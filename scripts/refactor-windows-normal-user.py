@@ -77,6 +77,18 @@ def run(arguments: list[str]) -> int:
     security.CreateRestrictedToken.restype = boolean
     security.ConvertStringSidToSidW.argtypes = [wintypes.LPCWSTR, ctypes.POINTER(pointer)]
     security.ConvertStringSidToSidW.restype = boolean
+    security.ConvertSidToStringSidW.argtypes = [pointer, ctypes.POINTER(pointer)]
+    security.ConvertSidToStringSidW.restype = boolean
+    security.ConvertStringSecurityDescriptorToSecurityDescriptorW.argtypes = [
+        wintypes.LPCWSTR, dword, ctypes.POINTER(pointer), ctypes.POINTER(dword),
+    ]
+    security.ConvertStringSecurityDescriptorToSecurityDescriptorW.restype = boolean
+    security.GetSecurityDescriptorDacl.argtypes = [
+        pointer, ctypes.POINTER(boolean), ctypes.POINTER(pointer), ctypes.POINTER(boolean),
+    ]
+    security.GetSecurityDescriptorDacl.restype = boolean
+    security.SetSecurityInfo.argtypes = [handle, dword, dword, pointer, pointer, pointer, pointer]
+    security.SetSecurityInfo.restype = dword
     security.GetLengthSid.argtypes = [pointer]
     security.GetLengthSid.restype = dword
     security.GetSidSubAuthorityCount.argtypes = [pointer]
@@ -119,6 +131,8 @@ def run(arguments: list[str]) -> int:
     original = handle()
     filtered = handle()
     medium_sid = pointer()
+    user_text = pointer()
+    user_descriptor = pointer()
     process = ProcessInfo()
     try:
         # An already filtered child only needs QUERY. Asking it for adjustment
@@ -128,9 +142,9 @@ def run(arguments: list[str]) -> int:
         if force_filter or not normal(original):
             kernel.CloseHandle(original)
             original = handle()
-            # QUERY | DUPLICATE | ASSIGN_PRIMARY | ADJUST_DEFAULT, only in the
-            # parent which creates a restricted version of its own token.
-            checked(security.OpenProcessToken(kernel.GetCurrentProcess(), 0x8B, ctypes.byref(original)))
+            # QUERY | DUPLICATE | ASSIGN_PRIMARY | ADJUST_DEFAULT | WRITE_DAC,
+            # only in the parent. The original token is never modified.
+            checked(security.OpenProcessToken(kernel.GetCurrentProcess(), 0x4008B, ctypes.byref(original)))
             # LUA_TOKEN | DISABLE_MAX_PRIVILEGE removes administrative groups
             # and privileges, including an elevated token's default owner.
             checked(security.CreateRestrictedToken(
@@ -148,6 +162,25 @@ def run(arguments: list[str]) -> int:
             user = ctypes.cast(user_data, ctypes.POINTER(SidAndAttributes)).contents
             owner = pointer(user.sid)
             checked(security.SetTokenInformation(filtered, 4, ctypes.byref(owner), ctypes.sizeof(owner)))
+            # An elevated runner can have an Administrators-only default DACL.
+            # Its filtered child must be able to open its own process/token and
+            # create grandchildren (rustc, link.exe, and actual test daemons).
+            checked(security.ConvertSidToStringSidW(user.sid, ctypes.byref(user_text)))
+            user_sid_text = ctypes.wstring_at(user_text)
+            checked(security.ConvertStringSecurityDescriptorToSecurityDescriptorW(
+                f"D:P(A;;GA;;;{user_sid_text})(A;;GA;;;SY)", 1,
+                ctypes.byref(user_descriptor), None,
+            ))
+            present, defaulted, dacl = boolean(), boolean(), pointer()
+            checked(security.GetSecurityDescriptorDacl(
+                user_descriptor, ctypes.byref(present), ctypes.byref(dacl), ctypes.byref(defaulted),
+            ))
+            if not present.value or not dacl.value:
+                raise RuntimeError("ordinary-user token DACL is missing")
+            checked(security.SetTokenInformation(filtered, 6, ctypes.byref(dacl), ctypes.sizeof(dacl)))
+            error = security.SetSecurityInfo(filtered, 6, 4, None, None, dacl, None)
+            if error:
+                raise ctypes.WinError(error)
             selected = filtered
         if not normal(selected):
             raise RuntimeError("refusing to run business tests without a medium, non-elevated user token")
@@ -181,6 +214,10 @@ def run(arguments: list[str]) -> int:
                 kernel.CloseHandle(owned)
         if medium_sid:
             kernel.LocalFree(medium_sid)
+        if user_text:
+            kernel.LocalFree(user_text)
+        if user_descriptor:
+            kernel.LocalFree(user_descriptor)
 
 
 if __name__ == "__main__":

@@ -51,9 +51,6 @@ jobs:
         run: python scripts/refactor-native-codecs.py build --target ${{ matrix.target }} --cache-dir "${{ runner.temp }}/nestlink-codec-sources" --work-dir "${{ runner.temp }}/nestlink-codecs" --msys-bin "${{ steps.msys.outputs.msys2-location }}/usr/bin" --nasm "${{ steps.msys.outputs.msys2-location }}/usr/bin/nasm.exe"
       - run: python scripts/refactor-native-codecs.py verify --target ${{ matrix.target }} --prefix "${{ env.NESTLINK_CODEC_PREFIX }}"
       - run: rustup show
-      - run: cargo fmt --all -- --check
-      - run: cargo check --locked -p nestlink-platform-audio
-      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - name: Allow the normal Windows token to use CI build inputs
         if: runner.os == 'Windows'
         shell: pwsh
@@ -77,7 +74,13 @@ jobs:
           "TMP=$testTemp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Check Windows private files and process identity with the normal token
         if: runner.os == 'Windows'
-        run: python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-platform-security --tests -p nestlink-privileged --lib --no-fail-fast
+        run: |
+          python scripts/refactor-windows-normal-user.py rustc -vV
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-platform-security --tests -p nestlink-privileged --lib --no-fail-fast
+      - run: cargo fmt --all -- --check
+      - run: cargo check --locked -p nestlink-platform-audio
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - if: runner.os == 'Linux'
         run: cargo test --workspace --locked --no-fail-fast
       - name: Test Windows with the ordinary business-process token
