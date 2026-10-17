@@ -106,7 +106,7 @@ jobs:
           toolchain: "1.96.0"
           targets: aarch64-linux-android,x86_64-linux-android
       - name: Install pinned Android SDK and NDK
-        run: sdkmanager "platforms;android-36" "build-tools;36.0.0" "system-images;android-${{ matrix.api-level }};google_apis;x86_64" "ndk;27.2.12479018"
+        run: sdkmanager "emulator" "platforms;android-36" "build-tools;36.0.0" "system-images;android-${{ matrix.api-level }};google_apis;x86_64" "ndk;27.2.12479018"
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.1
         with:
           name: android-codec-prefixes
@@ -122,18 +122,34 @@ jobs:
       - name: Install pinned cargo-ndk
         run: cargo install cargo-ndk --version 3.5.4 --locked
       - name: Start Android emulator
+        timeout-minutes: 10
         run: |
+          set -euo pipefail
           api_level="${{ matrix.api-level }}"
+          sudo setfacl -m "u:$(id -u):rw" /dev/kvm
           echo "no" | avdmanager create avd --force --name "nestlink-api${api_level}" --package "system-images;android-${api_level};google_apis;x86_64" --device pixel_2
-          emulator -avd "nestlink-api${api_level}" -no-window -no-audio -no-snapshot-save -no-boot-anim -gpu swiftshader_indirect &
-          adb wait-for-device
+          emulator_log="${RUNNER_TEMP}/nestlink-emulator.log"
+          "$ANDROID_HOME/emulator/emulator" -avd "nestlink-api${api_level}" -no-window -no-audio -no-snapshot-save -no-boot-anim -gpu swiftshader_indirect > "$emulator_log" 2>&1 &
+          emulator_pid=$!
+          if ! timeout 180 adb wait-for-device; then
+            tail -n 100 "$emulator_log"
+            exit 1
+          fi
           for attempt in $(seq 1 90); do
-            if [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ]; then
+            if ! kill -0 "$emulator_pid" 2>/dev/null; then
+              tail -n 100 "$emulator_log"
+              exit 1
+            fi
+            boot_completed="$(timeout 5 adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' || true)"
+            if [ "$boot_completed" = "1" ]; then
               break
             fi
             sleep 2
           done
-          test "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1"
+          if [ "$boot_completed" != "1" ]; then
+            tail -n 100 "$emulator_log"
+            exit 1
+          fi
       - name: Build Android debug APK and run emulator tests
         env:
           NESTLINK_CODEC_ARM64_PREFIX: ${{ runner.temp }}/android-codec-prefixes/arm64-v8a
