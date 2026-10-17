@@ -171,11 +171,16 @@ pub async fn wait_view(
     Ok(())
 }
 
+enum GatePath {
+    Exact(String),
+    Suffix(String),
+}
+
 /// Holds one actual server response after its transaction/read completed. No
 /// SDK or business response is mocked. Short expiry only changes the announced
 /// access lifetime, testing the client's deadline independently of server TTL.
 pub struct Gate {
-    pub path: String,
+    path: GatePath,
     pub method: &'static str,
     pub enabled: AtomicBool,
     pub arrived: Semaphore,
@@ -185,8 +190,14 @@ pub struct Gate {
 }
 impl Gate {
     pub fn new(path: impl Into<String>, method: &'static str) -> Arc<Self> {
+        Self::matching(GatePath::Exact(path.into()), method)
+    }
+    pub fn suffix(path: impl Into<String>, method: &'static str) -> Arc<Self> {
+        Self::matching(GatePath::Suffix(path.into()), method)
+    }
+    fn matching(path: GatePath, method: &'static str) -> Arc<Self> {
         Arc::new(Self {
-            path: path.into(),
+            path,
             method,
             enabled: AtomicBool::new(false),
             arrived: Semaphore::new(0),
@@ -197,7 +208,7 @@ impl Gate {
     }
     pub fn expiring() -> Arc<Self> {
         Arc::new(Self {
-            path: String::new(),
+            path: GatePath::Exact(String::new()),
             method: "",
             enabled: AtomicBool::new(false),
             arrived: Semaphore::new(0),
@@ -223,7 +234,11 @@ async fn intercept(State(gate): State<Arc<Gate>>, request: Request, next: Next) 
     let login = request.uri().path() == "/api/v3/auth/login";
     let me = request.uri().path() == "/api/v3/auth/me";
     let logout = request.uri().path() == "/api/v3/auth/logout";
-    let hold = request.uri().path() == gate.path.as_str()
+    let matches_path = match &gate.path {
+        GatePath::Exact(path) => request.uri().path() == path.as_str(),
+        GatePath::Suffix(path) => request.uri().path().ends_with(path.as_str()),
+    };
+    let hold = matches_path
         && request.method() == gate.method
         && gate.enabled.swap(false, Ordering::AcqRel);
     let mut response = next.run(request).await;

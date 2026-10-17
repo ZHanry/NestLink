@@ -155,7 +155,11 @@ struct Pair {
 }
 
 async fn pair() -> Result<Pair> {
-    let server = Server::start(None).await?;
+    pair_with_gate(None).await
+}
+
+async fn pair_with_gate(gate: Option<Arc<Gate>>) -> Result<Pair> {
+    let server = Server::start(gate).await?;
     let controller_identity = DeviceIdentity::generate();
     let host_identity = DeviceIdentity::generate();
     let host_id = host_identity.device_id.clone();
@@ -465,6 +469,23 @@ async fn connected_generations(
 }
 
 impl Pair {
+    async fn wait_reconnect_offer(&self, gate: &Gate) -> Result {
+        gate.entered().await.map_err(|error| {
+            let controller = self.controller_handle.snapshot();
+            let host = self.host_handle.snapshot();
+            io::Error::other(format!(
+                "{error}; controller session={:?} error={:?}; host session={:?} error={:?}; \
+                 server_forbidden={:?}",
+                controller.native_session.data,
+                controller.native_session.error,
+                host.native_session.data,
+                host.native_session.error,
+                self._server.forbidden_responses(),
+            ))
+        })?;
+        Ok(())
+    }
+
     async fn shutdown(&mut self) {
         let (controller, host) = tokio::join!(
             self.controller.shutdown(Duration::from_secs(5)),
@@ -619,30 +640,37 @@ async fn recovery_waits_for_held_input_and_media_cleanup_then_proves_a_fresh_gen
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn user_stop_during_recovery_cancels_exchange_and_never_attaches_successor_routes() -> Result
 {
-    let mut pair = pair().await?;
-    pair.reset.arm(false);
+    let gate = Gate::suffix("/reconnect/offer", "POST");
+    let mut pair = pair_with_gate(Some(gate.clone())).await?;
+    gate.arm();
     pair.controller_network.invalidate_generation()?;
-    pair.reset.wait_entered().await?;
+    // Hold a real reconnect response after its server transaction. The actor
+    // has completed old-session cleanup and cannot commit a successor yet.
     stage(
-        "controller recovery establishing state",
-        wait_view(&pair.controller_handle, |snapshot| {
-            snapshot
-                .native_session
-                .data
-                .as_ref()
-                .is_some_and(|session| session.status == NativeSessionStatus::Establishing)
-        }),
+        "controller reconnect offer",
+        pair.wait_reconnect_offer(&gate),
     )
     .await?;
-    stage(
+    assert_eq!(
+        pair.controller_handle
+            .snapshot()
+            .native_session
+            .data
+            .as_ref()
+            .unwrap()
+            .status,
+        NativeSessionStatus::Establishing,
+    );
+    let stopped = stage(
         "user stop during recovery",
         success(pair.controller_handle.submit(Action::StopNativeSession {
             request_id: pair.request_id.clone(),
             connection_generation: pair.binding.connection_generation,
         })?),
     )
-    .await?;
-    pair.reset.release();
+    .await;
+    gate.unblock();
+    stopped?;
     stage(
         "controller terminal state after user stop",
         wait_view(&pair.controller_handle, |snapshot| {
@@ -681,22 +709,19 @@ async fn user_stop_during_recovery_cancels_exchange_and_never_attaches_successor
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn revoked_recovery_retains_completed_cleanup_without_attaching_successor_routes() -> Result {
-    let mut pair = pair().await?;
-    pair.reset.arm(false);
+    let gate = Gate::suffix("/reconnect/offer", "POST");
+    let mut pair = pair_with_gate(Some(gate.clone())).await?;
+    let mut revoker = AppCore::start(Limits::default())?;
+    let revoke_handle = stage(
+        "independent revocation client",
+        connect(&revoker, &pair._server),
+    )
+    .await?;
+    gate.arm();
     pair.controller_network.invalidate_generation()?;
-    pair.reset.wait_entered().await?;
     stage(
-        "controller recovery after completed old connection cleanup",
-        wait_view(&pair.controller_handle, |snapshot| {
-            snapshot
-                .native_session
-                .data
-                .as_ref()
-                .is_some_and(|session| {
-                    session.status == NativeSessionStatus::Establishing
-                        && session.cleanup == Some(NativeSessionCleanup::Succeeded)
-                })
-        }),
+        "controller reconnect offer after cleanup",
+        pair.wait_reconnect_offer(&gate),
     )
     .await?;
     let previous = pair
@@ -707,17 +732,20 @@ async fn revoked_recovery_retains_completed_cleanup_without_attaching_successor_
         .as_ref()
         .unwrap()
         .clone();
+    assert_eq!(previous.status, NativeSessionStatus::Establishing);
+    assert_eq!(previous.cleanup, Some(NativeSessionCleanup::Succeeded));
 
-    // The host cannot approve a replacement while its real input cleanup is
-    // held. Revoke the request on the real server during that recovery window.
+    // The controller cannot commit a successor until this real HTTP response
+    // returns. A separate management client revokes on the real server; neither
+    // endpoint's single SDK client must leave recovery to perform the revoke.
     let revoked = stage(
         "server revocation during recovery",
-        success(pair.host_handle.submit(Action::RevokeRemote {
+        success(revoke_handle.submit(Action::RevokeRemote {
             request_id: pair.request_id.clone(),
         })?),
     )
     .await;
-    pair.reset.release();
+    gate.unblock();
     revoked?;
     stage(
         "controller rejected recovery with retained cleanup",
@@ -750,6 +778,10 @@ async fn revoked_recovery_retains_completed_cleanup_without_attaching_successor_
     assert!(pair.controller_handle.native_input_layout().is_err());
     assert!(pair.controller_handle.poll_native_video().is_err());
     pair.shutdown().await;
+    assert_eq!(
+        revoker.shutdown(Duration::from_secs(5)).await,
+        ShutdownState::Complete,
+    );
     Ok(())
 }
 
