@@ -3,11 +3,14 @@ mod bridge;
 mod browser_data;
 mod browser_displays;
 mod clipboard;
+mod connection;
 mod files;
+mod lists;
 mod management;
 mod native_displays;
 mod native_input;
 mod native_network;
+mod navigation;
 pub mod picker;
 mod privileged_input;
 mod remote;
@@ -16,13 +19,12 @@ pub mod theme;
 mod tray;
 mod widgets;
 
-use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use bridge::{Bridge, InputLayoutUpdate, Notice, VideoUpdate};
 use eframe::egui;
 use nestlink_app_core::{
-    Action, ApprovedServer, Authentication, BrowserHostStatus, NativeInputAction,
-    NativeInputBinding, NativeInputLayout, NativeSessionCleanup, NativeSessionStatus, OperationId,
-    OperationKind, OperationStatus, Page, Snapshot,
+    Action, Authentication, BrowserHostStatus, NativeInputAction, NativeInputBinding,
+    NativeInputLayout, NativeSessionCleanup, NativeSessionStatus, OperationId, OperationKind,
+    OperationStatus, Page, Snapshot,
 };
 use nestlink_app_ipc::wire::{Command, ExitResult, SensitiveReply};
 use std::collections::BTreeSet;
@@ -65,26 +67,19 @@ enum MessageTone {
 struct Credentials {
     username: String,
     password: Zeroizing<String>,
-    factor: Zeroizing<String>,
     new_password: Zeroizing<String>,
-    totp_code: Zeroizing<String>,
 }
 impl Credentials {
     fn clear(&mut self) {
         self.username.clear();
         self.password.zeroize();
-        self.factor.zeroize();
         self.new_password.zeroize();
-        self.totp_code.zeroize();
     }
 }
 
 #[derive(Default)]
 struct TrustForm {
     origin: String,
-    deployment_id: String,
-    issuer: String,
-    approved: bool,
     loopback: bool,
 }
 
@@ -190,7 +185,7 @@ impl DesktopApp {
             directory,
             tokens,
             tray: tray::Tray::create(creation.egui_ctx.clone()).ok(),
-            screen: Screen::Remote,
+            screen: Screen::Server,
             english: false,
             dark: false,
             connected: false,
@@ -1763,303 +1758,6 @@ impl DesktopApp {
             tray::restore(context);
         }
     }
-    fn sidebar(&mut self, context: &egui::Context, parent: &mut egui::Ui, snapshot: &Snapshot) {
-        let width = if context.content_rect().width() < 900. {
-            self.tokens.layout.sidebar_width_compact
-        } else {
-            self.tokens.layout.sidebar_width
-        };
-        let palette = if self.dark {
-            &self.tokens.dark
-        } else {
-            &self.tokens.light
-        };
-        egui::Panel::left("navigation")
-            .exact_size(width)
-            .resizable(false)
-            .frame(
-                egui::Frame::new()
-                    .fill(theme::color(&palette.sidebar))
-                    .inner_margin(18),
-            )
-            .show_inside(parent, |ui| {
-                ui.add_space(12.);
-                ui.horizontal(|ui| {
-                    let (rect, _) =
-                        ui.allocate_exact_size(egui::vec2(28., 28.), egui::Sense::hover());
-                    widgets::brand(ui.painter(), rect, self.dark);
-                    ui.label(egui::RichText::new("NestLink").strong().size(23.));
-                });
-                ui.add_space(30.);
-                for (screen, zh, en) in [
-                    (Screen::Remote, "远程控制", "Remote"),
-                    (Screen::Services, "服务发布", "Services"),
-                    (Screen::Devices, "设备", "Devices"),
-                ] {
-                    if ui
-                        .add_sized(
-                            [width - 36., self.tokens.layout.control_height],
-                            egui::Button::new(self.t(zh, en)).selected(self.screen == screen),
-                        )
-                        .clicked()
-                    {
-                        self.screen = screen;
-                        if snapshot.authentication == Authentication::SignedIn {
-                            match screen {
-                                Screen::Remote => {
-                                    if snapshot.devices.loading.is_none() {
-                                        self.load(snapshot, Page::Devices);
-                                    }
-                                    if snapshot.requests.loading.is_none() {
-                                        self.load(snapshot, Page::Requests);
-                                    }
-                                }
-                                Screen::Devices => self.load(snapshot, Page::Devices),
-                                Screen::Services => {
-                                    self.load(snapshot, Page::Services);
-                                    if snapshot.devices.loading.is_none() {
-                                        self.load(snapshot, Page::Devices);
-                                    }
-                                }
-                                _ => {}
-                            }
-                        }
-                    }
-                }
-                ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-                    ui.small(format!("v{}", env!("CARGO_PKG_VERSION")));
-                    ui.horizontal(|ui| {
-                        if ui
-                            .button(if self.english { "中文" } else { "EN" })
-                            .clicked()
-                        {
-                            self.english = !self.english;
-                        }
-                        if ui
-                            .button(self.t(
-                                if self.dark { "浅色" } else { "深色" },
-                                if self.dark { "Light" } else { "Dark" },
-                            ))
-                            .clicked()
-                        {
-                            self.dark = !self.dark;
-                            theme::apply(context, &self.tokens, self.dark);
-                        }
-                    });
-                    if ui.button(self.t("退出程序", "Exit program")).clicked() {
-                        self.exit(snapshot, context);
-                    }
-                    if self.connected && ui.button(self.t("切换服务器", "Change server")).clicked()
-                    {
-                        self.screen = Screen::Server;
-                    }
-                    if let Some(principal) = &snapshot.principal {
-                        ui.separator();
-                        if ui.button(&principal.name).clicked() {
-                            self.screen = Screen::Security;
-                            self.load(snapshot, Page::AccountSecurity);
-                        }
-                        if principal.is_admin {
-                            for (screen, page, zh, en) in [
-                                (Screen::Accounts, Page::Accounts, "账号管理", "Accounts"),
-                                (Screen::Network, Page::Policy, "网络策略", "Network policy"),
-                                (Screen::Nodes, Page::Nodes, "转发节点", "Nodes"),
-                                (Screen::Audit, Page::AuditRetention, "审计记录", "Audit"),
-                            ] {
-                                if ui
-                                    .selectable_label(self.screen == screen, self.t(zh, en))
-                                    .clicked()
-                                {
-                                    self.screen = screen;
-                                    self.load(snapshot, page);
-                                    match screen {
-                                        Screen::Network => {
-                                            self.load(snapshot, Page::RelayQuota);
-                                            self.load(snapshot, Page::RelayUsage);
-                                            self.load(snapshot, Page::PathLimits);
-                                        }
-                                        Screen::Audit => self.action(
-                                            snapshot,
-                                            Action::LoadAudit {
-                                                after_sequence: 0,
-                                                limit: 50,
-                                            },
-                                        ),
-                                        _ => {}
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            });
-    }
-    fn trust_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
-        ui.heading(self.t("连接控制中心", "Connect to a control center"));
-        ui.label(self.t("使用管理员提供的地址、部署 ID 和签发公钥核验服务器。", "Verify the server with the address, deployment ID and issuer key provided by your administrator."));
-        ui.add_space(24.);
-        widgets::field(
-            ui,
-            self.t("服务器地址", "Server origin"),
-            &mut self.trust.origin,
-            512,
-        );
-        widgets::field(
-            ui,
-            self.t("部署 ID", "Deployment ID"),
-            &mut self.trust.deployment_id,
-            36,
-        );
-        widgets::field(
-            ui,
-            self.t("签发公钥", "Issuer public key"),
-            &mut self.trust.issuer,
-            64,
-        );
-        ui.small(self.t(
-            "公钥格式：32 字节 Base64URL，无填充。",
-            "Key format: 32-byte Base64URL without padding.",
-        ));
-        ui.checkbox(
-            &mut self.trust.loopback,
-            if self.english {
-                "Allow HTTP for a local loopback test server"
-            } else {
-                "允许本机回环测试服务器使用 HTTP"
-            },
-        );
-        ui.checkbox(
-            &mut self.trust.approved,
-            if self.english {
-                "I have checked this deployment and key with the administrator"
-            } else {
-                "我已向管理员核对部署 ID 和公钥"
-            },
-        );
-        let verifying = snapshot.authentication == Authentication::VerifyingServer;
-        if ui
-            .add_enabled(
-                self.connected && self.trust.approved && !verifying,
-                egui::Button::new(self.t("核验并连接", "Verify and connect")),
-            )
-            .clicked()
-        {
-            let key = URL_SAFE_NO_PAD
-                .decode(self.trust.issuer.trim())
-                .ok()
-                .and_then(|bytes| <[u8; 32]>::try_from(bytes).ok());
-            if let Some(permit_issuer) = key {
-                self.clear_private_view(ui.ctx());
-                self.send(
-                    snapshot,
-                    Command::Connect {
-                        server: ApprovedServer {
-                            origin: self.trust.origin.trim().into(),
-                            deployment_id: self.trust.deployment_id.trim().into(),
-                            permit_issuer,
-                            allow_loopback_http: self.trust.loopback,
-                        },
-                    },
-                );
-                self.screen = Screen::Remote;
-            } else {
-                self.set_message(
-                    self.t(
-                        "签发公钥格式不正确。",
-                        "The issuer public key format is invalid.",
-                    )
-                    .into(),
-                    MessageTone::Danger,
-                );
-            }
-        }
-        if verifying {
-            ui.spinner();
-            ui.label(self.t("正在核验服务器身份…", "Verifying the server identity…"));
-        }
-        if let Some(server) = &snapshot.server {
-            ui.separator();
-            ui.label(&server.origin);
-            if let Some(error) = &server.error {
-                ui.colored_label(
-                    ui.visuals().error_fg_color,
-                    widgets::failure(error, self.english),
-                );
-            }
-            if self.screen == Screen::Server
-                && server.verified_health.is_some()
-                && ui
-                    .button(self.t("返回工作台", "Back to workspace"))
-                    .clicked()
-            {
-                self.screen = Screen::Remote;
-            }
-        }
-    }
-    fn signin(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
-        ui.heading(self.t("登录 NestLink", "Sign in to NestLink"));
-        if let Some(server) = &snapshot.server {
-            ui.label(&server.origin);
-        }
-        ui.add_space(24.);
-        widgets::field(
-            ui,
-            self.t("账号", "Account"),
-            &mut self.credentials.username,
-            128,
-        );
-        widgets::secret_field(
-            ui,
-            self.t("密码", "Password"),
-            &mut self.credentials.password,
-            "password",
-            self.generation,
-            1024,
-        );
-        widgets::secret_field(
-            ui,
-            self.t(
-                "TOTP 或一次性恢复码（已启用时必填）",
-                "TOTP or a recovery code (required when enabled)",
-            ),
-            &mut self.credentials.factor,
-            "factor",
-            self.generation,
-            128,
-        );
-        let signing_in = snapshot.authentication == Authentication::SigningIn;
-        if ui
-            .add_enabled(
-                self.connected
-                    && !signing_in
-                    && !self.credentials.username.trim().is_empty()
-                    && !self.credentials.password.is_empty(),
-                egui::Button::new(self.t("登录", "Sign in")),
-            )
-            .clicked()
-        {
-            let action = Action::SignIn {
-                username: self.credentials.username.trim().into(),
-                password: widgets::take_secret(&mut self.credentials.password),
-                factor: widgets::take_optional(&mut self.credentials.factor),
-            };
-            widgets::clear_secret_widgets(ui.ctx(), self.generation);
-            self.action(snapshot, action);
-        }
-        if signing_in {
-            ui.spinner();
-        }
-        ui.small(self.t(
-            "当前不保存登录令牌。",
-            "Login tokens are not saved between daemon runs.",
-        ));
-        if let Some(error) = &snapshot.authentication_error {
-            ui.colored_label(
-                ui.visuals().error_fg_color,
-                widgets::failure(error, self.english),
-            );
-        }
-    }
     fn confirmations(&mut self, context: &egui::Context, snapshot: &Snapshot) {
         if self.pending_confirmation.is_none() {
             return;
@@ -2148,7 +1846,8 @@ impl eframe::App for DesktopApp {
             self.generation = snapshot.generation;
         }
         self.show_remote_viewport(&context, &snapshot);
-        self.sidebar(&context, parent, &snapshot);
+        self.navigation(&context, parent, &snapshot);
+        self.workspace_toolbar(parent, &snapshot);
         egui::Panel::bottom("operation-status").show_inside(parent, |ui| {
             ui.horizontal(|ui| {
                 ui.small(self.t(
@@ -2243,9 +1942,9 @@ impl eframe::App for DesktopApp {
                                     .as_ref()
                                     .is_none_or(|server| server.verified_health.is_none())
                             {
-                                self.trust_page(ui, &snapshot);
+                                self.connection_page(ui, &snapshot);
                             } else if snapshot.authentication != Authentication::SignedIn {
-                                self.signin(ui, &snapshot);
+                                self.sign_in_page(ui, &snapshot);
                             } else {
                                 match self.screen {
                                     Screen::Remote => self.remote_page(ui, &snapshot),

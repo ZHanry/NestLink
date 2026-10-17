@@ -24,7 +24,7 @@ import urllib.request
 
 REPOSITORY = "ZHanry/NestLink"
 REPOSITORY_ID = "R_kgDOVNHMvg"
-VERSION = "0.1.0-rc.1"
+VERSION = "0.2.0-rc.1"
 TAG = "v" + VERSION
 MAX_ASSET_BYTES = 2 * 1024**3
 MANIFEST_NAME = "candidate-build-manifest.json"
@@ -215,7 +215,12 @@ def clean_source(root, revision):
 
 
 def release_body(revision, checksum):
-    return ("NestLink " + VERSION + " development release candidate.\n\n"
+    return ("NestLink " + VERSION + " 开发候选版。\n\n"
+            "- 连接只需服务器地址、账号和密码；HTTPS 自动读取并校验配置，移除部署 ID 与签发公钥的手动输入。\n"
+            "- 删除 TOTP 与恢复码功能；升级保留账号密码，并要求重新登录。\n"
+            "- Windows 使用 egui + egui_extras 优化导航、登录、设备与账号表格、中文字体及明暗主题。\n"
+            "- 五个上游补丁库改为版本依赖，由 [patch.crates-io] 指向独立 fork 分支；主仓库移除 483 个上游文件。\n\n"
+            "Forks: https://github.com/ZHanry/NestLink-dependencies/tree/nestlink-0.2\n\n"
             "Source commit: " + revision + ". All 18 product artifacts are bound to this clean source commit.\n"
             "candidate-build-manifest.json SHA-256: " + checksum + ".\n\n"
             "Windows Authenticode, Linux update and OCI signing are not configured. Android uses a development signing key. "

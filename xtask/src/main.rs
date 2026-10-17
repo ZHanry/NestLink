@@ -11,15 +11,23 @@ fn main() {
     }
 }
 
-fn is_first_party_manifest(path: &str) -> bool {
-    let path = path.replace('\\', "/");
-    ![
-        "/crates/traversal/vendor/",
-        "/crates/web-vendor/",
-        "/crates/platform-vendor/",
-    ]
-    .iter()
-    .any(|vendor_root| path.contains(vendor_root))
+fn reviewed_git_dependency(package: &Value, forks: &Value) -> bool {
+    let Some(name) = package["name"].as_str() else {
+        return false;
+    };
+    forks["packages"].get(name).is_some_and(|reviewed| {
+        package["version"] == reviewed["version"]
+            && package["source"].as_str()
+                == Some(
+                    format!(
+                        "git+{}?branch={}#{}",
+                        forks["repository"].as_str().unwrap_or_default(),
+                        forks["branch"].as_str().unwrap_or_default(),
+                        forks["commit"].as_str().unwrap_or_default(),
+                    )
+                    .as_str(),
+                )
+    })
 }
 
 fn run() -> Result<(), Box<dyn std::error::Error>> {
@@ -92,6 +100,8 @@ fn contract(root: &std::path::Path, write: bool) -> Result<(), Box<dyn std::erro
 }
 
 fn check_workspace(root: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
+    let forks: Value =
+        serde_json::from_slice(&fs::read(root.join("config/dependency-forks.json"))?)?;
     let output = Command::new(env::var("CARGO").unwrap_or_else(|_| "cargo".into()))
         .current_dir(root)
         .args(["metadata", "--format-version", "1", "--locked"])
@@ -118,16 +128,12 @@ fn check_workspace(root: &std::path::Path) -> Result<(), Box<dyn std::error::Err
         if package["source"]
             .as_str()
             .is_some_and(|s| s.starts_with("git+"))
+            && !reviewed_git_dependency(package, &forks)
         {
             return Err(format!("unreviewed git dependency: {}", package["name"]).into());
         }
-        // Cargo metadata includes local path dependencies in workspace_members,
-        // including upstream forks under the explicitly reviewed vendor roots.
-        // Those packages keep their upstream license and are checked by cargo-deny.
-        if workspace_members.contains(&package["id"])
-            && is_first_party_manifest(&path)
-            && package["license"] != "Apache-2.0"
-        {
+        // Upstream forks are Git dependencies outside the first-party workspace.
+        if workspace_members.contains(&package["id"]) && package["license"] != "Apache-2.0" {
             return Err(format!("unexpected first-party license: {}", package["name"]).into());
         }
         if ["rustdesk", "hbb_common", "frpc", "frps"]
@@ -142,28 +148,32 @@ fn check_workspace(root: &std::path::Path) -> Result<(), Box<dyn std::error::Err
 
 #[cfg(test)]
 mod tests {
-    use super::is_first_party_manifest;
+    use super::*;
 
     #[test]
-    fn vendor_forks_keep_their_upstream_license() {
-        for path in [
-            r"D:\repo\crates\traversal\vendor\turn\Cargo.toml",
-            r"D:\repo\crates\traversal\vendor\ice\Cargo.toml",
-            r"D:\repo\crates\web-vendor\leptos_macro\Cargo.toml",
-            r"D:\repo\crates\platform-vendor\objc2-foundation\Cargo.toml",
+    fn git_forks_require_the_reviewed_package_version_branch_and_commit() {
+        let forks = json!({"repository":"https://example.com/dependencies.git", "branch":"reviewed", "commit":"abc", "packages":{"turn":{"version":"0.17.2"}}});
+        let approved = json!({"name":"turn", "version":"0.17.2", "source":"git+https://example.com/dependencies.git?branch=reviewed#abc"});
+        assert!(reviewed_git_dependency(&approved, &forks));
+        for (field, replacement) in [
+            ("name", "other-package"),
+            ("version", "0.17.3"),
+            (
+                "source",
+                "git+https://example.com/dependencies.git?branch=reviewed#def",
+            ),
+            (
+                "source",
+                "git+https://example.com/dependencies.git?branch=other#abc",
+            ),
+            (
+                "source",
+                "git+https://example.com/other.git?branch=reviewed#abc",
+            ),
         ] {
-            assert!(!is_first_party_manifest(path), "{path}");
-        }
-    }
-
-    #[test]
-    fn first_party_packages_remain_subject_to_apache_license_check() {
-        for path in [
-            r"D:\repo\crates\policy\Cargo.toml",
-            r"D:\repo\apps\server\Cargo.toml",
-            r"D:\repo\xtask\Cargo.toml",
-        ] {
-            assert!(is_first_party_manifest(path), "{path}");
+            let mut changed = approved.clone();
+            changed[field] = json!(replacement);
+            assert!(!reviewed_git_dependency(&changed, &forks));
         }
     }
 }

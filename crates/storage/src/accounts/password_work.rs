@@ -93,9 +93,9 @@ impl Store {
     pub fn complete_login(
         &mut self,
         verified: LoginVerification,
-        factor: Option<&str>,
+        _factor: Option<&str>,
         now: u64,
-        vault: &VaultKey,
+        _vault: &VaultKey,
     ) -> Result<LoginGrant, StorageError> {
         let snapshot = verified.snapshot;
         let Some(id) = snapshot.account else {
@@ -113,16 +113,7 @@ impl Store {
         if blocked > now {
             return Err(StorageError::RateLimited);
         }
-        let factor_used = if disabled || !verified.matched {
-            None
-        } else {
-            match consume_factor(&tx, &id, factor, now, vault) {
-                Ok(recovery) => Some(recovery),
-                Err(StorageError::Unauthorized) => None,
-                Err(error) => return Err(error),
-            }
-        };
-        if factor_used.is_none() {
+        if disabled || !verified.matched {
             tx.execute("UPDATE account_security SET failed_attempts=failed_attempts+1,blocked_until=CASE WHEN failed_attempts+1>=5 THEN ?2 ELSE blocked_until END WHERE account_id=?1",params![id,now+30])?;
             audit(&tx, "login_failed", &id, AuditActor::Unauthenticated)?;
             tx.commit()?;
@@ -134,7 +125,6 @@ impl Store {
         )?;
         let grant = issue_login(&tx, &id, now)?;
         audit(&tx, "login_succeeded", &id, management(&grant.principal))?;
-        audit_recovery(&tx, &grant.principal, factor_used == Some(true))?;
         tx.commit()?;
         Ok(grant)
     }
@@ -148,71 +138,16 @@ impl Store {
             generation,
         })
     }
-    pub fn complete_begin_totp(
-        &mut self,
-        verified: PasswordVerification,
-        factor: Option<&str>,
-        now: u64,
-        vault: &VaultKey,
-    ) -> Result<Secret, StorageError> {
-        let tx = self.connection.transaction()?;
-        revalidate(&tx, &verified, now)?;
-        let actor = verified.actor();
-        let recovery = consume_factor(&tx, &actor.account_id, factor, now, vault)?;
-        let secret = zeroize_secret();
-        let encrypted = vault.encrypt(&actor.account_id, &*secret)?;
-        tx.execute("UPDATE account_security SET totp_pending=?1,totp_pending_expires=?2 WHERE account_id=?3",params![encrypted,now+600,actor.account_id])?;
-        audit(
-            &tx,
-            "totp_enrollment_started",
-            &actor.account_id,
-            management(actor),
-        )?;
-        audit_recovery(&tx, actor, recovery)?;
-        tx.commit()?;
-        Ok(base32_secret(&*secret))
-    }
-    pub fn complete_reset_recovery(
-        &mut self,
-        verified: PasswordVerification,
-        factor: &str,
-        now: u64,
-        vault: &VaultKey,
-    ) -> Result<Vec<Secret>, StorageError> {
-        let tx = self.connection.transaction()?;
-        revalidate(&tx, &verified, now)?;
-        let actor = verified.actor();
-        let enabled: bool = tx.query_row(
-            "SELECT totp_ciphertext IS NOT NULL FROM account_security WHERE account_id=?1",
-            [&actor.account_id],
-            |r| r.get(0),
-        )?;
-        if !enabled {
-            return Err(StorageError::Unauthorized);
-        }
-        let recovery = consume_factor(&tx, &actor.account_id, Some(factor), now, vault)?;
-        let codes = replace_recovery(&tx, &actor.account_id)?;
-        audit(
-            &tx,
-            "recovery_codes_rotated",
-            &actor.account_id,
-            management(actor),
-        )?;
-        audit_recovery(&tx, actor, recovery)?;
-        tx.commit()?;
-        Ok(codes)
-    }
     pub fn complete_password_change(
         &mut self,
         replacement: PasswordReplacement,
-        factor: Option<&str>,
+        _factor: Option<&str>,
         now: u64,
-        vault: &VaultKey,
+        _vault: &VaultKey,
     ) -> Result<(), StorageError> {
         let tx = self.connection.transaction()?;
         revalidate(&tx, &replacement.verified, now)?;
         let actor = replacement.actor();
-        let recovery = consume_factor(&tx, &actor.account_id, factor, now, vault)?;
         tx.execute(
             "UPDATE account_security SET password_hash=?1 WHERE account_id=?2",
             params![replacement.encoded, actor.account_id],
@@ -227,7 +162,6 @@ impl Store {
             &actor.account_id,
             management(actor),
         )?;
-        audit_recovery(&tx, actor, recovery)?;
         tx.commit()?;
         Ok(())
     }

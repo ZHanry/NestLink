@@ -1,5 +1,6 @@
 """Release collection must bind full notice bytes to exact locked packages."""
 import hashlib
+import os
 import importlib.util
 import io
 import json
@@ -191,7 +192,7 @@ class LocalWebForkTests(unittest.TestCase):
         metadata = metadata or {'workspace_members': [], 'packages': []}
         for name, review in N.REVIEWED_WEB_FORKS.items():
             path = root / review['path']
-            shutil.copytree(ROOT / review['path'], path)
+            shutil.copytree(N.dependency_fork_source(ROOT, name), path)
             lock += '\n[[package]]\nname="' + name + '"\nversion="' + review['version'] + '"\n'
             metadata['packages'].append({'id': name + '-local-id', 'name': name, 'version': review['version'], 'source': None, 'manifest_path': str(path / 'Cargo.toml'), 'license': 'MIT', 'license_file': None, 'authors': ['Greg Johnston'], 'repository': 'https://github.com/leptos-rs/leptos'})
         lock_path.write_text(lock)

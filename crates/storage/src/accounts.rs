@@ -1,8 +1,7 @@
 use super::{StorageError, Store, audit, require_id};
 use crate::auditing::management;
 use nestlink_auth::{
-    Secret, VaultKey, base32_secret, hash_password, random_id, recovery_codes, recovery_hash,
-    token, token_hash, verify_password, verify_totp,
+    Secret, VaultKey, hash_password, random_id, token, token_hash, verify_password,
 };
 use nestlink_protocol::api::AuditActor;
 pub use nestlink_protocol::api::{AccountView, Principal};
@@ -63,7 +62,7 @@ impl Store {
     }
     pub fn accounts(&self, actor: &Principal) -> Result<Vec<AccountView>, StorageError> {
         self.admin_identity(actor)?;
-        let mut statement=self.connection.prepare("SELECT a.id,a.name,s.is_admin,a.disabled,s.totp_ciphertext IS NOT NULL FROM accounts a JOIN account_security s ON s.account_id=a.id ORDER BY a.name LIMIT 1000")?;
+        let mut statement=self.connection.prepare("SELECT a.id,a.name,s.is_admin,a.disabled FROM accounts a JOIN account_security s ON s.account_id=a.id ORDER BY a.name LIMIT 1000")?;
         Ok(statement
             .query_map([], |r| {
                 Ok(AccountView {
@@ -71,7 +70,6 @@ impl Store {
                     name: r.get(1)?,
                     is_admin: r.get(2)?,
                     disabled: r.get(3)?,
-                    totp_enabled: r.get(4)?,
                 })
             })?
             .collect::<Result<_, _>>()?)
@@ -143,52 +141,6 @@ impl Store {
         tx.commit()?;
         Ok(())
     }
-    pub fn begin_totp(
-        &mut self,
-        actor: &Principal,
-        password: &str,
-        factor: Option<&str>,
-        now: u64,
-        vault: &VaultKey,
-    ) -> Result<Secret, StorageError> {
-        let verified = self.password_snapshot(actor)?.verify(password)?;
-        self.complete_begin_totp(verified, factor, now, vault)
-    }
-    pub fn confirm_totp(
-        &mut self,
-        actor: &Principal,
-        code: &str,
-        now: u64,
-        vault: &VaultKey,
-    ) -> Result<Vec<Secret>, StorageError> {
-        let tx = self.connection.unchecked_transaction()?;
-        self.validate_access(actor, now)?;
-        let pending:Option<Vec<u8>>=tx.query_row("SELECT totp_pending FROM account_security WHERE account_id=?1 AND totp_pending_expires>?2",params![actor.account_id,now],|r|r.get(0)).optional()?.flatten();
-        let pending = pending.ok_or(StorageError::Unauthorized)?;
-        let plaintext = vault.decrypt(&actor.account_id, &pending)?;
-        let step =
-            verify_totp(&plaintext, code, now, None).map_err(|_| StorageError::Unauthorized)?;
-        tx.execute("UPDATE account_security SET totp_ciphertext=?1,totp_pending=NULL,totp_pending_expires=NULL,totp_last_step=?2 WHERE account_id=?3",params![pending,step,actor.account_id])?;
-        let codes = replace_recovery(&tx, &actor.account_id)?;
-        tx.execute(
-            "UPDATE management_sessions SET revoked=1 WHERE account_id=?1 AND id<>?2",
-            params![actor.account_id, actor.session_id],
-        )?;
-        audit(&tx, "totp_enabled", &actor.account_id, management(actor))?;
-        tx.commit()?;
-        Ok(codes)
-    }
-    pub fn reset_recovery(
-        &mut self,
-        actor: &Principal,
-        password: &str,
-        factor: &str,
-        now: u64,
-        vault: &VaultKey,
-    ) -> Result<Vec<Secret>, StorageError> {
-        let verified = self.password_snapshot(actor)?.verify(password)?;
-        self.complete_reset_recovery(verified, factor, now, vault)
-    }
     pub fn change_password(
         &mut self,
         actor: &Principal,
@@ -234,16 +186,6 @@ impl Store {
         tx.commit()?;
         Ok(())
     }
-    pub fn totp_enabled(&self, actor: &Principal) -> Result<bool, StorageError> {
-        Ok(self.connection.query_row(
-            "SELECT totp_ciphertext IS NOT NULL FROM account_security WHERE account_id=?1",
-            [&actor.account_id],
-            |r| r.get(0),
-        )?)
-    }
-}
-fn zeroize_secret() -> impl std::ops::Deref<Target = [u8; 20]> {
-    nestlink_auth::totp_secret()
 }
 fn normalize_name(name: &str) -> Result<String, StorageError> {
     let name = name.trim().to_lowercase();
@@ -277,171 +219,70 @@ fn issue_login(tx: &Transaction<'_>, account: &str, now: u64) -> Result<LoginGra
         refresh_expires: now + REFRESH_SECONDS,
     })
 }
-fn consume_factor(
-    tx: &Transaction<'_>,
-    account: &str,
-    factor: Option<&str>,
-    now: u64,
-    vault: &VaultKey,
-) -> Result<bool, StorageError> {
-    let (ciphertext, last_step): (Option<Vec<u8>>, Option<u64>) = tx.query_row(
-        "SELECT totp_ciphertext,totp_last_step FROM account_security WHERE account_id=?1",
-        [account],
-        |r| Ok((r.get(0)?, r.get(1)?)),
-    )?;
-    let Some(ciphertext) = ciphertext else {
-        return Ok(false);
-    };
-    let code = factor.ok_or(StorageError::Unauthorized)?;
-    if code.len() == 6 {
-        let secret = vault.decrypt(account, &ciphertext)?;
-        let step =
-            verify_totp(&secret, code, now, last_step).map_err(|_| StorageError::Unauthorized)?;
-        tx.execute(
-            "UPDATE account_security SET totp_last_step=?1 WHERE account_id=?2",
-            params![step, account],
-        )?;
-        return Ok(false);
-    }
-    if code.len() != 22 {
-        return Err(StorageError::Unauthorized);
-    }
-    if tx.execute("UPDATE recovery_codes SET consumed=1 WHERE account_id=?1 AND code_sha256=?2 AND consumed=0",params![account,recovery_hash(account,code)])?!=1{return Err(StorageError::Unauthorized);}
-    Ok(true)
-}
-fn audit_recovery(tx: &Transaction<'_>, actor: &Principal, used: bool) -> Result<(), StorageError> {
-    if used {
-        audit(
-            tx,
-            "recovery_code_consumed",
-            &actor.account_id,
-            management(actor),
-        )?;
-    }
-    Ok(())
-}
-fn replace_recovery(tx: &Transaction<'_>, account: &str) -> Result<Vec<Secret>, StorageError> {
-    let codes = recovery_codes();
-    tx.execute("DELETE FROM recovery_codes WHERE account_id=?1", [account])?;
-    for code in &codes {
-        tx.execute(
-            "INSERT INTO recovery_codes(account_id,code_sha256) VALUES(?1,?2)",
-            params![account, recovery_hash(account, code.expose())],
-        )?;
-    }
-    Ok(codes)
-}
 
 #[cfg(test)]
-mod security_tests {
+mod password_only_migration {
     use super::*;
+
     #[test]
-    fn totp_and_recovery_are_consumed_once_and_enrollment_revokes_other_sessions()
-    -> Result<(), Box<dyn std::error::Error>> {
-        let mut store = Store::in_memory(&random_id())?;
-        let account = store.bootstrap_admin("admin", "test-only-password")?;
-        let vault = VaultKey::from_bytes([8; 32]);
-        let dummy = hash_password("dummy-only-password")?;
-        let first = store.login("admin", "test-only-password", None, 1000, &vault, &dummy)?;
-        let second = store.login("admin", "test-only-password", None, 1000, &vault, &dummy)?;
-        store.begin_totp(&first.principal, "test-only-password", None, 1000, &vault)?;
-        let encrypted: Vec<u8> = store.connection.query_row(
-            "SELECT totp_pending FROM account_security WHERE account_id=?1",
-            [&account],
-            |r| r.get(0),
-        )?;
-        let plaintext = vault.decrypt(&account, &encrypted)?;
-        let code = nestlink_auth::totp(&plaintext, 1000 / 30)?;
-        let recovery = store.confirm_totp(&first.principal, &code, 1000, &vault)?;
-        assert_eq!(recovery.len(), 10);
-        assert!(
-            store
-                .authenticate(second.access_token.expose(), 1000)
-                .is_err()
-        );
-        assert!(
-            store
-                .login(
-                    "admin",
-                    "test-only-password",
-                    Some(&code),
-                    1000,
-                    &vault,
-                    &dummy
-                )
-                .is_err()
-        );
-        assert!(
-            store
-                .login("admin", "test-only-password", None, 1000, &vault, &dummy)
-                .is_err()
-        );
-        let recovered = store.login(
-            "admin",
-            "test-only-password",
-            Some(recovery[0].expose()),
+    fn upgrading_legacy_factor_state_preserves_passwords_and_retires_logins()
+    -> Result<(), StorageError> {
+        let deployment = random_id();
+        let mut store = Store::in_memory(&deployment)?;
+        let vault = VaultKey::from_bytes(nestlink_auth::random_bytes());
+        let dummy = hash_password("migration-dummy-password")?;
+        let account = store.bootstrap_admin("administrator", "migration-account-password")?;
+        let old = store.login(
+            "administrator",
+            "migration-account-password",
+            None,
             1000,
             &vault,
             &dummy,
         )?;
-        assert!(
-            store
-                .login(
-                    "admin",
-                    "test-only-password",
-                    Some(recovery[0].expose()),
-                    1000,
-                    &vault,
-                    &dummy
-                )
-                .is_err()
-        );
-        let next = nestlink_auth::totp(&plaintext, 1030 / 30)?;
-        assert!(
-            store
-                .login(
-                    "admin",
-                    "test-only-password",
-                    Some(&next),
-                    1030,
-                    &vault,
-                    &dummy
-                )
-                .is_ok()
-        );
-        assert!(
-            store
-                .login(
-                    "admin",
-                    "test-only-password",
-                    Some(&next),
-                    1030,
-                    &vault,
-                    &dummy
-                )
-                .is_err()
-        );
-        let page = store.query_audit(
-            &first.principal,
-            nestlink_protocol::api::AuditQuery {
-                security_epoch: store.security_epoch()?,
-                after_sequence: 0,
-                limit: 100,
-            },
-            1030,
+        store.connection.execute("UPDATE account_security SET totp_ciphertext=x'0102',totp_pending=x'0304',totp_pending_expires=2000,totp_last_step=32", [])?;
+        store.connection.execute(
+            "INSERT INTO recovery_codes(account_id,code_sha256) VALUES(?1,zeroblob(32))",
+            [&account],
         )?;
-        let used: Vec<_> = page
-            .entries
-            .iter()
-            .filter(|e| e.event == "recovery_code_consumed")
-            .collect();
-        assert_eq!(used.len(), 1);
-        assert_eq!(used[0].actor, management(&recovered.principal));
-        let text = serde_json::to_string(&page)?;
-        for secret in recovery {
-            assert!(!text.contains(secret.expose()));
-        }
-        assert!(!text.contains(base32_secret(&plaintext).expose()));
+        store.connection.pragma_update(None, "user_version", 20)?;
+        let Store { connection } = store;
+        let mut migrated = Store::initialize(connection, &deployment)?;
+        let cleared: bool = migrated.connection.query_row("SELECT totp_ciphertext IS NULL AND totp_pending IS NULL AND totp_pending_expires IS NULL AND totp_last_step IS NULL FROM account_security", [], |row| row.get(0))?;
+        assert!(cleared);
+        assert_eq!(
+            migrated
+                .connection
+                .query_row("SELECT count(*) FROM recovery_codes", [], |row| row
+                    .get::<_, i64>(0))?,
+            0
+        );
+        assert!(
+            migrated
+                .authenticate(old.access_token.expose(), 1001)
+                .is_err()
+        );
+        let fresh = migrated.login(
+            "administrator",
+            "migration-account-password",
+            None,
+            1001,
+            &vault,
+            &dummy,
+        )?;
+        assert_eq!(fresh.principal.account_id, account);
+        assert!(
+            migrated
+                .login(
+                    "administrator",
+                    "incorrect-password",
+                    None,
+                    1002,
+                    &vault,
+                    &dummy
+                )
+                .is_err()
+        );
         Ok(())
     }
 }

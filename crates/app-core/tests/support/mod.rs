@@ -141,7 +141,11 @@ pub async fn success(ticket: Ticket) -> Result<Completion> {
 }
 pub async fn connect(core: &AppCore, server: &Server) -> Result<CoreHandle> {
     let handle = core.handle();
-    success(handle.switch_server(server.config.clone())?).await?;
+    success(handle.switch_server(ApprovedServer::from_origin(
+        server.config.origin.clone(),
+        server.config.allow_loopback_http,
+    ))?)
+    .await?;
     success(handle.submit(Action::SignIn {
         username: "admin".into(),
         password: password(),

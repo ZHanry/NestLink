@@ -763,12 +763,28 @@ fn password_work_snapshots_cannot_commit_after_password_refresh_logout_or_restor
         .password_snapshot(&fresh.principal)?
         .verify("snapshot-new-password")?;
     let refreshed = s.refresh_login(fresh.refresh_token.expose(), fresh.generation, 1003)?;
-    assert!(s.complete_begin_totp(proof, None, 1003, &vault).is_err());
+    assert!(
+        s.complete_password_change(
+            proof.replacement("another-test-password")?,
+            None,
+            1003,
+            &vault
+        )
+        .is_err()
+    );
     let proof = s
         .password_snapshot(&refreshed.principal)?
         .verify("snapshot-new-password")?;
     s.logout(&refreshed.principal)?;
-    assert!(s.complete_begin_totp(proof, None, 1004, &vault).is_err());
+    assert!(
+        s.complete_password_change(
+            proof.replacement("another-test-password")?,
+            None,
+            1004,
+            &vault
+        )
+        .is_err()
+    );
     let delayed = s
         .login_snapshot("admin", 1004, &dummy)?
         .verify("snapshot-new-password");

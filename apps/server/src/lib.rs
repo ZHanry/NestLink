@@ -35,10 +35,10 @@ use nestlink_identity::PermitSigner;
 use nestlink_protocol::{
     CONTROL_BYTES, ErrorCode,
     api::{
-        ApprovalSubmission, BrowserEndpointRegistration, DeviceRegistration, Factor, Login,
-        NewAccount, PasswordChange, PathLimitUpdate, PolicyUpdate, Reauthenticate, Refresh,
-        RemotePeerKeys, RemoteRequest, RenewalSubmission, RevokeDevice, ServerIdentityChallenge,
-        ServerIdentityClaims, ServerIdentityProof, SignalSubmission,
+        ApprovalSubmission, BrowserEndpointRegistration, DeviceRegistration, Login, NewAccount,
+        PasswordChange, PathLimitUpdate, PolicyUpdate, Refresh, RemotePeerKeys, RemoteRequest,
+        RenewalSubmission, RevokeDevice, ServerIdentityChallenge, ServerIdentityClaims,
+        ServerIdentityProof, SignalSubmission,
     },
 };
 use nestlink_storage::{
@@ -293,9 +293,6 @@ pub fn router(state: AppState) -> Router {
         .route("/api/v3/auth/logout", post(logout))
         .route("/api/v3/auth/me", get(me))
         .route("/api/v3/auth/password", put(password))
-        .route("/api/v3/auth/totp", post(totp_start))
-        .route("/api/v3/auth/totp/confirm", post(totp_confirm))
-        .route("/api/v3/auth/recovery", post(recovery))
         .route("/api/v3/accounts", get(accounts).post(create_account))
         .route("/api/v3/accounts/{id}", delete(disable_account))
         .route("/api/v3/devices/challenge", post(challenge))
@@ -473,13 +470,8 @@ async fn security(State(state): State<AppState>, request: Request<Body>, next: N
             return error.into_response();
         }
     }
-    if matches!(
-        request.uri().path(),
-        "/api/v3/auth/password"
-            | "/api/v3/auth/totp"
-            | "/api/v3/auth/totp/confirm"
-            | "/api/v3/auth/recovery"
-    ) && let Ok(token) = access(request.headers())
+    if matches!(request.uri().path(), "/api/v3/auth/password")
+        && let Ok(token) = access(request.headers())
         && let Err(error) = state.limit(&format!(
             "factor/{}",
             URL_SAFE_NO_PAD.encode(nestlink_auth::token_hash("rate", &token))
@@ -709,9 +701,7 @@ async fn me(State(state): State<AppState>, headers: HeaderMap) -> Result<Json<Va
     state
         .db(move |s| {
             let principal = s.authenticate(&token, now()?)?;
-            Ok(Json(
-                json!({"totp_enabled":s.totp_enabled(&principal)?,"principal":principal}),
-            ))
+            Ok(Json(json!({"principal":principal})))
         })
         .await
 }
@@ -770,59 +760,6 @@ async fn password(
         json!({}),
     );
     Ok(StatusCode::NO_CONTENT)
-}
-async fn totp_start(
-    State(state): State<AppState>,
-    headers: HeaderMap,
-    Json(body): Json<Reauthenticate>,
-) -> Result<Json<Value>, ApiError> {
-    let token = access(&headers)?;
-    let vault = state.vault.clone();
-    let proof = state
-        .password_proof(token, Secret::from_text(body.password))
-        .await?;
-    let factor = body.factor.map(Secret::from_text);
-    state.db(move|s|{let secret=s.complete_begin_totp(proof,factor.as_ref().map(|s|s.expose()),now()?,&vault)?;Ok(Json(json!({"secret":secret.expose(),"issuer":"NestLink","algorithm":"SHA1","digits":6,"period":30})))}).await
-}
-async fn totp_confirm(
-    State(state): State<AppState>,
-    headers: HeaderMap,
-    Json(body): Json<Factor>,
-) -> Result<Json<Value>, ApiError> {
-    let token = access(&headers)?;
-    let vault = state.vault.clone();
-    state
-        .db(move |s| {
-            let p = s.authenticate(&token, now()?)?;
-            let codes = s.confirm_totp(&p, &body.code, now()?, &vault)?;
-            Ok(Json(
-                json!({"recovery_codes":codes.iter().map(|v|v.expose()).collect::<Vec<_>>()}),
-            ))
-        })
-        .await
-}
-async fn recovery(
-    State(state): State<AppState>,
-    headers: HeaderMap,
-    Json(body): Json<Reauthenticate>,
-) -> Result<Json<Value>, ApiError> {
-    let token = access(&headers)?;
-    let vault = state.vault.clone();
-    let proof = state
-        .password_proof(token, Secret::from_text(body.password))
-        .await?;
-    let factor = body
-        .factor
-        .map(Secret::from_text)
-        .ok_or(ApiError(StatusCode::UNAUTHORIZED, ErrorCode::AuthRequired))?;
-    state
-        .db(move |s| {
-            let codes = s.complete_reset_recovery(proof, factor.expose(), now()?, &vault)?;
-            Ok(Json(
-                json!({"recovery_codes":codes.iter().map(|v|v.expose()).collect::<Vec<_>>()}),
-            ))
-        })
-        .await
 }
 async fn accounts(
     State(state): State<AppState>,

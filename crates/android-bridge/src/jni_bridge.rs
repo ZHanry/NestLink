@@ -189,12 +189,15 @@ pub extern "system" fn Java_com_zhanry_nestlink_NativeSdk_nativeConnect(
         let deployment_id = read_string(&mut env, deployment_id)?;
         let issuer_key = read_string(&mut env, issuer_key)?;
         let device_id = read_string(&mut env, device_id)?;
-        let issuer = URL_SAFE_NO_PAD
-            .decode(issuer_key)
-            .map_err(|_| "server signing key must be base64url without padding".to_owned())?;
-        let issuer: [u8; 32] = issuer
-            .try_into()
-            .map_err(|_| "server signing key must contain exactly 32 bytes".to_owned())?;
+        let issuer = if deployment_id.trim().is_empty() && issuer_key.trim().is_empty() {
+            [0; 32]
+        } else {
+            URL_SAFE_NO_PAD
+                .decode(issuer_key)
+                .map_err(|_| "server signing key must be base64url without padding".to_owned())?
+                .try_into()
+                .map_err(|_| "server signing key must contain exactly 32 bytes".to_owned())?
+        };
         let parsed_device_id = Uuid::parse_str(&device_id)
             .map_err(|_| "Android installation identifier is invalid".to_owned())?;
         if parsed_device_id.is_nil() || parsed_device_id.hyphenated().to_string() != device_id {
@@ -404,7 +407,7 @@ pub extern "system" fn Java_com_zhanry_nestlink_NativeSdk_nativeConfigureRemoteP
     let result = (|| {
         let settings_json = read_string(&mut env, settings_json)?;
         let mut password = Zeroizing::new(read_string(&mut env, password)?);
-        if !(12..=1_024).contains(&password.as_bytes().len()) {
+        if !(12..=1_024).contains(&password.len()) {
             return Err("remote password must be 12 to 1024 UTF-8 bytes".to_owned());
         }
         get_session(handle)?.configure_remote_password(
@@ -456,7 +459,7 @@ pub extern "system" fn Java_com_zhanry_nestlink_NativeSdk_nativeAuthorizeRemoteP
         let expected_revision = u64::try_from(expected_revision)
             .map_err(|_| "invalid remote password revision".to_owned())?;
         let mut password = Zeroizing::new(read_string(&mut env, password)?);
-        if !(12..=1_024).contains(&password.as_bytes().len()) {
+        if !(12..=1_024).contains(&password.len()) {
             return Err("remote password must be 12 to 1024 UTF-8 bytes".to_owned());
         }
         get_session(handle)?.authorize_remote_password(

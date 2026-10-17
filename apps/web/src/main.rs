@@ -1,11 +1,10 @@
 use std::rc::Rc;
 
-use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 #[cfg(target_arch = "wasm32")]
 use leptos::mount::mount_to_body;
 use leptos::{prelude::*, task::spawn_local};
 use nestlink_protocol::api::{NetworkPolicy, PolicyUpdate, Principal, RemoteView};
-use nestlink_sdk::{DeploymentTrust, Sdk, SdkError};
+use nestlink_sdk::{Sdk, SdkError};
 use nestlink_web::{
     i18n::{self, text as t},
     localized_format,
@@ -225,11 +224,10 @@ fn App() -> impl IntoView {
     let busy = RwSignal::new(false);
     let error = RwSignal::new(String::new());
     let notice = RwSignal::new(String::new());
-    let deployment_id = RwSignal::new(String::new());
-    let issuer_key = RwSignal::new(String::new());
+
     let username = RwSignal::new(String::new());
     let password = RwSignal::new(String::new());
-    let factor = RwSignal::new(String::new());
+
     let account_name = RwSignal::new(String::new());
     let account_password = RwSignal::new(String::new());
     let load_revision = RwSignal::new(0_u64);
@@ -253,7 +251,7 @@ fn App() -> impl IntoView {
         ingress.set("disabled".to_owned());
         username.set(String::new());
         password.set(String::new());
-        factor.set(String::new());
+
         account_name.set(String::new());
         account_password.set(String::new());
         session_revision.set(session_revision.get_untracked().saturating_add(1));
@@ -448,54 +446,18 @@ fn App() -> impl IntoView {
         load_revision.set(load_revision.get_untracked().saturating_add(1));
         api.set_value(None);
         busy.set(true);
-        let deployment = deployment_id.get_untracked().trim().to_owned();
-        let key_text = issuer_key.get_untracked().trim().to_owned();
         let server_origin = verify_origin.clone();
         spawn_local(async move {
-            let result = URL_SAFE_NO_PAD
-                .decode(key_text)
-                .ok()
-                .and_then(|bytes| <[u8; 32]>::try_from(bytes).ok())
-                .ok_or_else(|| {
-                    t(
-                        "签发公钥必须是 32 字节的 Base64URL 编码。",
-                        "The issuer public key must be 32 bytes encoded as Base64URL.",
-                    )
-                    .to_owned()
-                })
-                .and_then(|permit_issuer| {
-                    if deployment.is_empty() {
-                        Err(t(
-                            "请填写管理员提供的部署 ID。",
-                            "Enter the deployment ID supplied by your administrator.",
-                        )
-                        .to_owned())
-                    } else {
-                        Ok(DeploymentTrust {
-                            deployment_id: deployment,
-                            permit_issuer,
-                        })
+            match Sdk::connect_origin(&server_origin, false).await {
+                Ok(sdk) => {
+                    if session_revision.get_untracked() != session {
+                        return;
                     }
-                });
-            match result {
-                Ok(trust) => match Sdk::connect(&server_origin, trust, false).await {
-                    Ok(sdk) => {
-                        if session_revision.get_untracked() != session {
-                            return;
-                        }
-                        api.set_value(Some(Rc::new(futures_util::lock::Mutex::new(sdk))));
-                        screen.set(Screen::SignIn);
-                        notice.set(t("服务器身份与部署信息已匹配；本次仅保存在内存中。", "Server identity matches the approved deployment. It is retained in memory for this session.").into());
-                    }
-                    Err(problem) => {
-                        let problem = i18n::sdk_error(&problem);
-                        error.set(localized_format!(
-                            "服务器验证失败：{problem}",
-                            "Server verification failed: {problem}"
-                        ));
-                    }
-                },
-                Err(message) => error.set(message),
+                    api.set_value(Some(Rc::new(futures_util::lock::Mutex::new(sdk))));
+                    screen.set(Screen::SignIn);
+                    notice.set(t("服务器已连接。", "Connected to server.").into());
+                }
+                Err(problem) => error.set(i18n::sdk_error(&problem).to_string()),
             }
             busy.set(false);
         });
@@ -511,10 +473,10 @@ fn App() -> impl IntoView {
         busy.set(true);
         let user = username.get_untracked().trim().to_owned();
         let pass = password.get_untracked();
-        let one_time = factor.get_untracked().trim().to_owned();
+
         let session = session_revision.get_untracked();
         password.set(String::new());
-        factor.set(String::new());
+
         let Some(sdk) = api.get_value() else {
             busy.set(false);
             error.set(
@@ -532,7 +494,7 @@ fn App() -> impl IntoView {
                 sdk.login(
                     user,
                     nestlink_auth::Secret::from_text(pass),
-                    (!one_time.is_empty()).then(|| nestlink_auth::Secret::from_text(one_time)),
+                    None,
                 )
                 .await
                 .map_err(UiError::from)?;
@@ -614,8 +576,7 @@ fn App() -> impl IntoView {
             let finish = move |logout_problem: Option<String>| {
                 api.set_value(None);
                 clear_workspace.run(());
-                deployment_id.set(String::new());
-                issuer_key.set(String::new());
+
                 screen.set(Screen::Trust);
                 if let Some(problem) = logout_problem {
                     error.set(localized_format!("切换服务器前未能确认旧会话已撤销：{problem}", "Could not confirm revocation of the old session before changing servers: {problem}"));
@@ -830,16 +791,12 @@ fn App() -> impl IntoView {
                 <Brand />
                 <section class="entry-panel" aria-labelledby="trust-title">
                     <p class="entry-kicker">{move || t("连接到你的 NestLink 部署", "Connect to your NestLink deployment")}</p>
-                    <h1 id="trust-title">{move || t("先核验服务器", "Verify your server")}</h1>
-                    <p class="muted">{move || t("请从管理员处独立取得部署 ID 和策略签发公钥。浏览器不会仅凭服务器自报信息建立信任。", "Obtain the deployment ID and issuer public key independently from your administrator. Server claims alone do not establish trust.")}</p>
+                    <h1 id="trust-title">{move || t("连接服务器", "Connect to server")}</h1>
+                    <p class="muted">{move || t("通过 HTTPS 自动读取当前服务器配置，连接后即可登录。", "Discover this server over HTTPS, then sign in with your account.")}</p>
                     <form on:submit=move |event| verify_server.run(event) class="form-stack">
-                        <label for="deployment">{move || t("部署 ID", "Deployment ID")}</label>
-                        <input id="deployment" autocomplete="off" spellcheck="false" prop:value=move || deployment_id.get() on:input=move |event| deployment_id.set(event_target_value(&event)) />
-                        <label for="issuer">{move || t("策略签发公钥（Base64URL）", "Policy issuer public key (Base64URL)")}</label>
-                        <textarea id="issuer" rows="2" autocomplete="off" spellcheck="false" prop:value=move || issuer_key.get() on:input=move |event| issuer_key.set(event_target_value(&event))></textarea>
                         <p class="origin-note">{move || t("当前服务器：", "Current server: ")} <code>{move || display_origin.get_value()}</code></p>
                         <button class="primary" type="submit" disabled=move || busy.get()>
-                            {move || if busy.get() { t("正在验证…", "Verifying…") } else { t("验证并继续", "Verify and continue") }}
+                            {move || if busy.get() { t("正在验证…", "Verifying…") } else { t("连接并继续", "Connect and continue") }}
                         </button>
                     </form>
                 </section>
@@ -858,8 +815,7 @@ fn App() -> impl IntoView {
                         <input id="username" autocomplete="username" prop:value=move || username.get() on:input=move |event| username.set(event_target_value(&event)) />
                         <label for="password">{move || t("密码", "Password")}</label>
                         <input id="password" type="password" autocomplete="current-password" prop:value=move || password.get() on:input=move |event| password.set(event_target_value(&event)) />
-                        <label for="factor">{move || t("TOTP 或恢复码（如已启用）", "TOTP or recovery code (if enabled)")}</label>
-                        <input id="factor" type="password" inputmode="text" autocomplete="one-time-code" autocapitalize="off" spellcheck="false" prop:value=move || factor.get() on:input=move |event| factor.set(event_target_value(&event)) />
+
                         <button class="primary" type="submit" disabled=move || busy.get()>
                             {move || if busy.get() { t("正在登录…", "Signing in…") } else { t("登录", "Sign in") }}
                         </button>
@@ -1298,34 +1254,11 @@ async fn load_records(
                         id: account.id.clone(),
                         key: account.id.clone(),
                         title: account.name,
-                        detail: UiCopy::new(
-                            format!(
-                                "{} / TOTP {}",
-                                if account.is_admin {
-                                    "管理员"
-                                } else {
-                                    "普通账号"
-                                },
-                                if account.totp_enabled {
-                                    "已启用"
-                                } else {
-                                    "未启用"
-                                }
-                            ),
-                            format!(
-                                "{} / TOTP {}",
-                                if account.is_admin {
-                                    "Administrator"
-                                } else {
-                                    "Standard account"
-                                },
-                                if account.totp_enabled {
-                                    "Enabled"
-                                } else {
-                                    "Disabled"
-                                }
-                            ),
-                        ),
+                        detail: if account.is_admin {
+                            UiCopy::new("管理员", "Administrator")
+                        } else {
+                            UiCopy::new("普通账号", "Standard account")
+                        },
                         status: if account.disabled {
                             UiCopy::new("已停用", "Deactivated")
                         } else {

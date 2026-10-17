@@ -87,6 +87,11 @@ pub fn color(value: &str) -> Color32 {
         .unwrap_or(Color32::GRAY)
 }
 pub fn apply(context: &egui::Context, tokens: &Tokens, dark: bool) {
+    context.set_theme(if dark {
+        egui::Theme::Dark
+    } else {
+        egui::Theme::Light
+    });
     let palette = if dark { &tokens.dark } else { &tokens.light };
     let primary_action_text = if dark {
         &tokens.state.primary_action_text.dark
@@ -128,8 +133,18 @@ pub fn apply(context: &egui::Context, tokens: &Tokens, dark: bool) {
     visuals.widgets.hovered.corner_radius = egui::CornerRadius::same(tokens.shape.control);
     visuals.widgets.active.bg_stroke.color = color(focus);
     visuals.widgets.active.corner_radius = egui::CornerRadius::same(tokens.shape.control);
+    visuals.widgets.hovered.weak_bg_fill = color(&palette.primary).gamma_multiply(0.08);
+    visuals.widgets.active.weak_bg_fill = color(&palette.primary).gamma_multiply(0.14);
+    visuals.widgets.noninteractive.fg_stroke.color = color(&palette.muted);
+    visuals.extreme_bg_color = color(&palette.surface);
+    visuals.faint_bg_color = color(&palette.sidebar);
     context.set_visuals(visuals);
     context.global_style_mut(|style| {
+        style.spacing.interact_size = egui::vec2(40., tokens.layout.control_height);
+        style.spacing.icon_width = 18.;
+        style.spacing.icon_spacing = 8.;
+        style.spacing.text_edit_width = 420.;
+        style.spacing.scroll.bar_width = 7.;
         style.spacing.item_spacing = egui::vec2(
             tokens.spacing.egui_item_horizontal,
             tokens.spacing.egui_item_vertical,
@@ -174,6 +189,7 @@ pub fn fonts(context: &egui::Context) -> io::Result<bool> {
         )
         .join("Fonts");
         vec![
+            (windows.join("segoeuivf.ttf"), false),
             (windows.join("segoeui.ttf"), false),
             (windows.join("msyh.ttc"), true),
         ]
@@ -219,7 +235,11 @@ pub fn fonts(context: &egui::Context) -> io::Result<bool> {
     definition
         .families
         .insert(FontFamily::Proportional, names.clone());
-    definition.families.insert(FontFamily::Monospace, names);
+    definition
+        .families
+        .entry(FontFamily::Monospace)
+        .or_default()
+        .extend(names);
     context.set_fonts(definition);
     Ok(cjk)
 }
@@ -248,7 +268,7 @@ pub fn icon(size: u32) -> egui::IconData {
             rgba.extend_from_slice(if white {
                 &[255, 255, 255, 255]
             } else {
-                &[121, 85, 207, 255]
+                &[0, 95, 184, 255]
             });
         }
     }

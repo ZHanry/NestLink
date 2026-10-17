@@ -1,10 +1,10 @@
 # NestLink
 
-自建服务器的远程控制与服务发布工具，当前版本为 **0.1.0 RC1**（`0.1.0-rc.1`）。这是新仓库的独立发布，使用全新 Git 历史和 `main` 分支。
+自建服务器的远程控制与服务发布工具，当前版本为 **0.2.0 RC1**（`0.2.0-rc.1`）。本次更新简化连接登录流程，重做 Windows 桌面界面，并将上游补丁依赖迁出主仓库。
 
 [English](README.en.md) · [候选发行](https://github.com/ZHanry/NestLink/releases) · [构建说明](docs/refactor/CANDIDATE-BUILD.md) · [实现与检查记录](docs/refactor/IMPLEMENTATION.md)
 
-Rust 共享核心负责设备身份、授权、会话、媒体、文件与服务通道。桌面端使用 egui，Android 使用 Kotlin/JNI，Web 使用 Leptos/WASM。远控与服务发布分别授权、启停；支持本机批准、受信设备和密码授权。
+Rust 共享核心负责设备身份、授权、会话、媒体、文件与服务通道。桌面端使用 egui + egui_extras，Android 使用 Kotlin/JNI，Web 使用 Leptos/WASM。远控与服务发布分别授权、启停；支持本机批准、受信设备和密码授权。
 
 | 平台 | 目标范围 | 交付内容 |
 | --- | --- | --- |
@@ -13,6 +13,8 @@ Rust 共享核心负责设备身份、授权、会话、媒体、文件与服务
 | Android ARM64 / x86_64 | Android 11–16，API 30–36 | 两种 ABI 的 APK |
 | Web | 当前稳定 Chrome / Edge / Firefox | 管理、浏览器远控和静态站点 |
 | Server / OCI | Linux x64 / ARM64 | 服务端与两种架构的容器归档 |
+
+连接只需服务器地址、账号和密码；HTTPS 自动读取并校验服务器配置。TOTP 与恢复码功能已移除，升级会保留账号密码并要求重新登录。
 
 远控提供画面、输入、多屏、音频、文件和文本剪贴板的逐项授权。服务发布支持 HTTP、HTTPS、TCP 和 UDP，具有来源 ACL、配额及撤销控制。部署和配置见[服务端说明](docs/refactor/SERVER.md)。
 

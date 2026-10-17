@@ -59,12 +59,6 @@ PUBLIC_TEST_ASSIGNMENT_SHA256 = {
     "crates/storage/src/services/publication/tests.rs": frozenset((
         "3b9d9a3627c940323e07c7517ef32caebbc72693455cb44755840f62af726d92",
     )),
-    "crates/traversal/vendor/ice/src/candidate/candidate_relay_test.rs": frozenset((
-        "2be2f980f5e301979fec2f4afd0d8a015c25ddf145179a2a92a27a0288f78146",
-    )),
-    "crates/traversal/vendor/turn/src/auth/auth_test.rs": frozenset((
-        "340b47271ddaf6e61feea497069cbbe006f40e0cabe3bfa80c634d2f5443e2cf",
-    )),
     "crates/turn-service/src/tests.rs": frozenset((
         "258ed9174893a1ab6b38daf019a7852c4e9a1d074ed532aac9a7a35904294f04",
         "4b43914e843b841114f82387396764f3c7da5889944745577d21e9c739c549ee",
@@ -72,9 +66,6 @@ PUBLIC_TEST_ASSIGNMENT_SHA256 = {
         "b47551ee7ea0af0d4bbbb26b29aa9f30ad270a3ed04bdf3696d3af9ca801347f",
         "1c4da9e328a4d87a2380758088e6b8b977f1cfb828f25992f3cef61e4306071f",
         "1c14ebc64d2d0ecdc3e90def39d56feb5fc038ce3deae231fa18db26c017e5bc",
-    )),
-    "tests/refactor/test_browser_multidisplay_permit_observer.cjs": frozenset((
-        "df09e69ceca4f9789aef082304d1fb518e3ee207f3d3a32f3cb0e83553298472",
     )),
     "apps/server/src/remote_password.rs": frozenset((
         "f989e5d27d79aa152b22f90ea28e517f1e1b321c7acce575cad951c0aa5f6a14",

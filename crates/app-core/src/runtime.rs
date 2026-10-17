@@ -10,6 +10,7 @@ use crate::{
     BrowserHostDisplayApproval, BrowserHostDisplayOffer, BrowserHostExit, BrowserHostFailure,
     BrowserHostReady, run_browser_host,
 };
+use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 #[path = "runtime/native_network_control.rs"]
 mod native_network_control;
 #[path = "runtime/native_recovery.rs"]
@@ -35,7 +36,6 @@ pub use native_clipboard::*;
 mod native_files;
 pub use native_files::*;
 use native_files::{NativeFileBudget, NativeFilesRoute};
-use nestlink_auth::Secret;
 use nestlink_identity::VerifiedPermit;
 use nestlink_media_session::{
     DecodedVideo, SessionMediaTiming, VideoLayout, VideoPresentation, VideoReceiver,
@@ -190,10 +190,7 @@ pub struct CoreClosed;
 
 /// No Clone/Serialize. The binding explicitly consumes this once, then clears
 /// its display/cache on generation changes and clears its IPC encoding buffer.
-pub enum SensitiveMaterial {
-    TotpSeed(Secret),
-    RecoveryCodes(Vec<Secret>),
-}
+pub enum SensitiveMaterial {}
 impl std::fmt::Debug for SensitiveMaterial {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter.write_str("SensitiveMaterial([redacted])")
@@ -1296,7 +1293,10 @@ impl CoreHandle {
         expected: Option<u64>,
         server: ApprovedServer,
     ) -> Result<Ticket, SubmitError> {
-        if server.origin.len() > 2048 || !nestlink_protocol::valid_id(&server.deployment_id) {
+        if server.origin.len() > 2048
+            || !(nestlink_protocol::valid_id(&server.deployment_id)
+                || server.deployment_id.is_empty() && server.permit_issuer == [0; 32])
+        {
             return Err(SubmitError::Invalid);
         }
         let (envelope, ticket) = self.envelope(OperationKind::Connect, true, expected)?;
@@ -3079,15 +3079,20 @@ impl Actor {
                         service_host_runtime_id: None,
                         future: Box::pin(async move {
                             Job::Connected(
-                                Sdk::connect(
-                                    &config.origin,
-                                    DeploymentTrust {
-                                        deployment_id: config.deployment_id,
-                                        permit_issuer: config.permit_issuer,
-                                    },
-                                    config.allow_loopback_http,
-                                )
-                                .await
+                                if config.deployment_id.is_empty() {
+                                    Sdk::connect_origin(&config.origin, config.allow_loopback_http)
+                                        .await
+                                } else {
+                                    Sdk::connect(
+                                        &config.origin,
+                                        DeploymentTrust {
+                                            deployment_id: config.deployment_id,
+                                            permit_issuer: config.permit_issuer,
+                                        },
+                                        config.allow_loopback_http,
+                                    )
+                                    .await
+                                }
                                 .map_err(Failure::from),
                             )
                         }),
@@ -4273,7 +4278,20 @@ impl Actor {
                             }
                             self.view.authentication = Authentication::SignedOut;
                         }
-                        if let Some(server) = active.server.take() {
+                        if let Some(mut server) = active.server.take() {
+                            server.deployment_id = sdk.health().deployment_id.clone();
+                            if let Ok(bytes) = URL_SAFE_NO_PAD.decode(&sdk.health().permit_issuer)
+                                && let Ok(issuer) = <[u8; 32]>::try_from(bytes)
+                            {
+                                server.permit_issuer = issuer;
+                            }
+                            if current
+                                && active.cancelled.is_none()
+                                && let Some(view) = &mut self.view.server
+                            {
+                                view.deployment_id = server.deployment_id.clone();
+                                view.approved_issuer = server.permit_issuer;
+                            }
                             self.sdk = Some(Client { sdk, server });
                         }
                         if !current || active.cancelled.is_some() {

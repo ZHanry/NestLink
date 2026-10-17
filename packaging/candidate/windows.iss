@@ -28,7 +28,7 @@ DefaultDirName={localappdata}\Programs\NestLink-RC
 PrivilegesRequired=lowest
 #endif
 AppVersion={#Version}
-VersionInfoVersion=0.1.0.1
+VersionInfoVersion=0.2.0.1
 AppPublisher=NestLink development candidate
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible

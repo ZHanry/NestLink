@@ -10,7 +10,6 @@ use nestlink_app_core::{
     NativeInputBinding, NativeInputLayout, NativeSessionBinding, OperationId, OperationResult,
     Snapshot,
 };
-use nestlink_auth::Secret;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -289,40 +288,4 @@ pub enum Reply {
 /// Serializing it is permitted only into the authenticated transient IPC frame.
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
-pub enum SensitiveReply {
-    TotpSeed {
-        #[serde(with = "secret")]
-        seed: Secret,
-    },
-    RecoveryCodes {
-        #[serde(with = "secrets")]
-        codes: Vec<Secret>,
-    },
-}
-mod secret {
-    use nestlink_auth::Secret;
-    use serde::{Deserialize, Deserializer, Serializer};
-    pub fn serialize<S: Serializer>(value: &Secret, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(value.expose())
-    }
-    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Secret, D::Error> {
-        String::deserialize(deserializer).map(Secret::from_text)
-    }
-}
-mod secrets {
-    use nestlink_auth::Secret;
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
-    pub fn serialize<S: Serializer>(value: &[Secret], serializer: S) -> Result<S::Ok, S::Error> {
-        value
-            .iter()
-            .map(Secret::expose)
-            .collect::<Vec<_>>()
-            .serialize(serializer)
-    }
-    pub fn deserialize<'de, D: Deserializer<'de>>(
-        deserializer: D,
-    ) -> Result<Vec<Secret>, D::Error> {
-        Vec::<String>::deserialize(deserializer)
-            .map(|values| values.into_iter().map(Secret::from_text).collect())
-    }
-}
+pub enum SensitiveReply {}

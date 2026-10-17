@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "repository": "https://github.com/ZHanry/NestLink-dependencies.git",
+  "branch": "nestlink-0.2",
+  "commit": "8b09ece013cc5f2e8906485879f96367fc9fc996",
+  "packages": {
+    "turn": {
+      "version": "0.17.2",
+      "snapshot_sha256": "0c380268281a074763a71917c3a08d5eda10384a9529becb18647b6f91b31b1e",
+      "file_count": 72
+    },
+    "webrtc-ice": {
+      "version": "0.14.0",
+      "snapshot_sha256": "76c7b05ca4fdd8106d1723757fdcb1e433919b251283a459f5c08a2bf2a9d051",
+      "file_count": 63
+    },
+    "leptos_macro": {
+      "version": "0.8.19",
+      "snapshot_sha256": "0c142bb14baf3488f97cbe3d41f96328a0bdc7386bf1655beedc8aa1a6d32a89",
+      "file_count": 45
+    },
+    "tachys": {
+      "version": "0.2.19",
+      "snapshot_sha256": "a579cab329ff7ece62aa17bb475eade52b8b29451325f28540ab8932f1b90452",
+      "file_count": 66
+    },
+    "objc2-foundation": {
+      "version": "0.2.2",
+      "snapshot_sha256": "62e74309b92aa519ec0fdc9330fca6248f4e18e4ef35a27d810004e5c19a5cf8",
+      "file_count": 237
+    }
+  }
+}

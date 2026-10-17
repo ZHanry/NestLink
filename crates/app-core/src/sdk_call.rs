@@ -377,23 +377,6 @@ async fn execute(
                 read(sdk.remote(&request_id), fence).await?,
             ));
         }
-        Action::BeginTotp { password, factor } => {
-            response.sensitive = Some(crate::SensitiveMaterial::TotpSeed(
-                write(sdk.begin_totp(password, factor), effect, fence).await?,
-            ));
-        }
-        Action::ConfirmTotp { code } => {
-            response.sensitive = Some(crate::SensitiveMaterial::RecoveryCodes(
-                write(sdk.confirm_totp(code), effect, fence).await?,
-            ));
-            patches.push(Patch::Security(security(sdk, fence).await?));
-        }
-        Action::ResetRecovery { password, factor } => {
-            response.sensitive = Some(crate::SensitiveMaterial::RecoveryCodes(
-                write(sdk.reset_recovery(password, factor), effect, fence).await?,
-            ));
-            patches.push(Patch::Security(security(sdk, fence).await?));
-        }
         Action::ChangePassword {
             current_password,
             new_password,

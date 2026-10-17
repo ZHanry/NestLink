@@ -2,9 +2,9 @@ name: NestLink Rust core
 on:
   push:
     branches: [main]
-    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'deny.toml', 'config/ui-tokens.json', 'crates/**', 'apps/**', 'packaging/**', 'xtask/**', 'protocol-spec/**', '.cargo/**', 'scripts/refactor-*.py', 'scripts/test-vp8-boundary-sanitizer.sh', 'scripts/test-pipewire-audio-sanitizer.sh', 'tests/refactor/**', 'docs/refactor/native-codecs.lock.json', 'docs/refactor/cargo-notice-supplements.json', '.github/workflows/rust-core.yml']
+    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'deny.toml', 'config/ui-tokens.json', 'config/dependency-forks.json', 'crates/**', 'apps/**', 'packaging/**', 'xtask/**', 'protocol-spec/**', '.cargo/**', 'scripts/refactor-*.py', 'scripts/test-vp8-boundary-sanitizer.sh', 'scripts/test-pipewire-audio-sanitizer.sh', 'tests/refactor/**', 'docs/refactor/native-codecs.lock.json', 'docs/refactor/cargo-notice-supplements.json', '.github/workflows/rust-core.yml']
   pull_request:
-    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'deny.toml', 'config/ui-tokens.json', 'crates/**', 'apps/**', 'packaging/**', 'xtask/**', 'protocol-spec/**', '.cargo/**', 'scripts/refactor-*.py', 'scripts/test-vp8-boundary-sanitizer.sh', 'scripts/test-pipewire-audio-sanitizer.sh', 'tests/refactor/**', 'docs/refactor/native-codecs.lock.json', 'docs/refactor/cargo-notice-supplements.json', '.github/workflows/rust-core.yml']
+    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'deny.toml', 'config/ui-tokens.json', 'config/dependency-forks.json', 'crates/**', 'apps/**', 'packaging/**', 'xtask/**', 'protocol-spec/**', '.cargo/**', 'scripts/refactor-*.py', 'scripts/test-vp8-boundary-sanitizer.sh', 'scripts/test-pipewire-audio-sanitizer.sh', 'tests/refactor/**', 'docs/refactor/native-codecs.lock.json', 'docs/refactor/cargo-notice-supplements.json', '.github/workflows/rust-core.yml']
   workflow_dispatch:
 permissions:
   contents: read

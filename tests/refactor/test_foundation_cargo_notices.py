@@ -17,7 +17,7 @@ class FoundationNoticeTests(unittest.TestCase):
     def fixture(self, root):
         review = N.REVIEWED_PLATFORM_FORKS['objc2-foundation']
         source = root / review['path']
-        shutil.copytree(ROOT / review['path'], source)
+        shutil.copytree(N.dependency_fork_source(ROOT, 'objc2-foundation'), source)
         (root / 'docs/refactor').mkdir(parents=True)
         (root / 'docs/refactor/cargo-notice-supplements.json').write_text(json.dumps({'schema_version': 1, 'packages': []}))
         (root / 'LICENSE').write_bytes(b'fixture first-party license')

@@ -1110,7 +1110,7 @@ internal class NestLinkViewModel(application: Application) : AndroidViewModel(ap
         reportNativeNetworkFacts()
     }
 
-    fun connect(origin: String, deployment: String, issuer: String) = runTask {
+    fun connect(origin: String) = runTask {
         val materialBox = AtomicReference<IdentityMaterial?>()
         val pendingHandle = AtomicLong()
         var adopted = false
@@ -1123,7 +1123,7 @@ internal class NestLinkViewModel(application: Application) : AndroidViewModel(ap
                 identity.loadOrCreate().also(materialBox::set)
             }
             val handle = withContext(Dispatchers.IO) {
-                NativeSdk.nativeConnect(origin.trim(), deployment.trim(), issuer.trim(), material.deviceId, material.seed)
+                NativeSdk.nativeConnect(origin.trim(), "", "", material.deviceId, material.seed)
                     .also(pendingHandle::set)
             }
             val id = withContext(Dispatchers.IO) { NativeSdk.nativeDeviceId(handle) }
@@ -3669,8 +3669,6 @@ private fun NativeClosePendingScreen(state: MobileState, model: NestLinkViewMode
 @Composable
 private fun ConnectScreen(state: MobileState, model: NestLinkViewModel) {
     var origin by remember { mutableStateOf("") }
-    var deployment by remember { mutableStateOf("") }
-    var issuer by remember { mutableStateOf("") }
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(NestLinkUiTokens.mobileScreenPadding),
         verticalArrangement = Arrangement.Center,
@@ -3679,12 +3677,12 @@ private fun ConnectScreen(state: MobileState, model: NestLinkViewModel) {
         Text(uiText(UiTextKey.VERIFY_THE_SERVER_IDENTITY_THEN_SIGN_78C59), color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(24.dp))
         Field(uiText(UiTextKey.SERVER_HTTPS_ADDRESS_7764B), origin, { origin = it }, placeholder = "https://control.example.com")
-        Field(uiText(UiTextKey.DEPLOYMENT_ID_F6E0F), deployment, { deployment = it })
-        Field(uiText(UiTextKey.PINNED_ISSUER_PUBLIC_KEY_BASE64URL_2432D), issuer, { issuer = it })
+
+
         StateMessage(state)
         Button(
-            onClick = { model.connect(origin, deployment, issuer) },
-            enabled = !state.busy && origin.isNotBlank() && deployment.isNotBlank() && issuer.isNotBlank(),
+            onClick = { model.connect(origin) },
+            enabled = !state.busy && origin.isNotBlank(),
             modifier = Modifier.fillMaxWidth(),
         ) { if (state.busy) CircularProgressIndicator(Modifier.width(20.dp), strokeWidth = 2.dp) else Text(uiText(UiTextKey.VERIFY_SERVER_1717B)) }
         Text(uiText(UiTextKey.YOUR_ADMINISTRATOR_PROVIDES_THE_TRUST_DETAILS_9752F), style = MaterialTheme.typography.bodySmall, color = Muted, modifier = Modifier.padding(top = 12.dp))
@@ -3695,16 +3693,15 @@ private fun ConnectScreen(state: MobileState, model: NestLinkViewModel) {
 private fun LoginScreen(state: MobileState, model: NestLinkViewModel) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var factor by remember { mutableStateOf("") }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(NestLinkUiTokens.mobileScreenPadding), verticalArrangement = Arrangement.Center) {
         Text(uiText(UiTextKey.SIGN_IN_1E2DF), style = MaterialTheme.typography.headlineMedium)
         Text(uiText(UiTextKey.SERVER_IDENTITY_VERIFIED_AN_AUTHENTICATOR_OR_6F063), color = Muted)
         Spacer(Modifier.height(20.dp))
         Field(uiText(UiTextKey.ACCOUNT_311BB), username, { username = it })
         Field(uiText(UiTextKey.PASSWORD_A621A), password, { password = it }, secret = true)
-        Field(uiText(UiTextKey.TOTP_RECOVERY_CODE_IF_NEEDED_F0599), factor, { factor = it }, secret = true)
+
         StateMessage(state)
-        Button(onClick = { model.login(username, password, factor); password = ""; factor = "" }, enabled = !state.busy && username.isNotBlank() && password.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
+        Button(onClick = { model.login(username, password, ""); password = "" }, enabled = !state.busy && username.isNotBlank() && password.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
             if (state.busy) CircularProgressIndicator(Modifier.width(20.dp), strokeWidth = 2.dp) else Text(uiText(UiTextKey.SIGN_IN_1E2DF))
         }
         Spacer(Modifier.height(8.dp))

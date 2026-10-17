@@ -64,9 +64,4 @@ docs/refactor/history-audit/firebase-upstream-provenance-2026-10-13.json -text w
 # Keep the reviewed upstream license bytes, including its final empty line.
 packaging/notices/libvpx-1.16.0-LICENSE.txt -text whitespace=-blank-at-eof
 
-# Provenance is verified by its original byte digest on every platform.
-crates/web-vendor/*/UPSTREAM.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
-crates/web-vendor/*/UPSTREAM.md -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
-crates/platform-vendor/*/UPSTREAM.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
-crates/platform-vendor/*/UPSTREAM.md -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 *.crate binary

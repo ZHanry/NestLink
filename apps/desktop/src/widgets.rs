@@ -7,19 +7,151 @@ use nestlink_auth::Secret;
 use std::ops::Range;
 use zeroize::{Zeroize, Zeroizing};
 
+#[derive(Clone, Copy)]
+pub enum NavIcon {
+    Monitor,
+    Devices,
+    Share,
+    Network,
+    Account,
+    List,
+    Settings,
+}
+
+pub fn nav_button(ui: &mut egui::Ui, icon: NavIcon, text: &str, selected: bool) -> egui::Response {
+    let (rect, response) =
+        ui.allocate_exact_size(egui::vec2(ui.available_width(), 42.), egui::Sense::click());
+    response.widget_info(|| {
+        egui::WidgetInfo::selected(
+            egui::WidgetType::SelectableLabel,
+            ui.is_enabled(),
+            selected,
+            text,
+        )
+    });
+    let visuals = ui.style().interact_selectable(&response, selected);
+    if selected || response.hovered() || response.has_focus() {
+        let fill = if selected {
+            ui.visuals().selection.bg_fill.gamma_multiply(0.12)
+        } else {
+            visuals.weak_bg_fill
+        };
+        ui.painter().rect_filled(rect, 7., fill);
+    }
+    if selected {
+        ui.painter().rect_filled(
+            egui::Rect::from_min_size(rect.min + egui::vec2(0., 11.), egui::vec2(3., 20.)),
+            2.,
+            ui.visuals().selection.bg_fill,
+        );
+    }
+    if response.has_focus() {
+        ui.painter().rect_stroke(
+            rect.shrink(1.),
+            7.,
+            egui::Stroke::new(1.5, ui.visuals().selection.bg_fill),
+            egui::StrokeKind::Inside,
+        );
+    }
+    let color = if selected {
+        ui.visuals().hyperlink_color
+    } else {
+        visuals.text_color()
+    };
+    let center = rect.left_center() + egui::vec2(24., 0.);
+    let p = |x, y| center + egui::vec2(x, y);
+    let stroke = egui::Stroke::new(1.6, color);
+    let line = |a, b| ui.painter().line_segment([a, b], stroke);
+    match icon {
+        NavIcon::Monitor | NavIcon::Devices => {
+            let screen =
+                egui::Rect::from_center_size(center + egui::vec2(0., -2.), egui::vec2(18., 12.));
+            ui.painter()
+                .rect_stroke(screen, 2., stroke, egui::StrokeKind::Inside);
+            line(p(0., 4.), p(0., 8.));
+            line(p(-5., 8.), p(5., 8.));
+            if matches!(icon, NavIcon::Devices) {
+                ui.painter().rect_filled(
+                    egui::Rect::from_min_size(p(3., -1.), egui::vec2(7., 11.)),
+                    1.,
+                    ui.visuals().panel_fill,
+                );
+                ui.painter().rect_stroke(
+                    egui::Rect::from_min_size(p(3., -1.), egui::vec2(7., 11.)),
+                    1.,
+                    stroke,
+                    egui::StrokeKind::Inside,
+                );
+            }
+        }
+        NavIcon::Share | NavIcon::Network => {
+            for (x, y) in [(0., -7.), (-7., 6.), (7., 6.)] {
+                ui.painter().circle_stroke(p(x, y), 3., stroke);
+            }
+            line(p(-1.5, -4.), p(-5.5, 3.));
+            line(p(1.5, -4.), p(5.5, 3.));
+            if matches!(icon, NavIcon::Network) {
+                line(p(-4., 6.), p(4., 6.));
+            }
+        }
+        NavIcon::Account => {
+            ui.painter().circle_stroke(p(0., -5.), 4., stroke);
+            ui.painter().rect_stroke(
+                egui::Rect::from_min_max(p(-7., 2.), p(7., 10.)),
+                5.,
+                stroke,
+                egui::StrokeKind::Inside,
+            );
+        }
+        NavIcon::List => {
+            for y in [-6., 0., 6.] {
+                ui.painter().circle_filled(p(-7., y), 1.3, color);
+                line(p(-2., y), p(8., y));
+            }
+        }
+        NavIcon::Settings => {
+            ui.painter().circle_stroke(center, 7., stroke);
+            ui.painter().circle_stroke(center, 2.5, stroke);
+            for (x, y) in [(0., -10.), (0., 10.), (-10., 0.), (10., 0.)] {
+                line(p(x * 0.7, y * 0.7), p(x, y));
+            }
+        }
+    }
+    ui.painter().text(
+        rect.left_center() + egui::vec2(45., 0.),
+        egui::Align2::LEFT_CENTER,
+        text,
+        egui::FontId::proportional(14.),
+        color,
+    );
+    response
+}
+
+pub fn primary_button(ui: &mut egui::Ui, text: &str, enabled: bool) -> egui::Response {
+    ui.add_enabled(
+        enabled,
+        egui::Button::new((
+            egui::Atom::grow(),
+            egui::RichText::new(text).color(ui.visuals().selection.stroke.color),
+            egui::Atom::grow(),
+        ))
+        .fill(ui.visuals().selection.bg_fill)
+        .min_size(egui::vec2(ui.available_width(), 42.)),
+    )
+}
+
 pub fn field(ui: &mut egui::Ui, label: &str, value: &mut String, limit: usize) {
     ui.label(label);
     ui.add(
         egui::TextEdit::singleline(value)
             .desired_width(ui.available_width().min(540.))
+            .margin(egui::vec2(12., 10.))
             .char_limit(limit),
     );
 }
 const SECRET_FIELDS: &[&str] = &[
     "password",
-    "factor",
     "new-password",
-    "totp-code",
     "account-password",
     "remote-password",
     "remote-password-host",
@@ -41,6 +173,7 @@ pub fn secret_field(
         .password(true)
         .id(id)
         .desired_width(ui.available_width().min(540.))
+        .margin(egui::vec2(12., 10.))
         .char_limit(limit)
         .show(ui);
     // egui's normal TextEdit undoer copies TextBuffer::as_str even for password
@@ -122,14 +255,6 @@ pub fn clear_secret_widgets(context: &egui::Context, generation: u64) {
 }
 pub fn take_secret(value: &mut Zeroizing<String>) -> Secret {
     Secret::from_text(std::mem::take(&mut **value))
-}
-pub fn take_optional(value: &mut Zeroizing<String>) -> Option<Secret> {
-    if value.is_empty() {
-        value.zeroize();
-        None
-    } else {
-        Some(take_secret(value))
-    }
 }
 pub fn failure(error: &Failure, english: bool) -> String {
     let (zh, en) = match error.kind {
@@ -259,33 +384,6 @@ pub fn section<T>(ui: &mut egui::Ui, section: &Section<T>, english: bool) {
         } else {
             "请加载页面以查看实际记录。"
         });
-    }
-}
-pub fn brand(painter: &egui::Painter, rect: egui::Rect, dark: bool) {
-    painter.rect_filled(
-        rect,
-        6.,
-        if dark {
-            egui::Color32::from_rgb(175, 140, 238)
-        } else {
-            egui::Color32::from_rgb(121, 85, 207)
-        },
-    );
-    let scale = |x: f32, y: f32| {
-        egui::pos2(
-            rect.left() + x * rect.width() / 512.,
-            rect.top() + y * rect.height() / 512.,
-        )
-    };
-    let stroke = egui::Stroke::new(rect.width() * 44. / 512., egui::Color32::WHITE);
-    for [x1, y1, x2, y2] in [
-        [154., 342., 154., 196.],
-        [154., 196., 200., 150.],
-        [358., 170., 358., 316.],
-        [358., 316., 312., 362.],
-        [190., 190., 322., 322.],
-    ] {
-        painter.line_segment([scale(x1, y1), scale(x2, y2)], stroke);
     }
 }
 pub fn permissions(values: &[i32], english: bool) -> String {

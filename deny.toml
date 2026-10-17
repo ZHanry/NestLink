@@ -52,3 +52,4 @@ deny = [{ name = "hbb_common" }, { name = "rustdesk" }]
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
+allow-git = ["https://github.com/ZHanry/NestLink-dependencies.git"]

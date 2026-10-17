@@ -239,21 +239,10 @@ pub struct Refresh {
 }
 #[derive(Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
-pub struct Reauthenticate {
-    pub password: String,
-    pub factor: Option<String>,
-}
-#[derive(Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
 pub struct PasswordChange {
     pub current_password: String,
     pub new_password: String,
     pub factor: Option<String>,
-}
-#[derive(Serialize, Deserialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct Factor {
-    pub code: String,
 }
 #[derive(Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
@@ -305,7 +294,6 @@ pub struct LoginResponse {
 #[derive(Serialize, Deserialize, JsonSchema)]
 pub struct MeResponse {
     pub principal: Principal,
-    pub totp_enabled: bool,
 }
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
 pub struct AccountView {
@@ -313,7 +301,6 @@ pub struct AccountView {
     pub name: String,
     pub is_admin: bool,
     pub disabled: bool,
-    pub totp_enabled: bool,
 }
 #[derive(Serialize, Deserialize, JsonSchema)]
 pub struct AccountsResponse {
@@ -497,18 +484,6 @@ pub struct RelayUsage {
 #[derive(Serialize, Deserialize, JsonSchema)]
 pub struct IdResponse {
     pub id: String,
-}
-#[derive(Serialize, Deserialize, JsonSchema)]
-pub struct TotpResponse {
-    pub secret: String,
-    pub issuer: String,
-    pub algorithm: String,
-    pub digits: u32,
-    pub period: u32,
-}
-#[derive(Serialize, Deserialize, JsonSchema)]
-pub struct RecoveryResponse {
-    pub recovery_codes: Vec<String>,
 }
 #[derive(Serialize, Deserialize, JsonSchema)]
 pub struct PathLimit {

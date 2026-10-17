@@ -141,6 +141,36 @@ pub use node_relay::{NativeRelayRoute, NodeQuicRoute, NodeRelayRoute};
 mod native_tests;
 
 impl Sdk {
+    /// Discover deployment metadata over the origin's authenticated HTTPS
+    /// connection, then verify a fresh signed identity challenge. HTTP is
+    /// available only for an explicitly allowed loopback development server.
+    pub async fn connect_origin(origin: &str, allow_loopback_http: bool) -> Result<Self, SdkError> {
+        let parsed = parse_origin(origin, allow_loopback_http)?;
+        let client = Client::builder();
+        #[cfg(not(target_arch = "wasm32"))]
+        let client = client
+            .redirect(reqwest::redirect::Policy::none())
+            .timeout(Duration::from_secs(15));
+        let client = client.build()?;
+        let health: HealthResponse = request(&client, &parsed, Method::GET, "/health", None, None)
+            .await?
+            .ok_or(SdkError::Invalid)?;
+        let permit_issuer = URL_SAFE_NO_PAD
+            .decode(&health.permit_issuer)
+            .map_err(|_| SdkError::Trust)?
+            .try_into()
+            .map_err(|_| SdkError::Trust)?;
+        Self::connect(
+            origin,
+            DeploymentTrust {
+                deployment_id: health.deployment_id,
+                permit_issuer,
+            },
+            allow_loopback_http,
+        )
+        .await
+    }
+
     /// Caller obtains and approves the deployment trust anchor before installing it.
     pub async fn connect(
         origin: &str,
@@ -565,61 +595,6 @@ impl Sdk {
             )
             .await?
             .revision)
-    }
-    pub async fn begin_totp(
-        &self,
-        password: Secret,
-        factor: Option<Secret>,
-    ) -> Result<Secret, SdkError> {
-        let body = Reauthenticate {
-            password: password.expose().into(),
-            factor: factor.map(|v| v.expose().into()),
-        };
-        let response: TotpResponse = self
-            .required(Method::POST, "/auth/totp", Some(&body))
-            .await?;
-        if response.algorithm != "SHA1"
-            || response.digits != 6
-            || response.period != 30
-            || response.secret.len() != 32
-        {
-            return Err(SdkError::Invalid);
-        }
-        Ok(Secret::from_text(response.secret))
-    }
-    pub async fn confirm_totp(&self, code: Secret) -> Result<Vec<Secret>, SdkError> {
-        let response: RecoveryResponse = self
-            .required(
-                Method::POST,
-                "/auth/totp/confirm",
-                Some(&Factor {
-                    code: code.expose().into(),
-                }),
-            )
-            .await?;
-        Ok(response
-            .recovery_codes
-            .into_iter()
-            .map(Secret::from_text)
-            .collect())
-    }
-    pub async fn reset_recovery(
-        &self,
-        password: Secret,
-        factor: Secret,
-    ) -> Result<Vec<Secret>, SdkError> {
-        let body = Reauthenticate {
-            password: password.expose().into(),
-            factor: Some(factor.expose().into()),
-        };
-        let response: RecoveryResponse = self
-            .required(Method::POST, "/auth/recovery", Some(&body))
-            .await?;
-        Ok(response
-            .recovery_codes
-            .into_iter()
-            .map(Secret::from_text)
-            .collect())
     }
     pub async fn change_password(
         &mut self,

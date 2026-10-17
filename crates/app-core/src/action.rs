@@ -5,15 +5,28 @@ use nestlink_auth::Secret;
 use nestlink_protocol::api::*;
 use serde::{Deserialize, Serialize};
 
-/// Configuration must come from an explicitly approved trust anchor. This type
-/// never learns an issuer from the endpoint being connected to.
+/// A selected server origin. Empty legacy trust fields select HTTPS discovery;
+/// populated fields retain compatibility with explicitly pinned integrations.
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ApprovedServer {
     pub origin: String,
+    #[serde(default)]
     pub deployment_id: String,
+    #[serde(default)]
     pub permit_issuer: [u8; 32],
     pub allow_loopback_http: bool,
+}
+
+impl ApprovedServer {
+    pub fn from_origin(origin: String, allow_loopback_http: bool) -> Self {
+        Self {
+            origin,
+            deployment_id: String::new(),
+            permit_issuer: [0; 32],
+            allow_loopback_http,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -134,22 +147,6 @@ pub enum Action {
     RevokeRemote {
         request_id: String,
     },
-    BeginTotp {
-        #[serde(with = "secret")]
-        password: Secret,
-        #[serde(default, with = "optional_secret")]
-        factor: Option<Secret>,
-    },
-    ConfirmTotp {
-        #[serde(with = "secret")]
-        code: Secret,
-    },
-    ResetRecovery {
-        #[serde(with = "secret")]
-        password: Secret,
-        #[serde(with = "secret")]
-        factor: Secret,
-    },
     ChangePassword {
         #[serde(with = "secret")]
         current_password: Secret,
@@ -246,9 +243,6 @@ impl Action {
             Self::StopNativeSession { .. } => OperationKind::StopNativeSession,
             Self::StartBrowserHost { .. } => OperationKind::StartBrowserHost,
             Self::StopBrowserHost { .. } => OperationKind::StopBrowserHost,
-            Self::BeginTotp { .. } => OperationKind::BeginTotp,
-            Self::ConfirmTotp { .. } => OperationKind::ConfirmTotp,
-            Self::ResetRecovery { .. } => OperationKind::ResetRecovery,
             Self::ChangePassword { .. } => OperationKind::ChangePassword,
             Self::CreateAccount { .. } => OperationKind::CreateAccount,
             Self::DisableAccount { .. } => OperationKind::DisableAccount,
@@ -267,20 +261,11 @@ impl Action {
     }
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn sensitive(&self) -> bool {
-        matches!(
-            self,
-            Self::BeginTotp { .. } | Self::ConfirmTotp { .. } | Self::ResetRecovery { .. }
-        )
+        false
     }
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn reauthentication(&self) -> bool {
-        matches!(
-            self,
-            Self::BeginTotp { .. }
-                | Self::ConfirmTotp { .. }
-                | Self::ResetRecovery { .. }
-                | Self::ChangePassword { .. }
-        )
+        matches!(self, Self::ChangePassword { .. })
     }
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn local_identity(&self) -> bool {
@@ -311,15 +296,6 @@ impl Action {
                 password: value,
                 factor: value_factor,
             } => short(username) && password(value) && factor(value_factor),
-            Self::BeginTotp {
-                password: value,
-                factor: value_factor,
-            } => password(value) && factor(value_factor),
-            Self::ConfirmTotp { code } => code.expose().len() <= 128,
-            Self::ResetRecovery {
-                password: value,
-                factor,
-            } => password(value) && factor.expose().len() <= 128,
             Self::ChangePassword {
                 current_password,
                 new_password,
@@ -452,12 +428,9 @@ impl Action {
     pub(crate) fn section(&self) -> SectionKey {
         match self {
             Self::Load { page } => (*page).into(),
-            Self::SignIn { .. }
-            | Self::RefreshSession
-            | Self::BeginTotp { .. }
-            | Self::ConfirmTotp { .. }
-            | Self::ResetRecovery { .. }
-            | Self::ChangePassword { .. } => SectionKey::Security,
+            Self::SignIn { .. } | Self::RefreshSession | Self::ChangePassword { .. } => {
+                SectionKey::Security
+            }
             Self::LoadServicesPage { .. } => SectionKey::Services,
             Self::InspectService { .. }
             | Self::CreateService { .. }

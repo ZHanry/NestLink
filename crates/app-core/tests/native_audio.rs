@@ -433,6 +433,7 @@ async fn wait_stopped(handle: &CoreHandle, request_id: &str) -> Result {
                             session.status,
                             NativeSessionStatus::Stopped | NativeSessionStatus::Failed
                         )
+                        && session.cleanup.is_some()
                 });
             if stopped {
                 return;

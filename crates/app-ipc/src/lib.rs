@@ -11,8 +11,7 @@ pub mod wire {
     ));
 }
 use nestlink_app_core::{
-    CoreHandle, NativeInputAction, NativeInputBinding, NativeInputLayout, SensitiveMaterial,
-    SubmitError, Ticket,
+    CoreHandle, NativeInputAction, NativeInputBinding, NativeInputLayout, SubmitError, Ticket,
 };
 use nestlink_local_ipc::LocalStream;
 use std::{collections::HashMap, path::Path, sync::Arc};
@@ -833,15 +832,9 @@ async fn serve_requests(
                         }
                         Ok(Some(mut completion)) => {
                             tickets.remove(&operation.get());
-                            let sensitive =
-                                completion.take_sensitive().map(|material| match material {
-                                    SensitiveMaterial::TotpSeed(seed) => {
-                                        SensitiveReply::TotpSeed { seed }
-                                    }
-                                    SensitiveMaterial::RecoveryCodes(codes) => {
-                                        SensitiveReply::RecoveryCodes { codes }
-                                    }
-                                });
+                            let sensitive = completion
+                                .take_sensitive()
+                                .map(|material| match material {});
                             Reply::Completed {
                                 operation: completion.result,
                                 sensitive,

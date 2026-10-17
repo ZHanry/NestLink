@@ -1,140 +1,131 @@
 #![allow(clippy::unwrap_used)]
 mod support;
 use nestlink_app_core::*;
-use nestlink_auth::{Secret, totp};
+use nestlink_auth::Secret;
 use std::time::Duration;
 use support::*;
 
-fn decode_base32(text: &str) -> Result<Vec<u8>> {
-    let mut accumulator = 0u32;
-    let mut bits = 0;
-    let mut decoded = Vec::new();
-    for byte in text.bytes() {
-        let digit = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
-            .iter()
-            .position(|value| *value == byte)
-            .ok_or("invalid TOTP seed")?;
-        accumulator = (accumulator << 5) | digit as u32;
-        bits += 5;
-        if bits >= 8 {
-            bits -= 8;
-            decoded.push((accumulator >> bits) as u8);
-        }
-    }
-    Ok(decoded)
-}
-
 #[tokio::test]
-async fn real_totp_and_recovery_login_one_shot_outputs_password_change_and_clear() -> Result {
+async fn password_change_reauthenticates_and_requires_a_new_login() -> Result {
     let server = Server::start(None).await?;
-    let mut core = AppCore::start(Limits {
-        sensitive_outputs: 1,
-        ..Limits::default()
-    })?;
+    let mut core = AppCore::start(Limits::default())?;
     let handle = connect(&core, &server).await?;
-    // Wrong password/factor during step-up doesn't turn a valid access token
-    // into an expired account. The core checks the actual /auth/me result.
-    let wrong = done(handle.submit(Action::BeginTotp {
-        password: Secret::from_text("wrong-but-long-password".into()),
+    let wrong = done(handle.submit(Action::ChangePassword {
+        current_password: Secret::from_text("wrong-but-long-password".into()),
+        new_password: Secret::from_text("new-password-only-login".into()),
         factor: None,
     })?)
     .await?;
     assert_eq!(wrong.result.status, OperationStatus::Failed);
-    assert_eq!(wrong.result.failure.unwrap().status, Some(401));
     assert_eq!(handle.snapshot().authentication, Authentication::SignedIn);
-    let mut beginning = success(handle.submit(Action::BeginTotp {
-        password: password(),
-        factor: None,
-    })?)
-    .await?;
-    let capacity = done(handle.submit(Action::BeginTotp {
-        password: password(),
-        factor: None,
-    })?)
-    .await?;
-    assert_eq!(capacity.result.failure.unwrap().kind, FailureKind::Capacity);
-    assert_eq!(capacity.result.remote_effect, RemoteEffect::None);
-    let Some(SensitiveMaterial::TotpSeed(seed)) = beginning.take_sensitive() else {
-        panic!("missing TOTP seed");
-    };
-    assert!(beginning.take_sensitive().is_none());
-    assert!(!serde_json::to_string(handle.snapshot().as_ref())?.contains(seed.expose()));
-    let code = totp(&decode_base32(seed.expose())?, seconds()? / 30)?;
-    let mut confirmed = success(handle.submit(Action::ConfirmTotp {
-        code: Secret::from_text(code),
-    })?)
-    .await?;
-    let Some(SensitiveMaterial::RecoveryCodes(codes)) = confirmed.take_sensitive() else {
-        panic!("missing recovery codes");
-    };
-    assert_eq!(codes.len(), 10);
-    assert!(
-        handle
-            .snapshot()
-            .security
-            .data
-            .as_ref()
-            .unwrap()
-            .totp_enabled
-    );
-    let text = serde_json::to_string(handle.snapshot().as_ref())?;
-    assert!(codes.iter().all(|code| !text.contains(code.expose())));
-    success(handle.logout()?).await?;
-    assert_eq!(handle.snapshot().logout_confirmed, Some(true));
-    let without_factor = done(handle.submit(Action::SignIn {
-        username: "admin".into(),
-        password: password(),
-        factor: None,
-    })?)
-    .await?;
-    assert_eq!(without_factor.result.status, OperationStatus::Failed);
-    assert_eq!(handle.snapshot().authentication, Authentication::SignedOut);
-    // The server intentionally returns a generic rejection for password/MFA.
-    success(handle.submit(Action::SignIn {
-        username: "admin".into(),
-        password: password(),
-        factor: Some(Secret::from_text(codes[0].expose().into())),
-    })?)
-    .await?;
-    success(handle.logout()?).await?;
-    let replay = done(handle.submit(Action::SignIn {
-        username: "admin".into(),
-        password: password(),
-        factor: Some(Secret::from_text(codes[0].expose().into())),
-    })?)
-    .await?;
-    assert_eq!(replay.result.status, OperationStatus::Failed);
-    success(handle.submit(Action::SignIn {
-        username: "admin".into(),
-        password: password(),
-        factor: Some(Secret::from_text(codes[1].expose().into())),
-    })?)
-    .await?;
-    let changed = success(handle.submit(Action::ChangePassword {
+    success(handle.submit(Action::ChangePassword {
         current_password: password(),
-        new_password: Secret::from_text("new-app-core-password".into()),
-        factor: Some(Secret::from_text(codes[2].expose().into())),
+        new_password: Secret::from_text("new-password-only-login".into()),
+        factor: None,
     })?)
     .await?;
-    assert_eq!(changed.result.remote_effect, RemoteEffect::Committed);
-    assert_eq!(handle.snapshot().authentication, Authentication::Expired);
-    assert!(handle.snapshot().principal.is_none());
-    assert!(handle.snapshot().security.data.is_none());
+    assert_ne!(handle.snapshot().authentication, Authentication::SignedIn);
+    let old = done(handle.submit(Action::SignIn {
+        username: "admin".into(),
+        password: password(),
+        factor: None,
+    })?)
+    .await?;
+    assert_eq!(old.result.status, OperationStatus::Failed);
     success(handle.submit(Action::SignIn {
         username: "admin".into(),
-        password: Secret::from_text("new-app-core-password".into()),
-        factor: Some(Secret::from_text(codes[3].expose().into())),
+        password: Secret::from_text("new-password-only-login".into()),
+        factor: None,
     })?)
     .await?;
-    let mut reset = success(handle.submit(Action::ResetRecovery {
-        password: Secret::from_text("new-app-core-password".into()),
-        factor: Secret::from_text(codes[4].expose().into()),
+    assert_eq!(handle.snapshot().authentication, Authentication::SignedIn);
+    assert!(
+        !serde_json::to_string(handle.snapshot().as_ref())?.contains("new-password-only-login")
+    );
+    for action in ["begin_totp", "confirm_totp", "reset_recovery"] {
+        assert!(serde_json::from_value::<Action>(serde_json::json!({"action": action})).is_err());
+    }
+    assert_eq!(
+        core.shutdown(Duration::from_secs(5)).await,
+        ShutdownState::Complete
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn origin_only_connection_discovers_metadata_and_checks_signed_identity() -> Result {
+    let server = Server::start(None).await?;
+    let mut core = AppCore::start(Limits::default())?;
+    let handle = core.handle();
+    success(handle.switch_server(ApprovedServer::from_origin(
+        server.config.origin.clone(),
+        true,
+    ))?)
+    .await?;
+    let snapshot = handle.snapshot();
+    let resolved = snapshot.server.as_ref().unwrap();
+    assert_eq!(resolved.deployment_id, server.config.deployment_id);
+    assert_eq!(resolved.approved_issuer, server.config.permit_issuer);
+    success(handle.submit(Action::SignIn {
+        username: "admin".into(),
+        password: password(),
+        factor: None,
     })?)
     .await?;
-    // A reply can remain unconsumed across logout. Its slot must be zeroized
-    // immediately, not when the UI finally drops the completion or ticket.
-    success(handle.logout()?).await?;
-    assert!(reset.take_sensitive().is_none());
+    assert_eq!(handle.snapshot().authentication, Authentication::SignedIn);
+    let client = reqwest::Client::new();
+    for endpoint in ["totp", "totp/confirm", "recovery"] {
+        let response = client
+            .post(format!("{}/api/v3/auth/{endpoint}", server.config.origin))
+            .header("Origin", &server.config.origin)
+            .json(&serde_json::json!({}))
+            .send()
+            .await?;
+        assert_eq!(response.status().as_u16(), 404);
+    }
+    assert_eq!(
+        core.shutdown(Duration::from_secs(5)).await,
+        ShutdownState::Complete
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn late_discovery_cannot_replace_metadata_of_the_new_origin() -> Result {
+    let first_gate = Gate::new("/api/v3/health/proof", "POST");
+    let second_gate = Gate::new("/api/v3/health", "GET");
+    let first = Server::start(Some(first_gate.clone())).await?;
+    let second = Server::start(Some(second_gate.clone())).await?;
+    let mut core = AppCore::start(Limits::default())?;
+    let handle = core.handle();
+    first_gate.arm();
+    second_gate.arm();
+    let old = handle.switch_server(ApprovedServer::from_origin(
+        first.config.origin.clone(),
+        true,
+    ))?;
+    first_gate.entered().await?;
+    let generation = handle.snapshot().generation;
+    let new = handle.switch_server(ApprovedServer::from_origin(
+        second.config.origin.clone(),
+        true,
+    ))?;
+    wait_view(&handle, |view| view.generation > generation).await?;
+    first_gate.unblock();
+    assert_eq!(done(old).await?.result.status, OperationStatus::Superseded);
+    second_gate.entered().await?;
+    let snapshot = handle.snapshot();
+    let pending = snapshot.server.as_ref().unwrap();
+    assert_eq!(pending.origin, second.config.origin);
+    assert!(pending.deployment_id.is_empty());
+    assert_eq!(pending.approved_issuer, [0; 32]);
+    assert!(pending.verified_health.is_none());
+    second_gate.unblock();
+    success(new).await?;
+    assert_eq!(
+        handle.snapshot().server.as_ref().unwrap().deployment_id,
+        second.config.deployment_id
+    );
     assert_eq!(
         core.shutdown(Duration::from_secs(5)).await,
         ShutdownState::Complete

@@ -14,15 +14,15 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
 
 internal object NestLinkUiTokens {
-    val lightPrimary = Color(0xFF7955CF)
+    val lightPrimary = Color(0xFF005FB8)
     val lightPrimaryActionText = Color(0xFFFFFFFF)
-    val darkPrimaryActionText = Color(0xFF1C1924)
-    val lightCanvas = Color(0xFFFAF9FD)
-    val lightText = Color(0xFF282235)
-    val lightBorder = Color(0xFFE8E4EF)
-    val lightDanger = Color(0xFFA13248)
-    val lightFocus = Color(0xFF4E2F99)
-    val darkFocus = Color(0xFFD8C7FF)
+    val darkPrimaryActionText = Color(0xFF101C2C)
+    val lightCanvas = Color(0xFFF5F7FA)
+    val lightText = Color(0xFF1B2533)
+    val lightBorder = Color(0xFFDFE5ED)
+    val lightDanger = Color(0xFFB42336)
+    val lightFocus = Color(0xFF005FB8)
+    val darkFocus = Color(0xFF96C8FF)
     val lightWarning = Color(0xFF966313)
     val darkWarning = Color(0xFFF0C875)
     val lightSuccess = Color(0xFF316B4A)
@@ -37,47 +37,47 @@ internal object NestLinkUiTokens {
     val lightColorScheme: ColorScheme = materialLightColorScheme(
         primary = lightPrimary,
         onPrimary = lightPrimaryActionText,
-        primaryContainer = Color(0xFFF2EFF9),
-        onPrimaryContainer = Color(0xFF6842BB),
-        secondary = Color(0xFF6842BB),
+        primaryContainer = Color(0xFFEDF1F6),
+        onPrimaryContainer = Color(0xFF0055A6),
+        secondary = Color(0xFF0055A6),
         onSecondary = Color.White,
         background = lightCanvas,
         onBackground = lightText,
         surface = Color(0xFFFFFFFF),
         onSurface = lightText,
-        surfaceVariant = Color(0xFFF2EFF9),
-        onSurfaceVariant = Color(0xFF746E80),
+        surfaceVariant = Color(0xFFEDF1F6),
+        onSurfaceVariant = Color(0xFF637083),
         outline = lightBorder,
         error = lightDanger,
         onError = Color.White,
     )
 
     val darkColorScheme: ColorScheme = materialDarkColorScheme(
-        primary = Color(0xFFAF8CEE),
+        primary = Color(0xFF79B8FF),
         onPrimary = darkPrimaryActionText,
-        primaryContainer = Color(0xFF25202F),
-        onPrimaryContainer = Color(0xFFCFB8FA),
-        secondary = Color(0xFFCFB8FA),
-        onSecondary = Color(0xFF1C1924),
-        background = Color(0xFF1C1924),
-        onBackground = Color(0xFFF3EFFA),
-        surface = Color(0xFF302A3C),
-        onSurface = Color(0xFFF3EFFA),
-        surfaceVariant = Color(0xFF25202F),
-        onSurfaceVariant = Color(0xFFBCB3CB),
-        outline = Color(0xFF494152),
-        error = Color(0xFFFFA9BB),
-        onError = Color(0xFF1C1924),
+        primaryContainer = Color(0xFF182230),
+        onPrimaryContainer = Color(0xFF96C8FF),
+        secondary = Color(0xFF96C8FF),
+        onSecondary = Color(0xFF141B25),
+        background = Color(0xFF141B25),
+        onBackground = Color(0xFFF1F5FA),
+        surface = Color(0xFF1E2937),
+        onSurface = Color(0xFFF1F5FA),
+        surfaceVariant = Color(0xFF182230),
+        onSurfaceVariant = Color(0xFFA9B6C8),
+        outline = Color(0xFF364557),
+        error = Color(0xFFFFA8B4),
+        onError = Color(0xFF141B25),
     )
 
     val typography = Typography(
-        headlineLarge = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.SemiBold),
-        headlineMedium = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.SemiBold),
-        headlineSmall = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.SemiBold),
-        titleLarge = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.SemiBold),
-        titleMedium = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Medium),
-        bodyLarge = TextStyle(fontSize = 14.sp),
-        bodyMedium = TextStyle(fontSize = 14.sp),
+        headlineLarge = TextStyle(fontSize = 28.sp, fontWeight = FontWeight.SemiBold),
+        headlineMedium = TextStyle(fontSize = 28.sp, fontWeight = FontWeight.SemiBold),
+        headlineSmall = TextStyle(fontSize = 19.sp, fontWeight = FontWeight.SemiBold),
+        titleLarge = TextStyle(fontSize = 19.sp, fontWeight = FontWeight.SemiBold),
+        titleMedium = TextStyle(fontSize = 19.sp, fontWeight = FontWeight.Medium),
+        bodyLarge = TextStyle(fontSize = 15.sp),
+        bodyMedium = TextStyle(fontSize = 15.sp),
         bodySmall = TextStyle(fontSize = 12.sp),
         labelMedium = TextStyle(fontSize = 12.sp),
     )
@@ -85,9 +85,9 @@ internal object NestLinkUiTokens {
     val shapes = Shapes(
         extraSmall = RoundedCornerShape(7.dp),
         small = RoundedCornerShape(7.dp),
-        medium = RoundedCornerShape(9.dp),
+        medium = RoundedCornerShape(10.dp),
         large = RoundedCornerShape(12.dp),
-        extraLarge = RoundedCornerShape(16.dp),
+        extraLarge = RoundedCornerShape(12.dp),
     )
 
     val mobileScreenPadding = 24.dp

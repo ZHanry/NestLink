@@ -30,7 +30,11 @@ tempfile = "=3.27.0"
 tokio = { version = "=1.53.2", features = ["rt-multi-thread", "macros", "net", "time", "sync", "io-util"] }
 
 [patch.crates-io]
-webrtc-ice = { path = "../../../crates/traversal/vendor/ice" }
+turn = { git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "nestlink-0.2" }
+webrtc-ice = { git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "nestlink-0.2" }
+leptos_macro = { git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "nestlink-0.2" }
+tachys = { git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "nestlink-0.2" }
+objc2-foundation = { git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "nestlink-0.2" }
 
 [lints.rust]
 unsafe_code = "forbid"

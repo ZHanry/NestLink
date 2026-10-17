@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path, PurePosixPath
 import re
 import stat
@@ -156,8 +157,19 @@ def local_file(root, relative, budget=4 * 1024 * 1024):
     return path
 
 
-def reviewed_local_fork(root, package_root, item):
-    review = REVIEWED_LOCAL_FORKS[item['name']]
+def dependency_fork_source(root, name):
+    policy = json.loads((root / 'config/dependency-forks.json').read_text(encoding='utf-8'))
+    require(name in policy['packages'], 'Unknown dependency fork')
+    cargo = Path(os.environ.get('CARGO_HOME', str(Path.home() / '.cargo')))
+    matches = list((cargo / 'git/checkouts').glob('*/' + policy['commit'][:7] + '/' + name))
+    require(len(matches) == 1, 'Run cargo fetch --locked before testing dependency fork sources')
+    return matches[0]
+
+
+def reviewed_local_fork(root, package_root, item, external=False):
+    review = dict(REVIEWED_LOCAL_FORKS[item['name']])
+    if external:
+        review['path'] = package_root.name
     require(item['version'] == review['version'] and package_root == root / review['path'], 'Unreviewed local reviewed fork identity or path')
     provenance_path = local_file(root, review['path'] + '/UPSTREAM.json')
     require(digest(provenance_path) == review['provenance_sha256'], 'Local reviewed fork provenance differs from its review')
@@ -240,6 +252,37 @@ def collect(root, metadata, destination):
         portable(name)
         source = item.get('source')
         record = {'name': item['name'], 'version': item['version'], 'source': source, 'license_declared': item.get('license'), 'license_file_declared': item.get('license_file'), 'authors_declared': item.get('authors', []), 'repository_declared': item.get('repository'), 'files': [], 'attribution_files': []}
+        if source and source.startswith('git+'):
+            policy = json.loads((root / 'config/dependency-forks.json').read_text(encoding='utf-8'))
+            expected_source = 'git+' + policy['repository'] + '?branch=' + policy['branch'] + '#' + policy['commit']
+            require(source == expected_source and item['name'] in policy['packages'], 'Unreviewed Cargo Git source')
+            require(item['id'] not in workspace, 'A dependency fork cannot be first-party')
+            review = policy['packages'][item['name']]
+            require(item['version'] == review['version'], 'Dependency fork version differs')
+            package_root = Path(item['manifest_path']).parent.resolve()
+            snapshot = hashlib.sha256()
+            files = sorted((path for path in package_root.rglob('*') if path.is_file()), key=lambda path: path.relative_to(package_root).as_posix())
+            require(len(files) == review['file_count'], 'Dependency fork source inventory differs')
+            for path in files:
+                relative = path.relative_to(package_root).as_posix()
+                local_file(package_root, relative, 256 * 1024 * 1024)
+                snapshot.update((relative + '\0' + digest(path) + '\n').encode())
+            require(snapshot.hexdigest() == review['snapshot_sha256'], 'Dependency fork source bytes differ')
+            if item['name'] in REVIEWED_LOCAL_FORKS:
+                provenance, attribution = reviewed_local_fork(package_root.parent, package_root, item, external=True)
+                record['upstream_archive_sha256'] = provenance['archive_sha256']
+                record['license_review_basis'] = provenance['license_review_basis']
+                for filename, raw in sorted(attribution.items()):
+                    record['attribution_files'].append(write_file(destination, name + '/attribution/' + filename, raw))
+            for path in files:
+                if notice_filename(path.name) or path.name in ('UPSTREAM.md', 'UPSTREAM.json'):
+                    record['files'].append(write_file(destination, name + '/' + path.relative_to(package_root).as_posix(), path.read_bytes()))
+            require(any(license_filename(PurePosixPath(p['path']).name) for p in record['files']), 'Dependency fork lacks full upstream license files')
+            record['git_commit'] = policy['commit']
+            record['reviewed_source_sha256'] = review['snapshot_sha256']
+            record['attribution_files'].append(write_file(destination, name + '/patched/Cargo.toml', (package_root / 'Cargo.toml').read_bytes()))
+            records.append(record)
+            continue
         if source is None:
             package_root = Path(item['manifest_path']).parent.resolve()
             require(package_root.is_relative_to(root), 'Local Cargo source is outside the release checkout')

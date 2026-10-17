@@ -1,4 +1,4 @@
-use nestlink_auth::{VaultKey, hash_password, random_bytes, random_id, totp};
+use nestlink_auth::{VaultKey, hash_password, random_bytes, random_id};
 use nestlink_operations::backup::{BackupError, DeploymentBackup};
 use nestlink_platform_security::{load_key, read_private};
 use nestlink_storage::Store;
@@ -69,8 +69,7 @@ fn hostile_header_and_truncation_are_rejected_without_unbounded_kdf_work() -> Re
 }
 
 #[test]
-fn offline_restore_retains_identity_but_revokes_login_leases_and_all_old_recovery_codes() -> Result
-{
+fn offline_restore_retains_password_and_identity_but_revokes_login_and_leases() -> Result {
     let deployment = random_id();
     let mut source = Store::in_memory(&deployment)?;
     let vault_bytes = random_bytes();
@@ -86,15 +85,6 @@ fn offline_restore_retains_identity_but_revokes_login_leases_and_all_old_recover
         &vault,
         &dummy,
     )?;
-    source.begin_totp(&login.principal, ACCOUNT_PASSWORD, None, 1000, &vault)?;
-    // Read the real pending secret through a SQLite view to avoid a separate test implementation.
-    let view = rusqlite_view(&source.snapshot()?)?;
-    let pending: Vec<u8> =
-        view.query_row("SELECT totp_pending FROM account_security", [], |row| {
-            row.get(0)
-        })?;
-    let secret = vault.decrypt(&login.principal.account_id, &pending)?;
-    let codes = source.confirm_totp(&login.principal, &totp(&secret, 1000 / 30)?, 1000, &vault)?;
     let host = random_id();
     let controller = random_id();
     source.add_device(&host, &login.principal.account_id, &[4; 32])?;
@@ -104,15 +94,6 @@ fn offline_restore_retains_identity_but_revokes_login_leases_and_all_old_recover
     source.register_approved_session(&session, &controller, &host)?;
     source.add_lease(&lease, &session)?;
     let backup = DeploymentBackup::capture(&source, b"test config", &vault_bytes, &permit)?;
-    // Consume a code AFTER the snapshot; rollback must never resurrect it.
-    source.login(
-        "administrator",
-        ACCOUNT_PASSWORD,
-        Some(codes[0].expose()),
-        1001,
-        &vault,
-        &dummy,
-    )?;
     let parent = tempfile::tempdir()?;
     let target = parent.path().join("restored");
     let epoch = backup.restore_new(&target, b"sanitized config")?;
@@ -137,43 +118,13 @@ fn offline_restore_retains_identity_but_revokes_login_leases_and_all_old_recover
     );
     assert!(!restored.session_is_active(&session)?);
     assert!(!restored.lease_is_active(&lease)?);
-    for code in &codes[..2] {
-        assert!(
-            restored
-                .login(
-                    "administrator",
-                    ACCOUNT_PASSWORD,
-                    Some(code.expose()),
-                    1001,
-                    &vault,
-                    &dummy
-                )
-                .is_err()
-        );
-    }
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)?
-        .as_secs();
     assert!(
         restored
             .login(
                 "administrator",
                 ACCOUNT_PASSWORD,
-                Some(&totp(&secret, now / 30)?),
-                now,
-                &vault,
-                &dummy
-            )
-            .is_err()
-    );
-    let later = now + 90;
-    assert!(
-        restored
-            .login(
-                "administrator",
-                ACCOUNT_PASSWORD,
-                Some(&totp(&secret, later / 30)?),
-                later,
+                None,
+                1001,
                 &vault,
                 &dummy
             )
@@ -197,9 +148,4 @@ fn offline_restore_retains_identity_but_revokes_login_leases_and_all_old_recover
     );
     assert!(source.lease_is_active(&lease)?);
     Ok(())
-}
-fn rusqlite_view(bytes: &[u8]) -> Result<rusqlite::Connection> {
-    let mut connection = rusqlite::Connection::open_in_memory()?;
-    connection.deserialize_read_exact(rusqlite::MAIN_DB, bytes, bytes.len(), false)?;
-    Ok(connection)
 }

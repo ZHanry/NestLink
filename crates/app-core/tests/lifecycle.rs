@@ -287,7 +287,7 @@ async fn access_deadline_clears_loaded_account_data_and_actually_retires_sdk() -
 }
 
 #[tokio::test]
-async fn unread_completed_results_and_secrets_are_fenced_at_logout() -> Result {
+async fn unread_completed_results_are_fenced_at_logout() -> Result {
     let server = Server::start(None).await?;
     let mut core = AppCore::start(Limits::default())?;
     let handle = connect(&core, &server).await?;
@@ -303,23 +303,10 @@ async fn unread_completed_results_and_secrets_are_fenced_at_logout() -> Result {
         })
     })
     .await?;
-    let seed = handle.submit(Action::BeginTotp {
-        password: password(),
-        factor: None,
-    })?;
-    let seed_id = seed.id();
-    wait_view(&handle, |view| {
-        view.operations
-            .iter()
-            .any(|record| record.id == seed_id && record.status == OperationStatus::Succeeded)
-    })
-    .await?;
     success(handle.logout()?).await?;
     let old_account = done(created).await?;
     assert_eq!(old_account.result.status, OperationStatus::Superseded);
     assert_eq!(old_account.result.output, PublicOutput::None);
-    let mut old_seed = done(seed).await?;
-    assert!(old_seed.take_sensitive().is_none());
     assert!(handle.snapshot().accounts.data.is_none());
     assert!(
         handle

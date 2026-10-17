@@ -1,7 +1,7 @@
 use crate::{DesktopApp, Screen, widgets};
 use eframe::egui;
 use nestlink_app_core::{Action, OperationStatus, Page, Snapshot};
-use nestlink_app_ipc::wire::{Command, SensitiveReply};
+use nestlink_app_ipc::wire::Command;
 use nestlink_protocol::api::{NetworkPolicy, PolicyUpdate};
 
 pub(crate) struct PolicyDraft {
@@ -32,7 +32,7 @@ impl DesktopApp {
                     .collect::<String>()
             ));
         }
-        egui::CollapsingHeader::new(self.t("登记此设备", "Enroll this device")).show(ui,|ui| {
+        egui::CollapsingHeader::new(self.t("登记此设备", "Enroll this device")).default_open(snapshot.devices.data.as_ref().is_some_and(|devices| devices.is_empty())).show(ui,|ui| {
             widgets::field(ui,self.t("设备名称", "Device name"),&mut self.device_name,128);
             ui.small(self.t("Windows/Linux 工作台登记为控制端和主机，并声明 VP8/Opus 能力；其他平台不声明尚未接入的能力。", "Windows/Linux workspaces enroll as controllers and hosts with VP8/Opus; other platforms do not declare capabilities that are not integrated."));
             if ui.add_enabled(!self.device_name.trim().is_empty() && snapshot.devices.loading.is_none(),egui::Button::new(self.t("登记", "Enroll"))).clicked() {
@@ -41,56 +41,7 @@ impl DesktopApp {
         });
         ui.add_space(18.);
         widgets::section(ui, &snapshot.devices, self.english);
-        if let Some(devices) = &snapshot.devices.data {
-            if devices.is_empty() {
-                ui.label(self.t("尚无登记设备。", "No devices are enrolled."));
-            }
-            for view in devices.iter() {
-                ui.push_id(&view.device.id, |ui| {
-                    egui::Frame::group(ui.style()).show(ui, |ui| {
-                        ui.horizontal_wrapped(|ui| {
-                            ui.label(egui::RichText::new(&view.device.name).strong());
-                            ui.small(&view.device.platform);
-                            ui.label(self.t(
-                                if view.revoked {
-                                    "已撤销"
-                                } else {
-                                    "已登记"
-                                },
-                                if view.revoked { "Revoked" } else { "Enrolled" },
-                            ));
-                            if !view.revoked
-                                && ui
-                                    .add_enabled(
-                                        snapshot.devices.loading.is_none(),
-                                        egui::Button::new(self.t("撤销", "Revoke")),
-                                    )
-                                    .clicked()
-                            {
-                                self.pending_confirmation = Some((
-                                    format!(
-                                        "{} {}",
-                                        self.t("撤销设备：", "Revoke device:"),
-                                        view.device.name
-                                    ),
-                                    Command::Submit {
-                                        action: Action::RevokeDevice {
-                                            device_id: view.device.id.clone(),
-                                        },
-                                    },
-                                ));
-                            }
-                        });
-                        ui.monospace(&view.device.id);
-                        ui.small(format!(
-                            "{} · {}",
-                            view.device.path_mode,
-                            view.device.capabilities.join(", ")
-                        ));
-                    });
-                });
-            }
-        }
+        self.devices_table(ui, snapshot);
     }
     pub(crate) fn security_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         ui.horizontal(|ui| {
@@ -102,18 +53,6 @@ impl DesktopApp {
         widgets::section(ui, &snapshot.security, self.english);
         if let Some(security) = &snapshot.security.data {
             ui.label(&security.principal.name);
-            ui.label(self.t(
-                if security.totp_enabled {
-                    "TOTP 已启用"
-                } else {
-                    "TOTP 未启用"
-                },
-                if security.totp_enabled {
-                    "TOTP enabled"
-                } else {
-                    "TOTP not enabled"
-                },
-            ));
         }
         ui.horizontal_wrapped(|ui| {
             if ui.button(self.t("刷新登录期限", "Refresh login")).clicked() {
@@ -143,63 +82,8 @@ impl DesktopApp {
                 self.generation,
                 1024,
             );
-            widgets::secret_field(
-                ui,
-                self.t("TOTP 或恢复码", "TOTP or recovery code"),
-                &mut self.credentials.factor,
-                "factor",
-                self.generation,
-                128,
-            );
             let ready =
                 snapshot.security.loading.is_none() && !self.credentials.password.is_empty();
-            ui.horizontal_wrapped(|ui| {
-                if ui
-                    .add_enabled(
-                        ready,
-                        egui::Button::new(self.t("开始设置 TOTP", "Set up TOTP")),
-                    )
-                    .clicked()
-                {
-                    let password = widgets::take_secret(&mut self.credentials.password);
-                    let factor = widgets::take_optional(&mut self.credentials.factor);
-                    self.action(snapshot, Action::BeginTotp { password, factor });
-                    widgets::clear_secret_widgets(ui.ctx(), self.generation);
-                }
-                if ui
-                    .add_enabled(
-                        ready && !self.credentials.factor.is_empty(),
-                        egui::Button::new(self.t("重新生成恢复码", "Replace recovery codes")),
-                    )
-                    .clicked()
-                {
-                    let password = widgets::take_secret(&mut self.credentials.password);
-                    let factor = widgets::take_secret(&mut self.credentials.factor);
-                    self.action(snapshot, Action::ResetRecovery { password, factor });
-                    widgets::clear_secret_widgets(ui.ctx(), self.generation);
-                }
-            });
-            widgets::secret_field(
-                ui,
-                self.t("认证器的六位验证码", "Six-digit authenticator code"),
-                &mut self.credentials.totp_code,
-                "totp-code",
-                self.generation,
-                6,
-            );
-            if ui
-                .add_enabled(
-                    snapshot.security.loading.is_none() && self.credentials.totp_code.len() == 6,
-                    egui::Button::new(self.t("确认启用 TOTP", "Confirm TOTP")),
-                )
-                .clicked()
-            {
-                self.sensitive.take();
-                let code = widgets::take_secret(&mut self.credentials.totp_code);
-                self.action(snapshot, Action::ConfirmTotp { code });
-                widgets::clear_secret_widgets(ui.ctx(), self.generation);
-            }
-            ui.separator();
             widgets::secret_field(
                 ui,
                 self.t("新密码（至少 12 字节）", "New password (at least 12 bytes)"),
@@ -218,30 +102,13 @@ impl DesktopApp {
                 let action = Action::ChangePassword {
                     current_password: widgets::take_secret(&mut self.credentials.password),
                     new_password: widgets::take_secret(&mut self.credentials.new_password),
-                    factor: widgets::take_optional(&mut self.credentials.factor),
+                    factor: None,
                 };
                 self.sensitive.take();
                 self.action(snapshot, action);
                 widgets::clear_secret_widgets(ui.ctx(), self.generation);
             }
         });
-        if let Some(sensitive) = &self.sensitive {
-            ui.add_space(20.);
-            egui::Frame::group(ui.style()).show(ui,|ui| {
-                ui.label(egui::RichText::new(self.t("一次性安全信息", "One-time security information")).strong());
-                ui.label(self.t("请安全保存。关闭后不能再次读取；账号或服务器变化时立即清除。", "Save this securely. It cannot be retrieved after dismissal and is cleared when the account or server changes."));
-                match sensitive {
-                    SensitiveReply::TotpSeed {seed}=>{ui.monospace(seed.expose());ui.small("TOTP · SHA1 · 6 digits · 30 seconds");},
-                    SensitiveReply::RecoveryCodes {codes}=>{for code in codes {ui.monospace(code.expose());}},
-                }
-            });
-            if ui
-                .button(self.t("我已保存，清除显示", "Saved; clear display"))
-                .clicked()
-            {
-                self.sensitive.take();
-            }
-        }
         ui.add_space(18.);
         egui::CollapsingHeader::new(self.t("本次运行的操作", "Operations in this run")).show(
             ui,
@@ -316,64 +183,7 @@ impl DesktopApp {
             },
         );
         ui.add_space(18.);
-        if let Some(accounts) = &snapshot.accounts.data {
-            for account in accounts.iter() {
-                ui.push_id(&account.id, |ui| {
-                    egui::Frame::group(ui.style()).show(ui, |ui| {
-                        ui.horizontal_wrapped(|ui| {
-                            ui.label(egui::RichText::new(&account.name).strong());
-                            ui.small(self.t(
-                                if account.is_admin {
-                                    "管理员"
-                                } else {
-                                    "普通账号"
-                                },
-                                if account.is_admin {
-                                    "Administrator"
-                                } else {
-                                    "Standard account"
-                                },
-                            ));
-                            ui.small(self.t(
-                                if account.disabled {
-                                    "已禁用"
-                                } else {
-                                    "已启用"
-                                },
-                                if account.disabled {
-                                    "Disabled"
-                                } else {
-                                    "Enabled"
-                                },
-                            ));
-                            if !account.disabled
-                                && !account.is_admin
-                                && ui
-                                    .add_enabled(
-                                        snapshot.accounts.loading.is_none(),
-                                        egui::Button::new(self.t("禁用", "Disable")),
-                                    )
-                                    .clicked()
-                            {
-                                self.pending_confirmation = Some((
-                                    format!(
-                                        "{} {}",
-                                        self.t("禁用账号：", "Disable account:"),
-                                        account.name
-                                    ),
-                                    Command::Submit {
-                                        action: Action::DisableAccount {
-                                            account_id: account.id.clone(),
-                                        },
-                                    },
-                                ));
-                            }
-                        });
-                        ui.monospace(&account.id);
-                    });
-                });
-            }
-        }
+        self.accounts_table(ui, snapshot);
     }
     pub(crate) fn network_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         ui.horizontal(|ui| {

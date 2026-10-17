@@ -1,10 +1,10 @@
 # NestLink
 
-Self-hosted remote control and service publishing. The current version is **0.1.0 RC1** (`0.1.0-rc.1`), published from a new repository with fresh Git history and a single `main` branch.
+Self-hosted remote control and service publishing. The current version is **0.2.0 RC1** (`0.2.0-rc.1`). This update simplifies sign-in, redesigns the Windows workspace and moves patched upstream dependencies out of the product repository.
 
 [中文](README.md) · [Releases](https://github.com/ZHanry/NestLink/releases) · [Build instructions](docs/refactor/CANDIDATE-BUILD.md) · [Implementation and checks](docs/refactor/IMPLEMENTATION.md)
 
-A shared Rust core handles device identity, authorization, sessions, media, files and service channels. The desktop uses egui, Android uses Kotlin/JNI, and the Web application uses Leptos/WASM. Remote sessions and service publications have separate approvals and lifetimes. Connection authorization supports local approval, trusted devices and passwords.
+A shared Rust core handles device identity, authorization, sessions, media, files and service channels. The desktop uses egui + egui_extras, Android uses Kotlin/JNI, and the Web application uses Leptos/WASM. Remote sessions and service publications have separate approvals and lifetimes. Connection authorization supports local approval, trusted devices and passwords.
 
 | Platform | Targets | Deliverables |
 | --- | --- | --- |
@@ -13,6 +13,8 @@ A shared Rust core handles device identity, authorization, sessions, media, file
 | Android ARM64 / x86_64 | Android 11–16, API 30–36 | Separate ABI APKs |
 | Web | Current stable Chrome / Edge / Firefox | Management, browser remote control and static site |
 | Server / OCI | Linux x64 / ARM64 | Server packages and native architecture OCI archives |
+
+Connect using the server address, account and password. Server metadata is discovered and verified over HTTPS. Authenticator and recovery-code features have been removed; upgrading preserves passwords and requires a fresh sign-in.
 
 Screen, input, multiple displays, audio, files and text clipboard directions require explicit authorization. HTTP, HTTPS, TCP and UDP publications include source ACLs, quotas and revocation. See the [server documentation](docs/refactor/SERVER.md) for deployment.
 

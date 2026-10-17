@@ -14,17 +14,13 @@
           },
           "name": {
             "type": "string"
-          },
-          "totp_enabled": {
-            "type": "boolean"
           }
         },
         "required": [
           "id",
           "name",
           "is_admin",
-          "disabled",
-          "totp_enabled"
+          "disabled"
         ],
         "type": "object"
       },
@@ -629,19 +625,6 @@
         "title": "ErrorResponse",
         "type": "object"
       },
-      "Factor": {
-        "additionalProperties": false,
-        "properties": {
-          "code": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "code"
-        ],
-        "title": "Factor",
-        "type": "object"
-      },
       "HealthResponse": {
         "properties": {
           "alpn": {
@@ -755,14 +738,10 @@
         "properties": {
           "principal": {
             "$ref": "#/components/schemas/Principal"
-          },
-          "totp_enabled": {
-            "type": "boolean"
           }
         },
         "required": [
-          "principal",
-          "totp_enabled"
+          "principal"
         ],
         "title": "MeResponse",
         "type": "object"
@@ -1541,25 +1520,6 @@
         ],
         "type": "object"
       },
-      "Reauthenticate": {
-        "additionalProperties": false,
-        "properties": {
-          "factor": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "password": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "password"
-        ],
-        "title": "Reauthenticate",
-        "type": "object"
-      },
       "ReconnectionApproval": {
         "additionalProperties": false,
         "properties": {
@@ -1682,21 +1642,6 @@
           "host_signature"
         ],
         "title": "ReconnectionSubmission",
-        "type": "object"
-      },
-      "RecoveryResponse": {
-        "properties": {
-          "recovery_codes": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          }
-        },
-        "required": [
-          "recovery_codes"
-        ],
-        "title": "RecoveryResponse",
         "type": "object"
       },
       "Refresh": {
@@ -4119,38 +4064,6 @@
         "title": "SignedTurnResourceSnapshot",
         "type": "object"
       },
-      "TotpResponse": {
-        "properties": {
-          "algorithm": {
-            "type": "string"
-          },
-          "digits": {
-            "format": "uint32",
-            "minimum": 0,
-            "type": "integer"
-          },
-          "issuer": {
-            "type": "string"
-          },
-          "period": {
-            "format": "uint32",
-            "minimum": 0,
-            "type": "integer"
-          },
-          "secret": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "secret",
-          "issuer",
-          "algorithm",
-          "digits",
-          "period"
-        ],
-        "title": "TotpResponse",
-        "type": "object"
-      },
       "Transport": {
         "enum": [
           "quic",
@@ -4502,7 +4415,7 @@
   "info": {
     "description": "Generated from protocol-spec/management.rs and management-routes.json.",
     "title": "NestLink management contract",
-    "version": "0.1.0-rc.1"
+    "version": "0.2.0-rc.1"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -5422,102 +5335,6 @@
         "x-server-role": "control"
       }
     },
-    "/auth/recovery": {
-      "post": {
-        "operationId": "recovery",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Reauthenticate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RecoveryResponse"
-                }
-              }
-            },
-            "description": "Success"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Structured NestLink error"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Structured NestLink error"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Structured NestLink error"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Structured NestLink error"
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Structured NestLink error"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Structured NestLink error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          },
-          {
-            "accessCookie": []
-          }
-        ],
-        "x-server-role": "control"
-      }
-    },
     "/auth/refresh": {
       "post": {
         "operationId": "refresh",
@@ -5604,198 +5421,6 @@
           }
         },
         "security": [],
-        "x-server-role": "control"
-      }
-    },
-    "/auth/totp": {
-      "post": {
-        "operationId": "totp_start",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Reauthenticate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TotpResponse"
-                }
-              }
-            },
-            "description": "Success"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Structured NestLink error"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Structured NestLink error"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Structured NestLink error"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Structured NestLink error"
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Structured NestLink error"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Structured NestLink error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          },
-          {
-            "accessCookie": []
-          }
-        ],
-        "x-server-role": "control"
-      }
-    },
-    "/auth/totp/confirm": {
-      "post": {
-        "operationId": "totp_confirm",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Factor"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RecoveryResponse"
-                }
-              }
-            },
-            "description": "Success"
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Structured NestLink error"
-          },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Structured NestLink error"
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Structured NestLink error"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Structured NestLink error"
-          },
-          "429": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Structured NestLink error"
-          },
-          "500": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Structured NestLink error"
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          },
-          {
-            "accessCookie": []
-          }
-        ],
         "x-server-role": "control"
       }
     },

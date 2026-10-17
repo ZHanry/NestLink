@@ -1,7 +1,7 @@
 // Focused production-UI check against a new, owned control deployment. No
 // existing account, deployment, key, browser profile or trust store is read.
 // The report deliberately excludes bodies, screenshots and exception text:
-// they can contain passwords, TOTP seeds, recovery codes or access tokens.
+// they can contain passwords or access tokens.
 'use strict';
 const crypto = require('node:crypto');
 const fs = require('node:fs');
@@ -195,27 +195,6 @@ function latest(method, expression) { return report.api_requests.filter(item => 
 async function remoteRevoked(id) {
   await waitFor(async () => (await requiredApi('GET', '/remote/' + id)).status === 'revoked', 'Remote request not revoked');
 }
-function totp(seed) {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-  let bits = 0;
-  let value = 0;
-  const bytes = [];
-  for (const char of seed) {
-    const digit = alphabet.indexOf(char);
-    check(digit >= 0, 'TOTP encoding');
-    value = (value << 5) | digit;
-    bits += 5;
-    if (bits >= 8) { bits -= 8; bytes.push((value >> bits) & 255); }
-  }
-  const counter = Buffer.alloc(8);
-  counter.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 30_000)));
-  const key = Buffer.from(bytes);
-  const digest = crypto.createHmac('sha1', key).update(counter).digest();
-  key.fill(0);
-  const offset = digest[19] & 15;
-  return ((digest.readUInt32BE(offset) & 0x7fffffff) % 1_000_000).toString().padStart(6, '0');
-}
-
 async function main() {
   // Restrict the entire new scratch before any private files or profile exist.
   powershell("$ErrorActionPreference='Stop'; $p=$env:NESTLINK_OWNED_SCRATCH; $a=New-Object System.Security.AccessControl.DirectorySecurity; $a.SetAccessRuleProtection($true,$false); $s=[System.Security.Principal.WindowsIdentity]::GetCurrent().User; $a.SetOwner($s); foreach($sid in @('S-1-3-4','S-1-5-18')){ $id=New-Object System.Security.Principal.SecurityIdentifier($sid); $r=New-Object System.Security.AccessControl.FileSystemAccessRule($id,'FullControl','ContainerInherit,ObjectInherit','None','Allow'); $a.AddAccessRule($r) }; [IO.Directory]::SetAccessControl($p,$a)", { NESTLINK_OWNED_SCRATCH: scratch });
@@ -337,9 +316,8 @@ async function main() {
   await test('production-trust-and-sign-in', async () => {
     await page.goto(origin, { waitUntil: 'networkidle' });
     await button('English').click();
-    await page.locator('#deployment').fill(deploymentId);
-    await page.locator('#issuer').fill(permitPublicKey);
-    await button('Verify and continue').click();
+    check(await page.locator('#deployment, #issuer, #factor').count() === 0, 'Removed trust or factor fields remain');
+    await button('Connect and continue').click();
     await page.locator('#username').fill(username);
     await page.locator('#password').fill(initialPassword);
     await button('Sign in').click();
@@ -420,46 +398,28 @@ async function main() {
     await remoteRevoked(requestId);
     await button('Close').click();
   });
-  let seed;
-  let recoveryCodes;
   await test('wrong-reauthentication-keeps-valid-workspace', async () => {
     await button('Account and security').click();
-    await waitFor(async () => (await page.locator('.content').innerText()).includes('TOTP not enabled'), 'TOTP status missing');
+    await page.locator('#security-password').waitFor({ state: 'visible' });
     const meCount = count('GET', /^\/api\/v3\/auth\/me$/);
     await page.locator('#security-password').fill('intentionally-wrong-owned-password');
-    await button('Set up TOTP').click();
-    await waitFor(() => latest('POST', /^\/api\/v3\/auth\/totp$/)?.status === 401, 'Wrong reauthentication not denied');
+    await page.locator('#security-new-password').fill(changedPassword);
+    await page.locator('#security-confirm-password').fill(changedPassword);
+    await button('Change password and sign out').click();
+    await waitFor(() => latest('POST', /^\/api\/v3\/auth\/password$/)?.status === 401, 'Wrong reauthentication not denied');
     await waitFor(() => count('GET', /^\/api\/v3\/auth\/me$/) > meCount, 'Valid login was not rechecked');
     await workspace();
-    check(await page.locator('#security-password').isVisible(), 'Wrong factor discarded security panel');
+    check(await page.locator('#security-password').isVisible(), 'Wrong password discarded security panel');
   });
-  await test('real-totp-and-one-time-recovery-workflow', async () => {
-    await page.locator('#security-password').fill(initialPassword);
-    await button('Set up TOTP').click();
-    await waitFor(async () => (await page.locator('[aria-label="One-time security information"] code').count()) === 1, 'TOTP seed missing');
-    seed = await page.locator('[aria-label="One-time security information"] code').innerText();
-    check(/^[A-Z2-7]{32}$/.test(seed), 'TOTP seed format');
-    await page.locator('#security-totp-code').fill(totp(seed));
-    await button('Confirm TOTP').click();
-    await waitFor(async () => (await page.locator('[aria-label="One-time security information"] li code').count()) === 10, 'Recovery codes missing');
-    recoveryCodes = await page.locator('[aria-label="One-time security information"] li code').allTextContents();
-    check(new Set(recoveryCodes).size === 10, 'Recovery codes not distinct');
-    await page.locator('.sidebar nav').getByRole('button', { name: 'Devices', exact: true }).click();
-    await button('Account and security').click();
-    check(await page.locator('[aria-label="One-time security information"] code').count() === 0, 'One-time secrets reappeared after navigation');
-    await page.locator('#security-password').fill(initialPassword);
-    await page.locator('#security-factor').fill(recoveryCodes[0]);
-    await button('Replace recovery codes').click();
-    await waitFor(async () => (await page.locator('[aria-label="One-time security information"] li code').count()) === 10, 'Replacement recovery codes missing');
-    const replacement = await page.locator('[aria-label="One-time security information"] li code').allTextContents();
-    check(replacement.every(code => !recoveryCodes.includes(code)), 'Recovery replacement reused old codes');
-    recoveryCodes = replacement;
-    await button('Saved; clear display').click();
-    check(await page.locator('[aria-label="One-time security information"] code').count() === 0, 'Dismissed secrets still visible');
+  await test('removed-authenticator-and-recovery-routes-are-unavailable', async () => {
+    check(await page.locator('#security-factor, #security-totp-code').count() === 0, 'Removed factor fields remain');
+    check(await page.getByRole('button', { name: /TOTP|recovery codes/i }).count() === 0, 'Removed factor actions remain');
+    for (const endpoint of ['/auth/totp', '/auth/totp/confirm', '/auth/recovery']) {
+      check((await api('POST', endpoint, {})).status === 404, 'Removed authentication route remains');
+    }
   });
   await test('password-change-local-confirmation-revocation-and-new-login', async () => {
     await page.locator('#security-password').fill(initialPassword);
-    await page.locator('#security-factor').fill(recoveryCodes[0]);
     await page.locator('#security-new-password').fill(changedPassword);
     await page.locator('#security-confirm-password').fill('different-confirmation');
     check(!(await button('Change password and sign out').isEnabled()), 'Mismatched confirmation accepted');
@@ -471,13 +431,11 @@ async function main() {
     check(revoked.status === 401, 'Old API session survived password change');
     await page.locator('#username').fill(username);
     await page.locator('#password').fill(initialPassword);
-    await page.locator('#factor').fill(recoveryCodes[1]);
     const loginCount = count('POST', /^\/api\/v3\/auth\/login$/);
     await button('Sign in').click();
     await waitFor(() => count('POST', /^\/api\/v3\/auth\/login$/) === loginCount + 1, 'Old password login not attempted');
     check(latest('POST', /^\/api\/v3\/auth\/login$/)?.status === 401, 'Old password still authenticates');
     await page.locator('#password').fill(changedPassword);
-    await page.locator('#factor').fill(recoveryCodes[2]);
     await button('Sign in').click();
     await workspace();
     await button('Account and security').click();
@@ -485,8 +443,6 @@ async function main() {
     await waitFor(() => latest('POST', /^\/api\/v3\/auth\/refresh$/)?.status === 200, 'Refresh login failed');
     await workspace();
   });
-  seed = undefined;
-  recoveryCodes = undefined;
   check(!report.page_error_count, 'Production page raised runtime errors');
   report.status = 'passed';
 }

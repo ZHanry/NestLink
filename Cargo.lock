@@ -210,12 +210,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc7eb209b1518d6bb87b283c20095f5228ecda460da70b44f0802523dea6da04"
 
 [[package]]
-name = "anes"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b46cbb362ab8752921c97e041f5e366ee6297bd428a31275b9fcf1e380f7299"
-
-[[package]]
 name = "anstream"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -943,12 +937,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cast"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37b2a672a2cb129a2e41c10b1224bb368f9f37a2b16b612598138befd7b37eb5"
-
-[[package]]
 name = "cbc"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1041,33 +1029,6 @@ dependencies = [
  "cipher",
  "poly1305",
  "zeroize",
-]
-
-[[package]]
-name = "ciborium"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42e69ffd6f0917f5c029256a24d0161db17cea3997d185db0d35926308770f0e"
-dependencies = [
- "ciborium-io",
- "ciborium-ll",
- "serde",
-]
-
-[[package]]
-name = "ciborium-io"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05afea1e0a06c9be33d539b876f1ce3692f4afea2cb41f740e7743225ed1c757"
-
-[[package]]
-name = "ciborium-ll"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57663b653d948a338bfb3eeba9bb2fd5fcfaecb9e199e87e1eda4d9e8b240fd9"
-dependencies = [
- "ciborium-io",
- "half",
 ]
 
 [[package]]
@@ -1343,61 +1304,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "criterion"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2b12d017a929603d80db1831cd3a24082f8137ce19c69e6447f54f5fc8d692f"
-dependencies = [
- "anes",
- "cast",
- "ciborium",
- "clap",
- "criterion-plot",
- "is-terminal",
- "itertools 0.10.5",
- "num-traits",
- "once_cell",
- "oorandom",
- "plotters",
- "rayon",
- "regex",
- "serde",
- "serde_derive",
- "serde_json",
- "tinytemplate",
- "walkdir",
-]
-
-[[package]]
-name = "criterion-plot"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b50826342786a51a89e2da3a28f1c32b06e387201bc2d19791f622c673706b1"
-dependencies = [
- "cast",
- "itertools 0.10.5",
-]
-
-[[package]]
-name = "crossbeam-deque"
-version = "0.8.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "622f3fc73690be383c7214310406f28a90e6edeadc3cea882f9d71e495b9711a"
-dependencies = [
- "crossbeam-epoch",
- "crossbeam-utils",
-]
-
-[[package]]
-name = "crossbeam-epoch"
-version = "0.9.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc74980687109a3b14c72fd458107bf0baa1da1a1a805e178d15501ba9b86d9d"
-dependencies = [
- "crossbeam-utils",
-]
-
-[[package]]
 name = "crossbeam-utils"
 version = "0.8.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1479,37 +1385,6 @@ name = "data-encoding"
 version = "2.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4583a4551df46e2792f82ceeac45e850d2e2d5debba0b91f102385cda5b11f06"
-
-[[package]]
-name = "defmt"
-version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2953bfe4f93bbd20cc71198842756f77d161884c99ebbabc41d80231ded88d1"
-dependencies = [
- "bitflags 1.3.2",
- "defmt-macros",
-]
-
-[[package]]
-name = "defmt-macros"
-version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bad9c72e7ca2137e0dc3813245a0d282fd6daad32fd800af018306a9169b5fe8"
-dependencies = [
- "defmt-parser",
- "proc-macro2",
- "quote",
- "syn 2.0.119",
-]
-
-[[package]]
-name = "defmt-parser"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10d60334b3b2e7c9d91ef8150abfb6fa4c1c39ebbcf4a81c2e346aad939fee3e"
-dependencies = [
- "thiserror 2.0.21",
-]
 
 [[package]]
 name = "der"
@@ -1823,6 +1698,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "egui_extras"
+version = "0.34.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "598d8675f6fd9088db8a93d8c7aacda936b2f3d0c2b0660ad1744a45b5caf922"
+dependencies = [
+ "ahash",
+ "egui",
+ "enum-map",
+ "log",
+ "profiling",
+]
+
+[[package]]
 name = "egui_glow"
 version = "0.34.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1892,6 +1780,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "66b7e2430c6dff6a955451e2cfc438f09cea1965a9d6f87f7e3b90decc014099"
 
 [[package]]
+name = "enum-map"
+version = "2.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6866f3bfdf8207509a033af1a75a7b08abda06bbaaeae6669323fd5a097df2e9"
+dependencies = [
+ "enum-map-derive",
+]
+
+[[package]]
+name = "enum-map-derive"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f282cfdfe92516eb26c2af8589c274c7c17681f5ecc03c18255fe741c6aa64eb"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
 name = "enumflags2"
 version = "0.7.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1910,29 +1818,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
-]
-
-[[package]]
-name = "env_filter"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "900d271a03799a1ee8d1ca9b19893b48ca674a9284fefcfb85f05e74ed314217"
-dependencies = [
- "log",
- "regex",
-]
-
-[[package]]
-name = "env_logger"
-version = "0.11.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de671bd27a75a797dc9ae289ba1e77276e75e2026408aab65185384e2d5cd3f6"
-dependencies = [
- "anstream",
- "anstyle",
- "env_filter",
- "jiff",
- "log",
 ]
 
 [[package]]
@@ -1969,7 +1854,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2894,30 +2779,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "791930b43c0d5973160d90a8f3894509f2b273430f5c5c73b668636d0287c5c0"
 
 [[package]]
-name = "is-terminal"
-version = "0.4.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3640c1c38b8e4e43584d8df18be5fc6b0aa314ce6ebf51b53313d4306cca8e46"
-dependencies = [
- "hermit-abi",
- "libc",
- "windows-sys 0.61.2",
-]
-
-[[package]]
 name = "is_terminal_polyfill"
 version = "1.70.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6cb138bb79a146c1bd460005623e142ef0181e3d0219cb493e02f7d08a35695"
-
-[[package]]
-name = "itertools"
-version = "0.10.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
-dependencies = [
- "either",
-]
 
 [[package]]
 name = "itertools"
@@ -2933,43 +2798,6 @@ name = "itoa"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
-
-[[package]]
-name = "jiff"
-version = "0.2.38"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b2b005715dcbeb0089a3c0dab99f2ff1cc3b2525323552703d648585d342a383"
-dependencies = [
- "defmt",
- "jiff-core",
- "jiff-static",
- "log",
- "portable-atomic",
- "portable-atomic-util",
- "serde_core",
-]
-
-[[package]]
-name = "jiff-core"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e52fe76043ccecc9005d2305ebaadf7d7fc0cc89ca6baa10a94d6bc68c7128c"
-dependencies = [
- "defmt",
- "log",
-]
-
-[[package]]
-name = "jiff-static"
-version = "0.2.38"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2cc9817253cf7c7ee4684451bd327e88d6f3658014e54a29198625590650695c"
-dependencies = [
- "jiff-core",
- "proc-macro2",
- "quote",
- "syn 2.0.119",
-]
 
 [[package]]
 name = "jni"
@@ -3194,12 +3022,13 @@ dependencies = [
 [[package]]
 name = "leptos_macro"
 version = "0.8.19"
+source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.2#8b09ece013cc5f2e8906485879f96367fc9fc996"
 dependencies = [
  "attribute-derive",
  "cfg-if",
  "convert_case 0.11.0",
  "html-escape",
- "itertools 0.14.0",
+ "itertools",
  "leptos_hot_reload",
  "prettyplease 0.3.0",
  "proc-macro2",
@@ -3521,7 +3350,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-android-bridge"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "cap-fs-ext",
@@ -3549,7 +3378,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-app-core"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "axum",
  "base64 0.22.1",
@@ -3568,6 +3397,7 @@ dependencies = [
  "nestlink-storage",
  "nestlink-transport-stream",
  "prost",
+ "reqwest",
  "serde",
  "serde_json",
  "thiserror 2.0.21",
@@ -3578,7 +3408,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-app-ipc"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "nestlink-app-core",
  "nestlink-auth",
@@ -3594,18 +3424,15 @@ dependencies = [
 
 [[package]]
 name = "nestlink-auth"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "argon2",
  "base64 0.22.1",
  "chacha20poly1305",
  "getrandom 0.2.17",
- "hmac",
  "md-5",
  "rand_core 0.6.4",
- "sha1",
  "sha2",
- "subtle",
  "thiserror 2.0.21",
  "uuid",
  "zeroize",
@@ -3613,7 +3440,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-connectivity"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "nestlink-policy",
  "nestlink-protocol",
@@ -3622,7 +3449,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-daemon"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "clap",
  "nestlink-app-core",
@@ -3656,11 +3483,12 @@ dependencies = [
 
 [[package]]
 name = "nestlink-desktop"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "clap",
  "eframe",
+ "egui_extras",
  "nestlink-app-core",
  "nestlink-app-ipc",
  "nestlink-auth",
@@ -3677,7 +3505,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-identity"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "ed25519-dalek",
@@ -3693,7 +3521,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-local-ipc"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "hkdf",
  "nestlink-auth",
@@ -3715,7 +3543,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-media-codec"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "cc",
  "serde",
@@ -3727,7 +3555,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-media-session"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "nestlink-auth",
  "nestlink-identity",
@@ -3745,7 +3573,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-node"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "axum",
  "base64 0.22.1",
@@ -3771,7 +3599,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-operations"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "argon2",
  "chacha20poly1305",
@@ -3791,7 +3619,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-audio"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "cc",
  "libc",
@@ -3812,7 +3640,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-capture"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "cc",
  "libc",
@@ -3835,7 +3663,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-clipboard"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "futures-util",
  "libc",
@@ -3852,7 +3680,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-files"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "cap-fs-ext",
  "cap-std",
@@ -3883,7 +3711,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-input"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "futures-util",
  "libc",
@@ -3908,7 +3736,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-network"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "libc",
  "tokio",
@@ -3917,7 +3745,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-security"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "rustix 1.1.5",
  "tempfile",
@@ -3927,7 +3755,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-session"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "futures-util",
  "libc",
@@ -3940,7 +3768,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-tray"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "tokio",
  "windows-sys 0.61.2",
@@ -3949,7 +3777,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-policy"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "nestlink-protocol",
  "serde",
@@ -3957,7 +3785,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-privileged"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "clap",
@@ -3979,7 +3807,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-protocol"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "prost",
  "prost-build",
@@ -3997,7 +3825,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-remote"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "nestlink-auth",
  "nestlink-identity",
@@ -4017,7 +3845,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-sdk"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "axum",
  "base64 0.22.1",
@@ -4067,7 +3895,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-server"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "axum",
  "base64 0.22.1",
@@ -4104,7 +3932,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-session"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "nestlink-identity",
  "nestlink-policy",
@@ -4116,7 +3944,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-storage"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "nestlink-auth",
@@ -4135,7 +3963,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-transport-quic"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "nestlink-identity",
@@ -4151,7 +3979,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-transport-stream"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "nestlink-identity",
  "nestlink-protocol",
@@ -4165,7 +3993,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-transport-wss"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "futures-util",
@@ -4184,7 +4012,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-traversal"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "hmac",
@@ -4197,7 +4025,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-turn-service"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "async-trait",
  "futures-util",
@@ -4214,7 +4042,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-web"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "futures-channel",
@@ -4477,6 +4305,7 @@ checksum = "ef25abbcd74fb2609453eb695bd2f860d389e457f67dc17cafc8b8cbc89d0c33"
 [[package]]
 name = "objc2-foundation"
 version = "0.2.2"
+source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.2#8b09ece013cc5f2e8906485879f96367fc9fc996"
 dependencies = [
  "bitflags 2.13.2",
  "block2 0.5.1",
@@ -4651,12 +4480,6 @@ name = "once_cell_polyfill"
 version = "1.70.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
-
-[[package]]
-name = "oorandom"
-version = "11.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6790f58c7ff633d8771f42965289203411a5e5c68388703c06e14f24770b41e"
 
 [[package]]
 name = "opaque-debug"
@@ -4924,34 +4747,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
 
 [[package]]
-name = "plotters"
-version = "0.3.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5aeb6f403d7a4911efb1e33402027fc44f29b5bf6def3effcc22d7bb75f2b747"
-dependencies = [
- "num-traits",
- "plotters-backend",
- "plotters-svg",
- "wasm-bindgen",
- "web-sys",
-]
-
-[[package]]
-name = "plotters-backend"
-version = "0.3.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df42e13c12958a16b3f7f4386b9ab1f3e7933914ecea48da7139435263a4172a"
-
-[[package]]
-name = "plotters-svg"
-version = "0.3.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51bae2ac328883f7acdfea3d66a7c35751187f870bc81f94563733a154d7a670"
-dependencies = [
- "plotters-backend",
-]
-
-[[package]]
 name = "png"
 version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5142,7 +4937,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "03da047801ff44bb6a4d407d4860c05fd70bb81714e6b2f3812603d5b145b042"
 dependencies = [
  "heck",
- "itertools 0.14.0",
+ "itertools",
  "log",
  "multimap",
  "petgraph",
@@ -5161,7 +4956,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b570b25f7617e43d59005d0990ccb79e950a423952cea19671b7a876da390adf"
 dependencies = [
  "anyhow",
- "itertools 0.14.0",
+ "itertools",
  "proc-macro2",
  "quote",
  "syn 2.0.119",
@@ -5314,7 +5109,7 @@ dependencies = [
  "once_cell",
  "socket2 0.6.5",
  "tracing",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -5431,26 +5226,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "20675572f6f24e9e76ef639bc5552774ed45f1c30e2951e1e99c59888861c539"
 
 [[package]]
-name = "rayon"
-version = "1.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb39b166781f92d482534ef4b4b1b2568f42613b53e5b6c160e24cfbfa30926d"
-dependencies = [
- "either",
- "rayon-core",
-]
-
-[[package]]
-name = "rayon-core"
-version = "1.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "22e18b0f0062d30d4230b2e85ff77fdfe4326feb054b9783a3460d8435c8ab91"
-dependencies = [
- "crossbeam-deque",
- "crossbeam-utils",
-]
-
-[[package]]
 name = "rcgen"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5509,7 +5284,7 @@ checksum = "a29e469b556f25486678e9f5f65fa21a0351d98affde9a7eea9fee286bf8ebd6"
 dependencies = [
  "guardian",
  "indexmap",
- "itertools 0.14.0",
+ "itertools",
  "or_poisoned",
  "paste",
  "reactive_graph",
@@ -5794,7 +5569,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -6449,6 +6224,7 @@ dependencies = [
 [[package]]
 name = "tachys"
 version = "0.2.19"
+source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.2#8b09ece013cc5f2e8906485879f96367fc9fc996"
 dependencies = [
  "any_spawner",
  "async-trait",
@@ -6458,7 +6234,7 @@ dependencies = [
  "futures",
  "html-escape",
  "indexmap",
- "itertools 0.14.0",
+ "itertools",
  "js-sys",
  "next_tuple",
  "oco_ref",
@@ -6485,7 +6261,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix 1.1.5",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -6589,16 +6365,6 @@ checksum = "b1e27c91459209c2986af3dcf603a5a74a4368754ce37414f59acc971167f643"
 dependencies = [
  "displaydoc",
  "zerovec",
-]
-
-[[package]]
-name = "tinytemplate"
-version = "1.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be4d6b5f19ff7664e8c98d03e2139cb510db9b0a60b55f8e8709b689d939b6bc"
-dependencies = [
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -6876,14 +6642,11 @@ dependencies = [
 [[package]]
 name = "turn"
 version = "0.17.2"
+source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.2#8b09ece013cc5f2e8906485879f96367fc9fc996"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
- "clap",
- "criterion",
- "env_logger",
  "futures",
- "hex",
  "log",
  "md-5",
  "portable-atomic",
@@ -7458,6 +7221,7 @@ dependencies = [
 [[package]]
 name = "webrtc-ice"
 version = "0.14.0"
+source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.2#8b09ece013cc5f2e8906485879f96367fc9fc996"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -7726,7 +7490,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -8203,7 +7967,7 @@ checksum = "e450f9b2ed1dff33c94c12589a87338689467b9c4f5d8a5710bd09a847d2c8a7"
 
 [[package]]
 name = "xtask"
-version = "0.1.0-rc.1"
+version = "0.2.0-rc.1"
 dependencies = [
  "nestlink-policy",
  "nestlink-protocol",
