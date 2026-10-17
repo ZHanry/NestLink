@@ -265,12 +265,38 @@ def zip_tree(root, destination, epoch):
                 "Candidate ZIP readback differs")
 
 
+def inno6_bootstrap_x86(path):
+    """Check the pinned Inno 6 loader, separately from its x64 product payload.
+
+    Inno 6 produces an x86 PE32 bootstrap even in x64 install mode. Native
+    64-bit setup executables and SetupArchitecture were introduced in Inno 7:
+    https://jrsoftware.org/ishelp/topic_64bit.htm
+    """
+    TOOLS.regular(path)
+    with path.open("rb") as stream:
+        header = stream.read(64)
+        require(len(header) == 64 and header[:2] == b"MZ", "Candidate Inno 6 bootstrap is not a PE")
+        offset = int.from_bytes(header[60:64], "little")
+        require(64 <= offset <= 1024 * 1024, "Invalid candidate Inno 6 bootstrap PE offset")
+        stream.seek(offset)
+        pe = stream.read(24 + 224)
+    require(len(pe) == 24 + 224 and pe[:4] == b"PE\0\0"
+            and int.from_bytes(pe[4:6], "little") == 0x014c
+            and int.from_bytes(pe[20:22], "little") == 224
+            and int.from_bytes(pe[24:26], "little") == 0x010b,
+            "Candidate Inno 6 bootstrap must be x86 PE32")
+    characteristics = int.from_bytes(pe[22:24], "little")
+    require(characteristics & 0x0002 and not characteristics & 0x2000
+            and int.from_bytes(pe[24 + 68:24 + 70], "little") == 2,
+            "Candidate Inno 6 bootstrap must be a Windows GUI executable")
+
+
 def setup_candidate(input_directory, output, role, version, iscc):
     template = ROOT / "packaging/candidate/windows.iss"
     execute([iscc, "/Qp", "/DVersion=" + version, "/DPrivileged=" + ("1" if role == "privileged" else "0"),
              "/DPayloadDir=" + str(input_directory.resolve()), "/DOutputDir=" + str(output.parent.resolve()),
              "/DOutputBase=" + output.stem, template])
-    TOOLS.pe_x64(output)
+    inno6_bootstrap_x86(output)
 
 
 def deb_candidate(input_directory, output, role, architecture, value):

@@ -12,6 +12,8 @@
 
 候选签名状态明确为：Windows/更新/OCI `not-configured`，Android `development-only`，`production_update_eligible=false`。Windows 使用独立 AppId 和 `NestLink-RC` 安装/状态目录；普通版为当前用户安装，可选 broker 包只分发 broker 字节，未签名的正式特权激活仍需后续验收。Android 使用实际验证并记录的开发证书，应用 ID 为 `com.zhanry.nestlink.candidate`，versionName 为 `0.1.0-rc.1`；双 ABI 都执行 API 30–36 签名兼容、16 KiB ZIP 对齐及 ELF LOAD 检查。开发证书不作为固定 Release 身份，跨构建更新签名兼容不作承诺。
 
+Windows 候选编译器固定为 Inno Setup `6.7.3`。它的安装引导程序为 x86 PE32，使用 `ArchitecturesAllowed=x64compatible` 和 `ArchitecturesInstallIn64BitMode=x64compatible` 限制目标系统并启用 64 位安装模式；这两项不改变引导程序本身的 PE 架构。收集器分别严格校验引导程序为 x86/PE32 Windows GUI 可执行文件、desktop/daemon/privileged 三个实际产品执行文件为 x64；全局 `pe_x64` 校验不变。官方文档说明[64 位安装模式可用于 32 位安装器](https://jrsoftware.org/ishelp/topic_32vs64bitinstalls.htm)，并明确[真正的 64 位安装器及 `SetupArchitecture=x64` 从 Inno Setup 7 才引入](https://jrsoftware.org/ishelp/topic_64bit.htm)。候选包不为引导程序更换已固定的工具链。
+
 Linux 包名为 `nestlink-rc-desktop` / `nestlink-rc-server`，安装在 `/opt/nestlink-rc/`；DEB 版本采用 Debian 预发行排序形式 `0.1.0~rc.1`。桌面入口为 `nestlink-rc`，独立状态目录为 `${XDG_STATE_HOME:-$HOME/.local/state}/NestLink-RC`；服务端安装后由操作者显式初始化配置和启动，不自动开放服务。候选安装器保留用户数据。真实安装维护、固定证书升级/回滚和特权激活验收仍待完成。
 
 两种 OCI 在对应原生 runner 上从同一固定 Ubuntu index 构建，逐层回读检查架构、源码/版本标签、非 root 用户、入口及 server/Web 真实字节。镜像内实际 dpkg 软件清单追加到 SBOM；版权、common-licenses、dpkg/status 和文档链接清单按架构保存在许可证归档。Rust、原生编解码器和 Android 依赖锁、构建工具指纹与回读证据保存在 SBOM/许可证/材料中。

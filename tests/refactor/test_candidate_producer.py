@@ -9,6 +9,7 @@ import re
 import shutil
 import tempfile
 import textwrap
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 import zipfile
@@ -196,6 +197,68 @@ class CandidateTests(unittest.TestCase):
         with zipfile.ZipFile(output) as archive:
             self.assertEqual(archive.read("nested/run"), b"executable fixture")
             self.assertEqual(set(archive.namelist()), {"nested/run", "readme.txt"})
+
+    def pe_fixture(self, machine=0x014c, magic=0x010b, subsystem=2, characteristics=0x0102):
+        raw = bytearray(64 + 24 + 224)
+        raw[:2] = b"MZ"
+        raw[60:64] = (64).to_bytes(4, "little")
+        raw[64:68] = b"PE\0\0"
+        raw[68:70] = machine.to_bytes(2, "little")
+        raw[84:86] = (224).to_bytes(2, "little")
+        raw[86:88] = characteristics.to_bytes(2, "little")
+        raw[88:90] = magic.to_bytes(2, "little")
+        raw[156:158] = subsystem.to_bytes(2, "little")
+        return bytes(raw)
+
+    def test_inno6_bootstrap_requires_x86_pe32_gui_and_payload_checker_stays_x64(self):
+        path = self.write(self.root / "bootstrap.exe", self.pe_fixture())
+        P.inno6_bootstrap_x86(path)
+        with self.assertRaisesRegex(ValueError, "not x64"):
+            P.TOOLS.pe_x64(path)
+        for raw in (b"MZ", b"not a PE" + bytes(320), self.pe_fixture(machine=0x8664, magic=0x020b),
+                    self.pe_fixture(machine=0xaa64), self.pe_fixture(magic=0x020b),
+                    self.pe_fixture(subsystem=3), self.pe_fixture(characteristics=0x2102),
+                    self.pe_fixture(characteristics=0), self.pe_fixture()[:-1]):
+            with self.subTest(header=raw[:90]):
+                path.write_bytes(raw)
+                with self.assertRaises(ValueError):
+                    P.inno6_bootstrap_x86(path)
+        for position, raw in ((60, (32).to_bytes(4, "little")), (60, (1024 * 1024 + 1).to_bytes(4, "little")),
+                              (64, b"NOPE"), (84, (240).to_bytes(2, "little"))):
+            mutated = bytearray(self.pe_fixture())
+            mutated[position:position + len(raw)] = raw
+            path.write_bytes(mutated)
+            with self.subTest(position=position), self.assertRaises(ValueError):
+                P.inno6_bootstrap_x86(path)
+
+    def test_both_setup_roles_check_the_inno_bootstrap_after_compilation(self):
+        payload = self.root / "payload"
+        payload.mkdir()
+        for role, privileged in (("desktop", "0"), ("privileged", "1")):
+            output = self.root / (role + ".exe")
+            def compile_fixture(command):
+                self.assertIn("/DPrivileged=" + privileged, command)
+                output.write_bytes(self.pe_fixture())
+            with self.subTest(role=role), patch.object(P, "execute", side_effect=compile_fixture):
+                P.setup_candidate(payload, output, role, P.VERSION, "owned-fixture-ISCC")
+            with patch.object(P, "execute", side_effect=lambda command: output.write_bytes(self.pe_fixture(machine=0x8664, magic=0x020b))):
+                with self.assertRaisesRegex(ValueError, "x86 PE32"):
+                    P.setup_candidate(payload, output, role, P.VERSION, "owned-fixture-ISCC")
+
+    def test_each_native_windows_payload_still_rejects_x86_before_packaging(self):
+        inputs = self.root / "windows-input"
+        roles = P.NATIVE["windows-x64"][2]
+        supplier = SimpleNamespace(verify_receipt=lambda *args: None)
+        for rejected_role in roles:
+            for role in roles:
+                self.write(inputs / ("nestlink-" + role + ".exe"),
+                           self.pe_fixture() if role == rejected_role else self.pe_fixture(machine=0x8664, magic=0x020b))
+            args = argparse.Namespace(cohort=self.cohort_path, input=inputs, output=self.root / ("wrong-payload-" + rejected_role),
+                                      target="windows-x64", codec_prefix=self.root / "unused-codec", iscc="must-not-run")
+            with self.subTest(role=rejected_role), patch.object(P, "module", return_value=supplier), patch.object(P, "setup_candidate") as setup:
+                with self.assertRaisesRegex(ValueError, "not x64"):
+                    P.collect_native(args)
+                setup.assert_not_called()
 
     def test_real_symlink_cannot_be_archived(self):
         inputs = self.root / "linked-input"
