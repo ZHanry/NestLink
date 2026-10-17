@@ -14,6 +14,8 @@
 
 Windows 候选编译器固定为 Inno Setup `6.7.3`。它的安装引导程序为 x86 PE32，使用 `ArchitecturesAllowed=x64compatible` 和 `ArchitecturesInstallIn64BitMode=x64compatible` 限制目标系统并启用 64 位安装模式；这两项不改变引导程序本身的 PE 架构。收集器分别严格校验引导程序为 x86/PE32 Windows GUI 可执行文件、desktop/daemon/privileged 三个实际产品执行文件为 x64；全局 `pe_x64` 校验不变。官方文档说明[64 位安装模式可用于 32 位安装器](https://jrsoftware.org/ishelp/topic_32vs64bitinstalls.htm)，并明确[真正的 64 位安装器及 `SetupArchitecture=x64` 从 Inno Setup 7 才引入](https://jrsoftware.org/ishelp/topic_64bit.htm)。候选包不为引导程序更换已固定的工具链。
 
+每个 Android 单 ABI APK 的原生库精确为 `libnestlink_android.so` 与 Compose 依赖携带的 `libandroidx.graphics.path.so`。后者固定来自 Gradle 已锁定并校验 AAR 摘要的 `androidx.graphics:graphics-path:1.0.1`；收集器核对该依赖锁、AAR 校验 pin，以及 APK 内对应 ABI 库的精确字节数和 SHA256。两项库都必须保持原有 ELF64 ABI 与 16 KiB LOAD 校验，并以未压缩、16 KiB ZIP 数据对齐方式打包；额外库、其它 ABI、字节变化、压缩或错位均会拒绝。各库摘要、对齐和依赖来源记录在对应的开发签名证据中。
+
 Linux 包名为 `nestlink-rc-desktop` / `nestlink-rc-server`，安装在 `/opt/nestlink-rc/`；DEB 版本采用 Debian 预发行排序形式 `0.1.0~rc.1`。桌面入口为 `nestlink-rc`，独立状态目录为 `${XDG_STATE_HOME:-$HOME/.local/state}/NestLink-RC`；服务端安装后由操作者显式初始化配置和启动，不自动开放服务。候选安装器保留用户数据。真实安装维护、固定证书升级/回滚和特权激活验收仍待完成。
 
 两种 OCI 在对应原生 runner 上从同一固定 Ubuntu index 构建，逐层回读检查架构、源码/版本标签、非 root 用户、入口及 server/Web 真实字节。镜像内实际 dpkg 软件清单追加到 SBOM；版权、common-licenses、dpkg/status 和文档链接清单按架构保存在许可证归档。Rust、原生编解码器和 Android 依赖锁、构建工具指纹与回读证据保存在 SBOM/许可证/材料中。

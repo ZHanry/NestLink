@@ -22,6 +22,7 @@ import sys
 import tarfile
 import tempfile
 import tomllib
+import xml.etree.ElementTree as ET
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -78,6 +79,14 @@ EVIDENCE = {
 }
 SIGNING = {"windows": "not-configured", "android": "development-only",
            "linux_update": "not-configured", "oci": "not-configured"}
+ANDROID_GRAPHICS_PATH_AAR_SHA256 = "8ca4032b6d79b351f0b59ad4b580eddbb9423e1652f7c958830687f1eee2ec03"
+# Raw JNI entries from the checksum-verified graphics-path-1.0.1.aar. AGP
+# packages these already-stripped entries unchanged; no alternate bytes or
+# additional dependency libraries are allowed by this candidate policy.
+ANDROID_GRAPHICS_PATH_LIBRARIES = {
+    "arm64-v8a": {"bytes": 10096, "sha256": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6"},
+    "x86_64": {"bytes": 10760, "sha256": "4e56c996f13670e70082658de7880c4020eabf4f25e43387f88ed78a713fc9f0"},
+}
 require = TOOLS.require
 digest = TOOLS.digest
 read_json = TOOLS.json_read
@@ -400,9 +409,67 @@ def collect_native(args):
     part_receipt(args, args.target, artifacts, payload)
 
 
+def android_graphics_dependency():
+    """Keep the one allowed Compose native dependency bound to Gradle's pins."""
+    lock = TOOLS.artifact(ROOT, "apps/android/app/gradle.lockfile").read_text(encoding="utf-8")
+    entries = re.findall(r"^androidx\.graphics:graphics-path:([^=\s]+)=([^\r\n]+)$", lock, re.M)
+    require(len(entries) == 1 and entries[0][0] == "1.0.1"
+            and "debugRuntimeClasspath" in entries[0][1].split(","), "Candidate graphics-path dependency lock differs")
+    metadata = TOOLS.artifact(ROOT, "apps/android/gradle/verification-metadata.xml")
+    require(metadata.stat().st_size <= 2 * 1024**2, "Android dependency verification metadata exceeds its budget")
+    namespace = "{https://schema.gradle.org/dependency-verification}"
+    document = ET.fromstring(metadata.read_bytes())
+    components = [item for item in document.findall(namespace + "components/" + namespace + "component")
+                  if item.get("group") == "androidx.graphics" and item.get("name") == "graphics-path"]
+    require(len(components) == 1 and components[0].get("version") == "1.0.1", "Candidate graphics-path component differs")
+    artifacts = [item for item in components[0].findall(namespace + "artifact")
+                 if item.get("name") == "graphics-path-1.0.1.aar"]
+    require(len(artifacts) == 1 and [item.get("value") for item in artifacts[0].findall(namespace + "sha256")]
+            == [ANDROID_GRAPHICS_PATH_AAR_SHA256], "Candidate graphics-path AAR verification pin differs")
+    return {"coordinate": "androidx.graphics:graphics-path:1.0.1", "artifact": "graphics-path-1.0.1.aar",
+            "aar_sha256": ANDROID_GRAPHICS_PATH_AAR_SHA256}
+
+
+def android_native_libraries(archive, abi):
+    names = archive.namelist()
+    require(len(names) == len(set(names)) and len(names) <= 20000, "Candidate APK member inventory is invalid")
+    native = [name for name in names if name.endswith(".so")]
+    expected = {"lib/" + abi + "/" + name for name in ("libnestlink_android.so", "libandroidx.graphics.path.so")}
+    require(set(native) == expected, "Candidate APK JNI set differs")
+    facts = []
+    with tempfile.TemporaryDirectory(prefix="candidate-jni-") as scratch:
+        for name in sorted(native):
+            info = archive.getinfo(name)
+            require(0 < info.file_size <= 128 * 1024**2, "Candidate JNI exceeds its byte budget")
+            require(info.compress_type == zipfile.ZIP_STORED, "Candidate JNI must use uncompressed direct loading")
+            archive.fp.seek(info.header_offset)
+            header = archive.fp.read(30)
+            require(len(header) == 30 and header[:4] == b"PK\x03\x04", "Candidate JNI local ZIP header is invalid")
+            data_offset = info.header_offset + 30 + int.from_bytes(header[26:28], "little") + int.from_bytes(header[28:30], "little")
+            require(data_offset % 16384 == 0, "Candidate JNI ZIP data is not 16 KiB aligned")
+            raw = archive.read(name)
+            checksum = hashlib.sha256(raw).hexdigest()
+            item = {"path": name, "bytes": len(raw), "sha256": checksum, "abi": abi,
+                    "zip_data_offset": data_offset, "page_size_bytes": 16384}
+            if name.endswith("/libandroidx.graphics.path.so"):
+                require({"bytes": len(raw), "sha256": checksum} == ANDROID_GRAPHICS_PATH_LIBRARIES[abi],
+                        "Candidate graphics-path JNI differs from the fixed AAR bytes")
+                item["dependency"] = "androidx.graphics:graphics-path:1.0.1"
+                item["aar_sha256"] = ANDROID_GRAPHICS_PATH_AAR_SHA256
+            library = Path(scratch) / Path(name).name
+            library.write_bytes(raw)
+            # Apply the same existing ELF64 ABI and 16 KiB LOAD verification
+            # to the application JNI and the one fixed Compose dependency.
+            execute([sys.executable, ROOT / "scripts/verify-android-binary.py", "--library", library, "--abi", abi], timeout=60)
+            item["elf_16k_verification"] = "passed"
+            facts.append(item)
+    return facts
+
+
 def collect_android(args):
     value = cohort(args.cohort)
     outside(args.output)
+    android_graphics_dependency()
     apks = sorted(args.input.glob("*.apk"))
     require(len(apks) == 2, "Candidate requires both Android ABI APKs")
     signatures = module("candidate_android_signatures", "scripts/refactor-signatures.py")
@@ -426,20 +493,12 @@ def collect_android(args):
         require(int(identity["version_code"]) == value["android_version_code"], "Candidate Android version code differs")
         TOOLS.run([args.zipalign, "-c", "-P", "16", "-v", "4", path])
         with zipfile.ZipFile(path) as archive:
-            names = archive.namelist()
-            require(len(names) == len(set(names)) and len(names) <= 20000, "Candidate APK member inventory is invalid")
-            native = [name for name in names if name.endswith(".so")]
-            require(native == ["lib/" + abi + "/libnestlink_android.so"], "Candidate APK JNI set differs")
-            require(archive.getinfo(native[0]).file_size <= 128 * 1024**2, "Candidate JNI exceeds its byte budget")
-            with tempfile.TemporaryDirectory(prefix="candidate-jni-") as scratch:
-                library = Path(scratch) / "libnestlink_android.so"
-                library.write_bytes(archive.read(native[0]))
-                execute([sys.executable, ROOT / "scripts/verify-android-binary.py", "--library", library, "--abi", abi], timeout=60)
+            native = android_native_libraries(archive, abi)
         role = "android-arm64" if abi == "arm64-v8a" else "android-x86_64"
         target = args.output / "files" / ("NestLink-candidate-" + role + ".apk")
         copy_fixed(path, target)
         files.append(record(args.output, target, role, value["source_revision"]))
-        write_json(evidence / (role + "-development-signature.json"), {**identity, "status": "development-only", "fixed_release_identity_configured": False, "debuggable": "application-debuggable" in badging})
+        write_json(evidence / (role + "-development-signature.json"), {**identity, "status": "development-only", "fixed_release_identity_configured": False, "debuggable": "application-debuggable" in badging, "native_libraries": native})
     require(seen == {"arm64-v8a", "x86_64"} and len(certificates) == 1, "Android ABI cohort or development signer differs")
     supplier = module("candidate_android_codecs", "scripts/refactor-native-codecs.py")
     for target, prefix in (("aarch64-linux-android", args.codec_arm64), ("x86_64-linux-android", args.codec_x64)):

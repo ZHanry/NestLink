@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import struct
 import tempfile
 import textwrap
 from types import SimpleNamespace
@@ -259,6 +260,161 @@ class CandidateTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "not x64"):
                     P.collect_native(args)
                 setup.assert_not_called()
+
+    def elf_fixture(self, abi, alignment=16384):
+        raw = bytearray(256)
+        raw[:6] = b"\x7fELF\x02\x01"
+        struct.pack_into("<H", raw, 18, 183 if abi == "arm64-v8a" else 62)
+        struct.pack_into("<Q", raw, 32, 64)
+        struct.pack_into("<HH", raw, 54, 56, 1)
+        struct.pack_into("<IIQQQQQQ", raw, 64, 1, 5, 0, 0, 0, len(raw), len(raw), alignment)
+        return bytes(raw)
+
+    def native_zip(self, abi, *, libraries=None, aligned=True, compressed=False, path=None):
+        path = path or self.root / (abi + "-native.zip")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        libraries = libraries if libraries is not None else [("lib/" + abi + "/" + name, self.elf_fixture(abi))
+                     for name in ("libandroidx.graphics.path.so", "libnestlink_android.so")]
+        with zipfile.ZipFile(path, "w") as archive:
+            for name, raw in libraries:
+                info = zipfile.ZipInfo(name)
+                info.compress_type = zipfile.ZIP_DEFLATED if compressed else zipfile.ZIP_STORED
+                if aligned:
+                    padding = (-archive.fp.tell() - 30 - len(name.encode("utf-8"))) % 16384
+                    if padding:
+                        if padding < 4:
+                            padding += 16384
+                        info.extra = struct.pack("<HH", 0xcafe, padding - 4) + bytes(padding - 4)
+                archive.writestr(info, raw)
+        return path
+
+    def verify_android_fixture(self, command, *, timeout=60):
+        self.assertEqual(timeout, 60)
+        self.assertEqual(Path(command[1]), ROOT / "scripts/verify-android-binary.py")
+        spec = importlib.util.spec_from_file_location("candidate_android_elf_test", command[1])
+        binary = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(binary)
+        binary.verify(Path(command[command.index("--library") + 1]), command[command.index("--abi") + 1])
+
+    def graphics_fixture_pins(self):
+        return {abi: {"bytes": len(self.elf_fixture(abi)), "sha256": hashlib.sha256(self.elf_fixture(abi)).hexdigest()}
+                for abi in ("arm64-v8a", "x86_64")}
+
+    def test_graphics_native_source_requires_the_locked_coordinate_and_aar_hash(self):
+        self.assertEqual(P.android_graphics_dependency()["aar_sha256"], P.ANDROID_GRAPHICS_PATH_AAR_SHA256)
+        source = self.root / "graphics-source"
+        lock = source / "apps/android/app/gradle.lockfile"
+        metadata = source / "apps/android/gradle/verification-metadata.xml"
+        self.write(lock, (ROOT / "apps/android/app/gradle.lockfile").read_bytes())
+        self.write(metadata, (ROOT / "apps/android/gradle/verification-metadata.xml").read_bytes())
+        original = lock.read_text(encoding="utf-8")
+        lock.write_text(original.replace("androidx.graphics:graphics-path:1.0.1=", "androidx.graphics:graphics-path:1.0.2="), encoding="utf-8")
+        with patch.object(P, "ROOT", source), self.assertRaisesRegex(ValueError, "dependency lock"):
+            P.android_graphics_dependency()
+        lock.write_text(original, encoding="utf-8")
+        metadata.write_text(metadata.read_text(encoding="utf-8").replace(P.ANDROID_GRAPHICS_PATH_AAR_SHA256, "0" * 64), encoding="utf-8")
+        with patch.object(P, "ROOT", source), self.assertRaisesRegex(ValueError, "AAR verification pin"):
+            P.android_graphics_dependency()
+
+    def test_android_allows_exact_two_library_set_in_either_zip_order_for_both_abis(self):
+        for abi in ("arm64-v8a", "x86_64"):
+            for reverse in (False, True):
+                libraries = [("lib/" + abi + "/" + name, self.elf_fixture(abi))
+                             for name in ("libandroidx.graphics.path.so", "libnestlink_android.so")]
+                if reverse:
+                    libraries.reverse()
+                path = self.native_zip(abi, libraries=libraries)
+                with zipfile.ZipFile(path) as archive, patch.object(P, "ANDROID_GRAPHICS_PATH_LIBRARIES", self.graphics_fixture_pins()), \
+                        patch.object(P, "execute", side_effect=self.verify_android_fixture) as execute:
+                    facts = P.android_native_libraries(archive, abi)
+                self.assertEqual(execute.call_count, 2)
+                self.assertEqual(len(facts), 2)
+                self.assertTrue(all(item["zip_data_offset"] % 16384 == 0 and item["elf_16k_verification"] == "passed" for item in facts))
+                dependency = next(item for item in facts if item.get("dependency"))
+                self.assertEqual(dependency["aar_sha256"], P.ANDROID_GRAPHICS_PATH_AAR_SHA256)
+
+    def test_android_missing_extra_duplicate_or_other_abi_library_is_refused(self):
+        abi = "arm64-v8a"
+        valid = [("lib/" + abi + "/" + name, self.elf_fixture(abi))
+                 for name in ("libandroidx.graphics.path.so", "libnestlink_android.so")]
+        inventories = [valid[:1], valid + [("lib/" + abi + "/libunreviewed.so", self.elf_fixture(abi))],
+                       valid + [("lib/x86_64/libnestlink_android.so", self.elf_fixture("x86_64"))]]
+        for libraries in inventories:
+            path = self.native_zip(abi, libraries=libraries)
+            with zipfile.ZipFile(path) as archive, self.assertRaisesRegex(ValueError, "JNI set differs"):
+                P.android_native_libraries(archive, abi)
+        path = self.native_zip(abi)
+        with zipfile.ZipFile(path) as archive, patch.object(archive, "namelist", return_value=archive.namelist() * 2), \
+                self.assertRaisesRegex(ValueError, "inventory"):
+            P.android_native_libraries(archive, abi)
+
+    def test_android_fixed_graphics_bytes_zip_alignment_and_storage_cannot_be_bypassed(self):
+        abi = "x86_64"
+        for aligned, compressed, message in ((False, False, "16 KiB aligned"), (True, True, "uncompressed")):
+            path = self.native_zip(abi, aligned=aligned, compressed=compressed)
+            with zipfile.ZipFile(path) as archive, self.assertRaisesRegex(ValueError, message):
+                P.android_native_libraries(archive, abi)
+        path = self.native_zip(abi)
+        with zipfile.ZipFile(path) as archive, self.assertRaisesRegex(ValueError, "fixed AAR bytes"):
+            P.android_native_libraries(archive, abi)
+
+    def test_each_android_library_retains_elf_machine_and_16k_load_checks(self):
+        abi = "arm64-v8a"
+        for library in ("libandroidx.graphics.path.so", "libnestlink_android.so"):
+            for invalid in (self.elf_fixture("x86_64"), self.elf_fixture(abi, alignment=4096)):
+                libraries = [("lib/" + abi + "/" + name, invalid if name == library else self.elf_fixture(abi))
+                             for name in ("libandroidx.graphics.path.so", "libnestlink_android.so")]
+                path = self.native_zip(abi, libraries=libraries)
+                pins = self.graphics_fixture_pins()
+                if library == "libandroidx.graphics.path.so":
+                    pins[abi] = {"bytes": len(invalid), "sha256": hashlib.sha256(invalid).hexdigest()}
+                with zipfile.ZipFile(path) as archive, patch.object(P, "ANDROID_GRAPHICS_PATH_LIBRARIES", pins), \
+                        patch.object(P, "execute", side_effect=self.verify_android_fixture), self.assertRaises(ValueError):
+                    P.android_native_libraries(archive, abi)
+
+    def test_android_collector_completes_both_abis_through_signature_evidence_codec_copy_and_part_readback(self):
+        inputs = self.root / "android-apks"
+        for abi in ("arm64-v8a", "x86_64"):
+            self.native_zip(abi, path=inputs / (abi + ".apk"))
+        pin = "a" * 64
+        def run(command):
+            if command[0] == "fixture-apksigner":
+                return ("Signer #1 certificate SHA-256 digest: " + pin + "\n").encode()
+            if command[0] == "fixture-aapt2":
+                abi = Path(command[-1]).stem
+                return ("native-code: '" + abi + "'\napplication-debuggable\n").encode()
+            self.assertEqual(command[0], "fixture-zipalign")
+            self.assertEqual(command[1:7], ["-c", "-P", "16", "-v", "4", command[-1]])
+            return b"Verification successful"
+        def signature(path, actual_pin, app_id, version, abis, *tools):
+            self.assertEqual((actual_pin, app_id, version), (pin, self.value["android_application_id"], P.VERSION))
+            self.assertEqual(abis, [path.stem])
+            return {"version_code": str(self.value["android_version_code"]), "certificate_sha256": pin,
+                    "application_id": app_id, "version_name": version, "abis": abis,
+                    "signature_compatibility_sdk_range": [30, 36]}
+        signatures = SimpleNamespace(android_signature=signature)
+        supplier = SimpleNamespace(RECEIPT="nestlink-codecs.json", verify_receipt=lambda *args: None)
+        args = argparse.Namespace(cohort=self.cohort_path, input=inputs, output=self.root / "android-output",
+                                  java="fixture-java", apksigner="fixture-apksigner", aapt2="fixture-aapt2", zipalign="fixture-zipalign",
+                                  codec_arm64=self.root / "codec-arm64", codec_x64=self.root / "codec-x64")
+        self.write(args.codec_arm64 / supplier.RECEIPT, b"owned codec receipt fixture")
+        self.write(args.codec_x64 / supplier.RECEIPT, b"owned codec receipt fixture")
+        def modules(name, path):
+            return signatures if path.endswith("signatures.py") else supplier
+        with patch.object(P, "module", side_effect=modules), patch.object(P.TOOLS, "run", side_effect=run), \
+                patch.object(P.TOOLS, "tool_facts", return_value=[{"tool": "fixture"}]), \
+                patch.object(P, "ANDROID_GRAPHICS_PATH_LIBRARIES", self.graphics_fixture_pins()), \
+                patch.object(P, "execute", side_effect=self.verify_android_fixture) as execute:
+            P.collect_android(args)
+        self.assertEqual(execute.call_count, 4)
+        _, parts = P.read_parts(self.cohort_path, args.output, {"android"})
+        self.assertEqual({item["role"] for item in parts["android"]["artifacts"]}, {"android-arm64", "android-x86_64"})
+        self.assertEqual(len(parts["android"]["evidence"]), 5)
+        for role in ("android-arm64", "android-x86_64"):
+            identity = P.read_json(args.output / "evidence" / (role + "-development-signature.json"))
+            self.assertEqual(identity["status"], "development-only")
+            self.assertFalse(identity["fixed_release_identity_configured"])
+            self.assertEqual(len(identity["native_libraries"]), 2)
 
     def test_real_symlink_cannot_be_archived(self):
         inputs = self.root / "linked-input"
