@@ -19,7 +19,9 @@ jobs:
           - os: windows-2022
             target: x86_64-pc-windows-msvc
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 60
+    env:
+      CARGO_INCREMENTAL: "0"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -52,6 +54,30 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: cargo check --locked -p nestlink-platform-audio
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Allow the normal Windows token to use CI build inputs
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $testUserSid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+          $testTemp = Join-Path $env:RUNNER_TEMP 'nestlink-normal-user-temp'
+          New-Item -ItemType Directory -Path $testTemp -Force | Out-Null
+          $testInputs = @(
+            @{ Path = (Join-Path $env:USERPROFILE '.rustup'); Access = 'RX' },
+            @{ Path = (Join-Path $env:USERPROFILE '.cargo'); Access = 'M' },
+            @{ Path = $env:GITHUB_WORKSPACE; Access = 'M' },
+            @{ Path = $env:NESTLINK_CODEC_PREFIX; Access = 'RX' },
+            @{ Path = $testTemp; Access = 'M' }
+          )
+          foreach ($testInput in $testInputs) {
+            & icacls $testInput.Path /grant "*${testUserSid}:(OI)(CI)$($testInput.Access)" /T /Q
+            if ($LASTEXITCODE -ne 0) { throw 'Could not prepare the CI build input permissions' }
+          }
+          "TEMP=$testTemp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TMP=$testTemp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Check Windows private files and process identity with the normal token
+        if: runner.os == 'Windows'
+        run: python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-platform-security --tests -p nestlink-privileged --lib --no-fail-fast
       - if: runner.os == 'Linux'
         run: cargo test --workspace --locked --no-fail-fast
       - name: Test Windows with the ordinary business-process token
