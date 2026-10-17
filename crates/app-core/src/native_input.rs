@@ -773,11 +773,16 @@ async fn receive_layout(mut receiver: ChannelReceiver, route: &NativeInputRoute)
         if stopped.borrow().is_some() {
             return Ok(());
         }
-        let frame = tokio::select! { biased;
-            _ = stopped.changed() => return Ok(()),
-            result = receiver.receive() => result.map_err(io::Error::other)?,
+        let Some(frame) = native_channel::receive(receiver.receive(), &mut stopped).await? else {
+            return Ok(());
         };
         let payload = Zeroizing::new(frame.payload);
+        if let Err(error) = route.check() {
+            if native_channel::completed_stop(&stopped) {
+                return Ok(());
+            }
+            return Err(io::Error::other(error));
+        }
         let layout: WireInputLayout =
             decode_bounded(&payload, INPUT_BYTES).map_err(io::Error::other)?;
         layout.validate().map_err(io::Error::other)?;
@@ -787,7 +792,6 @@ async fn receive_layout(mut receiver: ChannelReceiver, route: &NativeInputRoute)
                 "input layout changed approved connection or source",
             ));
         }
-        route.check().map_err(io::Error::other)?;
         let layout = NativeInputLayout {
             binding: NativeInputBinding {
                 request_id: route.request_id.clone(),
@@ -848,25 +852,34 @@ async fn receive_input<D: InputDevice>(
         if stopped.borrow().is_some() {
             return Ok(());
         }
-        let frame = tokio::select! { biased;
-            _ = stopped.changed() => return Ok(()),
-            result = receiver.receive() => result.map_err(io::Error::other)?,
+        let Some(frame) = native_channel::receive(receiver.receive(), &mut stopped).await? else {
+            return Ok(());
         };
         let input = input.clone();
         let active_route = route.clone();
         let result = tokio::task::spawn_blocking(move || {
+            let mut frame = frame;
             if !active_route.input_ready.load(Ordering::Acquire) {
+                frame.payload.zeroize();
+                if native_channel::completed_stop(&active_route.lease.subscribe_stopped()) {
+                    return Ok(());
+                }
                 return Err(io::Error::new(
                     io::ErrorKind::PermissionDenied,
                     "input handshake not completed",
                 ));
             }
-            active_route.check().map_err(io::Error::other)?;
+            if let Err(error) = active_route.check() {
+                frame.payload.zeroize();
+                if native_channel::completed_stop(&active_route.lease.subscribe_stopped()) {
+                    return Ok(());
+                }
+                return Err(io::Error::other(error));
+            }
             let result = input
                 .apply_frame(&frame)
                 .map(|_| ())
                 .map_err(io::Error::other);
-            let mut frame = frame;
             frame.payload.zeroize();
             result
         })

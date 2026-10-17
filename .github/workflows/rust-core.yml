@@ -81,6 +81,12 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: cargo check --locked -p nestlink-platform-audio
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Check Linux recovery before the complete workspace suite
+        if: runner.os == 'Linux'
+        run: cargo test --locked -p nestlink-app-core --test native_recovery
+      - name: Check Windows recovery before the complete workspace suite
+        if: runner.os == 'Windows'
+        run: python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --test native_recovery
       - if: runner.os == 'Linux'
         run: cargo test --workspace --locked --no-fail-fast
       - name: Test Windows with the ordinary business-process token

@@ -11,6 +11,8 @@ use crate::{
     BrowserHostReady, run_browser_host,
 };
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
+#[path = "runtime/native_channel.rs"]
+mod native_channel;
 #[path = "runtime/native_network_control.rs"]
 mod native_network_control;
 #[path = "runtime/native_recovery.rs"]

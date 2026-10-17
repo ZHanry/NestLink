@@ -161,7 +161,8 @@ impl NativeDisplayRoute {
         .await
         {
             Ok(Ok(())) => self.check(),
-            _ => Err(io::Error::new(
+            Ok(Err(error)) => Err(io::Error::other(error)),
+            Err(_) => Err(io::Error::new(
                 io::ErrorKind::TimedOut,
                 "display control delivery exceeded budget",
             )),
@@ -217,8 +218,10 @@ impl NativeDisplayRoute {
                 ));
             }
             let frame = tokio::select! {biased;
-                _=stopped.changed()=>return Ok(()),
-                frame=receiver.receive()=>frame.map_err(io::Error::other)?,
+                frame=native_channel::receive(receiver.receive(), &mut stopped)=>{
+                    let Some(frame) = frame? else { return Ok(()); };
+                    frame
+                },
                 _=tokio::time::sleep(Duration::from_millis(250))=>{
                     if self.state.lock().map_err(|_|io::Error::other("display state poisoned"))?.deadline
                         .is_some_and(|until|Instant::now()>=until) {
@@ -227,10 +230,20 @@ impl NativeDisplayRoute {
                     continue;
                 }
             };
-            self.check()?;
             let payload = Zeroizing::new(frame.payload);
+            if let Err(error) = self.check() {
+                if native_channel::completed_stop(&stopped) {
+                    return Ok(());
+                }
+                return Err(error);
+            }
             let message = DisplayEnvelope::decode(&payload).map_err(io::Error::other)?;
-            self.handle(message).await?;
+            if let Err(error) = self.handle(message).await {
+                if native_channel::terminal_io_error(&error, &stopped) {
+                    return Ok(());
+                }
+                return Err(error);
+            }
         }
     }
     async fn handle(&self, message: DisplayEnvelope) -> io::Result<()> {
