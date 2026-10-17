@@ -6,6 +6,7 @@ development evidence; actual GNOME/KDE, IME, lock and monitor acceptance remain
 separate requirements.
 """
 import argparse
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -49,10 +50,14 @@ def main():
     if not args.socket_namespace:
         # WSLg mounts /tmp/.X11-unix read-only. Create a separate mount and
         # network namespace rather than changing that mount or reusing :0.
-        command = (["sudo", "-n"] if args.namespace_launcher == "sudo" else []) + ["unshare", "--user", "--map-root-user", "--mount", "--net", "--propagation", "private",
+        path = Path(__file__).with_name("refactor-linux-namespaces.py")
+        spec = importlib.util.spec_from_file_location("nestlink_linux_namespaces", path)
+        helper = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(helper)
+        command = helper.command(args.namespace_launcher, [
                    sys.executable, str(Path(__file__).resolve()), "--socket-namespace", "--test-executable", str(executable.resolve()),
                    "--output", str(args.output), "--original-namespaces",
-                   json.dumps({name: os.readlink(f"/proc/self/ns/{name}") for name in ("mnt", "net", "user")})]
+                   json.dumps({name: os.readlink(f"/proc/self/ns/{name}") for name in ("mnt", "net", "user")})])
         raise SystemExit(subprocess.run(command, cwd=root, check=False).returncode)
     # Refuse to mount anything unless this process really has isolated namespaces.
     original = json.loads(args.original_namespaces or "{}")

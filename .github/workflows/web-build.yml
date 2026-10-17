@@ -44,6 +44,8 @@ jobs:
           python3 scripts/refactor-ui-tokens.py --check
           python3 -m unittest discover -s tests/refactor -p "test_ui_tokens.py"
       - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
       - name: Install pinned WebAssembly build tools
         run: |
           rustup target add wasm32-unknown-unknown

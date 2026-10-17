@@ -51,12 +51,11 @@ def main():
             raise SystemExit("Expected one compiled Linux audio test binary.")
         executable = Path(binaries[0])
     if not args.service_namespace:
-        command = (["sudo", "-n"] if args.namespace_launcher == "sudo" else []) + [
-            "unshare", "--user", "--map-root-user", "--mount", "--net", "--propagation", "private",
+        command = helper.namespace_command(args.namespace_launcher, [
             sys.executable, str(Path(__file__).resolve()), "--service-namespace", "--test-executable", str(executable.resolve()),
             "--output", str(args.output.resolve()), "--original-namespaces", json.dumps(helper.namespaces()),
             "--host-namespaces", json.dumps(helper.host_namespaces()),
-        ]
+        ])
         raise SystemExit(subprocess.run(command, cwd=root, check=False).returncode)
     original = json.loads(args.original_namespaces or "{}")
     helper.isolated(original, json.loads(args.host_namespaces or "{}"))

@@ -13,6 +13,22 @@ SPEC.loader.exec_module(PORTAL)
 
 
 class PortalNamespaceTests(unittest.TestCase):
+    def test_privileged_launcher_maps_the_original_caller_and_preserves_arguments(self):
+        child = ["/usr/bin/python3", "/private checkout/fixture.py", "--test-executable", "/private checkout/test"]
+        with patch.object(PORTAL.os, "geteuid", return_value=1001, create=True), \
+                patch.object(PORTAL.os, "getegid", return_value=118, create=True):
+            command = PORTAL.namespace_command("sudo", child)
+        self.assertEqual(command[:2], ["sudo", "-n"])
+        self.assertEqual(command[command.index("--uid") + 1], "1001")
+        self.assertEqual(command[command.index("--gid") + 1], "118")
+        self.assertEqual(command[command.index("--") + 1:], child)
+        self.assertNotIn("--map-root-user", command)
+        self.assertEqual(PORTAL.namespace_command("unprivileged", child), [
+            "unshare", "--user", "--map-root-user", "--mount", "--net",
+            "--propagation", "private", *child])
+        with self.assertRaises(ValueError):
+            PORTAL.namespace_command("unknown", child)
+
     def test_group_leader_is_not_reaped_until_all_group_signals_finish(self):
         events = []
         child = SimpleNamespace(pid=123, returncode=None, wait=lambda **_: events.append("reap"))

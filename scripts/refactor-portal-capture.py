@@ -4,6 +4,7 @@ This is development evidence, not compositor or installed-product acceptance.
 The caller's system/session buses, screen and input devices are never used.
 """
 import argparse
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -17,6 +18,14 @@ import time
 
 TEST = "production_portal_pipewire_joint_revocation"
 NAMESPACES = ("mnt", "net", "user")
+
+
+def namespace_command(launcher, child):
+    path = Path(__file__).with_name("refactor-linux-namespaces.py")
+    spec = importlib.util.spec_from_file_location("nestlink_linux_namespaces", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.command(launcher, child)
 
 
 def namespaces():
@@ -135,12 +144,11 @@ def main():
             raise SystemExit("Expected one compiled portal_session integration test executable.")
         executable = Path(binaries[0])
     if not args.service_namespace:
-        command = (["sudo", "-n"] if args.namespace_launcher == "sudo" else []) + [
-            "unshare", "--user", "--map-root-user", "--mount", "--net", "--propagation", "private",
+        command = namespace_command(args.namespace_launcher, [
             sys.executable, str(Path(__file__).resolve()), "--service-namespace", "--test-executable", str(executable.resolve()),
             "--output", str(args.output.resolve()), "--original-namespaces", json.dumps(namespaces()),
             "--host-namespaces", json.dumps(host_namespaces()),
-        ]
+        ])
         raise SystemExit(subprocess.run(command, cwd=root, check=False).returncode)
     original = json.loads(args.original_namespaces or "{}")
     isolated(original, json.loads(args.host_namespaces or "{}"))
