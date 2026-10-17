@@ -24,6 +24,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - name: Verify normal Windows test identity
+        if: runner.os == 'Windows'
+        run: python scripts/refactor-windows-normal-user.py python scripts/refactor-windows-normal-user.py --check
       - name: Set native codec location
         shell: pwsh
         env:
@@ -46,9 +49,6 @@ jobs:
         run: python scripts/refactor-native-codecs.py build --target ${{ matrix.target }} --cache-dir "${{ runner.temp }}/nestlink-codec-sources" --work-dir "${{ runner.temp }}/nestlink-codecs" --msys-bin "${{ steps.msys.outputs.msys2-location }}/usr/bin" --nasm "${{ steps.msys.outputs.msys2-location }}/usr/bin/nasm.exe"
       - run: python scripts/refactor-native-codecs.py verify --target ${{ matrix.target }} --prefix "${{ env.NESTLINK_CODEC_PREFIX }}"
       - run: rustup show
-      - name: Verify normal Windows test identity
-        if: runner.os == 'Windows'
-        run: python scripts/refactor-windows-normal-user.py python scripts/refactor-windows-normal-user.py --check
       - run: cargo fmt --all -- --check
       - run: cargo check --locked -p nestlink-platform-audio
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings

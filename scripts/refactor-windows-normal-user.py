@@ -121,11 +121,16 @@ def run(arguments: list[str]) -> int:
     medium_sid = pointer()
     process = ProcessInfo()
     try:
-        # QUERY | DUPLICATE | ASSIGN_PRIMARY | ADJUST_DEFAULT. A restricted
-        # version of our own primary token needs no foreign-account logon.
-        checked(security.OpenProcessToken(kernel.GetCurrentProcess(), 0x8B, ctypes.byref(original)))
+        # An already filtered child only needs QUERY. Asking it for adjustment
+        # rights on its primary token can correctly be denied by Windows.
+        checked(security.OpenProcessToken(kernel.GetCurrentProcess(), 0x8, ctypes.byref(original)))
         selected = original
         if force_filter or not normal(original):
+            kernel.CloseHandle(original)
+            original = handle()
+            # QUERY | DUPLICATE | ASSIGN_PRIMARY | ADJUST_DEFAULT, only in the
+            # parent which creates a restricted version of its own token.
+            checked(security.OpenProcessToken(kernel.GetCurrentProcess(), 0x8B, ctypes.byref(original)))
             # LUA_TOKEN | DISABLE_MAX_PRIVILEGE removes administrative groups
             # and privileges, including an elevated token's default owner.
             checked(security.CreateRestrictedToken(
