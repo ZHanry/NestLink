@@ -126,8 +126,12 @@ jobs:
         run: |
           set -euo pipefail
           api_level="${{ matrix.api-level }}"
+          export ANDROID_USER_HOME="${RUNNER_TEMP}/nestlink-android-user"
+          export ANDROID_AVD_HOME="${ANDROID_USER_HOME}/avd"
+          mkdir -p "$ANDROID_AVD_HOME"
           sudo setfacl -m "u:$(id -u):rw" /dev/kvm
-          echo "no" | avdmanager create avd --force --name "nestlink-api${api_level}" --package "system-images;android-${api_level};google_apis;x86_64" --device pixel_2
+          echo "no" | avdmanager create avd --force --name "nestlink-api${api_level}" --path "${ANDROID_AVD_HOME}/nestlink-api${api_level}.avd" --package "system-images;android-${api_level};google_apis;x86_64" --device pixel_2
+          test -s "${ANDROID_AVD_HOME}/nestlink-api${api_level}.ini"
           emulator_log="${RUNNER_TEMP}/nestlink-emulator.log"
           "$ANDROID_HOME/emulator/emulator" -avd "nestlink-api${api_level}" -no-window -no-audio -no-snapshot-save -no-boot-anim -gpu swiftshader_indirect > "$emulator_log" 2>&1 &
           emulator_pid=$!
