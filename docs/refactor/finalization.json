@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "requested_at": "2026-10-12",
+  "updated_at": "2026-10-17",
+  "authorization_source": "The user explicitly requested complete implementation, main-repository upload and rename, only main branches, Release upload and deletion of the three named component repositories. The latest user sequence places the user's final full-function acceptance after repository delivery; missing production signing remains explicit in the candidate Release.",
+  "prerequisite": "Finish implementation and review targeted development verification; freeze candidate bytes from one clean final source commit; preserve and verify original history, dirty local work, every observed old Release asset and the final product source in durable main-repository archives before component deletion. Final user hardware, installed-product, cross-network and full-function acceptance remains pending after repository delivery.",
+  "main_repository": {
+    "current": "ZHanry/home-tunnel",
+    "target": "ZHanry/NestLink",
+    "remaining_branch": "main",
+    "release_version": "15.0.0",
+    "delivery_tag": "v15.0.0-preview.1",
+    "delivery_prerelease": true,
+    "production_update_authorized": false
+  },
+  "component_repositories_to_delete": [
+    "ZHanry/home-tunnel-server",
+    "ZHanry/home-tunnel-client",
+    "ZHanry/home-tunnel-android"
+  ],
+  "verified_github_repository_ids": {
+    "ZHanry/home-tunnel": "R_kgDOTz-mRQ",
+    "ZHanry/home-tunnel-server": "R_kgDOUSDIiA",
+    "ZHanry/home-tunnel-client": "R_kgDOUSDI3Q",
+    "ZHanry/home-tunnel-android": "R_kgDOUSDJHw"
+  },
+  "component_identity_basis": "docs/refactor/baseline.json; confirm GitHub repository IDs again before final operations",
+  "history_and_release_preservation": "Merge the audited component anchor as a history parent using the ours strategy, preserve the exact final product tree, retain 157 component-prefixed tags, and publish separate original-history and final-source archive Releases. Preserve the untouched original 317-ref bundle and every observed old Release byte; do not copy legacy product subtrees into the current product tree or discard dirty old worktrees.",
+  "history_merge": {
+    "strategy": "ours",
+    "filtered_anchor": "27589bf88ee8df34d7883e607167438cd3a548d0",
+    "component_tags": 157,
+    "component_commits": 11845,
+    "required_tree_check": "The final merge tree must exactly equal its final-product first parent's tree.",
+    "status": "pending"
+  },
+  "durable_archives": {
+    "original_history": {
+      "tag": "history-archive-2026-10-17",
+      "tag_target": "da66975153385f9d92643daa4b7d9f1efbaa7a7d",
+      "plan": "artifacts/history-preservation/history-archive-plan-20261017-attempt01.json",
+      "log": "artifacts/history-preservation/history-archive-upload-20261017-attempt01.log",
+      "status": "upload_running",
+      "original_release_assets": 799,
+      "original_release_bytes": 16177009767,
+      "payload_files": 830,
+      "expected_remote_assets_including_plan": 831,
+      "payload_bytes": 16346355439,
+      "additional_payload_copy_bytes": 0,
+      "durable_remote_preservation_verified": false
+    },
+    "final_product_source": {
+      "tag_pattern": "history-archive-final-<final-source-first-12-hex>",
+      "requires_clean_exact_source": true,
+      "requires_independent_bundle_restore_and_strict_fsck": true,
+      "status": "pending_final_source_commit",
+      "durable_remote_preservation_verified": false
+    }
+  },
+  "historical_gitlink_boundary": {
+    "unavailable_external_commits": [
+      "93f9445c69f30487f1479a9e4e1882773e00c7f9",
+      "b0f50c8d55a015f3d49fe9e90fcefb585d74a25f",
+      "f857bbd3bc350c800d447eb0d809d21f101cd80b"
+    ],
+    "scope": "The original trees and gitlink object IDs are preserved unchanged; all 136 current observed source ref-tip objects are available. The three already-unavailable external hbb_common commits are a documented baseline limit, not a claim of complete recursive historical checkout and not a new indefinite blocker to the authorized history consolidation."
+  },
+  "acceptance_and_signing": {
+    "user_full_functional_acceptance": "pending_after_repository_delivery",
+    "candidate_checklist": "config/repository-delivery.template.json",
+    "candidate_pending_cases_allowed": true,
+    "candidate_failed_cases_allowed": false,
+    "production_signing": "not_configured",
+    "production_update_authorized": false,
+    "formal_release_requires_separate_acceptance_and_enrolled_signing": true,
+    "android_minimum_api": 30,
+    "maximum_test_duration_seconds": 5400
+  },
+  "credential_observation": {
+    "observed_at": "2026-10-17",
+    "scopes": ["gist", "read:org", "repo", "workflow"],
+    "admin_and_push_on_all_four_repositories": true,
+    "delete_repo_scope_present": false,
+    "effect": "Only the final component-repository DELETE calls require a credential with deletion scope. Upload, candidate publication, rename, history import and main-only branch work can proceed using the current authorized identity."
+  },
+  "status": "implementation_and_repository_delivery_in_progress",
+  "remaining_runbook": "docs/refactor/HANDOFF-REMAINING-2026-10-17.md",
+  "operations_executed": [
+    {
+      "operation": "start_original_history_archive_upload",
+      "date": "2026-10-17",
+      "tag": "history-archive-2026-10-17",
+      "exec_session_id": 19114,
+      "status": "running",
+      "completion_evidence": "A final create-new upload receipt with every expected asset verified is required; a running process or partial progress log is not completion."
+    }
+  ]
+}

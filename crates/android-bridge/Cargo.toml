@@ -1,0 +1,46 @@
+[package]
+name = "nestlink-android-bridge"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lib]
+name = "nestlink_android"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+nestlink-app-core.workspace = true
+nestlink-auth.workspace = true
+nestlink-identity.workspace = true
+nestlink-media-codec.workspace = true
+nestlink-protocol.workspace = true
+nestlink-remote.workspace = true
+nestlink-sdk.workspace = true
+nestlink-session.workspace = true
+nestlink-transport-stream.workspace = true
+nestlink-platform-files.workspace = true
+nestlink-platform-clipboard.workspace = true
+nestlink-platform-security.workspace = true
+cap-std = "=4.0.3"
+cap-fs-ext = "=4.0.3"
+base64.workspace = true
+jni = "=0.21.1"
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+tokio.workspace = true
+zeroize.workspace = true
+uuid.workspace = true
+
+# Android's JNI ABI needs `#[unsafe(no_mangle)]` exports. This crate contains
+# a narrowly scoped unsafe block to adopt a ParcelFileDescriptor.detachFd owner.
+# This bridge performs no raw-pointer dereferences; every exported signature
+# is reviewed against NativeSdk.kt.
+[lints.rust]
+unsafe_code = "allow"
+
+# Keep the workspace's deny rules while allowing the JNI ABI exception above.
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"

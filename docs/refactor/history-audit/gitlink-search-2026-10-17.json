@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-10-16T21:40:58.205219+00:00",
+  "scope": "Read-only exact-SHA search on the public GitHub commit-search endpoint for the three unresolved hbb_common gitlink objects.",
+  "endpoint": "GET https://api.github.com/search/commits",
+  "results": [
+    {
+      "commit_sha": "93f9445c69f30487f1479a9e4e1882773e00c7f9",
+      "total_count": 0,
+      "matches": []
+    },
+    {
+      "commit_sha": "b0f50c8d55a015f3d49fe9e90fcefb585d74a25f",
+      "total_count": 0,
+      "matches": []
+    },
+    {
+      "commit_sha": "f857bbd3bc350c800d447eb0d809d21f101cd80b",
+      "total_count": 0,
+      "matches": []
+    }
+  ],
+  "conclusion": "No indexed public GitHub commit-search result was returned for these exact SHAs. This does not prove that the objects do not exist in other hosts, private repositories, or unindexed storage.",
+  "remote_repositories_modified": false,
+  "git_objects_downloaded": false,
+  "finalization_ready": false
+}

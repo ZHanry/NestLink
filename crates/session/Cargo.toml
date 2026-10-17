@@ -1,0 +1,19 @@
+[package]
+name = "nestlink-session"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+nestlink-protocol.workspace = true
+nestlink-identity.workspace = true
+nestlink-policy.workspace = true
+rand_core.workspace = true
+
+[dev-dependencies]
+prost.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

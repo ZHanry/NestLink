@@ -1,0 +1,492 @@
+{
+  "schema_version": 1,
+  "scope": "Read-only backup of old worktree tracked modifications, deletions, untracked unignored files and staged/unstaged binary diffs; ignored files remain in their original worktrees",
+  "started_at": "2026-10-15T03:54:10.660575+00:00",
+  "components": [
+    {
+      "component": "hub",
+      "head": "da66975153385f9d92643daa4b7d9f1efbaa7a7d",
+      "source_worktree": "D:\\home-tunnel-integration\\work-14.1.0\\hub",
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "file_count": 0,
+      "files": [],
+      "patch_sha256": {
+        "index.patch": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "worktree.patch": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "zip": {
+        "path": "D:\\代码\\远程控制\\NestLink\\artifacts\\history-preservation\\dirty-legacy-20261015-attempt02\\hub\\working-bytes.zip",
+        "bytes": 22,
+        "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+      },
+      "source_and_zip_bytes_reverified": true,
+      "status_unchanged": true
+    },
+    {
+      "component": "server",
+      "head": "10d3f5be070b4caf4d8feb11defb86ad0e68e5d4",
+      "source_worktree": "D:\\home-tunnel-integration\\work-14.1.0\\server",
+      "status_sha256": "abcd81dd3dae9e5537c00eaab7efd17ce12804486f9322b350fb7c05fe78e286",
+      "file_count": 38,
+      "files": [
+        {
+          "path": ".env.example",
+          "deleted": false,
+          "bytes": 2237,
+          "sha256": "d90ae2efa63631deb530a1a276cc2ce91710c2f1cbf075105e63ae86b16c328f"
+        },
+        {
+          "path": ".github/workflows/ci.yml",
+          "deleted": false,
+          "bytes": 15857,
+          "sha256": "bcca23870bc590c4eb850064357c74c35c96cf22411305f8f08f8ce64ca476fd"
+        },
+        {
+          "path": ".github/workflows/hbbs-image.yml",
+          "deleted": false,
+          "bytes": 3469,
+          "sha256": "5eaabc21c92e17ad6ad24774228dc92c9fea1076b80698e0627904f56359cb35"
+        },
+        {
+          "path": "README.en.md",
+          "deleted": false,
+          "bytes": 1298,
+          "sha256": "dc7278665d993c5c85f24b174ce4e8585b5db28147e4b563e5b63ef8f8390e66"
+        },
+        {
+          "path": "README.md",
+          "deleted": false,
+          "bytes": 1320,
+          "sha256": "2c7ba4309617ea363e37f62c28ff56cc2ec72d05fee7868443f5cc04c9b969b6"
+        },
+        {
+          "path": "compatibility.json",
+          "deleted": false,
+          "bytes": 1024,
+          "sha256": "3647fc027058211d9993d7baffd52a3f39d5caac24dc65c9559fef4f67544e4f"
+        },
+        {
+          "path": "compose.yaml",
+          "deleted": false,
+          "bytes": 7987,
+          "sha256": "a119a91478461b8b6479627c27cd99c17026990ec27bc40622062970bec0c676"
+        },
+        {
+          "path": "control-center/package.json",
+          "deleted": false,
+          "bytes": 3155,
+          "sha256": "07ddd51f83c25c77f17f4b3291999853f27ace2daad6c03b197561a12b6818be"
+        },
+        {
+          "path": "control-center/public/app.js",
+          "deleted": false,
+          "bytes": 99976,
+          "sha256": "107c755cadb145788cdca09e058c7a4443951672375f466fc8ec5f203d09bfbe"
+        },
+        {
+          "path": "control-center/public/index.html",
+          "deleted": false,
+          "bytes": 17738,
+          "sha256": "4169ada7e9c8ce81964f42d47d55ff5925cd9edc70c8686bc41cbee81ac8c6bf"
+        },
+        {
+          "path": "control-center/public/modules/api.js",
+          "deleted": false,
+          "bytes": 5658,
+          "sha256": "5bf25e8875664da4daeee2a0fc7b3fc07c51ad91617bf3daa0865b14db2c99a3"
+        },
+        {
+          "path": "control-center/public/modules/browser-remote.js",
+          "deleted": false,
+          "bytes": 12259,
+          "sha256": "9dfb572232a0cdf4effa7d14a445e668604608cdddb931cce36dbb5e4bd6fc77"
+        },
+        {
+          "path": "control-center/public/modules/connections.js",
+          "deleted": false,
+          "bytes": 7103,
+          "sha256": "0fb0b6bda9fd31368e46640f88441ef9979b460e780c836e02f485f2f792d0b2"
+        },
+        {
+          "path": "control-center/public/modules/devices.js",
+          "deleted": false,
+          "bytes": 7215,
+          "sha256": "648eaf514184cce2d50bd734f4b616f5763d5248444eeacb8cc43ae2537dc4e4"
+        },
+        {
+          "path": "control-center/public/modules/format.js",
+          "deleted": false,
+          "bytes": 2894,
+          "sha256": "1191e20208cfad56b2cff34a4bd14c75f54e9391a04dac8e9f401064e83dd749"
+        },
+        {
+          "path": "control-center/public/modules/homedesk.js",
+          "deleted": false,
+          "bytes": 3684,
+          "sha256": "b48fc09aa56ecea3bca45172ea767454df7b6ecdea8010ed94425b98c2161ce9"
+        },
+        {
+          "path": "control-center/public/modules/locale.js",
+          "deleted": false,
+          "bytes": 74798,
+          "sha256": "19ad796f3deaaac0ac618bcf57c50fc03aee0b73edaf052483fa453c4b5eec5d"
+        },
+        {
+          "path": "control-center/public/modules/pagination.js",
+          "deleted": false,
+          "bytes": 1010,
+          "sha256": "17d8ce1bb425e3533142c9f4fac284628b6ab043fa48920e3f61b0fdf590f6e2"
+        },
+        {
+          "path": "control-center/public/modules/realtime.js",
+          "deleted": false,
+          "bytes": 2714,
+          "sha256": "7a820a9f3b11adf4f000c9389081b0d9ef636ae3c1c6d6f2b45a69306e96851e"
+        },
+        {
+          "path": "control-center/public/modules/tunnel-wizard.js",
+          "deleted": false,
+          "bytes": 15183,
+          "sha256": "2c85098dcef8815524ee53cd64266763f0f3ce13f421e0d048cedf1cd6d0dab5"
+        },
+        {
+          "path": "control-center/scripts/api-module.test.mjs",
+          "deleted": false,
+          "bytes": 4698,
+          "sha256": "f5e8773450162b3ce060d7e3c89821ce11f3557fd0b38d3f25a507b346407146"
+        },
+        {
+          "path": "control-center/scripts/ui-preview.mjs",
+          "deleted": false,
+          "bytes": 21857,
+          "sha256": "e7da079a146f196f3bbdbeb6f8048a0ac131bac678ffd3762587f3060e43842d"
+        },
+        {
+          "path": "control-center/src/version.ts",
+          "deleted": false,
+          "bytes": 139,
+          "sha256": "b619beaf487ef13b5587dc5075d27763fb59e90149f488a0f43935ba41f0a299"
+        },
+        {
+          "path": "deploy/compose.yaml",
+          "deleted": false,
+          "bytes": 7032,
+          "sha256": "15d5c512670d6f1819aed54fb4836c2adf9dd65043df23961f0a824c5717eee8"
+        },
+        {
+          "path": "deploy/hbbs/.dockerignore",
+          "deleted": false,
+          "bytes": 13,
+          "sha256": "28aaff975cf37a9a1ad23fdccb2dfd8908b8efe28530e35f8d2933d3d5b047db"
+        },
+        {
+          "path": "deploy/hbbs/Dockerfile",
+          "deleted": false,
+          "bytes": 1172,
+          "sha256": "75f86874300f10852cf58f24f538e132cad2953dc086b18ef3ab835197e7bc68"
+        },
+        {
+          "path": "deploy/hbbs/README.md",
+          "deleted": false,
+          "bytes": 1217,
+          "sha256": "f8e63381d33c12c0891d64a2f22739021e05f333b5637c9f1dc466927849db2f"
+        },
+        {
+          "path": "deploy/hbbs/protocol.patch",
+          "deleted": false,
+          "bytes": 656,
+          "sha256": "637ce2ad73376010ec5373c3fcb2404198f0ece47cb2c08a75c6f18292adcaf4"
+        },
+        {
+          "path": "deploy/hbbs/rendezvous.patch",
+          "deleted": false,
+          "bytes": 2184,
+          "sha256": "7e4e636e018143f27a073f2b2463022e1f662c00b2376ad9da4d33a49353defd"
+        },
+        {
+          "path": "deploy/scripts/e2e_smoke.py",
+          "deleted": false,
+          "bytes": 58259,
+          "sha256": "aa306bf861b896afddc7a248a665ae901983d7e34479a40a8223a7037157c13e"
+        },
+        {
+          "path": "deploy/scripts/new-selfhost-config.ps1",
+          "deleted": false,
+          "bytes": 6597,
+          "sha256": "9c43c26bcb2452c4362d7a6a280a43b56bb9dca20d79bd94fc83980a3726aa22"
+        },
+        {
+          "path": "deploy/scripts/new-selfhost-config.sh",
+          "deleted": false,
+          "bytes": 4111,
+          "sha256": "caf380e9d76ee0d059b2ccd59ecd42e2354d125be4f8b650efa8ce20b5af4118"
+        },
+        {
+          "path": "docs/HOMEDESK_RELEASE.md",
+          "deleted": false,
+          "bytes": 13486,
+          "sha256": "2dee38df957391aba105a69e811daad879e8e418e8d6c364d1e63114a736f646"
+        },
+        {
+          "path": "docs/RELEASE_NOTES.md",
+          "deleted": false,
+          "bytes": 13486,
+          "sha256": "2dee38df957391aba105a69e811daad879e8e418e8d6c364d1e63114a736f646"
+        },
+        {
+          "path": "scripts/test_landing_contract.py",
+          "deleted": false,
+          "bytes": 1023,
+          "sha256": "d151e47c0218d46f0d748441a8bcafe85715f2fea41f0bed4bf2ba176e6d8dfb"
+        },
+        {
+          "path": "tests/hbbs-runtime.py",
+          "deleted": false,
+          "bytes": 6113,
+          "sha256": "08e735937f91fc87354d0d86de91cf94d6e3366ccedff543a25b34803d91ae9b"
+        },
+        {
+          "path": "tests/hbbs-udp.py",
+          "deleted": false,
+          "bytes": 3818,
+          "sha256": "7d26f706eaac92ee9c85a8cfdbbf3c99751974ed3e44de20de7df1847c55fca7"
+        },
+        {
+          "path": "traffic-gateway/package.json",
+          "deleted": false,
+          "bytes": 1108,
+          "sha256": "059dcf2736ed1996d4d467ea31424a4ba4e80d06af0dd2b92ffcebeae0654fbe"
+        }
+      ],
+      "patch_sha256": {
+        "index.patch": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "worktree.patch": "191bd01cd2e7605b00e661dfd33cfcb6af554825ffd70dc0b364b4bdf11dea11"
+      },
+      "zip": {
+        "path": "D:\\代码\\远程控制\\NestLink\\artifacts\\history-preservation\\dirty-legacy-20261015-attempt02\\server\\working-bytes.zip",
+        "bytes": 143903,
+        "sha256": "ef7513320c32cd6ad396c525a8901c41b0079bfb548cc92f8068123afb158d2f"
+      },
+      "source_and_zip_bytes_reverified": true,
+      "status_unchanged": true
+    },
+    {
+      "component": "client",
+      "head": "181519880a5971f0618adfc81a55281a09d613a8",
+      "source_worktree": "D:\\home-tunnel-integration\\work-14.1.0\\client",
+      "status_sha256": "dbc1c756a8c5e9abd86323bd4479f0c298e01cf7a5a7e001d34c88c19da221e2",
+      "file_count": 28,
+      "files": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "deleted": false,
+          "bytes": 11717,
+          "sha256": "02bcfb55af174aeb8e6ca492f2f2fc2a9fc8cf1737c0ae855622015d7f02f560"
+        },
+        {
+          "path": "agent/THIRD-PARTY-NOTICES.txt",
+          "deleted": false,
+          "bytes": 678,
+          "sha256": "709e85bf0b23c2638685b69ada87d9d000e1bd46567ab809c0ed76128925ec2f"
+        },
+        {
+          "path": "agent/main.go",
+          "deleted": false,
+          "bytes": 22560,
+          "sha256": "83dfda434c489e2a1432a5c7b5802d7fc53880d383586ae2b46808f1d7076562"
+        },
+        {
+          "path": "brand/brand.json",
+          "deleted": false,
+          "bytes": 432,
+          "sha256": "a7eca6d8e6aa3ebd6a36f9ab8bc6c93910b5e3b9625deb0c2a4f8a9044cb1a21"
+        },
+        {
+          "path": "build/tunnel/README.md",
+          "deleted": false,
+          "bytes": 1158,
+          "sha256": "5d947b57498602ca06f7dfb8e3204e55bdc7c4f70390f24707d80caa93d18e1a"
+        },
+        {
+          "path": "client/Cargo.lock",
+          "deleted": false,
+          "bytes": 280870,
+          "sha256": "d078e6f8f95f964b07853a3498643914c91d17c84e12cde9846981d5457abaca"
+        },
+        {
+          "path": "client/Cargo.toml",
+          "deleted": false,
+          "bytes": 8048,
+          "sha256": "6abaaea81464035ee9923a4235171f55ca7b31c0fb719cf6c215b601c63b86c3"
+        },
+        {
+          "path": "client/flutter/lib/desktop/widgets/tabbar_widget.dart",
+          "deleted": false,
+          "bytes": 52627,
+          "sha256": "d4b4699604a0f7c1cc73ce73f35219eaf9a02c8d035b26ab7f466fb42534a13e"
+        },
+        {
+          "path": "client/flutter/lib/homedesk_title_bar.dart",
+          "deleted": false,
+          "bytes": 6837,
+          "sha256": "4d9c49674e427797226c02cd9a3941876ad4131763967625eecc9a73adf0db6c"
+        },
+        {
+          "path": "client/flutter/lib/homedesk_tunnel_api.dart",
+          "deleted": false,
+          "bytes": 72955,
+          "sha256": "7d4096b121edff33239e9d51a32f17dcacd622f1baed4bd0e8ec1e14c7d9f1f6"
+        },
+        {
+          "path": "client/flutter/lib/homedesk_window.dart",
+          "deleted": false,
+          "bytes": 2962,
+          "sha256": "33ad5722b5370d18643afd8fbc3ab86d256dbe0c9087bc044a3ab1d43aa36b9f"
+        },
+        {
+          "path": "client/flutter/lib/nestlink_native_session.dart",
+          "deleted": false,
+          "bytes": 5390,
+          "sha256": "4d9cd6bf9af158d2337f22f2540c042781fdde50e4a46036a806a3ed30614423"
+        },
+        {
+          "path": "client/flutter/lib/nestlink_workspace.dart",
+          "deleted": false,
+          "bytes": 21328,
+          "sha256": "502cf5359cf03b102541c37d4b642d457970a85e4d9a42ab73794807f83fd64c"
+        },
+        {
+          "path": "client/flutter/pubspec.yaml",
+          "deleted": false,
+          "bytes": 6205,
+          "sha256": "8d156c1eec11d2b50426fa6712ca785b1a9c79fb65e81cf928babb6c3ba1d0b4"
+        },
+        {
+          "path": "client/flutter/test/homedesk_dashboard_test.dart",
+          "deleted": false,
+          "bytes": 19096,
+          "sha256": "24833dd836b353e5c1b0f55bcb9e5b54be613134f1cabec13861a5984110b881"
+        },
+        {
+          "path": "client/flutter/test/homedesk_shell_test.dart",
+          "deleted": false,
+          "bytes": 11989,
+          "sha256": "74f43995af5a5c8e5e1dcbc9a4d1f7be2aedb444923207461e018d0fb204ffa4"
+        },
+        {
+          "path": "client/flutter/windows/runner/flutter_window.cpp",
+          "deleted": false,
+          "bytes": 5446,
+          "sha256": "7b87c48e33d873f0cf131996b2a1e285e6b5f37a3ccb0712540973cdd1c67d28"
+        },
+        {
+          "path": "client/flutter/windows/runner/homedesk_window_tray.h",
+          "deleted": false,
+          "bytes": 3336,
+          "sha256": "cc7b31cdbf7699f818bfa9b09601dc82e18a7a80320ebd71610cd4dcf455c654"
+        },
+        {
+          "path": "client/src/client.rs",
+          "deleted": false,
+          "bytes": 165563,
+          "sha256": "47a705d65c7764cb64010a078b4d78cd44c90b65bda1a0679051a89e6fd1f9c8"
+        },
+        {
+          "path": "client/src/common.rs",
+          "deleted": false,
+          "bytes": 103368,
+          "sha256": "24d4724070c0fc415e96427c06c8c9333f7fc9d82df97a339ab1bb08743c866d"
+        },
+        {
+          "path": "client/src/flutter_ffi.rs",
+          "deleted": false,
+          "bytes": 103800,
+          "sha256": "9520ad41ff848070113563f666e6df525d9a22b1c6ad7a1fdaaf302d945cfd2f"
+        },
+        {
+          "path": "client/src/homedesk_config.rs",
+          "deleted": false,
+          "bytes": 18744,
+          "sha256": "40d8bfc0eae7cb17ac1fbf08369baf8a6e61f6dac087db07fa62fc15350f3b37"
+        },
+        {
+          "path": "client/src/kcp_stream.rs",
+          "deleted": false,
+          "bytes": 7010,
+          "sha256": "7cb2aef9acb4d4cc90283d62f58a68e93b7e6723f020c95f1527523f915a3a56"
+        },
+        {
+          "path": "compatibility.json",
+          "deleted": false,
+          "bytes": 1007,
+          "sha256": "8f075d8f5000a64a31a6a256c20709f8d90552408977cd65514be9a80b0ff9e2"
+        },
+        {
+          "path": "internal/model/model.go",
+          "deleted": false,
+          "bytes": 6124,
+          "sha256": "77e5f4c48722b3a917d22368cd6768edf400f3dba2547794cd284347f3f94be2"
+        },
+        {
+          "path": "native/remote/generated/host_version.hpp",
+          "deleted": false,
+          "bytes": 116,
+          "sha256": "90834619959ac119e4ab0a8c43a423ad70d14fd4e7d3e9822e8725c4996b3969"
+        },
+        {
+          "path": "packaging/windows/HomeDesk.iss",
+          "deleted": false,
+          "bytes": 5047,
+          "sha256": "4101530957f269b29d2a7cbfd8d77ed76bc68f3389209dc91ee95aa0b41678fb"
+        },
+        {
+          "path": "tests/runtime-manifest.rs",
+          "deleted": false,
+          "bytes": 1861,
+          "sha256": "535a28886b0e4ce134927fac8139746988306b798151da57ca18dc0316563934"
+        }
+      ],
+      "patch_sha256": {
+        "index.patch": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "worktree.patch": "e2874f5220674727793e304d2246672a8acc4c88d10185cba3b412f0a2c0fab1"
+      },
+      "zip": {
+        "path": "D:\\代码\\远程控制\\NestLink\\artifacts\\history-preservation\\dirty-legacy-20261015-attempt02\\client\\working-bytes.zip",
+        "bytes": 235726,
+        "sha256": "48490cc04a80d68b4dc740662c1884a3d60746bae7a7f704b43178978c1d701f"
+      },
+      "source_and_zip_bytes_reverified": true,
+      "status_unchanged": true
+    },
+    {
+      "component": "android",
+      "head": "fc3690289d7bda0b0f0aec122e9379b2fa93f16c",
+      "source_worktree": "D:\\home-tunnel-integration\\work-14.1.0\\android",
+      "status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "file_count": 0,
+      "files": [],
+      "patch_sha256": {
+        "index.patch": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "worktree.patch": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "zip": {
+        "path": "D:\\代码\\远程控制\\NestLink\\artifacts\\history-preservation\\dirty-legacy-20261015-attempt02\\android\\working-bytes.zip",
+        "bytes": 22,
+        "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+      },
+      "source_and_zip_bytes_reverified": true,
+      "status_unchanged": true
+    }
+  ],
+  "original_worktrees_modified": false,
+  "new_product_reuse_approved": false,
+  "durable_remote_archive_uploaded": false,
+  "finalization_ready": false,
+  "finished_at": "2026-10-15T03:54:14.118838+00:00",
+  "script_sha256": "aa831bb54700f7a814882be77babd103c95398b0b43a2de71e795b85b06f2a1e",
+  "retained_original_report": {
+    "path": "artifacts/history-preservation/dirty-legacy-20261015-attempt02/preservation.json",
+    "sha256": "2a231ba3a5e88885859dbb431d20d1694ee0b15a45a72f1bd6ce52d9dd0c5b8c"
+  },
+  "retained_failed_attempt": "artifacts/history-preservation/dirty-legacy-20261015/attempt01-failure.json"
+}

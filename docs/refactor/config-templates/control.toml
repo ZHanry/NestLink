@@ -1,0 +1,13 @@
+# Reference only. `nestlink-server init` creates new private configuration and
+# keys; use that generated deployment ID and retain its private file ACL/mode.
+deployment_id = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+listen = "127.0.0.1:28741"
+database = "control.sqlite3"
+vault_key_file = "vault.key"
+permit_key_file = "permit.key"
+management_origin = "https://control.example.com"
+allow_loopback_http = false
+
+# Up to four numeric public unicast SocketAddr values of your own STUN service.
+# Empty disables deployment-supplied discovery; no public service is built in.
+stun_servers = []

@@ -1,0 +1,33 @@
+[package]
+name = "nestlink-node"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+httparse = "=1.10.1"
+nestlink-protocol.workspace = true
+nestlink-identity.workspace = true
+nestlink-session.workspace = true
+nestlink-traversal.workspace = true
+nestlink-platform-security.workspace = true
+tokio.workspace = true
+tokio-tungstenite.workspace = true
+futures-util.workspace = true
+prost.workspace = true
+serde.workspace = true
+toml.workspace = true
+url.workspace = true
+base64.workspace = true
+thiserror.workspace = true
+reqwest = { workspace = true, features = ["stream"] }
+serde_json.workspace = true
+rusqlite.workspace = true
+uuid = {workspace = true, features = ["v4"]}
+
+[dev-dependencies]
+axum.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,80 @@
+use crate::{
+    ContractError, ErrorCode, NODE_RESOURCE_ALLOCATIONS, NODE_RESOURCE_TTL_MS,
+    NodeResourceQueryClaims, NodeResourceSnapshotClaims, SCHEMA_VERSION, valid_id,
+};
+fn invalid() -> ContractError {
+    ContractError::new(ErrorCode::InvalidMessage, "invalid node resource metadata")
+}
+impl NodeResourceQueryClaims {
+    pub fn validate(&self) -> Result<(), ContractError> {
+        if self.schema_version != SCHEMA_VERSION
+            || [
+                &self.deployment_id,
+                &self.node_id,
+                &self.runtime_id,
+                &self.request_id,
+            ]
+            .iter()
+            .any(|s| !valid_id(s))
+            || [
+                self.security_epoch,
+                self.runtime_generation,
+                self.policy_revision,
+                self.lease_sequence,
+                self.request_sequence,
+                self.issued_at_unix_ms,
+                self.expires_at_unix_ms,
+            ]
+            .iter()
+            .any(|n| *n == 0 || *n > i64::MAX as u64)
+            || self
+                .expires_at_unix_ms
+                .checked_sub(self.issued_at_unix_ms)
+                .is_none_or(|n| n == 0 || n > NODE_RESOURCE_TTL_MS)
+        {
+            return Err(invalid());
+        }
+        Ok(())
+    }
+}
+impl NodeResourceSnapshotClaims {
+    pub fn validate(&self) -> Result<(), ContractError> {
+        let q = self.query.as_ref().ok_or_else(invalid)?;
+        q.validate()?;
+        if self.query_sha256.len() != 32
+            || self.allocation_issuer.len() != 32
+            || self.quota_revision == 0
+            || self.quota_revision > i64::MAX as u64
+            || self.issued_at_unix_ms == 0
+            || self.expires_at_unix_ms > i64::MAX as u64
+            || self.expires_at_unix_ms > q.expires_at_unix_ms
+            || self
+                .expires_at_unix_ms
+                .checked_sub(self.issued_at_unix_ms)
+                .is_none_or(|n| n == 0 || n > NODE_RESOURCE_TTL_MS)
+            || self.allocations.len() as u64 > NODE_RESOURCE_ALLOCATIONS
+            || self
+                .allocations
+                .windows(2)
+                .any(|p| p[0].allocation_id >= p[1].allocation_id)
+        {
+            return Err(invalid());
+        }
+        for c in &self.allocations {
+            c.validate()?;
+            if c.deployment_id != q.deployment_id
+                || c.security_epoch != q.security_epoch
+                || c.node_id != q.node_id
+                || c.runtime_id != q.runtime_id
+                || c.runtime_generation != q.runtime_generation
+                || c.policy_revision != q.policy_revision
+                || c.quota_revision != self.quota_revision
+                || c.issued_at_unix_ms > self.issued_at_unix_ms
+                || c.expires_at_unix_ms <= self.issued_at_unix_ms
+            {
+                return Err(invalid());
+            }
+        }
+        Ok(())
+    }
+}

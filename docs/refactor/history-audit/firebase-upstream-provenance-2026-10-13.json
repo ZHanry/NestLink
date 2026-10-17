@@ -1,0 +1,33 @@
+{
+  "review_date": "2026-10-13",
+  "scope": "Unauthenticated public commit metadata only; no API-key values submitted.",
+  "results": [
+    {
+      "id": "client-139",
+      "url": "https://api.github.com/repos/rustdesk/rustdesk/commits/4887cdb7566c6231a3d1879e94d49c6d6a76b4ba",
+      "authentication_sent": false,
+      "http_status": 200,
+      "upstream_commit_sha_matches": true,
+      "upstream_committed_at": "2022-05-17T14:51:40Z",
+      "upstream_html_url": "https://github.com/rustdesk/rustdesk/commit/4887cdb7566c6231a3d1879e94d49c6d6a76b4ba"
+    },
+    {
+      "id": "client-140",
+      "url": "https://api.github.com/repos/rustdesk/rustdesk/commits/3fd0982af57fb62e8f994bedfc546310189df0c3",
+      "authentication_sent": false,
+      "http_status": 200,
+      "upstream_commit_sha_matches": true,
+      "upstream_committed_at": "2022-01-25T10:13:11Z",
+      "upstream_html_url": "https://github.com/rustdesk/rustdesk/commit/3fd0982af57fb62e8f994bedfc546310189df0c3"
+    },
+    {
+      "id": "client-143",
+      "url": "https://api.github.com/repos/rustdesk/rustdesk/commits/87343945237b5bbc21733dcbdf5409926f7f71d8",
+      "authentication_sent": false,
+      "http_status": 200,
+      "upstream_commit_sha_matches": true,
+      "upstream_committed_at": "2020-11-29T05:32:38Z",
+      "upstream_html_url": "https://github.com/rustdesk/rustdesk/commit/87343945237b5bbc21733dcbdf5409926f7f71d8"
+    }
+  ]
+}

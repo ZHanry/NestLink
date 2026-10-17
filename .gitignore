@@ -1,0 +1,95 @@
+# Dependencies and compiled output
+/target/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+**/node_modules/
+.pnpm-store/
+**/dist/
+/bin/
+**/obj/
+**/__pycache__/
+*.py[cod]
+artifacts/
+outputs/
+imported/
+products/
+material-input/
+release-public/
+.downloads/
+.codex-tools/
+design-system/
+
+# Locally built or vendored executables
+windows-client/assets/HomeTunnel.Agent.exe
+linux-client/home-tunnel-client
+deploy/frps/frps
+*.exe
+*.msi
+*.msix
+*.appx
+*.tar
+*.tar.gz
+*.apk
+*.aab
+*.aar
+*.jks
+*.keystore
+
+# Android and Gradle local/generated state
+.gradle/
+**/.gradle/
+**/.kotlin/
+**/build/
+# Existing Windows Gradle output junctions appear as symlinks to WSL Git.
+/apps/android/build
+/apps/android/app/build
+local.properties
+android-client/.android/
+android-client/.agent-build/
+android-client/app/src/main/jniLibs/**/libhometunnel_agent.so
+android-client/signing.properties
+
+# Secrets and machine-local configuration
+.env
+.env.*
+!.env.example
+**/secrets/
+*.pfx
+*.p12
+*.key
+*.pem
+*credentials*.txt
+*credential*.txt
+.ssh_known_hosts_home_tunnel
+
+# IDE, operating-system and user files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.swp
+*.tmp
+Thumbs.db
+.DS_Store
+
+# Logs, coverage and generated QA material
+*.log
+coverage/
+.nyc_output/
+.docx-qa/
+.lighthouseci/
+lighthouse-results/
+_site/
+release-smoke-evidence/
+tests/smoke/
+release-smoke-evidence-*/
+
+# Original deployment verification fixtures contain site-specific topology
+tests/caddy-baseline.Caddyfile
+tests/frpc-http.toml
+tests/frpc-https.toml
+
+**/test-results/
+**/playwright-report/

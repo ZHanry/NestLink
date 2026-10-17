@@ -1,0 +1,1173 @@
+{
+  "schema_version": 1,
+  "tool": "gitleaks 8.30.1",
+  "scope": "all currently reachable local refs; default rules; no project allowlist or ignore file; allow comments ignored",
+  "reports_redacted": true,
+  "history_imported": false,
+  "components": {
+    "hub": {
+      "finding_count": 38,
+      "report_sha256": "bd76fb8312f17fa5a30c50a12cf8c8aeca0d2311c8051e3478988b378df191fe",
+      "rules": {
+        "generic-api-key": 38
+      },
+      "review": "All preserved default-rule findings individually classified; see linked redacted report and maintenance disposition. No blanket allowlist; no history imported.",
+      "locations": [
+        {
+          "rule": "generic-api-key",
+          "path": "scripts/test_maintenance_distribution.py",
+          "commit": "f178173e985b2f94345479ad03a166d4b5bfe905",
+          "line": 31
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-remote-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 31
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-remote-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 32
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-remote-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 33
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-remote-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 34
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-remote-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 35
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-remote-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 36
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-remote-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 37
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-remote-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 38
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-remote-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 39
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-tunnel-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 31
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-tunnel-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 32
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-tunnel-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 33
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-tunnel-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 34
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-tunnel-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 35
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-tunnel-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 36
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-tunnel-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 37
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-tunnel-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 38
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-tunnel-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 39
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-light-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 31
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-light-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 32
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-light-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 33
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-light-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 34
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-light-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 35
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-light-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 36
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-light-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 37
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-light-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 38
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/assets/14.0.0/desktop-light-capture-manifest.json",
+          "commit": "2a3b508bd339f7df47f8be6395c8bfdd88295c3b",
+          "line": 39
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "contracts/nestlink-auth.v2-vectors.json",
+          "commit": "f4c938a615e75d7546521921461fa9651f74214a",
+          "line": 23
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "contracts/nestlink-auth.v2-vectors.json",
+          "commit": "f4c938a615e75d7546521921461fa9651f74214a",
+          "line": 24
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "contracts/nestlink-auth.v2-vectors.json",
+          "commit": "f4c938a615e75d7546521921461fa9651f74214a",
+          "line": 27
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "contracts/nestlink-auth.v2-vectors.json",
+          "commit": "f4c938a615e75d7546521921461fa9651f74214a",
+          "line": 27
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "contracts/nestlink-auth.v2-vectors.json",
+          "commit": "f4c938a615e75d7546521921461fa9651f74214a",
+          "line": 29
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "contracts/nestlink-auth.v2-vectors.json",
+          "commit": "f4c938a615e75d7546521921461fa9651f74214a",
+          "line": 29
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/candidate.json",
+          "commit": "f4c938a615e75d7546521921461fa9651f74214a",
+          "line": 17
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/release/candidate-11.0.0-rc.1.json",
+          "commit": "f4c938a615e75d7546521921461fa9651f74214a",
+          "line": 17
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "distribution.json",
+          "commit": "2cda395365a2b631ff93d66e76a943f10bd574d6",
+          "line": 149
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/site/candidate.json",
+          "commit": "2cda395365a2b631ff93d66e76a943f10bd574d6",
+          "line": 17
+        }
+      ],
+      "classification_report": {
+        "path": "docs/refactor/history-audit/hub-client-classification-2026-10-13.json",
+        "sha256": "91c8cd8c14dd54730afa8b14f87f64a6db526862323becfde686faa511292485"
+      },
+      "maintenance_disposition": "docs/refactor/history-audit/DISPOSITION.md"
+    },
+    "server": {
+      "finding_count": 5,
+      "report_sha256": "085c5e39dcd1e2b832bc688d16ddf27f0a005a1b36e741a084dcadfab76a686c",
+      "rules": {
+        "generic-api-key": 5
+      },
+      "review": "all 5 findings are 64-character SHA-256 file hash entries, individually checked at original commit; not credentials",
+      "locations": [
+        {
+          "rule": "generic-api-key",
+          "path": "docs/release/acceptance-13.0.0.json",
+          "commit": "67aa10e572041adad17f5ca29b4c1b26e487e306",
+          "line": 422
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/release/acceptance-13.0.0.json",
+          "commit": "67aa10e572041adad17f5ca29b4c1b26e487e306",
+          "line": 423
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/release/acceptance-13.0.0.json",
+          "commit": "67aa10e572041adad17f5ca29b4c1b26e487e306",
+          "line": 431
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/release/acceptance-13.0.0.json",
+          "commit": "67aa10e572041adad17f5ca29b4c1b26e487e306",
+          "line": 432
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "docs/release/acceptance-13.0.0.json",
+          "commit": "67aa10e572041adad17f5ca29b4c1b26e487e306",
+          "line": 433
+        }
+      ]
+    },
+    "client": {
+      "finding_count": 143,
+      "report_sha256": "f597867230517d4794c3b8a47a0009aceca587dcde159990c7e2ef163257f7e4",
+      "rules": {
+        "generic-api-key": 140,
+        "gcp-api-key": 3
+      },
+      "review": "All preserved default-rule findings individually classified; see linked redacted report and maintenance disposition. No blanket allowlist; no history imported.",
+      "locations": [
+        {
+          "rule": "generic-api-key",
+          "path": "contracts/nestlink-auth.v2-vectors.json",
+          "commit": "1cef935980c9118cc9d223642748260af740a424",
+          "line": 23
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "contracts/nestlink-auth.v2-vectors.json",
+          "commit": "1cef935980c9118cc9d223642748260af740a424",
+          "line": 24
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "contracts/nestlink-auth.v2-vectors.json",
+          "commit": "1cef935980c9118cc9d223642748260af740a424",
+          "line": 27
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "contracts/nestlink-auth.v2-vectors.json",
+          "commit": "1cef935980c9118cc9d223642748260af740a424",
+          "line": 27
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "contracts/nestlink-auth.v2-vectors.json",
+          "commit": "1cef935980c9118cc9d223642748260af740a424",
+          "line": 29
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "contracts/nestlink-auth.v2-vectors.json",
+          "commit": "1cef935980c9118cc9d223642748260af740a424",
+          "line": 29
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/ja.rs",
+          "commit": "a7c55db9ac232087e0b1a0ea68fd80e78dbaa989",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/bg.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/cs.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/da.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/eu.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/eo.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 562
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/eo.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/hr.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/lt.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 562
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/lt.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/kz.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 562
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/kz.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/nb.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 562
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/nb.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/sk.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/pt_PT.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 562
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/pt_PT.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/sv.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 562
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/sq.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 562
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/sq.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/sv.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/sr.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 562
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/sr.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/th.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 562
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/th.rs",
+          "commit": "0c86d4616298f09435f6236599b300964aa61460",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/be.rs",
+          "commit": "5d0533f0d4a86673982098b4b62d286f60f11cf3",
+          "line": 562
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/be.rs",
+          "commit": "5d0533f0d4a86673982098b4b62d286f60f11cf3",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/hu.rs",
+          "commit": "642c281ad015296c55e501bbc6aaf3c56a26ff68",
+          "line": 562
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/hu.rs",
+          "commit": "642c281ad015296c55e501bbc6aaf3c56a26ff68",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/el.rs",
+          "commit": "8a889d3ebb6915df0320659e4bb88131af45b338",
+          "line": 561
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/el.rs",
+          "commit": "8a889d3ebb6915df0320659e4bb88131af45b338",
+          "line": 645
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/tr.rs",
+          "commit": "5ee9dcf42d6944c58722982bd36278d3bdb5892a",
+          "line": 562
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/hu.rs",
+          "commit": "f112d097dcd8b78d7c8ca251d713d820f2618afc",
+          "line": 562
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/hu.rs",
+          "commit": "f112d097dcd8b78d7c8ca251d713d820f2618afc",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/tr.rs",
+          "commit": "204e81a700a1436d0b12900b7d9d7a0cd2ef2ce8",
+          "line": 562
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/tr.rs",
+          "commit": "204e81a700a1436d0b12900b7d9d7a0cd2ef2ce8",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/tr.rs",
+          "commit": "8e6e91eb4a59d0af24c920aef62c0d5e37fc9c56",
+          "line": 562
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/tr.rs",
+          "commit": "8e6e91eb4a59d0af24c920aef62c0d5e37fc9c56",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/hu.rs",
+          "commit": "a898c22f4bc4645ec26315eba09732044f30d06e",
+          "line": 562
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/hu.rs",
+          "commit": "a898c22f4bc4645ec26315eba09732044f30d06e",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/ja.rs",
+          "commit": "2c88a44a530fc3c03150df95b4240399af8f7e06",
+          "line": 646
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/hu.rs",
+          "commit": "aa680533ae58550a31ce99400cdb9fee72e3e599",
+          "line": 568
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/hu.rs",
+          "commit": "aa680533ae58550a31ce99400cdb9fee72e3e599",
+          "line": 654
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/ko.rs",
+          "commit": "8d559725d5789e693fb1c3d1ce2100a10d9f015e",
+          "line": 565
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/ko.rs",
+          "commit": "8d559725d5789e693fb1c3d1ce2100a10d9f015e",
+          "line": 649
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/ko.rs",
+          "commit": "4e1a814aebe9ae3b74dff7a185b5242db0faaad9",
+          "line": 651
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/ge.rs",
+          "commit": "d9109560a786a38da6566d99585346e268fa7c56",
+          "line": 567
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/ge.rs",
+          "commit": "d9109560a786a38da6566d99585346e268fa7c56",
+          "line": 652
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/ptbr.rs",
+          "commit": "d808bb29476a67173bb7f08c979e1989f89f9e3e",
+          "line": 651
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/ge.rs",
+          "commit": "f9af3e3a0ceda4bc8466c47e74a39bf5d9466d23",
+          "line": 567
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/ge.rs",
+          "commit": "f9af3e3a0ceda4bc8466c47e74a39bf5d9466d23",
+          "line": 652
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/et.rs",
+          "commit": "cef41759619804a50375f1f4e832a71fb9db7dde",
+          "line": 651
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/fr.rs",
+          "commit": "2b68c46fdcbc495cb0b88c84b883a9ee577bb949",
+          "line": 567
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/fr.rs",
+          "commit": "2b68c46fdcbc495cb0b88c84b883a9ee577bb949",
+          "line": 651
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/sc.rs",
+          "commit": "e17ab74040beec8409f29a96f17a5faeb72ed5e6",
+          "line": 567
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/sc.rs",
+          "commit": "e17ab74040beec8409f29a96f17a5faeb72ed5e6",
+          "line": 651
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/tw.rs",
+          "commit": "ee288280b38fe5d58d0095fa4e88064248eb58db",
+          "line": 651
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/nl.rs",
+          "commit": "a27fa4308102fda390108d9592b1515a3adc966f",
+          "line": 567
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/nl.rs",
+          "commit": "a27fa4308102fda390108d9592b1515a3adc966f",
+          "line": 651
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/hu.rs",
+          "commit": "db3bdb16a1c30cf41559bd038b3f69edf01f3974",
+          "line": 567
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/hu.rs",
+          "commit": "db3bdb16a1c30cf41559bd038b3f69edf01f3974",
+          "line": 651
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/uk.rs",
+          "commit": "8a70932cd663971bb1ec32696f5a27025a3e7563",
+          "line": 651
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/custom_server.rs",
+          "commit": "bc211c8031ac3b9b39ab14820ac1d8d064c84580",
+          "line": 180
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/tw.rs",
+          "commit": "78088360ca7dd8de777094d56a3511e12251d9e7",
+          "line": 567
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/tw.rs",
+          "commit": "78088360ca7dd8de777094d56a3511e12251d9e7",
+          "line": 651
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/ko.rs",
+          "commit": "d1fdcf1b16c440d2af69cc72a344792eaa0e7c6d",
+          "line": 651
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/hu.rs",
+          "commit": "adc5a7be51bec5a8009c0ae056e3b91e64918054",
+          "line": 567
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/hu.rs",
+          "commit": "adc5a7be51bec5a8009c0ae056e3b91e64918054",
+          "line": 651
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/pl.rs",
+          "commit": "6088920f8dcb546572fd6f0bd68eb1385a8ceb0d",
+          "line": 651
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/lv.rs",
+          "commit": "675ffe038164c802233428736af013a1e0e1e844",
+          "line": 650
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/es.rs",
+          "commit": "0f6d28def724f0392974f5b3bba2f9d4735692c3",
+          "line": 650
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/tw.rs",
+          "commit": "1a0814b201485b23402c3687c0ead6e4f312f838",
+          "line": 566
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/tw.rs",
+          "commit": "1a0814b201485b23402c3687c0ead6e4f312f838",
+          "line": 650
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/uk.rs",
+          "commit": "9c7f51bc76572c9ab6a2e311cf379e271eec0b84",
+          "line": 566
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/uk.rs",
+          "commit": "9c7f51bc76572c9ab6a2e311cf379e271eec0b84",
+          "line": 650
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/id.rs",
+          "commit": "22c84bbbd19d85e4064355f94e48921893e909b3",
+          "line": 650
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/sl.rs",
+          "commit": "227f154ee7a8ca6704345d7888b223fb29cae451",
+          "line": 566
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/sl.rs",
+          "commit": "227f154ee7a8ca6704345d7888b223fb29cae451",
+          "line": 650
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/tw.rs",
+          "commit": "b0edfb8f7027bf8ad7284c47095118a056c0f158",
+          "line": 566
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/ca.rs",
+          "commit": "fd62751cb830d75b1b1395bc923527104352d3e9",
+          "line": 650
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/nl.rs",
+          "commit": "4a745d82f63abbd0718c68cce4fabf8cd6c892be",
+          "line": 650
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/nl.rs",
+          "commit": "30a7847100857db44ec31614f68c5b8bc204047e",
+          "line": 650
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/nl.rs",
+          "commit": "1e822fa13577f71538e29ae1ef50686c597c1cf0",
+          "line": 650
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/nl.rs",
+          "commit": "f6261883e81a6012c60d61f7c447af49540529f8",
+          "line": 650
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/it.rs",
+          "commit": "3365844defe413e58e626ae59aedfe7e3050a308",
+          "line": 650
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/ru.rs",
+          "commit": "769bbf1e1c82f0bb5f5065ebbca6d5094e345f05",
+          "line": 650
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/de.rs",
+          "commit": "81b999cfbea26bcc23391c93965d6293a267c87b",
+          "line": 566
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/de.rs",
+          "commit": "81b999cfbea26bcc23391c93965d6293a267c87b",
+          "line": 650
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/en.rs",
+          "commit": "3e6938bec616e2d42f71416a8f4a126b87859909",
+          "line": 238
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/ptbr.rs",
+          "commit": "aa3402b44a9acff175ad18b8a898d265fe8990a1",
+          "line": 566
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/da.rs",
+          "commit": "75a4671bda78d0adba0d347cb2081bc650161647",
+          "line": 566
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/custom_server.rs",
+          "commit": "85ae3916cb7a4d772db979813739a8b58c2de577",
+          "line": 167
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/eu.rs",
+          "commit": "bbdce8d57bcebe07be87c822afe50a5d7b518fda",
+          "line": 566
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/eu.rs",
+          "commit": "8747b9847fd1800a38dd0ba106be89857043ff39",
+          "line": 567
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/be.rs",
+          "commit": "ef06b7d5d07b018f5db630203c9e32c0bc36733d",
+          "line": 567
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/de.rs",
+          "commit": "32fca6f9b31b6e10af1b3e29ba92679cbc505c24",
+          "line": 567
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/it.rs",
+          "commit": "7391271107e63361e04ef0795a4205da2e119547",
+          "line": 567
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/en.rs",
+          "commit": "eb81e00d20d31e64a48f30d7877bec35295ca88d",
+          "line": 204
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/tw.rs",
+          "commit": "eb81e00d20d31e64a48f30d7877bec35295ca88d",
+          "line": 567
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/hr.rs",
+          "commit": "84fc70e9a934c7d91d08da5cc687d74434ef29c8",
+          "line": 566
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/he.rs",
+          "commit": "05969c2f99b393e555d4ba847405f7684e9c8b03",
+          "line": 566
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/he.rs",
+          "commit": "41da6d552fc31caf9e0f354421751216eb5f55b9",
+          "line": 567
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/he.rs",
+          "commit": "a6aabed6a1ec9c79366b23e3fcbc844d940474e5",
+          "line": 203
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/license.rs",
+          "commit": "aa6f8795042b9019128109bd8fa3d98fb9c1969a",
+          "line": 156
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/bg",
+          "commit": "c00d23846ae75555fdab43cdd57dff44c92955cf",
+          "line": 204
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/fa.rs",
+          "commit": "222c9de19fac1f71ea6f7969dad85403a1533e16",
+          "line": 569
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/tw.rs",
+          "commit": "406d8469d8717608fbb56d6d784d070fac7af909",
+          "line": 569
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/fa.rs",
+          "commit": "1f16b5236b54c6ab3ae44a02826743fa948f9656",
+          "line": 569
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/el.rs",
+          "commit": "0cccbc438bee0e7c9660a5e374754022eecc9008",
+          "line": 569
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/et.rs",
+          "commit": "f6509e3fd6917aa976bad2fc684182601ebf2434",
+          "line": 204
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/fr.rs",
+          "commit": "adf9b82d6b0af2faad93ddb61d0084fe8831fa80",
+          "line": 569
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/id.rs",
+          "commit": "d90580943f7c0ed9921f83a077398b5998bf739e",
+          "line": 570
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/ua.rs",
+          "commit": "b2fe5cce5e0900837cb5918ffc61957eee11bbfa",
+          "line": 572
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/ua.rs",
+          "commit": "55775adba61df883afce060f615629f52c11865f",
+          "line": 572
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/ko.rs",
+          "commit": "2721af3052bc07a0400f20e565aa379f23353a8c",
+          "line": 573
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/cs.rs",
+          "commit": "e2c6aedddd2f2ff0bfb1b1e0312bdfd6eac62804",
+          "line": 572
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/sk.rs",
+          "commit": "b91a03b602417f3b702e6da54607964dcd9f637c",
+          "line": 572
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/id.rs",
+          "commit": "6b16d7ee8a0037fdbadd49152471b6126566df3a",
+          "line": 572
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/ru.rs",
+          "commit": "c9fd2fc1c254e872548505f5e03bfad2ecf28dda",
+          "line": 572
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/de.rs",
+          "commit": "fe90372b2f26636ea27abcfa3f1aeaa6cafcc0cc",
+          "line": 572
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/es.rs",
+          "commit": "854c374e2f8bc45a0fa9099677baf48f7976762c",
+          "line": 572
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/pl.rs",
+          "commit": "2016000d37c78bc1b0a877b5868ca2621e5c7b60",
+          "line": 572
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/nl.rs",
+          "commit": "6da36b27aa10b22c64724f6beb3e2b601c98c4af",
+          "line": 572
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/nl.rs",
+          "commit": "b4d3fc393e27ad845c6c734c05fa4e0e9ee6eade",
+          "line": 572
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/lv.rs",
+          "commit": "55b78727ab800a49f517c66a2c7a89af6f0bd309",
+          "line": 572
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/it.rs",
+          "commit": "69b555c0592914a94a82f79ba8175e65512923d4",
+          "line": 572
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/lang/en.rs",
+          "commit": "d7e8d4d5c338f652d014d14faffe7626bc541b6d",
+          "line": 205
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/license.rs",
+          "commit": "9ac3128309fa9812016fd7c3ce43e40d3c24003f",
+          "line": 117
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/license.rs",
+          "commit": "abaa7adfa8b201971d840592546951170969142b",
+          "line": 113
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/license.rs",
+          "commit": "1b899a5ce8cdc6aba83db1f3e8335fba2bdead34",
+          "line": 125
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/license.rs",
+          "commit": "1b899a5ce8cdc6aba83db1f3e8335fba2bdead34",
+          "line": 128
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "src/license.rs",
+          "commit": "1b899a5ce8cdc6aba83db1f3e8335fba2bdead34",
+          "line": 136
+        },
+        {
+          "rule": "gcp-api-key",
+          "path": "flutter/web/index.html",
+          "commit": "4887cdb7566c6231a3d1879e94d49c6d6a76b4ba",
+          "line": 168
+        },
+        {
+          "rule": "gcp-api-key",
+          "path": "web/index.html",
+          "commit": "3fd0982af57fb62e8f994bedfc546310189df0c3",
+          "line": 110
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "web/assets/vendor.b7bb6fa2.js",
+          "commit": "7ad28b5005beaa3723b6d77a25c04005406cd93f",
+          "line": 1
+        },
+        {
+          "rule": "generic-api-key",
+          "path": "web/assets/vendor.b7bb6fa2.js",
+          "commit": "7ad28b5005beaa3723b6d77a25c04005406cd93f",
+          "line": 1
+        },
+        {
+          "rule": "gcp-api-key",
+          "path": "flutter_hbb/android/app/google-services.json",
+          "commit": "87343945237b5bbc21733dcbdf5409926f7f71d8",
+          "line": 24
+        }
+      ],
+      "classification_report": {
+        "path": "docs/refactor/history-audit/hub-client-classification-2026-10-13.json",
+        "sha256": "91c8cd8c14dd54730afa8b14f87f64a6db526862323becfde686faa511292485"
+      },
+      "maintenance_disposition": "docs/refactor/history-audit/DISPOSITION.md"
+    },
+    "android": {
+      "finding_count": 0,
+      "report_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "rules": {},
+      "review": "no scanner findings; scanner alone does not prove provenance approval",
+      "locations": []
+    }
+  }
+}

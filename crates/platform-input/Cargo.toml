@@ -1,0 +1,40 @@
+[package]
+name = "nestlink-platform-input"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+nestlink-remote.workspace = true
+nestlink-session.workspace = true
+nestlink-platform-session.workspace = true
+tokio.workspace = true
+rand_core.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61.2", features = ["Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging", "Win32_System_StationsAndDesktops", "Win32_UI_HiDpi", "Win32_System_Threading", "Win32_System_RemoteDesktop", "Win32_Graphics_Gdi"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+nestlink-platform-clipboard.workspace = true
+x11rb = { version = "0.13.2", default-features = false, features = ["xtest", "xkb", "randr", "screensaver", "xfixes"] }
+x11rb-protocol = "0.13.2"
+libc = "0.2.190"
+zbus = { version = "=5.19.0", default-features = false, features = ["tokio"] }
+futures-util.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+nestlink-auth.workspace = true
+nestlink-identity.workspace = true
+nestlink-policy.workspace = true
+nestlink-protocol.workspace = true
+prost.workspace = true
+tempfile = "=3.27.0"
+
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"

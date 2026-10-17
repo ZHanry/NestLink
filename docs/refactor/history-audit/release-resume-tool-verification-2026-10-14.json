@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "scope": "Bounded historic release range resume, stream/atomic promotion failure boundaries and actual 17-to-80-byte smoke; not complete inventory, durable upload or product acceptance",
+  "source_files": [
+    {
+      "path": "scripts/refactor-release-archive.py",
+      "sha256": "e41bbb8a41ba6887079fc90607cbd00f7da41737fcb82ff9f604b68289137989"
+    },
+    {
+      "path": "scripts/refactor-release-resume.py",
+      "sha256": "6a864d4e4ee19cba2367680a2ca3326780ad8fd0bf8861b31b45bfc5aae54b70"
+    },
+    {
+      "path": "tests/refactor/test_release_resume.py",
+      "sha256": "8fe356a15b1f5044cde78dc1060dd48de1e0363d728e004131834f475d42ce18"
+    },
+    {
+      "path": "docs/refactor/history-audit/RELEASE-ARCHIVE.md",
+      "sha256": "b167107398a79441603c26ee83d2bae6ac57994994ba8edb8de2a8fe96228cc3"
+    }
+  ],
+  "platform_checks": [
+    {
+      "platform": "windows",
+      "scope": "Archive range/stream/filesystem failure boundaries; not full inventory or product acceptance",
+      "source_revision": "274808a42d4f3d42f5a56b45f2c80df532921359",
+      "source_files": [
+        {
+          "path": "scripts/refactor-release-archive.py",
+          "sha256": "e41bbb8a41ba6887079fc90607cbd00f7da41737fcb82ff9f604b68289137989"
+        },
+        {
+          "path": "scripts/refactor-release-resume.py",
+          "sha256": "6a864d4e4ee19cba2367680a2ca3326780ad8fd0bf8861b31b45bfc5aae54b70"
+        },
+        {
+          "path": "tests/refactor/test_release_resume.py",
+          "sha256": "8fe356a15b1f5044cde78dc1060dd48de1e0363d728e004131834f475d42ce18"
+        },
+        {
+          "path": "docs/refactor/history-audit/RELEASE-ARCHIVE.md",
+          "sha256": "b167107398a79441603c26ee83d2bae6ac57994994ba8edb8de2a8fe96228cc3"
+        }
+      ],
+      "command": [
+        "C:\\Users\\Popdo\\anaconda3\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/refactor",
+        "-p",
+        "test_*.py"
+      ],
+      "exit_code": 0,
+      "completed_at": "2026-10-13T19:03:34.477736+00:00",
+      "log": "artifacts/core-verification/windows-release-resume-20261013-190333/tool-tests.log",
+      "log_sha256": "95895e4de76b092632d17271472f0bc9a41f30dad3bcafb0db1e9341547e6bbd",
+      "passed_tests": 35
+    },
+    {
+      "platform": "linux",
+      "scope": "Archive range/stream/filesystem failure boundaries; not full inventory or product acceptance",
+      "source_revision": "274808a42d4f3d42f5a56b45f2c80df532921359",
+      "source_files": [
+        {
+          "path": "scripts/refactor-release-archive.py",
+          "sha256": "e41bbb8a41ba6887079fc90607cbd00f7da41737fcb82ff9f604b68289137989"
+        },
+        {
+          "path": "scripts/refactor-release-resume.py",
+          "sha256": "6a864d4e4ee19cba2367680a2ca3326780ad8fd0bf8861b31b45bfc5aae54b70"
+        },
+        {
+          "path": "tests/refactor/test_release_resume.py",
+          "sha256": "8fe356a15b1f5044cde78dc1060dd48de1e0363d728e004131834f475d42ce18"
+        },
+        {
+          "path": "docs/refactor/history-audit/RELEASE-ARCHIVE.md",
+          "sha256": "b167107398a79441603c26ee83d2bae6ac57994994ba8edb8de2a8fe96228cc3"
+        }
+      ],
+      "command": [
+        "/usr/bin/python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/refactor",
+        "-p",
+        "test_*.py"
+      ],
+      "exit_code": 0,
+      "completed_at": "2026-10-13T19:03:39.802501+00:00",
+      "log": "artifacts/core-verification/linux-release-resume-20261013-190338/tool-tests.log",
+      "log_sha256": "74163205b28e862f221463409a7b7b64ef73ecb72245d2d7bd61c5bd1dda3290",
+      "passed_tests": 35
+    }
+  ],
+  "actual_prefix_range_smoke": {
+    "asset_id": 574934286,
+    "bytes": 80,
+    "prefix_bytes": 17,
+    "downloaded_range_bytes": 63,
+    "sha256": "540d6a74b4c31229da8db9c13ef88c695ec1b95554f2902b519968b32f63ca15",
+    "original_partial_unchanged": true,
+    "metadata_before_and_after_matched": true,
+    "report_path": "C:\\Users\\Popdo\\NestLink-legacy-archive-20261014\\range-production-smoke-final\\range-resume-574934286-3be2b2559e4b432da74f186d5f38faab.json",
+    "report_sha256": "bc67181432255447a1d9b14ab7ebecdbd4b5075356a00316e72b9ea3ea8fd0c4",
+    "source_inventory_sha256": "8710e82fde1ac829aa25246a7fb763ace1be4ff16e0c21fed263684b4e058ec7"
+  },
+  "development_sequence": "An experimental small-prefix test detected inspection before the buffered copied prefix was flushed. The production implementation flushes/fsyncs before length inspection and has retained-success and failure tests on both systems. Production additionally records the input snapshot digest and total count, resumes only fixed asset-specific original/assembly partial names, and publishes with an exclusive same-directory hardlink so Unix rename semantics cannot overwrite a late competing destination. Original experimental smoke and ongoing large prototype report remain separate observations on their original script hashes. Final production tool tests and real prefix smoke match the final source bytes. The currently running original bulk archive script and its input snapshot have not been edited.",
+  "all_inventory_bytes_verified": false,
+  "durable_remote_archive_uploaded": false,
+  "product_acceptance": false,
+  "finalization_ready": false,
+  "staged_secret_scan": [
+    {
+      "rules": "default",
+      "findings": 0,
+      "scope": "staged range-resume tool increment before scan metadata addition",
+      "log": "artifacts/core-verification/windows-release-resume-20261013-190333/staged-default-gitleaks.log",
+      "log_sha256": "fe112695348415d9368caa5eec5c934e64aa3beed241449f83936b3cbd7fda07",
+      "result": "artifacts/core-verification/windows-release-resume-20261013-190333/staged-default-gitleaks.json",
+      "result_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "rules": "project",
+      "findings": 0,
+      "scope": "staged range-resume tool increment before scan metadata addition",
+      "log": "artifacts/core-verification/windows-release-resume-20261013-190333/staged-project-gitleaks.log",
+      "log_sha256": "0600e45c3454686716c24b199824207f81019a59498e1b09041ea363c4991c53",
+      "result": "artifacts/core-verification/windows-release-resume-20261013-190333/staged-project-gitleaks.json",
+      "result_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    }
+  ]
+}

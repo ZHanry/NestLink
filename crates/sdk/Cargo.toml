@@ -1,0 +1,71 @@
+[package]
+name = "nestlink-sdk"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+zeroize.workspace = true
+nestlink-protocol.workspace = true
+nestlink-auth.workspace = true
+nestlink-identity.workspace = true
+futures-util.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+base64.workspace = true
+prost.workspace = true
+url.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+rcgen.workspace = true
+nestlink-server = {path="../../apps/server",version="=0.1.0-rc.1"}
+nestlink-storage.workspace = true
+nestlink-platform-files.workspace = true
+tokio.workspace = true
+nestlink-transport-quic.workspace = true
+nestlink-remote.workspace = true
+nestlink-session.workspace = true
+nestlink-policy.workspace = true
+nestlink-node.workspace = true
+nestlink-transport-stream.workspace = true
+axum.workspace = true
+tokio-tungstenite.workspace = true
+
+[lints]
+workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+nestlink-node.workspace = true
+nestlink-platform-clipboard.workspace = true
+reqwest = { workspace = true, features = ["stream"] }
+nestlink-remote.workspace = true
+nestlink-session.workspace = true
+nestlink-connectivity.workspace = true
+nestlink-platform-network.workspace = true
+nestlink-policy.workspace = true
+nestlink-transport-wss.workspace = true
+nestlink-transport-stream.workspace = true
+rustls.workspace = true
+tokio-rustls.workspace = true
+nestlink-transport-quic.workspace = true
+tokio.workspace = true
+quinn.workspace = true
+if-addrs.workspace = true
+uuid.workspace = true
+webrtc.workspace = true
+nestlink-media-codec.workspace = true
+bytes = "=1.12.1"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+reqwest.workspace = true
+wasm-bindgen = "0.2.129"
+wasm-bindgen-futures = "0.4.79"
+js-sys = "0.3.106"
+wasm-streams = "0.5.0"
+gloo-timers = {version="0.3.0",features=["futures"]}
+web-sys = {version="0.3.106",features=["Window","Performance","Request","RequestInit","RequestRedirect","RequestCredentials","RequestMode","RequestCache","Response","Headers","AbortController","AbortSignal"]}
+
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+nestlink-platform-security.workspace = true

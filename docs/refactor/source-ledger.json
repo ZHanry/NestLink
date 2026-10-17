@@ -1,0 +1,2480 @@
+{
+  "schema_version": 1,
+  "license_route": "L-B",
+  "first_party_license": "Apache-2.0",
+  "browser_probe_lifecycle_and_input_diagnosis_20261016": {
+    "source": "Independent first-party local browser diagnostic and owned-data verification scripts",
+    "license": "Apache-2.0; existing reviewed pinned browser/Puppeteer suppliers unchanged",
+    "paths": [
+      "scripts/refactor-browser-native-check.cjs",
+      "scripts/lib/refactor-browser-owned-data.cjs"
+    ],
+    "method": "Stop diagnostic sampling before Firefox's closed-peer SDP getters; observe only bounded control metadata after actual sends; exercise trusted UI input immediately after an actual signed management renewal. No message bytes, browser clock, permission, codec or production handler is replaced.",
+    "diagnosis": "artifacts/browser-native-throughput-20261016/INPUT_RENEWAL_DIAGNOSIS.json",
+    "verification_scope": "Eight retained local Build05 runs independently indexed. Repaired Firefox probe passes smoke/audio/input/files. Chrome 1080p30+Opus and initial-lease input/files pass, but the added post-renewal check exposes a real input-authority race and remains failed. Product repair, three-engine 30-minute media, actual network damage, TURN and formal installed-product acceptance remain separate."
+  },
+  "service_startup_socket_release_review_20261016": {
+    "source": "Independent first-party service carrier socket/poller ownership adapter and SDK cancellation integration",
+    "license": "Apache-2.0; existing locked Quinn/Tokio suppliers retain their licenses",
+    "paths": [
+      "crates/transport-quic/src/service.rs",
+      "crates/transport-quic/src/service/socket.rs",
+      "crates/sdk/src/services/publication.rs",
+      "crates/sdk/tests/service_start_cancellation.rs"
+    ],
+    "review_document": "docs/refactor/SERVICE-HOST-SOCKET-RELEASE.md",
+    "baseline": "artifacts/service-endpoint-release-followup-20261016/BASELINE.json",
+    "method": "Actual runtime socket and every writable poller retain one private completion owner; field drop order closes inner references before completion. Consuming close drains connections, drops the endpoint and observes physical release. Startup error handling first drops its separate connection clone. No new dependency or copied supplier implementation.",
+    "verification_scope": "Frozen final four-path patch d76e7b2601f38dd9ba23b5cf084d1d2ce932524c8fd26375e6954657f4bd0684: Windows eight-package runtime passed 236/0/3; both platform workspace/all-target strict Clippy, fmt and Windows TURN example checks passed. All three new IPv4/IPv6/poller cases and SDK cancellation passed on both platforms. Complete Linux workspace attempt03 passed 1100/0/12 with 857 unchanged inputs, matching log and owned scratch cleanup, zero observed clock steps in the explicitly authorized bounded NTP pause, and original tsc/active timesyncd restored and independently read back. Earlier Linux TLS and two eight-package failed batches retain their original status. Android Build15/Matrix13 passed 112 actual emulator cases; formal product acceptance remains separate.",
+    "final_source_freeze": "artifacts/service-endpoint-release-followup-20261016/FROZEN.json",
+    "complete_linux_runtime_summary": "artifacts/core-verification/native-workspace-linux-runtime-20261015-attempt03-summary.json"
+  },
+  "tls_advisory_and_parser_review_20261016": {
+    "source": "Official rustls 0.23.46 registry archive, existing rustls-pki-types 1.15.1 API, and first-party parser integration/tests",
+    "license": "rustls Apache-2.0 OR ISC OR MIT; existing supplier licenses and vendored TURN MIT/Apache texts retained",
+    "archive_sha256": "48e13bd8c0e9365c43cfa5c9e8f9ad49d3c8444926c9aac819e0e4dc503c8fdf",
+    "upstream_commit": "f04804fa13341a9b1dc02b5d1dd8a746f2c4b7fb",
+    "review_document": "docs/refactor/tls-dependency-review-2026-10-16.md",
+    "supplier_evidence": "artifacts/tls-dependency-review-20261016/SUPPLIER.json",
+    "source_evidence": "artifacts/tls-dependency-review-20261016/SOURCE_REVIEW.json",
+    "method": "Official registry checksum matched local archive; complete three license texts and 25-file archive delta retained. Only rustls is upgraded; 11 obsolete dependency entries are removed. Local TURN example API migration reuses already locked Clap 4.6.7; original upstream manifest is retained. PEM integration preserves existing file and chain boundaries.",
+    "advisory_dispositions": "RUSTSEC-2026-0346/0347/0348/0349 fixed by rustls 0.23.46; RUSTSEC-2024-0375 and RUSTSEC-2025-0134 removed with their dependencies. RUSTSEC-2025-0141 is individually reviewed maintenance status: bincode 1.3.3 is used only by explicit DTLS State export/import, with no callers in 179 selected DTLS/WebRTC Rust sources or NestLink. Repeat review on dependency/caller changes and before stable release.",
+    "verification_scope": "Full cargo-deny attempts02 and03 passed; four real PEM/TLS cases and transport checks passed on both platforms. Post-socket-fix Windows eight-package runtime passed 236/0/3 and Windows/Linux complete workspace all-target strict Clippy passed. Complete Linux workspace runtime attempt03 passed 1100/0/12 on unchanged recorded inputs, zero observed clock steps and independently confirmed restoration of authorized temporary WSL settings. At that TLS-audit checkpoint, Android BuildAttempt15 / MatrixAttempt13 had 112 API30-36 emulator cases passed; the later current 1070-input cohort passed 119/119, recorded under android_browser_host_integration_review. Original failed batches remain failed. No formal signature, hardware or installed-product acceptance is inferred.",
+    "packaged_original_license_evidence": "artifacts/tls-dependency-review-20261016/PACKAGED_NOTICES.json"
+  },
+  "android_browser_host_integration_review": {
+    "source": "Independent first-party BrowserHost Android adapters, full binding ownership and existing NestLink UI token roles",
+    "license": "Apache-2.0; existing locked suppliers retain their licenses",
+    "method": "Frozen candidate files integrated against preserved byte baselines, then compile/JNI repairs and a separate dark-token repair. No legacy runtime source, image or font copied. Cargo.lock adds only two edges to already locked first-party workspace packages; no supplier version change.",
+    "integration_receipts": [
+      "artifacts/android-browser-host-integration-20261015/APPLIED.json",
+      "artifacts/android-browser-host-integration-20261015/FINAL_CODE.json",
+      "artifacts/android-dark-theme-followup-20261015/APPLIED.json",
+      "artifacts/android-browser-host-integration-20261015/FINAL_CODE_AFTER_DARK.json",
+      "artifacts/android-system-bars-followup-20261015/APPLIED.json",
+      "artifacts/android-browser-host-integration-20261015/FINAL_CODE_AFTER_SYSTEM_BARS.json"
+    ],
+    "review": "Native and BrowserHost bindings remain distinct and mutually exclusive. JNI resolves application classes on Java entry and retains GlobalRef for background callbacks; cancelled consent is armed before awaiting and frames are zeroized across local-frame error paths. Real lease gates are rechecked at queued Projection, image, audio and input calls. Files/clipboard retain directional local approval, one-use SAF grants, actual worker joins and failed-target cleanup. A complete-binding multicast owner keeps a bounded unproved setup window and checks real active leases after proof. Three business tabs and existing token palette are retained; current theme supplies supporting/error text colors. Desktop-only network sampler definitions are target-gated rather than lint-suppressed.",
+    "verification_scope": "Current 1070-file Android source cohort was independently rebuilt and revalidated after subsequent Android app changes: dual-ABI release JNI, both all-target strict checks, 127 JVM tests, and 119 actual API30-36 x86_64 instrumentation cases passed. Exact Android APK/JNI bytes, source digest and per-API device/cleanup evidence are bound in the current index. The 996 inputs overlapping the latest Windows/Linux verification are byte-identical. Formal release signature, ARM64 hardware, runtime 16 KiB, real Projection/SAF/accessibility, and external-network acceptance remain separate.",
+    "current_runtime_index": "artifacts/android-input-renewal-full-source-20261016/android-browser-host-seven-api-20261016-attempt01.json",
+    "current_runtime_index_sha256": "983f46638e8926b845bc64ad254e50c3e6f5cd8b6c828959dc0fd7f70fa1dc1f",
+    "tested_source_digest": "0e2b103b072c9de6ce07bc3b3ae2cd72d6af4ee1289106bb2509a6682055fa29",
+    "historical_build15_verification": {
+      "verification_scope": "Current BuildAttempt15 / MatrixAttempt13 includes rustls 0.23.46 and the service socket-release repair. All 112 actual instrumentation cases passed on seven API30-36 x86_64 emulators with stable source inputs, unchanged APK/JNI bytes and owned environment cleanup. Dual-ABI release/all-target strict Clippy attempt02 passed; unchanged Kotlin inputs retain 119/119 attempt04 JVM cases. API35 initial light/dark identity screenshots were visually inspected. No ARM64 hardware, real Projection/SAF/accessibility, formal signature, 16KiB runtime or external-network acceptance is inferred.",
+      "current_runtime_index": "artifacts/core-verification/android-browser-host-seven-api-20261015-attempt01.json",
+      "current_runtime_index_sha256": "22b50bd5caf5b053172cd45965955ec3462e9849fe6c9f3bce68c663f68e39c4",
+      "tested_source_digest": "0cbf05286b8f69d1d1c938760bec3bc8bfb159ed55492e2cdb87681602d6f656"
+    },
+    "historical_1042_source_verification": {
+      "verification_scope": "Current source increment passed dual-ABI release and all-target strict checks plus 112 actual API30-36 instrumentation cases with fixed APK/JNI bytes and owned cleanup. API30 Matrix01 environment failure ran zero cases and remains retained. Previous unchanged 65 Android app inputs retain their separate 119 JVM-case evidence. Emulator page size is 4096; formal signing, ARM64 hardware and real platform authorization remain unverified.",
+      "current_runtime_index": "artifacts/android-current-increment-20261016/android-browser-host-seven-api-20261016-attempt02.json",
+      "current_runtime_index_sha256": "7fe95725916e785686f7d6413f6647e7630952c520d4e05747c1c2fd7866374a",
+      "tested_source_digest": "edd9cd42f16ff72ec58a0c053adb01db1f5a78ddc53f91c58cf68eaf97c55f51"
+    },
+    "current_source_android_revalidation": {
+      "path": "artifacts/android-input-renewal-full-source-20261016/FINAL_REVIEW.json",
+      "bytes": 14748,
+      "sha256": "8b93a730f7bb388c8e06151fa54b2808bf4dc2f1856547fdedcfef62d719d631"
+    }
+  },
+  "webrtc_ice_resolved_candidate_review": {
+    "source": "crates/traversal/vendor/ice",
+    "upstream_package": "webrtc-ice 0.14.0",
+    "upstream_commit": "a1f8f1919235d8452835852e018efd654f2f8366",
+    "archive_sha256": "69cb13fd1a373e68addc4bba0c8ca058627518e54342583d024bdcbb8ae5d97d",
+    "license": "MIT OR Apache-2.0; upstream license texts preserved",
+    "method": "All 63 locked archive files were imported byte for byte and existing reviewed MIT/Apache notices retained. One production comparison now uses resolved candidate IP plus the existing candidate port; four cfg(test) regressions are appended. Network-type buckets and original IPv6 scope/flow handling remain intact. Workspace and fixture patches replace only this registry source; all dependency versions and other locked package fields are unchanged.",
+    "verification_scope": "The isolated real AgentInternal/CandidateHostConfig regression ran four cases: the original comparison failed both mDNS cases and passed both controls; the repair passed 4/4. Artifact copies disable 23 upstream test registrations in 16 files and remove dev dependencies only for the focused harness; 52 Rust sources and all 142 registry identities were audited. Actual browser media verification remains separate.",
+    "source_receipt": "artifacts/core-verification/ice-vendor-source-20261015-attempt01.json",
+    "lock_receipt": "artifacts/core-verification/ice-vendor-lock-edge-20261015-attempt01.json",
+    "repair_evidence": "artifacts/ice-resolved-candidate-followup-20261015/FROZEN.json",
+    "upstream_notes": "crates/traversal/vendor/ice/UPSTREAM.md"
+  },
+  "browser_retained_deadline_review": {
+    "source": "Independent first-party Session activation and production browser proof integration",
+    "license": "Apache-2.0",
+    "method": "Transport setup had been charged twice by combining an old request anchor with current remaining permit time. Activate from one current ClockSample, cap before returning to the previously retained permit/endpoint deadline, and recheck the browser authority before proof signing. Existing renewal and three-second proof budgets are unchanged.",
+    "integration_patch": "artifacts/browser-lease-activation-followup-20261015/repair.patch",
+    "verification_scope": "Windows Session authorization 17/17 including four new regressions, Session all-target strict Clippy, Web WASM all-target/all-feature strict and optimized production build passed with stable recorded inputs and scratch cleanup. Chrome-to-Windows attempt03 passed the former activation rejection but still timed out before capture or renewal. No full browser media or installed-product acceptance is claimed.",
+    "verification_prefix": "artifacts/core-verification/web-proof-retained-deadline-"
+  },
+  "native_multidisplay_and_download_restart_review": {
+    "source": "Independent first-party native display acknowledgement and process-restart download implementation",
+    "license": "Apache-2.0; existing locked suppliers retain their licenses",
+    "method": "Frozen payloads integrated against captured baselines; shared files three-way merged without copying legacy implementations or unreviewed assets. Only four direct edges to existing locked dependencies were added; supplier records are unchanged.",
+    "integration_receipts": [
+      "artifacts/core-verification/native-multidisplay-20261015-integration.json",
+      "artifacts/core-verification/native-file-restart-recovery-draft-20261015-integration.json",
+      "artifacts/native-completion-lock-edges-20261015/receipt.json",
+      "artifacts/native-completion-lint-fixes-20261015/receipt.json"
+    ],
+    "review": "Display catalogues bind the proved request/connection and exact local or portal grant; switching retires input and pixels before acknowledged epochs. Download journals persist object and synced-prefix facts without authority, require fresh endpoint proofs and local approval, preserve failed-cleanup reservations, and use exact no-follow recovery/no-clobber publication. SDK/Core/daemon/authenticated IPC/Desktop own their actual workers.",
+    "verification_scope": "Selected integrated Windows/Linux protocol, media, input, restart-download, Core, IPC/Desktop and daemon root-owner regressions passed, with exact source and failed attempts indexed in native-av-accounting-recovery-status-20261015.json. Platform restart cases passed 15/16, SDK actual process-kill/new TLS-QUIC proof cases 3 per platform, daemon owner revocation cases 7 per platform. Earlier failures remain preserved; no installed-product or hardware acceptance is claimed."
+  },
+  "native_av_timing_and_service_accounting_review": {
+    "source": "Independent first-party shared AV session timing and durable lifetime service accounting",
+    "license": "Apache-2.0; existing locked suppliers retain their licenses",
+    "method": "Frozen source batches integrated against captured baselines; accounting follow-up three-way merges retain the post-Connection cleanup sentinel, signed grant ceiling and earlier borrow/lifecycle fixes. No supplier version upgrade or legacy implementation copy.",
+    "integration_receipts": [
+      "artifacts/core-verification/native-av-timing-draft-20261015-integration.json",
+      "artifacts/core-verification/android-native-displays-20261015-integration.json",
+      "artifacts/core-verification/service-accounting-quota-draft-20261015-integration.json",
+      "artifacts/core-verification/service-accounting-regression-followup-20261015-integration.json",
+      "artifacts/core-verification/service-accounting-fixture-followup-20261015-integration.json",
+      "artifacts/core-verification/native-file-restart-recovery-audit-20261015-integration.json",
+      "artifacts/core-verification/native-file-restart-recovery-ui-audit-20261015-integration.json",
+      "artifacts/core-verification/node-config-test-compat-20261015-integration.json"
+    ],
+    "review": "One capture/playout mapping per proved session, real capture age, bounded drift and presentation queues, authenticated decode/replay history retained, independently optional device facts and matching C/Rust/JNI/Kotlin ABI. Lifetime service spent plus outstanding commitments share four immutable scopes; durable admission, exact signed reports/ACKs and physical drain seals avoid refunds of unknown debt. Shutdown retains pending bytes after a five-second report budget. Restore fences grant issuance and exposes reconciliation_required. Offline reconciliation now accepts only an independently provisioned external ledger signature bound to the exact recovery request and four-scope cumulative debts; one atomic import retains unknown outstanding debt and missing-ID scopes before one-time unseal. No configured external ledger is currently available. Test cleanup observes a sentinel dropped only after SQLite Connection closes.",
+    "verification_scope": "Integrated selected development results are indexed in native-av-accounting-recovery-status-20261015.json: Windows 280 and Linux 290 executed tests across their retained source snapshots; original failed batches remain failed. Actual HTTP/QUIC publication, process-kill download recovery, AV/protocol/lifecycle fixtures and offline CLI behavior passed in their stated scopes. Native audio C ABI ASan/UBSan exercised 100000 PCM cases; current Kotlin/JVM passed 75 tests. Current JNI/APK/device and fixed signed-product acceptance are recorded separately."
+  },
+  "service_registry_and_data_plane_review": {
+    "source": "Independent first-party v3 service configuration, explicit local target consent and bounded native service data plane",
+    "license": "Apache-2.0; existing locked suppliers retain their licenses",
+    "paths": [
+      "crates/protocol/src/services.rs",
+      "crates/protocol/src/service_plane.rs",
+      "crates/identity/src/services.rs",
+      "crates/identity/src/service_plane.rs",
+      "crates/storage/src/services.rs",
+      "crates/storage/migrations/018_service_registry.sql",
+      "apps/server/src/services.rs",
+      "crates/sdk/src/services.rs",
+      "crates/node/src/service_plane",
+      "crates/node/src/control/services.rs",
+      "crates/app-core/tests/services.rs",
+      "apps/desktop/src/services.rs",
+      "apps/web/src/services_panel.rs",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/ServiceManagement.kt",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/ServicesScreen.kt"
+    ],
+    "method": "New first-party implementation using existing reviewed protocol, identity and platform dependencies; no legacy runtime implementation copied.",
+    "review": "Configuration does not grant publication. Creator/approver login validity, revision-N local consent and N+1 approval, fixed local SocketAddr and trusted backend TLS, service-specific signatures, actual TCP/UDP/Web ingress gates and bounded shared budgets are separate. Schema 19 owns namespace/ingress reservations. Node poll uses the shared 1-second query ceiling; pinned service-only QUIC validates independently policy-signed issuer renewal. Caddy privately owns dynamic HTTP/HTTPS routes and certificate subjects, preserves streamed bodies/WebSockets, and retains removal ownership until actual Admin404 and certificate withdrawal. Core/IPC/Desktop now retain cancellable local startup/stop owners and bind one-use preview to exact runtime, snapshot, principal, service revision and TLS digest. Local Stopped reports local cleanup only.",
+    "verification_scope": "Selected Windows/Linux query-lifetime libraries passed 29/29 per platform and real HTTP-to-Node-to-pinned-QUIC-to-TCP publication passed. The corrected daemon and Windows TLS IPC video regressions passed. Integrated service-web-host-schema attempts each passed nine of ten groups, preserving the Core fixture timeout. Explicit real Core policy setup repaired that fixture; subsequent Core services passed 4/4 on each platform. Rust actual Caddy Admin round trips passed Windows loopback and Linux loopback/Unix, alongside the earlier Python process contracts. Server/Core all-target strict Clippy passed both platforms. Per-check stable source inputs, zero clock backsteps and owned scratch removal are recorded in service-host-producer-status-20261015.json. Public ACME, actual installed products, durable aggregate usage and formal platform/network acceptance remain open. Historical failures are retained and do not become whole-batch passes."
+  },
+  "native_installation_lifecycle_review": {
+    "source": "Independent first-party native installation and maintenance lifecycle",
+    "license": "Apache-2.0; existing locked suppliers retain their licenses",
+    "paths": [
+      "crates/local-ipc/src/maintenance.rs",
+      "apps/daemon/src/maintenance.rs",
+      "apps/daemon/tests/maintenance_process.rs",
+      "packaging/native/release_verify.py",
+      "packaging/windows/Manage-NestLink.ps1",
+      "packaging/windows/nestlink-v15.iss",
+      "packaging/linux/lifecycle.py",
+      "packaging/debian/maintainer-owner.py",
+      "packaging/systemd/nestlink-v15-daemon.service",
+      "packaging/systemd/nestlink-v15-control.service",
+      "docs/refactor/NATIVE-PACKAGING.md"
+    ],
+    "method": "New first-party Rust, Python stdlib, PowerShell and Inno recipes; no legacy runtime implementation copied. Existing local IPC and platform-private file primitives remain the authority.",
+    "review": "Stable admission/lifetime locks, incomplete-maintenance journals, authenticated exact-daemon Exit and actual owner quiescence; fresh installation UUID/generation, retained per-user data, fixed signed CMS statements, immutable Windows and x64/ARM64 DEB recipes, and exact compatible rollback. Offline schema migration takes a consistent read-only encrypted backup, preserves the original directory and security state, stages privately, and uses durable terminal journals to prevent old recovery from reviving consumed authority. Linux package activation defers schema admission until package/receipt commit. Windows SQLite now uses the normal locking win32-longpath VFS for long disk/UNC paths. No process-name killing or privileged user daemon.",
+    "verification_scope": "Frozen static parsing, PowerShell 5.1 AST and unsigned Inno syntax checks passed within their recorded scope. Integrated lifecycle pure tests passed Windows 14 with 16 platform skips and Linux 29 with 1 skip; integrated daemon library/maintenance/process regressions passed on both platforms. The original four Windows candidate-path failures are retained. With the normal locking long-path correction integrated, the latest Windows/Linux attempts passed both file-path regressions and all six encrypted migration fixtures, with source stability and owned scratch removal recorded. Real signed installation/upgrade/rollback/uninstall and formal platform acceptance remain open."
+  },
+  "current_service_and_native_source_integrations": {
+    "source": "Independent first-party implementation; Apache-2.0; existing pinned dependencies and their licenses retained",
+    "method": "Hash-frozen payloads merged against immutable captured baselines; parent fixes preserve concurrent source changes. No legacy runtime source copied.",
+    "integration_receipts": [
+      "artifacts/core-verification/service-native-datagram-runtime-draft-20261015-integration.json",
+      "artifacts/core-verification/service-native-datagram-audit-20261015-integration.json",
+      "artifacts/core-verification/native-install-instance-draft-20261015-integration.json",
+      "artifacts/core-verification/native-schema-migration-draft-20261015-integration.json",
+      "artifacts/core-verification/service-caddy-web-runtime-draft-20261015-integration.json",
+      "artifacts/core-verification/native-service-host-product-draft-20261015-integration.json",
+      "artifacts/core-verification/native-release-producer-draft-20261015-integration.json",
+      "artifacts/core-host-caddy-gradle-followups-20261015/receipt.json"
+    ],
+    "additional_parent_sources": [
+      "crates/storage/src/file_connection.rs",
+      "crates/storage/tests/file_paths.rs",
+      "crates/app-core/tests/services.rs",
+      "apps/server/src/service_edge/caddy/admin.rs",
+      "apps/android/app/build.gradle.kts"
+    ],
+    "scope": "Source integration evidence, distinct from signed fixed-product or platform acceptance; source/log receipts retain exact check inputs and owned scratch cleanup."
+  },
+  "browser_business_data_review": {
+    "source": "Independent first-party browser business DataChannels, SDK external queues and proof-gated services",
+    "license": "Apache-2.0; locked suppliers retain their original licenses",
+    "paths": [
+      "protocol-spec/webrtc-data.rs",
+      "crates/protocol/src/webrtc_data.rs",
+      "crates/sdk/src/webrtc_host/data.rs",
+      "crates/sdk/src/webrtc_host/tests/data_loopback_tests.rs",
+      "crates/remote/src/queues/external.rs",
+      "apps/web/src/browser_data.rs",
+      "apps/web/src/browser_rpc.rs",
+      "apps/web/src/browser_files.rs",
+      "apps/web/src/browser_storage.rs",
+      "apps/web/src/browser_clipboard.rs",
+      "apps/web/src/remote_panel/data_panel.rs",
+      "docs/refactor/web-business-dependency-review-2026-10-15.md"
+    ],
+    "method": "New first-party implementation and local native WebRTC fixtures. Uses existing first-party native file/clipboard contracts and locked browser bindings without copying legacy or supplier source.",
+    "review": "Four independently authorized ordered binary channels, immutable proved binding and live permission/lease checks, bounded fragmentation/RPC/backpressure, no pre-proof business cache, retained actual shutdown owners. Plaintext clipboard is zeroizing and excluded from UI signals. Explicit selected browser File snapshots, per-chunk/full digest verification, reserved bounded OPFS artifacts, browser-managed lifetime lock and implementation-only UUID recovery. Failed cleanup and unconfirmed server revocation remain retryable and block owner replacement.",
+    "verification_scope": "Current WASM all-target/all-feature strict and optimized verification/production builds passed in attempt03. Local Chrome 155.0.8059.40, Edge 155.0.4283.45 and Playwright patched Firefox 157.0 checks passed in optimized-three-browsers attempt02. Separate official stable Firefox 158.0 passed all 14 selected local cases through WebDriver BiDi in web-stock-firefox-bidi attempt01, including no-activation refusal against the unchanged 30-second production deadline. Earlier incomplete and failed tooling preparations are preserved. Tool-only supply and full license provenance are recorded in web-browser-tooling-review-2026-10-15.json. Installed-host integration and external-network/formal acceptance remain open."
+  },
+  "entries": [
+    {
+      "source": "NestLink_重构最终方案_v3_2026-10-12.md",
+      "use": "requirements and independent implementation",
+      "new_paths": [
+        "protocol-spec",
+        "crates",
+        "xtask",
+        "config",
+        ".github/workflows/rust-core.yml",
+        "apps/server",
+        "packaging"
+      ],
+      "method": "new implementation; no legacy runtime source copied",
+      "review": "initial implementation recorded; full G0 is open",
+      "source_sha256": "a8f0ff13f549bc04981955aefb6784385e471f39e3ced76bf3fa93176889e326"
+    },
+    {
+      "source": "Hub da66975153385f9d92643daa4b7d9f1efbaa7a7d",
+      "license": "Apache-2.0",
+      "use": "monorepo host and original distribution history",
+      "method": "isolated Git worktree",
+      "review": "legacy distribution identity retained"
+    },
+    {
+      "source": "Client client/ RustDesk-derived Rust/Dart/platform source",
+      "license": "AGPL-3.0; per-file third-party conditions also apply",
+      "use": "requirements reference only",
+      "method": "not copied, translated or linked into new crates",
+      "review": "excluded from L-B build"
+    },
+    {
+      "source": "legacy first-party assets, business source and test vectors",
+      "use": "baseline file hashes and contract-operation inventory only",
+      "method": "no asset/runtime/test-vector migration in this batch",
+      "review": "per-file provenance review pending before reuse"
+    },
+    {
+      "source": "scripts/refactor-test-vectors.py, independent manual protobuf and cryptography Ed25519",
+      "use": "public deterministic test vectors, not production credentials",
+      "new_paths": [
+        "tests/vectors/session-permit-v1.json"
+      ],
+      "method": "fresh independent fixture",
+      "review": "test-only fixed seeds explicitly identified"
+    },
+    {
+      "source": "Fresh v15 Rust control, auth, OS key storage and native TLS/QUIC implementations",
+      "use": "independent implementation of the v3 product requirements",
+      "new_paths": [
+        "crates/auth",
+        "crates/platform-security",
+        "crates/transport-stream",
+        "crates/transport-quic",
+        "crates/remote",
+        "apps/server",
+        "protocol-spec/management.rs",
+        "protocol-spec/management-routes.json",
+        "crates/connectivity"
+      ],
+      "method": "new first-party code; no RustDesk source copied or translated",
+      "license": "Apache-2.0",
+      "review": "purpose-separated account/device proofs and Ed25519 TLS key binding; DPAPI unsafe blocks individually documented; product acceptance remains open"
+    }
+  ],
+  "incremental_first_party_review": {
+    "paths": [
+      "crates/sdk",
+      "crates/transport-wss",
+      "crates/protocol/src/signaling.rs",
+      "crates/storage/src/signaling.rs",
+      "crates/storage/src/accounts/password_work.rs",
+      "apps/server/src/relay.rs"
+    ],
+    "source": "Independent implementation of v3 requirements and current user instructions",
+    "license": "Apache-2.0",
+    "method": "New code; no legacy source copied or mechanically translated",
+    "review": "Browser Fetch bounds and redirect rejection; canonical permit-bound signal and relay device proofs; end-to-end pinned TLS; transaction revalidation after password work; final product/source acceptance remains open"
+  },
+  "dependency_lock": "Cargo.lock",
+  "native_dial_review": {
+    "paths": [
+      "crates/sdk/src/native.rs",
+      "crates/sdk/src/native_tests.rs",
+      "crates/sdk/src/native_relay.rs"
+    ],
+    "source": "Independent integration of the existing NestLink scheduler with Quinn and same-socket STUN/QUIC endpoints",
+    "license": "Apache-2.0",
+    "method": "New first-party code; existing first-party protocol, TLS and session APIs reused",
+    "review": "Permit-bound local and peer identities before endpoint construction; configured private/ULA CIDR scope and hard metadata/loopback exclusions; separate local/peer network generations; bounded concurrent tasks dropped on winner/cancel/expiry/change; monotonic permit deadline and terminal wall-clock rollback; transport winner still completes both endpoint proofs before business data; loopback bypass exists only in test builds; Shared bounded QUIC/TCP-TLS/WSS scheduler; relay-only constructs no UDP endpoint; relay route derived only from configured management origin, pinned literal address with original TLS authority, complete permit digest and loopback-only development WS; real pending TCP cleanup tested on cancellation and generation change"
+  },
+  "node_control_review": {
+    "paths": [
+      "crates/node",
+      "crates/identity/src/nodes.rs",
+      "crates/storage/src/nodes.rs",
+      "crates/storage/migrations/005_data_nodes.sql",
+      "apps/server/src/node_control.rs"
+    ],
+    "source": "Independent implementation of v3 independent node registration, proof and short signed policy leases",
+    "license": "Apache-2.0",
+    "method": "New first-party code; no legacy node or third-party controller source copied",
+    "review": "Dedicated node keys and signature domains; purpose-specific HKDF derived policy key; bounded challenges and WSS channels; persisted lease sequences and consumed challenges; monotonic deadline checked during blocked IO; revocation and policy/epoch changes terminate old authority; business services additionally require separate resource/session permits"
+  },
+  "hkdf_dependency_review": {
+    "package": "hkdf-0.12.4",
+    "upstream_license": "MIT OR Apache-2.0",
+    "selected_license": "MIT",
+    "review": "Complete upstream MIT and Apache license texts read; MIT copyright and permission text preserved; used via public RustCrypto HKDF-SHA256 API",
+    "notice": "packaging/notices/hkdf-MIT.txt",
+    "notice_sha256": "d288f9c9b4590446ec18c22ead8f8b5a12a3d4025b68f62dc9015063eb9cca69"
+  },
+  "operations_review": {
+    "paths": [
+      "crates/operations",
+      "crates/storage/src/snapshot.rs",
+      "apps/server/src/main.rs",
+      "crates/platform-security/src/lib.rs"
+    ],
+    "source": "Independent implementation of the v3 backup and restore requirements; rusqlite public online-backup/serialization APIs; documented Win32 security-descriptor and directory-creation APIs",
+    "license": "Apache-2.0",
+    "method": "New first-party source; no legacy backup implementation or third-party source copied",
+    "review": "Bounded consistent WAL snapshot; authenticated versioned archive with fixed Argon2id and XChaCha20-Poly1305; zeroized first-party secret buffers and Argon2 work memory; restore to a new private directory with fixed paths and fresh security epoch; all old tickets, recovery codes and the current TOTP acceptance window revoked; synchronous Win32 ACL allocation/creation/free calls individually documented"
+  },
+  "traversal_review": {
+    "paths": [
+      "crates/traversal",
+      "crates/transport-quic/src/discovery.rs",
+      "crates/sdk/src/discovery.rs"
+    ],
+    "source": "Independent STUN Binding/XOR-MAPPED-ADDRESS implementation based on the wire requirements of RFC 5389; Quinn public runtime/socket interfaces",
+    "license": "Apache-2.0",
+    "method": "New first-party code; no third-party STUN or legacy source copied",
+    "review": "Configured STUN server and random transaction binding; IPv4/IPv6 XOR address and fingerprint checks; same UDP socket as QUIC; bounded pending probes and GRO/flood demultiplexing; OS interface declarations remain candidates until endpoint TLS validates identity"
+  },
+  "os_interface_dependency_review": {
+    "package": "if-addrs-0.14.0",
+    "upstream_license": "MIT OR BSD-3-Clause",
+    "selected_license": "MIT",
+    "review": "Complete upstream MIT and BSD texts read; MIT selected, copyright and license text preserved in packaging notices",
+    "notice": "packaging/notices/if-addrs-MIT.txt",
+    "notice_sha256": "3990ddb78a5a2cfd64a5ffe5cebc3306f3298f6880c644afdf15043ef7d702d9"
+  },
+  "non_cargo_dependencies": [
+    {
+      "name": "protoc",
+      "kind": "host build tool",
+      "source": "protoc-bin-vendored 3.3.0; embedded libprotoc 36.2 byte-matched against eight official v36.2 release ZIPs",
+      "review": "Version, license, release assets, binary and include bytes verified; upstream tag is unsigned. Full non-Cargo build/runtime inventory and final release-material binding remain open."
+    },
+    {
+      "name": "SQLite",
+      "kind": "native storage library",
+      "source": "libsqlite3-sys 0.35.0; SQLite 3.50.2 amalgamation byte-matched against sqlite.org official release ZIP",
+      "license": "SQLite public domain; wrapper crate MIT",
+      "review": "Source and license declaration verified; full runtime inventory and final release-material binding remain open."
+    },
+    {
+      "name": "Python cryptography",
+      "version": "46.0.3",
+      "kind": "independent development-only protocol vector generator",
+      "license": "Apache-2.0 OR BSD-3-Clause",
+      "distributed_in_product": false,
+      "source": "installed cryptography package; generator is scripts/refactor-test-vectors.py"
+    }
+  ],
+  "sbom_notice_complete": false,
+  "g0_passed": false,
+  "crypto_dependency_review": [
+    {
+      "package": "webpki-roots-0.26.11 and webpki-roots-1.0.9",
+      "license": "CDLA-Permissive-2.0",
+      "review": "Reviewed the complete upstream license: use/modification/sharing allowed; redistributed trust-root data must include this license text. A package-specific cargo-deny exception records this data-license approval. First-party code remains Apache-2.0.",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "e271993808fec50ab29350b39539cdec611a9103f827e0aa26d61da70e2d33f8"
+        }
+      ],
+      "redistributed_notice": "packaging/notices/webpki-roots-CDLA-Permissive-2.0.txt"
+    },
+    {
+      "package": "ring-0.17.14",
+      "license": "Apache-2.0 AND ISC",
+      "review": "upstream source license files reviewed; ISC approved for this TLS cryptography dependency; notices must ship in final packaging",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "b3d734001a94efff3579978d953391aa7115f877657d25eb54037a43875d078a"
+        },
+        {
+          "path": "LICENSE-BoringSSL",
+          "sha256": "005fc765ddc5115da796cca915baa9557abae13ff35e0a47c47affc56f6c414d"
+        },
+        {
+          "path": "LICENSE-other-bits",
+          "sha256": "f025ccfb7dfb6bdfedc75ca0f67acc69e6fb4998143d834f7c2f38a29989680f"
+        },
+        {
+          "path": "src/polyfill/once_cell/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "src/polyfill/once_cell/LICENSE-MIT",
+          "sha256": "6ee2ed6c77710de911761acd5fc1ad1da00f476beb1a7ef27e78c2d1858deafc"
+        },
+        {
+          "path": "third_party/fiat/LICENSE",
+          "sha256": "9eacbcb81be660840c714a560a9d65ba07913db98dd4baf969f78dd499fdd60f"
+        }
+      ]
+    },
+    {
+      "package": "rustls-webpki-0.103.15",
+      "license": "ISC",
+      "review": "upstream source license files reviewed; ISC approved for this TLS cryptography dependency; notices must ship in final packaging",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "5b698ca13897be3afdb7174256fa1574f8c6892b8bea1a66dd6469d3fe27885a"
+        }
+      ]
+    },
+    {
+      "package": "untrusted-0.9.0",
+      "license": "ISC",
+      "review": "upstream source license files reviewed; ISC approved for this TLS cryptography dependency; notices must ship in final packaging",
+      "files": [
+        {
+          "path": "LICENSE.txt",
+          "sha256": "7abd9b6960dcf7d4d0a48606a5b71bfe37d472db68d70637f3a58a56785f1621"
+        }
+      ]
+    }
+  ],
+  "platform_network_review": {
+    "paths": [
+      "crates/platform-network",
+      "crates/sdk/src/native.rs",
+      "scripts/refactor-network-events.py"
+    ],
+    "license": "Apache-2.0",
+    "source": "Independent implementation using Windows IP Helper notification/clock APIs and Linux NETLINK_ROUTE multicast/clock APIs",
+    "method": "New first-party code; OS ABI types from windows-sys/libc, no legacy platform code copied or translated",
+    "review": "Stable boxed callback context; synchronous IP Helper cancellation outside callbacks; keep context alive on cancellation failure; owned CLOEXEC/nonblocking netlink descriptor, bounded kernel-only datagrams, framing/loss rejection, monotonic watch generations; suspend delta includes/excludes system sleep; SDK captures baseline before sockets and clears in-flight STUN on changes; isolated Linux test refuses host namespace before address/route/link mutations; physical Windows/Linux suspend and installed-product acceptance remain open"
+  },
+  "libc_dependency_review": {
+    "package": "libc-0.2.190",
+    "upstream_license": "MIT OR Apache-2.0",
+    "selected_license": "MIT",
+    "review": "Complete MIT and Apache-2.0 texts read; use documented ABI declarations only; MIT copyright/permission text included",
+    "notice": "packaging/notices/libc-MIT.txt",
+    "notice_sha256": "123a331b5dbf04c30097fa43b8f858bc85df671fe776de498d01f3d6b7c1f69e"
+  },
+  "session_runtime_review": {
+    "paths": [
+      "crates/remote",
+      "crates/session",
+      "crates/sdk/src/native.rs",
+      "crates/protocol/src/input.rs",
+      "protocol-spec/nestlink.proto",
+      "scripts/refactor-signatures.py",
+      "tests/refactor"
+    ],
+    "license": "Apache-2.0",
+    "source": "Independent first-party implementation from v3 lifecycle/input/acceptance requirements; documented Tokio watch/IO, prost and OS signing verifier APIs",
+    "method": "No legacy runtime source copied or mechanically translated; input wire reference manually encoded in Python varint/zigzag/UTF-8",
+    "review": "Weakly owned idle lease supervisor; original network baseline retained through proof; bounded separate direction/channel queues with explicit single-stream head-of-line limitation; synchronous authorized input and terminal cleanup share serialization; adapter failure/panic reports never treated as success; signed-package checker uses fixed public identities and bytes, literal-path Authenticode, direct Java APK verifier and fail-closed missing inputs",
+    "limitations": "Real OS input drivers, independent QUIC streams/datagrams, TURN allocations, installed-platform signing and final product acceptance remain open"
+  },
+  "platform_input_review": {
+    "paths": [
+      "crates/platform-input",
+      "crates/remote/src/input.rs",
+      "crates/remote/src/lifecycle.rs",
+      "crates/session/src/lib.rs",
+      "scripts/refactor-x11-input.py"
+    ],
+    "license": "Apache-2.0",
+    "source": "Independent implementation from v3 requirements and documented Windows SendInput, XKB/XTEST, Unix sockets and x11rb APIs",
+    "method": "New first-party code; no legacy input/platform source copied or mechanically translated",
+    "review": "Original desktop and OS layout facts; remote-owned key release; Unicode partial-effect tracking on Windows; bounded X11 wire and same-server cleanup; fact panic caught before dropping mutex guard; isolated authenticated Xvfb verifies actual input and idle termination",
+    "limitations": "Full IME, X11 Unicode/logind lock, Wayland/Android, installed-product and Windows actual injection acceptance remain open",
+    "dependencies": [
+      {
+        "package": "x11rb-0.13.2",
+        "upstream_license": "MIT OR Apache-2.0",
+        "selected_license": "MIT",
+        "review": "Complete upstream license text reviewed; original license/copyright bytes preserved; public Rust API used without modified upstream source",
+        "notice": "packaging/notices/x11rb-0.13.2-MIT.txt",
+        "notice_sha256": "a72561f47c1f665535930f606739d9098a6186802d5e2e8ec491faf00f4add5b"
+      },
+      {
+        "package": "x11rb-protocol-0.13.2",
+        "upstream_license": "MIT OR Apache-2.0",
+        "selected_license": "MIT",
+        "review": "Complete upstream license text reviewed; original license/copyright bytes preserved; public Rust API used without modified upstream source",
+        "notice": "packaging/notices/x11rb-protocol-0.13.2-MIT.txt",
+        "notice_sha256": "a72561f47c1f665535930f606739d9098a6186802d5e2e8ec491faf00f4add5b"
+      },
+      {
+        "package": "gethostname-1.1.0",
+        "upstream_license": "Apache-2.0",
+        "selected_license": "Apache-2.0",
+        "review": "Complete upstream license text reviewed; original license/copyright bytes preserved; public Rust API used without modified upstream source",
+        "notice": "packaging/notices/gethostname-1.1.0-Apache-2.0.txt",
+        "notice_sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      }
+    ]
+  },
+  "wayland_portal_review": {
+    "paths": [
+      "crates/platform-input/src/portal.rs",
+      "crates/platform-input/src/portal/tests.rs",
+      "crates/platform-input/examples/portal-probe.rs",
+      "crates/platform-input/src/keys.rs"
+    ],
+    "license": "Apache-2.0",
+    "source": "Independent implementation of v3 Wayland consent/input requirements using documented freedesktop portal, logind and Linux evdev APIs",
+    "method": "New first-party Rust; independent private D-Bus fixtures; no legacy/RustDesk platform source copied or mechanically translated",
+    "review": "Fresh nonpersistent consent; token/sender-bound response subscriptions before requests; real returned device/monitor grant; same-UID Unix authenticated bus, pinned unique service owners; original session Closed observation before Start; logind active/lock/type/user facts and idle/owner monitors; separately owned bounded IPC worker and terminal cleanup; original PipeWire descriptor transferred once",
+    "limitations": "Private-bus fixtures prove client contract/lifecycle, not GNOME/KDE compositor or IME effects; PipeWire capture, format/DPI change observation, full UI integration and installed-product acceptance remain open",
+    "references": [
+      {
+        "url": "https://raw.githubusercontent.com/flatpak/xdg-desktop-portal/1.18.4/data/org.freedesktop.portal.RemoteDesktop.xml",
+        "sha256": "8ed940971e20f0f5c88ea521430b678f121555a8156d217b3298c61996da9410",
+        "use": "public interface semantics only; no upstream XML or implementation copied into product"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/flatpak/xdg-desktop-portal/1.18.4/data/org.freedesktop.portal.ScreenCast.xml",
+        "sha256": "44d44e0e1b1a193f2b6dab32c17baee912743d8aad4da9cb367874d6caf9176b",
+        "use": "public interface semantics only; no upstream XML or implementation copied into product"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/flatpak/xdg-desktop-portal/1.18.4/data/org.freedesktop.portal.Session.xml",
+        "sha256": "ee90d85cf43061214aec49abd6b9e460b6a01d8160fe19f866a83d3b8980be7a",
+        "use": "public interface semantics only; no upstream XML or implementation copied into product"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/flatpak/xdg-desktop-portal/1.18.4/data/org.freedesktop.portal.Request.xml",
+        "sha256": "ae61e45d67fa4d44139a36ffc5a89a57cbd910eac29bddbe6405b8afbe9faefd",
+        "use": "public interface semantics only; no upstream XML or implementation copied into product"
+      }
+    ],
+    "dependencies": [
+      {
+        "package": "async-broadcast-0.7.2",
+        "upstream_license": "MIT OR Apache-2.0",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE-MIT",
+            "path": "packaging/notices/async-broadcast-0.7.2-MIT.txt",
+            "sha256": "24e5860bf589d8501643e6ea51ffb3df66db2867492b09033d486183efbfa970",
+            "upstream_sha256": "24e5860bf589d8501643e6ea51ffb3df66db2867492b09033d486183efbfa970",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "async-recursion-1.2.0",
+        "upstream_license": "MIT OR Apache-2.0",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE-MIT",
+            "path": "packaging/notices/async-recursion-1.2.0-MIT.txt",
+            "sha256": "30fefc3a7d6a0041541858293bcbea2dde4caa4c0a5802f996a7f7e8c0085652",
+            "upstream_sha256": "cdbd06e25b8c9c5d6019949d2de8123f56d29cee4166396423d2ba8c81700845",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "async-trait-0.1.92",
+        "upstream_license": "MIT OR Apache-2.0",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE-MIT",
+            "path": "packaging/notices/async-trait-0.1.92-MIT.txt",
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "upstream_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "endi-1.1.1",
+        "upstream_license": "MIT",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE-MIT",
+            "path": "packaging/notices/endi-1.1.1-MIT.txt",
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "upstream_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "enumflags2-0.7.12",
+        "upstream_license": "MIT OR Apache-2.0",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE-MIT",
+            "path": "packaging/notices/enumflags2-0.7.12-MIT.txt",
+            "sha256": "2e3edd2716fb15616e867bd53f724f0906732242e9ae76bb1faad1d88f7eeebd",
+            "upstream_sha256": "2e3edd2716fb15616e867bd53f724f0906732242e9ae76bb1faad1d88f7eeebd",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "enumflags2_derive-0.7.12",
+        "upstream_license": "MIT OR Apache-2.0",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE-MIT",
+            "path": "packaging/notices/enumflags2_derive-0.7.12-MIT.txt",
+            "sha256": "d13669f0eaff9b7015bff0d8637297213b53d9f239826636c07a15633acf7052",
+            "upstream_sha256": "d13669f0eaff9b7015bff0d8637297213b53d9f239826636c07a15633acf7052",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "event-listener-5.4.2",
+        "upstream_license": "Apache-2.0 OR MIT",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE-MIT",
+            "path": "packaging/notices/event-listener-5.4.2-MIT.txt",
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "upstream_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "event-listener-strategy-0.5.4",
+        "upstream_license": "Apache-2.0 OR MIT",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE-MIT",
+            "path": "packaging/notices/event-listener-strategy-0.5.4-MIT.txt",
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "upstream_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "futures-lite-2.6.1",
+        "upstream_license": "Apache-2.0 OR MIT",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE-MIT",
+            "path": "packaging/notices/futures-lite-2.6.1-MIT.txt",
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "upstream_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          },
+          {
+            "upstream_file": "LICENSE-THIRD-PARTY",
+            "path": "packaging/notices/futures-lite-2.6.1-THIRD-PARTY.txt",
+            "sha256": "6226d0632e2e1a80c23597e964da9812ae193c535fe058154afb034e94167aa5",
+            "upstream_sha256": "6226d0632e2e1a80c23597e964da9812ae193c535fe058154afb034e94167aa5",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "hex-0.4.3",
+        "upstream_license": "MIT OR Apache-2.0",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE-MIT",
+            "path": "packaging/notices/hex-0.4.3-MIT.txt",
+            "sha256": "f7bdb3426d045cd50efd4953026e3eb5a83d0199f458a075602611b9344da5b9",
+            "upstream_sha256": "f7bdb3426d045cd50efd4953026e3eb5a83d0199f458a075602611b9344da5b9",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "memoffset-0.9.1",
+        "upstream_license": "MIT",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE",
+            "path": "packaging/notices/memoffset-0.9.1-MIT.txt",
+            "sha256": "3234ac55816264ee7b6c7ee27efd61cf0a1fe775806870e3d9b4c41ea73c5cb1",
+            "upstream_sha256": "3234ac55816264ee7b6c7ee27efd61cf0a1fe775806870e3d9b4c41ea73c5cb1",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "ordered-stream-0.2.0",
+        "upstream_license": "MIT OR Apache-2.0",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE-MIT",
+            "path": "packaging/notices/ordered-stream-0.2.0-MIT.txt",
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "upstream_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "parking-2.2.1",
+        "upstream_license": "Apache-2.0 OR MIT",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE-MIT",
+            "path": "packaging/notices/parking-2.2.1-MIT.txt",
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "upstream_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          },
+          {
+            "upstream_file": "LICENSE-THIRD-PARTY",
+            "path": "packaging/notices/parking-2.2.1-THIRD-PARTY.txt",
+            "sha256": "9a6d7a3c1b8edcc706c4b6c37f8dae9a77f02c7f9051df603f975db136b55419",
+            "upstream_sha256": "9a6d7a3c1b8edcc706c4b6c37f8dae9a77f02c7f9051df603f975db136b55419",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "proc-macro-crate-3.5.0",
+        "upstream_license": "MIT OR Apache-2.0",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE-MIT",
+            "path": "packaging/notices/proc-macro-crate-3.5.0-MIT.txt",
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "upstream_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "serde_repr-0.1.21",
+        "upstream_license": "MIT OR Apache-2.0",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE-MIT",
+            "path": "packaging/notices/serde_repr-0.1.21-MIT.txt",
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "upstream_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "toml_datetime-1.1.2+spec-1.1.0",
+        "upstream_license": "MIT OR Apache-2.0",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE-MIT",
+            "path": "packaging/notices/toml_datetime-1.1.2+spec-1.1.0-MIT.txt",
+            "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6",
+            "upstream_sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "toml_edit-0.25.17+spec-1.1.0",
+        "upstream_license": "MIT OR Apache-2.0",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE-MIT",
+            "path": "packaging/notices/toml_edit-0.25.17+spec-1.1.0-MIT.txt",
+            "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6",
+            "upstream_sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "tracing-attributes-0.1.31",
+        "upstream_license": "MIT",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE",
+            "path": "packaging/notices/tracing-attributes-0.1.31-MIT.txt",
+            "sha256": "898b1ae9821e98daf8964c8d6c7f61641f5f5aa78ad500020771c0939ee0dea1",
+            "upstream_sha256": "898b1ae9821e98daf8964c8d6c7f61641f5f5aa78ad500020771c0939ee0dea1",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "uds_windows-1.2.1",
+        "upstream_license": "MIT",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE",
+            "path": "packaging/notices/uds_windows-1.2.1-MIT.txt",
+            "sha256": "27ebda9d51f0a56b7e281ccd8230a27236dcb51c05f64b07869ecf6e965d68b0",
+            "upstream_sha256": "27ebda9d51f0a56b7e281ccd8230a27236dcb51c05f64b07869ecf6e965d68b0",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "zbus-5.19.0",
+        "upstream_license": "MIT",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE",
+            "path": "packaging/notices/zbus-5.19.0-MIT.txt",
+            "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+            "upstream_sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "zbus_macros-5.19.0",
+        "upstream_license": "MIT",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE",
+            "path": "packaging/notices/zbus_macros-5.19.0-MIT.txt",
+            "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+            "upstream_sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "zbus_names-4.3.4",
+        "upstream_license": "MIT",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE",
+            "path": "packaging/notices/zbus_names-4.3.4-MIT.txt",
+            "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+            "upstream_sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "zcheapstr-1.1.0",
+        "upstream_license": "MIT",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE",
+            "path": "packaging/notices/zcheapstr-1.1.0-MIT.txt",
+            "sha256": "59871bb1612f8a0569655c10b995636827eceab42c6578cebdc45ad2922e0142",
+            "upstream_sha256": "59871bb1612f8a0569655c10b995636827eceab42c6578cebdc45ad2922e0142",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "zvariant-5.15.0",
+        "upstream_license": "MIT",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE",
+            "path": "packaging/notices/zvariant-5.15.0-MIT.txt",
+            "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+            "upstream_sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "zvariant_derive-5.15.0",
+        "upstream_license": "MIT",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE",
+            "path": "packaging/notices/zvariant_derive-5.15.0-MIT.txt",
+            "sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+            "upstream_sha256": "260e4ff3fc493695880c90774283eb1e3d018f898fabe655bbd52dd2cbd2fcad",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      },
+      {
+        "package": "zvariant_utils-4.2.0",
+        "upstream_license": "MIT",
+        "selected_license": "MIT",
+        "review": "Complete selected upstream MIT texts and additional third-party notices read; copyright and permission text retained; no upstream code modified",
+        "notices": [
+          {
+            "upstream_file": "LICENSE",
+            "path": "packaging/notices/zvariant_utils-4.2.0-MIT.txt",
+            "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "upstream_sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+            "distribution_transform": "LF newline normalization only; license text retained"
+          }
+        ]
+      }
+    ]
+  },
+  "x11_capture_review": {
+    "paths": [
+      "crates/platform-input/src/x11_image.rs",
+      "crates/platform-input/src/x11_transport.rs",
+      "crates/platform-capture/src/x11.rs",
+      "crates/platform-capture/src/x11/tests.rs"
+    ],
+    "source": "Independent Apache-2.0 code using public X11 GetImage, RandR, XFixes and logind APIs. Existing first-party bounded input transport extracted without importing legacy implementations.",
+    "dependencies": "Locked x11rb/x11rb-protocol 0.13.2; xfixes activates existing render/shape protocol modules, no new package versions",
+    "cursor_reference": "Installed x11proto-dev 2023.2-1 fixesproto.txt.gz and renderproto: CARD32 0xAARRGGBB, premultiplied alpha, CreateCursor and hotspot semantics. Protocol facts only; no external implementation copied.",
+    "verification": "Owned isolated Xvfb: actual key-triggered red-to-green repaint and pixel capture; owned Render ARGB cursor; deadline, revocation, screen saver, TrueColor conversion and queue tests. HideCursor returns unchanged GetCursorImage data in Xvfb 21.1.12-1ubuntu1.8, so hidden-pointer matching remains unimplemented, alongside genuine desktop acceptance."
+  },
+  "portal_view_review": {
+    "paths": [
+      "crates/platform-input/src/portal.rs",
+      "crates/platform-input/src/portal/tests.rs"
+    ],
+    "source": "Independent implementation of documented ScreenCast-only consent, embedded cursor mode and optional pipewire-serial metadata. No RemoteDesktop calls or input trait on PortalView.",
+    "reference": "https://github.com/flatpak/xdg-desktop-portal/blob/main/data/org.freedesktop.portal.ScreenCast.xml",
+    "reference_scope": "API semantics only: cursor_mode Embedded bit 2; persist_mode added at v4 defaults to 0; pipewire-serial added at v6 is a never-reused uint64 object.serial. Downloaded XML is an ignored development reference, not a product source file."
+  },
+  "windows_capture_review": {
+    "paths": [
+      "crates/platform-capture/src/windows.rs",
+      "crates/platform-capture/src/windows/tests.rs"
+    ],
+    "source": "Independent Apache-2.0 implementation of Win32 GDI, WTS, desktop notification, monitor and DPI system APIs; no legacy capture code copied or translated",
+    "dependencies": "Existing locked windows-sys 0.61.2; feature additions only, no new registry packages",
+    "verification_scope": "Owned hidden window paints synthetic pixels into a private DIB; queue, terminal heartbeat and bounded cleanup tests. Actual monitor BitBlt, multiple GPUs, physical lock and mixed-DPI acceptance remain open"
+  },
+  "x11_session_text_review": {
+    "paths": [
+      "crates/platform-input/src/x11.rs",
+      "crates/platform-input/src/x11_session.rs",
+      "crates/platform-input/src/x11_text.rs"
+    ],
+    "source": "Independent Apache-2.0 implementation using public logind D-Bus and X11/XKB/XTEST protocols; no legacy input implementation copied or translated",
+    "dependencies": "Existing locked zbus, tokio, libc and x11rb packages; no new registry packages",
+    "limits": "Session-stable Unicode keycode mappings have finite capacity. Genuine target applications, long Chinese text and IBus/Fcitx acceptance remain mandatory. Test-only Xvfb session bypass does not exist in production builds",
+    "shared_monitor": "Original implementation extracted into crates/platform-session/src/linux.rs; old x11_session module only reexports the same types, no independent duplicate logind state machine."
+  },
+  "pipewire_capture_review": {
+    "paths": [
+      "crates/platform-capture",
+      "crates/remote/src/video.rs",
+      "crates/remote/tests/lifecycle.rs"
+    ],
+    "source": "Independent implementation of v3 requirements and public system PipeWire/SPA ABI; no legacy implementation copied or translated",
+    "license": "Apache-2.0 first-party; system headers and used PipeWire/SPA ABI helpers MIT",
+    "method": "Rust owns frames, budgets and lifecycle. Small independent C bridge uses official system headers to access SPA structs and callbacks; no compression codecs called",
+    "system_dependency": {
+      "name": "PipeWire",
+      "upstream_version": "1.0.5",
+      "development_package_version": "1.0.5-1ubuntu3.3",
+      "linkage": "system shared libpipewire-0.3; no PipeWire library copied into repository or release",
+      "headers": "Ubuntu libpipewire-0.3-dev and libspa-0.2-dev 1.0.5-1ubuntu3.3; used headers identify Wim Taymans and SPDX MIT",
+      "notice": {
+        "path": "packaging/notices/PipeWire-1.0.5-Debian-copyright.txt",
+        "sha256": "4a870a368fbb14aae8ff343f0e7cb6758f6a83c13a7bcab17b7509452ae6064a"
+      },
+      "license_review": "Full installed Debian copyright read; MIT core and SPA headers used. JACK, v0 protocol, ALSA, BlueZ and filter-chain code not incorporated. Distribution dependency/SBOM and all final installed binaries remain to be reviewed"
+    },
+    "build_dependency_notices": [
+      {
+        "package": "cc-1.8.0",
+        "selected_license": "MIT",
+        "upstream_file": "LICENSE-MIT",
+        "path": "packaging/notices/cc-1.8.0-MIT.txt",
+        "upstream_sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397",
+        "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397",
+        "transform": "LF normalization only"
+      },
+      {
+        "package": "pkg-config-0.3.34",
+        "selected_license": "MIT",
+        "upstream_file": "LICENSE-MIT",
+        "path": "packaging/notices/pkg-config-0.3.34-MIT.txt",
+        "upstream_sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397",
+        "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397",
+        "transform": "LF normalization only"
+      }
+    ],
+    "verification": "Owned private PipeWire daemon and videotestsrc supply actual raw pixels; explicit revocation, daemon loss, source/link deletion and actual crossed-source graph terminate capture. Original serial and unique Link endpoints verified before frame delivery with a core sync barrier. Production C bridge under ASan/UBSan tests signed/padded rows, crop and all eight inverse buffer transforms across the Rust ABI; EMPTY/GAP replaces old pixels with opaque black. Public portal request, real D-Bus FD handoff and video/input controller common revocation tested together in private namespaces. Genuine compositor permissions/rotation/crop, DMA-BUF, product encoder/UI and installed acceptance remain open",
+    "callback_status_review": "All heartbeat/format/pixel/neutral callbacks use 0 continue, positive ordinary cancellation, negative real failure. First Rust-observed timeout/malformed-frame failure survives a later successful eventfd cancel. Native source loss remains ESTALE. Deterministic Rust boundary and production C ASan/UBSan probes plus private portal joint fixture verified."
+  },
+  "native_codec_review": {
+    "paths": [
+      "crates/media-codec",
+      "crates/media-session",
+      "scripts/refactor-native-codecs.py",
+      "docs/refactor/native-codecs.lock.json"
+    ],
+    "first_party": "Independent Apache-2.0 Rust ownership/conversion/stream code and small C bridges using official libvpx and Opus APIs. No legacy remote-desktop codec integration copied or translated.",
+    "lock": "docs/refactor/native-codecs.lock.json",
+    "sources": [
+      {
+        "name": "libvpx",
+        "version": "1.16.0",
+        "license": "BSD-3-Clause; ISC x86inc assembly helper; upstream PATENTS grant",
+        "enabled": "VP8 encoder and decoder, static, realtime-only; VP9/libyuv/libwebm/tools/tests off"
+      },
+      {
+        "name": "Opus",
+        "version": "1.6.1",
+        "license": "BSD-3-Clause and BSD-2-Clause per-file notices; upstream IETF IPR references retained",
+        "enabled": "Float API, mono/stereo; DRED/DEEP_PLC/OSCE/custom modes/fixed point/nonthreadsafe pseudostack off"
+      }
+    ],
+    "version_selection": "Opus 1.6.1 includes upstream packet-extension overflow/OOB-read and malformed-bitstream fixes after 1.5.2; this records version selection and does not assert a NestLink exploit or assigned CVE.",
+    "review": "Read complete top-level licenses, patent/contributor notices, x86inc license and distinct per-file license conditions. Original notices retained; extra Opus notice collection covers optional source files as well and does not enable them.",
+    "notices": [
+      {
+        "package": "libvpx",
+        "version": "1.16.0",
+        "commit": "1024874c5919305883187e2953de8fcb4c3d7fa6",
+        "upstream_file": "LICENSE",
+        "path": "packaging/notices/libvpx-1.16.0-LICENSE.txt",
+        "sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615",
+        "transform": "none"
+      },
+      {
+        "package": "libvpx",
+        "version": "1.16.0",
+        "commit": "1024874c5919305883187e2953de8fcb4c3d7fa6",
+        "upstream_file": "PATENTS",
+        "path": "packaging/notices/libvpx-1.16.0-PATENTS.txt",
+        "sha256": "cc3273e0694ea5896145e0677699b53471b03ea43021ddc50e7923fbb9f5023c",
+        "transform": "none"
+      },
+      {
+        "package": "libvpx",
+        "version": "1.16.0",
+        "commit": "1024874c5919305883187e2953de8fcb4c3d7fa6",
+        "upstream_file": "third_party/x86inc/LICENSE",
+        "path": "packaging/notices/libvpx-1.16.0-third_party-x86inc-LICENSE.txt",
+        "sha256": "719d8fa235f2068e0ae6d6a7dceb0a7720d7840f0f0ebed29957989e6ded3cd8",
+        "transform": "none"
+      },
+      {
+        "package": "opus",
+        "version": "1.6.1",
+        "commit": "22244de5a79bd1d6d623c32e72bf1954b56235be",
+        "upstream_file": "COPYING",
+        "path": "packaging/notices/opus-1.6.1-COPYING.txt",
+        "sha256": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551",
+        "transform": "none"
+      },
+      {
+        "package": "opus",
+        "version": "1.6.1",
+        "commit": "22244de5a79bd1d6d623c32e72bf1954b56235be",
+        "upstream_file": "LICENSE_PLEASE_READ.txt",
+        "path": "packaging/notices/opus-1.6.1-LICENSE_PLEASE_READ.txt",
+        "sha256": "7efb4989e0cd1b256229bdf2f09300c5d14e35db0e7476bfb87fac243498273d",
+        "transform": "none"
+      },
+      {
+        "package": "opus",
+        "version": "1.6.1",
+        "commit": "22244de5a79bd1d6d623c32e72bf1954b56235be",
+        "upstream_file": "introductory comments in celt/, silk/, src/, include/",
+        "path": "packaging/notices/opus-1.6.1-source-notices.txt",
+        "sha256": "e66bfc995afb6397369afc2002c1e0739db5fc72b6178f559d07b3303fab5c2c",
+        "distinct_notices": 93,
+        "source_files": 309,
+        "transform": "license-comment extraction only; no implementation copied"
+      }
+    ],
+    "supply_boundary": "Fixed upstream archive size/SHA256 and exact commit; clean extraction and independent out-of-tree builds; receipt binds target/configuration/install hashes. Receipts detect inconsistent local inputs, not a hostile account that can replace both receipt and libraries.",
+    "verification_scope": "Development native VP8/Opus roundtrip, boundary tests and first-party C bridge ASan/UBSan. The upstream static codec libraries are not sanitizer-instrumented in those bridge checks. Browser RTP/RTCP, capture-to-display product latency, ARM64/Android packaging and final SBOM remain separate acceptance work."
+  },
+  "native_audio_session_review": {
+    "paths": [
+      "crates/remote/src/audio.rs",
+      "crates/remote/src/queues.rs",
+      "crates/media-session/src/audio.rs",
+      "crates/media-codec/src/opus.c",
+      "crates/media-codec/src/opus.rs"
+    ],
+    "source": "Independent first-party implementation of v3 audio authorization and official pinned Opus API; no legacy integration copied or translated",
+    "license": "Apache-2.0 first-party; existing pinned Opus notices unchanged",
+    "review": "Same lease generation/source/channel PCM capture and playback, one owner per direction; exclusive incoming channel dispatch, codec outside authorization lock; complete packet parse before bounded PLC/reset; revoke/reset flushes pending PCM; owned signal sink only, actual OS devices and final product acceptance remain open"
+  },
+  "windows_audio_review": {
+    "paths": [
+      "crates/platform-session",
+      "crates/platform-audio",
+      "crates/platform-capture/src/windows.rs"
+    ],
+    "source": "Independent first-party WASAPI adapter using official Windows SDK COM APIs; readonly session observer extracted from existing first-party capture, no legacy audio source copied or translated",
+    "license": "Apache-2.0 first-party; existing windows-sys and cc dependencies/notices retained",
+    "native_boundary": "Windows SDK 10.0.26100.0 mmdeviceapi.h/Audioclient.h/mmreg.h and __uuidof interface metadata, MSVC 14.44.35207; no SDK implementation source redistributed",
+    "review": "MTA worker owns original COM resources; opaque locally selected render endpoint, loopback only and no microphone/default fallback; Initialize accepts actual system PCM conversion. Callback contains no Rust pointer, sticky endpoint removal/state/property latch. SDK-owned buffer copy checks flags/length, SILENT zeroes samples, capture clocks reject regressions; bounded playback software+client buffer. Worker cancellation gates delivery, same-worker Stop/Reset and observer cleanup; first HRESULT and cleanup timeout retained. Failed unregister retains small independent notification context rather than freeing uncertain callbacks.",
+    "verification": "PCM gap/chunk/clock tests, production C copy and callback corpus, queue/heartbeat/cleanup failures. Production worker uses owned stalled Start backend to reproduce a sample read after stop, then confirms cancellation/session-facts recheck prevents any subsequent read; original failed log retained, no real driver hang claim. Current host two render endpoints mono/stereo actual initialize/reset without Start, PCM capture or output; owned-window capture regression retained. No WASAPI ASan/UBSan evidence yet (local MSVC has no x64 ASan runtime), actual system audio and product acceptance remain open",
+    "acceptance_tool": "windows-audio-probe example inventory/initialize are read-only or unarmed; roundtrip requires explicit local selected endpoint and --allow-system-audio, uses synthetic tones and records no raw sound, not run in this increment"
+  },
+  "linux_audio_review": {
+    "paths": [
+      "crates/platform-session/src/linux.rs",
+      "crates/platform-input/src/x11_session.rs",
+      "crates/platform-audio/src/linux.rs",
+      "crates/platform-audio/src/linux",
+      "crates/platform-audio/src/pipewire_audio.c",
+      "crates/platform-audio/src/pipewire_audio.h",
+      "crates/platform-audio/examples/linux-audio-probe.rs",
+      "crates/platform-audio/tests",
+      "scripts/refactor-linux-audio.py",
+      "scripts/test-pipewire-audio-sanitizer.sh"
+    ],
+    "source": "Independent first-party implementation of v3 and public logind/PipeWire/SPA APIs; original first-party logind monitor extracted from platform-input at ac08776. No legacy audio/platform source copied or translated.",
+    "license": "Apache-2.0 first-party; system PipeWire/SPA MIT ABI helpers and existing notice in pipewire_capture_review retained",
+    "native_boundary": "System shared libpipewire-0.3 and Ubuntu PipeWire/SPA 1.0.5 development headers; upstream stream.c read for inactive negotiation/ownership API semantics only, not copied into product.",
+    "review": "Original root-owned logind owner/session/user/type/active/unlocked pinned, sticky signal and 500ms heartbeat with unrelated-signal budget. Original private directory FD/socket dev+inode/SO_PEERCRED/core cookie/node/64-bit serial/name, actual all relevant Link endpoints and per-packet core-sync gate. Inactive open then validated PCM after arm; capture raw ABI/permission/clock and silence checks, bounded queues, original-worker cleanup and sticky deadlines, no default fallback or microphone enumeration.",
+    "verification": "Private system bus and owned software graph; X11/Wayland mono/stereo real PipeWire PCM under signed lease and endpoint key proofs, revoke/lock, actual 44.1kHz six-channel conversion, server/socket/serial/link replacement. First-party C boundary corpus under ASan/UBSan; system libpipewire itself not instrumented. Full hardware/desktop/product acceptance remains open.",
+    "acceptance_tool": "Local linux-audio-probe inventory/initialize do not arm audio; explicit node name and original serial, roundtrip additionally requires --allow-system-audio and stores aggregate metrics only. Prepared, not run on real desktop."
+  },
+  "windows_session_monitor_review": {
+    "paths": [
+      "crates/platform-session/src/windows.rs",
+      "crates/platform-input/src/windows.rs",
+      "crates/platform-capture/src/windows.rs",
+      "crates/platform-capture/src/windows/tests.rs"
+    ],
+    "source": "Independent first-party monitor built on the existing first-party readonly Windows observer and documented Windows SDK WTS/WinEvent/Window APIs. No legacy source copied or translated.",
+    "license": "Apache-2.0 first-party; existing windows-sys dependency retained",
+    "review": "Transferable monitor owns hidden HWND/hook on its worker, subscription precedes original session/logon/connection baseline, fixed heartbeat and terminal events/owner-window close/quit. Input checks original WTS identity and same active unlocked desktop even for release, never renews first reset budget, retains failure. Capture explicitly closes observer and preserves first cleanup timeout over late worker completion.",
+    "verification": "Pure heartbeat/first-error/late-cleanup tests; deterministic capture timeout failure then fix. Real own hidden monitor window tests for close, lock/unlock pulse and WM_QUIT with cleanup, actual readonly input monitor/empty reset, owned GDI pixels and unarmed WASAPI initialize/reset. No OS lock, SendInput or audible effects in these extra tests; real RDP/IME/user-window/product acceptance remains open.",
+    "boundary": "Readonly monitor does not grant business authority. Synchronous native input APIs and real driver stalls are not certified by cached monitor heartbeat or these fixtures."
+  },
+  "quic_channels_review": {
+    "paths": [
+      "crates/remote/src/quic.rs",
+      "crates/remote/src/quic/tests.rs",
+      "crates/remote/src/queues.rs",
+      "crates/remote/src/lifecycle.rs",
+      "crates/remote/tests/lifecycle.rs",
+      "crates/sdk/src/native.rs",
+      "crates/sdk/src/native_tests.rs",
+      "crates/sdk/tests/end_to_end.rs",
+      "crates/media-session/src/tests.rs",
+      "crates/media-session/src/audio/tests.rs",
+      "crates/transport-stream/src/lib.rs",
+      "crates/transport-quic/src/lib.rs",
+      "protocol-spec/nestlink.proto",
+      "protocol-spec/contract.json",
+      "protocol-spec/native-channels.md"
+    ],
+    "source": "Independent implementation of v3 native independent channels, bounded media delivery and SDK integration requirements; Quinn public stream/datagram APIs",
+    "license": "Apache-2.0",
+    "method": "New first-party code and fixtures; no legacy or RustDesk-derived implementation copied or translated",
+    "review": "Mutual native proof precedes exact profile/stream binding; original permit digest/path/generation pinned across renewal; approved channels only; extra streams and mismatched envelopes terminate. Separate bounded readers/writers; expiring audio fragments with geometry, duplicate, memory and replay checks. Shared lease supervision and actual connection close. Cleanup task ownership survives cancelled waits and failure remains sticky. SDK retains original network binding. Reliable VP8 and Opus datagram roundtrips use synthetic devices, not installed-product acceptance; browser media, outer QUIC relay and media feedback remain open."
+  },
+  "native_video_feedback_review": {
+    "paths": [
+      "crates/media-session/src/video.rs",
+      "crates/media-session/src/receiver.rs",
+      "crates/media-session/src/tests.rs",
+      "crates/media-session/src/tests/feedback.rs",
+      "crates/protocol/src/media.rs",
+      "crates/protocol/tests/media.rs",
+      "crates/remote/src/queues.rs",
+      "crates/remote/src/quic.rs",
+      "crates/remote/src/lib.rs",
+      "crates/transport-stream/src/lib.rs",
+      "protocol-spec/nestlink.proto",
+      "protocol-spec/contract.json",
+      "protocol-spec/native-media.md"
+    ],
+    "source": "Independent implementation of v3 bounded video recovery, native channel separation and session consent requirements; existing first-party codec APIs",
+    "license": "Apache-2.0; no new dependency or native bridge code",
+    "method": "New first-party implementation and synthetic fixtures; no legacy or RustDesk-derived source copied or translated",
+    "review": "View-bound reliable feedback pins connection/layout/source and monotonic request/ack sequences; exact last duplicate is idempotent. Sender coalesces requests, spaces forced keyframes and rechecks current capture consent before explicitly marked cached keyframes. Busy source cannot starve static recovery. Receiver drops damaged/delta output during fixed-time/attempt recovery with independent watchdog, retaining identity/replay failures as terminal. Bounded file FIFO is separate from video consumer. Native C/FFI and suppliers unchanged.",
+    "verification_scope": "Application-frame omission through bounded development bridge exercises actual automatic sender/receiver recovery. Synthetic request/response over in-memory framing and real loopback QUIC, bad feedback, file backlog, entropy failures and deadline tests. Not QUIC network packet-loss, browser RTCP, installed desktop or product acceptance."
+  },
+  "trusted_device_review": {
+    "paths": [
+      "crates/identity/src/lib.rs",
+      "crates/storage/src/trusted.rs",
+      "crates/storage/src/control.rs",
+      "crates/storage/src/lib.rs",
+      "crates/storage/src/snapshot.rs",
+      "crates/storage/migrations/006_device_trust.sql",
+      "crates/storage/tests/control/trusted.rs",
+      "crates/storage/tests/snapshots.rs",
+      "apps/server/src/trusted.rs",
+      "apps/server/src/lib.rs",
+      "crates/sdk/src/lib.rs",
+      "crates/sdk/tests/end_to_end.rs",
+      "protocol-spec/management.rs",
+      "protocol-spec/management-routes.json",
+      "protocol-spec/nestlink.proto",
+      "protocol-spec/trusted-devices.md",
+      "xtask/src/api.rs"
+    ],
+    "source": "Independent first-party implementation of v3 explicit trusted-installation access; existing NestLink Ed25519 device action, signed permit, SQLite transaction and SDK/HTTP boundaries",
+    "license": "Apache-2.0; no new dependency or copied legacy code",
+    "method": "New first-party code and deterministic development fixtures; legacy fixed-password or trust implementations were not copied or translated",
+    "review": "Separate host-signed TrustRemote purpose binds entire current permit and explicit expected revision/expiry. Stored both keys, approved permissions/paths, security epoch and tombstones; explicit trusted endpoint rechecks current policies/login/devices and caps session expiry. Transactions couple grant/revision/session changes; prior sessions remain revoked after regrant. Current permit and relay/renewal gates recheck trust. Schema 6 introduces no automatic trusts from old authority. Existing runtime proof and OS consent boundaries unchanged. Trusted-create rate keys use authenticated login sessions; invalid bearer strings cannot allocate buckets and refreshed access tokens retain the same quota. Individual live-session revocation events are emitted for replacement as well as deletion.",
+    "verification_scope": "Storage authority/replay/expiry/policy/key/restore/capacity/migration checks and actual HTTP SDK to WSS inner TLS proof/data/renewal/revocation. Separate manual-revocation scenario retained. UI/local daemon consent, fixed-password authorization and full installed-platform/cross-network acceptance remain open."
+  },
+  "remote_password_authorization_review": {
+    "paths": [
+      "crates/identity/src/remote_password.rs",
+      "crates/storage/src/remote_password.rs",
+      "crates/storage/migrations/007_remote_password.sql",
+      "crates/storage/tests/control/remote_password.rs",
+      "crates/sdk/src/remote_password.rs",
+      "apps/server/src/remote_password.rs",
+      "protocol-spec/remote-password.md"
+    ],
+    "source": "Independent implementation of v3 explicit fixed-password authorization and brute-force defense requirements using existing first-party auth/device/session APIs",
+    "license": "Apache-2.0; only existing audited base64 and zeroize workspace dependencies added to crate edges",
+    "method": "New code and deterministic tests; no legacy or RustDesk-derived implementation or tests copied or translated",
+    "review": "Host-key signed challenge/configuration; controller-key signed request/password/revision; Argon2 outside SQLite lock with transaction revalidation; both pinned keys and expiring scope checked for permit/relay/renewal. Revision tombstones and atomic associated-session withdrawal. Persistent per-host/per-account reservation before CPU work, no cancellation/refreshed-login/rotation refund. Plaintext-bearing request objects and signature buffers zeroized; no credential material in audit/events. Schema 7 starts empty and restore disables password authority.",
+    "verification_scope": "Storage adversarial/clock/concurrency/persistence/migration tests; HTTP authenticated-session rate boundary and live SDK WSS inner-TLS withdrawal/rotation. Platform consent/UI, one-time access product and installed cross-network acceptance remain open."
+  },
+  "combined_wss_relay_quota_review": {
+    "paths": [
+      "protocol-spec/management.rs",
+      "protocol-spec/relay-quotas.md",
+      "crates/storage/migrations/010_relay_quotas.sql",
+      "crates/storage/src/quotas.rs",
+      "crates/storage/tests/control/quotas.rs",
+      "apps/server/src/relay.rs",
+      "apps/server/src/relay/hub.rs",
+      "apps/server/src/quotas.rs",
+      "crates/sdk/src/lib.rs",
+      "crates/sdk/tests/end_to_end.rs"
+    ],
+    "source": "Independent implementation of v3 configurable relay capacity and byte limits, using existing first-party opaque relay and administrator APIs",
+    "license": "Apache-2.0; no new dependency",
+    "method": "New persistent configuration, runtime counters, stop watch and fixtures; preexisting first-party hub refactored into a dedicated module; no legacy or RustDesk-derived code copied or translated",
+    "review": "Live administrator access, bounded limits and revision-checked audit transaction; prior fixed defaults seeded without forwarding permission. Mutex couples capacity and combined-direction admission counters. Quota updates stop pairs through an independent watch; supervision reads persistent revision even after HTTP cancellation. Stale snapshots cannot downgrade limits or stale registration cleanup delete a replacement. Cumulative admitted bytes survive quota changes but have explicit runtime identity and are not persistent node accounting or proof of peer delivery.",
+    "verification_scope": "Quota/actor/rollback/reopen/snapshot/migration, runtime capacity/rate/lifetime/stop-queue tests and live HTTP SDK WSS inner-TLS transfer followed by zero-capacity shutdown. Account/device/resource aggregate budgets, durable independent node metering, QUIC/TURN/edge and installed UI remain open."
+  },
+  "audit_actor_review": {
+    "paths": [
+      "protocol-spec/management.rs",
+      "crates/storage/migrations/009_audit_actor.sql",
+      "crates/storage/src/auditing.rs",
+      "crates/storage/src/accounts.rs",
+      "crates/storage/src/accounts/password_work.rs",
+      "crates/storage/src/control.rs",
+      "crates/storage/src/lib.rs",
+      "crates/storage/src/remote_password.rs",
+      "crates/storage/src/trusted.rs",
+      "crates/storage/src/scopes.rs",
+      "crates/storage/src/nodes.rs",
+      "crates/storage/tests/control/auditing.rs",
+      "apps/server/src/lib.rs"
+    ],
+    "source": "Independent implementation of v3 necessary audit metadata and existing first-party authorization domains",
+    "license": "Apache-2.0; no new dependency",
+    "method": "New tagged actor contract, migration, transactional attribution and development fixtures; no legacy or RustDesk-derived source or tests copied or translated",
+    "review": "Historical actors remain unknown. New management/device actors require matching database identity associations and current epoch; device labels follow verified proofs, credential labels follow purpose-bound token refresh. HTTP policy/device revocation use the authenticated principal. Current database role/session rechecked for administrator mutations. Failed login actors remain unauthenticated without submitted names or secrets. Remote request/first permit/recovery consumption/pre-CPU password attempts added; idempotent transitions avoid duplicates; audit failure rolls back business mutations. Post-revocation identity is preserved within logout/password transactions. JSON size/validity and shared enum shape bound actor metadata.",
+    "verification_scope": "Windows/Ubuntu development checks, actor/role/rollback/retry/MFA/cancelled-attempt/SQLite-reopen/migration tests and actual HTTP SDK serialization. Outstanding relay/edge/TURN/service/quota event domains, installed UI and formal product acceptance remain open."
+  },
+  "audit_management_review": {
+    "paths": [
+      "crates/storage/src/auditing.rs",
+      "crates/storage/migrations/008_audit_retention.sql",
+      "crates/storage/tests/control/auditing.rs",
+      "apps/server/src/audit.rs",
+      "protocol-spec/audit.md"
+    ],
+    "source": "Independent implementation of v3 audit metadata, configurable retention and bounded cleanup requirements using existing SQLite and service APIs",
+    "license": "Apache-2.0; no new dependency",
+    "method": "New first-party implementation and synthetic metadata fixtures; no legacy source copied or mechanically translated",
+    "review": "Live database administrator/session checks; epoch-bound ordered bounded pages; transactional revision/retention updates; durable counter seeded from historical maximum prevents SQLite row-ID reuse after cleanup; bounded expiry index/batches, persistent prune cursor and cleanup clock. Control process owns maintenance with its listener and reports permanent failures. No secret/session/media/file payloads in returned records.",
+    "verification_scope": "Role/expiry/restore/cursor/retention/persistence/clock/counter rollback/migration tests and real HTTP SDK plus running maintenance. Full actor/domain event coverage, UI, sustained-load and formal acceptance remain open."
+  },
+  "node_runtime_usage_review": {
+    "paths": [
+      "protocol-spec/node-usage.md",
+      "protocol-spec/nestlink.proto",
+      "protocol-spec/management.rs",
+      "crates/identity/src/nodes.rs",
+      "crates/node/src/control.rs",
+      "crates/node/src/gate.rs",
+      "crates/node/src/meter.rs",
+      "crates/storage/migrations/011_node_usage.sql",
+      "crates/storage/src/nodes.rs",
+      "crates/storage/src/node_usage.rs",
+      "crates/storage/src/auditing.rs",
+      "apps/server/src/node_control.rs",
+      "crates/sdk/src/lib.rs",
+      "crates/node/tests",
+      "crates/storage/tests/node_usage.rs",
+      "crates/sdk/tests/node_usage.rs",
+      "apps/server/tests/nodes.rs"
+    ],
+    "source": "Independent implementation of v3 signed data-node leases, durable cumulative metering and aggregate capacity/rate execution",
+    "license": "Apache-2.0; existing pinned reqwest/uuid/axum/prost dependencies reused",
+    "method": "New first-party runtime binding, signatures, migration, transaction checks, shared meter and actual HTTP/WSS fixtures; no legacy or RustDesk-derived code or tests copied or translated",
+    "review": "Proof v2 binds each control instance runtime UUID. Persisted generations and bounded replay tombstones reject retired/expired IDs; control sockets cannot change runtime. Purpose-separated cumulative reports and acknowledgements bind the active epoch/runtime/policy lease, latest sequence and original raw-byte digest; retries retain acceptance time and do not change counts or resource capacity. Restore rotates epoch and clears current pointers. Administrator queries check live roles and use millisecond lease clocks. One bounded reporter belongs to the control future; initial ACK required before capacity, failure terminates authorization. Shared non-cloneable RAII capacity and monotonic one-second-burst token bucket count only successful queue admissions, across all roles. Each enqueue still requires separate resource/session authority. Current counts are self-reported admissions, not delivery or final shutdown accounting. Control drop synchronously publishes stop even before the pump is first polled; the pre-fix failure and post-fix verification are retained.",
+    "verification_scope": "SQLite reopen/snapshot/restore/migration, sequence/clock/signature/rate/capacity/replay and audit/generation-exhaustion rollback; live SDK query and byte-identical signed ACK retry; actual node WSS renewal, HTTP cumulative report and concurrent runtime replacement/revocation; stalled WS with working HTTP ACK still expires at original lease deadline. Independent data services, aggregate cross-node/account/resource limits and product acceptance remain open."
+  },
+  "relay_reservation_review": {
+    "paths": [
+      "crates/protocol/src/relay.rs",
+      "crates/identity/src/relay.rs",
+      "crates/identity/src/relay/tests.rs",
+      "crates/storage/src/relay_reservations.rs",
+      "crates/storage/src/relay_reservations/tests.rs",
+      "crates/storage/migrations/012_relay_reservations.sql",
+      "apps/server/src/relay.rs",
+      "apps/server/src/relay/reservation.rs",
+      "crates/sdk/src/relay_allocation.rs",
+      "crates/sdk/tests/relay_allocation.rs",
+      "protocol-spec/relay-allocations.md",
+      "apps/server/src/main.rs",
+      "apps/server/tests/installed.rs"
+    ],
+    "source": "Independent implementation of v3 relay capacity, signed resource reservation and fail-closed restart/restore requirements",
+    "license": "Apache-2.0; existing pinned dependencies; SDK development fixtures reuse nestlink-node",
+    "method": "New first-party protocol, signatures, SQLite transactions, lifecycle and loopback fixtures; no legacy or RustDesk-derived implementation or tests copied or translated",
+    "review": "Shared independent/combined allocation and both-account slot reservations; node runtime/role/key/policy binding; ten-second signed grant within both existing leases; exact current-permit device proof; stable approved-session digest and explicit repeated-field matching. Unchanged leases do not extend promises; allocation IDs remain bounded tombstones. Revocation/runtime takeover retains old promised capacity. Combined cleanup owns the committed reservation before the cancellable response boundary and matches connection tokens; last actual I/O close releases once. New control runtime fencing, unknown post-snapshot restore promises, maximum-lease monotonic wait and sticky clock anomaly refusal. No resource grant follows from global node policy or usage confirmation. Full Ubuntu checks exposed node-init rejecting valid base64url public issuers beginning with a hyphen. CLI value parsing now allows that character; a fixed public test seed reproduces it deterministically and verifies the persisted trust anchor. No private user key is part of the fixture.",
+    "verification_scope": "Development signature/domain/binding/range, shared/account/node capacity, retry/renewal/expiry, audit rollback, SQLite reopen/restore/migration and simulated clock/fence tests; actual HTTP/SDK/WSS cancellation and shared admission; existing inner TLS forwarding/revocation fixtures check durable release. Independent resource snapshots/guards, actual node forwarding, TURN/edge, aggregate device/resource budgets, installed UI and product acceptance remain open."
+  },
+  "node_resource_authority_review": {
+    "paths": [
+      "crates/protocol/src/node_resources.rs",
+      "crates/identity/src/nodes/resources.rs",
+      "crates/identity/src/nodes/resources/tests.rs",
+      "crates/identity/src/relay.rs",
+      "crates/storage/src/node_resources.rs",
+      "crates/storage/src/control.rs",
+      "crates/storage/src/relay_reservations/tests/resources.rs",
+      "crates/node/src/control/resources.rs",
+      "crates/node/src/control/resources/tests.rs",
+      "crates/node/src/control.rs",
+      "apps/server/src/node_control.rs",
+      "crates/sdk/tests/relay_allocation.rs",
+      "protocol-spec/node-resources.md"
+    ],
+    "source": "Independent implementation of v3 current per-resource node authority, signed admission and bounded metering/revocation requirements",
+    "license": "Apache-2.0; existing locked dependencies reused",
+    "method": "New first-party protocol, domain-separated signatures, SQLite fact checks, resource guards and deterministic/actual HTTP loopback fixtures; no legacy or RustDesk-derived source or tests copied or translated",
+    "review": "Node-key query and approved policy-key response bind a live runtime/epoch/policy lease and exact short request digest. Policy key delegates the existing allocation issuer without an unauthenticated trust anchor. Snapshot does not renew node/global or resource authority or release promises. Endpoint admission binds the complete signed allocation, fixed key, transport and service challenge; both roles share one lifetime byte/rate budget and node meter. Failed enqueue charges neither. Exact-token non-cloneable guards stop both roles; bounded seen IDs reject reusing a closed allocation. Snapshot expiry/missing resources/quota/issuer/control failure stop idle guards. Same grant sequence preserves its original monotonic deadline; higher sequence renews only an already-live stable binding. Global lease/usage and resource poll run as child futures of the same control owner.",
+    "verification_scope": "Purpose, digest/nonce/bounds/context/replay, shared rate/bytes/failed enqueue, monotonic renewal/expiry, stale cleanup and idle/global stops. SQLite actual session/account/device/login/node/policy/quota/trust/password revocation and restore, concurrent WSS lease sequence update, unchanged grants and mismatched keys. Actual HTTP/SDK proofs and two guards; real idle loopback socket closes within two seconds of node revocation. This is not standalone independent QUIC/WSS forwarding, cross-network load or installed product acceptance."
+  },
+  "independent_wss_relay_review": {
+    "paths": [
+      "apps/server/src/node_relay.rs",
+      "apps/server/src/main.rs",
+      "crates/node/src/control.rs",
+      "crates/node/src/control/resources.rs",
+      "crates/node/src/control/resources/tests.rs",
+      "crates/node/src/gate.rs",
+      "crates/sdk/src/node_relay.rs",
+      "crates/sdk/tests/node_relay.rs",
+      "crates/transport-wss/src/node.rs",
+      "crates/transport-wss/src/lib.rs",
+      "protocol-spec/management.rs",
+      "protocol-spec/management-routes.json",
+      "protocol-spec/independent-wss-relay.md",
+      "packaging/caddy/Caddyfile.relay"
+    ],
+    "source": "Independent implementation of v3 standalone native WSS forwarding, endpoint proof, opaque carriage and deadline/cancellation requirements",
+    "license": "Apache-2.0; existing locked dependencies and first-party WSS carrier reused; SDK raw security fixtures add the already-locked tokio-tungstenite dev dependency",
+    "method": "New first-party node router/hub/CLI/SDK route and actual HTTP/inner-TLS/native-proof fixtures. Existing first-party carrier URL/address/TLS helpers factored for both relay origins. No legacy or RustDesk-derived implementation, codec or test source copied or translated.",
+    "review": "Node/global and current resource authority are required before endpoint slot pairing. Fresh unpredictable socket challenge binds the presented original allocation, endpoint public key and WSS transport. The data node does not open control SQLite or receive management bearer/cookies. SDK origin is explicit locally approved configuration, addresses resolve once and actual socket/SNI remain pinned, with full-permit binding and strict loopback HTTP. Opaque TLS/proof/business bytes count shared pair and node quotas. Full queues wait outside the control lock with bounded rechecked retry; failed enqueue charges neither meter. Writer rechecks already-admitted data. Guard owns minimum node/resource/allocation monotonic timer and distinguishes live updates from stop; watchdog remains supplemental. Unique tokens bound hub cleanup, closed IDs cannot reset bytes, shutdown/cancellation owns terminal shared control stop. Loss of node authority returns a failed service result rather than successful listener termination. Caddy example strips account credentials upstream.",
+    "verification_scope": "Actual loopback HTTP control and separate node listener with two pinned inner TLS peers and native proof; 256 KiB synthetic business frame plus reverse frame; remote/byte/quota revocation, HTTP resource loss, listener cancellation, wrong key/transport/challenge replay, closed IDs and route refusal; original-ticket-expiry continuation on the same two renewed sockets. Timer fixture runs with no watchdog; hub covers finite queue and stale registration. Formal public Caddy TLS, signed node discovery, native candidate-race integration, QUIC virtual UDP, sustained load, actual media, installed applications and product acceptance remain open."
+  },
+  "independent_quic_relay_review": {
+    "paths": [
+      "crates/protocol/src/relay_datagram.rs",
+      "protocol-spec/contract.json",
+      "crates/identity/src/nodes.rs",
+      "crates/transport-stream/src/tls.rs",
+      "crates/transport-quic/src/lib.rs",
+      "crates/transport-quic/src/node.rs",
+      "crates/transport-quic/src/virtual_udp.rs",
+      "crates/transport-quic/Cargo.toml",
+      "apps/server/src/node_quic.rs",
+      "apps/server/src/main.rs",
+      "apps/server/Cargo.toml",
+      "crates/sdk/src/node_relay.rs",
+      "crates/sdk/src/native.rs",
+      "crates/sdk/src/native_relay.rs",
+      "crates/sdk/tests/node_relay.rs",
+      "crates/remote/src/queues.rs",
+      "protocol-spec/independent-quic-relay.md",
+      "packaging/caddy/Caddyfile.relay"
+    ],
+    "source": "Independent implementation of v3 outer authorized QUIC datagram forwarding, endpoint inner QUIC/virtual UDP, approved candidate race and lifecycle requirements",
+    "license": "Apache-2.0; existing locked quinn/rustls/serde/serde_json/base64 dependencies reused, no new third-party versions",
+    "method": "New first-party datagram framing, bounded reassembly/socket adapter, independent node hub/listener, pinned-node transport, approved routes/race and actual loopback fixtures. Existing first-party endpoint certificate encoding and transport settings factored; no legacy or RustDesk-derived implementation or tests copied or translated.",
+    "review": "Separate outer ALPN and no 0-RTT/resumption. Protected registered node TLS key pinned only by verified control allocation; current resource guards plus original ticket and QUIC-specific unpredictable challenge proof before unique-role pairing. Address validation Retry, finite sockets/tasks/rate/hub and stream/message/deadline bounds. Node validates fragment envelopes and forwards only to paired role; no inner keys or arbitrary destination. Virtual UDP fixed 1200-byte MTU, two maximum unreliable fragments, 32 incomplete/complete packets and original 100-ms age, bounded replay window; flood loops yield and failed enqueue does not count. Approved URIs resolve once and bind complete permit, literals and ticket. Inner native proof and shared network/lease lifecycle required. Explicit carrier owner and bounded-lifetime bidirectional close watcher stop both layers on cancellation, discarded candidate, proof failure, network change and runtime drop. Inner synthetic addresses cannot become actual peer network destinations. Signed promises are not refunded by local cleanup.",
+    "verification_scope": "Real IPv4/IPv6 outer and pinned inner QUIC, native channels and synthetic 256-KiB transfer; remote/quota/bytes/HTTP revocation, listener owner cancellation, pending/established candidate cleanup, network generation, live renewal, wrong node key/transport/challenge and pre-auth datagram refusal. Shared native race with an unreachable approved QUIC carrier selects authorized WSS. Reassembly exercises reorder/duplicate/expiry/malformed/5000-packet flood. Network-change failure preserved before explicit owner fix; parallel lifetime-byte exhaustion then exposed delayed client stop after node closure, fixed by direct bidirectional closure rather than relaxing the two-second budget. Public Caddy TLS, cross-host MTU/loss/congestion/migration, signed address discovery, admitted-carrier retry coordination, final receipts, sustained capacity/load, actual media, installed products and formal acceptance remain open."
+  },
+  "relay_selection_review": {
+    "paths": [
+      "apps/server/src/relay_selector.rs",
+      "apps/server/src/node_relay.rs",
+      "apps/server/src/node_quic.rs",
+      "apps/server/src/main.rs",
+      "apps/server/src/lib.rs",
+      "crates/node/src/control.rs",
+      "crates/node/src/control/resources.rs",
+      "crates/node/src/control/resources/tests.rs",
+      "crates/sdk/tests/node_relay.rs",
+      "protocol-spec/relay-selection.md",
+      "protocol-spec/node-resources.md",
+      "protocol-spec/independent-wss-relay.md",
+      "protocol-spec/independent-quic-relay.md"
+    ],
+    "source": "Independent implementation of v3 paired native carrier race, original authorization and bounded cleanup requirements",
+    "license": "Apache-2.0; existing locked dependencies, no added supplier or third-party versions",
+    "method": "New first-party candidate preparation/commit, shared selector and actual socket regressions. Existing first-party resource authority and opaque hubs reused. No legacy or RustDesk-derived implementation or tests copied or translated.",
+    "review": "Non-cloneable candidate preparation verifies original ticket and fresh transport-specific endpoint proof, consuming no resource role or business meter. Candidate pins delegated issuer and original ticket/observed grant monotonic deadline; commit rechecks current node/resource facts and cannot inherit an extended ticket deadline. Shared selector matches opposite roles on one transport, discards uncommitted losers and transfers owned guards through one-shot channels. Partial commit or failed handoff closes committed guards rather than forwarding from preparation. Multiple fixed-address candidates are bounded; exact-token cancellation cannot stop winners. Both listeners share socket/IP budgets; finite pending state and original pairing deadline. Used UUIDs remain terminal, local cleanup cannot refund signed capacity promises.",
+    "verification_scope": "Actual signed-proof preparation then issuer/revocation/global-stop changes, fixed monotonic expiry despite renewed authority and lagging wall clock, and waiter expiry without control watchdog. Actual node WSS/outer QUIC with both directions of one-sided UDP failure, crossed arrival order and either carrier winning, two approved loopback literals, duplicate candidates, pending cancellation/timeout/revocation, chosen carrier forwarding after loser cleanup, and retained closed-ID/renewal/quota/native-proof tests. Shared socket capacity and per-IP/table bounds. Development checks do not prove DNS across different nodes, admitted-carrier retry, public TLS, company/mobile networks, sustained load/capacity, installed products or formal acceptance."
+  },
+  "signed_node_discovery": {
+    "source": "Independent implementation of v3 approved node discovery, current endpoint proofs and persistent configuration fencing requirements",
+    "license": "Apache-2.0; already locked url/crypto/protobuf/system API dependencies, no new supplier versions",
+    "new_paths": [
+      "protocol-spec/node-discovery.md",
+      "crates/protocol/src/node_discovery.rs",
+      "crates/identity/src/node_discovery.rs",
+      "crates/identity/src/node_discovery/tests.rs",
+      "crates/storage/migrations/013_node_endpoints.sql",
+      "crates/storage/src/node_discovery.rs",
+      "crates/storage/src/relay_reservations/tests/discovery.rs",
+      "apps/server/src/node_discovery.rs",
+      "crates/sdk/src/node_discovery.rs",
+      "crates/sdk/tests/node_relay/signed_discovery.rs"
+    ],
+    "method": "New first-party implementation and tests. Existing first-party signing primitives, current authority validation, allocation/resource machinery and real isolated relay fixture reused. No legacy/RustDesk-derived code or tests copied or translated.",
+    "review": "Default-empty operator address approval requires current administrator identity, optimistic revision and atomic audit. Separate signing/action purposes bind exact endpoint request, nonce and full permit. Snapshot URLs/key/runtime/epoch/configuration revision are pinned before DNS; response and routes retain original request-start monotonic expiry. Persistent endpoint revisions bind allocations and remove old grants from current resource snapshots; no UUID revival or capacity refund. Legacy schema-12 allocation JSON defaults only the added endpoint revision to zero, which cannot authorize a discovered route.",
+    "verification_scope": "Signed descriptor tampering/purpose/issuer/full-permit/nonce tests, strict URI and literal IP classification, admin audit rollback, migration/snapshot preservation, current endpoint/login/capacity/runtime/role/policy filtering, old-revision removal and withdrawal. Actual HTTP SDK WSS inner TLS and outer plus inner QUIC carry bidirectional synthetic channel bytes; withdrawal closes both idle peers within two seconds. Expired response/route reuse and wrong revision/issuer fail before route resolution or admission. Final full Windows/Ubuntu regressions and WASM/contract/policy/dependency checks are recorded separately. Public TLS, real multi-node DNS, installed platforms/company/mobile networks, capacity/72-hour load and formal acceptance are open."
+  },
+  "reconnection_review": {
+    "license": "Apache-2.0; existing locked dependencies reused",
+    "source": "Independent implementation of v3 generation-fenced reconnection and endpoint consent requirements",
+    "paths": [
+      "protocol-spec/reconnection.md",
+      "crates/identity/src/reconnection.rs",
+      "crates/identity/src/reconnection/tests.rs",
+      "crates/storage/migrations/014_reconnections.sql",
+      "crates/storage/src/reconnection.rs",
+      "crates/storage/tests/control/reconnection.rs",
+      "apps/server/src/reconnection.rs",
+      "crates/sdk/src/reconnection.rs",
+      "crates/sdk/tests/node_relay/reconnection.rs"
+    ],
+    "method": "New first-party code and tests; no legacy or RustDesk-derived source copied or translated. Existing first-party proofs, authority checks, native session stop and isolated network fixtures reused.",
+    "review": "Both endpoint signatures bind full current consent, strict next generations and nonce. Original controller login and current endpoint/account/authorization/policy/epoch are rechecked in one generation CAS, signal cleanup, immutable receipt and actor-audit transaction. No lease or consent extension, allocation UUID revival or capacity refund. Independent signing purpose binds exact two-proof request, nonce and full signed successor. Receipt retries require the complete successor still current. Native/WASM coordinator and native cleanup/rebuild preserve original request budget, issuer and login.",
+    "verification_scope": "Different endpoint accounts, bad/replayed proofs, independent SQLite writers, audit rollback, restoration/revocation/expiration/renewal/policy fencing; real HTTP body failure after commit, successive proof exchanges, WSS inner TLS and outer/inner QUIC replacement with bidirectional synthetic data; stopped sender queues and retained request clock. Full platform regression evidence is recorded separately. Installed product fault detection/scheduling, browser WebRTC, TURN, real cross-network/capacity/72-hour and formal acceptance remain open."
+  },
+  "native_recovery_review": {
+    "source": "Independent implementation of v3 local fault observation and bounded native relay reconnection requirements",
+    "license": "Apache-2.0; existing locked dependencies reused, SDK adds existing workspace uuid",
+    "paths": [
+      "protocol-spec/native-recovery.md",
+      "crates/sdk/src/native_recovery.rs",
+      "crates/sdk/tests/node_relay/recovery.rs",
+      "crates/sdk/src/reconnection.rs",
+      "crates/sdk/src/native.rs",
+      "crates/session/src/lib.rs",
+      "crates/remote/src/lifecycle.rs",
+      "crates/remote/src/queues.rs",
+      "crates/remote/src/quic.rs",
+      "crates/transport-quic/src/node.rs",
+      "crates/transport-quic/src/virtual_udp.rs",
+      "crates/transport-wss/src/lib.rs",
+      "crates/storage/src/node_discovery.rs",
+      "crates/storage/src/relay_reservations/tests/discovery.rs",
+      "crates/remote/tests/lifecycle.rs",
+      "crates/session/tests/authorization.rs"
+    ],
+    "method": "New first-party code and tests, using existing first-party control proofs/current relay and isolated network fixtures. No legacy/RustDesk-derived implementation or test copied or translated.",
+    "review": "Only transport loss/network invalidation after successful cleanup can request a new generation. Revocation/exit/cancel/closed observers, protocol/platform/clock errors, suspend and expiration fail closed. Latest renewed permit and original local monotonic deadline bound both proofs, discovery, DNS, route race and native authorization. Fresh exchange nonce/old full permit/node derive one shared UUIDv8; it provides no authority or capacity refund. Current existing reservations are discoverable at full global/account/node limits only with exact current session/control/runtime/key/revision/expiry bindings; new UUIDs still need unchanged admission. Carrier faults are published before inner close so network loss cannot hide protocol errors. Recovered session owns its original endpoint observer; old queues/handles never move generations.",
+    "verification_scope": "Actual idle WSS and outer/inner QUIC recovery following an independent controller network fact, two-party proof/current signed discovery/new allocation/native proof and bidirectional synthetic frames; successive generation restoration, cancellation while waiting/proving, terminal errors, failed cleanup, retained latest permit/local budget, and saturated allocation pairing. Default Windows stack overflow, outer-carrier reason loss and last-slot discovery race were reproduced and repaired without increasing stacks or capacity. Full Windows/Ubuntu checks recorded separately. Installed clients, direct/multi-node scheduling, WebRTC/TURN, WSS black-hole detection, signed close receipts, aggregate budgets, real company/mobile networks and formal acceptance remain open."
+  },
+  "release_archive_exclusive_publication_review": {
+    "paths": [
+      "scripts/refactor-release-archive.py",
+      "tests/refactor/test_release_archive.py"
+    ],
+    "source": "Independent archival integrity repair after original full and subset archive processes exited",
+    "license": "Apache-2.0; Python standard library only",
+    "method": "Replace Linux race-prone rename publication with same-directory exclusive hard-link publication; require final current metadata for previously present blobs; retain conflicting destination bytes and independent partial evidence.",
+    "verification_scope": "Competing writer after the last existence check and current metadata change during existing blob verification; original reports/script snapshot preserved. Local tooling does not assert full inventory or durable remote preservation."
+  },
+  "signed_relay_close_review": {
+    "source": "Independent implementation of v3 durable relay-capacity cleanup, per-allocation signed facts and bounded node shutdown requirements",
+    "license": "Apache-2.0; existing locked dependencies only",
+    "paths": [
+      "protocol-spec/relay-close.md",
+      "protocol-spec/nestlink.proto",
+      "protocol-spec/contract.json",
+      "crates/protocol/src/relay_close.rs",
+      "crates/identity/src/nodes/closes.rs",
+      "crates/identity/src/nodes/closes/tests.rs",
+      "crates/storage/migrations/015_relay_close.sql",
+      "crates/storage/src/relay_close.rs",
+      "crates/storage/src/relay_reservations/tests/closes.rs",
+      "crates/node/src/control/closes.rs",
+      "crates/node/src/control/resources.rs",
+      "crates/node/src/control/resources/tests.rs",
+      "apps/server/src/node_control.rs",
+      "apps/server/src/node_relay.rs",
+      "apps/server/src/node_quic.rs",
+      "crates/sdk/tests/node_relay/closes.rs"
+    ],
+    "method": "New first-party protocol, signing, storage and I/O-lifetime code, using existing original fixtures. No legacy or RustDesk-derived implementation/test copied or translated. Read-only inspection of the pinned Quinn connection driver identified buffered-transmit behavior; no supplier code modified or copied.",
+    "review": "Purpose-separated raw-byte signatures; stable exact allocation/runtime/epoch/key binding; atomic promise retirement/immutable ACK/node audit; exact retries after control restart cannot release twice. Revocation cleanup grants no forwarding authority. Bare guard Drop cannot claim I/O close. WSS socket/queues end first; QUIC awaits actual shared endpoint idle, with conservative no-refund on timeout. Combined active/draining/pending bound reserves each admitted allocation's final receipt. Exact signed bytes survive failed ACKs, rotate fairly, and receive a fixed five-second business-stop drain. Original clock, lease, restore and tombstone constraints retained.",
+    "verification_scope": "Purpose, binding, partial-fact, renewal ordering, audit rollback, snapshot/restart/restore and queue/witness fixtures; actual HTTP/WSS/outer-inner QUIC shutdown, lost response, corrupt ACK and fresh UUID after signed capacity release. Full platform runs recorded separately. Shared QUIC endpoint activity may prevent early release; installed clients, other forwarding roles, real networks, sustained capacity, signing and formal acceptance remain open."
+  },
+  "native_recovery_node_diagnostics_review": {
+    "source": "Independent diagnosis of the real node-control regression and WSL clock observations during frozen native-recovery verification",
+    "license": "Apache-2.0; existing locked dependencies only",
+    "paths": [
+      "crates/node/src/control.rs",
+      "crates/node/src/gate.rs",
+      "apps/server/tests/nodes.rs",
+      "docs/refactor/history-audit/release-preservation-local-verification-2026-10-14.json"
+    ],
+    "method": "New first-party failure reporting and owned task completion. No copied legacy implementation. Archive evidence records the actual complete production-tool report without changing original reports.",
+    "review": "Lease/clock/revocation checks and original budgets unchanged; retain static phase, HTTP status and exact clock rejection causes without URLs, payloads or credentials. Owned completion consumes NodeControl so cancelling it stops authority and it cannot be polled again. Test diagnostics copy watch facts before awaiting/drop to avoid holding a read guard across a synchronous stop notification. Metadata/report/script/inventory hashes and exact asset identity coverage checked for all 799 local blobs.",
+    "verification_scope": "Original Ubuntu full and focused node failures and a 790 ms wall-clock rollback sample retained; their timing is environment evidence, not proof of every timeout cause. Final source full regressions tracked separately. All 799 Release assets locally reverified by full SHA256 and before/after metadata; remote preservation/history import/formal acceptance/final operations remain incomplete."
+  },
+  "native_download_storage_review": {
+    "source": "Independent first-party local download storage, verified prefix/content and no-clobber publication implementation",
+    "license": "Apache-2.0; existing fixed cap-std/cap-fs-ext suppliers retain the separately reviewed licenses including exact winx 0.36.4",
+    "paths": [
+      "crates/platform-files/src/download.rs",
+      "crates/platform-files/tests/transfer/downloads.rs",
+      "crates/remote/src/files/client.rs",
+      "protocol-spec/native-download-storage.md"
+    ],
+    "method": "New first-party implementation and fixtures. Reuse existing first-party private-directory OS boundary and fixed supplier capability I/O APIs; no legacy source or supplier implementation copied.",
+    "review": "Only a fresh local private area under a caller-selected trusted parent and one local portable file name; no peer-selected ambient save path. Opaque client owner/UUID binding; explicit rebound source and real disk prefix equality. Exact source End cannot be fabricated by cancellation. Per-chunk/current consent checks, full actual disk revalidation and file sync precede atomic same-filesystem hard-link creation, which refuses existing objects. Original handle/directory ownership, truthful publication/cleanup facts and no final-target deletion. Existing registry package identities/checksums and supplier license text unchanged.",
+    "verification_scope": "Actual TLS/QUIC private-file development fixtures, platform sharing/path substitution, prefix/content mutation, cancellation/revocation, different client with identical UUID/manifest, conflicts and no-clobber retry. Complete checks, original directory-fsync failure and frozen inputs recorded separately. Blocking calls still require owned product file workers; UI/SDK/daemon, safe export to existing save directories, upload/SAF/browser, abnormal storage and formal installed-product acceptance remain open."
+  },
+  "native_node_clock_failure_diagnostics_review": {
+    "source": "Independent first-party diagnostics for the current node fixture's observed early-stop and activation failures",
+    "license": "Apache-2.0",
+    "paths": [
+      "crates/node/tests/control.rs",
+      "docs/refactor/node-clock-diagnostic-2026-10-14.json"
+    ],
+    "method": "Report the existing owned NodeControl completion after copying watch facts; no legacy implementation or third-party test copied.",
+    "review": "Original two-second activation and eight-second minimum expiry assertions retained. Stalled socket additionally must terminate for the original local lease deadline. The third bounded Ubuntu run captured exact wall-clock rollback failure; raw clock samples and all failed/passing runs retained. No production clock, lease, revocation or system-setting change in this diagnostics increment.",
+    "verification_scope": "Windows selected five control tests and node all-target Clippy; bounded Ubuntu diagnostic runs with an observed failure. Not a new complete workspace or installed-product acceptance result."
+  },
+  "native_file_product_integration_review": {
+    "source": "Independent first-party v3 Core/daemon/local IPC/desktop file and clipboard integration",
+    "license": "Apache-2.0",
+    "paths": [
+      "crates/app-core/src/native_files.rs",
+      "crates/app-core/src/native_clipboard.rs",
+      "crates/app-ipc/src/files.rs",
+      "crates/app-ipc/src/clipboard.rs",
+      "protocol-spec/application-files.rs",
+      "protocol-spec/local-ipc.json",
+      "apps/daemon/src/native_files.rs",
+      "apps/daemon/src/native_clipboard.rs",
+      "apps/desktop/src/files.rs",
+      "apps/desktop/src/clipboard.rs"
+    ],
+    "method": "New first-party product binding and owned actors; reuse the reviewed NestLink business protocol and OS capability adapters, no legacy code copied or translated.",
+    "review": "One claim per proved session; full request ID/connection/Core generation/daemon runtime matching; independent per-root metadata/content/write and per-endpoint clipboard direction consent; native paths stay in authenticated local IPC, file contents and clipboard text never enter IPC state or operation logs. Exact RPC consumption and original task owners survive lost UI acknowledgement, cancellation and physical cleanup timeout. Switchable clipboard owner denies before selection and cannot install an adapter after retirement.",
+    "verification_scope": "Concentrated Windows development regression and Linux all-target compilation/strict lint checks are tracked separately. Android, WASM product transfer, aggregate quota, persistence, genuine desktops/SAF providers and installed-product acceptance remain open."
+  },
+  "native_system_selection_review": {
+    "source": "Independent first-party adaptation of documented Windows IFileOpenDialog/COM and freedesktop XDG FileChooser APIs",
+    "license": "Apache-2.0",
+    "paths": [
+      "crates/platform-files/src/selection.rs",
+      "crates/platform-files/src/selection/windows.rs",
+      "crates/platform-files/src/selection/linux.rs",
+      "apps/desktop/src/picker.rs"
+    ],
+    "method": "New first-party system API calls. Existing fixed windows and zbus dependencies retain their supplier licenses; no legacy picker source copied or translated.",
+    "review": "Windows unsafe is limited to the COM picker module: initialize/uninitialize balance, interface-before-apartment destruction, display-name CoTaskMemFree ownership and cancellation HRESULT handling. Linux pins the activated portal's unique owner and randomized request path, subscribes before OpenFile, validates the exact returned handle and bounded single local URI, and closes only that request. Helper paths use a bounded private pipe; parent revalidation and full session/runtime guards prevent stale results granting access. Choosing a path does not itself approve content, metadata or writes.",
+    "verification_scope": "Windows/Linux compilation and static ownership review; cancellation thread-resource-exhaustion handling and isolated portal regression are being completed. Genuine OS chooser, desktop and fixed-artifact acceptance remain open."
+  },
+  "native_file_read_review": {
+    "source": "Independent implementation of v3 native authorized file reads, safe paths, checksummed chunks, resumption and lifecycle requirements",
+    "license": "First-party Apache-2.0. Ten new registry packages permit Apache-2.0 or MIT alternatives; winx 0.36.4 declares only Apache-2.0 WITH LLVM-exception and retains that exact supplier license.",
+    "supplier": "https://github.com/bytecodealliance/cap-std; official crates.io registry packages fixed by Cargo.lock checksums; all newly introduced registry archives and their complete license files verified in a separate supplier receipt",
+    "paths": [
+      "protocol-spec/native-file-read.md",
+      "protocol-spec/nestlink.proto",
+      "protocol-spec/contract.json",
+      "crates/protocol/src/files.rs",
+      "crates/remote/src/files.rs",
+      "crates/remote/src/files/client.rs",
+      "crates/platform-files/Cargo.toml",
+      "crates/platform-files/src/lib.rs",
+      "crates/platform-files/tests/paths.rs",
+      "crates/platform-files/tests/transfer.rs",
+      "docs/refactor/NATIVE-FILES.md",
+      "docs/refactor/file-read-suppliers-2026-10-14.json",
+      "docs/refactor/file-read-license-review-2026-10-14.json",
+      "deny.toml"
+    ],
+    "method": "New first-party protocol, runtime, provider and tests. No legacy or RustDesk-derived source copied or mechanically translated. Fixed supplier no-follow/handle-relative APIs used without copying or modifying their implementation. First-party code forbids unsafe.",
+    "supplier_license_review": "Complete fixed registry archives and all included LICENSE/NOTICE files are retained with Cargo.lock checksum/identity verification. The winx LLVM exception adds embedded-object redistribution relief and a GPLv2 compatibility option, does not mandate GPL or relicense first-party code. Only exact winx 0.36.4 is allowed through a package/version-scoped cargo-deny exception; no global license allowance or scan ignore. Full product SBOM/NOTICE and license distribution remain required before release.",
+    "review": "FileRead permission, connection generation and exact request/reply identities checked independently of explicit local per-session directory consent. Portable path namespace, component-wise no-follow handles, regular/single-link/same-filesystem objects, local size limits, Unix nonblocking special-file rejection and Windows read-only sharing. Sequential bounded chunks, whole source and actual destination-byte verification, checksummed resume identity and exact offset; root revocation also gates cached retries. Four active/256 tombstoned transfers, 16 roots, one file worker/work slot; OS calls never hold the authorization lock. Blocking read cleanup preserves timeout and actual handle ownership after authority stops.",
+    "verification_scope": "Real private temporary directories with Windows junction/hardlink/share-denial and Unix symlink/FIFO/root-replacement/content mutation cases. Actual pinned mutual TLS/direct QUIC and endpoint proof deliver multi-block files, resumptions and empty files. Adversarial keyed peers, altered retries, root-only revoke, active/tombstone budgets, corrupt prefix and blocked disk/input/revoke fixtures. Full checks and failed attempts are recorded separately. WSS product file flow, atomic destination storage/uploads/browsing, Android SAF, Web/GUI/installers, real networks/storage performance and formal acceptance remain open."
+  },
+  "service_quota_restore_reconciliation_review": {
+    "source": "Independent first-party offline quota recovery, external trust and conservative lifetime accounting",
+    "license": "Apache-2.0; existing locked suppliers retain their licenses",
+    "paths": [
+      "crates/protocol/src/service_quota_recovery.rs",
+      "crates/identity/src/service_quota_recovery.rs",
+      "crates/storage/src/services/quota_recovery.rs",
+      "apps/server/src/main.rs",
+      "apps/server/tests/quota_recovery.rs",
+      "docs/refactor/SERVICE-QUOTA-RECOVERY.md"
+    ],
+    "method": "New first-party protocol, signature verification and transactional recovery; no legacy runtime code or new dependencies.",
+    "review": "Singleton offline lease; independently provisioned external ledger key outside restored deployment; exact epoch/revision/request digest binding; four-scope cumulative totals; no decrease of known spent plus outstanding, no invented terminal seals, persisted missing-ID debts, atomic one-time fence removal, replay and re-restore rejection. Current environment has no configured independent cumulative ledger.",
+    "verification_scope": "Windows/Linux five-crate all-target strict, targeted Node 29 and Storage 13 cases per platform, actual HTTP/Node/QUIC/TCP publication and start-cancellation 2 per platform, and real offline CLI singleton/external-trust/replay 1 per platform passed. CLI private-parent and daemon bounded-read fixture failures and their corrected attempt03 are retained separately. No configured production external ledger or formal acceptance is claimed."
+  },
+  "stock_firefox_development_tooling_review": {
+    "source": "Independent first-party BiDi probe adapter; Apache-2.0. External browser/launcher tools remain development-only inputs.",
+    "review": "Official Mozilla stable metadata, SHA512SUMS and valid Mozilla Authenticode installer; private extraction without normal browser installation/profile access. Pinned puppeteer-core 25.14.0 and 25 total npm packages installed with ignore-scripts and retained integrity lock. Declared licenses: 4 Apache-2.0, 16 MIT, 4 ISC, 1 BSD-3-Clause. Two npm packages omit their root LICENSE; exact npm gitHead upstream Apache license texts are preserved under development-notices.",
+    "record": "docs/refactor/web-browser-tooling-review-2026-10-15.json",
+    "verification_scope": "Actual stock headless Firefox 158.0 passed 14 local shared-probe cases; no locale/theme/motion emulation or custom clipboard preference override. Browser process exit/profile removal and closed owned servers were required before successful command/scratch receipts. No redistributed browser/launcher or installed-product acceptance is claimed."
+  },
+  "linux_arm64_server_development_review": {
+    "source": "Independent first-party build/CLI verification helpers; Apache-2.0",
+    "method": "Rust 1.96.0 current-source AArch64 release cross-build; exact APT-metadata SHA-256 verified GCC/sysroot and QEMU packages extracted privately without host package installation or binfmt registration. External tools remain development inputs and are not bundled with the product.",
+    "records": [
+      "artifacts/core-verification/linux-arm64-cross-tools-20261015-attempt01.json",
+      "artifacts/core-verification/linux-arm64-qemu-tools-20261015-attempt01.json",
+      "artifacts/core-verification/linux-arm64-server-ready-20261015-attempt01.json",
+      "artifacts/core-verification/linux-arm64-server-cli-20261015-attempt01.result.json",
+      "artifacts/core-verification/linux-arm64-server-cli-20261015-attempt01.receipt.json",
+      "artifacts/core-verification/linux-arm64-external-quota-20261015-attempt01.result.json",
+      "artifacts/core-verification/linux-arm64-external-quota-20261015-attempt01.receipt.json"
+    ],
+    "review": "Actual ELF machine 183 bytes executed through explicit user-mode emulation. Private init, Argon2 bootstrap, encrypted consistent backup, new-epoch restore, durable quota fence and no-clobber commands checked; owned secret fixtures reclaimed without logging passwords.",
+    "verification_scope": "13/13 selected offline server CLI scenarios passed under QEMU. A separate 16/16 actual CLI invocation batch with independent Python cryptography 41.0.7 Ed25519 signing verified four-scope missing-ID debts, bad proofs, replay and re-restore refusal; it includes its own setup calls and does not claim a configured production external ledger. No ARM64 hardware, desktop/daemon, installed package, performance or formal release acceptance. Build and execution records retain distinct scopes."
+  },
+  "current_native_development_check_index": {
+    "source": "Independent first-party integration and receipt indexing; Apache-2.0",
+    "record": "artifacts/core-verification/native-av-accounting-recovery-status-20261015.json",
+    "documentation": "docs/refactor/NATIVE-INTEGRATION-CHECKS-2026-10-15.md",
+    "scope": "Latest selected group outcomes across distinct retained source snapshots, not a full-workspace, installed-product or formal release pass. Index validates exact log hashes, unchanged inputs and owned scratch reclamation; broad snapshot differences remain explicit.",
+    "additional_strict_receipt": "artifacts/core-verification/native-integration-final-windows-clippy-20261015-attempt01.receipt.json"
+  },
+  "browser_ice_restart_path_wait_review": {
+    "date": "2026-10-15",
+    "source": "Fresh first-party production browser path-wait correction and local development probe; no new third-party dependency",
+    "license": "Apache-2.0",
+    "paths": [
+      "apps/web/src/browser_peer.rs",
+      "scripts/refactor-browser-native-check.cjs"
+    ],
+    "behavior": "Wait for a selected ICE pair within the original operation and authorization deadlines while the aggregate peer remains connected during an ICE restart; keep immediate rejection of a selected disallowed path and existing track proof gates. The probe can dispatch a synthetic online event and records actual offer/answer, decoded media, signed renewals and owned cleanup.",
+    "evidence": "artifacts/core-verification/browser-native-host-three-stable-engines-20261015-attempt01-summary.json",
+    "evidence_sha256": "d89e97e92693968ef352f6fb03127eb67cae0de835da622f4b513cac4c0e37bf",
+    "acceptance_limit": "Owned Windows local synthetic capture and synthetic restart trigger only; no claim of real OS network change, TURN, platform capture, Android or installed-product acceptance."
+  },
+  "cargo_notice_collection_review_20261016": {
+    "source": "Checksum-verified 730 locked crates.io archives, 36 first-party workspace packages, two local forks, and reviewed exact-version pinned original/standard notice texts",
+    "license": "Each supplier retains its declared license; collection is not a license compatibility waiver",
+    "paths": [
+      "scripts/refactor-cargo-notices.py",
+      "scripts/refactor-release-producer.py",
+      "docs/refactor/cargo-notice-supplements.json",
+      "tests/refactor/test_cargo_notices.py",
+      "tests/refactor/test_release_cargo_notice_integration.py"
+    ],
+    "review_document": "docs/refactor/cargo-notice-review-2026-10-16.md",
+    "method": "Verify Cargo.lock and all-feature metadata exhaustively; compare original archive manifest identity/license/author/repository declarations, retain original manifest/VCS bytes and complete notice bytes. Exact package/version/archive/text hashes pin reviewed supplements. Preserve current explanation and historical notices separately; retain unavailable revision errors and source mismatches. No author/year is synthesized. Missing originals retain an incomplete index and prevent metadata success.",
+    "enrolled_supplement_packages": 103,
+    "collected_notice_files": 1352,
+    "collected_original_attribution_files": 2182,
+    "collection_status": "historical-incomplete-superseded",
+    "unresolved_original_mit_files": [
+      "convert_case_extras 0.2.0",
+      "dispatch 0.2.0",
+      "erased 0.1.2"
+    ],
+    "collection_evidence": "artifacts/cargo-notice-review-20261016/collected-notices-attempt04/index.json",
+    "applied_evidence": "artifacts/cargo-notice-review-20261016/staged-followup-attempt03/APPLIED.json",
+    "verification_scope": "Nine collector boundary cases and two real producer/collector integration cases passed within the complete suites. Full Windows Python suite: 114 total, 16 platform/environment skips, no failures; Linux: 114 total, one platform skip, no failures. Successful collection and incomplete-index behavior are tested in the actual producer license archive path, including refusal of LICENSE containing only a declaration/link. SPDX input normalizes 39 legacy Cargo slash declarations to OR and preserves the original declaration. All five related workflows passed actionlint after the core job runner-context fix. Real archive collection remains incomplete for the stated three originals. Independent source compatibility and formal product review remain open.",
+    "final_source_and_checks": "artifacts/cargo-notice-review-20261016/FROZEN.json",
+    "legacy_cargo_spdx_declarations_normalized": 39,
+    "superseded_by": "docs/refactor/cargo-notice-current-2026-10-16.md"
+  },
+  "latest_completed_linux_workspace_runtime": {
+    "summary": "artifacts/core-verification/native-workspace-linux-runtime-20261015-attempt03-summary.json",
+    "sha256": "01d7eef917ccf9e1c3d2dc3d3a1ca5e0b787e8dca582e50a17f0f5eb22a984c8",
+    "passed": 1100,
+    "failed": 0,
+    "ignored": 12,
+    "scope": "Recorded current Rust implementation and exact source inputs; subsequent Cargo notice additions and release-tool/CI documentation changes are separately verified.",
+    "clock_samples": 12644,
+    "clock_steps_observed": 0,
+    "clocksource_restored": "tsc",
+    "timesyncd_test_window": "temporarily paused with user authorization; original active state restored and independently read back",
+    "clock_window_receipt": "artifacts/core-verification/native-workspace-linux-ntp-window-20261015-attempt03.json",
+    "clock_window_receipt_sha256": "744474cf92cae00532aa7f57484f746e16c79a1d46edb59d87b0f39fdd4e221c"
+  },
+  "release_publication_and_interrupted_installation_review_20261016": {
+    "source": "Independent first-party publication snapshot and interrupted installation ownership review; no legacy source copied",
+    "license": "Apache-2.0; existing dependencies and development compiler retain their supplier licenses",
+    "paths": [
+      "scripts/refactor-release-publish.py",
+      "tests/refactor/test_release_publish.py",
+      "packaging/windows/nestlink-v15.iss",
+      "packaging/windows/Manage-NestLink.ps1",
+      "apps/daemon/src/maintenance.rs",
+      "apps/daemon/tests/maintenance_process.rs",
+      "crates/local-ipc/src/maintenance.rs",
+      "tests/refactor/test_windows_install_instances.py",
+      "docs/refactor/INSTALL-INSTANCES.md",
+      "docs/refactor/NATIVE-PACKAGING.md"
+    ],
+    "method": "Freeze bounded signed statement/signature/certificate bytes before parsing and verification; independently exercise local GitHub behavior, held maintenance locks, actual daemon subprocesses and PowerShell policy functions. No new dependency or signing identity.",
+    "review": "Publication checks the exact tag/release/asset identities and records the fixed handoff digest. Failed or cancelled Windows transactions abandon OS ownership while retaining both durable fences; only a held-gate recovery with identical active instance, current/maximum record and sequence can retry exact accepted bytes, preserving rollback history. Ready records require the original live process/start time.",
+    "record": "artifacts/release-completion-review-20261016/FINAL_SOURCE_INPUTS.json",
+    "verification_scope": "Publication/handoff 22 tests on each platform; actual maintenance daemon 4 on each; IPC maintenance 3 Windows/4 Ubuntu; PowerShell pure policy functions 3; both selected daemon/IPC all-target strict clippy commands passed. Current Inno 6.7.3 code parsed with /O- using text payloads and temporary signing-only omissions. Original red regressions and one corrected private-directory test fixture failure are retained. No signed build, genuine installation, hardware, cross-network, sustained acceptance or remote operation."
+  },
+  "web_consumer_notice_removal_review_20261016": {
+    "source": "Exact published leptos_macro 0.8.19 and tachys 0.2.19 consumer forks with narrow independently written standard-library integration",
+    "license": "Original upstream MIT grants and declarations retained; these excluded suppliers remain third party",
+    "paths": [
+      "crates/web-vendor/leptos_macro",
+      "crates/web-vendor/tachys",
+      "Cargo.toml",
+      "Cargo.lock",
+      "scripts/refactor-cargo-notices.py",
+      "tests/refactor/test_cargo_notices.py"
+    ],
+    "review_document": "docs/refactor/web-vendor-license-removal-2026-10-16.md",
+    "method": "Preserve all 103 original archive members, original/patched manifest declarations separately and complete pinned license/provenance files. Replace two naming predicates using existing convert_case and external erasure using std Any/Box with compiler Send enforcement. No removed dependency implementation copied, guessed copyright or standard license template adopted. Cargo changes exactly two source identities and deletes the two unused packages, with no other package-field/version changes.",
+    "verification_scope": "12 erasure runtime checks plus one compile rejection passed; 54 boundary and 22621 exhaustive casing inputs matched original crate and both consumer branches. Complete WASM all-target/all-feature strict Clippy and optimized Trunk release passed on 440 unchanged recorded inputs. Collector unit13 and actual metadata integration2 passed. Real integrated locked/offline all-feature metadata covers766 packages; only dispatch0.2.0 remains incomplete. Browser runtime, installed product, hardware, formal signatures and release acceptance are separate.",
+    "license_binding_limit": "Leptos macro embedded revision is unavailable; the explicitly reviewed reachable release-family original MIT binding and limitation are retained. Tachys uses its exact embedded revision. Dispatch original-notice gap is not cleared by target selection.",
+    "compiled_snapshot": "artifacts/cargo-notice-followup-20261016/web-validation-attempt02/COMPILED_SOURCE.json",
+    "integration_receipt": "artifacts/cargo-notice-followup-20261016/root-integration-attempt01/APPLIED.json",
+    "collection_receipt": "artifacts/cargo-notice-followup-20261016/root-integration-attempt01/COLLECTION.json",
+    "source_freeze": "artifacts/cargo-notice-followup-20261016/FROZEN_WEB.json"
+  },
+  "browser_native_media_profile_and_pacing_review_20261016": {
+    "source": "Independent first-party VP8 frame pacing, owned synthetic media fixture and browser metrics",
+    "license": "Apache-2.0; existing codec and browser suppliers retain their licenses",
+    "method": "Account for encode/RTP time in the capture period; use owned 1080p30 pixels and optional owned PCM through real capture controllers and VP8/Opus. Runtime checks use actual browser decode/sample counters and fixed source archives/binaries.",
+    "verification_scope": "36-second owned synthetic capture, production Web UI/Core/VP8/Opus Chrome development run; preceding frozen Build02 bytes, before the new RTCP adaptation patch",
+    "summary": {
+      "path": "artifacts/browser-native-throughput-20261016/SHORT_RUN_SUMMARY.json",
+      "bytes": 4222,
+      "sha256": "252a50b1d29865e105ad1ba3f79d24d579ee39bbb2785c4c1b412ad0a0c6a8d3"
+    },
+    "limitations": "Synthetic capture, 36 seconds and concurrent fixture build; not installed product, 30-minute/active-loss/congestion/TURN/platform or formal acceptance. New RTCP code is indexed separately."
+  },
+  "webrtc_rate_feedback_review_20261016": {
+    "source": "Independent first-party RTCP rate controller and libvpx public-API reconfiguration bridge",
+    "license": "Apache-2.0; existing pinned VP8/WebRTC suppliers retain original licenses",
+    "paths": [
+      "crates/sdk/src/webrtc_host.rs",
+      "crates/sdk/src/webrtc_host/rate.rs",
+      "crates/sdk/src/webrtc_host/tests/feedback_tests.rs",
+      "crates/media-codec/src/vp8.rs",
+      "crates/media-codec/src/vp8.c",
+      "crates/media-codec/src/vp8/tests.rs",
+      "crates/media-codec/tests/vp8-boundary-sanitizer.c"
+    ],
+    "source_and_checks": {
+      "path": "artifacts/browser-congestion-followup-20261016/FINAL_SOURCE_AND_CHECKS.json",
+      "bytes": 129582,
+      "sha256": "993d8f8352c4e6f5dcd005ad68e50adebf8c2a5b58b20c5c36932ac672163ad0"
+    },
+    "method": "Authenticated RTCP must match the actual video SSRC. Finite receiver estimates and fresh receiver-report sequence numbers lower bitrate within the approved profile; recovery advances at most five percent per second. Reconfigure the existing worker-owned libvpx context without resetting timestamps/reference frames. Feedback has no permission, lease or path authority.",
+    "verification_scope": "Affected VP8 encoder reconfiguration and native WebRTC RTCP rate/SSRC/keyframe behavior on Windows/Linux; no formal G1/installed-product acceptance",
+    "formal_g1_passed": false
+  },
+  "foundation_consumer_notice_removal_review_20261016": {
+    "source": "Exact published objc2-foundation 0.2.2 consumer fork; independently written result storage around already locked dispatch2 0.3.1",
+    "license": "Original upstream MIT grant and declarations retained; excluded supplier remains third party and its original empty author metadata is preserved",
+    "paths": [
+      "crates/platform-vendor/objc2-foundation",
+      "Cargo.toml",
+      "Cargo.lock",
+      "scripts/refactor-cargo-notices.py",
+      "tests/refactor/test_foundation_cargo_notices.py"
+    ],
+    "review_document": "docs/refactor/foundation-dispatch-removal-2026-10-16.md",
+    "method": "Retain all 233 original archive members and original/local manifests, exact embedded-revision MIT grant, original VCS declaration and full hash inventory. Edit only the normalized manifest and sole run_on_main off-main call. Preserve public dispatch feature, original direct fast path, generic R, borrowed returns, ownership, FnOnce and Send boundaries. No removed dispatch implementation or inferred notice was imported. Lock changes only Foundation source identity/dependency edge and deletes dispatch0.2.0; all other package fields/versions remain unchanged.",
+    "verification_scope": "Actual complete Winit baseline/candidate checks on aarch64-apple-darwin and x86_64-apple-darwin; seven API forms in four positive builds plus four expected Rc capture/return compile rejections. Real upstream Linux GCD runs exact original/candidate consumer function bodies: each variant passes nine ordinary cases, direct fast path, direct panic and returned-destructor panic propagation, and two SIGABRT queued-panic cases. Root collector13+Foundation4+metadata integration2 pass. Actual root locked/offline/all-feature collection covers765 packages with complete notice texts and no unresolved entries.",
+    "runtime_limits": "Linux dispatch_main unbinds its main queue and sync callbacks can run on the caller. Marker is test-only and has no Objective-C authority. Baseline queued-callback abort reports unwinder error3 whose cause is unestablished; the other three abort cases explicitly report non-unwinding C ABI guard. All four exitSIGABRT. No Apple SDK linking, physical main-thread runtime, UI, installed-product, hardware, signature or release acceptance is inferred.",
+    "license_binding_limit": "The original dispatch0.2.0 grant is still unrecovered. That supplier is absent from the complete production graph; no target exclusion, generic license template, successor grant inference or author/year reconstruction was used. Complete notice collection is not a license-compatibility conclusion or release authorization.",
+    "candidate_archive": "artifacts/foundation-dispatch-removal-20261016/candidate-freeze-attempt01/foundation-increment.tar.gz",
+    "integration_receipt": "artifacts/foundation-dispatch-removal-20261016/INTEGRATED.json",
+    "collection_receipt": "artifacts/foundation-dispatch-removal-20261016/root-validation-attempt01/checks.receipt.json",
+    "per_case_runtime_scope": "artifacts/foundation-dispatch-removal-20261016/FOUNDATION_CANDIDATE_VALIDATION.json",
+    "source_freeze": "artifacts/foundation-dispatch-removal-20261016/FROZEN_FOUNDATION.json",
+    "cargo_lock_sha256": "14a97acfc7353d625e22f8c989037f3c2ddbd3b8b03037a627cd13a1dbca5bf2",
+    "snapshot_status": "historical-complete-for-bound-lockfile; superseded for current lockfile by latest_cargo_original_notice_collection_20261016"
+  },
+  "latest_cargo_original_notice_collection_20261016": {
+    "status": "complete",
+    "packages": 766,
+    "registry_packages": 724,
+    "first_party_workspace_packages": 38,
+    "reviewed_local_upstream_packages": 4,
+    "notice_files": 1365,
+    "original_attribution_files": 2176,
+    "missing_full_license_text_packages": [],
+    "index": {
+      "path": "D:\\NestLinkBuilds\\cargo-notice-current-20261016-attempt03\\index.json",
+      "sha256": "201151c5a893802556beee1017fb04fa6860399e358fca1d4c85da715d0add86"
+    },
+    "metadata": {
+      "path": "D:\\NestLinkBuilds\\cargo-notice-current-20261016-attempt03\\metadata.json",
+      "sha256": "0ea50d5320da02bbb9842acc4a34eb3f045d374843a9e65529d53466cda505ed",
+      "command": "cargo metadata --format-version 1 --all-features --locked"
+    },
+    "cargo_lock_sha256": "9a34ff54642f69de251808368609ff4251dfb1b572d4cef617a8d87f572a4bb7",
+    "supplements_sha256": "f99e74017374479c6155bef41833a966455c91a70f42fda1199125ca44b4a2ab",
+    "cargo_deny": {
+      "version": "0.18.9",
+      "status": "passed",
+      "checks": [
+        "advisories",
+        "bans",
+        "licenses",
+        "sources"
+      ],
+      "duplicate_version_warnings": 58,
+      "receipt": "D:\\NestLinkBuilds\\cargo-deny-current-20261016-attempt01\\receipt.json",
+      "receipt_sha256": "85f6cf0dc8db858461188f1c78757ce8f9e38ab9b1397bd3f20c5c4f6e6f73ca"
+    },
+    "formal_license_acceptance_passed": false,
+    "scope": "Current exact Cargo.lock notice and attribution collection plus automated dependency policy checks; organizational license approval, release material binding and product acceptance remain separate.",
+    "summary": {
+      "path": "D:\\NestLinkBuilds\\cargo-notice-current-20261016-attempt03\\summary.json",
+      "sha256": "742476e62c02418d1fce803c1d27aa880c238114cf24041c7d5a8a8e27e26bf7"
+    }
+  },
+  "automatic_native_signed_node_relay_review_20261016": {
+    "source": "Independent first-party SDK establishment/signaling integration using existing signed node descriptors and relay resources",
+    "license": "Apache-2.0; no new supplier versions",
+    "paths": [
+      "crates/sdk/src/native.rs",
+      "crates/sdk/src/native_tests.rs",
+      "crates/sdk/tests/node_relay/signed_discovery.rs",
+      "crates/storage/src/signaling.rs",
+      "crates/storage/tests/control.rs"
+    ],
+    "method": "Empty routes trigger local signed discovery, same-node selection, stable shared allocation rendezvous and normal endpoint-proven relay racing. Peer hints remain descriptive and cannot bypass local descriptor/allocation verification. Relay-only does not gather or dial direct routes. Signaling accepts authorized Relay paths while preserving full live permit, signature, endpoint, generation and address checks.",
+    "allocation_binding": "Stable endpoint/session identity, permissions, allowed paths, policy/security/connection generation and node/runtime/endpoint revision bind the allocation. Renewal-varying lease fields do not split one ongoing paired allocation.",
+    "verification": {
+      "status": "implemented-and-verified-in-selected-scope",
+      "scope": "Empty-route native establishment uses signed discovery and a shared managed relay allocation. These runs retain their distinct Cargo graphs and do not replace full product or cross-network acceptance.",
+      "implementation_source_paths": [
+        "crates/sdk/src/native.rs",
+        "crates/sdk/src/native_tests.rs",
+        "crates/sdk/tests/node_relay/signed_discovery.rs",
+        "crates/storage/src/signaling.rs",
+        "crates/storage/tests/control.rs"
+      ],
+      "source_freeze": "artifacts/product-completion-audit-20261016/frozen-inputs.json",
+      "combined_audit": {
+        "path": "artifacts/product-completion-audit-20261016/combined-index-excerpts-20261016-attempt02.json",
+        "sha256": "5fe4211dbad4b6a6d069a6ea714bf590e58d8a1a8840cff9749098069fc25274"
+      },
+      "historical_windows_correction": {
+        "path": "windows-attempt04-correction.md",
+        "sha256": "9fb7a2aae29211ba7cb211914d4582ccf51bc3f3937ce3f2d7508ee5b455d343",
+        "historical_attempt04_receipt_preserved": true,
+        "attempt04_all_six_pass_claim_withdrawn": true,
+        "attempt05_first_preflight_parser_failure_preserved": "windows-run-attempt05-preflight-parser-defect/",
+        "attempt05_successful_driver_reported_normal_SystemExit_as_failure": true,
+        "executed_driver_copy_matches_attempt05_receipt": true,
+        "corrected_driver_for_future_runs": {
+          "path": "run_windows_attempt05.py",
+          "sha256": "e7f8c13c0931d2a13fd2fa4804c981c7c2f93da26d6cd667c480fcfe5e4e5218"
+        }
+      },
+      "runs": {
+        "linux_x86_64_gnu": {
+          "runtime_cases_passed": 6,
+          "runtime_cases_failed": 0,
+          "strict_clippy_commands_passed": 2,
+          "receipts": [
+            {
+              "path": "artifacts/product-completion-audit-20261016/linux-run-attempt02/linux-test-run.json",
+              "sha256": "5202f8f30e207594884fa7d67f71018102da07086bf6e8e803f69b14a0e5160d"
+            }
+          ],
+          "exact_runtime_test_names": [
+            "native_tests::peer_relay_markers_match_any_signed_address_for_their_transport",
+            "native_tests::signed_relay_hint_cannot_become_a_route_without_a_local_verified_allocation",
+            "signal_possession_generation_paths_and_live_authorization_are_enforced",
+            "signed_discovery::establish_automatically_uses_signed_shared_relay_allocation_for_relay_only",
+            "signed_discovery::establish_joins_the_existing_shared_allocation_when_capacity_is_full",
+            "signed_discovery::establish_rendezvous_refreshes_allocation_after_node_endpoint_revision_changes"
+          ],
+          "cargo_graph": {
+            "target": "x86_64-unknown-linux-gnu",
+            "cargo_target_dir": "/mnt/d/NestLinkBuilds/native-development-20261015/linux-target",
+            "cargo_home": "/home/popdo/.cargo",
+            "rust_toolchain": "1.96.0",
+            "cargo_lock_sha256": "bce7ecc0da4d7bff63bd49443d75bcba62f50226ac04c98b4887c6b8018bbdf7",
+            "graph_note": "Linux GNU target resolution, enabled cfgs, and native link inputs; separate from the Windows MSVC graph below."
+          },
+          "source_inputs_unchanged": true,
+          "scope": "Four targeted test commands ran six actual tests; SDK and storage all-target strict Clippy passed (-D warnings). Linux source hashes remained unchanged per command."
+        },
+        "windows_x86_64_msvc": {
+          "runtime_cases_passed": 6,
+          "runtime_cases_failed": 0,
+          "strict_clippy_commands_passed": 0,
+          "receipts": [
+            {
+              "path": "artifacts/product-completion-audit-20261016/windows-run-attempt04/windows-test-run.json",
+              "sha256": "a10b50b46c500db08c049ca20013587ac1b89ec8f781317b204dcda38d6156fc"
+            },
+            {
+              "path": "artifacts/product-completion-audit-20261016/windows-run-attempt05/attempt05-result.json",
+              "sha256": "50b640f8848978bb9403199ad91f1355b22512c61cebb54b8f9f2872a0a1c024"
+            }
+          ],
+          "exact_runtime_test_names": [
+            "native_tests::peer_relay_markers_match_any_signed_address_for_their_transport",
+            "native_tests::signed_relay_hint_cannot_become_a_route_without_a_local_verified_allocation",
+            "signal_possession_generation_paths_and_live_authorization_are_enforced",
+            "signed_discovery::establish_automatically_uses_signed_shared_relay_allocation_for_relay_only",
+            "signed_discovery::establish_joins_the_existing_shared_allocation_when_capacity_is_full",
+            "signed_discovery::establish_rendezvous_refreshes_allocation_after_node_endpoint_revision_changes"
+          ],
+          "cargo_graph": {
+            "target": "x86_64-pc-windows-msvc",
+            "cargo_target_dir": "D:\\NestLinkBuilds\\native-development-20261015\\windows-target",
+            "cargo_home": "C:\\Users\\Popdo\\.cargo",
+            "rust_toolchain": "1.96.0-x86_64-pc-windows-msvc",
+            "graph_note": "Windows MSVC target resolution, cfgs, native link inputs, and codec prefix; distinct from Linux GNU, and not merged into a common cross-platform Cargo graph.",
+            "cargo_lock_sha256": "14a97acfc7353d625e22f8c989037f3c2ddbd3b8b03037a627cd13a1dbca5bf2"
+          },
+          "source_inputs_unchanged": true,
+          "scope": "Six actual Windows runtime cases: three attempt04 raw-log-confirmed cases and three missing attempt04 cases rerun with fully qualified signed_discovery:: names in attempt05. Three original zero-test commands are explicitly excluded from pass counts."
+        }
+      },
+      "new_android_package_coverage": "Separate current-source build and seven-API validation in progress",
+      "formal_release_acceptance_passed": false
+    },
+    "limitations": "Selected synthetic channel traffic and authorization regressions. Browser TURN, real network changes, hardware, sustained capacity, signatures and installed-platform acceptance require separate evidence."
+  },
+  "android_current_source_increment_20261016": {
+    "source": "Exact current root Rust/protocol/Android/manifests and pinned native codec supplier receipts",
+    "source_files": 1042,
+    "source_digest": "edd9cd42f16ff72ec58a0c053adb01db1f5a78ddc53f91c58cf68eaf97c55f51",
+    "source_archive": {
+      "path": "artifacts/android-current-increment-20261016/source-inputs.tar.gz",
+      "bytes": 2822631,
+      "sha256": "80ba8e6c7de99ce3b2b269db1680c213b684a9f438de7a2ac9de1635e9b2e1f2"
+    },
+    "method": "Preserve previous exact drivers and reviewed namespace-only diffs; serialize Android cache; bind native release, strict, APK and all API smoke runs to unchanged 1042-file source inputs. Reread all archived source bytes, native/embedded APK bytes and real instrumentation starts/finishes.",
+    "verification": "Two release JNI builds, two all-target strict clippy checks, two developer APKs and 16 tests on each of seven x86_64 API30-36 emulators (112 executed cases). ELF and APK native offsets align to16KiB.",
+    "review_receipt": {
+      "path": "artifacts/android-current-increment-20261016/FINAL_REVIEW.json",
+      "bytes": 11817,
+      "sha256": "2fb1c10ac3b4746bf5490e27d3e1c4fd80809c486cbe8986bbcb837aa01f44e2"
+    },
+    "seven_api_index": {
+      "path": "artifacts/android-current-increment-20261016/android-browser-host-seven-api-20261016-attempt02.json",
+      "bytes": 29146,
+      "sha256": "7fe95725916e785686f7d6413f6647e7630952c520d4e05747c1c2fd7866374a"
+    },
+    "retained_matrix_history": [
+      {
+        "path": "artifacts\\android-current-increment-20261016\\android-browser-host-api-matrix-20261016-attempt01.json",
+        "bytes": 2406,
+        "sha256": "e14f7ae576b51c0dbfd67a483e53a49a739cbb5582cfb03097d7178a96c41d16"
+      },
+      {
+        "path": "artifacts\\android-current-increment-20261016\\android-browser-host-api-matrix-20261016-attempt02.json",
+        "bytes": 4106,
+        "sha256": "5f973537d47af135d23c66daeae30309777227dc7114e7680534d0d06f721ecd"
+      }
+    ],
+    "followup_drivers": {
+      "path": "artifacts/android-current-increment-20261016/FOLLOWUP_DRIVERS.json",
+      "bytes": 1762,
+      "sha256": "3434b08c0c2f219bd8fa38f32489ba95891d049e2e89f1f5a28d748088934e77"
+    },
+    "retained_pretest_environment_failure": "API30 matrix01 executed zero tests because the new owned SDK omitted the emulator package; failure and cleanup retained. Exact complete tool-package copy followed by matrix02 API30-34, retaining API35/36=01.",
+    "limits": [
+      "Developer-signed debug APK; no formal release signing",
+      "x86_64 emulators only; ARM64 library built but no ARM64 hardware tested",
+      "ELF/APK 16 KiB alignment checked; actual emulator page sizes recorded independently",
+      "No real Projection/SAF/accessibility/cross-network acceptance",
+      "Unchanged Android app inputs: previous 119 JVM cases were not rerun",
+      "Android 10/API29 excluded by user instruction"
+    ],
+    "freeze": "artifacts/android-current-increment-20261016/FROZEN_ANDROID_CURRENT.json",
+    "status": "historical-superseded-by-later-current-source-cohorts"
+  },
+  "browser_input_renewal_repair_20261016": {
+    "source": "Independent first-party repair of the diagnosed input/permit refresh race",
+    "license": "Apache-2.0; no new third-party dependency or upstream byte change",
+    "paths": [
+      "crates/remote/src/input.rs",
+      "crates/remote/src/lifecycle.rs",
+      "crates/remote/tests/lifecycle.rs",
+      "crates/sdk/src/webrtc_host.rs",
+      "crates/sdk/src/webrtc_host/input.rs",
+      "crates/sdk/src/webrtc_host/tests/data_loopback_tests.rs",
+      "crates/sdk/src/webrtc_host/tests/input_renewal_tests.rs"
+    ],
+    "review": "artifacts/browser-input-renewal-20261016/PARENT_REVIEW.json",
+    "integration": "artifacts/browser-input-renewal-20261016/INTEGRATION.json",
+    "verification_scope": "Current 1035-file shared source, identical on Windows/Linux (c6376e08ac670ad7916e9e4b23fcc7d5c03e278c1ecdf0fff26d556f796e79ec): 92 affected SDK/remote runtime tests per platform, SDK/remote strict Clippy and workspace fmt passed in attempt03. Immutable Build06 Chrome/Edge/Firefox renewed-input replay remains separately scoped; formal long-run, hardware, cross-network and release acceptance remain pending.",
+    "followup_review": "artifacts/browser-input-renewal-20261016/wait-budget-followup-attempt01/PARENT_REVIEW.json",
+    "runtime_verification": "artifacts/browser-input-renewal-20261016/RUNTIME_VERIFICATION.json",
+    "browser_replay_verification": "artifacts/browser-input-renewal-20261016/BROWSER_REPLAY_VERIFICATION.json",
+    "latest_source_revalidation": "artifacts/browser-input-renewal-20261016/CURRENT_SOURCE_REVALIDATION.json"
+  },
+  "shared_management_entry_runtime_20261016": {
+    "scope": "Focused control-entry repair, actual signed HTTP and node lifecycle tests; no browser TURN or formal release acceptance",
+    "verification": {
+      "path": "artifacts/g1-managed-turn-20261016/shared-runtime-followup-attempt01/RUNTIME_VERIFICATION.json",
+      "sha256": "e9f9bccd050eb72ebcb297fb2fef8c029b837024aee86b126a135c9b9bb46eae",
+      "bytes": 3413
+    },
+    "runtime_tests": {
+      "windows": 3,
+      "linux": 3,
+      "total": 6
+    },
+    "strict_and_fmt_both_platforms": true,
+    "product_source": "apps/server/src/lib.rs",
+    "fixture": "scripts/fixtures/browser-native-host/src/main.rs",
+    "formal_acceptance_passed": false
+  },
+  "android_input_renewal_current_source_20261016": {
+    "source": "Exact source snapshot after the shared browser input-renewal repair",
+    "source_files": 1044,
+    "source_digest": "065b58bf4447c477c1163edd862da3c99f273c5247ed4460aa48d911a6cbff77",
+    "source_archive": {
+      "path": "artifacts/android-input-renewal-20261016/source-inputs.tar.gz",
+      "bytes": 2831847,
+      "sha256": "a7c4323a294bcf598846d0e4b6f8e5bfa164ed89e47c6791402fbc2c2c8791b2"
+    },
+    "method": "Preserved drivers, guarded sequential builds, actual instrumentation event checks and independent evidence/index integration; no repeated JVM or broad runtime tests.",
+    "verification": "Two release JNI builds, two strict all-target checks, developer APK signature/embedded JNI checks and 112 actual API30-36 x86_64 instrumentation cases.",
+    "review_receipt": {
+      "path": "artifacts/android-input-renewal-20261016/FINAL_REVIEW.json",
+      "bytes": 16843,
+      "sha256": "c8ca545a52ce454671c6c5f6873307b95a14793f1753a95cd8e2203fe9b8d96b"
+    },
+    "seven_api_index": {
+      "path": "artifacts/android-input-renewal-20261016/android-browser-host-seven-api-20261016-attempt01.json",
+      "bytes": 28693,
+      "sha256": "0b8b6fe965ded8aec6b4424e76b161a9c1e98a1bbabc12344be3938ab8acf7e2"
+    },
+    "freeze": {
+      "path": "artifacts/android-input-renewal-20261016/FROZEN_ANDROID_INPUT_RENEWAL.json",
+      "bytes": 34150,
+      "sha256": "afa0fd92750e71cc3212ad8facc95a7e12e2ce52874bd2328cbf595bd1f43d92"
+    },
+    "limits": [
+      "Developer-signed debug APK; no formal release signing",
+      "x86_64 emulators only; no ARM64 hardware acceptance",
+      "Static ELF/APK 16 KiB alignment differs from actual runtime page size",
+      "No real Projection/SAF/accessibility or cross-network acceptance",
+      "Unchanged 65 Android app inputs retain 119 earlier JVM cases without rerun",
+      "Android 10/API29 excluded by user instruction"
+    ],
+    "status": "historical-superseded-by-android_full_source_revalidation_20261016",
+    "superseded_by": {
+      "path": "artifacts/android-input-renewal-full-source-20261016/android-browser-host-seven-api-20261016-attempt01.json",
+      "bytes": 30802,
+      "sha256": "983f46638e8926b845bc64ad254e50c3e6f5cd8b6c828959dc0fd7f70fa1dc1f"
+    }
+  },
+  "direct_preferred_optional_turn_frozen_20261016": {
+    "source": "Independent first-party SDK/protocol/browser optional TURN authorization and path selection implementation",
+    "license": "Apache-2.0; previously reviewed locked WebRTC dependencies retain their licenses",
+    "paths": [
+      "crates/protocol/src/turn.rs",
+      "crates/sdk/src/webrtc_host.rs",
+      "crates/sdk/src/webrtc_host",
+      "apps/web/src/browser_peer.rs"
+    ],
+    "method": "Preserve direct-preferred establishment when optional TURN is unavailable, fail closed for required relays and trust/protocol errors, and revoke optional TURN renewal ownership and configured credentials.",
+    "verification": {
+      "path": "artifacts/direct-preferred-turn-20261016/FROZEN_DIRECT_PREFERRED_TURN.json",
+      "sha256": "b1b23767c2f867509da9ffd25a3ea2a54fd22ce5bc2d0b98067b966a21be0aa9"
+    },
+    "verification_scope": "71 retained scoped tests, Windows strict/fmt and Linux WASM strict passed. Every receipt pins its own unchanged inputs. Does not cover later native recovery, local network settings, broker, multi-display or localization edits.",
+    "allocation_cleanup_boundary": "Already gathered allocations may remain until peer close or original deadline; immediate physical removal is not claimed."
+  },
+  "native_recovery_current_source_20261016": {
+    "source": "Current native recovery and endpoint proof regression",
+    "status": "Windows attempt17 focused test passed; Linux attempt03 passed all native_recovery and native_network_settings tests. Temporary WSL clock/NTP window independently restored.",
+    "verification": "artifacts/native-network-integration-20261016/NATIVE_RECOVERY_CURRENT_SOURCE_VERIFICATION.json",
+    "source_paths": {
+      "crates/app-core/src/runtime/native_recovery.rs": "388e25b42d849c80bf4220414de5ade9fdda5c65bb01d4595541e05fde64d3b8",
+      "crates/app-core/tests/native_recovery.rs": "d1b329e3500ce326bc1ee3d6824ba0d4148b5154cc0d0b48dc4f2151d7ac7d09",
+      "crates/app-core/tests/support/mod.rs": "0f159ee672c0a6c5318220a9ae429f52417ecc998c7865ec253830be7a40d407"
+    }
+  },
+  "android_full_source_revalidation_20261016": {
+    "source": "Exact Android, Rust, protocol, native codec and build input snapshot after the latest Android app changes and shared input renewal repair.",
+    "source_files": 1070,
+    "source_digest": "0e2b103b072c9de6ce07bc3b3ae2cd72d6af4ee1289106bb2509a6682055fa29",
+    "source_archive": {
+      "path": "artifacts/android-input-renewal-full-source-20261016/source-inputs.tar.gz",
+      "bytes": 2919643,
+      "sha256": "19bb793ab8aaca06fdc9baf744d17467c9ae947ef80072c5b4ebae304f94d465"
+    },
+    "source_manifest": {
+      "path": "artifacts/android-input-renewal-full-source-20261016/DRIVERS.json",
+      "bytes": 195309,
+      "sha256": "d5f50e3e1fcc8cacf7d8a5152b90def485d9312347113329aa85a61e5142509b"
+    },
+    "changed_android_files_since_previous_cohort": [
+      "apps/android/app/src/androidTest/java/com/zhanry/nestlink/NestLinkSmokeTest.kt",
+      "apps/android/app/src/main/AndroidManifest.xml",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/AndroidBrowserRawFrame.kt",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/AppLanguage.kt",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/BrowserHostCaptureCoordinator.kt",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/BrowserHostData.kt",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/HostCaptureBinding.kt",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/HostCaptureService.kt",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/MainActivity.kt",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/NativeAudio.kt",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/NativeClipboard.kt",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/NativeHostFiles.kt",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/NativeNetworkSettings.kt",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/NativeSdk.kt",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/RemoteVideoCanvas.kt",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/ServiceManagement.kt",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/ServicesScreen.kt",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/UiText.kt",
+      "apps/android/app/src/main/java/com/zhanry/nestlink/UiTextCatalog.kt",
+      "apps/android/app/src/main/res/values-en/native_network.xml",
+      "apps/android/app/src/main/res/values-en/strings.xml",
+      "apps/android/app/src/main/res/values/native_network.xml",
+      "apps/android/app/src/main/res/values/strings.xml",
+      "apps/android/app/src/test/java/com/zhanry/nestlink/BrowserHostCapturePortRegressionTest.kt",
+      "apps/android/app/src/test/java/com/zhanry/nestlink/UiTextTest.kt"
+    ],
+    "method": "Rebuilt both Android JNI ABIs, ran both all-target strict Clippy checks, assembled APKs embedding the exact JNI bytes, repeated the complete changed Kotlin/JVM suite, and executed all current instrumentation methods on API30-36 x86_64 emulators. Re-read and verified each source archive member, Android API receipt and owned cleanup.",
+    "verification": {
+      "dual_abi_release_builds": 2,
+      "dual_abi_all_target_strict_checks": 2,
+      "jvm_tests": 127,
+      "jvm_failures": 0,
+      "android_api_levels": [
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "excluded_api_levels": [
+        29
+      ],
+      "tests_per_api": 17,
+      "executed_instrumentation_cases": 119,
+      "actual_device_page_sizes": {
+        "30": 4096,
+        "31": 4096,
+        "32": 4096,
+        "33": 4096,
+        "34": 4096,
+        "35": 4096,
+        "36": 4096
+      },
+      "static_elf_and_apk_jni_alignment_bytes": 16384,
+      "developer_apk_signatures_verified": true
+    },
+    "windows_linux_shared_source_overlap": {
+      "files": 996,
+      "changed_files": 0,
+      "basis": "Windows/Linux source checked receipts and exact file hash comparison to this Android cohort."
+    },
+    "build_and_test_receipts": {
+      "native_ready": {
+        "path": "artifacts/android-input-renewal-full-source-20261016/android-native-av-native-ready-20261016-attempt01.json",
+        "bytes": 177983,
+        "sha256": "14e40c730df93bacb085877297b28befe26f93965464872027f0a0fe808c127f"
+      },
+      "native_build": {
+        "path": "artifacts/android-input-renewal-full-source-20261016/android-native-av-dual-abi-jni-20261016-attempt01.receipt.json",
+        "bytes": 348648,
+        "sha256": "01af856d5af8247364abc1e5c4d13684103790c93ed4b6b3f097689dcf2ed673"
+      },
+      "android_clippy": {
+        "path": "artifacts/android-input-renewal-full-source-20261016/rust-android-clippy-attempt01.receipt.json",
+        "bytes": 348619,
+        "sha256": "31bd5ee7ed7694f63db20ca19d05253c7026f2b30f3b9f2cd5a19ed5959d5b1f"
+      },
+      "apk_ready": {
+        "path": "artifacts/android-input-renewal-full-source-20261016/android-native-av-apk-ready-20261016-attempt01.json",
+        "bytes": 1815,
+        "sha256": "bbdd612374dd4543b6163e53891bf34e56a70a809f540c4226c0b60429d9b907"
+      },
+      "apk_build": {
+        "path": "artifacts/android-input-renewal-full-source-20261016/android-native-av-apk-20261016-attempt01.receipt.json",
+        "bytes": 357285,
+        "sha256": "3d86ead919f2a26dcd512054d00f9489822f4ba2f8a141d59fc6ce2960441da1"
+      },
+      "debug_apk_signatures": {
+        "path": "artifacts/android-input-renewal-full-source-20261016/debug-apk-signatures-attempt01/checks.receipt.json",
+        "bytes": 2602,
+        "sha256": "afcee3c31641d88a360655f0fbb44946ee7990573bdf31cd47a5de7e35fe1ba4"
+      },
+      "jvm_unit_tests": {
+        "path": "artifacts/android-input-renewal-full-source-20261016/android-jvm-unit-tests-attempt01.receipt.json",
+        "bytes": 357250,
+        "sha256": "04ecb796dc5725464954e1310576af9b78bcd2f3cd2d99e817b753df2dede535"
+      },
+      "matrix": {
+        "path": "artifacts/android-input-renewal-full-source-20261016/android-browser-host-api-matrix-20261016-attempt04.json",
+        "bytes": 5884,
+        "sha256": "588f6601f1f096700b4e7f78836f1c611bdfb6662a15669e92a99177342f2cd9"
+      },
+      "seven_api_index": {
+        "path": "artifacts/android-input-renewal-full-source-20261016/android-browser-host-seven-api-20261016-attempt01.json",
+        "bytes": 30802,
+        "sha256": "983f46638e8926b845bc64ad254e50c3e6f5cd8b6c828959dc0fd7f70fa1dc1f"
+      },
+      "final_review": {
+        "path": "artifacts/android-input-renewal-full-source-20261016/FINAL_REVIEW.json",
+        "bytes": 14748,
+        "sha256": "8b93a730f7bb388c8e06151fa54b2808bf4dc2f1856547fdedcfef62d719d631"
+      }
+    },
+    "retained_matrix_history": [
+      {
+        "attempt": "01",
+        "completion": "failed",
+        "selected_checks_passed": false,
+        "summary": {
+          "path": "artifacts/android-input-renewal-full-source-20261016/android-browser-host-api-matrix-20261016-attempt01.json",
+          "bytes": 1048,
+          "sha256": "03afc3040f7049a573a92bd2bb04f747ee9508e705be868dc567499466665963"
+        },
+        "error": "API 35 failed; preserve its evidence and inspect before a new attempt.",
+        "api_results": [
+          {
+            "api": 35,
+            "status": "failed",
+            "tests_passed": 0
+          }
+        ]
+      },
+      {
+        "attempt": "02",
+        "completion": "failed",
+        "selected_checks_passed": false,
+        "summary": {
+          "path": "artifacts/android-input-renewal-full-source-20261016/android-browser-host-api-matrix-20261016-attempt02.json",
+          "bytes": 1048,
+          "sha256": "e7ddadc92f1ebb9ea4ba1db47cf1ebcb5f99da959e611ca3326c45753937241f"
+        },
+        "error": "API 35 failed; preserve its evidence and inspect before a new attempt.",
+        "api_results": [
+          {
+            "api": 35,
+            "status": "failed",
+            "tests_passed": 0
+          }
+        ]
+      },
+      {
+        "attempt": "03",
+        "completion": "failed",
+        "selected_checks_passed": false,
+        "summary": {
+          "path": "artifacts/android-input-renewal-full-source-20261016/android-browser-host-api-matrix-20261016-attempt03.json",
+          "bytes": 2422,
+          "sha256": "1de535167f880aa48f78cc45f2bf162f04123821b5863d2ceb897cbe6ad85b35"
+        },
+        "error": "API 30 failed; preserve its evidence and inspect before a new attempt.",
+        "api_results": [
+          {
+            "api": 35,
+            "status": "passed",
+            "tests_passed": 17
+          },
+          {
+            "api": 36,
+            "status": "passed",
+            "tests_passed": 17
+          },
+          {
+            "api": 30,
+            "status": "failed",
+            "tests_passed": 0
+          }
+        ]
+      },
+      {
+        "attempt": "04",
+        "completion": "finished",
+        "selected_checks_passed": true,
+        "summary": {
+          "path": "artifacts/android-input-renewal-full-source-20261016/android-browser-host-api-matrix-20261016-attempt04.json",
+          "bytes": 5884,
+          "sha256": "588f6601f1f096700b4e7f78836f1c611bdfb6662a15669e92a99177342f2cd9"
+        },
+        "error": null,
+        "api_results": [
+          {
+            "api": 35,
+            "status": "passed",
+            "tests_passed": 17
+          },
+          {
+            "api": 36,
+            "status": "passed",
+            "tests_passed": 17
+          },
+          {
+            "api": 30,
+            "status": "passed",
+            "tests_passed": 17
+          },
+          {
+            "api": 31,
+            "status": "passed",
+            "tests_passed": 17
+          },
+          {
+            "api": 32,
+            "status": "passed",
+            "tests_passed": 17
+          },
+          {
+            "api": 33,
+            "status": "passed",
+            "tests_passed": 17
+          },
+          {
+            "api": 34,
+            "status": "passed",
+            "tests_passed": 17
+          }
+        ]
+      }
+    ],
+    "limits": [
+      "Developer-signed debug packages only; official release signature unavailable.",
+      "No ARM64 Android hardware.",
+      "Emulator page size 4096 bytes; static 16 KiB alignment passed, runtime 16 KiB not verified.",
+      "Real Projection, SAF, accessibility/input-method authorization and cross-network tests not run.",
+      "Android 10/API29 excluded by user instruction."
+    ]
+  },
+  "cargo_dependency_policy_check_20261016": {
+    "version": "0.18.9",
+    "status": "passed",
+    "checks": [
+      "advisories",
+      "bans",
+      "licenses",
+      "sources"
+    ],
+    "duplicate_version_warnings": 58,
+    "receipt": "D:\\NestLinkBuilds\\cargo-deny-current-20261016-attempt01\\receipt.json",
+    "receipt_sha256": "85f6cf0dc8db858461188f1c78757ce8f9e38ab9b1397bd3f20c5c4f6e6f73ca",
+    "cargo_lock_sha256": "9a34ff54642f69de251808368609ff4251dfb1b572d4cef617a8d87f572a4bb7",
+    "metadata_sha256": "0ea50d5320da02bbb9842acc4a34eb3f045d374843a9e65529d53466cda505ed",
+    "advisory_database_commit": "479c888ce4401313bca61ba4aba2d0f6244c4a09",
+    "log_path": "D:\\NestLinkBuilds\\cargo-deny-current-20261016-attempt01\\check.log",
+    "log_sha256": "fca6dbdddfce52b63c1a8feec841a0110f9a3d0636ab6764eedb0e7d6f2f2e21",
+    "formal_license_acceptance_passed": false
+  },
+  "non_cargo_build_input_provenance_20261016": {
+    "status": "source-version-license-and-bytes-verified",
+    "receipt": "D:\\NestLinkBuilds\\noncargo-provenance-current-20261016-attempt01\\receipt.json",
+    "receipt_sha256": "f16c55bc3aaf86b2288b0070d2df873919aa8ab267e86f600c3abcfdfd119edf",
+    "protoc": {
+      "crate_version": "3.3.0",
+      "runtime_version": "libprotoc 36.2",
+      "release_tag": "v36.2",
+      "release_commit": "2c74169b34066ceb8ddb6b882fcb3fb32d737a55",
+      "release_tag_signature_status": "unsigned",
+      "platform_packages": 8,
+      "include_files_per_package": 20,
+      "all_release_asset_digest_and_embedded_binary_include_comparisons_passed": true,
+      "license_sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d"
+    },
+    "sqlite": {
+      "crate": "libsqlite3-sys 0.35.0",
+      "version": "3.50.2",
+      "upstream_release_zip_sha256": "387991de2834b5da2894119ff4173a9ea0779ea55ebcf53d9a40b24d1dc2484e",
+      "amalgamation_and_header_match_official_release_byte_for_byte": true,
+      "license": "Public Domain; wrapper crate separately declares MIT"
+    },
+    "scope": "Build-input provenance only; organizational license approval, complete non-Cargo runtime inventory, final SBOM/material binding and product acceptance remain open."
+  },
+  "native_recovery_focused_linux_20261016": {
+    "status": "passed",
+    "passed": 1,
+    "failed": 0,
+    "ignored": 0,
+    "scope": "One current-source native recovery integration case; not full Linux workspace or installed-product acceptance",
+    "source_inputs_unchanged": true,
+    "owned_scratch_removed": true,
+    "receipt": "artifacts/core-verification/native-recovery-linux-focused-20261016-attempt01.receipt.json",
+    "receipt_sha256": "5f8dee9eda14a70653b3b81d86e54dd284a5c870aaf01fed17e457c5eeb6c260",
+    "log": "artifacts/core-verification/native-recovery-linux-focused-20261016-attempt01.log",
+    "log_sha256": "cc6fa6f1acac92f9f062dda0bc60ccc10d1563a50fcca3cdc2b99d6823afd413",
+    "formal_acceptance_passed": false
+  }
+}

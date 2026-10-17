@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=NestLink
+Comment=Remote workspace and managed services
+Exec=/usr/lib/nestlink-v15/desktop/current/nestlink-desktop
+TryExec=/usr/lib/nestlink-v15/desktop/current/nestlink-desktop
+Icon=nestlink-v15
+Terminal=false
+Categories=Network;RemoteAccess;
+StartupNotify=true

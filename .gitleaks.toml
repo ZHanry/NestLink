@@ -1,0 +1,19 @@
+[extend]
+useDefault = true
+
+# Reviewed public outputs and the RFC 6455 handshake example only.
+# See docs/refactor/SECRET-SCAN-RC-2026-10-17.md.
+
+[[allowlists]]
+description = "Independently recomputed public test vectors"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^crates/traversal/vendor/turn/src/auth/auth_test\.rs$''']
+regexes = ['''^Tpz/nKkyvX/vMSLKvL4sbtBt8Vs=$''', '''^HWbnm25GwSj6jiHTEDMTO5D7aBw=$''']
+
+[[allowlists]]
+description = "Independently recomputed public test vectors"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^scripts/refactor\-service\-caddy\-contract\.py$''']
+regexes = ['''^dGhlIHNhbXBsZSBub25jZQ==$''']

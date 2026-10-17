@@ -1,0 +1,96 @@
+name: Web production build
+
+on:
+  push:
+    paths:
+      - "apps/web/**"
+      - "config/ui-tokens.json"
+      - "scripts/refactor-ui-tokens.py"
+      - "tests/refactor/test_ui_tokens.py"
+      - "crates/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - ".github/workflows/web-build.yml"
+  pull_request:
+    paths:
+      - "apps/web/**"
+      - "config/ui-tokens.json"
+      - "scripts/refactor-ui-tokens.py"
+      - "tests/refactor/test_ui_tokens.py"
+      - "crates/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - ".github/workflows/web-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-site:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      TRUNK_TOOLS_WASM_BINDGEN: "0.2.129"
+      TRUNK_TOOLS_WASM_OPT: "version_133"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Check generated cross-platform UI tokens
+        run: |
+          python3 scripts/refactor-ui-tokens.py --check
+          python3 -m unittest discover -s tests/refactor -p "test_ui_tokens.py"
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+      - name: Install pinned WebAssembly build tools
+        run: |
+          rustup target add wasm32-unknown-unknown
+          cargo install trunk --version 0.21.14 --locked
+          cargo install wasm-bindgen-cli --version 0.2.129 --locked
+      - name: Install verified Binaryen optimizer
+        shell: bash
+        run: |
+          binaryen_dir="$RUNNER_TEMP/nestlink-binaryen-133"
+          mkdir -p "$binaryen_dir"
+          curl --fail --location --retry 3 --output "$binaryen_dir/binaryen.tar.gz" \
+            https://github.com/WebAssembly/binaryen/releases/download/version_133/binaryen-version_133-x86_64-linux.tar.gz
+          printf '%s  %s\n' \
+            2dc9c7813f5375db93d96ead4b78222fcc3e2677bbb832297af4797782a37489 \
+            "$binaryen_dir/binaryen.tar.gz" | sha256sum --check --status
+          tar --extract --gzip --no-same-owner --file "$binaryen_dir/binaryen.tar.gz" \
+            --directory "$binaryen_dir" binaryen-version_133/bin/wasm-opt
+          test "$("$binaryen_dir/binaryen-version_133/bin/wasm-opt" --version)" = \
+            'wasm-opt version 133 (version_133)'
+          printf '%s\n' "$binaryen_dir/binaryen-version_133/bin" >> "$GITHUB_PATH"
+      - name: Build the release site
+        working-directory: apps/web
+        run: trunk build --release --locked --skip-version-check
+      - name: Verify static output for Caddy
+        shell: python
+        run: |
+          from pathlib import Path
+          import sys
+
+          dist = Path("apps/web/dist")
+          index = dist / "index.html"
+          if not index.is_file() or index.stat().st_size == 0:
+              sys.exit("Trunk did not produce a non-empty dist/index.html")
+          files = [path for path in dist.rglob("*") if path.is_file()]
+          if len(files) < 3:
+              sys.exit(f"Expected HTML, CSS, and WASM assets; found {len(files)} file(s)")
+          if not any(path.suffix == ".css" and path.stat().st_size > 0 for path in files):
+              sys.exit("The release site is missing its compiled stylesheet")
+          if not any(path.suffix == ".js" and path.stat().st_size > 0 for path in files):
+              sys.exit("The release site is missing its generated JavaScript")
+          if not any(path.suffix == ".wasm" and path.stat().st_size > 0 for path in files):
+              sys.exit("The release site is missing its compiled WebAssembly module")
+          html = index.read_text(encoding="utf-8")
+          if 'rel="stylesheet"' not in html or "<script" not in html:
+              sys.exit("The generated page does not reference its built stylesheet and script")
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: nestlink-web-dist
+          path: apps/web/dist/
+          if-no-files-found: error

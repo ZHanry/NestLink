@@ -1,0 +1,5 @@
+{
+  "server_forwarding": "deny",
+  "peer_path_mode": "direct_only",
+  "public_ingress": "disabled"
+}

@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "scope": "Exact new font parsing and font type crates in the eframe 0.34.3 desktop dependency graph. This is not a complete product SBOM/NOTICE or formal platform acceptance.",
+  "review_date": "2026-10-15",
+  "dependency_path": [
+    "nestlink-desktop",
+    "eframe 0.34.3",
+    "egui 0.34.3",
+    "epaint 0.34.3"
+  ],
+  "desktop_dependency_checksums": {
+    "eframe-0.34.3": "f98fe83b2589105b69dd25ca1e0fa2135a6e864d502fd8e08978f937e128cfef",
+    "egui-0.34.3": "42112be0ae157289312b92b3dfaf20e911b5a3c4c65d4aab0e7c47fbc0ce16e3",
+    "epaint-0.34.3": "6675898a291ec212fc3df04f537d177fce8496120244590e6359dcaa4c25da79"
+  },
+  "selected_desktop_features": {
+    "manifest": "apps/desktop/Cargo.toml",
+    "eframe_default_features": false,
+    "eframe_features": ["accesskit", "glow", "wayland", "x11"],
+    "epaint_default_fonts_resolved": false,
+    "basis": "The locked dependency list has no epaint_default_fonts package. epaint 0.34.3 makes that package optional behind default_fonts, while the desktop disables eframe defaults."
+  },
+  "advisory_context": {
+    "id": "RUSTSEC-2026-0192",
+    "previous_path": "eframe 0.33.3 -> egui 0.33.3 -> epaint 0.33.3 -> ab_glyph 0.2.32 -> owned_ttf_parser 0.25.1 -> ttf-parser 0.25.1",
+    "current_lock_contains": ["font-types 0.11.3", "skrifa 0.40.0", "read-fonts 0.37.0"],
+    "current_lock_excludes": ["ab_glyph", "owned_ttf_parser", "ttf-parser"],
+    "ignore_added": false
+  },
+  "packages": [
+    {
+      "name": "font-types",
+      "version": "0.11.3",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "cargo_lock_checksum": "5b38ad915f6dadd993ced50848a8291a543bd41ca62bc10740d5e64e2ab4cfd7",
+      "archive_checksum_verified_against_lock": true,
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/googlefonts/fontations",
+      "upstream_commit": "9af3f3188ab5522e23446a1fb98135cb3f7d96b6",
+      "upstream_path": "font-types",
+      "license_files": [
+        {
+          "archive_path": "font-types-0.11.3/LICENSE-APACHE",
+          "notice_path": "packaging/notices/font-types-0.11.3-LICENSE-APACHE.txt",
+          "bytes": 9695,
+          "sha256": "a14f7d685a79c0f4fb64aee305527a6d5fa55f2401f4e6d688d7b1301868e6c0"
+        },
+        {
+          "archive_path": "font-types-0.11.3/LICENSE-MIT",
+          "notice_path": "packaging/notices/font-types-0.11.3-LICENSE-MIT.txt",
+          "bytes": 1058,
+          "sha256": "8a62fa27ffdccc3df19dce90f8bb3d572e27aecffc1a383d0c2601834dcec434"
+        }
+      ]
+    },
+    {
+      "name": "skrifa",
+      "version": "0.40.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "cargo_lock_checksum": "7fbdfe3d2475fbd7ddd1f3e5cf8288a30eb3e5f95832829570cd88115a7434ac",
+      "archive_checksum_verified_against_lock": true,
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/googlefonts/fontations",
+      "upstream_commit": "338e2c0dcf3646554ae57b852705092a7611e230",
+      "upstream_path": "skrifa",
+      "license_files": [
+        {
+          "archive_path": "skrifa-0.40.0/LICENSE-APACHE",
+          "notice_path": "packaging/notices/skrifa-0.40.0-LICENSE-APACHE.txt",
+          "bytes": 9695,
+          "sha256": "a14f7d685a79c0f4fb64aee305527a6d5fa55f2401f4e6d688d7b1301868e6c0"
+        },
+        {
+          "archive_path": "skrifa-0.40.0/LICENSE-MIT",
+          "notice_path": "packaging/notices/skrifa-0.40.0-LICENSE-MIT.txt",
+          "bytes": 1058,
+          "sha256": "8a62fa27ffdccc3df19dce90f8bb3d572e27aecffc1a383d0c2601834dcec434"
+        }
+      ]
+    },
+    {
+      "name": "read-fonts",
+      "version": "0.37.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "cargo_lock_checksum": "7b634fabf032fab15307ffd272149b622260f55974d9fad689292a5d33df02e5",
+      "archive_checksum_verified_against_lock": true,
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/googlefonts/fontations",
+      "upstream_commit": "338e2c0dcf3646554ae57b852705092a7611e230",
+      "upstream_path": "read-fonts",
+      "license_files": [
+        {
+          "archive_path": "read-fonts-0.37.0/LICENSE-APACHE",
+          "notice_path": "packaging/notices/read-fonts-0.37.0-LICENSE-APACHE.txt",
+          "bytes": 9695,
+          "sha256": "a14f7d685a79c0f4fb64aee305527a6d5fa55f2401f4e6d688d7b1301868e6c0"
+        },
+        {
+          "archive_path": "read-fonts-0.37.0/LICENSE-MIT",
+          "notice_path": "packaging/notices/read-fonts-0.37.0-LICENSE-MIT.txt",
+          "bytes": 1058,
+          "sha256": "8a62fa27ffdccc3df19dce90f8bb3d572e27aecffc1a383d0c2601834dcec434"
+        }
+      ]
+    }
+  ],
+  "cargo_deny_handling": {
+    "existing_allow_list_covers": ["MIT", "Apache-2.0"],
+    "new_license_exception": false,
+    "new_advisory_ignore": false
+  },
+  "acceptance_limits": [
+    "Crate archives were downloaded from crates.io and their SHA-256 values matched the exact Cargo.lock checksums before review.",
+    "Notice files are byte-for-byte copies of the license files in those verified crate archives.",
+    "This dependency/license review does not claim that the desktop builds, platform regression tests, or full release acceptance have passed.",
+    "Re-review this scope if the locked eframe/epaint/fontation package versions or enabled default-font features change."
+  ]
+}

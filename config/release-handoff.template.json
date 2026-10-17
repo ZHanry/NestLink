@@ -1,0 +1,346 @@
+{
+  "schema_version": 1,
+  "product": "NestLink-v15",
+  "purpose": "release-handoff",
+  "version": "15.0.0",
+  "source_revision": null,
+  "repository_node_id": "R_kgDOTz-mRQ",
+  "update_certificate_sha256": null,
+  "completion": {
+    "implementation": "pending",
+    "installed_product_acceptance": "pending",
+    "release_bytes_frozen": "pending",
+    "legacy_preservation_review": "pending"
+  },
+  "artifacts": [
+    {
+      "id": "acceptance",
+      "role": "acceptance",
+      "path": "files/NestLink-acceptance-15.0.0.json",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "android-arm64",
+      "role": "android-arm64",
+      "path": "files/NestLink-android-arm64-15.0.0.apk",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "android-x86_64",
+      "role": "android-x86_64",
+      "path": "files/NestLink-android-x86_64-15.0.0.apk",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "dirty-worktree-backups",
+      "role": "dirty-worktree-backups",
+      "path": "files/NestLink-dirty-worktree-backups-15.0.0.zip",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "legacy-release-inventory",
+      "role": "legacy-release-inventory",
+      "path": "files/NestLink-legacy-release-inventory-15.0.0.json",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "legacy-source-bundle",
+      "role": "legacy-source-bundle",
+      "path": "files/NestLink-legacy-source-bundle-15.0.0.bundle",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "legacy-source-report",
+      "role": "legacy-source-report",
+      "path": "files/NestLink-legacy-source-report-15.0.0.json",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "licenses",
+      "role": "licenses",
+      "path": "files/NestLink-licenses-15.0.0.zip",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "linux-arm64-desktop",
+      "role": "linux-arm64-desktop",
+      "path": "files/NestLink-linux-arm64-desktop-15.0.0.deb",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "linux-arm64-server",
+      "role": "linux-arm64-server",
+      "path": "files/NestLink-linux-arm64-server-15.0.0.deb",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "linux-x64-desktop",
+      "role": "linux-x64-desktop",
+      "path": "files/NestLink-linux-x64-desktop-15.0.0.deb",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "linux-x64-server",
+      "role": "linux-x64-server",
+      "path": "files/NestLink-linux-x64-server-15.0.0.deb",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "materials",
+      "role": "materials",
+      "path": "files/NestLink-materials-15.0.0.zip",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "native-packages-manifest",
+      "role": "native-packages-manifest",
+      "path": "files/NestLink-native-packages-manifest-15.0.0.json",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "native-payload-manifest",
+      "role": "native-payload-manifest",
+      "path": "files/NestLink-native-payload-manifest-15.0.0.json",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "oci-arm64",
+      "role": "oci-arm64",
+      "path": "files/NestLink-oci-arm64-15.0.0.tar.gz",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "oci-x64",
+      "role": "oci-x64",
+      "path": "files/NestLink-oci-x64-15.0.0.tar.gz",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "sbom",
+      "role": "sbom",
+      "path": "files/NestLink-sbom-15.0.0.spdx.json",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "source",
+      "role": "source",
+      "path": "files/NestLink-source-15.0.0.tar.gz",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "web-static",
+      "role": "web-static",
+      "path": "files/NestLink-web-static-15.0.0.tar.gz",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "windows-x64-privileged-setup",
+      "role": "windows-x64-privileged-setup",
+      "path": "files/NestLink-windows-x64-privileged-15.0.0.exe",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "windows-x64-setup",
+      "role": "windows-x64-setup",
+      "path": "files/NestLink-windows-x64-setup-15.0.0.exe",
+      "bytes": null,
+      "sha256": null,
+      "source_revision": null
+    }
+  ],
+  "acceptance_cases": [
+    {
+      "id": "72-hour-soak",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "android-api-30",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "android-api-31",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "android-api-32",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "android-api-33",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "android-api-34",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "android-api-35",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "android-api-36",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "android-arm64-physical",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "chrome-current",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "company-to-home",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "edge-current",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "firefox-current",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "gnome-wayland-authorized",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "install-upgrade-rollback-uninstall",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "kde-wayland-authorized",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "license-and-source-audit",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "linux-arm64-x11-installed",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "linux-x64-x11-installed",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "mobile-to-home",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "reinstall-new-identity-retained-data",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "schema-migration-and-interruption-recovery",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "signature-android",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "signature-linux-update",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "signature-oci",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "signature-windows",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "turn-capacity-and-revoke",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "windows-10-installed",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "windows-privileged-input",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "windows-11-installed",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    }
+  ],
+  "legacy_assets": []
+}

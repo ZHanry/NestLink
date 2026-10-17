@@ -1,0 +1,9 @@
+# Copy into the node's private configuration directory with owner/SYSTEM ACLs.
+# Replace the UUID and documentation-only address before validation.
+deployment_id = "11111111-1111-4111-8111-111111111111"
+public_ips = ["203.0.113.10"]
+dns_json_endpoint = "https://dns.google/resolve"
+
+[admin]
+transport = "loopback_http"
+address = "127.0.0.1:2019"

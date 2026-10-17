@@ -1,0 +1,26 @@
+[package]
+name = "nestlink-storage"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+nestlink-protocol.workspace = true
+nestlink-policy.workspace = true
+nestlink-auth.workspace = true
+nestlink-identity.workspace = true
+serde.workspace = true
+base64.workspace = true
+rusqlite.workspace = true
+serde_json.workspace = true
+rand_core.workspace = true
+thiserror.workspace = true
+zeroize.workspace = true
+prost.workspace = true
+
+[dev-dependencies]
+tempfile = "3.23.0"
+
+[lints]
+workspace = true

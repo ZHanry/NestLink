@@ -1,0 +1,49 @@
+[package]
+name = "nestlink-platform-files"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+nestlink-protocol.workspace = true
+nestlink-remote.workspace = true
+nestlink-platform-security.workspace = true
+rand_core.workspace = true
+sha2.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+cap-std = "=4.0.3"
+cap-fs-ext = "=4.0.3"
+
+[target.'cfg(unix)'.dependencies]
+rustix = { version = "1.1.2", features = ["fs"] }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "=0.62.2", features = ["Win32_System_Com", "Win32_UI_Shell"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+zbus = { version = "=5.19.0", default-features = false, features = ["tokio"] }
+tokio.workspace = true
+futures-util.workspace = true
+url.workspace = true
+
+[dev-dependencies]
+nestlink-auth.workspace = true
+nestlink-identity.workspace = true
+nestlink-policy.workspace = true
+nestlink-session.workspace = true
+nestlink-transport-stream.workspace = true
+nestlink-transport-quic.workspace = true
+tokio.workspace = true
+tokio-rustls.workspace = true
+rustls.workspace = true
+prost.workspace = true
+tempfile = "3.23.0"
+
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"

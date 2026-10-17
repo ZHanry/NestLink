@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "scope": "Release archive tool failure boundaries, actual one-asset download and isolated Server tip closure; not complete archive or product acceptance",
+  "source_files": [
+    {
+      "path": "scripts/refactor-release-archive.py",
+      "sha256": "e41bbb8a41ba6887079fc90607cbd00f7da41737fcb82ff9f604b68289137989"
+    },
+    {
+      "path": "tests/refactor/test_release_archive.py",
+      "sha256": "a73623957fa87084055356554bcf77244ead51c2b898105c68bbaaacad013775"
+    },
+    {
+      "path": "docs/refactor/history-audit/RELEASE-ARCHIVE.md",
+      "sha256": "ade58244b5120bb0ce838c1e9dd1f009695ed8cac4f61b8042ce2c0b613163bb"
+    },
+    {
+      "path": "docs/refactor/history-audit/server-extra-refs-preservation-2026-10-14.json",
+      "sha256": "df3580f7a4d112db072ed812de3aade7f8082b552f8d194ff3a4e427ffae282b"
+    }
+  ],
+  "checks": [
+    {
+      "platform": "windows",
+      "passed_tests": 28,
+      "product_acceptance": false,
+      "path": "artifacts/history-audit/archive-tool-20261014/windows-tool-tests.log",
+      "sha256": "ed7dc857c9cef7fcd1c53d38fb6652b8dfe662d343047565cb20bc2d44113600"
+    },
+    {
+      "platform": "linux",
+      "passed_tests": 28,
+      "product_acceptance": false,
+      "path": "artifacts/history-audit/archive-tool-20261014/linux-tool-tests.log",
+      "sha256": "f6c9fae60da2639921358a29f109cc8493c9b2742078d75d9b8f2d8d86704d59"
+    }
+  ],
+  "actual_download": {
+    "path": "C:\\Users\\Popdo\\NestLink-legacy-archive-20261014\\archive-20261013-175609-a063aceb.json",
+    "sha256": "a45e5e5cb9d0db800aaa228e38348a459d6fa1f52e9a97da8b09ae257e42cf1b"
+  },
+  "actual_blob": {
+    "path": "C:\\Users\\Popdo\\NestLink-legacy-archive-20261014\\hub\\assets\\574934286-540d6a74b4c31229da8db9c13ef88c695ec1b95554f2902b519968b32f63ca15.blob",
+    "sha256": "540d6a74b4c31229da8db9c13ef88c695ec1b95554f2902b519968b32f63ca15"
+  },
+  "download_asset_count": 1,
+  "inventory_asset_count": 799,
+  "all_inventory_bytes_verified": false,
+  "history_imported": false,
+  "finalization_ready": false,
+  "staged_secret_scan": [
+    {
+      "rules": "default",
+      "scope": "current staged feature increment before scan metadata was added",
+      "findings": 0,
+      "ignore_inline_allow": true,
+      "redact_percent": 100,
+      "completed_at": "2026-10-13T18:05:34.702414+00:00",
+      "log": "artifacts/history-audit/archive-tool-20261014/staged-default-gitleaks.log",
+      "log_sha256": "ff123844f5448dbd9666f9895f00daffe251b7a5098efff6a9fd968b47663891",
+      "result": "artifacts/history-audit/archive-tool-20261014/staged-default-gitleaks.json",
+      "result_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "rules": "project",
+      "scope": "current staged feature increment before scan metadata was added",
+      "findings": 0,
+      "ignore_inline_allow": true,
+      "redact_percent": 100,
+      "completed_at": "2026-10-13T18:05:35.220632+00:00",
+      "log": "artifacts/history-audit/archive-tool-20261014/staged-project-gitleaks.log",
+      "log_sha256": "076d54d5c706b4465b9ef8d84daf3fd3b4e59926fe83e1932a1405fc1685f2cf",
+      "result": "artifacts/history-audit/archive-tool-20261014/staged-project-gitleaks.json",
+      "result_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    }
+  ]
+}

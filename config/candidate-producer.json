@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "product": "NestLink",
+  "version": "0.1.0-rc.1",
+  "release_tag": "v0.1.0-rc.1",
+  "repository": "ZHanry/NestLink",
+  "repository_node_id": "R_kgDOVNHMvg",
+  "android_application_id": "com.zhanry.nestlink.candidate",
+  "minimum_android_api": 30,
+  "maximum_android_api": 36
+}

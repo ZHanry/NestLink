@@ -1,0 +1,12 @@
+<resources>
+    <string name="native_network_title">Local direct connections</string>
+    <string name="native_network_description">STUN endpoints come from your verified control center. Private connections are limited to the networks you approve here; a server or peer cannot extend this consent.</string>
+    <string name="native_network_stun">Use deployment STUN discovery</string>
+    <string name="native_network_cidrs">Approved private CIDRs (one per line)</string>
+    <string name="native_network_consent">I approve this device dialing the private networks listed above</string>
+    <string name="native_network_idle">Stop current remote or sharing sessions first. Saved changes apply to subsequent sessions.</string>
+    <string name="native_network_save">Save local consent</string>
+    <string name="native_network_saved">Local network consent saved.</string>
+    <string name="native_network_durability">Changes are active, but persistence after power loss is unconfirmed. Save again to confirm.</string>
+    <string name="native_network_stale">These network settings are stale. Review them again.</string>
+</resources>

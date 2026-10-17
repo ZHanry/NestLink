@@ -1,0 +1,378 @@
+//! Demultiplexes bounded STUN replies before QUIC decoding, preserving GRO batches.
+use nestlink_traversal::stun;
+use quinn::{
+    AsyncUdpSocket, UdpPoller,
+    udp::{RecvMeta, Transmit},
+};
+use std::{
+    collections::HashMap,
+    fmt,
+    io::{self, IoSliceMut},
+    net::SocketAddr,
+    pin::Pin,
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicU64, Ordering},
+    },
+    task::{Context, Poll},
+    time::{Duration, Instant},
+};
+use tokio::sync::oneshot;
+
+#[derive(Debug, Clone)]
+pub struct Observation {
+    pub server: SocketAddr,
+    pub local: SocketAddr,
+    pub reflexive: SocketAddr,
+    pub network_generation: u64,
+}
+struct Pending {
+    server: SocketAddr,
+    generation: u64,
+    sender: oneshot::Sender<io::Result<SocketAddr>>,
+}
+pub struct DiscoverySocket {
+    inner: Arc<dyn AsyncUdpSocket>,
+    trusted: Vec<SocketAddr>,
+    generation: AtomicU64,
+    pending: Mutex<HashMap<[u8; 12], Pending>>,
+}
+impl fmt::Debug for DiscoverySocket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DiscoverySocket")
+            .field("generation", &self.generation.load(Ordering::Acquire))
+            .finish_non_exhaustive()
+    }
+}
+fn failure() -> io::Error {
+    io::Error::new(io::ErrorKind::InvalidData, "STUN discovery rejected")
+}
+struct Cleanup {
+    socket: Arc<DiscoverySocket>,
+    transaction: [u8; 12],
+}
+impl Drop for Cleanup {
+    fn drop(&mut self) {
+        if let Ok(mut pending) = self.socket.pending.lock() {
+            pending.remove(&self.transaction);
+        }
+    }
+}
+impl DiscoverySocket {
+    pub fn new(inner: Arc<dyn AsyncUdpSocket>, trusted: Vec<SocketAddr>) -> io::Result<Self> {
+        if trusted.len() > 4
+            || trusted
+                .iter()
+                .any(|s| s.port() == 0 || s.ip().is_unspecified() || s.ip().is_multicast())
+        {
+            return Err(failure());
+        }
+        Ok(Self {
+            inner,
+            trusted,
+            generation: AtomicU64::new(1),
+            pending: Mutex::new(HashMap::new()),
+        })
+    }
+    pub fn generation(&self) -> u64 {
+        self.generation.load(Ordering::Acquire)
+    }
+    /// Network adapters call this before re-probing; old replies can never win a new race.
+    pub fn invalidate_network(&self, next: u64) -> io::Result<()> {
+        let mut pending = self.pending.lock().map_err(|_| failure())?;
+        if next <= self.generation() {
+            return Err(failure());
+        }
+        self.generation.store(next, Ordering::Release);
+        for (_, request) in pending.drain() {
+            let _ = request.sender.send(Err(io::Error::new(
+                io::ErrorKind::Interrupted,
+                "network generation changed",
+            )));
+        }
+        Ok(())
+    }
+    pub async fn probe(
+        self: &Arc<Self>,
+        server: SocketAddr,
+        budget: Duration,
+    ) -> io::Result<Observation> {
+        if !self.trusted.contains(&server) || budget.is_zero() || budget > Duration::from_secs(3) {
+            return Err(failure());
+        }
+        let transaction = stun::transaction();
+        let generation = self.generation();
+        let (sender, mut receiver) = oneshot::channel();
+        {
+            let mut pending = self.pending.lock().map_err(|_| failure())?;
+            if pending.len() >= 4 || self.generation() != generation {
+                return Err(failure());
+            }
+            pending.insert(
+                transaction,
+                Pending {
+                    server,
+                    generation,
+                    sender,
+                },
+            );
+        }
+        let _cleanup = Cleanup {
+            socket: self.clone(),
+            transaction,
+        };
+        let bytes = stun::request(&transaction);
+        let deadline = Instant::now() + budget;
+        let mut poller = self.inner.clone().create_io_poller();
+        for attempt in 0..3 {
+            let transmit = Transmit {
+                destination: server,
+                ecn: None,
+                contents: &bytes,
+                segment_size: None,
+                src_ip: None,
+            };
+            loop {
+                match self.inner.try_send(&transmit) {
+                    Ok(()) => break,
+                    Err(e) if e.kind() == io::ErrorKind::WouldBlock => {
+                        tokio::time::timeout_at(
+                            deadline.into(),
+                            std::future::poll_fn(|cx| poller.as_mut().poll_writable(cx)),
+                        )
+                        .await
+                        .map_err(io::Error::other)??;
+                    }
+                    Err(e) => return Err(e),
+                }
+            }
+            let wait = if attempt == 2 {
+                deadline
+            } else {
+                (Instant::now() + Duration::from_millis(250_u64 << attempt)).min(deadline)
+            };
+            tokio::select! {
+                result=&mut receiver=>{
+                    let reflexive=result.map_err(io::Error::other)??;
+                    if self.generation()!=generation{return Err(failure());}
+                    return Ok(Observation {server,local:self.inner.local_addr()?,reflexive,network_generation:generation});
+                }
+                _=tokio::time::sleep_until(wait.into())=>{}
+            }
+            if Instant::now() >= deadline {
+                break;
+            }
+        }
+        Err(io::Error::new(
+            io::ErrorKind::TimedOut,
+            "STUN binding budget exhausted",
+        ))
+    }
+    fn consume(&self, bytes: &[u8], source: SocketAddr) {
+        if !stun::is_stun(bytes) {
+            return;
+        }
+        let Ok(transaction) = <[u8; 12]>::try_from(&bytes[8..20]) else {
+            return;
+        };
+        let Ok(mut pending) = self.pending.lock() else {
+            return;
+        };
+        let Some(request) = pending.get(&transaction) else {
+            return;
+        };
+        if request.server != source || request.generation != self.generation() {
+            return;
+        }
+        let Ok(address) = stun::mapped_address(bytes, &transaction) else {
+            return;
+        };
+        if let Some(request) = pending.remove(&transaction) {
+            let _ = request.sender.send(Ok(address));
+        }
+    }
+}
+impl AsyncUdpSocket for DiscoverySocket {
+    fn create_io_poller(self: Arc<Self>) -> Pin<Box<dyn UdpPoller>> {
+        self.inner.clone().create_io_poller()
+    }
+    fn try_send(&self, transmit: &Transmit) -> io::Result<()> {
+        self.inner.try_send(transmit)
+    }
+    fn poll_recv(
+        &self,
+        cx: &mut Context,
+        bufs: &mut [IoSliceMut<'_>],
+        meta: &mut [RecvMeta],
+    ) -> Poll<io::Result<usize>> {
+        // Bound work under a STUN flood and yield so timers/authorization remain responsive.
+        for _ in 0..8 {
+            let count = match self.inner.poll_recv(cx, bufs, meta) {
+                Poll::Ready(Ok(n)) => n,
+                result => return result,
+            };
+            let mut output = 0;
+            for index in 0..count {
+                let mut item = meta[index];
+                if item.len > bufs[index].len() || item.stride == 0 {
+                    return Poll::Ready(Err(failure()));
+                }
+                let mut kept = 0;
+                let buffer = &mut bufs[index];
+                for offset in (0..item.len).step_by(item.stride) {
+                    let end = (offset + item.stride).min(item.len);
+                    if stun::is_stun(&buffer[offset..end]) {
+                        self.consume(&buffer[offset..end], item.addr);
+                    } else {
+                        buffer.copy_within(offset..end, kept);
+                        kept += end - offset;
+                    }
+                }
+                if kept == 0 {
+                    continue;
+                }
+                item.len = kept;
+                if output < index {
+                    let (before, after) = bufs.split_at_mut(index);
+                    if before[output].len() < kept {
+                        return Poll::Ready(Err(failure()));
+                    }
+                    before[output][..kept].copy_from_slice(&after[0][..kept]);
+                }
+                meta[output] = item;
+                output += 1;
+            }
+            if output != 0 {
+                return Poll::Ready(Ok(output));
+            }
+        }
+        cx.waker().wake_by_ref();
+        Poll::Pending
+    }
+    fn local_addr(&self) -> io::Result<SocketAddr> {
+        self.inner.local_addr()
+    }
+    fn max_transmit_segments(&self) -> usize {
+        self.inner.max_transmit_segments()
+    }
+    fn max_receive_segments(&self) -> usize {
+        self.inner.max_receive_segments()
+    }
+    fn may_fragment(&self) -> bool {
+        self.inner.may_fragment()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::{collections::VecDeque, task::Waker};
+    #[derive(Debug)]
+    struct Packet {
+        bytes: Vec<u8>,
+        stride: usize,
+    }
+    #[derive(Debug)]
+    struct Fake(Mutex<VecDeque<Vec<Packet>>>);
+    #[derive(Debug)]
+    struct Writable;
+    impl UdpPoller for Writable {
+        fn poll_writable(self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<io::Result<()>> {
+            Poll::Ready(Ok(()))
+        }
+    }
+    impl AsyncUdpSocket for Fake {
+        fn create_io_poller(self: Arc<Self>) -> Pin<Box<dyn UdpPoller>> {
+            Box::pin(Writable)
+        }
+        fn try_send(&self, _: &Transmit) -> io::Result<()> {
+            Ok(())
+        }
+        fn poll_recv(
+            &self,
+            _: &mut Context<'_>,
+            bufs: &mut [IoSliceMut<'_>],
+            meta: &mut [RecvMeta],
+        ) -> Poll<io::Result<usize>> {
+            let Ok(mut packets) = self.0.lock() else {
+                return Poll::Ready(Err(failure()));
+            };
+            let Some(batch) = packets.pop_front() else {
+                return Poll::Pending;
+            };
+            if batch.len() > bufs.len() {
+                return Poll::Ready(Err(failure()));
+            }
+            let count = batch.len();
+            for (index, packet) in batch.into_iter().enumerate() {
+                if packet.bytes.len() > bufs[index].len() {
+                    return Poll::Ready(Err(failure()));
+                }
+                bufs[index][..packet.bytes.len()].copy_from_slice(&packet.bytes);
+                meta[index] = RecvMeta {
+                    len: packet.bytes.len(),
+                    stride: packet.stride,
+                    addr: SocketAddr::from(([127, 0, 0, 1], 1)),
+                    ..RecvMeta::default()
+                };
+            }
+            Poll::Ready(Ok(count))
+        }
+        fn local_addr(&self) -> io::Result<SocketAddr> {
+            Ok(SocketAddr::from(([127, 0, 0, 1], 1)))
+        }
+    }
+    #[test]
+    fn mixed_gro_and_batch_compaction_preserve_quic_datagram_boundaries() -> io::Result<()> {
+        let request = stun::request(&[1; 12]);
+        let bytes = [vec![0x40; 20], request.to_vec(), vec![0x41; 20]].concat();
+        let fake = Arc::new(Fake(Mutex::new(VecDeque::from([vec![
+            Packet {
+                bytes: request.to_vec(),
+                stride: 20,
+            },
+            Packet { bytes, stride: 20 },
+        ]]))));
+        let socket = DiscoverySocket::new(fake, vec![])?;
+        let mut first = [0; 128];
+        let mut second = [0; 128];
+        let mut bufs = [IoSliceMut::new(&mut first), IoSliceMut::new(&mut second)];
+        let mut meta = [RecvMeta::default(); 2];
+        let mut cx = Context::from_waker(Waker::noop());
+        assert!(matches!(
+            socket.poll_recv(&mut cx, &mut bufs, &mut meta),
+            Poll::Ready(Ok(1))
+        ));
+        assert_eq!(&bufs[0][..40], &[vec![0x40; 20], vec![0x41; 20]].concat());
+        assert_eq!(meta[0].len, 40);
+        assert_eq!(meta[0].stride, 20);
+        Ok(())
+    }
+    #[test]
+    fn stun_flood_yields_between_bounded_batches() -> io::Result<()> {
+        let mut queue = VecDeque::new();
+        for _ in 0..16 {
+            queue.push_back(vec![Packet {
+                bytes: stun::request(&[1; 12]).to_vec(),
+                stride: 20,
+            }]);
+        }
+        queue.push_back(vec![Packet {
+            bytes: vec![0x40; 20],
+            stride: 20,
+        }]);
+        let socket = DiscoverySocket::new(Arc::new(Fake(Mutex::new(queue))), vec![])?;
+        let mut storage = [0; 128];
+        let mut bufs = [IoSliceMut::new(&mut storage)];
+        let mut meta = [RecvMeta::default()];
+        let mut cx = Context::from_waker(Waker::noop());
+        assert!(socket.poll_recv(&mut cx, &mut bufs, &mut meta).is_pending());
+        assert!(socket.poll_recv(&mut cx, &mut bufs, &mut meta).is_pending());
+        assert!(matches!(
+            socket.poll_recv(&mut cx, &mut bufs, &mut meta),
+            Poll::Ready(Ok(1))
+        ));
+        assert_eq!(&bufs[0][..20], &[0x40; 20]);
+        Ok(())
+    }
+}

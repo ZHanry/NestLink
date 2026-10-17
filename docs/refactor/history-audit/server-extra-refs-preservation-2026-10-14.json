@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-13T17:51:20.903990+00:00",
+  "source_inventory": {
+    "path": "docs/refactor/history-audit/remote-preservation-inventory-2026-10-14.json",
+    "sha256": "8710e82fde1ac829aa25246a7fb763ace1be4ff16e0c21fed263684b4e058ec7"
+  },
+  "repository": "artifacts/history-preservation/server-extra-refs-20261014.git",
+  "remote": "https://github.com/ZHanry/home-tunnel-server.git",
+  "targets": [
+    {
+      "ref": "refs/heads/maintenance/retag-latest14-20261011",
+      "oid": "5df9a855c1d96387c6fd6d641934c3bc2e11095e",
+      "local_object_present": false,
+      "isolated_preservation_ref": "refs/tags/preserved/server/5df9a855c1d96387c6fd6d641934c3bc2e11095e",
+      "commit_sha_recomputed": "5df9a855c1d96387c6fd6d641934c3bc2e11095e",
+      "reachable_commit_count": 201,
+      "reachable_object_count": 3867,
+      "missing_objects": 0,
+      "strict_fsck_passed": true
+    },
+    {
+      "ref": "refs/heads/maintenance/retag-latest1401-c-owner-scope-attempt01",
+      "oid": "eb1d4a3b199d79a4db46811f0a12f3a2de14a99d",
+      "local_object_present": false,
+      "isolated_preservation_ref": "refs/tags/preserved/server/eb1d4a3b199d79a4db46811f0a12f3a2de14a99d",
+      "commit_sha_recomputed": "eb1d4a3b199d79a4db46811f0a12f3a2de14a99d",
+      "reachable_commit_count": 206,
+      "reachable_object_count": 3957,
+      "missing_objects": 0,
+      "strict_fsck_passed": true
+    }
+  ],
+  "shallow": false,
+  "original_repositories_modified": false,
+  "history_imported": false,
+  "finalization_ready": false,
+  "limits": [
+    "Isolated local bare-object preservation; no durable upload or source/secret/license review of new tips.",
+    "Git object closure excludes referenced submodule commits; the existing three missing hbb_common gitlinks remain open.",
+    "No original worktree, main repository, branch or release was uploaded, rewritten, renamed or deleted."
+  ]
+}

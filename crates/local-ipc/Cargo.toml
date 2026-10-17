@@ -1,0 +1,31 @@
+[package]
+name = "nestlink-local-ipc"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+nestlink-auth.workspace = true
+nestlink-identity.workspace = true
+nestlink-protocol.workspace = true
+nestlink-platform-security.workspace = true
+nestlink-transport-stream.workspace = true
+tokio.workspace = true
+tokio-rustls.workspace = true
+rustls.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+hkdf.workspace = true
+sha2.workspace = true
+zeroize.workspace = true
+thiserror.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+rustix = { version = "1.1.2", features = ["process", "fs"] }
+
+[dev-dependencies]
+tempfile = "3.23.0"
+
+[lints]
+workspace = true

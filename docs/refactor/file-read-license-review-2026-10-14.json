@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "scope": "Exact newly introduced native file supplier licenses; not final product SBOM/NOTICE or formal L-B acceptance.",
+  "first_party_license": "Apache-2.0",
+  "supplier_receipt": "docs/refactor/file-read-suppliers-2026-10-14.json",
+  "reviewed_package": {
+    "name": "winx",
+    "version": "0.36.4",
+    "repository": "https://github.com/sunfishcode/winx",
+    "source": "registry+https://github.com/rust-lang/crates.io-index",
+    "cargo_lock_checksum": "3f3fd376f71958b862e7afb20cfe5a22830e1963462f3a17f49d82a6c1d1f42d",
+    "declared_and_retained_license": "Apache-2.0 WITH LLVM-exception",
+    "complete_license": {
+      "archive_path": "winx-0.36.4/LICENSE",
+      "sha256": "268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5",
+      "bytes": 12243
+    }
+  },
+  "license_facts": [
+    "The registry manifest declares only Apache-2.0 WITH LLVM-exception; no plain Apache-2.0 or MIT alternative is asserted for winx.",
+    "The full file contains the Apache 2.0 license and LLVM exceptions, including relief from Sections 4(a), 4(b) and 4(d) for portions embedded into compiled object form.",
+    "The additional GPLv2 compatibility paragraph offers a choice to waive conflicting provisions only for Combined Software in its stated circumstances. It does not require NestLink to adopt GPL or change its first-party license.",
+    "The supplier is used through unchanged Cargo library APIs. Its source and original license bytes remain in the verified source archive."
+  ],
+  "cargo_deny_handling": {
+    "package": "winx",
+    "version_requirement": "=0.36.4",
+    "allowed_license": "Apache-2.0 WITH LLVM-exception",
+    "global_license_allowance_added": false,
+    "license_or_security_scan_ignore_added": false,
+    "supplier_license_modified": false
+  },
+  "distribution_requirements": [
+    "Include the original complete supplier LICENSE and any applicable notice material in the final third-party distribution inventory.",
+    "Generate and verify complete locked final-product SBOM/NOTICE before release; this review does not substitute for that gate.",
+    "Review a supplier version or license change again; the cargo-deny exception is exact-version scoped."
+  ],
+  "basis": "User-authorized v3 implementation, sections 1 and 5.3: first-party Apache-2.0 with reviewed third-party suppliers retaining their own licenses."
+}

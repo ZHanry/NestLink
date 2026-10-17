@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-15",
+  "scope": "Exact TURN/WebRTC dependency license and source review, including the two exact BSL dependencies; not the final product SBOM/NOTICE or formal release acceptance.",
+  "packages": [
+    {
+      "name": "webrtc-ice",
+      "version": "0.14.0",
+      "source": "path+crates/traversal/vendor/ice",
+      "original_registry_archive_sha256": "69cb13fd1a373e68addc4bba0c8ca058627518e54342583d024bdcbb8ae5d97d",
+      "archive_checksum_verified_against_original_lock": true,
+      "upstream_commit": "a1f8f1919235d8452835852e018efd654f2f8366",
+      "declared_license": "MIT OR Apache-2.0",
+      "upstream_archive_files_verified": 63,
+      "source_modifications": "Resolved-IP candidate matching plus four cfg(test) regressions; see crates/traversal/vendor/ice/UPSTREAM.md",
+      "license_files": [
+        "crates/traversal/vendor/ice/LICENSE-MIT",
+        "crates/traversal/vendor/ice/LICENSE-APACHE"
+      ],
+      "notice_files": [
+        "packaging/notices/webrtc-rs-LICENSE-MIT.txt",
+        "packaging/notices/webrtc-rs-LICENSE-APACHE-2.0.txt"
+      ],
+      "cargo_deny_exception_added": false,
+      "source_receipt": "artifacts/core-verification/ice-vendor-source-20261015-attempt01.json",
+      "repair_evidence": "artifacts/ice-resolved-candidate-followup-20261015/FROZEN.json"
+    },
+    {
+      "name": "clipboard-win",
+      "version": "5.4.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "archive_bytes": 20994,
+      "cargo_lock_checksum": "bde03770d3df201d4fb868f2c9c59e66a3e4e2bd06692a0fe701e7103c7e84d4",
+      "archive_checksum_verified_against_lock": true,
+      "declared_license": "BSL-1.0",
+      "repository": "https://github.com/DoumanAsh/clipboard-win",
+      "upstream_commit": "3b27cf2bfd1adcfa6e0264eb51c1025ddaf0f342",
+      "archive_contains_license_file": false,
+      "notice": {
+        "path": "packaging/notices/clipboard-win-5.4.1-BSL-1.0.txt",
+        "bytes": 1338,
+        "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+      },
+      "cargo_deny_exception": "=5.4.1"
+    },
+    {
+      "name": "error-code",
+      "version": "3.4.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "archive_bytes": 8964,
+      "cargo_lock_checksum": "0b5343afd4a8365a643ac588dab4cf234a190c7f6c88c9f6dd6ffe00837661b7",
+      "archive_checksum_verified_against_lock": true,
+      "declared_license": "BSL-1.0",
+      "repository": "https://github.com/DoumanAsh/error-code",
+      "upstream_commit": "e4615e514db3ff64f5f1b328b4865b20a3dcdbc3",
+      "archive_license_file": "error-code-3.4.0/LICENSE",
+      "notice": {
+        "path": "packaging/notices/error-code-3.4.0-BSL-1.0.txt",
+        "bytes": 1338,
+        "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+      },
+      "cargo_deny_exception": "=3.4.0"
+    },
+    {
+      "name": "webrtc",
+      "version": "0.14.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "archive_bytes": 196947,
+      "cargo_lock_checksum": "08fd686c0920ac08f3a57eacc48e31f0e4ca1ffefba4478784606f78c14e83ad",
+      "archive_checksum_verified_against_lock": true,
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/webrtc-rs/webrtc",
+      "upstream_commit": "a1f8f1919235d8452835852e018efd654f2f8366",
+      "archive_contains_license_files": false,
+      "notice_files": [
+        {
+          "path": "packaging/notices/webrtc-rs-LICENSE-MIT.txt",
+          "bytes": 1066,
+          "sha256": "56cc6c08157f4faf70d351b3a7ceac143399d5359a78c180e06dcd0390784f4d"
+        },
+        {
+          "path": "packaging/notices/webrtc-rs-LICENSE-APACHE-2.0.txt",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        }
+      ]
+    },
+    {
+      "name": "turn",
+      "version": "0.11.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "archive_bytes": 109973,
+      "cargo_lock_checksum": "5ed995882f66ab94238de77c62e5e778389698ab700afa4696f4754da8f457cb",
+      "archive_checksum_verified_against_lock": true,
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/webrtc-rs/webrtc/tree/master/turn",
+      "upstream_commit": "a1f8f1919235d8452835852e018efd654f2f8366",
+      "archive_license_files": ["turn-0.11.0/LICENSE-MIT", "turn-0.11.0/LICENSE-APACHE"],
+      "notice_files": [
+        "packaging/notices/webrtc-rs-LICENSE-MIT.txt",
+        "packaging/notices/webrtc-rs-LICENSE-APACHE-2.0.txt"
+      ]
+    },
+    {
+      "name": "waitgroup",
+      "version": "0.1.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "archive_bytes": 6154,
+      "cargo_lock_checksum": "d1f50000a783467e6c0200f9d10642f4bc424e39efc1b770203e88b488f79292",
+      "archive_checksum_verified_against_lock": true,
+      "declared_license": "Apache-2.0",
+      "repository": "https://github.com/laizy/waitgroup-rs",
+      "upstream_commit": "7a65c1990015b82584dbf3302b54f6ba29e38a01",
+      "archive_license_file": "waitgroup-0.1.2/LICENSE",
+      "notice": {
+        "path": "packaging/notices/waitgroup-0.1.2-Apache-2.0.txt",
+        "bytes": 11357,
+        "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
+    },
+    {
+      "name": "turn",
+      "version": "0.17.2",
+      "source": "path+crates/traversal/vendor/turn",
+      "cargo_lock_checksum": null,
+      "declared_license": "MIT/Apache-2.0",
+      "upstream_repository": "https://github.com/webrtc-rs/webrtc/tree/1da3fe8ee84db8d266322cbcfcb357c745959a8e/turn",
+      "upstream_commit": "1da3fe8ee84db8d266322cbcfcb357c745959a8e",
+      "source_modifications": "NestLink managed-allocation hooks and bounded TURN-over-stream buffer; see crates/traversal/vendor/turn/UPSTREAM.md",
+      "license_files": [
+        {
+          "path": "crates/traversal/vendor/turn/LICENSE-MIT",
+          "bytes": 1066,
+          "sha256": "56cc6c08157f4faf70d351b3a7ceac143399d5359a78c180e06dcd0390784f4d"
+        },
+        {
+          "path": "crates/traversal/vendor/turn/LICENSE-APACHE",
+          "bytes": 10847,
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        }
+      ],
+      "cargo_deny_exception_added": false
+    },
+    {
+      "name": "stun",
+      "version": "0.17.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "cargo_lock_checksum": "2e3b8d5ad1dd4c8cd0595440f26521a71dd593cb5873ee8e06b91510b7d97269",
+      "archive_checksum_matches_lock_and_crates_io_metadata": true,
+      "declared_license": "MIT/Apache-2.0",
+      "metadata_review_date": "2026-10-15",
+      "archive_locally_cached_for_file_review": false,
+      "notice_files": [
+        "packaging/notices/webrtc-rs-LICENSE-MIT.txt",
+        "packaging/notices/webrtc-rs-LICENSE-APACHE-2.0.txt"
+      ]
+    },
+    {
+      "name": "webrtc-util",
+      "version": "0.17.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "cargo_lock_checksum": "1beae0b4f24969741c26ca282a257dc5823bd9cbe608f7e3ca3775102d323ad9",
+      "archive_checksum_matches_lock_and_crates_io_metadata": true,
+      "declared_license": "MIT/Apache-2.0",
+      "metadata_review_date": "2026-10-15",
+      "archive_locally_cached_for_file_review": false,
+      "notice_files": [
+        "packaging/notices/webrtc-rs-LICENSE-MIT.txt",
+        "packaging/notices/webrtc-rs-LICENSE-APACHE-2.0.txt"
+      ]
+    }
+  ],
+  "cargo_deny_handling": {
+    "exact_bsl_exceptions": [
+      {"name": "clipboard-win", "version": "=5.4.1", "license": "BSL-1.0"},
+      {"name": "error-code", "version": "=3.4.0", "license": "BSL-1.0"}
+    ],
+    "global_bsl_allowance_added": false,
+    "other_license_exception_added": false,
+    "security_advisory_ignore_added": false
+  },
+  "acceptance_limits": [
+    "This scoped review is not a complete product SBOM/NOTICE or formal release acceptance.",
+    "The local TURN fork is modified from its cited upstream commit and must be reviewed before changing it.",
+    "The stun and webrtc-util crate archives were not cached locally; metadata and checksums were cross-checked against crates.io and Cargo.lock.",
+    "Re-review when any locked package, declared license, or local vendor source changes."
+  ]
+}

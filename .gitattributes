@@ -1,0 +1,65 @@
+* text=auto eol=lf
+
+# Keep the user's refactor plan byte-for-byte for its recorded source digest.
+docs/NestLink_重构最终方案_v3_2026-10-12.md -text
+
+*.cs text eol=crlf
+*.csproj text eol=crlf
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.xaml text eol=crlf
+*.sln text eol=crlf
+*.iss text eol=crlf
+*.isl text eol=crlf
+*.rc text eol=crlf
+*.manifest text eol=crlf
+
+*.sh text eol=lf
+*.py text eol=lf
+*.ts text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.kt text eol=lf
+*.kts text eol=lf
+*.properties text eol=lf
+*.sql text eol=lf
+*.md text eol=lf
+*.patch text eol=lf -whitespace
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.bmp binary
+*.cer binary
+*.docx binary
+*.exe binary
+*.dll binary
+*.apk binary
+*.aab binary
+*.aar binary
+*.so binary
+*.jks binary
+*.keystore binary
+*.tar binary
+*.gz binary
+
+# Preserve the original native Windows capture manifest bytes for provenance.
+docs/site/assets/v10/windows-capture-manifest.json -text
+# Preserve original signed release evidence byte-for-byte, including its line endings.
+docs/release/v10.1/client-candidate-download.json -text
+docs/release/v10.1/remote-host-provenance.json -text
+validation/client/41c0e21fbb3a4c634fbc9d63fcd7453337e4d029/windows-final-defender-scan.json -text
+# Preserve the original installed Android 14 capture manifest and stable 13 record bytes.
+docs/site/assets/14.0.0/android-devices-capture-manifest.json -text
+docs/release/stable-13.0.0.json -text
+
+# Preserve the reviewed public upstream provenance bytes for the audit digest.
+docs/refactor/history-audit/firebase-upstream-provenance-2026-10-13.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Keep the reviewed upstream license bytes, including its final empty line.
+packaging/notices/libvpx-1.16.0-LICENSE.txt -text whitespace=-blank-at-eof

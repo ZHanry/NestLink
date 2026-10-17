@@ -1,0 +1,3377 @@
+{
+  "schema_version": 1,
+  "observed_date": "2026-10-13",
+  "audit_kind": "read_only_local_preservation_inventory",
+  "git_version": "git version 2.55.0.windows.1",
+  "script": {
+    "path": "scripts/refactor-history-inventory.py",
+    "sha256": "92b42bf5af73f1bcadb7198d603deeb2153a9466061f4931ba504a6619eac9a4"
+  },
+  "inputs": [
+    {
+      "path": "docs/refactor/baseline.json",
+      "sha256": "bcbe89b8bb03efe1de690b55cedc98b54e74c1d75ca362911ab9dd4b9c877541"
+    },
+    {
+      "path": "docs/refactor/finalization.json",
+      "sha256": "0524dfa40c2e32d6f976d319b8e33ce91acd7f2491a644990144e21fb5192bb8"
+    },
+    {
+      "path": "docs/refactor/history-audit-index.json",
+      "sha256": "116bb70992c2956e1d5ac78e5ec133fd4da186adc8e40b17b197831243a74714"
+    },
+    {
+      "path": "docs/refactor/history-audit/DISPOSITION.md",
+      "sha256": "ce83cc7e19c0f340f779fa1eb51f5f0fd1bec2e76c1e521b157c1d7686f4d611"
+    }
+  ],
+  "scope": "legacy candidate local refs plus checked-out HEAD and fixed baseline commits; hub current NestLink development ref excluded from object/license counts; no reflog-only/unreachable object preservation claim",
+  "read_only_controls": {
+    "GIT_OPTIONAL_LOCKS": "0",
+    "GIT_NO_LAZY_FETCH": "1",
+    "GIT_NO_REPLACE_OBJECTS": "1",
+    "GIT_TERMINAL_PROMPT": "0"
+  },
+  "components": {
+    "hub": {
+      "repository_key": "hub",
+      "baseline_revision": "da66975153385f9d92643daa4b7d9f1efbaa7a7d",
+      "observed_head": "2f292c832d3e6c044f2c82115f8bf783314f83c3",
+      "head_snapshot_included": true,
+      "shallow": false,
+      "partial_clone_configuration_present": false,
+      "alternates_file_present": false,
+      "environment_alternates_present": false,
+      "replace_ref_count": 0,
+      "grafts_file_present": false,
+      "all_local_ref_count": 38,
+      "legacy_candidate_ref_count": 37,
+      "local_refs": [
+        {
+          "ref": "refs/heads/codex/homedesk-p2p-v11",
+          "oid": "2f292c832d3e6c044f2c82115f8bf783314f83c3",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/heads/codex/homedesk-p2p-v11"
+        },
+        {
+          "ref": "refs/heads/codex/nestlink-14.1.0",
+          "oid": "da66975153385f9d92643daa4b7d9f1efbaa7a7d",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/heads/codex/nestlink-14.1.0"
+        },
+        {
+          "ref": "refs/heads/codex/nestlink-v15-core",
+          "oid": "80a53643cbc74ecf8160f016424053ab69f13291",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "current_nestlink_development_excluded",
+          "proposed_preservation_ref": null
+        },
+        {
+          "ref": "refs/heads/main",
+          "oid": "de16006d91b0658d0a3fafb7c21d2de4ca70d91d",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/heads/main"
+        },
+        {
+          "ref": "refs/remotes/origin/HEAD",
+          "oid": "da66975153385f9d92643daa4b7d9f1efbaa7a7d",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/remotes/origin/HEAD"
+        },
+        {
+          "ref": "refs/remotes/origin/main",
+          "oid": "da66975153385f9d92643daa4b7d9f1efbaa7a7d",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/remotes/origin/main"
+        },
+        {
+          "ref": "refs/tags/v10.0.0",
+          "oid": "25bb858fab2c9669b5e1948ce6f54cca25bbb668",
+          "type": "tag",
+          "peeled_oid": "71b259d13711e17bb2195bbec5829a1ceb8f2c22",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v10.0.0"
+        },
+        {
+          "ref": "refs/tags/v10.1.0",
+          "oid": "de16006d91b0658d0a3fafb7c21d2de4ca70d91d",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v10.1.0"
+        },
+        {
+          "ref": "refs/tags/v11.0.0-rc.1",
+          "oid": "d0a3e5993778e385016789eefe9d93cb0ee30105",
+          "type": "tag",
+          "peeled_oid": "65926a083c324504910831174e7c7ba2c23c00e4",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v11.0.0-rc.1"
+        },
+        {
+          "ref": "refs/tags/v13.0.0",
+          "oid": "63f7d46dae0b64deb1013e4bba0e5ff53413b8ee",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v13.0.0"
+        },
+        {
+          "ref": "refs/tags/v14.0.0",
+          "oid": "d228b8e80cb531faf4cb6a18c8a05c779da09c4d",
+          "type": "tag",
+          "peeled_oid": "ba07e611a64bbf8383deec31ed3ad5d9c7952531",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v14.0.0"
+        },
+        {
+          "ref": "refs/tags/v14.0.1",
+          "oid": "da66975153385f9d92643daa4b7d9f1efbaa7a7d",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v14.0.1"
+        },
+        {
+          "ref": "refs/tags/v2.2.4",
+          "oid": "547de9dde40b5878bf476fde4911fd12936c8eb1",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v2.2.4"
+        },
+        {
+          "ref": "refs/tags/v2.2.5",
+          "oid": "1078a88f4af763f4792d61318f57b709d20b9223",
+          "type": "tag",
+          "peeled_oid": "b48d0865c6ef9e980273fa7ea15880132c03e2cd",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v2.2.5"
+        },
+        {
+          "ref": "refs/tags/v2.3.0",
+          "oid": "d6ff190e4b1136fd1e3bda742b41f700fa367175",
+          "type": "tag",
+          "peeled_oid": "4c613a91f5887f954648f1648cb522f22b922c2a",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v2.3.0"
+        },
+        {
+          "ref": "refs/tags/v2.4.0",
+          "oid": "e8dd1e8b4c1755ceab02cb4bce5c0004d85fd781",
+          "type": "tag",
+          "peeled_oid": "e017a7a48cb9ddafd525b7a9831484bd72baf34c",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v2.4.0"
+        },
+        {
+          "ref": "refs/tags/v2.5.0-rc.1",
+          "oid": "1e6b680f2b8d406ff22476d1c481d40b60b6efbc",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v2.5.0-rc.1"
+        },
+        {
+          "ref": "refs/tags/v2.5.0-rc.2",
+          "oid": "6342411575156cea3d6474ad8604a91c5f9d5123",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v2.5.0-rc.2"
+        },
+        {
+          "ref": "refs/tags/v3.0.0",
+          "oid": "db27681ce48fb10eceb05fa1fb6f49f38df11704",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v3.0.0"
+        },
+        {
+          "ref": "refs/tags/v3.0.0-rc.1",
+          "oid": "904eaeffbc5da4c2c6dab8eb6bc561faac35e449",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v3.0.0-rc.1"
+        },
+        {
+          "ref": "refs/tags/v3.0.0-rc.2",
+          "oid": "db27681ce48fb10eceb05fa1fb6f49f38df11704",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v3.0.0-rc.2"
+        },
+        {
+          "ref": "refs/tags/v3.1.0",
+          "oid": "573b8ce787603933836b64c59ea79f85a2967fb6",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v3.1.0"
+        },
+        {
+          "ref": "refs/tags/v3.1.0-rc.1",
+          "oid": "8548204004b2257c9dd9197ac23b886f561c9d1a",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v3.1.0-rc.1"
+        },
+        {
+          "ref": "refs/tags/v3.1.0-rc.2",
+          "oid": "573b8ce787603933836b64c59ea79f85a2967fb6",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v3.1.0-rc.2"
+        },
+        {
+          "ref": "refs/tags/v3.2.0",
+          "oid": "e3a50bea31d8c28605cdb5c2c968658fe37a611e",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v3.2.0"
+        },
+        {
+          "ref": "refs/tags/v3.2.0-rc.1",
+          "oid": "da5209b56ba4f0af9a225dd1fda66d338174bca8",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v3.2.0-rc.1"
+        },
+        {
+          "ref": "refs/tags/v3.2.0-rc.2",
+          "oid": "07ac8d9a97b4263b6b5fbd00ba32fdb906675e7f",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v3.2.0-rc.2"
+        },
+        {
+          "ref": "refs/tags/v3.2.0-rc.3",
+          "oid": "90492efc000628bf7c610f8c4bafff74d67e0320",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v3.2.0-rc.3"
+        },
+        {
+          "ref": "refs/tags/v4.0.0",
+          "oid": "dec6b9a0b8d34380c8654f33a40da75d72f7974e",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v4.0.0"
+        },
+        {
+          "ref": "refs/tags/v5.0.0",
+          "oid": "daf280aa7711a3b419c30d7b11a27ed5231c0554",
+          "type": "tag",
+          "peeled_oid": "cdf6136593d3dd7863f704724746a92a30240123",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v5.0.0"
+        },
+        {
+          "ref": "refs/tags/v5.0.0-rc.1",
+          "oid": "ebf30177d2fa6bb41737eec499638703c50747b4",
+          "type": "tag",
+          "peeled_oid": "e78ab90dc8922135e2026dae18a1ce709de09d19",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v5.0.0-rc.1"
+        },
+        {
+          "ref": "refs/tags/v5.0.0-rc.2",
+          "oid": "ce6bfa3133529cde4e40c59224dc750633c489f3",
+          "type": "tag",
+          "peeled_oid": "75c726953158fbb88477a32243ff23afae6ff4a2",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v5.0.0-rc.2"
+        },
+        {
+          "ref": "refs/tags/v5.0.0-rc.3",
+          "oid": "b2b5d11ea596469d4849007944d68c6b91ec0b2e",
+          "type": "tag",
+          "peeled_oid": "9947156036374166ca92235a7de68c1210944dfb",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v5.0.0-rc.3"
+        },
+        {
+          "ref": "refs/tags/v5.0.0-rc.4",
+          "oid": "1f6dacfc73f14e038d92252a5b3b846027f7dc6c",
+          "type": "tag",
+          "peeled_oid": "cdf6136593d3dd7863f704724746a92a30240123",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v5.0.0-rc.4"
+        },
+        {
+          "ref": "refs/tags/v6.0.0",
+          "oid": "8261cf860e98199be5c141bc3d95eeb5979b6ca8",
+          "type": "tag",
+          "peeled_oid": "20ec512a5ff1c5af8ef6636a18c39a8b66bc9711",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v6.0.0"
+        },
+        {
+          "ref": "refs/tags/v7.0.0",
+          "oid": "8e6e64d8c5109127f6b94be5a15568e35312f0d2",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v7.0.0"
+        },
+        {
+          "ref": "refs/tags/v8.0.0",
+          "oid": "540f7f904429c18b49fef08e282210578f10768f",
+          "type": "tag",
+          "peeled_oid": "b59e80eb80937cae1c4a46d302aa9746683d481a",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v8.0.0"
+        },
+        {
+          "ref": "refs/tags/v9.0.0",
+          "oid": "64e2153044987efa33c6c4d7c31d0fb6b78ffe59",
+          "type": "tag",
+          "peeled_oid": "2549a5fb2b6b9fdd4742bb96e1b7963372f32f08",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hub/tags/v9.0.0"
+        }
+      ],
+      "tag_count": 32,
+      "annotated_tag_count": 14,
+      "local_refs_changed_during_audit": false,
+      "legacy_refs_changed_during_audit": false,
+      "legacy_reachable_commit_count": 145,
+      "legacy_reachable_object_counts": {
+        "blob": 2139,
+        "commit": 145,
+        "tag": 14,
+        "tree": 1122
+      },
+      "legacy_reachable_uncompressed_object_bytes": 26956944,
+      "missing_object_count": 0,
+      "large_blob_count_at_least_10_mib": 0,
+      "large_blob_count_at_least_100_mib": 0,
+      "largest_blobs": [],
+      "license_blob_count": 1,
+      "license_blobs": [
+        {
+          "oid": "12f758b2b5afb6ea7db7a9ecd180dc273e89171c",
+          "sha256": "06a4d0421042d3d1e428040475b124cde7f4f25c39a68a1898fa66a9c1fbf7cc",
+          "bytes": 11354,
+          "text_signatures": [
+            "Apache-2.0-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        }
+      ],
+      "license_text_signature_counts": {
+        "Apache-2.0-text": 1
+      },
+      "unrecognized_license_blob_count": 0,
+      "baseline_license_files": [
+        {
+          "path": "LICENSE",
+          "mode": "100644",
+          "type": "blob",
+          "oid": "12f758b2b5afb6ea7db7a9ecd180dc273e89171c"
+        }
+      ],
+      "gitmodule_blob_count": 0,
+      "unique_gitlink_commit_count": 0,
+      "gitlink_tree_occurrence_count": 0,
+      "lfs_pointer_count": 0,
+      "lfs_local_verified_count": 0,
+      "lfs_scan_scope": "all reachable blobs <=1024 bytes with standard LF version/oid/size lines; no custom LFS storage or remote fetch",
+      "details": {
+        "path": "artifacts/history-audit/hub-local-objects.json",
+        "sha256": "6b2e91e6c7182ff6d3651307d1ebf2716fc0bdd12d2e0fb631a5563ab185d9f3"
+      },
+      "remote_refs_verified": false,
+      "history_imported": false,
+      "new_product_reuse_approved": false
+    },
+    "server": {
+      "repository_key": "server",
+      "baseline_revision": "10d3f5be070b4caf4d8feb11defb86ad0e68e5d4",
+      "observed_head": "3fc4758ed0aa6eeb78635b41d829b169956a3cb3",
+      "head_snapshot_included": true,
+      "shallow": false,
+      "partial_clone_configuration_present": false,
+      "alternates_file_present": false,
+      "environment_alternates_present": false,
+      "replace_ref_count": 0,
+      "grafts_file_present": false,
+      "all_local_ref_count": 31,
+      "legacy_candidate_ref_count": 31,
+      "local_refs": [
+        {
+          "ref": "refs/heads/codex/homedesk-p2p-v11",
+          "oid": "3fc4758ed0aa6eeb78635b41d829b169956a3cb3",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/heads/codex/homedesk-p2p-v11"
+        },
+        {
+          "ref": "refs/heads/codex/nestlink-14.1.0",
+          "oid": "10d3f5be070b4caf4d8feb11defb86ad0e68e5d4",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/heads/codex/nestlink-14.1.0"
+        },
+        {
+          "ref": "refs/heads/main",
+          "oid": "866e0cbb9ac89de39491ca353574f517f374554e",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/heads/main"
+        },
+        {
+          "ref": "refs/remotes/homedesk-source/hearth-web-ui",
+          "oid": "00d4719dfb33d4bef6b7fb290220d80d637ca6ef",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/remotes/homedesk-source/hearth-web-ui"
+        },
+        {
+          "ref": "refs/remotes/origin/HEAD",
+          "oid": "10d3f5be070b4caf4d8feb11defb86ad0e68e5d4",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/remotes/origin/HEAD"
+        },
+        {
+          "ref": "refs/remotes/origin/main",
+          "oid": "10d3f5be070b4caf4d8feb11defb86ad0e68e5d4",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/remotes/origin/main"
+        },
+        {
+          "ref": "refs/tags/api-v1.0.0",
+          "oid": "55c83f912a6cba62ce06d1a86dbd8813c38e9067",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/api-v1.0.0"
+        },
+        {
+          "ref": "refs/tags/api-v1.1.0",
+          "oid": "7959bfb6b96ea9532ca0040c1c3c689eaaed93c3",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/api-v1.1.0"
+        },
+        {
+          "ref": "refs/tags/api-v1.2.0",
+          "oid": "f4316948686da0e333698b7a8fc9c548061d94bc",
+          "type": "tag",
+          "peeled_oid": "4319f8d0cf2c6dcad0cc06d322e8a55ac83edf50",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/api-v1.2.0"
+        },
+        {
+          "ref": "refs/tags/api-v1.2.0-rc.1",
+          "oid": "68a07836671c4687d2351ff197157199bc2eff40",
+          "type": "tag",
+          "peeled_oid": "9c54212b91d3bfac24aa5af4863dd2f8649fa5fe",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/api-v1.2.0-rc.1"
+        },
+        {
+          "ref": "refs/tags/api-v1.3.0",
+          "oid": "e3b0acf1b4dd36eb6c40b8a654eba13978f06a73",
+          "type": "tag",
+          "peeled_oid": "82b30aa2dc169e141bc5a4ae8c653aabb74fd96c",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/api-v1.3.0"
+        },
+        {
+          "ref": "refs/tags/api-v1.4.0",
+          "oid": "c201f2989383cae071e723036559840f5ad64623",
+          "type": "tag",
+          "peeled_oid": "74e140da43c88043d0db2aad7505ba75fd3a9a49",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/api-v1.4.0"
+        },
+        {
+          "ref": "refs/tags/api-v1.5.0",
+          "oid": "194ae805f3569dc16d94b7fda71367e5d68fdff5",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/api-v1.5.0"
+        },
+        {
+          "ref": "refs/tags/api-v1.6.0",
+          "oid": "f260a5ffcd789c9a71936307b809ed5137e1a832",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/api-v1.6.0"
+        },
+        {
+          "ref": "refs/tags/api-v2.0.0",
+          "oid": "45d7610e8381d077edf343609736ce5ede427785",
+          "type": "tag",
+          "peeled_oid": "2242354fc10c6681ec0ccf33e91ab96611e60791",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/api-v2.0.0"
+        },
+        {
+          "ref": "refs/tags/v10.0.0",
+          "oid": "33144cd9b2668e355dd36233cb52071f32a660d2",
+          "type": "tag",
+          "peeled_oid": "9e5b4ff4e6381a42317c94618d1805b7398c558e",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/v10.0.0"
+        },
+        {
+          "ref": "refs/tags/v10.1.0",
+          "oid": "194ae805f3569dc16d94b7fda71367e5d68fdff5",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/v10.1.0"
+        },
+        {
+          "ref": "refs/tags/v11.0.0-rc.1",
+          "oid": "51e9b5407696b1c682aa16aeab358c8a51c50e96",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/v11.0.0-rc.1"
+        },
+        {
+          "ref": "refs/tags/v11.0.0-rc.2",
+          "oid": "7aaf115cb55f231967765c210d1331ac49b6c064",
+          "type": "tag",
+          "peeled_oid": "3fc4758ed0aa6eeb78635b41d829b169956a3cb3",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/v11.0.0-rc.2"
+        },
+        {
+          "ref": "refs/tags/v13.0.0",
+          "oid": "9645cf23871d2cb4913239eb9eff520d08c7cb23",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/v13.0.0"
+        },
+        {
+          "ref": "refs/tags/v14.0.0",
+          "oid": "2952e4408ad4a14544079942554e88e4d844d054",
+          "type": "tag",
+          "peeled_oid": "fa765744ce56076fcde364f1f11749cfe77a744a",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/v14.0.0"
+        },
+        {
+          "ref": "refs/tags/v14.0.1",
+          "oid": "10d3f5be070b4caf4d8feb11defb86ad0e68e5d4",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/v14.0.1"
+        },
+        {
+          "ref": "refs/tags/v5.0.1-rc.1",
+          "oid": "96239e6c8a389add103229c158c71ff13165f887",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/v5.0.1-rc.1"
+        },
+        {
+          "ref": "refs/tags/v6.0.0",
+          "oid": "e72d972b880f6da121352dc4954d7910d1b50bd7",
+          "type": "tag",
+          "peeled_oid": "ee0db762473900e1bc6a0855142906fa1366464a",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/v6.0.0"
+        },
+        {
+          "ref": "refs/tags/v6.0.1",
+          "oid": "7a066d9388dd8ce43fbdff0142d145abcd2294b3",
+          "type": "tag",
+          "peeled_oid": "1b2483b50c66c1cc65db172e08415714af3dde37",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/v6.0.1"
+        },
+        {
+          "ref": "refs/tags/v6.1.0",
+          "oid": "8485f92913f70e7d540c14c266dfb74f964590ac",
+          "type": "tag",
+          "peeled_oid": "7d84d049357fbab8cdb61597914b318dca661134",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/v6.1.0"
+        },
+        {
+          "ref": "refs/tags/v6.1.1",
+          "oid": "1ab12eeaa847645d61b16413376fd8f7b6b070bb",
+          "type": "tag",
+          "peeled_oid": "cb0bbb724b2a22c7e98ba9bd21efdbc426da7411",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/v6.1.1"
+        },
+        {
+          "ref": "refs/tags/v6.2.0",
+          "oid": "3119f8156a6611bda1d7f7c7b4824cdbd27d4d0f",
+          "type": "tag",
+          "peeled_oid": "33cb6607e7aa118bd168b61f66b2dcfd87c53909",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/v6.2.0"
+        },
+        {
+          "ref": "refs/tags/v7.0.0",
+          "oid": "7959bfb6b96ea9532ca0040c1c3c689eaaed93c3",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/v7.0.0"
+        },
+        {
+          "ref": "refs/tags/v8.0.0",
+          "oid": "dff258149085a074875a45f26de4295f2e70b47c",
+          "type": "tag",
+          "peeled_oid": "15fd9de2a8f8e984d68472877753dbbf6cf60775",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/v8.0.0"
+        },
+        {
+          "ref": "refs/tags/v9.0.0",
+          "oid": "4b634d9886d4ab6c11fd5d56e99b884c8a48558b",
+          "type": "tag",
+          "peeled_oid": "82b30aa2dc169e141bc5a4ae8c653aabb74fd96c",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/server/tags/v9.0.0"
+        }
+      ],
+      "tag_count": 25,
+      "annotated_tag_count": 15,
+      "local_refs_changed_during_audit": false,
+      "legacy_refs_changed_during_audit": false,
+      "legacy_reachable_commit_count": 206,
+      "legacy_reachable_object_counts": {
+        "blob": 2427,
+        "commit": 206,
+        "tag": 15,
+        "tree": 1316
+      },
+      "legacy_reachable_uncompressed_object_bytes": 50758634,
+      "missing_object_count": 0,
+      "large_blob_count_at_least_10_mib": 0,
+      "large_blob_count_at_least_100_mib": 0,
+      "largest_blobs": [],
+      "license_blob_count": 1,
+      "license_blobs": [
+        {
+          "oid": "12f758b2b5afb6ea7db7a9ecd180dc273e89171c",
+          "sha256": "06a4d0421042d3d1e428040475b124cde7f4f25c39a68a1898fa66a9c1fbf7cc",
+          "bytes": 11354,
+          "text_signatures": [
+            "Apache-2.0-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        }
+      ],
+      "license_text_signature_counts": {
+        "Apache-2.0-text": 1
+      },
+      "unrecognized_license_blob_count": 0,
+      "baseline_license_files": [
+        {
+          "path": "LICENSE",
+          "mode": "100644",
+          "type": "blob",
+          "oid": "12f758b2b5afb6ea7db7a9ecd180dc273e89171c"
+        }
+      ],
+      "gitmodule_blob_count": 0,
+      "unique_gitlink_commit_count": 0,
+      "gitlink_tree_occurrence_count": 0,
+      "lfs_pointer_count": 0,
+      "lfs_local_verified_count": 0,
+      "lfs_scan_scope": "all reachable blobs <=1024 bytes with standard LF version/oid/size lines; no custom LFS storage or remote fetch",
+      "details": {
+        "path": "artifacts/history-audit/server-local-objects.json",
+        "sha256": "3662049606b4e4e31fd04ade62d283e2f9195ffb37a81c690a9b54317a3460dc"
+      },
+      "remote_refs_verified": false,
+      "history_imported": false,
+      "new_product_reuse_approved": false
+    },
+    "client": {
+      "repository_key": "client",
+      "baseline_revision": "181519880a5971f0618adfc81a55281a09d613a8",
+      "observed_head": "f1c5044a1065608b9988a3e337f743e6f4529032",
+      "head_snapshot_included": true,
+      "shallow": false,
+      "partial_clone_configuration_present": false,
+      "alternates_file_present": false,
+      "environment_alternates_present": false,
+      "replace_ref_count": 0,
+      "grafts_file_present": false,
+      "all_local_ref_count": 21,
+      "legacy_candidate_ref_count": 21,
+      "local_refs": [
+        {
+          "ref": "refs/heads/codex/homedesk-p2p-v11",
+          "oid": "f1c5044a1065608b9988a3e337f743e6f4529032",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/heads/codex/homedesk-p2p-v11"
+        },
+        {
+          "ref": "refs/heads/codex/nestlink-14.1.0",
+          "oid": "181519880a5971f0618adfc81a55281a09d613a8",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/heads/codex/nestlink-14.1.0"
+        },
+        {
+          "ref": "refs/heads/main",
+          "oid": "3e9dd0ddc3cba51512626500997564df627ef6a6",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/heads/main"
+        },
+        {
+          "ref": "refs/remotes/homedesk-source/hearth-client-ui",
+          "oid": "6ba2383023d2851b394f13689054c31f4f8c39af",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/remotes/homedesk-source/hearth-client-ui"
+        },
+        {
+          "ref": "refs/remotes/origin/HEAD",
+          "oid": "181519880a5971f0618adfc81a55281a09d613a8",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/remotes/origin/HEAD"
+        },
+        {
+          "ref": "refs/remotes/origin/main",
+          "oid": "181519880a5971f0618adfc81a55281a09d613a8",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/remotes/origin/main"
+        },
+        {
+          "ref": "refs/tags/v10.0.0",
+          "oid": "ba7b39e7238fb093a8b957cf47fc22ca81cdff36",
+          "type": "tag",
+          "peeled_oid": "5eb6768f0d21a842c01d66d3d979a4f935a2ed61",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/tags/v10.0.0"
+        },
+        {
+          "ref": "refs/tags/v10.1.0",
+          "oid": "41c0e21fbb3a4c634fbc9d63fcd7453337e4d029",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/tags/v10.1.0"
+        },
+        {
+          "ref": "refs/tags/v11.0.0-rc.1",
+          "oid": "cc46ce85b308f1ca3b02754e3793a4733607e159",
+          "type": "tag",
+          "peeled_oid": "902607575789479ec9b328583690425420b8e6f4",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/tags/v11.0.0-rc.1"
+        },
+        {
+          "ref": "refs/tags/v11.0.0-rc.2",
+          "oid": "b75fd84f81325e6b509f1d7d0c383bb5bdc7e494",
+          "type": "tag",
+          "peeled_oid": "f1c5044a1065608b9988a3e337f743e6f4529032",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/tags/v11.0.0-rc.2"
+        },
+        {
+          "ref": "refs/tags/v13.0.0",
+          "oid": "e712c02e0f38dd9d65aaa42162255d4ec0576f92",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/tags/v13.0.0"
+        },
+        {
+          "ref": "refs/tags/v14.0.0",
+          "oid": "821b5a1f35055f9932b1144d5b2a1f57d5b62d73",
+          "type": "tag",
+          "peeled_oid": "46e6194b5e0474292a175b6247b36572434fa9a4",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/tags/v14.0.0"
+        },
+        {
+          "ref": "refs/tags/v14.0.1",
+          "oid": "181519880a5971f0618adfc81a55281a09d613a8",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/tags/v14.0.1"
+        },
+        {
+          "ref": "refs/tags/v5.0.1-rc.1",
+          "oid": "b57464c4b4c6fbed6d6f498f05cf302c8479beff",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/tags/v5.0.1-rc.1"
+        },
+        {
+          "ref": "refs/tags/v6.0.0",
+          "oid": "43d002f4577564be3d096b5cae22f65cc8deb7d2",
+          "type": "tag",
+          "peeled_oid": "e0c45aca737a260b48901fa98f72e1a8f1584bae",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/tags/v6.0.0"
+        },
+        {
+          "ref": "refs/tags/v6.0.1",
+          "oid": "a4b5e162abb4fcdc872bd8542f6d207a32a7f98d",
+          "type": "tag",
+          "peeled_oid": "3708868209a815a004fb507c7263d4cfb87c23c9",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/tags/v6.0.1"
+        },
+        {
+          "ref": "refs/tags/v6.1.0",
+          "oid": "1a2e2c36af2309fc4d9ab408d1529d98d796e9bf",
+          "type": "tag",
+          "peeled_oid": "5b61cda1c92c2e68e164243e6f67f707d35ac1fc",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/tags/v6.1.0"
+        },
+        {
+          "ref": "refs/tags/v6.1.1",
+          "oid": "5c70b4db5c7890e40ee65dfc140a012251896332",
+          "type": "tag",
+          "peeled_oid": "169cc70f9ed815a7be23a272b7e987fed5fb65e3",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/tags/v6.1.1"
+        },
+        {
+          "ref": "refs/tags/v7.0.0",
+          "oid": "6e9dc52f17ba8f3afdf1813d135a1c33528b4e4a",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/tags/v7.0.0"
+        },
+        {
+          "ref": "refs/tags/v8.0.0",
+          "oid": "ffd28aa6a335cac30757e41e73d4f08c0233a779",
+          "type": "tag",
+          "peeled_oid": "16d55f0e65b8d0f61d21d9770ecf0f6e94115af3",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/tags/v8.0.0"
+        },
+        {
+          "ref": "refs/tags/v9.0.0",
+          "oid": "1a625545359850950513cc10a1201f58c603bfaf",
+          "type": "tag",
+          "peeled_oid": "ac48749044c0e761b21650539a0643fbeadb4ff2",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client/tags/v9.0.0"
+        }
+      ],
+      "tag_count": 15,
+      "annotated_tag_count": 10,
+      "local_refs_changed_during_audit": false,
+      "legacy_refs_changed_during_audit": false,
+      "legacy_reachable_commit_count": 11501,
+      "legacy_reachable_object_counts": {
+        "blob": 36331,
+        "commit": 11501,
+        "tag": 10,
+        "tree": 42502
+      },
+      "legacy_reachable_uncompressed_object_bytes": 1185114857,
+      "missing_object_count": 0,
+      "large_blob_count_at_least_10_mib": 0,
+      "large_blob_count_at_least_100_mib": 0,
+      "largest_blobs": [],
+      "license_blob_count": 40,
+      "license_blobs": [
+        {
+          "oid": "029611345e0d00979068aa779070a119633760ef",
+          "sha256": "2e1dbf3ed314fd5e0980c11d3a442f4f822e9ad70b03c1f1901215c60d18dbac",
+          "bytes": 4376,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "0ad25db4bd1d86c452db3f9602ccdbe172438f52",
+          "sha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+          "bytes": 34523,
+          "text_signatures": [
+            "AGPL-3.0-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENCE",
+            "LICENSE-RUSTDESK"
+          ]
+        },
+        {
+          "oid": "11cf6de15c3ac156e25b7c23497ef4358675df23",
+          "sha256": "1f5f103e44c41a5aa2f381a311b174109c0f307cdd05940df88c699b80e7c181",
+          "bytes": 1069,
+          "text_signatures": [
+            "MIT-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "12f758b2b5afb6ea7db7a9ecd180dc273e89171c",
+          "sha256": "06a4d0421042d3d1e428040475b124cde7f4f25c39a68a1898fa66a9c1fbf7cc",
+          "bytes": 11354,
+          "text_signatures": [
+            "Apache-2.0-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "153b926a152a6bdd3230f64c0583a146d797f52e",
+          "sha256": "29e9914e6173b7061b7d48c25e6159fc1438326738bc047cc7248abc01b271f6",
+          "bytes": 1470,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "COPYING-vorbis.txt"
+          ]
+        },
+        {
+          "oid": "16fe87b06e802f094b3fbb0894b137bca2b16ef1",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "bytes": 10847,
+          "text_signatures": [
+            "Apache-2.0-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE-APACHE"
+          ]
+        },
+        {
+          "oid": "1ad16f6f0afdcaa13da2528abe9b006cf65fbc0e",
+          "sha256": "08215ba4b906f4da4d6b0caf46627e5454c8dcde71ece4419a75f11026e8bf36",
+          "bytes": 4398,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "1b8742533389f7f506f4e9c3df1c420ecb549dbf",
+          "sha256": "21a72705cf3bcac7593ded756f83b3bf94f374498473c9a3eea2580dead53d69",
+          "bytes": 4137,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "1ce44343c4a325e9e1189fd98bb44a9f2f096da9",
+          "sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615",
+          "bytes": 1537,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE-vpx.txt"
+          ]
+        },
+        {
+          "oid": "3a2bc1388ac5dcc4d7b627ae27d8d556f38fb3c6",
+          "sha256": "1fdda1405592840d107459bd45ab224d2735b460bee32b7aa1c590441c80d317",
+          "bytes": 4655,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "419fa8de33d38ad3935523fbc6587b8a5ed645af",
+          "sha256": "890cf034517d609e9e45c7eae79e09471507bcec9bd5790fa66481541778ce7c",
+          "bytes": 1082,
+          "text_signatures": [
+            "MIT-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "4292be18fcdec286532262195135ae808dd6c2f3",
+          "sha256": "0e76d2ac361bcd863d1614e9389d8c013c6fdd308f0b8f502bfc7af08f9eb40a",
+          "bytes": 60361,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "License.rtf"
+          ]
+        },
+        {
+          "oid": "5385068f4185ae407a9bb1900c11585bce96cbb1",
+          "sha256": "c81f9454cf3107c116bc3c1fd22b7d751523a2b11e17cf90c0db3327d3c9e0da",
+          "bytes": 1328,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "56c4368fa0647dc5e0a30aa334c1ce3cbe331cde",
+          "sha256": "e76a008244ac79d0a2fd265e7d878d7ff66ee45c26ada8d3c0178ec58f610cbd",
+          "bytes": 1116,
+          "text_signatures": [
+            "MIT-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "COPYING"
+          ]
+        },
+        {
+          "oid": "59d11f4d8acb34e3d432ef4129f2268691860176",
+          "sha256": "d00e49a1fcc95b372c30d3f45b24319da2ea7f21a440a30a8e05af47de3ff746",
+          "bytes": 4294,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "5db98344873e000c3b177a7e1e0c6dc91c7ebffa",
+          "sha256": "7de702ecb52907e1daaf52c50e8edd70a0c676cad0fe9b4dedc7eb7b86940d9a",
+          "bytes": 2068,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "5dd158b8a3d70d1a2a18b4f67fd50248b9df7553",
+          "sha256": "3cee48b06ad423c2c884c7fd4be99eab5aaf6d3077825d8f8524e26d836b26d6",
+          "bytes": 1056,
+          "text_signatures": [
+            "MIT-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE-MIT"
+          ]
+        },
+        {
+          "oid": "610d1f72e1004919072302f806e5084718293857",
+          "sha256": "6b3b465fa69075348ee5ffc9ba6afa93402743a4a942a463404fac25257bd3ed",
+          "bytes": 1057,
+          "text_signatures": [
+            "MIT-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE-MIT"
+          ]
+        },
+        {
+          "oid": "6111c6c5a6b95057e43d36b7c217b073bf5f9b22",
+          "sha256": "d2ab5758336489da61c12cc5bb757da5339c4ae9001f9bb0562b4370249af814",
+          "bytes": 1466,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "COPYING-ogg.txt"
+          ]
+        },
+        {
+          "oid": "7279e1fca97596954caa2f9552bc59d533f65fba",
+          "sha256": "29ebfdaaffe25beb2bbeea9978fd11923376ff764bdced451a000d7523e8b4be",
+          "bytes": 1265,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "74c2a263c753591f26ef2f2078b0b2e839df5be6",
+          "sha256": "dec362b063bef8382465e93d2e44068ce8e1b50772982e75c736fee786f7c870",
+          "bytes": 1068,
+          "text_signatures": [
+            "MIT-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "7d427005219ae0d582ec6145e35ce10e7282a231",
+          "sha256": "852f9b9b9e1aab69d0cda9414e754f3877047de295a535ff97084997cbf88f6f",
+          "bytes": 2242,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "875b138ecf6f2b2b8e402c51ea541d7740246504",
+          "sha256": "b327887de263238deaa80c34cdd2ff3e0ba1d35db585ce14a37ce3e74ee389e9",
+          "bytes": 1317,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "COPYING-dav1d.txt"
+          ]
+        },
+        {
+          "oid": "8875d2b6486cd681aa0596a2cdbeea468eda444a",
+          "sha256": "78c8480b74fdc672723d2d8c1de4a831b5ab9439806e0ad991e1b41780e74b9e",
+          "bytes": 2113,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "89c7aadd4415f262a42756043851ead17d0b5c78",
+          "sha256": "24cd1f206224ab48c1c697c15743d5689d32a3353943ff62eefaef7e4d70fa70",
+          "bytes": 1357,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "9c739c34a3a9dd39729587eb6b1f9dd4344e58f6",
+          "sha256": "8338ce8d922bb4416ce3dd1e5680173332435e3f0755007ac7801ccd674fe682",
+          "bytes": 1928,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "COPYING-opus.txt"
+          ]
+        },
+        {
+          "oid": "9d87ec7eb7d0613528bba0f7fad7a17e1d13fdb2",
+          "sha256": "152ddb53fe3bc2be4dcc82650fdcfc7c8ccbb6d9f0b26828718a17f2f4d82157",
+          "bytes": 2585,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "a67984a61fd4181a601fd25bc32222ac9b334335",
+          "sha256": "505ee8e018326f36bb4070f69c6eb3caa6079b8fb796cd53a8d1bb168337e5ae",
+          "bytes": 732,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE-nestegg.txt"
+          ]
+        },
+        {
+          "oid": "b24b0ea92153f10ceaf653473f5dbf5819d7cd97",
+          "sha256": "c33dfe4f701946cdf0e4e8220f0fbe352c4e3937dfa9b399cb1dfffbdaea59a5",
+          "bytes": 7211,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "b7dc525726e49c87fe7b03dd19c3517fc10f1ae0",
+          "sha256": "2f057476345546f0e4ffbf2ae5a5c7fa133aef50776c7ddd9e0e695885f98b45",
+          "bytes": 60372,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "License.rtf"
+          ]
+        },
+        {
+          "oid": "c3c295678c68b59204f99714f3b57ba8c02cab7b",
+          "sha256": "af9b838df8419b09ec91ac2afcdfb083cc655b057db69554665865b6d7199824",
+          "bytes": 5015,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "c8a328965105abee0d472322bb3c1936dab32d3a",
+          "sha256": "2a0072c2a3d361e81af5b57f19f170441f4fa10c64c4bdcece799456315af0cd",
+          "bytes": 613,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE.md"
+          ]
+        },
+        {
+          "oid": "c8ccce4ffb5d7a7574bac87429ec1d2a7b90686d",
+          "sha256": "8417fad7da775735564e209484a2e011e0fa201e94f01fdbee6e4977e478e6fc",
+          "bytes": 1470,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "COPYING-theora.txt"
+          ]
+        },
+        {
+          "oid": "cb9e72dd541aae393cac8790c613fd3e3d01571c",
+          "sha256": "538abb589c070f1025ac2e187342d7759f1cf84a349a16f15c95ad0fc8e3eb6d",
+          "bytes": 4863,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "d4b9c099baa3a3b9f397567aea4d4bd96131e520",
+          "sha256": "f4d766d1551a41e213da39e009ea71674e06c7203bcf9526beee583d920ae4eb",
+          "bytes": 1066,
+          "text_signatures": [
+            "MIT-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "dff6cdd298bb5571231c9e3f4285aef07e365748",
+          "sha256": "48625de0b2d8ab423922a5affb03f81b7e783f2c886b2b8e630083c2201a0fee",
+          "bytes": 1483,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE.txt"
+          ]
+        },
+        {
+          "oid": "ef62255d39bc2e55da5a5c3eed5662e054b34696",
+          "sha256": "3ffd24a7557c9b4457be9bc3eadf42829962b2c1605489b3c10030e133e1513f",
+          "bytes": 1091,
+          "text_signatures": [
+            "MIT-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "f288702d2fa16d3cdf0035b15a9fcbc552cd88e7",
+          "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+          "bytes": 35149,
+          "text_signatures": [
+            "GPL-3.0-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "f5ec35501cb44b71c168f8c0f38ab24669c6eadb",
+          "sha256": "4df433d6dae4699c7dcceec39f51501cce9406e4e5f8e1f4b6a6e4a23521dc80",
+          "bytes": 996,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "f8f5d27d51e0d1b105bb8784c7f024787590b14b",
+          "sha256": "374612a5a783c93cea845477f340df8ea9e9b998a804d346109b6a5622b9b79d",
+          "bytes": 2068,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        }
+      ],
+      "license_text_signature_counts": {
+        "AGPL-3.0-text": 1,
+        "Apache-2.0-text": 2,
+        "BSD-family-text": 10,
+        "GPL-3.0-text": 1,
+        "MIT-text": 8
+      },
+      "unrecognized_license_blob_count": 18,
+      "baseline_license_files": [
+        {
+          "path": "LICENSE",
+          "mode": "100644",
+          "type": "blob",
+          "oid": "12f758b2b5afb6ea7db7a9ecd180dc273e89171c"
+        },
+        {
+          "path": "LICENSE-RUSTDESK",
+          "mode": "100644",
+          "type": "blob",
+          "oid": "0ad25db4bd1d86c452db3f9602ccdbe172438f52"
+        },
+        {
+          "path": "client/LICENCE",
+          "mode": "100644",
+          "type": "blob",
+          "oid": "0ad25db4bd1d86c452db3f9602ccdbe172438f52"
+        },
+        {
+          "path": "client/flutter/vendor/external_path/LICENSE",
+          "mode": "100644",
+          "type": "blob",
+          "oid": "419fa8de33d38ad3935523fbc6587b8a5ed645af"
+        },
+        {
+          "path": "client/flutter/vendor/flutter_keyboard_visibility/LICENSE",
+          "mode": "100644",
+          "type": "blob",
+          "oid": "ef62255d39bc2e55da5a5c3eed5662e054b34696"
+        },
+        {
+          "path": "client/flutter/vendor/qr_code_scanner/LICENSE",
+          "mode": "100644",
+          "type": "blob",
+          "oid": "7279e1fca97596954caa2f9552bc59d533f65fba"
+        },
+        {
+          "path": "client/flutter/vendor/sqflite/LICENSE",
+          "mode": "100644",
+          "type": "blob",
+          "oid": "5385068f4185ae407a9bb1900c11585bce96cbb1"
+        },
+        {
+          "path": "client/flutter/vendor/uni_links/LICENSE",
+          "mode": "100644",
+          "type": "blob",
+          "oid": "89c7aadd4415f262a42756043851ead17d0b5c78"
+        },
+        {
+          "path": "client/libs/enigo/LICENSE",
+          "mode": "100644",
+          "type": "blob",
+          "oid": "d4b9c099baa3a3b9f397567aea4d4bd96131e520"
+        },
+        {
+          "path": "client/res/msi/Package/License.rtf",
+          "mode": "100644",
+          "type": "blob",
+          "oid": "b7dc525726e49c87fe7b03dd19c3517fc10f1ae0"
+        }
+      ],
+      "gitmodule_blob_count": 3,
+      "unique_gitlink_commit_count": 89,
+      "gitlink_tree_occurrence_count": 159,
+      "lfs_pointer_count": 0,
+      "lfs_local_verified_count": 0,
+      "lfs_scan_scope": "all reachable blobs <=1024 bytes with standard LF version/oid/size lines; no custom LFS storage or remote fetch",
+      "details": {
+        "path": "artifacts/history-audit/client-local-objects.json",
+        "sha256": "0f61db304e3cda8fd967450e5dcd56af00852651f68dd83f0fdf09a3d4a4047e"
+      },
+      "remote_refs_verified": false,
+      "history_imported": false,
+      "new_product_reuse_approved": false
+    },
+    "android": {
+      "repository_key": "android",
+      "baseline_revision": "fc3690289d7bda0b0f0aec122e9379b2fa93f16c",
+      "observed_head": "35c197cfa8b991d2a2317c8b5018d75af2de77b8",
+      "head_snapshot_included": true,
+      "shallow": false,
+      "partial_clone_configuration_present": false,
+      "alternates_file_present": false,
+      "environment_alternates_present": false,
+      "replace_ref_count": 0,
+      "grafts_file_present": false,
+      "all_local_ref_count": 16,
+      "legacy_candidate_ref_count": 16,
+      "local_refs": [
+        {
+          "ref": "refs/heads/codex/homedesk-p2p-v11",
+          "oid": "35c197cfa8b991d2a2317c8b5018d75af2de77b8",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android/heads/codex/homedesk-p2p-v11"
+        },
+        {
+          "ref": "refs/heads/codex/nestlink-14.1.0",
+          "oid": "fc3690289d7bda0b0f0aec122e9379b2fa93f16c",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android/heads/codex/nestlink-14.1.0"
+        },
+        {
+          "ref": "refs/heads/main",
+          "oid": "45a400bf57ca8a4d06e76261bff8a5b1109f7b97",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android/heads/main"
+        },
+        {
+          "ref": "refs/remotes/origin/HEAD",
+          "oid": "fc3690289d7bda0b0f0aec122e9379b2fa93f16c",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android/remotes/origin/HEAD"
+        },
+        {
+          "ref": "refs/remotes/origin/main",
+          "oid": "fc3690289d7bda0b0f0aec122e9379b2fa93f16c",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android/remotes/origin/main"
+        },
+        {
+          "ref": "refs/tags/v10.0.0",
+          "oid": "7873ba92ec535546dfac271806ced02430191a87",
+          "type": "tag",
+          "peeled_oid": "4701ecfa5e951787c6f49345214b2ece13326386",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android/tags/v10.0.0"
+        },
+        {
+          "ref": "refs/tags/v11.0.0-rc.1",
+          "oid": "a55b5d1e8c78f090ffacd7cbdfcf659ac7197b08",
+          "type": "tag",
+          "peeled_oid": "35c197cfa8b991d2a2317c8b5018d75af2de77b8",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android/tags/v11.0.0-rc.1"
+        },
+        {
+          "ref": "refs/tags/v13.0.0",
+          "oid": "3543a54633bf33c94bddc3339e5500f185b62617",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android/tags/v13.0.0"
+        },
+        {
+          "ref": "refs/tags/v14.0.0",
+          "oid": "2dd1d35caf5f26fa3d983242327683fe1394463b",
+          "type": "tag",
+          "peeled_oid": "a4a96b66208483b9e85f1f6dcf6298397de57e22",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android/tags/v14.0.0"
+        },
+        {
+          "ref": "refs/tags/v14.0.1",
+          "oid": "fc3690289d7bda0b0f0aec122e9379b2fa93f16c",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android/tags/v14.0.1"
+        },
+        {
+          "ref": "refs/tags/v6.0.0",
+          "oid": "aef7a6f607cf99a3be14a6f941c2742600101631",
+          "type": "tag",
+          "peeled_oid": "6eeac8efef5c039fa1351a0d45c0a9d73c970e5b",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android/tags/v6.0.0"
+        },
+        {
+          "ref": "refs/tags/v6.0.1",
+          "oid": "126aa09bdece5038cc9ee2f2efce4733580cc59a",
+          "type": "tag",
+          "peeled_oid": "3202b30139cc0d9da56667205db1a3d362e9e394",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android/tags/v6.0.1"
+        },
+        {
+          "ref": "refs/tags/v6.1.0",
+          "oid": "b1d21e1c2f776caa2f260594f1fbbc111bcb3684",
+          "type": "tag",
+          "peeled_oid": "763a003b06028f366d855732b4aa47bbad760e0c",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android/tags/v6.1.0"
+        },
+        {
+          "ref": "refs/tags/v7.0.0",
+          "oid": "5e30ff3cc9f656138b141418b67f198fe8e77cc3",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android/tags/v7.0.0"
+        },
+        {
+          "ref": "refs/tags/v8.0.0",
+          "oid": "adb52546f074ea51c6d06f4d8172be952d769ebc",
+          "type": "tag",
+          "peeled_oid": "618e3b9d2676361e1aff47935a53d59105179dc1",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android/tags/v8.0.0"
+        },
+        {
+          "ref": "refs/tags/v9.0.0",
+          "oid": "2d9432db587be3d408421ff542b344b04324723c",
+          "type": "tag",
+          "peeled_oid": "e67a9cca365366a74046432460c92f5f7db49f4a",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android/tags/v9.0.0"
+        }
+      ],
+      "tag_count": 11,
+      "annotated_tag_count": 8,
+      "local_refs_changed_during_audit": false,
+      "legacy_refs_changed_during_audit": false,
+      "legacy_reachable_commit_count": 138,
+      "legacy_reachable_object_counts": {
+        "blob": 1017,
+        "commit": 138,
+        "tag": 8,
+        "tree": 1122
+      },
+      "legacy_reachable_uncompressed_object_bytes": 18209002,
+      "missing_object_count": 0,
+      "large_blob_count_at_least_10_mib": 0,
+      "large_blob_count_at_least_100_mib": 0,
+      "largest_blobs": [],
+      "license_blob_count": 1,
+      "license_blobs": [
+        {
+          "oid": "12f758b2b5afb6ea7db7a9ecd180dc273e89171c",
+          "sha256": "06a4d0421042d3d1e428040475b124cde7f4f25c39a68a1898fa66a9c1fbf7cc",
+          "bytes": 11354,
+          "text_signatures": [
+            "Apache-2.0-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        }
+      ],
+      "license_text_signature_counts": {
+        "Apache-2.0-text": 1
+      },
+      "unrecognized_license_blob_count": 0,
+      "baseline_license_files": [
+        {
+          "path": "LICENSE",
+          "mode": "100644",
+          "type": "blob",
+          "oid": "12f758b2b5afb6ea7db7a9ecd180dc273e89171c"
+        }
+      ],
+      "gitmodule_blob_count": 1,
+      "unique_gitlink_commit_count": 29,
+      "gitlink_tree_occurrence_count": 39,
+      "lfs_pointer_count": 0,
+      "lfs_local_verified_count": 0,
+      "lfs_scan_scope": "all reachable blobs <=1024 bytes with standard LF version/oid/size lines; no custom LFS storage or remote fetch",
+      "details": {
+        "path": "artifacts/history-audit/android-local-objects.json",
+        "sha256": "07ea41ecfdee4de4077067c9cef1b16e77664bbd78474d5396298bcaba08b37d"
+      },
+      "remote_refs_verified": false,
+      "history_imported": false,
+      "new_product_reuse_approved": false
+    }
+  },
+  "auxiliary_local_repositories": {
+    "client-hbb-common": {
+      "repository_key": "client-hbb-common",
+      "baseline_revision": null,
+      "observed_head": "7e1c392c62d39c364127307cd408421dd5f8cfb0",
+      "head_snapshot_included": true,
+      "shallow": false,
+      "partial_clone_configuration_present": false,
+      "alternates_file_present": false,
+      "environment_alternates_present": false,
+      "replace_ref_count": 0,
+      "grafts_file_present": false,
+      "all_local_ref_count": 11,
+      "legacy_candidate_ref_count": 11,
+      "local_refs": [
+        {
+          "ref": "refs/heads/main",
+          "oid": "94ec710894ecd548b4fe174ef781eca5c1a318c0",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client-hbb-common/heads/main"
+        },
+        {
+          "ref": "refs/remotes/origin/HEAD",
+          "oid": "94ec710894ecd548b4fe174ef781eca5c1a318c0",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client-hbb-common/remotes/origin/HEAD"
+        },
+        {
+          "ref": "refs/remotes/origin/config-local-settings",
+          "oid": "750739f7f87aa95985f9b7e5b3c88416853eba8c",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client-hbb-common/remotes/origin/config-local-settings"
+        },
+        {
+          "ref": "refs/remotes/origin/dead-peer-recovery",
+          "oid": "6db01ec2f60b51de10ee3179161192f748e5a66c",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client-hbb-common/remotes/origin/dead-peer-recovery"
+        },
+        {
+          "ref": "refs/remotes/origin/kx-v2",
+          "oid": "42c77b9a3b91bb4b651d9e506bccae5f508202d8",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client-hbb-common/remotes/origin/kx-v2"
+        },
+        {
+          "ref": "refs/remotes/origin/main",
+          "oid": "94ec710894ecd548b4fe174ef781eca5c1a318c0",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client-hbb-common/remotes/origin/main"
+        },
+        {
+          "ref": "refs/remotes/origin/move-rustdesk-only-modules",
+          "oid": "e6fe9c333289eea49c4f752c4ed6ed9a9aa90667",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client-hbb-common/remotes/origin/move-rustdesk-only-modules"
+        },
+        {
+          "ref": "refs/remotes/origin/port-forward-mux",
+          "oid": "3a541cb11baf332cd254756f9dc7e1d9f029c553",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client-hbb-common/remotes/origin/port-forward-mux"
+        },
+        {
+          "ref": "refs/remotes/origin/webrtc",
+          "oid": "470612bdfb41471a60920002b9762853bf993716",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client-hbb-common/remotes/origin/webrtc"
+        },
+        {
+          "ref": "refs/tags/dirver",
+          "oid": "1819875476d487612a654099881b8a16f4337599",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client-hbb-common/tags/dirver"
+        },
+        {
+          "ref": "refs/tags/driver",
+          "oid": "4bd7fff39f859a868dc48fce97d4d06c9d3d7ff5",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/client-hbb-common/tags/driver"
+        }
+      ],
+      "tag_count": 2,
+      "annotated_tag_count": 0,
+      "local_refs_changed_during_audit": false,
+      "legacy_refs_changed_during_audit": false,
+      "legacy_reachable_commit_count": 453,
+      "legacy_reachable_object_counts": {
+        "blob": 509,
+        "commit": 453,
+        "tree": 764
+      },
+      "legacy_reachable_uncompressed_object_bytes": 24923813,
+      "missing_object_count": 0,
+      "large_blob_count_at_least_10_mib": 0,
+      "large_blob_count_at_least_100_mib": 0,
+      "largest_blobs": [],
+      "license_blob_count": 0,
+      "license_blobs": [],
+      "license_text_signature_counts": {},
+      "unrecognized_license_blob_count": 0,
+      "baseline_license_files": [],
+      "gitmodule_blob_count": 0,
+      "unique_gitlink_commit_count": 0,
+      "gitlink_tree_occurrence_count": 0,
+      "lfs_pointer_count": 0,
+      "lfs_local_verified_count": 0,
+      "lfs_scan_scope": "all reachable blobs <=1024 bytes with standard LF version/oid/size lines; no custom LFS storage or remote fetch",
+      "details": {
+        "path": "artifacts/history-audit/client-hbb-common-local-objects.json",
+        "sha256": "ddd5beedd29b711a26da7d097aa5e0a94e61d32d657af85e88c83ef6a4ea1f84"
+      },
+      "remote_refs_verified": false,
+      "history_imported": false,
+      "new_product_reuse_approved": false
+    },
+    "android-core": {
+      "repository_key": "android-core",
+      "baseline_revision": null,
+      "observed_head": "902607575789479ec9b328583690425420b8e6f4",
+      "head_snapshot_included": true,
+      "shallow": false,
+      "partial_clone_configuration_present": false,
+      "alternates_file_present": false,
+      "environment_alternates_present": false,
+      "replace_ref_count": 0,
+      "grafts_file_present": false,
+      "all_local_ref_count": 18,
+      "legacy_candidate_ref_count": 18,
+      "local_refs": [
+        {
+          "ref": "refs/heads/main",
+          "oid": "3e9dd0ddc3cba51512626500997564df627ef6a6",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-core/heads/main"
+        },
+        {
+          "ref": "refs/remotes/origin/HEAD",
+          "oid": "181519880a5971f0618adfc81a55281a09d613a8",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-core/remotes/origin/HEAD"
+        },
+        {
+          "ref": "refs/remotes/origin/main",
+          "oid": "181519880a5971f0618adfc81a55281a09d613a8",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-core/remotes/origin/main"
+        },
+        {
+          "ref": "refs/tags/v10.0.0",
+          "oid": "ba7b39e7238fb093a8b957cf47fc22ca81cdff36",
+          "type": "tag",
+          "peeled_oid": "5eb6768f0d21a842c01d66d3d979a4f935a2ed61",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-core/tags/v10.0.0"
+        },
+        {
+          "ref": "refs/tags/v10.1.0",
+          "oid": "41c0e21fbb3a4c634fbc9d63fcd7453337e4d029",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-core/tags/v10.1.0"
+        },
+        {
+          "ref": "refs/tags/v11.0.0-rc.1",
+          "oid": "cc46ce85b308f1ca3b02754e3793a4733607e159",
+          "type": "tag",
+          "peeled_oid": "902607575789479ec9b328583690425420b8e6f4",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-core/tags/v11.0.0-rc.1"
+        },
+        {
+          "ref": "refs/tags/v11.0.0-rc.2",
+          "oid": "b75fd84f81325e6b509f1d7d0c383bb5bdc7e494",
+          "type": "tag",
+          "peeled_oid": "f1c5044a1065608b9988a3e337f743e6f4529032",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-core/tags/v11.0.0-rc.2"
+        },
+        {
+          "ref": "refs/tags/v13.0.0",
+          "oid": "e712c02e0f38dd9d65aaa42162255d4ec0576f92",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-core/tags/v13.0.0"
+        },
+        {
+          "ref": "refs/tags/v14.0.0",
+          "oid": "821b5a1f35055f9932b1144d5b2a1f57d5b62d73",
+          "type": "tag",
+          "peeled_oid": "46e6194b5e0474292a175b6247b36572434fa9a4",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-core/tags/v14.0.0"
+        },
+        {
+          "ref": "refs/tags/v14.0.1",
+          "oid": "181519880a5971f0618adfc81a55281a09d613a8",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-core/tags/v14.0.1"
+        },
+        {
+          "ref": "refs/tags/v5.0.1-rc.1",
+          "oid": "b57464c4b4c6fbed6d6f498f05cf302c8479beff",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-core/tags/v5.0.1-rc.1"
+        },
+        {
+          "ref": "refs/tags/v6.0.0",
+          "oid": "43d002f4577564be3d096b5cae22f65cc8deb7d2",
+          "type": "tag",
+          "peeled_oid": "e0c45aca737a260b48901fa98f72e1a8f1584bae",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-core/tags/v6.0.0"
+        },
+        {
+          "ref": "refs/tags/v6.0.1",
+          "oid": "a4b5e162abb4fcdc872bd8542f6d207a32a7f98d",
+          "type": "tag",
+          "peeled_oid": "3708868209a815a004fb507c7263d4cfb87c23c9",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-core/tags/v6.0.1"
+        },
+        {
+          "ref": "refs/tags/v6.1.0",
+          "oid": "1a2e2c36af2309fc4d9ab408d1529d98d796e9bf",
+          "type": "tag",
+          "peeled_oid": "5b61cda1c92c2e68e164243e6f67f707d35ac1fc",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-core/tags/v6.1.0"
+        },
+        {
+          "ref": "refs/tags/v6.1.1",
+          "oid": "5c70b4db5c7890e40ee65dfc140a012251896332",
+          "type": "tag",
+          "peeled_oid": "169cc70f9ed815a7be23a272b7e987fed5fb65e3",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-core/tags/v6.1.1"
+        },
+        {
+          "ref": "refs/tags/v7.0.0",
+          "oid": "6e9dc52f17ba8f3afdf1813d135a1c33528b4e4a",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-core/tags/v7.0.0"
+        },
+        {
+          "ref": "refs/tags/v8.0.0",
+          "oid": "ffd28aa6a335cac30757e41e73d4f08c0233a779",
+          "type": "tag",
+          "peeled_oid": "16d55f0e65b8d0f61d21d9770ecf0f6e94115af3",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-core/tags/v8.0.0"
+        },
+        {
+          "ref": "refs/tags/v9.0.0",
+          "oid": "1a625545359850950513cc10a1201f58c603bfaf",
+          "type": "tag",
+          "peeled_oid": "ac48749044c0e761b21650539a0643fbeadb4ff2",
+          "peeled_type": "commit",
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-core/tags/v9.0.0"
+        }
+      ],
+      "tag_count": 15,
+      "annotated_tag_count": 10,
+      "local_refs_changed_during_audit": false,
+      "legacy_refs_changed_during_audit": false,
+      "legacy_reachable_commit_count": 11501,
+      "legacy_reachable_object_counts": {
+        "blob": 36331,
+        "commit": 11501,
+        "tag": 10,
+        "tree": 42502
+      },
+      "legacy_reachable_uncompressed_object_bytes": 1185114857,
+      "missing_object_count": 0,
+      "large_blob_count_at_least_10_mib": 0,
+      "large_blob_count_at_least_100_mib": 0,
+      "largest_blobs": [],
+      "license_blob_count": 40,
+      "license_blobs": [
+        {
+          "oid": "029611345e0d00979068aa779070a119633760ef",
+          "sha256": "2e1dbf3ed314fd5e0980c11d3a442f4f822e9ad70b03c1f1901215c60d18dbac",
+          "bytes": 4376,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "0ad25db4bd1d86c452db3f9602ccdbe172438f52",
+          "sha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+          "bytes": 34523,
+          "text_signatures": [
+            "AGPL-3.0-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENCE",
+            "LICENSE-RUSTDESK"
+          ]
+        },
+        {
+          "oid": "11cf6de15c3ac156e25b7c23497ef4358675df23",
+          "sha256": "1f5f103e44c41a5aa2f381a311b174109c0f307cdd05940df88c699b80e7c181",
+          "bytes": 1069,
+          "text_signatures": [
+            "MIT-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "12f758b2b5afb6ea7db7a9ecd180dc273e89171c",
+          "sha256": "06a4d0421042d3d1e428040475b124cde7f4f25c39a68a1898fa66a9c1fbf7cc",
+          "bytes": 11354,
+          "text_signatures": [
+            "Apache-2.0-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "153b926a152a6bdd3230f64c0583a146d797f52e",
+          "sha256": "29e9914e6173b7061b7d48c25e6159fc1438326738bc047cc7248abc01b271f6",
+          "bytes": 1470,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "COPYING-vorbis.txt"
+          ]
+        },
+        {
+          "oid": "16fe87b06e802f094b3fbb0894b137bca2b16ef1",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "bytes": 10847,
+          "text_signatures": [
+            "Apache-2.0-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE-APACHE"
+          ]
+        },
+        {
+          "oid": "1ad16f6f0afdcaa13da2528abe9b006cf65fbc0e",
+          "sha256": "08215ba4b906f4da4d6b0caf46627e5454c8dcde71ece4419a75f11026e8bf36",
+          "bytes": 4398,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "1b8742533389f7f506f4e9c3df1c420ecb549dbf",
+          "sha256": "21a72705cf3bcac7593ded756f83b3bf94f374498473c9a3eea2580dead53d69",
+          "bytes": 4137,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "1ce44343c4a325e9e1189fd98bb44a9f2f096da9",
+          "sha256": "8267348d5af1262c11d1a08de2f5afc77457755f1ac658627dd9acf71011d615",
+          "bytes": 1537,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE-vpx.txt"
+          ]
+        },
+        {
+          "oid": "3a2bc1388ac5dcc4d7b627ae27d8d556f38fb3c6",
+          "sha256": "1fdda1405592840d107459bd45ab224d2735b460bee32b7aa1c590441c80d317",
+          "bytes": 4655,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "419fa8de33d38ad3935523fbc6587b8a5ed645af",
+          "sha256": "890cf034517d609e9e45c7eae79e09471507bcec9bd5790fa66481541778ce7c",
+          "bytes": 1082,
+          "text_signatures": [
+            "MIT-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "4292be18fcdec286532262195135ae808dd6c2f3",
+          "sha256": "0e76d2ac361bcd863d1614e9389d8c013c6fdd308f0b8f502bfc7af08f9eb40a",
+          "bytes": 60361,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "License.rtf"
+          ]
+        },
+        {
+          "oid": "5385068f4185ae407a9bb1900c11585bce96cbb1",
+          "sha256": "c81f9454cf3107c116bc3c1fd22b7d751523a2b11e17cf90c0db3327d3c9e0da",
+          "bytes": 1328,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "56c4368fa0647dc5e0a30aa334c1ce3cbe331cde",
+          "sha256": "e76a008244ac79d0a2fd265e7d878d7ff66ee45c26ada8d3c0178ec58f610cbd",
+          "bytes": 1116,
+          "text_signatures": [
+            "MIT-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "COPYING"
+          ]
+        },
+        {
+          "oid": "59d11f4d8acb34e3d432ef4129f2268691860176",
+          "sha256": "d00e49a1fcc95b372c30d3f45b24319da2ea7f21a440a30a8e05af47de3ff746",
+          "bytes": 4294,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "5db98344873e000c3b177a7e1e0c6dc91c7ebffa",
+          "sha256": "7de702ecb52907e1daaf52c50e8edd70a0c676cad0fe9b4dedc7eb7b86940d9a",
+          "bytes": 2068,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "5dd158b8a3d70d1a2a18b4f67fd50248b9df7553",
+          "sha256": "3cee48b06ad423c2c884c7fd4be99eab5aaf6d3077825d8f8524e26d836b26d6",
+          "bytes": 1056,
+          "text_signatures": [
+            "MIT-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE-MIT"
+          ]
+        },
+        {
+          "oid": "610d1f72e1004919072302f806e5084718293857",
+          "sha256": "6b3b465fa69075348ee5ffc9ba6afa93402743a4a942a463404fac25257bd3ed",
+          "bytes": 1057,
+          "text_signatures": [
+            "MIT-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE-MIT"
+          ]
+        },
+        {
+          "oid": "6111c6c5a6b95057e43d36b7c217b073bf5f9b22",
+          "sha256": "d2ab5758336489da61c12cc5bb757da5339c4ae9001f9bb0562b4370249af814",
+          "bytes": 1466,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "COPYING-ogg.txt"
+          ]
+        },
+        {
+          "oid": "7279e1fca97596954caa2f9552bc59d533f65fba",
+          "sha256": "29ebfdaaffe25beb2bbeea9978fd11923376ff764bdced451a000d7523e8b4be",
+          "bytes": 1265,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "74c2a263c753591f26ef2f2078b0b2e839df5be6",
+          "sha256": "dec362b063bef8382465e93d2e44068ce8e1b50772982e75c736fee786f7c870",
+          "bytes": 1068,
+          "text_signatures": [
+            "MIT-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "7d427005219ae0d582ec6145e35ce10e7282a231",
+          "sha256": "852f9b9b9e1aab69d0cda9414e754f3877047de295a535ff97084997cbf88f6f",
+          "bytes": 2242,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "875b138ecf6f2b2b8e402c51ea541d7740246504",
+          "sha256": "b327887de263238deaa80c34cdd2ff3e0ba1d35db585ce14a37ce3e74ee389e9",
+          "bytes": 1317,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "COPYING-dav1d.txt"
+          ]
+        },
+        {
+          "oid": "8875d2b6486cd681aa0596a2cdbeea468eda444a",
+          "sha256": "78c8480b74fdc672723d2d8c1de4a831b5ab9439806e0ad991e1b41780e74b9e",
+          "bytes": 2113,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "89c7aadd4415f262a42756043851ead17d0b5c78",
+          "sha256": "24cd1f206224ab48c1c697c15743d5689d32a3353943ff62eefaef7e4d70fa70",
+          "bytes": 1357,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "9c739c34a3a9dd39729587eb6b1f9dd4344e58f6",
+          "sha256": "8338ce8d922bb4416ce3dd1e5680173332435e3f0755007ac7801ccd674fe682",
+          "bytes": 1928,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "COPYING-opus.txt"
+          ]
+        },
+        {
+          "oid": "9d87ec7eb7d0613528bba0f7fad7a17e1d13fdb2",
+          "sha256": "152ddb53fe3bc2be4dcc82650fdcfc7c8ccbb6d9f0b26828718a17f2f4d82157",
+          "bytes": 2585,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "a67984a61fd4181a601fd25bc32222ac9b334335",
+          "sha256": "505ee8e018326f36bb4070f69c6eb3caa6079b8fb796cd53a8d1bb168337e5ae",
+          "bytes": 732,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE-nestegg.txt"
+          ]
+        },
+        {
+          "oid": "b24b0ea92153f10ceaf653473f5dbf5819d7cd97",
+          "sha256": "c33dfe4f701946cdf0e4e8220f0fbe352c4e3937dfa9b399cb1dfffbdaea59a5",
+          "bytes": 7211,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "b7dc525726e49c87fe7b03dd19c3517fc10f1ae0",
+          "sha256": "2f057476345546f0e4ffbf2ae5a5c7fa133aef50776c7ddd9e0e695885f98b45",
+          "bytes": 60372,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "License.rtf"
+          ]
+        },
+        {
+          "oid": "c3c295678c68b59204f99714f3b57ba8c02cab7b",
+          "sha256": "af9b838df8419b09ec91ac2afcdfb083cc655b057db69554665865b6d7199824",
+          "bytes": 5015,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "c8a328965105abee0d472322bb3c1936dab32d3a",
+          "sha256": "2a0072c2a3d361e81af5b57f19f170441f4fa10c64c4bdcece799456315af0cd",
+          "bytes": 613,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE.md"
+          ]
+        },
+        {
+          "oid": "c8ccce4ffb5d7a7574bac87429ec1d2a7b90686d",
+          "sha256": "8417fad7da775735564e209484a2e011e0fa201e94f01fdbee6e4977e478e6fc",
+          "bytes": 1470,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "COPYING-theora.txt"
+          ]
+        },
+        {
+          "oid": "cb9e72dd541aae393cac8790c613fd3e3d01571c",
+          "sha256": "538abb589c070f1025ac2e187342d7759f1cf84a349a16f15c95ad0fc8e3eb6d",
+          "bytes": 4863,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "d4b9c099baa3a3b9f397567aea4d4bd96131e520",
+          "sha256": "f4d766d1551a41e213da39e009ea71674e06c7203bcf9526beee583d920ae4eb",
+          "bytes": 1066,
+          "text_signatures": [
+            "MIT-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "dff6cdd298bb5571231c9e3f4285aef07e365748",
+          "sha256": "48625de0b2d8ab423922a5affb03f81b7e783f2c886b2b8e630083c2201a0fee",
+          "bytes": 1483,
+          "text_signatures": [
+            "BSD-family-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE.txt"
+          ]
+        },
+        {
+          "oid": "ef62255d39bc2e55da5a5c3eed5662e054b34696",
+          "sha256": "3ffd24a7557c9b4457be9bc3eadf42829962b2c1605489b3c10030e133e1513f",
+          "bytes": 1091,
+          "text_signatures": [
+            "MIT-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "f288702d2fa16d3cdf0035b15a9fcbc552cd88e7",
+          "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+          "bytes": 35149,
+          "text_signatures": [
+            "GPL-3.0-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        },
+        {
+          "oid": "f5ec35501cb44b71c168f8c0f38ab24669c6eadb",
+          "sha256": "4df433d6dae4699c7dcceec39f51501cce9406e4e5f8e1f4b6a6e4a23521dc80",
+          "bytes": 996,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        },
+        {
+          "oid": "f8f5d27d51e0d1b105bb8784c7f024787590b14b",
+          "sha256": "374612a5a783c93cea845477f340df8ea9e9b998a804d346109b6a5622b9b79d",
+          "bytes": 2068,
+          "text_signatures": [],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "license.rs"
+          ]
+        }
+      ],
+      "license_text_signature_counts": {
+        "AGPL-3.0-text": 1,
+        "Apache-2.0-text": 2,
+        "BSD-family-text": 10,
+        "GPL-3.0-text": 1,
+        "MIT-text": 8
+      },
+      "unrecognized_license_blob_count": 18,
+      "baseline_license_files": [],
+      "gitmodule_blob_count": 3,
+      "unique_gitlink_commit_count": 89,
+      "gitlink_tree_occurrence_count": 159,
+      "lfs_pointer_count": 0,
+      "lfs_local_verified_count": 0,
+      "lfs_scan_scope": "all reachable blobs <=1024 bytes with standard LF version/oid/size lines; no custom LFS storage or remote fetch",
+      "details": {
+        "path": "artifacts/history-audit/android-core-local-objects.json",
+        "sha256": "1660869dd84c2f4db68eacb4129ce06c6d10f4394dd2dfd6eeea93594e8d122d"
+      },
+      "remote_refs_verified": false,
+      "history_imported": false,
+      "new_product_reuse_approved": false
+    },
+    "android-hbb-common": {
+      "repository_key": "android-hbb-common",
+      "baseline_revision": null,
+      "observed_head": "7e1c392c62d39c364127307cd408421dd5f8cfb0",
+      "head_snapshot_included": true,
+      "shallow": false,
+      "partial_clone_configuration_present": false,
+      "alternates_file_present": false,
+      "environment_alternates_present": false,
+      "replace_ref_count": 0,
+      "grafts_file_present": false,
+      "all_local_ref_count": 11,
+      "legacy_candidate_ref_count": 11,
+      "local_refs": [
+        {
+          "ref": "refs/heads/main",
+          "oid": "94ec710894ecd548b4fe174ef781eca5c1a318c0",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-hbb-common/heads/main"
+        },
+        {
+          "ref": "refs/remotes/origin/HEAD",
+          "oid": "94ec710894ecd548b4fe174ef781eca5c1a318c0",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-hbb-common/remotes/origin/HEAD"
+        },
+        {
+          "ref": "refs/remotes/origin/config-local-settings",
+          "oid": "750739f7f87aa95985f9b7e5b3c88416853eba8c",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-hbb-common/remotes/origin/config-local-settings"
+        },
+        {
+          "ref": "refs/remotes/origin/dead-peer-recovery",
+          "oid": "6db01ec2f60b51de10ee3179161192f748e5a66c",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-hbb-common/remotes/origin/dead-peer-recovery"
+        },
+        {
+          "ref": "refs/remotes/origin/kx-v2",
+          "oid": "42c77b9a3b91bb4b651d9e506bccae5f508202d8",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-hbb-common/remotes/origin/kx-v2"
+        },
+        {
+          "ref": "refs/remotes/origin/main",
+          "oid": "94ec710894ecd548b4fe174ef781eca5c1a318c0",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-hbb-common/remotes/origin/main"
+        },
+        {
+          "ref": "refs/remotes/origin/move-rustdesk-only-modules",
+          "oid": "e6fe9c333289eea49c4f752c4ed6ed9a9aa90667",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-hbb-common/remotes/origin/move-rustdesk-only-modules"
+        },
+        {
+          "ref": "refs/remotes/origin/port-forward-mux",
+          "oid": "3a541cb11baf332cd254756f9dc7e1d9f029c553",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-hbb-common/remotes/origin/port-forward-mux"
+        },
+        {
+          "ref": "refs/remotes/origin/webrtc",
+          "oid": "470612bdfb41471a60920002b9762853bf993716",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-hbb-common/remotes/origin/webrtc"
+        },
+        {
+          "ref": "refs/tags/dirver",
+          "oid": "1819875476d487612a654099881b8a16f4337599",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-hbb-common/tags/dirver"
+        },
+        {
+          "ref": "refs/tags/driver",
+          "oid": "4bd7fff39f859a868dc48fce97d4d06c9d3d7ff5",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/android-hbb-common/tags/driver"
+        }
+      ],
+      "tag_count": 2,
+      "annotated_tag_count": 0,
+      "local_refs_changed_during_audit": false,
+      "legacy_refs_changed_during_audit": false,
+      "legacy_reachable_commit_count": 453,
+      "legacy_reachable_object_counts": {
+        "blob": 509,
+        "commit": 453,
+        "tree": 764
+      },
+      "legacy_reachable_uncompressed_object_bytes": 24923813,
+      "missing_object_count": 0,
+      "large_blob_count_at_least_10_mib": 0,
+      "large_blob_count_at_least_100_mib": 0,
+      "largest_blobs": [],
+      "license_blob_count": 0,
+      "license_blobs": [],
+      "license_text_signature_counts": {},
+      "unrecognized_license_blob_count": 0,
+      "baseline_license_files": [],
+      "gitmodule_blob_count": 0,
+      "unique_gitlink_commit_count": 0,
+      "gitlink_tree_occurrence_count": 0,
+      "lfs_pointer_count": 0,
+      "lfs_local_verified_count": 0,
+      "lfs_scan_scope": "all reachable blobs <=1024 bytes with standard LF version/oid/size lines; no custom LFS storage or remote fetch",
+      "details": {
+        "path": "artifacts/history-audit/android-hbb-common-local-objects.json",
+        "sha256": "4a71f479082049385ecf65357404baf10c40df8a5cbad5f1c753c0382690e94d"
+      },
+      "remote_refs_verified": false,
+      "history_imported": false,
+      "new_product_reuse_approved": false
+    },
+    "hbbs-upstream": {
+      "repository_key": "hbbs-upstream",
+      "baseline_revision": null,
+      "observed_head": "73523b31cfd25d77dee862e6fc9f5e1fb5e485ef",
+      "head_snapshot_included": true,
+      "shallow": true,
+      "partial_clone_configuration_present": false,
+      "alternates_file_present": false,
+      "environment_alternates_present": false,
+      "replace_ref_count": 0,
+      "grafts_file_present": false,
+      "all_local_ref_count": 1,
+      "legacy_candidate_ref_count": 1,
+      "local_refs": [
+        {
+          "ref": "refs/tags/1.1.16",
+          "oid": "73523b31cfd25d77dee862e6fc9f5e1fb5e485ef",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hbbs-upstream/tags/1.1.16"
+        }
+      ],
+      "tag_count": 1,
+      "annotated_tag_count": 0,
+      "local_refs_changed_during_audit": false,
+      "legacy_refs_changed_during_audit": false,
+      "legacy_reachable_commit_count": 1,
+      "legacy_reachable_object_counts": {
+        "blob": 103,
+        "commit": 1,
+        "tree": 36
+      },
+      "legacy_reachable_uncompressed_object_bytes": 1165861,
+      "missing_object_count": 0,
+      "large_blob_count_at_least_10_mib": 0,
+      "large_blob_count_at_least_100_mib": 0,
+      "largest_blobs": [],
+      "license_blob_count": 2,
+      "license_blobs": [
+        {
+          "oid": "07684d9a570811aa9c5cb35ae3221e581464f867",
+          "sha256": "7da19c2079a0b1b78b75f4ebb2b842016714fd20d9a4d0b9d6b157dcc5f3c9f6",
+          "bytes": 36138,
+          "text_signatures": [
+            "AGPL-3.0-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "copyright"
+          ]
+        },
+        {
+          "oid": "0ad25db4bd1d86c452db3f9602ccdbe172438f52",
+          "sha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+          "bytes": 34523,
+          "text_signatures": [
+            "AGPL-3.0-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false,
+          "entry_names": [
+            "LICENSE"
+          ]
+        }
+      ],
+      "license_text_signature_counts": {
+        "AGPL-3.0-text": 2
+      },
+      "unrecognized_license_blob_count": 0,
+      "baseline_license_files": [],
+      "gitmodule_blob_count": 1,
+      "unique_gitlink_commit_count": 1,
+      "gitlink_tree_occurrence_count": 1,
+      "lfs_pointer_count": 0,
+      "lfs_local_verified_count": 0,
+      "lfs_scan_scope": "all reachable blobs <=1024 bytes with standard LF version/oid/size lines; no custom LFS storage or remote fetch",
+      "details": {
+        "path": "artifacts/history-audit/hbbs-upstream-local-objects.json",
+        "sha256": "7a691c170445066fede26ae9eea6b18d1fb2b74def2242559512f7505210c00e"
+      },
+      "remote_refs_verified": false,
+      "history_imported": false,
+      "new_product_reuse_approved": false
+    },
+    "hbbs-hbb-common": {
+      "repository_key": "hbbs-hbb-common",
+      "baseline_revision": null,
+      "observed_head": "83419b6549636ee39dacef7776c473f5802e08d6",
+      "head_snapshot_included": true,
+      "shallow": false,
+      "partial_clone_configuration_present": false,
+      "alternates_file_present": false,
+      "environment_alternates_present": false,
+      "replace_ref_count": 0,
+      "grafts_file_present": false,
+      "all_local_ref_count": 11,
+      "legacy_candidate_ref_count": 11,
+      "local_refs": [
+        {
+          "ref": "refs/heads/main",
+          "oid": "94ec710894ecd548b4fe174ef781eca5c1a318c0",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hbbs-hbb-common/heads/main"
+        },
+        {
+          "ref": "refs/remotes/origin/HEAD",
+          "oid": "94ec710894ecd548b4fe174ef781eca5c1a318c0",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hbbs-hbb-common/remotes/origin/HEAD"
+        },
+        {
+          "ref": "refs/remotes/origin/config-local-settings",
+          "oid": "750739f7f87aa95985f9b7e5b3c88416853eba8c",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hbbs-hbb-common/remotes/origin/config-local-settings"
+        },
+        {
+          "ref": "refs/remotes/origin/dead-peer-recovery",
+          "oid": "6db01ec2f60b51de10ee3179161192f748e5a66c",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hbbs-hbb-common/remotes/origin/dead-peer-recovery"
+        },
+        {
+          "ref": "refs/remotes/origin/kx-v2",
+          "oid": "42c77b9a3b91bb4b651d9e506bccae5f508202d8",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hbbs-hbb-common/remotes/origin/kx-v2"
+        },
+        {
+          "ref": "refs/remotes/origin/main",
+          "oid": "94ec710894ecd548b4fe174ef781eca5c1a318c0",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hbbs-hbb-common/remotes/origin/main"
+        },
+        {
+          "ref": "refs/remotes/origin/move-rustdesk-only-modules",
+          "oid": "e6fe9c333289eea49c4f752c4ed6ed9a9aa90667",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hbbs-hbb-common/remotes/origin/move-rustdesk-only-modules"
+        },
+        {
+          "ref": "refs/remotes/origin/port-forward-mux",
+          "oid": "3a541cb11baf332cd254756f9dc7e1d9f029c553",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hbbs-hbb-common/remotes/origin/port-forward-mux"
+        },
+        {
+          "ref": "refs/remotes/origin/webrtc",
+          "oid": "470612bdfb41471a60920002b9762853bf993716",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hbbs-hbb-common/remotes/origin/webrtc"
+        },
+        {
+          "ref": "refs/tags/dirver",
+          "oid": "1819875476d487612a654099881b8a16f4337599",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hbbs-hbb-common/tags/dirver"
+        },
+        {
+          "ref": "refs/tags/driver",
+          "oid": "4bd7fff39f859a868dc48fce97d4d06c9d3d7ff5",
+          "type": "commit",
+          "peeled_oid": null,
+          "peeled_type": null,
+          "scope": "local_legacy_candidate",
+          "proposed_preservation_ref": "refs/tags/legacy/hbbs-hbb-common/tags/driver"
+        }
+      ],
+      "tag_count": 2,
+      "annotated_tag_count": 0,
+      "local_refs_changed_during_audit": false,
+      "legacy_refs_changed_during_audit": false,
+      "legacy_reachable_commit_count": 453,
+      "legacy_reachable_object_counts": {
+        "blob": 509,
+        "commit": 453,
+        "tree": 764
+      },
+      "legacy_reachable_uncompressed_object_bytes": 24923813,
+      "missing_object_count": 0,
+      "large_blob_count_at_least_10_mib": 0,
+      "large_blob_count_at_least_100_mib": 0,
+      "largest_blobs": [],
+      "license_blob_count": 0,
+      "license_blobs": [],
+      "license_text_signature_counts": {},
+      "unrecognized_license_blob_count": 0,
+      "baseline_license_files": [],
+      "gitmodule_blob_count": 0,
+      "unique_gitlink_commit_count": 0,
+      "gitlink_tree_occurrence_count": 0,
+      "lfs_pointer_count": 0,
+      "lfs_local_verified_count": 0,
+      "lfs_scan_scope": "all reachable blobs <=1024 bytes with standard LF version/oid/size lines; no custom LFS storage or remote fetch",
+      "details": {
+        "path": "artifacts/history-audit/hbbs-hbb-common-local-objects.json",
+        "sha256": "d8e9d9387772a5745af5d32263e0495a6e9a74f133afb19ca7d5193dabea2408"
+      },
+      "remote_refs_verified": false,
+      "history_imported": false,
+      "new_product_reuse_approved": false
+    }
+  },
+  "submodule_availability": {
+    "unique_gitlink_commits": 118,
+    "commit_objects_unavailable_locally": 5,
+    "unavailable_commits": [
+      {
+        "oid": "5a78ec42303ca046d808742e911a156636a2432b",
+        "occurrences": [
+          {
+            "repository_key": "client",
+            "parent_tree_oid": "4e0fa16420d652ee77f15464abfa322e04021357",
+            "entry_name": "hbb_common",
+            "commit_oid": "5a78ec42303ca046d808742e911a156636a2432b"
+          },
+          {
+            "repository_key": "android-core",
+            "parent_tree_oid": "4e0fa16420d652ee77f15464abfa322e04021357",
+            "entry_name": "hbb_common",
+            "commit_oid": "5a78ec42303ca046d808742e911a156636a2432b"
+          }
+        ]
+      },
+      {
+        "oid": "93f9445c69f30487f1479a9e4e1882773e00c7f9",
+        "occurrences": [
+          {
+            "repository_key": "client",
+            "parent_tree_oid": "8275b1fb8f9a4cc882f3dd4658ebb527396667cf",
+            "entry_name": "hbb_common",
+            "commit_oid": "93f9445c69f30487f1479a9e4e1882773e00c7f9"
+          },
+          {
+            "repository_key": "android-core",
+            "parent_tree_oid": "8275b1fb8f9a4cc882f3dd4658ebb527396667cf",
+            "entry_name": "hbb_common",
+            "commit_oid": "93f9445c69f30487f1479a9e4e1882773e00c7f9"
+          }
+        ]
+      },
+      {
+        "oid": "b0f50c8d55a015f3d49fe9e90fcefb585d74a25f",
+        "occurrences": [
+          {
+            "repository_key": "client",
+            "parent_tree_oid": "8729f0280e9263e37027cab55526c9e7a6f91c98",
+            "entry_name": "hbb_common",
+            "commit_oid": "b0f50c8d55a015f3d49fe9e90fcefb585d74a25f"
+          },
+          {
+            "repository_key": "android-core",
+            "parent_tree_oid": "8729f0280e9263e37027cab55526c9e7a6f91c98",
+            "entry_name": "hbb_common",
+            "commit_oid": "b0f50c8d55a015f3d49fe9e90fcefb585d74a25f"
+          }
+        ]
+      },
+      {
+        "oid": "cecc93886ce839ec49b0041f072a573327acdf08",
+        "occurrences": [
+          {
+            "repository_key": "client",
+            "parent_tree_oid": "e27a5e6cff462f82783ba2500585fe4b587c6c19",
+            "entry_name": "shared-modules",
+            "commit_oid": "cecc93886ce839ec49b0041f072a573327acdf08"
+          },
+          {
+            "repository_key": "android-core",
+            "parent_tree_oid": "e27a5e6cff462f82783ba2500585fe4b587c6c19",
+            "entry_name": "shared-modules",
+            "commit_oid": "cecc93886ce839ec49b0041f072a573327acdf08"
+          }
+        ]
+      },
+      {
+        "oid": "f857bbd3bc350c800d447eb0d809d21f101cd80b",
+        "occurrences": [
+          {
+            "repository_key": "client",
+            "parent_tree_oid": "1f1d4661de058c3700b459ff0fc5bed15a6faeaf",
+            "entry_name": "hbb_common",
+            "commit_oid": "f857bbd3bc350c800d447eb0d809d21f101cd80b"
+          },
+          {
+            "repository_key": "android-core",
+            "parent_tree_oid": "1f1d4661de058c3700b459ff0fc5bed15a6faeaf",
+            "entry_name": "hbb_common",
+            "commit_oid": "f857bbd3bc350c800d447eb0d809d21f101cd80b"
+          }
+        ]
+      }
+    ],
+    "details": {
+      "path": "artifacts/history-audit/gitlink-local-availability.json",
+      "sha256": "a5a26e62d4d7205fad552eaa6f2831d0e1314cb291773767ea468b024ac00dac"
+    }
+  },
+  "dirty_linked_worktrees": [
+    {
+      "component": "hub",
+      "head": "da66975153385f9d92643daa4b7d9f1efbaa7a7d",
+      "porcelain_entry_count": 0,
+      "porcelain_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "modified_by_audit": false,
+      "dirty_contents_preserved_elsewhere_by_audit": false
+    },
+    {
+      "component": "server",
+      "head": "10d3f5be070b4caf4d8feb11defb86ad0e68e5d4",
+      "porcelain_entry_count": 34,
+      "porcelain_sha256": "fb7b909cdf07c144cbb9ed250dbcd2a8958aff27dc1b0e58a49e0ac5f11a5870",
+      "modified_by_audit": false,
+      "dirty_contents_preserved_elsewhere_by_audit": false
+    },
+    {
+      "component": "client",
+      "head": "181519880a5971f0618adfc81a55281a09d613a8",
+      "porcelain_entry_count": 28,
+      "porcelain_sha256": "dbc1c756a8c5e9abd86323bd4479f0c298e01cf7a5a7e001d34c88c19da221e2",
+      "modified_by_audit": false,
+      "dirty_contents_preserved_elsewhere_by_audit": false
+    },
+    {
+      "component": "android",
+      "head": "fc3690289d7bda0b0f0aec122e9379b2fa93f16c",
+      "porcelain_entry_count": 0,
+      "porcelain_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "modified_by_audit": false,
+      "dirty_contents_preserved_elsewhere_by_audit": false
+    }
+  ],
+  "release_assets": {
+    "metadata_scope": "existing final-audit component JSON files only; historical claims are not fresh GitHub or download verification",
+    "local_search_scope": "integration root recursively, excluding toolchains, .git, node_modules, target, .gradle, .dart_tool, Python caches/environments and directory symlinks",
+    "search_errors": [],
+    "other_existing_downloads": [
+      {
+        "filename": "HomeTunnel-Windows-10.1.0-x64.zip",
+        "bytes": 22861344,
+        "sha256": "e1c04b5cd06dcd5ac4548bac0e1611d9a996e70ba71307bb05fdb82350b98df7",
+        "relationship_to_complete_remote_release_inventory_verified": false
+      }
+    ],
+    "remote_release_list_verified": false,
+    "remote_asset_list_verified": false,
+    "remote_asset_bytes_downloaded_or_verified": false,
+    "recorded_asset_count": 12,
+    "recorded_assets_with_verified_local_bytes": 12,
+    "recorded_manifests": [
+      {
+        "component": "hub",
+        "path": "final-audit/hub.json",
+        "sha256": "9e7bd58292ae4eed8a5bd42f9ab7c724e933c57a22b16976b81433d015c42e1a",
+        "tag": "v11.0.0-rc.1",
+        "recorded_release_revision": "65926a083c324504910831174e7c7ba2c23c00e4",
+        "recorded_attachment_count": 2,
+        "historical_claim_revalidated": false
+      },
+      {
+        "component": "server",
+        "path": "final-audit/server.json",
+        "sha256": "bf8bf002c16728bd8b89cce6834c7c1d3c0db3f349b893698cf6e5cbe983c009",
+        "tag": "v11.0.0-rc.2",
+        "recorded_release_revision": "3fc4758ed0aa6eeb78635b41d829b169956a3cb3",
+        "recorded_attachment_count": 3,
+        "historical_claim_revalidated": false
+      },
+      {
+        "component": "client",
+        "path": "final-audit/client.json",
+        "sha256": "0275d5a21c467cf49468ed39f7df34f0062854f0b935276a397c612d7d1ccb6a",
+        "tag": "v11.0.0-rc.1",
+        "recorded_release_revision": "902607575789479ec9b328583690425420b8e6f4",
+        "recorded_attachment_count": 4,
+        "historical_claim_revalidated": false
+      },
+      {
+        "component": "android",
+        "path": "final-audit/android.json",
+        "sha256": "f1e088023fbd72f11037523b350515a5c1dc1e5c78d540d7f9cb2049fa4c536e",
+        "tag": "v11.0.0-rc.1",
+        "recorded_release_revision": "35c197cfa8b991d2a2317c8b5018d75af2de77b8",
+        "recorded_attachment_count": 3,
+        "historical_claim_revalidated": false
+      }
+    ],
+    "verified_local_assets": [
+      {
+        "component": "hub",
+        "tag": "v11.0.0-rc.1",
+        "filename": "HomeTunnel-Distribution-11.0.0-rc.1.zip",
+        "expected_bytes": 1818257,
+        "expected_sha256": "f58bf226651e6fa94e4fe9df185c5a56bd88e6e693166b91674ccdff5c0d68b3",
+        "verified_local_paths": [
+          "downloads/candidate-11/hub/v11.0.0-rc.1/HomeTunnel-Distribution-11.0.0-rc.1.zip"
+        ]
+      },
+      {
+        "component": "hub",
+        "tag": "v11.0.0-rc.1",
+        "filename": "SHA256SUMS.txt",
+        "expected_bytes": 106,
+        "expected_sha256": "214c77ab4a9094c2838d049c2682aff574820bcbc2559288b0875e85f311d009",
+        "verified_local_paths": [
+          "downloads/candidate-11/hub/v11.0.0-rc.1/SHA256SUMS.txt"
+        ]
+      },
+      {
+        "component": "server",
+        "tag": "v11.0.0-rc.2",
+        "filename": "HomeDesk-server-Materials-11.0.0-rc.2.zip",
+        "expected_bytes": 2594629,
+        "expected_sha256": "136431f6ade9750426dd5e01d00178cf547847a83a470b2abad6fbc9821bd19f",
+        "verified_local_paths": [
+          "downloads/candidate-11/server/v11.0.0-rc.2/HomeDesk-server-Materials-11.0.0-rc.2.zip",
+          "downloads/server-rc2/HomeDesk-server-Materials-11.0.0-rc.2.zip"
+        ]
+      },
+      {
+        "component": "server",
+        "tag": "v11.0.0-rc.2",
+        "filename": "SHA256SUMS.txt",
+        "expected_bytes": 212,
+        "expected_sha256": "53d7de32adf9119d35e49269bc3f89ed928b16facda5e3e63811f7ffffa47cb9",
+        "verified_local_paths": [
+          "downloads/candidate-11/server/v11.0.0-rc.2/SHA256SUMS.txt",
+          "downloads/server-rc2/SHA256SUMS.txt"
+        ]
+      },
+      {
+        "component": "server",
+        "tag": "v11.0.0-rc.2",
+        "filename": "home-tunnel-server-11.0.0-rc.2.tar.gz",
+        "expected_bytes": 887178,
+        "expected_sha256": "a7002005eab13246b0a6b6c5a7dea9a2f9e7b30d111519631054201d6394b5de",
+        "verified_local_paths": [
+          "downloads/candidate-11/server/v11.0.0-rc.2/home-tunnel-server-11.0.0-rc.2.tar.gz",
+          "downloads/server-rc2/home-tunnel-server-11.0.0-rc.2.tar.gz"
+        ]
+      },
+      {
+        "component": "client",
+        "tag": "v11.0.0-rc.1",
+        "filename": "HomeDesk-Setup-11.0.0-rc.1-x64.exe",
+        "expected_bytes": 30325040,
+        "expected_sha256": "2b207752fcb6a798c28a591e7ade794ccbe83497807b7a1c96b6ce844232ef49",
+        "verified_local_paths": [
+          "downloads/candidate-11/client/v11.0.0-rc.1/HomeDesk-Setup-11.0.0-rc.1-x64.exe"
+        ]
+      },
+      {
+        "component": "client",
+        "tag": "v11.0.0-rc.1",
+        "filename": "HomeDesk-client-Materials-11.0.0-rc.1.zip",
+        "expected_bytes": 655691974,
+        "expected_sha256": "bb032dd182fa27959ea56c8dde5adeeb8cca14eff53e7925050b541014b01077",
+        "verified_local_paths": [
+          "downloads/candidate-11/client/v11.0.0-rc.1/HomeDesk-client-Materials-11.0.0-rc.1.zip"
+        ]
+      },
+      {
+        "component": "client",
+        "tag": "v11.0.0-rc.1",
+        "filename": "HomeTunnel-CLI-Agent-11.0.0-rc.1.zip",
+        "expected_bytes": 44694951,
+        "expected_sha256": "2e3b46e4b71a3fc85bc6376b1d29d6a836e23d5349269914a2d68e5bd6bc26cf",
+        "verified_local_paths": [
+          "downloads/candidate-11/client/v11.0.0-rc.1/HomeTunnel-CLI-Agent-11.0.0-rc.1.zip"
+        ]
+      },
+      {
+        "component": "client",
+        "tag": "v11.0.0-rc.1",
+        "filename": "SHA256SUMS.txt",
+        "expected_bytes": 312,
+        "expected_sha256": "a127492badc9d343d6c69b4a7dea79ab87eae8fd7482b835c3d368773e877d2d",
+        "verified_local_paths": [
+          "downloads/candidate-11/client/v11.0.0-rc.1/SHA256SUMS.txt"
+        ]
+      },
+      {
+        "component": "android",
+        "tag": "v11.0.0-rc.1",
+        "filename": "HomeDesk-Android-11.0.0-rc.1.apk",
+        "expected_bytes": 117764062,
+        "expected_sha256": "285fbd11aa2983a6277e34c60d830367bd91807353f666004debae58045f71b4",
+        "verified_local_paths": [
+          "downloads/candidate-11/android/v11.0.0-rc.1/HomeDesk-Android-11.0.0-rc.1.apk"
+        ]
+      },
+      {
+        "component": "android",
+        "tag": "v11.0.0-rc.1",
+        "filename": "HomeDesk-android-Materials-11.0.0-rc.1.zip",
+        "expected_bytes": 1127137868,
+        "expected_sha256": "e07f0254279699ba4658c00efc02a8c8ca03071e1d321d636e4b77a843aa0fbf",
+        "verified_local_paths": [
+          "downloads/candidate-11/android/v11.0.0-rc.1/HomeDesk-android-Materials-11.0.0-rc.1.zip"
+        ]
+      },
+      {
+        "component": "android",
+        "tag": "v11.0.0-rc.1",
+        "filename": "SHA256SUMS.txt",
+        "expected_bytes": 208,
+        "expected_sha256": "b7002167989befb15ab000ef7a5b430429099355770f6f23611cb76d0d512a9d",
+        "verified_local_paths": [
+          "downloads/candidate-11/android/v11.0.0-rc.1/SHA256SUMS.txt"
+        ]
+      }
+    ],
+    "details": {
+      "path": "artifacts/history-audit/local-release-assets.json",
+      "sha256": "52563e6375c557625ed1b46def987385f3170799b79173d213f7b0cce9f0ea63"
+    },
+    "missing_local_assets": []
+  },
+  "limits": [
+    "No remote refs, hidden/pull-request refs, deleted refs, unreachable objects or reflogs were fetched or claimed complete.",
+    "No repository was imported, deleted, renamed, uploaded, rewritten or modified by the audit.",
+    "License filenames/text signatures are inventoried across all reachable trees; embedded notices, dependency source attribution, distribution obligations and compatibility require separate review.",
+    "Preserving original commits and licenses does not approve any old source, credentials, permit test vectors or cloud project for NestLink product reuse.",
+    "Existing finding classifications and DISPOSITION.md remain authoritative; no new secret scan or finding reclassification was performed.",
+    "Historical Release manifests only describe their recorded versions; complete current remote Releases and asset bytes remain unverified.",
+    "Dirty working trees are counted only; backup and preservation of uncommitted/ignored bytes remains a finalization prerequisite."
+  ],
+  "history_imported": false,
+  "new_product_reuse_approved": false,
+  "finalization_ready": false
+}

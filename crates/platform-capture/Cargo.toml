@@ -1,0 +1,42 @@
+[package]
+name = "nestlink-platform-capture"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+nestlink-remote.workspace = true
+nestlink-platform-input.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+nestlink-platform-session.workspace = true
+windows-sys = { version = "=0.61.2", features = ["Win32_Graphics_Gdi", "Win32_UI_HiDpi", "Win32_UI_WindowsAndMessaging", "Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_System_StationsAndDesktops", "Win32_System_Threading", "Win32_System_RemoteDesktop", "Win32_System_LibraryLoader", "Win32_UI_Accessibility"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = "=0.2.190"
+
+[build-dependencies]
+cc = "=1.8.0"
+pkg-config = "=0.3.34"
+
+[dev-dependencies]
+tempfile = "=3.27.0"
+serde_json.workspace = true
+
+[target.'cfg(target_os = "linux")'.dev-dependencies]
+tokio.workspace = true
+zbus = { version = "=5.19.0", default-features = false, features = ["tokio"] }
+nestlink-auth.workspace = true
+nestlink-identity.workspace = true
+nestlink-policy.workspace = true
+nestlink-protocol.workspace = true
+nestlink-session.workspace = true
+prost.workspace = true
+
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"

@@ -1,0 +1,18 @@
+[Unit]
+Description=NestLink v15 per-user daemon
+Documentation=https://github.com/ZHanry/NestLink
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/lib/nestlink-v15/desktop/current/nestlink-daemon --state-dir %S/NestLink-v15
+KillSignal=SIGINT
+TimeoutStopSec=45
+SendSIGKILL=no
+Restart=no
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=graphical-session.target

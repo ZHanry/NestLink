@@ -1,0 +1,2203 @@
+{
+  "schema_version": 1,
+  "scope": "Exact-version original notice supplements and archive file reviews for release collection; not a license compatibility waiver",
+  "packages": [
+    {
+      "name": "accesskit",
+      "version": "0.24.1",
+      "archive_sha256": "d3b7f7f85a7e5f68090000ed7622545829afd484d210358702ae4cb97dd0c320",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE-APACHE",
+          "git_blob_sha1": "1b5ec8b78e237b5c3b3d812a7c0a6589d0f7161d",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE-MIT",
+          "git_blob_sha1": "31aa79387f27e730e33d871925e152e35e428031",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE.chromium",
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/a55d3e1a18bb9ef0e4bccc9083fb13c3e0ad8969/LICENSE.chromium",
+          "git_blob_sha1": "a32e00ce6be3620adca152e53734f7de8fda38cf",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "accesskit_atspi_common",
+      "version": "0.18.1",
+      "archive_sha256": "1e8c61bee90b42a772d39d06a740207dc71a4e780004ace1db8d99fb1baaa954",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "f40dfc01a0c0e76de535969f82fb35e19513737d",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-APACHE",
+          "git_blob_sha1": "1b5ec8b78e237b5c3b3d812a7c0a6589d0f7161d",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-MIT",
+          "git_blob_sha1": "31aa79387f27e730e33d871925e152e35e428031",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE.chromium",
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE.chromium",
+          "git_blob_sha1": "a32e00ce6be3620adca152e53734f7de8fda38cf",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "accesskit_consumer",
+      "version": "0.35.0",
+      "archive_sha256": "53cf47daed85312e763fbf85ceca136e0d7abc68e0a7e12abe11f48172bc3b10",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "1bbcf100942bac96c2c3a4a91cb67b0b20201a24",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-APACHE",
+          "git_blob_sha1": "1b5ec8b78e237b5c3b3d812a7c0a6589d0f7161d",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-MIT",
+          "git_blob_sha1": "31aa79387f27e730e33d871925e152e35e428031",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE.chromium",
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE.chromium",
+          "git_blob_sha1": "a32e00ce6be3620adca152e53734f7de8fda38cf",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "accesskit_consumer",
+      "version": "0.36.0",
+      "archive_sha256": "25e0d7e25d06f4dc21d1774d67146e9e80d6789216cbd4d1e88185b0095dba60",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "f40dfc01a0c0e76de535969f82fb35e19513737d",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-APACHE",
+          "git_blob_sha1": "1b5ec8b78e237b5c3b3d812a7c0a6589d0f7161d",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-MIT",
+          "git_blob_sha1": "31aa79387f27e730e33d871925e152e35e428031",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE.chromium",
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE.chromium",
+          "git_blob_sha1": "a32e00ce6be3620adca152e53734f7de8fda38cf",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "accesskit_consumer",
+      "version": "0.38.0",
+      "archive_sha256": "5d10a236f96f87d70732e44520046785431ef01d5bcd6b041317bfadd2f88245",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "c88605b96d04431f9c3c792464a0f2f253480e94",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE-APACHE",
+          "git_blob_sha1": "1b5ec8b78e237b5c3b3d812a7c0a6589d0f7161d",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE-MIT",
+          "git_blob_sha1": "31aa79387f27e730e33d871925e152e35e428031",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE.chromium",
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE.chromium",
+          "git_blob_sha1": "a32e00ce6be3620adca152e53734f7de8fda38cf",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "accesskit_macos",
+      "version": "0.26.3",
+      "archive_sha256": "ce02dc63b43f0c9296af9ac946312a2dc8814427d7a64d2d600971dac55b6076",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "c88605b96d04431f9c3c792464a0f2f253480e94",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE-APACHE",
+          "git_blob_sha1": "1b5ec8b78e237b5c3b3d812a7c0a6589d0f7161d",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE-MIT",
+          "git_blob_sha1": "31aa79387f27e730e33d871925e152e35e428031",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE.chromium",
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/c88605b96d04431f9c3c792464a0f2f253480e94/LICENSE.chromium",
+          "git_blob_sha1": "a32e00ce6be3620adca152e53734f7de8fda38cf",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "accesskit_unix",
+      "version": "0.21.1",
+      "archive_sha256": "b016ca8db0ea0ea2ceff29a9d6240391492d960716aa471967c00e8cc8cb197c",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "f40dfc01a0c0e76de535969f82fb35e19513737d",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-APACHE",
+          "git_blob_sha1": "1b5ec8b78e237b5c3b3d812a7c0a6589d0f7161d",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE-MIT",
+          "git_blob_sha1": "31aa79387f27e730e33d871925e152e35e428031",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE.chromium",
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/f40dfc01a0c0e76de535969f82fb35e19513737d/LICENSE.chromium",
+          "git_blob_sha1": "a32e00ce6be3620adca152e53734f7de8fda38cf",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "accesskit_windows",
+      "version": "0.32.1",
+      "archive_sha256": "eff7009f1a532e917d66970a1e80c965140c6cfbbabbdde3d64e5431e6c78e21",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "1bbcf100942bac96c2c3a4a91cb67b0b20201a24",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-APACHE",
+          "git_blob_sha1": "1b5ec8b78e237b5c3b3d812a7c0a6589d0f7161d",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-MIT",
+          "git_blob_sha1": "31aa79387f27e730e33d871925e152e35e428031",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE.chromium",
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE.chromium",
+          "git_blob_sha1": "a32e00ce6be3620adca152e53734f7de8fda38cf",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "accesskit_winit",
+      "version": "0.32.2",
+      "archive_sha256": "1fe9a94394896352cc4660ca2288bd4ef883d83238853c038b44070c8f134313",
+      "license_declared": "Apache-2.0",
+      "crate_vcs_revision": "1bbcf100942bac96c2c3a4a91cb67b0b20201a24",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-APACHE",
+          "git_blob_sha1": "1b5ec8b78e237b5c3b3d812a7c0a6589d0f7161d",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE-MIT",
+          "git_blob_sha1": "31aa79387f27e730e33d871925e152e35e428031",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE.chromium",
+          "sha256": "845022e0c1db1abb41a6ba4cd3c4b674ec290f3359d9d3c78ae558d4c0ed9308",
+          "upstream_url": "https://raw.githubusercontent.com/AccessKit/accesskit/1bbcf100942bac96c2c3a4a91cb67b0b20201a24/LICENSE.chromium",
+          "git_blob_sha1": "a32e00ce6be3620adca152e53734f7de8fda38cf",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "anes",
+      "version": "0.1.6",
+      "archive_sha256": "4b46cbb362ab8752921c97e041f5e366ee6297bd428a31275b9fcf1e380f7299",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "378ac7461ecac29fde9e10df7b08359d1315a9ad",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/zrzka/anes-rs/378ac7461ecac29fde9e10df7b08359d1315a9ad/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "upstream_url": "https://raw.githubusercontent.com/zrzka/anes-rs/378ac7461ecac29fde9e10df7b08359d1315a9ad/LICENSE-APACHE",
+          "git_blob_sha1": "16fe87b06e802f094b3fbb0894b137bca2b16ef1",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/zrzka/anes-rs/378ac7461ecac29fde9e10df7b08359d1315a9ad/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "upstream_url": "https://raw.githubusercontent.com/zrzka/anes-rs/378ac7461ecac29fde9e10df7b08359d1315a9ad/LICENSE-MIT",
+          "git_blob_sha1": "31aa79387f27e730e33d871925e152e35e428031",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "any_spawner",
+      "version": "0.3.0",
+      "archive_sha256": "1384d3fe1eecb464229fcf6eebb72306591c56bf27b373561489458a7c73027d",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "9b2e313d20c89603ddc0deb7b1133e60c877faed",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/9b2e313d20c89603ddc0deb7b1133e60c877faed/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/9b2e313d20c89603ddc0deb7b1133e60c877faed/LICENSE",
+          "git_blob_sha1": "77d5625cb3656d2a3b63aa2f0c9b27190330e4eb",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "asn1-rs-impl",
+      "version": "0.2.0",
+      "archive_sha256": "7b18050c2cd6fe86c3a76584ef5e0baf286d038cda203eb6223df2cc413565f7",
+      "license_declared": "MIT/Apache-2.0",
+      "crate_vcs_revision": "a20e5f7319c896737ad0f2557037817b91ad854f",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/rusticata/asn1-rs/a20e5f7319c896737ad0f2557037817b91ad854f/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "upstream_url": "https://raw.githubusercontent.com/rusticata/asn1-rs/a20e5f7319c896737ad0f2557037817b91ad854f/LICENSE-APACHE",
+          "git_blob_sha1": "16fe87b06e802f094b3fbb0894b137bca2b16ef1",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/rusticata/asn1-rs/a20e5f7319c896737ad0f2557037817b91ad854f/LICENSE-MIT",
+          "sha256": "a5c61b93b6ee1d104af9920cf020ff3c7efe818e31fe562c72261847a728f513",
+          "upstream_url": "https://raw.githubusercontent.com/rusticata/asn1-rs/a20e5f7319c896737ad0f2557037817b91ad854f/LICENSE-MIT",
+          "git_blob_sha1": "290e7b9be19d39a81c8eb24c75a6b5f1e57fea71",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "block2",
+      "version": "0.5.1",
+      "archive_sha256": "2c132eebf10f5cad5289222520a4a058514204aed6d791f1cf4fe8088b82d15f",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "4fc083f1c6d6784577e38b0ee8dbd344481e2fd2",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/4fc083f1c6d6784577e38b0ee8dbd344481e2fd2/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/4fc083f1c6d6784577e38b0ee8dbd344481e2fd2/LICENSE.txt",
+          "git_blob_sha1": "e9ab3babc0d8602b83dccde8a462f8f3dc1e52ad",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "archive_sha256": "cdeb9d870516001442e364c5220d3574d2da8dc765554b4a617230d33fa58ef5",
+      "license_declared": "MIT",
+      "name": "block2",
+      "version": "0.6.2",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/b4167b582b2f75f9a1be75495c41b765344fd03c/LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/b4167b582b2f75f9a1be75495c41b765344fd03c/LICENSE.md",
+          "full_license_text": false
+        }
+      ],
+      "crate_vcs_revision": "b4167b582b2f75f9a1be75495c41b765344fd03c",
+      "selected_license_option": "MIT",
+      "review_basis": "Retain exact-revision license explanation and original Steven Sheldon MIT text from the verified ancestor immediately before upstream replaced LICENSE.txt with that explanation (cfb199226661ec6e4939fcd7cd7531b3c5453076). The replacement expressly retains MIT and makes future contributions MIT-compatible. No historical text is represented as an exact-current file. Apple-SDK provenance in the current explanation remains disclosed; this inventory decision is not approval of unsupported Apple platform distribution."
+    },
+    {
+      "archive_sha256": "6d43a04d8753f35258c91f8ec639f792891f748a1edbd759cf1dcea3382ad83c",
+      "license_declared": "Apache-2.0/MIT",
+      "name": "cesu8",
+      "version": "1.1.0",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/rust-lang/rust/a59de37e99060162a2674e3ff45409ac73595c0e/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "upstream_url": "https://raw.githubusercontent.com/rust-lang/rust/a59de37e99060162a2674e3ff45409ac73595c0e/LICENSE-APACHE",
+          "full_license_text": true
+        }
+      ],
+      "selected_license_option": "Apache-2.0",
+      "review_basis": "Exact archive source/README/manifest/COPYRIGHT-RUST match the original 1.1.0 release commit f18962a9de5189f21600b7ff2898845157df4447; its original source headers expressly select Apache-2.0 or MIT and retain Rust/Eric Kidd attribution. Choose Apache-2.0; retain literal standard terms from original Rust 1.0 LICENSE-APACHE and original archive declarations/attribution. This standard-text binding is disclosed, not represented as a previously existing file in the selected crate."
+    },
+    {
+      "name": "clipboard-win",
+      "version": "5.4.1",
+      "archive_sha256": "bde03770d3df201d4fb868f2c9c59e66a3e4e2bd06692a0fe701e7103c7e84d4",
+      "license_declared": "BSL-1.0",
+      "crate_vcs_revision": "3b27cf2bfd1adcfa6e0264eb51c1025ddaf0f342",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/DoumanAsh/clipboard-win/3b27cf2bfd1adcfa6e0264eb51c1025ddaf0f342/LICENSE",
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+          "upstream_url": "https://raw.githubusercontent.com/DoumanAsh/clipboard-win/3b27cf2bfd1adcfa6e0264eb51c1025ddaf0f342/LICENSE",
+          "git_blob_sha1": "36b7cd93cdfbac762f5be4c6ce276df2ea6305c2",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "const_str_slice_concat",
+      "version": "0.1.0",
+      "archive_sha256": "f67855af358fcb20fac58f9d714c94e2b228fe5694c1c9b4ead4a366343eda1b",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "4e23d2b6f1cb74ef7eb08b40ef7f14baa85a7285",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/4e23d2b6f1cb74ef7eb08b40ef7f14baa85a7285/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/4e23d2b6f1cb74ef7eb08b40ef7f14baa85a7285/LICENSE",
+          "git_blob_sha1": "77d5625cb3656d2a3b63aa2f0c9b27190330e4eb",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "crc-catalog",
+      "version": "2.5.0",
+      "archive_sha256": "217698eaf96b4a3f0bc4f3662aaa55bdf913cd54d7204591faa790070c6d0853",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "ed4ad631f22b05055c21a3a4127eb7cf6d75bb62",
+      "review_basis": "Original exact archive text: crc-catalog LICENSES directory, or r-efi AUTHORS containing the full optional MIT grant and actual copyright holders. r-efi is collected under its MIT option.",
+      "archive_license_files": [
+        {
+          "path": "LICENSES/MIT.txt",
+          "sha256": "5ef8fcfb6cccec8fcae043c834099a60c8b7406408db576e026d2b7e67dc5cf5"
+        },
+        {
+          "path": "LICENSES/Apache-2.0.txt",
+          "sha256": "d3cdb764b98283ee7c3a3cea8d374e2a2957322374378d1f3263f4d512741fc3"
+        }
+      ],
+      "files": []
+    },
+    {
+      "name": "defmt-parser",
+      "version": "1.0.0",
+      "archive_sha256": "10d60334b3b2e7c9d91ef8150abfb6fa4c1c39ebbcf4a81c2e346aad939fee3e",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "4a8cdb44891ed57b8ff5a023b6bec7137c48708f",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/knurling-rs/defmt/4a8cdb44891ed57b8ff5a023b6bec7137c48708f/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+          "upstream_url": "https://raw.githubusercontent.com/knurling-rs/defmt/4a8cdb44891ed57b8ff5a023b6bec7137c48708f/LICENSE-APACHE",
+          "git_blob_sha1": "11069edd79019f7dafbe3138841cf289209270dd",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/knurling-rs/defmt/4a8cdb44891ed57b8ff5a023b6bec7137c48708f/LICENSE-MIT",
+          "sha256": "2710a622a896bba67356913d4d0492cab5465f61b2ecce6d880aeb483834fb50",
+          "upstream_url": "https://raw.githubusercontent.com/knurling-rs/defmt/4a8cdb44891ed57b8ff5a023b6bec7137c48708f/LICENSE-MIT",
+          "git_blob_sha1": "e68a7ab37c8accca023db5f1505d48e4375d4324",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "archive_sha256": "1e0e367e4e7da84520dedcac1901e4da967309406d1e51017ae1abfb97adbd38",
+      "license_declared": "Zlib OR Apache-2.0 OR MIT",
+      "name": "dispatch2",
+      "version": "0.3.1",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/8852b424193ca41602281b3d7540d7c8ed51e49a/LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/8852b424193ca41602281b3d7540d7c8ed51e49a/LICENSE.md",
+          "full_license_text": false
+        }
+      ],
+      "crate_vcs_revision": "8852b424193ca41602281b3d7540d7c8ed51e49a",
+      "selected_license_option": "MIT",
+      "review_basis": "Retain exact-revision license explanation and original Steven Sheldon MIT text from the verified ancestor immediately before upstream replaced LICENSE.txt with that explanation (cfb199226661ec6e4939fcd7cd7531b3c5453076). The replacement expressly retains MIT and makes future contributions MIT-compatible. No historical text is represented as an exact-current file. Apple-SDK provenance in the current explanation remains disclosed; this inventory decision is not approval of unsupported Apple platform distribution."
+    },
+    {
+      "archive_sha256": "669a445ee724c5c69b1b06fe0b63e70a1c84bc9bb7d9696cd4f4e3ec45050408",
+      "license_declared": "MIT OR Apache-2.0",
+      "name": "drain_filter_polyfill",
+      "version": "0.1.3",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/rust-lang/rust/a59de37e99060162a2674e3ff45409ac73595c0e/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "upstream_url": "https://raw.githubusercontent.com/rust-lang/rust/a59de37e99060162a2674e3ff45409ac73595c0e/LICENSE-APACHE",
+          "full_license_text": true
+        }
+      ],
+      "crate_vcs_revision": "9dc585f3eec048bfc3faf8656e07c4a19273c38f",
+      "selected_license_option": "Apache-2.0",
+      "review_basis": "The exact archive and embedded upstream manifest expressly declare MIT OR Apache-2.0 and describe copying Vec::drain_filter from Rust. The archive declares no authors; none are invented. Choose Apache-2.0; retain literal standard terms from original Rust 1.0 LICENSE-APACHE and original archive declarations/attribution. This standard-text binding is disclosed, not represented as a previously existing file in the selected crate."
+    },
+    {
+      "name": "ecolor",
+      "version": "0.34.3",
+      "archive_sha256": "a05fbfa222ffb51989d5ccf33e5f7aebfcf96c5023413856b0c3618a7f79896e",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "65cb282a198d2dd72b6ca2346cc73eba45b7a830",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+          "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "git_blob_sha1": "11069edd79019f7dafbe3138841cf289209270dd",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c",
+          "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "git_blob_sha1": "673ea5f0505d6fa65c6a2b6a753c93b8e19d11b9",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "eframe",
+      "version": "0.34.3",
+      "archive_sha256": "f98fe83b2589105b69dd25ca1e0fa2135a6e864d502fd8e08978f937e128cfef",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "65cb282a198d2dd72b6ca2346cc73eba45b7a830",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+          "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "git_blob_sha1": "11069edd79019f7dafbe3138841cf289209270dd",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c",
+          "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "git_blob_sha1": "673ea5f0505d6fa65c6a2b6a753c93b8e19d11b9",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "egui",
+      "version": "0.34.3",
+      "archive_sha256": "42112be0ae157289312b92b3dfaf20e911b5a3c4c65d4aab0e7c47fbc0ce16e3",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "65cb282a198d2dd72b6ca2346cc73eba45b7a830",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+          "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "git_blob_sha1": "11069edd79019f7dafbe3138841cf289209270dd",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c",
+          "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "git_blob_sha1": "673ea5f0505d6fa65c6a2b6a753c93b8e19d11b9",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "egui-wgpu",
+      "version": "0.34.3",
+      "archive_sha256": "9f0c0559ac5598a1b887a6206dccbab7e3e6246c57cb00ae287262bd44776c9c",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "65cb282a198d2dd72b6ca2346cc73eba45b7a830",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+          "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "git_blob_sha1": "11069edd79019f7dafbe3138841cf289209270dd",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c",
+          "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "git_blob_sha1": "673ea5f0505d6fa65c6a2b6a753c93b8e19d11b9",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "egui-winit",
+      "version": "0.34.3",
+      "archive_sha256": "967c5b323625d46d46a59b5daba3fef742248d27693cc18972458619858c4239",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "65cb282a198d2dd72b6ca2346cc73eba45b7a830",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+          "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "git_blob_sha1": "11069edd79019f7dafbe3138841cf289209270dd",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c",
+          "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "git_blob_sha1": "673ea5f0505d6fa65c6a2b6a753c93b8e19d11b9",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "egui_glow",
+      "version": "0.34.3",
+      "archive_sha256": "62b652957fa7e1ab01e8fecbfbf4e35f6e43a53fa98af8a562b50d5403cd44b9",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "65cb282a198d2dd72b6ca2346cc73eba45b7a830",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+          "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "git_blob_sha1": "11069edd79019f7dafbe3138841cf289209270dd",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c",
+          "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "git_blob_sha1": "673ea5f0505d6fa65c6a2b6a753c93b8e19d11b9",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "either_of",
+      "version": "0.1.9",
+      "archive_sha256": "5060e0a4cbf26a87550792688ade88e6b8aec9208613631a7a363bda7bc2d4cd",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "fbc9ed631ff8c19c5eed02a1d4459e202cff7043",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+          "git_blob_sha1": "77d5625cb3656d2a3b63aa2f0c9b27190330e4eb",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "emath",
+      "version": "0.34.3",
+      "archive_sha256": "b53f0d33a479321da6b0caa71366c9f67e8a2c149762d90bdc0d16e601ee8ecb",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "65cb282a198d2dd72b6ca2346cc73eba45b7a830",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+          "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "git_blob_sha1": "11069edd79019f7dafbe3138841cf289209270dd",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c",
+          "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "git_blob_sha1": "673ea5f0505d6fa65c6a2b6a753c93b8e19d11b9",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "epaint",
+      "version": "0.34.3",
+      "archive_sha256": "6675898a291ec212fc3df04f537d177fce8496120244590e6359dcaa4c25da79",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "65cb282a198d2dd72b6ca2346cc73eba45b7a830",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+          "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "git_blob_sha1": "11069edd79019f7dafbe3138841cf289209270dd",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c",
+          "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "git_blob_sha1": "673ea5f0505d6fa65c6a2b6a753c93b8e19d11b9",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "gl_generator",
+      "version": "0.14.0",
+      "archive_sha256": "1a95dfc23a2b4a9a2f5ab41d194f8bfda3cabec42af4e39f08c339eb2a0c124d",
+      "license_declared": "Apache-2.0",
+      "crate_vcs_revision": "ea503e8d5fb6d73c6030e6191ce738cd3bf3433e",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/brendanzab/gl-rs/ea503e8d5fb6d73c6030e6191ce738cd3bf3433e/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "upstream_url": "https://raw.githubusercontent.com/brendanzab/gl-rs/ea503e8d5fb6d73c6030e6191ce738cd3bf3433e/LICENSE",
+          "git_blob_sha1": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "gloo-net",
+      "version": "0.6.0",
+      "archive_sha256": "c06f627b1a58ca3d42b45d6104bf1e1a03799df472df00988b6ba21accc10580",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "40c6daa612a90a138ba3e3d70804fcbc5ad4911e",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/rustwasm/gloo/40c6daa612a90a138ba3e3d70804fcbc5ad4911e/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "upstream_url": "https://raw.githubusercontent.com/rustwasm/gloo/40c6daa612a90a138ba3e3d70804fcbc5ad4911e/LICENSE-APACHE",
+          "git_blob_sha1": "16fe87b06e802f094b3fbb0894b137bca2b16ef1",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/rustwasm/gloo/40c6daa612a90a138ba3e3d70804fcbc5ad4911e/LICENSE-MIT",
+          "sha256": "5a6f5443ea473f130adbdcf84254761d1292bc79759b5253915d4b5e7afbef66",
+          "upstream_url": "https://raw.githubusercontent.com/rustwasm/gloo/40c6daa612a90a138ba3e3d70804fcbc5ad4911e/LICENSE-MIT",
+          "git_blob_sha1": "1ae4a6988028e2122acb3a755fdd00759b893426",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "gloo-timers",
+      "version": "0.3.0",
+      "archive_sha256": "bbb143cf96099802033e0d4f4963b19fd2e0b728bcf076cd9cf7f6634f092994",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "f3bb1d1a1c33dbcccaf26446aca7d0cea8e9d574",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/rustwasm/gloo/f3bb1d1a1c33dbcccaf26446aca7d0cea8e9d574/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "upstream_url": "https://raw.githubusercontent.com/rustwasm/gloo/f3bb1d1a1c33dbcccaf26446aca7d0cea8e9d574/LICENSE-APACHE",
+          "git_blob_sha1": "16fe87b06e802f094b3fbb0894b137bca2b16ef1",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/rustwasm/gloo/f3bb1d1a1c33dbcccaf26446aca7d0cea8e9d574/LICENSE-MIT",
+          "sha256": "5a6f5443ea473f130adbdcf84254761d1292bc79759b5253915d4b5e7afbef66",
+          "upstream_url": "https://raw.githubusercontent.com/rustwasm/gloo/f3bb1d1a1c33dbcccaf26446aca7d0cea8e9d574/LICENSE-MIT",
+          "git_blob_sha1": "1ae4a6988028e2122acb3a755fdd00759b893426",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "gloo-utils",
+      "version": "0.2.0",
+      "archive_sha256": "0b5555354113b18c547c1d3a98fbf7fb32a9ff4f6fa112ce823a21641a0ba3aa",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "f3bb1d1a1c33dbcccaf26446aca7d0cea8e9d574",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/rustwasm/gloo/f3bb1d1a1c33dbcccaf26446aca7d0cea8e9d574/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "upstream_url": "https://raw.githubusercontent.com/rustwasm/gloo/f3bb1d1a1c33dbcccaf26446aca7d0cea8e9d574/LICENSE-APACHE",
+          "git_blob_sha1": "16fe87b06e802f094b3fbb0894b137bca2b16ef1",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/rustwasm/gloo/f3bb1d1a1c33dbcccaf26446aca7d0cea8e9d574/LICENSE-MIT",
+          "sha256": "5a6f5443ea473f130adbdcf84254761d1292bc79759b5253915d4b5e7afbef66",
+          "upstream_url": "https://raw.githubusercontent.com/rustwasm/gloo/f3bb1d1a1c33dbcccaf26446aca7d0cea8e9d574/LICENSE-MIT",
+          "git_blob_sha1": "1ae4a6988028e2122acb3a755fdd00759b893426",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "archive_sha256": "dfa686283ad6dd069f105e5ab091b04c62850d3e4cf5d67debad1933f55023df",
+      "license_declared": "CC0-1.0",
+      "name": "hexf-parse",
+      "version": "0.2.1",
+      "files": [
+        {
+          "path": "packaging/notices/base16-0.2.1-LICENSE-CC0.txt",
+          "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+          "upstream_url": "https://raw.githubusercontent.com/thomcc/rust-base16/a5321823aa9361279d12ee460aa99ca1a4e62ddf/LICENSE-CC0",
+          "full_license_text": true
+        }
+      ],
+      "crate_vcs_revision": "4225763d744183d720f575ae96d04161b4d08ea0",
+      "selected_license_option": "CC0-1.0",
+      "review_basis": "Exact archive and embedded manifest declare CC0-1.0, Kang Seonghoon and the hexf repository. Retain those original declarations plus the complete literal CC0 1.0 legal code already verified from base16; that standard text names no invented package holder. The later hexf LICENSE is 0BSD and parse/LICENSE is a symlink; neither is substituted for this CC0 version."
+    },
+    {
+      "archive_sha256": "285b05858fe7d58c5eff059f7b46c228fd86996d996c59eb35fc0340d174f640",
+      "license_declared": "MIT",
+      "name": "hydration_context",
+      "version": "0.3.2",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+          "full_license_text": true
+        }
+      ],
+      "crate_vcs_revision": "95f574434a11ba607d58bc0018d3ab5a17e7ac8b",
+      "review_basis": "Exact checksum-verified archive declares MIT, Greg Johnston and this same monorepo. Its embedded commit is unavailable upstream (retained HTTP 422), and is not authenticated or substituted as source. Collect the original monorepo MIT grant, Copyright 2022 Greg Johnston, at reachable release-family revision fbc9ed631ff8c19c5eed02a1d4459e202cff7043; ten independently reachable selected crate revisions have identical original text. Source comparison results, including mismatches, remain in source-bindings-attempt04. This is an explicitly reviewed project-license text binding, not an exact embedded-commit claim."
+    },
+    {
+      "name": "jni",
+      "version": "0.22.4",
+      "archive_sha256": "5efd9a482cf3a427f00d6b35f14332adc7902ce91efb778580e180ff90fa3498",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "5ae9458a4ec44c5318f37ddc7569c1d4ae8a69e7",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/jni-rs/jni-rs/5ae9458a4ec44c5318f37ddc7569c1d4ae8a69e7/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "upstream_url": "https://raw.githubusercontent.com/jni-rs/jni-rs/5ae9458a4ec44c5318f37ddc7569c1d4ae8a69e7/LICENSE-APACHE",
+          "git_blob_sha1": "16fe87b06e802f094b3fbb0894b137bca2b16ef1",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/jni-rs/jni-rs/5ae9458a4ec44c5318f37ddc7569c1d4ae8a69e7/LICENSE-MIT",
+          "sha256": "fea1d5bf3dd71605ce5d7d2ff695c1837e914c77195e523a86b5391716477960",
+          "upstream_url": "https://raw.githubusercontent.com/jni-rs/jni-rs/5ae9458a4ec44c5318f37ddc7569c1d4ae8a69e7/LICENSE-MIT",
+          "git_blob_sha1": "74323882c4eeb6ce9f75f1f3269d212038f394d2",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "jni-macros",
+      "version": "0.22.4",
+      "archive_sha256": "a00109accc170f0bdb141fed3e393c565b6f5e072365c3bd58f5b062591560a3",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "33045a124105c939d1e2cbdcb5a39e5d868ffa03",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/jni-rs/jni-rs/33045a124105c939d1e2cbdcb5a39e5d868ffa03/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "upstream_url": "https://raw.githubusercontent.com/jni-rs/jni-rs/33045a124105c939d1e2cbdcb5a39e5d868ffa03/LICENSE-APACHE",
+          "git_blob_sha1": "16fe87b06e802f094b3fbb0894b137bca2b16ef1",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/jni-rs/jni-rs/33045a124105c939d1e2cbdcb5a39e5d868ffa03/LICENSE-MIT",
+          "sha256": "fea1d5bf3dd71605ce5d7d2ff695c1837e914c77195e523a86b5391716477960",
+          "upstream_url": "https://raw.githubusercontent.com/jni-rs/jni-rs/33045a124105c939d1e2cbdcb5a39e5d868ffa03/LICENSE-MIT",
+          "git_blob_sha1": "74323882c4eeb6ce9f75f1f3269d212038f394d2",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "jni-sys-macros",
+      "version": "0.4.1",
+      "archive_sha256": "38c0b942f458fe50cdac086d2f946512305e5631e720728f2a61aabcd47a6264",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "64d77b7a5f119d7b55b4e2c169a4668067ff59e6",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/jni-rs/jni-sys/64d77b7a5f119d7b55b4e2c169a4668067ff59e6/LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08",
+          "upstream_url": "https://raw.githubusercontent.com/jni-rs/jni-sys/64d77b7a5f119d7b55b4e2c169a4668067ff59e6/LICENSE-APACHE",
+          "git_blob_sha1": "8f71f43fee3f78649d238238cbde51e6d7055c82",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/jni-rs/jni-sys/64d77b7a5f119d7b55b4e2c169a4668067ff59e6/LICENSE-MIT",
+          "sha256": "1d85bd754b04ceec93e98e890edd1fa3c6a22e81bcb32135806beeccefa51cd1",
+          "upstream_url": "https://raw.githubusercontent.com/jni-rs/jni-sys/64d77b7a5f119d7b55b4e2c169a4668067ff59e6/LICENSE-MIT",
+          "git_blob_sha1": "2008402b8a1299cf118ea38e02116bfcc72e53c3",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "khronos_api",
+      "version": "3.1.0",
+      "archive_sha256": "e2db585e1d738fc771bf08a151420d3ed193d9d895a36df7f6f8a9456b911ddc",
+      "license_declared": "Apache-2.0",
+      "crate_vcs_revision": "f150967b1c44ae888e6676f93f639ebc82771bdc",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/brendanzab/gl-rs/f150967b1c44ae888e6676f93f639ebc82771bdc/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "upstream_url": "https://raw.githubusercontent.com/brendanzab/gl-rs/f150967b1c44ae888e6676f93f639ebc82771bdc/LICENSE",
+          "git_blob_sha1": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "leptos",
+      "version": "0.8.19",
+      "archive_sha256": "efa3982e7fe36c1de68f91f3c9083124f389a975523881f3d7e3363362feda41",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "fbc9ed631ff8c19c5eed02a1d4459e202cff7043",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+          "git_blob_sha1": "77d5625cb3656d2a3b63aa2f0c9b27190330e4eb",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "leptos_config",
+      "version": "0.8.10",
+      "archive_sha256": "0c06f751315bccc0d193fab302ac01d25bcfcd97474d4676440e7e3250dc3fc3",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "fbc9ed631ff8c19c5eed02a1d4459e202cff7043",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+          "git_blob_sha1": "77d5625cb3656d2a3b63aa2f0c9b27190330e4eb",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "leptos_dom",
+      "version": "0.8.8",
+      "archive_sha256": "35742e9ed8f8aaf9e549b454c68a7ac0992536e06856365639b111f72ab07884",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "da62c0cb9a1d814cf480c2f1dae5f67f4ea4773f",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/da62c0cb9a1d814cf480c2f1dae5f67f4ea4773f/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/da62c0cb9a1d814cf480c2f1dae5f67f4ea4773f/LICENSE",
+          "git_blob_sha1": "77d5625cb3656d2a3b63aa2f0c9b27190330e4eb",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "archive_sha256": "d84989bd3d604e66adbfe13a32bec2ea47bdcb6c9fcd643f784facbb32f6ef10",
+      "license_declared": "MIT",
+      "name": "leptos_hot_reload",
+      "version": "0.8.7",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+          "full_license_text": true
+        }
+      ],
+      "crate_vcs_revision": "58fe6c1ad0cd175e9c8ec204895a9739d52fda16",
+      "review_basis": "Exact checksum-verified archive declares MIT, Greg Johnston and this same monorepo. Its embedded commit is unavailable upstream (retained HTTP 422), and is not authenticated or substituted as source. Collect the original monorepo MIT grant, Copyright 2022 Greg Johnston, at reachable release-family revision fbc9ed631ff8c19c5eed02a1d4459e202cff7043; ten independently reachable selected crate revisions have identical original text. Source comparison results, including mismatches, remain in source-bindings-attempt04. This is an explicitly reviewed project-license text binding, not an exact embedded-commit claim."
+    },
+    {
+      "archive_sha256": "0902af1e6947ffc7e906b7003a165f76f178dc711a47b74241025090b0c32a72",
+      "license_declared": "MIT",
+      "name": "leptos_macro",
+      "version": "0.8.19",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+          "full_license_text": true
+        }
+      ],
+      "crate_vcs_revision": "58fe6c1ad0cd175e9c8ec204895a9739d52fda16",
+      "review_basis": "Exact checksum-verified archive declares MIT, Greg Johnston and this same monorepo. Its embedded commit is unavailable upstream (retained HTTP 422), and is not authenticated or substituted as source. Collect the original monorepo MIT grant, Copyright 2022 Greg Johnston, at reachable release-family revision fbc9ed631ff8c19c5eed02a1d4459e202cff7043; ten independently reachable selected crate revisions have identical original text. Source comparison results, including mismatches, remain in source-bindings-attempt04. This is an explicitly reviewed project-license text binding, not an exact embedded-commit claim."
+    },
+    {
+      "name": "leptos_server",
+      "version": "0.8.8",
+      "archive_sha256": "202b2d1261c22d886f307934760a6bb566444f68f39b24f6f10defdc23633049",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "584c3a2d884b0e4dba9e3f822a9b6982cff072c7",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/584c3a2d884b0e4dba9e3f822a9b6982cff072c7/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/584c3a2d884b0e4dba9e3f822a9b6982cff072c7/LICENSE",
+          "git_blob_sha1": "77d5625cb3656d2a3b63aa2f0c9b27190330e4eb",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "libsqlite3-sys",
+      "version": "0.35.0",
+      "archive_sha256": "133c182a6a2c87864fe97778797e46c7e999672690dc9fa3ee8e241aa4a9c13f",
+      "license_declared": "MIT",
+      "review_basis": "The exact locked libsqlite3-sys 0.35.0 crate embeds sqlite3.c and sqlite3.h byte-identical to the official SQLite 3.50.2 sqlite.org amalgamation ZIP (SHA-256 387991de2834b5da2894119ff4173a9ea0779ea55ebcf53d9a40b24d1dc2484e); source ID 2025-06-28 14:00:48 2af157d77fb1304a74176eaee7fbc7c7e932d946bf25325e9c26c91db19e3079. The original public-domain blessing is preserved as attribution; the Rust wrapper separately retains MIT. This excerpt is not represented as a full license text. See docs/refactor/build-input-provenance-2026-10-16.md.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/sqlite-3.50.2-PUBLIC-DOMAIN.txt",
+          "sha256": "ad89cf5f9a0ca133418eae187ae954f2805fd3261aa00716642ed93fc7f3892d",
+          "upstream_url": "https://www.sqlite.org/2025/sqlite-amalgamation-3500200.zip",
+          "upstream_archive_sha256": "387991de2834b5da2894119ff4173a9ea0779ea55ebcf53d9a40b24d1dc2484e",
+          "full_license_text": false
+        }
+      ]
+    },
+    {
+      "name": "ndk",
+      "version": "0.9.0",
+      "archive_sha256": "c3f42e7bbe13d351b6bead8286a43aac9534b82bd3cc43e47037f012ebfd62d4",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/rust-mobile/ndk/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-APACHE",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+          "upstream_url": "https://raw.githubusercontent.com/rust-mobile/ndk/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-APACHE",
+          "git_blob_sha1": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/rust-mobile/ndk/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-MIT",
+          "sha256": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1",
+          "upstream_url": "https://raw.githubusercontent.com/rust-mobile/ndk/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-MIT",
+          "git_blob_sha1": "9cf106272ac3b56b0c4c80218e8fc10a664ca5f4",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "ndk-context",
+      "version": "0.1.1",
+      "archive_sha256": "27b02d87554356db9e9a873add8782d4ea6e3e58ea071a9adb9a2e8ddb884a8b",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "10f2ba388fca20f7349996ebae26ccda7a6fda5c",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/rust-windowing/android-ndk-rs/10f2ba388fca20f7349996ebae26ccda7a6fda5c/LICENSE-APACHE",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+          "upstream_url": "https://raw.githubusercontent.com/rust-windowing/android-ndk-rs/10f2ba388fca20f7349996ebae26ccda7a6fda5c/LICENSE-APACHE",
+          "git_blob_sha1": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/rust-windowing/android-ndk-rs/10f2ba388fca20f7349996ebae26ccda7a6fda5c/LICENSE-MIT",
+          "sha256": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1",
+          "upstream_url": "https://raw.githubusercontent.com/rust-windowing/android-ndk-rs/10f2ba388fca20f7349996ebae26ccda7a6fda5c/LICENSE-MIT",
+          "git_blob_sha1": "9cf106272ac3b56b0c4c80218e8fc10a664ca5f4",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "ndk-sys",
+      "version": "0.6.0+11769913",
+      "archive_sha256": "ee6cda3051665f1fb8d9e08fc35c96d5a244fb1be711a03b71118828afc9a873",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/rust-mobile/ndk/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-APACHE",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+          "upstream_url": "https://raw.githubusercontent.com/rust-mobile/ndk/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-APACHE",
+          "git_blob_sha1": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/rust-mobile/ndk/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-MIT",
+          "sha256": "508a77d2e7b51d98adeed32648ad124b7b30241a8e70b2e72c99f92d8e5874d1",
+          "upstream_url": "https://raw.githubusercontent.com/rust-mobile/ndk/49bbbba16c58ff63cb8a0ad0eca5a9fb7ecaec25/LICENSE-MIT",
+          "git_blob_sha1": "9cf106272ac3b56b0c4c80218e8fc10a664ca5f4",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "next_tuple",
+      "version": "0.1.0",
+      "archive_sha256": "60993920e071b0c9b66f14e2b32740a4e27ffc82854dcd72035887f336a09a28",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "d665dd4b89151e5d797df3db5cd2260cbe1e8fae",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/d665dd4b89151e5d797df3db5cd2260cbe1e8fae/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/d665dd4b89151e5d797df3db5cd2260cbe1e8fae/LICENSE",
+          "git_blob_sha1": "77d5625cb3656d2a3b63aa2f0c9b27190330e4eb",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "objc-sys",
+      "version": "0.3.5",
+      "archive_sha256": "cdb91bdd390c7ce1a8607f35f3ca7151b65afc0ff5ff3b34fa350f7d7c7e4310",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "4fc083f1c6d6784577e38b0ee8dbd344481e2fd2",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/4fc083f1c6d6784577e38b0ee8dbd344481e2fd2/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/4fc083f1c6d6784577e38b0ee8dbd344481e2fd2/LICENSE.txt",
+          "git_blob_sha1": "e9ab3babc0d8602b83dccde8a462f8f3dc1e52ad",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "objc2",
+      "version": "0.5.3",
+      "archive_sha256": "19d5490aaf8f1d7cf7688dfa9b0ce07900e168852c45cd2c03f534dfd27cfd0b",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "5237cbf081d04ef75a1f6a207b4018e7c1ae7438",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/5237cbf081d04ef75a1f6a207b4018e7c1ae7438/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/5237cbf081d04ef75a1f6a207b4018e7c1ae7438/LICENSE.txt",
+          "git_blob_sha1": "e9ab3babc0d8602b83dccde8a462f8f3dc1e52ad",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "archive_sha256": "08849bbd4767dfae9457696856ae1c84fe4e0281bbe4a7abff2d0e06fb7981f8",
+      "license_declared": "MIT",
+      "name": "objc2",
+      "version": "0.6.5",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/d7d2fa23ceaa5e6096c923b081040e5d81b3b9df/LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/d7d2fa23ceaa5e6096c923b081040e5d81b3b9df/LICENSE.md",
+          "full_license_text": false
+        }
+      ],
+      "crate_vcs_revision": "d7d2fa23ceaa5e6096c923b081040e5d81b3b9df",
+      "selected_license_option": "MIT",
+      "review_basis": "Retain exact-revision license explanation and original Steven Sheldon MIT text from the verified ancestor immediately before upstream replaced LICENSE.txt with that explanation (cfb199226661ec6e4939fcd7cd7531b3c5453076). The replacement expressly retains MIT and makes future contributions MIT-compatible. No historical text is represented as an exact-current file. Apple-SDK provenance in the current explanation remains disclosed; this inventory decision is not approval of unsupported Apple platform distribution."
+    },
+    {
+      "name": "objc2-app-kit",
+      "version": "0.2.2",
+      "archive_sha256": "e4e89ad9e3d7d297152b17d39ed92cd50ca8063a89a9fa569046d41568891eff",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "git_blob_sha1": "e9ab3babc0d8602b83dccde8a462f8f3dc1e52ad",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+      "license_declared": "Zlib OR Apache-2.0 OR MIT",
+      "name": "objc2-app-kit",
+      "version": "0.3.2",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md",
+          "full_license_text": false
+        }
+      ],
+      "crate_vcs_revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "selected_license_option": "MIT",
+      "review_basis": "Retain exact-revision license explanation and original Steven Sheldon MIT text from the verified ancestor immediately before upstream replaced LICENSE.txt with that explanation (cfb199226661ec6e4939fcd7cd7531b3c5453076). The replacement expressly retains MIT and makes future contributions MIT-compatible. No historical text is represented as an exact-current file. Apple-SDK provenance in the current explanation remains disclosed; this inventory decision is not approval of unsupported Apple platform distribution."
+    },
+    {
+      "name": "objc2-cloud-kit",
+      "version": "0.2.2",
+      "archive_sha256": "74dd3b56391c7a0596a295029734d3c1c5e7e510a4cb30245f8221ccea96b009",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "git_blob_sha1": "e9ab3babc0d8602b83dccde8a462f8f3dc1e52ad",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "objc2-contacts",
+      "version": "0.2.2",
+      "archive_sha256": "a5ff520e9c33812fd374d8deecef01d4a840e7b41862d849513de77e44aa4889",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "git_blob_sha1": "e9ab3babc0d8602b83dccde8a462f8f3dc1e52ad",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "objc2-core-data",
+      "version": "0.2.2",
+      "archive_sha256": "617fbf49e071c178c0b24c080767db52958f716d9eabdf0890523aeae54773ef",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "git_blob_sha1": "e9ab3babc0d8602b83dccde8a462f8f3dc1e52ad",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "archive_sha256": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+      "license_declared": "Zlib OR Apache-2.0 OR MIT",
+      "name": "objc2-core-foundation",
+      "version": "0.3.2",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md",
+          "full_license_text": false
+        }
+      ],
+      "crate_vcs_revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "selected_license_option": "MIT",
+      "review_basis": "Retain exact-revision license explanation and original Steven Sheldon MIT text from the verified ancestor immediately before upstream replaced LICENSE.txt with that explanation (cfb199226661ec6e4939fcd7cd7531b3c5453076). The replacement expressly retains MIT and makes future contributions MIT-compatible. No historical text is represented as an exact-current file. Apple-SDK provenance in the current explanation remains disclosed; this inventory decision is not approval of unsupported Apple platform distribution."
+    },
+    {
+      "archive_sha256": "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807",
+      "license_declared": "Zlib OR Apache-2.0 OR MIT",
+      "name": "objc2-core-graphics",
+      "version": "0.3.2",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md",
+          "full_license_text": false
+        }
+      ],
+      "crate_vcs_revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "selected_license_option": "MIT",
+      "review_basis": "Retain exact-revision license explanation and original Steven Sheldon MIT text from the verified ancestor immediately before upstream replaced LICENSE.txt with that explanation (cfb199226661ec6e4939fcd7cd7531b3c5453076). The replacement expressly retains MIT and makes future contributions MIT-compatible. No historical text is represented as an exact-current file. Apple-SDK provenance in the current explanation remains disclosed; this inventory decision is not approval of unsupported Apple platform distribution."
+    },
+    {
+      "name": "objc2-core-image",
+      "version": "0.2.2",
+      "archive_sha256": "55260963a527c99f1819c4f8e3b47fe04f9650694ef348ffd2227e8196d34c80",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "git_blob_sha1": "e9ab3babc0d8602b83dccde8a462f8f3dc1e52ad",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "objc2-core-location",
+      "version": "0.2.2",
+      "archive_sha256": "000cfee34e683244f284252ee206a27953279d370e309649dc3ee317b37e5781",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "git_blob_sha1": "e9ab3babc0d8602b83dccde8a462f8f3dc1e52ad",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "archive_sha256": "ef25abbcd74fb2609453eb695bd2f860d389e457f67dc17cafc8b8cbc89d0c33",
+      "license_declared": "MIT",
+      "name": "objc2-encode",
+      "version": "4.1.0",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/8d214f5477365ffcbcbb7de058c86ed9a518efb7/LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/8d214f5477365ffcbcbb7de058c86ed9a518efb7/LICENSE.md",
+          "full_license_text": false
+        }
+      ],
+      "crate_vcs_revision": "8d214f5477365ffcbcbb7de058c86ed9a518efb7",
+      "selected_license_option": "MIT",
+      "review_basis": "Retain exact-revision license explanation and original Steven Sheldon MIT text from the verified ancestor immediately before upstream replaced LICENSE.txt with that explanation (cfb199226661ec6e4939fcd7cd7531b3c5453076). The replacement expressly retains MIT and makes future contributions MIT-compatible. No historical text is represented as an exact-current file. Apple-SDK provenance in the current explanation remains disclosed; this inventory decision is not approval of unsupported Apple platform distribution."
+    },
+    {
+      "archive_sha256": "0ee638a5da3799329310ad4cfa62fbf045d5f56e3ef5ba4149e7452dcf89d5a8",
+      "license_declared": "MIT",
+      "name": "objc2-foundation",
+      "version": "0.2.2",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "full_license_text": true
+        }
+      ],
+      "crate_vcs_revision": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+      "review_basis": "Complete original root MIT text at the exact embedded revision, including Steven Sheldon attribution. Earlier generic scanning missed this package; this is an explicit exact-version enrollment."
+    },
+    {
+      "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+      "license_declared": "MIT",
+      "name": "objc2-foundation",
+      "version": "0.3.2",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md",
+          "full_license_text": false
+        }
+      ],
+      "crate_vcs_revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "selected_license_option": "MIT",
+      "review_basis": "Retain exact-revision license explanation and original Steven Sheldon MIT text from the verified ancestor immediately before upstream replaced LICENSE.txt with that explanation (cfb199226661ec6e4939fcd7cd7531b3c5453076). The replacement expressly retains MIT and makes future contributions MIT-compatible. No historical text is represented as an exact-current file. Apple-SDK provenance in the current explanation remains disclosed; this inventory decision is not approval of unsupported Apple platform distribution."
+    },
+    {
+      "archive_sha256": "180788110936d59bab6bd83b6060ffdfffb3b922ba1396b312ae795e1de9d81d",
+      "license_declared": "Zlib OR Apache-2.0 OR MIT",
+      "name": "objc2-io-surface",
+      "version": "0.3.2",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md",
+          "full_license_text": false
+        }
+      ],
+      "crate_vcs_revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "selected_license_option": "MIT",
+      "review_basis": "Retain exact-revision license explanation and original Steven Sheldon MIT text from the verified ancestor immediately before upstream replaced LICENSE.txt with that explanation (cfb199226661ec6e4939fcd7cd7531b3c5453076). The replacement expressly retains MIT and makes future contributions MIT-compatible. No historical text is represented as an exact-current file. Apple-SDK provenance in the current explanation remains disclosed; this inventory decision is not approval of unsupported Apple platform distribution."
+    },
+    {
+      "name": "objc2-link-presentation",
+      "version": "0.2.2",
+      "archive_sha256": "a1a1ae721c5e35be65f01a03b6d2ac13a54cb4fa70d8a5da293d7b0020261398",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "git_blob_sha1": "e9ab3babc0d8602b83dccde8a462f8f3dc1e52ad",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "objc2-metal",
+      "version": "0.2.2",
+      "archive_sha256": "dd0cba1276f6023976a406a14ffa85e1fdd19df6b0f737b063b95f6c8c7aadd6",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "git_blob_sha1": "e9ab3babc0d8602b83dccde8a462f8f3dc1e52ad",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "objc2-quartz-core",
+      "version": "0.2.2",
+      "archive_sha256": "e42bee7bff906b14b167da2bac5efe6b6a07e6f7c0a21a7308d40c960242dc7a",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "git_blob_sha1": "e9ab3babc0d8602b83dccde8a462f8f3dc1e52ad",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "objc2-symbols",
+      "version": "0.2.2",
+      "archive_sha256": "0a684efe3dec1b305badae1a28f6555f6ddd3bb2c2267896782858d5a78404dc",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "git_blob_sha1": "e9ab3babc0d8602b83dccde8a462f8f3dc1e52ad",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "objc2-ui-kit",
+      "version": "0.2.2",
+      "archive_sha256": "b8bb46798b20cd6b91cbd113524c490f1686f4c4e8f49502431415f3512e2b6f",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "git_blob_sha1": "e9ab3babc0d8602b83dccde8a462f8f3dc1e52ad",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "archive_sha256": "d87d638e33c06f577498cbcc50491496a3ed4246998a7fbba7ccb98b1e7eab22",
+      "license_declared": "Zlib OR Apache-2.0 OR MIT",
+      "name": "objc2-ui-kit",
+      "version": "0.3.2",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/757cd841d0293341dbefd9b99d7548dec244ffde/LICENSE.txt",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md",
+          "sha256": "7f976f7e9cb2d87df7230606feb932c3f21ac0e664045a775b600046ff850c54",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE.md",
+          "full_license_text": false
+        }
+      ],
+      "crate_vcs_revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+      "selected_license_option": "MIT",
+      "review_basis": "Retain exact-revision license explanation and original Steven Sheldon MIT text from the verified ancestor immediately before upstream replaced LICENSE.txt with that explanation (cfb199226661ec6e4939fcd7cd7531b3c5453076). The replacement expressly retains MIT and makes future contributions MIT-compatible. No historical text is represented as an exact-current file. Apple-SDK provenance in the current explanation remains disclosed; this inventory decision is not approval of unsupported Apple platform distribution."
+    },
+    {
+      "name": "objc2-uniform-type-identifiers",
+      "version": "0.2.2",
+      "archive_sha256": "44fa5f9748dbfe1ca6c0b79ad20725a11eca7c2218bceb4b005cb1be26273bfe",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "git_blob_sha1": "e9ab3babc0d8602b83dccde8a462f8f3dc1e52ad",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "objc2-user-notifications",
+      "version": "0.2.2",
+      "archive_sha256": "76cfcbf642358e8689af64cee815d139339f3ed8ad05103ed5eaf73db8d84cb3",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "e282618be4c3a3b9542957e0c8540e9588472ce8",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "sha256": "e353f37b12aefbb9f9b29490e837cfee05d9bda70804b3562839a3285c1df1e5",
+          "upstream_url": "https://raw.githubusercontent.com/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt",
+          "git_blob_sha1": "e9ab3babc0d8602b83dccde8a462f8f3dc1e52ad",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "oco_ref",
+      "version": "0.2.1",
+      "archive_sha256": "ed0423ff9973dea4d6bd075934fdda86ebb8c05bdf9d6b0507067d4a1226371d",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "5f2d5115537d08043bba0293c406c4f9b97a4dae",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/5f2d5115537d08043bba0293c406c4f9b97a4dae/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/5f2d5115537d08043bba0293c406c4f9b97a4dae/LICENSE",
+          "git_blob_sha1": "77d5625cb3656d2a3b63aa2f0c9b27190330e4eb",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "or_poisoned",
+      "version": "0.1.0",
+      "archive_sha256": "8c04f5d74368e4d0dfe06c45c8627c81bd7c317d52762d118fb9b3076f6420fd",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "6865c1f951bfa0bc5b107aa69286a110cd6f45ca",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/6865c1f951bfa0bc5b107aa69286a110cd6f45ca/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/6865c1f951bfa0bc5b107aa69286a110cd6f45ca/LICENSE",
+          "git_blob_sha1": "77d5625cb3656d2a3b63aa2f0c9b27190330e4eb",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "profiling",
+      "version": "1.0.18",
+      "archive_sha256": "3d595e54a326bc53c1c197b32d295e14b169e3cfeaa8dc82b529f947fba6bcf5",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "8271551172eb6fa4cba47369aedd93790c623df9",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/aclysma/profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-APACHE",
+          "sha256": "10d30a673cd5e9349bdc02aeb48f14b3386d27d0da32df8f0a555d4aa16aa551",
+          "upstream_url": "https://raw.githubusercontent.com/aclysma/profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-APACHE",
+          "git_blob_sha1": "139dce95d473c201a8561ef17536314d8b8cda65",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/aclysma/profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-MIT",
+          "sha256": "c8167fdeeed46d3f244d3f85c5bf998ce889343691c32be2c61a8bc4b5c08333",
+          "upstream_url": "https://raw.githubusercontent.com/aclysma/profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-MIT",
+          "git_blob_sha1": "6a84e059ad8b43e03c2b06bc2af4dc1d8442808d",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "protoc-bin-vendored",
+      "version": "3.3.0",
+      "archive_sha256": "8760a25b6ff9c620324822737e468478fa092234190d2e449760344354896ed9",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "d7cc7356ead5b0efd14c415103406b2221a3f8fb",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "sha256": "97647e63047ef75a82ee2928b335df94f45c87e08777dc033393c73294f3a57a",
+          "upstream_url": "https://raw.githubusercontent.com/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "git_blob_sha1": "acce6396f3cd1990471e8415ddf190780fa255b5",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "protoc-bin-vendored-linux-aarch_64",
+      "version": "3.3.0",
+      "archive_sha256": "73fa2624782ca04cd44f51554566717377acd240e4c0016d757dd74fccc9324f",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "d7cc7356ead5b0efd14c415103406b2221a3f8fb",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review. The embedded Google protoc v36.2 payload and 20 include files are byte-identical to the official protoc-36.2-linux-aarch_64.zip release asset (SHA-256 8b8f18bd2b30346efbc698dd5a73dd7c805f3ef8380f6dfc95c768f3f1852f6a); its BSD-3-Clause license is included from the exact protobuf source commit 2c74169b34066ceb8ddb6b882fcb3fb32d737a55. The release tag is unsigned; full provenance and comparison receipts are in docs/refactor/build-input-provenance-2026-10-16.md.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "sha256": "97647e63047ef75a82ee2928b335df94f45c87e08777dc033393c73294f3a57a",
+          "upstream_url": "https://raw.githubusercontent.com/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "git_blob_sha1": "acce6396f3cd1990471e8415ddf190780fa255b5",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/protobuf-36.2-LICENSE-BSD-3-Clause.txt",
+          "sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d",
+          "upstream_url": "https://raw.githubusercontent.com/protocolbuffers/protobuf/2c74169b34066ceb8ddb6b882fcb3fb32d737a55/LICENSE",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "protoc-bin-vendored-linux-ppcle_64",
+      "version": "3.3.0",
+      "archive_sha256": "e2417e9817fa237dab803ad4dda7357a111656e242959cc6b8f9a1a583367d42",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "d7cc7356ead5b0efd14c415103406b2221a3f8fb",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review. The embedded Google protoc v36.2 payload and 20 include files are byte-identical to the official protoc-36.2-linux-ppcle_64.zip release asset (SHA-256 0eb8eff1b90b1f06e5dc9aa29aa9e313daba51dd33a3166636d53ea1142228bc); its BSD-3-Clause license is included from the exact protobuf source commit 2c74169b34066ceb8ddb6b882fcb3fb32d737a55. The release tag is unsigned; full provenance and comparison receipts are in docs/refactor/build-input-provenance-2026-10-16.md.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "sha256": "97647e63047ef75a82ee2928b335df94f45c87e08777dc033393c73294f3a57a",
+          "upstream_url": "https://raw.githubusercontent.com/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "git_blob_sha1": "acce6396f3cd1990471e8415ddf190780fa255b5",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/protobuf-36.2-LICENSE-BSD-3-Clause.txt",
+          "sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d",
+          "upstream_url": "https://raw.githubusercontent.com/protocolbuffers/protobuf/2c74169b34066ceb8ddb6b882fcb3fb32d737a55/LICENSE",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "protoc-bin-vendored-linux-s390_64",
+      "version": "3.3.0",
+      "archive_sha256": "4d189c34636356a46a7ed3188233dc8a88c431278cc54d4a19b096a2d270e985",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "d7cc7356ead5b0efd14c415103406b2221a3f8fb",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review. The embedded Google protoc v36.2 payload and 20 include files are byte-identical to the official protoc-36.2-linux-s390_64.zip release asset (SHA-256 6ef625085cc7eb42521192f52185c4a9211d5b4721cd104f923494dffbe1c836); its BSD-3-Clause license is included from the exact protobuf source commit 2c74169b34066ceb8ddb6b882fcb3fb32d737a55. The release tag is unsigned; full provenance and comparison receipts are in docs/refactor/build-input-provenance-2026-10-16.md.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "sha256": "97647e63047ef75a82ee2928b335df94f45c87e08777dc033393c73294f3a57a",
+          "upstream_url": "https://raw.githubusercontent.com/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "git_blob_sha1": "acce6396f3cd1990471e8415ddf190780fa255b5",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/protobuf-36.2-LICENSE-BSD-3-Clause.txt",
+          "sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d",
+          "upstream_url": "https://raw.githubusercontent.com/protocolbuffers/protobuf/2c74169b34066ceb8ddb6b882fcb3fb32d737a55/LICENSE",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "protoc-bin-vendored-linux-x86_32",
+      "version": "3.3.0",
+      "archive_sha256": "171e39f1e846e5f322ced1ac3b8d4cd3a3833ca24b6e5d58b3632574fe6204fa",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "d7cc7356ead5b0efd14c415103406b2221a3f8fb",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review. The embedded Google protoc v36.2 payload and 20 include files are byte-identical to the official protoc-36.2-linux-x86_32.zip release asset (SHA-256 81eb44f4003ddd0626cb847e43a34350d73df23cd2fa9233adb5466ce8dd34a0); its BSD-3-Clause license is included from the exact protobuf source commit 2c74169b34066ceb8ddb6b882fcb3fb32d737a55. The release tag is unsigned; full provenance and comparison receipts are in docs/refactor/build-input-provenance-2026-10-16.md.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "sha256": "97647e63047ef75a82ee2928b335df94f45c87e08777dc033393c73294f3a57a",
+          "upstream_url": "https://raw.githubusercontent.com/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "git_blob_sha1": "acce6396f3cd1990471e8415ddf190780fa255b5",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/protobuf-36.2-LICENSE-BSD-3-Clause.txt",
+          "sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d",
+          "upstream_url": "https://raw.githubusercontent.com/protocolbuffers/protobuf/2c74169b34066ceb8ddb6b882fcb3fb32d737a55/LICENSE",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "protoc-bin-vendored-linux-x86_64",
+      "version": "3.3.0",
+      "archive_sha256": "873cdcc097593432086661aa432b8078f1cd87bfb02847c332e98ae2c119e966",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "d7cc7356ead5b0efd14c415103406b2221a3f8fb",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review. The embedded Google protoc v36.2 payload and 20 include files are byte-identical to the official protoc-36.2-linux-x86_64.zip release asset (SHA-256 121f6c7afe1d4d0e3ea6aab9432038599250134cbf4474cb1167d2c7decd4278); its BSD-3-Clause license is included from the exact protobuf source commit 2c74169b34066ceb8ddb6b882fcb3fb32d737a55. The release tag is unsigned; full provenance and comparison receipts are in docs/refactor/build-input-provenance-2026-10-16.md.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "sha256": "97647e63047ef75a82ee2928b335df94f45c87e08777dc033393c73294f3a57a",
+          "upstream_url": "https://raw.githubusercontent.com/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "git_blob_sha1": "acce6396f3cd1990471e8415ddf190780fa255b5",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/protobuf-36.2-LICENSE-BSD-3-Clause.txt",
+          "sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d",
+          "upstream_url": "https://raw.githubusercontent.com/protocolbuffers/protobuf/2c74169b34066ceb8ddb6b882fcb3fb32d737a55/LICENSE",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "protoc-bin-vendored-macos-aarch_64",
+      "version": "3.3.0",
+      "archive_sha256": "eeb72df001783b8297847fe8f5f874ee400fd742c843d60583e8c23d96977c7f",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "d7cc7356ead5b0efd14c415103406b2221a3f8fb",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review. The embedded Google protoc v36.2 payload and 20 include files are byte-identical to the official protoc-36.2-osx-aarch_64.zip release asset (SHA-256 9cd98a532c5c5e0c4161314de0225de27e4c8a323917b6ea7b1b714d3ae23466); its BSD-3-Clause license is included from the exact protobuf source commit 2c74169b34066ceb8ddb6b882fcb3fb32d737a55. The release tag is unsigned; full provenance and comparison receipts are in docs/refactor/build-input-provenance-2026-10-16.md.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "sha256": "97647e63047ef75a82ee2928b335df94f45c87e08777dc033393c73294f3a57a",
+          "upstream_url": "https://raw.githubusercontent.com/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "git_blob_sha1": "acce6396f3cd1990471e8415ddf190780fa255b5",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/protobuf-36.2-LICENSE-BSD-3-Clause.txt",
+          "sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d",
+          "upstream_url": "https://raw.githubusercontent.com/protocolbuffers/protobuf/2c74169b34066ceb8ddb6b882fcb3fb32d737a55/LICENSE",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "protoc-bin-vendored-macos-x86_64",
+      "version": "3.3.0",
+      "archive_sha256": "b04652167eca899dda05f32f5481adeaf25c623a98ce2fc146a001cc59a2add7",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "d7cc7356ead5b0efd14c415103406b2221a3f8fb",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review. The embedded Google protoc v36.2 payload and 20 include files are byte-identical to the official protoc-36.2-osx-x86_64.zip release asset (SHA-256 228cc7add4616cc14ca5e80dee83209d44449a7aee95a914ae748fa374efb078); its BSD-3-Clause license is included from the exact protobuf source commit 2c74169b34066ceb8ddb6b882fcb3fb32d737a55. The release tag is unsigned; full provenance and comparison receipts are in docs/refactor/build-input-provenance-2026-10-16.md.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "sha256": "97647e63047ef75a82ee2928b335df94f45c87e08777dc033393c73294f3a57a",
+          "upstream_url": "https://raw.githubusercontent.com/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "git_blob_sha1": "acce6396f3cd1990471e8415ddf190780fa255b5",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/protobuf-36.2-LICENSE-BSD-3-Clause.txt",
+          "sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d",
+          "upstream_url": "https://raw.githubusercontent.com/protocolbuffers/protobuf/2c74169b34066ceb8ddb6b882fcb3fb32d737a55/LICENSE",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "protoc-bin-vendored-win32",
+      "version": "3.3.0",
+      "archive_sha256": "263a3f48f01e7309e857138bd47f785585b4a005e8e56c6d2824ce91195999c3",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "d7cc7356ead5b0efd14c415103406b2221a3f8fb",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review. The embedded Google protoc v36.2 payload and 20 include files are byte-identical to the official protoc-36.2-win32.zip release asset (SHA-256 031777688173e6414cfaead74da4c16d7cf2da490bca4e0d0c2458008587f105); its BSD-3-Clause license is included from the exact protobuf source commit 2c74169b34066ceb8ddb6b882fcb3fb32d737a55. The release tag is unsigned; full provenance and comparison receipts are in docs/refactor/build-input-provenance-2026-10-16.md.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "sha256": "97647e63047ef75a82ee2928b335df94f45c87e08777dc033393c73294f3a57a",
+          "upstream_url": "https://raw.githubusercontent.com/stepancheg/rust-protoc-bin-vendored/d7cc7356ead5b0efd14c415103406b2221a3f8fb/LICENSE.txt",
+          "git_blob_sha1": "acce6396f3cd1990471e8415ddf190780fa255b5",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/protobuf-36.2-LICENSE-BSD-3-Clause.txt",
+          "sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d",
+          "upstream_url": "https://raw.githubusercontent.com/protocolbuffers/protobuf/2c74169b34066ceb8ddb6b882fcb3fb32d737a55/LICENSE",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "r-efi",
+      "version": "5.3.0",
+      "archive_sha256": "69cdb34c158ceb288df11e18b4bd39de994f6657d83847bdffdbd7f346754b0f",
+      "license_declared": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
+      "crate_vcs_revision": "97b55bed1c2c91dcbf787674849f05337ff80b33",
+      "review_basis": "Original exact archive text: crc-catalog LICENSES directory, or r-efi AUTHORS containing the full optional MIT grant and actual copyright holders. r-efi is collected under its MIT option.",
+      "archive_license_files": [
+        {
+          "path": "AUTHORS",
+          "sha256": "ff92bed461f50338dd703a9ba9aee496a425957873df1d91192776e4bdf5dda7"
+        }
+      ],
+      "files": []
+    },
+    {
+      "name": "r-efi",
+      "version": "6.0.0",
+      "archive_sha256": "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf",
+      "license_declared": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
+      "crate_vcs_revision": "7e1b0322d31d625f81a5656096330934f9cd835d",
+      "review_basis": "Original exact archive text: crc-catalog LICENSES directory, or r-efi AUTHORS containing the full optional MIT grant and actual copyright holders. r-efi is collected under its MIT option.",
+      "archive_license_files": [
+        {
+          "path": "AUTHORS",
+          "sha256": "d027e91dbc9cdbb2f1190068e498bd6b61cff022b6a032b191021ba658d96111"
+        }
+      ],
+      "files": []
+    },
+    {
+      "name": "reactive_graph",
+      "version": "0.2.15",
+      "archive_sha256": "79f11fac67625645add76313dab8dae510fca0654d96ef98fd8f961a7d2e22c1",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "584c3a2d884b0e4dba9e3f822a9b6982cff072c7",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/584c3a2d884b0e4dba9e3f822a9b6982cff072c7/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/584c3a2d884b0e4dba9e3f822a9b6982cff072c7/LICENSE",
+          "git_blob_sha1": "77d5625cb3656d2a3b63aa2f0c9b27190330e4eb",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "reactive_stores",
+      "version": "0.4.4",
+      "archive_sha256": "a29e469b556f25486678e9f5f65fa21a0351d98affde9a7eea9fee286bf8ebd6",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "584c3a2d884b0e4dba9e3f822a9b6982cff072c7",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/584c3a2d884b0e4dba9e3f822a9b6982cff072c7/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/584c3a2d884b0e4dba9e3f822a9b6982cff072c7/LICENSE",
+          "git_blob_sha1": "77d5625cb3656d2a3b63aa2f0c9b27190330e4eb",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "reactive_stores_macro",
+      "version": "0.4.4",
+      "archive_sha256": "8d11f1b82859d94577892b8037c35f8a4f066cbb3864583e22e68def0af49a88",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "584c3a2d884b0e4dba9e3f822a9b6982cff072c7",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/584c3a2d884b0e4dba9e3f822a9b6982cff072c7/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/584c3a2d884b0e4dba9e3f822a9b6982cff072c7/LICENSE",
+          "git_blob_sha1": "77d5625cb3656d2a3b63aa2f0c9b27190330e4eb",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "rstml",
+      "version": "0.13.1",
+      "archive_sha256": "c6bd1bfba3c4c0b57aae906204d9e5744f3f65800ce6c75bd4cc162f2c26f3aa",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "9fe0f4616a8224d37d64a53fa91722a08d736952",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/rs-tml/rstml/9fe0f4616a8224d37d64a53fa91722a08d736952/LICENSE",
+          "sha256": "f99321bd5b3678fae12d43f1ae77064b2a0f6db3646c36d5171a38ecd01e744c",
+          "upstream_url": "https://raw.githubusercontent.com/rs-tml/rstml/9fe0f4616a8224d37d64a53fa91722a08d736952/LICENSE",
+          "git_blob_sha1": "5de783248c504def4f63412aa5f9c7741f243b6b",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "server_fn",
+      "version": "0.8.13",
+      "archive_sha256": "be8559dd05af1b5b7e363a150616589d5a88af5187273f7f331ba0dae8922812",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "30fa4e039455bea69c9467e8ec45cad7fce0722f",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/30fa4e039455bea69c9467e8ec45cad7fce0722f/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/30fa4e039455bea69c9467e8ec45cad7fce0722f/LICENSE",
+          "git_blob_sha1": "77d5625cb3656d2a3b63aa2f0c9b27190330e4eb",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "archive_sha256": "ce79d7b6ab93f7994e5ff4999eb962f2aea370d7c3b91986eb75da738a8e65f9",
+      "license_declared": "MIT",
+      "name": "server_fn_macro",
+      "version": "0.8.12",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+          "full_license_text": true
+        }
+      ],
+      "crate_vcs_revision": "95f574434a11ba607d58bc0018d3ab5a17e7ac8b",
+      "review_basis": "Exact checksum-verified archive declares MIT, Greg Johnston and this same monorepo. Its embedded commit is unavailable upstream (retained HTTP 422), and is not authenticated or substituted as source. Collect the original monorepo MIT grant, Copyright 2022 Greg Johnston, at reachable release-family revision fbc9ed631ff8c19c5eed02a1d4459e202cff7043; ten independently reachable selected crate revisions have identical original text. Source comparison results, including mismatches, remain in source-bindings-attempt04. This is an explicitly reviewed project-license text binding, not an exact embedded-commit claim."
+    },
+    {
+      "archive_sha256": "d9a4f81a0d855f279c3448243138a55cbfdd9851da9341b9c1e5971b90089e61",
+      "license_declared": "MIT",
+      "name": "server_fn_macro_default",
+      "version": "0.8.6",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE",
+          "full_license_text": true
+        }
+      ],
+      "crate_vcs_revision": "58fe6c1ad0cd175e9c8ec204895a9739d52fda16",
+      "review_basis": "Exact checksum-verified archive declares MIT, Greg Johnston and this same monorepo. Its embedded commit is unavailable upstream (retained HTTP 422), and is not authenticated or substituted as source. Collect the original monorepo MIT grant, Copyright 2022 Greg Johnston, at reachable release-family revision fbc9ed631ff8c19c5eed02a1d4459e202cff7043; ten independently reachable selected crate revisions have identical original text. Source comparison results, including mismatches, remain in source-bindings-attempt04. This is an explicitly reviewed project-license text binding, not an exact embedded-commit claim."
+    },
+    {
+      "name": "tachys",
+      "version": "0.2.19",
+      "archive_sha256": "e47e2220bb9d2a3be976a22a0fb7685a0b84499bb11ea5cb3bbc82907675ac68",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "584c3a2d884b0e4dba9e3f822a9b6982cff072c7",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/584c3a2d884b0e4dba9e3f822a9b6982cff072c7/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/584c3a2d884b0e4dba9e3f822a9b6982cff072c7/LICENSE",
+          "git_blob_sha1": "77d5625cb3656d2a3b63aa2f0c9b27190330e4eb",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "throw_error",
+      "version": "0.3.1",
+      "archive_sha256": "dc0ed6038fcbc0795aca7c92963ddda636573b956679204e044492d2b13c8f64",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "43359694b6596f88d911b9c8d8d92a121c27d0ce",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/leptos-rs/leptos/43359694b6596f88d911b9c8d8d92a121c27d0ce/LICENSE",
+          "sha256": "76356e713a0d1ea0bde549f4236b01c750100ab31790019843faa5aec449310f",
+          "upstream_url": "https://raw.githubusercontent.com/leptos-rs/leptos/43359694b6596f88d911b9c8d8d92a121c27d0ce/LICENSE",
+          "git_blob_sha1": "77d5625cb3656d2a3b63aa2f0c9b27190330e4eb",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "wasm_split_helpers",
+      "version": "0.2.3",
+      "archive_sha256": "ab578aae2fe2916edaea06843187d50f87b0965622da0ceef648edca27b385ba",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "d8263b20578e8c49b02851009ae3bc7d43c567bd",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/WorldSEnder/wasm-split-prototype/d8263b20578e8c49b02851009ae3bc7d43c567bd/LICENSE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "upstream_url": "https://raw.githubusercontent.com/WorldSEnder/wasm-split-prototype/d8263b20578e8c49b02851009ae3bc7d43c567bd/LICENSE",
+          "git_blob_sha1": "16fe87b06e802f094b3fbb0894b137bca2b16ef1",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "wasm_split_macros",
+      "version": "0.2.2",
+      "archive_sha256": "3e653af7ee4a9ef0fce481a9ec6f43cb78de20d0cdb4f4f5862e1dc6e407e6c8",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "a3266fe9d998b3f8b0d2111500b7c4b8ec892506",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/WorldSEnder/wasm-split-prototype/a3266fe9d998b3f8b0d2111500b7c4b8ec892506/LICENSE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "upstream_url": "https://raw.githubusercontent.com/WorldSEnder/wasm-split-prototype/a3266fe9d998b3f8b0d2111500b7c4b8ec892506/LICENSE",
+          "git_blob_sha1": "16fe87b06e802f094b3fbb0894b137bca2b16ef1",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "webrtc",
+      "version": "0.14.0",
+      "archive_sha256": "08fd686c0920ac08f3a57eacc48e31f0e4ca1ffefba4478784606f78c14e83ad",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "a1f8f1919235d8452835852e018efd654f2f8366",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/webrtc-rs/webrtc/a1f8f1919235d8452835852e018efd654f2f8366/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "upstream_url": "https://raw.githubusercontent.com/webrtc-rs/webrtc/a1f8f1919235d8452835852e018efd654f2f8366/LICENSE-APACHE",
+          "git_blob_sha1": "16fe87b06e802f094b3fbb0894b137bca2b16ef1",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/webrtc-rs/webrtc/a1f8f1919235d8452835852e018efd654f2f8366/LICENSE-MIT",
+          "sha256": "56cc6c08157f4faf70d351b3a7ceac143399d5359a78c180e06dcd0390784f4d",
+          "upstream_url": "https://raw.githubusercontent.com/webrtc-rs/webrtc/a1f8f1919235d8452835852e018efd654f2f8366/LICENSE-MIT",
+          "git_blob_sha1": "e11d93befe8321ba69c2c96f7aa501c07ade27de",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "archive_sha256": "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6",
+      "license_declared": "MIT/Apache-2.0",
+      "name": "winapi-i686-pc-windows-gnu",
+      "version": "0.4.0",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/retep998/winapi-rs/fa4e2c5a6dc495c71e6031bdde2e52870ebf6fdf/LICENSE-MIT",
+          "sha256": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b",
+          "upstream_url": "https://raw.githubusercontent.com/retep998/winapi-rs/fa4e2c5a6dc495c71e6031bdde2e52870ebf6fdf/LICENSE-MIT",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/retep998/winapi-rs/fa4e2c5a6dc495c71e6031bdde2e52870ebf6fdf/LICENSE-APACHE",
+          "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+          "upstream_url": "https://raw.githubusercontent.com/retep998/winapi-rs/fa4e2c5a6dc495c71e6031bdde2e52870ebf6fdf/LICENSE-APACHE",
+          "full_license_text": true
+        }
+      ],
+      "review_basis": "Original winapi-rs MIT/Apache text at fa4e2c5a6dc495c71e6031bdde2e52870ebf6fdf, the upstream change including licenses in import-library crates. Every actual library byte in the two locked 0.4.0 archives matches that revision (1388 and 1417 files); earlier 0.3.9 source comparison mismatches are retained and not used as evidence."
+    },
+    {
+      "archive_sha256": "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f",
+      "license_declared": "MIT/Apache-2.0",
+      "name": "winapi-x86_64-pc-windows-gnu",
+      "version": "0.4.0",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/retep998/winapi-rs/fa4e2c5a6dc495c71e6031bdde2e52870ebf6fdf/LICENSE-MIT",
+          "sha256": "ce7bc3499fee93d5022ef430d5e4201e79a6d9154f3974e42f41349f0569e09b",
+          "upstream_url": "https://raw.githubusercontent.com/retep998/winapi-rs/fa4e2c5a6dc495c71e6031bdde2e52870ebf6fdf/LICENSE-MIT",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/retep998/winapi-rs/fa4e2c5a6dc495c71e6031bdde2e52870ebf6fdf/LICENSE-APACHE",
+          "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+          "upstream_url": "https://raw.githubusercontent.com/retep998/winapi-rs/fa4e2c5a6dc495c71e6031bdde2e52870ebf6fdf/LICENSE-APACHE",
+          "full_license_text": true
+        }
+      ],
+      "review_basis": "Original winapi-rs MIT/Apache text at fa4e2c5a6dc495c71e6031bdde2e52870ebf6fdf, the upstream change including licenses in import-library crates. Every actual library byte in the two locked 0.4.0 archives matches that revision (1388 and 1417 files); earlier 0.3.9 source comparison mismatches are retained and not used as evidence."
+    },
+    {
+      "name": "yasna",
+      "version": "0.5.2",
+      "archive_sha256": "e17bb3549cc1321ae1296b9cdc2698e2b6cb1992adfa19a8c72e5b7a738f44cd",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "b7e65f9a4c317494cce2d18ea02b3d6eaaea7985",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/qnighy/yasna.rs/b7e65f9a4c317494cce2d18ea02b3d6eaaea7985/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "upstream_url": "https://raw.githubusercontent.com/qnighy/yasna.rs/b7e65f9a4c317494cce2d18ea02b3d6eaaea7985/LICENSE-APACHE",
+          "git_blob_sha1": "16fe87b06e802f094b3fbb0894b137bca2b16ef1",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/qnighy/yasna.rs/b7e65f9a4c317494cce2d18ea02b3d6eaaea7985/LICENSE-MIT",
+          "sha256": "2a7df90e60fd5512b8bca35d3ce90e068f21c52d962855053fd1d9e2e7ca0f16",
+          "upstream_url": "https://raw.githubusercontent.com/qnighy/yasna.rs/b7e65f9a4c317494cce2d18ea02b3d6eaaea7985/LICENSE-MIT",
+          "git_blob_sha1": "eaa67b3cb827ab4ece77b37e2de875657fc3cdee",
+          "full_license_text": true
+        }
+      ]
+    }
+  ],
+  "unresolved_packages": [
+    {
+      "archive_sha256": "589c70f0faf8aa9d17787557d5eae854d7755cac50f5c3d12c81d3d57661cebb",
+      "license_declared": "MIT",
+      "name": "convert_case_extras",
+      "version": "0.2.0",
+      "repository": "https://github.com/rutrum/convert-case-extras",
+      "authors_declared": [
+        "rutrum <dave@rutrum.net>"
+      ],
+      "reason": "The exact archive and upstream repository history declare MIT but no complete original MIT copyright/permission file was found. Keep publisher attribution and declaration, and require explicit follow-up; no copyright holder/year or grant is synthesized."
+    },
+    {
+      "archive_sha256": "bd0c93bb4b0c6d9b77f4435b0ae98c24d17f1c45b2ff844c6151a07256ca923b",
+      "license_declared": "MIT",
+      "name": "dispatch",
+      "version": "0.2.0",
+      "repository": "http://github.com/SSheldon/rust-dispatch",
+      "authors_declared": [
+        "Steven Sheldon"
+      ],
+      "reason": "The exact archive and upstream repository history declare MIT but no complete original MIT copyright/permission file was found. Keep publisher attribution and declaration, and require explicit follow-up; no copyright holder/year or grant is synthesized."
+    },
+    {
+      "archive_sha256": "a1731451909bde27714eacba19c2566362a7f35224f52b153d3f42cf60f72472",
+      "license_declared": "MIT",
+      "name": "erased",
+      "version": "0.1.2",
+      "repository": "https://github.com/JonathanBrouwer/erased",
+      "authors_declared": [
+        "Jonathan Brouwer <jonathantbrouwer@gmail.com>",
+        "Jonathan Dönszelmann <jonabent@gmail.com>"
+      ],
+      "reason": "The exact archive and upstream repository history declare MIT but no complete original MIT copyright/permission file was found. Keep publisher attribution and declaration, and require explicit follow-up; no copyright holder/year or grant is synthesized."
+    }
+  ]
+}

@@ -1,0 +1,351 @@
+{
+  "schema_version": 1,
+  "product": "NestLink-v15",
+  "purpose": "repository-delivery",
+  "version": "15.0.0",
+  "source_revision": null,
+  "repository_node_id": "R_kgDOTz-mRQ",
+  "completion": {
+    "implementation": "pending",
+    "legacy_preservation_review": "pending",
+    "release_bytes_frozen": "pending",
+    "targeted_verification": "pending",
+    "user_full_functional_acceptance": "pending"
+  },
+  "signing": {
+    "android": "not-configured",
+    "linux_update": "not-configured",
+    "oci": "not-configured",
+    "windows": "not-configured"
+  },
+  "artifacts": [
+    {
+      "id": "acceptance",
+      "role": "acceptance",
+      "path": "files/acceptance.bin",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "android-arm64",
+      "role": "android-arm64",
+      "path": "files/android-arm64.bin",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "android-x86_64",
+      "role": "android-x86_64",
+      "path": "files/android-x86_64.bin",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "final-source-archive-plan",
+      "role": "final-source-archive-plan",
+      "path": "files/final-source-archive-plan.json",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "final-source-archive-receipt",
+      "role": "final-source-archive-receipt",
+      "path": "files/final-source-archive-receipt.json",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "history-archive-plan",
+      "role": "history-archive-plan",
+      "path": "files/history-archive-plan.json",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "history-archive-receipt",
+      "role": "history-archive-receipt",
+      "path": "files/history-archive-receipt.json",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "licenses",
+      "role": "licenses",
+      "path": "files/licenses.bin",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "linux-arm64-desktop",
+      "role": "linux-arm64-desktop",
+      "path": "files/linux-arm64-desktop.bin",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "linux-arm64-server",
+      "role": "linux-arm64-server",
+      "path": "files/linux-arm64-server.bin",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "linux-x64-desktop",
+      "role": "linux-x64-desktop",
+      "path": "files/linux-x64-desktop.bin",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "linux-x64-server",
+      "role": "linux-x64-server",
+      "path": "files/linux-x64-server.bin",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "materials",
+      "role": "materials",
+      "path": "files/materials.bin",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "native-packages-manifest",
+      "role": "native-packages-manifest",
+      "path": "files/native-packages-manifest.bin",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "native-payload-manifest",
+      "role": "native-payload-manifest",
+      "path": "files/native-payload-manifest.bin",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "oci-arm64",
+      "role": "oci-arm64",
+      "path": "files/oci-arm64.bin",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "oci-x64",
+      "role": "oci-x64",
+      "path": "files/oci-x64.bin",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "sbom",
+      "role": "sbom",
+      "path": "files/sbom.bin",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "source",
+      "role": "source",
+      "path": "files/source.bin",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "web-static",
+      "role": "web-static",
+      "path": "files/web-static.bin",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "windows-x64-privileged-setup",
+      "role": "windows-x64-privileged-setup",
+      "path": "files/windows-x64-privileged-setup.bin",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    },
+    {
+      "id": "windows-x64-setup",
+      "role": "windows-x64-setup",
+      "path": "files/windows-x64-setup.bin",
+      "bytes": 0,
+      "sha256": null,
+      "source_revision": null
+    }
+  ],
+  "acceptance_cases": [
+    {
+      "id": "90-minute-soak",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "android-api-30",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "android-api-31",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "android-api-32",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "android-api-33",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "android-api-34",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "android-api-35",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "android-api-36",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "android-arm64-physical",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "chrome-current",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "company-to-home",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "edge-current",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "firefox-current",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "gnome-wayland-authorized",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "install-upgrade-rollback-uninstall",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "kde-wayland-authorized",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "license-and-source-audit",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "linux-arm64-x11-installed",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "linux-x64-x11-installed",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "mobile-to-home",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "reinstall-new-identity-retained-data",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "schema-migration-and-interruption-recovery",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "signature-android",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "signature-linux-update",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "signature-oci",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "signature-windows",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "turn-capacity-and-revoke",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "windows-10-installed",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "windows-11-installed",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "windows-privileged-input",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    }
+  ]
+}

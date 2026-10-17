@@ -1,0 +1,135 @@
+[workspace]
+members = [
+    "crates/protocol",
+    "crates/identity",
+    "crates/auth",
+    "crates/policy",
+    "crates/session",
+    "crates/storage",
+    "crates/operations",
+    "crates/node",
+    "crates/platform-security",
+    "crates/platform-files",
+    "crates/platform-clipboard",
+    "crates/platform-tray",
+    "crates/platform-network",
+    "crates/platform-input",
+    "crates/platform-capture",
+    "crates/platform-session",
+    "crates/platform-audio",
+    "crates/media-codec",
+    "crates/media-session",
+    "crates/transport-stream",
+    "crates/transport-quic",
+    "crates/transport-wss",
+    "crates/traversal",
+    "crates/turn-service",
+    "crates/remote",
+    "crates/connectivity",
+    "crates/sdk",
+    "crates/android-bridge",
+    "crates/app-core",
+    "crates/local-ipc",
+    "crates/app-ipc",
+    "apps/server",
+    "apps/web",
+    "apps/daemon",
+    "apps/desktop",
+    "apps/privileged",
+    "xtask",
+]
+exclude = ["crates/traversal/vendor/turn", "crates/traversal/vendor/ice", "crates/web-vendor/leptos_macro", "crates/web-vendor/tachys", "crates/platform-vendor/objc2-foundation"]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0-rc.1"
+edition = "2024"
+rust-version = "1.96"
+license = "Apache-2.0"
+repository = "https://github.com/ZHanry/NestLink"
+
+[workspace.dependencies]
+nestlink-protocol = { version = "=0.1.0-rc.1", path = "crates/protocol" }
+nestlink-identity = { version = "=0.1.0-rc.1", path = "crates/identity" }
+nestlink-policy = { version = "=0.1.0-rc.1", path = "crates/policy" }
+nestlink-session = { version = "=0.1.0-rc.1", path = "crates/session" }
+nestlink-storage = { version = "=0.1.0-rc.1", path = "crates/storage" }
+nestlink-operations = { version = "=0.1.0-rc.1", path = "crates/operations" }
+nestlink-node = { version = "=0.1.0-rc.1", path = "crates/node" }
+nestlink-auth = { version = "=0.1.0-rc.1", path = "crates/auth" }
+nestlink-platform-security = { version = "=0.1.0-rc.1", path = "crates/platform-security" }
+nestlink-platform-files = { version = "=0.1.0-rc.1", path = "crates/platform-files" }
+nestlink-platform-clipboard = { version = "=0.1.0-rc.1", path = "crates/platform-clipboard" }
+nestlink-platform-tray = { version = "=0.1.0-rc.1", path = "crates/platform-tray" }
+nestlink-platform-network = { version = "=0.1.0-rc.1", path = "crates/platform-network" }
+nestlink-platform-input = { version = "=0.1.0-rc.1", path = "crates/platform-input" }
+nestlink-platform-capture = { version = "=0.1.0-rc.1", path = "crates/platform-capture" }
+nestlink-platform-session = { version = "=0.1.0-rc.1", path = "crates/platform-session" }
+nestlink-platform-audio = { version = "=0.1.0-rc.1", path = "crates/platform-audio" }
+nestlink-media-codec = { version = "=0.1.0-rc.1", path = "crates/media-codec" }
+nestlink-media-session = { version = "=0.1.0-rc.1", path = "crates/media-session" }
+nestlink-transport-stream = { version = "=0.1.0-rc.1", path = "crates/transport-stream" }
+nestlink-transport-quic = { version = "=0.1.0-rc.1", path = "crates/transport-quic" }
+nestlink-transport-wss = { version = "=0.1.0-rc.1", path = "crates/transport-wss" }
+nestlink-traversal = { version = "=0.1.0-rc.1", path = "crates/traversal" }
+nestlink-turn-service = { version = "=0.1.0-rc.1", path = "crates/turn-service" }
+nestlink-remote = { version = "=0.1.0-rc.1", path = "crates/remote" }
+nestlink-connectivity = { version = "=0.1.0-rc.1", path = "crates/connectivity" }
+nestlink-sdk = { version = "=0.1.0-rc.1", path = "crates/sdk" }
+nestlink-app-core = { version = "=0.1.0-rc.1", path = "crates/app-core" }
+nestlink-local-ipc = { version = "=0.1.0-rc.1", path = "crates/local-ipc" }
+nestlink-app-ipc = { version = "=0.1.0-rc.1", path = "crates/app-ipc" }
+nestlink-privileged = { version = "=0.1.0-rc.1", path = "apps/privileged" }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+schemars = "1.2.1"
+thiserror = "2.0.17"
+prost = "0.14.1"
+ed25519-dalek = { version = "2.2.0", features = ["rand_core", "zeroize", "pkcs8"] }
+rand_core = { version = "0.6.4", features = ["getrandom"] }
+sha2 = "0.10.9"
+uuid = { version = "1.18.1", default-features = false, features = ["std", "v4"] }
+rusqlite = { version = "0.37.0", features = ["bundled", "backup", "serialize"] }
+argon2 = { version = "0.5.3", features = ["zeroize"] }
+chacha20poly1305 = "0.10.1"
+hmac = "0.12.1"
+hkdf = "0.12.4"
+sha1 = "0.10.6"
+md-5 = "0.10.6"
+zeroize = { version = "1.9.0", features = ["derive"] }
+base64 = "0.22.1"
+subtle = "2.6.1"
+tokio = { version = "1.48.0", features = ["rt-multi-thread", "macros", "net", "signal", "time", "sync", "io-util"] }
+axum = { version = "0.8.6", features = ["ws"] }
+tower = { version = "0.5.2", features = ["util"] }
+clap = { version = "4.5.50", features = ["derive"] }
+toml = "0.9.8"
+rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
+tokio-rustls = { version = "0.26.4", default-features = false, features = ["ring", "tls12"] }
+rcgen = { version = "0.14.5", default-features = false, features = ["ring", "crypto"] }
+x509-parser = "0.18.0"
+quinn = { version = "0.11.9", default-features = false, features = ["runtime-tokio", "rustls-ring"] }
+url = "2.5.8"
+reqwest = { version = "0.12.28", default-features = false, features = ["json", "rustls-tls"] }
+futures-util = { version = "0.3.31", features = ["sink"] }
+tokio-tungstenite = { version = "0.29.0", default-features = false, features = ["connect", "rustls-tls-webpki-roots"] }
+if-addrs = "0.14.0"
+webrtc = "=0.14.0"
+
+[patch.crates-io]
+objc2-foundation = { path = "crates/platform-vendor/objc2-foundation" }
+leptos_macro = { path = "crates/web-vendor/leptos_macro" }
+tachys = { path = "crates/web-vendor/tachys" }
+webrtc-ice = { path = "crates/traversal/vendor/ice" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

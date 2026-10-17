@@ -1,0 +1,54 @@
+[graph]
+all-features = true
+
+[advisories]
+version = 2
+ignore = [
+    { id = "RUSTSEC-2024-0436", reason = "The selected Leptos CSR dependency graph requires the paste proc-macro transitively; RustSec reports maintenance status only and no compatible upstream replacement is currently available in that graph. Recheck on every Leptos upgrade and before stable release." },
+    { id = "RUSTSEC-2025-0141", reason = "Reviewed bincode 1.3.3 via dtls 0.13.0/webrtc 0.14.0: its only two call sites serialize or deserialize explicitly imported/exported DTLS State. Neither DTLS internals, WebRTC, nor NestLink calls those APIs; network records use DTLS's own parser. This advisory reports maintenance status, with no safe upstream upgrade. See docs/refactor/tls-dependency-review-2026-10-16.md; repeat reachability review on any of these dependency or call-site changes and before stable release." },
+]
+
+[licenses]
+version = 2
+allow = ["Apache-2.0", "MIT", "BSD-3-Clause", "Unicode-3.0", "Zlib", "ISC"]
+
+[[licenses.exceptions]]
+name = "base16"
+version = "=0.2.1"
+allow = ["CC0-1.0"]
+
+[[licenses.exceptions]]
+name = "xxhash-rust"
+version = "=0.8.19"
+allow = ["BSL-1.0"]
+
+# Full BSL-1.0 text and package-source review are in the dated TURN/WebRTC
+# dependency review; keep these allowances pinned to the reviewed releases.
+[[licenses.exceptions]]
+name = "clipboard-win"
+version = "=5.4.1"
+allow = ["BSL-1.0"]
+
+[[licenses.exceptions]]
+name = "error-code"
+version = "=3.4.0"
+allow = ["BSL-1.0"]
+
+[[licenses.exceptions]]
+name = "webpki-roots"
+allow = ["CDLA-Permissive-2.0"]
+
+# Reviewed complete crate/license bytes; see the native file supplier review.
+[[licenses.exceptions]]
+name = "winx"
+version = "=0.36.4"
+allow = ["Apache-2.0 WITH LLVM-exception"]
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+deny = [{ name = "hbb_common" }, { name = "rustdesk" }]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

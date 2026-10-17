@@ -1,0 +1,787 @@
+syntax = "proto3";
+package nestlink.v1;
+
+enum ErrorCode {
+  ERROR_CODE_UNSPECIFIED = 0;
+  PROTOCOL_MISMATCH = 1;
+  AUTH_REQUIRED = 2;
+  PERMISSION_REQUIRED = 3;
+  DIRECT_UNAVAILABLE = 4;
+  RELAY_DISABLED = 5;
+  TURN_UNREACHABLE = 6;
+  PUBLIC_INGRESS_DISABLED = 7;
+  POLICY_REVOKED = 8;
+  LEASE_EXPIRED = 9;
+  CAPACITY_EXCEEDED = 10;
+  CODEC_UNSUPPORTED = 11;
+  PLATFORM_UNSUPPORTED = 12;
+  OS_PERMISSION_DENIED = 13;
+  INVALID_MESSAGE = 14;
+  IDENTITY_MISMATCH = 15;
+  REPLAY_REJECTED = 16;
+  INTERNAL_ERROR = 17;
+  RELAY_UNAVAILABLE = 18;
+}
+
+enum Path {
+  PATH_UNSPECIFIED = 0;
+  DIRECT = 1;
+  RELAY = 2;
+}
+
+enum Permission {
+  PERMISSION_UNSPECIFIED = 0;
+  VIEW = 1;
+  INPUT = 2;
+  AUDIO = 3;
+  FILE_READ = 4;
+  FILE_WRITE = 5;
+  CLIPBOARD_READ = 6;
+  CLIPBOARD_WRITE = 7;
+}
+
+// No account login token or device ID alone authorizes this resource.
+message PermitClaims {
+  uint32 schema_version = 1;
+  string deployment_id = 2;
+  uint64 security_epoch = 3;
+  string session_id = 4;
+  string account_id = 5;
+  string controller_device_id = 6;
+  string host_device_id = 7;
+  bytes controller_key_sha256 = 8;
+  bytes host_key_sha256 = 9;
+  string resource_id = 10;
+  repeated Permission permissions = 11;
+  repeated Path paths = 12;
+  uint64 policy_revision = 13;
+  uint64 connection_generation = 14;
+  uint64 lease_sequence = 15;
+  uint64 issued_at_unix_ms = 16;
+  uint64 expires_at_unix_ms = 17;
+  bytes capability_sha256 = 18;
+  repeated string required_capabilities = 19;
+}
+
+// Signature covers the exact claims bytes plus the session-permit domain.
+message SignedPermit {
+  bytes claims = 1;
+  bytes signature = 2;
+}
+
+// Endpoint proof covers the permit digest, both keys, path, challenge and generation.
+message EndpointProofClaims {
+  uint32 schema_version = 1;
+  bytes permit_sha256 = 2;
+  bytes challenge = 3;
+  bytes controller_key_sha256 = 4;
+  bytes host_key_sha256 = 5;
+  Path path = 6;
+  uint64 connection_generation = 7;
+}
+
+enum DeviceAction {
+  DEVICE_ACTION_UNSPECIFIED = 0;
+  REGISTER = 1;
+  APPROVE = 2;
+  RENEW = 3;
+  SIGNAL = 4;
+  RELAY_CONNECT = 5;
+  TRUST_REMOTE = 6;
+  CONFIGURE_REMOTE_PASSWORD = 7;
+  USE_REMOTE_PASSWORD = 8;
+  RELAY_ALLOCATE = 9;
+  NODE_RELAY_CONNECT = 10;
+  RELAY_DISCOVER = 11;
+  RECONNECT = 12;
+  REGISTER_BROWSER_ENDPOINT = 13;
+  TURN_ALLOCATE = 14;
+  APPROVE_SERVICE_TARGET = 15;
+}
+
+message DeviceActionClaims {
+  uint32 schema_version = 1;
+  DeviceAction action = 2;
+  string deployment_id = 3;
+  uint64 security_epoch = 4;
+  string account_id = 5;
+  string device_id = 6;
+  string resource_id = 7;
+  bytes challenge = 8;
+  bytes payload_sha256 = 9;
+  uint64 expires_at_unix_ms = 10;
+}
+
+// Independently signed receipt for the exact two-endpoint reconnection request.
+message ReconnectionGrantClaims {
+  uint32 schema_version = 1;
+  bytes previous_permit_sha256 = 2;
+  bytes request_sha256 = 3;
+  bytes nonce = 4;
+  bytes permit = 5; // Complete SignedPermit, under the same pinned issuer.
+}
+message SignedReconnectionGrant {
+  bytes claims = 1;
+  bytes signature = 2;
+}
+
+// Native mutual session proof. Every challenge and signature is connection-specific.
+message NativeProof {
+  EndpointProofClaims transcript = 1;
+  bytes signature = 2;
+  bytes peer_transcript_signature = 3;
+}
+
+// Negotiated on the proof stream after both endpoint proofs. No implicit
+// single-stream fallback. Channel numbers follow native-channels.md.
+message NativeQuicProfile {
+  uint32 schema_version = 1;
+  bytes binding_sha256 = 2;
+  uint64 connection_generation = 3;
+  repeated uint32 reliable_channels = 4;
+  uint32 audio_fragment_bytes = 5; // 960 when Audio is approved, otherwise 0
+}
+message NativeQuicStream {
+  uint32 schema_version = 1;
+  bytes binding_sha256 = 2;
+  uint64 connection_generation = 3;
+  uint32 channel = 4;
+}
+message NativeQuicAudioFragment {
+  uint32 schema_version = 1;
+  bytes binding_sha256 = 2;
+  uint64 connection_generation = 3;
+  uint64 packet_sequence = 4;
+  uint32 fragment_index = 5;
+  uint32 fragment_count = 6;
+  uint32 packet_bytes = 7;
+  bytes payload = 8;
+}
+
+// Only inside an authorized channel. Text commits and reliable buttons share
+// an ordered sequence; old connection/layout epochs are never replayed.
+message KeyInput {
+  uint32 hid_usage = 1;
+  bool down = 2;
+}
+message PointerInput {
+  optional uint32 button = 1;
+  bool down = 2;
+  sint32 x = 3;
+  sint32 y = 4;
+}
+message InputCommand {
+  uint32 schema_version = 1;
+  uint64 input_epoch = 2;
+  uint64 layout_epoch = 3;
+  uint64 connection_generation = 4;
+  uint64 sequence = 5;
+  oneof action {
+    KeyInput key = 6;
+    PointerInput pointer = 7;
+    string text = 8;
+    bool release_all = 9; // Must be true; consumes the same reliable sequence.
+  }
+}
+
+// Host-to-controller direction of the authorized native Input channel.
+// The platform's logical display bounds must match the captured source.
+message NativeInputLayout {
+  uint32 schema_version = 1;
+  uint64 connection_generation = 2;
+  uint64 input_epoch = 3;
+  uint64 layout_epoch = 4;
+  uint32 source = 5;
+  sint32 left = 6;
+  sint32 top = 7;
+  uint32 width = 8;
+  uint32 height = 9;
+}
+
+// Native authorized channels only. These are not RTP/WebRTC payload formats.
+// The current connection, approved source and frozen layout are checked by
+// the media session; protobuf validity alone never authorizes media.
+message NativeVideo {
+  uint32 schema_version = 1;
+  uint64 connection_generation = 2;
+  uint64 layout_epoch = 3;
+  uint32 source = 4;
+  uint64 sequence = 5;
+  uint64 pts_90khz = 6;
+  uint32 width = 7;
+  uint32 height = 8;
+  bool keyframe = 9;
+  bytes payload = 10; // one complete visible 8-bit VP8 frame
+  bool repeated_source = 11; // recovery keyframe from cached approved pixels, not a fresh capture
+}
+message NativeAudio {
+  uint32 schema_version = 1;
+  uint64 connection_generation = 2;
+  uint32 source = 3;
+  uint64 sequence = 4;
+  uint64 pts_48khz = 5;
+  uint32 channels = 6;
+  bytes payload = 7; // one complete 48 kHz / 20 ms Opus packet
+}
+
+enum VideoRecoveryReason {
+  VIDEO_RECOVERY_UNSPECIFIED = 0;
+  KEYFRAME_MISSING = 1;
+  REFERENCE_GAP = 2;
+  DECODER_FAILURE = 3;
+}
+// Reliable, View-authorized feedback. It cannot change source/layout/codec
+// consent. request_sequence is per source, distinct from frame sequence.
+message NativeVideoFeedback {
+  uint32 schema_version = 1;
+  uint64 connection_generation = 2;
+  uint64 layout_epoch = 3;
+  uint32 source = 4;
+  uint64 request_sequence = 5;
+  uint64 last_sequence = 6;
+  VideoRecoveryReason reason = 7;
+}
+
+enum NodeRole {
+  NODE_ROLE_UNSPECIFIED = 0;
+  NODE_RELAY = 1;
+  NODE_EDGE = 2;
+}
+
+// Node control signatures have separate keys/domains from endpoint actions.
+message NodeChallenge {
+  uint32 schema_version = 1;
+  string deployment_id = 2;
+  uint64 security_epoch = 3;
+  string node_id = 4;
+  bytes node_key_sha256 = 5;
+  string request_id = 6;
+  bytes nonce = 7;
+  uint64 expires_at_unix_ms = 8;
+}
+message NodeProof {
+  NodeChallenge challenge = 1;
+  bytes signature = 2;
+  string runtime_id = 3;
+}
+message NodeLeaseClaims {
+  uint32 schema_version = 1;
+  string deployment_id = 2;
+  uint64 security_epoch = 3;
+  string node_id = 4;
+  bytes node_key_sha256 = 5;
+  string request_id = 6;
+  bytes nonce = 7;
+  repeated NodeRole roles = 8;
+  uint64 policy_revision = 9;
+  uint64 lease_sequence = 10;
+  uint64 issued_at_unix_ms = 11;
+  uint64 expires_at_unix_ms = 12;
+  bool server_forwarding_allowed = 13;
+  bool public_ingress_allowed = 14;
+  uint32 max_connections = 15;
+  uint64 bytes_per_second = 16;
+  string runtime_id = 17;
+  uint64 runtime_generation = 18;
+}
+message SignedNodeLease {
+  bytes claims = 1;
+  bytes signature = 2;
+}
+
+// Cumulative queue admission counters, never resource authorization or delivery receipts.
+message NodeUsageClaims {
+  uint32 schema_version = 1;
+  string deployment_id = 2;
+  uint64 security_epoch = 3;
+  string node_id = 4;
+  string runtime_id = 5;
+  uint64 runtime_generation = 6;
+  uint64 policy_revision = 7;
+  uint64 lease_sequence = 8;
+  uint64 report_sequence = 9;
+  uint64 opened_connections = 10;
+  uint64 closed_connections = 11;
+  uint64 admitted_bytes = 12;
+  uint64 sampled_at_unix_ms = 13;
+}
+message SignedNodeUsage {
+  bytes claims = 1;
+  bytes signature = 2;
+}
+message NodeUsageAckClaims {
+  uint32 schema_version = 1;
+  string deployment_id = 2;
+  uint64 security_epoch = 3;
+  string node_id = 4;
+  string runtime_id = 5;
+  uint64 runtime_generation = 6;
+  uint64 report_sequence = 7;
+  bytes report_sha256 = 8;
+  uint64 accepted_at_unix_ms = 9;
+}
+message SignedNodeUsageAck {
+  bytes claims = 1;
+  bytes signature = 2;
+}
+
+enum RelayTransport {
+  RELAY_TRANSPORT_UNSPECIFIED = 0;
+  QUIC_DATAGRAM = 1;
+  WSS_STREAM = 2;
+}
+// A concrete relay reservation, never an endpoint's remote business permit.
+message RelayAllocationClaims {
+  uint32 schema_version = 1;
+  string deployment_id = 2;
+  uint64 security_epoch = 3;
+  string allocation_id = 4;
+  string session_id = 5;
+  string node_id = 6;
+  string runtime_id = 7;
+  uint64 runtime_generation = 8;
+  bytes node_key_sha256 = 9;
+  string controller_device_id = 10;
+  string host_device_id = 11;
+  bytes controller_key_sha256 = 12;
+  bytes host_key_sha256 = 13;
+  string controller_account_id = 14;
+  string host_account_id = 15;
+  uint64 connection_generation = 16;
+  uint64 policy_revision = 17;
+  uint64 quota_revision = 18;
+  bytes session_binding_sha256 = 19;
+  repeated RelayTransport transports = 20;
+  uint64 grant_sequence = 21;
+  uint64 issued_at_unix_ms = 22;
+  uint64 expires_at_unix_ms = 23;
+  uint64 bytes_per_second = 24;
+  uint64 bytes_per_allocation = 25;
+  uint64 node_endpoint_revision = 26;
+}
+message SignedRelayAllocation {
+  bytes claims = 1;
+  bytes signature = 2;
+}
+
+// Control-approved native relay locations. Discovery does not reserve capacity.
+message DiscoveredRelayNode {
+  string node_id = 1;
+  bytes node_key_sha256 = 2;
+  string runtime_id = 3;
+  uint64 runtime_generation = 4;
+  uint64 endpoint_revision = 5;
+  string quic_uri = 6;
+  string wss_origin = 7;
+  bool allow_loopback = 8;
+  uint64 expires_at_unix_ms = 9;
+}
+message NodeDiscoveryClaims {
+  uint32 schema_version = 1;
+  string deployment_id = 2;
+  uint64 security_epoch = 3;
+  string session_id = 4;
+  string account_id = 5;
+  string device_id = 6;
+  bytes device_key_sha256 = 7;
+  bytes permit_sha256 = 8;
+  bytes request_sha256 = 9;
+  bytes nonce = 10;
+  uint64 issued_at_unix_ms = 11;
+  uint64 expires_at_unix_ms = 12;
+  repeated DiscoveredRelayNode nodes = 13;
+}
+message SignedNodeDiscovery {
+  bytes claims = 1;
+  bytes signature = 2;
+}
+
+// A node-signed query, bounded by its already authenticated policy lease.
+message NodeResourceQueryClaims {
+  uint32 schema_version = 1;
+  string deployment_id = 2;
+  uint64 security_epoch = 3;
+  string node_id = 4;
+  string runtime_id = 5;
+  uint64 runtime_generation = 6;
+  uint64 policy_revision = 7;
+  uint64 lease_sequence = 8;
+  string request_id = 9;
+  uint64 request_sequence = 10;
+  uint64 issued_at_unix_ms = 11;
+  uint64 expires_at_unix_ms = 12;
+}
+message SignedNodeResourceQuery {
+  bytes claims = 1;
+  bytes signature = 2;
+}
+// Policy-key signature delegates the concrete allocation issuer trust anchor.
+// This response never renews a node/global lease or releases reserved capacity.
+message NodeResourceSnapshotClaims {
+  NodeResourceQueryClaims query = 1;
+  bytes query_sha256 = 2;
+  bytes allocation_issuer = 3;
+  uint64 quota_revision = 4;
+  uint64 issued_at_unix_ms = 5;
+  uint64 expires_at_unix_ms = 6;
+  repeated RelayAllocationClaims allocations = 7;
+}
+message SignedNodeResourceSnapshot {
+  bytes claims = 1;
+  bytes signature = 2;
+}
+
+// TURN has its own resource/signing purpose. Native relay tickets never confer
+// TURN authority. A peerless grant permits allocation and ICE gathering only.
+enum TurnPurpose {
+  TURN_PURPOSE_UNSPECIFIED = 0;
+  BROWSER_WEB_RTC = 1;
+}
+message TurnResourceQueryClaims {
+  uint32 schema_version = 1;
+  string deployment_id = 2;
+  uint64 security_epoch = 3;
+  string node_id = 4;
+  string runtime_id = 5;
+  uint64 runtime_generation = 6;
+  uint64 policy_revision = 7;
+  uint64 lease_sequence = 8;
+  string request_id = 9;
+  uint64 request_sequence = 10;
+  uint64 issued_at_unix_ms = 11;
+  uint64 expires_at_unix_ms = 12;
+}
+message SignedTurnResourceQuery { bytes claims = 1; bytes signature = 2; }
+message TurnGrantClaims {
+  uint32 schema_version = 1;
+  string deployment_id = 2;
+  uint64 security_epoch = 3;
+  string allocation_id = 4;
+  string session_id = 5;
+  string temporary_identity = 6;
+  TurnPurpose purpose = 7;
+  string node_id = 8;
+  string runtime_id = 9;
+  uint64 runtime_generation = 10;
+  bytes node_key_sha256 = 11;
+  string device_id = 12;
+  string controller_device_id = 13;
+  string host_device_id = 14;
+  bytes controller_key_sha256 = 15;
+  bytes host_key_sha256 = 16;
+  uint64 network_generation = 17;
+  uint64 connection_generation = 18;
+  uint64 lease_sequence = 19;
+  bytes permit_sha256 = 20;
+  uint64 policy_revision = 21;
+  uint64 quota_revision = 22;
+  uint64 grant_sequence = 23;
+  uint64 issued_at_unix_ms = 24;
+  uint64 expires_at_unix_ms = 25;
+  string username = 26;
+  string realm = 27;
+  // RFC 5389 long-term key, disclosed only to the authenticated data node.
+  bytes auth_key = 28;
+  uint64 bytes_per_second = 29;
+  uint64 bytes_per_allocation = 30;
+  uint32 max_peers = 31;
+  uint64 endpoint_revision = 32;
+  bytes controller_public_key = 33;
+  bytes host_public_key = 34;
+  bytes session_binding_sha256 = 35;
+}
+// Both endpoints sign the entire canonical pair, including exact address:port
+// sets. No inferred IP wildcard or unsigned SDP candidate activates forwarding.
+message TurnPeerBindingClaims {
+  uint32 schema_version = 1;
+  string deployment_id = 2;
+  uint64 security_epoch = 3;
+  string session_id = 4;
+  string temporary_identity = 5;
+  TurnPurpose purpose = 6;
+  string controller_allocation_id = 7;
+  string host_allocation_id = 8;
+  string controller_device_id = 9;
+  string host_device_id = 10;
+  bytes controller_key_sha256 = 11;
+  bytes host_key_sha256 = 12;
+  uint64 controller_network_generation = 13;
+  uint64 host_network_generation = 14;
+  uint64 connection_generation = 15;
+  uint64 lease_sequence = 16;
+  bytes permit_sha256 = 17;
+  repeated string controller_candidates = 18;
+  repeated string host_candidates = 19;
+  uint64 issued_at_unix_ms = 20;
+  uint64 expires_at_unix_ms = 21;
+}
+message SignedTurnPeerBinding {
+  bytes claims = 1;
+  bytes controller_signature = 2;
+  bytes host_signature = 3;
+}
+message TurnResourceSnapshotClaims {
+  TurnResourceQueryClaims query = 1;
+  bytes query_sha256 = 2;
+  uint64 snapshot_sequence = 3;
+  uint64 quota_revision = 4;
+  uint64 issued_at_unix_ms = 5;
+  uint64 expires_at_unix_ms = 6;
+  repeated TurnGrantClaims grants = 7;
+  repeated SignedTurnPeerBinding peer_bindings = 8;
+}
+message SignedTurnResourceSnapshot { bytes claims = 1; bytes signature = 2; }
+// Only the requesting endpoint receives its random password. The derived key
+// and other endpoint's password are never included in this receipt.
+message TurnCredentialsClaims {
+  uint32 schema_version = 1;
+  string deployment_id = 2;
+  uint64 security_epoch = 3;
+  string session_id = 4;
+  string allocation_id = 5;
+  string device_id = 6;
+  string temporary_identity = 7;
+  TurnPurpose purpose = 8;
+  string node_id = 9;
+  string runtime_id = 10;
+  uint64 runtime_generation = 11;
+  uint64 network_generation = 12;
+  uint64 connection_generation = 13;
+  uint64 lease_sequence = 14;
+  bytes permit_sha256 = 15;
+  bytes request_sha256 = 16;
+  uint64 grant_sequence = 17;
+  uint64 endpoint_revision = 18;
+  uint64 issued_at_unix_ms = 19;
+  uint64 expires_at_unix_ms = 20;
+  string username = 21;
+  string realm = 22;
+  string password = 23;
+  repeated string endpoints = 24;
+  bool allow_loopback = 25;
+}
+message SignedTurnCredentials { bytes claims = 1; bytes signature = 2; }
+
+// A node reports permanent retirement only after every committed resource
+// guard and its owned I/O have ended. Receipt retries never confer authority.
+message RelayCloseClaims {
+  uint32 schema_version = 1;
+  string deployment_id = 2;
+  uint64 security_epoch = 3;
+  string node_id = 4;
+  string runtime_id = 5;
+  uint64 runtime_generation = 6;
+  string allocation_id = 7;
+  bytes allocation_binding_sha256 = 8;
+  uint64 observed_grant_sequence = 9;
+  uint64 opened_connections = 10;
+  uint64 closed_connections = 11;
+  uint64 admitted_bytes = 12;
+  uint64 closed_at_unix_ms = 13;
+}
+message SignedRelayClose {
+  bytes claims = 1;
+  bytes signature = 2;
+}
+message RelayCloseAckClaims {
+  uint32 schema_version = 1;
+  string deployment_id = 2;
+  uint64 security_epoch = 3;
+  string node_id = 4;
+  string runtime_id = 5;
+  uint64 runtime_generation = 6;
+  string allocation_id = 7;
+  bytes close_sha256 = 8;
+  uint64 accepted_at_unix_ms = 9;
+  uint32 released_endpoint_slots = 10;
+}
+message SignedRelayCloseAck {
+  bytes claims = 1;
+  bytes signature = 2;
+}
+
+// FileRead is an endpoint-encrypted, already proved business channel. A root ID
+// names a local explicit approval; no remote request contains an ambient path.
+message FileReadOpen {
+  string root_id = 1;
+  string path = 2;
+  uint64 offset = 3;
+  bytes expected_sha256 = 4;
+}
+message FileReadNext { uint64 offset = 1; }
+message FileReadManifest {
+  uint64 size = 1;
+  bytes sha256 = 2;
+  uint64 offset = 3;
+}
+message FileReadChunk {
+  uint64 offset = 1;
+  bytes data = 2;
+  bytes sha256 = 3;
+}
+message FileReadEnd {
+  uint64 size = 1;
+  bytes sha256 = 2;
+}
+enum FileReadErrorCode {
+  FILE_READ_ERROR_UNSPECIFIED = 0;
+  FILE_READ_NOT_FOUND = 1;
+  FILE_READ_DENIED = 2;
+  FILE_READ_CHANGED = 3;
+  FILE_READ_CHECKSUM_MISMATCH = 4;
+  FILE_READ_CAPACITY = 5;
+  FILE_READ_IO_FAILED = 6;
+}
+message FileReadFailure { FileReadErrorCode code = 1; }
+// Empty directory selects the approved root. All other paths are portable,
+// handle-relative paths. Browse reveals metadata under independent local consent.
+message DirectoryBrowseBegin {
+  string root_id = 1;
+  string directory = 2;
+  uint32 maximum = 3;
+}
+message DirectoryBrowseNext {
+  bytes cursor = 1;
+  uint32 maximum = 2;
+}
+enum DirectoryEntryKind {
+  DIRECTORY_ENTRY_UNSPECIFIED = 0;
+  DIRECTORY_ENTRY_FILE = 1;
+  DIRECTORY_ENTRY_DIRECTORY = 2;
+}
+message DirectoryEntry {
+  string name = 1;
+  DirectoryEntryKind kind = 2;
+  optional uint64 size = 3;
+  sint64 modified_unix_ms = 4;
+}
+message DirectoryBrowsePage {
+  string root_id = 1;
+  string directory = 2;
+  bytes snapshot_id = 3;
+  uint32 offset = 4;
+  uint32 total_entries = 5;
+  repeated DirectoryEntry entries = 6;
+  bytes next_cursor = 7;
+}
+// A label supplied by the local root chooser. Native paths are never sent.
+message FileRoot { string root_id = 1; string display_name = 2; }
+message FileRootsRequest {}
+message FileRoots { repeated FileRoot roots = 1; }
+message NativeFileRead {
+  uint32 schema_version = 1;
+  uint64 connection_generation = 2;
+  uint64 sequence = 3;
+  string transfer_id = 4;
+  oneof action {
+    FileReadOpen open = 10;
+    FileReadNext next = 11;
+    bool cancel = 12;
+    FileReadManifest manifest = 13;
+    FileReadChunk chunk = 14;
+    FileReadEnd end = 15;
+    FileReadFailure failure = 16;
+    bool cancelled = 17;
+    DirectoryBrowseBegin browse_begin = 18;
+    DirectoryBrowseNext browse_next = 19;
+    DirectoryBrowsePage browse_page = 20;
+    FileRootsRequest roots_request = 21;
+    FileRoots roots = 22;
+  }
+}
+
+// FileWrite has separate business permission and independent local destination
+// approval. A UUID never reopens; offsets acknowledge actual bounded disk writes.
+message FileWriteOpen {
+  string root_id = 1;
+  string path = 2;
+  uint64 size = 3;
+  bytes sha256 = 4;
+}
+message FileWriteChunk {
+  uint64 offset = 1;
+  bytes data = 2;
+  bytes sha256 = 3;
+}
+message FileWriteCommit { uint64 size = 1; bytes sha256 = 2; }
+message FileWriteReady { uint64 size = 1; bytes sha256 = 2; uint64 offset = 3; }
+message FileWriteAck { uint64 offset = 1; }
+// These are actual effects, including when a later consent/deadline check fails.
+message FileWriteState {
+  uint64 confirmed_bytes = 1;
+  bool published = 2;
+  bool file_closed = 3;
+  bool temporary_removed = 4;
+  bool directory_synced = 5;
+  bool poisoned = 6;
+}
+message FileWriteReceipt { uint64 size = 1; bytes sha256 = 2; FileWriteState state = 3; }
+message FileWriteCancelled { FileWriteState state = 1; }
+enum FileWriteErrorCode {
+  FILE_WRITE_ERROR_UNSPECIFIED = 0;
+  FILE_WRITE_DENIED = 1;
+  FILE_WRITE_EXISTS = 2;
+  FILE_WRITE_CHECKSUM_MISMATCH = 3;
+  FILE_WRITE_CAPACITY = 4;
+  FILE_WRITE_EXPIRED = 5;
+  FILE_WRITE_IO_FAILED = 6;
+}
+message FileWriteFailure { FileWriteErrorCode code = 1; FileWriteState state = 2; }
+message NativeFileWrite {
+  uint32 schema_version = 1;
+  uint64 connection_generation = 2;
+  uint64 sequence = 3;
+  string transfer_id = 4;
+  oneof action {
+    FileWriteOpen open = 10;
+    FileWriteChunk chunk = 11;
+    FileWriteCommit commit = 12;
+    bool cancel = 13;
+    FileWriteReady ready = 20;
+    FileWriteAck ack = 21;
+    FileWriteReceipt committed = 22;
+    FileWriteCancelled cancelled = 23;
+    FileWriteFailure failure = 24;
+    FileRootsRequest roots_request = 25;
+    FileRoots roots = 26;
+  }
+}
+
+// Text only, on the separately permitted ClipboardRead/ClipboardWrite channels.
+// The complete UTF-8 text and this envelope share one 64 KiB frame budget.
+// Sequences are strict successors independently per direction; reconnecting
+// creates fresh consumers and never replays a previously submitted OS write.
+message ClipboardText { optional string text = 1; }
+enum ClipboardWriteEffect {
+  CLIPBOARD_WRITE_NOT_APPLIED = 0;
+  CLIPBOARD_WRITE_APPLIED = 1;
+  CLIPBOARD_WRITE_UNKNOWN = 2;
+}
+enum ClipboardErrorCode {
+  CLIPBOARD_ERROR_UNSPECIFIED = 0;
+  CLIPBOARD_DENIED = 1;
+  CLIPBOARD_EXPIRED = 2;
+  CLIPBOARD_CAPACITY = 3;
+  CLIPBOARD_UNAVAILABLE = 4;
+  CLIPBOARD_IO_FAILED = 5;
+}
+message ClipboardFailure {
+  ClipboardErrorCode code = 1;
+  ClipboardWriteEffect write_effect = 2;
+}
+message NativeClipboard {
+  uint32 schema_version = 1;
+  uint64 connection_generation = 2;
+  uint64 sequence = 3;
+  oneof action {
+    bool read = 10;
+    string write = 11;
+    // A local source approval withdrawn before delivery replaces an unsent
+    // Write with Cancel, retaining the exact direction, generation and sequence.
+    bool cancel = 12;
+    ClipboardText text = 20;
+    bool written = 21;
+    bool cancelled = 22;
+    ClipboardFailure failure = 23;
+  }
+}

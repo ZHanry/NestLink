@@ -1,0 +1,76 @@
+name: Bug report
+description: Report a reproducible remote-control or FRP problem without secrets.
+title: "[Bug]: "
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include passwords, tokens, private keys, enrollment codes, or unredacted diagnostics. The installable stable release is 9.0.0. 10.0.0 acceptance is pending.
+  - type: dropdown
+    id: workflow
+    attributes:
+      label: Workflow
+      options:
+        - Authorized UDP remote control
+        - FRP service publishing
+        - Website or documentation
+        - Upgrade or backup
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Use 9.0.0 for the stable release, or a commit SHA for the 10.0.0 development line. Do not report a 10.0.0 stable package.
+      placeholder: 9.0.0
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Windows remote host
+        - Windows / Web / Android controller
+        - Control center
+        - FRP / gateway
+        - Android app
+        - Website
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, architecture, and whether both sides used the same server. Redact addresses.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and redacted logs
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues.
+          required: true
+        - label: I removed credentials and personal data.
+          required: true
+        - label: This is not a security vulnerability.
+          required: true

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "product": "NestLink",
+  "light": {
+    "primary": "#7955CF",
+    "primary_text": "#6842BB",
+    "canvas": "#FAF9FD",
+    "sidebar": "#F2EFF9",
+    "surface": "#FFFFFF",
+    "text": "#282235",
+    "muted": "#746E80",
+    "border": "#E8E4EF",
+    "danger": "#A13248"
+  },
+  "dark": {
+    "primary": "#AF8CEE",
+    "primary_text": "#CFB8FA",
+    "canvas": "#1C1924",
+    "sidebar": "#25202F",
+    "surface": "#302A3C",
+    "text": "#F3EFFA",
+    "muted": "#BCB3CB",
+    "border": "#494152",
+    "danger": "#FFA9BB"
+  },
+  "type": {"body": 14, "small": 12, "title": 26, "section": 18, "family": "OS UI font with a system-installed Chinese fallback; no unreviewed fonts bundled", "css_family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif", "css_code_family": "ui-monospace, \"Cascadia Code\", Consolas, monospace"},
+  "layout": {"desktop_width": 1120, "desktop_height": 760, "minimum_width": 720, "minimum_height": 520, "sidebar_width": 216, "sidebar_width_compact": 194, "content_padding": 28, "row_height": 56, "control_height": 38},
+  "spacing": {"egui_item_horizontal": 10, "egui_item_vertical": 9, "egui_button_horizontal": 12, "egui_button_vertical": 9, "mobile_screen_padding": 24, "web_mobile_padding": 16},
+  "shape": {"control": 7, "panel": 9, "window": 12, "sheet": 16},
+  "state": {
+    "primary_action_text": {"light": "#FFFFFF", "dark": "#1C1924"},
+    "focus": {"light": "#4E2F99", "dark": "#D8C7FF"},
+    "warning": {"light": "#966313", "dark": "#F0C875"},
+    "success": {"light": "#316B4A", "dark": "#91D8A8"},
+    "danger_action": {"light": "#A13248", "dark": "#742F43"},
+    "danger_action_text": {"light": "#FFFFFF", "dark": "#FFFFFF"}
+  },
+  "media": {"canvas": "#17131F", "foreground": "#E1DAED"},
+  "navigation": ["远程控制", "服务发布", "设备"],
+  "principles": "A quiet device directory with a lavender navigation rail, aligned real status rows and a compact account entry. Reserve the linked N for the brand mark. Use visible keyboard focus, truthful empty/error states and action-owned progress; no demo devices or invented online paths."
+}

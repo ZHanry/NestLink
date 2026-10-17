@@ -1,0 +1,11 @@
+<resources>
+    <style name="Theme.NestLink" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowBackground">#FAF9FD</item>
+        <item name="android:statusBarColor">#FAF9FD</item>
+        <item name="android:navigationBarColor">#FAF9FD</item>
+        <item name="android:colorAccent">#7955CF</item>
+    </style>
+</resources>

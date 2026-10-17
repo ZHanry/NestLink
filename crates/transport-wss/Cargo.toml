@@ -1,0 +1,24 @@
+[package]
+name = "nestlink-transport-wss"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+nestlink-protocol.workspace = true
+nestlink-identity.workspace = true
+nestlink-transport-stream.workspace = true
+tokio.workspace = true
+tokio-rustls.workspace = true
+rustls.workspace = true
+tokio-tungstenite.workspace = true
+futures-util.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+base64.workspace = true
+url.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

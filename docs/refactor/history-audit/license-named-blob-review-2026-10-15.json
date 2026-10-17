@@ -1,0 +1,343 @@
+{
+  "schema_version": 1,
+  "scope": "All 18 previously unrecognized license-named blobs in the pinned Client history inventory; no new history scan or import",
+  "inventory_sha256": "18c537c79e47a48a710d80698c95a46bee47dc309231428d99232fb7ed7c4b0c",
+  "verified_original_count": 18,
+  "classifications": {
+    "GPL-3.0-or-later": 1,
+    "ISC": 1,
+    "license_key_program_source": 14,
+    "upstream_privacy_policy": 2
+  },
+  "rtf_decoder": {
+    "method": "Windows Forms RichTextBox.LoadFile, no window displayed",
+    "assembly": "System.Windows.Forms, Version=4.0.0.0, PublicKeyToken=b77a5c561934e089",
+    "clr": "4.0.30319.42000"
+  },
+  "preparation": {
+    "path": "artifacts/history-license-followup-20261015/originals.json",
+    "sha256": "9e5929203a9f278c556dde7927a2877a07d365b5a7526ccd1a4fefdcbfc9336e"
+  },
+  "tools": [
+    {
+      "path": "artifacts/history-license-followup-20261015/prepare_originals.py",
+      "sha256": "999ee083e01456e1ce86601b12cbb0edc1e842febcda2f915b15d37bca0199f9"
+    },
+    {
+      "path": "artifacts/history-license-followup-20261015/read_rtf.ps1",
+      "sha256": "db856792848a29be09e2025bc684f2f1769a0c7cf4c2e938247a79b174686b2c"
+    },
+    {
+      "path": "artifacts/history-license-followup-20261015/record_review.py",
+      "sha256": "bfd2d49ff3c47b3ecb6e6d89fd75a6be525aec2a26529cef46f973a3c4ca8dd9"
+    }
+  ],
+  "entries": [
+    {
+      "oid": "029611345e0d00979068aa779070a119633760ef",
+      "sha256": "2e1dbf3ed314fd5e0980c11d3a442f4f822e9ad70b03c1f1901215c60d18dbac",
+      "bytes": 4376,
+      "text_signatures": [],
+      "spdx_identifiers": [],
+      "legal_reuse_approved": false,
+      "entry_names": [
+        "license.rs"
+      ],
+      "classification": "Rust license-key processing program source; not a software license grant",
+      "disposition": "Preserve original source only with its original history and notices; excluded from the new product",
+      "representative_original_path": "src/license.rs",
+      "new_product_reuse_approved": false,
+      "classification_id": "license_key_program_source"
+    },
+    {
+      "oid": "1ad16f6f0afdcaa13da2528abe9b006cf65fbc0e",
+      "sha256": "08215ba4b906f4da4d6b0caf46627e5454c8dcde71ece4419a75f11026e8bf36",
+      "bytes": 4398,
+      "text_signatures": [],
+      "spdx_identifiers": [],
+      "legal_reuse_approved": false,
+      "entry_names": [
+        "license.rs"
+      ],
+      "classification": "Rust license-key processing program source; not a software license grant",
+      "disposition": "Preserve original source only with its original history and notices; excluded from the new product",
+      "representative_original_path": "src/license.rs",
+      "new_product_reuse_approved": false,
+      "classification_id": "license_key_program_source"
+    },
+    {
+      "oid": "1b8742533389f7f506f4e9c3df1c420ecb549dbf",
+      "sha256": "21a72705cf3bcac7593ded756f83b3bf94f374498473c9a3eea2580dead53d69",
+      "bytes": 4137,
+      "text_signatures": [],
+      "spdx_identifiers": [],
+      "legal_reuse_approved": false,
+      "entry_names": [
+        "license.rs"
+      ],
+      "classification": "Rust license-key processing program source; not a software license grant",
+      "disposition": "Preserve original source only with its original history and notices; excluded from the new product",
+      "representative_original_path": "src/license.rs",
+      "new_product_reuse_approved": false,
+      "classification_id": "license_key_program_source"
+    },
+    {
+      "oid": "3a2bc1388ac5dcc4d7b627ae27d8d556f38fb3c6",
+      "sha256": "1fdda1405592840d107459bd45ab224d2735b460bee32b7aa1c590441c80d317",
+      "bytes": 4655,
+      "text_signatures": [],
+      "spdx_identifiers": [],
+      "legal_reuse_approved": false,
+      "entry_names": [
+        "license.rs"
+      ],
+      "classification": "Rust license-key processing program source; not a software license grant",
+      "disposition": "Preserve original source only with its original history and notices; excluded from the new product",
+      "representative_original_path": "src/license.rs",
+      "new_product_reuse_approved": false,
+      "classification_id": "license_key_program_source"
+    },
+    {
+      "oid": "4292be18fcdec286532262195135ae808dd6c2f3",
+      "sha256": "0e76d2ac361bcd863d1614e9389d8c013c6fdd308f0b8f502bfc7af08f9eb40a",
+      "bytes": 60361,
+      "text_signatures": [],
+      "spdx_identifiers": [],
+      "legal_reuse_approved": false,
+      "entry_names": [
+        "License.rtf"
+      ],
+      "retained_original": "artifacts/history-license-followup-20261015/4292be18fcdec286532262195135ae808dd6c2f3.rtf",
+      "classification": "RustDesk website/application privacy policy; not a software copyright license grant",
+      "representative_original_path": "res/msi/Package/License.rtf",
+      "new_product_reuse_approved": false,
+      "classification_id": "upstream_privacy_policy",
+      "decoded_visible_text": "artifacts/history-license-followup-20261015/4292be18fcdec286532262195135ae808dd6c2f3.decoded.txt",
+      "decoded_visible_text_sha256": "9e65ff1ddefcc98b5dc27f88aee2434a674f64ea1b0baa043e89cf0f5bbde5d9",
+      "visible_character_count": 6840,
+      "disposition": "Preserve exact original text in original history; excluded from new product code, configuration, notices and privacy policy"
+    },
+    {
+      "oid": "59d11f4d8acb34e3d432ef4129f2268691860176",
+      "sha256": "d00e49a1fcc95b372c30d3f45b24319da2ea7f21a440a30a8e05af47de3ff746",
+      "bytes": 4294,
+      "text_signatures": [],
+      "spdx_identifiers": [],
+      "legal_reuse_approved": false,
+      "entry_names": [
+        "license.rs"
+      ],
+      "classification": "Rust license-key processing program source; not a software license grant",
+      "disposition": "Preserve original source only with its original history and notices; excluded from the new product",
+      "representative_original_path": "src/license.rs",
+      "new_product_reuse_approved": false,
+      "classification_id": "license_key_program_source"
+    },
+    {
+      "oid": "5db98344873e000c3b177a7e1e0c6dc91c7ebffa",
+      "sha256": "7de702ecb52907e1daaf52c50e8edd70a0c676cad0fe9b4dedc7eb7b86940d9a",
+      "bytes": 2068,
+      "text_signatures": [],
+      "spdx_identifiers": [],
+      "legal_reuse_approved": false,
+      "entry_names": [
+        "license.rs"
+      ],
+      "classification": "Rust license-key processing program source; not a software license grant",
+      "disposition": "Preserve original source only with its original history and notices; excluded from the new product",
+      "representative_original_path": "src/license.rs",
+      "new_product_reuse_approved": false,
+      "classification_id": "license_key_program_source"
+    },
+    {
+      "oid": "7d427005219ae0d582ec6145e35ce10e7282a231",
+      "sha256": "852f9b9b9e1aab69d0cda9414e754f3877047de295a535ff97084997cbf88f6f",
+      "bytes": 2242,
+      "text_signatures": [],
+      "spdx_identifiers": [],
+      "legal_reuse_approved": false,
+      "entry_names": [
+        "license.rs"
+      ],
+      "classification": "Rust license-key processing program source; not a software license grant",
+      "disposition": "Preserve original source only with its original history and notices; excluded from the new product",
+      "representative_original_path": "src/license.rs",
+      "new_product_reuse_approved": false,
+      "classification_id": "license_key_program_source"
+    },
+    {
+      "oid": "8875d2b6486cd681aa0596a2cdbeea468eda444a",
+      "sha256": "78c8480b74fdc672723d2d8c1de4a831b5ab9439806e0ad991e1b41780e74b9e",
+      "bytes": 2113,
+      "text_signatures": [],
+      "spdx_identifiers": [],
+      "legal_reuse_approved": false,
+      "entry_names": [
+        "license.rs"
+      ],
+      "classification": "Rust license-key processing program source; not a software license grant",
+      "disposition": "Preserve original source only with its original history and notices; excluded from the new product",
+      "representative_original_path": "src/license.rs",
+      "new_product_reuse_approved": false,
+      "classification_id": "license_key_program_source"
+    },
+    {
+      "oid": "9d87ec7eb7d0613528bba0f7fad7a17e1d13fdb2",
+      "sha256": "152ddb53fe3bc2be4dcc82650fdcfc7c8ccbb6d9f0b26828718a17f2f4d82157",
+      "bytes": 2585,
+      "text_signatures": [],
+      "spdx_identifiers": [],
+      "legal_reuse_approved": false,
+      "entry_names": [
+        "license.rs"
+      ],
+      "classification": "Rust license-key processing program source; not a software license grant",
+      "disposition": "Preserve original source only with its original history and notices; excluded from the new product",
+      "representative_original_path": "src/license.rs",
+      "new_product_reuse_approved": false,
+      "classification_id": "license_key_program_source"
+    },
+    {
+      "oid": "a67984a61fd4181a601fd25bc32222ac9b334335",
+      "sha256": "505ee8e018326f36bb4070f69c6eb3caa6079b8fb796cd53a8d1bb168337e5ae",
+      "bytes": 732,
+      "text_signatures": [],
+      "spdx_identifiers": [],
+      "legal_reuse_approved": false,
+      "entry_names": [
+        "LICENSE-nestegg.txt"
+      ],
+      "retained_original": "artifacts/history-license-followup-20261015/a67984a61fd4181a601fd25bc32222ac9b334335.txt",
+      "classification": "ISC permission/disclaimer text, Mozilla Foundation 2010",
+      "representative_original_path": "web/ogvjs-1.8.6/LICENSE-nestegg.txt",
+      "new_product_reuse_approved": false,
+      "classification_id": "ISC",
+      "disposition": "Preserve exact original text in original history; excluded from new product code, configuration, notices and privacy policy"
+    },
+    {
+      "oid": "b24b0ea92153f10ceaf653473f5dbf5819d7cd97",
+      "sha256": "c33dfe4f701946cdf0e4e8220f0fbe352c4e3937dfa9b399cb1dfffbdaea59a5",
+      "bytes": 7211,
+      "text_signatures": [],
+      "spdx_identifiers": [],
+      "legal_reuse_approved": false,
+      "entry_names": [
+        "license.rs"
+      ],
+      "classification": "Rust license-key processing program source; not a software license grant",
+      "disposition": "Preserve original source only with its original history and notices; excluded from the new product",
+      "representative_original_path": "src/license.rs",
+      "new_product_reuse_approved": false,
+      "classification_id": "license_key_program_source"
+    },
+    {
+      "oid": "b7dc525726e49c87fe7b03dd19c3517fc10f1ae0",
+      "sha256": "2f057476345546f0e4ffbf2ae5a5c7fa133aef50776c7ddd9e0e695885f98b45",
+      "bytes": 60372,
+      "text_signatures": [],
+      "spdx_identifiers": [],
+      "legal_reuse_approved": false,
+      "entry_names": [
+        "License.rtf"
+      ],
+      "retained_original": "artifacts/history-license-followup-20261015/b7dc525726e49c87fe7b03dd19c3517fc10f1ae0.rtf",
+      "classification": "RustDesk website/application privacy policy; not a software copyright license grant",
+      "representative_original_path": "client/res/msi/Package/License.rtf",
+      "new_product_reuse_approved": false,
+      "classification_id": "upstream_privacy_policy",
+      "decoded_visible_text": "artifacts/history-license-followup-20261015/b7dc525726e49c87fe7b03dd19c3517fc10f1ae0.decoded.txt",
+      "decoded_visible_text_sha256": "91f6839db979be8b39fc85aaebab5d13a8c33a51da10bb1a7ff1cf6bae7b4ff0",
+      "visible_character_count": 6850,
+      "disposition": "Preserve exact original text in original history; excluded from new product code, configuration, notices and privacy policy"
+    },
+    {
+      "oid": "c3c295678c68b59204f99714f3b57ba8c02cab7b",
+      "sha256": "af9b838df8419b09ec91ac2afcdfb083cc655b057db69554665865b6d7199824",
+      "bytes": 5015,
+      "text_signatures": [],
+      "spdx_identifiers": [],
+      "legal_reuse_approved": false,
+      "entry_names": [
+        "license.rs"
+      ],
+      "classification": "Rust license-key processing program source; not a software license grant",
+      "disposition": "Preserve original source only with its original history and notices; excluded from the new product",
+      "representative_original_path": "src/license.rs",
+      "new_product_reuse_approved": false,
+      "classification_id": "license_key_program_source"
+    },
+    {
+      "oid": "c8a328965105abee0d472322bb3c1936dab32d3a",
+      "sha256": "2a0072c2a3d361e81af5b57f19f170441f4fa10c64c4bdcece799456315af0cd",
+      "bytes": 613,
+      "text_signatures": [],
+      "spdx_identifiers": [],
+      "legal_reuse_approved": false,
+      "entry_names": [
+        "LICENSE.md"
+      ],
+      "retained_original": "artifacts/history-license-followup-20261015/c8a328965105abee0d472322bb3c1936dab32d3a.txt",
+      "classification": "GPL version 3 or later short notice, not the full license text",
+      "representative_original_path": "libs/pulsectl/LICENSE.md",
+      "new_product_reuse_approved": false,
+      "classification_id": "GPL-3.0-or-later",
+      "disposition": "Preserve exact original text in original history; excluded from new product code, configuration, notices and privacy policy"
+    },
+    {
+      "oid": "cb9e72dd541aae393cac8790c613fd3e3d01571c",
+      "sha256": "538abb589c070f1025ac2e187342d7759f1cf84a349a16f15c95ad0fc8e3eb6d",
+      "bytes": 4863,
+      "text_signatures": [],
+      "spdx_identifiers": [],
+      "legal_reuse_approved": false,
+      "entry_names": [
+        "license.rs"
+      ],
+      "classification": "Rust license-key processing program source; not a software license grant",
+      "disposition": "Preserve original source only with its original history and notices; excluded from the new product",
+      "representative_original_path": "src/license.rs",
+      "new_product_reuse_approved": false,
+      "classification_id": "license_key_program_source"
+    },
+    {
+      "oid": "f5ec35501cb44b71c168f8c0f38ab24669c6eadb",
+      "sha256": "4df433d6dae4699c7dcceec39f51501cce9406e4e5f8e1f4b6a6e4a23521dc80",
+      "bytes": 996,
+      "text_signatures": [],
+      "spdx_identifiers": [],
+      "legal_reuse_approved": false,
+      "entry_names": [
+        "license.rs"
+      ],
+      "classification": "Rust license-key processing program source; not a software license grant",
+      "disposition": "Preserve original source only with its original history and notices; excluded from the new product",
+      "representative_original_path": "src/license.rs",
+      "new_product_reuse_approved": false,
+      "classification_id": "license_key_program_source"
+    },
+    {
+      "oid": "f8f5d27d51e0d1b105bb8784c7f024787590b14b",
+      "sha256": "374612a5a783c93cea845477f340df8ea9e9b998a804d346109b6a5622b9b79d",
+      "bytes": 2068,
+      "text_signatures": [],
+      "spdx_identifiers": [],
+      "legal_reuse_approved": false,
+      "entry_names": [
+        "license.rs"
+      ],
+      "classification": "Rust license-key processing program source; not a software license grant",
+      "disposition": "Preserve original source only with its original history and notices; excluded from the new product",
+      "representative_original_path": "src/license.rs",
+      "new_product_reuse_approved": false,
+      "classification_id": "license_key_program_source"
+    }
+  ],
+  "unclassified_count": 0,
+  "history_imported": false,
+  "new_product_reuse_approved": false,
+  "limits": [
+    "Filename-based subset; does not cover source-header notices, dependency licensing or all preserved submodules",
+    "Representative Git paths are not a complete list of every historical occurrence",
+    "Original license ownership and obligations are not changed by this classification"
+  ]
+}

@@ -1,0 +1,3 @@
+title = "NestLink history audit using default rules, no project allowlist"
+[extend]
+useDefault = true

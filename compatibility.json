@@ -1,0 +1,12 @@
+{
+  "product": "nestlink",
+  "version": "0.1.0-rc.1",
+  "stage": "release-candidate",
+  "protocol_alpn": "nestlink/1",
+  "api_base": "/api/v3",
+  "schema_version": 1,
+  "legacy_compatible": false,
+  "configuration_namespace": "NestLink/v15",
+  "database_application_id": 1313622833,
+  "release_ready": false
+}

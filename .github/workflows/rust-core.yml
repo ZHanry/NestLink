@@ -1,0 +1,113 @@
+name: NestLink Rust core
+on:
+  push:
+    branches: [main]
+    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'deny.toml', 'config/ui-tokens.json', 'crates/**', 'apps/**', 'packaging/**', 'xtask/**', 'protocol-spec/**', '.cargo/**', 'scripts/refactor-*.py', 'scripts/test-vp8-boundary-sanitizer.sh', 'scripts/test-pipewire-audio-sanitizer.sh', 'tests/refactor/**', 'docs/refactor/native-codecs.lock.json', 'docs/refactor/cargo-notice-supplements.json', '.github/workflows/rust-core.yml']
+  pull_request:
+    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'deny.toml', 'config/ui-tokens.json', 'crates/**', 'apps/**', 'packaging/**', 'xtask/**', 'protocol-spec/**', '.cargo/**', 'scripts/refactor-*.py', 'scripts/test-vp8-boundary-sanitizer.sh', 'scripts/test-pipewire-audio-sanitizer.sh', 'tests/refactor/**', 'docs/refactor/native-codecs.lock.json', 'docs/refactor/cargo-notice-supplements.json', '.github/workflows/rust-core.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  core:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - os: windows-2022
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Set native codec location
+        shell: pwsh
+        env:
+          NESTLINK_TARGET: ${{ matrix.target }}
+        run: |
+          $codecRoot = Join-Path $env:RUNNER_TEMP "nestlink-codecs/$env:NESTLINK_TARGET"
+          "NESTLINK_CODEC_PREFIX=$codecRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config dbus libpipewire-0.3-dev pipewire-bin
+      - if: runner.os == 'Windows'
+        id: msys
+        uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e
+        with:
+          msystem: MSYS
+          install: make perl diffutils gawk sed grep coreutils nasm
+          cache: false
+      - if: runner.os == 'Linux'
+        run: python3 scripts/refactor-native-codecs.py build --target ${{ matrix.target }} --cache-dir "${{ runner.temp }}/nestlink-codec-sources" --work-dir "${{ runner.temp }}/nestlink-codecs"
+      - if: runner.os == 'Windows'
+        run: python scripts/refactor-native-codecs.py build --target ${{ matrix.target }} --cache-dir "${{ runner.temp }}/nestlink-codec-sources" --work-dir "${{ runner.temp }}/nestlink-codecs" --msys-bin "${{ steps.msys.outputs.msys2-location }}/usr/bin" --nasm "${{ steps.msys.outputs.msys2-location }}/usr/bin/nasm.exe"
+      - run: python scripts/refactor-native-codecs.py verify --target ${{ matrix.target }} --prefix "${{ env.NESTLINK_CODEC_PREFIX }}"
+      - run: rustup show
+      - run: cargo fmt --all -- --check
+      - run: cargo check --locked -p nestlink-platform-audio
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - run: cargo test --workspace --locked
+      - if: runner.os == 'Linux'
+        run: bash scripts/test-vp8-boundary-sanitizer.sh
+      - if: runner.os == 'Linux'
+        run: bash scripts/test-pipewire-audio-sanitizer.sh
+      - run: python -m unittest discover -s tests/refactor -p "test_*.py"
+      - run: python scripts/refactor-ui-tokens.py --check
+      - run: cargo xtask check
+  wasm-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - run: rustup target add wasm32-unknown-unknown
+      - run: cargo check --locked --target wasm32-unknown-unknown -p nestlink-protocol -p nestlink-policy -p nestlink-connectivity -p nestlink-sdk -p nestlink-web
+  linux-network-events:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - run: python3 scripts/refactor-network-events.py
+  linux-x11-input:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - run: sudo apt-get update && sudo apt-get install -y xvfb
+      - run: python3 scripts/refactor-x11-input.py --namespace-launcher sudo
+  linux-portal-capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - run: sudo apt-get update && sudo apt-get install -y build-essential pkg-config dbus libpipewire-0.3-dev pipewire-bin
+      - run: python3 scripts/refactor-portal-capture.py --namespace-launcher sudo
+  linux-system-audio:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - run: sudo apt-get update && sudo apt-get install -y build-essential pkg-config dbus libpipewire-0.3-dev pipewire-bin
+      - run: python3 scripts/refactor-linux-audio.py --namespace-launcher sudo
+  dependencies:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - run: rustup show
+      - run: cargo install cargo-deny --version 0.20.2 --locked
+      - run: cargo deny --all-features check

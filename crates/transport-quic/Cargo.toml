@@ -1,0 +1,21 @@
+[package]
+name = "nestlink-transport-quic"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+nestlink-transport-stream.workspace = true
+nestlink-identity.workspace = true
+nestlink-protocol.workspace = true
+nestlink-traversal.workspace = true
+quinn.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+base64.workspace = true
+socket2 = "=0.6.5"
+
+[lints]
+workspace = true

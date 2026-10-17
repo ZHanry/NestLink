@@ -1,0 +1,2938 @@
+{
+  "schema_version": 1,
+  "scope": "Latest selected development verification through 2026-10-17; historical failures remain unchanged. These are not signed or installed-product acceptance results.",
+  "windows_workspace_current_source_20261017": {
+    "scope": "Complete Windows x64 MSVC workspace runtime and all-target strict Clippy on the same current source snapshot; development evidence only.",
+    "runtime": {
+      "status": "passed",
+      "target": "x86_64-pc-windows-msvc",
+      "toolchain": "1.96.0",
+      "test_suites": 141,
+      "passed": 1187,
+      "failed": 0,
+      "ignored": 10,
+      "source_inputs": 1249,
+      "source_inputs_unchanged": true,
+      "log": {
+        "path": "artifacts/core-verification/native-workspace-windows-runtime-20261017-attempt02.log",
+        "sha256": "6c9452b224d31d4a02759dfdc3e0dae26168b92477f2cda4be9a07b60d8d5e18"
+      },
+      "receipt": {
+        "path": "artifacts/core-verification/native-workspace-windows-runtime-20261017-attempt02.receipt.json",
+        "sha256": "64ed8d2309c8805cc23959068c65fb660b40ec64cb271e9f3ccc6d1a30da9279"
+      },
+      "ignored_scope": "Seven actual interactive Windows desktop/audio/window-station cases and three dedicated Caddy/public-network cases require their documented environments."
+    },
+    "strict_clippy": {
+      "status": "passed",
+      "command": "cargo clippy --workspace --all-targets --keep-going --locked --offline -- -D warnings",
+      "source_inputs": 1249,
+      "source_inputs_unchanged": true,
+      "log": {
+        "path": "artifacts/core-verification/native-workspace-windows-strict-20261017-attempt05.log",
+        "sha256": "f6c9b2d2027a1f186fb3fc0a0211f1cf4c478e3c228eb28fe86f6cf70e12f539"
+      },
+      "receipt": {
+        "path": "artifacts/core-verification/native-workspace-windows-strict-20261017-attempt05.receipt.json",
+        "sha256": "c2597d52be5f64c3e66c35667de38be5b99c281deba8c39a02a5ad6742d577fb"
+      }
+    },
+    "sdk_current_source_after_lint_fix": {
+      "status": "passed",
+      "test_suites": 20,
+      "passed": 194,
+      "failed": 0,
+      "ignored": 1,
+      "source_inputs": 1249,
+      "source_inputs_unchanged": true,
+      "log": {
+        "path": "artifacts/core-verification/native-webrtc-audio-context-windows-20261017-attempt02.log",
+        "sha256": "cc6eb35c2f774ab2dfd84e121d2206545c9479e08c626b6193e9fbd9600522be"
+      },
+      "receipt": {
+        "path": "artifacts/core-verification/native-webrtc-audio-context-windows-20261017-attempt02.receipt.json",
+        "sha256": "8ea09d4668c5ea994b92a455da83f2a0a7ccd6848f2830e3c483e28001eb0208"
+      }
+    },
+    "linux_native_recovery_current_source": {
+      "status": "passed",
+      "passed": 77,
+      "failed": 0,
+      "ignored": 0,
+      "source_inputs": 1249,
+      "source_inputs_unchanged": true,
+      "log": {
+        "path": "artifacts/core-verification/native-recovery-linux-current-20261016-attempt03.log",
+        "sha256": "c059c9aa88c52e66274d2df5e686445c77ff5b582727599c344556440095548a"
+      },
+      "receipt": {
+        "path": "artifacts/core-verification/native-recovery-linux-current-20261016-attempt03.receipt.json",
+        "sha256": "7b1c371500599aa519003100a23399f04c74b291346a91bd055ce644ddc7f361"
+      }
+    },
+    "windows_daemon_process_regression": {
+      "status": "passed",
+      "maintenance_process_tests": 4,
+      "process_tests": 3,
+      "failed": 0,
+      "source_inputs": 1261,
+      "source_inputs_unchanged": true,
+      "log": {
+        "path": "artifacts/core-verification/native-daemon-process-current-windows-20261016-attempt01.log",
+        "sha256": "9c1807c9316f05766ff4caef3456f7ed7a6799e0f932300b8e5cd97c16422940"
+      },
+      "receipt": {
+        "path": "artifacts/core-verification/native-daemon-process-current-windows-20261016-attempt01.receipt.json",
+        "sha256": "50c451c696c0aacee7966ce8e9a274194df1bc1400936df6fef20d466eb7158e"
+      }
+    },
+    "formal_platform_acceptance_passed": false,
+    "formal_release_acceptance_passed": false,
+    "remote_operations_performed": false
+  },
+  "linux_turn_service_g2_current_source_20261017": {
+    "status": "passed",
+    "change": "Managed TURN refuses startup when its node online watch is false or closed, rechecks after asynchronous socket binding, gates authentication and packet authorization on the live watch value, and verifies two-second online revocation and relay port-budget rollback.",
+    "tests": {
+      "passed": 12,
+      "failed": 0,
+      "ignored": 0,
+      "format_check": "passed",
+      "strict_clippy": "passed"
+    },
+    "g2_development_checks": {
+      "udp_tcp_tls_listeners": "passed",
+      "unpaired_peer_rejected": "passed",
+      "online_allocation_revocation_under_two_seconds": "passed",
+      "expired_lease_closes_allocation": "passed",
+      "occupied_relay_port_releases_capacity_and_retry_succeeds": "passed",
+      "debug_fuzz_smoke_10_seconds": {
+        "status": "passed",
+        "udp_datagrams": 895,
+        "tcp_sessions": 40,
+        "tls_sessions": 10,
+        "active_allocations": 0
+      }
+    },
+    "source_inputs_unchanged": true,
+    "receipt": {
+      "path": "artifacts/core-verification/native-turn-g2-linux-20261017-attempt04.receipt.json",
+      "sha256": "4e9c367fdcac564685b3e68538af7d5ff16da0952325a247a0e5b5baf3d7a66b"
+    },
+    "log": {
+      "path": "artifacts/core-verification/native-turn-g2-linux-20261017-attempt04.log",
+      "sha256": "2f8f450384bfc6d030588f69b4fdf81d7df859db5b5de47540d6b369a9604dca"
+    },
+    "release_fuzz_smoke_10_seconds": {
+      "status": "passed",
+      "udp_datagrams": 896,
+      "tcp_sessions": 40,
+      "tls_sessions": 10,
+      "active_allocations": 0,
+      "receipt": {
+        "path": "artifacts/core-verification/native-turn-fuzz-release-smoke-linux-20261017-attempt01.receipt.json",
+        "sha256": "7e19239e38a0d9d91d4054fb8fc738792bb5fca7ae170143c792c5c2b5ccc341"
+      },
+      "log": {
+        "path": "artifacts/core-verification/native-turn-fuzz-release-smoke-linux-20261017-attempt01.log",
+        "sha256": "dadd3441a2da6fff00b715b75196feb27056f0326f4a2e6ce1fecddf594764db"
+      }
+    },
+    "formal_platform_acceptance_passed": false
+  },
+  "linux_turn_protocol_fuzz_24h_current_source_20261017": {
+    "status": "interrupted",
+    "requested_duration_seconds": 86400,
+    "elapsed_seconds": 540,
+    "scope": "Loopback-only release fuzzing of STUN/ChannelData and stream framing over UDP/TCP/TLS; developer evidence only",
+    "partial_counts": {
+      "udp_datagrams": 48217,
+      "tcp_sessions": 2148,
+      "tcp_frames": 5461,
+      "tls_sessions": 539,
+      "tls_frames": 1309,
+      "active_allocations": 0
+    },
+    "reason": "Stopped when the user set a 90-minute maximum for a single test. Partial log was removed; no completed-run receipt exists.",
+    "formal_g2_passed": false
+  },
+  "linux_turn_node_integration_current_source_20261017": {
+    "status": "passed",
+    "command_scope": "TURN node configuration and TLS tests plus server all-target strict Clippy on current source",
+    "tests": {
+      "passed": 4,
+      "failed": 0,
+      "ignored": 0
+    },
+    "strict_clippy": "passed",
+    "source_inputs_unchanged": true,
+    "receipt": {
+      "path": "artifacts/core-verification/native-turn-node-integration-linux-20261017-attempt03.receipt.json",
+      "sha256": "c5d3dde48c475d20792c0783c6826a7ef804671374a903913534de2a77be4b65"
+    },
+    "log": {
+      "path": "artifacts/core-verification/native-turn-node-integration-linux-20261017-attempt03.log",
+      "sha256": "aa43e8c63c3da9b7fd004a9a9fa5d979df7f3b51237c19fd9a38cb203cdb2dd1"
+    }
+  },
+  "browser_input_renewal_diagnosis_20261016": {
+    "scope": "Build05 local synthetic-capture browser observations with separately frozen Web and probe inputs; not formal G1 acceptance",
+    "diagnosis": {
+      "path": "artifacts/browser-native-throughput-20261016/INPUT_RENEWAL_DIAGNOSIS.json",
+      "sha256": "784281ca7887976716b394abecc9d8b641ca2110dbf06a51b99ecdb384c50509"
+    },
+    "historical_runs_reverified": 8,
+    "firefox_closed_description_probe_error_repaired": true,
+    "firefox_smoke_audio_input_files_after_probe_repair": "passed",
+    "chrome_1080p30_audio_fps": 29.011660188784006,
+    "chrome_1080p30_audio_input_files_before_first_renewal_fps": 28.947616747979254,
+    "input_immediately_after_actual_renewal": "failed; lease-2 input arrives before the host's independent signed-permit refresh",
+    "product_renewal_race_repair_verified": true,
+    "formal_g1_passed": false,
+    "historical_failures_retained": true,
+    "post_repair_browser_replay": {
+      "path": "artifacts/browser-input-renewal-20261016/BROWSER_REPLAY_VERIFICATION.json",
+      "bytes": 2551,
+      "sha256": "8ed4f374e4301b8abaec1194851f67d2db58709eb571a17084b05931f9434cf1",
+      "browsers": [
+        "Chrome/155.0.8059.40",
+        "Edg/155.0.4283.45",
+        "Firefox/158.0"
+      ],
+      "input_envelopes_per_browser": 24,
+      "input_after_signed_lease_2_passed": true
+    },
+    "diagnosis_is_pre_repair": true
+  },
+  "linux_workspace_bounded_attempt_20261017_attempt06": {
+    "status": "interrupted",
+    "command": "cargo test --workspace --locked --offline -- --test-threads=1",
+    "worker_time_limit_seconds": 1500,
+    "partial_runtime_counts": {
+      "passed": 1237,
+      "failed": 0,
+      "ignored": 12
+    },
+    "log_ends_at": "Doc-tests nestlink_sdk; no completion summary",
+    "runtime_source_manifest_available": false,
+    "full_workspace_runtime_passed": false,
+    "log": {
+      "path": "artifacts/native-network-integration-20261016/workspace-linux-attempt06.log",
+      "sha256": "b5cdc42a6450a2448215d0618c8fe0a9815f6ac7b37fb53e2c02e7d15c2d9ca6"
+    },
+    "standalone_workspace_doctests": {
+      "status": "passed",
+      "command": "cargo test --workspace --doc --locked --offline",
+      "targets_completed": 36,
+      "executable_examples": 0,
+      "source_inputs": 1081,
+      "source_inputs_unchanged": true,
+      "log": {
+        "path": "artifacts/native-network-integration-20261016/workspace-linux-doc-attempt01.log",
+        "sha256": "7327350d186927cad0615b85db3c6f10595b877e9158c7cb3db4892b3b67f0aa"
+      },
+      "receipt": {
+        "path": "artifacts/native-network-integration-20261016/workspace-linux-doc-attempt01.receipt.json",
+        "sha256": "5660e4844245c776c97693ba94eb5daea587c21000e82afa40e35c39b02986e8"
+      }
+    },
+    "clock_window": {
+      "status": "restored",
+      "clock_steps": 0,
+      "clocksource": "tsc",
+      "systemd_timesyncd": "active",
+      "restoration_errors": 0,
+      "receipt": {
+        "path": "artifacts/native-network-integration-20261016/linux-clock-window-attempt06.json",
+        "sha256": "4d7be7657f167c05fd211f5264dd99edd3015e27bf3bf5304c2e9f6a857240e9"
+      },
+      "watchdog_receipt": {
+        "path": "artifacts/native-network-integration-20261016/linux-clock-watchdog-attempt06.json",
+        "sha256": "16858be70ac518416c5c1d9b2971ff399f7aebecc11ab46f25cbf13a35a012e5"
+      }
+    },
+    "report": "docs/refactor/LINUX-WORKSPACE-ATTEMPT06-2026-10-17.md",
+    "formal_platform_acceptance_passed": false
+  },
+  "linux_workspace": {
+    "passed": 1229,
+    "failed": 0,
+    "ignored": 12,
+    "test_suites": 141,
+    "runtime_attempt": "05",
+    "runtime_log": {
+      "path": "artifacts/core-verification/native-workspace-linux-runtime-20261016-attempt05.log",
+      "sha256": "14bd822a179148e5ffc073946ad46578ef9a0ef29a666cdb90ece8de2a660615"
+    },
+    "runtime_receipt": {
+      "path": "artifacts/core-verification/native-workspace-linux-runtime-20261016-attempt05.receipt.json",
+      "sha256": "c94d297827ca1acf94e123fb72c45d278485065d033424d646c18150f442e1fc"
+    },
+    "source_inputs_unchanged": true,
+    "media_session_focused": {
+      "passed": 39,
+      "failed": 0,
+      "log": {
+        "path": "artifacts/core-verification/native-workspace-linux-media-session-20261016-attempt04.log",
+        "sha256": "42908e0b09ad3bc6a5a992fcf7f5233f1369f0221b4f98deec44bd2600259841"
+      },
+      "receipt": {
+        "path": "artifacts/core-verification/native-workspace-linux-media-session-20261016-attempt04.receipt.json",
+        "sha256": "74a9eb450efedbcb0754985883c659bc1b5ed1fadeefad96d08eeaa98ef87a16"
+      }
+    },
+    "daemon_focused_after_warning_cleanup": {
+      "passed": 28,
+      "failed": 0,
+      "ignored": 0,
+      "log": {
+        "path": "artifacts/core-verification/native-workspace-linux-daemon-20261016-attempt06.log",
+        "sha256": "deb625cfedf2abd36b3b8cd82dd2e93436ef3d84d0712c21b718fc69ad83fe10"
+      },
+      "receipt": {
+        "path": "artifacts/core-verification/native-workspace-linux-daemon-20261016-attempt06.receipt.json",
+        "sha256": "a6b31ceb676e32e68013fd0a4b5defd19771e479fb32512aa0db7ddc01515590"
+      },
+      "clock_window_receipt": {
+        "path": "artifacts/core-verification/native-workspace-linux-ntp-window-20261016-attempt06.json",
+        "sha256": "0872ec95ec3412d8b8d28b6d09eb0c20f0587bab7e2bd421bebbd731fa8ab241"
+      }
+    },
+    "strict_clippy": {
+      "status": "passed",
+      "log": {
+        "path": "artifacts/core-verification/native-workspace-linux-strict-20261016-attempt01.log",
+        "sha256": "33948352bb9ea4dcf75e49e4569df74ede8ecc99c0b14dbee9ea0fe8214b262a"
+      },
+      "receipt": {
+        "path": "artifacts/core-verification/native-workspace-linux-strict-20261016-attempt01.receipt.json",
+        "sha256": "50c19d3d3b20b2cc7afa0fd3bb6244752ffd31049daf4c081c6a2cb0b76d4a19"
+      },
+      "source_inputs_unchanged": true
+    },
+    "clock_steps_observed": 0,
+    "restoration_independently_confirmed": {
+      "clocksource": "tsc",
+      "systemd_timesyncd": "active"
+    },
+    "clock_samples": 12635,
+    "clocksource_restored": "tsc",
+    "timesyncd_test_window": "temporarily paused with user authorization; original active state restored and independently read back",
+    "clock_window_receipt": {
+      "path": "artifacts/core-verification/native-workspace-linux-ntp-window-20261016-attempt05.json",
+      "sha256": "d03400f5ecbba888a127b7240ccbb5f55fcd4abfae4fa183ad1c2a1c8f9b5f5d"
+    },
+    "previous_current_source_runtime": {
+      "passed": 1100,
+      "failed": 0,
+      "ignored": 12,
+      "summary": {
+        "path": "artifacts/core-verification/native-workspace-linux-runtime-20261015-attempt03-summary.json",
+        "sha256": "01d7eef917ccf9e1c3d2dc3d3a1ca5e0b787e8dca582e50a17f0f5eb22a984c8"
+      },
+      "clock_samples": 12644,
+      "clock_window_receipt": {
+        "path": "artifacts/core-verification/native-workspace-linux-ntp-window-20261015-attempt03.json",
+        "sha256": "744474cf92cae00532aa7f57484f746e16c79a1d46edb59d87b0f39fdd4e221c"
+      }
+    }
+  },
+  "windows_selected_eight_package_runtime": {
+    "passed": 236,
+    "failed": 0,
+    "ignored": 3,
+    "freeze": {
+      "path": "artifacts/service-endpoint-release-followup-20261016/FROZEN.json",
+      "sha256": "a0af0ff107f22d45a5ff588a1f56740a4b1873d25055764e21ab9458a7e65945"
+    },
+    "full_workspace_runtime_reverified_in_this_batch": false
+  },
+  "android_password_ui_jvm_followup_20261017": {
+    "status": "passed",
+    "scope": "Android Kotlin/JVM unit suite after the fixed-password UI changes; does not rebuild APKs or rerun emulator instrumentation",
+    "command": "scripts/test-android-unit.ps1 -RerunTasks -NoIncremental",
+    "tests": 131,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "selected_source_inputs": 79,
+    "source_inputs_unchanged": true,
+    "log": {
+      "path": "artifacts/android-password-ui-20261017/android-jvm-current-source-attempt02.log",
+      "sha256": "85304a821a9dba16a8e90ecb13f5afbea5904ac21a183c235c3cc72834079d38"
+    },
+    "receipt": {
+      "path": "artifacts/android-password-ui-20261017/android-jvm-current-source-attempt02.receipt.json",
+      "sha256": "753679f06f55655fed0965e1fc8f838c6128ce61a010e8b16efebc921e2e8327"
+    },
+    "superseded_environment_attempt": {
+      "status": "failed_before_tests",
+      "reason": "Gradle could not locate the installed Android SDK through the temporary subst path; rerun supplied ANDROID_HOME and ANDROID_SDK_ROOT",
+      "log": {
+        "path": "artifacts/android-password-ui-20261017/android-jvm-current-source-attempt01.log",
+        "sha256": "313560a58c5635b0cb31af4b1d3973eb3c57da0eddbcd0c58e3c13acfed881f8"
+      },
+      "receipt": {
+        "path": "artifacts/android-password-ui-20261017/android-jvm-current-source-attempt01.receipt.json",
+        "sha256": "70aefb431d4d7cfbe47907ab483533d927a19f8426aa49dca0e79b46a823afb0"
+      }
+    },
+    "formal_platform_acceptance_passed": false
+  },
+  "desktop_remote_password_ui_strict_20261017": {
+    "status": "passed",
+    "scope": "Windows x64 MSVC all-target strict Clippy for nestlink-desktop after the fixed-password UI update",
+    "command": "cargo clippy --locked --offline -p nestlink-desktop --all-targets -- -D warnings",
+    "toolchain": "1.96.0-x86_64-pc-windows-msvc",
+    "selected_source_inputs": 969,
+    "source_inputs_unchanged": true,
+    "log": {
+      "path": "artifacts/android-password-ui-20261017/desktop-strict-current-source-attempt04.log",
+      "sha256": "2461514dd4d9bed12ccf9c9d819fcb7d7938502b7da073c56c18c0ed47db95d4"
+    },
+    "receipt": {
+      "path": "artifacts/android-password-ui-20261017/desktop-strict-current-source-attempt04.receipt.json",
+      "sha256": "003bcd1f0180e19328d35ea684ddb70fc4d12808bebea9cbc45e42a0bc97f480"
+    },
+    "format_check": {
+      "status": "passed",
+      "command": "cargo fmt --all -- --check",
+      "receipt": {
+        "path": "artifacts/android-password-ui-20261017/desktop-format-current-source-attempt01.receipt.json",
+        "sha256": "f051fb8f66827781724794c76cea4a127746bdd5c914591c909899bbb03cbcde"
+      }
+    },
+    "fixed_lints": [
+      "needless_option_as_deref",
+      "collapsible_if"
+    ],
+    "prior_source_lint_attempt": {
+      "status": "failed_then_fixed",
+      "log": {
+        "path": "artifacts/android-password-ui-20261017/desktop-strict-current-source-attempt03.log",
+        "sha256": "798068df6e1f6f1098a3a2c9205fc9a1d4451191376c6ba89626aa336c58381d"
+      },
+      "receipt": {
+        "path": "artifacts/android-password-ui-20261017/desktop-strict-current-source-attempt03.receipt.json",
+        "sha256": "bdf172c76e612c3682d034809bcffa2a1ccaccc3835ec9e5b4ee8cd61fc3f9d1"
+      }
+    },
+    "formal_platform_acceptance_passed": false
+  },
+  "android": {
+    "build_attempt": "01",
+    "matrix_attempt": "04",
+    "api_matrix_attempts": {
+      "30": "04",
+      "31": "04",
+      "32": "04",
+      "33": "04",
+      "34": "04",
+      "35": "04",
+      "36": "04"
+    },
+    "api_levels": [
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36
+    ],
+    "excluded_api_levels": [
+      29
+    ],
+    "emulator_abi": "x86_64",
+    "source_file_count": 1070,
+    "tested_source_digest": "0e2b103b072c9de6ce07bc3b3ae2cd72d6af4ee1289106bb2509a6682055fa29",
+    "passed_instrumentation_cases": 119,
+    "tests_per_api": 17,
+    "actual_page_sizes": {
+      "30": 4096,
+      "31": 4096,
+      "32": 4096,
+      "33": 4096,
+      "34": 4096,
+      "35": 4096,
+      "36": 4096
+    },
+    "index": {
+      "path": "artifacts/android-input-renewal-full-source-20261016/android-browser-host-seven-api-20261016-attempt01.json",
+      "bytes": 30802,
+      "sha256": "983f46638e8926b845bc64ad254e50c3e6f5cd8b6c828959dc0fd7f70fa1dc1f"
+    },
+    "source_archive": {
+      "path": "artifacts/android-input-renewal-full-source-20261016/source-inputs.tar.gz",
+      "bytes": 2919643,
+      "sha256": "19bb793ab8aaca06fdc9baf744d17467c9ae947ef80072c5b4ebae304f94d465"
+    },
+    "tested_application_apk": {
+      "path": "D:\\NestLinkBuilds\\android-input-renewal-full-source-20261016\\gradle-output\\attempt01\\app\\outputs\\apk\\debug\\app-debug.apk",
+      "bytes": 70777300,
+      "sha256": "80a5b0d9013b193f7b8308fbcc15c4c8accac30bca705e7810925abf10841cb8"
+    },
+    "tested_android_test_apk": {
+      "path": "D:\\NestLinkBuilds\\android-input-renewal-full-source-20261016\\gradle-output\\attempt01\\app\\outputs\\apk\\androidTest\\debug\\app-debug-androidTest.apk",
+      "bytes": 2243276,
+      "sha256": "5ad345e6f8264d4d6f890b1a77f2348166209762444c3251341c4e82462420ca"
+    },
+    "debug_signature_certificate_sha256": "d9fd9d00be7296029d6a7e9c0966b6ec5ff5a8c7f8ce8fe4c2c5d2531d509dc5",
+    "developer_apk_signatures_verified": true,
+    "debug_signature_receipt": {
+      "path": "artifacts/android-input-renewal-full-source-20261016/debug-apk-signatures-attempt01/checks.receipt.json",
+      "bytes": 2602,
+      "sha256": "afcee3c31641d88a360655f0fbb44946ee7990573bdf31cd47a5de7e35fe1ba4"
+    },
+    "native_ready": {
+      "path": "artifacts/android-input-renewal-full-source-20261016/android-native-av-native-ready-20261016-attempt01.json",
+      "bytes": 177983,
+      "sha256": "14e40c730df93bacb085877297b28befe26f93965464872027f0a0fe808c127f"
+    },
+    "native_build_receipt": {
+      "path": "artifacts/android-input-renewal-full-source-20261016/android-native-av-dual-abi-jni-20261016-attempt01.receipt.json",
+      "bytes": 348648,
+      "sha256": "01af856d5af8247364abc1e5c4d13684103790c93ed4b6b3f097689dcf2ed673"
+    },
+    "dual_abi_all_target_strict_clippy_receipt": {
+      "path": "artifacts/android-input-renewal-full-source-20261016/rust-android-clippy-attempt01.receipt.json",
+      "bytes": 348619,
+      "sha256": "31bd5ee7ed7694f63db20ca19d05253c7026f2b30f3b9f2cd5a19ed5959d5b1f"
+    },
+    "apk_ready": {
+      "path": "artifacts/android-input-renewal-full-source-20261016/android-native-av-apk-ready-20261016-attempt01.json",
+      "bytes": 1815,
+      "sha256": "bbdd612374dd4543b6163e53891bf34e56a70a809f540c4226c0b60429d9b907"
+    },
+    "apk_assembly_receipt": {
+      "path": "artifacts/android-input-renewal-full-source-20261016/android-native-av-apk-20261016-attempt01.receipt.json",
+      "bytes": 357285,
+      "sha256": "3d86ead919f2a26dcd512054d00f9489822f4ba2f8a141d59fc6ce2960441da1"
+    },
+    "jvm_unit_tests": {
+      "total": 127,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "receipt": {
+        "path": "artifacts/android-input-renewal-full-source-20261016/android-jvm-unit-tests-attempt01.receipt.json",
+        "bytes": 357250,
+        "sha256": "04ecb796dc5725464954e1310576af9b78bcd2f3cd2d99e817b753df2dede535"
+      }
+    },
+    "final_review": {
+      "path": "artifacts/android-input-renewal-full-source-20261016/FINAL_REVIEW.json",
+      "bytes": 14748,
+      "sha256": "8b93a730f7bb388c8e06151fa54b2808bf4dc2f1856547fdedcfef62d719d631"
+    },
+    "retained_matrix_history": [
+      {
+        "attempt": "01",
+        "completion": "failed",
+        "selected_checks_passed": false,
+        "summary": {
+          "path": "artifacts/android-input-renewal-full-source-20261016/android-browser-host-api-matrix-20261016-attempt01.json",
+          "bytes": 1048,
+          "sha256": "03afc3040f7049a573a92bd2bb04f747ee9508e705be868dc567499466665963"
+        },
+        "error": "API 35 failed; preserve its evidence and inspect before a new attempt.",
+        "api_results": [
+          {
+            "api": 35,
+            "status": "failed",
+            "tests_passed": 0
+          }
+        ]
+      },
+      {
+        "attempt": "02",
+        "completion": "failed",
+        "selected_checks_passed": false,
+        "summary": {
+          "path": "artifacts/android-input-renewal-full-source-20261016/android-browser-host-api-matrix-20261016-attempt02.json",
+          "bytes": 1048,
+          "sha256": "e7ddadc92f1ebb9ea4ba1db47cf1ebcb5f99da959e611ca3326c45753937241f"
+        },
+        "error": "API 35 failed; preserve its evidence and inspect before a new attempt.",
+        "api_results": [
+          {
+            "api": 35,
+            "status": "failed",
+            "tests_passed": 0
+          }
+        ]
+      },
+      {
+        "attempt": "03",
+        "completion": "failed",
+        "selected_checks_passed": false,
+        "summary": {
+          "path": "artifacts/android-input-renewal-full-source-20261016/android-browser-host-api-matrix-20261016-attempt03.json",
+          "bytes": 2422,
+          "sha256": "1de535167f880aa48f78cc45f2bf162f04123821b5863d2ceb897cbe6ad85b35"
+        },
+        "error": "API 30 failed; preserve its evidence and inspect before a new attempt.",
+        "api_results": [
+          {
+            "api": 35,
+            "status": "passed",
+            "tests_passed": 17
+          },
+          {
+            "api": 36,
+            "status": "passed",
+            "tests_passed": 17
+          },
+          {
+            "api": 30,
+            "status": "failed",
+            "tests_passed": 0
+          }
+        ]
+      },
+      {
+        "attempt": "04",
+        "completion": "finished",
+        "selected_checks_passed": true,
+        "summary": {
+          "path": "artifacts/android-input-renewal-full-source-20261016/android-browser-host-api-matrix-20261016-attempt04.json",
+          "bytes": 5884,
+          "sha256": "588f6601f1f096700b4e7f78836f1c611bdfb6662a15669e92a99177342f2cd9"
+        },
+        "error": null,
+        "api_results": [
+          {
+            "api": 35,
+            "status": "passed",
+            "tests_passed": 17
+          },
+          {
+            "api": 36,
+            "status": "passed",
+            "tests_passed": 17
+          },
+          {
+            "api": 30,
+            "status": "passed",
+            "tests_passed": 17
+          },
+          {
+            "api": 31,
+            "status": "passed",
+            "tests_passed": 17
+          },
+          {
+            "api": 32,
+            "status": "passed",
+            "tests_passed": 17
+          },
+          {
+            "api": 33,
+            "status": "passed",
+            "tests_passed": 17
+          },
+          {
+            "api": 34,
+            "status": "passed",
+            "tests_passed": 17
+          }
+        ]
+      }
+    ],
+    "windows_linux_shared_source_overlap": {
+      "files": 996,
+      "changed_files": 0,
+      "verification": "artifacts/browser-input-renewal-20261016/CURRENT_SOURCE_REVALIDATION.json"
+    },
+    "arm64_hardware_verified": false,
+    "runtime_16k_verified": false,
+    "release_signed": false,
+    "formal_release_signature_verified": false,
+    "real_projection_saf_accessibility_verified": false,
+    "source_inputs_unchanged_during_tests": true
+  },
+  "release_python_tests": {
+    "windows": {
+      "total": 114,
+      "skipped": 16,
+      "failures": 0,
+      "receipt": {
+        "path": "artifacts/cargo-notice-review-20261016/release-python-tests-windows-attempt04.receipt.json",
+        "sha256": "9354c124dcffff707cbaff0dbc679a1c00652002d0500a1c56000d315ac6e167"
+      }
+    },
+    "linux": {
+      "total": 114,
+      "skipped": 1,
+      "failures": 0,
+      "receipt": {
+        "path": "artifacts/cargo-notice-review-20261016/release-python-tests-linux-attempt04.receipt.json",
+        "sha256": "857af3ec6e1d1c4d1589542a744ea15266175a3005046f3076e2d46fd36cd4c8"
+      }
+    }
+  },
+  "workflows": {
+    "checked": 5,
+    "actionlint_passed": true,
+    "receipt": {
+      "path": "artifacts/cargo-notice-review-20261016/release-workflows-actionlint-attempt01.receipt.json",
+      "sha256": "3039301c666868e87b94630089fe1317cfdc4d9c4e2c58f5d32a5aa695c18fc5"
+    }
+  },
+  "cargo_notice_collection": {
+    "status": "complete",
+    "packages": 766,
+    "registry_packages": 724,
+    "first_party_workspace_packages": 38,
+    "reviewed_local_upstream_packages": 4,
+    "notice_files": 1365,
+    "original_attribution_files": 2176,
+    "missing_full_license_text_packages": [],
+    "index": {
+      "path": "D:\\NestLinkBuilds\\cargo-notice-current-20261016-attempt03\\index.json",
+      "sha256": "201151c5a893802556beee1017fb04fa6860399e358fca1d4c85da715d0add86"
+    },
+    "metadata": {
+      "path": "D:\\NestLinkBuilds\\cargo-notice-current-20261016-attempt03\\metadata.json",
+      "command": "cargo metadata --format-version 1 --all-features --locked",
+      "sha256": "0ea50d5320da02bbb9842acc4a34eb3f045d374843a9e65529d53466cda505ed"
+    },
+    "summary": {
+      "path": "D:\\NestLinkBuilds\\cargo-notice-current-20261016-attempt03\\summary.json",
+      "sha256": "742476e62c02418d1fce803c1d27aa880c238114cf24041c7d5a8a8e27e26bf7"
+    },
+    "cargo_lock_sha256": "9a34ff54642f69de251808368609ff4251dfb1b572d4cef617a8d87f572a4bb7",
+    "supplements_sha256": "f99e74017374479c6155bef41833a966455c91a70f42fda1199125ca44b4a2ab",
+    "formal_license_acceptance_passed": false,
+    "superseded_previous_collection": {
+      "status": "historical-superseded",
+      "packages": 765,
+      "notice_files": 1356,
+      "original_attribution_files": 2176,
+      "missing_full_mit_originals": [],
+      "index": {
+        "path": "artifacts/foundation-dispatch-removal-20261016/root-validation-attempt01/cargo-notices/index.json",
+        "sha256": "b0db8a727d8584a902a797560869cf81bda67cd192455200575befc633b15614"
+      },
+      "cargo_lock_sha256": "14a97acfc7353d625e22f8c989037f3c2ddbd3b8b03037a627cd13a1dbca5bf2",
+      "final_source_and_checks": "artifacts/foundation-dispatch-removal-20261016/FROZEN_FOUNDATION.json",
+      "formal_license_acceptance_passed": false,
+      "scope": "Historical notice and attribution collection bound to a prior Cargo.lock; not evidence for the current lockfile.",
+      "superseded_by": "D:\\NestLinkBuilds\\cargo-notice-current-20261016-attempt03\\index.json"
+    },
+    "scope": "Complete original notice and attribution collection for its recorded Cargo.lock hash. Later first-party dependency-edge/version changes do not retroactively change this original evidence; candidate production must bind a fresh collection to its exact final source. License compatibility, release binding and product acceptance remain separate."
+  },
+  "g0_passed": false,
+  "formal_release_acceptance_passed": false,
+  "remote_operations_performed": true,
+  "pending_remote_operations": [
+    "publish a fresh-source 0.1.0-rc.1 release in ZHanry/NestLink; previous old-repository rename/deletion/consolidation actions are deferred by the user"
+  ],
+  "release_publication_and_installation_20261016": {
+    "scope": "Selected publication/maintenance development review on Windows and Ubuntu; no fixed-product or formal platform acceptance",
+    "publication_and_handoff": {
+      "windows": {
+        "passed": 22,
+        "failed": 0,
+        "receipt": {
+          "path": "artifacts/release-completion-review-20261016/windows-publish-handoff.json",
+          "bytes": 1062,
+          "sha256": "6d9ccd7f4b7ad6f2d0e0a0b0989c9f37b5f2bcbb879d33c02c4bd86c3bf8dd4f"
+        },
+        "log": {
+          "path": "artifacts/release-completion-review-20261016/windows-publish-handoff.log",
+          "bytes": 4084,
+          "sha256": "8d48df72901c74d2dd7f7e9380498fde8795a77d7da36b6562dc71e968231fb9"
+        },
+        "inputs_still_current": true
+      },
+      "linux": {
+        "passed": 22,
+        "failed": 0,
+        "receipt": {
+          "path": "artifacts/release-completion-review-20261016/linux-publish-handoff.json",
+          "bytes": 1016,
+          "sha256": "69ebdf59d1d0035e5cf3cc26cb38048f86f34adc56ffebb3b566470cdec7b899"
+        },
+        "log": {
+          "path": "artifacts/release-completion-review-20261016/linux-publish-handoff.log",
+          "bytes": 4057,
+          "sha256": "2aeab76a3d13718ecdbaced5b7c91044a7115a77ed1411c8cdb5da28cd89ac59"
+        },
+        "inputs_still_current": true
+      }
+    },
+    "maintenance": {
+      "windows": {
+        "actual_daemon_subprocesses_passed": 4,
+        "ipc_passed": 3,
+        "powershell_policy_fixtures_passed": 3,
+        "selected_strict_clippy_passed": true
+      },
+      "linux": {
+        "actual_daemon_subprocesses_passed": 4,
+        "ipc_passed": 4,
+        "selected_strict_clippy_passed": true
+      }
+    },
+    "inno_code_syntax_receipt": {
+      "path": "artifacts/release-completion-review-20261016/windows-inno-code-syntax.receipt.json",
+      "bytes": 1217,
+      "sha256": "c92fcb4de0d1ceb974321627bbf870d6f8d69c34c42c87270b13cea4385bfe30"
+    },
+    "final_source_and_checks": {
+      "path": "artifacts/release-completion-review-20261016/FINAL_SOURCE_INPUTS.json",
+      "bytes": 9722,
+      "sha256": "70ceb0c170c88faae44508f74a2651fa28cd568577183966478fa9ed5354496b"
+    },
+    "signing_verified": false,
+    "installed_product_acceptance_passed": false,
+    "remote_operations_performed": false
+  },
+  "web_notice_replacements_20261016": {
+    "scope": "Independent Web consumer-fork increment, ready for parent aggregation",
+    "status": "implemented-and-verified-in-stated-scope",
+    "wasm_clippy": "passed",
+    "optimized_web_site": "passed",
+    "casing_comparison_inputs": 22675,
+    "erasure_runtime_tests": 12,
+    "erasure_compile_rejection_tests": 1,
+    "collector_unit_tests": 13,
+    "release_metadata_integration_tests": 2,
+    "integrated_metadata_packages": 766,
+    "remaining_missing_original_notice_packages": [
+      "dispatch 0.2.0"
+    ],
+    "global_original_notice_gate": "incomplete",
+    "new_formal_template_supplements": 0,
+    "site": {
+      "path": "D:\\NestLinkBuilds\\web-license-replacements-20261016-attempt01\\validation\\production-dist",
+      "files": [
+        {
+          "path": "index.html",
+          "bytes": 1193,
+          "sha256": "b28f862836950f5ad8e518e1f446cf6c6bc025e01570c86f2b0680d8be0e2a27"
+        },
+        {
+          "path": "nestlink-cd4b2ff289dc22b7.css",
+          "bytes": 15978,
+          "sha256": "cd18d4dc2fadc74886e325b561d04ea6ef7e1f633e4f4469bac79fdedaeeed2f"
+        },
+        {
+          "path": "nestlink-web-78030380b6186d14.js",
+          "bytes": 73765,
+          "sha256": "b3ff7886f798871fe526f02fa1caf7ed43152e74db533b6321d44039971d6d31"
+        },
+        {
+          "path": "nestlink-web-78030380b6186d14_bg.wasm",
+          "bytes": 2723809,
+          "sha256": "59661dfa295973ace44288687addf7bb821c00261e56ac21e434c440b746461f"
+        }
+      ]
+    },
+    "compiled_source_archive": {
+      "scope": "Exact isolated source snapshot used for passed Web WASM strict Clippy and optimized production build, including unchanged sources copied before concurrent native-only edits",
+      "archive": "D:\\??????\\????????????\\NestLink\\artifacts\\cargo-notice-followup-20261016\\web-validation-attempt02\\compiled-source.tar.gz",
+      "archive_sha256": "f9547a81c97bde0ab305c48031b754b390000770523d7b7e24c2313ac28f3cfe",
+      "archive_bytes": 2609080,
+      "source_manifest": "D:\\??????\\????????????\\NestLink\\artifacts\\cargo-notice-followup-20261016\\web-validation-attempt02\\compiled-source-manifest.json",
+      "source_manifest_sha256": "c0fb62dadb45ae318b54e4e3c72de92e639f15fa0fc43692fafa02682fc5a965",
+      "files": 899,
+      "validation_receipt_sha256": "987e10ccc467faef6f8102863afd8b9990209002914279a3703a4d149571991f",
+      "deterministic_tar_metadata": true,
+      "every_archived_member_verified": true,
+      "reproduction": {
+        "cargo": "cargo clippy --locked --offline -p nestlink-web --target wasm32-unknown-unknown --all-targets --all-features -- -D warnings",
+        "site": "trunk build index.html --release --locked --offline --skip-version-check --dist <new-output>",
+        "site_workdir": "apps/web",
+        "exact_tools_and_environment": "validation.receipt.json checks contain full argv/environment and verified tool hashes"
+      }
+    },
+    "verification_receipt": "artifacts/cargo-notice-followup-20261016/web-validation-attempt02/validation.receipt.json",
+    "earlier_failures_preserved": true,
+    "automatic_cleanup_rejections_retained": true
+  },
+  "historical_cargo_notice_collection_before_web_replacements": {
+    "status": "incomplete",
+    "packages": 768,
+    "notice_files": 1352,
+    "original_attribution_files": 2182,
+    "missing_full_mit_originals": [
+      "convert_case_extras 0.2.0",
+      "dispatch 0.2.0",
+      "erased 0.1.2"
+    ],
+    "index": {
+      "path": "artifacts/cargo-notice-review-20261016/collected-notices-attempt04/index.json",
+      "sha256": "e333a07af179f376178160a29bb422afd11f4a3b9684fa56b64c040e6c1840ab"
+    },
+    "legacy_cargo_spdx_declarations_normalized": 39,
+    "final_source_and_checks": "artifacts/cargo-notice-review-20261016/FROZEN.json"
+  },
+  "browser_native_1080p30_audio_short_run_20261016": {
+    "scope": "36-second owned synthetic capture, production Web UI/Core/VP8/Opus Chrome development run; preceding frozen Build02 bytes, before the new RTCP adaptation patch",
+    "passed": true,
+    "browser": "Chrome/155.0.8059.40",
+    "average_decoded_fps": 28.14547937525273,
+    "signed_management_renewals": 5,
+    "summary": {
+      "path": "artifacts/browser-native-throughput-20261016/SHORT_RUN_SUMMARY.json",
+      "bytes": 4222,
+      "sha256": "252a50b1d29865e105ad1ba3f79d24d579ee39bbb2785c4c1b412ad0a0c6a8d3"
+    },
+    "formal_g1_passed": false,
+    "exclusive_performance_acceptance": false,
+    "rtcp_adaptation_covered": false
+  },
+  "webrtc_rate_feedback_20261016": {
+    "scope": "Affected VP8 encoder reconfiguration and native WebRTC RTCP rate/SSRC/keyframe behavior on Windows/Linux; no formal G1/installed-product acceptance",
+    "source_and_checks": {
+      "path": "artifacts/browser-congestion-followup-20261016/FINAL_SOURCE_AND_CHECKS.json",
+      "bytes": 129582,
+      "sha256": "993d8f8352c4e6f5dcd005ad68e50adebf8c2a5b58b20c5c36932ac672163ad0"
+    },
+    "windows": {
+      "codec": 17,
+      "webrtc": 18,
+      "strict": "passed"
+    },
+    "linux": {
+      "codec": 19,
+      "webrtc": 18,
+      "codec_strict": "passed",
+      "vp8_asan_ubsan": "passed"
+    },
+    "network_metrics_cases": 4,
+    "formal_g1_passed": false,
+    "android_previous_apk_covers_this_increment": false
+  },
+  "historical_cargo_notice_collection_before_foundation_replacement": {
+    "status": "incomplete",
+    "packages": 766,
+    "notice_files": 1356,
+    "original_attribution_files": 2178,
+    "missing_full_mit_originals": [
+      "dispatch 0.2.0"
+    ],
+    "index": {
+      "path": "artifacts/cargo-notice-followup-20261016/root-integration-attempt01/cargo-notices/index.json",
+      "sha256": "7ac6510ea5b48db140b313814ca969d7d15c1efcaeac92da5203eb21b5174fdb"
+    },
+    "final_source_and_checks": "artifacts/cargo-notice-followup-20261016/FROZEN_WEB.json",
+    "formal_license_acceptance_passed": false
+  },
+  "foundation_notice_replacement_20261016": {
+    "scope": "Integrated Foundation consumer-fork increment; exact sources and retained evidence independently rehashed by parent",
+    "status": "implemented-and-verified-in-stated-scope",
+    "apple_winit_target_type_checks": 4,
+    "apple_public_api_positive_compile_checks": 4,
+    "apple_public_api_expected_compile_rejections": 4,
+    "linux_gcd_process_comparisons": 10,
+    "ordinary_queue_cases_per_variant": 9,
+    "collector_unit_tests": 13,
+    "foundation_notice_tests": 4,
+    "release_metadata_integration_tests": 2,
+    "integrated_metadata_packages": 765,
+    "remaining_missing_original_notice_packages": [],
+    "global_original_notice_collection": "complete",
+    "global_license_compatibility_and_release_acceptance": "separate-review-records; not inferred by this increment",
+    "removed_supplier_names": [
+      "dispatch",
+      "convert_case_extras",
+      "erased"
+    ],
+    "new_formal_template_supplements": 0,
+    "root": {
+      "Cargo.toml": "b911401f9f0cc30986fa278ffbebc672ea697ba81857906e1373318b243aa561",
+      "Cargo.lock": "14a97acfc7353d625e22f8c989037f3c2ddbd3b8b03037a627cd13a1dbca5bf2",
+      "scripts/refactor-cargo-notices.py": "186e8229b05719ec1c8a8a81111a24b74248d05f7df5e170c99e1ef9c5a711c5"
+    },
+    "notice_index_sha256": "b0db8a727d8584a902a797560869cf81bda67cd192455200575befc633b15614",
+    "candidate_archive_sha256": "202e56efbd0c2622a44c2829c790d0f8fcc1c3715d3bf54e449e8ab4f05efb70",
+    "installed_files_identical_to_frozen_candidate": 242,
+    "integration_receipt": "artifacts/foundation-dispatch-removal-20261016/INTEGRATED.json",
+    "verification_receipt": "artifacts/foundation-dispatch-removal-20261016/root-validation-attempt01/checks.receipt.json",
+    "per_case_runtime_and_apple_scope": "artifacts/foundation-dispatch-removal-20261016/FOUNDATION_CANDIDATE_VALIDATION.json",
+    "historical_web_freeze_preserved": true,
+    "earlier_failed_test_scaffolds_preserved": true,
+    "previously_rejected_cleanup_paths_retained_without_retry": true
+  },
+  "automatic_native_signed_node_relay_20261016": {
+    "status": "implemented-and-verified-in-selected-scope",
+    "scope": "Empty-route native establishment uses signed discovery and a shared managed relay allocation. These runs retain their distinct Cargo graphs and do not replace full product or cross-network acceptance.",
+    "implementation_source_paths": [
+      "crates/sdk/src/native.rs",
+      "crates/sdk/src/native_tests.rs",
+      "crates/sdk/tests/node_relay/signed_discovery.rs",
+      "crates/storage/src/signaling.rs",
+      "crates/storage/tests/control.rs"
+    ],
+    "source_freeze": "artifacts/product-completion-audit-20261016/frozen-inputs.json",
+    "combined_audit": {
+      "path": "artifacts/product-completion-audit-20261016/combined-index-excerpts-20261016-attempt02.json",
+      "sha256": "5fe4211dbad4b6a6d069a6ea714bf590e58d8a1a8840cff9749098069fc25274"
+    },
+    "historical_windows_correction": {
+      "path": "windows-attempt04-correction.md",
+      "sha256": "9fb7a2aae29211ba7cb211914d4582ccf51bc3f3937ce3f2d7508ee5b455d343",
+      "historical_attempt04_receipt_preserved": true,
+      "attempt04_all_six_pass_claim_withdrawn": true,
+      "attempt05_first_preflight_parser_failure_preserved": "windows-run-attempt05-preflight-parser-defect/",
+      "attempt05_successful_driver_reported_normal_SystemExit_as_failure": true,
+      "executed_driver_copy_matches_attempt05_receipt": true,
+      "corrected_driver_for_future_runs": {
+        "path": "run_windows_attempt05.py",
+        "sha256": "e7f8c13c0931d2a13fd2fa4804c981c7c2f93da26d6cd667c480fcfe5e4e5218"
+      }
+    },
+    "runs": {
+      "linux_x86_64_gnu": {
+        "runtime_cases_passed": 6,
+        "runtime_cases_failed": 0,
+        "strict_clippy_commands_passed": 2,
+        "receipts": [
+          {
+            "path": "artifacts/product-completion-audit-20261016/linux-run-attempt02/linux-test-run.json",
+            "sha256": "5202f8f30e207594884fa7d67f71018102da07086bf6e8e803f69b14a0e5160d"
+          }
+        ],
+        "exact_runtime_test_names": [
+          "native_tests::peer_relay_markers_match_any_signed_address_for_their_transport",
+          "native_tests::signed_relay_hint_cannot_become_a_route_without_a_local_verified_allocation",
+          "signal_possession_generation_paths_and_live_authorization_are_enforced",
+          "signed_discovery::establish_automatically_uses_signed_shared_relay_allocation_for_relay_only",
+          "signed_discovery::establish_joins_the_existing_shared_allocation_when_capacity_is_full",
+          "signed_discovery::establish_rendezvous_refreshes_allocation_after_node_endpoint_revision_changes"
+        ],
+        "cargo_graph": {
+          "target": "x86_64-unknown-linux-gnu",
+          "cargo_target_dir": "/mnt/d/NestLinkBuilds/native-development-20261015/linux-target",
+          "cargo_home": "/home/popdo/.cargo",
+          "rust_toolchain": "1.96.0",
+          "cargo_lock_sha256": "bce7ecc0da4d7bff63bd49443d75bcba62f50226ac04c98b4887c6b8018bbdf7",
+          "graph_note": "Linux GNU target resolution, enabled cfgs, and native link inputs; separate from the Windows MSVC graph below."
+        },
+        "source_inputs_unchanged": true,
+        "scope": "Four targeted test commands ran six actual tests; SDK and storage all-target strict Clippy passed (-D warnings). Linux source hashes remained unchanged per command."
+      },
+      "windows_x86_64_msvc": {
+        "runtime_cases_passed": 6,
+        "runtime_cases_failed": 0,
+        "strict_clippy_commands_passed": 0,
+        "receipts": [
+          {
+            "path": "artifacts/product-completion-audit-20261016/windows-run-attempt04/windows-test-run.json",
+            "sha256": "a10b50b46c500db08c049ca20013587ac1b89ec8f781317b204dcda38d6156fc"
+          },
+          {
+            "path": "artifacts/product-completion-audit-20261016/windows-run-attempt05/attempt05-result.json",
+            "sha256": "50b640f8848978bb9403199ad91f1355b22512c61cebb54b8f9f2872a0a1c024"
+          }
+        ],
+        "exact_runtime_test_names": [
+          "native_tests::peer_relay_markers_match_any_signed_address_for_their_transport",
+          "native_tests::signed_relay_hint_cannot_become_a_route_without_a_local_verified_allocation",
+          "signal_possession_generation_paths_and_live_authorization_are_enforced",
+          "signed_discovery::establish_automatically_uses_signed_shared_relay_allocation_for_relay_only",
+          "signed_discovery::establish_joins_the_existing_shared_allocation_when_capacity_is_full",
+          "signed_discovery::establish_rendezvous_refreshes_allocation_after_node_endpoint_revision_changes"
+        ],
+        "cargo_graph": {
+          "target": "x86_64-pc-windows-msvc",
+          "cargo_target_dir": "D:\\NestLinkBuilds\\native-development-20261015\\windows-target",
+          "cargo_home": "C:\\Users\\Popdo\\.cargo",
+          "rust_toolchain": "1.96.0-x86_64-pc-windows-msvc",
+          "graph_note": "Windows MSVC target resolution, cfgs, native link inputs, and codec prefix; distinct from Linux GNU, and not merged into a common cross-platform Cargo graph.",
+          "cargo_lock_sha256": "14a97acfc7353d625e22f8c989037f3c2ddbd3b8b03037a627cd13a1dbca5bf2"
+        },
+        "source_inputs_unchanged": true,
+        "scope": "Six actual Windows runtime cases: three attempt04 raw-log-confirmed cases and three missing attempt04 cases rerun with fully qualified signed_discovery:: names in attempt05. Three original zero-test commands are explicitly excluded from pass counts."
+      }
+    },
+    "new_android_package_coverage": "Current 1044-source input-renewal cohort rebuilt both JNI ABIs/APKs and passed all 112 API30-36 emulator cases; formal hardware/signature/cross-network acceptance remains separate",
+    "formal_release_acceptance_passed": false
+  },
+  "android_previous_build15_matrix13_20261016": {
+    "build_attempt": "15",
+    "matrix_attempt": "13",
+    "api_levels": [
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36
+    ],
+    "excluded_api_levels": [
+      29
+    ],
+    "emulator_abi": "x86_64",
+    "passed_instrumentation_cases": 112,
+    "index": {
+      "path": "artifacts/core-verification/android-browser-host-seven-api-20261015-attempt01.json",
+      "sha256": "22b50bd5caf5b053172cd45965955ec3462e9849fe6c9f3bce68c663f68e39c4"
+    },
+    "arm64_hardware_verified": false,
+    "runtime_16k_verified": false,
+    "release_signed": false
+  },
+  "android_current_source_increment_20261016": {
+    "scope": "Independent current-source Android increment; ready for parent aggregation",
+    "status": "historical-superseded",
+    "source_digest": "edd9cd42f16ff72ec58a0c053adb01db1f5a78ddc53f91c58cf68eaf97c55f51",
+    "source_files": 1042,
+    "source_archive": {
+      "path": "artifacts/android-current-increment-20261016/source-inputs.tar.gz",
+      "bytes": 2822631,
+      "sha256": "80ba8e6c7de99ce3b2b269db1680c213b684a9f438de7a2ac9de1635e9b2e1f2"
+    },
+    "dual_abi_release_builds": 2,
+    "dual_abi_all_target_strict_checks": 2,
+    "current_apks": [
+      {
+        "path": "D:\\NestLinkBuilds\\android-current-increment-20261016\\gradle-output\\attempt01\\app\\outputs\\apk\\debug\\app-debug.apk",
+        "bytes": 69488364,
+        "sha256": "f567a7ea188452407d0f58c4f608d264062d3585651a3d114c55a794e2645267"
+      },
+      {
+        "path": "D:\\NestLinkBuilds\\android-current-increment-20261016\\gradle-output\\attempt01\\app\\outputs\\apk\\androidTest\\debug\\app-debug-androidTest.apk",
+        "bytes": 2237832,
+        "sha256": "359475f000ee175338e803d2b588133c0546964ce21f788c01979a4f6f0a01d8"
+      }
+    ],
+    "native_libraries": {
+      "arm64-v8a": {
+        "path": "/mnt/d/NestLinkBuilds/android-native-av-20261015/cargo-target/aarch64-linux-android/release/libnestlink_android.so",
+        "abi": "arm64-v8a",
+        "machine": 183,
+        "sha256": "96359cce3e03c1c2b1ce5947db9b966a66d0eadde9168c396558e55e2f771e58",
+        "page_size_bytes": 16384,
+        "load_segments": [
+          {
+            "index": 1,
+            "offset": 0,
+            "virtual_address": 0,
+            "alignment": 16384,
+            "flags": 4
+          },
+          {
+            "index": 2,
+            "offset": 4592000,
+            "virtual_address": 4608384,
+            "alignment": 16384,
+            "flags": 5
+          },
+          {
+            "index": 3,
+            "offset": 18381936,
+            "virtual_address": 18414704,
+            "alignment": 16384,
+            "flags": 6
+          },
+          {
+            "index": 4,
+            "offset": 18794856,
+            "virtual_address": 18844008,
+            "alignment": 16384,
+            "flags": 6
+          }
+        ],
+        "staged_path": "/mnt/d/NestLinkBuilds/android-current-increment-20261016/libs/attempt01/arm64-v8a/libnestlink_android.so",
+        "bytes": 18819984,
+        "codec_prefix": "/home/popdo/.local/share/nestlink-producer-codecs-20261015-attempt01/aarch64-linux-android/aarch64-linux-android",
+        "codec_receipt_sha256": "6864028e7c54cf4aa16d92a2b4aa9505fed55992fbe9442b7e142159f4c9983b"
+      },
+      "x86_64": {
+        "path": "/mnt/d/NestLinkBuilds/android-native-av-20261015/cargo-target/x86_64-linux-android/release/libnestlink_android.so",
+        "abi": "x86_64",
+        "machine": 62,
+        "sha256": "9b8ea08a6cdbf016d4cc47184fff908e099d093e8be2fd41bec96ef8f94ff415",
+        "page_size_bytes": 16384,
+        "load_segments": [
+          {
+            "index": 1,
+            "offset": 0,
+            "virtual_address": 0,
+            "alignment": 16384,
+            "flags": 4
+          },
+          {
+            "index": 2,
+            "offset": 4791488,
+            "virtual_address": 4807872,
+            "alignment": 16384,
+            "flags": 5
+          },
+          {
+            "index": 3,
+            "offset": 20583056,
+            "virtual_address": 20615824,
+            "alignment": 16384,
+            "flags": 6
+          },
+          {
+            "index": 4,
+            "offset": 21029808,
+            "virtual_address": 21078960,
+            "alignment": 16384,
+            "flags": 6
+          }
+        ],
+        "staged_path": "/mnt/d/NestLinkBuilds/android-current-increment-20261016/libs/attempt01/x86_64/libnestlink_android.so",
+        "bytes": 21055064,
+        "codec_prefix": "/home/popdo/.local/share/nestlink-producer-codecs-20261015-attempt01/x86_64-linux-android/x86_64-linux-android",
+        "codec_receipt_sha256": "da0e1d7fa57468449e5e453c9500330580b1f5042a3dfb5b59a8cc4959121742"
+      }
+    },
+    "api_levels": [
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36
+    ],
+    "excluded_api_levels": [
+      29
+    ],
+    "executed_instrumentation_cases": 112,
+    "tests_per_api": 16,
+    "actual_page_sizes": {
+      "30": 4096,
+      "31": 4096,
+      "32": 4096,
+      "33": 4096,
+      "34": 4096,
+      "35": 4096,
+      "36": 4096
+    },
+    "unchanged_android_app_files": 65,
+    "jvm_cases_repeated_this_increment": 0,
+    "previous_jvm_cases_not_repeated": 119,
+    "arm64_hardware_verified": false,
+    "formal_release_signature_verified": false,
+    "runtime_16k_page_verified": false,
+    "real_projection_saf_accessibility_verified": false,
+    "native_16k_elf_alignment_verified": true,
+    "apk_embedded_current_jni_and_16k_offsets_verified": true,
+    "both_developer_apk_public_signatures_verified": true,
+    "all_eleven_executed_command_scratch_cleanups_verified": true,
+    "successful_source_checked_commands": 10,
+    "retained_failed_pretest_environment_commands": 1,
+    "api_matrix_attempts": {
+      "30": "02",
+      "31": "02",
+      "32": "02",
+      "33": "02",
+      "34": "02",
+      "35": "01",
+      "36": "01"
+    },
+    "retained_matrix_history": [
+      {
+        "path": "artifacts\\android-current-increment-20261016\\android-browser-host-api-matrix-20261016-attempt01.json",
+        "bytes": 2406,
+        "sha256": "e14f7ae576b51c0dbfd67a483e53a49a739cbb5582cfb03097d7178a96c41d16"
+      },
+      {
+        "path": "artifacts\\android-current-increment-20261016\\android-browser-host-api-matrix-20261016-attempt02.json",
+        "bytes": 4106,
+        "sha256": "5f973537d47af135d23c66daeae30309777227dc7114e7680534d0d06f721ecd"
+      }
+    ],
+    "all_seven_owned_emulators_and_avds_removed": true,
+    "all_six_owned_image_import_instances_removed": true,
+    "imported_api_levels": [
+      30,
+      31,
+      32,
+      33,
+      34
+    ],
+    "api30_import_attempts": [
+      "01",
+      "02"
+    ],
+    "review_receipt": {
+      "path": "artifacts/android-current-increment-20261016/FINAL_REVIEW.json",
+      "bytes": 11817,
+      "sha256": "2fb1c10ac3b4746bf5490e27d3e1c4fd80809c486cbe8986bbcb837aa01f44e2"
+    },
+    "seven_api_index": {
+      "path": "artifacts/android-current-increment-20261016/android-browser-host-seven-api-20261016-attempt02.json",
+      "bytes": 29146,
+      "sha256": "7fe95725916e785686f7d6413f6647e7630952c520d4e05747c1c2fd7866374a"
+    },
+    "boundaries": [
+      "Developer-signed debug APK; no formal release signing",
+      "x86_64 emulators only; ARM64 library built but no ARM64 hardware tested",
+      "ELF/APK 16 KiB alignment checked; actual emulator page sizes recorded independently",
+      "No real Projection/SAF/accessibility/cross-network acceptance",
+      "Unchanged Android app inputs: previous 119 JVM cases were not rerun",
+      "Android 10/API29 excluded by user instruction"
+    ],
+    "visual_review_record": "VISUAL_REVIEW.json",
+    "freeze": "FROZEN_ANDROID_CURRENT.json",
+    "shared_indexes_edited_by_this_increment": false,
+    "repository_snapshot_matches_tested_snapshot": false,
+    "post_verification_changes": "This 1042-input cohort remains historical. The later 1070-input Android source was rebuilt and passed API30-36 instrumentation; current evidence is stored under android_input_renewal_current_source_20261016."
+  },
+  "browser_input_renewal_repair_20261016": {
+    "status": "Current-source Windows/Linux runtime, strict and fmt passed; immutable Build06 three-browser renewed-input replay passed separately",
+    "scope": "Retained signed current/previous permits, bounded trusted-refresh wait, and lock-local original input deadlines",
+    "parent_review": {
+      "path": "artifacts/browser-input-renewal-20261016/PARENT_REVIEW.json",
+      "sha256": "be2767fec959570c43de899f47886669b06c8259329edc36b1991c729f1ac607"
+    },
+    "integration": {
+      "path": "artifacts/browser-input-renewal-20261016/INTEGRATION.json",
+      "sha256": "f56dfa5cb799f73b8ac87d0f361f7614096ad27dcbb7693b836e4a8c0deb6b31"
+    },
+    "changed_paths": [
+      "crates/remote/src/input.rs",
+      "crates/remote/src/lifecycle.rs",
+      "crates/remote/tests/lifecycle.rs",
+      "crates/sdk/src/webrtc_host.rs",
+      "crates/sdk/src/webrtc_host/input.rs",
+      "crates/sdk/src/webrtc_host/tests/data_loopback_tests.rs",
+      "crates/sdk/src/webrtc_host/tests/input_renewal_tests.rs"
+    ],
+    "runtime_verified": true,
+    "browser_repair_verified": true,
+    "formal_g1_passed": false,
+    "runtime_cases_per_platform": 92,
+    "total_executed_runtime_cases": 184,
+    "runtime_verification": {
+      "path": "artifacts/browser-input-renewal-20261016/RUNTIME_VERIFICATION.json",
+      "sha256": "da4252a600241cf508473f64b997fbad1b1d149bdcbcbb5fcb9205bb5b2b13aa"
+    },
+    "followup_review": {
+      "path": "artifacts/browser-input-renewal-20261016/wait-budget-followup-attempt01/PARENT_REVIEW.json",
+      "sha256": "6af818eb16ee60c776741962041b5f1a08f20d62150e6494bc98bb4fe37301ce"
+    },
+    "delayed_poll_regression_reproduced_before_fix": true,
+    "historical_windows_strict_failure_retained": true,
+    "linux_original_clocksource_and_timesyncd_independently_restored": true,
+    "browser_replay": {
+      "path": "artifacts/browser-input-renewal-20261016/BROWSER_REPLAY_VERIFICATION.json",
+      "sha256": "8ed4f374e4301b8abaec1194851f67d2db58709eb571a17084b05931f9434cf1"
+    },
+    "browser_short_runs": [
+      {
+        "browser": "chrome",
+        "version": "Chrome/155.0.8059.40",
+        "fps": 28.04130122742233,
+        "decoded_seconds": 36.01830000001192,
+        "steady_renewals": 5,
+        "post_renewal_input": {
+          "started_after_signed_lease_sequence": 2,
+          "sent_input_envelopes": 24,
+          "sent_lease_sequences": [
+            2
+          ],
+          "host_input_and_files_passed": true
+        },
+        "all_process_trees_empty": true
+      },
+      {
+        "browser": "edge",
+        "version": "Edg/155.0.4283.45",
+        "fps": 28.593478466054677,
+        "decoded_seconds": 36.02220000000298,
+        "steady_renewals": 5,
+        "post_renewal_input": {
+          "started_after_signed_lease_sequence": 2,
+          "sent_input_envelopes": 24,
+          "sent_lease_sequences": [
+            2
+          ],
+          "host_input_and_files_passed": true
+        },
+        "all_process_trees_empty": true
+      },
+      {
+        "browser": "firefox",
+        "version": "firefox/158.0",
+        "fps": 28.908636489863927,
+        "decoded_seconds": 36.01,
+        "steady_renewals": 5,
+        "post_renewal_input": {
+          "started_after_signed_lease_sequence": 2,
+          "sent_input_envelopes": 24,
+          "sent_lease_sequences": [
+            2
+          ],
+          "host_input_and_files_passed": true
+        },
+        "all_process_trees_empty": true
+      }
+    ],
+    "latest_source_revalidation": {
+      "path": "artifacts/browser-input-renewal-20261016/CURRENT_SOURCE_REVALIDATION.json",
+      "sha256": "04edeb3783edf43e1e3e9900f532e10d2c9a5dda22c0dcd3398814ce53745395",
+      "source_file_count": 1035,
+      "source_sha256": "c6376e08ac670ad7916e9e4b23fcc7d5c03e278c1ecdf0fff26d556f796e79ec",
+      "runtime_cases_per_platform": 92,
+      "total_executed_runtime_cases": 184
+    }
+  },
+  "shared_management_entry_runtime_20261016": {
+    "scope": "Focused control-entry repair, actual signed HTTP and node lifecycle tests; no browser TURN or formal release acceptance",
+    "verification": {
+      "path": "artifacts/g1-managed-turn-20261016/shared-runtime-followup-attempt01/RUNTIME_VERIFICATION.json",
+      "sha256": "e9f9bccd050eb72ebcb297fb2fef8c029b837024aee86b126a135c9b9bb46eae",
+      "bytes": 3413
+    },
+    "runtime_tests": {
+      "windows": 3,
+      "linux": 3,
+      "total": 6
+    },
+    "strict_and_fmt_both_platforms": true,
+    "product_source": "apps/server/src/lib.rs",
+    "fixture": "scripts/fixtures/browser-native-host/src/main.rs",
+    "formal_acceptance_passed": false
+  },
+  "android_previous_1042_source_20261016": {
+    "build_attempt": "01",
+    "matrix_attempt": "02",
+    "api_matrix_attempts": {
+      "30": "02",
+      "31": "02",
+      "32": "02",
+      "33": "02",
+      "34": "02",
+      "35": "01",
+      "36": "01"
+    },
+    "api_levels": [
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36
+    ],
+    "excluded_api_levels": [
+      29
+    ],
+    "emulator_abi": "x86_64",
+    "passed_instrumentation_cases": 112,
+    "index": {
+      "path": "artifacts/android-current-increment-20261016/android-browser-host-seven-api-20261016-attempt02.json",
+      "bytes": 29146,
+      "sha256": "7fe95725916e785686f7d6413f6647e7630952c520d4e05747c1c2fd7866374a"
+    },
+    "tested_source_digest": "edd9cd42f16ff72ec58a0c053adb01db1f5a78ddc53f91c58cf68eaf97c55f51",
+    "tested_application_apk": {
+      "path": "D:\\NestLinkBuilds\\android-current-increment-20261016\\gradle-output\\attempt01\\app\\outputs\\apk\\debug\\app-debug.apk",
+      "bytes": 69488364,
+      "sha256": "f567a7ea188452407d0f58c4f608d264062d3585651a3d114c55a794e2645267"
+    },
+    "arm64_hardware_verified": false,
+    "runtime_16k_verified": false,
+    "release_signed": false,
+    "independent_readonly_review": {
+      "path": "artifacts/android-current-readonly-review-20261016/attempt02/READ_ONLY_REVIEW.json",
+      "sha256": "aeb42cae6262a79417da2d622a9364462e7caa0f7060c409859730cfd76d70e5",
+      "report": "artifacts/android-current-readonly-review-20261016/REPORT.md",
+      "groups_passed": 7,
+      "historical_scratch_evidence_is_original_receipt_only": true
+    },
+    "freeze": {
+      "path": "artifacts/android-current-increment-20261016/FROZEN_ANDROID_CURRENT.json",
+      "sha256": "f99df66cdef76c9818dac885b4e62fd42fdb342bc77a658907be040882989e78"
+    },
+    "repository_snapshot_matches_tested_snapshot": false,
+    "post_verification_changes": "Superseded for current-source status by the 1070-input BuildAttempt02 Android verification; the historical result and its original artifacts remain unchanged.",
+    "status": "historical-superseded"
+  },
+  "android_input_renewal_current_source_20261016": {
+    "scope": "Historical BuildAttempt02 debug APK cohort; its 119 API30-36 emulator cases remain valid for those exact bytes and are superseded by the top-level 1070-file Android cohort.",
+    "status": "historical-superseded",
+    "source_revision": "1e43481ae4a872b946af9a0f11c9b15ac61a8721",
+    "source_tree_dirty": true,
+    "source_digest": "3529ac75251c40cd26263e6e402669192c30b414cf811986a67ded14cb602d40",
+    "source_files": 1070,
+    "build_attempt": "02",
+    "matrix_attempt": "08",
+    "api_matrix_attempts": {
+      "30": null,
+      "31": null,
+      "32": null,
+      "33": null,
+      "34": null,
+      "35": null,
+      "36": null
+    },
+    "api_levels": [
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36
+    ],
+    "excluded_api_levels": [
+      29
+    ],
+    "emulator_abi": "x86_64",
+    "passed_instrumentation_cases": 119,
+    "tests_per_api": 17,
+    "current_apks": [
+      {
+        "path": "D:\\NestLinkBuilds\\android-input-renewal-20261016\\gradle-output\\attempt02\\app\\outputs\\apk\\debug\\app-debug.apk",
+        "bytes": 70777300,
+        "sha256": "80a5b0d9013b193f7b8308fbcc15c4c8accac30bca705e7810925abf10841cb8"
+      },
+      {
+        "path": "D:\\NestLinkBuilds\\android-input-renewal-20261016\\gradle-output\\attempt02\\app\\outputs\\apk\\androidTest\\debug\\app-debug-androidTest.apk",
+        "bytes": 2243276,
+        "sha256": "5ad345e6f8264d4d6f890b1a77f2348166209762444c3251341c4e82462420ca"
+      }
+    ],
+    "native_build_receipt": {
+      "path": "artifacts/android-input-renewal-20261016/android-native-av-native-ready-20261016-attempt02.json",
+      "bytes": 177947,
+      "sha256": "1315794d3607c7fb54f92bb70b9c2c97b12a4cf5bb6c1de32dbbeac593c44ab5"
+    },
+    "apk_build_receipt": {
+      "path": "artifacts/android-input-renewal-20261016/android-native-av-apk-ready-20261016-attempt02.json",
+      "bytes": 1767,
+      "sha256": "bf1115e131941324d657c537e9dd61bc5c26a18a58ed3d1d80deb574326587b5"
+    },
+    "seven_api_index": {
+      "path": "artifacts/android-input-renewal-20261016/android-browser-host-seven-api-20261016-attempt02.json",
+      "bytes": 41768,
+      "sha256": "4253981a3e5b23f4937f375ed9b6a81968d14fbea21c7de763b2f2c9ec6b19dc"
+    },
+    "matrix_history": [
+      {
+        "path": "artifacts/android-input-renewal-20261016/android-browser-host-api-matrix-20261016-attempt01.json",
+        "bytes": 5454,
+        "sha256": "e2824e13207d897dcad685e00ccf854b23cb233360e6c9df24b7cd43f551a400"
+      },
+      {
+        "path": "artifacts/android-input-renewal-20261016/android-browser-host-api-matrix-20261016-attempt02.json",
+        "bytes": 1048,
+        "sha256": "91fa6c22654686d0b74b9c1b791c9e84d6b9ee8b117c6806520fbc47d12f73f6"
+      },
+      {
+        "path": "artifacts/android-input-renewal-20261016/android-browser-host-api-matrix-20261016-attempt03.json",
+        "bytes": 1048,
+        "sha256": "85be31f409391549c603c4bc56255a4e41aa52b5995ca499353f764454c4a8da"
+      },
+      {
+        "path": "artifacts/android-input-renewal-20261016/android-browser-host-api-matrix-20261016-attempt04.json",
+        "bytes": 2394,
+        "sha256": "1249f98ebc7a9b076f7facae5bb7c60572b0c63fbdade619c4ccbffb770f6a5b"
+      },
+      {
+        "path": "artifacts/android-input-renewal-20261016/android-browser-host-api-matrix-20261016-attempt05.json",
+        "bytes": 2057,
+        "sha256": "81a26ecf6e2fa45a518cbb109b46b9c95f73ec6f5cfde57da440cdcce06b90cd"
+      },
+      {
+        "path": "artifacts/android-input-renewal-20261016/android-browser-host-api-matrix-20261016-attempt06.json",
+        "bytes": 1399,
+        "sha256": "43da4d834e98967fcfaaf1ebd28dddde7d893b2d795ac2cf3358a226ca301dc4"
+      },
+      {
+        "path": "artifacts/android-input-renewal-20261016/android-browser-host-api-matrix-20261016-attempt07.json",
+        "bytes": 1704,
+        "sha256": "3ab5d695425edab38242b098546b9b55507b332798673400394df4249139d798"
+      },
+      {
+        "path": "artifacts/android-input-renewal-20261016/android-browser-host-api-matrix-20261016-attempt08.json",
+        "bytes": 3740,
+        "sha256": "15c461becfa2cf21b82594b00c46d9a841019ba49102f4a3cebb0a5e8a7d0c30"
+      }
+    ],
+    "failed_matrix_attempts": [
+      {
+        "matrix_attempt": "02",
+        "api": 35,
+        "tests_passed": 0,
+        "reason": "Current instrumentation inventory had grown to 17 tests; the old driver rejected the changed inventory before emulator execution."
+      },
+      {
+        "matrix_attempt": "03",
+        "api": 35,
+        "tests_passed": 0,
+        "reason": "Theme capture matched only Chinese page text; English system locale was not recognized before instrumentation."
+      },
+      {
+        "matrix_attempt": "04",
+        "api": 30,
+        "tests_passed": 0,
+        "reason": "Official API30 image import passed; isolated SDK lacked an emulator package required by avdmanager. API35 and API36 each passed 17 tests."
+      },
+      {
+        "matrix_attempt": "05",
+        "api": 36,
+        "tests_passed": 16,
+        "reason": "The language-switch test timed out waiting for application window focus in Espresso.closeSoftKeyboard; all 17 API36 tests passed on retry attempt06."
+      }
+    ],
+    "actual_page_sizes": {
+      "30": 4096,
+      "31": 4096,
+      "32": 4096,
+      "33": 4096,
+      "34": 4096,
+      "35": 4096,
+      "36": 4096
+    },
+    "dual_abi_release_builds": 2,
+    "dual_abi_all_target_strict_checks": 2,
+    "native_16k_elf_alignment_verified": true,
+    "apk_embedded_current_jni_and_16k_offsets_verified": true,
+    "apk_zipalign_16k_verified": true,
+    "debug_signatures_verified": true,
+    "debug_signature_certificate_sha256": "d9fd9d00be7296029d6a7e9c0966b6ec5ff5a8c7f8ce8fe4c2c5d2531d509dc5",
+    "source_inputs_unchanged_during_all_successful_tests": true,
+    "previous_jvm_cases_not_repeated": 119,
+    "arm64_hardware_verified": false,
+    "runtime_16k_page_verified": false,
+    "formal_release_signature_verified": false,
+    "real_projection_saf_accessibility_verified": false,
+    "cross_network_verified": false,
+    "private_avd_image_and_emulator_process_cleanup_verified": true,
+    "isolated_emulator_package_revision": "37.1.11",
+    "isolated_emulator_package_cleanup_verified": true,
+    "repository_snapshot_matches_tested_snapshot": false,
+    "post_verification_changes": "Only documentation and the current verification index were updated; they are outside the Android source digest. Current code inputs still match the tested 1070-file cohort.",
+    "superseded_by": "android"
+  },
+  "direct_preferred_optional_turn_frozen_20261016": {
+    "scope": "Retained earlier development inputs, not the latest working tree or installed-product acceptance",
+    "frozen_summary": {
+      "path": "artifacts/direct-preferred-turn-20261016/FROZEN_DIRECT_PREFERRED_TURN.json",
+      "sha256": "b1b23767c2f867509da9ffd25a3ea2a54fd22ce5bc2d0b98067b966a21be0aa9"
+    },
+    "passed_tests": 71,
+    "windows_protocol_tests": 5,
+    "windows_sdk_tests": 52,
+    "windows_web_tests": 14,
+    "windows_all_target_clippy": "passed for retained SDK/protocol/Web inputs",
+    "wasm_all_target_all_feature_clippy": "passed for retained Linux WASM inputs",
+    "source_inputs_unchanged_per_receipt": true,
+    "owned_scratch_removed": true,
+    "historical_failures_retained": true,
+    "current_native_network_recovery_broker_multidisplay_localization_covered": false,
+    "formal_product_acceptance_passed": false
+  },
+  "browser_multidisplay_20261016": {
+    "scope": "Production Web and native Core in Chrome with two owned synthetic displays and recording input; development integration only, not formal platform acceptance",
+    "native_build": {
+      "path": "artifacts/browser-multidisplay-20261016/build-attempt06.json",
+      "bytes": 2276,
+      "sha256": "b2ba4feb331cd75473e880d79a4af41028be6c11a51573ee3d13c510ebaa02e2"
+    },
+    "production_web_build": {
+      "path": "artifacts/web-localization-20261016/site-build-attempt04.json",
+      "bytes": 329396,
+      "sha256": "f05e60d659c0809ecc2ef5c5f3fe9f79021ec69884f7854ff531fcdd56c6e3c7"
+    },
+    "diagnostics": {
+      "environment_switch": "NESTLINK_VIDEO_WORKER_TRACE",
+      "payloads_or_session_identifiers_logged": false,
+      "selection_gate_ack_and_worker_shutdown_stages_recorded": true
+    },
+    "attempts": [
+      {
+        "attempt": "07",
+        "passed": false,
+        "lifecycle_receipt": {
+          "path": "artifacts/browser-multidisplay-20261016/chrome-attempt07-lifecycle.json",
+          "bytes": 12333,
+          "sha256": "930eb6da55a0632cfeee8bc7a015ece6acef1d57ff77a324a251e711acbead19"
+        },
+        "browser_report": {
+          "path": "artifacts/browser-multidisplay-20261016/chrome-attempt07.json",
+          "bytes": 4702,
+          "sha256": "041a99dc42cee289d9a324e7526a62aa2d4f4473d98ee23925c6e07f93ade3e3"
+        },
+        "host_trace": {
+          "path": "artifacts/browser-multidisplay-20261016/chrome-attempt07-host.log",
+          "bytes": 4490,
+          "sha256": "ff56db10871bc5552917baf64a78f4e5134f92eecb36bd4c4c718b77ff69f035"
+        },
+        "selected_sources": [],
+        "source_frames": {},
+        "browser_error": "Display 3 selection/media did not become ready: {\"monotonic_ms\":14242.59999999404,\"selected\":null,\"selector_enabled\":false,\"width\":0,\"height\":0,\"ready_state\":0,\"current_time\":0,\"visible\":false,\"peer_states\":[\"closed\"],\"selected_acknowledged\":false,\"selection_ack_sent\":false,\"ready\":false}",
+        "host_peer_shutdown_reason": "PeerGuardCancelRequested",
+        "inputs_unchanged": {
+          "site": true,
+          "native_binary": true,
+          "driver": true
+        },
+        "cleanup": {
+          "browser_closed": true,
+          "caddy_stopped": true,
+          "profile_removed": true,
+          "ephemeral_key_removed": true,
+          "owned_native_temp_removed": true,
+          "cleanup_errors": []
+        }
+      },
+      {
+        "attempt": "08",
+        "passed": false,
+        "lifecycle_receipt": {
+          "path": "artifacts/browser-multidisplay-20261016/chrome-attempt08-lifecycle.json",
+          "bytes": 12378,
+          "sha256": "68882d846e6ba053853c64db4e17c1675b1c690ac9bf8ff11a337bf323f13b8e"
+        },
+        "browser_report": {
+          "path": "artifacts/browser-multidisplay-20261016/chrome-attempt08.json",
+          "bytes": 16839,
+          "sha256": "208c2188fa5ea0695d156ffef5b30ec9ca79143f198f059a3289a9ed373f6cde"
+        },
+        "host_trace": {
+          "path": "artifacts/browser-multidisplay-20261016/chrome-attempt08-host.log",
+          "bytes": 2337,
+          "sha256": "48cb477ee333e88d9f0be994cda6933094f4c8054a45c2d2c1be95733773b222"
+        },
+        "selected_sources": [
+          8,
+          3,
+          8
+        ],
+        "source_frames": {
+          "3": 7
+        },
+        "browser_error": "Display 8 selection/media did not become ready: {\"monotonic_ms\":16947.30000001192,\"selected\":null,\"selector_enabled\":false,\"width\":0,\"height\":0,\"ready_state\":0,\"current_time\":0,\"visible\":false,\"peer_states\":[\"closed\"],\"selected_acknowledged\":true,\"selection_ack_sent\":true,\"ready\":false}",
+        "host_peer_shutdown_reason": "PeerGuardCancelRequested",
+        "inputs_unchanged": {
+          "site": true,
+          "native_binary": true,
+          "driver": true
+        },
+        "cleanup": {
+          "browser_closed": true,
+          "caddy_stopped": true,
+          "profile_removed": true,
+          "ephemeral_key_removed": true,
+          "owned_native_temp_removed": true,
+          "cleanup_errors": []
+        }
+      },
+      {
+        "attempt": "09",
+        "passed": false,
+        "lifecycle_receipt": {
+          "path": "artifacts/browser-multidisplay-20261016/chrome-attempt09-lifecycle.json",
+          "bytes": 12399,
+          "sha256": "18d81b975e787ce020fba95982709aed05fcd318a2e0353eebf0c1dcea7a10cb"
+        },
+        "browser_report": {
+          "path": "artifacts/browser-multidisplay-20261016/chrome-attempt09.json",
+          "bytes": 25304,
+          "sha256": "8fdffc51e35926ff62a7e0171bdfe4ec90122b6a7f2c3370115909b0a1ac2945"
+        },
+        "host_trace": {
+          "path": "artifacts/browser-multidisplay-20261016/chrome-attempt09-host.log",
+          "bytes": 2467,
+          "sha256": "ccaf7b83b606e1827c682f0f5a232d22c3ae30193347f820b9474bbcfddffc70"
+        },
+        "selected_sources": [
+          8,
+          3,
+          8,
+          3
+        ],
+        "source_frames": {
+          "3": 7,
+          "8": 8
+        },
+        "browser_error": "Display 3 selection/media did not become ready: {\"monotonic_ms\":17329.59999999404,\"selected\":null,\"selector_enabled\":false,\"width\":0,\"height\":0,\"ready_state\":0,\"current_time\":0,\"visible\":false,\"peer_states\":[\"closed\"],\"selected_acknowledged\":true,\"selection_ack_sent\":true,\"ready\":false}",
+        "host_peer_shutdown_reason": "PeerGuardCancelRequested",
+        "inputs_unchanged": {
+          "site": true,
+          "native_binary": true,
+          "driver": true
+        },
+        "cleanup": {
+          "browser_closed": true,
+          "caddy_stopped": true,
+          "profile_removed": true,
+          "ephemeral_key_removed": true,
+          "owned_native_temp_removed": true,
+          "cleanup_errors": []
+        }
+      },
+      {
+        "attempt": "10",
+        "passed": false,
+        "lifecycle_receipt": {
+          "path": "artifacts/browser-multidisplay-20261016/chrome-attempt10-lifecycle.json",
+          "bytes": 12323,
+          "sha256": "1504530e3245a1fd0b62b768045125ea75123b7ba93072188efcd5a1871d9e45"
+        },
+        "browser_report": {
+          "path": "artifacts/browser-multidisplay-20261016/chrome-attempt10.json",
+          "bytes": 4690,
+          "sha256": "fd6603b7381ff94ef48741249d058cf3d3d6171b90e4752244cd6fda5c283733"
+        },
+        "host_trace": {
+          "path": "artifacts/browser-multidisplay-20261016/chrome-attempt10-host.log",
+          "bytes": 4635,
+          "sha256": "3c3d76a75949f1abd302bfffb630cd2c5327724559c7eba6ac8bfbb3d0645587"
+        },
+        "selected_sources": [],
+        "source_frames": {},
+        "browser_error": "Display 3 selection/media did not become ready: {\"monotonic_ms\":14306.5,\"selected\":null,\"selector_enabled\":false,\"width\":0,\"height\":0,\"ready_state\":0,\"current_time\":0,\"visible\":false,\"peer_states\":[\"closed\"],\"selected_acknowledged\":false,\"selection_ack_sent\":false,\"ready\":false}",
+        "host_peer_shutdown_reason": "PeerGuardCancelRequested",
+        "inputs_unchanged": {
+          "site": true,
+          "native_binary": true,
+          "driver": true
+        },
+        "cleanup": {
+          "browser_closed": true,
+          "caddy_stopped": true,
+          "profile_removed": true,
+          "ephemeral_key_removed": true,
+          "owned_native_temp_removed": true,
+          "cleanup_errors": []
+        }
+      },
+      {
+        "attempt": "11",
+        "passed": true,
+        "lifecycle_receipt": {
+          "path": "artifacts/browser-multidisplay-20261016/chrome-attempt11-lifecycle.json",
+          "bytes": 12091,
+          "sha256": "edb88d5cebf13c87b2c6870053fd31773b4adcb2ffdbc98286ca6fe458ef436f"
+        },
+        "browser_report": {
+          "path": "artifacts/browser-multidisplay-20261016/chrome-attempt11.json",
+          "bytes": 31021,
+          "sha256": "0360f96497f4c95ad6838e291fce5fab6533e932427102d47a7ed990f807d03e"
+        },
+        "host_trace": {
+          "path": "artifacts/browser-multidisplay-20261016/chrome-attempt11-host.log",
+          "bytes": 4053,
+          "sha256": "ebb2311d30eb4350b32bf423fb784aed240e9c0db876b60ba179b17930a62495"
+        },
+        "selected_sources": [
+          8,
+          3,
+          8,
+          3
+        ],
+        "source_frames": {
+          "3": 21,
+          "8": 9
+        },
+        "browser_error": null,
+        "host_peer_shutdown_reason": "PeerGuardCancelRequested",
+        "inputs_unchanged": {
+          "site": true,
+          "native_binary": true,
+          "driver": true
+        },
+        "cleanup": {
+          "browser_closed": true,
+          "caddy_stopped": true,
+          "profile_removed": true,
+          "ephemeral_key_removed": true,
+          "owned_native_temp_removed": true,
+          "cleanup_errors": []
+        }
+      },
+      {
+        "attempt": "12",
+        "passed": true,
+        "lifecycle_receipt": {
+          "path": "artifacts/browser-multidisplay-20261016/chrome-attempt12-lifecycle.json",
+          "bytes": 12092,
+          "sha256": "d97fca0af54f1b85a2a3d2540adf121edc2f58cb5ebc52741e9f369ac1b231c2"
+        },
+        "browser_report": {
+          "path": "artifacts/browser-multidisplay-20261016/chrome-attempt12.json",
+          "bytes": 30901,
+          "sha256": "b19d09c5e4d29e83fbe0b25a3727804d1f642efdc52cf93995663b18ef53893e"
+        },
+        "host_trace": {
+          "path": "artifacts/browser-multidisplay-20261016/chrome-attempt12-host.log",
+          "bytes": 4053,
+          "sha256": "69084ef2b02a67a8dd8b2f73bd54a8949de337460fad40f01328529e0b7f5744"
+        },
+        "selected_sources": [
+          8,
+          3,
+          8,
+          3
+        ],
+        "source_frames": {
+          "3": 21,
+          "8": 10
+        },
+        "browser_error": null,
+        "host_peer_shutdown_reason": "PeerGuardCancelRequested",
+        "inputs_unchanged": {
+          "site": true,
+          "native_binary": true,
+          "driver": true
+        },
+        "cleanup": {
+          "browser_closed": true,
+          "caddy_stopped": true,
+          "profile_removed": true,
+          "ephemeral_key_removed": true,
+          "owned_native_temp_removed": true,
+          "cleanup_errors": []
+        }
+      }
+    ],
+    "successful_attempts": [
+      "11",
+      "12"
+    ],
+    "failed_attempts_retained": [
+      "07",
+      "08",
+      "09",
+      "10"
+    ],
+    "result": "Two consecutive independent replays passed the exact 8???3???8???3 selection order. Both final returns to source 3 were observed by the media worker, recreated the encoder, and produced advancing capture frames. Earlier failed attempts were retained; they coincided with browser peer disconnection or incomplete DTLS negotiation, and did not establish a repeatable SDK worker deadlock.",
+    "formal_release_acceptance_passed": false,
+    "physical_displays_or_installed_input_adapters_verified": false,
+    "cross_network_or_signed_package_acceptance_verified": false
+  },
+  "android_input_renewal_1044_source_20261016": {
+    "scope": "Current shared input-renewal source cohort: development build and emulator checks",
+    "status": "historical-superseded",
+    "source_digest": "065b58bf4447c477c1163edd862da3c99f273c5247ed4460aa48d911a6cbff77",
+    "source_files": 1044,
+    "source_archive": {
+      "path": "artifacts/android-input-renewal-20261016/source-inputs.tar.gz",
+      "bytes": 2831847,
+      "sha256": "a7c4323a294bcf598846d0e4b6f8e5bfa164ed89e47c6791402fbc2c2c8791b2"
+    },
+    "changed_since_previous": [
+      "crates/remote/src/input.rs",
+      "crates/remote/src/lifecycle.rs",
+      "crates/remote/tests/lifecycle.rs",
+      "crates/sdk/src/webrtc_host.rs",
+      "crates/sdk/src/webrtc_host/input.rs",
+      "crates/sdk/src/webrtc_host/tests/data_loopback_tests.rs",
+      "crates/sdk/src/webrtc_host/tests/input_renewal_tests.rs"
+    ],
+    "dual_abi_release_builds": 2,
+    "dual_abi_all_target_strict_checks": 2,
+    "current_apks": [
+      {
+        "path": "D:\\NestLinkBuilds\\android-input-renewal-20261016\\gradle-output\\attempt01\\app\\outputs\\apk\\debug\\app-debug.apk",
+        "bytes": 69766188,
+        "sha256": "9f283a709adbbf5bea46a392777046c96b42ba2db72e553b47970b83ec8a5d1b"
+      },
+      {
+        "path": "D:\\NestLinkBuilds\\android-input-renewal-20261016\\gradle-output\\attempt01\\app\\outputs\\apk\\androidTest\\debug\\app-debug-androidTest.apk",
+        "bytes": 2237832,
+        "sha256": "359475f000ee175338e803d2b588133c0546964ce21f788c01979a4f6f0a01d8"
+      }
+    ],
+    "native_libraries": {
+      "arm64-v8a": {
+        "path": "/mnt/d/NestLinkBuilds/android-native-av-20261015/cargo-target/aarch64-linux-android/release/libnestlink_android.so",
+        "abi": "arm64-v8a",
+        "machine": 183,
+        "sha256": "028ebae0990f019c571fce691c2ef2af802db70e6a2cb7c224ae30a7259cbd00",
+        "page_size_bytes": 16384,
+        "load_segments": [
+          {
+            "index": 1,
+            "offset": 0,
+            "virtual_address": 0,
+            "alignment": 16384,
+            "flags": 4
+          },
+          {
+            "index": 2,
+            "offset": 4614912,
+            "virtual_address": 4631296,
+            "alignment": 16384,
+            "flags": 5
+          },
+          {
+            "index": 3,
+            "offset": 18513712,
+            "virtual_address": 18546480,
+            "alignment": 16384,
+            "flags": 6
+          },
+          {
+            "index": 4,
+            "offset": 18929320,
+            "virtual_address": 18978472,
+            "alignment": 16384,
+            "flags": 6
+          }
+        ],
+        "staged_path": "/mnt/d/NestLinkBuilds/android-input-renewal-20261016/libs/attempt01/arm64-v8a/libnestlink_android.so",
+        "bytes": 18954448,
+        "codec_prefix": "/home/popdo/.local/share/nestlink-producer-codecs-20261015-attempt01/aarch64-linux-android/aarch64-linux-android",
+        "codec_receipt_sha256": "6864028e7c54cf4aa16d92a2b4aa9505fed55992fbe9442b7e142159f4c9983b"
+      },
+      "x86_64": {
+        "path": "/mnt/d/NestLinkBuilds/android-native-av-20261015/cargo-target/x86_64-linux-android/release/libnestlink_android.so",
+        "abi": "x86_64",
+        "machine": 62,
+        "sha256": "b72eab11453c6f780fd91a0bf9c5de6bc435ba9adc5ce5930dad24a23a07104b",
+        "page_size_bytes": 16384,
+        "load_segments": [
+          {
+            "index": 1,
+            "offset": 0,
+            "virtual_address": 0,
+            "alignment": 16384,
+            "flags": 4
+          },
+          {
+            "index": 2,
+            "offset": 4813952,
+            "virtual_address": 4830336,
+            "alignment": 16384,
+            "flags": 5
+          },
+          {
+            "index": 3,
+            "offset": 20726896,
+            "virtual_address": 20759664,
+            "alignment": 16384,
+            "flags": 6
+          },
+          {
+            "index": 4,
+            "offset": 21176560,
+            "virtual_address": 21225712,
+            "alignment": 16384,
+            "flags": 6
+          }
+        ],
+        "staged_path": "/mnt/d/NestLinkBuilds/android-input-renewal-20261016/libs/attempt01/x86_64/libnestlink_android.so",
+        "bytes": 21201816,
+        "codec_prefix": "/home/popdo/.local/share/nestlink-producer-codecs-20261015-attempt01/x86_64-linux-android/x86_64-linux-android",
+        "codec_receipt_sha256": "da0e1d7fa57468449e5e453c9500330580b1f5042a3dfb5b59a8cc4959121742"
+      }
+    },
+    "api_levels": [
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36
+    ],
+    "excluded_api_levels": [
+      29
+    ],
+    "executed_instrumentation_cases": 112,
+    "tests_per_api": 16,
+    "actual_page_sizes": {
+      "30": 4096,
+      "31": 4096,
+      "32": 4096,
+      "33": 4096,
+      "34": 4096,
+      "35": 4096,
+      "36": 4096
+    },
+    "api_matrix_attempts": {
+      "30": "01",
+      "31": "01",
+      "32": "01",
+      "33": "01",
+      "34": "01",
+      "35": "01",
+      "36": "01"
+    },
+    "unchanged_android_app_files": 65,
+    "jvm_cases_repeated_this_increment": 0,
+    "previous_jvm_cases_not_repeated": 119,
+    "arm64_hardware_verified": false,
+    "formal_release_signature_verified": false,
+    "runtime_16k_page_verified": false,
+    "real_projection_saf_accessibility_verified": false,
+    "native_16k_elf_alignment_verified": true,
+    "apk_embedded_current_jni_and_16k_offsets_verified": true,
+    "both_developer_apk_public_signatures_verified": true,
+    "successful_source_checked_commands": 10,
+    "all_seven_owned_emulators_and_avds_removed": true,
+    "all_five_owned_image_import_instances_removed": true,
+    "review_receipt": {
+      "path": "artifacts/android-input-renewal-20261016/FINAL_REVIEW.json",
+      "bytes": 16843,
+      "sha256": "c8ca545a52ce454671c6c5f6873307b95a14793f1753a95cd8e2203fe9b8d96b"
+    },
+    "seven_api_index": {
+      "path": "artifacts/android-input-renewal-20261016/android-browser-host-seven-api-20261016-attempt01.json",
+      "bytes": 28693,
+      "sha256": "0b8b6fe965ded8aec6b4424e76b161a9c1e98a1bbabc12344be3938ab8acf7e2"
+    },
+    "freeze": {
+      "path": "artifacts/android-input-renewal-20261016/FROZEN_ANDROID_INPUT_RENEWAL.json",
+      "bytes": 34150,
+      "sha256": "afa0fd92750e71cc3212ad8facc95a7e12e2ce52874bd2328cbf595bd1f43d92"
+    },
+    "visual_review_record": {
+      "path": "artifacts/android-input-renewal-20261016/VISUAL_REVIEW.json",
+      "bytes": 1129,
+      "sha256": "323084403087f326a90f2832192037adff28d4b7a5f1b1c533ec6b4fc65e5b29"
+    },
+    "boundaries": [
+      "Developer-signed debug APK; no formal release signing",
+      "x86_64 emulators only; no ARM64 hardware acceptance",
+      "Static ELF/APK 16 KiB alignment differs from actual runtime page size",
+      "No real Projection/SAF/accessibility or cross-network acceptance",
+      "Unchanged 65 Android app inputs retain 119 earlier JVM cases without rerun",
+      "Android 10/API29 excluded by user instruction"
+    ],
+    "repository_snapshot_matches_tested_snapshot": true,
+    "post_verification_changes": "This 1044-input cohort remains as historical evidence. The current 1070-input source was rebuilt as BuildAttempt02 and passed all 119 API30-36 instrumentation checks; current evidence is stored under android_input_renewal_current_source_20261016.",
+    "superseded_by": "android_input_renewal_current_source_20261016 (1070-input BuildAttempt02)"
+  },
+  "native_recovery_current_source_20261016": {
+    "status": "Current-source focused recovery passed on Windows and Linux",
+    "verification": "artifacts/native-network-integration-20261016/NATIVE_RECOVERY_CURRENT_SOURCE_VERIFICATION.json",
+    "verification_sha256": "5c37fc4b84c0d52b129cf91d13e4cfaa06bbfa9f6a526d085a28891db992a1e4",
+    "formal_release_acceptance": false
+  },
+  "windows_selected_current_source_20261016": {
+    "status": "Selected Windows recovery, broker, WebRTC host and Web checks plus strict Clippy passed",
+    "verification": "artifacts/native-network-integration-20261016/WINDOWS_CURRENT_SOURCE_SELECTED_VERIFICATION.json",
+    "verification_sha256": "d866beb29fdc4b411e2c10d69373793c5032ac4f2ba1fc403f8cf618c23d826e",
+    "checks": 9,
+    "formal_platform_acceptance": false,
+    "formal_release_acceptance": false
+  },
+  "android_previous_attempt02_matrix08_20261016": {
+    "build_attempt": "02",
+    "matrix_attempt": "08",
+    "api_matrix_attempts": {
+      "30": null,
+      "31": null,
+      "32": null,
+      "33": null,
+      "34": null,
+      "35": null,
+      "36": null
+    },
+    "api_levels": [
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36
+    ],
+    "excluded_api_levels": [
+      29
+    ],
+    "emulator_abi": "x86_64",
+    "passed_instrumentation_cases": 119,
+    "tests_per_api": 17,
+    "index": {
+      "path": "artifacts/android-input-renewal-20261016/android-browser-host-seven-api-20261016-attempt02.json",
+      "bytes": 41768,
+      "sha256": "4253981a3e5b23f4937f375ed9b6a81968d14fbea21c7de763b2f2c9ec6b19dc"
+    },
+    "tested_source_digest": "3529ac75251c40cd26263e6e402669192c30b414cf811986a67ded14cb602d40",
+    "tested_application_apk": {
+      "path": "D:\\NestLinkBuilds\\android-input-renewal-20261016\\gradle-output\\attempt02\\app\\outputs\\apk\\debug\\app-debug.apk",
+      "bytes": 70777300,
+      "sha256": "80a5b0d9013b193f7b8308fbcc15c4c8accac30bca705e7810925abf10841cb8"
+    },
+    "tested_android_test_apk": {
+      "path": "D:\\NestLinkBuilds\\android-input-renewal-20261016\\gradle-output\\attempt02\\app\\outputs\\apk\\androidTest\\debug\\app-debug-androidTest.apk",
+      "bytes": 2243276,
+      "sha256": "5ad345e6f8264d4d6f890b1a77f2348166209762444c3251341c4e82462420ca"
+    },
+    "debug_signature_certificate_sha256": "d9fd9d00be7296029d6a7e9c0966b6ec5ff5a8c7f8ce8fe4c2c5d2531d509dc5",
+    "arm64_hardware_verified": false,
+    "runtime_16k_verified": false,
+    "release_signed": false,
+    "formal_release_signature_verified": false,
+    "source_inputs_unchanged_during_tests": true
+  },
+  "cargo_dependency_policy_checks": {
+    "status": "passed",
+    "tool": "cargo-deny 0.18.9",
+    "command": "cargo-deny check all --metadata-path <current all-features locked metadata.json>",
+    "cargo_lock_sha256": "9a34ff54642f69de251808368609ff4251dfb1b572d4cef617a8d87f572a4bb7",
+    "metadata_sha256": "0ea50d5320da02bbb9842acc4a34eb3f045d374843a9e65529d53466cda505ed",
+    "advisory_database_commit": "479c888ce4401313bca61ba4aba2d0f6244c4a09",
+    "checks": {
+      "advisories": "passed",
+      "bans": "passed",
+      "licenses": "passed",
+      "sources": "passed"
+    },
+    "duplicate_version_warnings": 58,
+    "exit_code": 0,
+    "receipt": {
+      "path": "D:\\NestLinkBuilds\\cargo-deny-current-20261016-attempt01\\receipt.json",
+      "sha256": "85f6cf0dc8db858461188f1c78757ce8f9e38ab9b1397bd3f20c5c4f6e6f73ca"
+    },
+    "log": {
+      "path": "D:\\NestLinkBuilds\\cargo-deny-current-20261016-attempt01\\check.log",
+      "sha256": "fca6dbdddfce52b63c1a8feec841a0110f9a3d0636ab6764eedb0e7d6f2f2e21"
+    },
+    "formal_license_acceptance_passed": false,
+    "scope": "Current exact Cargo metadata only; automatic checks and retained duplicate-version warnings do not replace organizational legal approval or final release-material binding."
+  },
+  "cargo_dependency_policy_check_20261016": {
+    "version": "0.18.9",
+    "status": "passed",
+    "checks": [
+      "advisories",
+      "bans",
+      "licenses",
+      "sources"
+    ],
+    "duplicate_version_warnings": 58,
+    "receipt": "D:\\NestLinkBuilds\\cargo-deny-current-20261016-attempt01\\receipt.json",
+    "receipt_sha256": "85f6cf0dc8db858461188f1c78757ce8f9e38ab9b1397bd3f20c5c4f6e6f73ca",
+    "cargo_lock_sha256": "9a34ff54642f69de251808368609ff4251dfb1b572d4cef617a8d87f572a4bb7",
+    "metadata_sha256": "0ea50d5320da02bbb9842acc4a34eb3f045d374843a9e65529d53466cda505ed",
+    "formal_license_acceptance_passed": false
+  },
+  "non_cargo_build_input_provenance": {
+    "status": "source-version-license-and-bytes-verified",
+    "report": "docs/refactor/build-input-provenance-2026-10-16.md",
+    "receipt": "D:\\NestLinkBuilds\\noncargo-provenance-current-20261016-attempt01\\receipt.json",
+    "receipt_sha256": "f16c55bc3aaf86b2288b0070d2df873919aa8ab267e86f600c3abcfdfd119edf",
+    "protoc": {
+      "crate_version": "3.3.0",
+      "runtime_version": "libprotoc 36.2",
+      "release_tag": "v36.2",
+      "release_tag_signature_status": "unsigned",
+      "platform_packages": 8,
+      "include_files_per_package": 20,
+      "all_release_asset_digest_and_embedded_binary_include_comparisons_passed": true,
+      "license_sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d"
+    },
+    "sqlite": {
+      "crate": "libsqlite3-sys 0.35.0",
+      "version": "3.50.2",
+      "upstream_release_zip_sha256": "387991de2834b5da2894119ff4173a9ea0779ea55ebcf53d9a40b24d1dc2484e",
+      "amalgamation_and_header_match_official_release_byte_for_byte": true,
+      "license": "Public Domain; wrapper crate separately declares MIT"
+    },
+    "scope": "Build-input provenance only; organizational license approval, complete non-Cargo runtime inventory, final SBOM/material binding and product acceptance remain open."
+  },
+  "linux_current_source_focused_recovery": {
+    "status": "passed",
+    "passed": 1,
+    "failed": 0,
+    "ignored": 0,
+    "command_scope": "One native recovery integration case on current source; not full Linux workspace acceptance",
+    "source_inputs_unchanged": true,
+    "owned_scratch_removed": true,
+    "receipt": {
+      "path": "artifacts/core-verification/native-recovery-linux-focused-20261016-attempt01.receipt.json",
+      "sha256": "5f8dee9eda14a70653b3b81d86e54dd284a5c870aaf01fed17e457c5eeb6c260"
+    },
+    "log": {
+      "path": "artifacts/core-verification/native-recovery-linux-focused-20261016-attempt01.log",
+      "sha256": "cc6fa6f1acac92f9f062dda0bc60ccc10d1563a50fcca3cdc2b99d6823afd413"
+    },
+    "formal_acceptance_passed": false
+  },
+  "xtask_license_classifier_current_source_20261017": {
+    "status": "passed",
+    "diagnosis": "Cargo metadata includes the locally patched upstream TURN fork in workspace_members; its upstream MIT/Apache declaration was incorrectly checked as a first-party Apache-only license.",
+    "repair": "The first-party assertion now excludes the fixed traversal, Web, and platform vendor roots. Supplier licenses remain covered by cargo-deny and retained vendor provenance.",
+    "unit_tests": {
+      "passed": 2,
+      "failed": 0
+    },
+    "format": "passed",
+    "strict_clippy": "passed",
+    "contract_workspace_check": "passed",
+    "network_policy_checks": [
+      "default",
+      "self-hosted-relay"
+    ],
+    "source_inputs": 51,
+    "receipt": {
+      "path": "artifacts/core-verification/native-xtask-license-windows-20261017-attempt01/receipt.json",
+      "sha256": "8b5b7269cbd423e6ad888b2168306bd9e08d59a279f7a6d50ea7d4951eeae920"
+    },
+    "scope_note": "Focused verification covers the xtask-only source change. The full Windows workspace runtime and all-target Clippy receipt above predates this helper change; no product runtime source changed in this follow-up."
+  },
+  "legacy_remote_release_metadata_crosscheck_20261017": {
+    "status": "passed",
+    "repositories": 4,
+    "refs": 136,
+    "refs_stable_during_collection": true,
+    "releases": 66,
+    "assets": 799,
+    "asset_bytes": 16177009767,
+    "metadata_matches_previous_verified_local_archive": 799,
+    "changed_assets": 0,
+    "missing_assets": 0,
+    "new_assets": 0,
+    "current_inventory": {
+      "path": "docs/refactor/history-audit/remote-preservation-inventory-2026-10-17.json",
+      "sha256": "b6286969ed0cc264352adc5ce534121f956f4a2660429c6d86c1de57ab0595cf"
+    },
+    "crosscheck": {
+      "path": "docs/refactor/history-audit/remote-release-archive-crosscheck-2026-10-17.json",
+      "sha256": "e7b4a7f7258f5f2485eda155c640df71cb8dcde7f8c95e08103cf069307b7be7"
+    },
+    "previous_archive_report": {
+      "path": "C:/Users/Popdo/NestLink-legacy-archive-20261014/archive-20261016-211836-9df6cbcb.json",
+      "sha256": "99f4fe861b0f9dd98d8d3a115de1d94b478991028530e3781f76240ad0f297b6",
+      "verified_assets": 799,
+      "verified_bytes": 16177009767,
+      "all_inventory_bytes_verified": true
+    },
+    "durable_remote_archive_uploaded": false,
+    "historical_source_imported": false,
+    "finalization_ready": false
+  },
+  "legacy_release_archive_reverification_20261017": {
+    "status": "passed",
+    "inventory_asset_count": 799,
+    "selected_asset_count": 799,
+    "verified_assets": 799,
+    "verified_bytes": 16177009767,
+    "all_inventory_bytes_verified": true,
+    "inventory": {
+      "path": "docs/refactor/history-audit/remote-preservation-inventory-2026-10-14.json",
+      "sha256": "8710e82fde1ac829aa25246a7fb763ace1be4ff16e0c21fed263684b4e058ec7"
+    },
+    "report": {
+      "path": "C:/Users/Popdo/NestLink-legacy-archive-20261014/archive-20261016-211836-9df6cbcb.json",
+      "sha256": "99f4fe861b0f9dd98d8d3a115de1d94b478991028530e3781f76240ad0f297b6"
+    },
+    "source_script_sha256": "3ccc7fdb600d8680a769c013d96dda05524dae680d76e907d89af8314b72a5b8",
+    "github_metadata_rechecked_before_and_after_each_asset": true,
+    "durable_remote_archive_uploaded": false,
+    "finalization_ready": false,
+    "scope": "Local byte preservation and current GitHub asset metadata only; not durable remote preservation or repository finalization."
+  },
+  "dirty_legacy_worktree_backup_reverification_20261017": {
+    "status": "passed",
+    "preservation_report": {
+      "path": "docs/refactor/history-audit/dirty-worktree-preservation-2026-10-15.json",
+      "sha256": "88766fa9205eb403111b232fea203212b9223f27def9f6050c4fe30b8259817d"
+    },
+    "archives": [
+      {
+        "component": "hub",
+        "files": 0,
+        "bytes": 22,
+        "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+      },
+      {
+        "component": "server",
+        "files": 38,
+        "bytes": 143903,
+        "sha256": "ef7513320c32cd6ad396c525a8901c41b0079bfb548cc92f8068123afb158d2f"
+      },
+      {
+        "component": "client",
+        "files": 28,
+        "bytes": 235726,
+        "sha256": "48490cc04a80d68b4dc740662c1884a3d60746bae7a7f704b43178978c1d701f"
+      },
+      {
+        "component": "android",
+        "files": 0,
+        "bytes": 22,
+        "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+      }
+    ],
+    "archive_zip_summaries_match_report": true,
+    "all_recorded_server_and_client_file_hashes_match_archive_entries": true,
+    "original_worktrees_modified": false,
+    "ignored_files_in_archives": false,
+    "ignored_files_retained_in_original_worktrees": true,
+    "durable_remote_archive_uploaded": false,
+    "finalization_ready": false,
+    "scope": "Local dirty/untracked worktree byte backups only; no ignored files, remote upload, source import, or finalization."
+  },
+  "legacy_source_bundle_independent_reverification_20261017": {
+    "status": "passed",
+    "bundle_bytes": 85678333,
+    "bundle_sha256": "ebf6650beae9d180daa8b7dc7d48e9fb91283a28151d22c31865d3f71c9cb943",
+    "restored_ref_count": 317,
+    "strict_fsck_passed": true,
+    "receipt": {
+      "path": "D:/NestLinkBuilds/legacy-bundle-reverification-20261017-attempt01-logs/receipt.json",
+      "sha256": "cc5ff46eea7069912218ccc60c8735706a91ce704cef73160d5e52110e3d4bc5"
+    },
+    "historical_gitlink_commits_missing": 3,
+    "product_history_imported": false,
+    "durable_remote_archive_uploaded": false,
+    "finalization_ready": false,
+    "scope": "Fresh isolated bare restoration and full strict fsck of the preserved local source bundle; no product import or remote write."
+  },
+  "linux_workspace_full_runtime_attempt07_20261017": {
+    "status": "passed",
+    "command": "cargo test --workspace --locked --offline -- --test-threads=1",
+    "target": "x86_64-unknown-linux-gnu",
+    "result_groups": 141,
+    "passed": 1237,
+    "failed": 0,
+    "ignored": 12,
+    "source_files": 1081,
+    "source_inputs_unchanged": true,
+    "owned_scratch_removed": true,
+    "log": {
+      "path": "artifacts/native-network-integration-20261016/workspace-linux-attempt07.log",
+      "sha256": "b496afe6cc1399b492216b18be7c0cbd2b8bfe7b89f4d263e7316f89ec4e626f"
+    },
+    "receipt": {
+      "path": "artifacts/native-network-integration-20261016/workspace-linux-attempt07.receipt.json",
+      "sha256": "135422fa4e0af24202752bd573135ac83c58b47e489ebfad2fd4b62903c75766"
+    },
+    "authorized_bounded_clock_window": {
+      "maximum_seconds": 1800,
+      "samples": 10783,
+      "clock_steps": 0,
+      "original_clocksource": "tsc",
+      "restored_clocksource": "tsc",
+      "original_timesyncd_state": "active",
+      "restored_timesyncd_state": "active",
+      "restored": true,
+      "restoration_errors": [],
+      "path": "artifacts/native-network-integration-20261016/linux-clock-window-attempt07.json",
+      "sha256": "5de92419bf877cd48c1f022e37b2d94e75eb06287a81c2d903e1970e555dfef1"
+    },
+    "window_wrapper": {
+      "path": "artifacts/native-network-integration-20261016/linux-clock-window-attempt07.py",
+      "sha256": "f49aad57e15c9a267e165d4a817244292d5384ca7f926c51ad6ba58aab217d9d"
+    },
+    "wrapper_derivation": {
+      "path": "artifacts/native-network-integration-20261016/linux-clock-window-attempt07-derivation.json",
+      "sha256": "fbb2661a2c18de53f75ab02bdc5007a182562445860ffa4a6f2a193a735a55a4"
+    },
+    "wsl_distributions_restored_to_stopped_state": true,
+    "formal_product_acceptance_passed": false,
+    "scope": "Full Linux workspace developer runtime including doctests; signed installation product and platform acceptance remain separate."
+  },
+  "web_service_quota_admin_current_source_20261017": {
+    "status": "passed",
+    "scope": "Web administrator service-quota page, SDK calls, and production WASM site assets; development verification only.",
+    "wasm_cargo_check": "passed",
+    "wasm_strict_clippy": "passed",
+    "wasm_release_build": "passed",
+    "sdk_test_strict_clippy": "passed",
+    "sdk_http_integration_test": {
+      "passed": 1,
+      "failed": 0,
+      "ignored": 0
+    },
+    "trunk_release_site": {
+      "status": "passed",
+      "files": 4,
+      "total_bytes": 3305922,
+      "content_hashed_css_supported": true
+    },
+    "source_inputs": 11,
+    "source_manifest_sha256": "8fb9b7a14301a6b8a5f2ceb6b1a3b2c4d16bfc04e97bb36bbd81b9cec3331784",
+    "formal_platform_acceptance_passed": false,
+    "log": {
+      "path": "artifacts/core-verification/web-service-quota-linux-20261017-attempt01.log",
+      "sha256": "188840810aab0c60976711ec8e868ff2ec2acedda1d5d19b299decef699523c8"
+    },
+    "receipt": {
+      "path": "artifacts/core-verification/web-service-quota-linux-20261017-attempt01.receipt.json",
+      "sha256": "c9190565b6b93ecbeca0c140e0df6240ed0350808938159c3e557dff75834502"
+    }
+  },
+  "desktop_password_context_current_source_20261017": {
+    "status": "passed",
+    "scope": "Current-source nestlink-desktop library unit tests and workspace formatting; development verification only.",
+    "command": "cargo test --locked --offline -p nestlink-desktop --lib",
+    "toolchain": "1.96.0-x86_64-unknown-linux-gnu",
+    "tests": 37,
+    "failures": 0,
+    "ignored": 0,
+    "selected_source_inputs": 58,
+    "source_inputs_unchanged": true,
+    "log": {
+      "path": "artifacts/core-verification/desktop-password-context-linux-20261017-attempt04.log",
+      "sha256": "ce01e17a1d5993fbbb099cc160be496b083e7172dfda977a5d3a2f033ea76145"
+    },
+    "receipt": {
+      "path": "artifacts/core-verification/desktop-password-context-linux-20261017-attempt04.receipt.json",
+      "sha256": "c07c2d1d704ed815baffc73efc559f5579a5e652927fa8152bb73f34a40cb2e0"
+    },
+    "format_check": {
+      "status": "passed",
+      "command": "cargo fmt --all -- --check",
+      "log": {
+        "path": "artifacts/core-verification/desktop-password-context-linux-20261017-format-attempt01.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "receipt": {
+        "path": "artifacts/core-verification/desktop-password-context-linux-20261017-format-attempt01.receipt.json",
+        "sha256": "4d642846f3f4fe58d69d0da2e52db0c79928079d78ea190f9195a2be7ed99a72"
+      }
+    },
+    "strict_clippy_reference": {
+      "verification_key": "desktop_remote_password_ui_strict_20261017",
+      "status": "passed",
+      "log": {
+        "path": "artifacts/android-password-ui-20261017/desktop-strict-current-source-attempt04.log",
+        "sha256": "2461514dd4d9bed12ccf9c9d819fcb7d7938502b7da073c56c18c0ed47db95d4"
+      },
+      "receipt": {
+        "path": "artifacts/android-password-ui-20261017/desktop-strict-current-source-attempt04.receipt.json",
+        "sha256": "003bcd1f0180e19328d35ea684ddb70fc4d12808bebea9cbc45e42a0bc97f480"
+      }
+    },
+    "missing_codec_prefix_attempt": {
+      "status": "failed_before_tests",
+      "reason": "The first WSL retry omitted NESTLINK_CODEC_PREFIX; the media-codec build script stopped before unit tests. The retained log and receipt record the environment failure.",
+      "log": {
+        "path": "artifacts/core-verification/desktop-password-context-linux-20261017-attempt03.log",
+        "sha256": "b48683bd9f92462a0b8523eea10a131944245348635a0b7d8e8e8d32fba2f08c"
+      },
+      "receipt": {
+        "path": "artifacts/core-verification/desktop-password-context-linux-20261017-attempt03.receipt.json",
+        "sha256": "995addbe5ce8533053779bc4964b0d76dc0a0b8f3cd982aaa6125363ce9a514c"
+      }
+    },
+    "wsl_after_run": {
+      "clocksource": "tsc",
+      "systemd_timesyncd": "active",
+      "distributions_restored_to_stopped_state": true
+    },
+    "formal_platform_acceptance_passed": false
+  },
+  "linux_turn_protocol_fuzz_90m_20261017": {
+    "status": "passed",
+    "scope": "Loopback-only release STUN/ChannelData and UDP/TCP/TLS framing development fuzz; not full platform or public-network acceptance",
+    "requested_duration_seconds": 5400,
+    "elapsed_seconds": 5400,
+    "interrupted": false,
+    "udp_datagrams": 483280,
+    "udp_send_errors": 0,
+    "tcp_sessions": 21482,
+    "tcp_connect_errors": 0,
+    "tcp_frames": 53952,
+    "tls_sessions": 5390,
+    "tls_handshake_errors": 0,
+    "tls_frames": 13560,
+    "active_allocations_at_exit": 0,
+    "source_inputs": 151,
+    "source_inputs_unchanged": true,
+    "owned_scratch_removed": true,
+    "log": {
+      "path": "artifacts/core-verification/native-turn-protocol-fuzz-linux-20261017-attempt02.log",
+      "sha256": "0429c40204e7fb7aa9d93cb2b983c97951972c0ea965f358d0107bb44c5b34d6"
+    },
+    "receipt": {
+      "path": "artifacts/core-verification/native-turn-protocol-fuzz-linux-20261017-attempt02.receipt.json",
+      "sha256": "4246fbce54bfe82734a4de4c07044ad0089635af9f3ac6989143478673c564d5"
+    },
+    "formal_g2_passed": false,
+    "host_restore_observed": {
+      "systemd_timesyncd": "active",
+      "clocksource": "tsc",
+      "observation_date": "2026-10-17",
+      "scope": "Independent read after watchdog restoration; direct unprivileged systemctl commands were denied, not claimed successful"
+    }
+  },
+  "android_service_publication_jvm_20261017": {
+    "status": "passed",
+    "scope": "Kotlin/JVM tests after publication three-state UI and translation fixes; excludes JNI rebuild, instrumentation and installed-product acceptance",
+    "command": "scripts/test-android-unit.ps1 -RerunTasks -NoIncremental",
+    "tests": 133,
+    "failures": 0,
+    "errors": 0,
+    "xml_suites": 22,
+    "log": {
+      "path": "artifacts/android-password-ui-20261017/android-jvm-current-source-service-publication-attempt01.log",
+      "sha256": "4fc74e6d4e234c251d2c38792d332bac5f97a6abaef343c6cb1e0b3faf21aca9"
+    },
+    "source_inputs_unchanged": "not-captured",
+    "source_receipt": "not-captured",
+    "provenance_limit": "Direct Gradle invocation retained console log and local XML counts; no before/after source manifest was captured. Do not reuse this as a frozen-source acceptance receipt.",
+    "environment": "ANDROID_HOME and ANDROID_SDK_ROOT explicitly set to existing local Android SDK; temporary SUBST drive removed by script",
+    "initial_setup_failure": "First invocation omitted SDK environment and failed before tests; this result records the subsequent successful invocation only",
+    "formal_platform_acceptance_passed": false
+  },
+  "service_publication_and_desktop_final_increment_20261017": {
+    "status": "passed-with-documented-sdk-document-scope-limit",
+    "scope": "Selected Windows x64 service publication state/HTTP/Node/QUIC/TCP/UDP runtime checks, contract drift check and all-target strict Clippy for storage, SDK, server and desktop; development evidence only.",
+    "checks": {
+      "storage": {
+        "exit_code": 0,
+        "source_inputs_unchanged": true,
+        "owned_scratch_removed": true,
+        "receipt": {
+          "path": "artifacts/core-verification/service-publication-windows-20261017-attempt01-storage.receipt.json",
+          "sha256": "da5240f0b5929ad5541bb252d07e19dd4e23c4ec3754ee10a8af95652cf4d1d3"
+        },
+        "log": {
+          "path": "artifacts/core-verification/service-publication-windows-20261017-attempt01-storage.log",
+          "sha256": "c9f7fc02fb8af4cc02d5a211bdfeebfe8a124b90814516e1480dbcd127ccb6bb"
+        },
+        "passed": 15,
+        "failed": 0,
+        "ignored": 0
+      },
+      "sdk": {
+        "exit_code": 0,
+        "source_inputs_unchanged": false,
+        "owned_scratch_removed": true,
+        "receipt": {
+          "path": "artifacts/core-verification/service-publication-windows-20261017-attempt01-sdk.receipt.json",
+          "sha256": "8a33663b66950d36a612096b47ded912321b064263c9de0e915671bdd89bbf32"
+        },
+        "log": {
+          "path": "artifacts/core-verification/service-publication-windows-20261017-attempt01-sdk.log",
+          "sha256": "f253ac1fe875056a036c6be23160dc7c5b99df9c6bb5a04b2068acddee0ab612"
+        },
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0,
+        "source_scope_comparison": {
+          "path": "artifacts/core-verification/service-publication-windows-20261017-attempt01-sdk.scope-comparison.json",
+          "sha256": "83b23b0a754583c291298f9619d477b9ff90da71757d1991199b8e1a923efa19"
+        },
+        "source_scope_limit": "The original full-scope receipt remains unchanged=false because product-state.md changed concurrently. The separate comparison proves 936 Rust/Cargo/OpenAPI inputs unchanged; no claim is made for the full recorded document scope."
+      },
+      "server": {
+        "exit_code": 0,
+        "source_inputs_unchanged": true,
+        "owned_scratch_removed": true,
+        "receipt": {
+          "path": "artifacts/core-verification/service-publication-windows-20261017-attempt01-server.receipt.json",
+          "sha256": "52ebab18801e2e17509d235ba7578552c7895b5ace1c11c8e4d27f5368b5bb07"
+        },
+        "log": {
+          "path": "artifacts/core-verification/service-publication-windows-20261017-attempt01-server.log",
+          "sha256": "31a097734d5bcdcf05afa3a083fdd021678303362020dc0d473365bbe50ed021"
+        },
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0
+      },
+      "contract": {
+        "exit_code": 0,
+        "source_inputs_unchanged": true,
+        "owned_scratch_removed": true,
+        "receipt": {
+          "path": "artifacts/core-verification/service-publication-windows-20261017-attempt01-contract.receipt.json",
+          "sha256": "66f11d2b1700bc0b4af056e92498ea542a5fbe119b1043f78985edf01f474a25"
+        },
+        "log": {
+          "path": "artifacts/core-verification/service-publication-windows-20261017-attempt01-contract.log",
+          "sha256": "67a5f865daf1d12112fc4e7aaac9e9988a85f93a70911cf905a1ef8e012c9c17"
+        }
+      },
+      "strict_clippy": {
+        "exit_code": 0,
+        "source_inputs_unchanged": true,
+        "owned_scratch_removed": true,
+        "receipt": {
+          "path": "artifacts/core-verification/service-publication-windows-20261017-attempt02-clippy.receipt.json",
+          "sha256": "24ecf705aba83f9911fd8312f364de548626095aa97b2e5bc4c32ddaecb87a14"
+        },
+        "log": {
+          "path": "artifacts/core-verification/service-publication-windows-20261017-attempt02-clippy.log",
+          "sha256": "c82f5e0ed47daa0122eccaf61abefb50a8e6051edf0288deb128a5a6a537c798"
+        }
+      }
+    },
+    "prior_strict_failure": {
+      "path": "artifacts/core-verification/service-publication-windows-20261017-attempt01-clippy.receipt.json",
+      "sha256": "dbadf1e8a7a5c4568f29015b8738ebc9b4965e1b41a66a737c7a99a77b7597ad"
+    },
+    "prior_failure_resolution": "The missing desktop theme/widgets imports were fixed; attempt02 passed. The failed receipt remains intact.",
+    "formal_platform_acceptance_passed": false
+  },
+  "web_account_and_authorization_handoff_builds_20261017": {
+    "status": "passed",
+    "scope": "Optimized production and verification WASM sites plus release strict Clippy; development verification, not installed or signed product acceptance.",
+    "checks": {
+      "production": {
+        "exit_code": 0,
+        "source_inputs_unchanged": true,
+        "owned_scratch_removed": true,
+        "receipt": {
+          "path": "artifacts/core-verification/web-handoff-production-20261017-attempt05.receipt.json",
+          "sha256": "40a83051ccfb93d6e7d5f4bd544c28f2078651b491e6d74847253927d7a31474"
+        },
+        "log": {
+          "path": "artifacts/core-verification/web-handoff-production-20261017-attempt05.log",
+          "sha256": "617988101410ab4f67de67b8d36aae20c4251b68458041eb3f07861ed13efc83"
+        }
+      },
+      "verification": {
+        "exit_code": 0,
+        "source_inputs_unchanged": true,
+        "owned_scratch_removed": true,
+        "receipt": {
+          "path": "artifacts/core-verification/web-handoff-verification-20261017-attempt01.receipt.json",
+          "sha256": "1011814980d50e2f113f6a13b39379a09c8f59fe8eac4dfbe06b6d94bea03533"
+        },
+        "log": {
+          "path": "artifacts/core-verification/web-handoff-verification-20261017-attempt01.log",
+          "sha256": "2254350b5344eb0a9b4a1bda4d6200558ebe6b0f95f08279187b32700d82d64a"
+        }
+      },
+      "wasm_strict_clippy": {
+        "exit_code": 0,
+        "source_inputs_unchanged": true,
+        "owned_scratch_removed": true,
+        "receipt": {
+          "path": "artifacts/core-verification/web-handoff-clippy-20261017-attempt02.receipt.json",
+          "sha256": "4f1aba7f00c32a39c97787327e026c4cb04860ed40995260748c991d1bdb456a"
+        },
+        "log": {
+          "path": "artifacts/core-verification/web-handoff-clippy-20261017-attempt02.log",
+          "sha256": "b8adc1a00a941fd54bb83cbf4c7e2ae4bd7cf729c30384d0ae76278c92a2e9bf"
+        }
+      }
+    },
+    "retained_failures": [
+      {
+        "path": "artifacts/core-verification/web-handoff-production-20261017-attempt02.receipt.json",
+        "sha256": "0c2d0222e8be79aab88c2b2a6e953d062bdb60b52fb4a3a11e38c3402eedc9a0"
+      },
+      {
+        "path": "artifacts/core-verification/web-handoff-production-20261017-attempt03.receipt.json",
+        "sha256": "5ab8cd693cda121813aa4aa2fa5feaf578eab1105236f050e02e9fac500899bb"
+      },
+      {
+        "path": "artifacts/core-verification/web-handoff-production-20261017-attempt04.receipt.json",
+        "sha256": "a7213ea90f69f599ceed585abdc6da7c7348bd3fcd88a8dbc6d4fecd34938cfb"
+      },
+      {
+        "path": "artifacts/core-verification/web-handoff-clippy-20261017-attempt01.receipt.json",
+        "sha256": "5db8bb1d43429afd4a6b674d49cc66365be93b68974fd0579b82ecb7947dd58f"
+      }
+    ],
+    "production_attempt01_launcher_failure": {
+      "log": {
+        "path": "artifacts/core-verification/web-handoff-production-20261017-attempt01.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "receipt_available": false,
+      "scope": "The executable was unavailable before the wrapper could start Trunk; the empty log is retained, without inventing a source or command-completion receipt."
+    },
+    "source_scope_limit": "After the fixed sites were built, browser_identity.rs received only a transaction-sender type alias to satisfy Clippy. Runtime browser claims bind the retained static site bytes in site-inputs.json; the source hash sampled by the browser script is not a claim that those sites were rebuilt for the alias.",
+    "formal_platform_acceptance_passed": false
+  },
+  "browser_persistent_identity_three_stable_browsers_20261017": {
+    "status": "selected-cases-passed-across-two-retained-runs",
+    "scope": "Production trust-screen smoke; refresh-persistent controller identity, non-extractable AES-GCM key, encrypted seed, concurrent tabs, account scope isolation, and tampered device binding rejection. No RTC or full product acceptance claim.",
+    "runs": [
+      {
+        "browser": "chrome",
+        "status": "passed",
+        "headless": true,
+        "completed_cases": [
+          {
+            "case": "production-ui-smoke",
+            "status": "passed"
+          },
+          {
+            "case": "browser-controller-identity-persistence",
+            "status": "passed"
+          }
+        ],
+        "version": "155.0.8059.82",
+        "production_ui_smoke": {
+          "status": "passed",
+          "title": "NestLink 管理",
+          "trust_screen": true,
+          "verification_api_absent": true
+        },
+        "browser_identity": {
+          "status": "passed",
+          "reload_preserved_identity": true,
+          "key_extractable": false,
+          "encrypted_seed_bytes": 48,
+          "concurrent_tabs_share_identity": true,
+          "account_scopes_separated": true,
+          "tampered_binding_rejected_without_replacement": true
+        }
+      },
+      {
+        "browser": "edge",
+        "status": "passed",
+        "headless": true,
+        "completed_cases": [
+          {
+            "case": "production-ui-smoke",
+            "status": "passed"
+          },
+          {
+            "case": "browser-controller-identity-persistence",
+            "status": "passed"
+          }
+        ],
+        "version": "155.0.4283.62",
+        "production_ui_smoke": {
+          "status": "passed",
+          "title": "NestLink 管理",
+          "trust_screen": true,
+          "verification_api_absent": true
+        },
+        "browser_identity": {
+          "status": "passed",
+          "reload_preserved_identity": true,
+          "key_extractable": false,
+          "encrypted_seed_bytes": 48,
+          "concurrent_tabs_share_identity": true,
+          "account_scopes_separated": true,
+          "tampered_binding_rejected_without_replacement": true
+        }
+      },
+      {
+        "browser": "firefox-stable",
+        "status": "passed",
+        "headless": true,
+        "completed_cases": [
+          {
+            "case": "production-ui-smoke",
+            "status": "passed"
+          },
+          {
+            "case": "browser-controller-identity-persistence",
+            "status": "passed"
+          }
+        ],
+        "automation_transport": "WebDriver BiDi; puppeteer-core 25.14.0",
+        "context_emulation": "none; stock locale/theme/motion settings",
+        "version": "firefox/158.0",
+        "production_ui_smoke": {
+          "status": "passed",
+          "title": "NestLink Management",
+          "trust_screen": true,
+          "verification_api_absent": true
+        },
+        "browser_identity": {
+          "status": "passed",
+          "reload_preserved_identity": true,
+          "key_extractable": false,
+          "encrypted_seed_bytes": 48,
+          "concurrent_tabs_share_identity": true,
+          "account_scopes_separated": true,
+          "tampered_binding_rejected_without_replacement": true
+        }
+      }
+    ],
+    "chromium_batch": {
+      "original_overall_passed": false,
+      "limit": "The two Chromium runs passed. The third requested firefox launcher was unconfigured and failed before cases; the original overall-failed report is unchanged.",
+      "report": {
+        "path": "artifacts/core-verification/web-identity-three-browsers-handoff-20261017-attempt02.json",
+        "sha256": "6e170816c1e6e41067011875875417c37db97f3d607bf53ed8b759660e274c01"
+      },
+      "run_check": {
+        "exit_code": 1,
+        "source_inputs_unchanged": true,
+        "owned_scratch_removed": true,
+        "receipt": {
+          "path": "artifacts/core-verification/web-identity-three-browsers-handoff-20261017-attempt02.receipt.json",
+          "sha256": "0e36abd8e24045506f6c297eaf97ea34d24592c47d22fbc15c41005a2fc0a74d"
+        },
+        "log": {
+          "path": "artifacts/core-verification/web-identity-three-browsers-handoff-20261017-attempt02.log",
+          "sha256": "59697ccf5bc4601910856d5a0e256254105af15a2168dc1b7bd6c3da9dfae00f"
+        }
+      },
+      "fixed_site_inputs": {
+        "path": "artifacts/core-verification/web-identity-three-browsers-handoff-20261017-attempt02.site-inputs.json",
+        "sha256": "f45b1027cc3284658eea6e9ddc8894e28e92054719e88d07c87974cd9cdf8565"
+      }
+    },
+    "stock_firefox_followup": {
+      "overall_passed": true,
+      "report": {
+        "path": "artifacts/core-verification/web-identity-firefox-stable-handoff-20261017-attempt01.json",
+        "sha256": "e3d8ef3527b9194cb1331d866dcf30f6e0587fc85709aaa7dfb30e2c7a131ca6"
+      },
+      "run_check": {
+        "exit_code": 0,
+        "source_inputs_unchanged": true,
+        "owned_scratch_removed": true,
+        "receipt": {
+          "path": "artifacts/core-verification/web-identity-firefox-stable-handoff-20261017-attempt01.receipt.json",
+          "sha256": "5f79335d11dad41ff5b1a7c6802f5891a9d96babed47e5d4040990eb1d477d8e"
+        },
+        "log": {
+          "path": "artifacts/core-verification/web-identity-firefox-stable-handoff-20261017-attempt01.log",
+          "sha256": "b8931f5e4b01d2caa65fa8bd67af87cee8a5763762ebe9b82959cd0ada4c5141"
+        }
+      },
+      "fixed_site_inputs": {
+        "path": "artifacts/core-verification/web-identity-firefox-stable-handoff-20261017-attempt01.site-inputs.json",
+        "sha256": "360a6e0c3b3e08e8be2b78a0bd22d0dcac93e505c76a9be6d35bff5f238869b0"
+      }
+    },
+    "source_binding_limit": "Browser runtime results apply to the frozen site bytes, not to later sampled source hashes. See the handoff-build entry for the type-alias-only change after site build.",
+    "formal_platform_acceptance_passed": false
+  },
+  "history_archive_remote_upload_20261017": {
+    "status": "stopped-at-user-request-superseded-by-new-repository-rc",
+    "plan": {
+      "path": "artifacts/history-preservation/history-archive-plan-20261017-attempt01.json",
+      "sha256": "525844d737158b1222247eda6830b26046a57eacf63b9a023a4c289f45fb0a36"
+    },
+    "tag": "history-archive-2026-10-17",
+    "expected_assets_including_plan": 831,
+    "original_release_assets": 799,
+    "final_product_source_preserved": false,
+    "durable_remote_preservation_verified": false,
+    "scope": "An upload has started. This entry deliberately does not assert completion; use the create-new published receipt after all assets are verified.",
+    "last_verified_assets": 108,
+    "stop_receipt": "artifacts/history-preservation/history-archive-stopped-by-user-20261017.json"
+  },
+  "web_account_security_ui_focused_20261017": {
+    "status": "passed",
+    "scope": "Focused development UI probe against fixed production Web bytes and an isolated real control server; not final RC installed-product acceptance.",
+    "passed": 9,
+    "failed": 0,
+    "browser": "Google Chrome 155.0.8059.82",
+    "duration_seconds": 14.628,
+    "source_inputs": 1061,
+    "source_inputs_unchanged": true,
+    "fixed_web_and_server_bytes_unchanged": true,
+    "owned_scratch_removed": true,
+    "coverage": [
+      "HTTPS pinned login",
+      "trusted denial without silent fallback and retry",
+      "real fullscreen enter and external exit",
+      "password scope change rejects credentials",
+      "wrong password and revoke",
+      "unknown committed response preserves request owner and permits revoke",
+      "wrong reauthentication retains login",
+      "real TOTP confirmation and recovery reset",
+      "password change revokes old login, new login and refresh"
+    ],
+    "physical_escape_key_acceptance": "pending",
+    "report": {
+      "path": "artifacts/core-verification/web-security-ui-20261017-attempt12.json",
+      "sha256": "cb016cf7cb1dc2895e1e450556f7ba222c22029b0a382efd4a4b004a8378b6c0"
+    },
+    "log": {
+      "path": "artifacts/core-verification/web-security-ui-20261017-attempt12.log",
+      "sha256": "70730f422b6932951c8ad6aba8b713f87330032007a40a439f28bae354e245c0"
+    },
+    "receipt": {
+      "path": "artifacts/core-verification/web-security-ui-20261017-attempt12.receipt.json",
+      "sha256": "d8f314dce9732e1f13861e906251b1a519d6be83118c95fa252f875558df42e9"
+    },
+    "documentation": "docs/refactor/WEB-SECURITY-VERIFICATION.md"
+  }
+}

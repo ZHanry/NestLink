@@ -1,0 +1,438 @@
+{
+  "scope": "Development-only browser automation tools, not production Web dependencies or redistributed browser binaries",
+  "method": "Official Mozilla stable metadata and SHA512SUMS; valid Mozilla Authenticode installer privately extracted. Pinned puppeteer-core installed with ignore-scripts and a retained npm integrity lock. Review covers installed package manifests and top-level full license files.",
+  "tools_receipt": "artifacts/core-verification/firefox-stable-tools-20261015-attempt04.json",
+  "tools_receipt_sha256": "8cdeefb39e88258e4b3698b8ce84051963c1f59a97631d464d7c6eff07ed00e0",
+  "browser": {
+    "version": "158.0",
+    "binary_sha256": "cafde68b3eadf3ae78093ce73be22996b4085b492a88666046ca0a6648405a0e",
+    "installer_sha512": "45480d848c055b807b1dff3551d5787b8481bf710e0ad5760d42d69dc8a8cc200e5a1eb3e41be2386c4ab521971433815babcf0c4b9d4c35322783ba54a41b75",
+    "publisher": {
+      "status": "Valid",
+      "subject": "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=San Francisco, S=California, C=US",
+      "certificate_sha256": "6bfc0ae7ad878d4dbf9e9ec9d09535b0c65b083acd5d58a71c1e883323bb52b3"
+    }
+  },
+  "node_version": "v24.19.0",
+  "npm_lock_sha256": "ff3a4c2a6f1edb1bb343132b6e1949389587275dbbf205e60053a48a829a1baf",
+  "packages": [
+    {
+      "name": "@puppeteer/browsers",
+      "version": "3.2.5",
+      "license": "Apache-2.0",
+      "installed_path": "node_modules/@puppeteer/browsers",
+      "manifest_sha256": "3671ce5a6b994d38cf16274390326d20d7a05ec11df0131198514e6a3ba1d1ec",
+      "resolved": "https://registry.npmjs.org/@puppeteer/browsers/-/browsers-3.2.5.tgz",
+      "integrity": "sha512-UoCo3Pynbm37aLEEoydSiG+t24ui7sLD40+07CKxzxNy4PpSowJMkvlLIiV67XjP1lMVynhQVnuwlTABqBH8LQ==",
+      "license_files": [],
+      "upstream_license_supplement": {
+        "reason": "npm archive omits the monorepo root license",
+        "npm_metadata_url": "https://registry.npmjs.org/%40puppeteer%2Fbrowsers/3.2.5",
+        "npm_metadata_sha256": "31914c400619f94f3c7de19cfe110b094b63ba993a79a1eda0713a9f1f49e551",
+        "upstream_revision": "d1b9a2162a0113356db5093f055b4a2e1979c6a8",
+        "license_url": "https://raw.githubusercontent.com/puppeteer/puppeteer/d1b9a2162a0113356db5093f055b4a2e1979c6a8/LICENSE",
+        "preserved_file": "docs/refactor/development-notices/puppeteer-browsers-3.2.5-LICENSE",
+        "sha256": "a27ca07269b3518550b2e83aed13eadd7d14d924b5864e14889b40cf227530ca"
+      }
+    },
+    {
+      "name": "ansi-regex",
+      "version": "6.4.0",
+      "license": "MIT",
+      "installed_path": "node_modules/ansi-regex",
+      "manifest_sha256": "365a0f0757b55b3068ac8ae121f547c62c7f038050c906abbb6b743e0d32d6d0",
+      "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-6.4.0.tgz",
+      "integrity": "sha512-KzTVk2tCWAHtYrvvvaP8bJKJq2pVinhLcGEQdtLIYPbmNGNyYe8QwNaTUYQp2J7/vIsUKt5QCqAfUkYyG9DkOw==",
+      "license_files": [
+        {
+          "name": "license",
+          "sha256": "5c932d88256b4ab958f64a856fa48e8bd1f55bc1d96b8149c65689e0c61789d3"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "ansi-styles",
+      "version": "6.2.3",
+      "license": "MIT",
+      "installed_path": "node_modules/ansi-styles",
+      "manifest_sha256": "0cf1f46ceee4b380298db6e6a54f14d345abe09abd5f650cbc20c8ac2ab27744",
+      "resolved": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-6.2.3.tgz",
+      "integrity": "sha512-4Dj6M28JB+oAH8kFkTLUo+a2jwOFkuqb3yucU0CANcRRUbxS0cP0nZYCGjcc3BNXwRIsUVmDGgzawme7zvJHvg==",
+      "license_files": [
+        {
+          "name": "license",
+          "sha256": "5c932d88256b4ab958f64a856fa48e8bd1f55bc1d96b8149c65689e0c61789d3"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "chromium-bidi",
+      "version": "157.0.8090-0",
+      "license": "Apache-2.0",
+      "installed_path": "node_modules/chromium-bidi",
+      "manifest_sha256": "32f9d25437fb0d21d654b08e9429a62dc99ffc2200d6fbb695f4e5f39f2f07d1",
+      "resolved": "https://registry.npmjs.org/chromium-bidi/-/chromium-bidi-157.0.8090-0.tgz",
+      "integrity": "sha512-KJw7IQgqXwxpJgJlEIPg5mr2ZoqA+jkTRtc5EABI7sUJ3bu3cpI7NuEBoj4Gn1AsF78CaT9So5WQWspK3/wYag==",
+      "license_files": [
+        {
+          "name": "LICENSE",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "cliui",
+      "version": "9.0.1",
+      "license": "ISC",
+      "installed_path": "node_modules/cliui",
+      "manifest_sha256": "305c7580ded81b1a9bfc3417e8c257692b4c2e54a66e67deb1b8f61f197aee9e",
+      "resolved": "https://registry.npmjs.org/cliui/-/cliui-9.0.1.tgz",
+      "integrity": "sha512-k7ndgKhwoQveBL+/1tqGJYNz097I7WOvwbmmU2AR5+magtbjPWQTS1C5vzGkBC8Ym8UWRzfKUzUUqFLypY4Q+w==",
+      "license_files": [
+        {
+          "name": "LICENSE.txt",
+          "sha256": "2dc0465729366c3a7890dfa9e972a1ba7048a26c02116fb8b419a6a1ac110149"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "string-width",
+      "version": "7.2.0",
+      "license": "MIT",
+      "installed_path": "node_modules/cliui/node_modules/string-width",
+      "manifest_sha256": "c136bc8e7e23b6de2ad6f083cf99c1c3769fe200224d7575351f29c9f6bed27e",
+      "resolved": "https://registry.npmjs.org/string-width/-/string-width-7.2.0.tgz",
+      "integrity": "sha512-tsaTIkKW9b4N+AEj+SVA+WhJzV7/zMhcSu78mLKWSk7cXMOSHsBKFWUs0fWwq8QyK3MgJBQRX6Gbi4kYbdvGkQ==",
+      "license_files": [
+        {
+          "name": "license",
+          "sha256": "5c932d88256b4ab958f64a856fa48e8bd1f55bc1d96b8149c65689e0c61789d3"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "devtools-protocol",
+      "version": "0.0.1696802",
+      "license": "BSD-3-Clause",
+      "installed_path": "node_modules/devtools-protocol",
+      "manifest_sha256": "be1c0bce75d00e6acad85cae71843a3164bde1cec7a98c5bd4193e3610aff016",
+      "resolved": "https://registry.npmjs.org/devtools-protocol/-/devtools-protocol-0.0.1696802.tgz",
+      "integrity": "sha512-FO5/SENfvc2K8wRnWQflKcwuoTH4dBkXCWTQ9ebIWtuX8JM5+ZvCotaEmkfh21pO7TvIKGTM3hG4xFiq9WTwmg==",
+      "license_files": [
+        {
+          "name": "LICENSE",
+          "sha256": "7a209dd1b94cabdb5ea9c6f9164b9546ffa5daaa671e7767d49510db055f5c51"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "emoji-regex",
+      "version": "10.6.0",
+      "license": "MIT",
+      "installed_path": "node_modules/emoji-regex",
+      "manifest_sha256": "ad8b9ae5582e5b85ae571a30a733fd8f3fd7951530122efd4f93342fe0995b11",
+      "resolved": "https://registry.npmjs.org/emoji-regex/-/emoji-regex-10.6.0.tgz",
+      "integrity": "sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A==",
+      "license_files": [
+        {
+          "name": "LICENSE-MIT.txt",
+          "sha256": "483acb265f182907d1caf6cff9c16c96f31325ed23792832cc5d8b12d5f88c8a"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "escalade",
+      "version": "3.2.0",
+      "license": "MIT",
+      "installed_path": "node_modules/escalade",
+      "manifest_sha256": "acd22b264ecbea162e320a360dab0ad0f3e5438fa4382288df844fa08b484e73",
+      "resolved": "https://registry.npmjs.org/escalade/-/escalade-3.2.0.tgz",
+      "integrity": "sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==",
+      "license_files": [
+        {
+          "name": "license",
+          "sha256": "9a9edad7baae52622bddf3c15b2ef8a33d2c89f2d25408ad13e8a7481c6b0c97"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "get-caller-file",
+      "version": "2.0.5",
+      "license": "ISC",
+      "installed_path": "node_modules/get-caller-file",
+      "manifest_sha256": "680a080d2885c05bc51dde429c80784bfb248ca3ef3685438079c5015721e2ae",
+      "resolved": "https://registry.npmjs.org/get-caller-file/-/get-caller-file-2.0.5.tgz",
+      "integrity": "sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg==",
+      "license_files": [
+        {
+          "name": "LICENSE.md",
+          "sha256": "902dbb4154679fb2b8d7c33878183f45b268d01eae5e5033dddaa8852d45f213"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "get-east-asian-width",
+      "version": "1.7.0",
+      "license": "MIT",
+      "installed_path": "node_modules/get-east-asian-width",
+      "manifest_sha256": "25b97bb720e84cdb3b0c3d1c1e804ce6b216d2573ff79cbe531e01bfa05ee9e9",
+      "resolved": "https://registry.npmjs.org/get-east-asian-width/-/get-east-asian-width-1.7.0.tgz",
+      "integrity": "sha512-XjH1AECxf0giL2V1aU8vKyRR2ppRUb5c0EvT7zuJTokQ74bNo52zOtghqdWIqrhUD79fo3x0WfKZdOqxF6LG1Q==",
+      "license_files": [
+        {
+          "name": "license",
+          "sha256": "5c932d88256b4ab958f64a856fa48e8bd1f55bc1d96b8149c65689e0c61789d3"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "mitt",
+      "version": "3.0.1",
+      "license": "MIT",
+      "installed_path": "node_modules/mitt",
+      "manifest_sha256": "99966ad2891dfe56614f039f5d03ada4bda6dba810952272ae57359abb527b91",
+      "resolved": "https://registry.npmjs.org/mitt/-/mitt-3.0.1.tgz",
+      "integrity": "sha512-vKivATfr97l2/QBCYAkXYDbrIWPM2IIKEl7YPhjCvKlG3kE2gm+uBo6nEXK3M5/Ffh/FLpKExzOQ3JJoJGFKBw==",
+      "license_files": [
+        {
+          "name": "LICENSE",
+          "sha256": "1cab22f196264195a4caec8ca5630170fdde76ee8f43346e47021d087332d3b0"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "modern-tar",
+      "version": "0.8.6",
+      "license": "MIT",
+      "installed_path": "node_modules/modern-tar",
+      "manifest_sha256": "11f6b6654fbe3307a7eb8cd49aadc61475b38dae0998672477731a65c5301429",
+      "resolved": "https://registry.npmjs.org/modern-tar/-/modern-tar-0.8.6.tgz",
+      "integrity": "sha512-LYSks0tNVqbtez/9OB0YFP6qLRSqkdAxJWOQpVaR67lNTbj2zNLyYpowkRMia5lXLCZKzxwoxkxH2MbbBR2aEg==",
+      "license_files": [
+        {
+          "name": "LICENSE",
+          "sha256": "dbcbef54fa7e111b69b12a9787051f31f5378b40711b6c57c5a82d99dc8a9e0d"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "puppeteer-core",
+      "version": "25.14.0",
+      "license": "Apache-2.0",
+      "installed_path": "node_modules/puppeteer-core",
+      "manifest_sha256": "6f363d666a296c907f316cf622c4cfb3f4b92fabcda7ef939b4a374bb2684ba5",
+      "resolved": "https://registry.npmjs.org/puppeteer-core/-/puppeteer-core-25.14.0.tgz",
+      "integrity": "sha512-LQitnes3tBeVbdZ7V/4iwJPLZGgkl9uBVK0W7YYMh68j/3Y9eNuvj4yl+Fdo7zN0SuajOMrhd7aPj3DifK8k6A==",
+      "license_files": [],
+      "upstream_license_supplement": {
+        "reason": "npm archive omits the monorepo root license",
+        "npm_metadata_url": "https://registry.npmjs.org/puppeteer-core/25.14.0",
+        "npm_metadata_sha256": "317c21fada783d01433f4ea6453cf87cc56eb9aa22654e380a6b87c0fd936650",
+        "upstream_revision": "d1b9a2162a0113356db5093f055b4a2e1979c6a8",
+        "license_url": "https://raw.githubusercontent.com/puppeteer/puppeteer/d1b9a2162a0113356db5093f055b4a2e1979c6a8/LICENSE",
+        "preserved_file": "docs/refactor/development-notices/puppeteer-core-25.14.0-LICENSE",
+        "sha256": "a27ca07269b3518550b2e83aed13eadd7d14d924b5864e14889b40cf227530ca"
+      }
+    },
+    {
+      "name": "string-width",
+      "version": "8.3.0",
+      "license": "MIT",
+      "installed_path": "node_modules/string-width",
+      "manifest_sha256": "91dd282553b13e201d56de724f61c6755996f3120c3ff4d024a8a7171e0aa2cb",
+      "resolved": "https://registry.npmjs.org/string-width/-/string-width-8.3.0.tgz",
+      "integrity": "sha512-ZbmZM0JCihQN91dWnxoipT2KOEyHqEyfRXUyjuRhW8b/xnqPDoq4gWEVApTVa9db2wN8mmoikgFBbjh71+cGeQ==",
+      "license_files": [
+        {
+          "name": "license",
+          "sha256": "5c932d88256b4ab958f64a856fa48e8bd1f55bc1d96b8149c65689e0c61789d3"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "strip-ansi",
+      "version": "7.2.0",
+      "license": "MIT",
+      "installed_path": "node_modules/strip-ansi",
+      "manifest_sha256": "228b214dd06ca80ab3c36e2b890a8696a39cea65585f6d61498c922c615e18a0",
+      "resolved": "https://registry.npmjs.org/strip-ansi/-/strip-ansi-7.2.0.tgz",
+      "integrity": "sha512-yDPMNjp4WyfYBkHnjIRLfca1i6KMyGCtsVgoKe/z1+6vukgaENdgGBZt+ZmKPc4gavvEZ5OgHfHdrazhgNyG7w==",
+      "license_files": [
+        {
+          "name": "license",
+          "sha256": "5c932d88256b4ab958f64a856fa48e8bd1f55bc1d96b8149c65689e0c61789d3"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "typed-query-selector",
+      "version": "2.12.3",
+      "license": "MIT",
+      "installed_path": "node_modules/typed-query-selector",
+      "manifest_sha256": "cb2225e8d35f27d893f78e6c4bdf0fc9ff56f277515f330084811bb5eb439d10",
+      "resolved": "https://registry.npmjs.org/typed-query-selector/-/typed-query-selector-2.12.3.tgz",
+      "integrity": "sha512-/dtuMZyutHLlrxWhhC1uib00ELUr2dZ8C9B8YzZYsJmeE3V56OxRblrSM2UaF142pcMtak7ehZ6+poWGeehNIg==",
+      "license_files": [
+        {
+          "name": "LICENSE",
+          "sha256": "e5a82d3d14a3b0fffb34243e6cc465d7b5c9e1ca2ef047ee5842ef50f9999e7e"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "webdriver-bidi-protocol",
+      "version": "1.0.1",
+      "license": "Apache-2.0",
+      "installed_path": "node_modules/webdriver-bidi-protocol",
+      "manifest_sha256": "e9b1fde496ce1fcee0e672c0141bca499f44de1909ba2b827ff6ee6ab733906b",
+      "resolved": "https://registry.npmjs.org/webdriver-bidi-protocol/-/webdriver-bidi-protocol-1.0.1.tgz",
+      "integrity": "sha512-WXWs/aXF2a6Al1Z2/V/7Gp2oPZOAAmHjJOTmv4KCXRJ122IMj3tSSMc6a4q3K4QOmhQbse/Ahr+oTVJOU2dUiw==",
+      "license_files": [
+        {
+          "name": "LICENSE",
+          "sha256": "b08840544230421823a071f4dace39a58be90a54537f36c4b283c93d93d70cc6"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "wrap-ansi",
+      "version": "9.0.2",
+      "license": "MIT",
+      "installed_path": "node_modules/wrap-ansi",
+      "manifest_sha256": "aa6924e02b510b48b0ad87f09212b2532a3e86043ea51ff0413f70d5964a7e31",
+      "resolved": "https://registry.npmjs.org/wrap-ansi/-/wrap-ansi-9.0.2.tgz",
+      "integrity": "sha512-42AtmgqjV+X1VpdOfyTGOYRi0/zsoLqtXQckTmqTeybT+BDIbM/Guxo7x3pE2vtpr1ok6xRqM9OpBe+Jyoqyww==",
+      "license_files": [
+        {
+          "name": "license",
+          "sha256": "5c932d88256b4ab958f64a856fa48e8bd1f55bc1d96b8149c65689e0c61789d3"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "string-width",
+      "version": "7.2.0",
+      "license": "MIT",
+      "installed_path": "node_modules/wrap-ansi/node_modules/string-width",
+      "manifest_sha256": "c136bc8e7e23b6de2ad6f083cf99c1c3769fe200224d7575351f29c9f6bed27e",
+      "resolved": "https://registry.npmjs.org/string-width/-/string-width-7.2.0.tgz",
+      "integrity": "sha512-tsaTIkKW9b4N+AEj+SVA+WhJzV7/zMhcSu78mLKWSk7cXMOSHsBKFWUs0fWwq8QyK3MgJBQRX6Gbi4kYbdvGkQ==",
+      "license_files": [
+        {
+          "name": "license",
+          "sha256": "5c932d88256b4ab958f64a856fa48e8bd1f55bc1d96b8149c65689e0c61789d3"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "ws",
+      "version": "8.22.0",
+      "license": "MIT",
+      "installed_path": "node_modules/ws",
+      "manifest_sha256": "c1ef91ca04eb4754c011c5f0e7638b5078ff71104fada400c44ac761cf93e0b1",
+      "resolved": "https://registry.npmjs.org/ws/-/ws-8.22.0.tgz",
+      "integrity": "sha512-Ydggc987+RO0AnWtZ/7Wq9FtNvcrL1b/RO0ud9mWjUPgDrsAAwQSF51sm2hm1XofbU/4jkpGEsLFsZZxU+1DOg==",
+      "license_files": [
+        {
+          "name": "LICENSE",
+          "sha256": "2b29dcfe0d6471f7e8c92c5fb38c9f93edee10330937055440192f1832b1ecef"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "y18n",
+      "version": "5.0.8",
+      "license": "ISC",
+      "installed_path": "node_modules/y18n",
+      "manifest_sha256": "f65855d14daaf57947e398e132caa246f93bbf045ff3f8f9627114714729ad29",
+      "resolved": "https://registry.npmjs.org/y18n/-/y18n-5.0.8.tgz",
+      "integrity": "sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==",
+      "license_files": [
+        {
+          "name": "LICENSE",
+          "sha256": "2034cce3b6fafcddd642c4175e01d3ddfc332a53b9f20fdc46b1466dc89ac469"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "yargs",
+      "version": "18.2.0",
+      "license": "MIT",
+      "installed_path": "node_modules/yargs",
+      "manifest_sha256": "d60c24ef770ba9512defe2b7113c4dabd677f8a2c39bc119cf3979823083b192",
+      "resolved": "https://registry.npmjs.org/yargs/-/yargs-18.2.0.tgz",
+      "integrity": "sha512-9OpKOLeaoNFecEp7P6iYbzze/5CqWoH7N3SMs/6y1XF4nMvFMspEGZzJ6uFi9MmQwXhyzqYoSEKO3tvA3Z/o2w==",
+      "license_files": [
+        {
+          "name": "LICENSE",
+          "sha256": "2f1a503bfab84b3ba7393627308b3274501e459e3b5185bbb56bbf16cb1602d4"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "yargs-parser",
+      "version": "22.0.0",
+      "license": "ISC",
+      "installed_path": "node_modules/yargs-parser",
+      "manifest_sha256": "9c78a4d2d78a3d1b9f5cbd9f99b8d695b02e2d8f06cc22667cf798c8c11c8204",
+      "resolved": "https://registry.npmjs.org/yargs-parser/-/yargs-parser-22.0.0.tgz",
+      "integrity": "sha512-rwu/ClNdSMpkSrUb+d6BRsSkLUq1fmfsY6TOpYzTwvwkg1/NRG85KBy3kq++A8LKQwX6lsu+aWad+2khvuXrqw==",
+      "license_files": [
+        {
+          "name": "LICENSE.txt",
+          "sha256": "365496ca1f56da40b23c9815fc40fa9005847b2f8f8fd1c1a4929ef25ec8cd1d"
+        }
+      ],
+      "upstream_license_supplement": null
+    },
+    {
+      "name": "zod",
+      "version": "4.6.7",
+      "license": "MIT",
+      "installed_path": "node_modules/zod",
+      "manifest_sha256": "c2d190d9ee4e0bdb60332aaa2130a6a98d65ddb903fe1d29248b15de57832c45",
+      "resolved": "https://registry.npmjs.org/zod/-/zod-4.6.7.tgz",
+      "integrity": "sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==",
+      "license_files": [
+        {
+          "name": "LICENSE",
+          "sha256": "3f1189b28e3866e0d979968d466b78f813f76827cfdca1fbb124cc0a5c8841f8"
+        }
+      ],
+      "upstream_license_supplement": null
+    }
+  ],
+  "license_counts": {
+    "Apache-2.0": 4,
+    "MIT": 16,
+    "ISC": 4,
+    "BSD-3-Clause": 1
+  },
+  "executed_probe": "artifacts/core-verification/web-stock-firefox-bidi-20261015-attempt01.json",
+  "executed_probe_sha256": "e4146cb28e75f15f7e4531e8e127165d63742e236c04353cebedef46b0c574d9",
+  "command_receipt_sha256": "f43468e1553d99dc2d0ef22218295fc4a904098dd9631d59947d0b1a263bb281",
+  "site_receipt_sha256": "9b5b4b87718e79b2b5354458d67875ad3092cf2b03ad5b09e90c9b607b76b8b0",
+  "passed_cases": 14,
+  "limits": "Stock headless Firefox under WebDriver BiDi and launcher automation defaults. No locale/theme/motion emulation or custom clipboard preference override. Does not establish installed-host, external-network, graphical accessibility or signed-product acceptance."
+}

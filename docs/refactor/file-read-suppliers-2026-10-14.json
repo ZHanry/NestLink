@@ -1,0 +1,337 @@
+{
+  "schema_version": 1,
+  "scope": "All newly introduced crates.io registry packages relative to 17f9a18; complete source archives and included license/notice bytes preserved. Does not assert complete final product SBOM/NOTICE or formal L-B acceptance.",
+  "parent_revision": "17f9a186071a508328eeabb546f2455c9496b4aa",
+  "cargo_lock_sha256": "48fe82959aec2040f8484d3c92e7b56a03879d192a67603dffd2f3d0ae5c253b",
+  "archive": {
+    "path": "artifacts/core-verification/file-read-suppliers/new-registry-archives.zip",
+    "sha256": "b0fb4dd5cb1aaaca7f5bd1e48499d2651122b1310bb16176084f19ae5e280c23",
+    "bytes": 317562
+  },
+  "packages": [
+    {
+      "name": "ambient-authority",
+      "version": "0.0.2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "e9d4ee0d472d1cd2e28c97dfa124b3d8d992e10eb0a035f33f5d12e3a177ba3b",
+      "archive_name": "ambient-authority-0.0.2.crate",
+      "archive_bytes": 14867,
+      "declared_license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/sunfishcode/ambient-authority",
+      "license_files": [
+        {
+          "archive_path": "ambient-authority-0.0.2/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "bytes": 10847
+        },
+        {
+          "archive_path": "ambient-authority-0.0.2/LICENSE-Apache-2.0_WITH_LLVM-exception",
+          "sha256": "268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5",
+          "bytes": 12243
+        },
+        {
+          "archive_path": "ambient-authority-0.0.2/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "bytes": 1023
+        }
+      ]
+    },
+    {
+      "name": "cap-fs-ext",
+      "version": "4.0.3",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "56ff379b70af8e08307a8f65e7040c7301cb4a572538ade16b4984f0da77847f",
+      "dependencies": [
+        "cap-primitives",
+        "cap-std",
+        "io-lifetimes 3.0.1",
+        "windows-sys 0.61.2"
+      ],
+      "archive_name": "cap-fs-ext-4.0.3.crate",
+      "archive_bytes": 16995,
+      "declared_license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/bytecodealliance/cap-std",
+      "license_files": [
+        {
+          "archive_path": "cap-fs-ext-4.0.3/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "bytes": 10847
+        },
+        {
+          "archive_path": "cap-fs-ext-4.0.3/LICENSE-Apache-2.0_WITH_LLVM-exception",
+          "sha256": "268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5",
+          "bytes": 12243
+        },
+        {
+          "archive_path": "cap-fs-ext-4.0.3/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "bytes": 1023
+        }
+      ]
+    },
+    {
+      "name": "cap-primitives",
+      "version": "4.0.3",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "8b5f74729fd2f44701d1a8eb47e906cdb3ccd9ec0f02baad85a744b791940b18",
+      "dependencies": [
+        "ambient-authority",
+        "fs-set-times",
+        "io-extras",
+        "io-lifetimes 3.0.1",
+        "ipnet",
+        "maybe-owned",
+        "rustix",
+        "rustix-linux-procfs",
+        "windows-sys 0.61.2",
+        "winx"
+      ],
+      "archive_name": "cap-primitives-4.0.3.crate",
+      "archive_bytes": 93618,
+      "declared_license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/bytecodealliance/cap-std",
+      "license_files": [
+        {
+          "archive_path": "cap-primitives-4.0.3/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "bytes": 10847
+        },
+        {
+          "archive_path": "cap-primitives-4.0.3/LICENSE-Apache-2.0_WITH_LLVM-exception",
+          "sha256": "268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5",
+          "bytes": 12243
+        },
+        {
+          "archive_path": "cap-primitives-4.0.3/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "bytes": 1023
+        }
+      ]
+    },
+    {
+      "name": "cap-std",
+      "version": "4.0.3",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "c1ec78e242cfa2cfe276807ac2ecc00315a6c97786977414bcd1c3963b6c91b8",
+      "dependencies": [
+        "cap-primitives",
+        "io-extras",
+        "io-lifetimes 3.0.1",
+        "rustix"
+      ],
+      "archive_name": "cap-std-4.0.3.crate",
+      "archive_bytes": 36964,
+      "declared_license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/bytecodealliance/cap-std",
+      "license_files": [
+        {
+          "archive_path": "cap-std-4.0.3/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "bytes": 10847
+        },
+        {
+          "archive_path": "cap-std-4.0.3/LICENSE-Apache-2.0_WITH_LLVM-exception",
+          "sha256": "268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5",
+          "bytes": 12243
+        },
+        {
+          "archive_path": "cap-std-4.0.3/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "bytes": 1023
+        }
+      ]
+    },
+    {
+      "name": "fs-set-times",
+      "version": "0.20.3",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "94e7099f6313ecacbe1256e8ff9d617b75d1bcb16a6fddef94866d225a01a14a",
+      "dependencies": [
+        "io-lifetimes 2.0.4",
+        "rustix",
+        "windows-sys 0.59.0"
+      ],
+      "archive_name": "fs-set-times-0.20.3.crate",
+      "archive_bytes": 15964,
+      "declared_license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/bytecodealliance/fs-set-times",
+      "license_files": [
+        {
+          "archive_path": "fs-set-times-0.20.3/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "bytes": 10847
+        },
+        {
+          "archive_path": "fs-set-times-0.20.3/LICENSE-Apache-2.0_WITH_LLVM-exception",
+          "sha256": "268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5",
+          "bytes": 12243
+        },
+        {
+          "archive_path": "fs-set-times-0.20.3/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "bytes": 1023
+        }
+      ]
+    },
+    {
+      "name": "io-extras",
+      "version": "0.19.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "20fd6de4ccfcc187e38bc21cfa543cb5a302cb86a8b114eb7f0bf0dc9f8ac00f",
+      "dependencies": [
+        "io-lifetimes 3.0.1",
+        "windows-sys 0.59.0"
+      ],
+      "archive_name": "io-extras-0.19.0.crate",
+      "archive_bytes": 34951,
+      "declared_license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/sunfishcode/io-extras",
+      "license_files": [
+        {
+          "archive_path": "io-extras-0.19.0/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "bytes": 10847
+        },
+        {
+          "archive_path": "io-extras-0.19.0/LICENSE-Apache-2.0_WITH_LLVM-exception",
+          "sha256": "268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5",
+          "bytes": 12243
+        },
+        {
+          "archive_path": "io-extras-0.19.0/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "bytes": 1023
+        }
+      ]
+    },
+    {
+      "name": "io-lifetimes",
+      "version": "2.0.4",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "06432fb54d3be7964ecd3649233cddf80db2832f47fec34c01f65b3d9d774983",
+      "archive_name": "io-lifetimes-2.0.4.crate",
+      "archive_bytes": 28501,
+      "declared_license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/sunfishcode/io-lifetimes",
+      "license_files": [
+        {
+          "archive_path": "io-lifetimes-2.0.4/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "bytes": 10847
+        },
+        {
+          "archive_path": "io-lifetimes-2.0.4/LICENSE-Apache-2.0_WITH_LLVM-exception",
+          "sha256": "268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5",
+          "bytes": 12243
+        },
+        {
+          "archive_path": "io-lifetimes-2.0.4/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "bytes": 1023
+        }
+      ]
+    },
+    {
+      "name": "io-lifetimes",
+      "version": "3.0.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "2f0fb0570afe1fed943c5c3d4102d5358592d8625fda6a0007fdbe65a92fba96",
+      "archive_name": "io-lifetimes-3.0.1.crate",
+      "archive_bytes": 28589,
+      "declared_license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/sunfishcode/io-lifetimes",
+      "license_files": [
+        {
+          "archive_path": "io-lifetimes-3.0.1/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "bytes": 10847
+        },
+        {
+          "archive_path": "io-lifetimes-3.0.1/LICENSE-Apache-2.0_WITH_LLVM-exception",
+          "sha256": "268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5",
+          "bytes": 12243
+        },
+        {
+          "archive_path": "io-lifetimes-3.0.1/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "bytes": 1023
+        }
+      ]
+    },
+    {
+      "name": "maybe-owned",
+      "version": "0.3.4",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "4facc753ae494aeb6e3c22f839b158aebd4f9270f55cd3c79906c45476c47ab4",
+      "archive_name": "maybe-owned-0.3.4.crate",
+      "archive_bytes": 14308,
+      "declared_license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rustonaut/maybe-owned",
+      "license_files": [
+        {
+          "archive_path": "maybe-owned-0.3.4/LICENSE-APACHE",
+          "sha256": "aecc100d0547aa3bcbe04bcf5cb87c7db0be11004602adfa5056edf8bb847b35",
+          "bytes": 10834
+        },
+        {
+          "archive_path": "maybe-owned-0.3.4/LICENSE-MIT",
+          "sha256": "ef2b3bbd7b718a7881253226313f103e89b379e1279681a3c1ebcb65a27d209d",
+          "bytes": 1058
+        }
+      ]
+    },
+    {
+      "name": "rustix-linux-procfs",
+      "version": "0.1.1",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "2fc84bf7e9aa16c4f2c758f27412dc9841341e16aa682d9c7ac308fe3ee12056",
+      "dependencies": [
+        "once_cell",
+        "rustix"
+      ],
+      "archive_name": "rustix-linux-procfs-0.1.1.crate",
+      "archive_bytes": 17465,
+      "declared_license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/sunfishcode/rustix-linux-procfs",
+      "license_files": [
+        {
+          "archive_path": "rustix-linux-procfs-0.1.1/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "bytes": 10847
+        },
+        {
+          "archive_path": "rustix-linux-procfs-0.1.1/LICENSE-Apache-2.0_WITH_LLVM-exception",
+          "sha256": "268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5",
+          "bytes": 12243
+        },
+        {
+          "archive_path": "rustix-linux-procfs-0.1.1/LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+          "bytes": 1023
+        }
+      ]
+    },
+    {
+      "name": "winx",
+      "version": "0.36.4",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "3f3fd376f71958b862e7afb20cfe5a22830e1963462f3a17f49d82a6c1d1f42d",
+      "dependencies": [
+        "bitflags",
+        "windows-sys 0.59.0"
+      ],
+      "archive_name": "winx-0.36.4.crate",
+      "archive_bytes": 13838,
+      "declared_license": "Apache-2.0 WITH LLVM-exception",
+      "repository": "https://github.com/sunfishcode/winx",
+      "license_files": [
+        {
+          "archive_path": "winx-0.36.4/LICENSE",
+          "sha256": "268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5",
+          "bytes": 12243
+        }
+      ]
+    }
+  ],
+  "new_registry_package_count": 11
+}

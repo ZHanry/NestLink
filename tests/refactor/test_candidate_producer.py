@@ -1,0 +1,314 @@
+"""Development candidate integrity and separation from production release trust."""
+import argparse
+import hashlib
+import importlib.util
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import tempfile
+import textwrap
+import unittest
+from unittest.mock import patch
+import zipfile
+
+ROOT = Path(__file__).resolve().parents[2]
+SPEC = importlib.util.spec_from_file_location("candidate_producer_test", ROOT / "scripts/refactor-candidate-producer.py")
+P = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(P)
+SOURCE = "1" * 40
+
+
+class CandidateTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix="candidate-contract-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.original_clean = P.clean_source
+        self.clean = patch.object(P, "clean_source").start()
+        self.addCleanup(patch.stopall)
+        patch.dict(os.environ, {"GITHUB_RUN_ID": "123", "GITHUB_RUN_ATTEMPT": "2"}).start()
+        self.cohort_path = self.root / "cohort/candidate-cohort.json"
+        index = {"schemaVersion": 2, "mediaType": "application/vnd.oci.image.index.v1+json", "manifests": [
+            {"digest": "sha256:" + digit * 64, "size": 100, "platform": {"os": "linux", "architecture": architecture}}
+            for digit, architecture in (("2", "amd64"), ("3", "arm64"))]}
+        P.write_json(self.cohort_path.parent / "oci-base-index.json", index)
+        self.value = {"schema_version": 1, "kind": "nestlink-development-candidate",
+                      "repository_node_id": P.REPOSITORY_ID, "version": P.VERSION,
+                      "product": "NestLink", "repository": P.REPOSITORY,
+                      "configuration_sha256": P.digest(ROOT / "config/candidate-producer.json"),
+                      "source_revision": SOURCE, "sequence": 1, "run_id": 123, "run_attempt": 2,
+                      "source_epoch": 1700000000, "android_version_code": 100001,
+                      "android_application_id": "com.zhanry.nestlink.candidate", "android_version_name": P.VERSION,
+                      "android_api_range": [30, 36], "oci_base": "ubuntu:24.04@sha256:" + P.digest(self.cohort_path.parent / "oci-base-index.json"),
+                      "signing": P.SIGNING, "production_update_eligible": False,
+                      "final_user_acceptance": "pending", "required_parts": sorted(P.EXPECTED),
+                      "required_roles": sorted(P.CURRENT_ROLES)}
+        P.write_json(self.cohort_path, self.value)
+        self.bundle = self.root / "parts-bundle"
+
+    def write(self, path, value):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(value if isinstance(value, bytes) else json.dumps(value).encode())
+        return path
+
+    def make_part(self, name):
+        artifacts = []
+        for role in sorted(P.EXPECTED[name]):
+            raw = {"packages": []} if role == "sbom-input" else (role + " fixture").encode()
+            path = self.write(self.bundle / "files" / (role + ".bin"), raw)
+            artifacts.append(P.record(self.bundle, path, role, SOURCE))
+        payload = []
+        if name in P.NATIVE:
+            for role in P.NATIVE[name][2]:
+                path = self.write(self.bundle / "native" / name / ("nestlink-" + role), (name + role).encode())
+                payload.append(P.record(self.bundle, path, "native-" + name + "-" + role, SOURCE))
+        evidence = []
+        for filename in sorted(P.EVIDENCE[name]):
+            raw = {"fixture": name}
+            if filename == name + "-readback.json" and name.startswith("oci-"):
+                raw = {"manifest_digest": "sha256:" + "4" * 64,
+                       "os_packages": [{"name": "libc6", "version": "2.39-fixture", "source": "glibc"}]}
+            path = self.write(self.bundle / "evidence" / filename, raw)
+            evidence.append(P.record(self.bundle, path, "evidence-" + filename.replace(".", "-"), SOURCE))
+        receipt = {"schema_version": 1, "kind": "nestlink-development-candidate-part", "part": name,
+                   "cohort_sha256": P.digest(self.cohort_path), "source_revision": SOURCE,
+                   "artifacts": artifacts, "payload": payload, "evidence": evidence}
+        self.write(self.bundle / "parts" / (name + ".json"), receipt)
+        return receipt
+
+    def parts(self):
+        return {name: self.make_part(name) for name in P.EXPECTED}
+
+    def test_preflight_needs_no_production_secret_and_preserves_base_index(self):
+        output = self.root / "preflight"
+        args = argparse.Namespace(source=SOURCE, sequence=1, run_id=123, run_attempt=2,
+                                  oci_base=self.value["oci_base"], oci_index=self.cohort_path.parent / "oci-base-index.json", output=output)
+        with patch.object(P.TOOLS, "run", return_value=b"1700000000\n"), patch.dict(os.environ, {}, clear=True):
+            P.preflight(args)
+        actual = P.cohort(output / "candidate-cohort.json")
+        self.assertEqual(actual, self.value)
+        self.assertEqual(P.digest(output / "oci-base-index.json"), args.oci_base.rsplit(":", 1)[1])
+        self.assertFalse(actual["production_update_eligible"])
+        self.assertEqual(actual["signing"]["android"], "development-only")
+
+    def test_cohort_rejects_production_claims_missing_platforms_or_other_ci_execution(self):
+        for field, invalid in (("signing", {**P.SIGNING, "windows": "passed"}),
+                               ("production_update_eligible", True), ("android_api_range", [31, 36]),
+                               ("required_parts", ["windows-x64"]), ("required_roles", []),
+                               ("android_application_id", "com.zhanry.nestlink"),
+                               ("repository_node_id", "R_kgDOTz-mRQ"),
+                               ("version", "15.0.0"),
+                               ("final_user_acceptance", "passed"), ("run_id", 999)):
+            self.write(self.cohort_path, {**self.value, field: invalid})
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                P.cohort(self.cohort_path)
+
+    def test_base_proof_rejects_tamper_and_single_architecture(self):
+        index = self.cohort_path.parent / "oci-base-index.json"
+        index.write_bytes(index.read_bytes() + b" ")
+        with self.assertRaisesRegex(ValueError, "digest"):
+            P.cohort(self.cohort_path)
+        data = json.loads(index.read_bytes())
+        data["manifests"] = data["manifests"][:1]
+        self.write(index, data)
+        with self.assertRaises(ValueError):
+            P.oci_index(index, "ubuntu:24.04@sha256:" + P.digest(index))
+
+    def test_no_part_or_android_abi_can_be_omitted(self):
+        self.parts()
+        android = self.bundle / "parts/android.json"
+        saved = android.read_bytes()
+        android.unlink()
+        with self.assertRaises(OSError):
+            P.read_parts(self.cohort_path, self.bundle)
+        android.write_bytes(saved)
+        receipt = json.loads(saved)
+        receipt["artifacts"] = receipt["artifacts"][:1]
+        self.write(android, receipt)
+        with self.assertRaisesRegex(ValueError, "platform/ABI"):
+            P.read_parts(self.cohort_path, self.bundle)
+
+    def test_cross_source_and_changed_bytes_are_rejected(self):
+        receipt = self.make_part("web")
+        part_path = self.bundle / "parts/web.json"
+        for changed in ({**receipt, "source_revision": "2" * 40},
+                        {**receipt, "cohort_sha256": "3" * 64}):
+            self.write(part_path, changed)
+            with self.assertRaisesRegex(ValueError, "source/cohort"):
+                P.read_parts(self.cohort_path, self.bundle, {"web"})
+        self.write(part_path, receipt)
+        artifact = self.bundle / receipt["artifacts"][0]["path"]
+        artifact.write_bytes(b"tampered")
+        with self.assertRaisesRegex(ValueError, "bytes changed"):
+            P.read_parts(self.cohort_path, self.bundle, {"web"})
+
+    def test_native_payload_missing_executable_is_rejected(self):
+        receipt = self.make_part("linux-arm64")
+        receipt["payload"].pop()
+        self.write(self.bundle / "parts/linux-arm64.json", receipt)
+        with self.assertRaisesRegex(ValueError, "executable matrix"):
+            P.read_parts(self.cohort_path, self.bundle, {"linux-arm64"})
+
+    def test_collision_traversal_and_unrecorded_oci_provenance_are_rejected(self):
+        receipt = self.make_part("android")
+        first, second = receipt["artifacts"]
+        receipt["artifacts"][1] = {**first, "id": second["id"], "role": second["role"]}
+        self.write(self.bundle / "parts/android.json", receipt)
+        with self.assertRaisesRegex(ValueError, "collide"):
+            P.read_parts(self.cohort_path, self.bundle, {"android"})
+        receipt["artifacts"][1] = {**second, "path": "../escape.apk"}
+        self.write(self.bundle / "parts/android.json", receipt)
+        with self.assertRaises(ValueError):
+            P.read_parts(self.cohort_path, self.bundle, {"android"})
+        oci = self.make_part("oci-x64")
+        oci["evidence"] = [item for item in oci["evidence"] if not item["path"].endswith("-readback.json")]
+        self.write(self.bundle / "parts/oci-x64.json", oci)
+        with self.assertRaisesRegex(ValueError, "provenance"):
+            P.read_parts(self.cohort_path, self.bundle, {"oci-x64"})
+
+    def test_source_must_match_head_and_remain_clean(self):
+        for head, status in (("2" * 40, b""), (SOURCE, b" M Cargo.toml\n"), (SOURCE, b"?? unknown.txt\n")):
+            with self.subTest(head=head, status=status), patch.object(P.TOOLS, "run", side_effect=[head.encode(), status]), self.assertRaises(ValueError):
+                self.original_clean(SOURCE, P.VERSION)
+
+    def test_new_rc_source_version_is_unified_and_protocol_namespace_is_independent(self):
+        source = self.root / "source-fixture"
+        source.mkdir()
+        (source / "Cargo.toml").write_text('[workspace.package]\nversion="0.1.0-rc.1"\n[workspace.dependencies]\nnestlink-fixture={path="crates/fixture",version="=0.1.0-rc.1"}\n', encoding="utf-8")
+        self.write(source / "compatibility.json", {"version": P.VERSION, "namespace": "v15"})
+        self.write(source / "protocol-spec/contract.json", {"product_version": P.VERSION, "namespace": "v15"})
+        metadata = source / "protocol-spec/openapi.json"
+        self.write(metadata, {"info": {"version": P.VERSION}})
+        with patch.object(P, "ROOT", source), patch.object(P.TOOLS, "run", side_effect=[SOURCE.encode(), b""]):
+            self.original_clean(SOURCE, P.VERSION)
+        self.write(metadata, {"info": {"version": "15.0.0"}})
+        with patch.object(P, "ROOT", source), patch.object(P.TOOLS, "run", side_effect=[SOURCE.encode(), b""]), self.assertRaisesRegex(ValueError, "version metadata"):
+            self.original_clean(SOURCE, P.VERSION)
+
+    def test_zip_readback(self):
+        inputs = self.root / "archive-input"
+        self.write(inputs / "nested/run", b"executable fixture")
+        self.write(inputs / "readme.txt", b"candidate")
+        output = self.root / "material.zip"
+        P.zip_tree(inputs, output, self.value["source_epoch"])
+        with zipfile.ZipFile(output) as archive:
+            self.assertEqual(archive.read("nested/run"), b"executable fixture")
+            self.assertEqual(set(archive.namelist()), {"nested/run", "readme.txt"})
+
+    def test_real_symlink_cannot_be_archived(self):
+        inputs = self.root / "linked-input"
+        self.write(inputs / "target", b"must not duplicate")
+        try:
+            (inputs / "link").symlink_to(inputs / "target")
+        except OSError:
+            self.skipTest("Host lacks symbolic-link creation permission")
+        with self.assertRaises(ValueError):
+            P.zip_tree(inputs, self.root / "linked.zip", self.value["source_epoch"])
+
+    @unittest.skipUnless(shutil.which("dpkg-deb"), "Requires native Debian packaging tools")
+    def test_actual_deb_rc_version_and_isolated_files(self):
+        inputs = self.root / "linux-input"
+        self.write(inputs / "nestlink-desktop", b"desktop fixture bytes")
+        self.write(inputs / "nestlink-daemon", b"daemon fixture bytes")
+        output = self.root / "candidate.deb"
+        P.deb_candidate(inputs, output, "desktop", "arm64", self.value)
+        fields = P.TOOLS.run(["dpkg-deb", "--field", output, "Version", "Architecture", "Package"]).decode()
+        self.assertIn("Version: 0.1.0~rc.1", fields)
+        self.assertIn("Architecture: arm64", fields)
+        self.assertIn("Package: nestlink-rc-desktop", fields)
+        extracted = self.root / "installed"
+        P.TOOLS.run(["dpkg-deb", "--extract", output, extracted])
+        self.assertEqual((extracted / "opt/nestlink-rc/desktop/nestlink-desktop").read_bytes(), b"desktop fixture bytes")
+        self.assertTrue((extracted / "usr/bin/nestlink-rc").stat().st_mode & 0o111)
+        self.assertFalse((extracted / "etc/systemd").exists())
+
+    def test_hashed_trunk_stylesheets_are_accepted_and_missing_references_rejected(self):
+        inputs = self.root / "web"
+        self.write(inputs / "index.html", b'<link rel="stylesheet" href="/nestlink-cafef00d.css"><script type="module">import "./app.js";</script>')
+        css = self.write(inputs / "nestlink-cafef00d.css", b"body{color:black}")
+        self.write(inputs / "app.js", b"// bootstrap")
+        self.write(inputs / "app.wasm", b"\x00asm")
+        args = argparse.Namespace(cohort=self.cohort_path, input=inputs, output=self.root / "web-output")
+        with patch.object(P.TOOLS, "tool_facts", return_value=[{"tool": "fixture"}]):
+            P.collect_web(args)
+        self.assertIn("web", P.read_parts(self.cohort_path, args.output, {"web"})[1])
+        css.unlink()
+        args.output = self.root / "web-missing-css"
+        with self.assertRaises(OSError):
+            P.collect_web(args)
+
+    def test_freeze_keeps_every_role_and_all_user_acceptance_pending(self):
+        self.parts()
+        output = self.root / "frozen"
+        P.freeze(argparse.Namespace(cohort=self.cohort_path, bundle=self.bundle, output=output, acceptance_evidence=None))
+        manifest = P.read_json(output / "candidate-build-manifest.json")
+        self.assertEqual({item["role"] for item in manifest["artifacts"]}, P.CURRENT_ROLES)
+        self.assertEqual(len(manifest["artifacts"]), 18)
+        self.assertFalse(manifest["production_update_eligible"])
+        self.assertEqual(manifest["user_full_functional_acceptance"], "pending")
+        for artifact in manifest["artifacts"]:
+            self.assertEqual(artifact["source_revision"], SOURCE)
+            P.verify_record(output, artifact, SOURCE)
+        self.assertEqual(manifest["repository_node_id"], "R_kgDOVNHMvg")
+        self.assertEqual(manifest["version"], "0.1.0-rc.1")
+        self.assertEqual(manifest["product"], "NestLink")
+        self.assertEqual({path.name for path in output.iterdir()}, {"files", "candidate-build-manifest.json"})
+        self.assertEqual(len(manifest["acceptance_cases"]), 30)
+        self.assertTrue(all(item["status"] == "pending" for item in manifest["acceptance_cases"]))
+        self.assertIn("90-minute-soak", {item["id"] for item in manifest["acceptance_cases"]})
+        self.assertNotIn("72-hour-soak", {item["id"] for item in manifest["acceptance_cases"]})
+        with zipfile.ZipFile(output / "files/NestLink-candidate-materials.zip") as archive:
+            self.assertEqual(P.digest(self.cohort_path.parent / "oci-base-index.json"), hashlib.sha256(archive.read("oci-base-index.json")).hexdigest())
+            self.assertTrue(any(name.startswith("native/linux-arm64/") for name in archive.namelist()))
+        payload = P.read_json(output / "files/NestLink-candidate-native-payload.json")
+        self.assertEqual(payload["purpose"], "development-candidate-native-payload")
+        self.assertFalse(payload["production_update_eligible"])
+
+    def test_freeze_refuses_existing_or_source_tree_outputs(self):
+        self.parts()
+        for output in (self.bundle, ROOT / "candidate-output-forbidden"):
+            with self.subTest(output=output), self.assertRaises(ValueError):
+                P.freeze(argparse.Namespace(cohort=self.cohort_path, bundle=self.bundle, output=output, acceptance_evidence=None))
+
+    def test_workflow_preserves_matrix_bounds_and_has_no_publication_or_secrets(self):
+        workflow = (ROOT / ".github/workflows/v15-candidate-build.yml").read_text(encoding="utf-8")
+        for platform in ("windows-2022", "ubuntu-24.04", "ubuntu-24.04-arm", "aarch64-linux-android,x86_64-linux-android"):
+            self.assertIn(platform, workflow)
+        limits = re.findall(r"timeout-minutes: ([0-9]+)", workflow)
+        self.assertEqual(len(limits), 6)
+        self.assertTrue(all(0 < int(limit) <= 90 for limit in limits))
+        self.assertNotIn("secrets.", workflow)
+        self.assertNotIn("contents: write", workflow)
+        self.assertNotIn("cargo test", workflow)
+        self.assertNotIn("refactor-release-publish.py", workflow)
+        self.assertNotIn("R_kgDOTz-mRQ", workflow)
+        self.assertNotIn("ZHanry/home-tunnel", workflow)
+        self.assertIn("R_kgDOVNHMvg", workflow)
+        self.assertIn('"--locked=true"', workflow)
+        self.assertIn(":app:assembleDebug", workflow)
+        self.assertIn("--project-cache-dir", workflow)
+        for reference in re.findall(r"uses: ([^\s]+)", workflow):
+            self.assertRegex(reference, r"@[0-9a-f]{40}$")
+        # Compile every embedded Python action without executing CI commands.
+        lines, blocks = workflow.splitlines(), []
+        for index, line in enumerate(lines):
+            if line.strip() != "shell: python":
+                continue
+            cursor = index + 1
+            while lines[cursor] != "        run: |":
+                cursor += 1
+            cursor += 1
+            block = []
+            while cursor < len(lines) and (lines[cursor].startswith("          ") or not lines[cursor]):
+                block.append(lines[cursor])
+                cursor += 1
+            blocks.append("\n".join(block) + "\n")
+        self.assertGreaterEqual(len(blocks), 8)
+        for index, block in enumerate(blocks):
+            compile(textwrap.dedent(block), "candidate-workflow-python-" + str(index), "exec")
+
+
+if __name__ == "__main__":
+    unittest.main()

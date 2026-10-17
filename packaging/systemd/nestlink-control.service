@@ -1,0 +1,31 @@
+[Unit]
+Description=NestLink v15 control service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nestlink
+Group=nestlink
+WorkingDirectory=/var/lib/nestlink-v15
+ExecStart=/usr/bin/nestlink-server control --config /var/lib/nestlink-v15/server.toml
+Restart=on-failure
+RestartSec=3
+UMask=0077
+StateDirectory=nestlink-v15
+StateDirectoryMode=0700
+RuntimeDirectory=nestlink
+RuntimeDirectoryMode=0750
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/nestlink-v15 /run/nestlink
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+LockPersonality=true
+RestrictSUIDSGID=true
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

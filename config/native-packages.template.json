@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "product": "NestLink-v15",
+  "purpose": "native-packages",
+  "version": "15.0.0",
+  "release_sequence": 1,
+  "source_revision": null,
+  "artifacts": [
+    {
+      "id": "windows-x86_64-desktop",
+      "platform": "windows",
+      "architecture": "x86_64",
+      "role": "desktop",
+      "format": "inno",
+      "path": "NestLink-windows-x64.exe",
+      "bytes": null,
+      "sha256": null,
+      "state_compatibility": null,
+      "payload_manifest_sha256": null,
+      "windows_certificate_sha256": null
+    },
+    {
+      "id": "windows-x86_64-privileged",
+      "platform": "windows",
+      "architecture": "x86_64",
+      "role": "privileged",
+      "format": "inno",
+      "path": "NestLink-windows-x64-privileged.exe",
+      "bytes": null,
+      "sha256": null,
+      "state_compatibility": null,
+      "payload_manifest_sha256": null,
+      "windows_certificate_sha256": null
+    },
+    {
+      "id": "linux-x86_64-desktop",
+      "platform": "linux",
+      "architecture": "x86_64",
+      "role": "desktop",
+      "format": "deb",
+      "path": "NestLink-linux-x64.deb",
+      "bytes": null,
+      "sha256": null,
+      "state_compatibility": null,
+      "payload_manifest_sha256": null
+    },
+    {
+      "id": "linux-aarch64-desktop",
+      "platform": "linux",
+      "architecture": "aarch64",
+      "role": "desktop",
+      "format": "deb",
+      "path": "NestLink-linux-arm64.deb",
+      "bytes": null,
+      "sha256": null,
+      "state_compatibility": null,
+      "payload_manifest_sha256": null
+    },
+    {
+      "id": "linux-x86_64-server",
+      "platform": "linux",
+      "architecture": "x86_64",
+      "role": "server",
+      "format": "deb",
+      "path": "NestLink-server-linux-x64.deb",
+      "bytes": null,
+      "sha256": null,
+      "state_compatibility": null,
+      "payload_manifest_sha256": null
+    },
+    {
+      "id": "linux-aarch64-server",
+      "platform": "linux",
+      "architecture": "aarch64",
+      "role": "server",
+      "format": "deb",
+      "path": "NestLink-server-linux-arm64.deb",
+      "bytes": null,
+      "sha256": null,
+      "state_compatibility": null,
+      "payload_manifest_sha256": null
+    }
+  ]
+}

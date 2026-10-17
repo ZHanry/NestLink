@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "scope": "Linux x86_64 Web build host tools; not product runtime dependencies or acceptance",
+  "trunk": {"version": "0.21.14", "license": "MIT OR Apache-2.0"},
+  "wasm_bindgen_cli": {"version": "0.2.129", "license": "MIT OR Apache-2.0"},
+  "wasm_opt": {
+    "release": "version_133",
+    "version_output": "wasm-opt version 133 (version_133)",
+    "url": "https://github.com/WebAssembly/binaryen/releases/download/version_133/binaryen-version_133-x86_64-linux.tar.gz",
+    "bytes": 111200018,
+    "sha256": "2dc9c7813f5375db93d96ead4b78222fcc3e2677bbb832297af4797782a37489",
+    "official_sha256_url": "https://github.com/WebAssembly/binaryen/releases/download/version_133/binaryen-version_133-x86_64-linux.tar.gz.sha256",
+    "official_sha256_sidecar_sha256": "7f7f1e28667e1bfb260b69b361cabfa992e7ee5deaf6abdf577c3985cc8417bc",
+    "license": "Apache-2.0; bundled FP16 retains MIT",
+    "license_sources": [
+      {"path": "LICENSE", "sha256": "64c0d02491e16eced74826440ecd2bcf7722d37fa586faf457b2494293afbffe"},
+      {"path": "third_party/FP16/LICENSE", "sha256": "17e4f539024be2749ee729d1e2f01d24cef12ece8c9bf18e91a4349be29c80bf"}
+    ],
+    "local_install_receipt": "artifacts/core-verification/web-binaryen-133-install-20261015-attempt01.json",
+    "local_license_review": "artifacts/core-verification/web-binaryen-133-license-review-20261015.json"
+  },
+  "ci_status": "Workflow prepared; hosted execution has not been claimed"
+}

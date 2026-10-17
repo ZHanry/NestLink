@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "scope": "Full fixed 799-asset local byte preservation after current GitHub metadata before/after verification and complete SHA256 of every existing archive blob; not durable remote upload, imported history or product acceptance",
+  "completed_at": "2026-10-13T21:10:51.551094+00:00",
+  "recorded_at": "2026-10-13T21:15:24.480046+00:00",
+  "inventory": {
+    "path": "docs/refactor/history-audit/remote-preservation-inventory-2026-10-14.json",
+    "sha256": "8710e82fde1ac829aa25246a7fb763ace1be4ff16e0c21fed263684b4e058ec7"
+  },
+  "full_archive_report": {
+    "path": "C:\\Users\\Popdo\\NestLink-legacy-archive-20261014\\archive-20261013-205332-fff54c53.json",
+    "sha256": "58405856dadaa5b6fca396ab3b600853469569a978cf4a285440ac2fc4ff5ce6"
+  },
+  "source_script": {
+    "path": "scripts/refactor-release-archive.py",
+    "sha256": "3ccc7fdb600d8680a769c013d96dda05524dae680d76e907d89af8314b72a5b8",
+    "preserved_snapshot": "C:\\Users\\Popdo\\NestLink-legacy-archive-20261014\\refactor-release-archive-3ccc7fdb600d8680a769c013d96dda05524dae680d76e907d89af8314b72a5b8.py"
+  },
+  "archive_root": "C:\\Users\\Popdo\\NestLink-legacy-archive-20261014",
+  "release_count": 66,
+  "inventory_asset_count": 799,
+  "verified_assets": 799,
+  "verified_bytes": 16177009767,
+  "components": [
+    {
+      "component": "hub",
+      "repository": "ZHanry/home-tunnel",
+      "repository_node_id": "R_kgDOTz-mRQ",
+      "verified_assets": 120,
+      "verified_bytes": 1120661056
+    },
+    {
+      "component": "server",
+      "repository": "ZHanry/home-tunnel-server",
+      "repository_node_id": "R_kgDOUSDIiA",
+      "verified_assets": 144,
+      "verified_bytes": 20093670
+    },
+    {
+      "component": "client",
+      "repository": "ZHanry/home-tunnel-client",
+      "repository_node_id": "R_kgDOUSDI3Q",
+      "verified_assets": 368,
+      "verified_bytes": 9856093755
+    },
+    {
+      "component": "android",
+      "repository": "ZHanry/home-tunnel-android",
+      "repository_node_id": "R_kgDOUSDJHw",
+      "verified_assets": 167,
+      "verified_bytes": 5180161286
+    }
+  ],
+  "all_inventory_bytes_verified": true,
+  "durable_remote_archive_uploaded": false,
+  "history_imported": false,
+  "product_acceptance": false,
+  "finalization_ready": false,
+  "retained_original_reports": [
+    {
+      "path": "C:\\Users\\Popdo\\NestLink-legacy-archive-20261014\\archive-20261013-180236-2f706689.json",
+      "sha256": "72d889ace6e6841b9ad5c388d45abe76ca6e4fea0657bfd78b90bb9a0cd040e3"
+    },
+    {
+      "path": "C:\\Users\\Popdo\\NestLink-legacy-archive-20261014\\archive-20261013-194158-2ef3ebb5.json",
+      "sha256": "02c9294373d8ab69f9de7b7ff22460356d6710c249e4d9795f5e04384fdccd12"
+    }
+  ],
+  "remaining_requirements": [
+    "Durable remote preservation with independent download/hash verification",
+    "Audited history import and retention of original licences/commit mappings/prefixed tags",
+    "Preservation of dirty/ignored local work and closure of three unresolved gitlinks",
+    "Full v3 product/platform acceptance from fixed build outputs before rename/main-only/release/deletion"
+  ]
+}

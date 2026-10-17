@@ -1,0 +1,17 @@
+# Example for a relay node. Replace the example DNS name and TEST-NET address
+# before use. Keep this file private to the service account (mode 0600 on Unix).
+realm = "turn.example.net"
+udp_bind = "0.0.0.0:3478"
+tcp_bind = "0.0.0.0:3478"
+tls_bind = "0.0.0.0:5349"
+tls_certificate_file = "/etc/nestlink/turn/fullchain.pem"
+tls_private_key_file = "/etc/nestlink/turn/privkey.pem"
+max_connections = 128
+
+# All ports in this range must be reachable from the public address and
+# forwarded to bind_ip when the node is behind a one-to-one NAT.
+[[relay_port_pools]]
+bind_ip = "0.0.0.0"
+public_ip = "203.0.113.10"
+min_port = 49152
+max_port = 65535

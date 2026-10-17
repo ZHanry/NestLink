@@ -1,0 +1,13 @@
+# Browser WebRTC signaling
+
+The browser controller is the initial offerer and is the only endpoint that requests ICE restart in the current browser contract. SDP is carried in signed `SignalPayload` records; trickle candidates are not supported. Every description binds its DTLS SHA-256 fingerprint to the signed payload.
+
+`SignalPayload.network_generation` is monotonic for its sender and is not shared between endpoints. A controller offer increments its own network generation after a network change. A host answer keeps the host's own network generation and sets `WebRtcDescription.in_reply_to_sequence` to the exact `SignalPayload.sequence` of the offer it answers. Offers omit this field. Answers without a positive offer sequence are invalid.
+
+The browser applies an answer only when its `in_reply_to_sequence` matches its latest published offer sequence. A lower reference is a delayed answer and is ignored; a higher reference is a protocol error. The SDK independently enforces monotonic signaling sequence, lease sequence, sender identity, and sender-local network generation. A restart that fails after changing local ICE state closes the old peer instead of presenting it as an active session.
+
+The management server accepts a host answer only when the referenced sequence is the latest stored controller offer for that session. This check is transactional with storing the answer, so an answer racing a newer offer is rejected. The browser controller and native host answerer both use the verified permit and signed signaling APIs. The browser obtains its temporary endpoint lease and TURN credentials from the trusted management SDK; it does not trust ICE servers or TURN credentials embedded in peer SDP.
+
+The working tree includes a receive-only browser controller flow and a native host answerer lifecycle. Managed TURN allocations remain peerless until both endpoints sign the current candidate binding. NodeControl gives that binding an independent monotonic deadline, clears its allowlist when a signed snapshot omits the binding, and accepts a replacement only when its signed issue time advances. Expiry denies peer operations immediately and the TURN service closes the active allocation on its reaper cadence without changing the grant's separate lease deadline.
+
+The browser flow does not yet provide remote input, file transfer, or clipboard operations, and no real browser-to-native media end-to-end acceptance run has been completed. Product capture providers also currently use the default display path where selection UI is unavailable. Build success or signaling tests alone do not establish cross-platform media quality or external-network TURN reachability.

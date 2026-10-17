@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "kind": "nestlink-native-codecs-lock",
+  "sources": [
+    {
+      "name": "libvpx",
+      "version": "1.16.0",
+      "repository": "https://github.com/webmproject/libvpx",
+      "commit": "1024874c5919305883187e2953de8fcb4c3d7fa6",
+      "url": "https://codeload.github.com/webmproject/libvpx/tar.gz/1024874c5919305883187e2953de8fcb4c3d7fa6",
+      "archive_sha256": "274c00c0b21f03a9152e324b1989f73b74268aa8545b39ef5faccc50fdb56393",
+      "archive_bytes": 5637178,
+      "archive_prefix": "libvpx-1024874c5919305883187e2953de8fcb4c3d7fa6",
+      "max_unpacked_bytes": 268435456,
+      "max_members": 20000,
+      "license_files": [
+        "LICENSE",
+        "PATENTS",
+        "third_party/x86inc/LICENSE"
+      ]
+    },
+    {
+      "name": "opus",
+      "version": "1.6.1",
+      "repository": "https://github.com/xiph/opus",
+      "commit": "22244de5a79bd1d6d623c32e72bf1954b56235be",
+      "url": "https://codeload.github.com/xiph/opus/tar.gz/22244de5a79bd1d6d623c32e72bf1954b56235be",
+      "archive_sha256": "3267aa969b2b26542417f57819a5bc25d5079355300307dd2dddc7c704aed418",
+      "archive_bytes": 4888967,
+      "archive_prefix": "opus-22244de5a79bd1d6d623c32e72bf1954b56235be",
+      "max_unpacked_bytes": 268435456,
+      "max_members": 20000,
+      "license_files": [
+        "COPYING",
+        "LICENSE_PLEASE_READ.txt"
+      ]
+    }
+  ],
+  "targets": {
+    "x86_64-pc-windows-msvc": {
+      "os": "windows",
+      "arch": "x86_64",
+      "crt": "dynamic",
+      "vpx_target": "x86_64-win64-vs17",
+      "libraries": {
+        "vpx": "lib/vpx.lib",
+        "opus": "lib/opus.lib"
+      }
+    },
+    "x86_64-unknown-linux-gnu": {
+      "os": "linux",
+      "arch": "x86_64",
+      "crt": "system",
+      "vpx_target": "x86_64-linux-gcc",
+      "libraries": {
+        "vpx": "lib/libvpx.a",
+        "opus": "lib/libopus.a"
+      }
+    },
+    "aarch64-linux-android": {
+      "os": "android",
+      "arch": "aarch64",
+      "android_abi": "arm64-v8a",
+      "crt": "bionic",
+      "vpx_target": "arm64-android-gcc",
+      "libraries": {
+        "vpx": "lib/libvpx.a",
+        "opus": "lib/libopus.a"
+      }
+    },
+    "x86_64-linux-android": {
+      "os": "android",
+      "arch": "x86_64",
+      "android_abi": "x86_64",
+      "crt": "bionic",
+      "vpx_target": "x86_64-android-gcc",
+      "libraries": {
+        "vpx": "lib/libvpx.a",
+        "opus": "lib/libopus.a"
+      }
+    },
+    "aarch64-unknown-linux-gnu": {
+      "os": "linux",
+      "arch": "aarch64",
+      "crt": "system",
+      "vpx_target": "arm64-linux-gcc",
+      "libraries": {
+        "vpx": "lib/libvpx.a",
+        "opus": "lib/libopus.a"
+      }
+    }
+  },
+  "android_ndk": {
+    "revision": "27.2.12479018",
+    "host_tag": "linux-x86_64",
+    "api_level": 30,
+    "page_size_bytes": 16384,
+    "final_shared_object_linker_flag": "-Wl,-z,max-page-size=16384",
+    "repository_url": "https://dl.google.com/android/repository/repository2-3.xml",
+    "linux_archive_url": "https://dl.google.com/android/repository/android-ndk-r27c-linux.zip",
+    "linux_archive_bytes": 663987688,
+    "linux_archive_sha1": "090e8083a715fdb1a3e402d0763c388abb03fb4e",
+    "linux_archive_sha256": "59c2f6dc96743b5daf5d1626684640b20a6bd2b1d85b13156b90333741bad5cc"
+  },
+  "profile": "release",
+  "linkage": "static",
+  "features": {
+    "vp8": true,
+    "vp8_encoder": true,
+    "vp8_decoder": true,
+    "vp9": false,
+    "opus_float": true,
+    "opus_fixed_point": false,
+    "opus_dred": false,
+    "opus_deep_plc": false,
+    "opus_osce": false,
+    "opus_custom_modes": false,
+    "opus_nonthreadsafe_pseudostack": false
+  },
+  "cross_compilation_policy": "Native Windows x64 and Linux x64/ARM64 builds require matching host architectures and compilers. Android ARM64 and x86_64 are built only on Linux x86_64 with the exact pinned Google NDK revision above. Windows ARM64 remains unsupported. Every ELF static archive object is checked against its target and cannot be relabeled."
+}

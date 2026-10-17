@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "alpn": "nestlink-ipc/15",
+  "transport": "TLS 1.3 over a kernel-selected IPv4 loopback port",
+  "authentication": "Mutual Ed25519 public-key pins derived with purpose-separated HKDF from this user's private local IPC key. TLS transcript signatures prove both private keys. TLS resumption and early data disabled.",
+  "endpoint": "Only a bounded private endpoint file in the caller-approved NestLink v15 state directory. The endpoint may not supply a trusted key or a non-loopback address. Its runtime UUID must match the authenticated daemon hello.",
+  "frame": "u32 big-endian nonzero JSON byte length followed by strict UTF-8 JSON; length is checked before allocation",
+  "binary_media": {
+    "transport": "A separate connection uses the same mutually pinned TLS endpoint. After one authenticated OpenNativeVideo JSON request and one JSON VideoStreamOpened response, the connection switches permanently to a binary-only server-to-client stream. It never carries or raises the JSON frame limit.",
+    "frame": "u32 big-endian body length, a fixed 140-byte header, then zero or one BGRA8 pixel payload. Header binds runtime_id, UI generation, request_id, connection generation, layout epoch, source, frame sequence, 90 kHz PTS, geometry, message kind, and payload length.",
+    "limits": {
+      "header_bytes": 140,
+      "payload_bytes": 67108864,
+      "frame_bytes": 67109004,
+      "write_chunk_bytes": 65536,
+      "frame_send_seconds": 5
+    },
+    "authorization": "The daemon opens the stream only for the current connected controller View session. It rechecks the app generation, request and connection binding, source/layout and View lease while sending. Layout-change and closed messages carry no pixels; revocation, generation change, client disconnect, or daemon shutdown terminates the stream and clears the UI frame.",
+    "memory": "At most one decoded frame is in flight per subscribed UI and only the newest pending UI frame is retained. Maximum decoded payload is 64 MiB; the desktop keeps one bounded CPU frame and one texture for the active source."
+  },
+  "limits": {
+    "frame_bytes": 1048576,
+    "accepted_connections": 8,
+    "handshake_seconds": 2,
+    "frame_io_seconds": 20,
+    "endpoint_file_bytes": 1024
+  },
+  "ownership": "A held OS file lock admits one user daemon; old endpoint replacement happens only while holding it. The owner's shutdown stops accepted connection I/O and removes only its matching endpoint file.",
+  "actions": "nestlink-app-core serializable ID-bearing actions and immutable snapshots. Secrets travel only in authenticated transient zeroized transport buffers and one-consumption sensitive replies; they never enter a snapshot, log or reusable response cache.",
+  "file_operations": {
+    "source": "application-files.rs defines the strict JSON operations and sanitized replies; application-ipc.rs binds each operation to the proved request, connection generation and expected Core generation.",
+    "local_selection": "Only this authenticated local UI may supply its chosen absolute directories or upload file. The daemon opens the chosen capability on the owned file worker and rechecks session and revocable root consent. The peer receives opaque root IDs, approved labels and portable relative paths, never local absolute paths.",
+    "lifetime": "Host read/write services claim their proved channels once and initially publish empty registries. Local selection updates those registries. Session replacement revokes all roots; cancelling or dropping a UI request does not lose the owned task or its physical-cleanup result.",
+    "data": "File contents stay in the SDK/worker transport, not JSON IPC or reusable UI history. Replies contain bounded directory pages, task IDs, confirmed progress and sanitized error codes. A lost acknowledgement is queried, not automatically replayed."
+  },
+  "clipboard_operations": {
+    "source": "application-ipc.rs defines local direction selection, status and explicit one-shot Copy/Send actions. Commands and replies contain no clipboard text.",
+    "consent": "Both ends require independent local Read/Write approval in addition to the proved remote direction permit. An unselected host replies with ClipboardDenied immediately, without reading or writing its OS clipboard. Revocation is irreversible for the selected owner; adding a direction requires a new session.",
+    "lifetime": "Core owns the stable SDK and platform workers. Each action rechecks its complete request, connection and Core generation binding and revocable direction consent. A matching read reply is consumed before refusing revoked local write consent so the channel sequence remains usable. Physical cleanup pending is retained separately from command failure."
+  },
+  "security_boundary": "The normal UI and daemon run as the same unprivileged OS user. This interface is not a system-permission agent, never executes arbitrary commands and does not issue remote authority. Any process already able to read this user's protected IPC key is within the same local trust boundary.",
+  "maintenance": {
+    "admission": "Stable maintenance.lock shared startup handoff and exclusive normal-user maintenance owner; the daemon singleton and every desktop/chooser lifetime lock must actually release before ready.",
+    "authentication": "Maintenance connects through the existing purpose-separated mutual TLS pins, binds the existing runtime UUID, reads one current snapshot and sends Exit once on that same ordered connection. A lost response is not replayed on another runtime.",
+    "failure": "A persistent maintenance-incomplete.json fences startup after controller error, crash or timeout. A new explicit maintenance owner may recover only by quiescing and explicitly releasing; no forced kill, identity reset, quota reset or implicit user-data deletion.",
+    "installer": "Marked install roots use an additional installation-admission.lock before discovery of user states. The normal desktop/daemon keeps shared install admission until its state lifetime owner is established. Ubuntu root package owner and per-user Windows native owner retain exclusive install admission through activation.",
+    "scope": "Normal-user maintenance is not a privileged permission proxy and grants no remote authority. Control markers are bounded private create-new files keyed to one control UUID."
+  }
+}

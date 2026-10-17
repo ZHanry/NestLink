@@ -1,0 +1,77 @@
+name: Deployment feedback
+description: Share a real 9.0.0 installation result without exposing infrastructure.
+title: "[Deployment]: "
+labels: [deployment-feedback, triage]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include domains, IP addresses, credentials, tokens, private keys, or unredacted logs. 10.0.0 has no stable deployment package.
+  - type: dropdown
+    id: workflow
+    attributes:
+      label: What you tried
+      options:
+        - FRP service publishing
+        - Authorized UDP remote control
+        - Both
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Home Tunnel version
+      placeholder: 9.0.0
+    validations:
+      required: true
+  - type: dropdown
+    id: server_platform
+    attributes:
+      label: Server platform
+      options:
+        - Linux amd64
+        - Linux arm64
+        - Other source build
+    validations:
+      required: true
+  - type: dropdown
+    id: client_platform
+    attributes:
+      label: Client platform
+      options:
+        - Windows x64
+        - Linux amd64
+        - Linux arm64
+        - macOS amd64
+        - macOS arm64
+        - Android arm64
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result
+      options:
+        - Deployed successfully
+        - Partially deployed
+        - Blocked before the first connection
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Path followed
+    validations:
+      required: true
+  - type: textarea
+    id: blocker
+    attributes:
+      label: Result and blockers
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy checklist
+      options:
+        - label: I removed domains, public IPs, credentials, tokens, private keys, and personal deployment details.
+          required: true

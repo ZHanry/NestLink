@@ -1,0 +1,25 @@
+{
+    # Caddy administrative interface stays local and off the management origin.
+    admin unix//run/nestlink/caddy-admin.sock
+}
+
+{$NESTLINK_MANAGEMENT_HOST} {
+    encode zstd gzip
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options nosniff
+        Referrer-Policy no-referrer
+        Content-Security-Policy "default-src 'self'; connect-src 'self' wss:; img-src 'self' data:; style-src 'self'; script-src 'self' 'wasm-unsafe-eval'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    }
+    handle /api/v3/* {
+        reverse_proxy 127.0.0.1:28740 {
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto https
+        }
+    }
+    handle {
+        root * /usr/share/nestlink/web
+        try_files {path} /index.html
+        file_server
+    }
+}

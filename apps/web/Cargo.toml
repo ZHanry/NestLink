@@ -1,0 +1,108 @@
+[package]
+name = "nestlink-web"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[features]
+browser-verification = []
+
+[dependencies]
+base64.workspace = true
+futures-util.workspace = true
+futures-channel = "=0.3.34"
+leptos = { version = "=0.8.19", default-features = false, features = ["csr"] }
+nestlink-auth.workspace = true
+nestlink-identity.workspace = true
+nestlink-protocol.workspace = true
+nestlink-sdk.workspace = true
+nestlink-session.workspace = true
+nestlink-policy.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+zeroize.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+gloo-timers = { version = "=0.3.0", features = ["futures"] }
+js-sys = "=0.3.106"
+uuid = { workspace = true, features = ["js"] }
+wasm-bindgen = "0.2.129"
+wasm-bindgen-futures = "=0.4.79"
+web-sys = { version = "0.3.106", features = [
+    "Crypto",
+    "CryptoKey",
+    "Window",
+    "Document",
+    "DomRect",
+    "Element",
+    "HtmlElement",
+    "HtmlTextAreaElement",
+    "CompositionEvent",
+    "Event",
+    "EventTarget",
+    "Location",
+    "RtcConfiguration",
+    "RtcIceCandidatePairStats",
+    "RtcIceCandidateStats",
+    "RtcIceGatheringState",
+    "RtcIceServer",
+    "RtcIceTransportPolicy",
+    "RtcOfferOptions",
+    "RtcPeerConnection",
+    "RtcPeerConnectionState",
+    "RtcRtpTransceiverDirection",
+    "RtcRtpTransceiverInit",
+    "RtcRtpTransceiver",
+    "RtcSdpType",
+    "RtcSessionDescription",
+    "RtcSessionDescriptionInit",
+    "RtcStats",
+    "RtcStatsIceCandidatePairState",
+    "RtcStatsIceCandidateType",
+    "RtcStatsReport",
+    "RtcStatsType",
+    "RtcTrackEvent",
+    "MediaStreamTrack",
+    "MediaStream",
+    "HtmlMediaElement",
+    "HtmlVideoElement",
+    "Performance",
+    "RtcRtpReceiver",
+    "RtcDataChannel",
+    "RtcDataChannelInit",
+    "RtcDataChannelState",
+    "RtcDataChannelType",
+    "MessageEvent",
+    "KeyboardEvent",
+    "PointerEvent",
+    "InputEvent",
+    "Navigator",
+    "Storage",
+    "Clipboard",
+    "Blob",
+    "File",
+    "FileList",
+    "HtmlInputElement",
+    "HtmlAnchorElement",
+    "Url",
+    "IdbDatabase",
+    "IdbFactory",
+    "IdbObjectStore",
+    "IdbOpenDbRequest",
+    "IdbRequest",
+    "IdbTransaction",
+    "IdbTransactionMode",
+    "SubtleCrypto",
+] }
+
+[[bin]]
+name = "nestlink-web-browser-verification"
+path = "src/bin/browser_verification.rs"
+required-features = ["browser-verification"]
+test = false
+bench = false
+
+[lints]
+workspace = true

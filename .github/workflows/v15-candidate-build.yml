@@ -1,0 +1,377 @@
+name: Build NestLink 0.1.0 RC development candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_revision:
+        description: Full clean final source commit with all public product versions already 0.1.0-rc.1
+        type: string
+        required: true
+      candidate_sequence:
+        description: Development candidate sequence (1 through 999)
+        type: number
+        required: true
+      oci_base:
+        description: Reviewed Ubuntu 24.04 multi-architecture base (ubuntu:24.04@sha256 followed by the index digest)
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nestlink-rc-development-candidate
+  cancel-in-progress: false
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CANDIDATE_SOURCE: ${{ inputs.source_revision }}
+      CANDIDATE_SEQUENCE: ${{ inputs.candidate_sequence }}
+      CANDIDATE_OCI_BASE: ${{ inputs.oci_base }}
+    steps:
+      - name: Check dispatch scalars and the persistent repository identity
+        shell: python
+        env:
+          CANDIDATE_REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          import json, os, re, subprocess
+          source, sequence, repository = (os.environ[key] for key in ("CANDIDATE_SOURCE", "CANDIDATE_SEQUENCE", "CANDIDATE_REPOSITORY"))
+          if not re.fullmatch(r"[0-9a-f]{40}", source) or not re.fullmatch(r"[1-9][0-9]{0,2}", sequence):
+              raise SystemExit("Full lowercase source SHA and sequence 1 through 999 are required")
+          if not re.fullmatch(r"ubuntu:24\.04@sha256:[0-9a-f]{64}", os.environ["CANDIDATE_OCI_BASE"]):
+              raise SystemExit("Reviewed Ubuntu 24.04 index digest is required")
+          if repository != "ZHanry/NestLink":
+              raise SystemExit("Unexpected candidate repository")
+          identity = json.loads(subprocess.check_output(["gh", "api", "--method", "GET", "repos/" + repository], timeout=60))
+          if identity["node_id"] != "R_kgDOVNHMvg":
+              raise SystemExit("Candidate repository ID differs")
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_revision }}
+          persist-credentials: false
+      - name: Install OCI index inspector
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes skopeo
+      - name: Fix one Ubuntu 24.04 multi-architecture base and clean source cohort
+        shell: python
+        run: |
+          import hashlib, os, pathlib, subprocess
+          scratch = pathlib.Path(os.environ["RUNNER_TEMP"])
+          base = os.environ["CANDIDATE_OCI_BASE"]
+          raw = subprocess.check_output(["skopeo", "inspect", "--raw", "docker://docker.io/library/" + base], timeout=120)
+          index = scratch / "ubuntu-base-index.json"
+          index.write_bytes(raw)
+          if hashlib.sha256(raw).hexdigest() != base.rsplit(":", 1)[1]:
+              raise SystemExit("Downloaded OCI index differs from the reviewed digest")
+          subprocess.run(["python3", "-B", "scripts/refactor-candidate-producer.py", "preflight", "--source", os.environ["CANDIDATE_SOURCE"], "--sequence", os.environ["CANDIDATE_SEQUENCE"], "--run-id", os.environ["GITHUB_RUN_ID"], "--run-attempt", os.environ["GITHUB_RUN_ATTEMPT"], "--oci-base", base, "--oci-index", str(index), "--output", str(scratch / "candidate-cohort")], check=True, timeout=120)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: rc-development-cohort-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/candidate-cohort
+          if-no-files-found: error
+          retention-days: 90
+
+  native:
+    needs: preflight
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2022
+            target: x86_64-pc-windows-msvc
+            part: windows-x64
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+            part: linux-x64
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            part: linux-arm64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    env:
+      CANDIDATE_PART: ${{ matrix.part }}
+      RUST_TARGET: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_revision }}
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: rc-development-cohort-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/candidate-cohort
+      - name: Keep product and codec outputs outside source
+        shell: python
+        run: |
+          import os, pathlib
+          scratch = pathlib.Path(os.environ["RUNNER_TEMP"])
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as stream:
+              stream.write("CARGO_TARGET_DIR=" + str(scratch / "rust-build") + "\n")
+              stream.write("NESTLINK_CODEC_PREFIX=" + str(scratch / "native-codecs" / os.environ["RUST_TARGET"]) + "\n")
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+      - if: runner.os == 'Linux'
+        name: Install native Linux build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes build-essential cmake ninja-build nasm perl pkg-config libpipewire-0.3-dev libasound2-dev libwayland-dev libxkbcommon-dev libgl1-mesa-dev libudev-dev
+      - if: runner.os == 'Windows'
+        id: msys
+        uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e
+        with:
+          msystem: MSYS
+          install: make perl diffutils gawk sed grep coreutils nasm
+          cache: false
+      - if: runner.os == 'Windows'
+        name: Install the candidate installer compiler
+        run: choco upgrade innosetup --version=6.7.3 --yes --no-progress --allow-downgrade
+      - if: runner.os == 'Linux'
+        name: Build and verify pinned native codecs
+        run: python3 -B scripts/refactor-native-codecs.py build --target "$RUST_TARGET" --cache-dir "$RUNNER_TEMP/codec-sources" --work-dir "$RUNNER_TEMP/native-codecs" --jobs 4
+      - if: runner.os == 'Windows'
+        name: Build and verify pinned MSVC native codecs
+        run: python -B scripts/refactor-native-codecs.py build --target $env:RUST_TARGET --cache-dir "$env:RUNNER_TEMP/codec-sources" --work-dir "$env:RUNNER_TEMP/native-codecs" --msys-bin "${{ steps.msys.outputs.msys2-location }}/usr/bin" --nasm "${{ steps.msys.outputs.msys2-location }}/usr/bin/nasm.exe" --jobs 4
+      - name: Build native executables and isolated candidate installers
+        shell: python
+        run: |
+          import os, pathlib, subprocess
+          scratch = pathlib.Path(os.environ["RUNNER_TEMP"])
+          packages = ["nestlink-desktop", "nestlink-daemon", "nestlink-privileged" if os.name == "nt" else "nestlink-server"]
+          command = ["cargo", "build", "--release", "--locked", "--target", os.environ["RUST_TARGET"]]
+          for package in packages:
+              command.extend(["-p", package])
+          subprocess.run(command, check=True, timeout=4800)
+          collect = ["python", "-B", "scripts/refactor-candidate-producer.py", "collect-native", "--cohort", str(scratch / "candidate-cohort/candidate-cohort.json"), "--input", str(scratch / "rust-build" / os.environ["RUST_TARGET"] / "release"), "--output", str(scratch / "part"), "--target", os.environ["CANDIDATE_PART"], "--codec-prefix", os.environ["NESTLINK_CODEC_PREFIX"]]
+          if os.name == "nt":
+              compiler = next(pathlib.Path(os.environ[key]) / "Inno Setup 6/ISCC.exe" for key in ("ProgramFiles(x86)", "ProgramFiles") if (pathlib.Path(os.environ[key]) / "Inno Setup 6/ISCC.exe").is_file())
+              collect += ["--iscc", str(compiler)]
+          subprocess.run(collect, check=True, timeout=600)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: rc-development-part-${{ matrix.part }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/part
+          if-no-files-found: error
+          retention-days: 90
+
+  android:
+    needs: preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_revision }}
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: rc-development-cohort-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/candidate-cohort
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
+      - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a
+        with:
+          gradle-version: "8.13"
+          cache-disabled: true
+      - name: Keep Android product and project outputs outside source
+        shell: python
+        run: |
+          import os, pathlib
+          scratch = pathlib.Path(os.environ["RUNNER_TEMP"])
+          values = {"CARGO_TARGET_DIR": scratch / "rust-build", "GRADLE_USER_HOME": scratch / "gradle-home", "NESTLINK_CANDIDATE_ANDROID_BUILD": scratch / "android-build", "ANDROID_NDK_HOME": pathlib.Path(os.environ["ANDROID_HOME"]) / "ndk/27.2.12479018", "NESTLINK_CODEC_ARM64_PREFIX": scratch / "codecs-aarch64-linux-android/aarch64-linux-android", "NESTLINK_CODEC_X86_64_PREFIX": scratch / "codecs-x86_64-linux-android/x86_64-linux-android"}
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as stream:
+              for key, value in values.items():
+                  stream.write(key + "=" + str(value) + "\n")
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          targets: aarch64-linux-android,x86_64-linux-android
+      - name: Install pinned Android tools and build both ABI codec suppliers
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes build-essential cmake ninja-build nasm perl
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018"
+          cargo install cargo-ndk --version 3.5.4 --locked
+          for target in aarch64-linux-android x86_64-linux-android; do
+            python3 -B scripts/refactor-native-codecs.py build --target "$target" \
+              --work-dir "$RUNNER_TEMP/codecs-$target" --cache-dir "$RUNNER_TEMP/codec-sources" \
+              --ndk "$ANDROID_NDK_HOME" --jobs 4
+          done
+      - name: Build isolated development APKs and verify their real signer and 16 KiB JNI
+        shell: python
+        run: |
+          import json, os, pathlib, subprocess
+          scratch = pathlib.Path(os.environ["RUNNER_TEMP"])
+          cohort = json.loads((scratch / "candidate-cohort/candidate-cohort.json").read_text())
+          env = dict(os.environ, NESTLINK_RELEASE_SEQUENCE=str(cohort["sequence"]))
+          init = pathlib.Path("packaging/candidate/android.init.gradle").resolve()
+          subprocess.run(["gradle", "-p", "apps/android", "--no-daemon", "--no-build-cache", "--project-cache-dir", str(scratch / "gradle-project-cache"), "--max-workers=4", "-I", str(init), "-PnestlinkSplitAbi=true", ":app:assembleDebug"], env=env, check=True, timeout=4800)
+          tools = pathlib.Path(os.environ["ANDROID_HOME"]) / "build-tools/36.0.0"
+          subprocess.run(["python3", "-B", "scripts/refactor-candidate-producer.py", "collect-android", "--cohort", str(scratch / "candidate-cohort/candidate-cohort.json"), "--input", str(scratch / "android-build/app/outputs/apk/debug"), "--output", str(scratch / "part"), "--codec-arm64", os.environ["NESTLINK_CODEC_ARM64_PREFIX"], "--codec-x64", os.environ["NESTLINK_CODEC_X86_64_PREFIX"], "--apksigner", str(tools / "lib/apksigner.jar"), "--aapt2", str(tools / "aapt2"), "--zipalign", str(tools / "zipalign")], check=True, timeout=300)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: rc-development-part-android-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/part
+          if-no-files-found: error
+          retention-days: 90
+
+  web-and-metadata:
+    needs: preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      TRUNK_TOOLS_WASM_BINDGEN: "0.2.129"
+      TRUNK_TOOLS_WASM_OPT: "version_133"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_revision }}
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: rc-development-cohort-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/candidate-cohort
+      - name: Keep Web build outputs outside source
+        shell: python
+        run: |
+          import os, pathlib
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as stream:
+              stream.write("CARGO_TARGET_DIR=" + str(pathlib.Path(os.environ["RUNNER_TEMP"]) / "rust-build") + "\n")
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          targets: wasm32-unknown-unknown
+      - name: Install fixed Web tools
+        run: |
+          cargo install trunk --version 0.21.14 --locked
+          cargo install wasm-bindgen-cli --version 0.2.129 --locked
+          mkdir -p "$RUNNER_TEMP/binaryen"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/binaryen/archive.tar.gz" \
+            https://github.com/WebAssembly/binaryen/releases/download/version_133/binaryen-version_133-x86_64-linux.tar.gz
+          printf '%s  %s\n' 2dc9c7813f5375db93d96ead4b78222fcc3e2677bbb832297af4797782a37489 "$RUNNER_TEMP/binaryen/archive.tar.gz" | sha256sum --check --status
+          tar --extract --gzip --no-same-owner --file "$RUNNER_TEMP/binaryen/archive.tar.gz" --directory "$RUNNER_TEMP/binaryen" binaryen-version_133/bin/wasm-opt
+          test "$("$RUNNER_TEMP/binaryen/binaryen-version_133/bin/wasm-opt" --version)" = 'wasm-opt version 133 (version_133)'
+          printf '%s\n' "$RUNNER_TEMP/binaryen/binaryen-version_133/bin" >> "$GITHUB_PATH"
+      - name: Build and freeze Web and source/license/SBOM inputs
+        shell: python
+        run: |
+          import os, pathlib, subprocess
+          scratch = pathlib.Path(os.environ["RUNNER_TEMP"])
+          subprocess.run(["trunk", "build", "--release", "--locked=true", "--skip-version-check", "--dist", str(scratch / "web-dist")], cwd="apps/web", check=True, timeout=4800)
+          common = ["python3", "-B", "scripts/refactor-candidate-producer.py"]
+          cohort = str(scratch / "candidate-cohort/candidate-cohort.json")
+          subprocess.run(common + ["collect-web", "--cohort", cohort, "--input", str(scratch / "web-dist"), "--output", str(scratch / "web-part")], check=True, timeout=300)
+          subprocess.run(common + ["metadata", "--cohort", cohort, "--output", str(scratch / "metadata-part")], check=True, timeout=900)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: rc-development-part-web-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/web-part
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: rc-development-part-metadata-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/metadata-part
+          if-no-files-found: error
+          retention-days: 90
+
+  oci:
+    needs: [native, web-and-metadata]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            part: linux-x64
+          - os: ubuntu-24.04-arm
+            part: linux-arm64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    env:
+      CANDIDATE_PART: ${{ matrix.part }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_revision }}
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: rc-development-cohort-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/candidate-cohort
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: rc-development-part-${{ matrix.part }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/bundle
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: rc-development-part-web-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/bundle
+      - name: Install native OCI builder
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes buildah
+      - name: Create context from verified server and Web bytes
+        run: python3 -B scripts/refactor-candidate-producer.py oci-context --cohort "$RUNNER_TEMP/candidate-cohort/candidate-cohort.json" --bundle "$RUNNER_TEMP/bundle" --target "$CANDIDATE_PART" --output "$RUNNER_TEMP/oci-context"
+      - name: Build and read back the actual native architecture OCI image
+        shell: python
+        run: |
+          import json, os, pathlib, subprocess
+          scratch = pathlib.Path(os.environ["RUNNER_TEMP"])
+          policy = json.loads((scratch / "oci-context/build-policy.json").read_text())
+          cohort = json.loads((scratch / "candidate-cohort/candidate-cohort.json").read_text())
+          tag = "localhost/nestlink:development-" + str(cohort["run_id"]) + "-" + str(cohort["run_attempt"]) + "-" + policy["architecture"]
+          subprocess.run(["sudo", "buildah", "bud", "--isolation", "chroot", "--format", "oci", "--platform", "linux/" + policy["architecture"], "--timestamp", str(cohort["source_epoch"]), "--build-arg", "NESTLINK_BASE=docker.io/library/" + policy["base"], "--build-arg", "NESTLINK_VERSION=" + policy["version"], "--build-arg", "NESTLINK_SOURCE=" + policy["source_revision"], "--tag", tag, str(scratch / "oci-context")], check=True, timeout=1200)
+          archive = scratch / "image.tar"
+          subprocess.run(["sudo", "buildah", "push", "--compression-format", "gzip", tag, "oci-archive:" + str(archive) + ":nestlink-rc-development"], check=True, timeout=600)
+          subprocess.run(["sudo", "chown", str(os.getuid()) + ":" + str(os.getgid()), str(archive)], check=True, timeout=60)
+          subprocess.run(["python3", "-B", "scripts/refactor-candidate-producer.py", "collect-oci", "--cohort", str(scratch / "candidate-cohort/candidate-cohort.json"), "--bundle", str(scratch / "bundle"), "--input", str(archive), "--target", os.environ["CANDIDATE_PART"], "--output", str(scratch / "part")], check=True, timeout=300)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: rc-development-part-oci-${{ matrix.part }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/part
+          if-no-files-found: error
+          retention-days: 90
+
+  freeze:
+    needs: [native, android, web-and-metadata, oci]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_revision }}
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: rc-development-cohort-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/candidate-cohort
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          pattern: rc-development-part-*-${{ github.run_attempt }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/bundle
+      - name: Freeze every required platform and retain pending user acceptance
+        run: python3 -B scripts/refactor-candidate-producer.py freeze --cohort "$RUNNER_TEMP/candidate-cohort/candidate-cohort.json" --bundle "$RUNNER_TEMP/bundle" --output "$RUNNER_TEMP/development-candidate"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: rc-development-candidate-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/development-candidate
+          if-no-files-found: error
+          retention-days: 90
+
+# This manual build produces development candidate bytes for user acceptance.
+# It has no production signing secrets or repository publication/delete step.
+# A separate RC publisher may publish these exact bytes to the new repository.
+# Formal signing and full user acceptance remain pending.

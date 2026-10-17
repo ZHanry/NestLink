@@ -1,0 +1,1962 @@
+{
+  "schema_version": 1,
+  "scope": "Pinned historical source preservation in an isolated local bare repository and standalone bundle; no product source import or remote writes",
+  "started_at": "2026-10-15T03:45:00.868180+00:00",
+  "finished_at": "2026-10-15T03:46:25.734573+00:00",
+  "status": "verified_local_preservation",
+  "inputs": [
+    {
+      "path": "docs/refactor/history-audit/local-preservation-inventory-with-recovered-gitlinks-2026-10-13.json",
+      "sha256": "18c537c79e47a48a710d80698c95a46bee47dc309231428d99232fb7ed7c4b0c"
+    },
+    {
+      "path": "docs/refactor/history-audit/remote-preservation-inventory-2026-10-14.json",
+      "sha256": "8710e82fde1ac829aa25246a7fb763ace1be4ff16e0c21fed263684b4e058ec7"
+    },
+    {
+      "path": "docs/refactor/history-audit/server-extra-refs-preservation-2026-10-14.json",
+      "sha256": "df3580f7a4d112db072ed812de3aade7f8082b552f8d194ff3a4e427ffae282b"
+    },
+    {
+      "path": "artifacts/history-audit/gitlink-recovery-2026-10-13/gitlink-local-availability.json",
+      "sha256": "98e076f809e2d351803f09ea2ec39ebfc3d3f1f0339a628fdc44f3859f5c18a8"
+    }
+  ],
+  "script_sha256": "b6fdda576defd4ef52d807368b2183a98caa278ee25b25a5bd13379eaa0a30e5",
+  "mappings": [
+    {
+      "source": "hub",
+      "oid": "2f292c832d3e6c044f2c82115f8bf783314f83c3",
+      "destination": "refs/tags/legacy/hub/local/heads/codex/homedesk-p2p-v11",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "da66975153385f9d92643daa4b7d9f1efbaa7a7d",
+      "destination": "refs/tags/legacy/hub/local/heads/codex/nestlink-14.1.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "de16006d91b0658d0a3fafb7c21d2de4ca70d91d",
+      "destination": "refs/tags/legacy/hub/local/heads/main",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "da66975153385f9d92643daa4b7d9f1efbaa7a7d",
+      "destination": "refs/tags/legacy/hub/local/remotes/origin/HEAD",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "da66975153385f9d92643daa4b7d9f1efbaa7a7d",
+      "destination": "refs/tags/legacy/hub/local/remotes/origin/main",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "25bb858fab2c9669b5e1948ce6f54cca25bbb668",
+      "destination": "refs/tags/legacy/hub/local/tags/v10.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "de16006d91b0658d0a3fafb7c21d2de4ca70d91d",
+      "destination": "refs/tags/legacy/hub/local/tags/v10.1.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "d0a3e5993778e385016789eefe9d93cb0ee30105",
+      "destination": "refs/tags/legacy/hub/local/tags/v11.0.0-rc.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "63f7d46dae0b64deb1013e4bba0e5ff53413b8ee",
+      "destination": "refs/tags/legacy/hub/local/tags/v13.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "d228b8e80cb531faf4cb6a18c8a05c779da09c4d",
+      "destination": "refs/tags/legacy/hub/local/tags/v14.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "da66975153385f9d92643daa4b7d9f1efbaa7a7d",
+      "destination": "refs/tags/legacy/hub/local/tags/v14.0.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "547de9dde40b5878bf476fde4911fd12936c8eb1",
+      "destination": "refs/tags/legacy/hub/local/tags/v2.2.4",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "1078a88f4af763f4792d61318f57b709d20b9223",
+      "destination": "refs/tags/legacy/hub/local/tags/v2.2.5",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "d6ff190e4b1136fd1e3bda742b41f700fa367175",
+      "destination": "refs/tags/legacy/hub/local/tags/v2.3.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "e8dd1e8b4c1755ceab02cb4bce5c0004d85fd781",
+      "destination": "refs/tags/legacy/hub/local/tags/v2.4.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "1e6b680f2b8d406ff22476d1c481d40b60b6efbc",
+      "destination": "refs/tags/legacy/hub/local/tags/v2.5.0-rc.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "6342411575156cea3d6474ad8604a91c5f9d5123",
+      "destination": "refs/tags/legacy/hub/local/tags/v2.5.0-rc.2",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "db27681ce48fb10eceb05fa1fb6f49f38df11704",
+      "destination": "refs/tags/legacy/hub/local/tags/v3.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "904eaeffbc5da4c2c6dab8eb6bc561faac35e449",
+      "destination": "refs/tags/legacy/hub/local/tags/v3.0.0-rc.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "db27681ce48fb10eceb05fa1fb6f49f38df11704",
+      "destination": "refs/tags/legacy/hub/local/tags/v3.0.0-rc.2",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "573b8ce787603933836b64c59ea79f85a2967fb6",
+      "destination": "refs/tags/legacy/hub/local/tags/v3.1.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "8548204004b2257c9dd9197ac23b886f561c9d1a",
+      "destination": "refs/tags/legacy/hub/local/tags/v3.1.0-rc.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "573b8ce787603933836b64c59ea79f85a2967fb6",
+      "destination": "refs/tags/legacy/hub/local/tags/v3.1.0-rc.2",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "e3a50bea31d8c28605cdb5c2c968658fe37a611e",
+      "destination": "refs/tags/legacy/hub/local/tags/v3.2.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "da5209b56ba4f0af9a225dd1fda66d338174bca8",
+      "destination": "refs/tags/legacy/hub/local/tags/v3.2.0-rc.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "07ac8d9a97b4263b6b5fbd00ba32fdb906675e7f",
+      "destination": "refs/tags/legacy/hub/local/tags/v3.2.0-rc.2",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "90492efc000628bf7c610f8c4bafff74d67e0320",
+      "destination": "refs/tags/legacy/hub/local/tags/v3.2.0-rc.3",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "dec6b9a0b8d34380c8654f33a40da75d72f7974e",
+      "destination": "refs/tags/legacy/hub/local/tags/v4.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "daf280aa7711a3b419c30d7b11a27ed5231c0554",
+      "destination": "refs/tags/legacy/hub/local/tags/v5.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "ebf30177d2fa6bb41737eec499638703c50747b4",
+      "destination": "refs/tags/legacy/hub/local/tags/v5.0.0-rc.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "ce6bfa3133529cde4e40c59224dc750633c489f3",
+      "destination": "refs/tags/legacy/hub/local/tags/v5.0.0-rc.2",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "b2b5d11ea596469d4849007944d68c6b91ec0b2e",
+      "destination": "refs/tags/legacy/hub/local/tags/v5.0.0-rc.3",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "1f6dacfc73f14e038d92252a5b3b846027f7dc6c",
+      "destination": "refs/tags/legacy/hub/local/tags/v5.0.0-rc.4",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "8261cf860e98199be5c141bc3d95eeb5979b6ca8",
+      "destination": "refs/tags/legacy/hub/local/tags/v6.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "8e6e64d8c5109127f6b94be5a15568e35312f0d2",
+      "destination": "refs/tags/legacy/hub/local/tags/v7.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "540f7f904429c18b49fef08e282210578f10768f",
+      "destination": "refs/tags/legacy/hub/local/tags/v8.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "64e2153044987efa33c6c4d7c31d0fb6b78ffe59",
+      "destination": "refs/tags/legacy/hub/local/tags/v9.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "da66975153385f9d92643daa4b7d9f1efbaa7a7d",
+      "destination": "refs/tags/legacy/hub/snapshot/baseline",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "2f292c832d3e6c044f2c82115f8bf783314f83c3",
+      "destination": "refs/tags/legacy/hub/snapshot/head",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "3fc4758ed0aa6eeb78635b41d829b169956a3cb3",
+      "destination": "refs/tags/legacy/server/local/heads/codex/homedesk-p2p-v11",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "10d3f5be070b4caf4d8feb11defb86ad0e68e5d4",
+      "destination": "refs/tags/legacy/server/local/heads/codex/nestlink-14.1.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "866e0cbb9ac89de39491ca353574f517f374554e",
+      "destination": "refs/tags/legacy/server/local/heads/main",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "00d4719dfb33d4bef6b7fb290220d80d637ca6ef",
+      "destination": "refs/tags/legacy/server/local/remotes/homedesk-source/hearth-web-ui",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "10d3f5be070b4caf4d8feb11defb86ad0e68e5d4",
+      "destination": "refs/tags/legacy/server/local/remotes/origin/HEAD",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "10d3f5be070b4caf4d8feb11defb86ad0e68e5d4",
+      "destination": "refs/tags/legacy/server/local/remotes/origin/main",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "55c83f912a6cba62ce06d1a86dbd8813c38e9067",
+      "destination": "refs/tags/legacy/server/local/tags/api-v1.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "7959bfb6b96ea9532ca0040c1c3c689eaaed93c3",
+      "destination": "refs/tags/legacy/server/local/tags/api-v1.1.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "f4316948686da0e333698b7a8fc9c548061d94bc",
+      "destination": "refs/tags/legacy/server/local/tags/api-v1.2.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "68a07836671c4687d2351ff197157199bc2eff40",
+      "destination": "refs/tags/legacy/server/local/tags/api-v1.2.0-rc.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "e3b0acf1b4dd36eb6c40b8a654eba13978f06a73",
+      "destination": "refs/tags/legacy/server/local/tags/api-v1.3.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "c201f2989383cae071e723036559840f5ad64623",
+      "destination": "refs/tags/legacy/server/local/tags/api-v1.4.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "194ae805f3569dc16d94b7fda71367e5d68fdff5",
+      "destination": "refs/tags/legacy/server/local/tags/api-v1.5.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "f260a5ffcd789c9a71936307b809ed5137e1a832",
+      "destination": "refs/tags/legacy/server/local/tags/api-v1.6.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "45d7610e8381d077edf343609736ce5ede427785",
+      "destination": "refs/tags/legacy/server/local/tags/api-v2.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "33144cd9b2668e355dd36233cb52071f32a660d2",
+      "destination": "refs/tags/legacy/server/local/tags/v10.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "194ae805f3569dc16d94b7fda71367e5d68fdff5",
+      "destination": "refs/tags/legacy/server/local/tags/v10.1.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "51e9b5407696b1c682aa16aeab358c8a51c50e96",
+      "destination": "refs/tags/legacy/server/local/tags/v11.0.0-rc.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "7aaf115cb55f231967765c210d1331ac49b6c064",
+      "destination": "refs/tags/legacy/server/local/tags/v11.0.0-rc.2",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "9645cf23871d2cb4913239eb9eff520d08c7cb23",
+      "destination": "refs/tags/legacy/server/local/tags/v13.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "2952e4408ad4a14544079942554e88e4d844d054",
+      "destination": "refs/tags/legacy/server/local/tags/v14.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "10d3f5be070b4caf4d8feb11defb86ad0e68e5d4",
+      "destination": "refs/tags/legacy/server/local/tags/v14.0.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "96239e6c8a389add103229c158c71ff13165f887",
+      "destination": "refs/tags/legacy/server/local/tags/v5.0.1-rc.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "e72d972b880f6da121352dc4954d7910d1b50bd7",
+      "destination": "refs/tags/legacy/server/local/tags/v6.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "7a066d9388dd8ce43fbdff0142d145abcd2294b3",
+      "destination": "refs/tags/legacy/server/local/tags/v6.0.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "8485f92913f70e7d540c14c266dfb74f964590ac",
+      "destination": "refs/tags/legacy/server/local/tags/v6.1.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "1ab12eeaa847645d61b16413376fd8f7b6b070bb",
+      "destination": "refs/tags/legacy/server/local/tags/v6.1.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "3119f8156a6611bda1d7f7c7b4824cdbd27d4d0f",
+      "destination": "refs/tags/legacy/server/local/tags/v6.2.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "7959bfb6b96ea9532ca0040c1c3c689eaaed93c3",
+      "destination": "refs/tags/legacy/server/local/tags/v7.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "dff258149085a074875a45f26de4295f2e70b47c",
+      "destination": "refs/tags/legacy/server/local/tags/v8.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "4b634d9886d4ab6c11fd5d56e99b884c8a48558b",
+      "destination": "refs/tags/legacy/server/local/tags/v9.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "10d3f5be070b4caf4d8feb11defb86ad0e68e5d4",
+      "destination": "refs/tags/legacy/server/snapshot/baseline",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "3fc4758ed0aa6eeb78635b41d829b169956a3cb3",
+      "destination": "refs/tags/legacy/server/snapshot/head",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "f1c5044a1065608b9988a3e337f743e6f4529032",
+      "destination": "refs/tags/legacy/client/local/heads/codex/homedesk-p2p-v11",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "181519880a5971f0618adfc81a55281a09d613a8",
+      "destination": "refs/tags/legacy/client/local/heads/codex/nestlink-14.1.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "3e9dd0ddc3cba51512626500997564df627ef6a6",
+      "destination": "refs/tags/legacy/client/local/heads/main",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "6ba2383023d2851b394f13689054c31f4f8c39af",
+      "destination": "refs/tags/legacy/client/local/remotes/homedesk-source/hearth-client-ui",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "181519880a5971f0618adfc81a55281a09d613a8",
+      "destination": "refs/tags/legacy/client/local/remotes/origin/HEAD",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "181519880a5971f0618adfc81a55281a09d613a8",
+      "destination": "refs/tags/legacy/client/local/remotes/origin/main",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "ba7b39e7238fb093a8b957cf47fc22ca81cdff36",
+      "destination": "refs/tags/legacy/client/local/tags/v10.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "41c0e21fbb3a4c634fbc9d63fcd7453337e4d029",
+      "destination": "refs/tags/legacy/client/local/tags/v10.1.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "cc46ce85b308f1ca3b02754e3793a4733607e159",
+      "destination": "refs/tags/legacy/client/local/tags/v11.0.0-rc.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "b75fd84f81325e6b509f1d7d0c383bb5bdc7e494",
+      "destination": "refs/tags/legacy/client/local/tags/v11.0.0-rc.2",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "e712c02e0f38dd9d65aaa42162255d4ec0576f92",
+      "destination": "refs/tags/legacy/client/local/tags/v13.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "821b5a1f35055f9932b1144d5b2a1f57d5b62d73",
+      "destination": "refs/tags/legacy/client/local/tags/v14.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "181519880a5971f0618adfc81a55281a09d613a8",
+      "destination": "refs/tags/legacy/client/local/tags/v14.0.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "b57464c4b4c6fbed6d6f498f05cf302c8479beff",
+      "destination": "refs/tags/legacy/client/local/tags/v5.0.1-rc.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "43d002f4577564be3d096b5cae22f65cc8deb7d2",
+      "destination": "refs/tags/legacy/client/local/tags/v6.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "a4b5e162abb4fcdc872bd8542f6d207a32a7f98d",
+      "destination": "refs/tags/legacy/client/local/tags/v6.0.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "1a2e2c36af2309fc4d9ab408d1529d98d796e9bf",
+      "destination": "refs/tags/legacy/client/local/tags/v6.1.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "5c70b4db5c7890e40ee65dfc140a012251896332",
+      "destination": "refs/tags/legacy/client/local/tags/v6.1.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "6e9dc52f17ba8f3afdf1813d135a1c33528b4e4a",
+      "destination": "refs/tags/legacy/client/local/tags/v7.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "ffd28aa6a335cac30757e41e73d4f08c0233a779",
+      "destination": "refs/tags/legacy/client/local/tags/v8.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "1a625545359850950513cc10a1201f58c603bfaf",
+      "destination": "refs/tags/legacy/client/local/tags/v9.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "181519880a5971f0618adfc81a55281a09d613a8",
+      "destination": "refs/tags/legacy/client/snapshot/baseline",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "f1c5044a1065608b9988a3e337f743e6f4529032",
+      "destination": "refs/tags/legacy/client/snapshot/head",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "35c197cfa8b991d2a2317c8b5018d75af2de77b8",
+      "destination": "refs/tags/legacy/android/local/heads/codex/homedesk-p2p-v11",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "fc3690289d7bda0b0f0aec122e9379b2fa93f16c",
+      "destination": "refs/tags/legacy/android/local/heads/codex/nestlink-14.1.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "45a400bf57ca8a4d06e76261bff8a5b1109f7b97",
+      "destination": "refs/tags/legacy/android/local/heads/main",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "fc3690289d7bda0b0f0aec122e9379b2fa93f16c",
+      "destination": "refs/tags/legacy/android/local/remotes/origin/HEAD",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "fc3690289d7bda0b0f0aec122e9379b2fa93f16c",
+      "destination": "refs/tags/legacy/android/local/remotes/origin/main",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "7873ba92ec535546dfac271806ced02430191a87",
+      "destination": "refs/tags/legacy/android/local/tags/v10.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "a55b5d1e8c78f090ffacd7cbdfcf659ac7197b08",
+      "destination": "refs/tags/legacy/android/local/tags/v11.0.0-rc.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "3543a54633bf33c94bddc3339e5500f185b62617",
+      "destination": "refs/tags/legacy/android/local/tags/v13.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "2dd1d35caf5f26fa3d983242327683fe1394463b",
+      "destination": "refs/tags/legacy/android/local/tags/v14.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "fc3690289d7bda0b0f0aec122e9379b2fa93f16c",
+      "destination": "refs/tags/legacy/android/local/tags/v14.0.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "aef7a6f607cf99a3be14a6f941c2742600101631",
+      "destination": "refs/tags/legacy/android/local/tags/v6.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "126aa09bdece5038cc9ee2f2efce4733580cc59a",
+      "destination": "refs/tags/legacy/android/local/tags/v6.0.1",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "b1d21e1c2f776caa2f260594f1fbbc111bcb3684",
+      "destination": "refs/tags/legacy/android/local/tags/v6.1.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "5e30ff3cc9f656138b141418b67f198fe8e77cc3",
+      "destination": "refs/tags/legacy/android/local/tags/v7.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "adb52546f074ea51c6d06f4d8172be952d769ebc",
+      "destination": "refs/tags/legacy/android/local/tags/v8.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "2d9432db587be3d408421ff542b344b04324723c",
+      "destination": "refs/tags/legacy/android/local/tags/v9.0.0",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "fc3690289d7bda0b0f0aec122e9379b2fa93f16c",
+      "destination": "refs/tags/legacy/android/snapshot/baseline",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "35c197cfa8b991d2a2317c8b5018d75af2de77b8",
+      "destination": "refs/tags/legacy/android/snapshot/head",
+      "provenance": "pinned_local_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "da66975153385f9d92643daa4b7d9f1efbaa7a7d",
+      "destination": "refs/tags/legacy/hub/remote/heads/main",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "25bb858fab2c9669b5e1948ce6f54cca25bbb668",
+      "destination": "refs/tags/legacy/hub/remote/tags/v10.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "de16006d91b0658d0a3fafb7c21d2de4ca70d91d",
+      "destination": "refs/tags/legacy/hub/remote/tags/v10.1.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "d0a3e5993778e385016789eefe9d93cb0ee30105",
+      "destination": "refs/tags/legacy/hub/remote/tags/v11.0.0-rc.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "63f7d46dae0b64deb1013e4bba0e5ff53413b8ee",
+      "destination": "refs/tags/legacy/hub/remote/tags/v13.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "d228b8e80cb531faf4cb6a18c8a05c779da09c4d",
+      "destination": "refs/tags/legacy/hub/remote/tags/v14.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "da66975153385f9d92643daa4b7d9f1efbaa7a7d",
+      "destination": "refs/tags/legacy/hub/remote/tags/v14.0.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "547de9dde40b5878bf476fde4911fd12936c8eb1",
+      "destination": "refs/tags/legacy/hub/remote/tags/v2.2.4",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "1078a88f4af763f4792d61318f57b709d20b9223",
+      "destination": "refs/tags/legacy/hub/remote/tags/v2.2.5",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "d6ff190e4b1136fd1e3bda742b41f700fa367175",
+      "destination": "refs/tags/legacy/hub/remote/tags/v2.3.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "e8dd1e8b4c1755ceab02cb4bce5c0004d85fd781",
+      "destination": "refs/tags/legacy/hub/remote/tags/v2.4.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "1e6b680f2b8d406ff22476d1c481d40b60b6efbc",
+      "destination": "refs/tags/legacy/hub/remote/tags/v2.5.0-rc.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "6342411575156cea3d6474ad8604a91c5f9d5123",
+      "destination": "refs/tags/legacy/hub/remote/tags/v2.5.0-rc.2",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "db27681ce48fb10eceb05fa1fb6f49f38df11704",
+      "destination": "refs/tags/legacy/hub/remote/tags/v3.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "904eaeffbc5da4c2c6dab8eb6bc561faac35e449",
+      "destination": "refs/tags/legacy/hub/remote/tags/v3.0.0-rc.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "db27681ce48fb10eceb05fa1fb6f49f38df11704",
+      "destination": "refs/tags/legacy/hub/remote/tags/v3.0.0-rc.2",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "573b8ce787603933836b64c59ea79f85a2967fb6",
+      "destination": "refs/tags/legacy/hub/remote/tags/v3.1.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "8548204004b2257c9dd9197ac23b886f561c9d1a",
+      "destination": "refs/tags/legacy/hub/remote/tags/v3.1.0-rc.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "573b8ce787603933836b64c59ea79f85a2967fb6",
+      "destination": "refs/tags/legacy/hub/remote/tags/v3.1.0-rc.2",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "e3a50bea31d8c28605cdb5c2c968658fe37a611e",
+      "destination": "refs/tags/legacy/hub/remote/tags/v3.2.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "da5209b56ba4f0af9a225dd1fda66d338174bca8",
+      "destination": "refs/tags/legacy/hub/remote/tags/v3.2.0-rc.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "07ac8d9a97b4263b6b5fbd00ba32fdb906675e7f",
+      "destination": "refs/tags/legacy/hub/remote/tags/v3.2.0-rc.2",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "90492efc000628bf7c610f8c4bafff74d67e0320",
+      "destination": "refs/tags/legacy/hub/remote/tags/v3.2.0-rc.3",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "dec6b9a0b8d34380c8654f33a40da75d72f7974e",
+      "destination": "refs/tags/legacy/hub/remote/tags/v4.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "daf280aa7711a3b419c30d7b11a27ed5231c0554",
+      "destination": "refs/tags/legacy/hub/remote/tags/v5.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "ebf30177d2fa6bb41737eec499638703c50747b4",
+      "destination": "refs/tags/legacy/hub/remote/tags/v5.0.0-rc.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "ce6bfa3133529cde4e40c59224dc750633c489f3",
+      "destination": "refs/tags/legacy/hub/remote/tags/v5.0.0-rc.2",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "b2b5d11ea596469d4849007944d68c6b91ec0b2e",
+      "destination": "refs/tags/legacy/hub/remote/tags/v5.0.0-rc.3",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "1f6dacfc73f14e038d92252a5b3b846027f7dc6c",
+      "destination": "refs/tags/legacy/hub/remote/tags/v5.0.0-rc.4",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "8261cf860e98199be5c141bc3d95eeb5979b6ca8",
+      "destination": "refs/tags/legacy/hub/remote/tags/v6.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "8e6e64d8c5109127f6b94be5a15568e35312f0d2",
+      "destination": "refs/tags/legacy/hub/remote/tags/v7.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "540f7f904429c18b49fef08e282210578f10768f",
+      "destination": "refs/tags/legacy/hub/remote/tags/v8.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "hub",
+      "oid": "64e2153044987efa33c6c4d7c31d0fb6b78ffe59",
+      "destination": "refs/tags/legacy/hub/remote/tags/v9.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "10d3f5be070b4caf4d8feb11defb86ad0e68e5d4",
+      "destination": "refs/tags/legacy/server/remote/heads/main",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server-extra",
+      "oid": "5df9a855c1d96387c6fd6d641934c3bc2e11095e",
+      "destination": "refs/tags/legacy/server/remote/heads/maintenance/retag-latest14-20261011",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server-extra",
+      "oid": "eb1d4a3b199d79a4db46811f0a12f3a2de14a99d",
+      "destination": "refs/tags/legacy/server/remote/heads/maintenance/retag-latest1401-c-owner-scope-attempt01",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "55c83f912a6cba62ce06d1a86dbd8813c38e9067",
+      "destination": "refs/tags/legacy/server/remote/tags/api-v1.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "7959bfb6b96ea9532ca0040c1c3c689eaaed93c3",
+      "destination": "refs/tags/legacy/server/remote/tags/api-v1.1.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "f4316948686da0e333698b7a8fc9c548061d94bc",
+      "destination": "refs/tags/legacy/server/remote/tags/api-v1.2.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "68a07836671c4687d2351ff197157199bc2eff40",
+      "destination": "refs/tags/legacy/server/remote/tags/api-v1.2.0-rc.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "e3b0acf1b4dd36eb6c40b8a654eba13978f06a73",
+      "destination": "refs/tags/legacy/server/remote/tags/api-v1.3.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "c201f2989383cae071e723036559840f5ad64623",
+      "destination": "refs/tags/legacy/server/remote/tags/api-v1.4.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "194ae805f3569dc16d94b7fda71367e5d68fdff5",
+      "destination": "refs/tags/legacy/server/remote/tags/api-v1.5.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "f260a5ffcd789c9a71936307b809ed5137e1a832",
+      "destination": "refs/tags/legacy/server/remote/tags/api-v1.6.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "45d7610e8381d077edf343609736ce5ede427785",
+      "destination": "refs/tags/legacy/server/remote/tags/api-v2.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "33144cd9b2668e355dd36233cb52071f32a660d2",
+      "destination": "refs/tags/legacy/server/remote/tags/v10.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "194ae805f3569dc16d94b7fda71367e5d68fdff5",
+      "destination": "refs/tags/legacy/server/remote/tags/v10.1.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "51e9b5407696b1c682aa16aeab358c8a51c50e96",
+      "destination": "refs/tags/legacy/server/remote/tags/v11.0.0-rc.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "7aaf115cb55f231967765c210d1331ac49b6c064",
+      "destination": "refs/tags/legacy/server/remote/tags/v11.0.0-rc.2",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "9645cf23871d2cb4913239eb9eff520d08c7cb23",
+      "destination": "refs/tags/legacy/server/remote/tags/v13.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "2952e4408ad4a14544079942554e88e4d844d054",
+      "destination": "refs/tags/legacy/server/remote/tags/v14.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "10d3f5be070b4caf4d8feb11defb86ad0e68e5d4",
+      "destination": "refs/tags/legacy/server/remote/tags/v14.0.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "96239e6c8a389add103229c158c71ff13165f887",
+      "destination": "refs/tags/legacy/server/remote/tags/v5.0.1-rc.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "e72d972b880f6da121352dc4954d7910d1b50bd7",
+      "destination": "refs/tags/legacy/server/remote/tags/v6.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "7a066d9388dd8ce43fbdff0142d145abcd2294b3",
+      "destination": "refs/tags/legacy/server/remote/tags/v6.0.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "8485f92913f70e7d540c14c266dfb74f964590ac",
+      "destination": "refs/tags/legacy/server/remote/tags/v6.1.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "1ab12eeaa847645d61b16413376fd8f7b6b070bb",
+      "destination": "refs/tags/legacy/server/remote/tags/v6.1.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "3119f8156a6611bda1d7f7c7b4824cdbd27d4d0f",
+      "destination": "refs/tags/legacy/server/remote/tags/v6.2.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "7959bfb6b96ea9532ca0040c1c3c689eaaed93c3",
+      "destination": "refs/tags/legacy/server/remote/tags/v7.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "dff258149085a074875a45f26de4295f2e70b47c",
+      "destination": "refs/tags/legacy/server/remote/tags/v8.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "server",
+      "oid": "4b634d9886d4ab6c11fd5d56e99b884c8a48558b",
+      "destination": "refs/tags/legacy/server/remote/tags/v9.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "181519880a5971f0618adfc81a55281a09d613a8",
+      "destination": "refs/tags/legacy/client/remote/heads/main",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "ba7b39e7238fb093a8b957cf47fc22ca81cdff36",
+      "destination": "refs/tags/legacy/client/remote/tags/v10.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "41c0e21fbb3a4c634fbc9d63fcd7453337e4d029",
+      "destination": "refs/tags/legacy/client/remote/tags/v10.1.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "cc46ce85b308f1ca3b02754e3793a4733607e159",
+      "destination": "refs/tags/legacy/client/remote/tags/v11.0.0-rc.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "b75fd84f81325e6b509f1d7d0c383bb5bdc7e494",
+      "destination": "refs/tags/legacy/client/remote/tags/v11.0.0-rc.2",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "e712c02e0f38dd9d65aaa42162255d4ec0576f92",
+      "destination": "refs/tags/legacy/client/remote/tags/v13.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "821b5a1f35055f9932b1144d5b2a1f57d5b62d73",
+      "destination": "refs/tags/legacy/client/remote/tags/v14.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "181519880a5971f0618adfc81a55281a09d613a8",
+      "destination": "refs/tags/legacy/client/remote/tags/v14.0.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "b57464c4b4c6fbed6d6f498f05cf302c8479beff",
+      "destination": "refs/tags/legacy/client/remote/tags/v5.0.1-rc.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "43d002f4577564be3d096b5cae22f65cc8deb7d2",
+      "destination": "refs/tags/legacy/client/remote/tags/v6.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "a4b5e162abb4fcdc872bd8542f6d207a32a7f98d",
+      "destination": "refs/tags/legacy/client/remote/tags/v6.0.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "1a2e2c36af2309fc4d9ab408d1529d98d796e9bf",
+      "destination": "refs/tags/legacy/client/remote/tags/v6.1.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "5c70b4db5c7890e40ee65dfc140a012251896332",
+      "destination": "refs/tags/legacy/client/remote/tags/v6.1.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "6e9dc52f17ba8f3afdf1813d135a1c33528b4e4a",
+      "destination": "refs/tags/legacy/client/remote/tags/v7.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "ffd28aa6a335cac30757e41e73d4f08c0233a779",
+      "destination": "refs/tags/legacy/client/remote/tags/v8.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "client",
+      "oid": "1a625545359850950513cc10a1201f58c603bfaf",
+      "destination": "refs/tags/legacy/client/remote/tags/v9.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "fc3690289d7bda0b0f0aec122e9379b2fa93f16c",
+      "destination": "refs/tags/legacy/android/remote/heads/main",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "7873ba92ec535546dfac271806ced02430191a87",
+      "destination": "refs/tags/legacy/android/remote/tags/v10.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "a55b5d1e8c78f090ffacd7cbdfcf659ac7197b08",
+      "destination": "refs/tags/legacy/android/remote/tags/v11.0.0-rc.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "3543a54633bf33c94bddc3339e5500f185b62617",
+      "destination": "refs/tags/legacy/android/remote/tags/v13.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "2dd1d35caf5f26fa3d983242327683fe1394463b",
+      "destination": "refs/tags/legacy/android/remote/tags/v14.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "fc3690289d7bda0b0f0aec122e9379b2fa93f16c",
+      "destination": "refs/tags/legacy/android/remote/tags/v14.0.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "aef7a6f607cf99a3be14a6f941c2742600101631",
+      "destination": "refs/tags/legacy/android/remote/tags/v6.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "126aa09bdece5038cc9ee2f2efce4733580cc59a",
+      "destination": "refs/tags/legacy/android/remote/tags/v6.0.1",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "b1d21e1c2f776caa2f260594f1fbbc111bcb3684",
+      "destination": "refs/tags/legacy/android/remote/tags/v6.1.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "5e30ff3cc9f656138b141418b67f198fe8e77cc3",
+      "destination": "refs/tags/legacy/android/remote/tags/v7.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "adb52546f074ea51c6d06f4d8172be952d769ebc",
+      "destination": "refs/tags/legacy/android/remote/tags/v8.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "android",
+      "oid": "2d9432db587be3d408421ff542b344b04324723c",
+      "destination": "refs/tags/legacy/android/remote/tags/v9.0.0",
+      "provenance": "pinned_remote_inventory"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "024380d0f9f904e9b4371c416ad5056bcd151b77",
+      "destination": "refs/tags/legacy/submodule/024380d0f9f904e9b4371c416ad5056bcd151b77",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "073403edbf1fffcb3acfe8cbe7582ee873b23398",
+      "destination": "refs/tags/legacy/submodule/073403edbf1fffcb3acfe8cbe7582ee873b23398",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "0b60b9ffa05259f72cd33e79010ef8e15d42b851",
+      "destination": "refs/tags/legacy/submodule/0b60b9ffa05259f72cd33e79010ef8e15d42b851",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "0ce69ea6df5e65b6e4f2112307b96ea339879662",
+      "destination": "refs/tags/legacy/submodule/0ce69ea6df5e65b6e4f2112307b96ea339879662",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "0d6f27388c269d809e4e8c794aa94c26bcd2d5f3",
+      "destination": "refs/tags/legacy/submodule/0d6f27388c269d809e4e8c794aa94c26bcd2d5f3",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "0e382020934f204a6a525a05c9b5ce9e96518025",
+      "destination": "refs/tags/legacy/submodule/0e382020934f204a6a525a05c9b5ce9e96518025",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "117ea7c3414ccb43dc9a7b608616d339bdbe17d1",
+      "destination": "refs/tags/legacy/submodule/117ea7c3414ccb43dc9a7b608616d339bdbe17d1",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "12f2a47770af7521588ccaa67731806f15d0132d",
+      "destination": "refs/tags/legacy/submodule/12f2a47770af7521588ccaa67731806f15d0132d",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "15a71f07a5bd8f7951b6869bea06f85064e41c67",
+      "destination": "refs/tags/legacy/submodule/15a71f07a5bd8f7951b6869bea06f85064e41c67",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "16900b9b064067e28f6e685b29a94c16350ffc36",
+      "destination": "refs/tags/legacy/submodule/16900b9b064067e28f6e685b29a94c16350ffc36",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "1819875476d487612a654099881b8a16f4337599",
+      "destination": "refs/tags/legacy/submodule/1819875476d487612a654099881b8a16f4337599",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "1df14d90c9858d2cd17d035790131758d8e3cc15",
+      "destination": "refs/tags/legacy/submodule/1df14d90c9858d2cd17d035790131758d8e3cc15",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "1ed5a469cfa2318b4045859cab6c88889717193a",
+      "destination": "refs/tags/legacy/submodule/1ed5a469cfa2318b4045859cab6c88889717193a",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "201709572345b06610c440da683faa3a5cca4a10",
+      "destination": "refs/tags/legacy/submodule/201709572345b06610c440da683faa3a5cca4a10",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "221c2bfb3e60139cd0db6bfb06ec950afb17a66c",
+      "destination": "refs/tags/legacy/submodule/221c2bfb3e60139cd0db6bfb06ec950afb17a66c",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "25e761f46778b567061770bc64d66332a4503332",
+      "destination": "refs/tags/legacy/submodule/25e761f46778b567061770bc64d66332a4503332",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "2acfd2a6697b484ce0d9fc0db55f3660ddc0580c",
+      "destination": "refs/tags/legacy/submodule/2acfd2a6697b484ce0d9fc0db55f3660ddc0580c",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "2e9f641101c6bfbd1f4ca42a249bef7c14e52f5b",
+      "destination": "refs/tags/legacy/submodule/2e9f641101c6bfbd1f4ca42a249bef7c14e52f5b",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "32fed54062c1cdf18146899515ed2850f6ff986b",
+      "destination": "refs/tags/legacy/submodule/32fed54062c1cdf18146899515ed2850f6ff986b",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "334641686c731631fc51524bb2aa2ec2773069ee",
+      "destination": "refs/tags/legacy/submodule/334641686c731631fc51524bb2aa2ec2773069ee",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "3454fe8c60d32ee5033d04fc72466eebb5873880",
+      "destination": "refs/tags/legacy/submodule/3454fe8c60d32ee5033d04fc72466eebb5873880",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "387603f47cbb15c0d3dc3d67ae3396d3eb707daf",
+      "destination": "refs/tags/legacy/submodule/387603f47cbb15c0d3dc3d67ae3396d3eb707daf",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "3afaf6494475ef58dcaaae6b4e6d2303cc3d632b",
+      "destination": "refs/tags/legacy/submodule/3afaf6494475ef58dcaaae6b4e6d2303cc3d632b",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "3e31a94939e026ab2c05d21a2c436960aa9bfea8",
+      "destination": "refs/tags/legacy/submodule/3e31a94939e026ab2c05d21a2c436960aa9bfea8",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "414e9188979bf6b286559978e1b26251a8b4b619",
+      "destination": "refs/tags/legacy/submodule/414e9188979bf6b286559978e1b26251a8b4b619",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "425b0e7d07cef33d92245905740ecc202d7eb6f6",
+      "destination": "refs/tags/legacy/submodule/425b0e7d07cef33d92245905740ecc202d7eb6f6",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "42aad01a517d4de7420ddcb7e99c29bd9f6d2b5a",
+      "destination": "refs/tags/legacy/submodule/42aad01a517d4de7420ddcb7e99c29bd9f6d2b5a",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "42af0f0aed0bb5fd5df4ff95fd4cc9816fcf5769",
+      "destination": "refs/tags/legacy/submodule/42af0f0aed0bb5fd5df4ff95fd4cc9816fcf5769",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "43556b948b0d4ed750cddad42ddeca42531ba5b3",
+      "destination": "refs/tags/legacy/submodule/43556b948b0d4ed750cddad42ddeca42531ba5b3",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "48c37de3e6c4e399af6f51ca20e8e3e1fd037976",
+      "destination": "refs/tags/legacy/submodule/48c37de3e6c4e399af6f51ca20e8e3e1fd037976",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "49c6b24a7a8c39d4448e07b743007ef1a3febd43",
+      "destination": "refs/tags/legacy/submodule/49c6b24a7a8c39d4448e07b743007ef1a3febd43",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "4cf3d1603a7c6d22b37746f3f02fee707a9338d9",
+      "destination": "refs/tags/legacy/submodule/4cf3d1603a7c6d22b37746f3f02fee707a9338d9",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "4eca5b45b95b2f3d71789dc001595149c015fe72",
+      "destination": "refs/tags/legacy/submodule/4eca5b45b95b2f3d71789dc001595149c015fe72",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "53709d8f8dd09a1491f4d8866e9643804caa380b",
+      "destination": "refs/tags/legacy/submodule/53709d8f8dd09a1491f4d8866e9643804caa380b",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "57c8a23ab970587ea6380943b04dc354020bbe7c",
+      "destination": "refs/tags/legacy/submodule/57c8a23ab970587ea6380943b04dc354020bbe7c",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "rustdesk-hbb-recovered",
+      "oid": "5a78ec42303ca046d808742e911a156636a2432b",
+      "destination": "refs/tags/legacy/submodule/5a78ec42303ca046d808742e911a156636a2432b",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "5b6c0cf49a6773ccca9c9e9bf18ebc8716734873",
+      "destination": "refs/tags/legacy/submodule/5b6c0cf49a6773ccca9c9e9bf18ebc8716734873",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "5cc7db26767651b3cd9c33f0b90136ec4002d394",
+      "destination": "refs/tags/legacy/submodule/5cc7db26767651b3cd9c33f0b90136ec4002d394",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "5e07db7444284006c008b5b1204f0968bc47b1a9",
+      "destination": "refs/tags/legacy/submodule/5e07db7444284006c008b5b1204f0968bc47b1a9",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "5ed0afde0841659e2fb37ae7acaddc005fa1a8d3",
+      "destination": "refs/tags/legacy/submodule/5ed0afde0841659e2fb37ae7acaddc005fa1a8d3",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "618922b2a77f7be44fc7b86e41f6cfba87d62193",
+      "destination": "refs/tags/legacy/submodule/618922b2a77f7be44fc7b86e41f6cfba87d62193",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "621b504fda60ae1f7cb0f702cf0e122554d88c85",
+      "destination": "refs/tags/legacy/submodule/621b504fda60ae1f7cb0f702cf0e122554d88c85",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "648b639427953cb8b052b4d80aeb882c644c4ce9",
+      "destination": "refs/tags/legacy/submodule/648b639427953cb8b052b4d80aeb882c644c4ce9",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "6490a8655c25801e16c3b30d161d9f2b9e458b36",
+      "destination": "refs/tags/legacy/submodule/6490a8655c25801e16c3b30d161d9f2b9e458b36",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "6e556f7e1751a3a709cd5cca0df7268ba3cb1c48",
+      "destination": "refs/tags/legacy/submodule/6e556f7e1751a3a709cd5cca0df7268ba3cb1c48",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "6fb03d076eae81e244db72e87474eee149a0fb85",
+      "destination": "refs/tags/legacy/submodule/6fb03d076eae81e244db72e87474eee149a0fb85",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "71cf549ed6218cce024a07da2ebc52f6289c7f7a",
+      "destination": "refs/tags/legacy/submodule/71cf549ed6218cce024a07da2ebc52f6289c7f7a",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "73ab9575fdfc1dbf2aad477bb9a8875405661cfc",
+      "destination": "refs/tags/legacy/submodule/73ab9575fdfc1dbf2aad477bb9a8875405661cfc",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "7839dcf4e4ddc3feab9b52b0ae1903d443bc084d",
+      "destination": "refs/tags/legacy/submodule/7839dcf4e4ddc3feab9b52b0ae1903d443bc084d",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "78facdf7597981b7e937985daa87400da07d7183",
+      "destination": "refs/tags/legacy/submodule/78facdf7597981b7e937985daa87400da07d7183",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "79f8ac2d68e7b3304773c553f91f1de825bacdf5",
+      "destination": "refs/tags/legacy/submodule/79f8ac2d68e7b3304773c553f91f1de825bacdf5",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "7ca0fd7186586965921e48beef2dbb2ae44fc895",
+      "destination": "refs/tags/legacy/submodule/7ca0fd7186586965921e48beef2dbb2ae44fc895",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "7cf11f7b771e27ecbd14fd1dd0ced55a64f40eb5",
+      "destination": "refs/tags/legacy/submodule/7cf11f7b771e27ecbd14fd1dd0ced55a64f40eb5",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "7d93d5af48db34dbd4a9d317e4a69d04b0bcf703",
+      "destination": "refs/tags/legacy/submodule/7d93d5af48db34dbd4a9d317e4a69d04b0bcf703",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "7e1c392c62d39c364127307cd408421dd5f8cfb0",
+      "destination": "refs/tags/legacy/submodule/7e1c392c62d39c364127307cd408421dd5f8cfb0",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "7ea868612dfee7954facb9a7857d65ef875076eb",
+      "destination": "refs/tags/legacy/submodule/7ea868612dfee7954facb9a7857d65ef875076eb",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "7f80d8dfe01ca26edeb8300a96722a2e4b99a10e",
+      "destination": "refs/tags/legacy/submodule/7f80d8dfe01ca26edeb8300a96722a2e4b99a10e",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "81b932b7bfa2ff8bc60189625fd6538db2fa9ea1",
+      "destination": "refs/tags/legacy/submodule/81b932b7bfa2ff8bc60189625fd6538db2fa9ea1",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "822701e416a60c97e6f3b23bb0bfa84a2177c57f",
+      "destination": "refs/tags/legacy/submodule/822701e416a60c97e6f3b23bb0bfa84a2177c57f",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "83419b6549636ee39dacef7776c473f5802e08d6",
+      "destination": "refs/tags/legacy/submodule/83419b6549636ee39dacef7776c473f5802e08d6",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "86f4eb38fb8a7d05b0213a2a3fbd19e6f968de56",
+      "destination": "refs/tags/legacy/submodule/86f4eb38fb8a7d05b0213a2a3fbd19e6f968de56",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "87b11a795964b00deded250657a63626f2c1efa0",
+      "destination": "refs/tags/legacy/submodule/87b11a795964b00deded250657a63626f2c1efa0",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "8b0e25867375ba9e6bff548acf44fe6d6ffa7c0e",
+      "destination": "refs/tags/legacy/submodule/8b0e25867375ba9e6bff548acf44fe6d6ffa7c0e",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "8b6700a33f8101fc0d9f0f2dcfcfeb0f53ac8f9b",
+      "destination": "refs/tags/legacy/submodule/8b6700a33f8101fc0d9f0f2dcfcfeb0f53ac8f9b",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "8e620a5c09119550f878bf2f8d7abee470da2210",
+      "destination": "refs/tags/legacy/submodule/8e620a5c09119550f878bf2f8d7abee470da2210",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "900077a2c2651336317f8094ea44074c48acd2a4",
+      "destination": "refs/tags/legacy/submodule/900077a2c2651336317f8094ea44074c48acd2a4",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "902607575789479ec9b328583690425420b8e6f4",
+      "destination": "refs/tags/legacy/submodule/902607575789479ec9b328583690425420b8e6f4",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "9043c15acc6d5b42b6c12ad284c16c1ec172f1f0",
+      "destination": "refs/tags/legacy/submodule/9043c15acc6d5b42b6c12ad284c16c1ec172f1f0",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "92ca2ca8be6c54d3977e35292d378dfbe90908fc",
+      "destination": "refs/tags/legacy/submodule/92ca2ca8be6c54d3977e35292d378dfbe90908fc",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "97266d7c180feef8b43726ea6fcb4491e3fd8752",
+      "destination": "refs/tags/legacy/submodule/97266d7c180feef8b43726ea6fcb4491e3fd8752",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "9b53baeffeedd0a2933ec5cc8c8e426eaecf804f",
+      "destination": "refs/tags/legacy/submodule/9b53baeffeedd0a2933ec5cc8c8e426eaecf804f",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "9e4b3f96962a259ad4be1378e7f258c3982c26d1",
+      "destination": "refs/tags/legacy/submodule/9e4b3f96962a259ad4be1378e7f258c3982c26d1",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "9ede5d49f65b8c513fe613dbfea2daf7694cba3e",
+      "destination": "refs/tags/legacy/submodule/9ede5d49f65b8c513fe613dbfea2daf7694cba3e",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "a26f25a04501f599f1f2a317f4cbd057730057f7",
+      "destination": "refs/tags/legacy/submodule/a26f25a04501f599f1f2a317f4cbd057730057f7",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "a4053b929b14059b1bd116900de8a103d9d838ae",
+      "destination": "refs/tags/legacy/submodule/a4053b929b14059b1bd116900de8a103d9d838ae",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "a86eda749e6fa33c282bab680e6b504d3ad87539",
+      "destination": "refs/tags/legacy/submodule/a86eda749e6fa33c282bab680e6b504d3ad87539",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "a920d00945e1d2441b3f77b2677054cb8c3d9dd2",
+      "destination": "refs/tags/legacy/submodule/a920d00945e1d2441b3f77b2677054cb8c3d9dd2",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "ae3726dd5f505b87b8be66f2b2cf4e902a2dcde4",
+      "destination": "refs/tags/legacy/submodule/ae3726dd5f505b87b8be66f2b2cf4e902a2dcde4",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "b55451eeca27a2d65406dff71c925622c7b0f414",
+      "destination": "refs/tags/legacy/submodule/b55451eeca27a2d65406dff71c925622c7b0f414",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "b8ea6e02a82d3a2e129d38e3522147673eb95dca",
+      "destination": "refs/tags/legacy/submodule/b8ea6e02a82d3a2e129d38e3522147673eb95dca",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "b927be495bd129da14a087851dd99c01b68722e4",
+      "destination": "refs/tags/legacy/submodule/b927be495bd129da14a087851dd99c01b68722e4",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "bae0bb947e4442cae5a4b02baeca770fc9f2ecd4",
+      "destination": "refs/tags/legacy/submodule/bae0bb947e4442cae5a4b02baeca770fc9f2ecd4",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "bb2d6fa6bdf097f23b891a10f439d747e5acb15f",
+      "destination": "refs/tags/legacy/submodule/bb2d6fa6bdf097f23b891a10f439d747e5acb15f",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "bfddd5bb193883237c2a1c2c8d8e3cfe02823ac7",
+      "destination": "refs/tags/legacy/submodule/bfddd5bb193883237c2a1c2c8d8e3cfe02823ac7",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "c078e938a42ec0806f3b9a0ca2c5590c62a664ef",
+      "destination": "refs/tags/legacy/submodule/c078e938a42ec0806f3b9a0ca2c5590c62a664ef",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "c0a824a96e9cf4dbcd00768197cbcd587f5d8266",
+      "destination": "refs/tags/legacy/submodule/c0a824a96e9cf4dbcd00768197cbcd587f5d8266",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "c5ab97ae0a42610218a4566deeff77fb3f677538",
+      "destination": "refs/tags/legacy/submodule/c5ab97ae0a42610218a4566deeff77fb3f677538",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "c5c3755841afdd4be1c31a2756e1e4251a349f3b",
+      "destination": "refs/tags/legacy/submodule/c5c3755841afdd4be1c31a2756e1e4251a349f3b",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "c69967dcd7515754127ee0d97c6a4ea4d4b52883",
+      "destination": "refs/tags/legacy/submodule/c69967dcd7515754127ee0d97c6a4ea4d4b52883",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "c8cbb6be283e9215da87625016fe8838dda76c02",
+      "destination": "refs/tags/legacy/submodule/c8cbb6be283e9215da87625016fe8838dda76c02",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "c943117b2be5f29a1f905041cc17ff60cc9054f9",
+      "destination": "refs/tags/legacy/submodule/c943117b2be5f29a1f905041cc17ff60cc9054f9",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "flathub-shared-recovered",
+      "oid": "cecc93886ce839ec49b0041f072a573327acdf08",
+      "destination": "refs/tags/legacy/submodule/cecc93886ce839ec49b0041f072a573327acdf08",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "d64954ae2211e5154fd9036ec4862413f24bbd7b",
+      "destination": "refs/tags/legacy/submodule/d64954ae2211e5154fd9036ec4862413f24bbd7b",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "d6538f342d4957ba3cfdf7a97ea6e61e873eecea",
+      "destination": "refs/tags/legacy/submodule/d6538f342d4957ba3cfdf7a97ea6e61e873eecea",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "d6b14975ffd35ed63528617a53795c479a6eaf13",
+      "destination": "refs/tags/legacy/submodule/d6b14975ffd35ed63528617a53795c479a6eaf13",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "d6dd7ae052ac62f0f1538f1e056bce9429e28e33",
+      "destination": "refs/tags/legacy/submodule/d6dd7ae052ac62f0f1538f1e056bce9429e28e33",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "da339dca64ecae3273838c0a1395c7fe2f1a1016",
+      "destination": "refs/tags/legacy/submodule/da339dca64ecae3273838c0a1395c7fe2f1a1016",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "dae45e423ee66639397f2f756c4358f7c975901e",
+      "destination": "refs/tags/legacy/submodule/dae45e423ee66639397f2f756c4358f7c975901e",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "db05d8c41ad73eaf3e3208bf8938c33f0802d144",
+      "destination": "refs/tags/legacy/submodule/db05d8c41ad73eaf3e3208bf8938c33f0802d144",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "de4a271a0ba57049ca81feac324563ca5baf7160",
+      "destination": "refs/tags/legacy/submodule/de4a271a0ba57049ca81feac324563ca5baf7160",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "df6badca5bf81b4e9836256cf8e31c993ad70dd1",
+      "destination": "refs/tags/legacy/submodule/df6badca5bf81b4e9836256cf8e31c993ad70dd1",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "e50ac3cd4897fa6c6ed545189adb2170c34df636",
+      "destination": "refs/tags/legacy/submodule/e50ac3cd4897fa6c6ed545189adb2170c34df636",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "e7d210e03a7a7b1ba10018f4c9829f07ca7ea51b",
+      "destination": "refs/tags/legacy/submodule/e7d210e03a7a7b1ba10018f4c9829f07ca7ea51b",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "ebb4d4a48cf7ed6ca62e93f8ed124065c6408536",
+      "destination": "refs/tags/legacy/submodule/ebb4d4a48cf7ed6ca62e93f8ed124065c6408536",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "f08ce5d6d07cd200713418ce2932769d14ff21d2",
+      "destination": "refs/tags/legacy/submodule/f08ce5d6d07cd200713418ce2932769d14ff21d2",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "f2a68062f70ee336443eee2ad017eff9f31cc651",
+      "destination": "refs/tags/legacy/submodule/f2a68062f70ee336443eee2ad017eff9f31cc651",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "f850a167ac403444451cf90c64d39fa6d3a58e1a",
+      "destination": "refs/tags/legacy/submodule/f850a167ac403444451cf90c64d39fa6d3a58e1a",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "f91459c4ab80fc3cfdef0882b2af51f984bc914c",
+      "destination": "refs/tags/legacy/submodule/f91459c4ab80fc3cfdef0882b2af51f984bc914c",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "f94753bddb11a6de52e4fe7f9e490fcf8df2275a",
+      "destination": "refs/tags/legacy/submodule/f94753bddb11a6de52e4fe7f9e490fcf8df2275a",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "f9a10eaa1fe0b3614232a17ffa2c8d1f8d305456",
+      "destination": "refs/tags/legacy/submodule/f9a10eaa1fe0b3614232a17ffa2c8d1f8d305456",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "fa157108be16b9ce58852a69c2186a3ced3c559b",
+      "destination": "refs/tags/legacy/submodule/fa157108be16b9ce58852a69c2186a3ced3c559b",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "fa160b286449d4feee26c03dfa721d9997b4748b",
+      "destination": "refs/tags/legacy/submodule/fa160b286449d4feee26c03dfa721d9997b4748b",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client-hbb-common",
+      "oid": "fa8f2897762d331c7c6ce3d99a34b8b7701d0c4b",
+      "destination": "refs/tags/legacy/submodule/fa8f2897762d331c7c6ce3d99a34b8b7701d0c4b",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "fd85de7e5a5954c407055c6d636d5807708aa663",
+      "destination": "refs/tags/legacy/submodule/fd85de7e5a5954c407055c6d636d5807708aa663",
+      "provenance": "pinned_gitlink_availability"
+    },
+    {
+      "source": "client",
+      "oid": "feaf1181efe55076dead52931203a8488cbad20d",
+      "destination": "refs/tags/legacy/submodule/feaf1181efe55076dead52931203a8488cbad20d",
+      "provenance": "pinned_gitlink_availability"
+    }
+  ],
+  "unavailable_gitlinks": [
+    "93f9445c69f30487f1479a9e4e1882773e00c7f9",
+    "b0f50c8d55a015f3d49fe9e90fcefb585d74a25f",
+    "f857bbd3bc350c800d447eb0d809d21f101cd80b"
+  ],
+  "original_worktrees_modified": false,
+  "new_product_reuse_approved": false,
+  "history_imported_into_product_repository": false,
+  "durable_remote_archive_uploaded": false,
+  "finalization_ready": false,
+  "preserved_ref_count": 317,
+  "preserved_gitlink_count": 115,
+  "reachable_object_count": 100114,
+  "bundle": {
+    "path": "D:\\代码\\远程控制\\NestLink\\artifacts\\history-preservation\\unified-legacy-20261015\\NestLink-legacy-source-20261015.bundle",
+    "bytes": 85678333,
+    "sha256": "ebf6650beae9d180daa8b7dc7d48e9fb91283a28151d22c31865d3f71c9cb943"
+  },
+  "bundle_standalone_verified": true,
+  "restored_ref_map_verified": true,
+  "strict_fsck_passed": true,
+  "retained_original_report": {
+    "path": "artifacts/history-preservation/unified-legacy-20261015/preservation.json",
+    "sha256": "dfc1efd58c53fa1e02f5a804c70e78f614dd1216ee20be3cf439c935401c2126"
+  },
+  "limits": [
+    "Pinned local 2026-10-13 and remote 2026-10-14 inventories, not a current remote snapshot.",
+    "No source worktree/index/HEAD/refs changed; no old source checked out into the product.",
+    "Three upstream hbb_common gitlinks remain unavailable at the previously audited sources.",
+    "Dirty 14.1.0 worktree contents and ignored files are not included in this Git bundle.",
+    "The bundle and 799 verified legacy release assets still require durable remote preservation before component deletion."
+  ]
+}

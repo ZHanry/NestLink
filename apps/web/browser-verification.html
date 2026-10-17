@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NestLink isolated browser verification</title>
+  </head>
+  <body>
+    <main>
+      <h1>NestLink isolated browser verification</h1>
+      <p>This entrypoint is only for the feature-gated browser verification binary.</p>
+      <button id="clipboard-fixture-start" data-hook="clipboardFixtureStart" data-status="fixture">
+        Start local WebRTC clipboard fixture
+      </button>
+      <p id="fixture" data-state="idle" aria-live="polite">idle</p>
+      <button id="clipboard-receive" data-hook="clipboardReceiveRemote" data-status="receive">
+        Receive remote clipboard text
+      </button>
+      <p id="receive" data-state="idle" aria-live="polite">idle</p>
+      <button id="clipboard-copy" data-hook="clipboardCopyRemote" data-status="copy">
+        Copy received text to local clipboard
+      </button>
+      <p id="copy" data-state="idle" aria-live="polite">idle</p>
+      <button id="clipboard-check-remote" data-expected="remote" data-status="check-remote">
+        Verify the copied clipboard fixture
+      </button>
+      <p id="check-remote" data-state="idle" aria-live="polite">idle</p>
+      <button id="clipboard-seed" data-status="seed">Seed local clipboard fixture text</button>
+      <p id="seed" data-state="idle" aria-live="polite">idle</p>
+      <button id="clipboard-check-local" data-expected="local" data-status="check-local">
+        Verify the seeded clipboard fixture
+      </button>
+      <p id="check-local" data-state="idle" aria-live="polite">idle</p>
+      <button id="clipboard-send" data-hook="clipboardSendLocal" data-status="send">
+        Send local clipboard text
+      </button>
+      <p id="send" data-state="idle" aria-live="polite">idle</p>
+      <button id="clipboard-bad-sequence" data-hook="clipboardUseBadReplySequence" data-status="bad-sequence">
+        Corrupt the next reply sequence
+      </button>
+      <p id="bad-sequence" data-state="idle" aria-live="polite">idle</p>
+      <button id="clipboard-stop" data-hook="clipboardStop" data-status="stop">Stop fixture</button>
+      <p id="stop" data-state="idle" aria-live="polite">idle</p>
+    </main>
+    <script>
+      function setState(id, state) {
+        const status = document.getElementById(id);
+        status.dataset.state = state;
+        status.textContent = state;
+      }
+      for (const button of document.querySelectorAll("button[data-hook]")) {
+        button.addEventListener("click", () => {
+          const statusId = button.dataset.status;
+          try {
+            const operation = window.nestlinkBrowserVerification[button.dataset.hook]();
+            setState(statusId, "pending");
+            Promise.resolve(operation).then(
+              () => setState(statusId, "fulfilled"),
+              () => setState(statusId, "rejected"),
+            );
+          } catch (_) {
+            setState(statusId, "rejected");
+          }
+        });
+      }
+      document.getElementById("clipboard-seed").addEventListener("click", () => {
+        setState("seed", "pending");
+        navigator.clipboard.writeText("nestlink browser local clipboard fixture").then(
+          () => setState("seed", "fulfilled"),
+          () => setState("seed", "rejected"),
+        );
+      });
+      document.getElementById("clipboard-check-remote").addEventListener("click", () => {
+        navigator.clipboard.readText().then(
+          text => setState("check-remote", text === "remote clipboard fixture" ? "match" : "mismatch"),
+          () => setState("check-remote", "rejected"),
+        );
+      });
+      document.getElementById("clipboard-check-local").addEventListener("click", () => {
+        navigator.clipboard.readText().then(
+          text => setState("check-local", text === "nestlink browser local clipboard fixture" ? "match" : "mismatch"),
+          () => setState("check-local", "rejected"),
+        );
+      });
+    </script>
+    <link data-trunk rel="rust" data-bin="nestlink-web-browser-verification"
+      data-cargo-features="browser-verification"
+      data-wasm-opt-params="--enable-bulk-memory --enable-nontrapping-float-to-int" />
+  </body>
+</html>

@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "product": "NestLink-v15",
+  "purpose": "native-payload",
+  "version": "15.0.0",
+  "release_sequence": 1,
+  "source_revision": null,
+  "artifacts": [
+    {
+      "id": "windows-x86_64-desktop",
+      "platform": "windows",
+      "architecture": "x86_64",
+      "role": "desktop",
+      "format": "executable",
+      "path": "windows-x86_64/nestlink-desktop.exe",
+      "bytes": null,
+      "sha256": null,
+      "state_compatibility": null,
+      "windows_certificate_sha256": null
+    },
+    {
+      "id": "windows-x86_64-daemon",
+      "platform": "windows",
+      "architecture": "x86_64",
+      "role": "daemon",
+      "format": "executable",
+      "path": "windows-x86_64/nestlink-daemon.exe",
+      "bytes": null,
+      "sha256": null,
+      "state_compatibility": null,
+      "windows_certificate_sha256": null
+    },
+    {
+      "id": "windows-x86_64-privileged",
+      "platform": "windows",
+      "architecture": "x86_64",
+      "role": "privileged",
+      "format": "executable",
+      "path": "windows-x86_64/nestlink-privileged.exe",
+      "bytes": null,
+      "sha256": null,
+      "state_compatibility": null,
+      "windows_certificate_sha256": null
+    },
+    {
+      "id": "linux-x86_64-desktop",
+      "platform": "linux",
+      "architecture": "x86_64",
+      "role": "desktop",
+      "format": "executable",
+      "path": "linux-x86_64/nestlink-desktop",
+      "bytes": null,
+      "sha256": null,
+      "state_compatibility": null
+    },
+    {
+      "id": "linux-x86_64-daemon",
+      "platform": "linux",
+      "architecture": "x86_64",
+      "role": "daemon",
+      "format": "executable",
+      "path": "linux-x86_64/nestlink-daemon",
+      "bytes": null,
+      "sha256": null,
+      "state_compatibility": null
+    },
+    {
+      "id": "linux-x86_64-server",
+      "platform": "linux",
+      "architecture": "x86_64",
+      "role": "server",
+      "format": "executable",
+      "path": "linux-x86_64/nestlink-server",
+      "bytes": null,
+      "sha256": null,
+      "state_compatibility": null
+    },
+    {
+      "id": "linux-aarch64-desktop",
+      "platform": "linux",
+      "architecture": "aarch64",
+      "role": "desktop",
+      "format": "executable",
+      "path": "linux-aarch64/nestlink-desktop",
+      "bytes": null,
+      "sha256": null,
+      "state_compatibility": null
+    },
+    {
+      "id": "linux-aarch64-daemon",
+      "platform": "linux",
+      "architecture": "aarch64",
+      "role": "daemon",
+      "format": "executable",
+      "path": "linux-aarch64/nestlink-daemon",
+      "bytes": null,
+      "sha256": null,
+      "state_compatibility": null
+    },
+    {
+      "id": "linux-aarch64-server",
+      "platform": "linux",
+      "architecture": "aarch64",
+      "role": "server",
+      "format": "executable",
+      "path": "linux-aarch64/nestlink-server",
+      "bytes": null,
+      "sha256": null,
+      "state_compatibility": null
+    }
+  ]
+}

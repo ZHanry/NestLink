@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "reference": "manual protobuf varint, UTF-8 and sint32 zigzag encoding; no generated Rust encoder",
+  "input_epoch": 1,
+  "layout_epoch": 1,
+  "connection_generation": 9,
+  "sequence": 1,
+  "text": "中文提交",
+  "text_hex": "08011001180120092801420ce4b8ade69687e68f90e4baa4",
+  "pointer_x": -5,
+  "pointer_y": 10,
+  "pointer_button": 1,
+  "pointer_hex": "080110011801200928013a080801100118092014"
+}

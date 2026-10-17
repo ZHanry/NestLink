@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "kind": "current-remote-release-metadata-vs-verified-local-archive",
+  "current_remote_inventory": {
+    "path": "docs/refactor/history-audit/remote-preservation-inventory-2026-10-17.json",
+    "sha256": "b6286969ed0cc264352adc5ce534121f956f4a2660429c6d86c1de57ab0595cf",
+    "started_at": "2026-10-17T08:49:22.411644+08:00",
+    "completed_at": "2026-10-17T08:52:52.565885+08:00"
+  },
+  "previous_full_archive_verification": {
+    "path": "C:/Users/Popdo/NestLink-legacy-archive-20261014/archive-20261016-211836-9df6cbcb.json",
+    "sha256": "99f4fe861b0f9dd98d8d3a115de1d94b478991028530e3781f76240ad0f297b6",
+    "verified_assets": 799,
+    "verified_bytes": 16177009767,
+    "all_inventory_bytes_verified": true,
+    "durable_remote_archive_uploaded": false
+  },
+  "components": {
+    "hub": {
+      "refs": 47,
+      "refs_stable_during_collection": true,
+      "releases": 26,
+      "assets": 120,
+      "bytes": 1120661056,
+      "metadata_matches_previous_verified_archive": 120
+    },
+    "server": {
+      "refs": 43,
+      "refs_stable_during_collection": true,
+      "releases": 14,
+      "assets": 144,
+      "bytes": 20093670,
+      "metadata_matches_previous_verified_archive": 144
+    },
+    "client": {
+      "refs": 26,
+      "refs_stable_during_collection": true,
+      "releases": 15,
+      "assets": 368,
+      "bytes": 9856093755,
+      "metadata_matches_previous_verified_archive": 368
+    },
+    "android": {
+      "refs": 20,
+      "refs_stable_during_collection": true,
+      "releases": 11,
+      "assets": 167,
+      "bytes": 5180161286,
+      "metadata_matches_previous_verified_archive": 167
+    }
+  },
+  "totals": {
+    "refs": 136,
+    "releases": 66,
+    "assets": 799,
+    "bytes": 16177009767,
+    "matching_assets": 799,
+    "changed_assets": 0,
+    "missing_assets": 0,
+    "new_assets": 0
+  },
+  "current_remote_ref_tips": {
+    "count": 136,
+    "exact_tip_objects_present_in_restored_legacy_bundle": 136,
+    "bundle_bytes": 85678333,
+    "bundle_sha256": "ebf6650beae9d180daa8b7dc7d48e9fb91283a28151d22c31865d3f71c9cb943",
+    "fresh_restore_receipt": {
+      "path": "D:/NestLinkBuilds/legacy-bundle-reverification-20261017-attempt01-logs/receipt.json",
+      "sha256": "cc5ff46eea7069912218ccc60c8735706a91ce704cef73160d5e52110e3d4bc5",
+      "restored_refs": 317,
+      "strict_fsck_passed": true
+    },
+    "unresolved_gitlinks": [
+      "93f9445c69f30487f1479a9e4e1882773e00c7f9",
+      "b0f50c8d55a015f3d49fe9e90fcefb585d74a25f",
+      "f857bbd3bc350c800d447eb0d809d21f101cd80b"
+    ]
+  },
+  "comparison_scope": "Every current GitHub asset ID, repository, release ID/tag, filename, size, uploaded state and SHA-256 matched the prior report whose local 799 asset bytes were independently rehashed. This comparison reused those byte-verification results; it did not hash the 16 GB archive again.",
+  "historical_source_imported": false,
+  "durable_remote_archive_uploaded": false,
+  "finalization_ready": false,
+  "remote_repositories_modified": false
+}

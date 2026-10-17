@@ -1,0 +1,40 @@
+[package]
+name = "nestlink-browser-native-host-fixture"
+version = "0.0.0"
+edition = "2024"
+license = "Apache-2.0"
+publish = false
+
+[workspace]
+resolver = "2"
+
+[dependencies]
+nestlink-app-core = { path = "../../../crates/app-core" }
+nestlink-sdk = { path = "../../../crates/sdk" }
+nestlink-server = { path = "../../../apps/server" }
+nestlink-storage = { path = "../../../crates/storage" }
+nestlink-auth = { path = "../../../crates/auth" }
+nestlink-identity = { path = "../../../crates/identity" }
+nestlink-protocol = { path = "../../../crates/protocol" }
+nestlink-remote = { path = "../../../crates/remote" }
+nestlink-media-codec = { path = "../../../crates/media-codec" }
+nestlink-platform-files = { path = "../../../crates/platform-files" }
+nestlink-platform-security = { path = "../../../crates/platform-security" }
+nestlink-session = { path = "../../../crates/session" }
+axum = "=0.8.9"
+base64 = "=0.22.1"
+log = "=0.4.34"
+serde_json = "=1.0.154"
+sha2 = "=0.10.9"
+tempfile = "=3.27.0"
+tokio = { version = "=1.53.2", features = ["rt-multi-thread", "macros", "net", "time", "sync", "io-util"] }
+
+[patch.crates-io]
+webrtc-ice = { path = "../../../crates/traversal/vendor/ice" }
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"

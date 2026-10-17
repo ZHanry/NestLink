@@ -1,0 +1,33 @@
+[package]
+name = "nestlink-protocol"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+build = "build.rs"
+
+[dependencies]
+prost.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+schemars.workspace = true
+uuid.workspace = true
+thiserror.workspace = true
+zeroize.workspace = true
+url.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+uuid = { workspace = true, features = ["js"] }
+
+[build-dependencies]
+prost-build = "0.14.1"
+protoc-bin-vendored = "3.2.0"
+serde_json.workspace = true
+tempfile = "3.23.0"
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[lints]
+workspace = true

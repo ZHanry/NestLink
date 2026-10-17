@@ -1,0 +1,41 @@
+[package]
+name = "nestlink-platform-audio"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+nestlink-remote.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+nestlink-platform-session.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+nestlink-platform-session.workspace = true
+libc = "0.2.190"
+
+[build-dependencies]
+cc = "=1.8.0"
+pkg-config = "=0.3.34"
+
+[dev-dependencies]
+serde_json.workspace = true
+tempfile = "=3.27.0"
+tokio.workspace = true
+nestlink-auth.workspace = true
+nestlink-identity.workspace = true
+nestlink-policy.workspace = true
+nestlink-session.workspace = true
+nestlink-protocol.workspace = true
+prost.workspace = true
+
+[target.'cfg(target_os = "linux")'.dev-dependencies]
+zbus = { version = "=5.19.0", default-features = false, features = ["tokio"] }
+
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"

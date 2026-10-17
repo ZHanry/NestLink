@@ -1,0 +1,463 @@
+{
+  "schema_version": 1,
+  "observed_date": "2026-10-13",
+  "original_inventory": {
+    "path": "docs/refactor/history-audit/local-preservation-inventory-2026-10-13.json",
+    "sha256": "8912ac5897461af4b1ff8cba4869376a143a630d5c8b1d16f16f35ad91176b61",
+    "bytes": 127673
+  },
+  "original_inventory_modified": false,
+  "script": {
+    "path": "scripts/refactor-gitlink-recovery-audit.py",
+    "sha256": "c800aa101b14bcc12620e0baa02b587993944ec13686e55650a743efe50bca0e",
+    "bytes": 13476
+  },
+  "fetch_attempt_evidence": {
+    "path": "artifacts/history-preservation/fetch-attempts-2026-10-13.json",
+    "sha256": "1af70ded659707175320d0150fe51cb26f66ff06c26c22508477313ac76d8832",
+    "bytes": 3957
+  },
+  "scope": "Five original missing gitlinks; exact SHA retrieval into isolated bare stores, then read-only local object verification. No product source import.",
+  "fetch_controls": {
+    "public_https_only": true,
+    "credential_helper_disabled": true,
+    "global_and_system_git_config_disabled": true,
+    "terminal_prompt_disabled": true,
+    "no_checkout_no_tags_no_recursive_submodules": true,
+    "request_ref_pattern": "<original gitlink SHA>:refs/tags/preserved/<same SHA>",
+    "fetch_used_no_depth_or_filter": true
+  },
+  "candidate_source_evidence": {
+    "21pages_hbb_common": {
+      "url": "https://github.com/21pages/hbb_common",
+      "declaration": {
+        "source_commit": "9dd4fa86464a7a390716c9dada405d6ff9b81f09",
+        "source_path": ".gitmodules",
+        "blob_oid": "5fc4a93920e37fe4efc9fbb058218317d5c47a07",
+        "category": "gitmodules",
+        "artifact": {
+          "path": "artifacts/history-preservation/declarations/5fc4a93920e37fe4efc9fbb058218317d5c47a07-.gitmodules",
+          "sha256": "ed60c6a151e31c85ff9bd13c54a9777049a96b4e450304b5735a895d8948d3b4",
+          "bytes": 143
+        }
+      },
+      "scope": "Exact historical .gitmodules elsewhere in Client history; not original URL for the three attempted targets"
+    },
+    "flathub_shared_modules": {
+      "url": "https://github.com/flathub/shared-modules.git",
+      "source_commit": "2b40c61d8ed62c5de4eeadc5f555fb3b3a6b29ee",
+      "source_path": ".github/workflows/flutter-build.yml",
+      "source_blob_oid": "3649651353aa67069f8d238b45c013be523c15e9",
+      "source_blob_sha256": "bd3040db5f62e82fff3f58811088a69e4732c7f6468c1dff1679873339326502",
+      "matching_line_numbers": [
+        2074
+      ],
+      "matched_public_command": "git clone https://github.com/flathub/shared-modules.git --depth=1",
+      "scope": "Later historical workflow is candidate evidence only; original gitlink commit has no .gitmodules"
+    }
+  },
+  "targets": [
+    {
+      "gitlink_oid": "5a78ec42303ca046d808742e911a156636a2432b",
+      "original_client_commit": "10f61ffdc28ca0b46dd0ab100e76bf08a0896527",
+      "original_gitlink_path": "libs/hbb_common",
+      "original_gitlink_verified": true,
+      "original_declared_url": "https://github.com/rustdesk/hbb_common",
+      "original_url_attribution_verified": true,
+      "full_original_gitmodules": {
+        "all_gitmodules_paths_in_tree": [
+          ".gitmodules"
+        ],
+        "declarations": [
+          {
+            "source_commit": "10f61ffdc28ca0b46dd0ab100e76bf08a0896527",
+            "source_path": ".gitmodules",
+            "blob_oid": "d80e69aa84a4c7f764eea191622a386878cf852d",
+            "category": "gitmodules",
+            "artifact": {
+              "path": "artifacts/history-preservation/declarations/d80e69aa84a4c7f764eea191622a386878cf852d-.gitmodules",
+              "sha256": "0cbdb9cb5ecf1b8f977d5ebc91ef9a99fe02c256a12fe58eb32ee2e4ca52b2d6",
+              "bytes": 100
+            }
+          }
+        ]
+      },
+      "parent_top_level_license_context": [
+        {
+          "source_commit": "10f61ffdc28ca0b46dd0ab100e76bf08a0896527",
+          "source_path": "LICENCE",
+          "blob_oid": "0ad25db4bd1d86c452db3f9602ccdbe172438f52",
+          "category": "license_text",
+          "artifact": {
+            "path": "artifacts/history-preservation/declarations/0ad25db4bd1d86c452db3f9602ccdbe172438f52-LICENCE",
+            "sha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+            "bytes": 34523
+          },
+          "text_signatures": [
+            "AGPL-3.0-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false
+        }
+      ],
+      "parent_license_is_not_automatic_submodule_license_grant": true,
+      "fetch_attempts": [
+        {
+          "repository_key": "rustdesk-hbb-common",
+          "url": "https://github.com/rustdesk/hbb_common",
+          "requested_commit": "5a78ec42303ca046d808742e911a156636a2432b",
+          "ref": "refs/tags/preserved/5a78ec42303ca046d808742e911a156636a2432b",
+          "exit_code": 0,
+          "fetch_log": "artifacts/history-preservation/rustdesk-hbb-common-5a78ec42303ca046d808742e911a156636a2432b-fetch.log",
+          "fetch_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "result": "fetched",
+          "read_only_remote_request": true
+        }
+      ],
+      "recovered": [
+        {
+          "fetched_from": "https://github.com/rustdesk/hbb_common",
+          "repository_path": "artifacts/history-preservation/rustdesk-hbb-common.git",
+          "object_type": "commit",
+          "gitlink_oid": "5a78ec42303ca046d808742e911a156636a2432b",
+          "recomputed_commit_oid": "5a78ec42303ca046d808742e911a156636a2432b",
+          "commit_payload_sha256": "8d5ebd24e4518d40f954888f3b8671975bbd6421b0c404621e4ab0d5100f043c",
+          "root_tree_oid": "700f258241c68e86504e9f980e10ec5ae4668af8",
+          "recomputed_tree_oid": "700f258241c68e86504e9f980e10ec5ae4668af8",
+          "shallow": false,
+          "reachable_commit_count": 302,
+          "reachable_object_count": 1101,
+          "missing_object_oids": [],
+          "closure": {
+            "path": "artifacts/history-preservation/rustdesk-hbb-common-5a78ec42303ca046d808742e911a156636a2432b-object-closure.txt",
+            "sha256": "671feef3230076bf2aa22b8751617909d36f2cf5dba2e1886c8e78f3fba94bef",
+            "bytes": 51866
+          },
+          "git_fsck_strict_exit_code": 0,
+          "fsck_stdout": {
+            "path": "artifacts/history-preservation/rustdesk-hbb-common-5a78ec42303ca046d808742e911a156636a2432b-verified-fsck.log",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          },
+          "nested_gitlinks_at_recovered_commit": [],
+          "license_declarations_at_recovered_commit": [],
+          "standalone_license_found": false,
+          "new_product_reuse_approved": false
+        }
+      ],
+      "status": "original_gitlink_object_recovered",
+      "unavailability_scope": null
+    },
+    {
+      "gitlink_oid": "93f9445c69f30487f1479a9e4e1882773e00c7f9",
+      "original_client_commit": "7792ac148139d8aead7d205baa335dbfaac50b22",
+      "original_gitlink_path": "libs/hbb_common",
+      "original_gitlink_verified": true,
+      "original_declared_url": "https://github.com/rustdesk/hbb_common",
+      "original_url_attribution_verified": true,
+      "full_original_gitmodules": {
+        "all_gitmodules_paths_in_tree": [
+          ".gitmodules"
+        ],
+        "declarations": [
+          {
+            "source_commit": "7792ac148139d8aead7d205baa335dbfaac50b22",
+            "source_path": ".gitmodules",
+            "blob_oid": "d80e69aa84a4c7f764eea191622a386878cf852d",
+            "category": "gitmodules",
+            "artifact": {
+              "path": "artifacts/history-preservation/declarations/d80e69aa84a4c7f764eea191622a386878cf852d-.gitmodules",
+              "sha256": "0cbdb9cb5ecf1b8f977d5ebc91ef9a99fe02c256a12fe58eb32ee2e4ca52b2d6",
+              "bytes": 100
+            }
+          }
+        ]
+      },
+      "parent_top_level_license_context": [
+        {
+          "source_commit": "7792ac148139d8aead7d205baa335dbfaac50b22",
+          "source_path": "LICENCE",
+          "blob_oid": "0ad25db4bd1d86c452db3f9602ccdbe172438f52",
+          "category": "license_text",
+          "artifact": {
+            "path": "artifacts/history-preservation/declarations/0ad25db4bd1d86c452db3f9602ccdbe172438f52-LICENCE",
+            "sha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+            "bytes": 34523
+          },
+          "text_signatures": [
+            "AGPL-3.0-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false
+        }
+      ],
+      "parent_license_is_not_automatic_submodule_license_grant": true,
+      "fetch_attempts": [
+        {
+          "repository_key": "rustdesk-hbb-common",
+          "url": "https://github.com/rustdesk/hbb_common",
+          "requested_commit": "93f9445c69f30487f1479a9e4e1882773e00c7f9",
+          "ref": "refs/tags/preserved/93f9445c69f30487f1479a9e4e1882773e00c7f9",
+          "exit_code": 128,
+          "fetch_log": "artifacts/history-preservation/rustdesk-hbb-common-93f9445c69f30487f1479a9e4e1882773e00c7f9-fetch.log",
+          "fetch_log_sha256": "b7d97495d0d7b0d57ce53817d5075048e8bc9722557818c9742dd08310c97e47",
+          "result": "remote_not_our_ref",
+          "read_only_remote_request": true
+        },
+        {
+          "repository_key": "21pages-hbb-common",
+          "url": "https://github.com/21pages/hbb_common",
+          "requested_commit": "93f9445c69f30487f1479a9e4e1882773e00c7f9",
+          "ref": "refs/tags/preserved/93f9445c69f30487f1479a9e4e1882773e00c7f9",
+          "exit_code": 128,
+          "fetch_log": "artifacts/history-preservation/21pages-hbb-common-93f9445c69f30487f1479a9e4e1882773e00c7f9-fetch.log",
+          "fetch_log_sha256": "b7d97495d0d7b0d57ce53817d5075048e8bc9722557818c9742dd08310c97e47",
+          "result": "remote_not_our_ref",
+          "read_only_remote_request": true
+        }
+      ],
+      "recovered": [],
+      "status": "not_obtainable_from_attempted_documented_sources",
+      "unavailability_scope": "These exact-SHA requests failed; global nonexistence is not claimed."
+    },
+    {
+      "gitlink_oid": "b0f50c8d55a015f3d49fe9e90fcefb585d74a25f",
+      "original_client_commit": "838decccc44f83d7989fbcd1d404196d7783bbc3",
+      "original_gitlink_path": "libs/hbb_common",
+      "original_gitlink_verified": true,
+      "original_declared_url": "https://github.com/rustdesk/hbb_common",
+      "original_url_attribution_verified": true,
+      "full_original_gitmodules": {
+        "all_gitmodules_paths_in_tree": [
+          ".gitmodules"
+        ],
+        "declarations": [
+          {
+            "source_commit": "838decccc44f83d7989fbcd1d404196d7783bbc3",
+            "source_path": ".gitmodules",
+            "blob_oid": "d80e69aa84a4c7f764eea191622a386878cf852d",
+            "category": "gitmodules",
+            "artifact": {
+              "path": "artifacts/history-preservation/declarations/d80e69aa84a4c7f764eea191622a386878cf852d-.gitmodules",
+              "sha256": "0cbdb9cb5ecf1b8f977d5ebc91ef9a99fe02c256a12fe58eb32ee2e4ca52b2d6",
+              "bytes": 100
+            }
+          }
+        ]
+      },
+      "parent_top_level_license_context": [
+        {
+          "source_commit": "838decccc44f83d7989fbcd1d404196d7783bbc3",
+          "source_path": "LICENCE",
+          "blob_oid": "0ad25db4bd1d86c452db3f9602ccdbe172438f52",
+          "category": "license_text",
+          "artifact": {
+            "path": "artifacts/history-preservation/declarations/0ad25db4bd1d86c452db3f9602ccdbe172438f52-LICENCE",
+            "sha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+            "bytes": 34523
+          },
+          "text_signatures": [
+            "AGPL-3.0-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false
+        }
+      ],
+      "parent_license_is_not_automatic_submodule_license_grant": true,
+      "fetch_attempts": [
+        {
+          "repository_key": "rustdesk-hbb-common",
+          "url": "https://github.com/rustdesk/hbb_common",
+          "requested_commit": "b0f50c8d55a015f3d49fe9e90fcefb585d74a25f",
+          "ref": "refs/tags/preserved/b0f50c8d55a015f3d49fe9e90fcefb585d74a25f",
+          "exit_code": 128,
+          "fetch_log": "artifacts/history-preservation/rustdesk-hbb-common-b0f50c8d55a015f3d49fe9e90fcefb585d74a25f-fetch.log",
+          "fetch_log_sha256": "d1b480c49c6378fccc4d560f06f923ab9c13aeb2d600904443209cf1c7de5a24",
+          "result": "remote_not_our_ref",
+          "read_only_remote_request": true
+        },
+        {
+          "repository_key": "21pages-hbb-common",
+          "url": "https://github.com/21pages/hbb_common",
+          "requested_commit": "b0f50c8d55a015f3d49fe9e90fcefb585d74a25f",
+          "ref": "refs/tags/preserved/b0f50c8d55a015f3d49fe9e90fcefb585d74a25f",
+          "exit_code": 128,
+          "fetch_log": "artifacts/history-preservation/21pages-hbb-common-b0f50c8d55a015f3d49fe9e90fcefb585d74a25f-fetch.log",
+          "fetch_log_sha256": "d1b480c49c6378fccc4d560f06f923ab9c13aeb2d600904443209cf1c7de5a24",
+          "result": "remote_not_our_ref",
+          "read_only_remote_request": true
+        }
+      ],
+      "recovered": [],
+      "status": "not_obtainable_from_attempted_documented_sources",
+      "unavailability_scope": "These exact-SHA requests failed; global nonexistence is not claimed."
+    },
+    {
+      "gitlink_oid": "f857bbd3bc350c800d447eb0d809d21f101cd80b",
+      "original_client_commit": "2b40c61d8ed62c5de4eeadc5f555fb3b3a6b29ee",
+      "original_gitlink_path": "libs/hbb_common",
+      "original_gitlink_verified": true,
+      "original_declared_url": "https://github.com/rustdesk/hbb_common",
+      "original_url_attribution_verified": true,
+      "full_original_gitmodules": {
+        "all_gitmodules_paths_in_tree": [
+          ".gitmodules"
+        ],
+        "declarations": [
+          {
+            "source_commit": "2b40c61d8ed62c5de4eeadc5f555fb3b3a6b29ee",
+            "source_path": ".gitmodules",
+            "blob_oid": "d80e69aa84a4c7f764eea191622a386878cf852d",
+            "category": "gitmodules",
+            "artifact": {
+              "path": "artifacts/history-preservation/declarations/d80e69aa84a4c7f764eea191622a386878cf852d-.gitmodules",
+              "sha256": "0cbdb9cb5ecf1b8f977d5ebc91ef9a99fe02c256a12fe58eb32ee2e4ca52b2d6",
+              "bytes": 100
+            }
+          }
+        ]
+      },
+      "parent_top_level_license_context": [
+        {
+          "source_commit": "2b40c61d8ed62c5de4eeadc5f555fb3b3a6b29ee",
+          "source_path": "LICENCE",
+          "blob_oid": "0ad25db4bd1d86c452db3f9602ccdbe172438f52",
+          "category": "license_text",
+          "artifact": {
+            "path": "artifacts/history-preservation/declarations/0ad25db4bd1d86c452db3f9602ccdbe172438f52-LICENCE",
+            "sha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+            "bytes": 34523
+          },
+          "text_signatures": [
+            "AGPL-3.0-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false
+        }
+      ],
+      "parent_license_is_not_automatic_submodule_license_grant": true,
+      "fetch_attempts": [
+        {
+          "repository_key": "rustdesk-hbb-common",
+          "url": "https://github.com/rustdesk/hbb_common",
+          "requested_commit": "f857bbd3bc350c800d447eb0d809d21f101cd80b",
+          "ref": "refs/tags/preserved/f857bbd3bc350c800d447eb0d809d21f101cd80b",
+          "exit_code": 128,
+          "fetch_log": "artifacts/history-preservation/rustdesk-hbb-common-f857bbd3bc350c800d447eb0d809d21f101cd80b-fetch.log",
+          "fetch_log_sha256": "13bcca568843131d9630aaafc971141288dae46fb9022612536c2d2baa94e639",
+          "result": "remote_not_our_ref",
+          "read_only_remote_request": true
+        },
+        {
+          "repository_key": "21pages-hbb-common",
+          "url": "https://github.com/21pages/hbb_common",
+          "requested_commit": "f857bbd3bc350c800d447eb0d809d21f101cd80b",
+          "ref": "refs/tags/preserved/f857bbd3bc350c800d447eb0d809d21f101cd80b",
+          "exit_code": 128,
+          "fetch_log": "artifacts/history-preservation/21pages-hbb-common-f857bbd3bc350c800d447eb0d809d21f101cd80b-fetch.log",
+          "fetch_log_sha256": "13bcca568843131d9630aaafc971141288dae46fb9022612536c2d2baa94e639",
+          "result": "remote_not_our_ref",
+          "read_only_remote_request": true
+        }
+      ],
+      "recovered": [],
+      "status": "not_obtainable_from_attempted_documented_sources",
+      "unavailability_scope": "These exact-SHA requests failed; global nonexistence is not claimed."
+    },
+    {
+      "gitlink_oid": "cecc93886ce839ec49b0041f072a573327acdf08",
+      "original_client_commit": "2d9346087343c817b465e56276fb829adbd1f25f",
+      "original_gitlink_path": "flatpak/shared-modules",
+      "original_gitlink_verified": true,
+      "original_declared_url": null,
+      "original_url_attribution_verified": false,
+      "full_original_gitmodules": {
+        "all_gitmodules_paths_in_tree": [],
+        "declarations": []
+      },
+      "parent_top_level_license_context": [
+        {
+          "source_commit": "2d9346087343c817b465e56276fb829adbd1f25f",
+          "source_path": "LICENCE",
+          "blob_oid": "0ad25db4bd1d86c452db3f9602ccdbe172438f52",
+          "category": "license_text",
+          "artifact": {
+            "path": "artifacts/history-preservation/declarations/0ad25db4bd1d86c452db3f9602ccdbe172438f52-LICENCE",
+            "sha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+            "bytes": 34523
+          },
+          "text_signatures": [
+            "AGPL-3.0-text"
+          ],
+          "spdx_identifiers": [],
+          "legal_reuse_approved": false
+        }
+      ],
+      "parent_license_is_not_automatic_submodule_license_grant": true,
+      "fetch_attempts": [
+        {
+          "repository_key": "flathub-shared-modules",
+          "url": "https://github.com/flathub/shared-modules.git",
+          "requested_commit": "cecc93886ce839ec49b0041f072a573327acdf08",
+          "ref": "refs/tags/preserved/cecc93886ce839ec49b0041f072a573327acdf08",
+          "exit_code": 0,
+          "fetch_log": "artifacts/history-preservation/flathub-shared-modules-cecc93886ce839ec49b0041f072a573327acdf08-fetch.log",
+          "fetch_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "result": "fetched",
+          "read_only_remote_request": true
+        }
+      ],
+      "recovered": [
+        {
+          "fetched_from": "https://github.com/flathub/shared-modules.git",
+          "repository_path": "artifacts/history-preservation/flathub-shared-modules.git",
+          "object_type": "commit",
+          "gitlink_oid": "cecc93886ce839ec49b0041f072a573327acdf08",
+          "recomputed_commit_oid": "cecc93886ce839ec49b0041f072a573327acdf08",
+          "commit_payload_sha256": "4be262458d09f6a209e0030f7f2899faf0486b388bb082408620c332ea6a4123",
+          "root_tree_oid": "89a40a098480e11c6b1a3d53eeb847e5b8bc6cd1",
+          "recomputed_tree_oid": "89a40a098480e11c6b1a3d53eeb847e5b8bc6cd1",
+          "shallow": false,
+          "reachable_commit_count": 243,
+          "reachable_object_count": 1079,
+          "missing_object_oids": [],
+          "closure": {
+            "path": "artifacts/history-preservation/flathub-shared-modules-cecc93886ce839ec49b0041f072a573327acdf08-object-closure.txt",
+            "sha256": "8143a327dee8853e507e0834c50362c3f8fee24b93476ece35af249219cd22ef",
+            "bytes": 57050
+          },
+          "git_fsck_strict_exit_code": 0,
+          "fsck_stdout": {
+            "path": "artifacts/history-preservation/flathub-shared-modules-cecc93886ce839ec49b0041f072a573327acdf08-verified-fsck.log",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "bytes": 0
+          },
+          "nested_gitlinks_at_recovered_commit": [],
+          "license_declarations_at_recovered_commit": [],
+          "standalone_license_found": false,
+          "new_product_reuse_approved": false
+        }
+      ],
+      "status": "original_gitlink_object_recovered",
+      "unavailability_scope": null
+    }
+  ],
+  "recovered_original_gitlink_count": 2,
+  "remaining_missing_gitlink_oids": [
+    "93f9445c69f30487f1479a9e4e1882773e00c7f9",
+    "b0f50c8d55a015f3d49fe9e90fcefb585d74a25f",
+    "f857bbd3bc350c800d447eb0d809d21f101cd80b"
+  ],
+  "limits": [
+    "The shared-modules object matches the original gitlink hash and passes strict fsck, but original origin attribution remains unverified.",
+    "The three unsuccessful hbb_common requests returned not our ref from the originally declared URL and a historically documented fork; no synthetic replacement commits were made.",
+    "All recovered commit/tree/source/license bytes remain in isolated Git stores. No product reuse authorization is inferred, including when a submodule contains no standalone license file.",
+    "Fetched Git object closures do not prove complete remote refs/Releases/assets, recover reflog-only history, or satisfy final repository-deletion prerequisites.",
+    "Existing original inventory and its artifacts were not overwritten. Isolated ignored artifacts still need durable preservation before finalization."
+  ],
+  "old_worktrees_modified": false,
+  "product_history_imported": false,
+  "remote_upload_or_deletion_performed": false,
+  "new_product_reuse_approved": false,
+  "finalization_ready": false
+}

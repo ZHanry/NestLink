@@ -1,0 +1,49 @@
+[package]
+name = "nestlink-daemon"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+nestlink-app-core.workspace = true
+nestlink-app-ipc.workspace = true
+nestlink-auth.workspace = true
+nestlink-identity.workspace = true
+nestlink-local-ipc.workspace = true
+nestlink-protocol.workspace = true
+nestlink-platform-security.workspace = true
+nestlink-media-codec.workspace = true
+nestlink-media-session.workspace = true
+nestlink-platform-capture.workspace = true
+nestlink-platform-clipboard.workspace = true
+nestlink-platform-files.workspace = true
+nestlink-remote.workspace = true
+nestlink-session.workspace = true
+nestlink-transport-stream.workspace = true
+nestlink-sdk.workspace = true
+clap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+tokio.workspace = true
+zeroize.workspace = true
+
+[dev-dependencies]
+tempfile = "=3.27.0"
+
+[target.'cfg(unix)'.dependencies]
+rustix = { version = "1.1.2", features = ["process"] }
+
+[target.'cfg(windows)'.dependencies]
+nestlink-privileged.workspace = true
+nestlink-platform-input.workspace = true
+nestlink-platform-audio.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+nestlink-platform-input.workspace = true
+nestlink-platform-audio.workspace = true
+nestlink-platform-session.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,118 @@
+use nestlink_sdk::{NetworkMonitor, native::AddressPolicy};
+use std::{net::SocketAddr, sync::Arc};
+
+use crate::{
+    BrowserHostConfig, NativeNetworkCommit, NativeNetworkError, NativeNetworkSettings,
+    NativeNetworkSettingsStore,
+};
+
+/// Trusted local network inputs for app-core-owned native sessions.
+/// STUN targets come from local operator configuration and the authenticated
+/// deployment. Private networks always require explicit local consent.
+#[derive(Clone)]
+pub struct NativeSessionConfig {
+    pub bind_address: SocketAddr,
+    pub stun_servers: Vec<SocketAddr>,
+    pub use_deployment_stun: bool,
+    pub private_network_prefixes: Vec<String>,
+    pub supported_capabilities: Vec<String>,
+    pub browser_host: Option<BrowserHostConfig>,
+    network: Arc<NetworkMonitor>,
+    pub(crate) network_settings_store: Option<Arc<dyn NativeNetworkSettingsStore>>,
+}
+
+impl NativeSessionConfig {
+    /// Resolve once before the initial native connection. Recovery retains this
+    /// exact configuration and cannot fetch a wider scope for the old budget.
+    pub(crate) async fn resolve_deployment_stun(
+        mut self,
+        sdk: &nestlink_sdk::Sdk,
+    ) -> Result<Self, nestlink_sdk::SdkError> {
+        if !self.use_deployment_stun {
+            return Ok(self);
+        }
+        match sdk.native_discovery_config().await {
+            Ok(config) => {
+                for address in config.stun_servers {
+                    if !self.stun_servers.contains(&address) && self.stun_servers.len() < 4 {
+                        self.stun_servers.push(address);
+                    }
+                }
+            }
+            Err(error) if error.discovery_temporarily_unavailable() => {}
+            Err(error) => return Err(error),
+        }
+        Ok(self)
+    }
+
+    pub fn new(network: Arc<NetworkMonitor>) -> Self {
+        Self {
+            bind_address: SocketAddr::from(([0, 0, 0, 0], 0)),
+            stun_servers: Vec::new(),
+            use_deployment_stun: true,
+            private_network_prefixes: Vec::new(),
+            supported_capabilities: vec!["vp8".into(), "opus".into()],
+            browser_host: None,
+            network,
+            network_settings_store: None,
+        }
+    }
+
+    pub fn with_browser_host(mut self, config: BrowserHostConfig) -> Self {
+        self.browser_host = Some(config);
+        self
+    }
+
+    pub fn network_settings(&self) -> NativeNetworkSettings {
+        NativeNetworkSettings {
+            use_deployment_stun: self.use_deployment_stun,
+            private_network_prefixes: self.private_network_prefixes.clone(),
+        }
+    }
+
+    pub fn with_network_settings_store(
+        mut self,
+        store: Arc<dyn NativeNetworkSettingsStore>,
+    ) -> Result<Self, NativeNetworkError> {
+        let settings = store.load()?;
+        settings.validate()?;
+        self.use_deployment_stun = settings.use_deployment_stun;
+        self.private_network_prefixes = settings.private_network_prefixes;
+        self.network_settings_store = Some(store);
+        Ok(self)
+    }
+
+    pub(crate) fn set_network_settings(
+        &mut self,
+        settings: NativeNetworkSettings,
+    ) -> Result<NativeNetworkCommit, NativeNetworkError> {
+        settings.validate()?;
+        let store = self
+            .network_settings_store
+            .as_ref()
+            .ok_or(NativeNetworkError::Persistence)?;
+        let commit = store.save(&settings)?;
+        self.use_deployment_stun = settings.use_deployment_stun;
+        self.private_network_prefixes = settings.private_network_prefixes;
+        Ok(commit)
+    }
+
+    pub(crate) fn validate(&self) -> bool {
+        self.stun_servers.len() <= 4
+            && self.private_network_prefixes.len() <= 32
+            && self.supported_capabilities.len() <= 32
+            && self
+                .supported_capabilities
+                .iter()
+                .all(|capability| !capability.is_empty() && capability.len() <= 128)
+            && AddressPolicy::new(&self.private_network_prefixes).is_ok()
+    }
+
+    pub(crate) fn address_policy(&self) -> Result<AddressPolicy, nestlink_sdk::native::DialError> {
+        AddressPolicy::new(&self.private_network_prefixes)
+    }
+
+    pub(crate) fn network(&self) -> &NetworkMonitor {
+        &self.network
+    }
+}

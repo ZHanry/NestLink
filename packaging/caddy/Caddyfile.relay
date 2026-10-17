@@ -1,0 +1,13 @@
+# Example independent native relay origin. Set NESTLINK_RELAY_HOST to the
+# administrator-approved hostname; the Rust listener stays on loopback.
+{$NESTLINK_RELAY_HOST} {
+    handle /api/v3/nodes/*/relay/* {
+        reverse_proxy 127.0.0.1:28746 {
+            header_up -Authorization
+            header_up -Cookie
+        }
+    }
+    handle {
+        respond 404
+    }
+}

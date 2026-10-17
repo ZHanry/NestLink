@@ -1,0 +1,40 @@
+[package]
+name = "nestlink-app-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+nestlink-auth.workspace = true
+nestlink-protocol.workspace = true
+serde = { workspace = true, features = ["rc"] }
+serde_json.workspace = true
+thiserror.workspace = true
+zeroize.workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+base64.workspace = true
+nestlink-identity.workspace = true
+nestlink-policy.workspace = true
+nestlink-platform-clipboard.workspace = true
+nestlink-platform-security.workspace = true
+nestlink-remote.workspace = true
+nestlink-media-session.workspace = true
+nestlink-session.workspace = true
+nestlink-sdk.workspace = true
+nestlink-transport-stream.workspace = true
+prost.workspace = true
+tokio.workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+nestlink-media-codec.workspace = true
+nestlink-server = { path = "../../apps/server", version = "=0.1.0-rc.1" }
+nestlink-storage.workspace = true
+nestlink-identity.workspace = true
+axum.workspace = true
+tower.workspace = true
+tokio.workspace = true
+
+[lints]
+workspace = true
