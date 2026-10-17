@@ -1,0 +1,58 @@
+Verbatim SPDX copyright notices from enum-map-2.7.3.crate
+Locked archive SHA-256: 6866f3bfdf8207509a033af1a75a7b08abda06bbaaeae6669323fd5a097df2e9
+Embedded Git revision: c788a9c4bd0431308d889942719f7a38761d9884
+
+enum-map-2.7.3/CHANGELOG.md
+SPDX-FileCopyrightText: 2018 - 2023 Kamila Borowska <kamila@borowska.pw>
+SPDX-FileCopyrightText: 2021 Alex Sayers <alex@asayers.com>
+
+enum-map-2.7.3/Cargo.toml.orig
+# SPDX-FileCopyrightText: 2017 - 2023 Kamila Borowska <kamila@borowska.pw>
+# SPDX-FileCopyrightText: 2021 Alex Sayers <alex@asayers.com>
+
+enum-map-2.7.3/README.md
+SPDX-FileCopyrightText: 2017 - 2023 Kamila Borowska <kamila@borowska.pw>
+
+enum-map-2.7.3/src/arbitrary.rs
+// SPDX-FileCopyrightText: 2021 Bruno Corrêa Zimmermann <brunoczim@gmail.com>
+// SPDX-FileCopyrightText: 2021 Kamila Borowska <kamila@borowska.pw>
+
+enum-map-2.7.3/src/enum_map_impls.rs
+// SPDX-FileCopyrightText: 2017 - 2021 Kamila Borowska <kamila@borowska.pw>
+// SPDX-FileCopyrightText: 2021 Bruno Corrêa Zimmermann <brunoczim@gmail.com>
+// SPDX-FileCopyrightText: 2021 micycle
+// SPDX-FileCopyrightText: 2023 Nicolas Carranza <nicarran@yandex.com>
+
+enum-map-2.7.3/src/internal.rs
+// SPDX-FileCopyrightText: 2017 - 2023 Kamila Borowska <kamila@borowska.pw>
+// SPDX-FileCopyrightText: 2021 Bruno Corrêa Zimmermann <brunoczim@gmail.com>
+// SPDX-FileCopyrightText: 2022 philipp <descpl@yahoo.de>
+
+enum-map-2.7.3/src/iter.rs
+// SPDX-FileCopyrightText: 2017 - 2022 Kamila Borowska <kamila@borowska.pw>
+// SPDX-FileCopyrightText: 2020 Amanieu d'Antras <amanieu@gmail.com>
+// SPDX-FileCopyrightText: 2021 Bruno Corrêa Zimmermann <brunoczim@gmail.com>
+
+enum-map-2.7.3/src/lib.rs
+// SPDX-FileCopyrightText: 2017 - 2023 Kamila Borowska <kamila@borowska.pw>
+// SPDX-FileCopyrightText: 2019 Riey <creeper844@gmail.com>
+// SPDX-FileCopyrightText: 2021 Alex Sayers <alex@asayers.com>
+// SPDX-FileCopyrightText: 2021 Bruno Corrêa Zimmermann <brunoczim@gmail.com>
+// SPDX-FileCopyrightText: 2022 Cass Fridkin <cass@cloudflare.com>
+// SPDX-FileCopyrightText: 2022 Mateusz Kowalczyk <fuuzetsu@fuuzetsu.co.uk>
+
+enum-map-2.7.3/src/serde.rs
+// SPDX-FileCopyrightText: 2017 - 2023 Kamila Borowska <kamila@borowska.pw>
+// SPDX-FileCopyrightText: 2021 Bruno Corrêa Zimmermann <brunoczim@gmail.com>
+
+enum-map-2.7.3/tests/serde.rs
+// SPDX-FileCopyrightText: 2017 - 2022 Kamila Borowska <kamila@borowska.pw>
+// SPDX-FileCopyrightText: 2022 Cass Fridkin <cass@cloudflare.com>
+
+enum-map-2.7.3/tests/test.rs
+// SPDX-FileCopyrightText: 2018 - 2022 Kamila Borowska <kamila@borowska.pw>
+// SPDX-FileCopyrightText: 2019 Riey <creeper844@gmail.com>
+// SPDX-FileCopyrightText: 2020 Amanieu d'Antras <amanieu@gmail.com>
+// SPDX-FileCopyrightText: 2021 Bruno Corrêa Zimmermann <brunoczim@gmail.com>
+// SPDX-FileCopyrightText: 2021 micycle
+// SPDX-FileCopyrightText: 2022 Cass Fridkin <cass@cloudflare.com>

@@ -640,6 +640,30 @@
       ]
     },
     {
+      "name": "egui_extras",
+      "version": "0.34.3",
+      "archive_sha256": "598d8675f6fd9088db8a93d8c7aacda936b2f3d0c2b0660ad1744a45b5caf922",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "65cb282a198d2dd72b6ca2346cc73eba45b7a830",
+      "review_basis": "Full original root license texts and associated notices at the exact Git revision embedded in this locked crate archive; bytes verified against Git tree blob IDs. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90",
+          "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-APACHE",
+          "git_blob_sha1": "11069edd79019f7dafbe3138841cf289209270dd",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c",
+          "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
+          "git_blob_sha1": "673ea5f0505d6fa65c6a2b6a753c93b8e19d11b9",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
       "name": "egui_glow",
       "version": "0.34.3",
       "archive_sha256": "62b652957fa7e1ab01e8fecbfbf4e35f6e43a53fa98af8a562b50d5403cd44b9",
@@ -700,6 +724,68 @@
           "sha256": "95ca92f5f8ea5231f1580b3a2a799e8260af3114b900e1def5355a7f44bcf60c",
           "upstream_url": "https://raw.githubusercontent.com/emilk/egui/65cb282a198d2dd72b6ca2346cc73eba45b7a830/LICENSE-MIT",
           "git_blob_sha1": "673ea5f0505d6fa65c6a2b6a753c93b8e19d11b9",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "enum-map",
+      "version": "2.7.3",
+      "archive_sha256": "6866f3bfdf8207509a033af1a75a7b08abda06bbaaeae6669323fd5a097df2e9",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "c788a9c4bd0431308d889942719f7a38761d9884",
+      "review_basis": "Complete original REUSE license texts at the exact Git revision embedded in the locked crate archive, verified against Git tree blob IDs. Verbatim per-file SPDX copyright statements from that checksum-verified archive are preserved in packaging/notices/enum-map-2.7.3-COPYRIGHT.txt. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/xfix/enum-map/c788a9c4bd0431308d889942719f7a38761d9884/LICENSES/Apache-2.0.txt",
+          "sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff",
+          "upstream_url": "https://raw.githubusercontent.com/xfix/enum-map/c788a9c4bd0431308d889942719f7a38761d9884/LICENSES/Apache-2.0.txt",
+          "git_blob_sha1": "137069b823873b8bcf42979bcf8e9371052d26a2",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/xfix/enum-map/c788a9c4bd0431308d889942719f7a38761d9884/LICENSES/MIT.txt",
+          "sha256": "b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0",
+          "upstream_url": "https://raw.githubusercontent.com/xfix/enum-map/c788a9c4bd0431308d889942719f7a38761d9884/LICENSES/MIT.txt",
+          "git_blob_sha1": "2071b23b0e08594ea6bc99ac71129ef992abf498",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/xfix/enum-map/c788a9c4bd0431308d889942719f7a38761d9884/LICENSES/CC0-1.0.txt",
+          "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+          "upstream_url": "https://raw.githubusercontent.com/xfix/enum-map/c788a9c4bd0431308d889942719f7a38761d9884/LICENSES/CC0-1.0.txt",
+          "git_blob_sha1": "0e259d42c996742e9e3cba14c677129b2c1b6311",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
+      "name": "enum-map-derive",
+      "version": "0.17.0",
+      "archive_sha256": "f282cfdfe92516eb26c2af8589c274c7c17681f5ecc03c18255fe741c6aa64eb",
+      "license_declared": "MIT OR Apache-2.0",
+      "crate_vcs_revision": "2026968c30ad14d268f3d70c618a704e22a3b980",
+      "review_basis": "Complete original REUSE license texts at the exact Git revision embedded in the locked crate archive, verified against Git tree blob IDs. Verbatim per-file SPDX copyright statements from that checksum-verified archive are preserved in packaging/notices/enum-map-derive-0.17.0-COPYRIGHT.txt. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/xfix/enum-map/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/Apache-2.0.txt",
+          "sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff",
+          "upstream_url": "https://raw.githubusercontent.com/xfix/enum-map/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/Apache-2.0.txt",
+          "git_blob_sha1": "137069b823873b8bcf42979bcf8e9371052d26a2",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/xfix/enum-map/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/MIT.txt",
+          "sha256": "b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0",
+          "upstream_url": "https://raw.githubusercontent.com/xfix/enum-map/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/MIT.txt",
+          "git_blob_sha1": "2071b23b0e08594ea6bc99ac71129ef992abf498",
+          "full_license_text": true
+        },
+        {
+          "path": "packaging/notices/cargo-upstream/xfix/enum-map/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/CC0-1.0.txt",
+          "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+          "upstream_url": "https://raw.githubusercontent.com/xfix/enum-map/2026968c30ad14d268f3d70c618a704e22a3b980/LICENSES/CC0-1.0.txt",
+          "git_blob_sha1": "0e259d42c996742e9e3cba14c677129b2c1b6311",
           "full_license_text": true
         }
       ]
@@ -2195,7 +2281,7 @@
       "repository": "https://github.com/JonathanBrouwer/erased",
       "authors_declared": [
         "Jonathan Brouwer <jonathantbrouwer@gmail.com>",
-        "Jonathan Dönszelmann <jonabent@gmail.com>"
+        "Jonathan D\u00f6nszelmann <jonabent@gmail.com>"
       ],
       "reason": "The exact archive and upstream repository history declare MIT but no complete original MIT copyright/permission file was found. Keep publisher attribution and declaration, and require explicit follow-up; no copyright holder/year or grant is synthesized."
     }
