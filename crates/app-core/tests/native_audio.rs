@@ -563,6 +563,7 @@ async fn playback_reset_failure_stays_in_receipt_and_shutdown_waits_for_worker_j
     tokio::time::timeout(Duration::from_secs(5), entered_rx).await??;
     assert_eq!(resets.load(Ordering::SeqCst), 1);
 
+    let shutdown_generation = pair.controller.snapshot().generation;
     assert_eq!(
         pair.controller_core
             .shutdown(Duration::from_millis(100))
@@ -571,7 +572,16 @@ async fn playback_reset_failure_stays_in_receipt_and_shutdown_waits_for_worker_j
         "AppCore must retain the session while playback reset blocks"
     );
     release_tx.send(())?;
-    success(revocation).await?;
+    wait_view(&pair.controller, |snapshot| {
+        snapshot.generation > shutdown_generation && snapshot.lifecycle != Lifecycle::Running
+    })
+    .await?;
+    let completion = done(revocation).await?;
+    // Shutdown retires the operation's generation even though the server's
+    // revoke committed before playback cleanup started. Preserve both facts.
+    assert_eq!(completion.result.status, OperationStatus::Superseded);
+    assert_eq!(completion.result.remote_effect, RemoteEffect::Committed);
+    assert!(completion.result.failure.is_none());
     assert_eq!(
         pair.controller_core.shutdown(Duration::from_secs(10)).await,
         ShutdownState::Complete
