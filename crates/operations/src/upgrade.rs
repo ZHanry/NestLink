@@ -623,7 +623,7 @@ mod tests {
     }
 
     #[test]
-    fn migration_preserves_identity_epoch_and_consumed_recovery_state() -> TestResult {
+    fn migration_preserves_identity_epoch_and_discards_legacy_recovery_codes() -> TestResult {
         let fixture = Fixture::new()?;
         let original = fs::read(fixture.directory.join("control.sqlite3"))?;
         let receipt = fixture.migrate(false)?;
@@ -648,7 +648,7 @@ mod tests {
                 [],
                 |row| row.get::<_, i32>(0)
             )?,
-            1
+            0
         );
         assert_eq!(
             connection.query_row(
@@ -656,7 +656,7 @@ mod tests {
                 [],
                 |row| row.get::<_, i32>(0)
             )?,
-            1
+            0
         );
         assert_eq!(
             fs::read(

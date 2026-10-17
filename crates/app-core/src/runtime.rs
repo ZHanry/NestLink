@@ -4958,7 +4958,9 @@ impl Actor {
                     failure_stop_reason(&failure)
                 };
                 let generation = expected_connection_generation.unwrap_or(0);
-                let previous = self.view.native_session.data.as_ref();
+                let previous = self.view.native_session.data.as_ref().filter(|session| {
+                    session.request_id == request_id && session.connection_generation == generation
+                });
                 self.view.native_session = crate::Section {
                     data: Some(Arc::new(NativeSessionView {
                         request_id: request_id.clone(),
@@ -4972,8 +4974,10 @@ impl Actor {
                         host_view_authorized: false,
                         path: None,
                         stop_reason,
-                        stop_effects: None,
-                        cleanup: None,
+                        // A rejected recovery has no successor session. Retain
+                        // the completed cleanup of this exact failed connection.
+                        stop_effects: previous.and_then(|session| session.stop_effects),
+                        cleanup: previous.and_then(|session| session.cleanup),
                         failure: Some(failure.clone()),
                     })),
                     loading: None,

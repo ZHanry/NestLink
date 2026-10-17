@@ -419,8 +419,8 @@ async fn revoke(pair: &AudioPair) -> Result {
     Ok(())
 }
 
-async fn wait_stopped(handle: &CoreHandle, request_id: &str) -> Result {
-    tokio::time::timeout(Duration::from_secs(10), async {
+async fn wait_stopped(handle: &CoreHandle, request_id: &str, stage: &str) -> Result {
+    let result = tokio::time::timeout(Duration::from_secs(10), async {
         loop {
             let stopped = handle
                 .snapshot()
@@ -441,7 +441,19 @@ async fn wait_stopped(handle: &CoreHandle, request_id: &str) -> Result {
             tokio::time::sleep(Duration::from_millis(5)).await;
         }
     })
-    .await?;
+    .await;
+    if result.is_err() {
+        let snapshot = handle.snapshot();
+        let session = snapshot.native_session.data.as_ref();
+        return Err(format!(
+            "audio stop timed out at {stage}: request_matches={}, status={:?}, cleanup={:?}, binding_present={}",
+            session.is_some_and(|session| session.request_id == request_id),
+            session.map(|session| session.status),
+            session.and_then(|session| session.cleanup),
+            handle.native_audio_binding().is_some(),
+        )
+        .into());
+    }
     Ok(())
 }
 
@@ -470,8 +482,8 @@ async fn stale_same_generation_binding_cannot_attach_or_poison_new_audio_route()
     let old_request = pair.request_id.clone();
     let old_host_binding = wait_audio_binding(&pair.host).await?;
     revoke(&pair).await?;
-    wait_stopped(&pair.host, &old_request).await?;
-    wait_stopped(&pair.controller, &old_request).await?;
+    wait_stopped(&pair.host, &old_request, "first host").await?;
+    wait_stopped(&pair.controller, &old_request, "first controller").await?;
 
     let next_request = approve_audio_request(&pair.controller, &pair.host, &pair.host_id).await?;
     assert_ne!(next_request, old_request);
@@ -508,8 +520,8 @@ async fn stale_same_generation_binding_cannot_attach_or_poison_new_audio_route()
         },
     )?;
     revoke(&pair).await?;
-    wait_stopped(&pair.host, &pair.request_id).await?;
-    wait_stopped(&pair.controller, &pair.request_id).await?;
+    wait_stopped(&pair.host, &pair.request_id, "replacement host").await?;
+    wait_stopped(&pair.controller, &pair.request_id, "replacement controller").await?;
     assert_eq!(
         pair.host
             .snapshot()

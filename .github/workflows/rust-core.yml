@@ -46,10 +46,17 @@ jobs:
         run: python scripts/refactor-native-codecs.py build --target ${{ matrix.target }} --cache-dir "${{ runner.temp }}/nestlink-codec-sources" --work-dir "${{ runner.temp }}/nestlink-codecs" --msys-bin "${{ steps.msys.outputs.msys2-location }}/usr/bin" --nasm "${{ steps.msys.outputs.msys2-location }}/usr/bin/nasm.exe"
       - run: python scripts/refactor-native-codecs.py verify --target ${{ matrix.target }} --prefix "${{ env.NESTLINK_CODEC_PREFIX }}"
       - run: rustup show
+      - name: Verify normal Windows test identity
+        if: runner.os == 'Windows'
+        run: python scripts/refactor-windows-normal-user.py python scripts/refactor-windows-normal-user.py --check
       - run: cargo fmt --all -- --check
       - run: cargo check --locked -p nestlink-platform-audio
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
-      - run: cargo test --workspace --locked --no-fail-fast
+      - if: runner.os == 'Linux'
+        run: cargo test --workspace --locked --no-fail-fast
+      - name: Test Windows with the ordinary business-process token
+        if: runner.os == 'Windows'
+        run: python scripts/refactor-windows-normal-user.py cargo test --workspace --locked --no-fail-fast
       - if: runner.os == 'Linux'
         run: bash scripts/test-vp8-boundary-sanitizer.sh
       - if: runner.os == 'Linux'

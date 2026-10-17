@@ -680,6 +680,80 @@ async fn user_stop_during_recovery_cancels_exchange_and_never_attaches_successor
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn revoked_recovery_retains_completed_cleanup_without_attaching_successor_routes() -> Result {
+    let mut pair = pair().await?;
+    pair.reset.arm(false);
+    pair.controller_network.invalidate_generation()?;
+    pair.reset.wait_entered().await?;
+    stage(
+        "controller recovery after completed old connection cleanup",
+        wait_view(&pair.controller_handle, |snapshot| {
+            snapshot
+                .native_session
+                .data
+                .as_ref()
+                .is_some_and(|session| {
+                    session.status == NativeSessionStatus::Establishing
+                        && session.cleanup == Some(NativeSessionCleanup::Succeeded)
+                })
+        }),
+    )
+    .await?;
+    let previous = pair
+        .controller_handle
+        .snapshot()
+        .native_session
+        .data
+        .as_ref()
+        .unwrap()
+        .clone();
+
+    // The host cannot approve a replacement while its real input cleanup is
+    // held. Revoke the request on the real server during that recovery window.
+    let revoked = stage(
+        "server revocation during recovery",
+        success(pair.host_handle.submit(Action::RevokeRemote {
+            request_id: pair.request_id.clone(),
+        })?),
+    )
+    .await;
+    pair.reset.release();
+    revoked?;
+    stage(
+        "controller rejected recovery with retained cleanup",
+        wait_view(&pair.controller_handle, |snapshot| {
+            snapshot
+                .native_session
+                .data
+                .as_ref()
+                .is_some_and(|session| {
+                    session.status == NativeSessionStatus::Failed
+                        && session.cleanup == Some(NativeSessionCleanup::Succeeded)
+                })
+        }),
+    )
+    .await?;
+    let snapshot = pair.controller_handle.snapshot();
+    let session = snapshot.native_session.data.as_ref().unwrap();
+    assert_eq!(session.request_id, previous.request_id);
+    assert_eq!(
+        session.connection_generation,
+        previous.connection_generation
+    );
+    assert_eq!(session.lease_sequence, previous.lease_sequence);
+    assert_eq!(session.stop_effects, previous.stop_effects);
+    assert!(session.stop_effects.is_some());
+    assert!(session.failure.is_some());
+    assert!(!session.host_view_authorized);
+    assert!(session.path.is_none());
+    assert!(pair.controller_handle.native_audio_binding().is_none());
+    assert!(pair.controller_handle.native_input_layout().is_err());
+    assert!(pair.controller_handle.poll_native_video().is_err());
+    pair.shutdown().await;
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn failed_platform_cleanup_does_not_offer_a_replacement_generation() -> Result {
     let mut pair = pair().await?;
     pair.reset.arm(true);
