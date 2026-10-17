@@ -67,7 +67,9 @@ jobs:
           import hashlib, os, pathlib, subprocess
           scratch = pathlib.Path(os.environ["RUNNER_TEMP"])
           base = os.environ["CANDIDATE_OCI_BASE"]
-          raw = subprocess.check_output(["skopeo", "inspect", "--raw", "docker://docker.io/library/" + base], timeout=120)
+          # containers/image accepts name@digest; the reviewed tag remains in the cohort.
+          pull_reference = "docker.io/library/ubuntu@" + base.split("@", 1)[1]
+          raw = subprocess.check_output(["skopeo", "inspect", "--raw", "docker://" + pull_reference], timeout=120)
           index = scratch / "ubuntu-base-index.json"
           index.write_bytes(raw)
           if hashlib.sha256(raw).hexdigest() != base.rsplit(":", 1)[1]:
@@ -332,7 +334,8 @@ jobs:
           policy = json.loads((scratch / "oci-context/build-policy.json").read_text())
           cohort = json.loads((scratch / "candidate-cohort/candidate-cohort.json").read_text())
           tag = "localhost/nestlink:development-" + str(cohort["run_id"]) + "-" + str(cohort["run_attempt"]) + "-" + policy["architecture"]
-          subprocess.run(["sudo", "buildah", "bud", "--isolation", "chroot", "--format", "oci", "--platform", "linux/" + policy["architecture"], "--timestamp", str(cohort["source_epoch"]), "--build-arg", "NESTLINK_BASE=docker.io/library/" + policy["base"], "--build-arg", "NESTLINK_VERSION=" + policy["version"], "--build-arg", "NESTLINK_SOURCE=" + policy["source_revision"], "--tag", tag, str(scratch / "oci-context")], check=True, timeout=1200)
+          pull_reference = "docker.io/library/ubuntu@" + policy["base"].split("@", 1)[1]
+          subprocess.run(["sudo", "buildah", "bud", "--isolation", "chroot", "--format", "oci", "--platform", "linux/" + policy["architecture"], "--timestamp", str(cohort["source_epoch"]), "--build-arg", "NESTLINK_BASE=" + pull_reference, "--build-arg", "NESTLINK_VERSION=" + policy["version"], "--build-arg", "NESTLINK_SOURCE=" + policy["source_revision"], "--tag", tag, str(scratch / "oci-context")], check=True, timeout=1200)
           archive = scratch / "image.tar"
           subprocess.run(["sudo", "buildah", "push", "--compression-format", "gzip", tag, "oci-archive:" + str(archive) + ":nestlink-rc-development"], check=True, timeout=600)
           subprocess.run(["sudo", "chown", str(os.getuid()) + ":" + str(os.getgid()), str(archive)], check=True, timeout=60)
