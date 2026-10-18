@@ -1,6 +1,6 @@
 # NestLink
 
-Self-hosted remote control and service publishing. The current version is **0.2.0 RC1** (`0.2.0-rc.1`). This update simplifies sign-in, redesigns the Windows workspace and moves patched upstream dependencies out of the product repository.
+Self-hosted remote control and service publishing. The current version is **0.3.0 RC1** (`0.3.0-rc.1`). This update unifies desktop icons and the blue theme, improves device selection and automatic connection after approval, and adds combined-server WebSocket relay fallback and actionable connection errors.
 
 [中文](README.md) · [Releases](https://github.com/ZHanry/NestLink/releases) · [Build instructions](docs/refactor/CANDIDATE-BUILD.md) · [Implementation and checks](docs/refactor/IMPLEMENTATION.md)
 
@@ -21,3 +21,5 @@ Screen, input, multiple displays, audio, files and text clipboard directions req
 This RC is for subsequent real-world acceptance. Windows packages currently have no Authenticode identity; Android uses a development signer and the isolated `com.zhanry.nestlink.candidate` application ID. Fixed release signing, ARM64 hardware, installed desktops and external networks remain pending. Verify the release SHA-256 values and fixed source manifest before testing.
 
 The build workflow produces every platform, source, SBOM, licenses and materials from one clean commit. The internal `v15` protocol and state namespaces remain separate from the public product version. First-party source is Apache-2.0; upstream license texts remain in their source directories and release materials.
+
+For cross-network access, upgrade the server and both clients, enable server forwarding, and allow relay for both devices and the session. See [connection setup](docs/REMOTE-CONNECTION.md).

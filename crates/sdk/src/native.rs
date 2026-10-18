@@ -39,7 +39,9 @@ use dual_stack::AdditionalFamily;
 const CONTROL_REQUEST_BUDGET: Duration = Duration::from_secs(5);
 const CANDIDATE_GATHER_BUDGET: Duration = Duration::from_secs(3);
 const RELAY_SETUP_BUDGET: Duration = Duration::from_secs(12);
-const SIGNAL_WAIT_BUDGET: Duration = Duration::from_secs(8);
+// Allow the sleeping host inbox, STUN and signed relay discovery to complete.
+// Every operation is still capped by this budget and the permit deadline.
+const SIGNAL_WAIT_BUDGET: Duration = Duration::from_secs(20);
 const SIGNAL_POLL_INTERVAL: Duration = Duration::from_millis(150);
 
 /// Routes backed by one shared allocation. The node and allocation identifiers
@@ -773,6 +775,18 @@ impl NativeEndpoint {
         }
         local_candidates = bounded_unique(local_candidates, CANDIDATE_COUNT as usize);
 
+        // A normal self-hosted deployment already has a mutually authenticated
+        // WSS relay on its approved management origin. Do not require a separate
+        // data node just to connect across restrictive NAT/firewalls.
+        let combined_relay = if routes.is_empty() && relay_allowed {
+            tokio::select! {
+                biased;
+                _ = cancellation(&mut cancel) => return Err(SessionEstablishError::Cancelled),
+                result = tokio::time::timeout(CONTROL_REQUEST_BUDGET, sdk.relay_route(&self.permit)) => result.ok().and_then(Result::ok),
+            }
+        } else {
+            None
+        };
         let mut auto_relay = None;
         if routes.is_empty() && relay_allowed {
             let prepared = tokio::select! {
@@ -792,13 +806,16 @@ impl NativeEndpoint {
         if let Some(relay) = &auto_relay {
             signaling_routes.extend(relay.routes());
         }
+        if let Some(relay) = &combined_relay {
+            signaling_routes.push(NativeRelayRoute::Combined(relay));
+        }
         let mut signal_candidates = local_candidates.clone();
         let relay_marker = signaling_routes.iter().find_map(|route| {
             route
                 .candidates(network_generation)
                 .ok()?
                 .into_iter()
-                .next()
+                .find(|candidate| safe_peer_address(candidate.address.ip()))
         });
         if let Some(marker) = relay_marker {
             signal_candidates.truncate((CANDIDATE_COUNT as usize).saturating_sub(1));
@@ -807,7 +824,11 @@ impl NativeEndpoint {
         if signal_candidates.is_empty() {
             for route in &signaling_routes {
                 if let Ok(candidates) = route.candidates(network_generation) {
-                    signal_candidates.extend(candidates);
+                    signal_candidates.extend(
+                        candidates
+                            .into_iter()
+                            .filter(|candidate| safe_peer_address(candidate.address.ip())),
+                    );
                 }
             }
             signal_candidates = bounded_unique(signal_candidates, CANDIDATE_COUNT as usize);
@@ -869,6 +890,9 @@ impl NativeEndpoint {
         let mut active_routes = routes.to_vec();
         if let Some(relay) = &auto_relay {
             active_routes.extend(relay.routes());
+        }
+        if let Some(relay) = &combined_relay {
+            active_routes.push(NativeRelayRoute::Combined(relay));
         }
         if local_candidates.is_empty() && active_routes.is_empty() {
             if relay_allowed && !self.permit.claims().paths.contains(&(Path::Direct as i32)) {

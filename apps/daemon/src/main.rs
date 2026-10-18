@@ -442,6 +442,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let network = Arc::new(nestlink_sdk::NetworkMonitor::start()?);
     let browser_data_registry = Arc::new(browser_data::BrowserHostDataRegistry::default());
     let mut native = nestlink_app_core::NativeSessionConfig::new(network);
+    native.listen_for_native_requests = true;
     native.bind_address = args.native_bind;
     native.stun_servers = args.stun_servers;
     let network_store = Arc::new(NativeNetworkFileStore::open(&state_dir)?);

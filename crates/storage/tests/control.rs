@@ -625,6 +625,9 @@ fn signal_possession_generation_paths_and_live_authorization_are_enforced() -> R
     s.submit_signal(&admin, &view.id, body.clone(), 1003)?;
     s.submit_signal(&admin, &view.id, body, 1003)?;
     assert_eq!(s.remote_signals(&member, &view.id, 1003)?.len(), 1);
+    assert_eq!(s.ready_native_remote(&member, &h, 1003)?.len(), 1);
+    assert!(s.ready_native_remote(&admin, &h, 1003).is_err());
+    assert!(s.ready_native_remote(&member, &c, 1003).is_err());
     let mut next = payload.clone();
     next.network_generation = 2;
     next.sequence = 2;
@@ -657,6 +660,8 @@ fn signal_possession_generation_paths_and_live_authorization_are_enforced() -> R
         }),
     };
     s.submit_signal(&admin, &view.id, sign(offer)?, 1006)?;
+    // A browser SDP offer must never wake a native host session.
+    assert!(s.ready_native_remote(&member, &h, 1006)?.is_empty());
     let sign_answer = |sequence: u64, in_reply_to_sequence: u64| -> Result<SignalSubmission> {
         let payload = SignalPayload {
             connection_generation: 1,

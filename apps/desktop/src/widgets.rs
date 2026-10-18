@@ -7,16 +7,7 @@ use nestlink_auth::Secret;
 use std::ops::Range;
 use zeroize::{Zeroize, Zeroizing};
 
-#[derive(Clone, Copy)]
-pub enum NavIcon {
-    Monitor,
-    Devices,
-    Share,
-    Network,
-    Account,
-    List,
-    Settings,
-}
+pub use crate::icons::Icon as NavIcon;
 
 pub fn nav_button(ui: &mut egui::Ui, icon: NavIcon, text: &str, selected: bool) -> egui::Response {
     let (rect, response) =
@@ -58,65 +49,13 @@ pub fn nav_button(ui: &mut egui::Ui, icon: NavIcon, text: &str, selected: bool) 
     } else {
         visuals.text_color()
     };
-    let center = rect.left_center() + egui::vec2(24., 0.);
-    let p = |x, y| center + egui::vec2(x, y);
-    let stroke = egui::Stroke::new(1.6, color);
-    let line = |a, b| ui.painter().line_segment([a, b], stroke);
-    match icon {
-        NavIcon::Monitor | NavIcon::Devices => {
-            let screen =
-                egui::Rect::from_center_size(center + egui::vec2(0., -2.), egui::vec2(18., 12.));
-            ui.painter()
-                .rect_stroke(screen, 2., stroke, egui::StrokeKind::Inside);
-            line(p(0., 4.), p(0., 8.));
-            line(p(-5., 8.), p(5., 8.));
-            if matches!(icon, NavIcon::Devices) {
-                ui.painter().rect_filled(
-                    egui::Rect::from_min_size(p(3., -1.), egui::vec2(7., 11.)),
-                    1.,
-                    ui.visuals().panel_fill,
-                );
-                ui.painter().rect_stroke(
-                    egui::Rect::from_min_size(p(3., -1.), egui::vec2(7., 11.)),
-                    1.,
-                    stroke,
-                    egui::StrokeKind::Inside,
-                );
-            }
-        }
-        NavIcon::Share | NavIcon::Network => {
-            for (x, y) in [(0., -7.), (-7., 6.), (7., 6.)] {
-                ui.painter().circle_stroke(p(x, y), 3., stroke);
-            }
-            line(p(-1.5, -4.), p(-5.5, 3.));
-            line(p(1.5, -4.), p(5.5, 3.));
-            if matches!(icon, NavIcon::Network) {
-                line(p(-4., 6.), p(4., 6.));
-            }
-        }
-        NavIcon::Account => {
-            ui.painter().circle_stroke(p(0., -5.), 4., stroke);
-            ui.painter().rect_stroke(
-                egui::Rect::from_min_max(p(-7., 2.), p(7., 10.)),
-                5.,
-                stroke,
-                egui::StrokeKind::Inside,
-            );
-        }
-        NavIcon::List => {
-            for y in [-6., 0., 6.] {
-                ui.painter().circle_filled(p(-7., y), 1.3, color);
-                line(p(-2., y), p(8., y));
-            }
-        }
-        NavIcon::Settings => {
-            ui.painter().circle_stroke(center, 7., stroke);
-            ui.painter().circle_stroke(center, 2.5, stroke);
-            for (x, y) in [(0., -10.), (0., 10.), (-10., 0.), (10., 0.)] {
-                line(p(x * 0.7, y * 0.7), p(x, y));
-            }
-        }
-    }
+    crate::icons::paint(
+        ui,
+        icon,
+        rect.left_center() + egui::vec2(24., 0.),
+        22.,
+        color,
+    );
     ui.painter().text(
         rect.left_center() + egui::vec2(45., 0.),
         egui::Align2::LEFT_CENTER,
@@ -257,6 +196,22 @@ pub fn take_secret(value: &mut Zeroizing<String>) -> Secret {
     Secret::from_text(std::mem::take(&mut **value))
 }
 pub fn failure(error: &Failure, english: bool) -> String {
+    if let Some(code) = error.code {
+        let message = match code {
+            nestlink_protocol::ErrorCode::DirectUnavailable => Some((
+                "直连未成功。跨网络连接请让管理员启用服务器转发，并为双方设备和本次授权允许中继。",
+                "Direct connection failed. For cross-network access, enable server forwarding and allow relay for both devices and this session.",
+            )),
+            nestlink_protocol::ErrorCode::RelayUnavailable => Some((
+                "中继连接未成功。请检查服务器转发策略、HTTPS 反向代理的 WebSocket 转发和中继服务可达性。",
+                "Relay connection failed. Check server forwarding policy, WebSocket support on the HTTPS proxy, and relay reachability.",
+            )),
+            _ => None,
+        };
+        if let Some((zh, en)) = message {
+            return if english { en } else { zh }.into();
+        }
+    }
     let (zh, en) = match error.kind {
         FailureKind::Transport => (
             "网络请求失败，请刷新查看状态。",
@@ -284,8 +239,8 @@ pub fn failure(error: &Failure, english: bool) -> String {
             "The operation budget is full. Try again later.",
         ),
         FailureKind::NativeSessionUnavailable => (
-            "本机原生会话未配置网络监视或连接策略。",
-            "Native session networking or policy is not configured on this device.",
+            "没有可用的会话连接路径。请确认双方客户端与服务器均已升级，并检查网络和中继授权。",
+            "No usable session path is available. Update both clients and the server, then check networking and relay authorization.",
         ),
         FailureKind::NativeSessionCancelled => (
             "原生会话连接已取消。",

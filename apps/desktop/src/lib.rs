@@ -5,6 +5,7 @@ mod browser_displays;
 mod clipboard;
 mod connection;
 mod files;
+mod icons;
 mod lists;
 mod management;
 mod native_displays;
@@ -14,6 +15,7 @@ mod navigation;
 pub mod picker;
 mod privileged_input;
 mod remote;
+mod remote_flow;
 mod services;
 pub mod theme;
 mod tray;
@@ -157,6 +159,7 @@ pub struct DesktopApp {
     native_pointer_position: Option<(i32, i32)>,
     last_native_pointer_send: Option<std::time::Instant>,
     remote_viewport_open: bool,
+    remote_tools_open: bool,
     remote_viewport_target: Option<RemoteViewportTarget>,
     remote_window_cleanup: Option<RemoteWindowCleanup>,
     remote_inspection_submission: Option<u64>,
@@ -230,6 +233,7 @@ impl DesktopApp {
             native_pointer_position: None,
             last_native_pointer_send: None,
             remote_viewport_open: false,
+            remote_tools_open: false,
             remote_viewport_target: None,
             remote_window_cleanup: None,
             remote_inspection_submission: None,
@@ -271,6 +275,7 @@ impl DesktopApp {
         self.sensitive.take();
         self.pending_confirmation.take();
         self.remote = remote::RemoteForm::default();
+        self.remote_tools_open = false;
         self.service_panel = services::ServicePanel::default();
         self.file_panel.reconcile(None);
         self.recovery_panel.reconcile(None);
@@ -482,7 +487,8 @@ impl DesktopApp {
                 && self.video_status == VideoStatus::Streaming;
             let control_was_enabled = self.native_control_enabled;
             let mut toggle_control = false;
-            ui.horizontal(|ui| {
+            ui.horizontal_wrapped(|ui| {
+                icons::badge(ui, icons::Icon::Keyboard, 28.);
                 ui.label(egui::RichText::new(self.t("远程画面", "Remote screen")).strong());
                 ui.small(status);
                 if ui
@@ -520,7 +526,7 @@ impl DesktopApp {
                 ));
             }
             let width = ui.available_width().max(1.);
-            let height = (width * 9. / 16.).clamp(220., 560.);
+            let height = (ui.available_height() - 12.).max(180.);
             let (rect, response) = ui.allocate_exact_size(
                 egui::vec2(width, height),
                 egui::Sense::click_and_drag(),
@@ -1049,6 +1055,16 @@ impl DesktopApp {
         });
         ui.horizontal_wrapped(|ui| {
             ui.heading(self.t("远程控制", "Remote control"));
+            if icons::button(
+                ui,
+                icons::Icon::Settings,
+                self.t("会话工具", "Session tools"),
+            )
+            .clicked()
+            {
+                self.release_native_control();
+                self.remote_tools_open = !self.remote_tools_open;
+            }
             if ui
                 .button(if fullscreen {
                     self.t("退出全屏 (Esc)", "Exit fullscreen (Esc)")
@@ -1060,7 +1076,23 @@ impl DesktopApp {
                 fullscreen_change = Some(!fullscreen);
             }
             if let Some(target) = &target {
-                ui.monospace(&target.request_id);
+                let name = snapshot
+                    .selected_request
+                    .data
+                    .as_ref()
+                    .filter(|request| request.id == target.request_id)
+                    .and_then(|request| {
+                        snapshot
+                            .devices
+                            .data
+                            .as_deref()?
+                            .iter()
+                            .find(|device| device.device.id == request.host_device_id)
+                    })
+                    .map(|device| device.device.name.as_str());
+                if let Some(name) = name {
+                    ui.strong(name);
+                }
             }
             if let Some(session) = session {
                 ui.label(match session.status {
@@ -1128,13 +1160,55 @@ impl DesktopApp {
         }
 
         ui.add_space(10.);
-        if self.remote_window_cleanup.is_none() {
-            self.native_display_panel(ui, snapshot);
+        if self.remote_tools_open && self.remote_window_cleanup.is_none() {
+            let tools_width = (ui.available_width() * 0.38).clamp(260., 360.);
+            egui::Panel::right("remote-session-tools")
+                .exact_size(tools_width)
+                .resizable(false)
+                .show_inside(ui, |ui| {
+                    egui::ScrollArea::vertical()
+                        .id_salt("remote-tools-scroll")
+                        .show(ui, |ui| {
+                            ui.heading(self.t("会话工具", "Session tools"));
+                            ui.add_space(10.);
+                            ui.horizontal(|ui| {
+                                icons::badge(ui, icons::Icon::Monitor, 28.);
+                                ui.strong(self.t("显示器", "Displays"));
+                            });
+                            self.native_display_panel(ui, snapshot);
+                            ui.separator();
+                            if let Some(request) =
+                                snapshot.selected_request.data.as_ref().filter(|request| {
+                                    target
+                                        .as_ref()
+                                        .is_some_and(|target| target.request_id == request.id)
+                                })
+                            {
+                                ui.horizontal_wrapped(|ui| {
+                                    icons::badge(ui, icons::Icon::Audio, 28.);
+                                    ui.strong(self.t("音频", "Audio"));
+                                    ui.label(
+                                        if request.permissions.contains(
+                                            &(nestlink_protocol::Permission::Audio as i32),
+                                        ) {
+                                            self.t(
+                                                "已授权 · 使用本机系统音频设备",
+                                                "Authorized · uses local system audio devices",
+                                            )
+                                        } else {
+                                            self.t(
+                                                "未授权，重新申请时可选择音频",
+                                                "Not authorized; request Audio for a new session",
+                                            )
+                                        },
+                                    );
+                                });
+                            }
+                            self.transfer_panels(ui, snapshot);
+                        });
+                });
         }
         self.video_panel(ui, snapshot);
-        if self.remote_window_cleanup.is_none() {
-            self.transfer_panels(ui, snapshot);
-        }
         action
     }
 
@@ -1644,6 +1718,7 @@ impl DesktopApp {
                     }
                     self.exiting = false;
                     let message = widgets::rejection(reason, self.english).to_owned();
+                    self.remote_flow_rejected(submission_id, &message);
                     if let Some(submission_id) = submission_id
                         && self.remote_inspection_submission == Some(submission_id)
                     {
@@ -1712,6 +1787,7 @@ impl DesktopApp {
                     if result.generation != snapshot.generation {
                         continue;
                     }
+                    let flow_notice = self.remote_flow_completed(submission_id, &result);
                     if let Some(sensitive) = sensitive {
                         self.sensitive = Some(sensitive);
                         self.screen = Screen::Security;
@@ -1725,7 +1801,9 @@ impl DesktopApp {
                         | OperationStatus::Cancelled
                         | OperationStatus::Superseded => MessageTone::Danger,
                     };
-                    self.set_message(operation_message, tone);
+                    if !flow_notice && result.kind != OperationKind::Load {
+                        self.set_message(operation_message, tone);
+                    }
                     if result.status == OperationStatus::Succeeded
                         && result.kind == OperationKind::SignIn
                     {
@@ -1800,6 +1878,7 @@ impl eframe::App for DesktopApp {
         }
         let snapshot = self.notices(context);
         self.reconcile_remote_password_context(&snapshot);
+        self.advance_remote_flow(&snapshot);
         if let Some(tray) = &self.tray {
             let actions = tray.actions();
             for action in actions {
@@ -1924,7 +2003,7 @@ impl eframe::App for DesktopApp {
                                         ui.label(message);
                                     }
                                     if ui
-                                        .small_button("×")
+                                        .small_button(self.t("关闭", "Dismiss"))
                                         .on_hover_text(self.t("关闭提示", "Dismiss message"))
                                         .clicked()
                                     {

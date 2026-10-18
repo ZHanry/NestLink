@@ -13,6 +13,8 @@ use crate::{
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 #[path = "runtime/native_channel.rs"]
 mod native_channel;
+#[path = "runtime/native_inbox.rs"]
+mod native_inbox;
 #[path = "runtime/native_network_control.rs"]
 mod native_network_control;
 #[path = "runtime/native_recovery.rs"]
@@ -1577,6 +1579,9 @@ impl AppCore {
             view: watching,
         };
         let actor = Actor {
+            automation: handle.clone(),
+            native_inbox_deadline: tokio::time::Instant::now(),
+            native_inbox_attempts: std::collections::BTreeSet::new(),
             limits,
             shared,
             incoming,
@@ -1773,6 +1778,11 @@ struct Client {
     server: ApprovedServer,
 }
 enum Job {
+    NativeInboxPolled {
+        client: Client,
+        generation: u64,
+        result: Result<Vec<nestlink_protocol::api::RemoteView>, Failure>,
+    },
     Operation(sdk_call::Response),
     Connected(Result<Sdk, Failure>),
     NativeEstablished {
@@ -1883,6 +1893,9 @@ struct Active {
 }
 
 struct Actor {
+    automation: CoreHandle,
+    native_inbox_deadline: tokio::time::Instant,
+    native_inbox_attempts: std::collections::BTreeSet<(u64, String, u64)>,
     limits: Limits,
     shared: Arc<Shared>,
     incoming: mpsc::Receiver<Envelope>,
@@ -3120,6 +3133,9 @@ impl Actor {
         if self.pending.is_empty() && self.start_native_recovery() {
             return;
         }
+        if self.pending.is_empty() && self.start_native_inbox() {
+            return;
+        }
         let Some(mut envelope) = self.pending.pop_front() else {
             return;
         };
@@ -4179,6 +4195,14 @@ impl Actor {
             return;
         };
         let job = match job {
+            Job::NativeInboxPolled {
+                client,
+                generation,
+                result,
+            } => {
+                self.complete_native_inbox(active, client, generation, result);
+                return;
+            }
             Job::NativeEstablished {
                 client,
                 request_id,
@@ -4425,6 +4449,7 @@ impl Actor {
             }
             Job::Retired { .. } => {}
             Job::NativeEstablished { .. }
+            | Job::NativeInboxPolled { .. }
             | Job::NativePermitPolled { .. }
             | Job::LocalServiceHostStarted { .. } => {}
         }
@@ -5229,7 +5254,11 @@ fn map_dial_failure(error: DialError) -> Failure {
         DialError::NetworkChanged => Failure::local(FailureKind::NetworkChanged),
         DialError::Expired => Failure::local(FailureKind::PermitExpired),
         DialError::Cancelled => Failure::local(FailureKind::NativeSessionCancelled),
-        DialError::Failed { .. } => Failure::local(FailureKind::Transport),
+        DialError::Failed { code, .. } => Failure {
+            kind: FailureKind::Transport,
+            status: None,
+            code: Some(code),
+        },
         DialError::Binding | DialError::Setup | DialError::Contract(_) => {
             Failure::local(FailureKind::NativeSessionUnavailable)
         }

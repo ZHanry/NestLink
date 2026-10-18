@@ -1,34 +1,36 @@
-# NestLink 0.2.0 RC product design
+# NestLink 0.3.0 RC product design
 
-The desktop baseline uses the supplied UU Remote image as a layout reference: a quiet left navigation and a grouped, full-width device list. NestLink keeps its own purple identity and existing account, remote approval and tunnel behavior.
+NestLink uses a quiet blue workspace and one linked-N identity. The desktop's primary flow is selecting a computer, choosing permissions, requesting access and opening the authorized remote screen. UU Remote's device and session workflows informed this design; NestLink retains its own self-hosted authorization model and VP8/Opus media stack.
 
 ## Tokens
 
 | Role | Color |
 | --- | --- |
-| Eggplant purple / primary actions | `#7955CF` |
-| Purple text / selected navigation | `#6842BB` |
-| Pale lavender / navigation chrome | `#F2EFF9` |
-| Canvas | `#FAF9FD` |
+| Primary actions | `#246BCE` |
+| Selected text | `#205EB5` |
+| Navigation | `#EAF0F8` |
+| Canvas | `#F2F5FA` |
 | Content | `#FFFFFF` |
-| Text | `#282235` |
+| Text | `#182B43` |
+| Muted text | `#64748B` |
+| Border | `#DCE4EF` |
 
-Use the existing system UI fonts. Titles are 24 px, device names 14 px, secondary information 12–13 px. Left-align names, groups and headings. Device rows have 8 px corners and no shadows; the list remains readable at narrow widths and larger text sizes.
+`config/ui-tokens.json` defines light/dark colors, spacing and type metrics. Desktop reads it directly; generated Web and Android adapters use the same tokens. System UI fonts include a Chinese fallback. Navigation and commands share a custom 24-unit outline icon set rather than platform-dependent text symbols. Names and actions align left; rows have no shadows and remain readable at narrow widths.
 
 ```text
  [linked N] NestLink                      language / theme / version / window controls
  Device management  | All devices                                      Search devices
  Remote assistance  | Computers 2
  Tunnels            | [PC] This computer    local                                 info
-                    | [PC] Another computer  online                    connect / info
+                    | [PC] Another computer  enrolled                  connect / info
                     | Phones / tablets 1
-                    | [phone] Device name  offline                               info
+                    | [phone] Device name  enrolled                             info
                     |
  Account and settings |
 ```
 
-The linked N is the only expressive brand element. Its two rounded brackets and joining stroke suggest devices being linked. A single SVG source exports the Windows executable, tray and installer icons, Flutter assets, Android launcher and monochrome notification icons, and Web branding. Large blue dashboards, repeated metric cards and decorative gradients have been removed from the desktop home.
+Device names lead rows and remote windows. Enrollment is described as enrollment; it is never presented as online presence. Permission and path choices explain their effect. Request IDs, connection generations and cleanup traces appear in expandable diagnostics. Connect continues through approval, permit and transport setup; progress, cancellation and actionable failures remain visible. The SVG source defines the executable, tray, installer, Android and Web marks.
 
-Windows/Linux, the Web server and Android share the 0.2.0 RC product identity and action names. Web adapts the grouped device directory to a browser workspace; Android uses touch-sized navigation and controls. The underlying account, approval, revocation and tunnel boundaries remain intact. This RC uses development signing; formal signing and installed-product acceptance remain pending and are recorded with the fixed build materials.
+Files, text clipboard, keyboard/mouse, multiple displays and audio remain subject to explicit permissions and host-side selection. Do not advertise gaming, HDR, gamepads, Wake-on-LAN or unimplemented platforms as shipped capabilities. Windows/Linux, Web and Android share the 0.3.0 RC identity. This RC uses development signing; fixed signing, installed-product and real-network acceptance remain pending in the release materials.
 
 Run `packaging/windows/install-local-clean.ps1` before every local installation; it backs up and removes the prior install and configuration before running the installer. Local installation and published installer upgrade acceptance are recorded separately.

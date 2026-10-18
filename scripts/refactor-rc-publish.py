@@ -24,7 +24,7 @@ import urllib.request
 
 REPOSITORY = "ZHanry/NestLink"
 REPOSITORY_ID = "R_kgDOVNHMvg"
-VERSION = "0.2.0-rc.1"
+VERSION = "0.3.0-rc.1"
 TAG = "v" + VERSION
 MAX_ASSET_BYTES = 2 * 1024**3
 MANIFEST_NAME = "candidate-build-manifest.json"
@@ -216,17 +216,18 @@ def clean_source(root, revision):
 
 def release_body(revision, checksum):
     return ("NestLink " + VERSION + " 开发候选版。\n\n"
-            "- 连接只需服务器地址、账号和密码；HTTPS 自动读取并校验配置，移除部署 ID 与签发公钥的手动输入。\n"
-            "- 删除 TOTP 与恢复码功能；升级保留账号密码，并要求重新登录。\n"
-            "- Windows 使用 egui + egui_extras 优化导航、登录、设备与账号表格、中文字体及明暗主题。\n"
-            "- 五个上游补丁库改为版本依赖，由 [patch.crates-io] 指向独立 fork 分支；主仓库移除 483 个上游文件。\n\n"
-            "Forks: https://github.com/ZHanry/NestLink-dependencies/tree/nestlink-0.2\n\n"
+            "- 桌面统一蓝色主题和线性图标，改进设备搜索、查看/控制模式、权限选择、连接进度和取消交互。\n"
+            "- 一次连接操作自动完成申请、等待批准、领取许可和建立会话；已登录被控端自动接续获准请求，停止后不重复拉起。\n"
+            "- 跨网络自动回退到管理服务器 WebSocket 中继，UDP 尝试为 WSS 保留并发槽位；保留端到端身份校验及授权边界。\n"
+            "- 键鼠、文件、文本剪贴板、多屏和音频继续逐项授权。Android/Web 同步主题色，原生客户端共享连接修复。\n\n"
+            "跨网络使用：请同时升级服务器和双方客户端；管理员启用服务器转发，并为双方设备和会话允许中继。HTTPS 反向代理须转发 WebSocket。\n"
+            "部署与排障：https://github.com/ZHanry/NestLink/blob/main/docs/REMOTE-CONNECTION.md\n\n"
             "Source commit: " + revision + ". All 18 product artifacts are bound to this clean source commit.\n"
             "candidate-build-manifest.json SHA-256: " + checksum + ".\n\n"
             "Windows Authenticode, Linux update and OCI signing are not configured. Android uses a development signing key. "
             "Production update eligibility: false. Full functional user acceptance: pending.\n"
             "All 30 platform, signing, physical-device and real-network acceptance cases remain pending; "
-            "attached prior development checks do not complete those cases. Android support covers Android 11–16 (API 30–36).\n")
+            "automated development checks do not complete those cases. Android support covers Android 11–16 (API 30–36).\n")
 
 
 def local_plan(args):

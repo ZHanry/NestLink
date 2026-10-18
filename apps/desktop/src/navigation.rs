@@ -154,13 +154,18 @@ impl DesktopApp {
                             let (rect, _) =
                                 ui.allocate_exact_size(egui::vec2(32., 32.), egui::Sense::hover());
                             ui.painter().rect_filled(rect, 8., primary);
-                            let p = |x, y| rect.min + egui::vec2(x, y);
-                            ui.painter()
-                                .line_segment([p(10., 23.), p(10., 9.)], (2.4, Color32::WHITE));
-                            ui.painter()
-                                .line_segment([p(10., 9.), p(22., 23.)], (2.4, Color32::WHITE));
-                            ui.painter()
-                                .line_segment([p(22., 23.), p(22., 9.)], (2.4, Color32::WHITE));
+                            for [x1, y1, x2, y2] in [
+                                [9.6, 21.4, 9.6, 12.3],
+                                [9.6, 12.3, 12.5, 9.4],
+                                [22.4, 10.6, 22.4, 19.8],
+                                [22.4, 19.8, 19.5, 22.6],
+                                [11.9, 11.9, 20.1, 20.1],
+                            ] {
+                                ui.painter().line_segment(
+                                    [rect.min + egui::vec2(x1, y1), rect.min + egui::vec2(x2, y2)],
+                                    (2.7, Color32::WHITE),
+                                );
+                            }
                             ui.label(RichText::new("NestLink").size(22.).strong());
                         });
                         ui.add_space(28.);

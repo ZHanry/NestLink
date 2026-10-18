@@ -618,6 +618,22 @@ impl Sdk {
             .await?
             .requests)
     }
+    pub async fn ready_native_remote(
+        &self,
+        local: &DeviceIdentity,
+    ) -> Result<Vec<RemoteView>, SdkError> {
+        if !nestlink_protocol::valid_id(&local.device_id) {
+            return Err(SdkError::Invalid);
+        }
+        Ok(self
+            .required::<(), RemoteRequestsResponse>(
+                Method::GET,
+                &format!("/remote/native-ready/{}", local.device_id),
+                None,
+            )
+            .await?
+            .requests)
+    }
     pub async fn audit_page(&self, after_sequence: u64, limit: u16) -> Result<AuditPage, SdkError> {
         if limit == 0 || limit > 100 || after_sequence > i64::MAX as u64 {
             return Err(SdkError::Invalid);

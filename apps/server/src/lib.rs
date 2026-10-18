@@ -380,6 +380,7 @@ pub fn router(state: AppState) -> Router {
         .route("/api/v3/policy/scopes", get(path_limits))
         .route("/api/v3/policy/scopes/{scope}/{id}", put(update_path_limit))
         .route("/api/v3/remote", get(pending).post(create_remote))
+        .route("/api/v3/remote/native-ready/{id}", get(native_ready))
         .route("/api/v3/remote/trusted", post(trusted::connect))
         .route("/api/v3/remote/{id}", get(remote).delete(revoke_remote))
         .route("/api/v3/remote/{id}/peer-keys", get(remote_peer_keys))
@@ -945,6 +946,22 @@ async fn pending(
         .db(move |s| {
             let p = s.authenticate(&token, now()?)?;
             Ok(Json(json!({"requests":s.pending_remote(&p)?})))
+        })
+        .await
+}
+async fn native_ready(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+) -> Result<Json<Value>, ApiError> {
+    let token = access(&headers)?;
+    state
+        .db(move |s| {
+            let time = now()?;
+            let principal = s.authenticate(&token, time)?;
+            Ok(Json(
+                json!({"requests": s.ready_native_remote(&principal, &id, time)?}),
+            ))
         })
         .await
 }

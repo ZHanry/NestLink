@@ -120,6 +120,14 @@ impl Scheduler {
         }
         let mut ready = Vec::new();
         let has_relay = self.candidates.iter().any(|c| c.path() == Path::Relay);
+        let has_wss = self
+            .candidates
+            .iter()
+            .any(|c| c.path() == Path::Relay && c.transport == Transport::Wss);
+        let has_quic_relay = self
+            .candidates
+            .iter()
+            .any(|c| c.path() == Path::Relay && c.transport == Transport::Quic);
         let pending: Vec<_> = self.pending.iter().copied().collect();
         for id in pending {
             if self.active.len() >= PARALLEL_ATTEMPTS as usize {
@@ -133,7 +141,21 @@ impl Scheduler {
                 .count();
             if has_relay
                 && candidate.path() == Path::Direct
-                && active_direct >= (PARALLEL_ATTEMPTS - 1) as usize
+                && active_direct
+                    >= (PARALLEL_ATTEMPTS - if has_wss && has_quic_relay { 2 } else { 1 }) as usize
+            {
+                continue;
+            }
+            // A set of UDP black holes must not consume the TCP/WSS slot.
+            // Company networks commonly allow HTTPS while blocking all UDP.
+            let active_non_wss = self
+                .active
+                .iter()
+                .filter(|id| self.candidates[**id].transport != Transport::Wss)
+                .count();
+            if has_wss
+                && candidate.transport != Transport::Wss
+                && active_non_wss >= (PARALLEL_ATTEMPTS - 1) as usize
             {
                 continue;
             }
@@ -221,6 +243,44 @@ mod tests {
             address: address.parse()?,
             generation: 1,
         })
+    }
+    #[test]
+    fn udp_blackholes_leave_a_slot_for_wss_at_the_relay_deadline()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let mut candidates = Vec::new();
+        for port in 10000..10010 {
+            candidates.push(candidate(
+                CandidateKind::Lan,
+                Transport::Quic,
+                &format!("192.168.1.2:{port}"),
+            )?);
+            candidates.push(candidate(
+                CandidateKind::Relay,
+                Transport::Quic,
+                &format!("203.0.113.2:{port}"),
+            )?);
+        }
+        candidates.push(candidate(
+            CandidateKind::Relay,
+            Transport::Wss,
+            "203.0.113.2:443",
+        )?);
+        let mut scheduler = Scheduler::new(1, 0, PathSet::BOTH, candidates)?;
+        let direct = scheduler.poll(0);
+        assert!(
+            direct
+                .iter()
+                .all(|attempt| attempt.candidate.path() == Path::Direct)
+        );
+        assert!(direct.len() < PARALLEL_ATTEMPTS as usize);
+        let relay = scheduler.poll(RELAY_START_MS);
+        assert!(
+            relay
+                .iter()
+                .any(|attempt| attempt.candidate.transport == Transport::Wss)
+        );
+        assert!(direct.len() + relay.len() <= PARALLEL_ATTEMPTS as usize);
+        Ok(())
     }
     #[test]
     fn relay_only_never_attempts_direct_and_old_network_results_are_ignored()

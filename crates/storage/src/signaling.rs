@@ -5,6 +5,49 @@ use nestlink_protocol::api::{SignalSubmission, SignalView};
 use rusqlite::{OptionalExtension, params};
 
 impl Store {
+    /// Discover native offers for this account's enrolled host only. An offer
+    /// is a wake-up hint; the host must still verify the permit and peer proof.
+    pub fn ready_native_remote(
+        &self,
+        actor: &Principal,
+        host_id: &str,
+        now: u64,
+    ) -> Result<Vec<nestlink_protocol::api::RemoteView>, StorageError> {
+        self.validate_management_session(actor, now)?;
+        let host = self.device_record_at(host_id, now)?;
+        if host.account != actor.account_id {
+            return Err(StorageError::Forbidden);
+        }
+        let mut statement = self.connection.prepare(
+            "SELECT r.id FROM remote_requests r JOIN remote_signals s ON s.session_id=r.id AND s.device_id=r.controller_device_id WHERE r.host_device_id=?1 AND r.status='approved' AND r.expires>?2 AND s.received_at>=?3 ORDER BY s.received_at DESC,r.id LIMIT 32",
+        )?;
+        let ids = statement
+            .query_map(params![host_id, now, now.saturating_sub(30)], |row| {
+                row.get::<_, String>(0)
+            })?
+            .collect::<Result<Vec<_>, _>>()?;
+        let mut ready = Vec::new();
+        for id in ids {
+            // Revocation, login expiry and policy changes are checked again at
+            // discovery. They are also checked during endpoint establishment.
+            let Ok(permit) = self.current_permit(actor, &id, now) else {
+                continue;
+            };
+            let signals = self.remote_signals(actor, &id, now)?;
+            if signals.iter().any(|signal| {
+                let payload = &signal.submission.payload;
+                signal.submission.device_id == permit.controller_device_id
+                    && payload.connection_generation == permit.connection_generation
+                    && payload.lease_sequence == permit.lease_sequence
+                    && payload.description.is_none()
+                    && !payload.candidates.is_empty()
+            }) {
+                ready.push(self.remote(actor, &id)?);
+            }
+        }
+        Ok(ready)
+    }
+
     pub fn validate_management_session(
         &self,
         actor: &Principal,

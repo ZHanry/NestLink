@@ -268,7 +268,7 @@ pub fn icon(size: u32) -> egui::IconData {
             rgba.extend_from_slice(if white {
                 &[255, 255, 255, 255]
             } else {
-                &[0, 95, 184, 255]
+                &[36, 107, 206, 255]
             });
         }
     }

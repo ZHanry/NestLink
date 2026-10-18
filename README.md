@@ -1,6 +1,6 @@
 # NestLink
 
-自建服务器的远程控制与服务发布工具，当前版本为 **0.2.0 RC1**（`0.2.0-rc.1`）。本次更新简化连接登录流程，重做 Windows 桌面界面，并将上游补丁依赖迁出主仓库。
+自建服务器的远程控制与服务发布工具，当前版本为 **0.3.0 RC1**（`0.3.0-rc.1`）。本次更新统一桌面图标与蓝色主题，改进设备选择、授权后自动连接、跨网络中继回退和连接错误提示。
 
 [English](README.en.md) · [候选发行](https://github.com/ZHanry/NestLink/releases) · [构建说明](docs/refactor/CANDIDATE-BUILD.md) · [实现与检查记录](docs/refactor/IMPLEMENTATION.md)
 
@@ -16,7 +16,7 @@ Rust 共享核心负责设备身份、授权、会话、媒体、文件与服务
 
 连接只需服务器地址、账号和密码；HTTPS 自动读取并校验服务器配置。TOTP 与恢复码功能已移除，升级会保留账号密码并要求重新登录。
 
-远控提供画面、输入、多屏、音频、文件和文本剪贴板的逐项授权。服务发布支持 HTTP、HTTPS、TCP 和 UDP，具有来源 ACL、配额及撤销控制。部署和配置见[服务端说明](docs/refactor/SERVER.md)。
+远控提供画面、输入、多屏、音频、文件和文本剪贴板的逐项授权。服务发布支持 HTTP、HTTPS、TCP 和 UDP，具有来源 ACL、配额及撤销控制。公司连接家里等跨网络场景需同时升级服务器和双方客户端；管理员须启用服务器转发，并为设备及会话允许中继。详见[跨网络连接说明](docs/REMOTE-CONNECTION.md)。部署和配置见[服务端说明](docs/refactor/SERVER.md)。
 
 RC 用于后续实际验收。当前 Windows 包未配置 Authenticode，Android 包使用开发签名及独立的 `com.zhanry.nestlink.candidate` 身份；固定发行签名、ARM64 真机、真实桌面与跨网验收仍待完成。下载时请核对 Release 中的 SHA-256 和固定源码清单；完整验收按用户安排在发布后进行。
 

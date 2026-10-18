@@ -14,12 +14,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
 
 internal object NestLinkUiTokens {
-    val lightPrimary = Color(0xFF005FB8)
+    val lightPrimary = Color(0xFF246BCE)
     val lightPrimaryActionText = Color(0xFFFFFFFF)
     val darkPrimaryActionText = Color(0xFF101C2C)
-    val lightCanvas = Color(0xFFF5F7FA)
-    val lightText = Color(0xFF1B2533)
-    val lightBorder = Color(0xFFDFE5ED)
+    val lightCanvas = Color(0xFFF2F5FA)
+    val lightText = Color(0xFF182B43)
+    val lightBorder = Color(0xFFDCE4EF)
     val lightDanger = Color(0xFFB42336)
     val lightFocus = Color(0xFF005FB8)
     val darkFocus = Color(0xFF96C8FF)
@@ -37,16 +37,16 @@ internal object NestLinkUiTokens {
     val lightColorScheme: ColorScheme = materialLightColorScheme(
         primary = lightPrimary,
         onPrimary = lightPrimaryActionText,
-        primaryContainer = Color(0xFFEDF1F6),
-        onPrimaryContainer = Color(0xFF0055A6),
-        secondary = Color(0xFF0055A6),
+        primaryContainer = Color(0xFFEAF0F8),
+        onPrimaryContainer = Color(0xFF205EB5),
+        secondary = Color(0xFF205EB5),
         onSecondary = Color.White,
         background = lightCanvas,
         onBackground = lightText,
         surface = Color(0xFFFFFFFF),
         onSurface = lightText,
-        surfaceVariant = Color(0xFFEDF1F6),
-        onSurfaceVariant = Color(0xFF637083),
+        surfaceVariant = Color(0xFFEAF0F8),
+        onSurfaceVariant = Color(0xFF64748B),
         outline = lightBorder,
         error = lightDanger,
         onError = Color.White,

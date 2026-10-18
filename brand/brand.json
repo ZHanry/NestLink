@@ -1,11 +1,11 @@
 {
   "name": "NestLink",
-  "version": "0.2.0-rc.1",
-  "style": "lavender-device-directory",
-  "primary": "#7955CF",
-  "background": "#FAF9FD",
+  "version": "0.3.0-rc.1",
+  "style": "device-and-session-workspace",
+  "primary": "#246BCE",
+  "background": "#F2F5FA",
   "icon": "icon.svg",
-  "icon_sha256": "7d7f9364ff04a67f3995e6f2e7e323205b1f08a957aaffee5ff9eb1b5d63d63c",
-  "scrollbars": "hidden-with-accessible-scrolling",
-  "upgrade_identity": "Preserve HomeDesk configuration namespace, installer identity, Android applicationId and signing certificate"
+  "icon_sha256": "c92069900b37f0f418277213a7edcce7179267d8d492fc8648705218892676be",
+  "scrollbars": "visible-when-scrollable",
+  "upgrade_identity": "Preserve existing RC installation identities and per-device private state"
 }

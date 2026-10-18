@@ -2,14 +2,14 @@
   "schema_version": 1,
   "product": "NestLink",
   "light": {
-    "primary": "#005FB8",
-    "primary_text": "#0055A6",
-    "canvas": "#F5F7FA",
-    "sidebar": "#EDF1F6",
+    "primary": "#246BCE",
+    "primary_text": "#205EB5",
+    "canvas": "#F2F5FA",
+    "sidebar": "#EAF0F8",
     "surface": "#FFFFFF",
-    "text": "#1B2533",
-    "muted": "#637083",
-    "border": "#DFE5ED",
+    "text": "#182B43",
+    "muted": "#64748B",
+    "border": "#DCE4EF",
     "danger": "#B42336"
   },
   "dark": {
@@ -92,5 +92,5 @@
     "服务发布",
     "设备"
   ],
-  "principles": "A Windows Fluent workspace with a blue navigation indicator, grouped commands, aligned device and account rows, bounded connection forms and clear connection state. Use installed Segoe UI and Chinese system fonts, visible keyboard focus, light/dark appearances and truthful empty states."
+  "principles": "Device-first remote workspace. One outline icon family and linked-N brand, readable device rows, explicit connection progress, grouped session tools, and diagnostics on demand. System UI fonts, visible keyboard focus and truthful connection states."
 }

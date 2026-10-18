@@ -11,6 +11,9 @@ use crate::{
 /// deployment. Private networks always require explicit local consent.
 #[derive(Clone)]
 pub struct NativeSessionConfig {
+    /// Continue already approved native offers while the desktop is in the tray.
+    /// The authenticated permit remains the sole authority for starting media.
+    pub listen_for_native_requests: bool,
     pub bind_address: SocketAddr,
     pub stun_servers: Vec<SocketAddr>,
     pub use_deployment_stun: bool,
@@ -47,6 +50,7 @@ impl NativeSessionConfig {
 
     pub fn new(network: Arc<NetworkMonitor>) -> Self {
         Self {
+            listen_for_native_requests: false,
             bind_address: SocketAddr::from(([0, 0, 0, 0], 0)),
             stun_servers: Vec::new(),
             use_deployment_stun: true,

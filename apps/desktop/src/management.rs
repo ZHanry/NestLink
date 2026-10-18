@@ -14,7 +14,9 @@ impl DesktopApp {
     pub(crate) fn devices_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         ui.horizontal(|ui| {
             ui.heading(self.t("设备", "Devices"));
-            if ui.button(self.t("刷新", "Refresh")).clicked() {
+            if crate::icons::button(ui, crate::icons::Icon::Refresh, self.t("刷新", "Refresh"))
+                .clicked()
+            {
                 self.load(snapshot, Page::Devices);
             }
         });
@@ -46,7 +48,9 @@ impl DesktopApp {
     pub(crate) fn security_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         ui.horizontal(|ui| {
             ui.heading(self.t("账号与安全", "Account and security"));
-            if ui.button(self.t("刷新", "Refresh")).clicked() {
+            if crate::icons::button(ui, crate::icons::Icon::Refresh, self.t("刷新", "Refresh"))
+                .clicked()
+            {
                 self.load(snapshot, Page::AccountSecurity);
             }
         });
@@ -141,7 +145,9 @@ impl DesktopApp {
     pub(crate) fn accounts_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         ui.horizontal(|ui| {
             ui.heading(self.t("账号管理", "Accounts"));
-            if ui.button(self.t("刷新", "Refresh")).clicked() {
+            if crate::icons::button(ui, crate::icons::Icon::Refresh, self.t("刷新", "Refresh"))
+                .clicked()
+            {
                 self.load(snapshot, Page::Accounts);
             }
         });
@@ -188,7 +194,9 @@ impl DesktopApp {
     pub(crate) fn network_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         ui.horizontal(|ui| {
             ui.heading(self.t("网络策略", "Network policy"));
-            if ui.button(self.t("刷新", "Refresh")).clicked() {
+            if crate::icons::button(ui, crate::icons::Icon::Refresh, self.t("刷新", "Refresh"))
+                .clicked()
+            {
                 self.load(snapshot, Page::Policy);
                 self.load(snapshot, Page::RelayQuota);
                 self.load(snapshot, Page::RelayUsage);
@@ -347,7 +355,9 @@ impl DesktopApp {
     pub(crate) fn nodes_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         ui.horizontal(|ui| {
             ui.heading(self.t("转发节点", "Nodes"));
-            if ui.button(self.t("刷新", "Refresh")).clicked() {
+            if crate::icons::button(ui, crate::icons::Icon::Refresh, self.t("刷新", "Refresh"))
+                .clicked()
+            {
                 self.load(snapshot, Page::Nodes);
             }
         });
@@ -509,7 +519,7 @@ impl DesktopApp {
     }
 }
 
-fn local_capabilities() -> Vec<String> {
+pub(super) fn local_capabilities() -> Vec<String> {
     if cfg!(any(windows, target_os = "linux")) {
         vec!["controller", "host", "vp8", "opus"]
             .into_iter()
