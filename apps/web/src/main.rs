@@ -1060,7 +1060,7 @@ fn Brand() -> impl IntoView {
 fn BrandMark(#[prop(optional)] small: bool) -> impl IntoView {
     view! {
         <svg class=if small { "brand-mark small" } else { "brand-mark" } viewBox="0 0 512 512" aria-hidden="true" focusable="false">
-            <rect x="8" y="8" width="496" height="496" rx="116" fill="#7955CF" />
+            <rect x="8" y="8" width="496" height="496" rx="116" fill="#246BCE" />
             <polyline points="154,342 154,196 200,150" fill="none" stroke="#FFFFFF" stroke-width="44" stroke-linecap="round" stroke-linejoin="round" />
             <polyline points="358,170 358,316 312,362" fill="none" stroke="#FFFFFF" stroke-width="44" stroke-linecap="round" stroke-linejoin="round" />
             <line x1="190" y1="190" x2="322" y2="322" stroke="#FFFFFF" stroke-width="44" stroke-linecap="round" />
