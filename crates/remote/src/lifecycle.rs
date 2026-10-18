@@ -7,10 +7,25 @@ use nestlink_session::{Session, SessionState, StopEffects, StopReason};
 use nestlink_transport_stream::Channel;
 use std::{
     io,
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, MutexGuard, TryLockError},
     time::{Duration, Instant},
 };
 use tokio::{sync::watch, task::JoinHandle};
+
+/// Platform cleanup and contended session locks are synchronous. Let a
+/// multithreaded Tokio executor replace this worker while it waits; otherwise
+/// concurrent channel checks can occupy every worker needed to release a
+/// platform operation. Isolated current-thread media runtimes keep their
+/// existing synchronous boundary.
+fn blocking_lifecycle<T>(operation: impl FnOnce() -> T) -> T {
+    if tokio::runtime::Handle::try_current()
+        .is_ok_and(|runtime| runtime.runtime_flavor() == tokio::runtime::RuntimeFlavor::MultiThread)
+    {
+        tokio::task::block_in_place(operation)
+    } else {
+        operation()
+    }
+}
 
 /// Capture the generation used to construct the endpoint, not a fresh baseline
 /// after the handshake. Closed observers and stale generations fail closed.
@@ -132,21 +147,23 @@ impl Managed {
         } else {
             CleanupStatus::Succeeded
         };
-        for handler in &mut self.handlers {
-            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                handler.stop(reason, effects)
-            }));
-            let failure = match result {
-                Ok(Ok(())) => None,
-                Ok(Err(error)) => Some(error.kind()),
-                Err(_) => Some(io::ErrorKind::Other),
-            };
-            if let Some(kind) = failure
-                && !matches!(cleanup, CleanupStatus::Failed(_))
-            {
-                cleanup = CleanupStatus::Failed(kind);
+        blocking_lifecycle(|| {
+            for handler in &mut self.handlers {
+                let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    handler.stop(reason, effects)
+                }));
+                let failure = match result {
+                    Ok(Ok(())) => None,
+                    Ok(Err(error)) => Some(error.kind()),
+                    Err(_) => Some(io::ErrorKind::Other),
+                };
+                if let Some(kind) = failure
+                    && !matches!(cleanup, CleanupStatus::Failed(_))
+                {
+                    cleanup = CleanupStatus::Failed(kind);
+                }
             }
-        }
+        });
         let report = StopReport {
             reason,
             effects,
@@ -169,6 +186,15 @@ struct Inner {
     task: Mutex<Option<JoinHandle<()>>>,
 }
 impl Inner {
+    fn lock(&self) -> Result<MutexGuard<'_, Managed>, RemoteError> {
+        match self.managed.try_lock() {
+            Ok(managed) => Ok(managed),
+            Err(TryLockError::Poisoned(_)) => Err(RemoteError::Stopped),
+            Err(TryLockError::WouldBlock) => {
+                blocking_lifecycle(|| self.managed.lock()).map_err(|_| RemoteError::Stopped)
+            }
+        }
+    }
     fn reconcile(&self, managed: &mut Managed) {
         if matches!(managed.session.state(), SessionState::Stopped(_)) {
             // Publish terminal revocation before any synchronous platform
@@ -358,11 +384,7 @@ impl LeaseControl {
     pub fn subscribe_input_permits(
         &self,
     ) -> Result<watch::Receiver<Option<VerifiedPermit>>, RemoteError> {
-        let mut managed = self
-            .inner
-            .managed
-            .lock()
-            .map_err(|_| RemoteError::Stopped)?;
+        let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
         let permit = managed
             .session
@@ -373,11 +395,7 @@ impl LeaseControl {
         Ok(self.inner.input_permits.subscribe())
     }
     pub fn reconnection_budget(&self) -> Result<ReconnectionBudget, RemoteError> {
-        let managed = self
-            .inner
-            .managed
-            .lock()
-            .map_err(|_| RemoteError::Stopped)?;
+        let managed = self.inner.lock()?;
         if self.inner.stop.has_changed().is_err()
             || self.inner.stop.borrow().is_some()
             || self.inner.network.as_ref().is_some_and(|network| {
@@ -416,11 +434,7 @@ impl LeaseControl {
         self.inner.updates.subscribe()
     }
     pub(crate) fn remaining(&self) -> Result<Duration, RemoteError> {
-        let mut managed = self
-            .inner
-            .managed
-            .lock()
-            .map_err(|_| RemoteError::Stopped)?;
+        let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
         Ok(Duration::from_millis(
             managed
@@ -434,11 +448,7 @@ impl LeaseControl {
     }
     pub(crate) fn transport_binding(&self) -> Result<([u8; 32], u64, Vec<Channel>), RemoteError> {
         use prost::Message;
-        let mut managed = self
-            .inner
-            .managed
-            .lock()
-            .map_err(|_| RemoteError::Stopped)?;
+        let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
         let mut transcript = managed.session.proof_transcript();
         // The permit digest binds deployment, resource, both keys, capability
@@ -470,11 +480,7 @@ impl LeaseControl {
     /// currently authorizes Input on this live proved lease. This cannot renew,
     /// recover, grant a channel or turn a decoded input envelope into authority.
     pub fn input_permit_deadline(&self, permit: &VerifiedPermit) -> Result<Instant, RemoteError> {
-        let mut managed = self
-            .inner
-            .managed
-            .lock()
-            .map_err(|_| RemoteError::Stopped)?;
+        let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
         let authorized = managed.session.authorize(
             Permission::Input,
@@ -543,11 +549,7 @@ impl LeaseControl {
             );
         }
         self.check_channel_binding(channel, generation)?;
-        let mut managed = self
-            .inner
-            .managed
-            .lock()
-            .map_err(|_| RemoteError::Stopped)?;
+        let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
         if managed.session.binding().connection_generation != generation {
             return Err(io::Error::new(
@@ -578,11 +580,7 @@ impl LeaseControl {
         generation: u64,
     ) -> Result<nestlink_session::SessionBinding, RemoteError> {
         self.check_channel_binding(Channel::FileRead, generation)?;
-        let mut managed = self
-            .inner
-            .managed
-            .lock()
-            .map_err(|_| RemoteError::Stopped)?;
+        let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
         let mut binding = managed.session.binding().clone();
         // Rebinding permits a new connection, never a new resource, principal,
@@ -602,11 +600,7 @@ impl LeaseControl {
         generation: Option<u64>,
         operation: impl FnOnce() -> io::Result<T>,
     ) -> Result<T, RemoteError> {
-        let mut managed = self
-            .inner
-            .managed
-            .lock()
-            .map_err(|_| RemoteError::Stopped)?;
+        let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
         let authorization =
             managed
@@ -638,11 +632,7 @@ impl LeaseControl {
         direction: AudioDirection,
         handler: Box<dyn StopHandler>,
     ) -> Result<(), RemoteError> {
-        let mut managed = self
-            .inner
-            .managed
-            .lock()
-            .map_err(|_| RemoteError::Stopped)?;
+        let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
         managed.session.authorize(
             Permission::Audio,
@@ -667,11 +657,7 @@ impl LeaseControl {
         generation: u64,
         handler: Box<dyn StopHandler>,
     ) -> Result<(), RemoteError> {
-        let mut managed = self
-            .inner
-            .managed
-            .lock()
-            .map_err(|_| RemoteError::Stopped)?;
+        let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
         managed.session.authorize(
             Permission::Input,
@@ -695,11 +681,7 @@ impl LeaseControl {
         generation: u64,
         handler: Box<dyn StopHandler>,
     ) -> Result<(), RemoteError> {
-        let mut managed = self
-            .inner
-            .managed
-            .lock()
-            .map_err(|_| RemoteError::Stopped)?;
+        let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
         managed.session.authorize(
             Permission::View,
@@ -721,11 +703,7 @@ impl LeaseControl {
         Ok(())
     }
     pub fn stop(&self, reason: StopReason) -> Result<StopEffects, RemoteError> {
-        let mut managed = self
-            .inner
-            .managed
-            .lock()
-            .map_err(|_| RemoteError::Stopped)?;
+        let mut managed = self.inner.lock()?;
         if !reconnection_is_allowed(reason) {
             managed.recovery_forbidden = true;
         }
@@ -737,11 +715,7 @@ impl LeaseControl {
     /// stop reason has won, teardown notifications from dropping channel/task
     /// guards are cleanup only and cannot change reconnection eligibility.
     pub fn stop_if_running(&self, reason: StopReason) -> Result<(), RemoteError> {
-        let mut managed = self
-            .inner
-            .managed
-            .lock()
-            .map_err(|_| RemoteError::Stopped)?;
+        let mut managed = self.inner.lock()?;
         if matches!(managed.session.state(), SessionState::Stopped(_)) {
             return Ok(());
         }
@@ -775,11 +749,7 @@ impl LeaseControl {
         permit: VerifiedPermit,
         request_started_ms: u64,
     ) -> Result<(), RemoteError> {
-        let mut managed = self
-            .inner
-            .managed
-            .lock()
-            .map_err(|_| RemoteError::Stopped)?;
+        let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
         let observed = permit.clone();
         let result = managed

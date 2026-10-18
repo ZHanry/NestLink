@@ -16,7 +16,7 @@ use std::{
         Arc, Condvar, Mutex,
         atomic::{AtomicBool, AtomicUsize, Ordering},
     },
-    time::Duration,
+    time::{Duration, Instant},
 };
 use support::*;
 
@@ -44,6 +44,7 @@ struct ResetGate {
     fail: AtomicBool,
     released: Mutex<bool>,
     changed: Condvar,
+    timed_out: AtomicBool,
 }
 impl ResetGate {
     fn arm(&self, fail: bool) {
@@ -64,6 +65,7 @@ impl ResetGate {
             .changed
             .wait_timeout_while(released, Duration::from_secs(5), |released| !*released)
             .map_err(|_| io::Error::other("reset gate poisoned"))?;
+        self.timed_out.store(!*released, Ordering::Release);
         if !*released || self.fail.load(Ordering::Acquire) {
             return Err(io::Error::other("platform reset did not complete"));
         }
@@ -496,7 +498,9 @@ impl Pair {
     }
 }
 
-#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+// Keep the executor small: channel checks contending with held platform
+// cleanup must leave capacity for the driver and the Core control actor.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn recovery_waits_for_held_input_and_media_cleanup_then_proves_a_fresh_generation() -> Result
 {
     let mut pair = pair().await?;
@@ -535,6 +539,7 @@ async fn recovery_waits_for_held_input_and_media_cleanup_then_proves_a_fresh_gen
         Err(NativeNetworkError::Busy),
     );
     pair.reset.arm(false);
+    let cleanup_started = Instant::now();
     pair.controller_network.invalidate_generation()?;
     pair.reset.wait_entered().await?;
     assert_eq!(
@@ -573,6 +578,11 @@ async fn recovery_waits_for_held_input_and_media_cleanup_then_proves_a_fresh_gen
             .is_err()
     );
     pair.reset.release();
+    assert!(
+        !pair.reset.timed_out.load(Ordering::Acquire),
+        "test cleanup gate expired before release after {:?}",
+        cleanup_started.elapsed(),
+    );
     // Drop a stopped external capture owner too: cleanup must not be treated
     // as new ExplicitExit consent that vetoes the retained transport budget.
     tokio::time::timeout(Duration::from_secs(3), async {
