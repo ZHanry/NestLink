@@ -70,6 +70,9 @@ impl Actor {
             || self.view.authentication != Authentication::SignedIn
             || self.retire
             || self.boundary.is_some()
+            // A user command may arrive while this read is in flight. Let it
+            // run first; a manual Start must not race an automatic duplicate.
+            || !self.pending.is_empty()
             || active.cancelled.is_some()
             || active.cancellation.load(Ordering::Acquire)
         {
