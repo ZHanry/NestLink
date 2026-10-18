@@ -330,7 +330,21 @@ def remote_check(github, plan):
     try:
         release = github.request("GET", base + "/releases/tags/" + TAG)
     except Missing:
+        # GitHub's tag endpoint only returns published releases. Drafts must
+        # be discovered through the authenticated list, then read by ID.
+        listed = github.pages(base + "/releases")
+        require(all(isinstance(item, dict) and isinstance(item.get("tag_name"), str) for item in listed),
+                "Malformed RC release inventory")
+        matches = [item for item in listed if item["tag_name"] == TAG]
+        require(len(matches) <= 1, "RC tag has ambiguous release entries")
         release = None
+        if matches:
+            candidate = matches[0]
+            validate_release(candidate, plan)
+            require(candidate["draft"] is True, "Published RC is absent from its tag lookup")
+            release = github.request("GET", base + "/releases/" + str(candidate["id"]))
+            require(isinstance(release, dict) and release.get("id") == candidate["id"] and release.get("draft") is True,
+                    "RC draft identity or state changed during discovery")
     if release is not None:
         validate_release(release, plan)
         require(tag_exists, "Existing RC release has no matching tag")

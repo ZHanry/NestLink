@@ -63,7 +63,7 @@ class FakeGitHub:
             self.tag_source = kwargs["value"]["sha"]
             return {"object": {"type": "commit", "sha": self.tag_source}}
         if method == "GET" and path == BASE + "/releases/tags/" + P.TAG:
-            if self.release is None:
+            if self.release is None or self.release["draft"]:
                 raise P.Missing()
             return dict(self.release)
         if method == "POST" and path == BASE + "/releases":
@@ -102,6 +102,8 @@ class FakeGitHub:
 
     def pages(self, path):
         self.calls.append(("GET", path))
+        if path == BASE + "/releases":
+            return [dict(self.release)] if self.release else []
         assert path == BASE + "/releases/17/assets"
         return [self.metadata(value) for value in self.assets.values()]
 
@@ -189,6 +191,54 @@ class RCPublicationTests(unittest.TestCase):
         self.assertFalse(self.github.downloads)
         self.assertEqual(self.github.writes[-1], ("PATCH", BASE + "/releases/17"))
         self.assertFalse(any(method == "DELETE" for method, _ in self.github.calls))
+
+    def test_draft_tag_404_is_discovered_and_read_back_by_id_without_writes(self):
+        self.upload_draft()
+        before = list(self.github.writes)
+        self.github.calls.clear()
+        self.args.action = "verify"
+        result = P.promote(self.args, self.github)
+        self.assertEqual(result["release_id"], 17)
+        self.assertEqual(result["existing_assets_verified"], 19)
+        self.assertIn(("GET", BASE + "/releases"), self.github.calls)
+        self.assertIn(("GET", BASE + "/releases/17"), self.github.calls)
+        self.assertEqual(self.github.writes, [])
+        self.assertTrue(before)
+
+    def test_ambiguous_draft_discovery_is_refused_without_writes(self):
+        self.upload_draft()
+        before = list(self.github.writes)
+        pages = self.github.pages
+        def duplicate(path):
+            result = pages(path)
+            return result + copy.deepcopy(result) if path == BASE + "/releases" else result
+        with patch.object(self.github, "pages", side_effect=duplicate), self.assertRaisesRegex(ValueError, "ambiguous"):
+            P.promote(self.args, self.github)
+        self.assertEqual(self.github.writes, before)
+
+    def test_draft_id_or_state_changing_after_listing_blocks_every_write(self):
+        self.upload_draft()
+        before = list(self.github.writes)
+        original = dict(self.github.release)
+        for field, value in (("id", 18), ("draft", False)):
+            with self.subTest(field=field):
+                self.github.release = dict(original)
+                self.github.read_hook = lambda gh, field=field, value=value: gh.release.update({field: value})
+                with self.assertRaisesRegex(ValueError, "draft identity or state"):
+                    P.promote(self.args, self.github)
+                self.assertEqual(self.github.writes, before)
+
+    def test_published_release_missing_from_tag_lookup_is_refused(self):
+        P.promote(self.args, self.github)
+        before = list(self.github.writes)
+        request = self.github.request
+        def missing_tag(method, path, **kwargs):
+            if path == BASE + "/releases/tags/" + P.TAG:
+                raise P.Missing()
+            return request(method, path, **kwargs)
+        with patch.object(self.github, "request", side_effect=missing_tag), self.assertRaisesRegex(ValueError, "absent from its tag lookup"):
+            P.promote(self.args, self.github)
+        self.assertEqual(self.github.writes, before)
 
     def test_publish_is_idempotent_and_preserves_explicit_pending_signing(self):
         result = P.promote(self.args, self.github)
@@ -302,7 +352,13 @@ class RCPublicationTests(unittest.TestCase):
         for changes in ({"body": "All formal signing and user acceptance passed."}, {"prerelease": False},
                         {"tag_name": "v15.0.0"}, {"name": "Official stable release"}, {"id": True}):
             with self.subTest(changes=changes):
+                self.github.read_hook = None
                 self.github.release = {**original, **changes}
+                if "tag_name" in changes:
+                    # An unrelated tag in the list is a different release.
+                    # Reject our selected draft changing tag at ID readback.
+                    self.github.release = dict(original)
+                    self.github.read_hook = lambda gh, changes=changes: gh.release.update(changes)
                 with self.assertRaises(ValueError):
                     P.promote(self.args, self.github)
         self.assertEqual(self.github.writes, before)
