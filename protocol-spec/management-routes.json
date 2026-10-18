@@ -42,6 +42,7 @@
   {"path":"/policy/scopes","method":"get","operation":"path_limits","response":"PathLimitsResponse","status":200,"auth":true},
   {"path":"/policy/scopes/{scope}/{id}","method":"put","operation":"update_path_limit","request":"PathLimitUpdate","response":"RevisionResponse","status":200,"auth":true},
   {"path":"/remote","method":"get","operation":"pending","response":"RemoteRequestsResponse","status":200,"auth":true},
+  {"path":"/remote/native-ready/{id}","method":"get","operation":"native_ready","response":"RemoteRequestsResponse","status":200,"auth":true},
   {"path":"/remote","method":"post","operation":"create_remote","request":"RemoteRequest","response":"RemoteView","status":201,"auth":true},
   {"path":"/remote/trusted","method":"post","operation":"trusted::connect","request":"RemoteRequest","response":"RemoteView","status":201,"auth":true},
   {"path":"/remote/{id}","method":"get","operation":"remote","response":"RemoteView","status":200,"auth":true},

@@ -9515,7 +9515,6 @@
     },
     "/remote/native-ready/{id}": {
       "get": {
-        "description": "Approved, unexpired native offers addressed to an enrolled host owned by the signed-in account. This wake-up hint does not replace permit verification, endpoint proof or consent. Browser SDP offers are excluded.",
         "operationId": "native_ready",
         "parameters": [
           {
@@ -9523,6 +9522,7 @@
             "name": "id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           }
