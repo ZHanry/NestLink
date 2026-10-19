@@ -32,6 +32,15 @@ pub(super) struct PrivateLedger {
     fail_next_before_replace: std::sync::atomic::AtomicBool,
 }
 
+impl Drop for PrivateLedger {
+    fn drop(&mut self) {
+        // flock belongs to the open file description. A concurrent fork can
+        // briefly inherit it even with CLOEXEC; closing our descriptor alone
+        // then leaves a departed owner locked until the child execs/exits.
+        let _ = self._lock.unlock();
+    }
+}
+
 impl PrivateLedger {
     pub(super) fn open(
         private_state_dir: &Path,
@@ -201,6 +210,12 @@ struct MaintenanceOwner {
     directory: Dir,
     _lock: File,
     lock_marker: Vec<u8>,
+}
+
+impl Drop for MaintenanceOwner {
+    fn drop(&mut self) {
+        let _ = self._lock.unlock();
+    }
 }
 
 struct OpenedMetadata {
@@ -1093,6 +1108,34 @@ mod tests {
         assert_eq!(fs::read(state.join(LEDGER_TEMP_NAME))?, pending.raw);
         assert_eq!(fs::read(state.join(LOCK_NAME))?, original_marker);
         assert_eq!(fs::read_dir(&state)?.count(), entry_count);
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn retired_owner_releases_lock_even_when_its_file_description_is_duplicated() -> io::Result<()>
+    {
+        let (_owner, state) = private_state()?;
+        let (ledger, _) = PrivateLedger::open(&state, 100, 4)?;
+        // try_clone shares the same open file description, as an inherited
+        // fork descriptor does, without forking the multithreaded test process.
+        let inherited = ledger._lock.try_clone()?;
+        assert_eq!(
+            PrivateLedger::open(&state, 100, 4).err().map(|e| e.kind()),
+            Some(io::ErrorKind::WouldBlock)
+        );
+        drop(ledger);
+        let maintenance = MaintenanceOwner::open_existing(&state)?;
+        let inherited_maintenance = maintenance._lock.try_clone()?;
+        assert_eq!(
+            PrivateLedger::open(&state, 100, 4).err().map(|e| e.kind()),
+            Some(io::ErrorKind::WouldBlock)
+        );
+        drop(maintenance);
+        let reopened = PrivateLedger::open(&state, 100, 4)?;
+        drop(reopened);
+        drop(inherited_maintenance);
+        drop(inherited);
         Ok(())
     }
 

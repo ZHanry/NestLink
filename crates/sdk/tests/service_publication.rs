@@ -108,7 +108,8 @@ async fn run() -> Result {
         },
         true,
     )
-    .await?;
+    .await
+    .map_err(|e| format!("connect: {e:?}"))?;
     sdk.login("admin".into(), Secret::from_text(password.into()), None)
         .await?;
     sdk.set_policy(PolicyUpdate {
@@ -204,13 +205,20 @@ async fn run() -> Result {
                 },
             },
         })
-        .await?;
+        .await
+        .map_err(|e| format!("create service: {e:?}"))?;
     let consent =
         LocalServiceTargetConsent::from_local_choice(&definition, "tcp", backend_address)?;
-    let approved = sdk.approve_service_target(&host, &consent, 60000).await?;
+    let approved = sdk
+        .approve_service_target(&host, &consent, 60000)
+        .await
+        .map_err(|e| format!("approve target: {e:?}"))?;
     assert_eq!(approved.revision, definition.revision + 1);
     drop(public_reservation);
-    let mut runtime = sdk.start_service_host(host.clone(), consent).await?;
+    let mut runtime = sdk
+        .start_service_host(host.clone(), consent)
+        .await
+        .map_err(|e| format!("start tcp host: {e:?}"))?;
     assert_eq!(
         sdk.service(&definition.id).await?.publication,
         ServicePublicationStatus::Published
@@ -282,7 +290,9 @@ async fn run() -> Result {
     })
     .await?;
     assert!(sdk.service(&definition.id).await?.target_id.is_some());
-    exercise_udp(&sdk, host, node_id, public_address).await?;
+    exercise_udp(&sdk, host, node_id, public_address)
+        .await
+        .map_err(|e| format!("udp phase: {e:?}"))?;
     let _ = stop_edge.send(());
     (&mut edge.0).await??;
     control.stop();
@@ -331,9 +341,13 @@ async fn exercise_udp(
                 },
             },
         })
-        .await?;
+        .await
+        .map_err(|e| format!("create service: {e:?}"))?;
     let consent = LocalServiceTargetConsent::from_local_choice(&definition, "udp", target)?;
-    let approved = sdk.approve_service_target(&host, &consent, 60000).await?;
+    let approved = sdk
+        .approve_service_target(&host, &consent, 60000)
+        .await
+        .map_err(|e| format!("approve target: {e:?}"))?;
     let mut runtime = sdk.start_service_host(host, consent).await?;
     let visitor = UdpSocket::bind("127.0.0.1:0").await?;
     visitor.connect(public).await?;
