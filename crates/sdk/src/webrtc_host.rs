@@ -739,13 +739,8 @@ impl WebRtcHostPeer {
                 .permissions
                 .contains(&(Permission::Audio as i32)),
             turn_credentials.as_ref(),
-        )
-        .await?;
-        peer.set_configuration(peer_configuration_with_stun(
-            &fresh,
-            turn_credentials.as_ref(),
             &stun_urls,
-        ))
+        )
         .await?;
         let (permit_tx, permit_rx) = watch::channel(fresh.clone());
         let display_transaction_gate = Arc::new(Mutex::new(()));
@@ -2554,6 +2549,7 @@ async fn make_peer(
     permit: &VerifiedPermit,
     with_audio: bool,
     turn_credentials: Option<&TurnCredentials>,
+    stun_urls: &[String],
 ) -> Result<
     (
         Arc<RTCPeerConnection>,
@@ -2572,6 +2568,7 @@ async fn make_peer(
         // resolving the browser's own privacy-preserving mDNS candidates.
         MulticastDnsMode::QueryOnly,
         turn_credentials,
+        stun_urls,
     )
     .await
 }
@@ -2590,7 +2587,7 @@ async fn make_peer_with_mdns(
     ),
     WebRtcHostError,
 > {
-    make_peer_with_configuration(permit, with_audio, mdns_mode, None).await
+    make_peer_with_configuration(permit, with_audio, mdns_mode, None, &[]).await
 }
 
 async fn make_peer_with_configuration(
@@ -2598,6 +2595,7 @@ async fn make_peer_with_configuration(
     with_audio: bool,
     mdns_mode: MulticastDnsMode,
     turn_credentials: Option<&TurnCredentials>,
+    stun_urls: &[String],
 ) -> Result<
     (
         Arc<RTCPeerConnection>,
@@ -2664,7 +2662,10 @@ async fn make_peer_with_configuration(
         .with_interceptor_registry(registry)
         .with_setting_engine(settings)
         .build();
-    let configuration = peer_configuration(permit, turn_credentials);
+    // webrtc 0.14 copies ICE URLs into its gatherer at construction. Its
+    // set_configuration updates public metadata only, so STUN must be present
+    // before creating the peer, not applied to the peer afterwards.
+    let configuration = peer_configuration_with_stun(permit, turn_credentials, stun_urls);
     let peer = Arc::new(api.new_peer_connection(configuration).await?);
     let video_track = Arc::new(TrackLocalStaticSample::new(
         RTCRtpCodecCapability {

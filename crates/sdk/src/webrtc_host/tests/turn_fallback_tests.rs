@@ -289,6 +289,53 @@ fn offer(permit: &VerifiedPermit) -> SignalPayload {
 }
 
 #[tokio::test]
+async fn initial_native_ice_gatherer_actually_uses_stun_and_publishes_srflx() -> TestResult {
+    let controller = DeviceIdentity::generate();
+    let host = DeviceIdentity::generate();
+    let permit = test_permit(&controller, &host)?;
+    let stun = tokio::net::UdpSocket::bind("127.0.0.1:0").await?;
+    let endpoint = format!("stun:{}", stun.local_addr()?);
+    let responder = tokio::spawn(async move {
+        let mut request = [0; 2048];
+        loop {
+            let (length, source) = stun.recv_from(&mut request).await?;
+            if length < 20 || request[..2] != [0, 1] || request[4..8] != [0x21, 0x12, 0xa4, 0x42] {
+                continue;
+            }
+            // RFC 8489 binding success with a synthetic public XOR-MAPPED
+            // address. No external service or real NAT mapping is required.
+            let mut response = vec![1, 1, 0, 12];
+            response.extend_from_slice(&request[4..20]);
+            response.extend_from_slice(&[0, 0x20, 0, 8, 0, 1]);
+            response.extend_from_slice(&(45678_u16 ^ 0x2112).to_be_bytes());
+            response.extend_from_slice(&[11 ^ 0x21, 0x12, 0xa4, 1 ^ 0x42]);
+            stun.send_to(&response, source).await?;
+        }
+        #[allow(unreachable_code)]
+        Ok::<(), std::io::Error>(())
+    });
+    let (peer, _, _, _) = make_peer(&permit, false, None, &[endpoint]).await?;
+    let mut complete = peer.gathering_complete_promise().await;
+    peer.set_local_description(peer.create_offer(None).await?)
+        .await?;
+    tokio::time::timeout(Duration::from_secs(5), complete.recv()).await?;
+    let sdp = peer
+        .local_description()
+        .await
+        .ok_or("missing local SDP")?
+        .sdp;
+    peer.close().await?;
+    responder.abort();
+    assert!(
+        sdp.lines().any(|line| line.starts_with("a=candidate:")
+            && line.contains("11.0.0.1")
+            && line.contains(" typ srflx")),
+        "the actual ICE gatherer did not publish a server-reflexive candidate"
+    );
+    Ok(())
+}
+
+#[tokio::test]
 async fn stun_survives_turn_capacity_fallback_and_optional_turn_withdrawal() -> TestResult {
     let controller = DeviceIdentity::generate();
     let host = DeviceIdentity::generate();
