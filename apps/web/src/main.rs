@@ -276,9 +276,10 @@ fn App() -> impl IntoView {
             spawn_local(async move {
                 if let Err(problem) = sdk.lock().await.logout().await {
                     let problem = i18n::sdk_error(&problem);
-                    notice.set(localized_format!(
-                        "服务器未确认旧会话已撤销：{problem}",
-                        "The server did not confirm revocation of the previous session: {problem}"
+                    notice.set(nestlink_web::localized_detail!(
+                        "服务器未确认旧会话已撤销：{}",
+                        "The server did not confirm revocation of the previous session: {}",
+                        problem
                     ));
                 }
                 busy.set(false);
@@ -493,7 +494,7 @@ fn App() -> impl IntoView {
                     auth_failure.run(auth_sdk);
                     return;
                 }
-                Err(problem) => error.set(localized_format!(
+                Err(problem) => error.set(nestlink_web::localized_detail!(
                     "读取更早审计记录失败：{}",
                     "Could not load earlier audit records: {}",
                     problem.message
@@ -640,9 +641,10 @@ fn App() -> impl IntoView {
                         if let Err(cleanup) = sdk.logout().await {
                             let cleanup = i18n::sdk_error(&cleanup);
                             return Err(UiError {
-                                message: localized_format!("{}；服务器未确认刚建立的登录会话已撤销：{cleanup}", "{}; the server did not confirm revocation of the newly created session: {cleanup}",
-                                    problem.message
-                                ),
+                                message: {
+                                    let detail = nestlink_web::localized_detail!("服务器未确认刚建立的登录会话已撤销：{}", "The server did not confirm revocation of the newly created session: {}", cleanup);
+                                    i18n::join_feedback(&[problem.message, detail], "; ")
+                                },
                                 requires_sign_in: problem.requires_sign_in,
                             });
                         }
@@ -676,7 +678,7 @@ fn App() -> impl IntoView {
                     load.run(Section::Devices.key().to_owned());
                 }
                 Err(problem) => {
-                    error.set(localized_format!(
+                    error.set(nestlink_web::localized_detail!(
                         "登录失败：{}",
                         "Sign-in failed: {}",
                         problem.message
@@ -702,9 +704,10 @@ fn App() -> impl IntoView {
                 spawn_local(async move {
                     if let Err(problem) = sdk.lock().await.logout().await {
                         let problem = i18n::sdk_error(&problem);
-                        error.set(localized_format!(
-                            "服务器未确认退出：{problem}",
-                            "The server did not confirm sign-out: {problem}"
+                        error.set(nestlink_web::localized_detail!(
+                            "服务器未确认退出：{}",
+                            "The server did not confirm sign-out: {}",
+                            problem
                         ));
                     }
                     api.set_value(None);
@@ -730,7 +733,7 @@ fn App() -> impl IntoView {
 
                 screen.set(Screen::Trust);
                 if let Some(problem) = logout_problem {
-                    error.set(localized_format!("切换服务器前未能确认旧会话已撤销：{problem}", "Could not confirm revocation of the old session before changing servers: {problem}"));
+                    error.set(nestlink_web::localized_detail!("切换服务器前未能确认旧会话已撤销：{}", "Could not confirm revocation of the old session before changing servers: {}", problem));
                 }
                 busy.set(false);
             };
@@ -804,7 +807,7 @@ fn App() -> impl IntoView {
                         revoke_auth_failure.run(auth_sdk);
                         return;
                     }
-                    error.set(localized_format!(
+                    error.set(nestlink_web::localized_detail!(
                         "撤销未完成：{}",
                         "Revocation did not complete: {}",
                         problem.message
@@ -869,7 +872,7 @@ fn App() -> impl IntoView {
                         policy_auth_failure.run(auth_sdk);
                         return;
                     }
-                    error.set(localized_format!(
+                    error.set(nestlink_web::localized_detail!(
                         "策略未保存：{}",
                         "Policy was not saved: {}",
                         problem.message
@@ -924,7 +927,7 @@ fn App() -> impl IntoView {
                         account_auth_failure.run(auth_sdk);
                         return;
                     }
-                    error.set(localized_format!(
+                    error.set(nestlink_web::localized_detail!(
                         "账号未创建：{}",
                         "Account was not created: {}",
                         problem.message

@@ -8,7 +8,13 @@ impl Fixture {
             }
             Ok::<(), nestlink_node::control::Error>(())
         })
-        .await??;
+        .await
+        .map_err(|error| {
+            format!(
+                "fixture close receipt was not acknowledged: {error}; status={:?}",
+                self.control.close_report_status()
+            )
+        })??;
         assert_eq!(
             self.control.close_report_status()?.acknowledged_receipts,
             acknowledged

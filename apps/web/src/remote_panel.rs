@@ -267,9 +267,10 @@ impl RemoteRun {
             && let Err(problem) = self.sdk.lock().await.revoke_remote(&self.id).await
         {
             self.request_created.set(true);
-            problems.push(localized_format!(
-                "服务器未确认会话撤销：{problem}",
-                "The server did not confirm session revocation: {problem}"
+            problems.push(nestlink_web::localized_detail!(
+                "服务器未确认会话撤销：{}",
+                "The server did not confirm session revocation: {}",
+                i18n::sdk_error(&problem)
             ));
         }
         if self
@@ -598,10 +599,11 @@ pub fn RemotePanel(
                 }
                 if !cleanup.is_empty() {
                     let _ = problem.try_update(|message| {
-                        if !message.is_empty() {
-                            message.push(' ');
-                        }
-                        message.push_str(&cleanup.join(" "));
+                        let previous = std::mem::take(message);
+                        *message = i18n::join_feedback(
+                            &[previous, i18n::join_feedback(&cleanup, " ")],
+                            " ",
+                        );
                     });
                 }
             }
@@ -636,7 +638,7 @@ pub fn RemotePanel(
                 release_clean_run(&run);
             }
             let _ = pending_cleanup.try_set(retained_count());
-            let _ = problem.try_set(problems.join(" "));
+            let _ = problem.try_set(i18n::join_feedback(&problems, " "));
         });
     };
     let close = move |_| {

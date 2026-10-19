@@ -22,15 +22,39 @@ pub fn text(chinese: &'static str, english_text: &'static str) -> &'static str {
     if english() { english_text } else { chinese }
 }
 
-pub fn feedback_text(value: &str) -> String {
-    let en = english();
+pub fn feedback_pair(value: &str) -> (String, String) {
     MESSAGES.with(|cache| {
         cache
             .borrow()
             .get(value)
-            .map(|pair| if en { pair.1.clone() } else { pair.0.clone() })
-            .unwrap_or_else(|| value.to_owned())
+            .cloned()
+            .unwrap_or_else(|| (value.to_owned(), value.to_owned()))
     })
+}
+
+pub fn feedback_text(value: &str) -> String {
+    let pair = feedback_pair(value);
+    if english() { pair.1 } else { pair.0 }
+}
+
+pub fn join_feedback(values: &[String], separator: &str) -> String {
+    let pairs: Vec<_> = values
+        .iter()
+        .filter(|value| !value.is_empty())
+        .map(|value| feedback_pair(value))
+        .collect();
+    formatted(
+        pairs
+            .iter()
+            .map(|pair| pair.0.as_str())
+            .collect::<Vec<_>>()
+            .join(separator),
+        pairs
+            .iter()
+            .map(|pair| pair.1.as_str())
+            .collect::<Vec<_>>()
+            .join(separator),
+    )
 }
 
 pub fn formatted(chinese: String, english_text: String) -> String {
@@ -155,10 +179,7 @@ fn api_error(code: nestlink_protocol::ErrorCode) -> &'static str {
 
 pub fn peer_error(error: &crate::browser_peer::PeerError) -> String {
     use crate::browser_peer::PeerError;
-    if english() {
-        return error.to_string();
-    }
-    match error {
+    let chinese = match error {
         PeerError::InvalidIceConfiguration => "部署的连接发现配置无效。",
         PeerError::InvalidPathMode => "所选连接方式无效。",
         PeerError::InvalidPermit => "会话许可无效或已到期。",
@@ -179,8 +200,8 @@ pub fn peer_error(error: &crate::browser_peer::PeerError) -> String {
         PeerError::BrowserUnavailable => "此浏览器不支持 WebRTC。",
         PeerError::BrowserOperation => "浏览器未能完成媒体连接操作。",
         PeerError::SignalRejected => "设备签名信令核验失败，连接已拒绝。",
-    }
-    .into()
+    };
+    formatted(chinese.into(), error.to_string())
 }
 
 pub fn peer_connection_error(
@@ -199,17 +220,22 @@ pub fn peer_connection_error(
         return peer_error(error);
     }
     let help = if mode == PeerPathMode::DirectOnly {
-        text(
+        (
             "未建立可达的直连路径。请检查 STUN 和 UDP 网络；跨网受限时，请管理员允许并配置 TURN 中继，再使用自动连接。",
             "No reachable direct path was established. Check STUN and UDP reachability. For restrictive networks, ask your administrator to configure and allow TURN, then use Automatic.",
         )
     } else {
-        text(
+        (
             "未建立可达的远控路径。请检查部署的 STUN、TURN 中继和双方的中继权限后重试。服务器上的 WebSocket 中继不能替代浏览器所需的 TURN。",
             "No reachable remote path was established. Check deployment STUN, TURN and both devices' relay permissions, then retry. Browser connections require TURN; the native WebSocket relay does not provide it.",
         )
     };
-    format!("{} {help}", peer_error(error))
+    let detail = peer_error(error);
+    let (chinese, english_text) = feedback_pair(&detail);
+    formatted(
+        format!("{chinese} {}", help.0),
+        format!("{english_text} {}", help.1),
+    )
 }
 
 pub fn set_english(value: bool) {
@@ -272,6 +298,16 @@ macro_rules! localized_format {
     }};
 }
 
+/// Only explicit local UI feedback is translated; names and protocol values stay raw.
+#[macro_export]
+macro_rules! localized_detail {
+    ($chinese:literal, $english:literal, $detail:expr $(,)?) => {{
+        let detail = $detail.to_string();
+        let (chinese, english_text) = $crate::i18n::feedback_pair(&detail);
+        $crate::i18n::formatted(format!($chinese, chinese), format!($english, english_text))
+    }};
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -291,6 +327,25 @@ mod tests {
             "Mode direct_only"
         );
         assert_eq!(value, "direct_only");
+        let problem = sdk_error(&nestlink_sdk::SdkError::Timeout);
+        let detail = crate::localized_detail!("保存失败：{}", "Save failed: {}", problem);
+        assert!(detail.starts_with("Save failed: The request timed out."));
+        set_english(false);
+        assert!(feedback_text(&detail).starts_with("保存失败：请求超时"));
+        let peer = peer_connection_error(
+            &crate::browser_peer::PeerError::TimedOut,
+            crate::browser_peer::PeerPathMode::DirectOnly,
+        );
+        let joined = join_feedback(&[detail.clone(), peer], " ");
+        set_english(true);
+        let english_joined = feedback_text(&joined);
+        assert!(english_joined.contains("Save failed: The request timed out."));
+        assert!(english_joined.contains("No reachable direct path"));
+        assert!(!english_joined.contains("请求"));
+        // A remote name equal to local UI copy remains an ordinary format value.
+        let name = "设备";
+        let named = crate::localized_format!("名称 {}", "Name {}", name);
+        assert_eq!(named, "Name 设备");
         set_english(false);
     }
 }

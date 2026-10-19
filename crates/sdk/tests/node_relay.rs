@@ -310,7 +310,8 @@ impl Fixture {
                 tokio::time::sleep(Duration::from_millis(10)).await;
             }
         })
-        .await?;
+        .await
+        .map_err(|error| format!("fixture node authorization timed out: {error}"))?;
         let allocation = sdk
             .reserve_relay_allocation(&controller, &permit, &random_id(), &node_id)
             .await?;
@@ -456,7 +457,13 @@ impl Fixture {
             }
             Ok::<(), nestlink_node::control::Error>(())
         })
-        .await??;
+        .await
+        .map_err(|error| {
+            format!(
+                "fixture sockets did not close: {error}; counters={:?}",
+                self.control.counters()
+            )
+        })??;
         Ok(())
     }
     async fn pending(&self, expected: usize) -> Result {

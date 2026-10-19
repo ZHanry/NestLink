@@ -378,7 +378,7 @@ pub(super) fn ServicesPanel(
                         }
                         Err(problem) => {
                             let problem = sdk_error(&problem);
-                            error.set(localized_format!("操作已提交，但目录刷新失败：{problem}。请刷新目录。", "The operation was submitted, but the catalog refresh failed: {problem}. Refresh the catalog."));
+                            error.set(nestlink_web::localized_detail!("操作已提交，但目录刷新失败：{}。请刷新目录。", "The operation was submitted, but the catalog refresh failed: {}. Refresh the catalog.", problem));
                         }
                     }
                 }
@@ -398,7 +398,7 @@ pub(super) fn ServicesPanel(
                         }
                         Err(problem) => {
                             let problem = sdk_error(&problem);
-                            error.set(localized_format!("停止已提交，但目录刷新失败：{problem}。请刷新目录。", "Stop was submitted, but the catalog refresh failed: {problem}. Refresh the catalog."));
+                            error.set(nestlink_web::localized_detail!("停止已提交，但目录刷新失败：{}。请刷新目录。", "Stop was submitted, but the catalog refresh failed: {}. Refresh the catalog.", problem));
                         }
                     }
                 }
@@ -411,7 +411,7 @@ pub(super) fn ServicesPanel(
                         matches!(&problem, SdkError::Api(status, _) if status.is_client_error());
                     let problem = sdk_error(&problem);
                     error.set(if write && !known {
-                        localized_format!("未能确认保存或撤销结果：{problem}。请先刷新；创建草稿保留相同 ID，核实后可重试。", "Could not confirm the save or revocation result: {problem}. Refresh first; new drafts retain the same ID so you can check before retrying.")
+                        nestlink_web::localized_detail!("未能确认保存或撤销结果：{}。请先刷新；创建草稿保留相同 ID，核实后可重试。", "Could not confirm the save or revocation result: {}. Refresh first; new drafts retain the same ID so you can check before retrying.", problem)
                     } else { problem.to_string() });
                 }
             }

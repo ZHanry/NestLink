@@ -147,10 +147,7 @@ pub(super) fn AccountSecurityPanel(
                         matches!(&problem, SdkError::Api(status, _) if status.is_client_error());
                     let problem = sdk_error(&problem);
                     error.set(if writes && !rejected {
-                        localized_format!(
-                            "无法确认安全操作结果：{problem}。请先刷新状态；不要自动重试。",
-                            "The security operation could not be confirmed: {problem}. Refresh its status before retrying."
-                        )
+                        nestlink_web::localized_detail!("无法确认安全操作结果：{}。请先刷新状态；不要自动重试。", "The security operation could not be confirmed: {}. Refresh its status before retrying.", problem)
                     } else {
                         problem.to_string()
                     });

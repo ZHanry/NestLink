@@ -169,7 +169,7 @@ pub(super) fn ServiceQuotaPanel(
                         // A transport failure can arrive after the transaction
                         // committed. Do not leave an old revision looking current.
                         stale.set(true);
-                        error.set(localized_format!(
+                        error.set(nestlink_web::localized_detail!(
                             "未能确认配额更新结果：{}。请重新读取当前修订后再操作。",
                             "Could not confirm the quota update: {}. Read the current revision before trying again.",
                             nestlink_web::i18n::sdk_error(&problem)
