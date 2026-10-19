@@ -5,10 +5,7 @@ use leptos::{prelude::*, task::spawn_local};
 use nestlink_auth::Secret;
 use nestlink_protocol::api::MeResponse;
 use nestlink_sdk::{Sdk, SdkError};
-use nestlink_web::{
-    i18n::{sdk_error, text as t},
-    localized_format,
-};
+use nestlink_web::i18n::{sdk_error, text as t};
 use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
