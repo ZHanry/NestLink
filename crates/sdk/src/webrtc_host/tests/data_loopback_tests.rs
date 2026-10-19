@@ -1207,6 +1207,10 @@ async fn idle_offer_poll_renews_over_sctp_and_http_then_rejects_revocation() -> 
             },
         )
         .await?;
+    let prepared = host_sdk.remote(&request.id).await?;
+    host_sdk
+        .mark_browser_host_ready(&host_identity, &prepared)
+        .await?;
     let mut permit = controller_sdk.permit(&request.id).await?;
     let original_expiry = permit.claims().expires_at_unix_ms;
     assert_ne!(

@@ -1,11 +1,11 @@
 {
   "name": "NestLink",
-  "version": "0.3.0-rc.1",
+  "version": "0.4.0-rc.1",
   "style": "device-and-session-workspace",
-  "primary": "#246BCE",
-  "background": "#F2F5FA",
+  "primary": "#7850B2",
+  "background": "#F6F3FC",
   "icon": "icon.svg",
-  "icon_sha256": "c92069900b37f0f418277213a7edcce7179267d8d492fc8648705218892676be",
+  "icon_sha256": "3486f7a518d48da84a788abbb46ca9229214ddf40f8828dadf2ae2003712cfe8",
   "scrollbars": "visible-when-scrollable",
   "upgrade_identity": "Preserve existing RC installation identities and per-device private state"
 }

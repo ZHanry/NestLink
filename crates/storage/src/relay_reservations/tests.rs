@@ -243,6 +243,17 @@ fn approve(
     let signature = URL_SAFE_NO_PAD
         .encode(key.sign_action(&s.approval_transcript(h, &view.id, &choice, now)?)?);
     s.approve_remote(h, &view.id, choice, &signature, now)?;
+    if s.is_browser_controller(controller)? {
+        let proof = s.browser_host_readiness_transcript(h, &view.id, now)?;
+        s.mark_browser_host_ready(
+            h,
+            &view.id,
+            nestlink_protocol::api::BrowserHostReadinessSubmission {
+                signature: URL_SAFE_NO_PAD.encode(key.sign_action(&proof)?),
+            },
+            now,
+        )?;
+    }
     Ok(s.initial_permit(c, &view.id, now)?)
 }
 #[test]

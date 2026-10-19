@@ -236,8 +236,22 @@ impl BrowserHostCaptureProvider for SystemCaptureProvider {
 
     fn prepare<'a>(
         &'a self,
-        _request_id: &'a str,
+        request_id: &'a str,
         permit: &'a VerifiedPermit,
+        cancel: watch::Receiver<bool>,
+    ) -> Pin<Box<dyn Future<Output = Result<PreparedBrowserCapture, BrowserHostError>> + Send + 'a>>
+    {
+        Box::pin(async move {
+            let binding = nestlink_app_core::browser_host_binding(request_id, permit)?;
+            self.prepare_request(&binding, &permit.claims().permissions, cancel)
+                .await
+        })
+    }
+
+    fn prepare_request<'a>(
+        &'a self,
+        _binding: &'a nestlink_app_core::BrowserHostBinding,
+        permissions: &'a [i32],
         cancel: watch::Receiver<bool>,
     ) -> Pin<Box<dyn Future<Output = Result<PreparedBrowserCapture, BrowserHostError>> + Send + 'a>>
     {
@@ -249,20 +263,14 @@ impl BrowserHostCaptureProvider for SystemCaptureProvider {
             {
                 prepare_windows(
                     cancel,
-                    permit
-                        .claims()
-                        .permissions
-                        .contains(&(Permission::Input as i32)),
+                    permissions.contains(&(Permission::Input as i32)),
                     self.privileged.clone(),
                 )
                 .await
             }
             #[cfg(target_os = "linux")]
             {
-                let input_enabled = permit
-                    .claims()
-                    .permissions
-                    .contains(&(Permission::Input as i32));
+                let input_enabled = permissions.contains(&(Permission::Input as i32));
                 match &self.mode {
                     LinuxCaptureMode::Wayland => prepare_wayland(cancel, input_enabled).await,
                     LinuxCaptureMode::X11(display) => {

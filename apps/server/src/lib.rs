@@ -381,6 +381,11 @@ pub fn router(state: AppState) -> Router {
         .route("/api/v3/policy/scopes/{scope}/{id}", put(update_path_limit))
         .route("/api/v3/remote", get(pending).post(create_remote))
         .route("/api/v3/remote/native-ready/{id}", get(native_ready))
+        .route("/api/v3/remote/browser-ready/{id}", get(browser_ready))
+        .route(
+            "/api/v3/remote/{id}/browser-host-ready",
+            get(browser_host_readiness).post(mark_browser_host_ready),
+        )
         .route("/api/v3/remote/trusted", post(trusted::connect))
         .route("/api/v3/remote/{id}", get(remote).delete(revoke_remote))
         .route("/api/v3/remote/{id}/peer-keys", get(remote_peer_keys))
@@ -965,6 +970,58 @@ async fn native_ready(
         })
         .await
 }
+async fn browser_ready(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+) -> Result<Json<Value>, ApiError> {
+    let token = access(&headers)?;
+    state
+        .db(move |s| {
+            let time = now()?;
+            let principal = s.authenticate(&token, time)?;
+            Ok(Json(
+                json!({"requests": s.ready_browser_remote(&principal, &id, time)?}),
+            ))
+        })
+        .await
+}
+
+async fn browser_host_readiness(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+) -> Result<Json<nestlink_protocol::api::BrowserHostReadiness>, ApiError> {
+    let token = access(&headers)?;
+    Ok(Json(
+        state
+            .db(move |s| {
+                let time = now()?;
+                let principal = s.authenticate(&token, time)?;
+                s.browser_host_readiness(&principal, &id, time)
+            })
+            .await?,
+    ))
+}
+
+async fn mark_browser_host_ready(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+    Json(body): Json<nestlink_protocol::api::BrowserHostReadinessSubmission>,
+) -> Result<Json<nestlink_protocol::api::BrowserHostReadiness>, ApiError> {
+    let token = access(&headers)?;
+    Ok(Json(
+        state
+            .db(move |s| {
+                let time = now()?;
+                let principal = s.authenticate(&token, time)?;
+                s.mark_browser_host_ready(&principal, &id, body, time)
+            })
+            .await?,
+    ))
+}
+
 async fn remote(
     State(state): State<AppState>,
     headers: HeaderMap,

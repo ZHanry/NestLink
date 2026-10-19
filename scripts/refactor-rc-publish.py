@@ -24,7 +24,7 @@ import urllib.request
 
 REPOSITORY = "ZHanry/NestLink"
 REPOSITORY_ID = "R_kgDOVNHMvg"
-VERSION = "0.3.0-rc.1"
+VERSION = "0.4.0-rc.1"
 TAG = "v" + VERSION
 MAX_ASSET_BYTES = 2 * 1024**3
 MANIFEST_NAME = "candidate-build-manifest.json"
@@ -216,12 +216,13 @@ def clean_source(root, revision):
 
 def release_body(revision, checksum):
     return ("NestLink " + VERSION + " 开发候选版。\n\n"
-            "- 桌面统一蓝色主题和线性图标，改进设备搜索、查看/控制模式、权限选择、连接进度和取消交互。\n"
-            "- 一次连接操作自动完成申请、等待批准、领取许可和建立会话；已登录被控端自动接续获准请求，停止后不重复拉起。\n"
-            "- 跨网络自动回退到管理服务器 WebSocket 中继，UDP 尝试为 WSS 保留并发槽位；保留端到端身份校验及授权边界。\n"
-            "- 修复断网恢复时输入清理与通道检查争用会话锁导致的停滞，清理完成后再继续原授权内的恢复。\n"
-            "- 键鼠、文件、文本剪贴板、多屏和音频继续逐项授权。Android/Web 同步主题色，原生客户端共享连接修复。\n\n"
-            "跨网络使用：请同时升级服务器和双方客户端；管理员启用服务器转发，并为双方设备和会话允许中继。HTTPS 反向代理须转发 WebSocket。\n"
+            "- 修复浏览器远控批准后无画面、短许可提前过期的时序：被控端自动准备宿主，先完成屏幕批准，再领取新的 15 秒许可并协商连接。\n"
+            "- 桌面登录后自动登记本机，保留现有安装身份，避免重复登记或替换已撤销身份。\n"
+            "- 根据 Gemini CLI 原型优化桌面双栏布局、设备搜索、连接设置、待审批提示及屏幕选择，窄窗口自动上下排列。\n"
+            "- 桌面、Web、Android 与品牌图标统一淡紫主题；Windows 程序、托盘、开始菜单及安装器补齐图标。\n"
+            "- Windows 安装器新增简体中文/English 选择、向导图及可选桌面快捷方式；补充有容量上限的本地连接阶段诊断。\n"
+            "- 保留逐项授权、双方身份核验、撤销及停止后不自动重启；原生直连/WSS 回退和浏览器 ICE/TURN 分别使用各自路径。\n\n"
+            "升级：请同时升级服务器、Web 和双方客户端。原生跨网络回退需管理员允许服务器转发及双方 relay；浏览器跨网络需相应的 ICE/TURN 配置。\n"
             "部署与排障：https://github.com/ZHanry/NestLink/blob/main/docs/REMOTE-CONNECTION.md\n\n"
             "Source commit: " + revision + ". All 18 product artifacts are bound to this clean source commit.\n"
             "candidate-build-manifest.json SHA-256: " + checksum + ".\n\n"

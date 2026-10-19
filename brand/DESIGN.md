@@ -1,36 +1,36 @@
-# NestLink 0.3.0 RC product design
+# NestLink 0.4.0 RC product design
 
-NestLink uses a quiet blue workspace and one linked-N identity. The desktop's primary flow is selecting a computer, choosing permissions, requesting access and opening the authorized remote screen. UU Remote's device and session workflows informed this design; NestLink retains its own self-hosted authorization model and VP8/Opus media stack.
-
-## Tokens
+NestLink uses a light lavender workspace and the existing linked-N identity. Its main task is choosing a computer and establishing an explicitly authorized remote session. Gemini CLI supplied the layout prototype in `docs/design/0.4.0-desktop-prototype.html`; the native egui implementation retains real device, approval and session state.
 
 | Role | Color |
 | --- | --- |
-| Primary actions | `#246BCE` |
-| Selected text | `#205EB5` |
-| Navigation | `#EAF0F8` |
-| Canvas | `#F2F5FA` |
+| Primary actions | `#7850B2` |
+| Selected text | `#684298` |
+| Navigation | `#EEE8F8` |
+| Canvas | `#F6F3FC` |
 | Content | `#FFFFFF` |
-| Text | `#182B43` |
-| Muted text | `#64748B` |
-| Border | `#DCE4EF` |
+| Text | `#2E2540` |
+| Muted text | `#746783` |
+| Border | `#DDD3EB` |
 
-`config/ui-tokens.json` defines light/dark colors, spacing and type metrics. Desktop reads it directly; generated Web and Android adapters use the same tokens. System UI fonts include a Chinese fallback. Navigation and commands share a custom 24-unit outline icon set rather than platform-dependent text symbols. Names and actions align left; rows have no shadows and remain readable at narrow widths.
+`config/ui-tokens.json` defines colors, spacing and type metrics. Desktop reads it directly; generated Web CSS and Android Compose adapters share it. Dark mode uses purple-tinted surfaces. System UI fonts include Chinese fallback. Navigation uses one custom outline icon vocabulary. Names and actions align left; visible scrollbars keep dense settings usable.
 
 ```text
- [linked N] NestLink                      language / theme / version / window controls
- Device management  | All devices                                      Search devices
- Remote assistance  | Computers 2
- Tunnels            | [PC] This computer    local                                 info
-                    | [PC] Another computer  enrolled                  connect / info
-                    | Phones / tablets 1
-                    | [phone] Device name  enrolled                             info
-                    |
- Account and settings |
+[linked N] NestLink | Remote control                     account / window controls
+Remote control     | [This computer · enrolled]                  Copy device ID
+Services           |
+My devices         | Your computers          | Connect to selected computer
+                   | Search / refresh        | View / control
+                   | [PC] Home workstation   | Audio / files / clipboard
+                   | [PC] Office laptop      | Authorization / connection path
+                   |                         | Connect device
+Server / settings  | Pending requests and screen approval appear before the list
 ```
 
-Device names lead rows and remote windows. Enrollment is described as enrollment; it is never presented as online presence. Permission and path choices explain their effect. Request IDs, connection generations and cleanup traces appear in expandable diagnostics. Connect continues through approval, permit and transport setup; progress, cancellation and actionable failures remain visible. The SVG source defines the executable, tray, installer, Android and Web marks.
+The default window is 1200×800. Wide content places devices beside a 300-point connection panel. Narrow content stacks them; the sidebar compacts below 900 points. Technical identifiers, lease and generation values appear in expandable diagnostics. Device enrollment is never presented as live presence.
 
-Files, text clipboard, keyboard/mouse, multiple displays and audio remain subject to explicit permissions and host-side selection. Do not advertise gaming, HDR, gamepads, Wake-on-LAN or unimplemented platforms as shipped capabilities. Windows/Linux, Web and Android share the 0.3.0 RC identity. This RC uses development signing; fixed signing, installed-product and real-network acceptance remain pending in the release materials.
+After sign-in, the desktop loads device records and registers this installation once if absent. Existing and revoked identities are preserved. A browser request wakes the host automatically after access approval. Screen preparation and local approval happen before the controller requests the first short permit. Media still requires a verified permit and mutual endpoint proof.
 
-Run `packaging/windows/install-local-clean.ps1` before every local installation; it backs up and removes the prior install and configuration before running the installer. Local installation and published installer upgrade acceptance are recorded separately.
+`brand/icon.svg` is the source geometry. `scripts/generate-brand-icons.py` generates the multi-size ICO, PNG and installer artwork. The executable embeds the ICO; window and tray use the same colors and linked-N geometry. Candidate installers provide Simplified Chinese and English while preserving their installation and state identities. Upgrades must preserve existing private state.
+
+Files, clipboard, keyboard/mouse, multiple displays and audio remain individually authorized. Formal signing and installed-device/cross-network acceptance are reported in release materials.

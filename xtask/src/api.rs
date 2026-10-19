@@ -67,6 +67,8 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         BrowserEndpointRegistration,
         BrowserEndpointLease,
         RemoteRequest,
+        BrowserHostReadiness,
+        BrowserHostReadinessSubmission,
         ApprovalChoice,
         ApprovalSubmission,
         TrustChoice,

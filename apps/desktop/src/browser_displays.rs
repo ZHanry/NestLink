@@ -37,8 +37,8 @@ impl DesktopApp {
                 .strong(),
             );
             ui.small(self.t(
-                "画面会在你批准来源子集和初始屏幕后开始采集。",
-                "Capture starts after you approve the source set and initial screen.",
+                "选择本次允许共享的屏幕。批准后将自动连接，身份核验完成后开始共享。",
+                "Choose the screens to share. Connection continues automatically after approval; sharing begins after identity verification.",
             ));
             let id = egui::Id::new("browser-host-display-consent")
                 .with(&catalog.request_id)

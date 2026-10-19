@@ -36,10 +36,10 @@ The probe logs in through the actual UI, requests the native host,
 checks real decoded RTP frames over the requested duration (36–1800 seconds)
 and signed management renewals,
 then checks peer closure. No browser grants or media clocks are replaced.
-The host waits for the controller's actual initial permit issuance, as the
-product's StartBrowserHost gate does. Approval with lease sequence zero never
-causes a forbidden current-permit request to be retried or authorization to be
-invented. `host-start-gate.json` records that gate; `management-stages.jsonl`
+The host prepares and approves its owned screen before the controller's initial
+permit issuance, matching the product's automatic browser inbox. It signs host
+readiness, then waits for a real controller-issued permit; capture still waits
+for mutual proof. `host-start-gate.json` records the pre-lease gate; `management-stages.jsonl`
 contains only fixed operation labels, methods, elapsed times and HTTP statuses.
 The browser also samples the decoded owned pixels and peer/ICE/signaling states.
 Every interval checks actual receiver frame and byte counters, VP8 identity,

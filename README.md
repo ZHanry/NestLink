@@ -1,6 +1,6 @@
 # NestLink
 
-自建服务器的远程控制与服务发布工具，当前版本为 **0.3.0 RC1**（`0.3.0-rc.1`）。本次更新统一桌面图标与蓝色主题，改进设备选择、授权后自动连接、跨网络中继回退和连接错误提示。
+自建服务器的远程控制与服务发布工具，当前版本为 **0.4.0 RC1**（`0.4.0-rc.1`）。本次更新统一桌面图标与蓝色主题，改进设备选择、授权后自动连接、跨网络中继回退和连接错误提示。
 
 [English](README.en.md) · [候选发行](https://github.com/ZHanry/NestLink/releases) · [构建说明](docs/refactor/CANDIDATE-BUILD.md) · [实现与检查记录](docs/refactor/IMPLEMENTATION.md)
 

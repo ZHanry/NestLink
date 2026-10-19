@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NestLink 0.4.0 RC 设计原型</title>
+<style>
+  :root {
+    --canvas-bg: #F6F3FC;
+    --sidebar-bg: #EEE8F8;
+    --surface-white: #FFFFFF;
+    --surface-hover: #F9F7FD;
+    --surface-alt: #F3EEFA;
+    --border-color: #DDD3EB;
+    --border-subtle: #E8E0F2;
+    --border-strong: #C4B5DC;
+    --primary: #7850B2;
+    --primary-light: #906BCA;
+    --primary-dark: #623D9A;
+    --primary-tint: #F1EBF9;
+    --ink: #2E2540;
+    --ink-secondary: #5E5275;
+    --ink-tertiary: #877B9E;
+    --ink-muted: #A397B8;
+    --status-enrolled: #705898;
+    --status-enrolled-bg: #F0EAF8;
+    --status-idle: #B45309;
+    --status-idle-bg: #FEF3C7;
+    --danger: #DC2626;
+    --danger-bg: #FEE2E2;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    --font-mono: "SF Mono", Menlo, Monaco, Consolas, "JetBrains Mono", monospace;
+    --shadow-soft: 0 4px 20px rgba(94, 72, 133, 0.08);
+    --shadow-hover: 0 8px 24px rgba(94, 72, 133, 0.14);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+  body {
+    background: var(--canvas-bg);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .window {
+    width: 100%;
+    max-width: 1240px;
+    height: 840px;
+    background: var(--surface-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-soft);
+    overflow: hidden;
+  }
+
+  /* 顶部标题栏 */
+  .titlebar {
+    height: 44px;
+    background: var(--sidebar-bg);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+  }
+  .title-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .brand-badge {
+    background: var(--primary-tint);
+    color: var(--primary);
+    border: 1px solid var(--border-color);
+    padding: 2px 7px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .title-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .win-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.1);
+  }
+  .win-min { background: #FBBF24; }
+  .win-max { background: #34D399; }
+  .win-close { background: #F87171; }
+
+  /* 主体工作区 */
+  .workspace {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* 侧边导航栏 */
+  .sidebar {
+    width: 230px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 14px 10px;
+    flex-shrink: 0;
+  }
+  .nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .nav-header {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-tertiary);
+    letter-spacing: 0.5px;
+    padding: 10px 10px 4px;
+  }
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-secondary);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    transition: all 0.15s ease;
+  }
+  .nav-btn:hover {
+    background: var(--surface-white);
+    color: var(--ink);
+  }
+  .nav-btn.active {
+    background: var(--surface-white);
+    color: var(--primary);
+    font-weight: 600;
+    box-shadow: 0 1px 4px rgba(94, 72, 133, 0.06);
+    border: 1px solid var(--border-subtle);
+  }
+  .nav-btn svg {
+    width: 17px;
+    height: 17px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    flex-shrink: 0;
+  }
+
+  .sidebar-footer {
+    background: var(--surface-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--ink-secondary);
+  }
+  .status-circle {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--primary);
+  }
+
+  /* 主工作区视图切换容器 */
+  .main-pane {
+    flex: 1;
+    overflow-y: auto;
+    padding: 22px 26px;
+    background: var(--canvas-bg);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: flex; flex-direction: column; gap: 18px; }
+
+  /* 顶部视图介绍 */
+  .view-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .view-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .view-sub {
+    font-size: 12px;
+    color: var(--ink-secondary);
+    margin-top: 3px;
+  }
+
+  /* 接入授权申请通知卡片 (Incoming Approval) */
+  .approval-card {
+    background: var(--surface-white);
+    border: 1.5px solid var(--primary-light);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    box-shadow: var(--shadow-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background-image: linear-gradient(to right, #FAF7FE, #FFFFFF);
+  }
+  .approval-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .approval-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--primary-tint);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    flex-shrink: 0;
+  }
+  .approval-text h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .approval-badge {
+    background: var(--primary);
+    color: #fff;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+  .approval-desc {
+    font-size: 12px;
+    color: var(--ink-secondary);
+    margin-top: 2px;
+  }
+  .approval-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  /* 左右双栏连接卡片 (Two-Column Desktop Layout) */
+  .connect-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 18px;
+  }
+  .panel-card {
+    background: var(--surface-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 18px;
+    box-shadow: var(--shadow-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .panel-card h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* 本机凭据与设置 */
+  .id-box {
+    background: var(--surface-alt);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .id-number {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: 1px;
+  }
+  .field-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--ink-secondary);
+    padding: 3px 0;
+  }
+  .code-text {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--surface-alt);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+  }
+
+  /* 远端输入区与显示器选择器 */
+  .input-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-secondary);
+    margin-bottom: 4px;
+  }
+  .text-input {
+    width: 100%;
+    background: var(--surface-white);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .text-input:focus {
+    border-color: var(--primary);
+  }
+
+  /* 显示器选择器组件 (Monitor Choice) */
+  .monitor-choice-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .monitor-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .monitor-option {
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 8px 6px;
+    cursor: pointer;
+    background: var(--surface-white);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .monitor-option:hover {
+    border-color: var(--primary-light);
+    background: var(--surface-hover);
+  }
+  .monitor-option.selected {
+    border-color: var(--primary);
+    background: var(--primary-tint);
+  }
+  .monitor-option .mon-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .monitor-option .mon-res {
+    font-size: 10px;
+    color: var(--ink-tertiary);
+    font-family: var(--font-mono);
+  }
+
+  /* 按钮通用 */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary-dark);
+  }
+  .btn-primary:hover {
+    background: var(--primary-dark);
+  }
+  .btn-secondary {
+    background: var(--surface-white);
+    color: var(--ink-secondary);
+    border-color: var(--border-color);
+  }
+  .btn-secondary:hover {
+    background: var(--surface-alt);
+    color: var(--ink);
+    border-color: var(--border-strong);
+  }
+  .btn-danger {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border-color: #FECACA;
+  }
+  .btn-danger:hover {
+    background: #FCA5A5;
+    color: #991B1B;
+  }
+  .btn-sm {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  /* 登记设备列表 */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .devices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 14px;
+  }
+  .device-item {
+    background: var(--surface-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    box-shadow: var(--shadow-soft);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .device-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .device-meta-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .device-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    background: var(--primary-tint);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+  }
+  .device-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .device-sub {
+    font-size: 11px;
+    color: var(--ink-tertiary);
+    font-family: var(--font-mono);
+  }
+  .tag-badge {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 600;
+    display: inline-block;
+  }
+  .tag-enrolled {
+    background: var(--status-enrolled-bg);
+    color: var(--status-enrolled);
+    border: 1px solid var(--border-color);
+  }
+  .tag-idle {
+    background: var(--status-idle-bg);
+    color: var(--status-idle);
+    border: 1px solid #FDE68A;
+  }
+  .device-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    font-size: 10px;
+    background: var(--surface-alt);
+    border: 1px solid var(--border-subtle);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--ink-secondary);
+  }
+  .device-action-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 10px;
+    font-size: 11px;
+    color: var(--ink-tertiary);
+  }
+
+  /* 会话视图模拟器 */
+  .session-box {
+    background: var(--surface-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-soft);
+  }
+  .session-nav {
+    background: var(--sidebar-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .session-tools {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .mon-switcher {
+    display: flex;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--surface-white);
+  }
+  .mon-switch-btn {
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--ink-secondary);
+  }
+  .mon-switch-btn.active {
+    background: var(--primary);
+    color: #fff;
+  }
+  .viewport-stage {
+    height: 380px;
+    background: #E8E2F2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .mock-screen {
+    width: 82%;
+    height: 80%;
+    background: var(--surface-white);
+    border: 1.5px solid var(--border-strong);
+    border-radius: 6px;
+    box-shadow: 0 10px 30px rgba(94, 72, 133, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .mock-screen-bar {
+    height: 24px;
+    background: #FAF7FE;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 11px;
+    color: var(--ink-tertiary);
+  }
+  .mock-screen-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: var(--ink-secondary);
+    background: linear-gradient(135deg, #FAF7FE 0%, #EDE6F7 100%);
+    font-family: var(--font-mono);
+  }
+  .telemetry-tag {
+    position: absolute;
+    bottom: 12px;
+    left: 14px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 5px 12px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--primary-dark);
+    display: flex;
+    gap: 14px;
+    box-shadow: var(--shadow-soft);
+  }
+
+  /* 表格卡片 */
+  .table-card {
+    background: var(--surface-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-soft);
+  }
+  .data-grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .data-grid th {
+    background: var(--sidebar-bg);
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 700;
+    color: var(--ink-secondary);
+    border-bottom: 1px solid var(--border-color);
+  }
+  .data-grid td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--ink);
+  }
+  .data-grid tr:last-child td { border-bottom: none; }
+  .data-grid tr:hover td { background: var(--surface-hover); }
+
+  /* 设置项 */
+  .setting-card {
+    background: var(--surface-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    box-shadow: var(--shadow-soft);
+  }
+  .setting-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .setting-hint {
+    font-size: 11px;
+    color: var(--ink-tertiary);
+    margin-top: 2px;
+  }
+
+  /* 开关滑动器 */
+  .toggle {
+    position: relative;
+    display: inline-block;
+    width: 42px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--border-strong);
+    transition: .2s;
+    border-radius: 22px;
+  }
+  .toggle-slider:before {
+    position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
+    background-color: white;
+    transition: .2s;
+    border-radius: 50%;
+  }
+  input:checked + .toggle-slider { background-color: var(--primary); }
+  input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+  /* 底栏状态条 */
+  .footer-status {
+    height: 30px;
+    background: var(--sidebar-bg);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    font-size: 11px;
+    color: var(--ink-tertiary);
+    font-family: var(--font-mono);
+  }
+  .footer-meta {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  /* 720px 响应式断点适配 */
+  @media (max-width: 720px) {
+    body { padding: 0; }
+    .window {
+      height: 100vh;
+      border-radius: 0;
+      border: none;
+    }
+    .workspace {
+      flex-direction: column;
+    }
+    .sidebar {
+      width: 100%;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 12px;
+    }
+    .nav-group {
+      flex-direction: row;
+      overflow-x: auto;
+      gap: 6px;
+    }
+    .nav-header { display: none; }
+    .sidebar-footer { display: none; }
+    .nav-btn {
+      white-space: nowrap;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+    .connect-grid {
+      grid-template-columns: 1fr;
+    }
+    .approval-card {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .approval-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+    .main-pane {
+      padding: 14px;
+    }
+    .monitor-options {
+      grid-template-columns: 1fr;
+    }
+    .devices-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="window">
+  <!-- 标题栏 -->
+  <div class="titlebar">
+    <div class="title-brand">
+      <!-- 紫色 Linked-N 图标 -->
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="28" height="28" rx="7" fill="#7850B2"/>
+        <path d="M7 19V9l6 10V9" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M15 19V9l6 10V9" stroke="#E2D6F5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M11 14h6" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="1 3"/>
+      </svg>
+      <span>NestLink 原型</span>
+      <span class="brand-badge">0.4.0 RC</span>
+    </div>
+    <div class="title-controls">
+      <div class="win-dot win-min" title="最小化"></div>
+      <div class="win-dot win-max" title="最大化"></div>
+      <div class="win-dot win-close" title="关闭"></div>
+    </div>
+  </div>
+
+  <!-- 主体工作区 -->
+  <div class="workspace">
+    <!-- 侧边导航栏 -->
+    <div class="sidebar">
+      <div class="nav-group">
+        <div class="nav-header">核心功能</div>
+        <button class="nav-btn active" onclick="navigate('tab-connect', this)">
+          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          远程桌面
+        </button>
+        <button class="nav-btn" onclick="navigate('tab-devices', this)">
+          <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="11" y2="17"/></svg>
+          受信任设备簿
+        </button>
+        <button class="nav-btn" onclick="navigate('tab-session', this)">
+          <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          会话控制演示
+        </button>
+
+        <div class="nav-header" style="margin-top: 10px;">网络与自建</div>
+        <button class="nav-btn" onclick="navigate('tab-relays', this)">
+          <svg viewBox="0 0 24 24"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+          私有中继节点
+        </button>
+        <button class="nav-btn" onclick="navigate('tab-settings', this)">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          安全与审计策略
+        </button>
+      </div>
+
+      <!-- 侧边底栏服务状态 -->
+      <div class="sidebar-footer">
+        <div class="status-pill">
+          <span class="status-circle"></span>
+          <span>本机守护进程: 已就绪</span>
+        </div>
+        <div style="color: var(--ink-tertiary);">仅作布局原型 · 功能以实际版本为准</div>
+      </div>
+    </div>
+
+    <!-- 动态内容窗格 -->
+    <div class="main-pane">
+
+      <!-- 视图 1: 远程桌面主页 -->
+      <div id="tab-connect" class="tab-content active">
+        <div class="view-heading">
+          <div>
+            <div class="view-title">快速连接与控制</div>
+            <div class="view-sub">自建管理服务，按设备授权建立远程连接</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="alert('已刷新测试设备列表');">刷新设备</button>
+        </div>
+
+        <!-- 传入连接审批卡片 (Incoming Approval) -->
+        <div class="approval-card" id="approvalBanner">
+          <div class="approval-info">
+            <div class="approval-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <div class="approval-text">
+              <h4>
+                <span>传入接入授权申请</span>
+                <span class="approval-badge">等待响应 (26秒)</span>
+              </h4>
+              <div class="approval-desc">
+                远端设备 <strong>“团队运维-ThinkPad”</strong> (ID: 419 802 115) 申请控制本机 <strong>显示器 1 (主屏)</strong>。包含鼠标、键盘与剪贴板权限。
+              </div>
+            </div>
+          </div>
+          <div class="approval-actions">
+            <button class="btn btn-danger btn-sm" onclick="dismissApproval(false)">拒绝连接</button>
+            <button class="btn btn-secondary btn-sm" onclick="alert('已限制为仅查看模式'); dismissApproval(true);">仅允许查看</button>
+            <button class="btn btn-primary btn-sm" onclick="dismissApproval(true)">同意受控接入</button>
+          </div>
+        </div>
+
+        <!-- 左右两栏布局 (Two-Column Desktop Layout) -->
+        <div class="connect-grid">
+          <!-- 左栏: 本机受控凭据 -->
+          <div class="panel-card">
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              允许此设备被控制
+            </h3>
+
+            <div>
+              <div class="input-label">本机设备码 (Device ID)</div>
+              <div class="id-box">
+                <span class="id-number">918 204 773</span>
+                <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('918204773'); alert('设备码已复制');">复制</button>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div class="field-row">
+                <span>临时一次性连接密码:</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span class="code-text">8bF@9qZ!</span>
+                  <button class="btn btn-secondary btn-sm" style="padding:2px 6px;" title="重新生成">↻</button>
+                </div>
+              </div>
+              <div class="field-row">
+                <span>固定安全受控密码:</span>
+                <span style="color:var(--ink-secondary);">已配置 (按授权范围接入)</span>
+              </div>
+              <div class="field-row">
+                <span>本机共享屏幕:</span>
+                <span style="color:var(--primary); font-weight:600;">双显示器就绪 (DP-1, HDMI-1)</span>
+              </div>
+            </div>
+
+            <div style="border-top:1px solid var(--border-subtle); padding-top:10px; font-size:11px; color:var(--ink-tertiary); line-height: 1.6;">
+              安全提示: 启用仅查看模式可在被接入时禁止远端操作您的物理鼠标与键盘。
+            </div>
+          </div>
+
+          <!-- 右栏: 控制远端设备 & 显示器选择 -->
+          <div class="panel-card">
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              控制远端设备
+            </h3>
+
+            <div>
+              <div class="input-label">选择已登记的远端设备</div>
+              <input type="text" class="text-input" placeholder="输入 9 位设备码或 192.168.x.x:9443" value="504 883 120">
+            </div>
+
+            <!-- 显示器选择器组件 (Monitor Choice) -->
+            <div class="monitor-choice-box">
+              <div class="input-label">选择接入的目标显示器:</div>
+              <div class="monitor-options">
+                <div class="monitor-option selected" onclick="selectMonitor(this)">
+                  <div class="mon-name">显示器 1 (主屏)</div>
+                  <div class="mon-res">3840×2160 • 4K</div>
+                </div>
+                <div class="monitor-option" onclick="selectMonitor(this)">
+                  <div class="mon-name">显示器 2 (副屏)</div>
+                  <div class="mon-res">1920×1080 • 竖屏</div>
+                </div>
+                <div class="monitor-option" onclick="selectMonitor(this)">
+                  <div class="mon-name">跨屏多显示器</div>
+                  <div class="mon-res">合并视窗全景</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div style="display:flex; gap:12px; font-size:12px; color:var(--ink-secondary);">
+                <label style="display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" checked> 剪贴板同步</label>
+                <label style="display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" checked> 系统音频</label>
+              </div>
+              <button class="btn btn-primary" onclick="navigate('tab-session', document.querySelectorAll('.nav-btn')[2])">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                发起远程会话
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 登记设备列表 (从不声称在线) -->
+        <div class="section-header">
+          <span>受信任的已登记设备簿 (4台)</span>
+          <span style="font-size:11px; color:var(--ink-tertiary); font-weight:normal;">全部设备状态均为离线、休眠或待命</span>
+        </div>
+
+        <div class="devices-grid">
+          <!-- 设备 1 -->
+          <div class="device-item">
+            <div>
+              <div class="device-head">
+                <div class="device-meta-group">
+                  <div class="device-avatar">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
+                  </div>
+                  <div>
+                    <div class="device-title">家用工作站 (Arch-Linux)</div>
+                    <div class="device-sub">504 883 120 • 192.168.1.150</div>
+                  </div>
+                </div>
+                <span class="tag-badge tag-enrolled">已登记 (离线休眠)</span>
+              </div>
+              <div class="device-chips" style="margin-top:10px;">
+                <span class="chip">双显示器配置</span>
+                <span class="chip">共享前批准屏幕</span>
+                <span class="chip">上次活跃: 昨天 22:40</span>
+              </div>
+            </div>
+            <div class="device-action-row">
+              <span>路径遵循当前网络策略</span>
+              <button class="btn btn-secondary btn-sm" onclick="alert('此为交互原型，请在桌面应用中连接');">申请连接</button>
+            </div>
+          </div>
+
+          <!-- 设备 2 -->
+          <div class="device-item">
+            <div>
+              <div class="device-head">
+                <div class="device-meta-group">
+                  <div class="device-avatar">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/></svg>
+                  </div>
+                  <div>
+                    <div class="device-title">工作室绘图主机 (Win11)</div>
+                    <div class="device-sub">830 119 442 • 10.0.0.12</div>
+                  </div>
+                </div>
+                <span class="tag-badge tag-idle">待命中 (未连接)</span>
+              </div>
+              <div class="device-chips" style="margin-top:10px;">
+                <span class="chip">屏幕由被控端批准</span>
+                <span class="chip">VP8 画面</span>
+                <span class="chip">上次活跃: 4小时前</span>
+              </div>
+            </div>
+            <div class="device-action-row">
+              <span>受密码凭据保护</span>
+              <button class="btn btn-secondary btn-sm" onclick="navigate('tab-session', document.querySelectorAll('.nav-btn')[2])">发起连接</button>
+            </div>
+          </div>
+
+          <!-- 设备 3 -->
+          <div class="device-item">
+            <div>
+              <div class="device-head">
+                <div class="device-meta-group">
+                  <div class="device-avatar">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg>
+                  </div>
+                  <div>
+                    <div class="device-title">外勤便携本 (Linux 笔记本)</div>
+                    <div class="device-sub">310 994 212 • 私网待定</div>
+                  </div>
+                </div>
+                <span class="tag-badge tag-enrolled">已登记 (离线)</span>
+              </div>
+              <div class="device-chips" style="margin-top:10px;">
+                <span class="chip">Retina 内建屏</span>
+                <span class="chip">端到端自签证书</span>
+                <span class="chip">上次活跃: 3天前</span>
+              </div>
+            </div>
+            <div class="device-action-row">
+              <span>等待受控端上线握手</span>
+              <button class="btn btn-secondary btn-sm" disabled style="opacity:0.6; cursor:not-allowed;">暂不可达</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 视图 2: 受信任设备簿完整表格 -->
+      <div id="tab-devices" class="tab-content">
+        <div class="view-heading">
+          <div>
+            <div class="view-title">受信任设备管理</div>
+            <div class="view-sub">维护已登记端点密钥签名，所有离线节点均可配置唤醒策略</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="alert('请输入待登记的主机公钥或配对代码');">+ 登记新机器</button>
+        </div>
+
+        <div class="table-card">
+          <table class="data-grid">
+            <thead>
+              <tr>
+                <th>主机别名</th>
+                <th>设备 ID</th>
+                <th>显示器能力</th>
+                <th>连接登记状态</th>
+                <th>最近一次活动</th>
+                <th>授权级别</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>家用工作站 (Arch-Linux)</strong></td>
+                <td style="font-family:var(--font-mono);">504 883 120</td>
+                <td>双屏 (4K主屏 + 1080P竖屏)</td>
+                <td><span class="tag-badge tag-enrolled">已登记 (离线休眠)</span></td>
+                <td>昨日 22:40</td>
+                <td>双因子安全认证</td>
+                <td><button class="btn btn-secondary btn-sm" onclick="alert('发送局域网唤醒广播包');">网络唤醒</button></td>
+              </tr>
+              <tr>
+                <td><strong>工作室绘图主机 (Win11)</strong></td>
+                <td style="font-family:var(--font-mono);">830 119 442</td>
+                <td>单屏 (3840×2160 HDR)</td>
+                <td><span class="tag-badge tag-idle">待命中 (服务挂起)</span></td>
+                <td>4小时前</td>
+                <td>预共享安全密钥</td>
+                <td><button class="btn btn-secondary btn-sm" onclick="navigate('tab-session', document.querySelectorAll('.nav-btn')[2])">测试通道</button></td>
+              </tr>
+              <tr>
+                <td><strong>外勤便携本 (Linux 笔记本)</strong></td>
+                <td style="font-family:var(--font-mono);">310 994 212</td>
+                <td>单屏 (Liquid Retina)</td>
+                <td><span class="tag-badge tag-enrolled">已登记 (离线)</span></td>
+                <td>3天前</td>
+                <td>每次交互需人工确认</td>
+                <td><button class="btn btn-secondary btn-sm">编辑策略</button></td>
+              </tr>
+              <tr>
+                <td><strong>备用测试机 (Ubuntu-Server)</strong></td>
+                <td style="font-family:var(--font-mono);">772 104 990</td>
+                <td>虚拟虚拟帧缓冲 (1080P)</td>
+                <td><span class="tag-badge tag-enrolled">已登记 (守护进程停止)</span></td>
+                <td>2周前</td>
+                <td>仅限终端与文件</td>
+                <td><button class="btn btn-secondary btn-sm">移除信任</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 视图 3: 会话视图与多显示器切换演示 -->
+      <div id="tab-session" class="tab-content">
+        <div class="view-heading">
+          <div>
+            <div class="view-title">会话窗口控制演示</div>
+            <div class="view-sub">展示远程画面流、多显示器即时切换、工具条及实时遥测指标</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="navigate('tab-connect', document.querySelectorAll('.nav-btn')[0])">返回主界面</button>
+            <button class="btn btn-danger btn-sm" onclick="alert('已断开当前远程会话'); navigate('tab-connect', document.querySelectorAll('.nav-btn')[0])">挂断断开</button>
+          </div>
+        </div>
+
+        <div class="session-box">
+          <!-- 会话工具栏与显示器切换器 (Monitor Switcher) -->
+          <div class="session-nav">
+            <div class="session-tools">
+              <!-- 多显示器即时切换器 -->
+              <span style="font-size:11px; font-weight:700; color:var(--ink-secondary);">目标显示器:</span>
+              <div class="mon-switcher">
+                <button class="mon-switch-btn active" onclick="switchSessionMonitor(this, '显示器 1 (3840×2160 @ 60Hz - 主屏)')">显示器 1 (4K)</button>
+                <button class="mon-switch-btn" onclick="switchSessionMonitor(this, '显示器 2 (1920×1080 - 竖屏编程)')">显示器 2 (1080P)</button>
+                <button class="mon-switch-btn" onclick="switchSessionMonitor(this, '跨屏全景 (双屏拼接视窗)')">双屏并排模式</button>
+              </div>
+
+              <div style="width:1px; height:18px; background:var(--border-color); margin:0 4px;"></div>
+
+              <button class="btn btn-secondary btn-sm" onclick="alert('已向远端发送 Ctrl+Alt+Del 快捷键指令');">Ctrl+Alt+Del</button>
+              <button class="btn btn-secondary btn-sm" onclick="alert('文件传输管理器已开启');">文件传输</button>
+              <button class="btn btn-secondary btn-sm" onclick="alert('远端物理黑屏已激活 (防窥模式)');">黑屏隐私</button>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="tag-badge tag-enrolled" style="background:var(--primary-tint);">P2P QUIC 加速链路</span>
+              <span style="font-size:11px; font-family:var(--font-mono); color:var(--ink-secondary);">码率: 4.6 Mbps</span>
+            </div>
+          </div>
+
+          <!-- 模拟渲染画布舞台 -->
+          <div class="viewport-stage">
+            <div class="mock-screen">
+              <div class="mock-screen-bar">
+                <span id="sessionMonitorLabel">受控远端: 家用工作站 — 显示器 1 (3840×2160 @ 60Hz - 主屏)</span>
+              </div>
+              <div class="mock-screen-content" id="sessionCanvasText">
+                [NestLink 零拷贝硬件渲染画面流 • 当前传输显示器 1]
+              </div>
+            </div>
+
+            <!-- 浮动遥测信息标签 -->
+            <div class="telemetry-tag">
+              <span>往返延迟(RTT): <strong>6.2 ms</strong></span>
+              <span>丢包率: <strong>0.0%</strong></span>
+              <span>编解码: <strong>H.265 (VAAPI 硬解)</strong></span>
+              <span>色彩格式: <strong>YUV444 8bit</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 视图 4: 自建私有中继节点 -->
+      <div id="tab-relays" class="tab-content">
+        <div class="view-heading">
+          <div>
+            <div class="view-title">私有中继与打洞信令</div>
+            <div class="view-sub">完全自主托管的节点服务器，不依赖第三方公共云中转</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="alert('输入自建服务器 IP 与接入凭据');">+ 添加私有中继</button>
+        </div>
+
+        <div class="table-card">
+          <table class="data-grid">
+            <thead>
+              <tr>
+                <th>节点地址 (Endpoint)</th>
+                <th>协议类型</th>
+                <th>节点模式</th>
+                <th>网络延迟</th>
+                <th>负载容量</th>
+                <th>配置操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>relay-cn-shanghai.mynest.internal:9443</strong></td>
+                <td>QUIC + STUN</td>
+                <td>自建主力节点</td>
+                <td>14 ms</td>
+                <td>4 会话 / 2.1 Gbps</td>
+                <td><button class="btn btn-secondary btn-sm">测试连通</button></td>
+              </tr>
+              <tr>
+                <td><strong>edge-beijing.mynest.internal:443</strong></td>
+                <td>WSS Fallback</td>
+                <td>自建备用节点</td>
+                <td>22 ms</td>
+                <td>1 会话 / 180 Mbps</td>
+                <td><button class="btn btn-secondary btn-sm">测试连通</button></td>
+              </tr>
+              <tr>
+                <td><strong>local-lab-relay.private:8080</strong></td>
+                <td>TCP Stream</td>
+                <td>局域网隔离中继</td>
+                <td>1.2 ms</td>
+                <td>空闲就绪</td>
+                <td><button class="btn btn-secondary btn-sm">测试连通</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 视图 5: 安全与策略设置 -->
+      <div id="tab-settings" class="tab-content">
+        <div class="view-heading">
+          <div>
+            <div class="view-title">安全合规与审计策略</div>
+            <div class="view-sub">受控接入细粒度权限、剪贴板过滤与本地安全防护</div>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div class="setting-card">
+            <div>
+              <div class="setting-label">接入前强制本地人工弹窗审批 (Incoming Approval)</div>
+              <div class="setting-hint">屏幕共享保留本机明确批准；受信或密码访问仍受权限、路径和期限约束</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-card">
+            <div>
+              <div class="setting-label">受控时开启物理显示器防窥 (黑屏模式)</div>
+              <div class="setting-hint">被远端接入期间自动切断本地 HDMI/DP 物理输出，并在断开后恢复原状</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-card">
+            <div>
+              <div class="setting-label">单向剪贴板同步防护</div>
+              <div class="setting-hint">仅允许由主控端向受控端复制纯文本，阻断文件和富文本的逆向注入</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-card">
+            <div>
+              <div class="setting-label">端到端会话加密操作审计记录</div>
+              <div class="setting-hint">记录授权与连接阶段，不记录屏幕、凭据或输入内容</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 底部状态栏 -->
+  <div class="footer-status">
+    <div class="footer-meta">
+      <span>● 网络传输: QUIC P2P 直接穿透</span>
+      <span>自建信令服务器: <strong>hub.nestlink.internal</strong></span>
+    </div>
+    <div class="footer-meta">
+      <span>显示器支持: 动态多屏捕获就绪</span>
+      <span>NestLink 0.4.0 RC 设计原型</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 选项卡切换
+  function navigate(tabId, btnElement) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+    const target = document.getElementById(tabId);
+    if (target) {
+      target.classList.add('active');
+    }
+    if (btnElement) {
+      btnElement.classList.add('active');
+    }
+  }
+
+  // 接入审批卡片交互
+  function dismissApproval(isAccepted) {
+    const card = document.getElementById('approvalBanner');
+    if (card) {
+      card.style.opacity = '0';
+      card.style.transition = 'opacity 0.3s';
+      setTimeout(() => {
+        card.style.display = 'none';
+        if (isAccepted) {
+          alert('您已通过该接入请求，会话已建立。');
+        } else {
+          alert('已拒绝远端接入请求。');
+        }
+      }, 300);
+    }
+  }
+
+  // 发起连接表单的显示器选择 (Monitor Choice)
+  function selectMonitor(element) {
+    document.querySelectorAll('.monitor-option').forEach(el => el.classList.remove('selected'));
+    element.classList.add('selected');
+  }
+
+  // 会话窗口内的显示器切换
+  function switchSessionMonitor(btn, monitorDesc) {
+    document.querySelectorAll('.mon-switch-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('sessionMonitorLabel').innerText = '受控远端: 家用工作站 — ' + monitorDesc;
+    document.getElementById('sessionCanvasText').innerText = '[NestLink 零拷贝硬件渲染画面流 • ' + monitorDesc + ']';
+  }
+</script>
+</body>
+</html>

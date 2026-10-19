@@ -30,6 +30,8 @@ class UiTokenTests(unittest.TestCase):
         changed["spacing"]["mobile_screen_padding"] = 31
         changed["shape"]["control"] = 11
         changed["media"]["canvas"] = "#abcdef"
+        changed["layout"]["sidebar_width"] = 240
+        changed["layout"]["sidebar_width_compact"] = 190
 
         css = TOKENS.render_css(changed)
         kotlin = TOKENS.render_android(changed)
@@ -38,8 +40,8 @@ class UiTokenTests(unittest.TestCase):
         self.assertIn("--primary-action-text: #654321;", css)
         self.assertIn("--media-canvas: #abcdef;", css)
         self.assertIn("--font-ui: system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;", css)
-        self.assertIn("--sidebar-width: 232px;", css)
-        self.assertIn("--sidebar-width-compact: 208px;", css)
+        self.assertIn("--sidebar-width: 240px;", css)
+        self.assertIn("--sidebar-width-compact: 190px;", css)
         self.assertIn("val lightPrimary = Color(0xFF123456)", kotlin)
         self.assertIn("val darkPrimaryActionText = Color(0xFF654321)", kotlin)
         self.assertIn("val mediaCanvas = Color(0xFFABCDEF)", kotlin)

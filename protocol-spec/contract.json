@@ -2,7 +2,7 @@
   "schema_version": 1,
   "alpn": "nestlink/1",
   "api_base": "/api/v3",
-  "product_version": "0.3.0-rc.1",
+  "product_version": "0.4.0-rc.1",
   "limits": {
     "control_bytes": 262144,
     "input_bytes": 16384,

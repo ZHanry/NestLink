@@ -1,4 +1,4 @@
-; v15 per-user setup. Every version is immutable; the signed setup contains
+﻿; v15 per-user setup. Every version is immutable; the signed setup contains
 ; the verified payload, independent CMS statement and maintenance controller.
 #ifndef Version
   #error Final Version must be provided
@@ -43,9 +43,18 @@ UninstallLogMode=append
 CloseApplications=no
 RestartApplications=no
 WizardStyle=modern
+SetupIconFile=..\..\brand\nestlink.ico
+WizardImageFile=..\..\brand\wizard-large.bmp
+WizardSmallImageFile=..\..\brand\wizard-small.bmp
+ShowLanguageDialog=yes
+LanguageDetectionMethod=uilanguage
 SignTool=NestLinkSigning
 SignedUninstaller=yes
 SignedUninstallerDir={#PayloadDir}\signed-uninstaller
+
+[Languages]
+Name: "chinesesimp"; MessagesFile: "..\windows\languages\ChineseSimplified.isl"
+Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "{#PayloadDir}\nestlink-daemon.exe"; Flags: dontcopy

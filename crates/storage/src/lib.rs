@@ -6,7 +6,7 @@ use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, params};
 use std::{path::Path, time::Duration};
 
 pub const APPLICATION_ID: i32 = 1_313_622_833;
-pub const SCHEMA_VERSION: i32 = 21;
+pub const SCHEMA_VERSION: i32 = 22;
 const MIGRATION: &str = include_str!("../migrations/001_initial.sql");
 const CONTROL_MIGRATION: &str = include_str!("../migrations/002_control.sql");
 const SCOPES_MIGRATION: &str = include_str!("../migrations/003_policy_scopes.sql");
@@ -32,6 +32,7 @@ const SERVICE_USAGE_MIGRATION: &str =
     include_str!("../migrations/020_service_usage_accounting.sql");
 pub mod accounts;
 pub mod auditing;
+pub mod browser_readiness;
 pub mod control;
 pub mod node_discovery;
 pub mod node_resources;
@@ -264,6 +265,13 @@ impl Store {
             let transaction = connection.transaction()?;
             transaction.execute_batch(include_str!("../migrations/021_password_only.sql"))?;
             transaction.pragma_update(None, "user_version", 21)?;
+            transaction.commit()?;
+        }
+        if version < 22 {
+            let transaction = connection.transaction()?;
+            transaction
+                .execute_batch(include_str!("../migrations/022_browser_host_readiness.sql"))?;
+            transaction.pragma_update(None, "user_version", 22)?;
             transaction.commit()?;
         }
         // Schema 20 has not shipped yet, but local v20 development databases

@@ -14,6 +14,8 @@ type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 const PASSWORD: &str = "integration-only-password";
 #[path = "control/auditing.rs"]
 mod auditing;
+#[path = "control/browser_readiness.rs"]
+mod browser_readiness;
 #[path = "control/quotas.rs"]
 mod quotas;
 #[path = "control/reconnection.rs"]
@@ -199,6 +201,15 @@ fn browser_endpoint_is_controller_only_and_server_expiry_bounds_permits() -> Res
     let proof = s.approval_transcript(&member, &view.id, &choice, 2599)?;
     let signature = URL_SAFE_NO_PAD.encode(host.sign_action(&proof)?);
     s.approve_remote(&member, &view.id, choice, &signature, 2599)?;
+    let proof = s.browser_host_readiness_transcript(&member, &view.id, 2599)?;
+    s.mark_browser_host_ready(
+        &member,
+        &view.id,
+        nestlink_protocol::api::BrowserHostReadinessSubmission {
+            signature: URL_SAFE_NO_PAD.encode(host.sign_action(&proof)?),
+        },
+        2599,
+    )?;
     let permit = s.initial_permit(&admin, &view.id, 2599)?;
     assert_eq!(permit.expires_at_unix_ms, 2_600_000);
     assert!(s.session_is_active_at(&view.id, 2599)?);

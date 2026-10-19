@@ -1562,7 +1562,7 @@ internal class HostCaptureService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         return Notification.Builder(this, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_menu_view)
+            .setSmallIcon(R.drawable.ic_nestlink_foreground)
             .setContentTitle(uiText(UiTextKey.NESTLINK_SCREEN_CAPTURE_FC39D))
             .setContentText(
                 when {

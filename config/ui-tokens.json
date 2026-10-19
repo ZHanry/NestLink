@@ -2,25 +2,25 @@
   "schema_version": 1,
   "product": "NestLink",
   "light": {
-    "primary": "#246BCE",
-    "primary_text": "#205EB5",
-    "canvas": "#F2F5FA",
-    "sidebar": "#EAF0F8",
+    "primary": "#7850B2",
+    "primary_text": "#684298",
+    "canvas": "#F6F3FC",
+    "sidebar": "#EEE8F8",
     "surface": "#FFFFFF",
-    "text": "#182B43",
-    "muted": "#64748B",
-    "border": "#DCE4EF",
+    "text": "#2E2540",
+    "muted": "#746783",
+    "border": "#DDD3EB",
     "danger": "#B42336"
   },
   "dark": {
-    "primary": "#79B8FF",
-    "primary_text": "#96C8FF",
-    "canvas": "#141B25",
-    "sidebar": "#182230",
-    "surface": "#1E2937",
-    "text": "#F1F5FA",
-    "muted": "#A9B6C8",
-    "border": "#364557",
+    "primary": "#BC9BE9",
+    "primary_text": "#D2B7F3",
+    "canvas": "#191420",
+    "sidebar": "#211A2C",
+    "surface": "#2A2236",
+    "text": "#F4EFFB",
+    "muted": "#BDB0CE",
+    "border": "#493A5C",
     "danger": "#FFA8B4"
   },
   "type": {
@@ -35,12 +35,12 @@
   "layout": {
     "desktop_width": 1200,
     "desktop_height": 800,
-    "minimum_width": 720,
-    "minimum_height": 520,
-    "sidebar_width": 232,
-    "sidebar_width_compact": 208,
-    "content_padding": 32,
-    "row_height": 58,
+    "minimum_width": 760,
+    "minimum_height": 560,
+    "sidebar_width": 208,
+    "sidebar_width_compact": 184,
+    "content_padding": 24,
+    "row_height": 68,
     "control_height": 40
   },
   "spacing": {
@@ -52,19 +52,19 @@
     "web_mobile_padding": 16
   },
   "shape": {
-    "control": 7,
-    "panel": 10,
+    "control": 8,
+    "panel": 12,
     "window": 12,
     "sheet": 12
   },
   "state": {
     "primary_action_text": {
       "light": "#FFFFFF",
-      "dark": "#101C2C"
+      "dark": "#21152F"
     },
     "focus": {
-      "light": "#005FB8",
-      "dark": "#96C8FF"
+      "light": "#684298",
+      "dark": "#D2B7F3"
     },
     "warning": {
       "light": "#966313",
@@ -92,5 +92,5 @@
     "服务发布",
     "设备"
   ],
-  "principles": "Device-first remote workspace. One outline icon family and linked-N brand, readable device rows, explicit connection progress, grouped session tools, and diagnostics on demand. System UI fonts, visible keyboard focus and truthful connection states."
+  "principles": "Soft lavender remote workspace. Device list and connection settings share a responsive two-column layout; incoming consent and screen approval stay visible. One purple linked-N identity across app, installer, taskbar, tray, web and Android. Enrolled is never described as online without evidence."
 }

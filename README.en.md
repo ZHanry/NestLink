@@ -1,6 +1,6 @@
 # NestLink
 
-Self-hosted remote control and service publishing. The current version is **0.3.0 RC1** (`0.3.0-rc.1`). This update unifies desktop icons and the blue theme, improves device selection and automatic connection after approval, and adds combined-server WebSocket relay fallback and actionable connection errors.
+Self-hosted remote control and service publishing. The current version is **0.4.0 RC1** (`0.4.0-rc.1`). This update unifies desktop icons and the blue theme, improves device selection and automatic connection after approval, and adds combined-server WebSocket relay fallback and actionable connection errors.
 
 [中文](README.md) · [Releases](https://github.com/ZHanry/NestLink/releases) · [Build instructions](docs/refactor/CANDIDATE-BUILD.md) · [Implementation and checks](docs/refactor/IMPLEMENTATION.md)
 

@@ -1,6 +1,7 @@
 //! Per-user owner of product operations. It is never a privileged service agent.
 mod browser_data;
 mod capture;
+mod diagnostics;
 mod maintenance;
 mod native_audio;
 mod native_clipboard;
@@ -460,10 +461,10 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     }
     native = native.with_network_settings_store(network_store)?;
     let privileged_input = privileged_input::PrivilegedInput::new();
-    native = native.with_browser_host(capture::browser_host_config(
-        browser_data_registry.clone(),
-        privileged_input.clone(),
-    ));
+    native = native.with_browser_host(
+        capture::browser_host_config(browser_data_registry.clone(), privileged_input.clone())
+            .with_diagnostics(diagnostics::browser_host_sink(state_dir.clone())),
+    );
     let mut core = AppCore::with_identity_and_native_session(
         Limits::default(),
         identity(&state_dir)?,

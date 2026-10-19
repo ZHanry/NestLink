@@ -273,6 +273,7 @@ fn validate_action(claims: &nestlink_protocol::DeviceActionClaims) -> Result<(),
             Ok(DeviceAction::Register
                 | DeviceAction::RegisterBrowserEndpoint
                 | DeviceAction::Approve
+                | DeviceAction::PrepareBrowserHost
                 | DeviceAction::Renew
                 | DeviceAction::Signal
                 | DeviceAction::RelayConnect

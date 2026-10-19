@@ -97,6 +97,7 @@ enum DeviceAction {
   REGISTER_BROWSER_ENDPOINT = 13;
   TURN_ALLOCATE = 14;
   APPROVE_SERVICE_TARGET = 15;
+  PREPARE_BROWSER_HOST = 16;
 }
 
 message DeviceActionClaims {

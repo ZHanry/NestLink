@@ -14,15 +14,15 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
 
 internal object NestLinkUiTokens {
-    val lightPrimary = Color(0xFF246BCE)
+    val lightPrimary = Color(0xFF7850B2)
     val lightPrimaryActionText = Color(0xFFFFFFFF)
-    val darkPrimaryActionText = Color(0xFF101C2C)
-    val lightCanvas = Color(0xFFF2F5FA)
-    val lightText = Color(0xFF182B43)
-    val lightBorder = Color(0xFFDCE4EF)
+    val darkPrimaryActionText = Color(0xFF21152F)
+    val lightCanvas = Color(0xFFF6F3FC)
+    val lightText = Color(0xFF2E2540)
+    val lightBorder = Color(0xFFDDD3EB)
     val lightDanger = Color(0xFFB42336)
-    val lightFocus = Color(0xFF005FB8)
-    val darkFocus = Color(0xFF96C8FF)
+    val lightFocus = Color(0xFF684298)
+    val darkFocus = Color(0xFFD2B7F3)
     val lightWarning = Color(0xFF966313)
     val darkWarning = Color(0xFFF0C875)
     val lightSuccess = Color(0xFF316B4A)
@@ -37,37 +37,37 @@ internal object NestLinkUiTokens {
     val lightColorScheme: ColorScheme = materialLightColorScheme(
         primary = lightPrimary,
         onPrimary = lightPrimaryActionText,
-        primaryContainer = Color(0xFFEAF0F8),
-        onPrimaryContainer = Color(0xFF205EB5),
-        secondary = Color(0xFF205EB5),
+        primaryContainer = Color(0xFFEEE8F8),
+        onPrimaryContainer = Color(0xFF684298),
+        secondary = Color(0xFF684298),
         onSecondary = Color.White,
         background = lightCanvas,
         onBackground = lightText,
         surface = Color(0xFFFFFFFF),
         onSurface = lightText,
-        surfaceVariant = Color(0xFFEAF0F8),
-        onSurfaceVariant = Color(0xFF64748B),
+        surfaceVariant = Color(0xFFEEE8F8),
+        onSurfaceVariant = Color(0xFF746783),
         outline = lightBorder,
         error = lightDanger,
         onError = Color.White,
     )
 
     val darkColorScheme: ColorScheme = materialDarkColorScheme(
-        primary = Color(0xFF79B8FF),
+        primary = Color(0xFFBC9BE9),
         onPrimary = darkPrimaryActionText,
-        primaryContainer = Color(0xFF182230),
-        onPrimaryContainer = Color(0xFF96C8FF),
-        secondary = Color(0xFF96C8FF),
-        onSecondary = Color(0xFF141B25),
-        background = Color(0xFF141B25),
-        onBackground = Color(0xFFF1F5FA),
-        surface = Color(0xFF1E2937),
-        onSurface = Color(0xFFF1F5FA),
-        surfaceVariant = Color(0xFF182230),
-        onSurfaceVariant = Color(0xFFA9B6C8),
-        outline = Color(0xFF364557),
+        primaryContainer = Color(0xFF211A2C),
+        onPrimaryContainer = Color(0xFFD2B7F3),
+        secondary = Color(0xFFD2B7F3),
+        onSecondary = Color(0xFF191420),
+        background = Color(0xFF191420),
+        onBackground = Color(0xFFF4EFFB),
+        surface = Color(0xFF2A2236),
+        onSurface = Color(0xFFF4EFFB),
+        surfaceVariant = Color(0xFF211A2C),
+        onSurfaceVariant = Color(0xFFBDB0CE),
+        outline = Color(0xFF493A5C),
         error = Color(0xFFFFA8B4),
-        onError = Color(0xFF141B25),
+        onError = Color(0xFF191420),
     )
 
     val typography = Typography(
@@ -83,9 +83,9 @@ internal object NestLinkUiTokens {
     )
 
     val shapes = Shapes(
-        extraSmall = RoundedCornerShape(7.dp),
-        small = RoundedCornerShape(7.dp),
-        medium = RoundedCornerShape(10.dp),
+        extraSmall = RoundedCornerShape(8.dp),
+        small = RoundedCornerShape(8.dp),
+        medium = RoundedCornerShape(12.dp),
         large = RoundedCornerShape(12.dp),
         extraLarge = RoundedCornerShape(12.dp),
     )

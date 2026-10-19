@@ -11,11 +11,8 @@ pub enum Icon {
     List,
     Settings,
     Refresh,
-    Connect,
-    Folder,
     Keyboard,
     Audio,
-    Clipboard,
     Close,
     Copy,
 }
@@ -93,24 +90,6 @@ pub fn paint(ui: &egui::Ui, icon: Icon, center: Pos2, size: f32, color: Color32)
             line((20., 3.), (20., 9.));
             line((14., 9.), (20., 9.));
         }
-        Icon::Connect => {
-            line((3., 12.), (21., 12.));
-            line((15., 6.), (21., 12.));
-            line((15., 18.), (21., 12.));
-        }
-        Icon::Folder => {
-            ui.painter().add(egui::Shape::closed_line(
-                vec![
-                    p(3., 5.),
-                    p(10., 5.),
-                    p(12., 8.),
-                    p(21., 8.),
-                    p(21., 20.),
-                    p(3., 20.),
-                ],
-                stroke,
-            ));
-        }
         Icon::Keyboard => {
             rect((2., 5.), (22., 19.), 2.);
             for x in [6., 10., 14., 18.] {
@@ -127,12 +106,6 @@ pub fn paint(ui: &egui::Ui, icon: Icon, center: Pos2, size: f32, color: Color32)
             line((3., 15.), (3., 9.));
             line((18., 7.), (21., 12.));
             line((21., 12.), (18., 17.));
-        }
-        Icon::Clipboard => {
-            rect((5., 5.), (19., 22.), 2.);
-            rect((8., 2.), (16., 8.), 2.);
-            line((9., 12.), (15., 12.));
-            line((9., 16.), (15., 16.));
         }
         Icon::Close => {
             line((6., 6.), (18., 18.));

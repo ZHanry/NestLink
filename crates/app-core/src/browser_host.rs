@@ -76,6 +76,17 @@ impl PreparedBrowserCapture {
 /// Prepare consent/device selection only. `PreparedBrowserCapture` is consumed
 /// later by `WebRtcHostPeer` after both endpoint proofs succeed.
 pub trait BrowserHostCaptureProvider: Send + Sync + 'static {
+    /// Prepare local consent without a lease. Capture/input activation must
+    /// remain deferred to the factory called after mutual endpoint proof.
+    fn prepare_request<'a>(
+        &'a self,
+        _binding: &'a BrowserHostBinding,
+        _permissions: &'a [i32],
+        _cancel: watch::Receiver<bool>,
+    ) -> Pin<Box<dyn Future<Output = Result<PreparedBrowserCapture, BrowserHostError>> + Send + 'a>>
+    {
+        Box::pin(async { Err(BrowserHostError::UnsupportedPermission) })
+    }
     fn supports_audio(&self) -> bool {
         false
     }
@@ -118,10 +129,26 @@ pub trait BrowserHostCaptureProvider: Send + Sync + 'static {
 #[derive(Clone)]
 pub struct BrowserHostConfig {
     provider: Arc<dyn BrowserHostCaptureProvider>,
+    diagnostics: Option<Arc<dyn Fn(BrowserHostDiagnostic) + Send + Sync>>,
 }
 impl BrowserHostConfig {
     pub fn new(provider: Arc<dyn BrowserHostCaptureProvider>) -> Self {
-        Self { provider }
+        Self {
+            provider,
+            diagnostics: None,
+        }
+    }
+    pub fn with_diagnostics(
+        mut self,
+        sink: Arc<dyn Fn(BrowserHostDiagnostic) + Send + Sync>,
+    ) -> Self {
+        self.diagnostics = Some(sink);
+        self
+    }
+    fn report(&self, event: BrowserHostDiagnostic) {
+        if let Some(sink) = &self.diagnostics {
+            sink(event);
+        }
     }
 
     pub fn supports_audio(&self) -> bool {
@@ -177,6 +204,7 @@ pub enum BrowserHostDiagnosticStage {
 /// the source error's Display/Debug text in this value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BrowserHostDiagnosticSource {
+    Progress,
     Cancelled,
     Capture,
     UnsupportedPermission,
@@ -288,65 +316,114 @@ pub async fn run_browser_host(
     let mut failure = None;
     let mut diagnostic_stage = BrowserHostDiagnosticStage::FetchHostPermit;
     let mut diagnostic = None;
+    let mut preparation_generation = 0;
+    let mut startup_cancel = cancel.clone();
 
     let startup = async {
         ensure_not_cancelled(&cancel)?;
         diagnostic_stage = BrowserHostDiagnosticStage::FetchHostPermit;
-        let permit = sdk.host_permit(&installation, &request_id).await?;
-        validate_host_permit(
-            &permit,
-            &installation,
-            config.supports_audio(),
-            config.supports_input(),
-            config.supports_files(),
-            config.supports_clipboard(),
-        )?;
-        let claims = permit.claims();
-        let has = |permission: Permission| claims.permissions.contains(&(permission as i32));
-        let binding = browser_host_binding(&request_id, &permit)?;
-        ready_info = Some(BrowserHostReady {
-            binding: binding.clone(),
-            lease_sequence: claims.lease_sequence,
-            data: BrowserHostDataView {
-                files_available: config.supports_files(),
-                clipboard_available: config.supports_clipboard(),
-                permitted_file_read: has(Permission::FileRead),
-                permitted_file_write: has(Permission::FileWrite),
-                permitted_clipboard_read: has(Permission::ClipboardRead),
-                permitted_clipboard_write: has(Permission::ClipboardWrite),
-                ..BrowserHostDataView::default()
-            },
-            displays: crate::BrowserHostDisplayView::default(),
-            path: preferred_path(claims.paths.as_slice())? as i32,
+        config.report(BrowserHostDiagnostic {
+            stage: diagnostic_stage,
+            source: BrowserHostDiagnosticSource::Progress,
+            elapsed_ms: elapsed_ms(started),
+            peer: None,
         });
-
-        let preparation_cancel = cancel.clone();
+        let request = sdk.remote(&request_id).await?;
+        preparation_generation = request.connection_generation;
+        if request.status != "approved"
+            || request.host_device_id != installation.device_id
+            || request.connection_generation == 0
+        {
+            return Err(BrowserHostError::HostIdentity);
+        }
+        // Existing native test/explicit sessions can already have a permit.
+        // Browser inbox sessions prepare local consent before any lease exists.
+        let existing_permit = if request.lease_sequence > 0 {
+            Some(sdk.host_permit(&installation, &request_id).await?)
+        } else {
+            None
+        };
+        let preparation_binding = if let Some(permit) = &existing_permit {
+            validate_host_permit(
+                permit,
+                &installation,
+                config.supports_audio(),
+                config.supports_input(),
+                config.supports_files(),
+                config.supports_clipboard(),
+            )?;
+            browser_host_binding(&request_id, permit)?
+        } else {
+            // This binding identifies LOCAL consent only. Zero digests cannot
+            // activate a session, data worker, capture source or peer proof.
+            BrowserHostBinding {
+                request_id: request_id.clone(),
+                session_id: request_id.clone(),
+                controller_device_id: request.controller_device_id.clone(),
+                host_device_id: request.host_device_id.clone(),
+                controller_key_sha256: [0; 32],
+                host_key_sha256: installation.identity.fingerprint(),
+                permit_sha256: [0; 32],
+                connection_generation: request.connection_generation,
+            }
+        };
         diagnostic_stage = BrowserHostDiagnosticStage::PrepareCapture;
+        config.report(BrowserHostDiagnostic {
+            stage: diagnostic_stage,
+            source: BrowserHostDiagnosticSource::Progress,
+            elapsed_ms: elapsed_ms(started),
+            peer: None,
+        });
+        let preparation_cancel = cancel.clone();
+        let preparation = async {
+            if let Some(permit) = &existing_permit {
+                config
+                    .provider
+                    .prepare(&request_id, permit, preparation_cancel)
+                    .await
+            } else {
+                config
+                    .provider
+                    .prepare_request(
+                        &preparation_binding,
+                        &request.permissions,
+                        preparation_cancel,
+                    )
+                    .await
+            }
+        };
         let prepared = tokio::select! {
             biased;
             _ = cancelled(&mut cancel) => return Err(BrowserHostError::Cancelled),
-            result = config.provider.prepare(&request_id, &permit, preparation_cancel) => result?,
+            result = preparation => result?,
         };
         ensure_not_cancelled(&cancel)?;
-
         validate_candidates(&prepared.displays).map_err(|_| BrowserHostError::Capture)?;
         let catalog = catalog_key(
             &request_id,
-            claims.connection_generation,
+            request.connection_generation,
             1,
             &prepared.displays,
         )
         .map_err(|_| BrowserHostError::Capture)?;
-        let offer = BrowserHostDisplayOffer {
-            binding: binding.clone(),
-            catalog: catalog.clone(),
-            displays: prepared.displays.clone(),
-        };
-        if display_offer.send(offer).is_err() {
+        if display_offer
+            .send(BrowserHostDisplayOffer {
+                binding: preparation_binding.clone(),
+                catalog: catalog.clone(),
+                displays: prepared.displays.clone(),
+            })
+            .is_err()
+        {
             return Err(BrowserHostError::Cancelled);
         }
         diagnostic_stage = BrowserHostDiagnosticStage::AwaitDisplayApproval;
-        let approval = tokio::time::timeout(DISPLAY_APPROVAL_BUDGET, async {
+        config.report(BrowserHostDiagnostic {
+            stage: diagnostic_stage,
+            source: BrowserHostDiagnosticSource::Progress,
+            elapsed_ms: elapsed_ms(started),
+            peer: None,
+        });
+        let mut approval = tokio::time::timeout(DISPLAY_APPROVAL_BUDGET, async {
             loop {
                 if let Some(approval) = display_approval.borrow_and_update().clone() {
                     return Ok(approval);
@@ -362,15 +439,17 @@ pub async fn run_browser_host(
         })
         .await
         .map_err(|_| BrowserHostError::Capture)??;
-        if approval.binding != binding
+        if approval.binding != preparation_binding
             || approval.catalog != catalog
             || approval.sources.is_empty()
             || approval.sources.len() > prepared.displays.len()
             || approval.sources.windows(2).any(|pair| pair[0] >= pair[1])
-            || approval
-                .sources
-                .iter()
-                .any(|source| !prepared.displays.iter().any(|display| display.source == *source))
+            || approval.sources.iter().any(|source| {
+                !prepared
+                    .displays
+                    .iter()
+                    .any(|display| display.source == *source)
+            })
             || !approval.sources.contains(&approval.initial_source)
         {
             return Err(BrowserHostError::UnsupportedPermission);
@@ -382,15 +461,89 @@ pub async fn run_browser_host(
             .cloned()
             .collect();
         validate_displays(&approved_displays).map_err(|_| BrowserHostError::Capture)?;
-        if let Some(ready) = ready_info.as_mut() {
-            ready.displays = crate::BrowserHostDisplayView {
+        let permit = if let Some(permit) = existing_permit {
+            permit
+        } else {
+            ensure_not_cancelled(&cancel)?;
+            sdk.mark_browser_host_ready(&installation, &request).await?;
+            diagnostic_stage = BrowserHostDiagnosticStage::FetchHostPermit;
+            config.report(BrowserHostDiagnostic {
+                stage: diagnostic_stage,
+                source: BrowserHostDiagnosticSource::Progress,
+                elapsed_ms: elapsed_ms(started),
+                peer: None,
+            });
+            // Keep the wait finite, cancelable, and subject to server-side
+            // revocation/policy/login/deadline checks on every observation.
+            tokio::time::timeout(DISPLAY_APPROVAL_BUDGET, async {
+                loop {
+                    ensure_not_cancelled(&cancel)?;
+                    let current = sdk.remote(&request_id).await?;
+                    if current.status != "approved"
+                        || current.connection_generation != request.connection_generation
+                        || !sdk.browser_host_readiness(&request_id).await?.ready
+                    {
+                        return Err(BrowserHostError::SessionBinding);
+                    }
+                    if current.lease_sequence > 0 {
+                        return sdk
+                            .host_permit(&installation, &request_id)
+                            .await
+                            .map_err(BrowserHostError::from);
+                    }
+                    tokio::select! {
+                        biased;
+                        _ = cancelled(&mut cancel) => return Err(BrowserHostError::Cancelled),
+                        _ = tokio::time::sleep(OFFER_POLL_INTERVAL) => {}
+                    }
+                }
+            })
+            .await
+            .map_err(|_| BrowserHostError::SessionBinding)??
+        };
+        validate_host_permit(
+            &permit,
+            &installation,
+            config.supports_audio(),
+            config.supports_input(),
+            config.supports_files(),
+            config.supports_clipboard(),
+        )?;
+        let claims = permit.claims();
+        if claims.connection_generation != request.connection_generation
+            || claims.controller_device_id != request.controller_device_id
+            || claims.permissions != request.permissions
+            || claims.paths != request.paths
+            || claims.policy_revision != request.policy_revision
+        {
+            return Err(BrowserHostError::SessionBinding);
+        }
+        let binding = browser_host_binding(&request_id, &permit)?;
+        // Rebind only the already-approved local source set after validating
+        // the signed permit against the exact preparation request/generation.
+        approval.binding = binding.clone();
+        let has = |permission: Permission| claims.permissions.contains(&(permission as i32));
+        ready_info = Some(BrowserHostReady {
+            binding,
+            lease_sequence: claims.lease_sequence,
+            data: BrowserHostDataView {
+                files_available: config.supports_files(),
+                clipboard_available: config.supports_clipboard(),
+                permitted_file_read: has(Permission::FileRead),
+                permitted_file_write: has(Permission::FileWrite),
+                permitted_clipboard_read: has(Permission::ClipboardRead),
+                permitted_clipboard_write: has(Permission::ClipboardWrite),
+                ..BrowserHostDataView::default()
+            },
+            displays: crate::BrowserHostDisplayView {
                 catalog: Some(catalog.clone()),
                 displays: approved_displays,
                 approval_required: false,
                 approved_sources: approval.sources.clone(),
                 initial_source: Some(approval.initial_source),
-            };
-        }
+            },
+            path: preferred_path(&claims.paths)? as i32,
+        });
 
         let data_requested = claims.permissions.iter().any(|permission| {
             matches!(
@@ -402,6 +555,12 @@ pub async fn run_browser_host(
             )
         });
         diagnostic_stage = BrowserHostDiagnosticStage::PrepareData;
+        config.report(BrowserHostDiagnostic {
+            stage: diagnostic_stage,
+            source: BrowserHostDiagnosticSource::Progress,
+            elapsed_ms: elapsed_ms(started),
+            peer: None,
+        });
         let prepared_data = if data_requested {
             let data_cancel = cancel.clone();
             tokio::select! {
@@ -419,7 +578,9 @@ pub async fn run_browser_host(
 
         let clock = RuntimeClock::default();
         let request_started_ms = clock.monotonic_ms();
-        let now = clock.sample().map_err(|_| BrowserHostError::SessionBinding)?;
+        let now = clock
+            .sample()
+            .map_err(|_| BrowserHostError::SessionBinding)?;
         let path = Path::try_from(
             ready_info
                 .as_ref()
@@ -429,6 +590,12 @@ pub async fn run_browser_host(
         .map_err(|_| BrowserHostError::SessionBinding)?;
         let binding = session_binding(&permit)?;
         diagnostic_stage = BrowserHostDiagnosticStage::ActivateSession;
+        config.report(BrowserHostDiagnostic {
+            stage: diagnostic_stage,
+            source: BrowserHostDiagnosticSource::Progress,
+            elapsed_ms: elapsed_ms(started),
+            peer: None,
+        });
         let session = Session::activate(permit.clone(), binding, path, request_started_ms, now)
             .map_err(|_| BrowserHostError::SessionBinding)?;
         let (stop_tx, stop_rx) = watch::channel(None);
@@ -452,6 +619,12 @@ pub async fn run_browser_host(
             Ok(media)
         };
         diagnostic_stage = BrowserHostDiagnosticStage::CreatePeer;
+        config.report(BrowserHostDiagnostic {
+            stage: diagnostic_stage,
+            source: BrowserHostDiagnosticSource::Progress,
+            elapsed_ms: elapsed_ms(started),
+            peer: None,
+        });
         let host = if claims.paths.contains(&(Path::Relay as i32)) {
             WebRtcHostPeer::new_with_turn(&sdk, &installation, permit, setup, factory).await?
         } else {
@@ -481,9 +654,8 @@ pub async fn run_browser_host(
             };
             if answered && !connected {
                 connected = true;
-                if let Some((_connection_generation, lease_sequence, path)) = peer
-                    .as_ref()
-                    .and_then(WebRtcHostPeer::proved_session_info)
+                if let Some((_connection_generation, lease_sequence, path)) =
+                    peer.as_ref().and_then(WebRtcHostPeer::proved_session_info)
                     && let Some(ready_info) = ready_info.as_mut()
                 {
                     ready_info.lease_sequence = lease_sequence;
@@ -507,8 +679,14 @@ pub async fn run_browser_host(
         }
         #[allow(unreachable_code)]
         Ok::<(), BrowserHostError>(())
-    }
-    .await;
+    };
+    // Include in-flight HTTP reads/writes in the cancellation budget as well
+    // as local consent, polling sleeps and peer negotiation.
+    let startup = tokio::select! {
+        biased;
+        _ = cancelled(&mut startup_cancel) => Err(BrowserHostError::Cancelled),
+        result = startup => result,
+    };
 
     if let Err(error) = startup {
         failure = Some(classify_failure(&error));
@@ -562,12 +740,18 @@ pub async fn run_browser_host(
         });
     }
 
+    config.report(diagnostic.unwrap_or(BrowserHostDiagnostic {
+        stage: BrowserHostDiagnosticStage::Shutdown,
+        source: BrowserHostDiagnosticSource::Progress,
+        elapsed_ms: elapsed_ms(started),
+        peer: None,
+    }));
     BrowserHostExit {
         sdk,
         request_id,
-        connection_generation: ready_info
-            .as_ref()
-            .map_or(0, |ready| ready.binding.connection_generation),
+        connection_generation: ready_info.as_ref().map_or(preparation_generation, |ready| {
+            ready.binding.connection_generation
+        }),
         lease_sequence: ready_info.as_ref().map_or(0, |ready| ready.lease_sequence),
         binding: connected
             .then(|| ready_info.as_ref().map(|ready| ready.binding.clone()))
@@ -608,6 +792,27 @@ pub fn browser_host_binding(
         permit_sha256: permit.digest(),
         connection_generation: claims.connection_generation,
     })
+}
+
+/// Compare a local pre-lease consent binding with the verified session binding.
+/// This only preserves a prepared source selection; it cannot authorize media.
+pub fn browser_preparation_matches(
+    prepared: &BrowserHostBinding,
+    proved: &BrowserHostBinding,
+) -> bool {
+    if prepared.permit_sha256 != [0; 32] {
+        return prepared == proved;
+    }
+    prepared.controller_key_sha256 == [0; 32]
+        && proved.permit_sha256 != [0; 32]
+        && proved.controller_key_sha256 != [0; 32]
+        && prepared.request_id == proved.request_id
+        && prepared.session_id == proved.session_id
+        && prepared.controller_device_id == proved.controller_device_id
+        && prepared.host_device_id == proved.host_device_id
+        && prepared.host_key_sha256 == proved.host_key_sha256
+        && prepared.connection_generation != 0
+        && prepared.connection_generation == proved.connection_generation
 }
 
 fn ensure_not_cancelled(cancel: &watch::Receiver<bool>) -> Result<(), BrowserHostError> {
@@ -801,6 +1006,61 @@ fn classify_diagnostic_source(error: &BrowserHostError) -> BrowserHostDiagnostic
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn preparation_rebinding_preserves_both_devices_generation_and_local_host_key() {
+        let prepared = BrowserHostBinding {
+            request_id: "request".into(),
+            session_id: "request".into(),
+            controller_device_id: "controller".into(),
+            host_device_id: "host".into(),
+            controller_key_sha256: [0; 32],
+            host_key_sha256: [2; 32],
+            permit_sha256: [0; 32],
+            connection_generation: 1,
+        };
+        assert!(!browser_preparation_matches(&prepared, &prepared));
+        let proved = BrowserHostBinding {
+            controller_key_sha256: [1; 32],
+            permit_sha256: [3; 32],
+            ..prepared.clone()
+        };
+        assert!(browser_preparation_matches(&prepared, &proved));
+        for changed in [
+            BrowserHostBinding {
+                request_id: "other".into(),
+                ..proved.clone()
+            },
+            BrowserHostBinding {
+                session_id: "other".into(),
+                ..proved.clone()
+            },
+            BrowserHostBinding {
+                controller_device_id: "other".into(),
+                ..proved.clone()
+            },
+            BrowserHostBinding {
+                host_device_id: "other".into(),
+                ..proved.clone()
+            },
+            BrowserHostBinding {
+                host_key_sha256: [4; 32],
+                ..proved.clone()
+            },
+            BrowserHostBinding {
+                connection_generation: 2,
+                ..proved.clone()
+            },
+        ] {
+            assert!(!browser_preparation_matches(&prepared, &changed));
+        }
+        assert!(browser_preparation_matches(&proved, &proved));
+        let renewed = BrowserHostBinding {
+            permit_sha256: [4; 32],
+            ..proved.clone()
+        };
+        assert!(!browser_preparation_matches(&proved, &renewed));
+    }
 
     fn claims_for(installation: &DeviceIdentity) -> nestlink_protocol::PermitClaims {
         nestlink_protocol::PermitClaims {

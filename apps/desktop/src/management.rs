@@ -38,7 +38,7 @@ impl DesktopApp {
             widgets::field(ui,self.t("设备名称", "Device name"),&mut self.device_name,128);
             ui.small(self.t("Windows/Linux 工作台登记为控制端和主机，并声明 VP8/Opus 能力；其他平台不声明尚未接入的能力。", "Windows/Linux workspaces enroll as controllers and hosts with VP8/Opus; other platforms do not declare capabilities that are not integrated."));
             if ui.add_enabled(!self.device_name.trim().is_empty() && snapshot.devices.loading.is_none(),egui::Button::new(self.t("登记", "Enroll"))).clicked() {
-                self.action(snapshot,Action::EnrollLocalDevice {name:self.device_name.trim().into(),platform:std::env::consts::OS.into(),capabilities:local_capabilities(),path_mode:"direct_preferred".into()});
+                self.action(snapshot,Action::EnrollLocalDevice {name:self.device_name.trim().into(),platform:local_platform().into(),capabilities:local_capabilities(),path_mode:"direct_preferred".into()});
             }
         });
         ui.add_space(18.);
@@ -516,6 +516,20 @@ impl DesktopApp {
                 );
             }
         }
+    }
+}
+
+pub(super) fn local_platform() -> &'static str {
+    if cfg!(target_os = "linux") {
+        if std::env::var("XDG_SESSION_TYPE").is_ok_and(|value| value == "wayland")
+            || std::env::var_os("WAYLAND_DISPLAY").is_some_and(|value| !value.is_empty())
+        {
+            "linux-wayland"
+        } else {
+            "linux-x11"
+        }
+    } else {
+        std::env::consts::OS
     }
 }
 

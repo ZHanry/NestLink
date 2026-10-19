@@ -343,6 +343,18 @@ pub struct RemoteView {
 pub struct RemoteRequestsResponse {
     pub requests: Vec<RemoteView>,
 }
+/// A host-signed preparation hint. This grants no capture or session authority.
+#[derive(Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct BrowserHostReadiness {
+    pub ready: bool,
+    pub connection_generation: u64,
+}
+#[derive(Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct BrowserHostReadinessSubmission {
+    pub signature: String,
+}
 #[derive(Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct RemotePeerKeys {

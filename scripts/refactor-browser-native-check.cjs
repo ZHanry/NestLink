@@ -279,8 +279,8 @@ async function main() {
     }, profile);
     await page.goto(ready.origin, { waitUntil: 'networkidle0' });
     check(await page.evaluate(() => isSecureContext && location.protocol === 'https:'), 'Production page must run in an HTTPS secure context');
-    await page.locator('#deployment').fill(ready.deployment_id);
-    await page.locator('#issuer').fill(ready.permit_issuer);
+    // The production entry screen discovers its deployment over this HTTPS
+    // origin; it no longer exposes manual issuer/deployment input fields.
     await page.locator('.entry-panel button.primary').click();
     await page.waitForSelector('#username', { visible: true });
     await page.locator('#username').fill(ready.username);
@@ -299,18 +299,32 @@ async function main() {
     const requestStarted = performance.now();
     await page.locator('.remote-footer button.primary').click();
     await page.waitForFunction(() => {
-      const button = document.querySelector('.remote-actions button.secondary');
-      return ['播放画面与声音', 'Play video and audio'].some(label => button?.textContent.includes(label)) && !button.disabled;
+      return [...document.querySelectorAll('.remote-actions button.secondary')].some(button =>
+        ['播放画面与声音', 'Play video and audio'].some(label => button.textContent.includes(label)) && !button.disabled);
     });
     // Decode the owned tone without disturbing the user's speakers. This
     // verifies receiver samples, not audible playback or output-device delay.
     await page.$eval('#remote-view-video', video => { video.volume = 0; });
     report.audio_output_muted = true;
-    await page.locator('.remote-actions button.secondary').click();
+    await page.locator('::-p-xpath(//div[contains(@class,"remote-actions")]/button[contains(.,"播放画面与声音") or contains(.,"Play video and audio")])').click();
     await page.waitForFunction(profile => {
       const video = document.querySelector('#remote-view-video');
       return video?.videoWidth === profile.width && video.videoHeight === profile.height && video.currentTime > 0 && video.readyState >= 2;
     }, { timeout: 35000 }, profile);
+    // The HTML video can render its first frame before getStats publishes its
+    // inbound stream. Start the measured interval only with a real RTP baseline.
+    await page.waitForFunction(async () => {
+      const streams = [];
+      for (const peer of window.__nativeProbePeers) {
+        const stats = await peer.getStats();
+        for (const item of stats.values()) if (item.type === 'inbound-rtp' &&
+          (item.kind === 'video' || item.mediaType === 'video')) {
+          streams.push(item.framesDecoded > 0 && item.bytesReceived > 0 &&
+            stats.get(item.codecId)?.mimeType?.toLowerCase() === 'video/vp8');
+        }
+      }
+      return streams.length === 1 && streams[0];
+    }, { timeout: 10000 });
     if (profile.with_audio) await page.waitForFunction(async () => {
       for (const peer of window.__nativeProbePeers) {
         const stats = await peer.getStats();
@@ -380,7 +394,7 @@ async function main() {
     const initial = report.initial_permits[0];
     check([initial.session_id, initial.controller_device_id].every(value =>
       typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value)),
-      'Actual initial permit lacks exact session and temporary-controller identifiers');
+      'Actual initial permit lacks exact session and persistent-controller identifiers');
     await ownedData.holdTerminalKey(page, ready, args, report);
     report.disconnect_requested_monotonic_ms = performance.now();
     if (!await ownedData.disconnect(page, ready, args, report)) await page.locator('.remote-actions button.danger').click();
@@ -394,10 +408,11 @@ async function main() {
       'The UI retained an unfinished cleanup operation');
     report.cleanup_revocations = report.successful_revocations.filter(item =>
       item.observed_monotonic_ms >= report.disconnect_requested_monotonic_ms);
-    for (const target of [`/api/v3/remote/${initial.session_id}`, `/api/v3/devices/${initial.controller_device_id}`]) {
-      check(report.cleanup_revocations.filter(item => item.path === target).length === 1,
-        'The server did not confirm this exact session and temporary controller revocation');
-    }
+    check(report.cleanup_revocations.filter(item => item.path === `/api/v3/remote/${initial.session_id}`).length === 1,
+      'The server did not confirm this exact session revocation');
+    check(!report.successful_revocations.some(item => item.path === `/api/v3/devices/${initial.controller_device_id}`),
+      'Stopping a session must preserve the enrolled persistent browser identity');
+    report.persistent_controller_preserved = true;
     report.ui_cleanup_complete = true;
     report.passed = true;
   } catch (error) {

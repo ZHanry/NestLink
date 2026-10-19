@@ -1781,7 +1781,13 @@ enum Job {
     NativeInboxPolled {
         client: Client,
         generation: u64,
-        result: Result<Vec<nestlink_protocol::api::RemoteView>, Failure>,
+        result: Result<
+            (
+                Vec<nestlink_protocol::api::RemoteView>,
+                Vec<nestlink_protocol::api::RemoteView>,
+            ),
+            Failure,
+        >,
     },
     Operation(sdk_call::Response),
     Connected(Result<Sdk, Failure>),
@@ -3504,7 +3510,6 @@ impl Actor {
         if selected.status != "approved"
             || selected.host_device_id != identity.device_id
             || selected.connection_generation == 0
-            || selected.lease_sequence == 0
             || selected.expires_at_unix_ms <= unix_millis().unwrap_or(u64::MAX)
         {
             self.deliver(

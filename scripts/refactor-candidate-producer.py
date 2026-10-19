@@ -40,7 +40,7 @@ def module(name, path):
 # called or monkeypatched by this separate producer.
 TOOLS = module("candidate_release_utilities", "scripts/refactor-release-producer.py")
 NATIVE = TOOLS.NATIVE
-VERSION = "0.3.0-rc.1"
+VERSION = "0.4.0-rc.1"
 REPOSITORY = "ZHanry/NestLink"
 REPOSITORY_ID = "R_kgDOVNHMvg"
 CURRENT_ROLES = frozenset((
@@ -174,7 +174,7 @@ def cohort(path):
     require(value.get("signing") == SIGNING and value.get("production_update_eligible") is False,
             "Candidate cannot claim production signing or update eligibility")
     require(type(value.get("sequence")) is int and 1 <= value["sequence"] <= 999
-            and value.get("android_version_code") == 300000 + value["sequence"],
+            and value.get("android_version_code") == 400000 + value["sequence"],
             "Invalid candidate version allocation")
     require(type(value.get("source_epoch")) is int and value["source_epoch"] > 0,
             "Candidate source epoch is missing")
@@ -214,7 +214,7 @@ def preflight(args):
              "source_revision": args.source, "sequence": args.sequence,
              "run_id": args.run_id, "run_attempt": args.run_attempt,
              "source_epoch": int(TOOLS.run(["git", "show", "-s", "--format=%ct", args.source]).decode().strip()),
-             "android_version_code": 300000 + args.sequence,
+             "android_version_code": 400000 + args.sequence,
              "android_application_id": "com.zhanry.nestlink.candidate",
              "android_version_name": policy["version"],
              "android_api_range": [30, 36], "oci_base": args.oci_base,
@@ -337,7 +337,11 @@ def deb_candidate(input_directory, output, role, architecture, value):
             launcher.chmod(0o755)
             desktop = staging / "usr/share/applications/nestlink-rc.desktop"
             desktop.parent.mkdir(parents=True)
-            desktop.write_text("[Desktop Entry]\nType=Application\nName=NestLink RC\nExec=nestlink-rc\nTerminal=false\nCategories=Network;RemoteAccess;\n", encoding="utf-8")
+            desktop.write_text("[Desktop Entry]\nType=Application\nName=NestLink RC\nName[zh_CN]=NestLink 远程桌面\nIcon=nestlink-rc\nExec=nestlink-rc\nTerminal=false\nCategories=Network;RemoteAccess;\n", encoding="utf-8")
+        if role == "desktop":
+            icon = staging / "usr/share/icons/hicolor/scalable/apps/nestlink-rc.svg"
+            icon.parent.mkdir(parents=True)
+            copy_fixed(ROOT / "brand/icon.svg", icon)
         notices = staging / "usr/share/doc" / ("nestlink-rc-" + role)
         notices.mkdir(parents=True)
         copy_fixed(ROOT / "LICENSE", notices / "copyright")
@@ -353,7 +357,9 @@ def deb_candidate(input_directory, output, role, architecture, value):
 
 
 def candidate_readme(value):
-    return ("NestLink development-only user acceptance candidate\n"
+    return ("NestLink RC 开发预览版 / Development candidate\n"
+            "登录后自动登记此电脑；浏览器访问获准后，请选择并批准共享屏幕。\n"
+            "本预览版尚未配置 Windows 发行签名，卸载时保留用户数据。\n\n"
             f"Source: {value['source_revision']}\nVersion: {value['version']} candidate {value['sequence']}\n"
             "Windows Authenticode, fixed Android Release signing and update/OCI signatures are not configured.\n"
             "Android uses its recorded development certificate and an isolated .candidate applicationId.\n"

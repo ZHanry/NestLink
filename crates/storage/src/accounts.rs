@@ -245,6 +245,9 @@ mod password_only_migration {
             "INSERT INTO recovery_codes(account_id,code_sha256) VALUES(?1,zeroblob(32))",
             [&account],
         )?;
+        store
+            .connection
+            .execute("DROP TABLE browser_host_readiness", [])?;
         store.connection.pragma_update(None, "user_version", 20)?;
         let Store { connection } = store;
         let mut migrated = Store::initialize(connection, &deployment)?;

@@ -297,9 +297,9 @@ impl BrowserHostCaptureProvider for Provider {
     }
     fn prepare<'a>(
         &'a self,
-        _request_id: &'a str,
+        request_id: &'a str,
         permit: &'a VerifiedPermit,
-        _cancel: watch::Receiver<bool>,
+        cancel: watch::Receiver<bool>,
     ) -> Pin<
         Box<
             dyn Future<Output = std::result::Result<PreparedBrowserCapture, BrowserHostError>>
@@ -307,13 +307,24 @@ impl BrowserHostCaptureProvider for Provider {
                 + 'a,
         >,
     > {
+        Box::pin(async move {
+            let binding = nestlink_app_core::browser_host_binding(request_id, permit)?;
+            self.prepare_request(&binding, &permit.claims().permissions, cancel).await
+        })
+    }
+    fn prepare_request<'a>(
+        &'a self,
+        binding: &'a nestlink_app_core::BrowserHostBinding,
+        _permissions: &'a [i32],
+        _cancel: watch::Receiver<bool>,
+    ) -> Pin<Box<dyn Future<Output = std::result::Result<PreparedBrowserCapture, BrowserHostError>> + Send + 'a>> {
         let facts = self.0.clone();
         let profile = self.1;
         let with_audio = self.2;
         let owned_data = self.3.clone();
         let multidisplay = self.4.clone();
         let displays = owned_displays(profile, multidisplay.is_some());
-        let generation = permit.claims().connection_generation;
+        let generation = binding.connection_generation;
         Box::pin(async move {
             facts.prepared.store(true, Ordering::Release);
             let prepared =
@@ -752,31 +763,11 @@ async fn run() -> Result {
         };
         if !matches_owned_permissions(&request.permissions, &permissions) || request.paths != vec![Path::Direct as i32] { return Err("fixture only approves its exact owned media/direct request".into()); }
         sdk.approve(&installation, &request, ApprovalChoice { approved: true, permissions: permissions.clone(), paths: vec![Path::Direct as i32] }).await?;
-        // The product's StartBrowserHost gate requires the controller to have
-        // issued the first lease. Approval alone leaves sequence zero and a
-        // current-permit GET must correctly reject that state. Mirror that
-        // gate instead of starting early or retrying forbidden permit reads.
-        let issued = loop {
-            if Instant::now() >= deadline || evidence.join("stop.request").exists() {
-                return Err("no controller-issued lease before fixture shutdown".into());
-            }
-            let current = sdk.remote(&request.id).await?;
-            if current.status != "approved"
-                || current.host_device_id != installation.device_id
-                || current.controller_device_id != request.controller_device_id
-                || current.permissions != permissions
-                || current.paths != vec![Path::Direct as i32]
-            {
-                return Err("fixture request was retired or changed before host start".into());
-            }
-            if current.lease_sequence > 0 && current.connection_generation > 0 {
-                break current;
-            }
-            tokio::time::sleep(Duration::from_millis(100)).await;
-        };
+        // Mirror the product's automatic pre-lease host preparation.
+        let approved = sdk.remote(&request.id).await?;
         std::fs::write(evidence.join("host-start-gate.json"), serde_json::to_vec_pretty(&json!({
-            "approved":true,"controller_issued_initial_lease":true,
-            "lease_sequence":issued.lease_sequence,"connection_generation":issued.connection_generation,
+            "approved":true,"controller_issued_initial_lease":false,
+            "lease_sequence":approved.lease_sequence,"connection_generation":approved.connection_generation,
             "elapsed_ms":probe_started.elapsed().as_millis()
         }))?)?;
         let facts = Arc::new(CaptureFacts::default());

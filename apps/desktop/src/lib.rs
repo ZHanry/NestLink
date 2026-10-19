@@ -131,6 +131,7 @@ pub struct DesktopApp {
     policy: Option<management::PolicyDraft>,
     service_panel: services::ServicePanel,
     device_name: String,
+    registration_generation: Option<u64>,
     remote: remote::RemoteForm,
     file_panel: files::FilePanel,
     recovery_panel: files::recovery::RecoveryPanel,
@@ -205,6 +206,7 @@ impl DesktopApp {
             policy: None,
             service_panel: services::ServicePanel::default(),
             device_name: String::new(),
+            registration_generation: None,
             remote: remote::RemoteForm::default(),
             file_panel: files::FilePanel::default(),
             recovery_panel: files::recovery::RecoveryPanel::default(),
@@ -1801,7 +1803,12 @@ impl DesktopApp {
                         | OperationStatus::Cancelled
                         | OperationStatus::Superseded => MessageTone::Danger,
                     };
-                    if !flow_notice && result.kind != OperationKind::Load {
+                    let enrolled_automatically = result.kind == OperationKind::EnrollDevice
+                        && result.status == OperationStatus::Succeeded
+                        && self.screen == Screen::Remote
+                        && self.registration_generation == Some(result.generation);
+                    if !flow_notice && result.kind != OperationKind::Load && !enrolled_automatically
+                    {
                         self.set_message(operation_message, tone);
                     }
                     if result.status == OperationStatus::Succeeded
@@ -1878,6 +1885,7 @@ impl eframe::App for DesktopApp {
         }
         let snapshot = self.notices(context);
         self.reconcile_remote_password_context(&snapshot);
+        self.advance_local_enrollment(&snapshot);
         self.advance_remote_flow(&snapshot);
         if let Some(tray) = &self.tray {
             let actions = tray.actions();
@@ -1924,6 +1932,11 @@ impl eframe::App for DesktopApp {
             self.clear_private_view(&context);
             self.generation = snapshot.generation;
         }
+        parent.painter().rect_filled(
+            parent.max_rect(),
+            0.,
+            context.global_style().visuals.panel_fill,
+        );
         self.show_remote_viewport(&context, &snapshot);
         self.navigation(&context, parent, &snapshot);
         self.workspace_toolbar(parent, &snapshot);

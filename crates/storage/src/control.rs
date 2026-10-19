@@ -598,6 +598,11 @@ impl Store {
             }
             return Ok(claims);
         }
+        if self.is_browser_controller(&view.controller_device_id)?
+            && !self.browser_host_readiness(actor, id, now)?.ready
+        {
+            return Err(StorageError::Conflict);
+        }
         self.issue_permit(actor, id, 1, now)
     }
     pub fn current_permit(

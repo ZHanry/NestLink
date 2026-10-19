@@ -634,6 +634,72 @@ impl Sdk {
             .await?
             .requests)
     }
+    pub async fn ready_browser_remote(
+        &self,
+        local: &DeviceIdentity,
+    ) -> Result<Vec<RemoteView>, SdkError> {
+        if !nestlink_protocol::valid_id(&local.device_id) {
+            return Err(SdkError::Invalid);
+        }
+        Ok(self
+            .required::<(), RemoteRequestsResponse>(
+                Method::GET,
+                &format!("/remote/browser-ready/{}", local.device_id),
+                None,
+            )
+            .await?
+            .requests)
+    }
+    pub async fn browser_host_readiness(
+        &self,
+        id: &str,
+    ) -> Result<nestlink_protocol::api::BrowserHostReadiness, SdkError> {
+        self.required(
+            Method::GET,
+            &format!("{}/browser-host-ready", resource("remote", id)?),
+            None::<&()>,
+        )
+        .await
+    }
+    pub async fn mark_browser_host_ready(
+        &self,
+        local: &DeviceIdentity,
+        view: &RemoteView,
+    ) -> Result<(), SdkError> {
+        if view.host_device_id != local.device_id
+            || view.status != "approved"
+            || view.lease_sequence != 0
+        {
+            return Err(SdkError::Trust);
+        }
+        let proof = DeviceActionClaims {
+            schema_version: SCHEMA_VERSION,
+            action: DeviceAction::PrepareBrowserHost as i32,
+            deployment_id: self.trust.deployment_id.clone(),
+            security_epoch: self.health.security_epoch,
+            account_id: self.principal().ok_or(SdkError::SignIn)?.account_id.clone(),
+            device_id: local.device_id.clone(),
+            resource_id: view.id.clone(),
+            challenge: URL_SAFE_NO_PAD
+                .decode(&view.nonce)
+                .map_err(|_| SdkError::Invalid)?,
+            payload_sha256: digest(&view.connection_generation.to_be_bytes()).to_vec(),
+            expires_at_unix_ms: view.expires_at_unix_ms,
+        };
+        let response: nestlink_protocol::api::BrowserHostReadiness = self
+            .required(
+                Method::POST,
+                &format!("{}/browser-host-ready", resource("remote", &view.id)?),
+                Some(&nestlink_protocol::api::BrowserHostReadinessSubmission {
+                    signature: URL_SAFE_NO_PAD.encode(local.identity.sign_action(&proof)?),
+                }),
+            )
+            .await?;
+        if !response.ready || response.connection_generation != view.connection_generation {
+            return Err(SdkError::Trust);
+        }
+        Ok(())
+    }
     pub async fn audit_page(&self, after_sequence: u64, limit: u16) -> Result<AuditPage, SdkError> {
         if limit == 0 || limit > 100 || after_sequence > i64::MAX as u64 {
             return Err(SdkError::Invalid);

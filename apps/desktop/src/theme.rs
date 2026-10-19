@@ -113,7 +113,8 @@ pub fn apply(context: &egui::Context, tokens: &Tokens, dark: bool) {
     } else {
         egui::Visuals::light()
     };
-    visuals.override_text_color = Some(color(&palette.text));
+    visuals.override_text_color = None;
+    visuals.weak_text_color = Some(color(&palette.muted));
     visuals.panel_fill = color(&palette.canvas);
     visuals.window_fill = color(&palette.surface);
     visuals.selection.bg_fill = color(&palette.primary);
@@ -127,15 +128,21 @@ pub fn apply(context: &egui::Context, tokens: &Tokens, dark: bool) {
     visuals.widgets.noninteractive.bg_stroke.color = color(&palette.border);
     visuals.widgets.noninteractive.corner_radius = egui::CornerRadius::same(tokens.shape.panel);
     visuals.widgets.inactive.bg_fill = color(&palette.surface);
-    visuals.widgets.inactive.bg_stroke.color = color(&palette.border);
+    visuals.widgets.inactive.weak_bg_fill = color(&palette.surface);
+    visuals.widgets.inactive.fg_stroke.color = color(&palette.text);
+    visuals.widgets.inactive.bg_stroke = egui::Stroke::new(1., color(&palette.border));
     visuals.widgets.inactive.corner_radius = egui::CornerRadius::same(tokens.shape.control);
     visuals.widgets.hovered.bg_stroke.color = color(focus);
+    visuals.widgets.hovered.bg_fill = color(&palette.sidebar);
+    visuals.widgets.hovered.fg_stroke.color = color(&palette.text);
     visuals.widgets.hovered.corner_radius = egui::CornerRadius::same(tokens.shape.control);
     visuals.widgets.active.bg_stroke.color = color(focus);
+    visuals.widgets.active.bg_fill = color(&palette.sidebar);
+    visuals.widgets.active.fg_stroke.color = color(&palette.text);
     visuals.widgets.active.corner_radius = egui::CornerRadius::same(tokens.shape.control);
     visuals.widgets.hovered.weak_bg_fill = color(&palette.primary).gamma_multiply(0.08);
     visuals.widgets.active.weak_bg_fill = color(&palette.primary).gamma_multiply(0.14);
-    visuals.widgets.noninteractive.fg_stroke.color = color(&palette.muted);
+    visuals.widgets.noninteractive.fg_stroke.color = color(&palette.text);
     visuals.extreme_bg_color = color(&palette.surface);
     visuals.faint_bg_color = color(&palette.sidebar);
     context.set_visuals(visuals);
@@ -243,8 +250,11 @@ pub fn fonts(context: &egui::Context) -> io::Result<bool> {
     context.set_fonts(definition);
     Ok(cjk)
 }
+/// Rasterize the linked-N geometry with rounded transparent corners and 4x AA.
 pub fn icon(size: u32) -> egui::IconData {
-    let mut rgba = Vec::with_capacity((size * size * 4) as usize);
+    let primary = tokens()
+        .map(|tokens| color(&tokens.light.primary))
+        .unwrap_or(Color32::from_rgb(120, 80, 178));
     let segments = [
         [154., 342., 154., 196.],
         [154., 196., 200., 150.],
@@ -252,24 +262,43 @@ pub fn icon(size: u32) -> egui::IconData {
         [358., 316., 312., 362.],
         [190., 190., 322., 322.],
     ];
+    let mut rgba = Vec::with_capacity((size * size * 4) as usize);
     for y in 0..size {
         for x in 0..size {
-            let point = egui::pos2(
-                (x as f32 + 0.5) * 512. / size as f32,
-                (y as f32 + 0.5) * 512. / size as f32,
-            );
-            let white = segments.iter().any(|segment| {
-                let first = egui::pos2(segment[0], segment[1]);
-                let last = egui::pos2(segment[2], segment[3]);
-                let delta = last - first;
-                let fraction = ((point - first).dot(delta) / delta.length_sq()).clamp(0., 1.);
-                (point - (first + delta * fraction)).length() <= 22.
-            });
-            rgba.extend_from_slice(if white {
-                &[255, 255, 255, 255]
-            } else {
-                &[36, 107, 206, 255]
-            });
+            let mut sum = [0u32; 4];
+            for sy in 0..4 {
+                for sx in 0..4 {
+                    let point = egui::pos2(
+                        (x as f32 + (sx as f32 + 0.5) / 4.) * 512. / size as f32,
+                        (y as f32 + (sy as f32 + 0.5) / 4.) * 512. / size as f32,
+                    );
+                    let q =
+                        egui::vec2((point.x - 256.).abs() - 132., (point.y - 256.).abs() - 132.);
+                    if egui::vec2(q.x.max(0.), q.y.max(0.)).length() + q.x.max(q.y).min(0.) > 116. {
+                        continue;
+                    }
+                    let white = segments.iter().any(|segment| {
+                        let first = egui::pos2(segment[0], segment[1]);
+                        let last = egui::pos2(segment[2], segment[3]);
+                        let delta = last - first;
+                        let fraction =
+                            ((point - first).dot(delta) / delta.length_sq()).clamp(0., 1.);
+                        (point - (first + delta * fraction)).length() <= 22.
+                    });
+                    let pixel = if white { Color32::WHITE } else { primary };
+                    sum[0] += u32::from(pixel.r());
+                    sum[1] += u32::from(pixel.g());
+                    sum[2] += u32::from(pixel.b());
+                    sum[3] += 1;
+                }
+            }
+            let count = sum[3];
+            rgba.extend_from_slice(&[
+                sum[0].checked_div(count).unwrap_or(0) as u8,
+                sum[1].checked_div(count).unwrap_or(0) as u8,
+                sum[2].checked_div(count).unwrap_or(0) as u8,
+                (count * 255 / 16) as u8,
+            ]);
         }
     }
     egui::IconData {

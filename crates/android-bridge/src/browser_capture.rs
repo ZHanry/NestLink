@@ -451,7 +451,11 @@ impl AndroidBrowserCaptureReservation for JniAndroidBrowserCaptureReservation {
 
         if binding != &self.binding
             || serde_json::to_string(binding).ok().as_deref() != Some(&self.binding_json)
-            || permit.digest() != binding.permit_sha256
+            || !nestlink_app_core::browser_preparation_matches(
+                binding,
+                &nestlink_app_core::browser_host_binding(&binding.request_id, permit)
+                    .map_err(|_| WebRtcHostError::Permit)?,
+            )
         {
             return Err(WebRtcHostError::Permit);
         }

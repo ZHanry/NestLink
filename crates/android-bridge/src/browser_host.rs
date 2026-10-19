@@ -134,10 +134,29 @@ impl BrowserHostCaptureProvider for AndroidBrowserHostProvider {
         cancel: watch::Receiver<bool>,
     ) -> Pin<Box<dyn Future<Output = Result<PreparedBrowserCapture, BrowserHostError>> + Send + 'a>>
     {
-        let binding = browser_host_binding(request_id, permit);
+        self.prepare_binding(browser_host_binding(request_id, permit), cancel)
+    }
+
+    fn prepare_request<'a>(
+        &'a self,
+        binding: &'a BrowserHostBinding,
+        _permissions: &'a [i32],
+        cancel: watch::Receiver<bool>,
+    ) -> Pin<Box<dyn Future<Output = Result<PreparedBrowserCapture, BrowserHostError>> + Send + 'a>>
+    {
+        self.prepare_binding(Ok(binding.clone()), cancel)
+    }
+}
+
+impl AndroidBrowserHostProvider {
+    fn prepare_binding<'a>(
+        &'a self,
+        binding: Result<BrowserHostBinding, BrowserHostError>,
+        cancel: watch::Receiver<bool>,
+    ) -> Pin<Box<dyn Future<Output = Result<PreparedBrowserCapture, BrowserHostError>> + Send + 'a>>
+    {
         let port = Arc::clone(&self.port);
         let core = self.core.get().cloned();
-        let permit = permit.clone();
         Box::pin(async move {
             let binding = binding?;
             if binding.request_id.is_empty()
@@ -184,12 +203,10 @@ impl BrowserHostCaptureProvider for AndroidBrowserHostProvider {
             let prepared =
                 PreparedBrowserCapture::new(displays, move |approval, lease, proved_permit| {
                     let _consent_task = consent_task;
-                    if proved_permit.digest() != binding.permit_sha256
-                        || proved_permit.claims().connection_generation
-                            != binding.connection_generation
-                        || proved_permit.claims().session_id != binding.session_id
-                        || permit.digest() != binding.permit_sha256
-                        || approval.binding != binding
+                    let proved_binding = browser_host_binding(&binding.request_id, &proved_permit)
+                        .map_err(|_| WebRtcHostError::Permit)?;
+                    if !nestlink_app_core::browser_preparation_matches(&binding, &proved_binding)
+                        || approval.binding != proved_binding
                         || approval.catalog != local_catalog
                         || approval.sources.as_slice() != [0]
                         || approval.initial_source != 0

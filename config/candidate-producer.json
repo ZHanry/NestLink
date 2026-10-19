@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "product": "NestLink",
-  "version": "0.3.0-rc.1",
-  "release_tag": "v0.3.0-rc.1",
+  "version": "0.4.0-rc.1",
+  "release_tag": "v0.4.0-rc.1",
   "repository": "ZHanry/NestLink",
   "repository_node_id": "R_kgDOVNHMvg",
   "android_application_id": "com.zhanry.nestlink.candidate",

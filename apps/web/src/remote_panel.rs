@@ -945,6 +945,25 @@ async fn run_session(
             }
         }
     }
+    ui.status(t(
+        "权限已批准，等待被控设备选择并批准共享屏幕…",
+        "Access approved. Waiting for the host to choose and approve a screen…",
+    ));
+    let preparation_deadline = performance_ms()? + 60_000.0;
+    loop {
+        run.check()?;
+        if performance_ms()? >= preparation_deadline {
+            return Err(t("被控设备尚未完成屏幕准备，请在被控端选择并批准屏幕后重试。", "The host did not finish screen preparation. Choose and approve a screen on the host, then try again.").into());
+        }
+        let readiness = managed_request(&run, async {
+            run.sdk.lock().await.browser_host_readiness(&run.id).await
+        })
+        .await?;
+        if readiness.ready {
+            break;
+        }
+        TimeoutFuture::new(250).await;
+    }
     let permit =
         managed_request(&run, async { run.sdk.lock().await.permit(&run.id).await }).await?;
     run.check()?;
