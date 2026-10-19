@@ -39,7 +39,7 @@ fn unknown_action_future_schema_and_oversized_input_fail_closed() -> Result {
     let vector: serde_json::Value =
         serde_json::from_str(include_str!("../../../tests/vectors/input-v1.json"))?;
     let mut encoded = bytes(&vector["text_hex"])?;
-    encoded[10] = 0x52; // unknown oneof field 10, with the same wire type
+    encoded[10] = 0x5a; // unknown oneof field 11, with the same wire type (10 is Scroll)
     let command: InputCommand = decode_bounded(&encoded, INPUT_BYTES)?;
     assert!(command.validate().is_err());
     let mut command: InputCommand = decode_bounded(&bytes(&vector["text_hex"])?, INPUT_BYTES)?;
@@ -86,5 +86,24 @@ fn ordered_release_and_host_logical_layout_match_independent_vectors() -> Result
     layout.width = 80;
     layout.left = i32::MAX;
     assert!(layout.validate().is_err());
+    Ok(())
+}
+
+#[test]
+fn scroll_matches_independently_encoded_signed_wheel_units() -> Result {
+    // Field 10 contains sint32 x=-120 and y=240 (zigzag 239 and 480).
+    let encoded = [
+        0x08, 1, 0x10, 2, 0x18, 3, 0x20, 9, 0x28, 5, 0x52, 6, 0x08, 0xef, 1, 0x10, 0xe0, 3,
+    ];
+    let command: InputCommand = decode_bounded(&encoded, INPUT_BYTES)?;
+    command.validate()?;
+    assert_eq!(
+        command.action,
+        Some(Action::Scroll(nestlink_protocol::ScrollInput {
+            x: -120,
+            y: 240
+        }))
+    );
+    assert_eq!(command.encode_to_vec(), encoded);
     Ok(())
 }

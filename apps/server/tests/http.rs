@@ -194,11 +194,12 @@ async fn login_cookie_scope_refresh_logout_and_legacy_rejection() -> Result {
     )
     .await?;
     assert_eq!(status, StatusCode::OK);
+    let (retry_status, retry) =
+        call(&app, "POST", "/api/v3/auth/refresh", refresh_body, None).await?;
+    assert_eq!(retry_status, StatusCode::OK);
     assert_eq!(
-        call(&app, "POST", "/api/v3/auth/refresh", refresh_body, None)
-            .await?
-            .0,
-        StatusCode::UNAUTHORIZED
+        retry, next,
+        "lost-response retries recover the same grant, without another rotation"
     );
     assert_eq!(
         call(&app, "GET", "/api/v3/auth/me", Value::Null, Some(token))

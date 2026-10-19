@@ -469,6 +469,54 @@ pub fn router(state: AppState) -> Router {
         .with_state(state)
 }
 async fn security(State(state): State<AppState>, request: Request<Body>, next: Next) -> Response {
+    let started = Instant::now();
+    let request_id = uuid::Uuid::new_v4().to_string();
+    let route = request
+        .extensions()
+        .get::<axum::extract::MatchedPath>()
+        .map(|matched| matched.as_str().to_owned())
+        .unwrap_or_else(|| "unmatched".into());
+    let method = request.method().clone();
+    let mut response = security_inner(state, request, next).await;
+    let elapsed_ms = started.elapsed().as_millis() as u64;
+    let status = response.status().as_u16();
+    if response.status().is_server_error() || elapsed_ms >= 1000 {
+        tracing::warn!(event = "management_request", request_id, route, %method, status, elapsed_ms);
+    } else {
+        tracing::debug!(event = "management_request", request_id, route, %method, status, elapsed_ms);
+    }
+    if response.status().is_client_error()
+        && !response
+            .headers()
+            .get(header::CONTENT_TYPE)
+            .and_then(|v| v.to_str().ok())
+            .is_some_and(|v| v.starts_with("application/json"))
+    {
+        let status = response.status();
+        let code = if status == StatusCode::PAYLOAD_TOO_LARGE {
+            ErrorCode::CapacityExceeded
+        } else {
+            ErrorCode::InvalidMessage
+        };
+        response = ApiError(status, code).into_response();
+    }
+    response
+        .headers_mut()
+        .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
+    response.headers_mut().insert(
+        header::X_CONTENT_TYPE_OPTIONS,
+        HeaderValue::from_static("nosniff"),
+    );
+    response.headers_mut().insert(
+        header::REFERRER_POLICY,
+        HeaderValue::from_static("no-referrer"),
+    );
+    if let Ok(value) = HeaderValue::from_str(&request_id) {
+        response.headers_mut().insert("x-request-id", value);
+    }
+    response
+}
+async fn security_inner(state: AppState, request: Request<Body>, next: Next) -> Response {
     if request.uri().path() == "/api/v3/auth/login"
         || (request.uri().path().split('/').nth(3) == Some("nodes")
             && request.uri().path().ends_with("/control"))
@@ -535,52 +583,7 @@ async fn security(State(state): State<AppState>, request: Request<Body>, next: N
     {
         return ApiError(StatusCode::FORBIDDEN, ErrorCode::PermissionRequired).into_response();
     }
-    let started = Instant::now();
-    let request_id = uuid::Uuid::new_v4().to_string();
-    let route = request
-        .extensions()
-        .get::<axum::extract::MatchedPath>()
-        .map(|matched| matched.as_str().to_owned())
-        .unwrap_or_else(|| "unmatched".into());
-    let method = request.method().clone();
-    let mut response = next.run(request).await;
-    let elapsed_ms = started.elapsed().as_millis() as u64;
-    let status = response.status().as_u16();
-    if response.status().is_server_error() || elapsed_ms >= 1000 {
-        tracing::warn!(event = "management_request", request_id, route, %method, status, elapsed_ms);
-    } else {
-        tracing::debug!(event = "management_request", request_id, route, %method, status, elapsed_ms);
-    }
-    if let Ok(value) = HeaderValue::from_str(&request_id) {
-        response.headers_mut().insert("x-request-id", value);
-    }
-    if response.status().is_client_error()
-        && !response
-            .headers()
-            .get(header::CONTENT_TYPE)
-            .and_then(|v| v.to_str().ok())
-            .is_some_and(|v| v.starts_with("application/json"))
-    {
-        let status = response.status();
-        let code = if status == StatusCode::PAYLOAD_TOO_LARGE {
-            ErrorCode::CapacityExceeded
-        } else {
-            ErrorCode::InvalidMessage
-        };
-        response = ApiError(status, code).into_response();
-    }
-    response
-        .headers_mut()
-        .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
-    response.headers_mut().insert(
-        header::X_CONTENT_TYPE_OPTIONS,
-        HeaderValue::from_static("nosniff"),
-    );
-    response.headers_mut().insert(
-        header::REFERRER_POLICY,
-        HeaderValue::from_static("no-referrer"),
-    );
-    response
+    next.run(request).await
 }
 fn now() -> Result<u64, StorageError> {
     SystemTime::now()

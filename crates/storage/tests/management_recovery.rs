@@ -3,6 +3,38 @@ use nestlink_storage::{StorageError, Store};
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 #[test]
+fn schema_twenty_two_upgrade_preserves_existing_management_login() -> Result {
+    let temporary = tempfile::tempdir()?;
+    let path = temporary.path().join("control.sqlite3");
+    let deployment = random_id();
+    let vault = VaultKey::from_bytes([38; 32]);
+    let dummy = hash_password("upgrade-dummy-password")?;
+    let mut store = Store::open(&path, &deployment)?;
+    let account = store.bootstrap_admin("owner", "upgrade-test-password")?;
+    let login = store.login("owner", "upgrade-test-password", None, 1000, &vault, &dummy)?;
+    drop(store);
+    let old = rusqlite::Connection::open(&path)?;
+    old.execute_batch("DROP TABLE management_refresh_receipts; DROP INDEX remote_pending_inbox; PRAGMA user_version=22;")?;
+    drop(old);
+    let mut upgraded = Store::open(&path, &deployment)?;
+    assert_eq!(
+        upgraded
+            .authenticate(login.access_token.expose(), 1001)?
+            .account_id,
+        account
+    );
+    let rotated = upgraded.refresh_login_recoverable(
+        login.refresh_token.expose(),
+        login.generation,
+        1001,
+        &vault,
+    )?;
+    assert_eq!(rotated.principal.account_id, account);
+    assert_eq!(rotated.generation, login.generation + 1);
+    Ok(())
+}
+
+#[test]
 fn lost_rotation_response_is_idempotent_but_never_extends_the_retry_window() -> Result {
     let mut store = Store::in_memory(&random_id())?;
     let vault = VaultKey::from_bytes([37; 32]);

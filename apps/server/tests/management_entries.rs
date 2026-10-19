@@ -77,7 +77,7 @@ async fn configured_entries_share_turn_runtime_and_replay_state() -> Result {
         .error_for_status()?;
     assert_eq!(
         native_login.headers().get_all("set-cookie").iter().count(),
-        2
+        3
     );
     assert!(
         native_login
@@ -97,7 +97,7 @@ async fn configured_entries_share_turn_runtime_and_replay_state() -> Result {
         .error_for_status()?;
     assert_eq!(
         browser_login.headers().get_all("set-cookie").iter().count(),
-        2
+        3
     );
     assert!(
         browser_login
