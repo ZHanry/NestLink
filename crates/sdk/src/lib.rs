@@ -139,6 +139,8 @@ pub use native_relay::RelayRoute;
 pub use node_relay::{NativeRelayRoute, NodeQuicRoute, NodeRelayRoute};
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod native_tests;
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod session_refresh_tests;
 
 impl Sdk {
     /// Discover deployment metadata over the origin's authenticated HTTPS
@@ -363,6 +365,14 @@ impl Sdk {
             .await;
         let response = match result {
             Ok(Some(response)) => response,
+            Err(error @ (SdkError::Timeout | SdkError::BrowserTransport)) => return Err(error),
+            #[cfg(not(target_arch = "wasm32"))]
+            Err(error @ SdkError::Transport(_)) => return Err(error),
+            Err(error @ SdkError::Api(status, _))
+                if status.is_server_error() || status.as_u16() == 429 =>
+            {
+                return Err(error);
+            }
             _ => {
                 self.login = None;
                 return Err(SdkError::SignIn);

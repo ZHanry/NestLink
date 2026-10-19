@@ -53,6 +53,7 @@ pub struct InstallationView {
 #[serde(rename_all = "snake_case")]
 pub enum FailureKind {
     Transport,
+    IceConnection,
     Timeout,
     Rejected,
     SignInRequired,

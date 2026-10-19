@@ -1382,6 +1382,7 @@ mod wasm {
         remote_network_generation: u64,
         local_candidate_addresses: Vec<String>,
         remote_candidate_addresses: Vec<String>,
+        direct_ice: TrustedIceConfiguration,
         turn_credentials: Option<TurnCredentials>,
         offer_published: bool,
         remote_answer_set: bool,
@@ -1650,6 +1651,14 @@ mod wasm {
                 remote_network_generation: 0,
                 local_candidate_addresses: Vec::new(),
                 remote_candidate_addresses: Vec::new(),
+                direct_ice: TrustedIceConfiguration {
+                    servers: ice
+                        .servers
+                        .iter()
+                        .filter(|server| !server.has_turn())
+                        .cloned()
+                        .collect(),
+                },
                 turn_credentials: None,
                 offer_published: false,
                 remote_answer_set: false,
@@ -1706,17 +1715,27 @@ mod wasm {
             mode: PeerPathMode,
         ) -> Result<Self, PeerError> {
             let mode = effective_path_mode(mode, &permit.claims().paths)?;
+            let stun = if mode != PeerPathMode::RelayOnly {
+                let config = sdk
+                    .lock()
+                    .await
+                    .native_discovery_config()
+                    .await
+                    .map_err(|_| PeerError::InvalidIceConfiguration)?;
+                let servers = config
+                    .webrtc_stun_urls()
+                    .map_err(|_| PeerError::InvalidIceConfiguration)?
+                    .into_iter()
+                    .map(TrustedIceServer::stun)
+                    .collect();
+                TrustedIceConfiguration::from_trusted_deployment_config(servers)?
+            } else {
+                TrustedIceConfiguration::default()
+            };
             if mode == PeerPathMode::DirectOnly
                 || !permit.claims().paths.contains(&(Path::Relay as i32))
             {
-                return Self::new_with_lease(
-                    sdk,
-                    permit,
-                    identity,
-                    lease,
-                    TrustedIceConfiguration::default(),
-                    mode,
-                );
+                return Self::new_with_lease(sdk, permit, identity, lease, stun, mode);
             }
             let mut initial = PeerAuthority::new(permit.clone(), lease.as_ref(), mode)?;
             let started = monotonic_ms()?;
@@ -1760,13 +1779,15 @@ mod wasm {
                         permit,
                         identity,
                         lease,
-                        TrustedIceConfiguration::default(),
+                        stun,
                         PeerPathMode::DirectOnly,
                     );
                 }
                 Err(problem) => return Err(problem),
             };
-            let ice = managed_ice_configuration(&credentials)?;
+            let mut ice = managed_ice_configuration(&credentials)?;
+            ice.servers.extend(stun.servers);
+            let ice = TrustedIceConfiguration::from_trusted_deployment_config(ice.servers)?;
             let mut peer = Self::new_with_lease(sdk, permit, identity, lease, ice, mode)?;
             peer.authority
                 .borrow_mut()
@@ -2704,7 +2725,8 @@ mod wasm {
                     deadline,
                 )
                 .await?;
-            let ice = managed_ice_configuration(&credentials)?;
+            let mut ice = managed_ice_configuration(&credentials)?;
+            ice.servers.extend(self.direct_ice.servers.iter().cloned());
             let configuration = rtc_configuration(&ice, self.mode, &self.permit.claims().paths)?;
             self.peer
                 .set_configuration_with_configuration(&configuration)
@@ -2850,7 +2872,7 @@ mod wasm {
             drop(authority);
             if self.turn_credentials.is_some() {
                 let configuration = rtc_configuration(
-                    &TrustedIceConfiguration::default(),
+                    &self.direct_ice,
                     PeerPathMode::DirectOnly,
                     &self.permit.claims().paths,
                 )?;

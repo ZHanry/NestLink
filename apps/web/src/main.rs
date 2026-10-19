@@ -167,7 +167,7 @@ impl From<SdkError> for UiError {
 }
 
 fn is_auth_status(status: u16) -> bool {
-    matches!(status, 401 | 403)
+    status == 401
 }
 
 #[cfg(test)]
@@ -175,9 +175,9 @@ mod tests {
     use super::is_auth_status;
 
     #[test]
-    fn only_unauthorized_and_forbidden_statuses_end_the_ui_session() {
+    fn permission_denial_keeps_other_sessions_and_the_current_login() {
         assert!(is_auth_status(401));
-        assert!(is_auth_status(403));
+        assert!(!is_auth_status(403));
         assert!(!is_auth_status(400));
         assert!(!is_auth_status(500));
     }
@@ -295,6 +295,52 @@ fn App() -> impl IntoView {
             )
             .into(),
         );
+    });
+
+    // Every page owns its own SDK and rotating refresh token. Background
+    // renewal never reads another tab's cookies as its session identity.
+    #[cfg(target_arch = "wasm32")]
+    Effect::new(move |_| {
+        let revision = session_revision.get();
+        if screen.get() != Screen::Workspace {
+            return;
+        }
+        let Some(sdk) = api.get_value() else {
+            return;
+        };
+        spawn_local(async move {
+            loop {
+                gloo_timers::future::TimeoutFuture::new(15_000).await;
+                if session_revision.try_get_untracked() != Some(revision)
+                    || screen.try_get_untracked() != Some(Screen::Workspace)
+                {
+                    break;
+                }
+                let mut client = sdk.lock().await;
+                if session_revision.try_get_untracked() != Some(revision) {
+                    break;
+                }
+                let now = (js_sys::Date::now() / 1000.0) as u64;
+                let due = client
+                    .principal()
+                    .is_some_and(|user| user.access_expires <= now.saturating_add(60));
+                if !due {
+                    continue;
+                }
+                let result = client.refresh().await;
+                let user = client.principal().cloned();
+                drop(client);
+                if session_revision.try_get_untracked() != Some(revision) {
+                    break;
+                }
+                if result.is_ok() {
+                    let _ = principal.try_set(user);
+                } else if user.is_none() {
+                    auth_failure.run(sdk.clone());
+                    break;
+                }
+            }
+        });
     });
 
     let load = Callback::new({

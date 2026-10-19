@@ -287,6 +287,25 @@ async function main() {
     await page.locator('#password').fill(ready.password);
     await page.locator('.entry-panel button.primary').click();
     await page.waitForSelector('button.record', { visible: true });
+    // A second page shares browser cookies but owns a different SDK login.
+    // Its logout must not replace or revoke this page's bearer session, nor
+    // the native host's login. The first page must still establish and renew
+    // the real media session below after the shared cookies are cleared.
+    const sibling = await browser.newPage();
+    try {
+      await sibling.goto(ready.origin, { waitUntil: 'networkidle0' });
+      await sibling.locator('.entry-panel button.primary').click();
+      await sibling.waitForSelector('#username', { visible: true });
+      await sibling.locator('#username').fill(ready.username);
+      await sibling.locator('#password').fill(ready.password);
+      await sibling.locator('.entry-panel button.primary').click();
+      await sibling.waitForSelector('button.record', { visible: true });
+      await sibling.locator('::-p-xpath(//button[contains(.,"退出登录") or contains(.,"Sign out")])').click();
+      await sibling.waitForFunction(() => document.querySelector('.entry-panel button.primary')?.disabled === false && !document.querySelector('#username'));
+      report.concurrent_login = { same_account: true, shared_browser_context: true, second_page_signed_out: true };
+    } finally {
+      await sibling.close();
+    }
     check(await page.$$eval('button.record', nodes => nodes.length) === 1, 'Fixture must initially expose only its own native host');
     await page.locator('button.record').click();
     await page.locator('.detail-pane button.primary').click();

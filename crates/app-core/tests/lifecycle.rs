@@ -9,6 +9,46 @@ use nestlink_sdk::{DeploymentTrust, DeviceIdentity, Sdk};
 use std::{sync::atomic::Ordering, time::Duration};
 use support::*;
 
+#[tokio::test]
+async fn idle_login_renews_automatically_and_logout_does_not_end_another_login() -> Result {
+    let gate = Gate::new("/api/v3/auth/refresh", "POST");
+    let server = Server::start(Some(gate.clone())).await?;
+    let mut core = AppCore::start(Limits::default())?;
+    let handle = connect(&core, &server).await?;
+    let first_session = handle
+        .snapshot()
+        .principal
+        .as_ref()
+        .unwrap()
+        .session_id
+        .clone();
+    let mut other = Sdk::connect_origin(&server.config.origin, true).await?;
+    other.login("admin".into(), password(), None).await?;
+    assert_ne!(first_session, other.principal().unwrap().session_id);
+    gate.arm();
+    tokio::time::pause();
+    tokio::time::advance(Duration::from_secs(245)).await;
+    tokio::time::resume();
+    gate.entered().await?;
+    let revision = handle.snapshot().revision;
+    gate.unblock();
+    wait_view(&handle, |view| view.revision > revision).await?;
+    assert_eq!(handle.snapshot().authentication, Authentication::SignedIn);
+    assert_eq!(
+        handle.snapshot().principal.as_ref().unwrap().session_id,
+        first_session
+    );
+    success(handle.logout()?).await?;
+    assert!(other.me().await.is_ok());
+    other.refresh().await?;
+    other.logout().await?;
+    assert_eq!(
+        core.shutdown(Duration::from_secs(5)).await,
+        ShutdownState::Complete
+    );
+    Ok(())
+}
+
 #[test]
 fn native_download_limits_are_checked_against_the_sdk_hard_caps() {
     for native_downloads in [

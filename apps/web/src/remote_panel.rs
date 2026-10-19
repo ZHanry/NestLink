@@ -114,6 +114,7 @@ struct PasswordSubmission {
 
 #[derive(Clone, Copy)]
 struct SessionUi {
+    phase: RwSignal<u8>,
     status: RwSignal<String>,
     picture: RwSignal<bool>,
     generation: RwSignal<u64>,
@@ -393,12 +394,13 @@ pub fn RemotePanel(
     let file_write = RwSignal::new(false);
     let clipboard_read = RwSignal::new(false);
     let clipboard_write = RwSignal::new(false);
-    let path_mode = RwSignal::new("direct_only".to_owned());
+    let path_mode = RwSignal::new("direct_preferred".to_owned());
     let access_method = RwSignal::new("local_approval".to_owned());
     let password_offer = RwSignal::new(None::<PasswordOffer>);
     let remote_password = RwSignal::new(Zeroizing::new(String::new()));
     let fullscreen = RwSignal::new(false);
     let active = RwSignal::new(false);
+    let phase = RwSignal::new(0_u8);
     let picture = RwSignal::new(false);
     let data_ready = RwSignal::new(false);
     let displays = RwSignal::new(None::<PeerDisplaySnapshot>);
@@ -421,6 +423,7 @@ pub fn RemotePanel(
         }
         owner.set_value(None);
         active.set(false);
+        phase.set(0);
         picture.set(false);
         data_ready.set(false);
         displays.set(None);
@@ -441,7 +444,7 @@ pub fn RemotePanel(
             file_write.set(false);
             clipboard_read.set(false);
             clipboard_write.set(false);
-            path_mode.set("direct_only".into());
+            path_mode.set("direct_preferred".into());
             access_method.set("local_approval".into());
             problem.set(String::new());
             status.set(
@@ -464,6 +467,7 @@ pub fn RemotePanel(
         if active.get_untracked() {
             return;
         }
+        phase.set(0);
         if retained_count() != 0 {
             pending_cleanup.set(retained_count());
             problem.set(
@@ -557,6 +561,7 @@ pub fn RemotePanel(
                 requested_path,
                 requested_access,
                 SessionUi {
+                    phase,
                     status,
                     picture,
                     generation,
@@ -757,6 +762,14 @@ pub fn RemotePanel(
                         <button class="secondary" type="button" on:click=close>{move || t("关闭", "Close")}</button>
                     </div>
                 </header>
+                <Show when=move || active.get() || !problem.get().is_empty()>
+                    <ol class="remote-progress" aria-label=move || t("连接进度", "Connection progress")>
+                        <li class:current={move || phase.get() == 0} class:done={move || phase.get() > 0} aria-current={move || (phase.get() == 0).then_some("step")}>{move || t("请求批准", "Request access")}</li>
+                        <li class:current={move || phase.get() == 1} class:done={move || phase.get() > 1} aria-current={move || (phase.get() == 1).then_some("step")}>{move || t("准备屏幕", "Prepare screen")}</li>
+                        <li class:current={move || phase.get() == 2} class:done={move || phase.get() > 2} aria-current={move || (phase.get() == 2).then_some("step")}>{move || t("建立连接", "Connect")}</li>
+                        <li class:current={move || phase.get() == 3} aria-current={move || (phase.get() == 3).then_some("step")}>{move || t("远程会话", "Remote session")}</li>
+                    </ol>
+                </Show>
                 <RemoteDisplaySelector snapshot=displays switching=display_switching active select=select_display />
                 <div class="remote-stage">
                     <video id="remote-view-video" autoplay playsinline class=move || if picture.get() { "remote-video visible" } else { "remote-video" } aria-label=move || t("远程屏幕", "Remote screen") />
@@ -945,6 +958,7 @@ async fn run_session(
             }
         }
     }
+    let _ = ui.phase.try_set(1);
     ui.status(t(
         "权限已批准，等待被控设备选择并批准共享屏幕…",
         "Access approved. Waiting for the host to choose and approve a screen…",
@@ -964,6 +978,7 @@ async fn run_session(
         }
         TimeoutFuture::new(250).await;
     }
+    let _ = ui.phase.try_set(2);
     let permit =
         managed_request(&run, async { run.sdk.lock().await.permit(&run.id).await }).await?;
     run.check()?;
@@ -987,12 +1002,12 @@ async fn run_session(
     ));
     peer.create_and_publish_offer(12_000)
         .await
-        .map_err(|problem| i18n::peer_error(&problem))?;
+        .map_err(|problem| i18n::peer_connection_error(&problem, mode))?;
     receive_answer(&run, &mut peer).await?;
     let mut path = peer
         .wait_for_verified_path(10_000)
         .await
-        .map_err(|problem| i18n::peer_error(&problem))?;
+        .map_err(|problem| i18n::peer_connection_error(&problem, mode))?;
     ui.status(t(
         "正在核验双方设备身份…",
         "Verifying both device identities…",
@@ -1038,6 +1053,7 @@ async fn run_session(
     let _ = ui.data_ready.try_set(true);
     let mut input_capture = attach_input_capture(&run, &peer, requested.input)?;
     ui.status(path_status(path, false));
+    let _ = ui.phase.try_set(3);
     let mut observed_network = network.generation.get();
     let mut last_control_check = performance_ms()?;
     let mut last_media_time = run.video.current_time();

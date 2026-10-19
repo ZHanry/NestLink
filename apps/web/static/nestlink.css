@@ -104,6 +104,12 @@ dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
 .remote-toolbar h2 { margin: 0 0 4px; }
 .remote-toolbar p { max-width: 76ch; margin: 0; color: var(--subtle); font-size: 13px; }
 .remote-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.remote-progress { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; list-style: none; counter-reset: connection-step; margin: 0; padding: 0 20px 16px; font-size: var(--text-small); color: var(--subtle); }
+.remote-progress li { counter-increment: connection-step; border-top: 3px solid var(--line); padding-top: 8px; }
+.remote-progress li::before { content: counter(connection-step) ". "; }
+.remote-progress li.current { border-color: var(--plum); color: var(--ink); font-weight: 600; }
+.remote-progress li.done { border-color: var(--plum); }
+@media (max-width: 520px) { .remote-progress { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .remote-display-selector { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 0 20px 12px; font-size: 13px; }
 .remote-display-selector label { margin: 0; }
 .remote-display-selector select { width: auto; min-width: 160px; max-width: min(100%, 420px); margin: 0; }

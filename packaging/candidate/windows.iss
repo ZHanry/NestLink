@@ -28,7 +28,7 @@ DefaultDirName={localappdata}\Programs\NestLink-RC
 PrivilegesRequired=lowest
 #endif
 AppVersion={#Version}
-VersionInfoVersion=0.4.0.1
+VersionInfoVersion=0.5.0.1
 UninstallDisplayIcon={app}\nestlink.ico
 AppPublisher=NestLink
 ArchitecturesAllowed=x64compatible

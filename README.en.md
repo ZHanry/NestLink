@@ -1,6 +1,6 @@
 # NestLink
 
-Self-hosted remote control and service publishing. The current version is **0.4.0 RC1** (`0.4.0-rc.1`). This update unifies desktop icons and the blue theme, improves device selection and automatic connection after approval, and adds combined-server WebSocket relay fallback and actionable connection errors.
+Self-hosted remote control and service publishing. The current version is **0.5.0 RC1** (`0.5.0-rc.1`). This update connects trusted STUN configuration to WebRTC, renews logins automatically, adds Web connection progress, and shows an independent sharing notice at the bottom right of the controlled desktop.
 
 [中文](README.md) · [Releases](https://github.com/ZHanry/NestLink/releases) · [Build instructions](docs/refactor/CANDIDATE-BUILD.md) · [Implementation and checks](docs/refactor/IMPLEMENTATION.md)
 
@@ -15,6 +15,8 @@ A shared Rust core handles device identity, authorization, sessions, media, file
 | Server / OCI | Linux x64 / ARM64 | Server packages and native architecture OCI archives |
 
 Connect using the server address, account and password. Server metadata is discovered and verified over HTTPS. Authenticator and recovery-code features have been removed; upgrading preserves passwords and requires a fresh sign-in.
+
+An account can sign in on multiple devices and browser pages. Each login renews independently; signing out ends only that login. The desktop sharing notice shows the remote device, permissions and session state, and keeps a disconnect action available while the main window is in the tray.
 
 Screen, input, multiple displays, audio, files and text clipboard directions require explicit authorization. HTTP, HTTPS, TCP and UDP publications include source ACLs, quotas and revocation. See the [server documentation](docs/refactor/SERVER.md) for deployment.
 

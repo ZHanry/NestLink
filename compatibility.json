@@ -1,6 +1,6 @@
 {
   "product": "nestlink",
-  "version": "0.4.0-rc.1",
+  "version": "0.5.0-rc.1",
   "stage": "release-candidate",
   "protocol_alpn": "nestlink/1",
   "api_base": "/api/v3",

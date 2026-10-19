@@ -213,6 +213,10 @@ pub fn failure(error: &Failure, english: bool) -> String {
         }
     }
     let (zh, en) = match error.kind {
+        FailureKind::IceConnection => (
+            "未能建立浏览器远控连接。请检查部署的 STUN 服务和 UDP 可达性；复杂网络需启用并配置 TURN 中继，再重新连接。",
+            "The browser remote connection could not be established. Check deployment STUN and UDP reachability; restrictive networks need an authorized TURN relay. Then reconnect.",
+        ),
         FailureKind::Transport => (
             "网络请求失败，请刷新查看状态。",
             "The network request failed; refresh to check its state.",

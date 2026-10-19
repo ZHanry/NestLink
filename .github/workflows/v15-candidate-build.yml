@@ -1,10 +1,10 @@
-name: Build NestLink 0.4.0 RC development candidate
+name: Build NestLink 0.5.0 RC development candidate
 
 on:
   workflow_dispatch:
     inputs:
       source_revision:
-        description: Full clean final source commit with all public product versions already 0.4.0-rc.1
+        description: Full clean final source commit with all public product versions already 0.5.0-rc.1
         type: string
         required: true
       candidate_sequence:

@@ -5,6 +5,7 @@ mod browser_displays;
 mod clipboard;
 mod connection;
 mod files;
+mod host_notice;
 mod icons;
 mod lists;
 mod management;
@@ -166,6 +167,7 @@ pub struct DesktopApp {
     remote_inspection_submission: Option<u64>,
     remote_inspection_completed: bool,
     remote_inspection_succeeded: bool,
+    host_notice: host_notice::HostNoticeState,
 }
 impl DesktopApp {
     pub fn new(
@@ -241,6 +243,7 @@ impl DesktopApp {
             remote_inspection_submission: None,
             remote_inspection_completed: false,
             remote_inspection_succeeded: false,
+            host_notice: host_notice::HostNoticeState::default(),
         })
     }
     fn t(&self, zh: &'static str, en: &'static str) -> &'static str {
@@ -1872,7 +1875,7 @@ impl DesktopApp {
     }
 }
 impl eframe::App for DesktopApp {
-    fn logic(&mut self, context: &egui::Context, _frame: &mut eframe::Frame) {
+    fn logic(&mut self, context: &egui::Context, frame: &mut eframe::Frame) {
         // An exclusive maintenance owner already fences new starts and will
         // request Exit from the exact authenticated daemon. Close every UI and
         // its owned workers without submitting a duplicate remote operation.
@@ -1887,6 +1890,7 @@ impl eframe::App for DesktopApp {
         self.reconcile_remote_password_context(&snapshot);
         self.advance_local_enrollment(&snapshot);
         self.advance_remote_flow(&snapshot);
+        self.update_host_notice(context, frame, &snapshot);
         if let Some(tray) = &self.tray {
             let actions = tray.actions();
             for action in actions {

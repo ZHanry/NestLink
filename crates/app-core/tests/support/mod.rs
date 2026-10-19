@@ -233,6 +233,7 @@ impl Gate {
 async fn intercept(State(gate): State<Arc<Gate>>, request: Request, next: Next) -> Response {
     let login = request.uri().path() == "/api/v3/auth/login";
     let me = request.uri().path() == "/api/v3/auth/me";
+    let refresh = request.uri().path() == "/api/v3/auth/refresh";
     let logout = request.uri().path() == "/api/v3/auth/logout";
     let matches_path = match &gate.path {
         GatePath::Exact(path) => request.uri().path() == path.as_str(),
@@ -245,7 +246,7 @@ async fn intercept(State(gate): State<Arc<Gate>>, request: Request, next: Next) 
     if logout && response.status().is_success() {
         gate.logout_responses.fetch_add(1, Ordering::AcqRel);
     }
-    if gate.shorten_lifetime && (login || me) && response.status().is_success() {
+    if gate.shorten_lifetime && (login || me || refresh) && response.status().is_success() {
         response = match shorten_lifetime(response).await {
             Ok(response) => response,
             Err(error) => {

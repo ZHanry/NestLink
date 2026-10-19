@@ -183,6 +183,8 @@ pub enum BrowserHostFailure {
     UnsupportedPermission,
     Capture,
     Transport,
+    Connectivity,
+    PermitExpired,
     Rejected,
 }
 
@@ -705,8 +707,13 @@ pub async fn run_browser_host(
         StopReason::ExplicitExit
     } else if failure == Some(BrowserHostFailure::Capture) {
         StopReason::PlatformChanged
-    } else if failure == Some(BrowserHostFailure::Transport) {
+    } else if matches!(
+        failure,
+        Some(BrowserHostFailure::Transport | BrowserHostFailure::Connectivity)
+    ) {
         StopReason::TransportLost
+    } else if failure == Some(BrowserHostFailure::PermitExpired) {
+        StopReason::Expired
     } else if failure.is_some() {
         StopReason::ProtocolViolation
     } else {
@@ -950,11 +957,11 @@ fn classify_failure(error: &BrowserHostError) -> BrowserHostFailure {
         BrowserHostError::HostIdentity
         | BrowserHostError::SessionBinding
         | BrowserHostError::ViewRequired => BrowserHostFailure::Rejected,
-        BrowserHostError::Sdk(SdkError::Timeout)
-        | BrowserHostError::WebRtc(WebRtcHostError::GatherTimeout)
+        BrowserHostError::WebRtc(WebRtcHostError::Permit) => BrowserHostFailure::PermitExpired,
+        BrowserHostError::WebRtc(WebRtcHostError::GatherTimeout)
         | BrowserHostError::WebRtc(WebRtcHostError::ConnectTimeout)
         | BrowserHostError::WebRtc(WebRtcHostError::PathConnectTimeout) => {
-            BrowserHostFailure::Transport
+            BrowserHostFailure::Connectivity
         }
         BrowserHostError::WebRtc(WebRtcHostError::Io(_)) => BrowserHostFailure::Capture,
         BrowserHostError::Sdk(_) | BrowserHostError::WebRtc(_) => BrowserHostFailure::Transport,

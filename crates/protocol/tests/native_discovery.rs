@@ -12,6 +12,10 @@ fn deployment_stun_rejects_local_special_scoped_duplicate_and_unbounded_addresse
         ],
     };
     config.validate()?;
+    assert_eq!(
+        config.webrtc_stun_urls()?,
+        vec!["stun:11.0.0.1:3478", "stun:[2606:4700:4700::1111]:3478"]
+    );
     for invalid in [
         "0.0.0.0:3478",
         "127.0.0.1:3478",
@@ -29,6 +33,10 @@ fn deployment_stun_rejects_local_special_scoped_duplicate_and_unbounded_addresse
     ] {
         config.stun_servers = vec![invalid.parse()?];
         assert!(config.validate().is_err(), "accepted {invalid}");
+        assert!(
+            config.webrtc_stun_urls().is_err(),
+            "WebRTC accepted {invalid}"
+        );
     }
     let mut flowing = std::net::SocketAddrV6::new("2606:4700::1".parse()?, 3478, 7, 0);
     config.stun_servers = vec![flowing.into()];

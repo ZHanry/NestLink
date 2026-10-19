@@ -24,7 +24,7 @@ import urllib.request
 
 REPOSITORY = "ZHanry/NestLink"
 REPOSITORY_ID = "R_kgDOVNHMvg"
-VERSION = "0.4.0-rc.1"
+VERSION = "0.5.0-rc.1"
 TAG = "v" + VERSION
 MAX_ASSET_BYTES = 2 * 1024**3
 MANIFEST_NAME = "candidate-build-manifest.json"
@@ -216,13 +216,12 @@ def clean_source(root, revision):
 
 def release_body(revision, checksum):
     return ("NestLink " + VERSION + " 开发候选版。\n\n"
-            "- 修复浏览器远控批准后无画面、短许可提前过期的时序：被控端自动准备宿主，先完成屏幕批准，再领取新的 15 秒许可并协商连接。\n"
-            "- 桌面登录后自动登记本机，保留现有安装身份，避免重复登记或替换已撤销身份。\n"
-            "- 根据 Gemini CLI 原型优化桌面双栏布局、设备搜索、连接设置、待审批提示及屏幕选择，窄窗口自动上下排列。\n"
-            "- 桌面、Web、Android 与品牌图标统一淡紫主题；Windows 程序、托盘、开始菜单及安装器补齐图标。\n"
-            "- Windows 安装器新增简体中文/English 选择、向导图及可选桌面快捷方式；补充有容量上限的本地连接阶段诊断。\n"
+            "- 修复 WebRTC 未使用受信任 STUN 配置的问题，浏览器与原生宿主同时接入；保留受管 TURN 及各路径授权。\n"
+            "- 桌面和 Web 自动续期登录，同账号多端独立登录、续期及退出；普通 403 权限拒绝不再退出 Web 登录。\n"
+            "- Web 默认自动连接，新增授权、屏幕准备、协商和会话阶段进度，区分 ICE 超时与许可过期。\n"
+            "- 被控桌面新增右下角独立置顶提示，显示远端设备、权限、路径和时长，提供查看、拒绝及断开；收进托盘后仍显示。\n"
             "- 保留逐项授权、双方身份核验、撤销及停止后不自动重启；原生直连/WSS 回退和浏览器 ICE/TURN 分别使用各自路径。\n\n"
-            "升级：请同时升级服务器、Web 和双方客户端。原生跨网络回退需管理员允许服务器转发及双方 relay；浏览器跨网络需相应的 ICE/TURN 配置。\n"
+            "升级：请同时升级服务器、Web 和双方客户端。原生跨网络回退需管理员允许服务器转发及双方 relay；浏览器需可达 STUN，受限网络还需注册 TURN 节点并允许中继。升级不会自动放宽服务器策略，原生 WSS 不能替代浏览器 TURN。\n"
             "部署与排障：https://github.com/ZHanry/NestLink/blob/main/docs/REMOTE-CONNECTION.md\n\n"
             "Source commit: " + revision + ". All 18 product artifacts are bound to this clean source commit.\n"
             "candidate-build-manifest.json SHA-256: " + checksum + ".\n\n"

@@ -41,44 +41,44 @@ members = [
 resolver = "3"
 
 [workspace.package]
-version = "0.4.0-rc.1"
+version = "0.5.0-rc.1"
 edition = "2024"
 rust-version = "1.96"
 license = "Apache-2.0"
 repository = "https://github.com/ZHanry/NestLink"
 
 [workspace.dependencies]
-nestlink-protocol = { version = "=0.4.0-rc.1", path = "crates/protocol" }
-nestlink-identity = { version = "=0.4.0-rc.1", path = "crates/identity" }
-nestlink-policy = { version = "=0.4.0-rc.1", path = "crates/policy" }
-nestlink-session = { version = "=0.4.0-rc.1", path = "crates/session" }
-nestlink-storage = { version = "=0.4.0-rc.1", path = "crates/storage" }
-nestlink-operations = { version = "=0.4.0-rc.1", path = "crates/operations" }
-nestlink-node = { version = "=0.4.0-rc.1", path = "crates/node" }
-nestlink-auth = { version = "=0.4.0-rc.1", path = "crates/auth" }
-nestlink-platform-security = { version = "=0.4.0-rc.1", path = "crates/platform-security" }
-nestlink-platform-files = { version = "=0.4.0-rc.1", path = "crates/platform-files" }
-nestlink-platform-clipboard = { version = "=0.4.0-rc.1", path = "crates/platform-clipboard" }
-nestlink-platform-tray = { version = "=0.4.0-rc.1", path = "crates/platform-tray" }
-nestlink-platform-network = { version = "=0.4.0-rc.1", path = "crates/platform-network" }
-nestlink-platform-input = { version = "=0.4.0-rc.1", path = "crates/platform-input" }
-nestlink-platform-capture = { version = "=0.4.0-rc.1", path = "crates/platform-capture" }
-nestlink-platform-session = { version = "=0.4.0-rc.1", path = "crates/platform-session" }
-nestlink-platform-audio = { version = "=0.4.0-rc.1", path = "crates/platform-audio" }
-nestlink-media-codec = { version = "=0.4.0-rc.1", path = "crates/media-codec" }
-nestlink-media-session = { version = "=0.4.0-rc.1", path = "crates/media-session" }
-nestlink-transport-stream = { version = "=0.4.0-rc.1", path = "crates/transport-stream" }
-nestlink-transport-quic = { version = "=0.4.0-rc.1", path = "crates/transport-quic" }
-nestlink-transport-wss = { version = "=0.4.0-rc.1", path = "crates/transport-wss" }
-nestlink-traversal = { version = "=0.4.0-rc.1", path = "crates/traversal" }
-nestlink-turn-service = { version = "=0.4.0-rc.1", path = "crates/turn-service" }
-nestlink-remote = { version = "=0.4.0-rc.1", path = "crates/remote" }
-nestlink-connectivity = { version = "=0.4.0-rc.1", path = "crates/connectivity" }
-nestlink-sdk = { version = "=0.4.0-rc.1", path = "crates/sdk" }
-nestlink-app-core = { version = "=0.4.0-rc.1", path = "crates/app-core" }
-nestlink-local-ipc = { version = "=0.4.0-rc.1", path = "crates/local-ipc" }
-nestlink-app-ipc = { version = "=0.4.0-rc.1", path = "crates/app-ipc" }
-nestlink-privileged = { version = "=0.4.0-rc.1", path = "apps/privileged" }
+nestlink-protocol = { version = "=0.5.0-rc.1", path = "crates/protocol" }
+nestlink-identity = { version = "=0.5.0-rc.1", path = "crates/identity" }
+nestlink-policy = { version = "=0.5.0-rc.1", path = "crates/policy" }
+nestlink-session = { version = "=0.5.0-rc.1", path = "crates/session" }
+nestlink-storage = { version = "=0.5.0-rc.1", path = "crates/storage" }
+nestlink-operations = { version = "=0.5.0-rc.1", path = "crates/operations" }
+nestlink-node = { version = "=0.5.0-rc.1", path = "crates/node" }
+nestlink-auth = { version = "=0.5.0-rc.1", path = "crates/auth" }
+nestlink-platform-security = { version = "=0.5.0-rc.1", path = "crates/platform-security" }
+nestlink-platform-files = { version = "=0.5.0-rc.1", path = "crates/platform-files" }
+nestlink-platform-clipboard = { version = "=0.5.0-rc.1", path = "crates/platform-clipboard" }
+nestlink-platform-tray = { version = "=0.5.0-rc.1", path = "crates/platform-tray" }
+nestlink-platform-network = { version = "=0.5.0-rc.1", path = "crates/platform-network" }
+nestlink-platform-input = { version = "=0.5.0-rc.1", path = "crates/platform-input" }
+nestlink-platform-capture = { version = "=0.5.0-rc.1", path = "crates/platform-capture" }
+nestlink-platform-session = { version = "=0.5.0-rc.1", path = "crates/platform-session" }
+nestlink-platform-audio = { version = "=0.5.0-rc.1", path = "crates/platform-audio" }
+nestlink-media-codec = { version = "=0.5.0-rc.1", path = "crates/media-codec" }
+nestlink-media-session = { version = "=0.5.0-rc.1", path = "crates/media-session" }
+nestlink-transport-stream = { version = "=0.5.0-rc.1", path = "crates/transport-stream" }
+nestlink-transport-quic = { version = "=0.5.0-rc.1", path = "crates/transport-quic" }
+nestlink-transport-wss = { version = "=0.5.0-rc.1", path = "crates/transport-wss" }
+nestlink-traversal = { version = "=0.5.0-rc.1", path = "crates/traversal" }
+nestlink-turn-service = { version = "=0.5.0-rc.1", path = "crates/turn-service" }
+nestlink-remote = { version = "=0.5.0-rc.1", path = "crates/remote" }
+nestlink-connectivity = { version = "=0.5.0-rc.1", path = "crates/connectivity" }
+nestlink-sdk = { version = "=0.5.0-rc.1", path = "crates/sdk" }
+nestlink-app-core = { version = "=0.5.0-rc.1", path = "crates/app-core" }
+nestlink-local-ipc = { version = "=0.5.0-rc.1", path = "crates/local-ipc" }
+nestlink-app-ipc = { version = "=0.5.0-rc.1", path = "crates/app-ipc" }
+nestlink-privileged = { version = "=0.5.0-rc.1", path = "apps/privileged" }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 schemars = "1.2.1"

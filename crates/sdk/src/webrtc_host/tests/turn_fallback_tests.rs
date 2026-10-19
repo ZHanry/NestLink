@@ -45,6 +45,16 @@ impl Fixture {
         paths: PathSet,
         reply: TurnReply,
     ) -> TestResult<Self> {
+        Self::with_stun(controller, host, paths, reply, Vec::new()).await
+    }
+
+    async fn with_stun(
+        controller: &DeviceIdentity,
+        host: &DeviceIdentity,
+        paths: PathSet,
+        reply: TurnReply,
+        stun_servers: Vec<std::net::SocketAddr>,
+    ) -> TestResult<Self> {
         let signer = Arc::new(PermitSigner::generate());
         let mut claims = test_permit(controller, host)?.claims().clone();
         claims.paths = paths.to_wire();
@@ -81,7 +91,15 @@ impl Fixture {
         let turn_permit = permit.clone();
         let turn_signer = signer.clone();
         let path = format!("{API_BASE}/remote/{}", claims.session_id);
+        let discovery = nestlink_protocol::api::NativeDiscoveryConfig {
+            deployment_id: claims.deployment_id.clone(),
+            stun_servers,
+        };
         let app = Router::new()
+            .route(
+                &format!("{API_BASE}/network/discovery"),
+                get(move || async move { Json(discovery) }),
+            )
             .route(
                 &format!("{path}/permit"),
                 get(move || async move { Json(permit_response) }),
@@ -268,6 +286,63 @@ fn offer(permit: &VerifiedPermit) -> SignalPayload {
         candidates: Vec::new(),
         description: None,
     }
+}
+
+#[tokio::test]
+async fn stun_survives_turn_capacity_fallback_and_optional_turn_withdrawal() -> TestResult {
+    let controller = DeviceIdentity::generate();
+    let host = DeviceIdentity::generate();
+    for reply in [TurnReply::Capacity, TurnReply::Granted] {
+        let fixture = Fixture::with_stun(
+            &controller,
+            &host,
+            PathSet::BOTH,
+            reply,
+            vec!["11.0.0.1:3478".parse()?],
+        )
+        .await?;
+        let mut peer = fixture.peer(&host).await?;
+        let configuration = peer.peer.get_configuration().await;
+        assert!(
+            configuration
+                .ice_servers
+                .iter()
+                .any(|server| server.urls == vec!["stun:11.0.0.1:3478"])
+        );
+        peer.disable_optional_turn().await?;
+        let configuration = peer.peer.get_configuration().await;
+        assert_eq!(configuration.ice_servers.len(), 1);
+        assert_eq!(
+            configuration.ice_servers[0].urls,
+            vec!["stun:11.0.0.1:3478"]
+        );
+        assert!(configuration.ice_servers[0].username.is_empty());
+        assert!(configuration.ice_servers[0].credential.is_empty());
+        peer.close().await?;
+    }
+    let fixture = Fixture::with_stun(
+        &controller,
+        &host,
+        PathSet::RELAY,
+        TurnReply::Granted,
+        vec!["11.0.0.1:3478".parse()?],
+    )
+    .await?;
+    let mut peer = fixture.peer(&host).await?;
+    assert_eq!(
+        peer.peer.get_configuration().await.ice_transport_policy,
+        RTCIceTransportPolicy::Relay
+    );
+    assert!(
+        peer.peer
+            .get_configuration()
+            .await
+            .ice_servers
+            .iter()
+            .all(|server| server.urls.iter().all(|url| !url.starts_with("stun:")))
+    );
+    peer.close().await?;
+    Ok(())
 }
 
 #[tokio::test]

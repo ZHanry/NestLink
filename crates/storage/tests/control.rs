@@ -88,6 +88,55 @@ fn enroll_browser(
     Ok(s.register_browser_endpoint(p, registration, now)?)
 }
 #[test]
+fn concurrent_account_logins_refresh_and_logout_independently() -> Result {
+    let (mut store, vault, dummy, _, _) = fixture()?;
+    let desktop = store.login("admin", PASSWORD, None, 1001, &vault, &dummy)?;
+    let web = store.login("admin", PASSWORD, None, 1002, &vault, &dummy)?;
+    let phone = store.login("admin", PASSWORD, None, 1003, &vault, &dummy)?;
+    assert_ne!(desktop.principal.session_id, web.principal.session_id);
+    assert_ne!(web.principal.session_id, phone.principal.session_id);
+    let desktop = store.refresh_login(desktop.refresh_token.expose(), desktop.generation, 1010)?;
+    assert!(store.authenticate(web.access_token.expose(), 1010).is_ok());
+    assert!(
+        store
+            .authenticate(phone.access_token.expose(), 1010)
+            .is_ok()
+    );
+    store.logout(&web.principal)?;
+    assert!(store.authenticate(web.access_token.expose(), 1011).is_err());
+    assert!(
+        store
+            .authenticate(desktop.access_token.expose(), 1011)
+            .is_ok()
+    );
+    assert!(
+        store
+            .authenticate(phone.access_token.expose(), 1011)
+            .is_ok()
+    );
+    let phone = store.refresh_login(phone.refresh_token.expose(), phone.generation, 1012)?;
+    store.change_password(
+        &desktop.principal,
+        PASSWORD,
+        "replacement-password-050",
+        None,
+        1013,
+        &vault,
+    )?;
+    assert!(
+        store
+            .authenticate(desktop.access_token.expose(), 1013)
+            .is_err()
+    );
+    assert!(
+        store
+            .authenticate(phone.access_token.expose(), 1013)
+            .is_err()
+    );
+    Ok(())
+}
+
+#[test]
 fn token_refresh_is_single_consumer_and_old_access_is_dead() -> Result {
     let (mut s, vault, dummy, admin, member) = fixture()?;
     assert!(matches!(

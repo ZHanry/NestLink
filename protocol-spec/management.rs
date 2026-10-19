@@ -10,6 +10,13 @@ pub struct NativeDiscoveryConfig {
     pub stun_servers: Vec<std::net::SocketAddr>,
 }
 impl NativeDiscoveryConfig {
+    /// WebRTC uses the same pinned deployment STUN endpoints as native QUIC.
+    /// Formatting SocketAddr preserves brackets around IPv6 literals.
+    pub fn webrtc_stun_urls(&self) -> Result<Vec<String>, crate::ContractError> {
+        self.validate()?;
+        Ok(self.stun_servers.iter().map(|address| format!("stun:{address}")).collect())
+    }
+
     pub fn validate(&self) -> Result<(), crate::ContractError> {
         let invalid = || {
             crate::ContractError::new(
@@ -323,7 +330,7 @@ pub struct DeviceView {
 pub struct DevicesResponse {
     pub devices: Vec<DeviceView>,
 }
-#[derive(Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
 pub struct RemoteView {
     pub id: String,
     pub controller_device_id: String,

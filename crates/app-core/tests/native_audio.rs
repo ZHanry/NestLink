@@ -75,6 +75,7 @@ fn remote_request_failure_category(completion: &Completion) -> &'static str {
         }
         FailureKind::Rejected => "rejected",
         FailureKind::Transport => "transport",
+        FailureKind::IceConnection => "ice_connection",
         FailureKind::Timeout => "timeout",
         FailureKind::SignInRequired => "sign_in_required",
         FailureKind::Trust => "trust",

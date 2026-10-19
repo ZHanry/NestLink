@@ -579,6 +579,7 @@ pub struct WebRtcHostPeer {
     cursor: SignalCursor,
     signal_sequence: u64,
     network_generation: u64,
+    stun_urls: Vec<String>,
     turn_credentials: Option<TurnCredentials>,
     turn_binding_claims: Option<TurnPeerBindingClaims>,
     turn_binding_context: Option<TurnBindingContext>,
@@ -673,6 +674,17 @@ impl WebRtcHostPeer {
     where
         F: FnOnce(LeaseControl) -> Result<HostMediaSources, WebRtcHostError> + Send + 'static,
     {
+        // Fetch only through the pinned management channel, before the fresh
+        // host permit. Never accept ICE endpoints from a peer's SDP.
+        let stun_urls = if permit.claims().paths.contains(&(Path::Direct as i32)) {
+            match sdk.native_discovery_config().await {
+                Ok(config) => config.webrtc_stun_urls()?,
+                Err(error) if error.discovery_temporarily_unavailable() => Vec::new(),
+                Err(error) => return Err(error.into()),
+            }
+        } else {
+            Vec::new()
+        };
         let fresh = sdk
             .host_permit(installation, &permit.claims().session_id)
             .await?;
@@ -728,6 +740,12 @@ impl WebRtcHostPeer {
                 .contains(&(Permission::Audio as i32)),
             turn_credentials.as_ref(),
         )
+        .await?;
+        peer.set_configuration(peer_configuration_with_stun(
+            &fresh,
+            turn_credentials.as_ref(),
+            &stun_urls,
+        ))
         .await?;
         let (permit_tx, permit_rx) = watch::channel(fresh.clone());
         let display_transaction_gate = Arc::new(Mutex::new(()));
@@ -802,6 +820,7 @@ impl WebRtcHostPeer {
             cursor,
             signal_sequence: 0,
             network_generation,
+            stun_urls,
             turn_credentials,
             turn_binding_claims: None,
             turn_binding_context: None,
@@ -1029,7 +1048,11 @@ impl WebRtcHostPeer {
             || renewed.claims().expires_at_unix_ms != previous_expiry
         {
             self.peer
-                .set_configuration(peer_configuration(permit, Some(&renewed)))
+                .set_configuration(peer_configuration_with_stun(
+                    permit,
+                    Some(&renewed),
+                    &self.stun_urls,
+                ))
                 .await?;
         }
         self.turn_credentials = Some(renewed);
@@ -1226,6 +1249,11 @@ impl WebRtcHostPeer {
         let mut permit = self.permit_rx.clone();
         let mut cancelled = self.cancel_tx.subscribe();
         loop {
+            // During initial ICE negotiation, expiry means no reachable path
+            // was established within the signed startup lease.
+            if ensure_live(&permit.borrow().clone()).is_err() {
+                return Err(WebRtcHostError::PathConnectTimeout);
+            }
             if *cancelled.borrow() {
                 return Err(WebRtcHostError::Closed);
             }
@@ -1575,13 +1603,16 @@ impl WebRtcHostPeer {
         self.turn_credentials = None;
         self.turn_binding_claims = None;
         self.turn_binding_context = None;
-        let mut configuration = peer_configuration(&self.current_permit(), None);
+        let mut configuration =
+            peer_configuration_with_stun(&self.current_permit(), None, &self.stun_urls);
         // webrtc 0.14 treats an empty ice_servers vector as "leave unchanged".
         // A valid server with no URLs replaces the public configuration with
         // no endpoints or credentials. Previously gathered allocations may
         // remain until peer close/their original expiry; they confer no path
         // authority and the selected-pair guard still rejects every relay.
-        configuration.ice_servers.push(RTCIceServer::default());
+        if configuration.ice_servers.is_empty() {
+            configuration.ice_servers.push(RTCIceServer::default());
+        }
         self.peer.set_configuration(configuration).await?;
         Ok(())
     }
@@ -2701,6 +2732,21 @@ fn peer_configuration(
             } else {
                 RTCIceTransportPolicy::Relay
             };
+    }
+    configuration
+}
+
+fn peer_configuration_with_stun(
+    permit: &VerifiedPermit,
+    turn_credentials: Option<&TurnCredentials>,
+    stun_urls: &[String],
+) -> RTCConfiguration {
+    let mut configuration = peer_configuration(permit, turn_credentials);
+    if permit.claims().paths.contains(&(Path::Direct as i32)) && !stun_urls.is_empty() {
+        configuration.ice_servers.push(RTCIceServer {
+            urls: stun_urls.to_vec(),
+            ..Default::default()
+        });
     }
     configuration
 }
@@ -4412,6 +4458,7 @@ mod tests {
             cursor: SignalCursor::new(permit, host_identity)?,
             signal_sequence: 0,
             network_generation: 1,
+            stun_urls: Vec::new(),
             turn_credentials: None,
             turn_binding_claims: None,
             turn_binding_context: None,
@@ -4791,6 +4838,7 @@ mod tests {
             cursor: SignalCursor::new(&permit, &host_identity)?,
             signal_sequence: 0,
             network_generation: 1,
+            stun_urls: Vec::new(),
             turn_credentials: None,
             turn_binding_claims: None,
             turn_binding_context: None,
@@ -5211,6 +5259,7 @@ mod tests {
             cursor: SignalCursor::new(&permit, &host_identity)?,
             signal_sequence: 0,
             network_generation: 1,
+            stun_urls: Vec::new(),
             turn_credentials: None,
             turn_binding_claims: None,
             turn_binding_context: None,

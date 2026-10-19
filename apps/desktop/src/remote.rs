@@ -1537,7 +1537,7 @@ impl DesktopApp {
     }
 }
 
-fn incoming_requests(snapshot: &Snapshot) -> impl Iterator<Item = &RemoteView> {
+pub(super) fn incoming_requests(snapshot: &Snapshot) -> impl Iterator<Item = &RemoteView> {
     let local = snapshot
         .installation
         .as_ref()

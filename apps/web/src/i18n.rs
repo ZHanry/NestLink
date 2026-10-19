@@ -143,6 +143,35 @@ pub fn peer_error(error: &crate::browser_peer::PeerError) -> String {
     .into()
 }
 
+pub fn peer_connection_error(
+    error: &crate::browser_peer::PeerError,
+    mode: crate::browser_peer::PeerPathMode,
+) -> String {
+    use crate::browser_peer::{PeerError, PeerPathMode};
+    if !matches!(
+        error,
+        PeerError::TimedOut
+            | PeerError::Expired
+            | PeerError::InvalidPermit
+            | PeerError::NoSelectedPath
+            | PeerError::BrowserOperation
+    ) {
+        return peer_error(error);
+    }
+    let help = if mode == PeerPathMode::DirectOnly {
+        text(
+            "未建立可达的直连路径。请检查 STUN 和 UDP 网络；跨网受限时，请管理员允许并配置 TURN 中继，再使用自动连接。",
+            "No reachable direct path was established. Check STUN and UDP reachability. For restrictive networks, ask your administrator to configure and allow TURN, then use Automatic.",
+        )
+    } else {
+        text(
+            "未建立可达的远控路径。请检查部署的 STUN、TURN 中继和双方的中继权限后重试。服务器上的 WebSocket 中继不能替代浏览器所需的 TURN。",
+            "No reachable remote path was established. Check deployment STUN, TURN and both devices' relay permissions, then retry. Browser connections require TURN; the native WebSocket relay does not provide it.",
+        )
+    };
+    format!("{} {help}", peer_error(error))
+}
+
 pub fn set_english(value: bool) {
     ENGLISH.with(|language| language.set(value));
     #[cfg(target_arch = "wasm32")]

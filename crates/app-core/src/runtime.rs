@@ -21,6 +21,7 @@ mod native_network_control;
 mod native_recovery;
 #[path = "runtime/service_host.rs"]
 mod service_host;
+mod session_refresh;
 use service_host::{
     PREVIEW_LIFETIME, PREVIEW_LIFETIME_MS, PendingServiceHostPreview, SERVICE_HOST_CLEANUP_POLL,
     ServiceHostBinding, ServiceHostContext, ServiceHostOwner, ServiceHostTarget,
@@ -1609,6 +1610,7 @@ impl AppCore {
             retire: false,
             secret_slots: Vec::new(),
             access_deadline: None,
+            session_refresh_retry: tokio::time::Instant::now(),
         };
         let task = Some(runtime.spawn(actor.run()));
         Ok(Self {
@@ -1778,6 +1780,11 @@ struct Client {
     server: ApprovedServer,
 }
 enum Job {
+    SessionRefreshed {
+        client: Client,
+        generation: u64,
+        result: Result<(), Failure>,
+    },
     NativeInboxPolled {
         client: Client,
         generation: u64,
@@ -1930,6 +1937,7 @@ struct Actor {
     retire: bool,
     secret_slots: Vec<Weak<Mutex<Option<SensitiveMaterial>>>>,
     access_deadline: Option<tokio::time::Instant>,
+    session_refresh_retry: tokio::time::Instant,
 }
 
 impl Actor {
@@ -3136,6 +3144,9 @@ impl Actor {
         if self.browser_host.is_some() {
             return;
         }
+        if self.start_session_refresh() {
+            return;
+        }
         if self.pending.is_empty() && self.start_native_recovery() {
             return;
         }
@@ -4200,6 +4211,14 @@ impl Actor {
             return;
         };
         let job = match job {
+            Job::SessionRefreshed {
+                client,
+                generation,
+                result,
+            } => {
+                self.complete_session_refresh(client, generation, result);
+                return;
+            }
             Job::NativeInboxPolled {
                 client,
                 generation,
@@ -4454,6 +4473,7 @@ impl Actor {
             }
             Job::Retired { .. } => {}
             Job::NativeEstablished { .. }
+            | Job::SessionRefreshed { .. }
             | Job::NativeInboxPolled { .. }
             | Job::NativePermitPolled { .. }
             | Job::LocalServiceHostStarted { .. } => {}
@@ -5644,6 +5664,8 @@ fn browser_host_failure(failure: BrowserHostFailure) -> Failure {
         BrowserHostFailure::UnsupportedPermission => FailureKind::Invalid,
         BrowserHostFailure::Rejected => FailureKind::Trust,
         BrowserHostFailure::Transport => FailureKind::Transport,
+        BrowserHostFailure::Connectivity => FailureKind::IceConnection,
+        BrowserHostFailure::PermitExpired => FailureKind::PermitExpired,
         BrowserHostFailure::Capture | BrowserHostFailure::Unavailable => {
             FailureKind::NativeSessionUnavailable
         }
@@ -5655,6 +5677,8 @@ fn browser_host_stop_reason(failure: BrowserHostFailure) -> NativeSessionStopRea
         BrowserHostFailure::Cancelled => NativeSessionStopReason::UserCancelled,
         BrowserHostFailure::Capture => NativeSessionStopReason::PlatformChanged,
         BrowserHostFailure::Transport => NativeSessionStopReason::TransportLost,
+        BrowserHostFailure::Connectivity => NativeSessionStopReason::TransportLost,
+        BrowserHostFailure::PermitExpired => NativeSessionStopReason::Expired,
         BrowserHostFailure::Rejected | BrowserHostFailure::UnsupportedPermission => {
             NativeSessionStopReason::ProtocolViolation
         }

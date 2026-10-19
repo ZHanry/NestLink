@@ -31,12 +31,12 @@ tokio.workspace = true
 if-addrs.workspace = true
 reqwest.workspace = true
 nestlink-media-codec.workspace = true
-nestlink-server = { path = "../../apps/server", version = "=0.4.0-rc.1" }
+nestlink-server = { path = "../../apps/server", version = "=0.5.0-rc.1" }
 nestlink-storage.workspace = true
 nestlink-identity.workspace = true
 axum.workspace = true
 tower.workspace = true
-tokio.workspace = true
+tokio = { workspace = true, features = ["test-util"] }
 
 [lints]
 workspace = true
