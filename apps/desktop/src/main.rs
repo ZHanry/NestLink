@@ -56,6 +56,11 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     if let Some(kind) = args.native_file_selector {
         std::process::exit(nestlink_desktop::picker::run_selector(&kind));
     }
+    let Some(_instance) =
+        nestlink_local_ipc::maintenance::DesktopInstance::acquire_or_activate(&directory)?
+    else {
+        return Ok(());
+    };
     let tokens = theme::tokens()?;
     let options = eframe::NativeOptions {
         viewport: eframe::egui::ViewportBuilder::default()

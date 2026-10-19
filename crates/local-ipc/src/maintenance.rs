@@ -207,6 +207,38 @@ impl StartupPermit {
 pub struct DesktopLease {
     _lifetime: File,
 }
+
+/// One workspace window per private state directory. A repeated launch only
+/// posts an activation request; it never reads or changes management sessions.
+pub struct DesktopInstance {
+    _owner: File,
+}
+impl DesktopInstance {
+    pub fn acquire_or_activate(directory: &Path) -> Result<Option<Self>> {
+        let owner = open_lock(directory, "desktop-instance.lock")?;
+        match owner.try_lock() {
+            Ok(()) => {
+                let _ = std::fs::remove_file(directory.join("desktop-activate"));
+                Ok(Some(Self { _owner: owner }))
+            }
+            Err(TryLockError::WouldBlock) => {
+                nestlink_platform_security::replace_private_metadata(
+                    &directory.join("desktop-activate"),
+                    b"open",
+                )?;
+                Ok(None)
+            }
+            Err(error) => Err(busy(error)),
+        }
+    }
+    pub fn take_activation(directory: &Path) -> bool {
+        let path = directory.join("desktop-activate");
+        match nestlink_platform_security::read_private(&path, 4) {
+            Ok(bytes) if bytes.as_slice() == b"open" => std::fs::remove_file(path).is_ok(),
+            _ => false,
+        }
+    }
+}
 impl DesktopLease {
     pub fn acquire(directory: &Path) -> Result<Self> {
         let _startup = StartupPermit::acquire(directory)?;
@@ -466,6 +498,23 @@ mod tests {
             std::fs::read(directory.join(ADMISSION))?,
             b"not an empty stable lock"
         );
+        Ok(())
+    }
+
+    #[test]
+    fn repeated_desktop_start_activates_exact_state_directory() -> TestResult {
+        let temporary = tempfile::tempdir()?;
+        let directory = temporary.path().join("state");
+        let _startup = StartupPermit::acquire(&directory)?;
+        let first = DesktopInstance::acquire_or_activate(&directory)?.ok_or("missing owner")?;
+        assert!(DesktopInstance::acquire_or_activate(&directory)?.is_none());
+        assert!(DesktopInstance::take_activation(&directory));
+        assert!(!DesktopInstance::take_activation(&directory));
+        let other = temporary.path().join("other");
+        let _other_startup = StartupPermit::acquire(&other)?;
+        assert!(DesktopInstance::acquire_or_activate(&other)?.is_some());
+        drop(first);
+        assert!(DesktopInstance::acquire_or_activate(&directory)?.is_some());
         Ok(())
     }
 

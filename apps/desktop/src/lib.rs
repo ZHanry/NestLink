@@ -34,7 +34,7 @@ use std::collections::BTreeSet;
 use std::{path::PathBuf, time::Duration};
 use zeroize::{Zeroize, Zeroizing};
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 enum Screen {
     Remote,
     Services,
@@ -68,6 +68,7 @@ enum MessageTone {
 
 #[derive(Default)]
 struct Credentials {
+    remember_login: bool,
     username: String,
     password: Zeroizing<String>,
     new_password: Zeroizing<String>,
@@ -116,6 +117,7 @@ pub struct DesktopApp {
     tokens: theme::Tokens,
     tray: Option<tray::Tray>,
     screen: Screen,
+    workspace_attached: bool,
     english: bool,
     dark: bool,
     connected: bool,
@@ -188,10 +190,11 @@ impl DesktopApp {
         };
         Ok(Self {
             bridge: Bridge::start(directory.clone(), creation.egui_ctx.clone()),
-            directory,
+            directory: directory.clone(),
             tokens,
             tray: tray::Tray::create(creation.egui_ctx.clone()).ok(),
             screen: Screen::Server,
+            workspace_attached: false,
             english: false,
             dark: false,
             connected: false,
@@ -199,7 +202,14 @@ impl DesktopApp {
             hidden: false,
             exit_confirmed: false,
             generation: 1,
-            credentials: Credentials::default(),
+            credentials: Credentials {
+                remember_login: nestlink_platform_security::read_private(
+                    &directory.join("remember-login.json"),
+                    16,
+                )
+                .is_ok_and(|bytes| bytes.as_slice() == b"true"),
+                ..Credentials::default()
+            },
             trust: TrustForm::default(),
             sensitive: None,
             message,
@@ -607,6 +617,28 @@ impl DesktopApp {
         let events = ui.input(|input| input.events.clone());
         for (index, event) in events.iter().cloned().enumerate() {
             match event {
+                egui::Event::MouseWheel { unit, delta, .. }
+                    if self.native_control_enabled
+                        && layout.scroll_supported
+                        && response.hovered() =>
+                {
+                    let scale = match unit {
+                        egui::MouseWheelUnit::Point => 3.0,
+                        egui::MouseWheelUnit::Line => 120.0,
+                        egui::MouseWheelUnit::Page => 1200.0,
+                    };
+                    let x = (-delta.x * scale).round().clamp(-12000.0, 12000.0) as i32;
+                    let y = (delta.y * scale).round().clamp(-12000.0, 12000.0) as i32;
+                    if (x != 0 || y != 0)
+                        && !self.queue_native_input(
+                            generation,
+                            &binding,
+                            NativeInputAction::Scroll { x, y },
+                        )
+                    {
+                        return;
+                    }
+                }
                 egui::Event::PointerMoved(position) if self.native_control_enabled => {
                     if let Some(point) =
                         native_input::pointer_to_logical(position, image_rect, layout)
@@ -1828,6 +1860,13 @@ impl DesktopApp {
                 }
             }
         }
+        if self.connected
+            && !self.workspace_attached
+            && snapshot.authentication == Authentication::SignedIn
+        {
+            self.workspace_attached = true;
+            self.screen = Screen::Remote;
+        }
         self.poll_transfer_panels(&snapshot);
         snapshot
     }
@@ -1852,30 +1891,32 @@ impl DesktopApp {
         }
         let mut approved = false;
         let mut cancelled = false;
-        egui::Window::new(self.t("确认操作", "Confirm action"))
-            .id(egui::Id::new("confirm-action"))
-            .collapsible(false)
-            .resizable(false)
-            .show(context, |ui| {
-                if let Some((message, _)) = &self.pending_confirmation {
-                    ui.label(message);
-                }
-                ui.horizontal(|ui| {
-                    approved = ui.button(self.t("确认", "Confirm")).clicked();
-                    cancelled = ui.button(self.t("取消", "Cancel")).clicked();
-                });
+        egui::Modal::new(egui::Id::new("confirm-action")).show(context, |ui| {
+            ui.set_width(420.);
+            ui.heading(self.t("确认操作", "Confirm action"));
+            if let Some((message, _)) = &self.pending_confirmation {
+                ui.label(message);
+            }
+            ui.horizontal(|ui| {
+                approved = ui.button(self.t("确认", "Confirm")).clicked();
+                cancelled = ui.button(self.t("取消", "Cancel")).clicked();
             });
+        });
         if approved {
             if let Some((_, command)) = self.pending_confirmation.take() {
                 self.send(snapshot, command);
             }
-        } else if cancelled {
+        } else if cancelled || context.input(|i| i.key_pressed(egui::Key::Escape)) {
             self.pending_confirmation.take();
         }
     }
 }
 impl eframe::App for DesktopApp {
     fn logic(&mut self, context: &egui::Context, frame: &mut eframe::Frame) {
+        if nestlink_local_ipc::maintenance::DesktopInstance::take_activation(&self.directory) {
+            self.hidden = false;
+            tray::restore(context);
+        }
         // An exclusive maintenance owner already fences new starts and will
         // request Exit from the exact authenticated daemon. Close every UI and
         // its owned workers without submitting a duplicate remote operation.
@@ -1982,55 +2023,8 @@ impl eframe::App for DesktopApp {
             )
             .show_inside(parent, |ui| {
                 egui::ScrollArea::vertical()
-                    .id_salt("workspace-scroll")
+                    .id_salt(("workspace-scroll", self.screen))
                     .show(ui, |ui| {
-                        if let Some(message) = self.message.clone() {
-                            let message_color = match self.message_tone {
-                                MessageTone::Neutral => None,
-                                MessageTone::Warning => {
-                                    let pair = &self.tokens.state.warning;
-                                    Some(theme::color(if self.dark {
-                                        &pair.dark
-                                    } else {
-                                        &pair.light
-                                    }))
-                                }
-                                MessageTone::Success => {
-                                    let pair = &self.tokens.state.success;
-                                    Some(theme::color(if self.dark {
-                                        &pair.dark
-                                    } else {
-                                        &pair.light
-                                    }))
-                                }
-                                MessageTone::Danger => {
-                                    let palette = if self.dark {
-                                        &self.tokens.dark
-                                    } else {
-                                        &self.tokens.light
-                                    };
-                                    Some(theme::color(&palette.danger))
-                                }
-                            };
-                            egui::Frame::group(ui.style()).show(ui, |ui| {
-                                ui.horizontal_wrapped(|ui| {
-                                    if let Some(color) = message_color {
-                                        ui.colored_label(color, message);
-                                    } else {
-                                        ui.label(message);
-                                    }
-                                    if ui
-                                        .small_button(self.t("关闭", "Dismiss"))
-                                        .on_hover_text(self.t("关闭提示", "Dismiss message"))
-                                        .clicked()
-                                    {
-                                        self.message = None;
-                                        self.message_tone = MessageTone::Neutral;
-                                    }
-                                });
-                            });
-                            ui.add_space(18.);
-                        }
                         ui.add_enabled_ui(self.connected && !self.exiting, |ui| {
                             if self.screen == Screen::Server
                                 || snapshot
@@ -2056,6 +2050,58 @@ impl eframe::App for DesktopApp {
                             }
                         });
                     });
+            });
+        egui::Area::new(egui::Id::new("operation-notification"))
+            .order(egui::Order::Foreground)
+            .anchor(egui::Align2::RIGHT_TOP, egui::vec2(-24., 88.))
+            .show(&context, |ui| {
+                ui.set_width((context.content_rect().width() - 48.).clamp(200., 400.));
+                if let Some(message) = self.message.clone() {
+                    let message_color = match self.message_tone {
+                        MessageTone::Neutral => None,
+                        MessageTone::Warning => {
+                            let pair = &self.tokens.state.warning;
+                            Some(theme::color(if self.dark {
+                                &pair.dark
+                            } else {
+                                &pair.light
+                            }))
+                        }
+                        MessageTone::Success => {
+                            let pair = &self.tokens.state.success;
+                            Some(theme::color(if self.dark {
+                                &pair.dark
+                            } else {
+                                &pair.light
+                            }))
+                        }
+                        MessageTone::Danger => {
+                            let palette = if self.dark {
+                                &self.tokens.dark
+                            } else {
+                                &self.tokens.light
+                            };
+                            Some(theme::color(&palette.danger))
+                        }
+                    };
+                    egui::Frame::group(ui.style()).show(ui, |ui| {
+                        ui.horizontal_wrapped(|ui| {
+                            if let Some(color) = message_color {
+                                ui.colored_label(color, message);
+                            } else {
+                                ui.label(message);
+                            }
+                            if ui
+                                .small_button(self.t("关闭", "Dismiss"))
+                                .on_hover_text(self.t("关闭提示", "Dismiss message"))
+                                .clicked()
+                            {
+                                self.message = None;
+                                self.message_tone = MessageTone::Neutral;
+                            }
+                        });
+                    });
+                }
             });
         self.confirmations(&context, &snapshot);
     }
@@ -2342,6 +2388,7 @@ mod video_tests {
                 top: 0,
                 width: 200,
                 height: 100,
+                scroll_supported: true,
             },
         }
     }

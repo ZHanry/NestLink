@@ -134,6 +134,7 @@ pub struct X11Input {
     held: BTreeMap<Button, Keycode>,
     cleanup_until: Option<Instant>,
     terminal: bool,
+    scroll_remainder: [i32; 2],
 }
 impl X11Input {
     pub fn open(display: &str) -> io::Result<Self> {
@@ -204,6 +205,7 @@ impl X11Input {
             held: BTreeMap::new(),
             cleanup_until: None,
             terminal: false,
+            scroll_remainder: [0; 2],
         })
     }
     fn check_until(&mut self, until: Instant) -> io::Result<()> {
@@ -295,6 +297,7 @@ impl InputDevice for X11Input {
         self.check_until(Instant::now() + IO_BUDGET)
     }
     fn begin_reset(&mut self) -> io::Result<()> {
+        self.scroll_remainder = [0; 2];
         self.terminal = true;
         let until = Instant::now() + IO_BUDGET;
         self.cleanup_until = Some(until);
@@ -408,6 +411,19 @@ impl InputDevice for X11Input {
                     )?;
                     if !down {
                         self.held.remove(&Button::Pointer(*button));
+                    }
+                }
+                Ok(())
+            }
+            PlatformInput::Action(InputAction::Scroll { x, y }) => {
+                for (axis, delta, positive, negative) in [(0, *x, 7, 6), (1, *y, 4, 5)] {
+                    self.scroll_remainder[axis] += delta;
+                    while self.scroll_remainder[axis].unsigned_abs() >= 120 {
+                        let direction = self.scroll_remainder[axis].signum();
+                        let button = if direction > 0 { positive } else { negative };
+                        self.event(xproto::BUTTON_PRESS_EVENT, button, 0, 0)?;
+                        self.event(xproto::BUTTON_RELEASE_EVENT, button, 0, 0)?;
+                        self.scroll_remainder[axis] -= direction * 120;
                     }
                 }
                 Ok(())

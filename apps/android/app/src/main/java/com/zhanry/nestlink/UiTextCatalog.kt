@@ -3,6 +3,11 @@ package com.zhanry.nestlink
 // Local interface copy only. Remote names, paths and protocol tokens
 // never pass through this catalog. Format arguments are evaluated once.
 internal enum class UiTextKey(val chinese: String, val english: String) {
+    REMOTE_FIT("适应", "Fit"),
+    REMOTE_RIGHT_CLICK("中心右键", "Right click center"),
+    REMOTE_MINIMIZE("收起会话", "Minimize session"),
+    REMOTE_DISCONNECT("断开连接", "Disconnect"),
+    REMOTE_FULLSCREEN("全屏会话", "Full screen session"),
     WAITING_FOR_ANDROID_SCREEN_SHARING_CONSENT_6CCCE("等待用户确认 Android 屏幕共享授权。", "Waiting for Android screen sharing consent."),
     COULD_NOT_REQUEST_ANDROID_SCREEN_SHARING_6882B("无法提交 Android 屏幕授权请求。", "Could not request Android screen sharing consent."),
     ANDROID_SCREEN_SHARING_CONSENT_WAS_DENIED_F55AA("Android 屏幕共享授权已拒绝。", "Android screen sharing consent was denied."),
@@ -371,7 +376,7 @@ internal enum class UiTextKey(val chinese: String, val english: String) {
     SEND_FILES_TO_THE_HOST_4CD61("发送文件至主机", "Send files to the host"),
     READ_THE_HOST_TEXT_CLIPBOARD_55683("读取主机文本剪贴板", "Read the host text clipboard"),
     WRITE_THE_HOST_TEXT_CLIPBOARD_DBE0B("写入主机文本剪贴板", "Write the host text clipboard"),
-    REQUEST_VIEW_AND_SELECTED_DATA_DIRECTIONS_E5AE2("申请查看和所选数据方向", "Request view and selected data directions"),
+    REQUEST_VIEW_AND_SELECTED_DATA_DIRECTIONS_E5AE2("按所选权限申请（不勾选为仅查看）", "Request selected permissions (none means view only)"),
     REVOKE_DEVICE_3BBA1("撤销设备", "Revoke device"),
     CURRENT_87FC9("%1\$s · 当前", "%1\$s · Current"),
     CONFIRMING_THE_REMOTE_SHARED_DISPLAY_96971("正在确认远端共享屏幕…", "Confirming the remote shared display…"),
@@ -418,7 +423,7 @@ internal enum class UiTextKey(val chinese: String, val english: String) {
     ALLOW_SENDING_TO_A_PRIVATE_AREA_5B4E3("允许向本机之后明确批准的私有区发送", "Allow sending to a private area explicitly approved later on this device"),
     ALLOW_READING_THE_HOST_TEXT_CLIPBOARD_EE309("允许读取主机文本剪贴板方向", "Allow reading the host text clipboard"),
     ALLOW_WRITING_THE_HOST_TEXT_CLIPBOARD_082E7("允许写入主机文本剪贴板方向", "Allow writing the host text clipboard"),
-    APPROVE_VIEW_AND_SELECTED_DATA_DIRECTIONS_98E45("批准查看和所选数据方向", "Approve view and selected data directions"),
+    APPROVE_VIEW_AND_SELECTED_DATA_DIRECTIONS_98E45("批准所选权限", "Approve selected permissions"),
     LOCAL_FILE_SHARING_PRIVATE_RECEIVING_AND_3CCA0("本机文件共享、私有接收区和系统剪贴板仍默认关闭；会话建立后须分别明确批准。", "Local file sharing, private receiving, and the system clipboard remain disabled by default. Approve each separately after connecting."),
     START_NATIVE_SESSION_1BAF9("启动原生会话", "Start native session"),
     START_BROWSER_SHARING_SESSION_482DC("启动浏览器共享会话", "Start browser sharing session"),

@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
-nestlink-traversal = { version = "=0.5.0-rc.1", path = "../traversal" }
+nestlink-traversal = { version = "=0.6.0-rc.1", path = "../traversal" }
 turn = "=0.17.2"
 async-trait = "=0.1.89"
 futures-util.workspace = true

@@ -179,9 +179,12 @@ impl Store {
             return Err(StorageError::Conflict);
         }
         tx.execute("INSERT INTO remote_signals(session_id,device_id,network_generation,sequence,lease_sequence,received_at,signal_json) VALUES(?1,?2,?3,?4,?5,?6,?7) ON CONFLICT(session_id,device_id) DO UPDATE SET network_generation=excluded.network_generation,sequence=excluded.sequence,lease_sequence=excluded.lease_sequence,received_at=excluded.received_at,signal_json=excluded.signal_json",params![id,view.submission.device_id,payload.network_generation,payload.sequence,payload.lease_sequence,now,json])?;
-        tx.execute("DELETE FROM remote_signals WHERE session_id IN (SELECT id FROM remote_requests WHERE status<>'approved' OR last_renewed<?1 LIMIT 128)",[now.saturating_sub(60)])?;
+        tx.execute("DELETE FROM remote_signals WHERE rowid IN (SELECT g.rowid FROM remote_signals g JOIN remote_requests r ON r.id=g.session_id WHERE r.status<>'approved' OR (r.expires<=?1 AND r.last_renewed<?2) ORDER BY g.rowid LIMIT 256)",params![now,now.saturating_sub(60)])?;
         tx.commit()?;
         Ok(())
+    }
+    pub fn cleanup_remote_signals(&mut self, now: u64) -> Result<usize, StorageError> {
+        Ok(self.connection.execute("DELETE FROM remote_signals WHERE rowid IN (SELECT g.rowid FROM remote_signals g JOIN remote_requests r ON r.id=g.session_id WHERE r.status<>'approved' OR (r.expires<=?1 AND r.last_renewed<?2) ORDER BY g.rowid LIMIT 256)",params![now,now.saturating_sub(60)])?)
     }
     pub fn remote_signals(
         &self,

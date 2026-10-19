@@ -290,35 +290,34 @@ async fn owner_drop_and_timed_shutdown_keep_slow_write_and_revoke_owned() -> Res
 }
 
 #[tokio::test]
-async fn access_deadline_clears_loaded_account_data_and_actually_retires_sdk() -> Result {
-    let gate = Gate::expiring();
+async fn access_expiry_recovers_with_refresh_without_retiring_the_management_session() -> Result {
+    let gate = Gate::new("/api/v3/auth/refresh", "POST");
     let server = Server::start(Some(gate.clone())).await?;
     let mut core = AppCore::start(Limits::default())?;
     let handle = connect(&core, &server).await?;
+    let session = handle
+        .snapshot()
+        .principal
+        .as_ref()
+        .unwrap()
+        .session_id
+        .clone();
+    gate.arm();
+    tokio::time::pause();
+    tokio::time::advance(Duration::from_secs(301)).await;
+    tokio::time::resume();
+    gate.entered().await?;
+    assert_eq!(handle.snapshot().authentication, Authentication::SignedIn);
+    gate.unblock();
     success(handle.submit(Action::Load {
         page: Page::Devices,
     })?)
     .await?;
-    assert!(handle.snapshot().devices.data.is_some());
-    wait_view(&handle, |view| {
-        view.authentication == Authentication::Expired
-    })
-    .await?;
-    assert!(handle.snapshot().principal.is_none());
-    assert!(handle.snapshot().devices.data.is_none());
-    assert!(handle.snapshot().security.data.is_none());
     assert_eq!(
-        done(handle.submit(Action::Load {
-            page: Page::Devices
-        })?)
-        .await?
-        .result
-        .failure
-        .unwrap()
-        .kind,
-        FailureKind::SignInRequired
+        handle.snapshot().principal.as_ref().unwrap().session_id,
+        session
     );
-    assert_eq!(gate.logout_responses.load(Ordering::Acquire), 1);
+    assert_eq!(gate.logout_responses.load(Ordering::Acquire), 0);
     assert_eq!(
         core.shutdown(Duration::from_secs(5)).await,
         ShutdownState::Complete

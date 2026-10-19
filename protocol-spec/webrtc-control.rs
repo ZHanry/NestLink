@@ -222,6 +222,7 @@ pub enum WebRtcControl {
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum WebRtcInputAction {
+    Scroll { x: i32, y: i32 },
     Key { usage: u16, down: bool },
     Pointer {
         button: Option<u8>,

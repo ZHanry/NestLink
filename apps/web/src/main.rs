@@ -29,6 +29,7 @@ struct RemoteTarget {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Screen {
+    Restoring,
     Trust,
     SignIn,
     Workspace,
@@ -206,7 +207,7 @@ fn App() -> impl IntoView {
         .unwrap_or_default();
     #[cfg(not(target_arch = "wasm32"))]
     let origin = String::new();
-    let screen = RwSignal::new(Screen::Trust);
+    let screen = RwSignal::new(Screen::Restoring);
     let section = RwSignal::new(Section::Devices);
     let api: Api = StoredValue::new_local(None);
     let principal = RwSignal::new(None::<Principal>);
@@ -227,6 +228,7 @@ fn App() -> impl IntoView {
 
     let username = RwSignal::new(String::new());
     let password = RwSignal::new(String::new());
+    let remember_login = RwSignal::new(false);
 
     let account_name = RwSignal::new(String::new());
     let account_password = RwSignal::new(String::new());
@@ -345,9 +347,6 @@ fn App() -> impl IntoView {
 
     let load = Callback::new({
         move |key: String| {
-            if busy.get_untracked() {
-                return;
-            }
             let Some(sdk) = api.get_value() else {
                 clear_workspace.run(());
                 screen.set(Screen::SignIn);
@@ -361,10 +360,22 @@ fn App() -> impl IntoView {
                 return;
             };
             let current = Section::from_key(&key);
+            let navigating = current != section.get_untracked();
+            busy.set(false);
             section.set(current);
-            selected.set(None);
-            error.set(String::new());
-            notice.set(String::new());
+            #[cfg(target_arch = "wasm32")]
+            if let Some(storage) =
+                web_sys::window().and_then(|window| window.session_storage().ok().flatten())
+            {
+                let _ = storage.set_item("nestlink.management-section", current.key());
+            }
+            if navigating {
+                selected.set(None);
+                rows.set(Vec::new());
+                audit_page.set(None);
+                error.set(String::new());
+                notice.set(String::new());
+            }
             let revision = load_revision.get_untracked().saturating_add(1);
             load_revision.set(revision);
             let session = session_revision.get_untracked();
@@ -388,6 +399,15 @@ fn App() -> impl IntoView {
                 }
                 match result {
                     Ok((data, policy, audit)) => {
+                        selected.update(|chosen| {
+                            if let Some(previous) = chosen.as_ref() {
+                                *chosen = data
+                                    .rows
+                                    .iter()
+                                    .find(|row| row.key == previous.key)
+                                    .cloned();
+                            }
+                        });
                         rows.set(data.rows);
                         empty_text.set(data.empty);
                         audit_page.set(audit);
@@ -451,7 +471,12 @@ fn App() -> impl IntoView {
             }
             match result {
                 Ok((data, _, next_page)) => {
-                    rows.update(|items| items.extend(data.rows));
+                    rows.update(|items| {
+                        items.extend(data.rows);
+                        if items.len() > 500 {
+                            items.drain(..items.len() - 500);
+                        }
+                    });
                     let next_page = next_page.map(|mut next| {
                         next.history_pruned |= page.history_pruned;
                         next.pruned_through = next.pruned_through.max(page.pruned_through);
@@ -478,6 +503,41 @@ fn App() -> impl IntoView {
         });
     });
 
+    #[cfg(target_arch = "wasm32")]
+    {
+        let restore_origin = origin.clone();
+        spawn_local(async move {
+            let saved = browser_session_selector(None);
+            if let Some(saved) = saved {
+                match Sdk::connect_origin(&restore_origin, false).await {
+                    Ok(mut sdk) => match sdk.restore_browser_session(saved).await {
+                        Ok(()) => {
+                            principal.set(sdk.principal().cloned());
+                            api.set_value(Some(Rc::new(futures_util::lock::Mutex::new(sdk))));
+                            screen.set(Screen::Workspace);
+                            let page = web_sys::window()
+                                .and_then(|window| window.session_storage().ok().flatten())
+                                .and_then(|storage| {
+                                    storage
+                                        .get_item("nestlink.management-section")
+                                        .ok()
+                                        .flatten()
+                                })
+                                .map(|key| Section::from_key(&key))
+                                .unwrap_or(Section::Devices);
+                            load.run(page.key().to_owned());
+                            return;
+                        }
+                        Err(problem) => error.set(i18n::sdk_error(&problem).into()),
+                    },
+                    Err(problem) => error.set(i18n::sdk_error(&problem).into()),
+                }
+            }
+            screen.set(Screen::Trust);
+        });
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    screen.set(Screen::Trust);
     let verify_origin = origin.clone();
     let display_origin = StoredValue::new_local(origin);
     let verify_server = UnsyncCallback::new(move |event: leptos::ev::SubmitEvent| {
@@ -495,7 +555,36 @@ fn App() -> impl IntoView {
         let server_origin = verify_origin.clone();
         spawn_local(async move {
             match Sdk::connect_origin(&server_origin, false).await {
-                Ok(sdk) => {
+                Ok(mut sdk) => {
+                    #[cfg(target_arch = "wasm32")]
+                    if let Some(saved) = browser_session_selector(None) {
+                        match sdk.restore_browser_session(saved).await {
+                            Ok(()) => {
+                                if session_revision.get_untracked() != session {
+                                    return;
+                                }
+                                principal.set(sdk.principal().cloned());
+                                api.set_value(Some(Rc::new(futures_util::lock::Mutex::new(sdk))));
+                                screen.set(Screen::Workspace);
+                                busy.set(false);
+                                load.run(Section::Devices.key().to_owned());
+                                return;
+                            }
+                            Err(problem)
+                                if matches!(problem, SdkError::SignIn)
+                                    || matches!(&problem, SdkError::Api(status, _) if status.as_u16() == 401) =>
+                            {
+                                browser_session_selector(Some(None));
+                            }
+                            Err(problem) => {
+                                error.set(i18n::sdk_error(&problem).into());
+                                busy.set(false);
+                                return;
+                            }
+                        }
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    let _ = &mut sdk;
                     if session_revision.get_untracked() != session {
                         return;
                     }
@@ -567,6 +656,20 @@ fn App() -> impl IntoView {
             }
             match result {
                 Ok(user) => {
+                    #[cfg(target_arch = "wasm32")]
+                    {
+                        browser_session_selector(Some(Some(user.session_id.clone())));
+                        if let Some(storage) = web_sys::window()
+                            .and_then(|window| window.local_storage().ok().flatten())
+                        {
+                            if remember_login.get_untracked() {
+                                let _ = storage
+                                    .set_item("nestlink.remembered-session", &user.session_id);
+                            } else {
+                                let _ = storage.remove_item("nestlink.remembered-session");
+                            }
+                        }
+                    }
                     principal.set(Some(user));
                     screen.set(Screen::Workspace);
                     busy.set(false);
@@ -586,6 +689,8 @@ fn App() -> impl IntoView {
 
     let sign_out = {
         move |_| {
+            #[cfg(target_arch = "wasm32")]
+            browser_session_selector(Some(None));
             if busy.get_untracked() {
                 return;
             }
@@ -832,7 +937,8 @@ fn App() -> impl IntoView {
 
     view! {
         <LanguageSelector />
-        <Show when=move || screen.get() == Screen::Trust>
+        <Show when=move || screen.get() == Screen::Restoring><main class="entry"><h1>{move || t("正在恢复登录…", "Restoring your session…")}</h1><p>{move || t("正在核对服务器和管理会话。", "Verifying the server and management session.")}</p></main></Show>
+            <Show when=move || screen.get() == Screen::Trust>
             <main class="entry-shell">
                 <Brand />
                 <section class="entry-panel" aria-labelledby="trust-title">
@@ -862,6 +968,7 @@ fn App() -> impl IntoView {
                         <label for="password">{move || t("密码", "Password")}</label>
                         <input id="password" type="password" autocomplete="current-password" prop:value=move || password.get() on:input=move |event| password.set(event_target_value(&event)) />
 
+                        <label class="checkbox-row"><input type="checkbox" prop:checked=move || remember_login.get() on:change=move |event| remember_login.set(event_target_checked(&event)) />{move || t("在此浏览器保持登录（新标签页和重启时恢复此账号）", "Keep this account signed in across new tabs and browser restarts")}</label>
                         <button class="primary" type="submit" disabled=move || busy.get()>
                             {move || if busy.get() { t("正在登录…", "Signing in…") } else { t("登录", "Sign in") }}
                         </button>
@@ -914,12 +1021,12 @@ fn App() -> impl IntoView {
                                 </button>
                             </header>
                             <Feedback error notice />
-                            <Show when=move || section.get() == Section::Services>
-                                <services_panel::ServicesPanel api session_revision refresh=load_revision auth_failure error notice />
-                            </Show>
-                            <Show when=move || section.get() == Section::Quotas>
-                                <service_quota_panel::ServiceQuotaPanel api session_revision refresh=load_revision auth_failure error notice />
-                            </Show>
+                            <div hidden=move || section.get() != Section::Services>
+                                <services_panel::ServicesPanel api session_revision refresh=load_revision active=Signal::derive(move || section.get() == Section::Services) auth_failure error notice />
+                            </div>
+                            <div hidden=move || section.get() != Section::Quotas>
+                                <service_quota_panel::ServiceQuotaPanel api session_revision refresh=load_revision active=Signal::derive(move || section.get() == Section::Quotas) auth_failure error notice />
+                            </div>
                             <Show when=move || section.get() == Section::Security>
                                 <account_security_panel::AccountSecurityPanel api session_revision refresh=load_revision auth_failure password_changed error notice />
                             </Show>
@@ -965,24 +1072,22 @@ fn App() -> impl IntoView {
                                         <div><h2>{move || list_heading(section.get())}</h2><p>{move || localized_format!("{} 项", "{} items", rows.with(Vec::len))}</p></div>
                                     </div>
                                     <div class="records" aria-live="polite">
-                                        {move || rows.with(|items| {
-                                            if items.is_empty() {
-                                                view! { <p class="empty-state">{move || empty_text.get().current()}</p> }.into_any()
-                                            } else {
-                                                items.iter().map(|item| {
-                                                    let row = item.clone();
-                                                    let detail = item.detail.clone();
-                                                    let status = item.status.clone();
-                                                    let active = selected.with(|row| row.as_ref().is_some_and(|v| v.key == item.key));
-                                                    view! {
-                                                         <button class=if active { "record selected" } else { "record" } type="button" aria-pressed=active disabled=move || busy.get() on:click=move |_| selected.set(Some(row.clone()))>
-                                                            <span class="record-main"><strong>{item.title.clone()}</strong><small>{move || detail.current()}</small></span>
-                                                            <span class="record-status">{move || status.current()}</span>
-                                                        </button>
-                                                    }
-                                                }).collect_view().into_any()
+                                        <Show when=move || rows.with(Vec::is_empty)><p class="empty-state">{move || empty_text.get().current()}</p></Show>
+                                        <For each=move || rows.get() key=|item| item.key.clone() children=move |item| {
+                                            let row = item.clone();
+                                            let active_key = item.key.clone();
+                                            let pressed_key = item.key.clone();
+                                            let detail = item.detail.clone();
+                                            let status = item.status.clone();
+                                            view! {
+                                                <button class=move || if selected.with(|chosen| chosen.as_ref().is_some_and(|v| v.key == active_key)) { "record selected" } else { "record" }
+                                                    type="button" aria-pressed=move || selected.with(|chosen| chosen.as_ref().is_some_and(|v| v.key == pressed_key))
+                                                    on:click=move |_| selected.set(Some(row.clone()))>
+                                                    <span class="record-main"><strong>{item.title}</strong><small>{move || detail.current()}</small></span>
+                                                    <span class="record-status">{move || status.current()}</span>
+                                                </button>
                                             }
-                                        })}
+                                        } />
                                     </div>
                                     {move || (section.get() == Section::Audit).then(|| view! {
                                         <div class="audit-pagination" aria-live="polite">
@@ -1119,10 +1224,10 @@ fn Feedback(error: RwSignal<String>, notice: RwSignal<String>) -> impl IntoView 
     view! {
         <div class="feedback" aria-live="polite">
             <Show when=move || !error.get().is_empty()>
-                <p class="error-message" role="alert">{move || error.get()}</p>
+                <p class="error-message" role="alert">{move || i18n::feedback_text(&error.get())} <button type="button" on:click=move |_| error.set(String::new())>{move || t("关闭", "Dismiss")}</button></p>
             </Show>
             <Show when=move || !notice.get().is_empty()>
-                <p class="notice-message">{move || notice.get()}</p>
+                <p class="notice-message">{move || i18n::feedback_text(&notice.get())} <button type="button" on:click=move |_| notice.set(String::new())>{move || t("关闭", "Dismiss")}</button></p>
             </Show>
         </div>
     }
@@ -1135,12 +1240,12 @@ fn NavButton(
     load: Callback<String>,
     busy: RwSignal<bool>,
 ) -> impl IntoView {
+    let _ = busy;
     view! {
         <button
             type="button"
             class=move || if section.get() == current { "nav-item active" } else { "nav-item" }
             aria-current=move || (section.get() == current).then_some("page")
-            disabled=move || busy.get()
             on:click=move |_| load.run(current.key().to_owned())
         >
             <span class="nav-marker" aria-hidden="true"></span>{move || current.title()}
@@ -1199,7 +1304,7 @@ async fn load_records(
                         status: if view.revoked {
                             UiCopy::new("已撤销", "Revoked")
                         } else {
-                            UiCopy::new("可用", "Available")
+                            UiCopy::new("已登记，在线状态未知", "Registered; availability unknown")
                         },
                         kind: "device",
                     })
@@ -1465,4 +1570,65 @@ fn remote_status(status: &str) -> UiCopy {
         "expired" => UiCopy::new("已到期", "Expired"),
         _ => status.to_owned().into(),
     }
+}
+
+#[component]
+fn TaskDialog(
+    open: Signal<bool>,
+    label: Signal<String>,
+    on_close: Callback<()>,
+    children: Children,
+) -> impl IntoView {
+    let dialog = NodeRef::<leptos::html::Dialog>::new();
+    Effect::new(move |_| {
+        let requested = open.get();
+        #[cfg(target_arch = "wasm32")]
+        if let Some(element) = dialog.get() {
+            if requested && !element.open() {
+                let _ = element.show_modal();
+            } else if !requested && element.open() {
+                element.close();
+            }
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        let _ = requested;
+    });
+    view! {
+        <dialog class="task-dialog" node_ref=dialog aria-label=move || label.get()
+            on:cancel=move |event: leptos::ev::Event| { event.prevent_default(); on_close.run(()); }>
+            {children()}
+        </dialog>
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn browser_session_selector(update: Option<Option<String>>) -> Option<String> {
+    let window = web_sys::window()?;
+    let storage = window.session_storage().ok()??;
+    if let Some(value) = update {
+        if let Some(value) = value {
+            let _ = storage.set_item("nestlink.management-session", &value);
+        } else {
+            let _ = storage.remove_item("nestlink.management-session");
+            if let Ok(Some(local)) = window.local_storage() {
+                let _ = local.remove_item("nestlink.remembered-session");
+            }
+        }
+    }
+    let selected = storage
+        .get_item("nestlink.management-session")
+        .ok()
+        .flatten()
+        .or_else(|| {
+            window
+                .local_storage()
+                .ok()
+                .flatten()
+                .and_then(|local| local.get_item("nestlink.remembered-session").ok().flatten())
+        })
+        .filter(|id| nestlink_protocol::valid_id(id));
+    if let Some(selected) = &selected {
+        let _ = storage.set_item("nestlink.management-session", selected);
+    }
+    selected
 }

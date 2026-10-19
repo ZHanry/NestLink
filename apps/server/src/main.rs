@@ -226,6 +226,14 @@ enum DataRole {
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+                tracing_subscriber::EnvFilter::new("warn,nestlink_server=info")
+            }),
+        )
+        .json()
+        .init();
     if let Err(error) = run().await {
         eprintln!("NestLink: {error}");
         std::process::exit(1);
@@ -567,7 +575,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             config.use_local_state_paths();
             backup.restore_new(&directory, toml::to_string_pretty(&config)?.as_bytes())?;
             println!(
-                "Deployment {} restored offline. Reauthenticate and regenerate recovery codes; start control explicitly after reviewing server.toml.",
+                "Deployment {} restored offline. Sign in again, verify the deployment configuration, and review device and service approvals; start control explicitly after reviewing server.toml.",
                 backup.deployment_id
             );
         }
@@ -748,6 +756,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             let secure = config.secure_cookies();
             let state = AppState::new(store, vault, signer, config.management_origin, secure)?
                 .with_stun_servers(config.stun_servers)?;
+            state.start_maintenance();
             let app = router(state.clone());
             let listener = tokio::net::TcpListener::bind(config.listen).await?;
             println!("NestLink control listening on {}", listener.local_addr()?);

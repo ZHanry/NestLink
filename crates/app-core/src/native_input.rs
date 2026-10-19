@@ -3,7 +3,7 @@
 use super::*;
 use nestlink_protocol::{
     INPUT_BYTES, InputCommand, KeyInput, NativeInputLayout as WireInputLayout, PointerInput,
-    decode_bounded, input_command::Action as WireAction,
+    ScrollInput, decode_bounded, input_command::Action as WireAction,
 };
 use nestlink_remote::input::{InputController, InputDevice, InputEpoch, InputLayout};
 use prost::Message;
@@ -29,6 +29,8 @@ pub struct NativeInputLayout {
     pub top: i32,
     pub width: u32,
     pub height: u32,
+    #[serde(default)]
+    pub scroll_supported: bool,
 }
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(
@@ -45,6 +47,10 @@ pub enum NativeInputAction {
     Pointer {
         button: Option<u8>,
         down: bool,
+        x: i32,
+        y: i32,
+    },
+    Scroll {
         x: i32,
         y: i32,
     },
@@ -114,7 +120,7 @@ impl NativeInputRoute {
                 "display input binding differs",
             ));
         }
-        let layout = NativeInputLayout {
+        let mut layout = NativeInputLayout {
             binding: NativeInputBinding {
                 request_id: self.request_id.clone(),
                 connection_generation: self.connection_generation,
@@ -126,11 +132,16 @@ impl NativeInputRoute {
             top: display.top,
             width: display.width,
             height: display.height,
+            scroll_supported: cfg!(not(target_os = "android")),
         };
         let mut cursor = self
             .cursor
             .lock()
             .map_err(|_| io::Error::other("input cursor poisoned"))?;
+        layout.scroll_supported = cursor
+            .layout
+            .as_ref()
+            .is_some_and(|current| current.scroll_supported);
         if let Some(current) = &cursor.layout {
             if current == &layout {
                 return Ok(());
@@ -222,6 +233,7 @@ impl NativeInputRoute {
                 top: layout.top,
                 width: layout.width,
                 height: layout.height,
+                scroll_supported: cfg!(not(target_os = "android")),
             });
             cursor.sequence = 0;
             Ok(epoch.input)
@@ -488,6 +500,12 @@ impl CoreHandle {
                 .filter(|layout| &layout.binding == binding)
                 .ok_or(NativeInputError::Invalid)?;
             let wire_action = match action.as_ref() {
+                Some(NativeInputAction::Scroll { x, y }) => {
+                    if !layout.scroll_supported {
+                        return Err(NativeInputError::Invalid);
+                    }
+                    WireAction::Scroll(ScrollInput { x: *x, y: *y })
+                }
                 Some(NativeInputAction::Key { code, down }) => WireAction::Key(KeyInput {
                     hid_usage: u32::from(*code),
                     down: *down,
@@ -637,6 +655,7 @@ impl CoreHandle {
             top: layout.top,
             width: layout.width,
             height: layout.height,
+            scroll_supported: cfg!(not(target_os = "android")),
         };
         if wire.validate().is_err() {
             return Err(reject_device(device, NativeInputError::Invalid));
@@ -722,6 +741,7 @@ impl CoreHandle {
             top: layout.top,
             width: layout.width,
             height: layout.height,
+            scroll_supported: cfg!(not(target_os = "android")),
         });
         let owned = route.clone();
         *worker_slot = Some(runtime.spawn(async move {
@@ -804,6 +824,7 @@ async fn receive_layout(mut receiver: ChannelReceiver, route: &NativeInputRoute)
             top: layout.top,
             width: layout.width,
             height: layout.height,
+            scroll_supported: layout.scroll_supported,
         };
         let mut cursor = route
             .cursor
@@ -819,7 +840,9 @@ async fn receive_layout(mut receiver: ChannelReceiver, route: &NativeInputRoute)
             {
                 continue;
             }
-            if current != &layout {
+            let mut expected = current.clone();
+            expected.scroll_supported = layout.scroll_supported;
+            if expected != layout {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidData,
                     "input layout changed without a new owner",

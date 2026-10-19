@@ -7,6 +7,7 @@
   {"path":"/audit/retention","method":"put","operation":"audit::configure","request":"AuditRetentionUpdate","response":"AuditRetention","status":200,"auth":true},
   {"path":"/auth/login","method":"post","operation":"login","request":"Login","response":"LoginResponse","status":200,"auth":false},
   {"path":"/auth/refresh","method":"post","operation":"refresh","request":"Refresh","response":"LoginResponse","status":200,"auth":false},
+  {"path":"/auth/restore","method":"post","operation":"restore_login","request":"RestoreLogin","response":"LoginResponse","status":200,"auth":false},
   {"path":"/auth/logout","method":"post","operation":"logout","status":204,"auth":true},
   {"path":"/auth/me","method":"get","operation":"me","response":"MeResponse","status":200,"auth":true},
   {"path":"/auth/password","method":"put","operation":"password","request":"PasswordChange","status":204,"auth":true},

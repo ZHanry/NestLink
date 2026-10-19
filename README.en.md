@@ -1,6 +1,6 @@
 # NestLink
 
-Self-hosted remote control and service publishing. The current version is **0.5.0 RC1** (`0.5.0-rc.1`). This update connects trusted STUN configuration to WebRTC, renews logins automatically, adds Web connection progress, and shows an independent sharing notice at the bottom right of the controlled desktop.
+Self-hosted remote control and service publishing. The current version is **0.6.0 RC1** (`0.6.0-rc.1`). This candidate fixes authentication recovery, bounded backend resources, wheel input and desktop/Web/Android task flows. See the [remediation record](docs/0.6.0-remediation.md) and [changelog](CHANGELOG.md) for evidence and pending hardware acceptance.
 
 [中文](README.md) · [Releases](https://github.com/ZHanry/NestLink/releases) · [Build instructions](docs/refactor/CANDIDATE-BUILD.md) · [Implementation and checks](docs/refactor/IMPLEMENTATION.md)
 

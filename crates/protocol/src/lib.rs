@@ -6,6 +6,7 @@ pub mod file_recovery;
 pub mod file_roots;
 pub mod files;
 pub mod input;
+pub use input::valid_scroll;
 pub mod media;
 pub mod native_displays;
 pub mod node_discovery;

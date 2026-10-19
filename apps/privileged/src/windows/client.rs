@@ -513,6 +513,9 @@ impl InputDevice for BrokerInput {
             return Err(BrokerError::Stopped.into());
         }
         let action = match input {
+            PlatformInput::Action(InputAction::Scroll { x, y }) => {
+                BrokerAction::Scroll { x: *x, y: *y }
+            }
             PlatformInput::Action(InputAction::Key { code, down }) => BrokerAction::Key {
                 code: *code,
                 down: *down,

@@ -15,7 +15,7 @@ use futures_util::future::join_all;
 use nestlink_traversal::turn::{TurnAction, TurnAuthorization};
 use std::{
     collections::HashMap,
-    net::SocketAddr,
+    net::{IpAddr, SocketAddr},
     sync::{
         Arc,
         atomic::{AtomicU64, Ordering},
@@ -65,6 +65,7 @@ struct ServiceInner {
     next_server_id: AtomicU64,
     shutdown_tx: watch::Sender<bool>,
     connection_limit: Arc<Semaphore>,
+    source_connections: Mutex<HashMap<IpAddr, std::sync::Weak<Semaphore>>>,
     listener_tasks: Mutex<Vec<JoinHandle<()>>>,
     shutdown_lock: Mutex<()>,
 }
@@ -128,6 +129,7 @@ impl TurnService {
             next_server_id: AtomicU64::new(1),
             shutdown_tx,
             connection_limit: Arc::new(Semaphore::new(config.max_connections)),
+            source_connections: Mutex::new(HashMap::new()),
             listener_tasks: Mutex::new(Vec::new()),
             shutdown_lock: Mutex::new(()),
         });
@@ -371,6 +373,22 @@ impl AuthHandler for ManagedAuth {
     }
 }
 
+async fn source_permit(
+    inner: &ServiceInner,
+    source: IpAddr,
+) -> Option<tokio::sync::OwnedSemaphorePermit> {
+    let mut sources = inner.source_connections.lock().await;
+    sources.retain(|_, limit| limit.strong_count() > 0);
+    let limit = sources
+        .get(&source)
+        .and_then(std::sync::Weak::upgrade)
+        .unwrap_or_else(|| {
+            let limit = Arc::new(Semaphore::new(16));
+            sources.insert(source, Arc::downgrade(&limit));
+            limit
+        });
+    limit.try_acquire_owned().ok()
+}
 async fn accept_loop(inner: Arc<ServiceInner>, listener: TcpListener) {
     let mut shutdown = inner.shutdown_tx.subscribe();
     let mut connections = JoinSet::new();
@@ -380,12 +398,14 @@ async fn accept_loop(inner: Arc<ServiceInner>, listener: TcpListener) {
             _ = shutdown.changed() => break,
             Some(_) = connections.join_next(), if !connections.is_empty() => {},
             accepted = listener.accept() => match accepted {
-                Ok((stream, _)) => {
+                Ok((stream, peer)) => {
+                    let Some(source) = source_permit(&inner, peer.ip()).await else { continue; };
                     let Ok(permit) = Arc::clone(&inner.connection_limit).try_acquire_owned() else {
                         drop(stream);
                         continue;
                     };
-                    connections.spawn(serve_stream(Arc::clone(&inner), stream, permit));
+                    let stream_inner = inner.clone();
+                    connections.spawn(async move { let _source = source; serve_stream(stream_inner, stream, permit).await; });
                 }
                 Err(error) => {
                     tracing::warn!(%error, "TURN TCP accept failed");
@@ -410,7 +430,8 @@ async fn accept_tls_loop(
             _ = shutdown.changed() => break,
             Some(_) = connections.join_next(), if !connections.is_empty() => {},
             accepted = listener.accept() => match accepted {
-                Ok((stream, _)) => {
+                Ok((stream, peer)) => {
+                    let Some(source) = source_permit(&inner, peer.ip()).await else { continue; };
                     let Ok(permit) = Arc::clone(&inner.connection_limit).try_acquire_owned() else {
                         drop(stream);
                         continue;
@@ -418,6 +439,7 @@ async fn accept_tls_loop(
                     let inner = Arc::clone(&inner);
                     let acceptor = acceptor.clone();
                     connections.spawn(async move {
+                        let _source = source;
                         let tls = timeout(TLS_HANDSHAKE_TIMEOUT, acceptor.accept(stream)).await;
                         if let Ok(Ok(stream)) = tls {
                             serve_stream(inner, stream, permit).await;
@@ -488,7 +510,23 @@ async fn serve_stream<S>(
         let _ = server.close().await;
         return;
     };
-    conn.wait_closed().await;
+    let mut probe = interval(Duration::from_secs(2));
+    let mut active_at = tokio::time::Instant::now();
+    loop {
+        tokio::select! {
+            _ = conn.wait_closed() => break,
+            _ = probe.tick() => {
+                if matches!(timeout(Duration::from_secs(1), server.get_allocations_info(None)).await,
+                    Ok(Ok(ref allocations)) if !allocations.is_empty()) {
+                    conn.authenticated();
+                    active_at = tokio::time::Instant::now();
+                } else if active_at.elapsed() >= Duration::from_secs(30) {
+                    let _ = conn.close().await;
+                    break;
+                }
+            }
+        }
+    }
     let _ = server.close().await;
     inner.remove_server(id).await;
 }

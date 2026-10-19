@@ -545,6 +545,23 @@ impl InputDevice for WindowsInput {
                 }
                 Ok(())
             }
+            PlatformInput::Action(InputAction::Scroll { x, y }) => {
+                let packets: Vec<_> = [(*x, MOUSEEVENTF_HWHEEL), (*y, MOUSEEVENTF_WHEEL)]
+                    .into_iter()
+                    .filter(|(delta, _)| *delta != 0)
+                    .map(|(delta, flags)| INPUT {
+                        r#type: INPUT_MOUSE,
+                        Anonymous: INPUT_0 {
+                            mi: MOUSEINPUT {
+                                mouseData: delta as u32,
+                                dwFlags: flags,
+                                ..MOUSEINPUT::default()
+                            },
+                        },
+                    })
+                    .collect();
+                send(&packets)
+            }
             PlatformInput::Action(InputAction::Text(text)) => self.text(text),
             PlatformInput::Release(_) => unreachable!(),
         }

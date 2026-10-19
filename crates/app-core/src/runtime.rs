@@ -1514,22 +1514,31 @@ pub struct AppCore {
 }
 impl AppCore {
     pub fn start(limits: Limits) -> Result<Self, StartError> {
-        Self::start_owned(limits, None, None)
+        Self::start_owned(limits, None, None, None)
     }
     pub fn with_identity(limits: Limits, identity: DeviceIdentity) -> Result<Self, StartError> {
-        Self::start_owned(limits, Some(Arc::new(identity)), None)
+        Self::start_owned(limits, Some(Arc::new(identity)), None, None)
     }
     pub fn with_identity_and_native_session(
         limits: Limits,
         identity: DeviceIdentity,
         native: NativeSessionConfig,
     ) -> Result<Self, StartError> {
-        Self::start_owned(limits, Some(Arc::new(identity)), Some(native))
+        Self::start_owned(limits, Some(Arc::new(identity)), Some(native), None)
+    }
+    pub fn with_restored_identity_and_native_session(
+        limits: Limits,
+        identity: DeviceIdentity,
+        native: NativeSessionConfig,
+        recovered: Option<Sdk>,
+    ) -> Result<Self, StartError> {
+        Self::start_owned(limits, Some(Arc::new(identity)), Some(native), recovered)
     }
     fn start_owned(
         limits: Limits,
         identity: Option<Arc<DeviceIdentity>>,
         native: Option<NativeSessionConfig>,
+        recovered: Option<Sdk>,
     ) -> Result<Self, StartError> {
         if !limits.valid() {
             return Err(StartError::Limits);
@@ -1559,7 +1568,7 @@ impl AppCore {
         });
         let (commands, incoming) = mpsc::channel(limits.operations);
         let (controls, controlling) = mpsc::channel(limits.controls);
-        let view = Snapshot {
+        let mut view = Snapshot {
             native_network: native.as_ref().map_or_else(
                 crate::NativeNetworkSettings::default,
                 NativeSessionConfig::network_settings,
@@ -1570,6 +1579,30 @@ impl AppCore {
             }),
             ..Snapshot::default()
         };
+        let recovered = recovered.map(|sdk| {
+            let mut issuer = [0; 32];
+            if let Ok(bytes) = URL_SAFE_NO_PAD.decode(&sdk.health().permit_issuer)
+                && let Ok(key) = <[u8; 32]>::try_from(bytes)
+            {
+                issuer = key;
+            }
+            let server = ApprovedServer {
+                origin: sdk.management_origin().into(),
+                deployment_id: sdk.health().deployment_id.clone(),
+                permit_issuer: issuer,
+                allow_loopback_http: false,
+            };
+            view.server = Some(ServerView {
+                origin: server.origin.clone(),
+                deployment_id: server.deployment_id.clone(),
+                approved_issuer: issuer,
+                verified_health: Some(sdk.health().clone()),
+                error: None,
+            });
+            view.principal = sdk.principal().cloned();
+            view.authentication = Authentication::SignedIn;
+            Client { sdk, server }
+        });
         let (views, watching) = watch::channel(Arc::new(view.clone()));
         let (stop, stopping) = watch::channel(false);
         let (finish, finished) = watch::channel(false);
@@ -1579,7 +1612,7 @@ impl AppCore {
             shared: shared.clone(),
             view: watching,
         };
-        let actor = Actor {
+        let mut actor = Actor {
             automation: handle.clone(),
             native_inbox_deadline: tokio::time::Instant::now(),
             native_inbox_attempts: std::collections::BTreeSet::new(),
@@ -1593,7 +1626,7 @@ impl AppCore {
             view,
             identity,
             native,
-            sdk: None,
+            sdk: recovered,
             native_session_key: None,
             native_session_control: None,
             native_session_task: None,
@@ -1612,6 +1645,7 @@ impl AppCore {
             access_deadline: None,
             session_refresh_retry: tokio::time::Instant::now(),
         };
+        actor.install_deadline();
         let task = Some(runtime.spawn(actor.run()));
         Ok(Self {
             handle,
@@ -1957,8 +1991,11 @@ impl Actor {
                     self.finish.send_replace(true);
                     return;
                 }
-            } else if self.expired() {
-                self.expire();
+            } else if self.expired() && !self.retire {
+                // Access expiry fences live platform effects, but does not
+                // revoke the independent, still-valid refresh credential.
+                self.request_native_stop(StopReason::Expired, None);
+                self.stop_local_service_host_owner();
             }
             self.start_next();
             enum Step {
@@ -2982,6 +3019,7 @@ impl Actor {
         self.publish();
     }
     fn stop(&mut self) {
+        self.persist_management_login();
         self.shared.closing.store(true, Ordering::Release);
         self.incoming.close();
         self.controlling.close();
@@ -3051,6 +3089,15 @@ impl Actor {
             }
             if let Some(mut client) = self.sdk.take() {
                 let had_session = client.sdk.principal().is_some();
+                let store = self
+                    .native
+                    .as_ref()
+                    .and_then(|n| n.management_login_store.clone());
+                let preserve = self.view.lifecycle != Lifecycle::Running
+                    && store.as_ref().is_some_and(|store| store.enabled());
+                if !preserve && let Some(store) = &store {
+                    let _ = store.clear();
+                }
                 self.active = Some(Active {
                     envelope: None,
                     server: None,
@@ -3063,7 +3110,12 @@ impl Actor {
                     native_connection_generation: None,
                     service_host_runtime_id: None,
                     future: Box::pin(async move {
-                        let result = client.sdk.logout().await.map_err(Failure::from);
+                        let result = if preserve {
+                            client.sdk.forget_login();
+                            Ok(())
+                        } else {
+                            client.sdk.logout().await.map_err(Failure::from)
+                        };
                         Job::Retired {
                             client,
                             had_session,
@@ -3145,6 +3197,11 @@ impl Actor {
             return;
         }
         if self.start_session_refresh() {
+            return;
+        }
+        // During a failed or delayed renewal, no protected work may use the
+        // expired access credential. The timer retries with its bounded backoff.
+        if self.expired() && !self.retire {
             return;
         }
         if self.pending.is_empty() && self.start_native_recovery() {
@@ -4416,6 +4473,9 @@ impl Actor {
                     }
                     if let Some(section) = active.section {
                         section.status(&mut self.view, None, response.failure.clone());
+                    }
+                    if sign_in && response.failure.is_none() {
+                        self.persist_management_login();
                     }
                     if sign_in {
                         self.view.authentication = if response.failure.is_none() {

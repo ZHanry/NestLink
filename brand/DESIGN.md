@@ -1,4 +1,4 @@
-# NestLink 0.5.0 RC product design
+# NestLink 0.6.0 RC product design
 
 NestLink uses a light lavender workspace and the existing linked-N identity. Its main task is choosing a computer and establishing an explicitly authorized remote session. Gemini CLI supplied the layout prototype in `docs/design/0.4.0-desktop-prototype.html`; the native egui implementation retains real device, approval and session state.
 

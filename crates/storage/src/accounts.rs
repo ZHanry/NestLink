@@ -99,12 +99,67 @@ impl Store {
         generation: u64,
         now: u64,
     ) -> Result<LoginGrant, StorageError> {
+        self.rotate_login(refresh, generation, now, None)
+    }
+    pub fn refresh_login_recoverable(
+        &mut self,
+        refresh: &str,
+        generation: u64,
+        now: u64,
+        vault: &VaultKey,
+    ) -> Result<LoginGrant, StorageError> {
+        self.rotate_login(refresh, generation, now, Some(vault))
+    }
+    pub fn restore_browser_login(
+        &mut self,
+        session: &str,
+        refresh: &str,
+        now: u64,
+        vault: &VaultKey,
+    ) -> Result<LoginGrant, StorageError> {
+        require_id(session)?;
+        let generation: u64 = self
+            .connection
+            .query_row(
+                "SELECT generation FROM management_sessions WHERE id=?1 AND refresh_sha256=?2 UNION ALL SELECT previous_generation FROM management_refresh_receipts WHERE session_id=?1 AND previous_sha256=?2 LIMIT 1",
+                params![session, token_hash("refresh", refresh)],
+                |r| r.get(0),
+            )
+            .optional()?
+            .ok_or(StorageError::Unauthorized)?;
+        self.refresh_login_recoverable(refresh, generation, now, vault)
+    }
+    fn rotate_login(
+        &mut self,
+        refresh: &str,
+        generation: u64,
+        now: u64,
+        vault: Option<&VaultKey>,
+    ) -> Result<LoginGrant, StorageError> {
         if refresh.len() != 43 {
             return Err(StorageError::Unauthorized);
         }
+        let previous_hash = token_hash("refresh", refresh);
         let tx = self.connection.transaction()?;
         let record:Option<(String,String)>=tx.query_row("SELECT s.id,s.account_id FROM management_sessions s JOIN accounts a ON a.id=s.account_id JOIN deployment d ON d.singleton=1 WHERE s.refresh_sha256=?1 AND s.generation=?2 AND s.refresh_expires>?3 AND s.revoked=0 AND a.disabled=0 AND s.security_epoch=d.security_epoch",params![token_hash("refresh",refresh),generation,now],|r|Ok((r.get(0)?,r.get(1)?))).optional()?;
         let Some((session_id, account_id)) = record else {
+            if let Some(vault) = vault {
+                let receipt: Option<(String, Vec<u8>)> = tx.query_row(
+                    "SELECT s.id,r.response_ciphertext FROM management_refresh_receipts r JOIN management_sessions s ON s.id=r.session_id JOIN accounts a ON a.id=s.account_id JOIN deployment d ON d.singleton=1 WHERE r.previous_sha256=?1 AND r.previous_generation=?2 AND r.expires>?3 AND s.generation=?2+1 AND s.refresh_expires>?3 AND s.revoked=0 AND a.disabled=0 AND s.security_epoch=d.security_epoch",
+                    params![previous_hash, generation, now], |r| Ok((r.get(0)?,r.get(1)?))).optional()?;
+                if let Some((session, cipher)) = receipt {
+                    let plain = vault.decrypt_management(&session, &cipher)?;
+                    let response: nestlink_protocol::api::LoginResponse =
+                        serde_json::from_slice(&plain)?;
+                    return Ok(LoginGrant {
+                        principal: response.principal,
+                        access_token: Secret::from_text(response.access_token),
+                        refresh_token: Secret::from_text(response.refresh_token),
+                        generation: response.generation,
+                        refresh_expires: response.refresh_expires,
+                    });
+                }
+            }
             return Err(StorageError::Unauthorized);
         };
         let next = generation
@@ -116,6 +171,24 @@ impl Store {
         tx.execute("UPDATE management_sessions SET access_sha256=?1,refresh_sha256=?2,generation=?3,access_expires=?4,refresh_expires=?5 WHERE id=?6",params![token_hash("access",access.expose()),token_hash("refresh",refresh.expose()),next,now+ACCESS_SECONDS,now+REFRESH_SECONDS,session_id])?;
         let principal = principal_for(&tx, &account_id, &session_id, now + ACCESS_SECONDS)?;
         audit(&tx, "login_refreshed", &session_id, management(&principal))?;
+        if let Some(vault) = vault {
+            let plain = zeroize::Zeroizing::new(serde_json::to_vec(
+                &nestlink_protocol::api::LoginResponse {
+                    principal: principal.clone(),
+                    access_token: access.expose().into(),
+                    refresh_token: refresh.expose().into(),
+                    generation: next,
+                    refresh_expires: now + REFRESH_SECONDS,
+                },
+            )?);
+            let cipher = vault.encrypt_management(&session_id, &plain)?;
+            tx.execute(
+                "DELETE FROM management_refresh_receipts WHERE expires<=?1",
+                [now],
+            )?;
+            tx.execute("INSERT INTO management_refresh_receipts VALUES(?1,?2,?3,?4,?5) ON CONFLICT(session_id) DO UPDATE SET previous_sha256=excluded.previous_sha256,previous_generation=excluded.previous_generation,response_ciphertext=excluded.response_ciphertext,expires=excluded.expires",
+                params![session_id, previous_hash, generation, cipher, now + 30])?;
+        }
         tx.commit()?;
         Ok(LoginGrant {
             principal,

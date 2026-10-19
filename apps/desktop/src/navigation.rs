@@ -4,6 +4,7 @@ use nestlink_app_core::{Action, Page, Snapshot};
 
 impl DesktopApp {
     pub(crate) fn navigate(&mut self, screen: Screen, snapshot: &Snapshot) {
+        self.message = None;
         self.screen = screen;
         match screen {
             Screen::Remote => {

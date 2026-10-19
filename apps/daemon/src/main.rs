@@ -8,6 +8,7 @@ mod native_clipboard;
 mod native_files;
 mod native_video;
 mod privileged_input;
+mod session_store;
 
 use clap::{Parser, Subcommand};
 use nestlink_app_core::{AppCore, Limits, ShutdownState};
@@ -465,10 +466,17 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         capture::browser_host_config(browser_data_registry.clone(), privileged_input.clone())
             .with_diagnostics(diagnostics::browser_host_sink(state_dir.clone())),
     );
-    let mut core = AppCore::with_identity_and_native_session(
+    let login_store = Arc::new(session_store::SessionStore::new(state_dir.clone()));
+    let recovered = login_store.restore().await;
+    native.management_login_store = Some(login_store);
+    if recovered.is_some() {
+        native.listen_for_native_requests = false;
+    }
+    let mut core = AppCore::with_restored_identity_and_native_session(
         Limits::default(),
         identity(&state_dir)?,
         native,
+        recovered,
     )?;
     let _native_clipboard = native_clipboard::install(&core.handle())?;
     let native_files = Arc::new(native_files::LocalFiles::new(

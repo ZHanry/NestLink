@@ -4,6 +4,10 @@ use crate::{
     input_command::Action,
 };
 use prost::Message;
+/// Bounded relative wheel motion, independent of display coordinates.
+pub fn valid_scroll(x: i32, y: i32) -> bool {
+    (-12000..=12000).contains(&x) && (-12000..=12000).contains(&y) && (x != 0 || y != 0)
+}
 impl InputCommand {
     pub fn validate(&self) -> Result<(), ContractError> {
         let invalid = |reason| ContractError::new(ErrorCode::InvalidMessage, reason);
@@ -32,6 +36,7 @@ impl InputCommand {
         }
         match self.action.as_ref() {
             Some(Action::ReleaseAll(true)) => Ok(()),
+            Some(Action::Scroll(s)) if valid_scroll(s.x, s.y) => Ok(()),
             Some(Action::Key(key)) if (4..=0xe7).contains(&key.hid_usage) => Ok(()),
             Some(Action::Pointer(pointer))
                 if pointer.button.is_none_or(|b| (1..=5).contains(&b))

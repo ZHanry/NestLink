@@ -95,18 +95,34 @@ impl VaultKey {
     pub fn from_bytes(bytes: [u8; 32]) -> Self {
         Self(bytes)
     }
+    pub fn encrypt_management(&self, session: &str, plain: &[u8]) -> Result<Vec<u8>, AuthError> {
+        self.encrypt_bound(&format!("NestLink/v15/management-refresh/{session}"), plain)
+    }
+    pub fn decrypt_management(
+        &self,
+        session: &str,
+        cipher: &[u8],
+    ) -> Result<Zeroizing<Vec<u8>>, AuthError> {
+        self.decrypt_bound(
+            &format!("NestLink/v15/management-refresh/{session}"),
+            cipher,
+        )
+    }
     pub fn encrypt_turn(
         &self,
         allocation_id: &str,
         plaintext: &[u8],
     ) -> Result<Vec<u8>, AuthError> {
+        if plaintext.len() > 984 {
+            return Err(AuthError::Invalid);
+        }
         self.encrypt_bound(
             &format!("NestLink/v15/turn-credential/{allocation_id}"),
             plaintext,
         )
     }
     fn encrypt_bound(&self, aad: &str, plaintext: &[u8]) -> Result<Vec<u8>, AuthError> {
-        if plaintext.len() > 984 {
+        if plaintext.len() > 16384 {
             return Err(AuthError::Invalid);
         }
         let nonce = random_bytes::<24>();
@@ -129,13 +145,16 @@ impl VaultKey {
         allocation_id: &str,
         ciphertext: &[u8],
     ) -> Result<Zeroizing<Vec<u8>>, AuthError> {
+        if ciphertext.len() > 1024 {
+            return Err(AuthError::Invalid);
+        }
         self.decrypt_bound(
             &format!("NestLink/v15/turn-credential/{allocation_id}"),
             ciphertext,
         )
     }
     fn decrypt_bound(&self, aad: &str, ciphertext: &[u8]) -> Result<Zeroizing<Vec<u8>>, AuthError> {
-        if ciphertext.len() < 40 || ciphertext.len() > 1024 {
+        if ciphertext.len() < 40 || ciphertext.len() > 16424 {
             return Err(AuthError::Invalid);
         }
         let cipher = XChaCha20Poly1305::new((&self.0).into());

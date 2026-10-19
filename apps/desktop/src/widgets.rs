@@ -80,13 +80,14 @@ pub fn primary_button(ui: &mut egui::Ui, text: &str, enabled: bool) -> egui::Res
 }
 
 pub fn field(ui: &mut egui::Ui, label: &str, value: &mut String, limit: usize) {
-    ui.label(label);
+    let label_response = ui.label(label);
     ui.add(
         egui::TextEdit::singleline(value)
             .desired_width(ui.available_width().min(540.))
             .margin(egui::vec2(12., 10.))
             .char_limit(limit),
-    );
+    )
+    .labelled_by(label_response.id);
 }
 const SECRET_FIELDS: &[&str] = &[
     "password",
@@ -105,7 +106,7 @@ pub fn secret_field(
     generation: u64,
     limit: usize,
 ) {
-    ui.label(label);
+    let label_response = ui.label(label);
     let id = egui::Id::new(("secret", generation, name));
     let mut buffer = MaskedSecret::new(value, limit);
     let mut output = egui::TextEdit::singleline(&mut buffer)
@@ -117,6 +118,7 @@ pub fn secret_field(
         .show(ui);
     // egui's normal TextEdit undoer copies TextBuffer::as_str even for password
     // fields. Our buffer exposes only masks, and undo cannot replace the secret.
+    egui::Response::clone(&output.response).labelled_by(label_response.id);
     output.state.clear_undoer();
     output.state.store(ui.ctx(), id);
 }
@@ -324,16 +326,18 @@ pub fn operation_message(result: &OperationResult, english: bool) -> String {
     message
 }
 pub fn section<T>(ui: &mut egui::Ui, section: &Section<T>, english: bool) {
-    if section.loading.is_some() {
-        ui.horizontal(|ui| {
-            ui.spinner();
-            ui.label(if english {
-                "Loading…"
-            } else {
-                "正在加载…"
+    ui.allocate_ui(egui::vec2(ui.available_width(), 28.), |ui| {
+        if section.loading.is_some() {
+            ui.horizontal(|ui| {
+                ui.spinner();
+                ui.label(if english {
+                    "Loading…"
+                } else {
+                    "正在加载…"
+                });
             });
-        });
-    }
+        }
+    });
     if let Some(error) = &section.error {
         ui.colored_label(ui.visuals().error_fg_color, failure(error, english));
     }

@@ -228,3 +228,22 @@ dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
 @media (max-width: 600px) {
     .language-selector { padding-inline: 0.5rem; }
 }
+
+/* Operation feedback does not take space away from the current task. */
+.feedback { position: fixed; z-index: 90; right: 20px; top: 62px; width: min(420px, calc(100vw - 40px)); pointer-events: none; }
+.feedback > p { pointer-events: auto; box-shadow: 0 4px 18px #0003; }
+.feedback button { float: right; margin-inline-start: 12px; cursor: pointer; }
+.remote-toolbar { position: sticky; top: 0; z-index: 2; background: var(--paper); }
+
+.task-dialog { width: min(640px, calc(100vw - 32px)); max-height: calc(100dvh - 40px); padding: 24px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-window); overflow: auto; }
+.task-dialog::backdrop { background: #18132299; }
+.task-dialog form { margin: 0; }
+.task-dialog .primary, .task-dialog .secondary { position: sticky; bottom: 0; }
+.remote-session { overflow: auto; overscroll-behavior: contain; }
+.remote-stage { flex: 1 0 32vh; min-height: 180px; }
+.remote-toolbar { flex: 0 0 auto; }
+
+[hidden], .remote-session:not([open]) { display: none !important; }
+.remote-session { margin: auto; width: calc(100vw - 32px); height: calc(100dvh - 32px); max-width: 1500px; max-height: none; color: var(--ink); border: 1px solid var(--line); }
+.remote-session::backdrop { background: #181322aa; }
+.remote-session .remote-toolbar { position: sticky; top: -1px; }

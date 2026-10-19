@@ -21,7 +21,7 @@ use axum::{
     Json, Router,
     body::Body,
     extract::{
-        DefaultBodyLimit, Path, State, WebSocketUpgrade,
+        DefaultBodyLimit, Path, Query, State, WebSocketUpgrade,
         ws::{Message, WebSocket},
     },
     http::{HeaderMap, HeaderValue, Request, StatusCode, header},
@@ -46,7 +46,7 @@ use nestlink_storage::{
     accounts::{LoginGrant, MemberDraft, PasswordVerification, Principal},
 };
 use prost::Message as ProstMessage;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::{
     collections::HashMap,
@@ -54,6 +54,8 @@ use std::{
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
 use tokio::sync::{Semaphore, broadcast};
+
+type RateBuckets = HashMap<String, HashMap<String, (Instant, u32)>>;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -66,13 +68,15 @@ pub struct AppState {
     events: broadcast::Sender<Event>,
     origin: Arc<String>,
     secure_cookies: bool,
-    rates: Arc<Mutex<HashMap<String, (Instant, u32)>>>,
+    rates: Arc<Mutex<RateBuckets>>,
     relays: Arc<relay::RelayHub>,
     relay_lifecycle: Arc<nestlink_storage::relay_reservations::RelayLifecycle>,
     service_lifecycle: Arc<nestlink_storage::services::publication::ServiceLifecycle>,
     service_signer: Arc<nestlink_identity::service_plane::ServiceLeaseSigner>,
     node_signer: Arc<nestlink_identity::nodes::NodePolicySigner>,
     node_connections: Arc<Semaphore>,
+    event_connections: Arc<Semaphore>,
+    event_accounts: Arc<Mutex<HashMap<String, Arc<Semaphore>>>>,
     stun_servers: Arc<Vec<std::net::SocketAddr>>,
 }
 #[derive(Clone, Serialize)]
@@ -105,6 +109,7 @@ impl From<StorageError> for ApiError {
                 {
                     Self(StatusCode::CONFLICT, ErrorCode::InvalidMessage)
                 } else {
+                    tracing::error!(event = "database_failed", code = ?rusqlite_error.sqlite_error_code(), "database operation failed");
                     Self(StatusCode::INTERNAL_SERVER_ERROR, ErrorCode::InternalError)
                 }
             }
@@ -176,8 +181,33 @@ impl AppState {
             service_signer: Arc::new(service_signer),
             node_signer: Arc::new(node_signer),
             node_connections: Arc::new(Semaphore::new(128)),
+            event_connections: Arc::new(Semaphore::new(256)),
+            event_accounts: Arc::new(Mutex::new(HashMap::new())),
             stun_servers: Arc::new(Vec::new()),
         })
+    }
+    pub fn start_maintenance(&self) {
+        let store = Arc::downgrade(&self.store);
+        tokio::spawn(async move {
+            let mut tick = tokio::time::interval(std::time::Duration::from_secs(5));
+            loop {
+                tick.tick().await;
+                let Some(store) = store.upgrade() else {
+                    return;
+                };
+                let result = tokio::task::spawn_blocking(move || {
+                    let mut store = store.lock().map_err(|_| StorageError::Conflict)?;
+                    store.cleanup_remote_signals(now()?)
+                })
+                .await;
+                if !matches!(result, Ok(Ok(_))) {
+                    tracing::warn!(
+                        event = "signal_cleanup_failed",
+                        "bounded signal maintenance failed"
+                    );
+                }
+            }
+        });
     }
     async fn db<R, F>(&self, action: F) -> Result<R, ApiError>
     where
@@ -250,6 +280,8 @@ impl AppState {
             .rates
             .lock()
             .map_err(|_| ApiError(StatusCode::INTERNAL_SERVER_ERROR, ErrorCode::InternalError))?;
+        let namespace = bucket.split('/').next().unwrap_or("other");
+        let rates = rates.entry(namespace.into()).or_default();
         rates.retain(|_, (start, _)| start.elapsed().as_secs() < 60);
         if !rates.contains_key(bucket) && rates.len() >= 2048 {
             return Err(ApiError(
@@ -290,6 +322,7 @@ pub fn router(state: AppState) -> Router {
         )
         .route("/api/v3/auth/login", post(login))
         .route("/api/v3/auth/refresh", post(refresh))
+        .route("/api/v3/auth/restore", post(restore_login))
         .route("/api/v3/auth/logout", post(logout))
         .route("/api/v3/auth/me", get(me))
         .route("/api/v3/auth/password", put(password))
@@ -476,14 +509,18 @@ async fn security(State(state): State<AppState>, request: Request<Body>, next: N
             return error.into_response();
         }
     }
-    if matches!(request.uri().path(), "/api/v3/auth/password")
-        && let Ok(token) = access(request.headers())
-        && let Err(error) = state.limit(&format!(
-            "factor/{}",
-            URL_SAFE_NO_PAD.encode(nestlink_auth::token_hash("rate", &token))
-        ))
-    {
-        return error.into_response();
+    if request.uri().path() == "/api/v3/auth/password" {
+        let token = match access(request.headers()) {
+            Ok(token) => token,
+            Err(error) => return error.into_response(),
+        };
+        let principal = match state.db(move |s| s.authenticate(&token, now()?)).await {
+            Ok(principal) => principal,
+            Err(error) => return error.into_response(),
+        };
+        if let Err(error) = state.limit(&format!("factor/{}", principal.session_id)) {
+            return error.into_response();
+        }
     }
     if request
         .headers()
@@ -498,7 +535,25 @@ async fn security(State(state): State<AppState>, request: Request<Body>, next: N
     {
         return ApiError(StatusCode::FORBIDDEN, ErrorCode::PermissionRequired).into_response();
     }
+    let started = Instant::now();
+    let request_id = uuid::Uuid::new_v4().to_string();
+    let route = request
+        .extensions()
+        .get::<axum::extract::MatchedPath>()
+        .map(|matched| matched.as_str().to_owned())
+        .unwrap_or_else(|| "unmatched".into());
+    let method = request.method().clone();
     let mut response = next.run(request).await;
+    let elapsed_ms = started.elapsed().as_millis() as u64;
+    let status = response.status().as_u16();
+    if response.status().is_server_error() || elapsed_ms >= 1000 {
+        tracing::warn!(event = "management_request", request_id, route, %method, status, elapsed_ms);
+    } else {
+        tracing::debug!(event = "management_request", request_id, route, %method, status, elapsed_ms);
+    }
+    if let Ok(value) = HeaderValue::from_str(&request_id) {
+        response.headers_mut().insert("x-request-id", value);
+    }
     if response.status().is_client_error()
         && !response
             .headers()
@@ -584,7 +639,18 @@ fn cookies(state: &AppState, grant: &LoginGrant) -> Result<HeaderMap, ApiError> 
     Ok(headers)
 }
 fn login_response(state: &AppState, grant: LoginGrant) -> Result<Response, ApiError> {
-    let headers = cookies(state, &grant)?;
+    let mut headers = cookies(state, &grant)?;
+    let secure = if state.secure_cookies { "; Secure" } else { "" };
+    headers.append(
+        header::SET_COOKIE,
+        HeaderValue::from_str(&format!(
+            "nl15_restore_{}={}; HttpOnly; SameSite=Strict; Path=/api/v3/auth; Max-Age=604800{}",
+            grant.principal.session_id,
+            grant.refresh_token.expose(),
+            secure
+        ))
+        .map_err(|_| ApiError(StatusCode::INTERNAL_SERVER_ERROR, ErrorCode::InternalError))?,
+    );
     Ok((headers,Json(json!({"principal":grant.principal,"access_token":grant.access_token.expose(),"refresh_token":grant.refresh_token.expose(),"generation":grant.generation,"refresh_expires":grant.refresh_expires}))).into_response())
 }
 async fn path_limits(
@@ -697,8 +763,31 @@ async fn refresh(
         .refresh_token
         .or_else(|| cookie(&headers, "nl15_refresh"))
         .ok_or(ApiError(StatusCode::UNAUTHORIZED, ErrorCode::AuthRequired))?;
+    let vault = state.vault.clone();
     let grant = state
-        .db(move |s| s.refresh_login(&refresh, body.generation, now()?))
+        .db(move |s| s.refresh_login_recoverable(&refresh, body.generation, now()?, &vault))
+        .await?;
+    login_response(&state, grant)
+}
+async fn restore_login(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<nestlink_protocol::api::RestoreLogin>,
+) -> Result<Response, ApiError> {
+    if headers.get(header::ORIGIN).and_then(|v| v.to_str().ok()) != Some(state.origin.as_str()) {
+        return Err(ApiError(
+            StatusCode::FORBIDDEN,
+            ErrorCode::PermissionRequired,
+        ));
+    }
+    if !nestlink_protocol::valid_id(&body.session_id) {
+        return Err(ApiError(StatusCode::BAD_REQUEST, ErrorCode::InvalidMessage));
+    }
+    let refresh = cookie(&headers, &format!("nl15_restore_{}", body.session_id))
+        .ok_or(ApiError(StatusCode::UNAUTHORIZED, ErrorCode::AuthRequired))?;
+    let vault = state.vault.clone();
+    let grant = state
+        .db(move |s| s.restore_browser_login(&body.session_id, &refresh, now()?, &vault))
         .await?;
     login_response(&state, grant)
 }
@@ -713,11 +802,11 @@ async fn me(State(state): State<AppState>, headers: HeaderMap) -> Result<Json<Va
 }
 async fn logout(State(state): State<AppState>, headers: HeaderMap) -> Result<Response, ApiError> {
     let token = access(&headers)?;
-    let account = state
+    let (account, session) = state
         .db(move |s| {
             let p = s.authenticate(&token, now()?)?;
             s.logout(&p)?;
-            Ok(p.account_id)
+            Ok((p.account_id, p.session_id))
         })
         .await?;
     state.emit(
@@ -727,6 +816,13 @@ async fn logout(State(state): State<AppState>, headers: HeaderMap) -> Result<Res
         json!({}),
     );
     let mut h = HeaderMap::new();
+    h.append(
+        header::SET_COOKIE,
+        HeaderValue::from_str(&format!(
+            "nl15_restore_{session}=; HttpOnly; SameSite=Strict; Path=/api/v3/auth; Max-Age=0"
+        ))
+        .map_err(|_| ApiError(StatusCode::INTERNAL_SERVER_ERROR, ErrorCode::InternalError))?,
+    );
     for name in ["nl15_access", "nl15_refresh"] {
         h.append(
             header::SET_COOKIE,
@@ -942,15 +1038,26 @@ async fn update_policy(
     state.emit("policy_revoked", None, None, json!({"revision":revision}));
     Ok(Json(json!({"revision":revision})))
 }
+#[derive(Deserialize, Default)]
+struct PendingQuery {
+    after: Option<String>,
+}
 async fn pending(
     State(state): State<AppState>,
+    Query(query): Query<PendingQuery>,
     headers: HeaderMap,
 ) -> Result<Json<Value>, ApiError> {
     let token = access(&headers)?;
     state
         .db(move |s| {
             let p = s.authenticate(&token, now()?)?;
-            Ok(Json(json!({"requests":s.pending_remote(&p)?})))
+            let requests = s.pending_remote_page(&p, now()?, query.after.as_deref())?;
+            let next_cursor = (requests.len() == 100)
+                .then(|| requests.last().map(|r| r.id.clone()))
+                .flatten();
+            Ok(Json(
+                json!({"requests":requests, "next_cursor": next_cursor}),
+            ))
         })
         .await
 }
@@ -1171,10 +1278,9 @@ async fn submit_signal(
     Json(body): Json<SignalSubmission>,
 ) -> Result<StatusCode, ApiError> {
     let token = access(&headers)?;
-    state.limit(&format!(
-        "signal/{}",
-        URL_SAFE_NO_PAD.encode(nestlink_auth::token_hash("rate", &token))
-    ))?;
+    let check = token.clone();
+    let principal = state.db(move |s| s.authenticate(&check, now()?)).await?;
+    state.limit(&format!("signal/{}", principal.session_id))?;
     let resource = id.clone();
     let audience = state
         .db(move |s| {
@@ -1211,11 +1317,32 @@ async fn events(
     let token = access(&headers)?;
     let check = token.clone();
     let principal = state.db(move |s| s.authenticate(&check, now()?)).await?;
+    let global = state
+        .event_connections
+        .clone()
+        .try_acquire_owned()
+        .map_err(|_| ApiError(StatusCode::TOO_MANY_REQUESTS, ErrorCode::CapacityExceeded))?;
+    let account = {
+        let mut accounts = state
+            .event_accounts
+            .lock()
+            .map_err(|_| ApiError(StatusCode::INTERNAL_SERVER_ERROR, ErrorCode::InternalError))?;
+        accounts.retain(|_, slots| slots.available_permits() < 4);
+        accounts
+            .entry(principal.account_id.clone())
+            .or_insert_with(|| Arc::new(Semaphore::new(4)))
+            .clone()
+            .try_acquire_owned()
+            .map_err(|_| ApiError(StatusCode::TOO_MANY_REQUESTS, ErrorCode::CapacityExceeded))?
+    };
     let subscription = state.events.subscribe();
     Ok(ws
         .max_message_size(CONTROL_BYTES as usize)
         .max_frame_size(CONTROL_BYTES as usize)
-        .on_upgrade(move |socket| event_loop(socket, state, principal, token, subscription)))
+        .on_upgrade(move |socket| async move {
+            let _slots = (global, account);
+            event_loop(socket, state, principal, token, subscription).await;
+        }))
 }
 async fn event_loop(
     mut socket: WebSocket,
@@ -1224,10 +1351,19 @@ async fn event_loop(
     token: String,
     mut subscription: broadcast::Receiver<Event>,
 ) {
-    let mut heartbeat = tokio::time::interval(std::time::Duration::from_secs(1));
+    let mut heartbeat = tokio::time::interval(std::time::Duration::from_secs(5));
+    heartbeat.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    let mut verified_at = Instant::now();
     loop {
         tokio::select! {
-            _=heartbeat.tick()=>{let token=token.clone();if state.db(move|s|s.authenticate(&token,now()?)).await.is_err(){break;}},
+            _=heartbeat.tick()=>{
+                let token=token.clone();
+                match state.db(move|s|s.authenticate(&token,now()?)).await {
+                    Ok(_) => verified_at = Instant::now(),
+                    Err(ApiError(StatusCode::TOO_MANY_REQUESTS, _)) if verified_at.elapsed().as_secs() < 15 => {},
+                    Err(_) => break,
+                }
+            },
             event=subscription.recv()=>{match event{Ok(event)if event.audience.as_ref().is_none_or(|v|v.contains(&principal.account_id))=>{let Ok(text)=serde_json::to_string(&event)else{break;};if !bounded_send(&mut socket,Message::Text(text.into())).await {break;}},Ok(_)=>{},Err(_)=>break,}},
             input=socket.recv()=>{match input{Some(Ok(Message::Ping(bytes)))=>{if !bounded_send(&mut socket,Message::Pong(bytes)).await {break;}},Some(Ok(Message::Pong(_)))=>{},_=>break,}}
         }

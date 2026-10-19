@@ -6,6 +6,10 @@ import android.view.View
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
@@ -104,8 +108,15 @@ internal fun RemoteVideoCanvas(
         onDispose { if (binding != null) latestReleaseInput.value(binding) }
     }
 
+    var viewScale by remember(activeInputLayout?.binding) { mutableStateOf(1f) }
+    var viewPan by remember(activeInputLayout?.binding) { mutableStateOf(Offset.Zero) }
     Column(modifier) {
-        Text(uiText(UiTextKey.REMOTE_SCREEN_CD57D), style = MaterialTheme.typography.titleMedium)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(uiText(UiTextKey.REMOTE_SCREEN_CD57D), modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
+            TextButton(onClick = { viewScale = (viewScale / 1.5f).coerceAtLeast(1f); if (viewScale == 1f) viewPan = Offset.Zero }) { Text("−") }
+            TextButton(onClick = { viewScale = (viewScale * 1.5f).coerceAtMost(4f) }) { Text("+") }
+            TextButton(onClick = { viewScale = 1f; viewPan = Offset.Zero }) { Text(uiText(UiTextKey.REMOTE_FIT)) }
+        }
         if (presentation == null) {
             Surface(
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -159,7 +170,7 @@ internal fun RemoteVideoCanvas(
                     Image(
                         bitmap = image,
                         contentDescription = uiText(UiTextKey.NESTLINK_AUTHORIZED_REMOTE_SCREEN_ED93E),
-                        modifier = Modifier.fillMaxSize().clip(MaterialTheme.shapes.large).then(
+                        modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = viewScale; scaleY = viewScale; translationX = viewPan.x; translationY = viewPan.y }.clip(MaterialTheme.shapes.large).then(
                             if (activeInputLayout == null) Modifier else Modifier.pointerInput(
                                 activeInputLayout,
                                 presentation.width,
@@ -186,6 +197,16 @@ internal fun RemoteVideoCanvas(
                                     try {
                                         while (true) {
                                             val event = awaitPointerEvent()
+                                            if (event.changes.count { it.pressed } >= 2) {
+                                                if (pointerHeld) { onReleaseInput(activeInputLayout.binding); pointerHeld = false }
+                                                viewScale = (viewScale * event.calculateZoom()).coerceIn(1f, 4f)
+                                                val pan = viewPan + event.calculatePan()
+                                                val maxX = size.width * (viewScale - 1f) / 2f
+                                                val maxY = size.height * (viewScale - 1f) / 2f
+                                                viewPan = Offset(pan.x.coerceIn(-maxX, maxX), pan.y.coerceIn(-maxY, maxY))
+                                                event.changes.forEach { it.consume() }
+                                                continue
+                                            }
                                             val change = event.changes.firstOrNull { it.id == down.id } ?: break
                                             val point = mapVideoPointToInput(
                                                 change.position.x,
@@ -229,6 +250,7 @@ internal fun RemoteVideoCanvas(
                                     }
                                 }
                             }.focusRequester(focusRequester).focusable().onFocusChanged {
+                                if (videoHasFocus.value && !it.isFocused) onReleaseInput(activeInputLayout.binding)
                                 videoHasFocus.value = it.isFocused
                             }.onPreviewKeyEvent { event ->
                                 val usage = event.nativeKeyEvent.keyCode.toHidUsage() ?: return@onPreviewKeyEvent false
@@ -270,7 +292,29 @@ internal fun RemoteVideoCanvas(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (activeInputLayout?.scrollSupported == true) {
+                Row(Modifier.fillMaxWidth()) {
+                    TextButton(onClick = { onInputAction(activeInputLayout.binding, NativeInputAction.Scroll(0, 120)) }) { Text("↑") }
+                    TextButton(onClick = { onInputAction(activeInputLayout.binding, NativeInputAction.Scroll(0, -120)) }) { Text("↓") }
+                    TextButton(onClick = { onInputAction(activeInputLayout.binding, NativeInputAction.Scroll(-120, 0)) }) { Text("←") }
+                    TextButton(onClick = { onInputAction(activeInputLayout.binding, NativeInputAction.Scroll(120, 0)) }) { Text("→") }
+                }
+            }
             if (activeInputLayout != null) {
+                Row(Modifier.fillMaxWidth()) {
+                    TextButton(onClick = {
+                        val x = activeInputLayout.left + activeInputLayout.width / 2
+                        val y = activeInputLayout.top + activeInputLayout.height / 2
+                        onInputAction(activeInputLayout.binding, NativeInputAction.Pointer(2, true, x, y))
+                        onInputAction(activeInputLayout.binding, NativeInputAction.Pointer(2, false, x, y))
+                    }) { Text(uiText(UiTextKey.REMOTE_RIGHT_CLICK)) }
+                    for ((label, usage) in listOf("Esc" to 0x29, "Enter" to 0x28, "Tab" to 0x2b)) {
+                        TextButton(onClick = {
+                            onInputAction(activeInputLayout.binding, NativeInputAction.Key(usage, true))
+                            onInputAction(activeInputLayout.binding, NativeInputAction.Key(usage, false))
+                        }) { Text(label) }
+                    }
+                }
                 RemoteInputComposer(
                     binding = activeInputLayout.binding,
                     onCommit = { text ->

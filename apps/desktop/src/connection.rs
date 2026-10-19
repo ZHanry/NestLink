@@ -156,6 +156,14 @@ impl DesktopApp {
                             1024,
                         );
                         ui.add_space(14.);
+                        ui.checkbox(
+                            &mut self.credentials.remember_login,
+                            if self.english {
+                                "Keep me signed in on this device"
+                            } else {
+                                "在此设备保持登录"
+                            },
+                        );
                         let signing_in = snapshot.authentication == Authentication::SigningIn;
                         let ready = self.connected
                             && !signing_in
@@ -181,6 +189,12 @@ impl DesktopApp {
                         .clicked()
                             || (enter && ready)
                         {
+                            let preference = self.directory.join("remember-login.json");
+                            if nestlink_platform_security::replace_private_metadata(&preference,
+                                if self.credentials.remember_login { b"true" } else { b"false" }).is_err() {
+                                self.set_message(self.t("无法保存登录设置，请检查本机数据目录。", "Could not save the sign-in setting. Check the local data directory.").into(), MessageTone::Danger);
+                                return;
+                            }
                             let action = Action::SignIn {
                                 username: self.credentials.username.trim().into(),
                                 password: widgets::take_secret(&mut self.credentials.password),

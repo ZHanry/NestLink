@@ -1479,7 +1479,11 @@ impl WebRtcHostPeer {
         let fingerprint = dtls_fingerprint(&local.sdp)?;
         let description = WebRtcDescription {
             kind: "answer".into(),
-            sdp: local.sdp.clone(),
+            sdp: if cfg!(target_os = "android") {
+                local.sdp.clone()
+            } else {
+                format!("{}a=nestlink-scroll:120\r\n", local.sdp)
+            },
             dtls_sha256: fingerprint,
             in_reply_to_sequence: Some(offer.sequence),
         };
@@ -2799,6 +2803,7 @@ fn spawn_input_control(
                             WebRtcInputAction::Pointer { button, down, x, y } => {
                                 InputAction::Pointer { button, down, x, y }
                             }
+                            WebRtcInputAction::Scroll { x, y } => InputAction::Scroll { x, y },
                             WebRtcInputAction::Text { text } => InputAction::Text(text),
                         };
                         let event = InputEvent {

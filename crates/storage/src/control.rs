@@ -482,12 +482,73 @@ impl Store {
         })
     }
 
-    pub fn pending_remote(&self, actor: &Principal) -> Result<Vec<RemoteView>, StorageError> {
-        let mut statement=self.connection.prepare("SELECT r.id FROM remote_requests r JOIN devices h ON h.id=r.host_device_id WHERE h.account_id=?1 AND r.status='pending' ORDER BY r.expires LIMIT 100")?;
-        let ids = statement
-            .query_map([&actor.account_id], |r| r.get::<_, String>(0))?
-            .collect::<Result<Vec<_>, _>>()?;
-        ids.iter().map(|id| self.remote(actor, id)).collect()
+    pub fn pending_remote(
+        &self,
+        actor: &Principal,
+        now: u64,
+    ) -> Result<Vec<RemoteView>, StorageError> {
+        self.pending_remote_page(actor, now, None)
+    }
+    pub fn pending_remote_page(
+        &self,
+        actor: &Principal,
+        now: u64,
+        after: Option<&str>,
+    ) -> Result<Vec<RemoteView>, StorageError> {
+        if let Some(id) = after {
+            require_id(id)?;
+        }
+        let mut statement = self.connection.prepare("SELECT r.id,r.controller_device_id,r.host_device_id,r.permissions_json,r.paths_json,r.nonce,r.policy_revision,r.expires,r.status,r.lease_sequence,r.connection_generation,r.trust_revision,r.password_revision FROM remote_requests r JOIN devices h ON h.id=r.host_device_id WHERE h.account_id=?1 AND r.status='pending' AND r.expires>?2 AND (?3 IS NULL OR (r.expires,r.id) > (SELECT expires,id FROM remote_requests WHERE id=?3)) ORDER BY r.expires,r.id LIMIT 100")?;
+        let rows = statement.query_map(params![actor.account_id, now, after], |r| {
+            Ok((
+                r.get::<_, String>(0)?,
+                r.get::<_, String>(1)?,
+                r.get::<_, String>(2)?,
+                r.get::<_, String>(3)?,
+                r.get::<_, String>(4)?,
+                r.get::<_, Vec<u8>>(5)?,
+                r.get::<_, u64>(6)?,
+                r.get::<_, u64>(7)?,
+                r.get::<_, String>(8)?,
+                r.get::<_, u64>(9)?,
+                r.get::<_, u64>(10)?,
+                r.get::<_, Option<u64>>(11)?,
+                r.get::<_, Option<u64>>(12)?,
+            ))
+        })?;
+        rows.map(|row| {
+            let (
+                id,
+                c,
+                h,
+                permissions,
+                paths,
+                nonce,
+                policy_revision,
+                expires,
+                status,
+                lease_sequence,
+                connection_generation,
+                trust_revision,
+                password_revision,
+            ) = row?;
+            Ok(RemoteView {
+                id,
+                controller_device_id: c,
+                host_device_id: h,
+                permissions: serde_json::from_str(&permissions)?,
+                paths: serde_json::from_str(&paths)?,
+                nonce: URL_SAFE_NO_PAD.encode(nonce),
+                policy_revision,
+                expires_at_unix_ms: expires * 1000,
+                status,
+                lease_sequence,
+                connection_generation,
+                trust_revision,
+                password_revision,
+            })
+        })
+        .collect()
     }
     pub fn approval_transcript(
         &self,

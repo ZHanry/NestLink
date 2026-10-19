@@ -197,6 +197,7 @@ mod tests {
             top: 20,
             width: 200,
             height: 100,
+            scroll_supported: true,
         }
     }
 

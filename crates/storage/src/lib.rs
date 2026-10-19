@@ -6,7 +6,7 @@ use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, params};
 use std::{path::Path, time::Duration};
 
 pub const APPLICATION_ID: i32 = 1_313_622_833;
-pub const SCHEMA_VERSION: i32 = 22;
+pub const SCHEMA_VERSION: i32 = 23;
 const MIGRATION: &str = include_str!("../migrations/001_initial.sql");
 const CONTROL_MIGRATION: &str = include_str!("../migrations/002_control.sql");
 const SCOPES_MIGRATION: &str = include_str!("../migrations/003_policy_scopes.sql");
@@ -288,6 +288,12 @@ impl Store {
                 "ALTER TABLE service_quota_settings ADD COLUMN restore_fenced INTEGER NOT NULL DEFAULT 0 CHECK(restore_fenced IN (0,1))",
                 [],
             )?;
+            transaction.commit()?;
+        }
+        if version < 23 {
+            let transaction = connection.transaction()?;
+            transaction.execute_batch(include_str!("../migrations/023_refresh_receipts.sql"))?;
+            transaction.pragma_update(None, "user_version", 23)?;
             transaction.commit()?;
         }
         connection.pragma_update(None, "journal_mode", "WAL")?;

@@ -966,6 +966,7 @@ mod wasm {
 
     #[derive(Default)]
     struct InputSendState {
+        scroll_supported: bool,
         layout: Option<PeerInputLayout>,
         pending_layout: Option<PeerInputLayout>,
         suspended: bool,
@@ -1039,6 +1040,22 @@ mod wasm {
                             layout_epoch: layout.layout_epoch,
                             sequence,
                             action: WebRtcInputAction::Pointer { button, down, x, y },
+                        }
+                    }
+                    BrowserInputEvent::Scroll { x, y } => {
+                        if !state.scroll_supported {
+                            return Ok(());
+                        }
+                        let sequence = next_input_sequence(state.sequence)?;
+                        WebRtcControl::InputEvent {
+                            schema_version: claims.schema_version,
+                            session_id: claims.session_id.clone(),
+                            connection_generation: claims.connection_generation,
+                            lease_sequence: claims.lease_sequence,
+                            input_epoch: layout.input_epoch,
+                            layout_epoch: layout.layout_epoch,
+                            sequence,
+                            action: WebRtcInputAction::Scroll { x, y },
                         }
                     }
                     BrowserInputEvent::Text(text) => {
@@ -2087,6 +2104,10 @@ mod wasm {
                     continue;
                 }
                 let remote = rtc_description(&description, self.permit.claims())?;
+                self.input_state.borrow_mut().scroll_supported = description
+                    .sdp
+                    .lines()
+                    .any(|line| line == "a=nestlink-scroll:120");
                 if self.turn_credentials.is_some() {
                     self.remote_candidate_addresses =
                         managed_candidate_addresses(self.mode, &description.sdp)?;

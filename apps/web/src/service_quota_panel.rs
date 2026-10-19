@@ -77,7 +77,7 @@ fn parse_scope(value: &str) -> Option<ServiceQuotaScope> {
 
 fn authentication_lost(error: &SdkError) -> bool {
     matches!(error, SdkError::SignIn)
-        || matches!(error, SdkError::Api(status, _) if status.as_u16() == 401 || status.as_u16() == 403)
+        || matches!(error, SdkError::Api(status, _) if status.as_u16() == 401)
 }
 
 #[component]
@@ -85,6 +85,7 @@ pub(super) fn ServiceQuotaPanel(
     api: Api,
     session_revision: RwSignal<u64>,
     refresh: RwSignal<u64>,
+    active: Signal<bool>,
     auth_failure: Callback<SdkHandle>,
     error: RwSignal<String>,
     notice: RwSignal<String>,
@@ -93,6 +94,7 @@ pub(super) fn ServiceQuotaPanel(
     let scope_key = RwSignal::new(String::new());
     let limit_bytes = RwSignal::new(String::new());
     let usage = RwSignal::new(None::<ServiceQuotaUsageView>);
+    let stale = RwSignal::new(false);
     let busy = RwSignal::new(false);
     let alive = Arc::new(AtomicBool::new(true));
     let owner = alive.clone();
@@ -135,7 +137,15 @@ pub(super) fn ServiceQuotaPanel(
                 && scope_key.get_untracked().trim() == requested_key;
             match result {
                 Ok(view) if still_selected => {
-                    limit_bytes.set(view.limit_bytes.to_string());
+                    let dirty = usage.with_untracked(|old| {
+                        old.as_ref().is_some_and(|old| {
+                            limit_bytes.get_untracked() != old.limit_bytes.to_string()
+                        })
+                    });
+                    if write || !dirty {
+                        limit_bytes.set(view.limit_bytes.to_string());
+                    }
+                    stale.set(false);
                     usage.set(Some(view));
                     notice.set(
                         if write {
@@ -158,7 +168,7 @@ pub(super) fn ServiceQuotaPanel(
                     if write {
                         // A transport failure can arrive after the transaction
                         // committed. Do not leave an old revision looking current.
-                        usage.set(None);
+                        stale.set(true);
                         error.set(localized_format!(
                             "未能确认配额更新结果：{}。请重新读取当前修订后再操作。",
                             "Could not confirm the quota update: {}. Read the current revision before trying again.",
@@ -189,19 +199,20 @@ pub(super) fn ServiceQuotaPanel(
             );
             return;
         }
-        usage.set(None);
         submit.run(Command::Load { scope, scope_key });
     };
 
     let loaded_refresh = StoredValue::new(None::<u64>);
     Effect::new(move |_| {
+        if !active.get() {
+            return;
+        }
         let requested = refresh.get();
         if loaded_refresh.get_value() != Some(requested) {
             loaded_refresh.set_value(Some(requested));
             if let Some(scope) = parse_scope(&scope.get_untracked()) {
                 let scope_key = scope_key.get_untracked().trim().to_owned();
                 if valid_id(&scope_key) {
-                    usage.set(None);
                     submit.run(Command::Load { scope, scope_key });
                 }
             }
@@ -260,12 +271,13 @@ pub(super) fn ServiceQuotaPanel(
 
     let can_save = move || {
         !busy.get()
+            && !stale.get()
             && usage.with(|value| {
                 value.as_ref().is_some_and(|value| {
-                    parse_scope(&scope.get_untracked()) == Some(value.scope)
-                        && scope_key.get_untracked().trim() == value.scope_key
+                    parse_scope(&scope.get()) == Some(value.scope)
+                        && scope_key.get().trim() == value.scope_key
                         && limit_bytes
-                            .get_untracked()
+                            .get()
                             .parse::<u64>()
                             .is_ok_and(|next| next <= i64::MAX as u64 && next != value.limit_bytes)
                 })
@@ -288,7 +300,7 @@ pub(super) fn ServiceQuotaPanel(
                     <label for="service-quota-scope">{move || t("配额范围", "Quota scope")}</label>
                     <select id="service-quota-scope" disabled=move || busy.get() prop:value=move || scope.get() on:change=move |event| {
                         scope.set(event_target_value(&event));
-                        usage.set(None);
+                        stale.set(true);
                         limit_bytes.set(String::new());
                         error.set(String::new());
                         notice.set(String::new());
@@ -303,7 +315,7 @@ pub(super) fn ServiceQuotaPanel(
                         prop:value=move || scope_key.get()
                         on:input=move |event| {
                             scope_key.set(event_target_value(&event));
-                            usage.set(None);
+                            stale.set(true);
                             limit_bytes.set(String::new());
                             error.set(String::new());
                             notice.set(String::new());
@@ -311,37 +323,27 @@ pub(super) fn ServiceQuotaPanel(
                     <p class="muted">{move || t("请使用对应账号、设备、节点或服务的完整 UUID。无已计量流量的范围仍可设置限制。", "Use the full UUID of the account, device, node, or service. A scope with no recorded traffic can still receive a limit.")}</p>
                 </form>
                 <Show when=move || usage.with(Option::is_some)>
-                    {move || usage.get().map(|view| {
-                        let reconciliation_required = view.reconciliation_required;
-                        let latest_runtime = view.latest_runtime_id.clone();
-                        let latest_generation = view.latest_runtime_generation;
-                        view! {
                             <article class="policy-form">
                                 <div class="section-heading">
-                                    <div><h2>{move || t("当前计量", "Current usage")}</h2><p>{move || t("配额修订 ", "Quota revision ")} {view.limit_revision}</p></div>
+                                    <div><h2>{move || t("当前计量", "Current usage")}</h2><p>{move || t("配额修订 ", "Quota revision ")} {move || usage.with(|v| v.as_ref().map(|v| v.limit_revision).unwrap_or_default())}</p></div>
                                 </div>
-                                <p>{move || localized_format!("已确认用量：{} 字节", "Confirmed spent: {} bytes", view.spent_bytes)}</p>
-                                <p>{move || localized_format!("未结清授权：{} 字节", "Outstanding grants: {} bytes", view.outstanding_bytes)}</p>
-                                <p>{move || localized_format!("活动授权数：{}", "Active grants: {}", view.active_grants)}</p>
-                                {reconciliation_required.then(|| view! {
-                                    <p class="quota-warning" role="status">{move || t("恢复后的用量尚待外部对账；对账完成前服务授权仍被关闭。", "Restored usage still requires external reconciliation; service grants remain disabled until it is complete.")}</p>
-                                })}
-                                {latest_runtime.map(|runtime| view! {
-                                    <p class="muted">{move || localized_format!("最近节点运行时：{}（代次 {}）", "Latest node runtime: {} (generation {})", runtime, latest_generation.unwrap_or_default())}</p>
-                                })}
+                                <p>{move || localized_format!("已确认用量：{} 字节", "Confirmed spent: {} bytes", usage.with(|v| v.as_ref().map(|v| v.spent_bytes).unwrap_or_default()))}</p>
+                                <p>{move || localized_format!("未结清授权：{} 字节", "Outstanding grants: {} bytes", usage.with(|v| v.as_ref().map(|v| v.outstanding_bytes).unwrap_or_default()))}</p>
+                                <p>{move || localized_format!("活动授权数：{}", "Active grants: {}", usage.with(|v| v.as_ref().map(|v| v.active_grants).unwrap_or_default()))}</p>
+                                <Show when=move || usage.with(|v| v.as_ref().is_some_and(|v| v.reconciliation_required))><p class="quota-warning" role="status">{move || t("恢复后的用量尚待外部对账。", "Restored usage requires external reconciliation.")}</p></Show>
+                                <Show when=move || stale.get()><p role="status">{move || t("当前为上次读取的数据，请刷新后再保存。", "Showing last known data. Refresh before saving.")}</p></Show>
                                 <form class="service-fields" on:submit=save>
                                     <label for="service-quota-limit">{move || t("新累计流量上限（字节）", "New cumulative traffic limit (bytes)")}</label>
                                     <input id="service-quota-limit" type="number" min="0" max="9223372036854775807" step="1" required=true disabled=move || busy.get()
                                         prop:value=move || limit_bytes.get()
                                         on:input=move |event| limit_bytes.set(event_target_value(&event)) />
+                                    <p class="muted">{move || limit_bytes.get().parse::<u64>().ok().map(|bytes| localized_format!("约 {:.3} GiB（1 GiB = 1073741824 字节）。", "Approximately {:.3} GiB (1 GiB = 1073741824 bytes).", bytes as f64 / 1073741824.)).unwrap_or_default()}</p>
                                     <p class="muted">{move || t("保存会递增当前范围的修订；并发修改会被拒绝，必须刷新后重试。", "Saving advances this scope's revision. Concurrent changes are rejected; refresh before retrying.")}</p>
                                     <button class="primary" type="submit" disabled=move || !can_save()>
                                         {move || if busy.get() { t("正在保存…", "Saving…") } else { t("保存服务配额", "Save service quota") }}
                                     </button>
                                 </form>
                             </article>
-                        }
-                    })}
                 </Show>
             </section>
             <aside class="detail-pane" aria-label=move || t("配额说明", "Quota details")>

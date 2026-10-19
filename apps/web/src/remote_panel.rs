@@ -746,9 +746,18 @@ pub fn RemotePanel(
         }
     });
 
+    let remote_dialog = NodeRef::<leptos::html::Dialog>::new();
+    Effect::new(move |_| {
+        if target.get().is_some()
+            && let Some(dialog) = remote_dialog.get()
+            && !dialog.open()
+        {
+            let _ = dialog.show_modal();
+        }
+    });
     view! {
         <Show when=move || target.get().is_some()>
-            <section id="remote-session" class="remote-session" role="dialog" aria-modal="true" aria-labelledby="remote-session-title">
+            <dialog node_ref=remote_dialog id="remote-session" class="remote-session" aria-labelledby="remote-session-title" on:cancel=move |event: leptos::ev::Event| { event.prevent_default(); reset(); target.set(None); }>
                 <header class="remote-toolbar">
                     <div><h2 id="remote-session-title">{move || target.get().map(|host| host.name).unwrap_or_default()}</h2>
                         <p aria-live="polite">{move || status.get()}</p></div>
@@ -821,7 +830,7 @@ pub fn RemotePanel(
                     <button class="primary" type="button" on:click=start disabled=move || active.get()>{move || t("请求连接", "Request connection")}</button>
                 </footer>
                 <Show when=move || !problem.get().is_empty()><p class="error-message remote-error" role="alert">{move || problem.get()}</p></Show>
-            </section>
+            </dialog>
         </Show>
     }
 }

@@ -10,7 +10,7 @@ use std::{
 use wasm_bindgen::{JsCast, closure::Closure};
 use web_sys::{
     CompositionEvent, Document, Event, EventTarget, HtmlElement, HtmlTextAreaElement,
-    HtmlVideoElement, InputEvent, KeyboardEvent, PointerEvent, Window,
+    HtmlVideoElement, InputEvent, KeyboardEvent, PointerEvent, WheelEvent, Window,
 };
 
 const POINTER_SAMPLE_MS: f64 = 16.0;
@@ -39,6 +39,10 @@ impl BrowserInputLayout {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BrowserInputEvent {
+    Scroll {
+        x: i32,
+        y: i32,
+    },
     Key {
         usage: u16,
         down: bool,
@@ -116,6 +120,37 @@ impl BrowserInputCapture {
     }
 
     fn install(&mut self, document: &Document) -> Result<(), &'static str> {
+        let sink = self.sink.clone();
+        let wheel = Closure::wrap(Box::new(move |event: Event| {
+            let Ok(event) = event.dyn_into::<WheelEvent>() else {
+                return;
+            };
+            if event.ctrl_key() {
+                return;
+            }
+            let scale = match event.delta_mode() {
+                1 => 120.0,
+                2 => 1200.0,
+                _ => 3.0,
+            };
+            let x = (event.delta_x() * scale).round().clamp(-12000.0, 12000.0) as i32;
+            let y = (-event.delta_y() * scale).round().clamp(-12000.0, 12000.0) as i32;
+            if x != 0 || y != 0 {
+                (sink.borrow_mut())(BrowserInputEvent::Scroll { x, y });
+                event.prevent_default();
+            }
+        }) as Box<dyn FnMut(Event)>);
+        let options = web_sys::AddEventListenerOptions::new();
+        options.set_passive(false);
+        let target: EventTarget = self.video.clone().into();
+        target
+            .add_event_listener_with_callback_and_add_event_listener_options(
+                "wheel",
+                wheel.as_ref().unchecked_ref(),
+                &options,
+            )
+            .map_err(|_| "wheel listener unavailable")?;
+        self.listeners.push((target, "wheel", wheel));
         let composing = Rc::new(Cell::new(false));
         let sink = self.sink.clone();
         let video = self.video.clone();

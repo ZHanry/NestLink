@@ -2186,6 +2186,12 @@
       },
       "RemoteRequestsResponse": {
         "properties": {
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "requests": {
             "items": {
               "$ref": "#/components/schemas/RemoteView"
@@ -2303,6 +2309,19 @@
           "host_signature"
         ],
         "title": "RenewalSubmission",
+        "type": "object"
+      },
+      "RestoreLogin": {
+        "additionalProperties": false,
+        "properties": {
+          "session_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id"
+        ],
+        "title": "RestoreLogin",
         "type": "object"
       },
       "RevisionResponse": {
@@ -4448,7 +4467,7 @@
   "info": {
     "description": "Generated from protocol-spec/management.rs and management-routes.json.",
     "title": "NestLink management contract",
-    "version": "0.5.0-rc.1"
+    "version": "0.6.0-rc.1"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -5376,6 +5395,95 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Refresh"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [],
+        "x-server-role": "control"
+      }
+    },
+    "/auth/restore": {
+      "post": {
+        "operationId": "restore_login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreLogin"
               }
             }
           },

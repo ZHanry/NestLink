@@ -69,6 +69,7 @@ struct LoginState {
     access: Secret,
     refresh: Secret,
     generation: u64,
+    refresh_expires: u64,
 }
 pub struct DeviceIdentity {
     pub device_id: String,
@@ -245,6 +246,48 @@ impl Sdk {
             login: None,
         })
     }
+    pub fn management_origin(&self) -> &str {
+        self.origin.as_str()
+    }
+    /// Secret-bearing recovery data for the daemon's OS-protected store only.
+    pub fn export_login(&self) -> Result<Option<zeroize::Zeroizing<Vec<u8>>>, SdkError> {
+        let Some(login) = &self.login else {
+            return Ok(None);
+        };
+        Ok(Some(zeroize::Zeroizing::new(serde_json::to_vec(
+            &serde_json::json!({
+                "origin": self.origin.as_str(), "deployment_id": self.trust.deployment_id,
+                "permit_issuer": self.trust.permit_issuer,
+                "login": LoginResponse { principal: login.principal.clone(), access_token: login.access.expose().into(),
+                    refresh_token: login.refresh.expose().into(), generation: login.generation, refresh_expires: login.refresh_expires }
+            }),
+        )?)))
+    }
+    pub async fn resume_login(bytes: &[u8]) -> Result<Self, SdkError> {
+        #[derive(serde::Deserialize)]
+        struct Saved {
+            origin: String,
+            deployment_id: String,
+            permit_issuer: [u8; 32],
+            login: LoginResponse,
+        }
+        let saved: Saved = serde_json::from_slice(bytes)?;
+        let mut sdk = Self::connect(
+            &saved.origin,
+            DeploymentTrust {
+                deployment_id: saved.deployment_id,
+                permit_issuer: saved.permit_issuer,
+            },
+            false,
+        )
+        .await?;
+        sdk.install_login(saved.login)?;
+        sdk.refresh().await?;
+        Ok(sdk)
+    }
+    pub fn forget_login(&mut self) {
+        self.login = None;
+    }
     pub fn principal(&self) -> Option<&Principal> {
         self.login.as_ref().map(|v| &v.principal)
     }
@@ -348,8 +391,31 @@ impl Sdk {
             access: Secret::from_text(response.access_token),
             refresh: Secret::from_text(response.refresh_token),
             generation: response.generation,
+            refresh_expires: response.refresh_expires,
         });
         Ok(())
+    }
+    /// Select a specific browser session using its HttpOnly cookie. The selector
+    /// contains no credential, and must belong to this tab and verified origin.
+    pub async fn restore_browser_session(&mut self, session_id: String) -> Result<(), SdkError> {
+        if self.login.is_some() || !valid_id(&session_id) {
+            return Err(SdkError::Invalid);
+        }
+        let response: LoginResponse = self
+            .call(
+                Method::POST,
+                "/auth/restore",
+                Some(&nestlink_protocol::api::RestoreLogin {
+                    session_id: session_id.clone(),
+                }),
+                false,
+            )
+            .await?
+            .ok_or(SdkError::Invalid)?;
+        if response.principal.session_id != session_id {
+            return Err(SdkError::Trust);
+        }
+        self.install_login(response)
     }
     pub async fn refresh(&mut self) -> Result<(), SdkError> {
         let login = self.login.as_ref().ok_or(SdkError::SignIn)?;
@@ -623,10 +689,27 @@ impl Sdk {
         Ok(())
     }
     pub async fn pending_remote(&self) -> Result<Vec<RemoteView>, SdkError> {
-        Ok(self
-            .required::<(), RemoteRequestsResponse>(Method::GET, "/remote", None)
-            .await?
-            .requests)
+        let mut requests = Vec::new();
+        let mut cursor = None;
+        loop {
+            let path = cursor
+                .as_ref()
+                .map_or_else(|| "/remote".to_owned(), |id| format!("/remote?after={id}"));
+            let page = self
+                .required::<(), RemoteRequestsResponse>(Method::GET, &path, None)
+                .await?;
+            requests.extend(page.requests);
+            let Some(next) = page.next_cursor else {
+                return Ok(requests);
+            };
+            if !nestlink_protocol::valid_id(&next)
+                || cursor.as_ref() == Some(&next)
+                || requests.len() >= 10000
+            {
+                return Err(SdkError::Invalid);
+            }
+            cursor = Some(next);
+        }
     }
     pub async fn ready_native_remote(
         &self,

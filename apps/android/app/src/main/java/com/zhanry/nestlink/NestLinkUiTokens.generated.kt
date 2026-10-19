@@ -19,7 +19,7 @@ internal object NestLinkUiTokens {
     val darkPrimaryActionText = Color(0xFF21152F)
     val lightCanvas = Color(0xFFF6F3FC)
     val lightText = Color(0xFF2E2540)
-    val lightBorder = Color(0xFFDDD3EB)
+    val lightBorder = Color(0xFF8E7BA3)
     val lightDanger = Color(0xFFB42336)
     val lightFocus = Color(0xFF684298)
     val darkFocus = Color(0xFFD2B7F3)
@@ -46,7 +46,7 @@ internal object NestLinkUiTokens {
         surface = Color(0xFFFFFFFF),
         onSurface = lightText,
         surfaceVariant = Color(0xFFEEE8F8),
-        onSurfaceVariant = Color(0xFF746783),
+        onSurfaceVariant = Color(0xFF6E617C),
         outline = lightBorder,
         error = lightDanger,
         onError = Color.White,
@@ -65,7 +65,7 @@ internal object NestLinkUiTokens {
         onSurface = Color(0xFFF4EFFB),
         surfaceVariant = Color(0xFF211A2C),
         onSurfaceVariant = Color(0xFFBDB0CE),
-        outline = Color(0xFF493A5C),
+        outline = Color(0xFF927DAA),
         error = Color(0xFFFFA8B4),
         onError = Color(0xFF191420),
     )

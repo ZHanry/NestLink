@@ -240,6 +240,11 @@ pub struct Login {
 }
 #[derive(Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
+pub struct RestoreLogin {
+    pub session_id: String,
+}
+#[derive(Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct Refresh {
     pub refresh_token: Option<String>,
     pub generation: u64,
@@ -349,6 +354,8 @@ pub struct RemoteView {
 #[derive(Serialize, Deserialize, JsonSchema)]
 pub struct RemoteRequestsResponse {
     pub requests: Vec<RemoteView>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub next_cursor: Option<String>,
 }
 /// A host-signed preparation hint. This grants no capture or session authority.
 #[derive(Serialize, Deserialize, JsonSchema)]

@@ -13,6 +13,7 @@ use tokio::{
 use webrtc_util::{Conn, Result as UtilResult};
 
 const MAX_TURN_FRAME: usize = 65_560;
+const READ_TIMEOUT: Duration = Duration::from_secs(30);
 const WRITE_TIMEOUT: Duration = Duration::from_millis(500);
 
 /// A preconnected TURN-over-TCP/TLS client transport. Each accepted stream is
@@ -26,6 +27,7 @@ pub(crate) struct StreamConn<S> {
     close_tx: watch::Sender<bool>,
     close_rx: watch::Receiver<bool>,
     closed: AtomicBool,
+    authenticated: AtomicBool,
 }
 
 impl<S> StreamConn<S>
@@ -43,7 +45,12 @@ where
             close_tx,
             close_rx,
             closed: AtomicBool::new(false),
+            authenticated: AtomicBool::new(false),
         }
+    }
+
+    pub(crate) fn authenticated(&self) {
+        self.authenticated.store(true, Ordering::Release);
     }
 
     pub(crate) async fn wait_closed(&self) {
@@ -97,7 +104,10 @@ where
         let result = tokio::select! {
             biased;
             _ = closed.changed() => Err(Self::close_error()),
-            result = read_frame(reader, buf) => result,
+            result = timeout(if self.authenticated.load(Ordering::Acquire) { Duration::from_secs(600) } else { READ_TIMEOUT }, read_frame(reader, buf)) => match result {
+                Ok(result) => result,
+                Err(_) => Err(io::Error::new(io::ErrorKind::TimedOut, "TURN stream read deadline elapsed")),
+            },
         };
         match result {
             Ok(bytes) => Ok((bytes, self.peer)),
@@ -208,6 +218,22 @@ fn align4(length: usize) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test(start_paused = true)]
+    async fn empty_and_partial_unauthenticated_frames_reach_a_fixed_deadline() -> io::Result<()> {
+        for partial in [vec![], vec![0], vec![0, 0, 0, 4, 0, 0]] {
+            let (mut peer, stream) = tokio::io::duplex(128);
+            peer.write_all(&partial).await?;
+            let address = SocketAddr::from(([127, 0, 0, 1], 12345));
+            let connection = StreamConn::new(stream, address, address);
+            let started = tokio::time::Instant::now();
+            let mut buffer = [0; 128];
+            assert!(connection.recv_from(&mut buffer).await.is_err());
+            assert_eq!(started.elapsed(), READ_TIMEOUT);
+            assert!(connection.closed.load(Ordering::Acquire));
+        }
+        Ok(())
+    }
 
     #[tokio::test]
     async fn channel_data_stream_frames_include_rfc_padding() -> io::Result<()> {

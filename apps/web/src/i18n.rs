@@ -3,6 +3,7 @@ use leptos::prelude::*;
 
 thread_local! {
     static ENGLISH: ArcRwSignal<bool> = ArcRwSignal::new(false);
+    static MESSAGES: std::cell::RefCell<std::collections::BTreeMap<String, (String, String)>> = const { std::cell::RefCell::new(std::collections::BTreeMap::new()) };
 }
 
 pub fn english() -> bool {
@@ -10,7 +11,46 @@ pub fn english() -> bool {
 }
 
 pub fn text(chinese: &'static str, english_text: &'static str) -> &'static str {
+    MESSAGES.with(|cache| {
+        let mut cache = cache.borrow_mut();
+        if cache.len() < 4096 {
+            let pair = (chinese.to_owned(), english_text.to_owned());
+            cache.insert(chinese.into(), pair.clone());
+            cache.insert(english_text.into(), pair);
+        }
+    });
     if english() { english_text } else { chinese }
+}
+
+pub fn feedback_text(value: &str) -> String {
+    let en = english();
+    MESSAGES.with(|cache| {
+        cache
+            .borrow()
+            .get(value)
+            .map(|pair| if en { pair.1.clone() } else { pair.0.clone() })
+            .unwrap_or_else(|| value.to_owned())
+    })
+}
+
+pub fn formatted(chinese: String, english_text: String) -> String {
+    let selected = if english() {
+        english_text.clone()
+    } else {
+        chinese.clone()
+    };
+    if chinese.len() <= 4096 && english_text.len() <= 4096 {
+        MESSAGES.with(|cache| {
+            let mut cache = cache.borrow_mut();
+            if cache.len() >= 4094 {
+                cache.clear();
+            }
+            let pair = (chinese, english_text);
+            cache.insert(pair.0.clone(), pair.clone());
+            cache.insert(pair.1.clone(), pair);
+        });
+    }
+    selected
 }
 
 /// Explain typed management failures without displaying tokens or remote bodies.
@@ -215,13 +255,21 @@ pub fn initialize() {
 /// Both format strings remain compile-time checked, including captured values.
 #[macro_export]
 macro_rules! localized_format {
-    ($chinese:literal, $english:literal $(, $($arguments:tt)*)?) => {
-        if $crate::i18n::english() {
-            format!($english $(, $($arguments)*)?)
-        } else {
-            format!($chinese $(, $($arguments)*)?)
-        }
+    ($chinese:literal, $english:literal $(,)?) => {
+        $crate::i18n::formatted(format!($chinese), format!($english))
     };
+    ($chinese:literal, $english:literal, $a:expr $(,)?) => {{
+        let a = &$a;
+        $crate::i18n::formatted(format!($chinese, a), format!($english, a))
+    }};
+    ($chinese:literal, $english:literal, $a:expr, $b:expr $(,)?) => {{
+        let (a, b) = (&$a, &$b);
+        $crate::i18n::formatted(format!($chinese, a, b), format!($english, a, b))
+    }};
+    ($chinese:literal, $english:literal, $a:expr, $b:expr, $c:expr $(,)?) => {{
+        let (a, b, c) = (&$a, &$b, &$c);
+        $crate::i18n::formatted(format!($chinese, a, b, c), format!($english, a, b, c))
+    }};
 }
 
 #[cfg(test)]
@@ -236,6 +284,7 @@ mod tests {
         let message = crate::localized_format!("模式 {value}", "Mode {value}");
         assert_eq!(message, "模式 direct_only");
         set_english(true);
+        assert_eq!(feedback_text(&message), "Mode direct_only");
         assert_eq!(text("设备", "Devices"), "Devices");
         assert_eq!(
             crate::localized_format!("模式 {value}", "Mode {value}"),

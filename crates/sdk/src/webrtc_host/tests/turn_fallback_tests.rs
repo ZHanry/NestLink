@@ -220,6 +220,7 @@ impl Fixture {
                 access: Secret::from_text("A".repeat(43)),
                 refresh: Secret::from_text("B".repeat(43)),
                 generation: 1,
+                refresh_expires: claims.expires_at_unix_ms / 1000 + 604800,
             }),
         };
         Ok(Self {

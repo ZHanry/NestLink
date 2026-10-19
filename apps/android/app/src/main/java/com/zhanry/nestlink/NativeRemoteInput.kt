@@ -35,6 +35,7 @@ internal data class NativeRemoteInputLayout(
     val top: Int,
     val width: Int,
     val height: Int,
+    val scrollSupported: Boolean = false,
 ) {
     fun toJson(): String = JSONObject()
         .put("binding", JSONObject(binding.toJson()))
@@ -42,6 +43,7 @@ internal data class NativeRemoteInputLayout(
         .put("top", top)
         .put("width", width)
         .put("height", height)
+        .put("scroll_supported", scrollSupported)
         .toString()
 
     companion object {
@@ -63,6 +65,7 @@ internal data class NativeRemoteInputLayout(
                     top = item.getInt("top"),
                     width = item.getInt("width"),
                     height = item.getInt("height"),
+                    scrollSupported = item.optBoolean("scroll_supported", false),
                 )
             }.getOrNull()?.takeIf { it.isValid() }
         }
@@ -100,6 +103,11 @@ internal sealed interface NativeInputAction {
                 .put("x", x)
                 .put("y", y))
             .toString()
+    }
+
+    data class Scroll(val x: Int, val y: Int) : NativeInputAction {
+        override fun toJson(): String = JSONObject().put("kind", "scroll")
+            .put("value", JSONObject().put("x", x).put("y", y)).toString()
     }
 
     data class Text(val text: String) : NativeInputAction {

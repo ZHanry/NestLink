@@ -1078,6 +1078,65 @@ fn layout() -> InputLayout {
     }
 }
 
+#[tokio::test]
+async fn wheel_is_bounded_sequenced_epoch_fenced_and_revoked_with_the_input_lease() -> Result {
+    let (session, clock, _, _) = active(15000)?;
+    let (_keep, stop) = watch::channel(None);
+    let (_peer, stream) = tokio::io::duplex(4096);
+    let (read, write) = split(stream);
+    let runtime =
+        AuthorizedConnection::new(read, write, session, Path::Direct, clock, stop)?.into_channels();
+    let lease = runtime.lease_control();
+    let log = Arc::new(Mutex::new(Vec::new()));
+    let input = InputController::attach(
+        lease.clone(),
+        Device {
+            log: log.clone(),
+            fail_release: false,
+            fail_press: false,
+        },
+        epoch(),
+        layout(),
+    )?;
+    let wheel = InputEvent {
+        epoch: epoch(),
+        sequence: 1,
+        action: InputAction::Scroll { x: -120, y: 240 },
+    };
+    assert!(input.apply(&wheel)?);
+    assert!(!input.apply(&wheel)?);
+    assert_eq!(log.lock().map_err(|_| "log poisoned")?.len(), 1);
+    assert!(
+        InputEvent {
+            epoch: epoch(),
+            sequence: 2,
+            action: InputAction::Scroll { x: i32::MIN, y: 1 }
+        }
+        .encode()
+        .is_err()
+    );
+    assert!(
+        InputEvent {
+            epoch: epoch(),
+            sequence: 2,
+            action: InputAction::Scroll { x: 0, y: 0 }
+        }
+        .encode()
+        .is_err()
+    );
+    lease.stop(StopReason::Revoked)?;
+    assert!(
+        input
+            .apply(&InputEvent {
+                epoch: epoch(),
+                sequence: 2,
+                action: InputAction::Scroll { x: 0, y: 120 }
+            })
+            .is_err()
+    );
+    Ok(())
+}
+
 struct Capture {
     frames: Arc<Mutex<std::collections::VecDeque<RawFrame>>>,
     stopped: Arc<std::sync::atomic::AtomicBool>,

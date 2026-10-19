@@ -34,6 +34,8 @@ url.workspace = true
 futures-util.workspace = true
 uuid.workspace = true
 rustls.workspace = true
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.20", features = ["env-filter", "json"] }
 
 [dev-dependencies]
 tower.workspace = true

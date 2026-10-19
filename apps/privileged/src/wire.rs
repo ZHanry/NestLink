@@ -127,6 +127,10 @@ pub struct Grant {
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum BrokerAction {
+    Scroll {
+        x: i32,
+        y: i32,
+    },
     Key {
         code: u16,
         down: bool,
@@ -144,6 +148,9 @@ pub enum BrokerAction {
 impl BrokerAction {
     pub fn into_native(self, layout: Layout) -> Result<InputAction> {
         match self {
+            Self::Scroll { x, y } if nestlink_protocol::valid_scroll(x, y) => {
+                Ok(InputAction::Scroll { x, y })
+            }
             Self::Key { code, down } if (4..=0xe7).contains(&code) => {
                 Ok(InputAction::Key { code, down })
             }

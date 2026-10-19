@@ -268,6 +268,9 @@ fn valid_native_input(action: &NativeInputAction, layout: &NativeInputLayout) ->
                 && i64::from(*y) >= i64::from(layout.top)
                 && i64::from(*y) < bottom
         }
+        NativeInputAction::Scroll { x, y } => {
+            layout.scroll_supported && nestlink_protocol::valid_scroll(*x, *y)
+        }
         NativeInputAction::Text(text) => {
             !text.is_empty()
                 && text.len() <= 1_800

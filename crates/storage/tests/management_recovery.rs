@@ -1,0 +1,180 @@
+use nestlink_auth::{VaultKey, hash_password, random_id};
+use nestlink_storage::{StorageError, Store};
+type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
+
+#[test]
+fn lost_rotation_response_is_idempotent_but_never_extends_the_retry_window() -> Result {
+    let mut store = Store::in_memory(&random_id())?;
+    let vault = VaultKey::from_bytes([37; 32]);
+    let dummy = hash_password("dummy-test-password")?;
+    store.bootstrap_admin("owner", "initial-test-password")?;
+    let initial = store.login("owner", "initial-test-password", None, 1000, &vault, &dummy)?;
+    // Access has expired, while the independent refresh qualification remains live.
+    assert!(
+        store
+            .authenticate(initial.access_token.expose(), 1301)
+            .is_err()
+    );
+    let rotated = store.refresh_login_recoverable(
+        initial.refresh_token.expose(),
+        initial.generation,
+        1301,
+        &vault,
+    )?;
+    let recovered = store.refresh_login_recoverable(
+        initial.refresh_token.expose(),
+        initial.generation,
+        1329,
+        &vault,
+    )?;
+    assert_eq!(
+        rotated.access_token.expose(),
+        recovered.access_token.expose()
+    );
+    assert_eq!(
+        rotated.refresh_token.expose(),
+        recovered.refresh_token.expose()
+    );
+    assert_eq!(rotated.refresh_expires, recovered.refresh_expires);
+    assert_eq!(rotated.generation, recovered.generation);
+    assert!(matches!(
+        store.refresh_login_recoverable(
+            initial.refresh_token.expose(),
+            initial.generation,
+            1331,
+            &vault
+        ),
+        Err(StorageError::Unauthorized)
+    ));
+    let next = store.refresh_login_recoverable(
+        rotated.refresh_token.expose(),
+        rotated.generation,
+        1332,
+        &vault,
+    )?;
+    assert!(
+        store
+            .refresh_login_recoverable(
+                initial.refresh_token.expose(),
+                initial.generation,
+                1333,
+                &vault
+            )
+            .is_err()
+    );
+    store.logout(&next.principal)?;
+    assert!(
+        store
+            .refresh_login_recoverable(
+                rotated.refresh_token.expose(),
+                rotated.generation,
+                1333,
+                &vault
+            )
+            .is_err()
+    );
+    assert!(
+        store
+            .refresh_login_recoverable(next.refresh_token.expose(), next.generation, 1333, &vault)
+            .is_err()
+    );
+    Ok(())
+}
+
+#[test]
+fn browser_restore_is_session_bound_and_concurrent_retry_reuses_the_same_grant() -> Result {
+    let mut store = Store::in_memory(&random_id())?;
+    let vault = VaultKey::from_bytes([38; 32]);
+    let dummy = hash_password("dummy-test-password")?;
+    store.bootstrap_admin("owner", "initial-test-password")?;
+    let initial = store.login("owner", "initial-test-password", None, 1000, &vault, &dummy)?;
+    assert!(
+        store
+            .restore_browser_login(&random_id(), initial.refresh_token.expose(), 1001, &vault)
+            .is_err()
+    );
+    let first = store.restore_browser_login(
+        &initial.principal.session_id,
+        initial.refresh_token.expose(),
+        1001,
+        &vault,
+    )?;
+    let retry = store.restore_browser_login(
+        &initial.principal.session_id,
+        initial.refresh_token.expose(),
+        1002,
+        &vault,
+    )?;
+    assert_eq!(first.generation, retry.generation);
+    assert_eq!(first.refresh_token.expose(), retry.refresh_token.expose());
+    assert!(
+        store
+            .restore_browser_login(
+                &initial.principal.session_id,
+                initial.refresh_token.expose(),
+                1031,
+                &vault
+            )
+            .is_err()
+    );
+    Ok(())
+}
+
+#[test]
+fn expired_inbox_and_signal_backlogs_make_bounded_forward_progress() -> Result {
+    let directory = tempfile::tempdir()?;
+    let path = directory.path().join("control.sqlite");
+    let mut store = Store::open(&path, &random_id())?;
+    let owner = random_id();
+    let controller = random_id();
+    let host = random_id();
+    store.add_account(&owner, "owner")?;
+    store.add_device(&controller, &owner, &[1; 32])?;
+    store.add_device(&host, &owner, &[2; 32])?;
+    let connection = rusqlite::Connection::open(&path)?;
+    let actor = nestlink_storage::accounts::Principal {
+        account_id: owner.clone(),
+        session_id: random_id(),
+        name: "owner".into(),
+        is_admin: false,
+        access_expires: 2000,
+    };
+    let tx = connection.unchecked_transaction()?;
+    for index in 0..1530 {
+        let id = random_id();
+        let expires = if index < 1300 { 1000 } else { 1060 };
+        tx.execute("INSERT INTO remote_requests(id,controller_device_id,host_device_id,controller_account_id,permissions_json,paths_json,request_json,capability_sha256,nonce,policy_revision,expires,status) VALUES(?1,?2,?3,?4,'[1]','[1]','{}',?5,?5,1,?6,'pending')", rusqlite::params![id,controller,host,owner,[0u8;32].as_slice(),expires])?;
+        if index < 1300 {
+            tx.execute(
+                "INSERT INTO remote_signals VALUES(?1,?2,1,1,1,1,'{}')",
+                rusqlite::params![id, controller],
+            )?;
+        }
+    }
+    tx.commit()?;
+    let mut cursor = None;
+    let mut found = std::collections::BTreeSet::new();
+    loop {
+        let page = store.pending_remote_page(&actor, 1000, cursor.as_deref())?;
+        assert!(page.len() <= 100);
+        if page.is_empty() {
+            break;
+        }
+        for item in &page {
+            assert!(found.insert(item.id.clone()));
+            assert_eq!(item.expires_at_unix_ms, 1060000);
+        }
+        cursor = page.last().map(|item| item.id.clone());
+    }
+    assert_eq!(found.len(), 230);
+    assert!(store.pending_remote(&actor, 1060)?.is_empty());
+    for _ in 0..6 {
+        assert!(store.cleanup_remote_signals(1000)? <= 256);
+    }
+    assert_eq!(
+        connection.query_row("SELECT count(*) FROM remote_signals", [], |row| row
+            .get::<_, u64>(0))?,
+        0
+    );
+    Ok(())
+}

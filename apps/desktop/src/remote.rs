@@ -539,14 +539,8 @@ impl DesktopApp {
                     });
                 });
         }
-        if let Some(request) = &snapshot.selected_request.data
-            && request.status == "pending"
-        {
-            self.request_details(ui, snapshot, request);
-        }
         self.browser_host_panel(ui, snapshot);
         self.remote_device_picker(ui, snapshot);
-        self.connection_progress(ui, snapshot);
         self.native_session_panel(ui, snapshot);
         ui.add_space(20.);
         ui.label(
@@ -602,10 +596,58 @@ impl DesktopApp {
         }
         ui.add_space(20.);
         widgets::section(ui, &snapshot.selected_request, self.english);
-        if let Some(request) = &snapshot.selected_request.data
-            && request.status != "pending"
+        if self.remote.flow.as_ref().is_some_and(|flow| flow.is_busy())
+            || (snapshot
+                .selected_request
+                .data
+                .as_ref()
+                .is_some_and(|request| {
+                    self.remote.selected.as_deref() == Some(request.id.as_str())
+                }))
         {
-            self.request_details(ui, snapshot, request);
+            let context = ui.ctx().clone();
+            let mut close = false;
+            egui::Modal::new(egui::Id::new("remote-request-task")).show(&context, |ui| {
+                ui.set_width((context.content_rect().width() - 48.).clamp(280., 620.));
+                ui.heading(self.t("连接与授权", "Connection and approval"));
+                egui::ScrollArea::vertical()
+                    .max_height((context.content_rect().height() - 180.).clamp(180., 460.))
+                    .auto_shrink([false, false])
+                    .id_salt("request-task-scroll")
+                    .show(ui, |ui| {
+                        self.connection_progress(ui, snapshot);
+                        if let Some(request) = &snapshot.selected_request.data
+                            && self.remote.selected.as_deref() == Some(request.id.as_str())
+                        {
+                            self.request_details(ui, snapshot, request);
+                        }
+                    });
+                ui.separator();
+                ui.horizontal(|ui| {
+                    if ui
+                        .add_enabled_ui(self.connection_can_cancel(), |ui| {
+                            icons::button(ui, Icon::Close, self.t("取消连接", "Cancel connection"))
+                        })
+                        .inner
+                        .clicked()
+                    {
+                        self.cancel_remote_connection(snapshot);
+                        close = true;
+                    }
+                    close |= ui
+                        .add_enabled(
+                            !self.remote.flow.as_ref().is_some_and(|flow| flow.is_busy()),
+                            egui::Button::new(self.t("关闭详情", "Close details")),
+                        )
+                        .clicked();
+                });
+            });
+            if close
+                || (!self.remote.flow.as_ref().is_some_and(|flow| flow.is_busy())
+                    && context.input(|i| i.key_pressed(egui::Key::Escape)))
+            {
+                self.remote.selected = None;
+            }
         }
         self.transfer_panels(ui, snapshot);
         ui.add_space(20.);
@@ -1256,7 +1298,6 @@ impl DesktopApp {
         let request_is_current =
             selected_request_is_current(snapshot, self.remote.selected.as_deref(), request);
         let busy = snapshot.selected_request.loading.is_some()
-            || snapshot.requests.loading.is_some()
             || snapshot.native_session.loading.is_some()
             || snapshot.browser_host.loading.is_some();
         if is_controller && request.status == "pending" && request_is_current {

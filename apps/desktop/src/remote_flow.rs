@@ -257,14 +257,34 @@ impl DesktopApp {
         }
     }
 
+    pub(crate) fn connection_can_cancel(&self) -> bool {
+        self.remote
+            .flow
+            .as_ref()
+            .is_some_and(|flow| flow.active() && flow.request.is_some())
+    }
+
+    pub(crate) fn cancel_remote_connection(&mut self, snapshot: &Snapshot) {
+        if let Some(request_id) = self
+            .remote
+            .flow
+            .as_ref()
+            .and_then(|flow| flow.request.clone())
+        {
+            if let Some(operation) = snapshot.native_session.loading {
+                self.send(snapshot, Command::Cancel { operation });
+            }
+            self.action(snapshot, Action::RevokeRemote { request_id });
+            self.remote.flow = None;
+        }
+    }
+
     pub(crate) fn connection_progress(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         let Some(flow) = &self.remote.flow else {
             return;
         };
         let stage = flow.stage;
         let active = flow.active();
-        let request = flow.request.clone();
-        let cancellable = flow.active() && request.is_some();
         let error = flow.error.clone();
         ui.add_space(12.);
         egui::Frame::group(ui.style()).inner_margin(18).show(ui, |ui| {
@@ -286,16 +306,9 @@ impl DesktopApp {
                 }
             });
             if stage == Stage::Approval {
-                ui.small(self.t("请在被控端批准，或在下方使用该设备已设置的访问密码。获准后自动连接。", "Approve on the host or use its configured access password below. Connection continues automatically."));
+                ui.small(self.t("请在被控端批准，或在连接详情中使用该设备已设置的访问密码。获准后自动连接。", "Approve on the host or use its configured access password in connection details. Connection continues automatically."));
             }
             if let Some(error) = error { ui.colored_label(ui.visuals().error_fg_color, error); }
-            if cancellable && icons::button(ui, Icon::Close, self.t("取消连接", "Cancel connection")).clicked() {
-                if let Some(operation) = snapshot.native_session.loading {
-                    self.send(snapshot, Command::Cancel { operation });
-                }
-                if let Some(request_id) = request { self.action(snapshot, Action::RevokeRemote { request_id }); }
-                self.remote.flow = None;
-            }
             if stage == Stage::Connected && snapshot.native_session.data.as_ref().is_some_and(|session| session.status == NativeSessionStatus::Connected && !session.host_view_authorized)
                 && icons::button(ui, Icon::Monitor, self.t("打开远程画面", "Open remote screen")).clicked()
                 && let Some(session) = snapshot.native_session.data.as_ref()

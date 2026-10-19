@@ -13,6 +13,7 @@ nestlink-auth.workspace = true
 nestlink-protocol.workspace = true
 nestlink-platform-tray.workspace = true
 nestlink-platform-files.workspace = true
+nestlink-platform-security.workspace = true
 eframe = { version = "=0.34.3", default-features = false, features = ["accesskit", "glow", "wayland", "x11"] }
 egui_extras = { version = "=0.34.3", default-features = false }
 base64.workspace = true

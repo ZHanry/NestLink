@@ -2,8 +2,8 @@
 //! injection; this layer owns pressed buttons, replay checks and revocation.
 use crate::{LeaseControl, RemoteError, StopHandler};
 use nestlink_protocol::{
-    INPUT_BYTES, InputCommand, KeyInput, Permission, PointerInput, SCHEMA_VERSION, decode_bounded,
-    input_command::Action,
+    INPUT_BYTES, InputCommand, KeyInput, Permission, PointerInput, SCHEMA_VERSION, ScrollInput,
+    decode_bounded, input_command::Action,
 };
 use nestlink_session::{StopEffects, StopReason};
 use nestlink_transport_stream::{Channel, Frame};
@@ -61,6 +61,10 @@ pub enum InputAction {
         x: i32,
         y: i32,
     },
+    Scroll {
+        x: i32,
+        y: i32,
+    },
     Text(String),
 }
 /// Reliable button messages always include their matching layout coordinates.
@@ -89,6 +93,7 @@ impl InputEvent {
                 x: *x,
                 y: *y,
             }),
+            InputAction::Scroll { x, y } => Action::Scroll(ScrollInput { x: *x, y: *y }),
             InputAction::Text(text) => Action::Text(text.clone()),
         };
         let command = InputCommand {
@@ -216,6 +221,7 @@ impl<D: InputDevice> State<D> {
             };
         }
         let button = match &event.action {
+            InputAction::Scroll { x, y } if nestlink_protocol::valid_scroll(*x, *y) => None,
             InputAction::Key { code, down } if (4..=0xe7).contains(code) => {
                 Some((Button::Key(*code), *down))
             }
@@ -337,6 +343,7 @@ impl<D: InputDevice> InputController<D> {
                 x: pointer.x,
                 y: pointer.y,
             },
+            Action::Scroll(s) => InputAction::Scroll { x: s.x, y: s.y },
             Action::Text(text) => InputAction::Text(text),
             Action::ReleaseAll(_) => return Err(rejected("invalid input release command").into()),
         };

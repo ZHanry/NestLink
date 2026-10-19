@@ -1,10 +1,10 @@
-name: Build NestLink 0.5.0 RC development candidate
+name: Build NestLink 0.6.0 RC development candidate
 
 on:
   workflow_dispatch:
     inputs:
       source_revision:
-        description: Full clean final source commit with all public product versions already 0.5.0-rc.1
+        description: Full clean final source commit with all public product versions already 0.6.0-rc.1
         type: string
         required: true
       candidate_sequence:
@@ -18,6 +18,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: nestlink-rc-development-candidate
@@ -57,6 +58,10 @@ jobs:
         with:
           ref: ${{ inputs.source_revision }}
           persist-credentials: false
+      - name: Require successful checks for the exact source SHA
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/refactor-required-checks.py --source "$CANDIDATE_SOURCE" --output "$RUNNER_TEMP/required-checks.json"
       - name: Install OCI index inspector
         run: |
           sudo apt-get update
@@ -75,6 +80,15 @@ jobs:
           if hashlib.sha256(raw).hexdigest() != base.rsplit(":", 1)[1]:
               raise SystemExit("Downloaded OCI index differs from the reviewed digest")
           subprocess.run(["python3", "-B", "scripts/refactor-candidate-producer.py", "preflight", "--source", os.environ["CANDIDATE_SOURCE"], "--sequence", os.environ["CANDIDATE_SEQUENCE"], "--run-id", os.environ["GITHUB_RUN_ID"], "--run-attempt", os.environ["GITHUB_RUN_ATTEMPT"], "--oci-base", base, "--oci-index", str(index), "--output", str(scratch / "candidate-cohort")], check=True, timeout=120)
+      - name: Bind quality evidence into the source cohort
+        shell: python
+        run: |
+          import json, os, pathlib
+          scratch = pathlib.Path(os.environ["RUNNER_TEMP"])
+          path = scratch / "candidate-cohort/candidate-cohort.json"
+          value = json.loads(path.read_text())
+          value["quality_checks"] = json.loads((scratch / "required-checks.json").read_text())
+          path.write_text(json.dumps(value, indent=2) + "\n")
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: rc-development-cohort-${{ github.run_attempt }}
@@ -367,8 +381,13 @@ jobs:
           pattern: rc-development-part-*-${{ github.run_attempt }}
           merge-multiple: true
           path: ${{ runner.temp }}/bundle
+      - name: Recheck the latest required run attempts before freezing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_SOURCE: ${{ inputs.source_revision }}
+        run: python3 scripts/refactor-required-checks.py --source "$CANDIDATE_SOURCE" --output "$RUNNER_TEMP/quality-evidence/required-checks.json"
       - name: Freeze every required platform and retain pending user acceptance
-        run: python3 -B scripts/refactor-candidate-producer.py freeze --cohort "$RUNNER_TEMP/candidate-cohort/candidate-cohort.json" --bundle "$RUNNER_TEMP/bundle" --output "$RUNNER_TEMP/development-candidate"
+        run: python3 -B scripts/refactor-candidate-producer.py freeze --cohort "$RUNNER_TEMP/candidate-cohort/candidate-cohort.json" --bundle "$RUNNER_TEMP/bundle" --output "$RUNNER_TEMP/development-candidate" --acceptance-evidence "$RUNNER_TEMP/quality-evidence"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: rc-development-candidate-${{ github.run_attempt }}

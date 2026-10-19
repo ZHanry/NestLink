@@ -171,6 +171,9 @@ message PointerInput {
   sint32 x = 3;
   sint32 y = 4;
 }
+// Signed wheel units: 120 per detent; +x right, +y up. Each axis is
+// bounded to +/-12000 and shares the reliable input sequence and epochs.
+message ScrollInput { sint32 x = 1; sint32 y = 2; }
 message InputCommand {
   uint32 schema_version = 1;
   uint64 input_epoch = 2;
@@ -182,12 +185,14 @@ message InputCommand {
     PointerInput pointer = 7;
     string text = 8;
     bool release_all = 9; // Must be true; consumes the same reliable sequence.
+    ScrollInput scroll = 10;
   }
 }
 
 // Host-to-controller direction of the authorized native Input channel.
 // The platform's logical display bounds must match the captured source.
 message NativeInputLayout {
+  bool scroll_supported = 10; // Absent on older hosts: do not send ScrollInput.
   uint32 schema_version = 1;
   uint64 connection_generation = 2;
   uint64 input_epoch = 3;

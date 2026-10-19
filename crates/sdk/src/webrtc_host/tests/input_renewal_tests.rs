@@ -121,6 +121,7 @@ impl InputFixture {
             WebRtcInputAction::Pointer { button, down, x, y } => {
                 InputAction::Pointer { button, down, x, y }
             }
+            WebRtcInputAction::Scroll { x, y } => InputAction::Scroll { x, y },
             WebRtcInputAction::Text { text } => InputAction::Text(text),
         };
         let applied = self.controller.apply_with_deadline(

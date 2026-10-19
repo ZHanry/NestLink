@@ -28,6 +28,24 @@ struct Editor {
     saved: Option<ServiceDefinition>,
 }
 impl Editor {
+    fn fingerprint(&self) -> String {
+        format!(
+            "{:?}",
+            (
+                &self.name,
+                &self.host,
+                &self.edge,
+                &self.protocol,
+                &self.ingress,
+                &self.sources,
+                &self.connections,
+                &self.rate,
+                &self.bytes,
+                &self.idle
+            )
+        )
+    }
+
     fn new() -> Self {
         Self {
             id: nestlink_auth::random_id(),
@@ -79,6 +97,27 @@ impl Editor {
             "请检查主机和节点 ID、域名或端口、规范 CIDR 网络地址及配额。",
             "Check host and node IDs, domain or port, canonical CIDR networks, and quotas.",
         );
+        if !nestlink_protocol::valid_id(&self.host) {
+            return Err(t(
+                "主机设备：请选择有效设备。",
+                "Host device: select a valid device.",
+            ));
+        }
+        if !nestlink_protocol::valid_id(&self.edge) {
+            return Err(t(
+                "边缘节点：请选择有效节点。",
+                "Edge node: select a valid node.",
+            ));
+        }
+        let port_error = t("入口端口：请输入 1–65535。", "Ingress port: enter 1–65535.");
+        let quota_error = t(
+            "服务配额：请检查连接数、速率、累计字节数和超时。",
+            "Service limits: check connections, rate, total bytes and timeout.",
+        );
+        let cidr_error = t(
+            "访问来源：每行必须是规范 CIDR 网络地址。",
+            "Allowed sources: each line must be a canonical CIDR network.",
+        );
         let requested_ingress = match self.protocol.as_str() {
             "http" => ServiceIngress::Http {
                 hostname: self.ingress.clone(),
@@ -87,10 +126,20 @@ impl Editor {
                 hostname: self.ingress.clone(),
             },
             "tcp" => ServiceIngress::Tcp {
-                port: self.ingress.parse().map_err(|_| invalid)?,
+                port: self
+                    .ingress
+                    .parse::<u16>()
+                    .ok()
+                    .filter(|v| *v != 0)
+                    .ok_or(port_error)?,
             },
             "udp" => ServiceIngress::Udp {
-                port: self.ingress.parse().map_err(|_| invalid)?,
+                port: self
+                    .ingress
+                    .parse::<u16>()
+                    .ok()
+                    .filter(|v| *v != 0)
+                    .ok_or(port_error)?,
             },
             _ => return Err(invalid),
         };
@@ -104,10 +153,10 @@ impl Editor {
             if allowed_sources.len() == 32 {
                 return Err(invalid);
             }
-            let (address, prefix) = line.split_once('/').ok_or(invalid)?;
+            let (address, prefix) = line.split_once('/').ok_or(cidr_error)?;
             allowed_sources.push(ServiceSourceNetwork {
                 address: address.into(),
-                prefix: prefix.parse().map_err(|_| invalid)?,
+                prefix: prefix.parse().map_err(|_| cidr_error)?,
             });
         }
         let definition = ServiceDefinition {
@@ -117,10 +166,10 @@ impl Editor {
             requested_ingress,
             allowed_sources,
             limits: ServiceLimits {
-                maximum_connections: self.connections.parse().map_err(|_| invalid)?,
-                bytes_per_second: self.rate.parse().map_err(|_| invalid)?,
-                maximum_bytes: self.bytes.parse().map_err(|_| invalid)?,
-                idle_timeout_seconds: self.idle.parse().map_err(|_| invalid)?,
+                maximum_connections: self.connections.parse().map_err(|_| quota_error)?,
+                bytes_per_second: self.rate.parse().map_err(|_| quota_error)?,
+                maximum_bytes: self.bytes.parse().map_err(|_| quota_error)?,
+                idle_timeout_seconds: self.idle.parse().map_err(|_| quota_error)?,
             },
         };
         definition.validate().map_err(|_| invalid)?;
@@ -162,7 +211,7 @@ enum Command {
     },
 }
 enum Outcome {
-    Page(ServicePage),
+    Page(ServicePage, Vec<(String, String)>, Vec<(String, String)>),
     Committed {
         view: Box<ServiceView>,
         page: Result<ServicePage, SdkError>,
@@ -173,7 +222,25 @@ enum Outcome {
 }
 async fn execute(sdk: &Sdk, command: Command) -> Result<Outcome, SdkError> {
     let view = match command {
-        Command::List(after) => return sdk.services(after.as_deref(), 50).await.map(Outcome::Page),
+        Command::List(after) => {
+            let page = sdk.services(after.as_deref(), 50).await?;
+            let hosts = sdk
+                .devices()
+                .await?
+                .into_iter()
+                .filter(|v| !v.revoked && v.device.capabilities.iter().any(|c| c == "host"))
+                .map(|v| (v.device.id, v.device.name))
+                .collect();
+            let nodes = sdk
+                .nodes()
+                .await
+                .unwrap_or_default()
+                .into_iter()
+                .filter(|v| !v.revoked)
+                .map(|v| (v.node.id, v.node.name))
+                .collect();
+            return Ok(Outcome::Page(page, hosts, nodes));
+        }
         Command::StopPublication { id, revision } => {
             sdk.stop_service_publication(&id, revision).await?;
             return Ok(Outcome::PublicationStopped {
@@ -217,13 +284,28 @@ pub(super) fn ServicesPanel(
     api: Api,
     session_revision: RwSignal<u64>,
     refresh: RwSignal<u64>,
+    active: Signal<bool>,
     auth_failure: Callback<SdkHandle>,
     error: RwSignal<String>,
     notice: RwSignal<String>,
 ) -> impl IntoView {
     let page = RwSignal::new(None::<ServicePage>);
+    let hosts = RwSignal::new(Vec::<(String, String)>::new());
+    let edges = RwSignal::new(Vec::<(String, String)>::new());
     let editor = RwSignal::new(None::<Editor>);
     let confirmation = RwSignal::new(None::<ServiceView>);
+    let discard = RwSignal::new(false);
+    let baseline = RwSignal::new(String::new());
+    let editor_close = Callback::new(move |()| {
+        if editor.with_untracked(|v| {
+            v.as_ref()
+                .is_some_and(|v| !v.unchanged() && v.fingerprint() != baseline.get_untracked())
+        }) {
+            discard.set(true);
+        } else {
+            editor.set(None);
+        }
+    });
     let busy = RwSignal::new(false);
     let alive = Arc::new(AtomicBool::new(true));
     let owner = alive.clone();
@@ -255,7 +337,9 @@ pub(super) fn ServicesPanel(
                 return;
             }
             match result {
-                Ok(Outcome::Page(value)) => {
+                Ok(Outcome::Page(value, host_options, edge_options)) => {
+                    hosts.set(host_options);
+                    edges.set(edge_options);
                     editor.update(|draft| {
                         if let Some(draft) = draft {
                             for view in &value.services {
@@ -336,6 +420,9 @@ pub(super) fn ServicesPanel(
     });
     let loaded_refresh = StoredValue::new(None::<u64>);
     Effect::new(move |_| {
+        if !active.get() {
+            return;
+        }
         let requested = refresh.get();
         if !busy.get() && loaded_refresh.get_value() != Some(requested) {
             loaded_refresh.set_value(Some(requested));
@@ -359,7 +446,7 @@ pub(super) fn ServicesPanel(
         <div class="content-grid">
             <section class="list-pane" aria-label=move || t("服务目录", "Service catalog")>
                 <div class="section-heading"><div><h2>{move || t("服务目录", "Service catalog")}</h2><p>{move || t("保存入口配置，由主机上的用户单独批准目标。", "Save ingress configuration here. The user on the host separately approves the target.")}</p></div>
-                    <button class="secondary" type="button" disabled=move || busy.get() on:click=move |_| { editor.set(Some(Editor::new())); confirmation.set(None); }>{move || t("新建服务", "New service")}</button>
+                    <button class="secondary" type="button" disabled=move || busy.get() on:click=move |_| { baseline.set(Editor::new().fingerprint()); editor.set(Some(Editor::new())); confirmation.set(None); }>{move || t("新建服务", "New service")}</button>
                 </div>
                 <div class="records" aria-live="polite">
                     {move || page.get().map(|value| if value.services.is_empty() {
@@ -380,7 +467,7 @@ pub(super) fn ServicesPanel(
                                 <Show when=move || service.publication != ServicePublicationStatus::NotPublished>
                                     <button class="danger" type="button" disabled=move || busy.get() on:click=move |_| { let (id, revision) = stop_publication.get_value(); submit.run(Command::StopPublication { id, revision }); }>{move || t("停止发布", "Stop publication")}</button>
                                 </Show>
-                                <button class="secondary" type="button" disabled=move || busy.get() || revoked on:click=move |_| { editor.set(Some(Editor::from_view(&edit))); confirmation.set(None); }>{move || t("编辑配置", "Edit configuration")}</button>
+                                <button class="secondary" type="button" disabled=move || busy.get() || revoked on:click=move |_| { baseline.set(Editor::from_view(&edit).fingerprint()); editor.set(Some(Editor::from_view(&edit))); confirmation.set(None); }>{move || t("编辑配置", "Edit configuration")}</button>
                                 <button class="danger" type="button" disabled=move || busy.get() || revoked on:click=move |_| confirmation.set(Some(revoke.clone()))>{move || t("撤销", "Revoke")}</button>
                             </article> }
                         }).collect_view().into_any()
@@ -394,7 +481,10 @@ pub(super) fn ServicesPanel(
                     }>{move || t("下一页", "Next page")}</button>
                 </div>
                 <Show when=move || confirmation.with(Option::is_some)>
-                    <div class="policy-form" role="alert">
+                    <super::TaskDialog open=Signal::derive(move || confirmation.with(Option::is_some))
+                        label=Signal::derive(move || t("撤销此服务？", "Revoke this service?").to_owned())
+                        on_close=Callback::new(move |()| confirmation.set(None))>
+                    <div class="policy-form">
                         <h3>{move || t("撤销此服务？", "Revoke this service?")}</h3><p>{move || confirmation.with(|v| v.as_ref().map(|v| v.definition.name.clone()).unwrap_or_default())}</p>
                         <p>{move || t("目标批准将失效，恢复使用需要重新配置和批准。", "Target approval will expire. Reconfigure and approve the service before using it again.")}</p>
                         <button class="danger" type="button" disabled=move || busy.get() on:click=move |_| {
@@ -402,16 +492,26 @@ pub(super) fn ServicesPanel(
                         }>{move || t("确认撤销", "Confirm revocation")}</button>
                         <button class="secondary" type="button" disabled=move || busy.get() on:click=move |_| confirmation.set(None)>{move || t("取消", "Cancel")}</button>
                     </div>
+                    </super::TaskDialog>
                 </Show>
             </section>
             <aside class="detail-pane" aria-label=move || t("入口配置", "Ingress configuration")>
                 <Show when=move || editor.with(Option::is_some) fallback=|| view! { <h2>{move || t("选择或创建服务", "Select or create a service")}</h2><p>{move || t("目标地址只在主机本机批准时选择。", "Target addresses are chosen only during local approval on the host.")}</p> }>
+                    <super::TaskDialog open=Signal::derive(move || editor.with(Option::is_some))
+                        label=Signal::derive(move || t("入口配置", "Ingress configuration").to_owned()) on_close=editor_close>
                     <form class="policy-form" on:submit=save>
                         <h2>{move || t("入口配置", "Ingress configuration")}</h2><p>{move || t("修改配置会使原目标批准失效。", "Changing the configuration invalidates the previous target approval.")}</p>
+                        <p class="form-error" aria-live="polite">{move || editor.with(|value| value.as_ref().and_then(|value| value.definition().err()).unwrap_or(""))}</p>
                         <fieldset class="service-fields" disabled=move || busy.get()>
                             {field(editor, Field::Name, "服务名称", "Service name", 128)}
-                            {field(editor, Field::Host, "主机设备 ID", "Host device ID", 36)}
-                            {field(editor, Field::Edge, "边缘节点 ID", "Edge node ID", 36)}
+                            <label>{move || t("主机设备（输入名称搜索）", "Host device (search by name)")}
+                                <input list="service-host-options" required=true prop:value=move || editor.with(|v| v.as_ref().map(|v| v.host.clone()).unwrap_or_default()) on:input=move |event| editor.update(|v| if let Some(v) = v { v.host = event_target_value(&event); }) />
+                            </label>
+                            <datalist id="service-host-options"><For each=move || hosts.get() key=|v| v.0.clone() children=move |(id,name)| view! { <option value=id>{name}</option> } /></datalist>
+                            <label>{move || t("边缘节点（输入名称搜索）", "Edge node (search by name)")}
+                                <input list="service-edge-options" required=true prop:value=move || editor.with(|v| v.as_ref().map(|v| v.edge.clone()).unwrap_or_default()) on:input=move |event| editor.update(|v| if let Some(v) = v { v.edge = event_target_value(&event); }) />
+                            </label>
+                            <datalist id="service-edge-options"><For each=move || edges.get() key=|v| v.0.clone() children=move |(id,name)| view! { <option value=id>{name}</option> } /></datalist>
                             <label>{move || t("协议", "Protocol")}<select prop:value=move || editor.with(|v| v.as_ref().map(|v| v.protocol.clone()).unwrap_or_default()) on:change=move |event| editor.update(|v| if let Some(v) = v { v.protocol = event_target_value(&event); })>
                                 <option value="http">"HTTP"</option><option value="https">"HTTPS"</option><option value="tcp">"TCP"</option><option value="udp">"UDP"</option>
                             </select></label>
@@ -422,13 +522,26 @@ pub(super) fn ServicesPanel(
                             {field(editor, Field::Connections, "最大连接数", "Maximum connections", 3)}
                             {field(editor, Field::Rate, "速率上限（字节/秒）", "Rate limit (bytes/second)", 10)}
                             {field(editor, Field::Bytes, "累计流量上限（字节）", "Total traffic limit (bytes)", 13)}
+                            <p class="muted">{move || editor.with(|v| v.as_ref().map(|v| {
+                                let rate = v.rate.parse::<u64>().unwrap_or_default();
+                                let bytes = v.bytes.parse::<u64>().unwrap_or_default();
+                                localized_format!("速率约 {:.3} MiB/s；累计流量约 {:.3} GiB（1 MiB = 1048576 字节；1 GiB = 1073741824 字节）。", "Rate: {:.3} MiB/s; total: {:.3} GiB (1 MiB = 1048576 bytes; 1 GiB = 1073741824 bytes).", rate as f64 / 1048576., bytes as f64 / 1073741824.)
+                            }).unwrap_or_default())}</p>
                             {field(editor, Field::Idle, "空闲超时（秒）", "Idle timeout (seconds)", 3)}
                             <button class="primary" type="submit" disabled=move || busy.get() || editor.with(|v| v.as_ref().is_none_or(Editor::unchanged))>{move || t("保存配置", "Save configuration")}</button>
-                            <button class="secondary" type="button" on:click=move |_| editor.set(None)>{move || t("关闭编辑", "Close editor")}</button>
+                            <button class="secondary" type="button" on:click=move |_| editor_close.run(())>{move || t("关闭编辑", "Close editor")}</button>
                         </fieldset>
                     </form>
+                    </super::TaskDialog>
                 </Show>
             </aside>
+            <super::TaskDialog open=Signal::derive(move || discard.get())
+                label=Signal::derive(move || t("放弃修改？", "Discard changes?").to_owned())
+                on_close=Callback::new(move |()| discard.set(false))>
+                <h2>{move || t("放弃未保存的修改？", "Discard unsaved changes?")}</h2>
+                <button class="secondary" type="button" on:click=move |_| discard.set(false)>{move || t("继续编辑", "Keep editing")}</button>
+                <button class="danger" type="button" on:click=move |_| { editor.set(None); discard.set(false); }>{move || t("放弃修改", "Discard changes")}</button>
+            </super::TaskDialog>
         </div>
     }
 }
@@ -436,8 +549,7 @@ pub(super) fn ServicesPanel(
 #[derive(Clone, Copy)]
 enum Field {
     Name,
-    Host,
-    Edge,
+
     Ingress,
     Connections,
     Rate,
@@ -448,8 +560,7 @@ impl Field {
     fn value(self, editor: &mut Editor) -> &mut String {
         match self {
             Self::Name => &mut editor.name,
-            Self::Host => &mut editor.host,
-            Self::Edge => &mut editor.edge,
+
             Self::Ingress => &mut editor.ingress,
             Self::Connections => &mut editor.connections,
             Self::Rate => &mut editor.rate,
@@ -465,9 +576,30 @@ fn field(
     english_label: &'static str,
     maximum: u16,
 ) -> impl IntoView {
-    view! { <label>{move || t(label, english_label)}<input maxlength=maximum autocomplete="off" required=true
+    let bounds = match field {
+        Field::Connections => Some((1_u64, 128_u64)),
+        Field::Rate => Some((1, 1_073_741_824)),
+        Field::Bytes => Some((1, 1_099_511_627_776)),
+        Field::Idle => Some((1, 300)),
+        _ => None,
+    };
+    let invalid = move || {
+        editor.with(|value| {
+            value.as_ref().is_some_and(|value| {
+                bounds.is_some_and(|(min, max)| {
+                    field
+                        .value(&mut value.clone())
+                        .parse::<u64>()
+                        .map_or(true, |number| number < min || number > max)
+                })
+            })
+        })
+    };
+    view! { <label>{move || t(label, english_label)}<input type=match field { Field::Connections | Field::Rate | Field::Bytes | Field::Idle => "number", _ => "text" } min=bounds.map(|v| v.0) max=bounds.map(|v| v.1) step="1" aria-invalid=move || invalid().to_string() maxlength=maximum autocomplete="off" required=true
     prop:value=move || editor.with(|editor| editor.as_ref().map(|value| field.value(&mut value.clone()).clone()).unwrap_or_default())
-    on:input=move |event| editor.update(|editor| if let Some(editor) = editor { *field.value(editor) = event_target_value(&event); }) /></label> }
+    on:input=move |event| editor.update(|editor| if let Some(editor) = editor { *field.value(editor) = event_target_value(&event); }) />
+    <span class="form-error">{move || if invalid() { bounds.map(|(min,max)| localized_format!("请输入 {}–{} 的整数。", "Enter an integer from {} to {}.", min, max)).unwrap_or_default() } else { String::new() }}</span>
+    </label> }
 }
 fn approval_label(state: ServiceApprovalState) -> &'static str {
     match state {

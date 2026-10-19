@@ -1094,6 +1094,10 @@ impl InputDevice for AndroidBrowserInputDevice {
 
     fn inject(&mut self, input: PlatformInput<'_>) -> io::Result<()> {
         match input {
+            PlatformInput::Action(InputAction::Scroll { .. }) => Err(io::Error::new(
+                io::ErrorKind::Unsupported,
+                "Android host wheel injection is unavailable",
+            )),
             PlatformInput::Action(InputAction::Key { code, down }) => self.accepted(
                 "sendHidKey",
                 "(Ljava/lang/String;IZ)Z",

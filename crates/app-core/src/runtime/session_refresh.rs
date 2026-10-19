@@ -6,6 +6,29 @@ use super::*;
 const REFRESH_AHEAD: Duration = Duration::from_secs(60);
 
 impl Actor {
+    pub(super) fn persist_management_login(&mut self) {
+        let Some(store) = self
+            .native
+            .as_ref()
+            .and_then(|n| n.management_login_store.clone())
+        else {
+            return;
+        };
+        if !store.enabled() {
+            let _ = store.clear();
+            return;
+        }
+        let result = self
+            .sdk
+            .as_ref()
+            .and_then(|client| client.sdk.export_login().ok())
+            .flatten()
+            .map(|bytes| store.save(&bytes));
+        if result.is_some_and(|result| result.is_err()) {
+            self.view.authentication_error = Some(Failure::local(FailureKind::Invalid));
+        }
+    }
+
     pub(super) fn start_session_refresh(&mut self) -> bool {
         let now = tokio::time::Instant::now();
         if self.view.authentication != Authentication::SignedIn
@@ -72,6 +95,7 @@ impl Actor {
             }
             self.install_deadline();
             self.view.authentication_error = None;
+            self.persist_management_login();
             self.publish();
         } else if self
             .sdk

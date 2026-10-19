@@ -20,6 +20,7 @@ pub struct NativeSessionConfig {
     pub private_network_prefixes: Vec<String>,
     pub supported_capabilities: Vec<String>,
     pub browser_host: Option<BrowserHostConfig>,
+    pub management_login_store: Option<Arc<dyn ManagementLoginStore>>,
     network: Arc<NetworkMonitor>,
     pub(crate) network_settings_store: Option<Arc<dyn NativeNetworkSettingsStore>>,
 }
@@ -57,6 +58,7 @@ impl NativeSessionConfig {
             private_network_prefixes: Vec::new(),
             supported_capabilities: vec!["vp8".into(), "opus".into()],
             browser_host: None,
+            management_login_store: None,
             network,
             network_settings_store: None,
         }
@@ -119,4 +121,12 @@ impl NativeSessionConfig {
     pub(crate) fn network(&self) -> &NetworkMonitor {
         &self.network
     }
+}
+
+/// The implementation must encrypt credentials with an OS-protected key.
+/// It is owned by the user daemon and never exposed through Snapshot or IPC.
+pub trait ManagementLoginStore: Send + Sync {
+    fn enabled(&self) -> bool;
+    fn save(&self, bytes: &[u8]) -> std::io::Result<()>;
+    fn clear(&self) -> std::io::Result<()>;
 }

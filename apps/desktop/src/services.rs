@@ -20,6 +20,8 @@ const MAX_CA_BUNDLE_FILE_BYTES: usize = 192 * 1024;
 pub(crate) struct ServicePanel {
     generation: u64,
     draft: Option<Draft>,
+    draft_baseline: Option<String>,
+    discard_confirmation: bool,
     error: Option<String>,
     revoke: Option<ServiceView>,
     local_target: Option<LocalTargetDraft>,
@@ -82,6 +84,21 @@ struct Draft {
     saved_definition: Option<ServiceDefinition>,
 }
 impl Draft {
+    fn fingerprint(&self) -> String {
+        format!(
+            "{:?}",
+            (
+                &self.name,
+                &self.host,
+                &self.edge,
+                self.protocol,
+                &self.ingress,
+                &self.sources,
+                self.limits
+            )
+        )
+    }
+
     fn new(snapshot: &Snapshot) -> Self {
         Self {
             id: uuid::Uuid::new_v4().to_string(),
@@ -517,6 +534,7 @@ impl ServicePanel {
                 .add_enabled(!busy, egui::Button::new(t("新建服务", "New service")))
                 .clicked()
             {
+                self.draft_baseline = Some(Draft::new(snapshot).fingerprint());
                 self.draft = Some(Draft::new(snapshot));
                 self.error = None;
             }
@@ -581,6 +599,7 @@ impl ServicePanel {
                                         .add_enabled(live, egui::Button::new(t("编辑", "Edit")))
                                         .clicked()
                                     {
+                                        self.draft_baseline = Some(Draft::edit(view).fingerprint());
                                         self.draft = Some(Draft::edit(view));
                                         self.error = None;
                                     }
@@ -738,7 +757,14 @@ impl ServicePanel {
             }
         }
         let mut target_inputs_changed = false;
+        let mut close_target = false;
         if let Some(target) = &mut self.local_target {
+            let context = ui.ctx().clone();
+            egui::Modal::new(egui::Id::new("local-service-target")).show(&context, |ui| {
+            ui.set_width((context.content_rect().width() - 48.).clamp(280., 620.));
+            close_target = ui.button(t("关闭目标批准", "Close target approval")).clicked();
+            egui::ScrollArea::vertical().id_salt("local-target-scroll")
+                .max_height(context.content_rect().height() * 0.65).show(ui, |ui| {
             ui.add_space(14.);
             ui.separator();
             ui.heading(t(
@@ -969,6 +995,12 @@ impl ServicePanel {
                     "Choose a supported service hosted by this device from the service list first.",
                 ));
             }
+            });
+            });
+        }
+        if close_target {
+            self.local_target = None;
+            self.invalidate_preview();
         }
         if target_inputs_changed {
             self.invalidate_preview();
@@ -976,7 +1008,10 @@ impl ServicePanel {
         if let Some(message) = &self.status_message {
             ui.label(message);
         }
-        if let Some(view) = &self.revoke {
+        if let Some(view) = self.revoke.clone() {
+            let context = ui.ctx().clone();
+            egui::Modal::new(egui::Id::new("revoke-service")).show(&context, |ui| {
+            ui.set_width(420.);
             let id = view.id.clone();
             let revision = view.revision;
             ui.separator();
@@ -1003,12 +1038,16 @@ impl ServicePanel {
                     self.revoke = None;
                 }
             });
+            });
         }
         if let Some(draft) = &mut self.draft {
-            ui.add_space(18.);
-            ui.separator();
-            ui.heading(t("入口配置", "Ingress configuration"));
+            let context = ui.ctx().clone();
             let mut close = false;
+            egui::Modal::new(egui::Id::new("service-editor")).show(&context, |ui| {
+            ui.set_width((context.content_rect().width() - 48.).clamp(280., 620.));
+            ui.heading(t("入口配置", "Ingress configuration"));
+            egui::ScrollArea::vertical().id_salt("service-editor-scroll")
+                .max_height(context.content_rect().height() * 0.6).show(ui, |ui| {
             ui.add_enabled_ui(!busy, |ui| {
             widgets::field(ui, t("服务名称", "Service name"), &mut draft.name, 128);
             widgets::field(ui, t("主机设备 ID", "Host device ID"), &mut draft.host, 36);
@@ -1077,9 +1116,33 @@ impl ServicePanel {
                 if ui.button(t("关闭编辑", "Close editor")).clicked() { close = true; }
             });
             });
-            if close {
+            });
+            });
+            if close || context.input(|i| i.key_pressed(egui::Key::Escape)) {
+                let dirty = !draft.unchanged()
+                    && self.draft_baseline.as_ref() != Some(&draft.fingerprint());
+                if dirty {
+                    self.discard_confirmation = true;
+                } else {
+                    self.draft = None;
+                    self.error = None;
+                }
+            }
+        }
+        if self.discard_confirmation {
+            let mut discard = false;
+            let mut keep = false;
+            egui::Modal::new(egui::Id::new("discard-service-draft")).show(ui.ctx(), |ui| {
+                ui.heading(t("放弃未保存的修改？", "Discard unsaved changes?"));
+                keep = ui.button(t("继续编辑", "Keep editing")).clicked();
+                discard = ui.button(t("放弃修改", "Discard changes")).clicked();
+            });
+            if discard {
                 self.draft = None;
                 self.error = None;
+            }
+            if discard || keep {
+                self.discard_confirmation = false;
             }
         }
         if let Some(error) = &self.error {

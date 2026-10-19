@@ -1316,6 +1316,20 @@ impl Core {
                 }
                 Ok(())
             }
+            InputAction::Scroll { x, y } => {
+                let mut options = HashMap::<&str, Value<'_>>::new();
+                options.insert("finish", Value::from(true));
+                self.notify(
+                    "NotifyPointerAxis",
+                    &(
+                        OwnedObjectPath::try_from(self.session.as_str()).map_err(error)?,
+                        options,
+                        f64::from(x) / 120.0 * 15.0,
+                        -f64::from(y) / 120.0 * 15.0,
+                    ),
+                )
+                .await
+            }
             InputAction::Text(text) => {
                 if text.is_empty() || text.len() > 16384 || !self.held.is_empty() {
                     return Err(denied(

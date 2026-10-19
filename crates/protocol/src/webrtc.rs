@@ -161,6 +161,7 @@ impl WebRtcControl {
                     WebRtcInputAction::Pointer { button, down, .. }
                         if button.is_none_or(|value| (1..=5).contains(&value))
                             && (button.is_some() || !*down) => {}
+                    WebRtcInputAction::Scroll { x, y } if crate::valid_scroll(*x, *y) => {}
                     WebRtcInputAction::Text { text }
                         if !text.is_empty()
                             && text.len() <= 1800
