@@ -2126,6 +2126,23 @@
       ]
     },
     {
+      "name": "valuable",
+      "version": "0.1.1",
+      "archive_sha256": "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "9efc29b6e58cef28f6566a47aa7e142a55fead77",
+      "review_basis": "Full original root MIT license at the exact Git revision embedded in the locked crate archive; bytes verified against the Git tree blob ID. License compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/tokio-rs/valuable/9efc29b6e58cef28f6566a47aa7e142a55fead77/LICENSE",
+          "sha256": "ed60d479b8fd1f64e9cbc3de449a16a53ac1b3d1b6aeb9bf9d190a8e93061b44",
+          "upstream_url": "https://raw.githubusercontent.com/tokio-rs/valuable/9efc29b6e58cef28f6566a47aa7e142a55fead77/LICENSE",
+          "git_blob_sha1": "4ca822a5cb54142a14070f5be388e60497781615",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
       "name": "wasm_split_helpers",
       "version": "0.2.3",
       "archive_sha256": "ab578aae2fe2916edaea06843187d50f87b0965622da0ceef648edca27b385ba",
@@ -2281,7 +2298,7 @@
       "repository": "https://github.com/JonathanBrouwer/erased",
       "authors_declared": [
         "Jonathan Brouwer <jonathantbrouwer@gmail.com>",
-        "Jonathan D\u00f6nszelmann <jonabent@gmail.com>"
+        "Jonathan Dönszelmann <jonabent@gmail.com>"
       ],
       "reason": "The exact archive and upstream repository history declare MIT but no complete original MIT copyright/permission file was found. Keep publisher attribution and declaration, and require explicit follow-up; no copyright holder/year or grant is synthesized."
     }

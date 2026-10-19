@@ -322,7 +322,7 @@ def deb_candidate(input_directory, output, role, architecture, value):
         control.mkdir()
         depends = "libc6 (>= 2.39), libgcc-s1, libstdc++6"
         if role == "desktop":
-            depends += ", libasound2t64, libpipewire-0.3-0t64, libwayland-client0, libxkbcommon0, libx11-6, libxcursor1, libxi6, libxrandr2, libgl1, xdg-desktop-portal"
+            depends += ", libasound2t64, libpipewire-0.3-0t64, libwayland-client0, libxkbcommon0, libx11-6, libxcursor1, libxi6, libxrandr2, libgl1, xdg-desktop-portal, libsecret-tools"
         deb_version = value["version"].replace("-rc.", "~rc.")
         text = (f"Package: nestlink-rc-{role}\nVersion: {deb_version}\n"
                 f"Architecture: {architecture}\nMaintainer: NestLink candidate build <candidate@invalid.example>\n"
