@@ -168,9 +168,10 @@ async fn automatic_host_waits_past_old_lease_then_receives_fresh_permit_and_stay
     })
     .await??;
     let permit = sdk.permit(&request.id).await?;
+    assert!(permit.claims().is_setup());
     assert_eq!(
         permit.claims().expires_at_unix_ms - permit.claims().issued_at_unix_ms,
-        nestlink_protocol::SESSION_LEASE_MS
+        nestlink_protocol::ice::SETUP_BUDGET_MS
     );
     assert_eq!(
         starts.load(Ordering::SeqCst),
