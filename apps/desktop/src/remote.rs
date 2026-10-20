@@ -186,15 +186,15 @@ impl DesktopApp {
         let width = ui.available_width();
         if width >= 740. {
             ui.horizontal_top(|ui| {
+                ui.spacing_mut().item_spacing.x = 14.;
                 ui.allocate_ui_with_layout(
-                    egui::vec2(width - 324., 400.),
+                    egui::vec2(width - 314., 400.),
                     egui::Layout::top_down(egui::Align::Min),
                     |ui| {
-                        ui.set_width(width - 324.);
+                        ui.set_width(width - 314.);
                         self.remote_device_list(ui, snapshot, local_id);
                     },
                 );
-                ui.add_space(14.);
                 ui.allocate_ui_with_layout(
                     egui::vec2(300., 400.),
                     egui::Layout::top_down(egui::Align::Min),
@@ -274,7 +274,9 @@ impl DesktopApp {
                     || view.device.id.to_lowercase().contains(&query)
             })
             .collect();
-        if hosts.is_empty() && snapshot.devices.loading.is_none() {
+        if hosts.is_empty()
+            && (snapshot.devices.data.is_some() || snapshot.devices.loading.is_none())
+        {
             egui::Frame::new().inner_margin(24).show(ui, |ui| {
                 icons::badge(ui, Icon::Monitor, 48.);
                 ui.strong(self.t(
@@ -298,6 +300,7 @@ impl DesktopApp {
         egui::ScrollArea::vertical()
             .id_salt("remote-device-picker")
             .max_height(400.)
+            .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysVisible)
             .auto_shrink([false, true])
             .show(ui, |ui| {
                 for view in hosts {
@@ -321,8 +324,33 @@ impl DesktopApp {
                             ui.set_min_width((ui.available_width() - 2.).max(0.));
                             ui.horizontal(|ui| {
                                 icons::badge(ui, Icon::Monitor, 40.);
+                                // Reserve both actions before laying out the device name.
+                                // A long name must not push the hit targets into the next column.
+                                let font = egui::TextStyle::Button.resolve(ui.style());
+                                let action_width = [
+                                    self.t("进入桌面", "Enter desktop"),
+                                    self.t("已选择", "Selected"),
+                                ]
+                                .into_iter()
+                                .map(|label| {
+                                    ui.painter()
+                                        .layout_no_wrap(
+                                            label.into(),
+                                            font.clone(),
+                                            ui.visuals().text_color(),
+                                        )
+                                        .size()
+                                        .x
+                                        + 2. * ui.spacing().button_padding.x
+                                })
+                                .sum::<f32>()
+                                    + ui.spacing().item_spacing.x;
+                                let name_width = (ui.available_width()
+                                    - action_width
+                                    - ui.spacing().item_spacing.x)
+                                    .max(60.);
                                 ui.vertical(|ui| {
-                                    ui.set_max_width((ui.available_width() - 78.).max(60.));
+                                    ui.set_width(name_width);
                                     ui.add(
                                         egui::Label::new(
                                             egui::RichText::new(&view.device.name).strong(),
@@ -682,30 +710,19 @@ impl DesktopApp {
         }
         self.transfer_panels(ui, snapshot);
         ui.add_space(20.);
-        egui::CollapsingHeader::new(
-            self.t("本机访问与网络设置", "Host access and network settings"),
-        )
-        .show(ui, |ui| {
-            self.remote_password_host_panel(ui, snapshot);
-            if let Some(command) =
-                self.privileged_panel
-                    .show(ui, snapshot, self.english, self.connected)
-            {
-                let submission = self.bridge.submit_tracked(snapshot.generation, command);
-                self.privileged_panel.submitted(submission);
-            }
-            if let Some(command) = self.network_panel.show(ui, snapshot, self.english) {
-                self.network_submission = if self.connected {
-                    self.bridge.submit_tracked(snapshot.generation, command)
-                } else {
-                    None
-                };
-                if self.network_submission.is_none() {
-                    self.network_panel
-                        .complete(Err(nestlink_app_core::NativeNetworkError::Unavailable));
+        egui::CollapsingHeader::new(self.t("本机访问设置", "Host access settings")).show(
+            ui,
+            |ui| {
+                self.remote_password_host_panel(ui, snapshot);
+                if let Some(command) =
+                    self.privileged_panel
+                        .show(ui, snapshot, self.english, self.connected)
+                {
+                    let submission = self.bridge.submit_tracked(snapshot.generation, command);
+                    self.privileged_panel.submitted(submission);
                 }
-            }
-        });
+            },
+        );
         ui.add_space(12.);
         ui.small(self.t(
             "仅在访问获准且连接可用时显示远端画面。",

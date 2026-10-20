@@ -334,18 +334,23 @@ pub fn operation_message(result: &OperationResult, english: bool) -> String {
     message
 }
 pub fn section<T>(ui: &mut egui::Ui, section: &Section<T>, english: bool) {
-    ui.allocate_ui(egui::vec2(ui.available_width(), 28.), |ui| {
-        if section.loading.is_some() {
-            ui.horizontal(|ui| {
-                ui.spinner();
+    ui.allocate_ui_with_layout(
+        egui::vec2(ui.available_width(), 28.),
+        egui::Layout::left_to_right(egui::Align::Center),
+        |ui| {
+            // allocate_ui's requested size is a budget, not a reserved minimum.
+            // Keep refresh polling from inserting/removing an entire control row.
+            ui.set_min_height(28.);
+            if section.loading.is_some() {
+                ui.add(egui::Spinner::new().size(18.));
                 ui.label(if english {
                     "Loading…"
                 } else {
                     "正在加载…"
                 });
-            });
-        }
-    });
+            }
+        },
+    );
     if let Some(error) = &section.error {
         ui.colored_label(ui.visuals().error_fg_color, failure(error, english));
     }

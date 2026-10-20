@@ -7,6 +7,8 @@ mod connection;
 mod files;
 mod host_notice;
 mod icons;
+#[cfg(test)]
+mod layout_tests;
 mod lists;
 mod management;
 mod native_displays;
@@ -198,11 +200,28 @@ impl DesktopApp {
         } else {
             MessageTone::Neutral
         };
-        Ok(Self {
-            bridge: Bridge::start(directory.clone(), creation.egui_ctx.clone()),
+        Ok(Self::from_parts(
+            directory.clone(),
+            tokens,
+            Bridge::start(directory, creation.egui_ctx.clone()),
+            tray::Tray::create(creation.egui_ctx.clone()).ok(),
+            message,
+            message_tone,
+        ))
+    }
+    fn from_parts(
+        directory: PathBuf,
+        tokens: theme::Tokens,
+        bridge: Bridge,
+        tray: Option<tray::Tray>,
+        message: Option<String>,
+        message_tone: MessageTone,
+    ) -> Self {
+        Self {
+            bridge,
             directory: directory.clone(),
             tokens,
-            tray: tray::Tray::create(creation.egui_ctx.clone()).ok(),
+            tray,
             screen: Screen::Server,
             workspace_attached: false,
             english: false,
@@ -265,7 +284,7 @@ impl DesktopApp {
             remote_inspection_completed: false,
             remote_inspection_succeeded: false,
             host_notice: host_notice::HostNoticeState::default(),
-        })
+        }
     }
     fn t(&self, zh: &'static str, en: &'static str) -> &'static str {
         if self.english { en } else { zh }
@@ -2041,77 +2060,12 @@ impl eframe::App for DesktopApp {
         self.show_remote_viewport(&context, &snapshot);
         self.navigation(&context, parent, &snapshot);
         self.workspace_toolbar(parent, &snapshot);
-        egui::Panel::bottom("operation-status").show_inside(parent, |ui| {
-            ui.horizontal(|ui| {
-                ui.small(self.t(
-                    if self.connected {
-                        "本用户守护进程已连接"
-                    } else {
-                        "守护进程未连接"
-                    },
-                    if self.connected {
-                        "User daemon connected"
-                    } else {
-                        "User daemon disconnected"
-                    },
-                ));
-                if snapshot.logout_confirmed == Some(false) {
-                    ui.small(self.t(
-                        "本地登录已清除，远端注销未确认。",
-                        "Local login cleared; server logout unconfirmed.",
-                    ));
-                }
-                if self.exiting {
-                    ui.spinner();
-                    ui.small(self.t("正在清理并退出…", "Stopping and cleaning up…"));
-                }
-                if !self.connected && ui.button(self.t("重新连接", "Reconnect")).clicked() {
-                    self.clear_private_view(&context);
-                    self.bridge = Bridge::start(self.directory.clone(), context.clone());
-                }
-            });
-        });
-        egui::CentralPanel::default()
-            .frame(
-                egui::Frame::new()
-                    .fill(context.global_style().visuals.panel_fill)
-                    .inner_margin(self.tokens.layout.content_padding.round() as i8),
-            )
+        egui::Panel::bottom("operation-notification")
+            .exact_size(60.)
+            .resizable(false)
+            .show_separator_line(false)
+            .frame(egui::Frame::new().inner_margin(egui::Margin::symmetric(12, 8)))
             .show_inside(parent, |ui| {
-                egui::ScrollArea::vertical()
-                    .id_salt(("workspace-scroll", self.screen))
-                    .show(ui, |ui| {
-                        ui.add_enabled_ui(self.connected && !self.exiting, |ui| {
-                            if self.screen == Screen::Server
-                                || snapshot
-                                    .server
-                                    .as_ref()
-                                    .is_none_or(|server| server.verified_health.is_none())
-                            {
-                                self.connection_page(ui, &snapshot);
-                            } else if snapshot.authentication != Authentication::SignedIn {
-                                self.sign_in_page(ui, &snapshot);
-                            } else {
-                                match self.screen {
-                                    Screen::Remote => self.remote_page(ui, &snapshot),
-                                    Screen::Services => self.services_page(ui, &snapshot),
-                                    Screen::Devices => self.devices_page(ui, &snapshot),
-                                    Screen::Security => self.security_page(ui, &snapshot),
-                                    Screen::Accounts => self.accounts_page(ui, &snapshot),
-                                    Screen::Network => self.network_page(ui, &snapshot),
-                                    Screen::Nodes => self.nodes_page(ui, &snapshot),
-                                    Screen::Audit => self.audit_page(ui, &snapshot),
-                                    Screen::Server => {}
-                                }
-                            }
-                        });
-                    });
-            });
-        egui::Area::new(egui::Id::new("operation-notification"))
-            .order(egui::Order::Foreground)
-            .anchor(egui::Align2::RIGHT_TOP, egui::vec2(-24., 88.))
-            .show(&context, |ui| {
-                ui.set_width((context.content_rect().width() - 48.).clamp(200., 400.));
                 if let Some(message) = self.message.clone() {
                     let message_color = match self.message_tone {
                         MessageTone::Neutral => None,
@@ -2140,24 +2094,115 @@ impl eframe::App for DesktopApp {
                             Some(theme::color(&palette.danger))
                         }
                     };
-                    egui::Frame::group(ui.style()).show(ui, |ui| {
-                        ui.horizontal_wrapped(|ui| {
-                            if let Some(color) = message_color {
-                                ui.colored_label(color, message);
-                            } else {
-                                ui.label(message);
-                            }
-                            if ui
-                                .small_button(self.t("关闭", "Dismiss"))
-                                .on_hover_text(self.t("关闭提示", "Dismiss message"))
-                                .clicked()
+                    ui.horizontal(|ui| {
+                        let width = (ui.available_width() - 86.).max(0.);
+                        ui.allocate_ui_with_layout(
+                            egui::vec2(width, 44.),
+                            egui::Layout::top_down(egui::Align::Min),
+                            |ui| {
+                                ui.set_width(width);
+                                egui::ScrollArea::vertical()
+                                    .id_salt("operation-message-text")
+                                    .max_height(44.)
+                                    .auto_shrink([false, false])
+                                    .show(ui, |ui| {
+                                        if let Some(color) = message_color {
+                                            ui.colored_label(color, message);
+                                        } else {
+                                            ui.label(message);
+                                        }
+                                    });
+                            },
+                        );
+                        if ui
+                            .add_sized(
+                                egui::vec2(76., 40.),
+                                egui::Button::new(self.t("关闭", "Dismiss")),
+                            )
+                            .on_hover_text(self.t("关闭提示", "Dismiss message"))
+                            .clicked()
+                        {
+                            self.message = None;
+                            self.message_tone = MessageTone::Neutral;
+                        }
+                    });
+                }
+            });
+        egui::Panel::bottom("operation-status")
+            .exact_size(44.)
+            .resizable(false)
+            .frame(egui::Frame::new().inner_margin(2))
+            .show_inside(parent, |ui| {
+                ui.horizontal(|ui| {
+                    ui.set_min_height(40.);
+                    ui.small(self.t(
+                        if self.connected {
+                            "本用户守护进程已连接"
+                        } else {
+                            "守护进程未连接"
+                        },
+                        if self.connected {
+                            "User daemon connected"
+                        } else {
+                            "User daemon disconnected"
+                        },
+                    ));
+                    if snapshot.logout_confirmed == Some(false) {
+                        ui.small(self.t(
+                            "本地登录已清除，远端注销未确认。",
+                            "Local login cleared; server logout unconfirmed.",
+                        ));
+                    }
+                    if self.exiting {
+                        ui.add(egui::Spinner::new().size(18.));
+                        ui.small(self.t("正在清理并退出…", "Stopping and cleaning up…"));
+                    }
+                    if !self.connected && ui.button(self.t("重新连接", "Reconnect")).clicked() {
+                        self.clear_private_view(&context);
+                        self.bridge = Bridge::start(self.directory.clone(), context.clone());
+                    }
+                });
+            });
+        egui::CentralPanel::default()
+            .frame(
+                egui::Frame::new()
+                    .fill(context.global_style().visuals.panel_fill)
+                    .inner_margin(self.tokens.layout.content_padding.round() as i8),
+            )
+            .show_inside(parent, |ui| {
+                egui::ScrollArea::vertical()
+                    .id_salt(("workspace-scroll", self.screen))
+                    .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysVisible)
+                    .auto_shrink([false, false])
+                    .show(ui, |ui| {
+                        ui.add_enabled_ui(self.connected && !self.exiting, |ui| {
+                            if self.screen == Screen::Server
+                                || snapshot
+                                    .server
+                                    .as_ref()
+                                    .is_none_or(|server| server.verified_health.is_none())
                             {
-                                self.message = None;
-                                self.message_tone = MessageTone::Neutral;
+                                self.connection_page(ui, &snapshot);
+                                if self.screen == Screen::Server {
+                                    self.local_network_settings(ui, &snapshot);
+                                }
+                            } else if snapshot.authentication != Authentication::SignedIn {
+                                self.sign_in_page(ui, &snapshot);
+                            } else {
+                                match self.screen {
+                                    Screen::Remote => self.remote_page(ui, &snapshot),
+                                    Screen::Services => self.services_page(ui, &snapshot),
+                                    Screen::Devices => self.devices_page(ui, &snapshot),
+                                    Screen::Security => self.security_page(ui, &snapshot),
+                                    Screen::Accounts => self.accounts_page(ui, &snapshot),
+                                    Screen::Network => self.network_page(ui, &snapshot),
+                                    Screen::Nodes => self.nodes_page(ui, &snapshot),
+                                    Screen::Audit => self.audit_page(ui, &snapshot),
+                                    Screen::Server => {}
+                                }
                             }
                         });
                     });
-                }
             });
         self.confirmations(&context, &snapshot);
     }

@@ -153,6 +153,37 @@ pub struct Bridge {
     input_thread: Option<std::thread::JoinHandle<()>>,
 }
 impl Bridge {
+    /// Layout tests render the real workspace without starting a daemon or media workers.
+    #[cfg(test)]
+    pub(crate) fn for_layout(snapshot: Snapshot) -> Self {
+        Self {
+            commands: mpsc::sync_channel(16).0,
+            next_submission_id: AtomicU64::new(1),
+            notices: mpsc::sync_channel(32).1,
+            snapshot: Arc::new(Mutex::new(Arc::new(snapshot))),
+            displays: Arc::new(Mutex::new(DisplayMailbox::default())),
+            video_update: Arc::new(Mutex::new(None)),
+            video_interest: tokio::sync::watch::channel(false).0,
+            video_stop: tokio::sync::watch::channel(false).0,
+            runtime_id: Arc::new(Mutex::new(None)),
+            video_thread: None,
+            input_commands: tokio::sync::mpsc::channel(INPUT_QUEUE_CAPACITY).0,
+            input_interest: tokio::sync::watch::channel(false).0,
+            input_stop: tokio::sync::watch::channel(false).0,
+            input_release: tokio::sync::watch::channel(None).0,
+            input_layout: Arc::new(Mutex::new(None)),
+            input_thread: None,
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn layout_snapshot(&mut self, snapshot: Snapshot) {
+        *self
+            .snapshot
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner) = Arc::new(snapshot);
+    }
+
     pub fn start(directory: PathBuf, context: egui::Context) -> Self {
         let (commands, incoming) = mpsc::sync_channel(16);
         let (outgoing, notices) = mpsc::sync_channel(32);

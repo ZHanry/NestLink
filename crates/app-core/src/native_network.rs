@@ -21,19 +21,28 @@ pub struct NativeNetworkSettings {
     pub private_network_prefixes: Vec<String>,
 }
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum MediaRouteMode {
-    #[default]
     System,
     Physical,
     Interface,
 }
 
+impl Default for MediaRouteMode {
+    fn default() -> Self {
+        if cfg!(windows) {
+            Self::Physical
+        } else {
+            Self::System
+        }
+    }
+}
+
 impl Default for NativeNetworkSettings {
     fn default() -> Self {
         Self {
-            media_route: MediaRouteMode::System,
+            media_route: MediaRouteMode::default(),
             media_interface_index: None,
             use_deployment_stun: true,
             private_network_prefixes: Vec::new(),
@@ -149,9 +158,31 @@ mod tests {
     #[test]
     fn default_does_not_approve_any_private_destination() {
         let settings = NativeNetworkSettings::default();
+        assert_eq!(
+            settings.media_route,
+            if cfg!(windows) {
+                MediaRouteMode::Physical
+            } else {
+                MediaRouteMode::System
+            }
+        );
         assert!(settings.use_deployment_stun);
         assert!(settings.private_network_prefixes.is_empty());
         assert!(settings.validate().is_ok());
+    }
+
+    #[test]
+    fn legacy_settings_get_platform_default_but_explicit_route_is_preserved()
+    -> Result<(), serde_json::Error> {
+        let settings: NativeNetworkSettings =
+            serde_json::from_str(r#"{"use_deployment_stun":true,"private_network_prefixes":[]}"#)?;
+        assert_eq!(settings, NativeNetworkSettings::default());
+        let explicit: NativeNetworkSettings = serde_json::from_str(
+            r#"{"media_route":"system","use_deployment_stun":true,"private_network_prefixes":[]}"#,
+        )?;
+        assert_eq!(explicit.media_route, MediaRouteMode::System);
+        assert!(explicit.private_network_prefixes.is_empty());
+        Ok(())
     }
 
     #[test]

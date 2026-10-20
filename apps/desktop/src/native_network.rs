@@ -1,6 +1,6 @@
 //! Local dialing consent, separate from administrator forwarding policy.
 use eframe::egui;
-use nestlink_app_core::{MediaRouteMode, NativeNetworkError, NativeNetworkSettings, Snapshot};
+use nestlink_app_core::{NativeNetworkError, NativeNetworkSettings, Snapshot};
 use nestlink_app_ipc::wire::Command;
 
 #[derive(Default)]
@@ -8,8 +8,6 @@ pub(crate) struct NativeNetworkPanel {
     base: Option<(u64, u64)>,
     prefixes: String,
     use_deployment_stun: bool,
-    media_route: MediaRouteMode,
-    media_interface_index: u32,
     approved: bool,
     pending: bool,
     message: Option<NativeNetworkError>,
@@ -36,8 +34,6 @@ impl NativeNetworkPanel {
             self.base = Some((snapshot.generation, snapshot.native_network_revision));
             self.prefixes = snapshot.native_network.private_network_prefixes.join("\n");
             self.use_deployment_stun = snapshot.native_network.use_deployment_stun;
-            self.media_route = snapshot.native_network.media_route;
-            self.media_interface_index = snapshot.native_network.media_interface_index.unwrap_or(1);
             self.approved = false;
             self.pending = false;
         }
@@ -52,35 +48,14 @@ impl NativeNetworkPanel {
                 if ui.checkbox(&mut self.use_deployment_stun, t("使用部署提供的 STUN 地址发现", "Use deployment STUN discovery")).changed() {
                     self.approved = false;
                 }
-                ui.label(t("媒体网络路径", "Media network route"));
-                let previous = (self.media_route, self.media_interface_index);
-                egui::ComboBox::from_id_salt("media-route-mode").selected_text(match self.media_route {
-                    MediaRouteMode::System => t("跟随系统（默认）", "Follow system (default)"),
-                    MediaRouteMode::Physical => t("优先物理网卡直连", "Prefer a physical interface"),
-                    MediaRouteMode::Interface => t("指定接口", "Select an interface"),
-                }).show_ui(ui, |ui| {
-                    ui.selectable_value(&mut self.media_route, MediaRouteMode::System, t("跟随系统（默认）", "Follow system (default)"));
-                    if cfg!(windows) {
-                        ui.selectable_value(&mut self.media_route, MediaRouteMode::Physical, t("优先物理网卡直连", "Prefer a physical interface"));
-                        ui.selectable_value(&mut self.media_route, MediaRouteMode::Interface, t("指定接口", "Select an interface"));
-                    }
-                });
-                if self.media_route == MediaRouteMode::Interface {
-                    ui.horizontal(|ui| {
-                        ui.label(t("接口索引", "Interface index"));
-                        ui.add(egui::DragValue::new(&mut self.media_interface_index).range(1..=u32::MAX));
-                    });
-                }
-                if previous != (self.media_route, self.media_interface_index) { self.approved = false; }
-                ui.small(t("跟随系统保留现有 VPN 路由；直连选择只作用于本机新建的媒体连接。指定接口不可用时显示连接失败。", "System mode preserves VPN routing. Route selection applies to new local media sockets. An unavailable selected interface causes an explicit connection failure."));
                 ui.label(t("批准的内网 CIDR（每行一个）", "Approved private CIDRs (one per line)"));
                 if ui.add(egui::TextEdit::multiline(&mut self.prefixes).char_limit(4096).desired_rows(3)
                     .hint_text("192.168.1.0/24\nfd12:3456::/32")).changed() {
                     self.approved = false;
                 }
                 let settings = NativeNetworkSettings {
-                    media_route: self.media_route,
-                    media_interface_index: (self.media_route == MediaRouteMode::Interface).then_some(self.media_interface_index),
+                    media_route: snapshot.native_network.media_route,
+                    media_interface_index: snapshot.native_network.media_interface_index,
                     use_deployment_stun: self.use_deployment_stun,
                     private_network_prefixes: self.prefixes.lines().map(str::trim)
                         .filter(|line| !line.is_empty()).map(str::to_owned).collect(),

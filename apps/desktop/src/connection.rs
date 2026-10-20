@@ -119,6 +119,29 @@ impl DesktopApp {
         });
     }
 
+    pub(crate) fn local_network_settings(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
+        ui.add_space(24.);
+        ui.separator();
+        ui.heading(self.t("本机网络设置", "Local network settings"));
+        if cfg!(windows) {
+            ui.label(self.t(
+                "媒体连接默认优先使用物理网卡，无需在远程控制时选择网络路径。",
+                "Media connections prefer a physical interface by default. No network selection is needed for remote control.",
+            ));
+        }
+        if let Some(command) = self.network_panel.show(ui, snapshot, self.english) {
+            self.network_submission = if self.connected {
+                self.bridge.submit_tracked(snapshot.generation, command)
+            } else {
+                None
+            };
+            if self.network_submission.is_none() {
+                self.network_panel
+                    .complete(Err(nestlink_app_core::NativeNetworkError::Unavailable));
+            }
+        }
+    }
+
     pub(crate) fn sign_in_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         ui.add_space(32.);
         ui.horizontal(|ui| {

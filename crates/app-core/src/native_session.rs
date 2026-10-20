@@ -57,7 +57,7 @@ impl NativeSessionConfig {
             bind_address: SocketAddr::from(([0, 0, 0, 0], 0)),
             stun_servers: Vec::new(),
             use_deployment_stun: true,
-            media_route: crate::MediaRouteMode::System,
+            media_route: crate::MediaRouteMode::default(),
             media_interface_index: None,
             private_network_prefixes: Vec::new(),
             supported_capabilities: {
