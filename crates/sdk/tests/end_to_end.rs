@@ -85,7 +85,13 @@ async fn real_http_sdk_registration_approval_native_quic_and_revoke() -> Result 
             "direct_preferred".into(),
         )
         .await?;
-    assert_eq!(controller_sdk.devices().await?.len(), 1);
+    let controller_devices = controller_sdk.devices().await?;
+    assert_eq!(controller_devices.len(), 1);
+    assert_eq!(
+        controller_devices[0].device.capabilities,
+        vec!["controller".to_owned(), "vp8".to_owned()],
+        "registration must preserve the caller's explicit codec capabilities"
+    );
     assert_eq!(host_sdk.devices().await?.len(), 1);
     let view = controller_sdk
         .create_remote(RemoteRequest {

@@ -319,6 +319,8 @@ async fn authorized_capture_vp8_roundtrip_multiple_sources_and_other_channels() 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn negotiated_h264_roundtrip_recovers_a_reference_gap_and_stops_on_revoke() -> Result {
     let mut pair = pair_with_profile(false, Some(3), true).await?;
+    let host_stop = pair.host.lease_control().subscribe_stopped();
+    let controller_stop = pair.controller.lease_control().subscribe_stopped();
     let frames = Arc::new(Mutex::new(VecDeque::new()));
     let stopped = Arc::new(AtomicBool::new(false));
     let stream = VideoStream {
@@ -363,7 +365,16 @@ async fn negotiated_h264_roundtrip_recovers_a_reference_gap_and_stops_on_revoke(
                 pixels: [32, 160, 64, 255].repeat(320 * 240),
             });
         tokio::time::sleep(Duration::from_millis(45)).await;
-        if let Some(frame) = receiver.poll_video()? {
+        let frame = receiver.poll_video().map_err(|error| {
+            format!(
+                "H.264 poll failed after sequence {presented}: {error}; sender={:?}; receiver={:?}; host_stop={:?}; controller_stop={:?}",
+                sender.monitor().status(),
+                receiver.monitor().status(),
+                *host_stop.borrow(),
+                *controller_stop.borrow(),
+            )
+        })?;
+        if let Some(frame) = frame {
             assert!(frame.sequence > presented);
             assert_eq!(frame.epoch, EPOCH);
             assert_eq!(frame.pixels.len(), 320 * 240 * 4);

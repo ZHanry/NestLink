@@ -920,19 +920,6 @@ impl Sdk {
         capabilities: Vec<String>,
         path_mode: String,
     ) -> Result<(), SdkError> {
-        #[cfg(windows)]
-        let mut capabilities = capabilities;
-        #[cfg(windows)]
-        if platform == "windows"
-            && tokio::task::spawn_blocking(nestlink_media_codec::h264_hardware_available)
-                .await
-                .unwrap_or(false)
-            && !capabilities
-                .iter()
-                .any(|value| value == nestlink_protocol::media::H264_CAPABILITY)
-        {
-            capabilities.push(nestlink_protocol::media::H264_CAPABILITY.into());
-        }
         let descriptor = DeviceDescriptor {
             id: installation.device_id.clone(),
             name,
