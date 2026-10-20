@@ -117,6 +117,17 @@ impl std::fmt::Display for PeerError {
 impl std::error::Error for PeerError {}
 
 impl PeerError {
+    pub fn diagnostic_failure_for_setup(
+        &self,
+        setup: bool,
+    ) -> nestlink_protocol::diagnostics::ConnectionFailure {
+        if setup && *self == Self::Expired {
+            nestlink_protocol::diagnostics::ConnectionFailure::StartupAuthorizationExpired
+        } else {
+            self.diagnostic_failure()
+        }
+    }
+
     pub fn diagnostic_failure(&self) -> nestlink_protocol::diagnostics::ConnectionFailure {
         use nestlink_protocol::diagnostics::ConnectionFailure as F;
         match self {
@@ -548,6 +559,27 @@ fn managed_candidate_addresses(mode: PeerPathMode, sdp: &str) -> Result<Vec<Stri
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn setup_expiry_does_not_reclassify_endpoint_expiry_or_running_authority() {
+        use nestlink_protocol::diagnostics::ConnectionFailure as F;
+        assert_eq!(
+            PeerError::Expired.diagnostic_failure_for_setup(true),
+            F::StartupAuthorizationExpired
+        );
+        assert_eq!(
+            PeerError::Expired.diagnostic_failure_for_setup(false),
+            F::AuthorizationExpired
+        );
+        assert_eq!(
+            PeerError::EndpointLeaseExpired.diagnostic_failure_for_setup(true),
+            F::AuthorizationExpired
+        );
+        assert_eq!(
+            PeerError::SignalRejected.diagnostic_failure_for_setup(true),
+            F::SignalingRejected
+        );
+    }
 
     #[test]
     fn throughput_classification_changes_do_not_request_ice_restarts() {
@@ -1881,14 +1913,10 @@ mod wasm {
             }
         }
 
-        pub fn record_failure(&self, problem: &PeerError) {
-            self.diagnostics.failure(
-                if *problem == PeerError::Expired && self.permit.claims().is_setup() {
-                    ConnectionFailure::StartupAuthorizationExpired
-                } else {
-                    problem.diagnostic_failure()
-                },
-            );
+        pub fn record_failure(&self, problem: &PeerError) -> ConnectionFailure {
+            let failure = problem.diagnostic_failure_for_setup(self.permit.claims().is_setup());
+            self.diagnostics.failure(failure);
+            failure
         }
 
         pub fn data_channels(&self) -> Result<BrowserDataChannels, PeerError> {

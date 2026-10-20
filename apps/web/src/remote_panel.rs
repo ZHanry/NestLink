@@ -1442,8 +1442,8 @@ async fn receive_answer(run: &RemoteRun, peer: &mut BrowserPeer) -> Result<(), S
 }
 
 fn diagnosed_peer_error(peer: &BrowserPeer, problem: PeerError) -> String {
-    peer.record_failure(&problem);
-    i18n::peer_error(&problem)
+    let failure = peer.record_failure(&problem);
+    i18n::peer_diagnostic_error(&problem, failure, None)
 }
 
 fn diagnosed_connection_error(
@@ -1451,8 +1451,8 @@ fn diagnosed_connection_error(
     problem: PeerError,
     mode: PeerPathMode,
 ) -> String {
-    peer.record_failure(&problem);
-    i18n::peer_connection_error(&problem, mode)
+    let failure = peer.record_failure(&problem);
+    i18n::peer_diagnostic_error(&problem, failure, Some(mode))
 }
 
 fn path_status(path: SelectedPath, picture: bool) -> &'static str {

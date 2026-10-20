@@ -208,6 +208,23 @@ pub fn peer_error(error: &crate::browser_peer::PeerError) -> String {
     formatted(chinese.into(), error.to_string())
 }
 
+pub fn peer_diagnostic_error(
+    error: &crate::browser_peer::PeerError,
+    failure: nestlink_protocol::diagnostics::ConnectionFailure,
+    mode: Option<crate::browser_peer::PeerPathMode>,
+) -> String {
+    if failure == nestlink_protocol::diagnostics::ConnectionFailure::StartupAuthorizationExpired {
+        return formatted(
+            "建链授权已到期，请重新连接。若反复出现，请导出连接诊断以检查协商耗时。".into(),
+            "Connection setup authorization expired. Connect again. If this repeats, export connection diagnostics to check negotiation timing.".into(),
+        );
+    }
+    mode.map_or_else(
+        || peer_error(error),
+        |mode| peer_connection_error(error, mode),
+    )
+}
+
 pub fn peer_connection_error(
     error: &crate::browser_peer::PeerError,
     mode: crate::browser_peer::PeerPathMode,
@@ -315,6 +332,29 @@ macro_rules! localized_detail {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn setup_expiry_has_specific_recovery_copy_without_mislabeling_temporary_identity() {
+        use crate::browser_peer::{PeerError, PeerPathMode};
+        set_english(false);
+        let problem = peer_diagnostic_error(
+            &PeerError::Expired,
+            PeerError::Expired.diagnostic_failure_for_setup(true),
+            Some(PeerPathMode::DirectOnly),
+        );
+        assert!(problem.starts_with("建链授权已到期"));
+        assert!(!problem.contains("临时设备"));
+        assert!(!problem.contains("TURN"));
+        set_english(true);
+        assert!(feedback_text(&problem).starts_with("Connection setup authorization expired"));
+        let endpoint = peer_diagnostic_error(
+            &PeerError::EndpointLeaseExpired,
+            PeerError::EndpointLeaseExpired.diagnostic_failure_for_setup(true),
+            None,
+        );
+        assert!(!endpoint.contains("setup authorization"));
+        set_english(false);
+    }
 
     #[test]
     fn language_changes_only_explicit_ui_copy_and_formats_values_once() {
