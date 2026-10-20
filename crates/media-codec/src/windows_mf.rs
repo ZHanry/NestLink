@@ -28,6 +28,7 @@ unsafe extern "C" {
         output_pts: *mut u64,
     ) -> i32;
     fn nl_mf_bitrate(handle: *mut c_void, kbps: u32) -> i32;
+    fn nl_mf_flush_decoder(handle: *mut c_void) -> i32;
     fn nl_mf_close(handle: *mut c_void);
     fn nl_mf_hardware_used(handle: *mut c_void) -> u32;
 }
@@ -245,6 +246,21 @@ pub struct MfH264Decoder {
 }
 
 impl MfH264Decoder {
+    /// Discard buffered output and reference state while retaining the owned
+    /// transform/device. Input/output timestamp replay fences remain intact.
+    pub fn reset_for_keyframe(&mut self) -> io::Result<()> {
+        if self.inner.failed {
+            return Err(io::Error::other("failed H.264 decoder cannot be reset"));
+        }
+        // SAFETY: exclusively borrowed live decoder on its owning COM thread.
+        let code = unsafe { nl_mf_flush_decoder(self.inner.handle.as_ptr()) };
+        if code < 0 {
+            self.inner.failed = true;
+            return Err(failed("decoder flush", code));
+        }
+        self.validator.reset_for_keyframe();
+        Ok(())
+    }
     pub fn new(width: u32, height: u32, hardware_only: bool) -> io::Result<Self> {
         Ok(Self {
             validator: H264Validator::new(width, height)?,
@@ -305,13 +321,15 @@ mod tests {
         let mut decoder = MfH264Decoder::new(320, 240, false)?;
         let mut outputs = 0;
         let mut idrs = 0;
+        let mut reset_pts = 0;
         for frame in 0..18 {
             let Some(packet) = encoder.encode(&pixels, frame * 3000, frame % 6 == 0)? else {
                 continue;
             };
             if packet.keyframe {
                 idrs += 1;
-                decoder = MfH264Decoder::new(320, 240, false)?;
+                decoder.reset_for_keyframe()?;
+                reset_pts = packet.pts_90khz;
                 assert!(
                     MfH264Decoder::new(640, 480, false)?
                         .decode(&packet.data, packet.pts_90khz)
@@ -321,6 +339,7 @@ mod tests {
             if let Some((decoded, pts)) = decoder.decode_frame(&packet.data, packet.pts_90khz)? {
                 outputs += 1;
                 assert!(pts <= packet.pts_90khz);
+                assert!(pts >= reset_pts, "pre-flush output escaped the decoder");
                 assert!(
                     decoded
                         .chunks_exact(4)

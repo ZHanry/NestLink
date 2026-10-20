@@ -39,8 +39,8 @@ written video terminates the whole generation with TransportLost; the stream
 is never reused after a cancelled partial frame. QUIC buffering is bounded to
 512KiB and input/feedback stream priority is preserved. The source may replace raw frames before encoding. Receivers
 must decode every accepted reference packet in sequence, even when presentation
-of an old decoded image is skipped. A sequence gap or decode error requires a
-fresh decoder and a keyframe before presentation resumes. Datagram packet loss,
+of an old decoded image is skipped. A sequence gap or decode error requires
+discarding buffered references and a keyframe before presentation resumes. Datagram packet loss,
 browser PLI and browser negotiation are separate protocols, not implied here.
 Round-robin scheduling keeps other outgoing channels progressing once the
 current frame finishes. A reliable TCP/WSS byte stream still has wire and
@@ -56,15 +56,26 @@ DecoderFailure. Unknown reasons and wrong identity, layout, geometry, sequence
 or PTS remain terminal; recovery never changes consent or revives a stopped lease.
 
 A missing initial keyframe, a forward sequence gap or an entropy decode failure
-discards the decoder and unpresented image for that source. Deltas are discarded
+discards buffered references and the unpresented image for that source. H.264
+reference-gap recovery flushes and reuses the transform when possible; entropy
+failure or unsupported flush rebuilds the same negotiated codec. A flush retains
+the input/output PTS replay fences and clears SPS/PPS validation state. Deltas are discarded
 while awaiting a new keyframe; their validated sequence/PTS still advance so
-they cannot replay. A new decoder processes the next keyframe. Each recovery
+they cannot replay. Only an independent IDR with SPS/PPS may restart H.264. Each recovery
 has one two-second deadline, never extended by retries or more deltas. At most
 three recovery starts/failed entropy attempts fit in a rolling 30-second window.
 Budget exhaustion stops the session and clears output. An independent watchdog
 supervises published recovery deadlines even if the codec or file dispatcher
 stalls; a late decode cannot clear an expired deadline. Codec cleanup retains
 its separate bounded join and explicit timeout result.
+
+The receiver prepares the decoder before the sender starts. Fixed-stream callers
+await `wait_ready`; advertised-display controllers await `wait_display_ready`
+before sending SelectionAck. Readiness binds the current connection, catalogue
+revision, selected source, geometry and layout epoch. Suspension, replacement,
+closure and revocation invalidate it. Preparation has a two-second maximum and
+cannot extend the lease or grant media/input authority. This prevents GPU
+transform creation from consuming the first frame's 500ms transport budget.
 
 The receiver sends feedback at most once per source per 250 ms; a full outgoing
 queue defers insertion without consuming the request sequence. The sender

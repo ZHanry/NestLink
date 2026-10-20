@@ -35,15 +35,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut decoded = 0;
         let mut encode_times = Vec::new();
         let mut decode_times = Vec::new();
+        let mut reset_times = Vec::new();
         let pixels = [32, 160, 64, 255].repeat((width * height) as usize);
         for frame in 0..frames {
             let encoding = Instant::now();
-            let packet = encoder.encode(&pixels, frame * 1500, frame == 0)?;
+            let packet = encoder.encode(&pixels, frame * 1500, frame.is_multiple_of(30))?;
             encode_times.push(encoding.elapsed().as_micros());
             if let Some(packet) = packet {
                 encoded += 1;
                 if encoded == 1 && !packet.keyframe {
                     return Err(io::Error::other("first encoded frame was not an IDR").into());
+                }
+                if encoded > 1 && packet.keyframe {
+                    let resetting = Instant::now();
+                    decoder.reset_for_keyframe()?;
+                    reset_times.push(resetting.elapsed().as_micros());
                 }
                 let decoding = Instant::now();
                 let result = decoder.decode(&packet.data, packet.pts_90khz)?;
@@ -70,6 +76,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         encode_times.sort_unstable();
         decode_times.sort_unstable();
+        reset_times.sort_unstable();
         let percentile =
             |times: &[u128], value: usize| times[(times.len() - 1) * value / 100] as f64 / 1000.0;
         println!(
@@ -79,6 +86,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             percentile(&decode_times, 50),
             percentile(&decode_times, 95)
         );
+        if !reset_times.is_empty() {
+            println!(
+                "decoder_resets={} reset_p50_ms={:.2} reset_p95_ms={:.2}",
+                reset_times.len(),
+                percentile(&reset_times, 50),
+                percentile(&reset_times, 95)
+            );
+        }
         println!(
             "hardware_requested={hardware} encoder_hardware_observed={} decoder_hardware_observed={} encoded={encoded} decoded={decoded} width={width} height={height} elapsed_ms={} synthetic_pipeline_fps={:.1} copy_path=cpu_bgra_nv12",
             encoder.hardware(),

@@ -9,6 +9,7 @@ use tokio::{io::DuplexStream, task::JoinHandle};
 pub(super) struct FrameBridge {
     task: JoinHandle<io::Result<()>>,
     dropped: Arc<AtomicUsize>,
+    progress: Arc<Mutex<String>>,
 }
 impl FrameBridge {
     pub(super) fn drop_video(host: DuplexStream, controller: DuplexStream, sequence: u64) -> Self {
@@ -16,13 +17,21 @@ impl FrameBridge {
         let (mut controller_read, mut controller_write) = split(controller);
         let dropped = Arc::new(AtomicUsize::new(0));
         let count = dropped.clone();
+        let progress = Arc::new(Mutex::new("awaiting frame".to_owned()));
+        let task_progress = progress.clone();
         let task = tokio::spawn(async move {
             // Both halves are owned by one task so EOF closes the bridge in
             // both directions, including the write half held by io::split.
-            tokio::select! {
+            let result = tokio::select! {
                 result = async {
                     loop {
                         let frame = read_frame(&mut host_read).await?;
+                        if frame.channel == Channel::Video {
+                            let packet = NativeVideo::decode_validated(&frame.payload)
+                                .map_err(io::Error::other)?;
+                            *task_progress.lock().map_err(|_| io::Error::other("bridge poisoned"))? =
+                                format!("read video sequence {} ({} bytes)", packet.sequence, frame.payload.len());
+                        }
                         if frame.channel == Channel::Video
                             && NativeVideo::decode_validated(&frame.payload)
                                 .map_err(io::Error::other)?
@@ -36,9 +45,29 @@ impl FrameBridge {
                     }
                 } => result,
                 result = tokio::io::copy(&mut controller_read, &mut host_write) => result.map(|_| ()),
+            };
+            if let Err(error) = &result
+                && let Ok(mut progress) = task_progress.lock()
+            {
+                *progress = format!("{progress}; bridge error: {error}");
             }
+            result
         });
-        Self { task, dropped }
+        Self {
+            task,
+            dropped,
+            progress,
+        }
+    }
+    pub(super) fn diagnostics(&self) -> String {
+        format!(
+            "finished={}, dropped={}, progress={}",
+            self.task.is_finished(),
+            self.dropped.load(Ordering::SeqCst),
+            self.progress
+                .lock()
+                .map_or_else(|_| "poisoned".to_owned(), |progress| progress.clone())
+        )
     }
 }
 impl Drop for FrameBridge {

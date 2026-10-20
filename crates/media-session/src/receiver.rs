@@ -142,11 +142,18 @@ pub struct VideoReceiverStats {
     pub discarded_future_frames: u64,
     pub discarded_budget_frames: u64,
 }
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum DecoderReadiness {
+    Unprepared,
+    Fixed,
+    Display(VideoLayout, u64),
+}
 struct Output {
     playout: Option<crate::SessionPlayoutClock>,
     state: Mutex<State>,
     changes: watch::Sender<u64>,
     recovery_deadline: watch::Sender<Option<Instant>>,
+    prepared: watch::Sender<DecoderReadiness>,
 }
 impl Output {
     fn check_recovery_deadline(&self) -> io::Result<()> {
@@ -168,6 +175,7 @@ impl Output {
     fn with_clock(playout: Option<crate::SessionPlayoutClock>) -> Arc<Self> {
         let (changes, _) = watch::channel(0);
         let (recovery_deadline, _) = watch::channel(None);
+        let (prepared, _) = watch::channel(DecoderReadiness::Unprepared);
         Arc::new(Self {
             playout,
             state: Mutex::new(State {
@@ -185,6 +193,7 @@ impl Output {
             }),
             changes,
             recovery_deadline,
+            prepared,
         })
     }
     fn set_recovery_deadline(&self, deadline: Option<Instant>) -> io::Result<()> {
@@ -225,6 +234,7 @@ impl Output {
         state.selected = None;
         state.last_selected = None;
         drop(state);
+        self.prepared.send_replace(DecoderReadiness::Unprepared);
         self.wake();
     }
 }
@@ -244,6 +254,81 @@ pub struct VideoPresentation {
     connection_generation: u64,
 }
 impl VideoPresentation {
+    async fn wait_prepared(&self, expected: DecoderReadiness) -> io::Result<()> {
+        let mut prepared = self.output.prepared.subscribe();
+        let mut reports = self.lease.subscribe_stopped();
+        let waiting = async {
+            loop {
+                self.lease
+                    .check_media_binding(Channel::Video, self.connection_generation)
+                    .map_err(io::Error::other)?;
+                {
+                    let state = self
+                        .output
+                        .state
+                        .lock()
+                        .map_err(|_| io::Error::other("media output poisoned"))?;
+                    if state.closed
+                        || matches!(expected, DecoderReadiness::Display(layout, revision)
+                            if state.selected != Some(layout)
+                                || state.catalog.as_ref().map(|(key, _)| key.revision) != Some(revision))
+                    {
+                        return Err(io::Error::new(
+                            io::ErrorKind::BrokenPipe,
+                            "decoder preparation retired",
+                        ));
+                    }
+                }
+                if *prepared.borrow_and_update() == expected {
+                    return Ok(());
+                }
+                tokio::select! { biased;
+                    _ = reports.changed() => {},
+                    result = prepared.changed() => { result.map_err(|_| io::Error::other("decoder preparation closed"))?; }
+                }
+            }
+        };
+        tokio::time::timeout(Duration::from_secs(2), waiting)
+            .await
+            .map_err(|_| {
+                io::Error::new(
+                    io::ErrorKind::TimedOut,
+                    "decoder preparation budget exhausted",
+                )
+            })?
+    }
+    /// Wait before acknowledging the host's selected display. No media/input
+    /// authority is granted here; the exact live selection remains required.
+    pub async fn wait_display_ready(&self, selection: &DisplaySelection) -> io::Result<()> {
+        let layout = {
+            let state = self
+                .output
+                .state
+                .lock()
+                .map_err(|_| io::Error::other("media output poisoned"))?;
+            state
+                .selected
+                .filter(|layout| {
+                    layout.source == selection.source
+                        && layout.epoch.layout == selection.layout_epoch
+                        && state
+                            .catalog
+                            .as_ref()
+                            .is_some_and(|(key, _)| key == &selection.catalog)
+                })
+                .ok_or_else(|| {
+                    io::Error::new(
+                        io::ErrorKind::PermissionDenied,
+                        "display preparation binding changed",
+                    )
+                })?
+        };
+        self.wait_prepared(DecoderReadiness::Display(
+            layout,
+            selection.catalog.revision,
+        ))
+        .await
+    }
     /// Install the exact host/local-consent catalogue before acknowledging it.
     /// The receive worker starts with no allowed source and never guesses IDs.
     pub fn install_display_catalog(
@@ -300,6 +385,9 @@ impl VideoPresentation {
             state.ready.clear();
         }
         state.catalog = Some((key, displays));
+        self.output
+            .prepared
+            .send_replace(DecoderReadiness::Unprepared);
         drop(state);
         self.output.wake();
         Ok(())
@@ -353,6 +441,11 @@ impl VideoPresentation {
         state.ready.clear();
         state.layouts.clear();
         state.layouts.insert(layout.source, layout);
+        if state.selected != Some(layout) {
+            self.output
+                .prepared
+                .send_replace(DecoderReadiness::Unprepared);
+        }
         state.selected = Some(layout);
         state.last_selected = Some(layout);
         drop(state);
@@ -378,6 +471,9 @@ impl VideoPresentation {
         state.layouts.clear();
         state.ready.clear();
         drop(state);
+        self.output
+            .prepared
+            .send_replace(DecoderReadiness::Unprepared);
         self.output.wake();
         Ok(())
     }
@@ -463,6 +559,12 @@ enum ReceiveSources {
     Advertised,
 }
 impl VideoReceiver {
+    /// Fixed-stream callers must prepare decoders before enabling the sender.
+    pub async fn wait_ready(&self) -> io::Result<()> {
+        self.presentation()
+            .wait_prepared(DecoderReadiness::Fixed)
+            .await
+    }
     pub fn attach(
         mut runtime: ChannelRuntime,
         epoch: VideoEpoch,
@@ -742,6 +844,7 @@ struct Decoder {
     stream: VideoStream,
     layout: u64,
     codec: Option<VideoDecoder>,
+    awaiting_keyframe: bool,
     pending: BTreeMap<u64, (u64, bool)>,
     sequence: u64,
     pts: Option<u64>,
@@ -750,6 +853,20 @@ struct Decoder {
     attempts: VecDeque<Instant>,
 }
 impl Decoder {
+    fn new(stream: VideoStream, layout: u64) -> Self {
+        Self {
+            stream,
+            layout,
+            codec: None,
+            awaiting_keyframe: true,
+            pending: BTreeMap::new(),
+            sequence: 0,
+            pts: None,
+            request_sequence: 0,
+            recovery: None,
+            attempts: VecDeque::new(),
+        }
+    }
     fn recovery_deadline(&self) -> Option<Instant> {
         self.recovery
             .as_ref()
@@ -768,9 +885,23 @@ impl Decoder {
         Ok(())
     }
     fn recover(&mut self, reason: VideoRecoveryReason, now: Instant) -> io::Result<()> {
-        self.pending.clear();
-        self.codec = None;
         self.deadline(now)?;
+        self.pending.clear();
+        if reason == VideoRecoveryReason::DecoderFailure {
+            self.codec = None;
+        } else if !self.awaiting_keyframe {
+            // Recreating a GPU transform for every omitted reference can stall
+            // the reliable reader long enough to exhaust its video deadline.
+            // A flush drops all delayed output; only a fresh IDR may follow it.
+            let reused = self
+                .codec
+                .as_mut()
+                .is_some_and(|codec| codec.reset_for_keyframe().unwrap_or(false));
+            if !reused {
+                self.codec = None;
+            }
+        }
+        self.awaiting_keyframe = true;
         if self.recovery.is_none() || reason == VideoRecoveryReason::DecoderFailure {
             while self.attempts.front().is_some_and(|at| {
                 now.saturating_duration_since(*at)
@@ -877,7 +1008,7 @@ impl Decoder {
         if gap {
             self.recover(VideoRecoveryReason::ReferenceGap, now)?;
         }
-        if self.codec.is_none() && !packet.keyframe {
+        if self.awaiting_keyframe && !packet.keyframe {
             self.recover(VideoRecoveryReason::KeyframeMissing, now)?;
             return Ok(None);
         }
@@ -889,6 +1020,7 @@ impl Decoder {
             };
             self.codec = Some(VideoDecoder::new(kind, packet.width, packet.height)?);
         }
+        self.awaiting_keyframe = false;
         if self.pending.len() >= 8 {
             self.recover(VideoRecoveryReason::DecoderFailure, now)?;
             return Ok(None);
@@ -1027,6 +1159,61 @@ async fn supervise_recovery(mut deadlines: watch::Receiver<Option<Instant>>) -> 
     }
 }
 
+fn prepare_display_decoder(
+    codecs: &mut BTreeMap<u32, Decoder>,
+    current: Option<(VideoLayout, u64)>,
+    kind: VideoCodec,
+    lease: &LeaseControl,
+    output: &Output,
+) -> io::Result<()> {
+    for codec in codecs.values_mut() {
+        codec.codec = None;
+        codec.awaiting_keyframe = true;
+        codec.pending.clear();
+        codec.recovery = None;
+    }
+    output.recovery_deadline.send_replace(None);
+    if let Some((layout, revision)) = current {
+        lease
+            .check_media_binding(Channel::Video, layout.epoch.connection)
+            .map_err(io::Error::other)?;
+        let decoder = codecs.entry(layout.source).or_insert_with(|| {
+            Decoder::new(
+                VideoStream {
+                    source: layout.source,
+                    codec: VideoConfig {
+                        width: layout.width,
+                        height: layout.height,
+                        fps: 30,
+                        bitrate_kbps: 1000,
+                    },
+                },
+                layout.epoch.layout,
+            )
+        });
+        decoder.layout = layout.epoch.layout;
+        decoder.stream.codec.width = layout.width;
+        decoder.stream.codec.height = layout.height;
+        decoder.codec = Some(VideoDecoder::new(kind, layout.width, layout.height)?);
+        lease
+            .check_media_binding(Channel::Video, layout.epoch.connection)
+            .map_err(io::Error::other)?;
+        let state = output
+            .state
+            .lock()
+            .map_err(|_| io::Error::other("media output poisoned"))?;
+        if state.selected == Some(layout)
+            && state.catalog.as_ref().map(|(key, _)| key.revision) == Some(revision)
+            && !state.closed
+        {
+            output
+                .prepared
+                .send_replace(DecoderReadiness::Display(layout, revision));
+        }
+    }
+    Ok(())
+}
+
 fn receive(
     mut video: ChannelReceiver,
     sender: ChannelSender,
@@ -1047,6 +1234,12 @@ fn receive(
     };
     let mut reports = lease.subscribe_stopped();
     let advertised = matches!(&sources, ReceiveSources::Advertised);
+    let fixed = matches!(&sources, ReceiveSources::Fixed(_));
+    let kind = if codec_kind == 1 {
+        VideoCodec::H264Baseline
+    } else {
+        VideoCodec::Vp8
+    };
     let (selected, dynamic_sources) = match sources {
         ReceiveSources::Fixed(selected) => (selected, None),
         ReceiveSources::Dynamic(sources) => (Vec::new(), Some(sources)),
@@ -1054,33 +1247,36 @@ fn receive(
     };
     let mut codecs: BTreeMap<_, _> = selected
         .into_iter()
-        .map(|stream| {
-            (
-                stream.source,
-                Decoder {
-                    stream,
-                    layout: epoch.layout,
-                    codec: None,
-                    pending: BTreeMap::new(),
-                    sequence: 0,
-                    pts: None,
-                    request_sequence: 0,
-                    recovery: None,
-                    attempts: VecDeque::new(),
-                },
-            )
-        })
+        .map(|stream| (stream.source, Decoder::new(stream, epoch.layout)))
         .collect();
+    if fixed {
+        for decoder in codecs.values_mut() {
+            lease
+                .check_media_binding(Channel::Video, epoch.connection)
+                .map_err(io::Error::other)?;
+            decoder.codec = Some(VideoDecoder::new(
+                kind,
+                decoder.stream.codec.width,
+                decoder.stream.codec.height,
+            )?);
+        }
+        lease
+            .check_media_binding(Channel::Video, epoch.connection)
+            .map_err(io::Error::other)?;
+        output.prepared.send_replace(DecoderReadiness::Fixed);
+    }
     runtime.block_on(async {
-        let mut selected_layout: Option<VideoLayout>=None;
+        let mut selected_layout: Option<(VideoLayout, u64)>=None;
         let mut changes=output.changes.subscribe();
         loop {
             if advertised {
-                let current=output.state.lock().map_err(|_| io::Error::other("media output poisoned"))?.selected;
+                let current={
+                    let state=output.state.lock().map_err(|_| io::Error::other("media output poisoned"))?;
+                    state.selected.zip(state.catalog.as_ref().map(|(key, _)| key.revision))
+                };
                 if current!=selected_layout {
-                    for codec in codecs.values_mut() {codec.codec=None; codec.pending.clear(); codec.recovery=None;}
+                    prepare_display_decoder(&mut codecs, current, kind, &lease, &output)?;
                     selected_layout=current;
-                    output.recovery_deadline.send_replace(None);
                 }
             }
             output.check_recovery_deadline()?;
@@ -1088,7 +1284,7 @@ fn receive(
                 return Ok(());
             }
             for codec in codecs.values_mut() {
-                if advertised && selected_layout.is_none_or(|layout| layout.source!=codec.stream.source) {continue;}
+                if advertised && selected_layout.is_none_or(|(layout, _)| layout.source!=codec.stream.source) {continue;}
                 let codec_epoch = VideoEpoch { layout: codec.layout, connection: epoch.connection };
                 if codec.feedback(&sender, codec_epoch, Instant::now())? {
                     let mut state = output
@@ -1142,11 +1338,11 @@ fn receive(
                     }
                     // Selection may have changed while this thread awaited a
                     // frame. Reconcile before decoding its first keyframe.
-                    let current = state.selected;
+                    let current = state.selected.zip(state.catalog.as_ref().map(|(key, _)| key.revision));
+                    drop(state);
                     if current != selected_layout {
-                        for codec in codecs.values_mut() { codec.codec=None; codec.recovery=None; }
+                        prepare_display_decoder(&mut codecs, current, kind, &lease, &output)?;
                         selected_layout=current;
-                        output.recovery_deadline.send_replace(None);
                     }
                     true
                 } else {sources.contains(&source)};
@@ -1258,6 +1454,7 @@ fn update_dynamic_layout(
         codec.stream.codec.width = packet.width;
         codec.stream.codec.height = packet.height;
         codec.codec = None;
+        codec.awaiting_keyframe = true;
         codec.pending.clear();
         // Do not reset recovery, request sequence, attempt budget or media
         // sequence. A resize cannot extend any pending keyframe deadline.
@@ -1276,6 +1473,7 @@ fn update_dynamic_layout(
                 },
                 layout: packet.layout_epoch,
                 codec: None,
+                awaiting_keyframe: true,
                 pending: BTreeMap::new(),
                 sequence: 0,
                 pts: None,

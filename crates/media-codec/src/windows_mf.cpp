@@ -414,6 +414,28 @@ extern "C" int32_t nl_mf_bitrate(void* opaque, uint32_t kbps) noexcept {
     if (!state || !state->encoder || state->thread != GetCurrentThreadId() || kbps < 64 || kbps > 100000) return E_INVALIDARG;
     return set_codec_value(state->transform.Get(), CODECAPI_AVEncCommonMeanBitRate, kbps*1000);
 }
+extern "C" int32_t nl_mf_flush_decoder(void* opaque) noexcept {
+    auto* state = static_cast<Codec*>(opaque);
+    if (!state || state->encoder || state->thread != GetCurrentThreadId()) return E_INVALIDARG;
+    HRESULT hr = S_OK;
+    state->input_events = 0;
+    state->output_events = 0;
+    if (state->events) {
+        // Drain the old stream before flushing. Flush may itself publish fresh
+        // NeedInput credits; draining afterwards would discard those credits.
+        bool drained = false;
+        for (unsigned count = 0; count < 64; ++count) {
+            ComPtr<IMFMediaEvent> event;
+            hr = state->events->GetEvent(MF_EVENT_FLAG_NO_WAIT, &event);
+            if (hr == MF_E_NO_EVENTS_AVAILABLE) { drained = true; break; }
+            if (FAILED(hr)) return hr;
+        }
+        if (!drained) return E_UNEXPECTED;
+    }
+    hr = state->transform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
+    if (FAILED(hr)) return hr;
+    return state->transform->ProcessMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM, 0);
+}
 extern "C" uint32_t nl_mf_hardware_used(void* opaque) noexcept {
     auto* state = static_cast<Codec*>(opaque);
     return state && state->thread == GetCurrentThreadId() && state->hardware_used ? 1 : 0;

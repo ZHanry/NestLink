@@ -70,6 +70,15 @@ pub enum VideoDecoder {
     H264(H264Decoder),
 }
 impl VideoDecoder {
+    /// Reuse an H.264 transform after discarding buffered references. Other
+    /// backends request recreation. Callers must wait for an independent IDR.
+    pub fn reset_for_keyframe(&mut self) -> io::Result<bool> {
+        match self {
+            Self::Vp8(_) => Ok(false),
+            #[cfg(windows)]
+            Self::H264(codec) => codec.inner.reset_for_keyframe().map(|()| true),
+        }
+    }
     pub fn new(codec: VideoCodec, width: u32, height: u32) -> io::Result<Self> {
         match codec {
             VideoCodec::Vp8 => Ok(Self::Vp8(Vp8Decoder::new(width, height)?)),

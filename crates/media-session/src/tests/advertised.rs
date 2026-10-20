@@ -51,6 +51,56 @@ fn packet(source: u32, layout: u64, sequence: u64, pts: u64) -> Result<NativeVid
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn decoder_preparation_precedes_media_and_is_bound_to_live_catalogue_and_selection() -> Result
+{
+    for quic in [false, true] {
+        let mut pair = pair_with_transport(quic).await?;
+        let receiver =
+            VideoReceiver::attach_advertised_channel(&mut pair.controller, EPOCH.connection)?;
+        let presentation = receiver.presentation();
+        let (key, displays) = catalog()?;
+        let first = selection(&key, 42, 1);
+        assert!(presentation.wait_display_ready(&first).await.is_err());
+        presentation.install_display_catalog(key.clone(), displays.clone())?;
+        assert!(presentation.wait_display_ready(&first).await.is_err());
+        presentation.select_display(&first)?;
+        // No video packet is sent: ACK must not depend on receiving a frame
+        // that the host is still forbidden to send before that ACK.
+        presentation.wait_display_ready(&first).await?;
+        presentation.wait_display_ready(&first).await?;
+        assert!(presentation.poll_video()?.is_none());
+        presentation.suspend_display()?;
+        assert!(presentation.wait_display_ready(&first).await.is_err());
+        let second = selection(&key, 77, 2);
+        presentation.select_display(&second)?;
+        assert!(presentation.wait_display_ready(&first).await.is_err());
+        presentation.wait_display_ready(&second).await?;
+
+        let refreshed = catalog_key(&key.request_id, EPOCH.connection, 2, &displays)?;
+        presentation.install_display_catalog(refreshed.clone(), displays)?;
+        assert!(presentation.wait_display_ready(&second).await.is_err());
+        let third = selection(&refreshed, 77, 3);
+        presentation.select_display(&third)?;
+        presentation.wait_display_ready(&third).await?;
+        let mut wrong_catalogue = third.clone();
+        wrong_catalogue.catalog = key;
+        assert!(
+            presentation
+                .wait_display_ready(&wrong_catalogue)
+                .await
+                .is_err()
+        );
+
+        pair.controller_revoke
+            .send_replace(Some(StopReason::Revoked));
+        wait_until(|| Ok(receiver.monitor().status().finished)).await?;
+        assert!(presentation.wait_display_ready(&third).await.is_err());
+        assert!(presentation.poll_video().is_err());
+    }
+    Ok(())
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn timed_display_switch_flushes_old_deadlines_and_retains_replay_history() -> Result {
     for quic in [false, true] {
         let mut pair = pair_with_transport(quic).await?;

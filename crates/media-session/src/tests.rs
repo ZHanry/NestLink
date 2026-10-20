@@ -332,6 +332,8 @@ async fn negotiated_h264_roundtrip_recovers_a_reference_gap_and_stops_on_revoke(
             bitrate_kbps: 2_000,
         },
     };
+    let mut receiver = VideoReceiver::attach(pair.controller, EPOCH, vec![stream])?;
+    receiver.wait_ready().await?;
     let mut sender = VideoSender::attach(
         &mut pair.host,
         Capture {
@@ -350,7 +352,6 @@ async fn negotiated_h264_roundtrip_recovers_a_reference_gap_and_stops_on_revoke(
         }],
         vec![stream],
     )?;
-    let mut receiver = VideoReceiver::attach(pair.controller, EPOCH, vec![stream])?;
     let mut presented = 0;
     let deadline = Instant::now() + Duration::from_secs(8);
     while Instant::now() < deadline {
@@ -367,11 +368,12 @@ async fn negotiated_h264_roundtrip_recovers_a_reference_gap_and_stops_on_revoke(
         tokio::time::sleep(Duration::from_millis(45)).await;
         let frame = receiver.poll_video().map_err(|error| {
             format!(
-                "H.264 poll failed after sequence {presented}: {error}; sender={:?}; receiver={:?}; host_stop={:?}; controller_stop={:?}",
+                "H.264 poll failed after sequence {presented}: {error}; sender={:?}; receiver={:?}; host_stop={:?}; controller_stop={:?}; bridge={:?}",
                 sender.monitor().status(),
                 receiver.monitor().status(),
                 *host_stop.borrow(),
                 *controller_stop.borrow(),
+                pair.bridge.as_ref().map(feedback::FrameBridge::diagnostics),
             )
         })?;
         if let Some(frame) = frame {

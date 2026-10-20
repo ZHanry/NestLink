@@ -478,20 +478,20 @@ impl NativeDisplayRoute {
                     }
                     (display, duplicate)
                 };
+                let presentation = self.presentation()?.presentation.clone();
                 if !duplicate {
-                    self.presentation()?
-                        .presentation
-                        .select_display(&selection)?;
-                    if self.input_authorized {
-                        let shared = self.shared()?;
-                        let input = shared
-                            .native_input
-                            .lock()
-                            .map_err(|_| io::Error::other("input route poisoned"))?
-                            .clone()
-                            .ok_or_else(|| denied("input route unavailable"))?;
-                        input.commit_display_layout(&selection, &display)?;
-                    }
+                    presentation.select_display(&selection)?;
+                }
+                presentation.wait_display_ready(&selection).await?;
+                if !duplicate && self.input_authorized {
+                    let shared = self.shared()?;
+                    let input = shared
+                        .native_input
+                        .lock()
+                        .map_err(|_| io::Error::other("input route poisoned"))?
+                        .clone()
+                        .ok_or_else(|| denied("input route unavailable"))?;
+                    input.commit_display_layout(&selection, &display)?;
                 }
                 self.send(DisplayEnvelope::SelectionAck(selection)).await?;
             }

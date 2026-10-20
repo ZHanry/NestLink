@@ -117,6 +117,12 @@ pub struct H264AccessUnit {
     pub keyframe: bool,
 }
 impl H264Validator {
+    #[cfg(windows)]
+    pub(crate) fn reset_for_keyframe(&mut self) {
+        self.sps.clear();
+        self.pps.clear();
+        self.started = false;
+    }
     pub fn new(width: u32, height: u32) -> io::Result<Self> {
         if width == 0
             || height == 0
