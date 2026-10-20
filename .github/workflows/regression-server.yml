@@ -1,0 +1,104 @@
+name: Build regression server
+
+on:
+  push:
+    branches: ['release/**']
+    paths: ['Cargo.*', 'rust-toolchain.toml', 'crates/**', 'apps/server/**', 'packaging/regression/**', '.github/workflows/regression-server.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: regression-server-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_INCREMENTAL: '0'
+  # Official Ubuntu 24.04 index, verified to contain linux/arm64 and linux/amd64.
+  NESTLINK_BASE: ubuntu:24.04@sha256:68ee22004a9109b44973313b02ff7b1de250f1de0f5ecb628d73f579aaff33ac
+
+jobs:
+  arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: '1.96.0'
+      - name: Build and test the server on the GitHub ARM64 runner
+        run: |
+          cargo build --release --locked -p nestlink-server
+          cargo test --locked -p nestlink-server --lib --tests
+          test "$(target/release/nestlink-server --version)" = 'nestlink-server 0.7.0-rc.1'
+      - name: Stage the exact server and locked dependency notices
+        shell: python
+        run: |
+          import importlib.util, json, os, pathlib, re, shutil, subprocess
+          root = pathlib.Path.cwd()
+          source = os.environ['GITHUB_SHA']
+          assert re.fullmatch(r'[0-9a-f]{40}', source)
+          assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip() == source
+          assert not subprocess.check_output(['git', 'status', '--porcelain'], text=True).strip()
+          stage = pathlib.Path(os.environ['RUNNER_TEMP']) / 'regression-context'
+          stage.mkdir()
+          shutil.copy2('target/release/nestlink-server', stage / 'nestlink-server')
+          notices = stage / 'notices'
+          notices.mkdir()
+          for name in ('LICENSE', 'Cargo.lock'):
+              shutil.copy2(root / name, notices / name)
+          shutil.copytree(root / 'packaging/notices', notices / 'reviewed')
+          subprocess.run(['cargo', 'fetch', '--locked'], check=True)
+          cargo = json.loads(subprocess.check_output(['cargo', 'metadata', '--locked', '--format-version', '1'], text=True))
+          spec = importlib.util.spec_from_file_location('cargo_notices', root / 'scripts/refactor-cargo-notices.py')
+          module = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(module)
+          module.collect(root, cargo, notices / 'cargo')
+      - name: Assemble and verify the deployable image on GitHub
+        shell: bash
+        run: |
+          image="nestlink-regression:${GITHUB_SHA}-arm64"
+          docker build --pull --platform linux/arm64 --file packaging/regression/Dockerfile \
+            --build-arg "NESTLINK_BASE=$NESTLINK_BASE" --build-arg "NESTLINK_SOURCE=$GITHUB_SHA" \
+            --tag "$image" "$RUNNER_TEMP/regression-context"
+          test "$(docker run --rm --network none "$image" --version)" = 'nestlink-server 0.7.0-rc.1'
+          docker image inspect "$image" > "$RUNNER_TEMP/regression-image.json"
+          mkdir "$RUNNER_TEMP/regression-artifact"
+          docker save "$image" | gzip -1 > "$RUNNER_TEMP/regression-artifact/server-arm64.docker.tar.gz"
+      - name: Bind archive, binary, image and workflow identities
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, shutil
+          scratch = pathlib.Path(os.environ['RUNNER_TEMP'])
+          image = json.loads((scratch / 'regression-image.json').read_text())[0]
+          source = os.environ['GITHUB_SHA']
+          assert image['Architecture'] == 'arm64' and image['Os'] == 'linux'
+          assert image['Config']['Labels']['org.opencontainers.image.revision'] == source
+          assert image['Config']['User'] == '65532:65532'
+          def sha(path):
+              digest = hashlib.sha256()
+              with path.open('rb') as stream:
+                  for chunk in iter(lambda: stream.read(1024 * 1024), b''):
+                      digest.update(chunk)
+              return digest.hexdigest()
+          output = scratch / 'regression-artifact'
+          archive = output / 'server-arm64.docker.tar.gz'
+          value = {'schema_version': 1, 'purpose': 'regression-only', 'source_revision': source,
+                   'version': '0.7.0-rc.1', 'target': 'aarch64-unknown-linux-gnu',
+                   'image_id': image['Id'], 'base': os.environ['NESTLINK_BASE'],
+                   'binary_sha256': sha(scratch / 'regression-context/nestlink-server'),
+                   'archive_sha256': sha(archive), 'archive_bytes': archive.stat().st_size,
+                   'repository': os.environ['GITHUB_REPOSITORY'], 'run_id': os.environ['GITHUB_RUN_ID'],
+                   'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+                   'full_product_acceptance': 'pending', 'production_update_eligible': False}
+          (output / 'regression-build.json').write_text(json.dumps(value, indent=2) + '\n')
+          shutil.copy2(scratch / 'regression-image.json', output / 'image-inspect.json')
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: nestlink-regression-server-arm64-${{ github.sha }}
+          path: ${{ runner.temp }}/regression-artifact/
+          if-no-files-found: error
+          retention-days: 14
