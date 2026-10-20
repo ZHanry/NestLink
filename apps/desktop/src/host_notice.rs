@@ -194,13 +194,17 @@ impl DesktopApp {
                     self.hidden = false;
                     tray::restore(context);
                     self.screen = Screen::Remote;
-                    self.remote.selected = Some(notice.key.id.clone());
-                    self.action(
-                        snapshot,
-                        Action::InspectRemote {
-                            request_id: notice.key.id.clone(),
-                        },
-                    );
+                    if notice.phase == Phase::Request {
+                        self.remote.selected = Some(notice.key.id.clone());
+                        self.action(
+                            snapshot,
+                            Action::InspectRemote {
+                                request_id: notice.key.id.clone(),
+                            },
+                        );
+                    } else {
+                        self.remote.browser_host_details = true;
+                    }
                 }
                 Choice::Reject if notice.phase == Phase::Request => {
                     if let Some(request) = &notice.request {
@@ -331,103 +335,81 @@ fn notice_ui(
             .layer_id(egui::LayerId::background())
             .max_rect(context.content_rect()),
     );
-    egui::CentralPanel::default()
+    let visuals = context.global_style().visuals.clone();
+    egui::Panel::top("host-notice-heading")
+        .exact_size(102.)
+        .resizable(false)
+        .show_separator_line(false)
         .frame(
             egui::Frame::new()
-                .fill(context.global_style().visuals.panel_fill)
-                .inner_margin(18.)
-                .stroke(egui::Stroke::new(
-                    1.,
-                    context
-                        .global_style()
-                        .visuals
-                        .widgets
-                        .noninteractive
-                        .bg_stroke
-                        .color,
-                )),
+                .fill(visuals.selection.bg_fill)
+                .inner_margin(16),
         )
         .show_inside(&mut parent, |ui| {
-            ui.horizontal(|ui| {
-                let (dot, _) = ui.allocate_exact_size(egui::vec2(10., 10.), egui::Sense::hover());
-                ui.painter().circle_filled(
-                    dot.center(),
-                    4.,
-                    if notice.phase == Phase::Sharing {
-                        theme::color("#316B4A")
-                    } else {
-                        theme::color("#966313")
-                    },
-                );
-                ui.strong(match notice.phase {
-                    Phase::Request => t("有设备请求连接", "Incoming connection"),
-                    Phase::Preparing => t("正在准备远程连接", "Preparing remote access"),
-                    Phase::Screen => t("请选择共享屏幕", "Choose a screen to share"),
-                    Phase::Sharing => t("此电脑正在共享", "This computer is being shared"),
-                    Phase::Stopping => t("正在断开连接", "Disconnecting"),
-                });
-            });
-            ui.add_space(12.);
-            ui.add(
+            let color = visuals.selection.stroke.color;
+            ui.add_sized(
+                egui::vec2(ui.available_width(), 30.),
                 egui::Label::new(
-                    egui::RichText::new(if notice.peer.is_empty() {
-                        t("已授权的远端设备", "Authorized remote device")
-                    } else {
-                        &notice.peer
+                    egui::RichText::new(match notice.phase {
+                        Phase::Request => t("有设备请求连接", "Incoming connection"),
+                        Phase::Preparing => t("正在准备远程连接", "Preparing remote access"),
+                        Phase::Screen => t("请选择共享屏幕", "Choose a screen to share"),
+                        Phase::Sharing => t("本机正在共享", "This computer is being shared"),
+                        Phase::Stopping => t("正在断开连接", "Disconnecting"),
                     })
                     .size(19.)
-                    .strong(),
+                    .strong()
+                    .color(color),
                 )
                 .truncate(),
             );
-            let permissions = notice
-                .request
-                .as_ref()
-                .map(|request| widgets::permissions(&request.permissions, english))
-                .unwrap_or_else(|| {
-                    t(
-                        "权限以本机批准范围为准",
-                        "Access follows your local approval",
-                    )
-                    .into()
-                });
-            ui.label(permissions);
-            ui.add_space(4.);
-            ui.small(match notice.phase {
-                Phase::Request => t(
-                    "查看权限后批准，也可以直接拒绝。",
-                    "Review the requested access or deny it.",
-                ),
-                Phase::Screen => t(
-                    "批准屏幕后才会发送画面。",
-                    "Video starts only after you approve a screen.",
-                ),
-                _ => t(
-                    "可随时断开，主窗口收起后提示仍保留。",
-                    "Disconnect at any time, even with the main window hidden.",
-                ),
-            });
-            if notice.phase == Phase::Sharing {
+            let detail = if notice.phase == Phase::Sharing {
                 let path = match notice.path {
                     Some(1) => t("直连", "Direct"),
                     Some(2) => t("中继", "Relay"),
                     _ => t("已连接", "Connected"),
                 };
-                ui.small(format!(
-                    "{path}    {:02}:{:02}:{:02}",
+                format!(
+                    "{path}    {} {:02}:{:02}:{:02}",
+                    t("本次观察", "Observed"),
                     elapsed / 3600,
                     elapsed / 60 % 60,
                     elapsed % 60
-                ));
-            }
-            ui.add_space(12.);
+                )
+            } else {
+                t(
+                    "批准后才会共享，可随时断开",
+                    "Sharing requires approval; disconnect at any time",
+                )
+                .into()
+            };
+            ui.add_sized(
+                egui::vec2(ui.available_width(), 24.),
+                egui::Label::new(egui::RichText::new(detail).color(color)).truncate(),
+            );
+        });
+    // Actions have their own fixed panel. Peer names, permissions, path and
+    // elapsed text can never push a button outside this small host window.
+    egui::Panel::bottom("host-notice-actions")
+        .exact_size(64.)
+        .resizable(false)
+        .frame(
+            egui::Frame::new()
+                .fill(visuals.window_fill)
+                .inner_margin(12),
+        )
+        .show_inside(&mut parent, |ui| {
+            let width = (ui.available_width() - ui.spacing().item_spacing.x) / 2.;
             ui.horizontal(|ui| {
                 if ui
-                    .button(if notice.phase == Phase::Request {
-                        t("查看并批准", "Review access")
-                    } else {
-                        t("查看会话", "Show session")
-                    })
+                    .add_sized(
+                        egui::vec2(width, 40.),
+                        egui::Button::new(if notice.phase == Phase::Request {
+                            t("查看并批准", "Review access")
+                        } else {
+                            t("查看会话", "Show session")
+                        }),
+                    )
                     .clicked()
                 {
                     choice = Some(Choice::Review);
@@ -438,11 +420,16 @@ fn notice_ui(
                     t("断开连接", "Disconnect")
                 };
                 if ui
-                    .add_enabled(
-                        notice.phase != Phase::Stopping,
-                        egui::Button::new(egui::RichText::new(label).color(egui::Color32::WHITE))
+                    .add_enabled_ui(notice.phase != Phase::Stopping, |ui| {
+                        ui.add_sized(
+                            egui::vec2(width, 40.),
+                            egui::Button::new(
+                                egui::RichText::new(label).color(egui::Color32::WHITE),
+                            )
                             .fill(theme::color("#B42336")),
-                    )
+                        )
+                    })
+                    .inner
                     .on_hover_text(t("立即停止此设备的访问", "Stop this device's access"))
                     .clicked()
                 {
@@ -454,6 +441,55 @@ fn notice_ui(
                 }
             });
         });
+    egui::CentralPanel::default()
+        .frame(egui::Frame::new().fill(visuals.panel_fill).inner_margin(16))
+        .show_inside(&mut parent, |ui| {
+            egui::ScrollArea::vertical()
+                .id_salt("host-notice-peer")
+                .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysVisible)
+                .auto_shrink([false, false])
+                .show(ui, |ui| {
+                    ui.small(t("远端设备", "Remote device"));
+                    ui.add(
+                        egui::Label::new(
+                            egui::RichText::new(if notice.peer.is_empty() {
+                                t("已授权的远端设备", "Authorized remote device")
+                            } else {
+                                &notice.peer
+                            })
+                            .size(19.)
+                            .strong(),
+                        )
+                        .truncate(),
+                    );
+                    let permissions = notice
+                        .request
+                        .as_ref()
+                        .map(|request| widgets::permissions(&request.permissions, english))
+                        .unwrap_or_else(|| {
+                            t(
+                                "权限以本机批准范围为准",
+                                "Access follows your local approval",
+                            )
+                            .into()
+                        });
+                    ui.label(permissions);
+                    ui.small(match notice.phase {
+                        Phase::Request => t(
+                            "查看权限后批准，也可以直接拒绝。",
+                            "Review the requested access or deny it.",
+                        ),
+                        Phase::Screen => t(
+                            "批准屏幕后才会发送画面。",
+                            "Video starts only after you approve a screen.",
+                        ),
+                        _ => t(
+                            "主窗口收起后，此提示仍保留。",
+                            "This notice stays visible when the main window is hidden.",
+                        ),
+                    });
+                });
+        });
     choice
 }
 
@@ -462,6 +498,93 @@ mod tests {
     use super::*;
     use nestlink_app_core::{BrowserHostView, Section};
     use std::sync::Arc;
+
+    #[test]
+    fn disconnect_stays_clickable_across_phase_changes_and_long_peer_text() {
+        let context = egui::Context::default();
+        context.enable_accesskit();
+        let tokens = theme::tokens().unwrap_or_else(|error| panic!("tokens: {error}"));
+        theme::apply(&context, &tokens, false);
+        let mut notice = Notice {
+            key: NoticeKey {
+                id: "request".into(),
+                connection: 1,
+                browser: true,
+            },
+            phase: Phase::Preparing,
+            request: None,
+            path: None,
+            peer: "HL".into(),
+        };
+        let mut nodes = std::collections::HashMap::new();
+        let mut draw = |notice: &Notice, events: Vec<egui::Event>| {
+            let mut choice = None;
+            let output = context.run_ui(
+                egui::RawInput {
+                    screen_rect: Some(egui::Rect::from_min_size(
+                        egui::Pos2::ZERO,
+                        egui::vec2(368., 320.),
+                    )),
+                    events,
+                    ..Default::default()
+                },
+                |_| choice = notice_ui(&context, notice, false, 99_999),
+            );
+            if let Some(update) = output.platform_output.accesskit_update {
+                nodes.extend(update.nodes);
+            }
+            let rect = nodes
+                .values()
+                .find(|node| node.label() == Some("断开连接"))
+                .and_then(|node| node.bounds())
+                .unwrap_or_else(|| panic!("disconnect not accessible"));
+            (
+                egui::Rect::from_min_max(
+                    egui::pos2(rect.x0 as f32, rect.y0 as f32),
+                    egui::pos2(rect.x1 as f32, rect.y1 as f32),
+                ),
+                choice,
+            )
+        };
+        let (baseline, _) = draw(&notice, Vec::new());
+        assert!(
+            egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(368., 320.))
+                .contains_rect(baseline)
+        );
+        let position = baseline.center();
+        draw(
+            &notice,
+            vec![
+                egui::Event::PointerMoved(position),
+                egui::Event::PointerButton {
+                    pos: position,
+                    button: egui::PointerButton::Primary,
+                    pressed: true,
+                    modifiers: Default::default(),
+                },
+            ],
+        );
+        for phase in [Phase::Screen, Phase::Sharing, Phase::Preparing] {
+            notice.phase = phase;
+            notice.peer = "很长的远端设备名称 Long remote name ".repeat(100);
+            notice.path = Some(1);
+            let (actual, _) = draw(&notice, Vec::new());
+            assert_eq!(actual, baseline, "host state moved disconnect");
+        }
+        let (_, choice) = draw(
+            &notice,
+            vec![egui::Event::PointerButton {
+                pos: position,
+                button: egui::PointerButton::Primary,
+                pressed: false,
+                modifiers: Default::default(),
+            }],
+        );
+        assert!(
+            matches!(choice, Some(Choice::Disconnect)),
+            "phase refresh swallowed disconnect click"
+        );
+    }
 
     #[test]
     fn browser_host_notice_survives_without_request_metadata_and_disappears_after_stop() {

@@ -285,3 +285,140 @@ fn refreshing_an_empty_device_list_keeps_the_connection_controls_in_place() {
         );
     }
 }
+
+#[test]
+fn incoming_requests_and_browser_host_lifecycle_do_not_push_device_controls() {
+    use nestlink_app_core::{BrowserHostView, Failure, FailureKind};
+    use nestlink_protocol::api::RemoteView;
+    let size = egui::vec2(1200., 800.);
+    let mut workspace = Workspace::new(enrolled_snapshot());
+    for _ in 0..5 {
+        workspace.frame(size, Vec::new());
+    }
+    let labels = ["进入桌面", "系统声音", "刷新"];
+    let baseline: Vec<_> = labels.iter().map(|label| workspace.bounds(label)).collect();
+    for phase in 0..12 {
+        let mut snapshot = enrolled_snapshot();
+        if phase % 3 == 1 {
+            snapshot.browser_host.data = Some(Arc::new(BrowserHostView {
+                request_id: "00000000-0000-4000-8000-000000000010".into(),
+                connection_generation: 1,
+                lease_sequence: 0,
+                status: BrowserHostStatus::Establishing,
+                host_view_authorized: false,
+                binding: None,
+                displays: nestlink_app_core::BrowserHostDisplayView {
+                    approval_required: true,
+                    ..Default::default()
+                },
+                data: Default::default(),
+                path: None,
+                stop_reason: None,
+                stop_effects: None,
+                cleanup: None,
+                failure: None,
+            }));
+            snapshot.requests.data = Some(Arc::new(vec![RemoteView {
+                id: "00000000-0000-4000-8000-000000000010".into(),
+                controller_device_id: "00000000-0000-4000-8000-000000000002".into(),
+                host_device_id: "00000000-0000-4000-8000-000000000001".into(),
+                permissions: vec![1],
+                paths: vec![1],
+                nonce: "test".into(),
+                policy_revision: 1,
+                expires_at_unix_ms: u64::MAX,
+                status: "pending".into(),
+                lease_sequence: 0,
+                connection_generation: 1,
+                trust_revision: None,
+                password_revision: None,
+            }]));
+        } else if phase % 3 == 2 {
+            snapshot.browser_host.error = Some(Failure {
+                kind: FailureKind::Transport,
+                status: None,
+                code: None,
+            });
+        }
+        workspace.app.bridge.layout_snapshot(snapshot);
+        workspace.frame(size, Vec::new());
+        let actual: Vec<_> = labels.iter().map(|label| workspace.bounds(label)).collect();
+        assert_eq!(
+            actual, baseline,
+            "host lifecycle or incoming requests moved the device controls"
+        );
+    }
+}
+
+#[test]
+fn selecting_devices_and_refreshing_long_names_keep_the_entry_visible_and_fixed() {
+    for size in [
+        egui::vec2(1200., 800.),
+        egui::vec2(1000., 640.),
+        egui::vec2(760., 560.),
+    ] {
+        let mut workspace = Workspace::new(enrolled_snapshot());
+        for _ in 0..5 {
+            workspace.frame(size, Vec::new());
+        }
+        let baseline = workspace.bounds("进入桌面");
+        assert_eq!(baseline.len(), 1);
+        assert!(
+            egui::Rect::from_min_size(egui::Pos2::ZERO, size - egui::vec2(0., 104.))
+                .contains_rect(baseline[0]),
+            "desktop entry is clipped at {size:?}: {baseline:?}"
+        );
+        let row = workspace.bounds("Test computer 2");
+        assert_eq!(row.len(), 1);
+        let position = row[0].center();
+        workspace.frame(
+            size,
+            vec![
+                egui::Event::PointerMoved(position),
+                egui::Event::PointerButton {
+                    pos: position,
+                    button: egui::PointerButton::Primary,
+                    pressed: true,
+                    modifiers: Default::default(),
+                },
+            ],
+        );
+        workspace.frame(
+            size,
+            vec![egui::Event::PointerButton {
+                pos: position,
+                button: egui::PointerButton::Primary,
+                pressed: false,
+                modifiers: Default::default(),
+            }],
+        );
+        assert_eq!(
+            workspace.app.remote.host_device_id.as_deref(),
+            Some("00000000-0000-4000-8000-000000000002"),
+            "device row did not accept click at {size:?}: {row:?}"
+        );
+        for phase in 0..12 {
+            let mut snapshot = enrolled_snapshot();
+            if phase % 3 != 0 {
+                Arc::get_mut(snapshot.devices.data.as_mut().expect("devices"))
+                    .expect("exclusive snapshot")[1]
+                    .device
+                    .name = "很长的设备名称 Long device name ".repeat(40);
+                snapshot.devices.loading = Some(serde_json::from_str("1").expect("operation ID"));
+            }
+            workspace.app.bridge.layout_snapshot(snapshot);
+            workspace.frame(size, Vec::new());
+            assert_eq!(
+                workspace.bounds("进入桌面"),
+                baseline,
+                "selection or name moved the entry at {size:?}"
+            );
+            assert!(
+                workspace
+                    .bounds("断开连接")
+                    .iter()
+                    .all(|rect| rect.max.x <= size.x)
+            );
+        }
+    }
+}

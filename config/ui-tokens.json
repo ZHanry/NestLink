@@ -92,5 +92,5 @@
     "服务发布",
     "设备"
   ],
-  "principles": "Soft lavender remote workspace. Device list and connection settings share a responsive two-column layout; incoming consent and screen approval stay visible. One purple linked-N identity across app, installer, taskbar, tray, web and Android. Enrolled is never described as online without evidence."
+  "principles": "Blue and light-gray remote workspace. Compact device navigation and one selected-device detail share fixed columns. Connection status, desktop entry, local sharing and disconnect actions keep stable positions during polling. Use NestLink's own linked-N identity. Enrolled is never described as online without evidence."
 }
