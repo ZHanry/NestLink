@@ -260,12 +260,15 @@ fn refreshing_an_empty_device_list_keeps_the_connection_controls_in_place() {
     let empty = || {
         let mut snapshot = enrolled_snapshot();
         Arc::get_mut(snapshot.devices.data.as_mut().expect("device list"))
-            .expect("exclusive test snapshot").truncate(1);
+            .expect("exclusive test snapshot")
+            .truncate(1);
         snapshot
     };
     let size = egui::vec2(800., 560.);
     let mut workspace = Workspace::new(empty());
-    for _ in 0..5 { workspace.frame(size, Vec::new()); }
+    for _ in 0..5 {
+        workspace.frame(size, Vec::new());
+    }
     let baseline = workspace.bounds("进入桌面");
     assert_eq!(baseline.len(), 1);
     for frame in 0..10 {
@@ -275,6 +278,10 @@ fn refreshing_an_empty_device_list_keeps_the_connection_controls_in_place() {
         }
         workspace.app.bridge.layout_snapshot(snapshot);
         workspace.frame(size, Vec::new());
-        assert_eq!(workspace.bounds("进入桌面"), baseline, "empty list refresh moved the connection controls");
+        assert_eq!(
+            workspace.bounds("进入桌面"),
+            baseline,
+            "empty list refresh moved the connection controls"
+        );
     }
 }
