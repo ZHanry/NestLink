@@ -15,6 +15,12 @@
 下载后校验清单、archive SHA-256、载入后的镜像 ID/架构/源码 label。
 服务器只执行 `docker load` 和精确服务替换。
 
+Classic Docker store 的 image ID 是配置摘要，containerd store 可能返回 OCI manifest
+摘要。`refactor-regression-image.py` 从归档核验两者的有向引用、各层字节摘要与顺序，
+把 `config_sha256`、`oci_manifest_sha256` 和 rootfs diff IDs 一起写入构建证据。
+载入后只能接受这两个被同一归档验证的标识，并须核对平台、rootfs、源码 label、
+运行用户和服务端二进制摘要；不能因 Docker 后端差异跳过镜像验证。
+
 先备份现有程序、配置、Web、共享网关配置和数据库；用副本验证 schema23 到24的
 迁移和新程序启动。保留 deployment ID、账号、设备、批准、撤销记录及密钥。
 禁止执行清空数据或重新初始化命令。只更新 NestLink control/STUN 及对应静态资源，

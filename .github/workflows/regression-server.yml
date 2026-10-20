@@ -3,7 +3,7 @@ name: Build regression server
 on:
   push:
     branches: ['release/**']
-    paths: ['Cargo.*', 'rust-toolchain.toml', 'crates/**', 'apps/server/**', 'packaging/regression/**', '.github/workflows/regression-server.yml']
+    paths: ['Cargo.*', 'rust-toolchain.toml', 'crates/**', 'apps/server/**', 'packaging/regression/**', 'packaging/notices/**', 'LICENSE', 'scripts/refactor-cargo-notices.py', 'scripts/refactor-regression-image.py', 'tests/refactor/test_regression_image.py', '.github/workflows/regression-server.yml']
   workflow_dispatch:
 
 permissions:
@@ -31,6 +31,7 @@ jobs:
           toolchain: '1.96.0'
       - name: Build and test the server on the GitHub ARM64 runner
         run: |
+          python3 -m unittest discover -s tests/refactor -p 'test_regression_image.py'
           cargo build --release --locked -p nestlink-server
           cargo test --locked -p nestlink-server --lib --tests
           test "$(target/release/nestlink-server --version)" = 'nestlink-server 0.7.0-rc.1'
@@ -71,7 +72,7 @@ jobs:
       - name: Bind archive, binary, image and workflow identities
         shell: python
         run: |
-          import hashlib, json, os, pathlib, shutil
+          import hashlib, importlib.util, json, os, pathlib, shutil
           scratch = pathlib.Path(os.environ['RUNNER_TEMP'])
           image = json.loads((scratch / 'regression-image.json').read_text())[0]
           source = os.environ['GITHUB_SHA']
@@ -94,6 +95,12 @@ jobs:
                    'repository': os.environ['GITHUB_REPOSITORY'], 'run_id': os.environ['GITHUB_RUN_ID'],
                    'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
                    'full_product_acceptance': 'pending', 'production_update_eligible': False}
+          spec = importlib.util.spec_from_file_location('regression_image', 'scripts/refactor-regression-image.py')
+          module = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(module)
+          identity = module.inspect_archive(archive, source)
+          assert image['Id'] in (identity['config_sha256'], identity['oci_manifest_sha256'])
+          value.update(identity)
           (output / 'regression-build.json').write_text(json.dumps(value, indent=2) + '\n')
           shutil.copy2(scratch / 'regression-image.json', output / 'image-inspect.json')
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
