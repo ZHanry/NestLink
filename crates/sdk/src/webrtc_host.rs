@@ -193,6 +193,11 @@ pub struct WebRtcHostDiagnostic {
 /// was not observed. These are not cross-machine one-way latency estimates.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct WebRtcConnectionTimeline {
+    pub started_unix_ms: Option<u64>,
+    pub local_device_sha256: Option<[u8; 32]>,
+    pub remote_device_sha256: Option<[u8; 32]>,
+    pub last_local_signal: Option<nestlink_protocol::diagnostics::SignalSummary>,
+    pub last_remote_signal: Option<nestlink_protocol::diagnostics::SignalSummary>,
     pub offer_received_ms: Option<u64>,
     pub answer_published_ms: Option<u64>,
     pub first_local_candidate_ms: Option<u64>,
@@ -221,12 +226,35 @@ impl Default for PeerDiagnosticRecorder {
         Self {
             started: Instant::now(),
             first: Arc::new(StdMutex::new(None)),
-            timeline: Arc::new(StdMutex::new(WebRtcConnectionTimeline::default())),
+            timeline: Arc::new(StdMutex::new(WebRtcConnectionTimeline {
+                started_unix_ms: SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .ok()
+                    .and_then(|time| time.as_millis().try_into().ok()),
+                ..WebRtcConnectionTimeline::default()
+            })),
         }
     }
 }
 
 impl PeerDiagnosticRecorder {
+    fn signal(&self, local: bool, summary: nestlink_protocol::diagnostics::SignalSummary) {
+        let mut timeline = self
+            .timeline
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        if local {
+            timeline.last_local_signal = Some(summary);
+        } else {
+            timeline.last_remote_signal = Some(summary);
+        }
+        drop(timeline);
+        self.candidates(
+            local,
+            summary.candidate_count,
+            local && summary.end_of_candidates,
+        );
+    }
     fn mark(&self, field: fn(&mut WebRtcConnectionTimeline) -> &mut Option<u64>) {
         let mut timeline = self
             .timeline
@@ -820,6 +848,17 @@ impl WebRtcHostPeer {
         let (state_tx, state_rx) = watch::channel(peer.connection_state());
         let (cancel_tx, cancel_rx) = watch::channel(false);
         let diagnostics = PeerDiagnosticRecorder::default();
+        {
+            let mut timeline = diagnostics
+                .timeline
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            timeline.local_device_sha256 =
+                Some(nestlink_identity::digest(installation.device_id.as_bytes()));
+            timeline.remote_device_sha256 = Some(nestlink_identity::digest(
+                fresh.claims().controller_device_id.as_bytes(),
+            ));
+        }
         let (selected_path_tx, selected_path_rx) = watch::channel(None);
         let (path_authority_tx, _) = watch::channel(true);
         let control = Arc::new(Mutex::new(None));
@@ -968,6 +1007,10 @@ impl WebRtcHostPeer {
         };
         let claims = self.current_permit();
         validate_offer(&offer, &claims)?;
+        self.diagnostics.signal(
+            false,
+            nestlink_protocol::diagnostics::SignalSummary::from_payload(&offer),
+        );
         if offer.ice.is_some() && offer.description_sequence() == self.remote_offer_sequence {
             self.apply_remote_ice(&offer).await?;
             self.publish_local_ice(sdk, installation).await?;
@@ -1637,8 +1680,11 @@ impl WebRtcHostPeer {
         // A failed/ambiguous publish must never cause sequence reuse.
         self.signal_sequence = sequence;
         self.local_ice_signal = answer_payload.ice.as_ref().map(|_| answer_payload.clone());
+        let signal_summary =
+            nestlink_protocol::diagnostics::SignalSummary::from_payload(&answer_payload);
         sdk.publish_signal(installation, permit, answer_payload)
             .await?;
+        self.diagnostics.signal(true, signal_summary);
         self.diagnostics
             .mark(|value| &mut value.answer_published_ms);
         self.diagnostics.candidates(
@@ -1723,6 +1769,10 @@ impl WebRtcHostPeer {
         }
         sdk.publish_signal(installation, &permit, signal.clone())
             .await?;
+        self.diagnostics.signal(
+            true,
+            nestlink_protocol::diagnostics::SignalSummary::from_payload(&signal),
+        );
         self.local_ice_signal = Some(signal);
         Ok(())
     }

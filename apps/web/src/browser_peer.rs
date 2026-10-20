@@ -116,6 +116,32 @@ impl std::fmt::Display for PeerError {
 
 impl std::error::Error for PeerError {}
 
+impl PeerError {
+    pub fn diagnostic_failure(&self) -> nestlink_protocol::diagnostics::ConnectionFailure {
+        use nestlink_protocol::diagnostics::ConnectionFailure as F;
+        match self {
+            Self::InvalidIceConfiguration | Self::InvalidPathMode => F::InvalidConfiguration,
+            Self::InvalidPermit => F::InvalidAuthorization,
+            Self::EndpointMismatch => F::EndpointMismatch,
+            Self::EndpointLeaseExpired | Self::Expired => F::AuthorizationExpired,
+            Self::UnauthorizedTrack => F::TrackNotAuthorized,
+            Self::CodecUnavailable => F::CodecUnavailable,
+            Self::PathNotPermitted => F::PathNotPermitted,
+            Self::RelayUnavailable => F::RelayUnavailable,
+            Self::NoSelectedPath => F::NoSelectedPair,
+            Self::SelectedPathRejected => F::SelectedPairRejected,
+            Self::OfferRequired | Self::UnsupportedTrickleSignal | Self::SignalRejected => {
+                F::SignalingRejected
+            }
+            Self::AnswerRequired => F::AnswerNotConsumed,
+            Self::Cancelled => F::Cancelled,
+            Self::TimedOut => F::OperationTimeout,
+            Self::BrowserUnavailable => F::BrowserUnavailable,
+            Self::BrowserOperation => F::BrowserOperation,
+        }
+    }
+}
+
 /// A server entry supplied by deployment configuration, never from a peer signal.
 #[derive(Clone, PartialEq, Eq)]
 pub struct TrustedIceServer {
@@ -912,6 +938,7 @@ mod tests {
 mod wasm {
     use super::*;
     use crate::browser_data::{BrowserDataChannels, BrowserDataError};
+    use crate::browser_diagnostics::BrowserConnectionDiagnostics;
     use crate::browser_displays::{DisplayClientState, DisplayPermitWindow, PendingDisplayCatalog};
     use crate::browser_input::BrowserInputEvent;
     use crate::browser_sdp::rtc_session_description_init;
@@ -920,6 +947,7 @@ mod wasm {
     use js_sys::{Array, ArrayBuffer, Date, Iterator, Uint8Array};
     use nestlink_identity::verify_endpoint_proof;
     use nestlink_policy::PathSet;
+    use nestlink_protocol::diagnostics::{ConnectionFailure, ConnectionStage, ConnectionTimeline};
     use nestlink_protocol::native_displays::DisplayEnvelope;
     use nestlink_protocol::turn::TURN_BINDING_BYTES;
     use nestlink_protocol::{
@@ -953,6 +981,7 @@ mod wasm {
         peer: RtcPeerConnection,
         expiry_timer: i32,
         data: BrowserDataChannels,
+        diagnostics: BrowserConnectionDiagnostics,
     }
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1114,7 +1143,18 @@ mod wasm {
     }
 
     impl PeerCancellation {
+        pub fn connection_timeline(&self) -> ConnectionTimeline {
+            self.diagnostics.snapshot()
+        }
+        pub fn observe_video_progress(&self) {
+            self.diagnostics
+                .mark_once(ConnectionStage::FirstVideoProgressObserved);
+        }
+        pub fn record_unclassified_failure(&self) {
+            self.diagnostics.failure(ConnectionFailure::Unclassified);
+        }
         pub fn cancel(&self) {
+            self.diagnostics.mark_once(ConnectionStage::Stopped);
             self.data.close();
             close_peer(&self.peer, &self.cancelled);
             if let Some(window) = web_sys::window() {
@@ -1389,6 +1429,7 @@ mod wasm {
     }
 
     pub struct BrowserPeer {
+        diagnostics: BrowserConnectionDiagnostics,
         peer: RtcPeerConnection,
         sdk: Rc<Mutex<Sdk>>,
         permit: VerifiedPermit,
@@ -1661,7 +1702,15 @@ mod wasm {
             );
             control_channel.set_onmessage(Some(control_handler.as_ref().unchecked_ref()));
 
+            let diagnostics = BrowserConnectionDiagnostics::new(
+                &permit.claims().session_id,
+                permit.claims().connection_generation,
+                &identity.device_id,
+                &permit.claims().host_device_id,
+            );
+            diagnostics.mark(ConnectionStage::PeerCreated);
             Ok(Self {
+                diagnostics,
                 peer,
                 sdk,
                 permit,
@@ -1828,7 +1877,18 @@ mod wasm {
                 peer: self.peer.clone(),
                 expiry_timer: self.expiry_timer,
                 data: self.data.clone(),
+                diagnostics: self.diagnostics.clone(),
             }
+        }
+
+        pub fn record_failure(&self, problem: &PeerError) {
+            self.diagnostics.failure(
+                if *problem == PeerError::Expired && self.permit.claims().is_setup() {
+                    ConnectionFailure::StartupAuthorizationExpired
+                } else {
+                    problem.diagnostic_failure()
+                },
+            );
         }
 
         pub fn data_channels(&self) -> Result<BrowserDataChannels, PeerError> {
@@ -1970,6 +2030,7 @@ mod wasm {
                 deadline,
             )
             .await?;
+            self.diagnostics.mark(ConnectionStage::LocalDescriptionSet);
             if !self.trickle_enabled() {
                 self.wait_for_ice_gathering(deadline).await?;
             }
@@ -1996,6 +2057,7 @@ mod wasm {
             if !self.offer_published || !self.remote_answer_set {
                 return Err(PeerError::OfferRequired);
             }
+            self.diagnostics.mark(ConnectionStage::IceRestart);
             let next_generation = next_network_generation(self.network_generation)?;
             for receiver in self.peer.get_receivers().iter() {
                 if let Ok(receiver) = receiver.dyn_into::<RtcRtpReceiver>() {
@@ -2046,6 +2108,7 @@ mod wasm {
                 deadline,
             )
             .await?;
+            self.diagnostics.mark(ConnectionStage::LocalDescriptionSet);
             if !self.trickle_enabled() {
                 self.wait_for_ice_gathering(deadline).await?;
             }
@@ -2118,6 +2181,8 @@ mod wasm {
                 if !answer_matches_current_offer(self.local_offer_sequence, offer_sequence)? {
                     continue;
                 }
+                self.diagnostics
+                    .signal(ConnectionStage::SignalConsumed, &signal);
                 if signal.ice.is_some()
                     && self.remote_answer_sequence == signal.description_sequence()
                 {
@@ -2145,6 +2210,8 @@ mod wasm {
                 )
                 .await?;
                 self.remote_answer_set = true;
+                self.diagnostics
+                    .signal(ConnectionStage::RemoteDescriptionSet, &signal);
                 self.remote_answer_sequence = signal.description_sequence();
                 self.remote_ice.reset();
                 self.apply_remote_ice(&signal).await?;
@@ -2244,9 +2311,19 @@ mod wasm {
                 }
             };
             match result {
-                Ok(Some(_)) => self.resume_tracks()?,
+                Ok(Some(_)) => {
+                    self.resume_tracks()?;
+                    self.diagnostics.mark(ConnectionStage::PathVerified);
+                }
                 Ok(None) => {}
-                Err(_) => close_peer(&self.peer, &self.cancelled),
+                Err(ref problem) => {
+                    if *problem == PeerError::TimedOut {
+                        self.diagnostics.failure(ConnectionFailure::IceCheckTimeout);
+                    } else {
+                        self.record_failure(problem);
+                    }
+                    close_peer(&self.peer, &self.cancelled);
+                }
             }
             result
         }
@@ -2259,9 +2336,15 @@ mod wasm {
                 return Ok(());
             }
             if let Err(problem) = self.complete_endpoint_proof_inner().await {
+                if problem == PeerError::TimedOut {
+                    self.diagnostics.failure(ConnectionFailure::ProofTimeout);
+                } else {
+                    self.record_failure(&problem);
+                }
                 self.cancellation().cancel();
                 return Err(problem);
             }
+            self.diagnostics.mark_once(ConnectionStage::EndpointProved);
             // The host may publish its next-lease signature as soon as the
             // endpoint proof completes. Consume it before any post-proof
             // display wait can reach the original short permit deadline.
@@ -2279,6 +2362,8 @@ mod wasm {
                     self.wait_tick(deadline).await?;
                 }
             }
+            self.diagnostics
+                .mark_once(ConnectionStage::RunningAuthorized);
             Ok(())
         }
 
@@ -2345,6 +2430,7 @@ mod wasm {
                     && snapshot.selected.is_some()
                     && snapshot.pending_source.is_none()
                 {
+                    self.diagnostics.mark(ConnectionStage::DisplaySelected);
                     return Ok(snapshot);
                 }
                 self.wait_tick(deadline).await?;
@@ -3017,6 +3103,14 @@ mod wasm {
                     self.operation_deadline(1_000)?,
                 )
                 .await?;
+            if sample.bytes.is_some_and(|bytes| bytes > 0.0) {
+                self.diagnostics
+                    .mark_once(ConnectionStage::FirstPacketObserved);
+            }
+            if sample.frames.is_some_and(|frames| frames > 0.0) {
+                self.diagnostics
+                    .mark_once(ConnectionStage::FirstDecodedFrameObserved);
+            }
             Ok(sample)
         }
 
@@ -3075,6 +3169,17 @@ mod wasm {
             self.local_offer_sequence = next;
             self.local_ice_signal = payload.ice.as_ref().map(|_| payload.clone());
             self.network_generation = network_generation;
+            self.diagnostics
+                .signal(ConnectionStage::SignalSubmitted, &payload);
+            self.diagnostics
+                .signal(ConnectionStage::LocalCandidates, &payload);
+            if payload
+                .ice
+                .as_ref()
+                .is_some_and(|ice| ice.end_of_candidates)
+            {
+                self.diagnostics.mark(ConnectionStage::GatherComplete);
+            }
             Ok(())
         }
 
@@ -3123,6 +3228,13 @@ mod wasm {
                 deadline,
             )
             .await?;
+            self.diagnostics
+                .signal(ConnectionStage::SignalSubmitted, &signal);
+            self.diagnostics
+                .signal(ConnectionStage::LocalCandidates, &signal);
+            if signal.ice.as_ref().is_some_and(|ice| ice.end_of_candidates) {
+                self.diagnostics.mark(ConnectionStage::GatherComplete);
+            }
             self.local_ice_signal = Some(signal);
             Ok(())
         }
@@ -3167,6 +3279,8 @@ mod wasm {
                 .await
                 .map_err(|_| PeerError::BrowserOperation)?;
             }
+            self.diagnostics
+                .signal(ConnectionStage::RemoteCandidates, signal);
             Ok(())
         }
 
@@ -3179,6 +3293,7 @@ mod wasm {
                 // previous permit until its expiry edge.
                 self.renew_from_host_before(gather_deadline).await?;
                 if self.peer.ice_gathering_state() == RtcIceGatheringState::Complete {
+                    self.diagnostics.mark(ConnectionStage::GatherComplete);
                     return Ok(());
                 }
                 self.wait_tick(gather_deadline).await?;
@@ -3259,6 +3374,7 @@ mod wasm {
 
     impl Drop for BrowserPeer {
         fn drop(&mut self) {
+            self.diagnostics.mark_once(ConnectionStage::Stopped);
             self.display_permit.borrow_mut().take();
             self.display_deadline.set(None);
             self.data.close();

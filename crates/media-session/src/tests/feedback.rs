@@ -138,7 +138,15 @@ async fn omitted_reference_frame_recovers_through_automatic_feedback_on_a_static
     assert!(receiver.stats().feedback_requests >= 1);
     assert!(sender.stats().feedback_requests >= 1);
     assert_eq!(sender.stats().keyframes_encoded, 2);
-    assert_eq!(dropped.load(Ordering::SeqCst), 1);
+    assert_eq!(
+        dropped.load(Ordering::SeqCst),
+        1,
+        "{}",
+        pair.bridge
+            .as_ref()
+            .ok_or("missing fault bridge")?
+            .diagnostics()
+    );
     pair.revoke.send_replace(Some(StopReason::Revoked));
     wait_until(|| Ok(stopped.load(Ordering::SeqCst) && receiver.monitor().status().finished))
         .await?;

@@ -8,7 +8,7 @@
 
 | 工作包 | 已实现 | 尚需完成或资格验证 |
 | --- | --- | --- |
-| N01 关联诊断 | 宿主单调时钟建链时间线、候选数量、选中路径、授权与首包阶段；request 哈希、generation；64KiB 私有诊断环 | 控制端与服务端消费时序的完整关联、所有新错误分类 |
+| N01 关联诊断 | 双端单调建链观察、信令序号/候选摘要、服务端验证存储与响应准备观察；请求/generation/设备哈希关联工具；Web128项与宿主64KiB私有环 | 原场景三端日志实测、全部前置管理与宿主错误分类；缺日志仍不能断言未消费 |
 | N02 媒体 socket 选路 | 系统/物理/指定接口策略；Windows index/LUID/地址/默认路由和 metric；真实 ICE、原生 QUIC 共享工厂 | 原 HL↔外部 Edge 的对等媒体与代理流量对照 |
 | N03 Trickle ICE | 双端能力协商的累计快照；不可变 SDP、候选绑定/去重/大小上界/end；漏轮询恢复、同字节重试、旧代次拒绝 | 当前仅 direct-only 开启；TURN 继续完整 gather；真实公网 restart 矩阵 |
 | N04 启动授权 | 签名能力启用 30s setup；媒体/输入禁止，双方证明与双签续租后15s运行；预算不足专用错误 | 原故障环境慢网、时钟偏差与长期资格复测 |
@@ -63,6 +63,8 @@ Windows界面自动化初始化仍报`failed to write kernel assets (os error 3)
 先备份schema23数据、配置和旧镜像，再升级控制端及同SHA Web，正式RC发布仍受全部验收门禁约束。
 
 ## 可重跑的验证入口
+
+三端日志采集、关联键和测量边界见 [CONNECTION-DIAGNOSTICS.md](CONNECTION-DIAGNOSTICS.md)。
 
 ```text
 cargo fmt --all -- --check

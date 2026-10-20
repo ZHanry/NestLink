@@ -1,5 +1,6 @@
 mod audit;
 pub mod config;
+mod connection_diagnostics;
 mod native_discovery;
 mod node_control;
 mod node_discovery;
@@ -78,6 +79,7 @@ pub struct AppState {
     event_connections: Arc<Semaphore>,
     event_accounts: Arc<Mutex<HashMap<String, Arc<Semaphore>>>>,
     stun_servers: Arc<Vec<std::net::SocketAddr>>,
+    connection_diagnostics: Arc<connection_diagnostics::SignalDiagnostics>,
 }
 #[derive(Clone, Serialize)]
 struct Event {
@@ -184,6 +186,7 @@ impl AppState {
             event_connections: Arc::new(Semaphore::new(256)),
             event_accounts: Arc::new(Mutex::new(HashMap::new())),
             stun_servers: Arc::new(Vec::new()),
+            connection_diagnostics: Arc::new(connection_diagnostics::SignalDiagnostics::default()),
         })
     }
     pub fn start_maintenance(&self) {
@@ -1287,10 +1290,24 @@ async fn signals(
     Path(id): Path<String>,
 ) -> Result<Json<Value>, ApiError> {
     let token = access(&headers)?;
+    let diagnostics = state.connection_diagnostics.clone();
     state
         .db(move |s| {
             let p = s.authenticate(&token, now()?)?;
-            Ok(Json(json!({"signals": s.remote_signals(&p, &id, now()?)?})))
+            let signals = s.remote_signals(&p, &id, now()?)?;
+            for signal in &signals {
+                diagnostics.record(
+                    &id,
+                    &p.session_id,
+                    &signal.submission.device_id,
+                    nestlink_protocol::diagnostics::ConnectionStage::SignalResponsePrepared,
+                    signal.submission.payload.connection_generation,
+                    nestlink_protocol::diagnostics::SignalSummary::from_payload(
+                        &signal.submission.payload,
+                    ),
+                );
+            }
+            Ok(Json(json!({"signals": signals})))
         })
         .await
 }
@@ -1305,10 +1322,23 @@ async fn submit_signal(
     let principal = state.db(move |s| s.authenticate(&check, now()?)).await?;
     state.limit(&format!("signal/{}", principal.session_id))?;
     let resource = id.clone();
+    let diagnostics = state.connection_diagnostics.clone();
     let audience = state
         .db(move |s| {
             let p = s.authenticate(&token, now()?)?;
+            let sender = body.device_id.clone();
+            let generation = body.payload.connection_generation;
+            let summary =
+                nestlink_protocol::diagnostics::SignalSummary::from_payload(&body.payload);
             s.submit_signal(&p, &id, body, now()?)?;
+            diagnostics.record(
+                &id,
+                &p.session_id,
+                &sender,
+                nestlink_protocol::diagnostics::ConnectionStage::SignalAccepted,
+                generation,
+                summary,
+            );
             s.remote_event_accounts(&id)
         })
         .await?;

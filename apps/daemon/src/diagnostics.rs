@@ -25,6 +25,9 @@ pub fn browser_host_sink(directory: PathBuf) -> Arc<dyn Fn(BrowserHostDiagnostic
             "request_sha256": event.request_sha256.iter().map(|byte| format!("{byte:02x}")).collect::<String>(),
             "connection_generation": event.connection_generation,
             "peer_timeline": event.timeline,
+            "peer_reason": event.peer.map(|peer| format!("{:?}", peer.reason)),
+            "peer_io_kind": event.peer.and_then(|peer| peer.io_error_kind).map(|kind| format!("{kind:?}")),
+            "peer_elapsed_ms": event.peer.map(|peer| peer.elapsed_ms),
         }).to_string();
         while records.len() + line.len() + 1 > 65_536 {
             if let Some(end) = records.iter().position(|byte| *byte == b'\n') {

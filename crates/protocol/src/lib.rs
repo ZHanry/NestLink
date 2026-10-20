@@ -2,6 +2,7 @@
 pub mod api;
 pub mod browse;
 pub mod clipboard;
+pub mod diagnostics;
 pub mod file_recovery;
 pub mod file_roots;
 pub mod files;

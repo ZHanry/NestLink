@@ -60,6 +60,7 @@ fn export_media_diagnostic(
     let report = serde_json::json!({
         "schema_version": 1, "version": env!("CARGO_PKG_VERSION"),
         "request_sha256": request_sha256, "receiver": statistics,
+        "controller_timeline": run.and_then(|run| run.peer.borrow().as_ref().map(PeerCancellation::connection_timeline)),
         "measurement": "receiver counter deltas; not end-to-end input latency",
         "hardware_decoder": null,
     });
@@ -624,6 +625,12 @@ pub fn RemotePanel(
             .await;
             run.run_finished.set(true);
             let was_cancelled = run.cancelled.get();
+            if result.is_err()
+                && !was_cancelled
+                && let Some(peer) = run.peer.borrow().as_ref()
+            {
+                peer.record_unclassified_failure();
+            }
             run.cancel();
             if generation.try_get_untracked() == Some(revision) {
                 let _ = picture.try_set(false);
@@ -1083,26 +1090,27 @@ async fn run_session(
         }
         track_run.stream.add_track(&track);
     });
-    let network = NetworkObserver::attach().map_err(|problem| i18n::peer_error(&problem))?;
+    let network =
+        NetworkObserver::attach().map_err(|problem| diagnosed_peer_error(&peer, problem))?;
     ui.status(t(
         "权限已批准，正在与设备协商连接…",
         "Access approved. Negotiating the connection…",
     ));
     peer.create_and_publish_offer(12_000)
         .await
-        .map_err(|problem| i18n::peer_connection_error(&problem, mode))?;
+        .map_err(|problem| diagnosed_connection_error(&peer, problem, mode))?;
     receive_answer(&run, &mut peer).await?;
     let mut path = peer
         .wait_for_verified_path(10_000)
         .await
-        .map_err(|problem| i18n::peer_connection_error(&problem, mode))?;
+        .map_err(|problem| diagnosed_connection_error(&peer, problem, mode))?;
     ui.status(t(
         "正在核验双方设备身份…",
         "Verifying both device identities…",
     ));
     peer.complete_endpoint_proof()
         .await
-        .map_err(|problem| i18n::peer_error(&problem))?;
+        .map_err(|problem| diagnosed_peer_error(&peer, problem))?;
     ui.status(t(
         "正在读取本机批准的显示器…",
         "Loading displays approved on the remote device…",
@@ -1110,7 +1118,7 @@ async fn run_session(
     let catalog = peer
         .wait_for_display_catalog(5_000)
         .await
-        .map_err(|problem| i18n::peer_error(&problem))?;
+        .map_err(|problem| diagnosed_peer_error(&peer, problem))?;
     let initial_source = catalog
         .displays
         .first()
@@ -1119,11 +1127,11 @@ async fn run_session(
     let _ = ui.displays.try_set(Some(catalog));
     let _ = ui.display_switching.try_set(true);
     peer.select_display(initial_source)
-        .map_err(|problem| i18n::peer_error(&problem))?;
+        .map_err(|problem| diagnosed_peer_error(&peer, problem))?;
     let initial_display = peer
         .wait_for_display_selection(5_000)
         .await
-        .map_err(|problem| i18n::peer_error(&problem))?;
+        .map_err(|problem| diagnosed_peer_error(&peer, problem))?;
     let mut selected_display = initial_display
         .selected
         .clone()
@@ -1132,7 +1140,7 @@ async fn run_session(
     let _ = ui.display_switching.try_set(false);
     let rpc = BrowserRpc::new(
         peer.data_channels()
-            .map_err(|problem| i18n::peer_error(&problem))?,
+            .map_err(|problem| diagnosed_peer_error(&peer, problem))?,
         peer.connection_generation(),
     )
     .map_err(|problem| problem.to_string())?;
@@ -1157,7 +1165,7 @@ async fn run_session(
             drop(input_capture.take());
             if !peer
                 .select_display(source)
-                .map_err(|problem| i18n::peer_error(&problem))?
+                .map_err(|problem| diagnosed_peer_error(&peer, problem))?
             {
                 input_capture = attach_input_capture(&run, &peer, requested.input)?;
                 let _ = ui.display_switching.try_set(false);
@@ -1165,7 +1173,7 @@ async fn run_session(
         }
         let snapshot = peer
             .display_snapshot()
-            .map_err(|problem| i18n::peer_error(&problem))?
+            .map_err(|problem| diagnosed_peer_error(&peer, problem))?
             .ok_or_else(|| i18n::peer_error(&PeerError::SignalRejected))?;
         if snapshot.pending_source.is_some() {
             ui.picture(false);
@@ -1188,10 +1196,10 @@ async fn run_session(
         }
         peer.renew_from_host()
             .await
-            .map_err(|problem| i18n::peer_error(&problem))?;
+            .map_err(|problem| diagnosed_peer_error(&peer, problem))?;
         peer.maintain_turn()
             .await
-            .map_err(|problem| i18n::peer_error(&problem))?;
+            .map_err(|problem| diagnosed_peer_error(&peer, problem))?;
         let current_network = network.generation.get();
         if current_network != observed_network {
             // Consume only the generation used to create this offer. A newer
@@ -1207,14 +1215,14 @@ async fn run_session(
             ));
             peer.restart_ice_and_publish_offer(10_000)
                 .await
-                .map_err(|problem| i18n::peer_error(&problem))?;
+                .map_err(|problem| diagnosed_peer_error(&peer, problem))?;
             receive_answer(&run, &mut peer).await?;
             let verified_path = peer
                 .wait_for_verified_path_or_network_change(10_000, || {
                     network.generation.get() != current_network
                 })
                 .await
-                .map_err(|problem| i18n::peer_error(&problem))?;
+                .map_err(|problem| diagnosed_peer_error(&peer, problem))?;
             let Some(verified_path) = verified_path else {
                 // The just-answered offer was built for an older route. Keep
                 // tracks paused and let the next loop issue a fresh restart.
@@ -1227,7 +1235,7 @@ async fn run_session(
         if now - last_control_check >= 1_000.0 {
             peer.check_control_status()
                 .await
-                .map_err(|problem| i18n::peer_error(&problem))?;
+                .map_err(|problem| diagnosed_peer_error(&peer, problem))?;
             last_control_check = now;
             // Diagnostics are optional observations. An unavailable statistic
             // cannot extend a lease or turn a healthy session into an error.
@@ -1247,6 +1255,9 @@ async fn run_session(
             && run.video.ready_state() >= 2
             && run.video.video_width() > 0
         {
+            if let Some(cancel) = run.peer.borrow().as_ref() {
+                cancel.observe_video_progress();
+            }
             ui.picture(true);
             ui.status(path_status(path, true));
             last_media_time = media_time;
@@ -1416,18 +1427,32 @@ async fn receive_answer(run: &RemoteRun, peer: &mut BrowserPeer) -> Result<(), S
         run.check()?;
         peer.renew_from_host()
             .await
-            .map_err(|problem| i18n::peer_error(&problem))?;
+            .map_err(|problem| diagnosed_peer_error(peer, problem))?;
         match peer.receive_and_apply_answer_with_timeout(1_000).await {
             Ok(()) => return Ok(()),
             Err(PeerError::AnswerRequired) => {
                 peer.renew_from_host()
                     .await
-                    .map_err(|problem| i18n::peer_error(&problem))?;
+                    .map_err(|problem| diagnosed_peer_error(peer, problem))?;
                 TimeoutFuture::new(50).await;
             }
-            Err(problem) => return Err(i18n::peer_error(&problem)),
+            Err(problem) => return Err(diagnosed_peer_error(peer, problem)),
         }
     }
+}
+
+fn diagnosed_peer_error(peer: &BrowserPeer, problem: PeerError) -> String {
+    peer.record_failure(&problem);
+    i18n::peer_error(&problem)
+}
+
+fn diagnosed_connection_error(
+    peer: &BrowserPeer,
+    problem: PeerError,
+    mode: PeerPathMode,
+) -> String {
+    peer.record_failure(&problem);
+    i18n::peer_connection_error(&problem, mode)
 }
 
 fn path_status(path: SelectedPath, picture: bool) -> &'static str {

@@ -3,6 +3,7 @@
 pub mod browser_clipboard;
 #[cfg(target_arch = "wasm32")]
 pub mod browser_data;
+pub mod browser_diagnostics;
 #[cfg(any(target_arch = "wasm32", test))]
 mod browser_displays;
 #[cfg(target_arch = "wasm32")]
