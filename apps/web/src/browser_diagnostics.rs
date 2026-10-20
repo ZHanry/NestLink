@@ -22,6 +22,23 @@ mod wasm {
             .filter(|now| now.is_finite() && *now >= 0.0)
     }
     impl BrowserConnectionDiagnostics {
+        pub fn preflight(request: &str, remote: &str) -> Self {
+            let mut timeline = ConnectionTimeline::new(request, 0, js_sys::Date::now() as u64);
+            timeline.remote_device_sha256 =
+                Some(nestlink_protocol::diagnostics::request_hash(remote));
+            Self {
+                started_ms: monotonic_ms().unwrap_or(f64::NAN),
+                timeline: Rc::new(RefCell::new(timeline)),
+            }
+        }
+        pub fn bind_authority(&self, claims: &nestlink_protocol::PermitClaims) {
+            self.timeline.borrow_mut().bind_authority(
+                &claims.session_id,
+                claims.connection_generation,
+                &claims.controller_device_id,
+                &claims.host_device_id,
+            );
+        }
         pub fn new(request: &str, generation: u64, local: &str, remote: &str) -> Self {
             let mut timeline =
                 ConnectionTimeline::new(request, generation, js_sys::Date::now() as u64);
@@ -62,7 +79,7 @@ mod wasm {
                 .iter()
                 .rev()
                 .find(|event| event.stage != ConnectionStage::Stopped)
-                .map_or(ConnectionStage::PeerCreated, |event| event.stage);
+                .map_or(ConnectionStage::RequestStarted, |event| event.stage);
             self.observe(stage, None, Some(failure));
         }
         fn observe(

@@ -11,6 +11,17 @@ STAGES = {"peer_created", "local_description_set", "signal_submitted", "signal_c
           "path_verified", "endpoint_proved", "running_authorized", "display_selected",
           "first_packet_observed", "first_decoded_frame_observed", "first_video_progress_observed",
           "ice_restart", "stopped"}
+PREFLIGHT_STAGES = {"request_started", "identity_ready", "request_submitting", "request_submitted",
+                    "await_approval", "approval_granted", "await_host_readiness", "host_ready",
+                    "permit_received", "peer_creating", "peer_created", "stopped"}
+FAILURES = {"unclassified", "invalid_configuration", "invalid_authorization", "authorization_expired",
+            "startup_authorization_expired", "endpoint_mismatch", "codec_unavailable", "track_not_authorized",
+            "path_not_permitted", "relay_unavailable", "no_selected_pair", "selected_pair_rejected",
+            "signaling_rejected", "answer_not_consumed", "ice_check_timeout", "proof_timeout",
+            "first_frame_timeout", "operation_timeout", "browser_unavailable", "browser_operation", "cancelled",
+            "management_transport", "management_rejected", "sign_in_required", "authorization_revoked",
+            "invalid_response", "identity_storage_unavailable", "identity_invalid", "approval_timeout",
+            "approval_rejected", "host_readiness_timeout"}
 HOST_STAGES = ("offer_received_ms", "answer_published_ms", "first_local_candidate_ms",
                "first_remote_candidate_ms", "gather_complete_ms", "selected_pair_ms",
                "endpoint_proved_ms", "running_authorized_ms", "first_encoded_ms", "first_rtp_write_ms")
@@ -34,10 +45,50 @@ def signal_key(sender, signal):
     return (fingerprint(sender), *(signal[key] for key in SIGNAL_FIELDS))
 
 
+def failure_observation(event, stages):
+    if event is None:
+        return None
+    if (not isinstance(event, dict) or not integer(event.get('elapsed_ms'))
+            or event.get('stage') not in stages or event.get('failure') not in FAILURES):
+        raise ValueError('invalid fixed failure observation')
+    return {key: event[key] for key in ('elapsed_ms', 'stage', 'failure')}
+
+
+def preflight_observations(trace):
+    if not isinstance(trace, dict) or not isinstance(trace.get('events'), list) or len(trace['events']) > 128:
+        raise ValueError('invalid preflight observation budget')
+    result = {'request_sha256': fingerprint(trace.get('request_sha256')),
+              'connection_generation': trace.get('connection_generation'),
+              'first_failure': failure_observation(trace.get('first_failure'), PREFLIGHT_STAGES),
+              'stage_elapsed_ms': {}}
+    if not integer(result['connection_generation']):
+        raise ValueError('invalid preflight generation')
+    for key in ('local_device_sha256', 'remote_device_sha256'):
+        result[key] = fingerprint(trace[key]) if trace.get(key) is not None else None
+    previous = 0
+    for event in trace['events']:
+        if (not isinstance(event, dict) or not integer(event.get('elapsed_ms'))
+                or event['elapsed_ms'] < previous or event.get('stage') not in PREFLIGHT_STAGES):
+            raise ValueError('invalid preflight observation or clock order')
+        previous = event['elapsed_ms']
+        result['stage_elapsed_ms'].setdefault(event['stage'], previous)
+        if event.get('failure') is not None:
+            failure_observation(event, PREFLIGHT_STAGES)
+    return result
+
+
 def correlate(controller, host_records, server_records):
     if not isinstance(controller, dict) or not isinstance(host_records, list) or not isinstance(server_records, list):
         raise ValueError("expected controller object and log record arrays")
+    preflight = preflight_observations(controller['controller_preflight_timeline']) if controller.get('controller_preflight_timeline') is not None else None
     trace = controller.get("controller_timeline", controller)
+    if trace is None and preflight is not None:
+        if len(host_records) > 10000 or len(server_records) > 10000:
+            raise ValueError('observation budget exceeded')
+        return {'schema_version': 1, 'request_sha256': preflight['request_sha256'],
+                'connection_generation': preflight['connection_generation'], 'controller_preflight': preflight,
+                'peer_observations_available': False, 'signals': [], 'cross_clock_latencies_computed': False,
+                'limitations': ['No owned peer timeline was recorded; this does not prove ICE or media failure.']}
     if not isinstance(trace, dict) or not isinstance(trace.get("events"), list):
         raise ValueError("missing controller timeline events")
     request = fingerprint(trace.get("request_sha256"))
@@ -47,6 +98,10 @@ def correlate(controller, host_records, server_records):
     if len(trace.get("events", [])) > 128 or len(host_records) > 10000 or len(server_records) > 10000:
         raise ValueError("observation budget exceeded")
     local, remote = (fingerprint(trace.get(key)) for key in ("local_device_sha256", "remote_device_sha256"))
+    if preflight is not None:
+        if (preflight['request_sha256'] != request or preflight['connection_generation'] != generation
+                or preflight['local_device_sha256'] != local or preflight['remote_device_sha256'] != remote):
+            raise ValueError('preflight and peer authority bindings differ')
     joined = {}
     durations = {}
     previous = 0
@@ -124,6 +179,8 @@ def correlate(controller, host_records, server_records):
                         "observations": sorted(observations), "recipient_consumption_observed": consumed in observations,
                         "accepted_without_consumption_observation": "server_accepted" in observations and consumed not in observations})
     return {"schema_version": 1, "request_sha256": request, "connection_generation": generation,
+            "controller_preflight": preflight, "peer_observations_available": True,
+            "controller_first_failure": failure_observation(trace.get('first_failure'), STAGES),
             "matched_host_records": matched_hosts, "matched_server_records": matched_server,
             "controller_stage_elapsed_ms": durations, "host_stage_elapsed_ms": host_stages,
             "controller_local_durations_ms": {

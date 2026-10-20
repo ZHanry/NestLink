@@ -10,6 +10,16 @@ pub const TIMELINE_EVENT_LIMIT: usize = 128;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ConnectionStage {
+    RequestStarted,
+    IdentityReady,
+    RequestSubmitting,
+    RequestSubmitted,
+    AwaitApproval,
+    ApprovalGranted,
+    AwaitHostReadiness,
+    HostReady,
+    PermitReceived,
+    PeerCreating,
     PeerCreated,
     LocalDescriptionSet,
     SignalSubmitted,
@@ -55,6 +65,16 @@ pub enum ConnectionFailure {
     BrowserUnavailable,
     BrowserOperation,
     Cancelled,
+    ManagementTransport,
+    ManagementRejected,
+    SignInRequired,
+    AuthorizationRevoked,
+    InvalidResponse,
+    IdentityStorageUnavailable,
+    IdentityInvalid,
+    ApprovalTimeout,
+    ApprovalRejected,
+    HostReadinessTimeout,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -131,6 +151,36 @@ impl ConnectionTimeline {
             first_failure: None,
         }
     }
+    /// Attach a verified permit's correlation keys to pre-permit observations.
+    /// A failed diagnostic binding never mutates or authorizes the session.
+    pub fn bind_authority(
+        &mut self,
+        request: &str,
+        generation: u64,
+        local: &str,
+        remote: &str,
+    ) -> bool {
+        let local = request_hash(local);
+        let remote = request_hash(remote);
+        if generation == 0
+            || self.request_sha256 != request_hash(request)
+            || (self.connection_generation != 0 && self.connection_generation != generation)
+            || self
+                .local_device_sha256
+                .as_ref()
+                .is_some_and(|value| value != &local)
+            || self
+                .remote_device_sha256
+                .as_ref()
+                .is_some_and(|value| value != &remote)
+        {
+            return false;
+        }
+        self.connection_generation = generation;
+        self.local_device_sha256 = Some(local);
+        self.remote_device_sha256 = Some(remote);
+        true
+    }
     pub fn observe(&mut self, event: ConnectionObservation) {
         // A regressed local clock is missing evidence, never a negative latency
         // or a reason to change the live authorization/session state.
@@ -169,6 +219,33 @@ pub fn request_hash(request: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn preflight_binding_cannot_mix_requests_generations_or_endpoint_identities()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let mut trace = ConnectionTimeline::new("request", 0, 1000);
+        trace.remote_device_sha256 = Some(request_hash("host"));
+        for (request, generation, local, remote) in [
+            ("other", 1, "controller", "host"),
+            ("request", 0, "controller", "host"),
+            ("request", 1, "controller", "other-host"),
+        ] {
+            let before = serde_json::to_value(&trace)?;
+            assert!(!trace.bind_authority(request, generation, local, remote));
+            assert_eq!(serde_json::to_value(&trace)?, before);
+        }
+        assert!(trace.bind_authority("request", 7, "controller", "host"));
+        assert!(trace.bind_authority("request", 7, "controller", "host"));
+        for (generation, local, remote) in [
+            (8, "controller", "host"),
+            (7, "other", "host"),
+            (7, "controller", "other"),
+        ] {
+            let before = serde_json::to_value(&trace)?;
+            assert!(!trace.bind_authority("request", generation, local, remote));
+            assert_eq!(serde_json::to_value(&trace)?, before);
+        }
+        Ok(())
+    }
     #[test]
     fn signal_summary_never_serializes_description_or_candidate_secrets()
     -> Result<(), Box<dyn std::error::Error>> {

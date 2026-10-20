@@ -4,6 +4,7 @@ use crate::{Api, RemoteTarget, SdkHandle};
 use gloo_timers::future::TimeoutFuture;
 use leptos::{prelude::*, task::spawn_local};
 use nestlink_auth::Secret;
+use nestlink_protocol::diagnostics::{ConnectionFailure, ConnectionStage, ConnectionTimeline};
 use nestlink_protocol::webrtc_data::WebRtcDataChannel;
 use nestlink_protocol::{
     Permission,
@@ -12,6 +13,7 @@ use nestlink_protocol::{
 use nestlink_sdk::DeviceIdentity;
 use nestlink_web::browser_clipboard::BrowserClipboard;
 use nestlink_web::browser_data::{LocalDataApproval, LocalDataConsent};
+use nestlink_web::browser_diagnostics::BrowserConnectionDiagnostics;
 use nestlink_web::browser_files::BrowserFiles;
 use nestlink_web::browser_identity::{self, BrowserIdentityError};
 use nestlink_web::browser_input::{BrowserInputCapture, BrowserInputLayout};
@@ -47,20 +49,20 @@ thread_local! {
 fn retained_count() -> usize {
     RETAINED_RUNS.with(|runs| runs.borrow().len())
 }
-fn export_media_diagnostic(
-    statistics: Option<MediaStatistics>,
-    run: Option<&RemoteRun>,
-) -> Result<(), ()> {
-    let request_sha256 = run.map(|run| {
-        nestlink_identity::digest(run.id.as_bytes())
-            .iter()
-            .map(|byte| format!("{byte:02x}"))
-            .collect::<String>()
-    });
+#[derive(Clone)]
+struct RemoteDiagnosticSnapshot {
+    preflight: ConnectionTimeline,
+    peer: Option<ConnectionTimeline>,
+    receiver: Option<MediaStatistics>,
+}
+
+fn export_media_diagnostic(snapshot: Option<RemoteDiagnosticSnapshot>) -> Result<(), ()> {
+    let snapshot = snapshot.ok_or(())?;
     let report = serde_json::json!({
         "schema_version": 1, "version": env!("CARGO_PKG_VERSION"),
-        "request_sha256": request_sha256, "receiver": statistics,
-        "controller_timeline": run.and_then(|run| run.peer.borrow().as_ref().map(PeerCancellation::connection_timeline)),
+        "request_sha256": snapshot.preflight.request_sha256, "receiver": snapshot.receiver,
+        "controller_preflight_timeline": snapshot.preflight,
+        "controller_timeline": snapshot.peer,
         "measurement": "receiver counter deltas; not end-to-end input latency",
         "hardware_decoder": null,
     });
@@ -180,6 +182,7 @@ impl SessionUi {
 struct RemoteRun {
     sdk: SdkHandle,
     id: String,
+    diagnostics: BrowserConnectionDiagnostics,
     cancelled: Cell<bool>,
     run_finished: Cell<bool>,
     cleanup_busy: Cell<bool>,
@@ -196,6 +199,18 @@ struct RemoteRun {
 }
 
 impl RemoteRun {
+    fn diagnostic_snapshot(&self, receiver: Option<MediaStatistics>) -> RemoteDiagnosticSnapshot {
+        RemoteDiagnosticSnapshot {
+            preflight: self.diagnostics.snapshot(),
+            peer: self
+                .peer
+                .borrow()
+                .as_ref()
+                .map(PeerCancellation::connection_timeline),
+            receiver,
+        }
+    }
+
     fn cancel(&self) {
         self.cancelled.set(true);
         self.display_request.set(None);
@@ -463,12 +478,16 @@ pub fn RemotePanel(
     let problem = RwSignal::new(String::new());
     let generation = RwSignal::new(0_u64);
     let owner: StoredValue<Option<Rc<RemoteRun>>, LocalStorage> = StoredValue::new_local(None);
+    // Only redacted values outlive cleanup. No peer, key or permission owner is retained.
+    let last_diagnostic: StoredValue<Option<RemoteDiagnosticSnapshot>, LocalStorage> =
+        StoredValue::new_local(None);
     let reset = move || {
         generation.update(|value| *value = value.saturating_add(1));
         if let Some(run) = owner.get_value() {
             run.cancel();
         }
         owner.set_value(None);
+        last_diagnostic.set_value(None);
         active.set(false);
         phase.set(0);
         picture.set(false);
@@ -561,9 +580,13 @@ pub fn RemotePanel(
             return;
         };
         video.set_src_object(Some(&stream));
+        let request_id = nestlink_auth::random_id();
+        let diagnostics = BrowserConnectionDiagnostics::preflight(&request_id, &host.id);
+        diagnostics.mark(ConnectionStage::RequestStarted);
         let run = Rc::new(RemoteRun {
             sdk,
-            id: nestlink_auth::random_id(),
+            id: request_id,
+            diagnostics,
             cancelled: Cell::new(false),
             run_finished: Cell::new(false),
             cleanup_busy: Cell::new(false),
@@ -583,6 +606,7 @@ pub fn RemotePanel(
         let revision = generation.get_untracked().saturating_add(1);
         generation.set(revision);
         owner.set_value(Some(run.clone()));
+        last_diagnostic.set_value(None);
         active.set(true);
         picture.set(false);
         problem.set(String::new());
@@ -625,6 +649,14 @@ pub fn RemotePanel(
             .await;
             run.run_finished.set(true);
             let was_cancelled = run.cancelled.get();
+            if was_cancelled {
+                run.diagnostics.failure(ConnectionFailure::Cancelled);
+            } else if result.is_err()
+                && run.diagnostics.snapshot().first_failure.is_none()
+                && run.peer.borrow().is_none()
+            {
+                run.diagnostics.failure(ConnectionFailure::Unclassified);
+            }
             if result.is_err()
                 && !was_cancelled
                 && let Some(peer) = run.peer.borrow().as_ref()
@@ -632,7 +664,10 @@ pub fn RemotePanel(
                 peer.record_unclassified_failure();
             }
             run.cancel();
+            run.diagnostics.mark(ConnectionStage::Stopped);
             if generation.try_get_untracked() == Some(revision) {
+                let _ = last_diagnostic
+                    .try_set_value(Some(run.diagnostic_snapshot(statistics.get_untracked())));
                 let _ = picture.try_set(false);
                 let _ = data_ready.try_set(false);
                 let _ = displays.try_set(None);
@@ -858,8 +893,10 @@ pub fn RemotePanel(
                                 }
                             })}
                             <p class="muted">{move || t("每秒采样浏览器接收统计。网络往返、解码与缓冲是不同口径，不能相加当作端到端输入时延。", "Browser receiver statistics are sampled each second. Round trip, decode and buffering measure different stages and do not sum to input-to-picture latency.")}</p>
-                            <button class="secondary" type="button" disabled=move || statistics.get().is_none() on:click=move |_| {
-                                if export_media_diagnostic(statistics.get(), owner.get_value().as_deref()).is_err() {
+                            <button class="secondary" type="button" on:click=move |_| {
+                                let snapshot = owner.get_value().map(|run| run.diagnostic_snapshot(statistics.get()))
+                                    .or_else(|| last_diagnostic.get_value());
+                                if export_media_diagnostic(snapshot).is_err() {
                                     problem.set(t("诊断导出失败，请重试。", "Diagnostic export failed. Retry.").into());
                                 }
                             }>{move || t("导出脱敏诊断", "Export redacted diagnostics")}</button>
@@ -921,15 +958,16 @@ pub fn RemotePanel(
     }
 }
 
-async fn managed_request<T, F>(_run: &RemoteRun, future: F) -> Result<T, String>
+async fn managed_request<T, F>(run: &RemoteRun, future: F) -> Result<T, String>
 where
     F: std::future::Future<Output = Result<T, nestlink_sdk::SdkError>>,
 {
     // SDK requests are themselves bounded. Keep their result after user stop
     // so a registration or request racing stop can still be revoked.
-    future
-        .await
-        .map_err(|problem| i18n::sdk_error(&problem).into())
+    future.await.map_err(|problem| {
+        run.diagnostics.failure(problem.diagnostic_failure());
+        i18n::sdk_error(&problem).into()
+    })
 }
 
 async fn run_session(
@@ -940,12 +978,23 @@ async fn run_session(
     access_method: AccessMethod,
     ui: SessionUi,
 ) -> Result<(), String> {
-    let mode = PeerPathMode::parse(&path_mode).map_err(|problem| i18n::peer_error(&problem))?;
+    let mode = PeerPathMode::parse(&path_mode).map_err(|problem| {
+        run.diagnostics.failure(problem.diagnostic_failure());
+        i18n::peer_error(&problem)
+    })?;
     let identity = {
         let mut sdk = run.sdk.lock().await;
         browser_identity::load_or_register(&mut sdk)
             .await
-            .map_err(|problem| -> String { match problem {
+            .map_err(|problem| -> String {
+                run.diagnostics.failure(match &problem {
+                    BrowserIdentityError::Management(problem) => problem.diagnostic_failure(),
+                    BrowserIdentityError::Storage => ConnectionFailure::IdentityStorageUnavailable,
+                    BrowserIdentityError::Corrupt => ConnectionFailure::IdentityInvalid,
+                    BrowserIdentityError::Revoked => ConnectionFailure::AuthorizationRevoked,
+                    BrowserIdentityError::Mismatch => ConnectionFailure::EndpointMismatch,
+                });
+                match problem {
                 BrowserIdentityError::Management(problem) => i18n::sdk_error(&problem).into(),
                 BrowserIdentityError::Storage => t(
                     "此浏览器无法提供受保护的持久身份存储。",
@@ -969,6 +1018,7 @@ async fn run_session(
                 .into(),
             } })?
     };
+    run.diagnostics.mark(ConnectionStage::IdentityReady);
     run.check()?;
     let mut permissions = vec![Permission::View as i32];
     if requested.audio {
@@ -988,6 +1038,7 @@ async fn run_session(
         }
     }
     run.request_created.set(true);
+    run.diagnostics.mark(ConnectionStage::RequestSubmitting);
     let creation = async {
         let request = RemoteRequest {
             id: run.id.clone(),
@@ -1008,6 +1059,7 @@ async fn run_session(
     let view = match creation {
         Ok(view) => view,
         Err(problem) => {
+            run.diagnostics.failure(problem.diagnostic_failure());
             // These management responses are issued before the create
             // transaction commits. Retaining a nonexistent request would make
             // its later DELETE fail with 403 and block every replacement run.
@@ -1020,7 +1072,9 @@ async fn run_session(
             return Err(i18n::sdk_error(&problem).into());
         }
     };
+    run.diagnostics.mark(ConnectionStage::RequestSubmitted);
     run.check()?;
+    run.diagnostics.mark(ConnectionStage::AwaitApproval);
     if access_method == AccessMethod::Password {
         authorize_password(&run, &identity, &view, ui).await?;
     }
@@ -1032,6 +1086,7 @@ async fn run_session(
     loop {
         run.check()?;
         if performance_ms()? >= approval_deadline {
+            run.diagnostics.failure(ConnectionFailure::ApprovalTimeout);
             return Err(t(
                 "本次请求等待批准超时，请重新请求。",
                 "Approval timed out. Submit a new request.",
@@ -1045,6 +1100,7 @@ async fn run_session(
             "approved" => break,
             "pending" => TimeoutFuture::new(400).await,
             _ => {
+                run.diagnostics.failure(ConnectionFailure::ApprovalRejected);
                 return Err(t(
                     "被控设备未批准本次请求，或请求已撤销。",
                     "The remote device did not approve this request, or the request was revoked.",
@@ -1053,15 +1109,19 @@ async fn run_session(
             }
         }
     }
+    run.diagnostics.mark(ConnectionStage::ApprovalGranted);
     let _ = ui.phase.try_set(1);
     ui.status(t(
         "权限已批准，等待被控设备选择并批准共享屏幕…",
         "Access approved. Waiting for the host to choose and approve a screen…",
     ));
     let preparation_deadline = performance_ms()? + 60_000.0;
+    run.diagnostics.mark(ConnectionStage::AwaitHostReadiness);
     loop {
         run.check()?;
         if performance_ms()? >= preparation_deadline {
+            run.diagnostics
+                .failure(ConnectionFailure::HostReadinessTimeout);
             return Err(t("被控设备尚未完成屏幕准备，请在被控端选择并批准屏幕后重试。", "The host did not finish screen preparation. Choose and approve a screen on the host, then try again.").into());
         }
         let readiness = managed_request(&run, async {
@@ -1073,13 +1133,23 @@ async fn run_session(
         }
         TimeoutFuture::new(250).await;
     }
+    run.diagnostics.mark(ConnectionStage::HostReady);
     let _ = ui.phase.try_set(2);
     let permit =
         managed_request(&run, async { run.sdk.lock().await.permit(&run.id).await }).await?;
+    run.diagnostics.bind_authority(permit.claims());
+    run.diagnostics.mark(ConnectionStage::PermitReceived);
     run.check()?;
+    run.diagnostics.mark(ConnectionStage::PeerCreating);
+    let setup = permit.claims().is_setup();
     let mut peer = BrowserPeer::new_managed_persistent(run.sdk.clone(), permit, identity, mode)
         .await
-        .map_err(|problem| i18n::peer_error(&problem))?;
+        .map_err(|problem| {
+            let failure = problem.diagnostic_failure_for_setup(setup);
+            run.diagnostics.failure(failure);
+            i18n::peer_diagnostic_error(&problem, failure, Some(mode))
+        })?;
+    run.diagnostics.mark(ConnectionStage::PeerCreated);
     *run.peer.borrow_mut() = Some(peer.cancellation());
     run.check()?;
     let track_run = run.clone();
@@ -1284,6 +1354,8 @@ async fn authorize_password(
             .iter()
             .all(|permission| settings.permissions.contains(permission))
     {
+        run.diagnostics
+            .failure(ConnectionFailure::InvalidAuthorization);
         return Err(t(
             "主机密码授权未启用，或不允许本次请求的权限。请重新选择权限并创建请求。",
             "The host's password authorization is inactive or does not cover the requested permissions. Choose permissions and create a new request.",
@@ -1303,6 +1375,7 @@ async fn authorize_password(
             return Err(t("连接页面已更换。", "The connection page changed.").into());
         }
         if performance_ms()? >= deadline {
+            run.diagnostics.failure(ConnectionFailure::ApprovalTimeout);
             return Err(t(
                 "本次密码授权等待超时，请重新请求。",
                 "Password authorization timed out. Submit a new request.",
@@ -1316,6 +1389,8 @@ async fn authorize_password(
     };
     let _ = ui.password_offer.try_set(None);
     if submitted.offer != offer {
+        run.diagnostics
+            .failure(ConnectionFailure::InvalidAuthorization);
         return Err(t(
             "密码不再对应当前请求，请重新请求。",
             "The password no longer belongs to the current request. Submit a new request.",
@@ -1337,6 +1412,8 @@ async fn authorize_password(
         || !current_settings.active
         || PasswordOffer::new(&current, &current_settings) != offer
     {
+        run.diagnostics
+            .failure(ConnectionFailure::InvalidAuthorization);
         return Err(t(
             "本次请求或主机密码配置已变化，密码未提交。请重新请求。",
             "The request or host password configuration changed. The password was not submitted. Create a new request.",
@@ -1358,6 +1435,7 @@ async fn authorize_password(
     .await?;
     run.check()?;
     if approved.id != run.id || approved.status != "approved" {
+        run.diagnostics.failure(ConnectionFailure::InvalidResponse);
         return Err(t(
             "服务器未确认本次密码授权。",
             "The server did not confirm password authorization for this request.",

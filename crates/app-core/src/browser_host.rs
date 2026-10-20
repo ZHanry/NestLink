@@ -215,8 +215,10 @@ pub enum BrowserHostDiagnosticSource {
     ViewRequired,
     SdkTimeout,
     SdkOther,
+    SdkFailure(nestlink_protocol::diagnostics::ConnectionFailure),
     WebRtcSdkTimeout,
     WebRtcSdkOther,
+    WebRtcSdkFailure(nestlink_protocol::diagnostics::ConnectionFailure),
     WebRtcEngine,
     WebRtcContract,
     WebRtcIo,
@@ -1037,9 +1039,11 @@ fn classify_diagnostic_source(error: &BrowserHostError) -> BrowserHostDiagnostic
         BrowserHostError::SessionBinding => Source::SessionBinding,
         BrowserHostError::ViewRequired => Source::ViewRequired,
         BrowserHostError::Sdk(SdkError::Timeout) => Source::SdkTimeout,
-        BrowserHostError::Sdk(_) => Source::SdkOther,
+        BrowserHostError::Sdk(error) => Source::SdkFailure(error.diagnostic_failure()),
         BrowserHostError::WebRtc(WebRtc::Sdk(SdkError::Timeout)) => Source::WebRtcSdkTimeout,
-        BrowserHostError::WebRtc(WebRtc::Sdk(_)) => Source::WebRtcSdkOther,
+        BrowserHostError::WebRtc(WebRtc::Sdk(error)) => {
+            Source::WebRtcSdkFailure(error.diagnostic_failure())
+        }
         BrowserHostError::WebRtc(WebRtc::WebRtc(_)) => Source::WebRtcEngine,
         BrowserHostError::WebRtc(WebRtc::Contract(_)) => Source::WebRtcContract,
         BrowserHostError::WebRtc(WebRtc::Io(_)) => Source::WebRtcIo,
@@ -1070,6 +1074,35 @@ fn classify_diagnostic_source(error: &BrowserHostError) -> BrowserHostDiagnostic
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn host_management_diagnostics_preserve_typed_causes_without_private_error_text() {
+        use nestlink_protocol::{ErrorCode, diagnostics::ConnectionFailure as Failure};
+        for (code, expected) in [
+            (
+                ErrorCode::SetupBudgetExhausted,
+                Failure::StartupAuthorizationExpired,
+            ),
+            (ErrorCode::PolicyRevoked, Failure::AuthorizationRevoked),
+            (ErrorCode::AuthRequired, Failure::SignInRequired),
+        ] {
+            let error = || {
+                SdkError::Proof(nestlink_protocol::ContractError::new(
+                    code,
+                    "private-proof-reason",
+                ))
+            };
+            let source = classify_diagnostic_source(&BrowserHostError::Sdk(error()));
+            assert_eq!(source, BrowserHostDiagnosticSource::SdkFailure(expected));
+            assert!(!format!("{source:?}").contains("private-proof-reason"));
+            assert_eq!(
+                classify_diagnostic_source(&BrowserHostError::WebRtc(
+                    WebRtcHostError::Sdk(error())
+                )),
+                BrowserHostDiagnosticSource::WebRtcSdkFailure(expected)
+            );
+        }
+    }
 
     #[test]
     fn preparation_rebinding_preserves_both_devices_generation_and_local_host_key() {

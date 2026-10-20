@@ -20,6 +20,7 @@ mod http_wasm;
 #[cfg(target_arch = "wasm32")]
 use http_wasm::request;
 use url::Url;
+mod diagnostics;
 
 #[derive(Debug, thiserror::Error)]
 pub enum SdkError {
