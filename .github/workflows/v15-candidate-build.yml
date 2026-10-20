@@ -397,5 +397,6 @@ jobs:
 
 # This manual build produces development candidate bytes for user acceptance.
 # It has no production signing secrets or repository publication/delete step.
-# A separate RC publisher may publish these exact bytes to the new repository.
+# The RC publisher additionally requires reviewed report acceptance bound to
+# these exact bytes; a successful development build cannot authorize release.
 # Formal signing and full user acceptance remain pending.

@@ -22,6 +22,6 @@ Linux 包名为 `nestlink-rc-desktop` / `nestlink-rc-server`，安装在 `/opt/n
 
 本地入口为 `python -B scripts/refactor-candidate-producer.py --help`。先运行 `preflight --source <SHA> --sequence <N> --run-id <ID> --run-attempt <N> --oci-base <fixed-base> --oci-index <raw-index.json> --output <outside-checkout>/cohort`；后续 `collect-native`、`collect-android`、`collect-web`、`metadata` 收集独立 part，`oci-context` / `collect-oci` 处理镜像，最后 `freeze --cohort <cohort.json> --bundle <merged-parts> --output <new-output>`。所有输出均需在源码目录外的新目录。可用 `--acceptance-evidence <directory>` 为 freeze 增加已经执行的开发检查日志；这些日志不自动变成产品验收通过。
 
-冻结后的 `candidate-build-manifest.json` 可直接交独立 `refactor-rc-publish.py` 核验并发布新仓 `v0.7.0-rc.1` prerelease。所有 18 条 artifact 的 `source_revision` 相同，路径相对 bundle 根且包含 `files/`；30 条 `acceptance_cases` 均为 `{id,status:"pending",evidence_artifact_id:"acceptance"}`，含 90 分钟 soak。manifest 不含旧仓库归档角色或门槛。候选构建不改名、删仓库、删分支或发布 Release，也不读取/重传旧历史归档。用户随后对冻结字节做全功能验收。
+冻结后的 `candidate-build-manifest.json` 只有在完成[0.7报告全部验收](REMEDIATION-ACCEPTANCE.md)、提供绑定同一构建的审阅证据包后，才可交独立 `refactor-rc-publish.py` 核验并发布新仓 `v0.7.0-rc.1` prerelease。所有 18 条 artifact 的 `source_revision` 相同，路径相对 bundle 根且包含 `files/`；30 条 `acceptance_cases` 均为 `{id,status:"pending",evidence_artifact_id:"acceptance"}`，含 90 分钟 soak。manifest 不含旧仓库归档角色或门槛。候选构建不改名、删仓库、删分支或发布 Release，也不读取/重传旧历史归档。用户随后对冻结字节做全功能验收；成功构建不能授权发布。
 
 正式 `v15-release-build.yml`、固定 Release 签名、生产安装/维护校验和正式发布门槛保持不变；候选的 manifest purpose 独立，不能代入生产更新授权。

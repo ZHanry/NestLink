@@ -13,6 +13,7 @@ from unittest.mock import patch
 import urllib.error
 import urllib.parse
 import urllib.request
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
 SPEC = importlib.util.spec_from_file_location("rc_publish_test", ROOT / "scripts/refactor-rc-publish.py")
@@ -141,6 +142,7 @@ class RCPublicationTests(unittest.TestCase):
                          "acceptance_cases": [{"id": name, "status": "pending", "evidence_artifact_id": "acceptance"}
                                               for name in sorted(P.REQUIRED_CASES)], "artifacts": products}
         self.write_manifest()
+        self.write_report_acceptance()
         self.clean = patch.object(P, "clean_source")
         self.clean.start()
         self.addCleanup(self.clean.stop)
@@ -148,6 +150,24 @@ class RCPublicationTests(unittest.TestCase):
 
     def write_manifest(self):
         self.args.manifest.write_text(json.dumps(self.manifest, indent=2) + "\n", encoding="utf-8")
+
+    def write_report_acceptance(self, mutate=None, entries=None):
+        # Synthetic fixture only: these bytes never qualify a real product.
+        raw = b"Synthetic publication protocol fixture, not real measurements."
+        self.report = {"schema_version": 1, "kind": "nestlink-remediation-acceptance", "repository": P.REPOSITORY,
+                       "version": P.VERSION, "source_revision": REVISION,
+                       "manifest_sha256": checksum(self.args.manifest.read_bytes()), "report_sha256": P.REPORT_SHA256,
+                       "status": "passed", "reviewer": "Synthetic test fixture", "reviewed_at": "2026-10-20T00:00:00Z",
+                       "cases": [{"id": name, "status": "passed", "evidence": ["evidence/fixture.txt"]}
+                                 for name in sorted(P.REMEDIATION_CASES)],
+                       "evidence": [{"path": "evidence/fixture.txt", "bytes": len(raw), "sha256": checksum(raw)}]}
+        if mutate:
+            mutate(self.report)
+        with zipfile.ZipFile(self.args.bundle / P.REMEDIATION_NAME, "w", zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr("remediation-acceptance.json", json.dumps(self.report))
+            archive.writestr("evidence/fixture.txt", raw)
+            for name, content in entries or []:
+                archive.writestr(name, content)
 
     def upload_draft(self):
         self.args.action = "upload-draft"
@@ -172,21 +192,21 @@ class RCPublicationTests(unittest.TestCase):
         self.args.action = "verify"
         result = P.promote(self.args, self.github)
         self.assertEqual(result["status"], "verified")
-        self.assertEqual(result["expected_assets"], 19)
+        self.assertEqual(result["expected_assets"], 20)
         self.assertEqual(result["existing_assets_verified"], 0)
         self.assertFalse(self.github.writes)
 
     def test_upload_then_publish_reuses_every_verified_asset(self):
         draft = self.upload_draft()
         self.assertEqual(draft["status"], "draft-uploaded")
-        self.assertEqual(len(self.github.assets), 19)
+        self.assertEqual(len(self.github.assets), 20)
         self.assertFalse(any(method == "PATCH" for method, _ in self.github.calls))
         before = len(self.github.writes)
         self.args.action = "publish"
         result = P.promote(self.args, self.github)
         self.assertEqual(result["status"], "published-prerelease")
         self.assertEqual(len(self.github.writes), before + 1)
-        self.assertEqual(len(result["uploads"]), 19)
+        self.assertEqual(len(result["uploads"]), 20)
         self.assertTrue(all(item["readback"] == "github-asset-id-sha256" for item in result["uploads"]))
         self.assertFalse(self.github.downloads)
         self.assertEqual(self.github.writes[-1], ("PATCH", BASE + "/releases/17"))
@@ -199,7 +219,7 @@ class RCPublicationTests(unittest.TestCase):
         self.args.action = "verify"
         result = P.promote(self.args, self.github)
         self.assertEqual(result["release_id"], 17)
-        self.assertEqual(result["existing_assets_verified"], 19)
+        self.assertEqual(result["existing_assets_verified"], 20)
         self.assertIn(("GET", BASE + "/releases"), self.github.calls)
         self.assertIn(("GET", BASE + "/releases/17"), self.github.calls)
         self.assertEqual(self.github.writes, [])
@@ -250,7 +270,9 @@ class RCPublicationTests(unittest.TestCase):
         self.assertEqual(result["signing"], P.SIGNING)
         self.assertFalse(result["production_update_eligible"])
         self.assertEqual(result["pending_acceptance_cases"], 30)
-        self.assertIn("All 30", self.github.release["body"])
+        self.assertEqual(result["report_remediation_acceptance"], "passed")
+        self.assertEqual(result["report_acceptance_cases"], 25)
+        self.assertIn("30 pending", self.github.release["body"])
         self.assertIn("pending", self.github.release["body"])
         self.assertTrue(self.github.release["prerelease"])
 
@@ -263,7 +285,7 @@ class RCPublicationTests(unittest.TestCase):
     def test_missing_api_digest_uses_download_by_asset_id_only(self):
         self.github.digest_mode = "absent"
         result = P.promote(self.args, self.github)
-        self.assertEqual(len(set(self.github.downloads)), 19)
+        self.assertEqual(len(set(self.github.downloads)), 20)
         self.assertTrue(all(item["readback"] == "download-sha256" for item in result["uploads"]))
 
     def test_malformed_or_wrong_api_digest_keeps_release_draft(self):
@@ -297,7 +319,7 @@ class RCPublicationTests(unittest.TestCase):
         self.assertEqual(result["status"], "published-prerelease")
         self.assertEqual(first_ids, {name: self.github.assets[name]["id"] for name in first_ids})
         posts = [path for method, path in self.github.calls if method == "POST" and "/assets?name=" in path]
-        self.assertEqual(len(posts), 19)
+        self.assertEqual(len(posts), 20)
         self.assertFalse(any(method == "DELETE" for method, _ in self.github.calls))
 
     def test_wrong_repository_node_main_or_tag_blocks_every_write(self):
@@ -390,10 +412,14 @@ class RCPublicationTests(unittest.TestCase):
         first = self.manifest["artifacts"][0]
         path = self.args.bundle / first["path"]
         original_product = path.read_bytes()
-        for target, raw in ((path, b"x" * len(original_product)), (self.args.manifest, original_manifest + b" ")):
+        evidence = self.args.bundle / P.REMEDIATION_NAME
+        original_evidence = evidence.read_bytes()
+        for target, raw in ((path, b"x" * len(original_product)), (self.args.manifest, original_manifest + b" "),
+                            (evidence, b"x" * len(original_evidence))):
             with self.subTest(target=target.name):
                 path.write_bytes(original_product)
                 self.args.manifest.write_bytes(original_manifest)
+                evidence.write_bytes(original_evidence)
                 github = FakeGitHub()
                 github.upload_hook = lambda gh, item, target=target, raw=raw: target.write_bytes(raw)
                 with self.assertRaises(ValueError):
@@ -409,6 +435,16 @@ class RCPublicationTests(unittest.TestCase):
 
     def test_changed_source_after_upload_keeps_draft(self):
         P.clean_source.side_effect = [None, None, ValueError("source became dirty")]
+        with self.assertRaises(ValueError):
+            P.promote(self.args, self.github)
+        self.assertTrue(self.github.release["draft"])
+        self.assertFalse(any(method == "PATCH" for method, _ in self.github.calls))
+
+    def test_report_changed_during_final_remote_readback_keeps_draft(self):
+        evidence = self.args.bundle / P.REMEDIATION_NAME
+        # Initial inventory has no release. The hook runs on final draft readback,
+        # after the first post-upload local check and before public promotion.
+        self.github.read_hook = lambda gh: evidence.write_bytes(b"changed after local check")
         with self.assertRaises(ValueError):
             P.promote(self.args, self.github)
         self.assertTrue(self.github.release["draft"])
@@ -489,8 +525,65 @@ class RCPublicationTests(unittest.TestCase):
                 self.assertFalse(self.github.calls)
         first["bytes"] = P.MAX_ASSET_BYTES
         self.write_manifest()
+        self.write_report_acceptance()
         with patch.object(P, "fixed_file"):
             self.assertEqual(P.local_plan(self.args)["uploads"][0]["bytes"], P.MAX_ASSET_BYTES)
+
+    def test_missing_report_evidence_blocks_every_action_before_github(self):
+        (self.args.bundle / P.REMEDIATION_NAME).unlink()
+        for action in ("verify", "upload-draft", "publish"):
+            with self.subTest(action=action):
+                self.args.action = action
+                with self.assertRaises(OSError):
+                    P.promote(self.args, self.github)
+                self.assertFalse(self.github.calls)
+
+    def test_report_pending_failed_incomplete_or_unbound_cannot_reach_github(self):
+        mutations = [lambda v: v.update(status="pending"), lambda v: v.update(status="failed"),
+                     lambda v: v.update(source_revision="2" * 40), lambda v: v.update(manifest_sha256="0" * 64),
+                     lambda v: v.update(report_sha256="0" * 64), lambda v: v.update(version="0.6.0-rc.1"),
+                     lambda v: v.update(repository="ZHanry/other"), lambda v: v.update(schema_version=True),
+                     lambda v: v.update(reviewer=" "), lambda v: v.update(reviewer="bad\nreviewer"),
+                     lambda v: v.update(reviewed_at="2099-01-01T00:00:00Z"),
+                     lambda v: v.update(reviewed_at="2026-10-20"),
+                     lambda v: v["cases"].pop(), lambda v: v["cases"][0].update(id="unknown"),
+                     lambda v: v["cases"][0].update(status="pending"),
+                     lambda v: v["cases"][0].update(status="failed"),
+                     lambda v: v["cases"][0].update(evidence=[]),
+                     lambda v: v["cases"][0].update(evidence=["evidence/missing.txt"]),
+                     lambda v: v["cases"].__setitem__(0, copy.deepcopy(v["cases"][1])),
+                     lambda v: v["evidence"][0].update(sha256="0" * 64),
+                     lambda v: v["evidence"][0].update(bytes=True),
+                     lambda v: v["evidence"][0].update(path="../outside.txt"),
+                     lambda v: v.update(evidence=[]), lambda v: v.update(extra=True)]
+        for index, mutate in enumerate(mutations):
+            with self.subTest(index=index):
+                self.write_report_acceptance(mutate)
+                with self.assertRaises(ValueError):
+                    P.promote(self.args, self.github)
+                self.assertFalse(self.github.calls)
+
+    def test_evidence_archive_rejects_unlisted_duplicate_traversal_and_links(self):
+        link = zipfile.ZipInfo("evidence/link")
+        link.create_system, link.external_attr = 3, 0o120777 << 16
+        entries = [("evidence/unlisted.txt", b"extra"), ("EVIDENCE/FIXTURE.TXT", b"collision"),
+                   ("../outside.txt", b"traversal"), ("evidence/dir/", b"directory"),
+                   (link, b"fixture.txt")]
+        for entry in entries:
+            with self.subTest(entry=entry[0]):
+                self.write_report_acceptance(entries=[entry])
+                with self.assertRaises(ValueError):
+                    P.promote(self.args, self.github)
+                self.assertFalse(self.github.calls)
+
+    def test_compressed_oversize_or_invalid_evidence_cannot_reach_github(self):
+        self.write_report_acceptance(entries=[("evidence/large.bin", b"x" * (16 * 1024**2 + 1))])
+        with self.assertRaises(ValueError):
+            P.promote(self.args, self.github)
+        (self.args.bundle / P.REMEDIATION_NAME).write_bytes(b"not a zip")
+        with self.assertRaises(ValueError):
+            P.promote(self.args, self.github)
+        self.assertFalse(self.github.calls)
 
     def test_symlinks_and_reparse_metadata_are_refused(self):
         first = self.manifest["artifacts"][0]

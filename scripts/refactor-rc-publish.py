@@ -9,7 +9,9 @@ This separate RC policy does not relax any formal or historical release gate.
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -21,6 +23,7 @@ import tomllib
 import urllib.error
 import urllib.parse
 import urllib.request
+import zipfile
 
 REPOSITORY = "ZHanry/NestLink"
 REPOSITORY_ID = "R_kgDOVNHMvg"
@@ -28,6 +31,15 @@ VERSION = "0.7.0-rc.1"
 TAG = "v" + VERSION
 MAX_ASSET_BYTES = 2 * 1024**3
 MANIFEST_NAME = "candidate-build-manifest.json"
+REMEDIATION_NAME = "remediation-acceptance.zip"
+REPORT_SHA256 = "c6cac00cef64627e023eabf78fa77750b2093e9e1138567ad3ecad112c49905c"
+REMEDIATION_CASES = frozenset((
+    "N01", "N02", "N03", "N04", "M01", "M02", "M03", "M04", "T01", "T02",
+    "R01", "U01", "U02", "U03", "Q01", "original-edge-100", "stratified-uu-200",
+    "first-frame-p95", "native-1080p60", "input-display-ab", "weak-network-adaptation",
+    "concurrent-file-input", "recovery-p95", "cross-day-24h-soak", "revocation-and-exit",
+))
+MAX_REMEDIATION_BYTES = 64 * 1024**2
 CURRENT_ROLES = frozenset((
     "windows-x64-setup", "windows-x64-privileged-setup", "linux-x64-desktop", "linux-arm64-desktop",
     "linux-x64-server", "linux-arm64-server", "android-arm64", "android-x86_64",
@@ -214,6 +226,87 @@ def clean_source(root, revision):
     require(value.get("workspace", {}).get("package", {}).get("version") == VERSION, "Clean source has the wrong public RC version")
 
 
+def remediation_acceptance(bundle, revision, manifest_sha256):
+    """Check reviewed evidence binding, not the truth of a human measurement.
+
+    Development bundles deliberately contain pending platform cases. Publishing
+    additionally requires this independent, fully reviewed report evidence pack.
+    It is never generated with passed statuses by the development producer.
+    """
+    path = artifact(bundle, REMEDIATION_NAME)
+    require(0 < regular(path).st_size <= MAX_REMEDIATION_BYTES, "Report evidence archive exceeds its byte budget")
+    with path.open("rb") as stream:
+        raw = stream.read(MAX_REMEDIATION_BYTES + 1)
+    require(0 < len(raw) <= MAX_REMEDIATION_BYTES, "Report evidence archive exceeds its byte budget")
+    try:
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries, folded, total = {}, set(), 0
+            require(1 < len(archive.infolist()) <= 257, "Unexpected report evidence entry count")
+            for item in archive.infolist():
+                portable(item.filename)
+                require(item.filename == item.orig_filename and item.filename.casefold() not in folded and not item.is_dir()
+                        and not item.flag_bits & 1
+                        and item.compress_type in (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED)
+                        and stat.S_IFMT(item.external_attr >> 16) in (0, stat.S_IFREG),
+                        "Unsafe or duplicate report evidence entry")
+                require(0 < item.file_size <= 16 * 1024**2, "Report evidence entry exceeds its byte budget")
+                total += item.file_size
+                require(total <= MAX_REMEDIATION_BYTES, "Expanded report evidence exceeds its byte budget")
+                folded.add(item.filename.casefold())
+                entries[item.filename] = item
+            metadata = "remediation-acceptance.json"
+            require(metadata in entries and entries[metadata].file_size <= 1024**2, "Missing or oversized report acceptance metadata")
+            value = json.loads(archive.read(metadata).decode("utf-8"), object_pairs_hook=unique_fields)
+            fields = {"schema_version", "kind", "repository", "version", "source_revision", "manifest_sha256",
+                      "report_sha256", "status", "reviewer", "reviewed_at", "cases", "evidence"}
+            require(isinstance(value, dict) and set(value) == fields, "Unexpected report acceptance fields")
+            require(type(value["schema_version"]) is int and value["schema_version"] == 1
+                    and value["kind"] == "nestlink-remediation-acceptance" and value["repository"] == REPOSITORY
+                    and value["version"] == VERSION and value["source_revision"] == revision
+                    and value["manifest_sha256"] == manifest_sha256 and value["report_sha256"] == REPORT_SHA256,
+                    "Report acceptance does not bind this report and candidate")
+            require(value["status"] == "passed", "All report acceptance cases must pass before RC publication")
+            require(isinstance(value["reviewer"], str) and 1 <= len(value["reviewer"].strip()) <= 200
+                    and all(ord(ch) >= 32 and ord(ch) != 127 for ch in value["reviewer"]), "Report evidence requires a named reviewer")
+            timestamp = value["reviewed_at"]
+            require(isinstance(timestamp, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", timestamp),
+                    "Report evidence requires a UTC review timestamp")
+            reviewed = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+            require(reviewed <= datetime.now(timezone.utc), "Report review timestamp is in the future")
+            evidence = value["evidence"]
+            require(isinstance(evidence, list) and 0 < len(evidence) <= 256, "Missing report evidence descriptors")
+            verified = set()
+            for item in evidence:
+                require(isinstance(item, dict) and set(item) == {"path", "bytes", "sha256"}, "Unexpected report evidence descriptor")
+                parts = portable(item["path"])
+                name = item["path"]
+                require(len(parts) >= 2 and parts[0] == "evidence" and name in entries and name not in verified,
+                        "Missing or duplicate report evidence file")
+                require(type(item["bytes"]) is int and item["bytes"] == entries[name].file_size
+                        and isinstance(item["sha256"], str) and re.fullmatch(r"[0-9a-f]{64}", item["sha256"]),
+                        "Invalid report evidence size or digest")
+                require(hashlib.sha256(archive.read(name)).hexdigest() == item["sha256"], "Report evidence digest differs")
+                verified.add(name)
+            require(set(entries) == verified | {metadata}, "Report archive contains undeclared evidence")
+            cases, seen, referenced = value["cases"], set(), set()
+            require(isinstance(cases, list) and len(cases) == len(REMEDIATION_CASES), "All 25 report cases are required")
+            for item in cases:
+                require(isinstance(item, dict) and set(item) == {"id", "status", "evidence"}
+                        and isinstance(item["id"], str) and item["id"] in REMEDIATION_CASES and item["id"] not in seen
+                        and item["status"] == "passed", "Every report case must be unique and passed")
+                refs = item["evidence"]
+                require(isinstance(refs, list) and 0 < len(refs) <= len(verified)
+                        and all(isinstance(ref, str) and ref in verified for ref in refs)
+                        and len(set(refs)) == len(refs), "Every report case requires verified evidence")
+                seen.add(item["id"])
+                referenced.update(refs)
+            require(seen == REMEDIATION_CASES and referenced == verified, "Report case/evidence coverage differs")
+    except (zipfile.BadZipFile, NotImplementedError, RuntimeError, EOFError) as error:
+        raise ValueError("Invalid report evidence archive") from error
+    return {"asset_name": REMEDIATION_NAME, "local_path": path, "role": "remediation-acceptance",
+            "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()}
+
+
 def release_body(revision, checksum):
     return ("NestLink " + VERSION + " 开发候选版。\n\n"
             "- Windows 媒体 socket 支持跟随系统、优先物理接口和指定接口；实际 ICE 与原生 QUIC 使用同一 socket 工厂。\n"
@@ -221,16 +314,17 @@ def release_body(revision, checksum):
             "- Windows 增加 DXGI 采集、GDI 降级恢复和按签名协商的 Media Foundation H.264 硬编硬解；VP8 保留兼容。\n"
             "- 原生可靠视频加入发送截止、缓冲上界和本地码率/帧率调节；增加进入桌面、操作中心和脱敏实测诊断。\n"
             "- 完整整改状态与验收边界：https://github.com/ZHanry/NestLink/blob/" + revision + "/docs/refactor/REMEDIATION-0.7.0-RC1.md\n\n"
-            "范围：浏览器仍为 VP8；当前媒体仍有 CPU 像素转换和上传。GPU 零拷贝、H.265、4:4:4/HDR、视频 datagram 尚未实现；1080p60、原 HL↔外部 Edge 百次直连、UU 配对 A/B 和 24 小时长稳尚未完成资格验收。本 RC 不宣称全部报告项目已通过。\n\n"
+            "报告验收：15 个研发工作包与 10 项体验门槛的审阅凭据随 remediation-acceptance.zip 发布，并绑定本候选清单摘要。适用硬件、网络、原始样本与限制以包内证据为准；发布脚本只核验证据结构和绑定，不代替实测或人工审阅。\n\n"
             "升级：请同时升级服务器、Web 和双方客户端。原生跨网络回退需管理员允许服务器转发及双方 relay；浏览器需可达 STUN，受限网络还需注册 TURN 节点并允许中继。升级不会自动放宽服务器策略，原生 WSS 不能替代浏览器 TURN。\n"
-            "数据库升级到 schema 24；升级前备份，回滚旧版本须恢复升级前备份。恢复登录不会恢复屏幕、输入或文件授权。\n"
+            "数据库升级到 schema 24；升级前备份。schema 24 获准业务后须前向修复，禁止恢复旧授权数据库快照。恢复登录不会恢复屏幕、输入或文件授权。\n"
             "部署与排障：https://github.com/ZHanry/NestLink/blob/" + revision + "/docs/REMOTE-CONNECTION.md\n\n"
             "Source commit: " + revision + ". All 18 product artifacts are bound to this clean source commit.\n"
             "candidate-build-manifest.json SHA-256: " + checksum + ".\n\n"
             "Windows Authenticode, Linux update and OCI signing are not configured. Android uses a development signing key. "
-            "Production update eligibility: false. Full functional user acceptance: pending.\n"
-            "All 30 platform, signing, physical-device and real-network acceptance cases remain pending; "
-            "automated development checks do not complete those cases. Android support covers Android 11–16 (API 30–36).\n")
+            "Production update eligibility: false. Report remediation acceptance: passed with reviewed evidence.\n"
+            "The frozen development manifest retains its 30 pending platform, signing, physical-device and real-network cases; "
+            "the separate report evidence does not rewrite that historical checklist or claim formal signing. "
+            "Android support covers Android 11–16 (API 30–36).\n")
 
 
 def local_plan(args):
@@ -262,7 +356,7 @@ def local_plan(args):
             "All 30 agreed RC acceptance cases must remain explicit and pending")
     products = value["artifacts"]
     require(isinstance(products, list) and len(products) == len(CURRENT_ROLES), "RC must contain all 18 artifact roles")
-    uploads, roles, paths, names = [], set(), set(), {MANIFEST_NAME.casefold()}
+    uploads, roles, paths, names = [], set(), set(), {MANIFEST_NAME.casefold(), REMEDIATION_NAME.casefold()}
     for item in products:
         require(isinstance(item, dict) and set(item) == {"id", "role", "path", "bytes", "sha256", "source_revision"},
                 "Unexpected RC artifact fields")
@@ -286,6 +380,7 @@ def local_plan(args):
     checksum = hashlib.sha256(raw).hexdigest()
     uploads.append({"asset_name": MANIFEST_NAME, "local_path": manifest, "role": "candidate-build-manifest",
                     "bytes": len(raw), "sha256": checksum})
+    uploads.append(remediation_acceptance(bundle, revision, checksum))
     clean_source(source_root, revision)
     return {"source_root": source_root, "source_revision": revision, "manifest_sha256": checksum,
             "cohort_sha256": value["cohort_sha256"], "body": release_body(revision, checksum), "uploads": uploads}
@@ -296,6 +391,7 @@ def recheck_local(plan):
     for item in plan["uploads"]:
         absolute(item["local_path"])
         fixed_file(item["local_path"], item["bytes"], item["sha256"])
+    remediation_acceptance(plan["uploads"][-1]["local_path"].parent, plan["source_revision"], plan["manifest_sha256"])
 
 
 def verify_tag(github, revision):
@@ -406,6 +502,8 @@ def promote(args, github=None):
                    "cohort_sha256": plan["cohort_sha256"], "product_artifacts": len(CURRENT_ROLES),
                    "signing": SIGNING, "production_update_eligible": False, "user_full_functional_acceptance": "pending",
                    "pending_acceptance_cases": len(REQUIRED_CASES), "repository_deletion_performed": False,
+                   "report_remediation_acceptance": "passed", "report_acceptance_cases": len(REMEDIATION_CASES),
+                   "report_evidence_sha256": plan["uploads"][-1]["sha256"],
                    "branch_deletion_performed": False}
     if args.action == "verify":
         recheck_local(plan)
@@ -456,6 +554,7 @@ def promote(args, github=None):
     require(immutable_assets(final_assets) == immutable_assets(durable) and len(final_assets) == len(plan["uploads"]),
             "RC asset inventory changed during upload")
     if args.action == "publish" and current_release["draft"]:
+        recheck_local(plan)
         release = github.request("PATCH", base + "/releases/" + str(release_id),
                                  value={"draft": False, "prerelease": True, "make_latest": "false"})
         mutated = True
