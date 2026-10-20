@@ -6,6 +6,7 @@ use prost::Message;
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 fn video() -> NativeVideo {
     NativeVideo {
+        codec: 0,
         schema_version: 1,
         connection_generation: 9,
         layout_epoch: 7,

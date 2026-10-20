@@ -14,6 +14,7 @@ thiserror.workspace = true
 zeroize.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+nestlink-platform-network.workspace = true
 base64.workspace = true
 nestlink-identity.workspace = true
 nestlink-policy.workspace = true
@@ -21,6 +22,7 @@ nestlink-platform-clipboard.workspace = true
 nestlink-platform-security.workspace = true
 nestlink-remote.workspace = true
 nestlink-media-session.workspace = true
+nestlink-media-codec.workspace = true
 nestlink-session.workspace = true
 nestlink-sdk.workspace = true
 nestlink-transport-stream.workspace = true
@@ -31,7 +33,7 @@ tokio.workspace = true
 if-addrs.workspace = true
 reqwest.workspace = true
 nestlink-media-codec.workspace = true
-nestlink-server = { path = "../../apps/server", version = "=0.6.0-rc.1" }
+nestlink-server = { path = "../../apps/server", version = "=0.7.0-rc.1" }
 nestlink-storage.workspace = true
 nestlink-identity.workspace = true
 axum.workspace = true

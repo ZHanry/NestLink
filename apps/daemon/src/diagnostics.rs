@@ -22,6 +22,9 @@ pub fn browser_host_sink(directory: PathBuf) -> Arc<dyn Fn(BrowserHostDiagnostic
             "unix_ms": SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |time| time.as_millis() as u64),
             "stage": format!("{:?}", event.stage), "source": format!("{:?}", event.source),
             "elapsed_ms": event.elapsed_ms,
+            "request_sha256": event.request_sha256.iter().map(|byte| format!("{byte:02x}")).collect::<String>(),
+            "connection_generation": event.connection_generation,
+            "peer_timeline": event.timeline,
         }).to_string();
         while records.len() + line.len() + 1 > 65_536 {
             if let Some(end) = records.iter().position(|byte| *byte == b'\n') {

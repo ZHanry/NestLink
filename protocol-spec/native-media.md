@@ -17,17 +17,27 @@ connection generation; old packets cannot reset the current state.
 
 Video has an additional nonzero layout epoch. Layout and dimensions are frozen
 for the approved stream. A change requires a newly approved layout and fresh
-encoder/decoder state, beginning with a keyframe. Each payload is one complete,
-visible VP8 frame in 8-bit I420, with no hidden altref frame or scaling.
-The keyframe flag and dimensions must agree with the VP8 uncompressed header.
+encoder/decoder state, beginning with a keyframe. Each payload is one complete access unit of the signed negotiated codec.
+Codec 0 is visible VP8 in 8-bit I420, with no hidden altref or scaling; its
+keyframe flag and dimensions agree with the VP8 uncompressed header. Codec 1
+requires `h264-baseline-v1` on both enrolled devices and in the signed permit.
+It is bounded Annex B H.264 Baseline, progressive 8-bit 4:2:0, P/I-only.
+SPS/PPS, slice references, first IDR, level, reference count and visible coded
+geometry are validated before Media Foundation decoding. Odd visible desktop
+dimensions use a coded surface rounded up by at most one pixel per axis, with
+replicated edges; the decoded output is cropped to the approved dimensions.
+A coded surface must independently fit the raw frame budget.
 The complete protobuf envelope, including all metadata, fits within 8 MiB.
 Dimensions are at most 8192 per axis and decoded packed BGRA fits within 64 MiB.
 PTS uses a 90 kHz clock; the codec's internal fixed frame clock is not exposed.
 
 The initial native reliable transport keeps at most one queued encoded video
 packet per direction, in addition to the frame currently being transferred.
-When the queue is full the producer waits. It never replaces or expires a
-reference frame. The source may replace raw frames before encoding. Receivers
+When the queue is full the producer waits. It never skips a reference and then sends its dependent deltas. Outgoing
+reliable writes have a 500ms deadline including queue time. Expired or partly
+written video terminates the whole generation with TransportLost; the stream
+is never reused after a cancelled partial frame. QUIC buffering is bounded to
+512KiB and input/feedback stream priority is preserved. The source may replace raw frames before encoding. Receivers
 must decode every accepted reference packet in sequence, even when presentation
 of an old decoded image is skipped. A sequence gap or decode error requires a
 fresh decoder and a keyframe before presentation resumes. Datagram packet loss,

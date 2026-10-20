@@ -765,6 +765,21 @@ impl Sdk {
         {
             return Err(SdkError::Trust);
         }
+        let version: Vec<u32> = self
+            .health
+            .version
+            .split(['.', '-'])
+            .take(2)
+            .filter_map(|v| v.parse().ok())
+            .collect();
+        let protocol_features = if version.as_slice() >= [0, 7].as_slice() {
+            vec![
+                nestlink_protocol::ice::TRICKLE_CAPABILITY.into(),
+                nestlink_protocol::ice::SETUP_CAPABILITY.into(),
+            ]
+        } else {
+            Vec::new()
+        };
         let proof = DeviceActionClaims {
             schema_version: SCHEMA_VERSION,
             action: DeviceAction::PrepareBrowserHost as i32,
@@ -776,7 +791,11 @@ impl Sdk {
             challenge: URL_SAFE_NO_PAD
                 .decode(&view.nonce)
                 .map_err(|_| SdkError::Invalid)?,
-            payload_sha256: digest(&view.connection_generation.to_be_bytes()).to_vec(),
+            payload_sha256: digest(&nestlink_protocol::ice::readiness_payload(
+                view.connection_generation,
+                &protocol_features,
+            )?)
+            .to_vec(),
             expires_at_unix_ms: view.expires_at_unix_ms,
         };
         let response: nestlink_protocol::api::BrowserHostReadiness = self
@@ -784,6 +803,7 @@ impl Sdk {
                 Method::POST,
                 &format!("{}/browser-host-ready", resource("remote", &view.id)?),
                 Some(&nestlink_protocol::api::BrowserHostReadinessSubmission {
+                    protocol_features,
                     signature: URL_SAFE_NO_PAD.encode(local.identity.sign_action(&proof)?),
                 }),
             )
@@ -900,13 +920,18 @@ impl Sdk {
         capabilities: Vec<String>,
         path_mode: String,
     ) -> Result<(), SdkError> {
-        let challenge: EnrollmentChallenge = self
-            .required(Method::POST, "/devices/challenge", None::<&()>)
-            .await?;
-        if challenge.deployment_id != self.trust.deployment_id
-            || challenge.security_epoch != self.health.security_epoch
+        #[cfg(windows)]
+        let mut capabilities = capabilities;
+        #[cfg(windows)]
+        if platform == "windows"
+            && tokio::task::spawn_blocking(nestlink_media_codec::h264_hardware_available)
+                .await
+                .unwrap_or(false)
+            && !capabilities
+                .iter()
+                .any(|value| value == nestlink_protocol::media::H264_CAPABILITY)
         {
-            return Err(SdkError::Trust);
+            capabilities.push(nestlink_protocol::media::H264_CAPABILITY.into());
         }
         let descriptor = DeviceDescriptor {
             id: installation.device_id.clone(),
@@ -916,6 +941,91 @@ impl Sdk {
             path_mode,
             public_key: URL_SAFE_NO_PAD.encode(installation.identity.public_key()),
         };
+        self.enroll_descriptor(installation, descriptor, "/devices")
+            .await
+    }
+
+    pub async fn refresh_browser_features(
+        &self,
+        installation: &DeviceIdentity,
+        mut descriptor: DeviceDescriptor,
+    ) -> Result<(), SdkError> {
+        if descriptor.id != installation.device_id
+            || descriptor.platform != "web"
+            || descriptor.public_key != URL_SAFE_NO_PAD.encode(installation.identity.public_key())
+        {
+            return Err(SdkError::Invalid);
+        }
+        for feature in [
+            nestlink_protocol::ice::SETUP_CAPABILITY,
+            nestlink_protocol::ice::TRICKLE_CAPABILITY,
+        ] {
+            if !descriptor.capabilities.iter().any(|value| value == feature) {
+                descriptor.capabilities.push(feature.into());
+            }
+        }
+        let path = format!("{}/features", resource("devices", &installation.device_id)?);
+        self.enroll_descriptor(installation, descriptor, &path)
+            .await
+    }
+
+    /// Add only the probed media feature to an existing Windows signing key.
+    /// The server verifies the unchanged identity, roles and descriptor fields.
+    pub async fn refresh_native_media_features(
+        &self,
+        installation: &DeviceIdentity,
+        mut descriptor: DeviceDescriptor,
+    ) -> Result<bool, SdkError> {
+        if self
+            .health
+            .version
+            .split(['.', '-'])
+            .take(2)
+            .filter_map(|value| value.parse::<u32>().ok())
+            .collect::<Vec<_>>()
+            .as_slice()
+            < [0, 7].as_slice()
+        {
+            return Ok(false);
+        }
+        #[cfg(windows)]
+        if descriptor.platform == "windows"
+            && descriptor.id == installation.device_id
+            && !descriptor
+                .capabilities
+                .iter()
+                .any(|value| value == nestlink_protocol::media::H264_CAPABILITY)
+            && tokio::task::spawn_blocking(nestlink_media_codec::h264_hardware_available)
+                .await
+                .unwrap_or(false)
+        {
+            descriptor
+                .capabilities
+                .push(nestlink_protocol::media::H264_CAPABILITY.into());
+            let path = format!("{}/features", resource("devices", &installation.device_id)?);
+            self.enroll_descriptor(installation, descriptor, &path)
+                .await?;
+            return Ok(true);
+        }
+        #[cfg(not(windows))]
+        let _ = (installation, &mut descriptor);
+        Ok(false)
+    }
+
+    async fn enroll_descriptor(
+        &self,
+        installation: &DeviceIdentity,
+        descriptor: DeviceDescriptor,
+        path: &str,
+    ) -> Result<(), SdkError> {
+        let challenge: EnrollmentChallenge = self
+            .required(Method::POST, "/devices/challenge", None::<&()>)
+            .await?;
+        if challenge.deployment_id != self.trust.deployment_id
+            || challenge.security_epoch != self.health.security_epoch
+        {
+            return Err(SdkError::Trust);
+        }
         let claims = DeviceActionClaims {
             schema_version: SCHEMA_VERSION,
             action: DeviceAction::Register as i32,
@@ -935,7 +1045,7 @@ impl Sdk {
             device: descriptor,
             signature: URL_SAFE_NO_PAD.encode(installation.identity.sign_action(&claims)?),
         };
-        self.call::<_, serde_json::Value>(Method::POST, "/devices", Some(&body), true)
+        self.call::<_, serde_json::Value>(Method::POST, path, Some(&body), true)
             .await
             .map(|_| ())
     }
@@ -962,7 +1072,12 @@ impl Sdk {
             name,
             platform: "web".into(),
             public_key: URL_SAFE_NO_PAD.encode(installation.identity.public_key()),
-            capabilities: vec!["controller".into(), "vp8".into()],
+            capabilities: vec![
+                "controller".into(),
+                "vp8".into(),
+                nestlink_protocol::ice::TRICKLE_CAPABILITY.into(),
+                nestlink_protocol::ice::SETUP_CAPABILITY.into(),
+            ],
             path_mode,
         };
         let claims = DeviceActionClaims {

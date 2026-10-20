@@ -143,6 +143,79 @@ impl Store {
         tx.commit()?;
         Ok(())
     }
+    /// Upgrade allowed browser protocol / Windows media features on a saved key,
+    /// changing its role, extending its lifetime, or reviving a revoked device.
+    pub fn refresh_browser_features(
+        &mut self,
+        actor: &Principal,
+        id: &str,
+        submission: DeviceRegistration,
+        now: u64,
+    ) -> Result<(), StorageError> {
+        validate_descriptor(&submission.device)?;
+        let tx = self.connection.unchecked_transaction()?;
+        self.validate_management_session(actor, now)?;
+        let current = self.device_record_at(id, now)?;
+        let entry = self
+            .devices_at(actor, now)?
+            .into_iter()
+            .find(|entry| entry.device.id == id)
+            .ok_or(StorageError::Forbidden)?;
+        let old = &entry.device;
+        let new = &submission.device;
+        if current.account != actor.account_id
+            || new.id != id
+            || !matches!(old.platform.as_str(), "web" | "windows")
+            || new.platform != old.platform
+            || new.name != old.name
+            || new.public_key != old.public_key
+            || new.path_mode != old.path_mode
+            || old
+                .capabilities
+                .iter()
+                .any(|value| !new.capabilities.contains(value))
+            || new.capabilities.iter().any(|value| {
+                let allowed_addition = match old.platform.as_str() {
+                    "web" => matches!(
+                        value.as_str(),
+                        nestlink_protocol::ice::SETUP_CAPABILITY
+                            | nestlink_protocol::ice::TRICKLE_CAPABILITY
+                    ),
+                    "windows" => value == nestlink_protocol::media::H264_CAPABILITY,
+                    _ => false,
+                };
+                !old.capabilities.contains(value) && !allowed_addition
+            })
+        {
+            return Err(StorageError::Forbidden);
+        }
+        let transcript = self.registration_transcript(actor, &submission, now)?;
+        verify_device_action(
+            &transcript,
+            &current.public_key,
+            &decode_signature(&submission.signature)?,
+        )?;
+        if tx.execute("UPDATE enrollment_challenges SET consumed=1 WHERE id=?1 AND account_id=?2 AND expires>?3 AND consumed=0",
+            params![submission.challenge_id, actor.account_id, now])? != 1 {
+            return Err(StorageError::Unauthorized);
+        }
+        tx.execute(
+            "UPDATE device_details SET capabilities_json=?1 WHERE device_id=?2",
+            params![serde_json::to_string(&new.capabilities)?, id],
+        )?;
+        audit(
+            &tx,
+            if old.platform == "web" {
+                "browser_protocol_features_updated"
+            } else {
+                "device_media_features_updated"
+            },
+            id,
+            auditing::device(actor, id),
+        )?;
+        tx.commit()?;
+        Ok(())
+    }
     pub fn browser_endpoint_transcript(
         &self,
         actor: &Principal,
@@ -740,7 +813,7 @@ impl Store {
             || sequence != view.lease_sequence + 1
             || last == 0
             || now < last
-            || now >= last + 15
+            || now.saturating_mul(1000) >= current.expires_at_unix_ms
         {
             return Err(StorageError::Forbidden);
         }
@@ -810,8 +883,90 @@ impl Store {
         let controller_expiry = self.device_expiration_ms(&view.controller_device_id)?;
         let host_expiry = self.device_expiration_ms(&view.host_device_id)?;
         let mut required_capabilities = vec!["vp8".to_owned()];
-        if view.permissions.contains(&(Permission::Audio as i32)) {
+        if !self.is_browser_controller(&view.controller_device_id)?
+            && c.capabilities
+                .iter()
+                .any(|value| value == nestlink_protocol::media::H264_CAPABILITY)
+            && h.capabilities
+                .iter()
+                .any(|value| value == nestlink_protocol::media::H264_CAPABILITY)
+        {
+            required_capabilities.push(nestlink_protocol::media::H264_CAPABILITY.into());
+        }
+        if self.is_browser_controller(&view.controller_device_id)? {
+            let features: Option<String> = self.connection.query_row(
+                "SELECT protocol_features FROM browser_host_readiness WHERE request_id=?1 AND connection_generation=?2 AND ready_until>?3",
+                params![id, view.connection_generation, now], |row| row.get(0),
+            ).optional()?;
+            let features: Vec<String> = features
+                .map(|json| serde_json::from_str(&json))
+                .transpose()?
+                .unwrap_or_default();
+            for feature in [
+                nestlink_protocol::ice::TRICKLE_CAPABILITY,
+                nestlink_protocol::ice::SETUP_CAPABILITY,
+            ] {
+                // TURN binding continues to use its complete-SDP profile until
+                // cumulative candidate binding has a separate qualification.
+                if feature == nestlink_protocol::ice::TRICKLE_CAPABILITY
+                    && view.paths != [nestlink_protocol::Path::Direct as i32]
+                {
+                    continue;
+                }
+                if features.iter().any(|value| value == feature)
+                    && c.capabilities.iter().any(|value| value == feature)
+                {
+                    required_capabilities.push(feature.into());
+                }
+            }
+        }
+        if sequence > 1 {
+            let previous: String = self.connection.query_row(
+                "SELECT last_permit_json FROM remote_requests WHERE id=?1",
+                [id],
+                |row| row.get(0),
+            )?;
+            required_capabilities =
+                serde_json::from_str::<PermitClaims>(&previous)?.required_capabilities;
+        }
+        let setup = sequence == 1
+            && required_capabilities
+                .iter()
+                .any(|value| value == nestlink_protocol::ice::SETUP_CAPABILITY);
+        let lifetime = if setup {
+            nestlink_protocol::ice::SETUP_BUDGET_MS
+        } else {
+            SESSION_LEASE_MS
+        };
+        let request_deadline = if sequence == 1 {
+            view.expires_at_unix_ms
+        } else {
+            u64::MAX
+        };
+        if view.permissions.contains(&(Permission::Audio as i32))
+            && !required_capabilities.iter().any(|value| value == "opus")
+        {
             required_capabilities.push("opus".to_owned());
+        }
+        let issued_at_unix_ms = now.saturating_mul(1000);
+        let expires_at_unix_ms = issued_at_unix_ms
+            .saturating_add(lifetime)
+            .min(request_deadline)
+            .min(self.trust_expiration(id, now)?.unwrap_or(u64::MAX))
+            .min(
+                self.remote_password_expiration(id, now)?
+                    .unwrap_or(u64::MAX),
+            )
+            .min(controller_expiry.unwrap_or(u64::MAX))
+            .min(host_expiry.unwrap_or(u64::MAX));
+        // A partial setup window is not a fresh connection budget. Reject it
+        // before consuming lease sequence 1, keeping every original deadline.
+        if setup && expires_at_unix_ms.saturating_sub(issued_at_unix_ms) < lifetime {
+            return Err(nestlink_protocol::ContractError::new(
+                nestlink_protocol::ErrorCode::SetupBudgetExhausted,
+                "authorization cannot cover the complete setup window",
+            )
+            .into());
         }
         let claims = PermitClaims {
             schema_version: SCHEMA_VERSION,
@@ -829,15 +984,8 @@ impl Store {
             policy_revision: view.policy_revision,
             connection_generation: view.connection_generation,
             lease_sequence: sequence,
-            issued_at_unix_ms: now * 1000,
-            expires_at_unix_ms: (now * 1000 + SESSION_LEASE_MS)
-                .min(self.trust_expiration(id, now)?.unwrap_or(u64::MAX))
-                .min(
-                    self.remote_password_expiration(id, now)?
-                        .unwrap_or(u64::MAX),
-                )
-                .min(controller_expiry.unwrap_or(u64::MAX))
-                .min(host_expiry.unwrap_or(u64::MAX)),
+            issued_at_unix_ms,
+            expires_at_unix_ms,
             capability_sha256: capability,
             required_capabilities,
         };

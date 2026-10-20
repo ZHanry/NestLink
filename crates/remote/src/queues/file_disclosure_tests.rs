@@ -9,6 +9,35 @@ use prost::Message;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
+#[tokio::test]
+async fn expired_or_partially_written_video_ends_the_generation() -> Result {
+    let (mut peer, mut writer) = tokio::io::duplex(16);
+    let stale = Instant::now() - VIDEO_WRITE_AGE;
+    assert!(
+        matches!(write_media_bounded(&mut writer, Channel::Video, &[7; 80], stale)
+        .await, Err(error) if error.kind() == io::ErrorKind::TimedOut)
+    );
+    assert!(
+        tokio::time::timeout(
+            Duration::from_millis(10),
+            tokio::io::AsyncReadExt::read_u8(&mut peer)
+        )
+        .await
+        .is_err()
+    );
+    let (session, clock) = active()?;
+    let (_keep, stopped) = watch::channel(None);
+    let (read, write) = tokio::io::split(writer);
+    let mut runtime =
+        AuthorizedConnection::new(read, write, session, Path::Direct, clock, stopped)?
+            .into_channels();
+    runtime.send(Channel::Video, &[7; 80]).await?;
+    let report = tokio::time::timeout(Duration::from_secs(2), runtime.wait_stopped()).await??;
+    assert_eq!(report.reason, StopReason::TransportLost);
+    assert!(runtime.send(Channel::Video, &[8; 80]).await.is_err());
+    Ok(())
+}
+
 fn active() -> Result<(Session, RuntimeClock)> {
     let controller = InstallationIdentity::generate();
     let host = InstallationIdentity::generate();

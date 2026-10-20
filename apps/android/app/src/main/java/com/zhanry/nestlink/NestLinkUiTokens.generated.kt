@@ -14,15 +14,15 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
 
 internal object NestLinkUiTokens {
-    val lightPrimary = Color(0xFF7850B2)
+    val lightPrimary = Color(0xFF1467D5)
     val lightPrimaryActionText = Color(0xFFFFFFFF)
-    val darkPrimaryActionText = Color(0xFF21152F)
-    val lightCanvas = Color(0xFFF6F3FC)
-    val lightText = Color(0xFF2E2540)
-    val lightBorder = Color(0xFF8E7BA3)
+    val darkPrimaryActionText = Color(0xFF102A4C)
+    val lightCanvas = Color(0xFFF4F6F9)
+    val lightText = Color(0xFF172337)
+    val lightBorder = Color(0xFF8795A6)
     val lightDanger = Color(0xFFB42336)
-    val lightFocus = Color(0xFF684298)
-    val darkFocus = Color(0xFFD2B7F3)
+    val lightFocus = Color(0xFF0D56B4)
+    val darkFocus = Color(0xFFA9CAFF)
     val lightWarning = Color(0xFF966313)
     val darkWarning = Color(0xFFF0C875)
     val lightSuccess = Color(0xFF316B4A)
@@ -37,37 +37,37 @@ internal object NestLinkUiTokens {
     val lightColorScheme: ColorScheme = materialLightColorScheme(
         primary = lightPrimary,
         onPrimary = lightPrimaryActionText,
-        primaryContainer = Color(0xFFEEE8F8),
-        onPrimaryContainer = Color(0xFF684298),
-        secondary = Color(0xFF684298),
+        primaryContainer = Color(0xFFEBEFF5),
+        onPrimaryContainer = Color(0xFF0D56B4),
+        secondary = Color(0xFF0D56B4),
         onSecondary = Color.White,
         background = lightCanvas,
         onBackground = lightText,
         surface = Color(0xFFFFFFFF),
         onSurface = lightText,
-        surfaceVariant = Color(0xFFEEE8F8),
-        onSurfaceVariant = Color(0xFF6E617C),
+        surfaceVariant = Color(0xFFEBEFF5),
+        onSurfaceVariant = Color(0xFF516079),
         outline = lightBorder,
         error = lightDanger,
         onError = Color.White,
     )
 
     val darkColorScheme: ColorScheme = materialDarkColorScheme(
-        primary = Color(0xFFBC9BE9),
+        primary = Color(0xFF88B6FF),
         onPrimary = darkPrimaryActionText,
-        primaryContainer = Color(0xFF211A2C),
-        onPrimaryContainer = Color(0xFFD2B7F3),
-        secondary = Color(0xFFD2B7F3),
-        onSecondary = Color(0xFF191420),
-        background = Color(0xFF191420),
-        onBackground = Color(0xFFF4EFFB),
-        surface = Color(0xFF2A2236),
-        onSurface = Color(0xFFF4EFFB),
-        surfaceVariant = Color(0xFF211A2C),
-        onSurfaceVariant = Color(0xFFBDB0CE),
-        outline = Color(0xFF927DAA),
+        primaryContainer = Color(0xFF1C2737),
+        onPrimaryContainer = Color(0xFFA9CAFF),
+        secondary = Color(0xFFA9CAFF),
+        onSecondary = Color(0xFF151D29),
+        background = Color(0xFF151D29),
+        onBackground = Color(0xFFF0F5FC),
+        surface = Color(0xFF243247),
+        onSurface = Color(0xFFF0F5FC),
+        surfaceVariant = Color(0xFF1C2737),
+        onSurfaceVariant = Color(0xFFB6C4D8),
+        outline = Color(0xFF8295AE),
         error = Color(0xFFFFA8B4),
-        onError = Color(0xFF191420),
+        onError = Color(0xFF151D29),
     )
 
     val typography = Typography(

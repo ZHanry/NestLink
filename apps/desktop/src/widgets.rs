@@ -200,6 +200,14 @@ pub fn take_secret(value: &mut Zeroizing<String>) -> Secret {
 pub fn failure(error: &Failure, english: bool) -> String {
     if let Some(code) = error.code {
         let message = match code {
+            nestlink_protocol::ErrorCode::SetupBudgetExhausted => Some((
+                "授权剩余时间不足以完成连接准备，请重新申请访问。",
+                "Too little authorization time remains to prepare the connection. Request access again.",
+            )),
+            nestlink_protocol::ErrorCode::CodecUnsupported => Some((
+                "两端没有共同且可用的视频编码，请检查客户端版本和媒体后端。",
+                "The endpoints have no common available video codec. Check client versions and media backends.",
+            )),
             nestlink_protocol::ErrorCode::DirectUnavailable => Some((
                 "直连未成功。跨网络连接请让管理员启用服务器转发，并为双方设备和本次授权允许中继。",
                 "Direct connection failed. For cross-network access, enable server forwarding and allow relay for both devices and this session.",

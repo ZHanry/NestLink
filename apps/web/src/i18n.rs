@@ -146,6 +146,10 @@ fn api_error(code: nestlink_protocol::ErrorCode) -> &'static str {
             "授权已到期，请重新申请访问。",
             "Authorization expired. Request access again.",
         ),
+        ErrorCode::SetupBudgetExhausted => text(
+            "授权剩余时间不足以完成连接准备，请重新申请访问。",
+            "Too little authorization time remains to prepare the connection. Request access again.",
+        ),
         ErrorCode::CapacityExceeded => text(
             "已达到容量或流量上限，请稍后重试。",
             "A capacity or traffic limit was reached. Retry later.",

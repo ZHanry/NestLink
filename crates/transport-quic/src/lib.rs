@@ -22,6 +22,9 @@ fn transport_value() -> TransportConfig {
     value.max_concurrent_uni_streams(8_u8.into());
     value.stream_receive_window(2_097_152_u32.into());
     value.receive_window(16_777_216_u32.into());
+    // Bound application buffering so video backpressure reaches its deadline
+    // and adaptive producer. Input/feedback retain their higher stream priority.
+    value.send_window(512 * 1024);
     value.datagram_receive_buffer_size(Some(32 * QUIC_DATAGRAM_BYTES as usize));
     value.datagram_send_buffer_size(16 * QUIC_DATAGRAM_BYTES as usize);
     value.keep_alive_interval(Some(Duration::from_secs(3)));
@@ -93,20 +96,7 @@ pub fn discovery_endpoint(
 }
 
 fn bind_discovery_socket(address: SocketAddr) -> std::io::Result<std::net::UdpSocket> {
-    let domain = if address.is_ipv4() {
-        socket2::Domain::IPV4
-    } else {
-        socket2::Domain::IPV6
-    };
-    let socket = socket2::Socket::new(domain, socket2::Type::DGRAM, Some(socket2::Protocol::UDP))?;
-    if address.is_ipv6() {
-        // Each family has its own candidate/QUIC socket. Never permit an
-        // IPv4-mapped source to bypass IPv4 private-address policy on IPv6.
-        socket.set_only_v6(true)?;
-    }
-    socket.bind(&address.into())?;
-    socket.set_nonblocking(true)?;
-    Ok(socket.into())
+    nestlink_platform_network::path::NetworkPathManager::from_default()?.bind_udp(address)
 }
 
 #[cfg(test)]

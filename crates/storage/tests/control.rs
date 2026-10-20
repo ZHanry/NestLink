@@ -70,6 +70,94 @@ fn enroll_browser(
     identity: &InstallationIdentity,
     now: u64,
 ) -> Result<nestlink_protocol::api::BrowserEndpointLease> {
+    enroll_browser_with_features(s, p, identity, now, &[])
+}
+
+#[test]
+fn native_media_upgrade_is_same_key_additive_and_cannot_revive_revoked_devices() -> Result {
+    let (mut store, _, _, actor, _) = fixture()?;
+    let identity = InstallationIdentity::generate();
+    let id = enroll(&mut store, &actor, &identity, "native media")?;
+    let original = store
+        .devices_at(&actor, 1001)?
+        .into_iter()
+        .find(|entry| entry.device.id == id)
+        .ok_or("missing device")?
+        .device;
+    let mut upgraded = original.clone();
+    upgraded
+        .capabilities
+        .push(nestlink_protocol::media::H264_CAPABILITY.into());
+    let challenge = store.enrollment_challenge(&actor, 1001)?;
+    let mut submission = DeviceRegistration {
+        challenge_id: challenge.id,
+        device: upgraded.clone(),
+        signature: String::new(),
+    };
+    submission.signature = URL_SAFE_NO_PAD.encode(
+        identity.sign_action(&store.registration_transcript(&actor, &submission, 1001)?)?,
+    );
+    let mut role_change = submission.clone();
+    role_change
+        .device
+        .capabilities
+        .push("setup-budget-v1".into());
+    role_change.signature = URL_SAFE_NO_PAD.encode(
+        identity.sign_action(&store.registration_transcript(&actor, &role_change, 1001)?)?,
+    );
+    assert!(
+        store
+            .refresh_browser_features(&actor, &id, role_change, 1001)
+            .is_err()
+    );
+    let mut wrong_key = submission.clone();
+    wrong_key.signature = URL_SAFE_NO_PAD.encode(
+        InstallationIdentity::generate()
+            .sign_action(&store.registration_transcript(&actor, &wrong_key, 1001)?)?,
+    );
+    assert!(
+        store
+            .refresh_browser_features(&actor, &id, wrong_key, 1001)
+            .is_err()
+    );
+    store.refresh_browser_features(&actor, &id, submission.clone(), 1001)?;
+    assert!(
+        store
+            .refresh_browser_features(&actor, &id, submission, 1001)
+            .is_err()
+    );
+    let saved = store
+        .devices_at(&actor, 1001)?
+        .into_iter()
+        .find(|entry| entry.device.id == id)
+        .ok_or("missing upgraded device")?
+        .device;
+    assert_eq!(saved.public_key, original.public_key);
+    assert_eq!(saved.capabilities, upgraded.capabilities);
+    let challenge = store.enrollment_challenge(&actor, 1002)?;
+    let mut submission = DeviceRegistration {
+        challenge_id: challenge.id,
+        device: upgraded,
+        signature: String::new(),
+    };
+    submission.signature = URL_SAFE_NO_PAD.encode(
+        identity.sign_action(&store.registration_transcript(&actor, &submission, 1002)?)?,
+    );
+    store.revoke_device_as(&actor, &random_id(), &id, 1002)?;
+    assert!(
+        store
+            .refresh_browser_features(&actor, &id, submission, 1002)
+            .is_err()
+    );
+    Ok(())
+}
+fn enroll_browser_with_features(
+    s: &mut Store,
+    p: &Principal,
+    identity: &InstallationIdentity,
+    now: u64,
+    features: &[&str],
+) -> Result<nestlink_protocol::api::BrowserEndpointLease> {
     let challenge = s.enrollment_challenge(p, now)?;
     let mut registration = BrowserEndpointRegistration {
         challenge_id: challenge.id,
@@ -78,7 +166,11 @@ fn enroll_browser(
             name: "browser controller".into(),
             platform: "web".into(),
             public_key: URL_SAFE_NO_PAD.encode(identity.public_key()),
-            capabilities: vec!["controller".into(), "vp8".into()],
+            capabilities: ["controller", "vp8"]
+                .into_iter()
+                .chain(features.iter().copied())
+                .map(str::to_owned)
+                .collect(),
             path_mode: "direct_only".into(),
         },
         signature: String::new(),
@@ -255,6 +347,7 @@ fn browser_endpoint_is_controller_only_and_server_expiry_bounds_permits() -> Res
         &member,
         &view.id,
         nestlink_protocol::api::BrowserHostReadinessSubmission {
+            protocol_features: Vec::new(),
             signature: URL_SAFE_NO_PAD.encode(host.sign_action(&proof)?),
         },
         2599,
@@ -654,6 +747,7 @@ fn signal_possession_generation_paths_and_live_authorization_are_enforced() -> R
     )?;
     let permit = s.initial_permit(&admin, &view.id, 1002)?;
     let payload = SignalPayload {
+        ice: None,
         connection_generation: 1,
         lease_sequence: 1,
         network_generation: 1,
@@ -707,6 +801,7 @@ fn signal_possession_generation_paths_and_live_authorization_are_enforced() -> R
     );
     let offer_sequence = 3;
     let offer = SignalPayload {
+        ice: None,
         connection_generation: 1,
         lease_sequence: 1,
         network_generation: 3,
@@ -724,6 +819,7 @@ fn signal_possession_generation_paths_and_live_authorization_are_enforced() -> R
     assert!(s.ready_native_remote(&member, &h, 1006)?.is_empty());
     let sign_answer = |sequence: u64, in_reply_to_sequence: u64| -> Result<SignalSubmission> {
         let payload = SignalPayload {
+            ice: None,
             connection_generation: 1,
             lease_sequence: 1,
             network_generation: 1,
@@ -750,6 +846,7 @@ fn signal_possession_generation_paths_and_live_authorization_are_enforced() -> R
     );
     s.submit_signal(&member, &view.id, sign_answer(1, offer_sequence)?, 1007)?;
     let newer_offer = SignalPayload {
+        ice: None,
         connection_generation: 1,
         lease_sequence: 1,
         network_generation: 4,

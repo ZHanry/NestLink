@@ -41,7 +41,7 @@ class CandidateTests(unittest.TestCase):
                       "product": "NestLink", "repository": P.REPOSITORY,
                       "configuration_sha256": P.digest(ROOT / "config/candidate-producer.json"),
                       "source_revision": SOURCE, "sequence": 1, "run_id": 123, "run_attempt": 2,
-                      "source_epoch": 1700000000, "android_version_code": 600001,
+                      "source_epoch": 1700000000, "android_version_code": 700001,
                       "android_application_id": "com.zhanry.nestlink.candidate", "android_version_name": P.VERSION,
                       "android_api_range": [30, 36], "oci_base": "ubuntu:24.04@sha256:" + P.digest(self.cohort_path.parent / "oci-base-index.json"),
                       "signing": P.SIGNING, "production_update_eligible": False,
@@ -178,7 +178,7 @@ class CandidateTests(unittest.TestCase):
     def test_new_rc_source_version_is_unified_and_protocol_namespace_is_independent(self):
         source = self.root / "source-fixture"
         source.mkdir()
-        (source / "Cargo.toml").write_text('[workspace.package]\nversion="0.6.0-rc.1"\n[workspace.dependencies]\nnestlink-fixture={path="crates/fixture",version="=0.6.0-rc.1"}\n', encoding="utf-8")
+        (source / "Cargo.toml").write_text('[workspace.package]\nversion="0.7.0-rc.1"\n[workspace.dependencies]\nnestlink-fixture={path="crates/fixture",version="=0.7.0-rc.1"}\n', encoding="utf-8")
         self.write(source / "compatibility.json", {"version": P.VERSION, "namespace": "v15"})
         self.write(source / "protocol-spec/contract.json", {"product_version": P.VERSION, "namespace": "v15"})
         metadata = source / "protocol-spec/openapi.json"
@@ -434,7 +434,7 @@ class CandidateTests(unittest.TestCase):
         output = self.root / "candidate.deb"
         P.deb_candidate(inputs, output, "desktop", "arm64", self.value)
         fields = P.TOOLS.run(["dpkg-deb", "--field", output, "Version", "Architecture", "Package"]).decode()
-        self.assertIn("Version: 0.6.0~rc.1", fields)
+        self.assertIn("Version: 0.7.0~rc.1", fields)
         self.assertIn("Architecture: arm64", fields)
         self.assertIn("Package: nestlink-rc-desktop", fields)
         extracted = self.root / "installed"
@@ -471,7 +471,7 @@ class CandidateTests(unittest.TestCase):
             self.assertEqual(artifact["source_revision"], SOURCE)
             P.verify_record(output, artifact, SOURCE)
         self.assertEqual(manifest["repository_node_id"], "R_kgDOVNHMvg")
-        self.assertEqual(manifest["version"], "0.6.0-rc.1")
+        self.assertEqual(manifest["version"], "0.7.0-rc.1")
         self.assertEqual(manifest["product"], "NestLink")
         self.assertEqual({path.name for path in output.iterdir()}, {"files", "candidate-build-manifest.json"})
         self.assertEqual(len(manifest["acceptance_cases"]), 30)

@@ -52,6 +52,8 @@ impl NativeNetworkSettingsStore for Store {
 
 fn settings() -> NativeNetworkSettings {
     NativeNetworkSettings {
+        media_route: Default::default(),
+        media_interface_index: None,
         use_deployment_stun: false,
         private_network_prefixes: vec!["192.168.12.0/24".into(), "fd12:3456::/32".into()],
     }

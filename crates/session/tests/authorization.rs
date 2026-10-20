@@ -322,6 +322,49 @@ fn prove(
 }
 
 #[test]
+fn setup_authorizes_only_proof_until_a_running_permit_is_accepted() {
+    let (signer, controller, host, mut claims, mut binding) = fixture();
+    let feature = nestlink_protocol::ice::SETUP_CAPABILITY.to_owned();
+    claims.required_capabilities.push(feature.clone());
+    binding.supported_capabilities.push(feature);
+    claims.expires_at_unix_ms = claims.issued_at_unix_ms + 30_000;
+    let mut session = activate(&signer, &claims, binding);
+    prove(&mut session, &controller, &host, 1000);
+    assert_eq!(session.state(), SessionState::Active);
+    for permission in [Permission::View, Permission::Input, Permission::FileRead] {
+        assert_eq!(
+            session
+                .authorize(permission, Path::Direct, 1100)
+                .unwrap_err()
+                .code,
+            ErrorCode::AuthRequired
+        );
+    }
+    let mut running = claims.clone();
+    running.lease_sequence = 2;
+    running.issued_at_unix_ms += 100;
+    // A setup feature on a later sequence must not extend running leases.
+    assert!(running.validate().is_err());
+    running.expires_at_unix_ms = running.issued_at_unix_ms + 15_000;
+    session
+        .renew(
+            verified(&signer, &running),
+            1100,
+            ClockSample {
+                monotonic_ms: 1100,
+                unix_ms: 1_000_100,
+            },
+        )
+        .unwrap();
+    session
+        .authorize(Permission::View, Path::Direct, 1101)
+        .unwrap();
+    session
+        .authorize(Permission::Input, Path::Direct, 1101)
+        .unwrap();
+}
+
+#[test]
 fn both_endpoint_keys_are_required_and_channel_permissions_stay_separate() {
     let (signer, controller, host, claims, binding) = fixture();
     let mut session = activate(&signer, &claims, binding);

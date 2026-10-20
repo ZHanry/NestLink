@@ -7,6 +7,8 @@ license.workspace = true
 
 [dependencies]
 tokio.workspace = true
+if-addrs.workspace = true
+socket2 = "=0.6.5"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.61.2", features = ["Win32_NetworkManagement_IpHelper", "Win32_NetworkManagement_Ndis", "Win32_Networking_WinSock", "Win32_System_SystemInformation", "Win32_System_WindowsProgramming"] }
@@ -16,6 +18,10 @@ libc = "0.2.190"
 
 [lints.rust]
 unsafe_code = "deny"
+
+[dev-dependencies]
+nestlink-traversal.workspace = true
+serde_json.workspace = true
 
 [lints.clippy]
 unwrap_used = "deny"

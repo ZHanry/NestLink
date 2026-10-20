@@ -12,7 +12,7 @@ use nestlink_app_core::{
     CoreHandle, DisplayDescriptor, Lifecycle, NativeDisplayState,
     NativeSessionBinding as SessionIdentity, NativeVideoBinding, NativeVideoError,
 };
-use nestlink_media_codec::{VideoConfig, Vp8Encoder};
+use nestlink_media_codec::{VideoCodec, VideoConfig, VideoEncoder, VideoQuality};
 use nestlink_remote::input::InputDevice;
 use nestlink_remote::video::{CaptureDevice, Display, RawFrame, VideoController};
 #[cfg(target_os = "linux")]
@@ -900,13 +900,15 @@ fn stream_capture<D: CaptureDevice>(
     stop: &watch::Receiver<bool>,
 ) -> (VideoController<D>, StreamExit) {
     let mut active: Option<NativeVideoBinding> = None;
-    let mut encoder: Option<Vp8Encoder> = None;
+    let mut encoder: Option<VideoEncoder> = None;
+    let mut pending_sources = std::collections::BTreeMap::new();
     let mut pixels = Zeroizing::new(Vec::new());
     let origin = Instant::now();
     let mut source_pts = std::collections::BTreeMap::<u32, u64>::new();
     let mut selected_since = origin;
     let mut first_deadline = origin + FIRST_FRAME_TIMEOUT;
     let mut next_frame = origin;
+    let mut quality = VideoQuality::new(FPS, BITRATE_KBPS, origin);
     loop {
         if *stop.borrow() || !is_current_session(core, identity) {
             return (controller, StreamExit::SessionEnded);
@@ -951,12 +953,26 @@ fn stream_capture<D: CaptureDevice>(
         };
         if active != Some(binding) {
             pixels.clear();
-            encoder = match Vp8Encoder::new(VideoConfig {
-                width: binding.width,
-                height: binding.height,
-                fps: FPS,
-                bitrate_kbps: BITRATE_KBPS,
-            }) {
+            pending_sources.clear();
+            let codec_kind = match core.native_video_codec(identity) {
+                Ok(codec) => codec,
+                Err(_) => return (controller, StreamExit::SessionEnded),
+            };
+            let target_fps = if codec_kind == VideoCodec::H264Baseline {
+                60
+            } else {
+                FPS
+            };
+            quality = VideoQuality::new(target_fps, BITRATE_KBPS, Instant::now());
+            encoder = match VideoEncoder::new(
+                codec_kind,
+                VideoConfig {
+                    width: binding.width,
+                    height: binding.height,
+                    fps: target_fps,
+                    bitrate_kbps: BITRATE_KBPS,
+                },
+            ) {
                 Ok(encoder) => Some(encoder),
                 Err(_) => return (controller, StreamExit::CaptureFailed),
             };
@@ -1004,10 +1020,24 @@ fn stream_capture<D: CaptureDevice>(
         let Some(encoder) = encoder.as_mut() else {
             return (controller, StreamExit::CaptureFailed);
         };
+        if pending_sources.len() >= 8 {
+            return (controller, StreamExit::CaptureFailed);
+        }
+        pending_sources.insert(pts, repeated);
+        let encoding_started = Instant::now();
         let encoded = match encoder.encode(&pixels, pts, keyframe || repeated) {
-            Ok(encoded) => encoded,
+            Ok(Some(encoded)) => encoded,
+            Ok(None) => {
+                thread::sleep(CAPTURE_TICK);
+                continue;
+            }
             Err(_) => return (controller, StreamExit::CaptureFailed),
         };
+        let Some(repeated) = pending_sources.remove(&encoded.pts_90khz) else {
+            return (controller, StreamExit::CaptureFailed);
+        };
+        let encoding_time = encoding_started.elapsed();
+        let enqueue_started = Instant::now();
         let sent = if repeated {
             runtime.block_on(core.send_native_video_recovery_frame(
                 identity,
@@ -1031,7 +1061,18 @@ fn stream_capture<D: CaptureDevice>(
         {
             return (controller, StreamExit::TransportFailed);
         }
-        next_frame += Duration::from_millis(1_000 / u64::from(FPS));
+        if let Some(kbps) =
+            quality.observe(Instant::now(), encoding_time, enqueue_started.elapsed())
+            && encoder.set_bitrate(kbps).is_err()
+        {
+            return (controller, StreamExit::CaptureFailed);
+        }
+        let fps = if encoder.hardware() {
+            quality.fps()
+        } else {
+            quality.fps().min(FPS)
+        };
+        next_frame += Duration::from_nanos(1_000_000_000 / u64::from(fps));
         let delay = next_frame.saturating_duration_since(Instant::now());
         if !delay.is_zero() {
             thread::sleep(delay);

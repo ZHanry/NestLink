@@ -39,6 +39,22 @@ fn main() -> io::Result<()> {
         bridge.static_crt(false);
     }
     bridge.compile("nestlink_codec_bridge");
+    if target == "windows" {
+        cc::Build::new()
+            .cpp(true)
+            .std("c++17")
+            .file("src/windows_mf.cpp")
+            .warnings(true)
+            .warnings_into_errors(true)
+            .static_crt(false)
+            .compile("nestlink_mf_bridge");
+        for library in [
+            "mfplat", "mf", "mfuuid", "ole32", "oleaut32", "strmiids", "d3d11", "dxgi",
+        ] {
+            println!("cargo:rustc-link-lib={library}");
+        }
+        println!("cargo:rerun-if-changed=src/windows_mf.cpp");
+    }
     println!("cargo:rustc-link-search=native={}", library.display());
     println!("cargo:rustc-link-lib=static=vpx");
     println!("cargo:rustc-link-lib=static=opus");

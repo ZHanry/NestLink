@@ -5,6 +5,7 @@ pub mod clipboard;
 pub mod file_recovery;
 pub mod file_roots;
 pub mod files;
+pub mod ice;
 pub mod input;
 pub use input::valid_scroll;
 pub mod media;
@@ -58,6 +59,13 @@ pub fn valid_id(value: &str) -> bool {
 }
 
 impl PermitClaims {
+    pub fn is_setup(&self) -> bool {
+        self.lease_sequence == 1
+            && self
+                .required_capabilities
+                .iter()
+                .any(|value| value == ice::SETUP_CAPABILITY)
+    }
     pub fn validate(&self) -> Result<(), ContractError> {
         let invalid = |reason| ContractError::new(ErrorCode::InvalidMessage, reason);
         if self.schema_version != SCHEMA_VERSION {
@@ -111,7 +119,17 @@ impl PermitClaims {
             .expires_at_unix_ms
             .checked_sub(self.issued_at_unix_ms)
             .ok_or_else(|| invalid("invalid lease interval"))?;
-        if lifetime == 0 || lifetime > SESSION_LEASE_MS {
+        let maximum = if self.lease_sequence == 1
+            && self
+                .required_capabilities
+                .iter()
+                .any(|capability| capability == ice::SETUP_CAPABILITY)
+        {
+            ice::SETUP_BUDGET_MS
+        } else {
+            SESSION_LEASE_MS
+        };
+        if lifetime == 0 || lifetime > maximum {
             return Err(invalid("lease lifetime out of bounds"));
         }
         if self.paths.is_empty()

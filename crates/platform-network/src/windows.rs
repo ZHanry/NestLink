@@ -8,6 +8,139 @@ use windows_sys::Win32::{
     Networking::WinSock::AF_UNSPEC,
     System::{SystemInformation::GetTickCount64, WindowsProgramming::QueryUnbiasedInterruptTime},
 };
+
+pub(super) fn path_interfaces() -> io::Result<Vec<super::path::NetworkInterface>> {
+    use std::collections::BTreeMap;
+    use windows_sys::Win32::Networking::WinSock::AF_INET;
+    let mut defaults = BTreeMap::<u32, u32>::new();
+    let mut table: *mut MIB_IPFORWARD_TABLE2 = std::ptr::null_mut();
+    // SAFETY: IP Helper allocates a bounded routing table; it is read before
+    // FreeMibTable and no pointer escapes. Route existence is evidence of a
+    // configured default, not a claim of Internet reachability.
+    let result = unsafe { GetIpForwardTable2(AF_UNSPEC, &mut table) };
+    if result != 0 {
+        return Err(io::Error::from_raw_os_error(result as i32));
+    }
+    if !table.is_null() {
+        unsafe {
+            let count = (*table).NumEntries as usize;
+            if count <= 65_536 {
+                for row in std::slice::from_raw_parts((*table).Table.as_ptr(), count) {
+                    if row.DestinationPrefix.PrefixLength == 0 && row.ValidLifetime != 0 {
+                        defaults
+                            .entry(row.InterfaceIndex)
+                            .and_modify(|value| *value = (*value).min(row.Metric))
+                            .or_insert(row.Metric);
+                    }
+                }
+            }
+            FreeMibTable(table.cast());
+        }
+    }
+    let mut interfaces = BTreeMap::new();
+    for address in if_addrs::get_if_addrs()? {
+        let Some(index) = address.index else {
+            continue;
+        };
+        let ip = address.ip();
+        if ip.is_unspecified() || ip.is_loopback() || ip.is_multicast() || address.is_link_local() {
+            continue;
+        }
+        let mut row = MIB_IF_ROW2 {
+            InterfaceIndex: index,
+            ..Default::default()
+        };
+        // SAFETY: initialized row with a kernel-provided interface index. The
+        // system copies data into the local ABI-sized row without retaining it.
+        let result = unsafe { GetIfEntry2(&mut row) };
+        if result != 0 {
+            continue;
+        }
+        let mut route = MIB_IPINTERFACE_ROW {
+            Family: AF_INET,
+            InterfaceIndex: index,
+            ..Default::default()
+        };
+        let metric = if unsafe { GetIpInterfaceEntry(&mut route) } == 0 {
+            route.Metric
+        } else {
+            u32::MAX
+        };
+        let interface = interfaces
+            .entry(index)
+            .or_insert_with(|| super::path::NetworkInterface {
+                index,
+                // SAFETY: NET_LUID's integral Value covers its complete union.
+                luid: unsafe { row.InterfaceLuid.Value },
+                name: address.name.clone(),
+                physical: row.InterfaceAndOperStatusFlags._bitfield & 1 != 0,
+                up: row.OperStatus == 1,
+                metric: metric.saturating_add(defaults.get(&index).copied().unwrap_or(0)),
+                default_route: defaults.contains_key(&index),
+                addresses: Vec::new(),
+            });
+        if !interface.addresses.contains(&ip) {
+            interface.addresses.push(ip);
+        }
+    }
+    Ok(interfaces.into_values().collect())
+}
+
+pub(super) fn bind_media_interface(
+    socket: &socket2::Socket,
+    index: u32,
+    ipv6: bool,
+) -> io::Result<()> {
+    use std::{mem::size_of, os::windows::io::AsRawSocket};
+    use windows_sys::Win32::Networking::WinSock::{
+        IP_UNICAST_IF, IPPROTO_IP, IPPROTO_IPV6, IPV6_UNICAST_IF, WSAGetLastError, getsockopt,
+        setsockopt,
+    };
+    let (level, option, value) = if ipv6 {
+        (IPPROTO_IPV6, IPV6_UNICAST_IF, index)
+    } else {
+        (IPPROTO_IP, IP_UNICAST_IF, index.to_be())
+    };
+    // SAFETY: documented DWORD option ABI; IPv4 uses network byte order, IPv6
+    // host order. The socket remains owned, live and unbound on this thread.
+    let result = unsafe {
+        setsockopt(
+            socket.as_raw_socket() as usize,
+            level,
+            option,
+            (&value as *const u32).cast(),
+            size_of::<u32>() as i32,
+        )
+    };
+    if result != 0 {
+        return Err(io::Error::from_raw_os_error(unsafe { WSAGetLastError() }));
+    }
+    let mut actual = 0u32;
+    let mut size = size_of::<u32>() as i32;
+    // SAFETY: initialized output and exact size; verify the option on the same
+    // socket subsequently retained for discovery, checks and media traffic.
+    let result = unsafe {
+        getsockopt(
+            socket.as_raw_socket() as usize,
+            level,
+            option,
+            (&mut actual as *mut u32).cast(),
+            &mut size,
+        )
+    };
+    if result != 0 {
+        return Err(io::Error::from_raw_os_error(unsafe { WSAGetLastError() }));
+    }
+    // Winsock accepts the IPv4 set value in network order but returns the
+    // interface index in host order from getsockopt (IPv6 uses host order for
+    // both). Verify the documented readback rather than comparing raw bytes.
+    if size != size_of::<u32>() as i32 || actual != index {
+        return Err(io::Error::other(format!(
+            "media interface option did not persist (index={index}, requested={value:#x}, actual={actual:#x}, bytes={size})"
+        )));
+    }
+    Ok(())
+}
 pub(super) struct Registration {
     handles: Vec<isize>,
     context: Option<Box<watch::Sender<NetworkState>>>,

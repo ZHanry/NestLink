@@ -1,19 +1,19 @@
-# NestLink 0.6.0 RC product design
+# NestLink 0.7.0 RC product design
 
-NestLink uses a light lavender workspace and the existing linked-N identity. Its main task is choosing a computer and establishing an explicitly authorized remote session. Gemini CLI supplied the layout prototype in `docs/design/0.4.0-desktop-prototype.html`; the native egui implementation retains real device, approval and session state.
+NestLink uses a light gray, white and blue workspace and the existing linked-N identity. Its main task is choosing a computer and establishing an explicitly authorized remote session. The historical layout prototype is recorded in `docs/design/0.4.0-desktop-prototype.html`; the native egui implementation retains real device, approval and session state.
 
 | Role | Color |
 | --- | --- |
-| Primary actions | `#7850B2` |
-| Selected text | `#684298` |
-| Navigation | `#EEE8F8` |
-| Canvas | `#F6F3FC` |
+| Primary actions | `#1467D5` |
+| Selected text | `#0D56B4` |
+| Navigation | `#EBEFF5` |
+| Canvas | `#F4F6F9` |
 | Content | `#FFFFFF` |
-| Text | `#2E2540` |
-| Muted text | `#746783` |
-| Border | `#DDD3EB` |
+| Text | `#172337` |
+| Muted text | `#516079` |
+| Border | `#8795A6` |
 
-`config/ui-tokens.json` defines colors, spacing and type metrics. Desktop reads it directly; generated Web CSS and Android Compose adapters share it. Dark mode uses purple-tinted surfaces. System UI fonts include Chinese fallback. Navigation uses one custom outline icon vocabulary. Names and actions align left; visible scrollbars keep dense settings usable.
+`config/ui-tokens.json` defines colors, spacing and type metrics. Desktop reads it directly; generated Web CSS and Android Compose adapters share it. Dark mode uses blue-gray surfaces. System UI fonts include Chinese fallback. Navigation uses one custom outline icon vocabulary. Names and actions align left; visible scrollbars keep dense settings usable.
 
 ```text
 [linked N] NestLink | Remote control                     account / window controls

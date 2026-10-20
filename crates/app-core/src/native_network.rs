@@ -13,13 +13,28 @@ pub use nestlink_platform_security::MetadataCommit as NativeNetworkCommit;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct NativeNetworkSettings {
+    #[serde(default)]
+    pub media_route: MediaRouteMode,
+    #[serde(default)]
+    pub media_interface_index: Option<u32>,
     pub use_deployment_stun: bool,
     pub private_network_prefixes: Vec<String>,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MediaRouteMode {
+    #[default]
+    System,
+    Physical,
+    Interface,
 }
 
 impl Default for NativeNetworkSettings {
     fn default() -> Self {
         Self {
+            media_route: MediaRouteMode::System,
+            media_interface_index: None,
             use_deployment_stun: true,
             private_network_prefixes: Vec::new(),
         }
@@ -48,6 +63,14 @@ impl NativeNetworkSettings {
     /// destinations need no exception; metadata, loopback, mapped IPv6 and
     /// link-local destinations remain forbidden by the SDK AddressPolicy.
     pub fn validate(&self) -> Result<(), NativeNetworkError> {
+        if !cfg!(windows) && self.media_route != MediaRouteMode::System {
+            return Err(NativeNetworkError::Unavailable);
+        }
+        if (self.media_route == MediaRouteMode::Interface) != self.media_interface_index.is_some()
+            || self.media_interface_index == Some(0)
+        {
+            return Err(NativeNetworkError::Invalid);
+        }
         if self.private_network_prefixes.len() > 32 {
             return Err(NativeNetworkError::Invalid);
         }
@@ -86,6 +109,23 @@ impl NativeNetworkSettings {
             }
         }
         Ok(())
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(crate) fn apply_route_policy(&self) -> Result<(), NativeNetworkError> {
+        use nestlink_platform_network::path::{RoutePolicy, set_default_policy};
+        let policy = match self.media_route {
+            MediaRouteMode::System => RoutePolicy::System,
+            MediaRouteMode::Physical => RoutePolicy::PreferPhysical,
+            MediaRouteMode::Interface => RoutePolicy::Interface(
+                self.media_interface_index
+                    .ok_or(NativeNetworkError::Invalid)?,
+            ),
+        };
+        if !cfg!(windows) && policy != RoutePolicy::System {
+            return Err(NativeNetworkError::Unavailable);
+        }
+        set_default_policy(policy).map_err(|_| NativeNetworkError::Unavailable)
     }
 }
 

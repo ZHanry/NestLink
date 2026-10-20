@@ -217,6 +217,25 @@ impl DesktopApp {
         snapshot: &Snapshot,
         local_id: Option<&str>,
     ) {
+        let entry_ready = snapshot.devices.data.as_deref().is_some_and(|devices| {
+            devices
+                .iter()
+                .any(|entry| Some(entry.device.id.as_str()) == local_id && !entry.revoked)
+        }) && !snapshot
+            .native_session
+            .data
+            .as_ref()
+            .is_some_and(|session| {
+                matches!(
+                    session.status,
+                    NativeSessionStatus::Establishing
+                        | NativeSessionStatus::Connected
+                        | NativeSessionStatus::Stopping
+                )
+            })
+            && !self.remote.flow.as_ref().is_some_and(|flow| flow.is_busy())
+            && snapshot.devices.loading.is_none()
+            && snapshot.devices.error.is_none();
         ui.horizontal(|ui| {
             ui.label(
                 egui::RichText::new(self.t("我的电脑", "Your computers"))
@@ -320,6 +339,19 @@ impl DesktopApp {
                                 ui.with_layout(
                                     egui::Layout::right_to_left(egui::Align::Center),
                                     |ui| {
+                                        if ui
+                                            .add_enabled(
+                                                entry_ready,
+                                                egui::Button::new(
+                                                    self.t("进入桌面", "Enter desktop"),
+                                                ),
+                                            )
+                                            .clicked()
+                                        {
+                                            self.remote.host_device_id =
+                                                Some(view.device.id.clone());
+                                            self.connect_remote_device(snapshot);
+                                        }
                                         if ui
                                             .selectable_label(
                                                 selected,
@@ -465,8 +497,7 @@ impl DesktopApp {
                     && snapshot.devices.loading.is_none()
                     && snapshot.devices.error.is_none();
                 ui.add_space(18.);
-                if widgets::primary_button(ui, self.t("连接设备", "Connect to device"), ready)
-                    .clicked()
+                if widgets::primary_button(ui, self.t("进入桌面", "Enter desktop"), ready).clicked()
                 {
                     self.connect_remote_device(snapshot);
                 }

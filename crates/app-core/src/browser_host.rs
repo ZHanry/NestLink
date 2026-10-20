@@ -243,6 +243,9 @@ pub enum BrowserHostDiagnosticSource {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct BrowserHostDiagnostic {
+    pub request_sha256: [u8; 32],
+    pub connection_generation: u64,
+    pub timeline: Option<nestlink_sdk::webrtc_host::WebRtcConnectionTimeline>,
     pub stage: BrowserHostDiagnosticStage,
     pub source: BrowserHostDiagnosticSource,
     pub elapsed_ms: u64,
@@ -310,6 +313,7 @@ pub async fn run_browser_host(
         ready: ready_sender,
     } = channels;
     let started = Instant::now();
+    let request_sha256 = nestlink_identity::digest(request_id.as_bytes());
     let mut ready = Some(ready_sender);
     let mut peer: Option<WebRtcHostPeer> = None;
     let mut stop_owner = None;
@@ -325,6 +329,9 @@ pub async fn run_browser_host(
         ensure_not_cancelled(&cancel)?;
         diagnostic_stage = BrowserHostDiagnosticStage::FetchHostPermit;
         config.report(BrowserHostDiagnostic {
+            request_sha256,
+            connection_generation: preparation_generation,
+            timeline: peer.as_ref().map(WebRtcHostPeer::connection_timeline),
             stage: diagnostic_stage,
             source: BrowserHostDiagnosticSource::Progress,
             elapsed_ms: elapsed_ms(started),
@@ -371,6 +378,9 @@ pub async fn run_browser_host(
         };
         diagnostic_stage = BrowserHostDiagnosticStage::PrepareCapture;
         config.report(BrowserHostDiagnostic {
+            request_sha256,
+            connection_generation: preparation_generation,
+            timeline: peer.as_ref().map(WebRtcHostPeer::connection_timeline),
             stage: diagnostic_stage,
             source: BrowserHostDiagnosticSource::Progress,
             elapsed_ms: elapsed_ms(started),
@@ -420,6 +430,9 @@ pub async fn run_browser_host(
         }
         diagnostic_stage = BrowserHostDiagnosticStage::AwaitDisplayApproval;
         config.report(BrowserHostDiagnostic {
+            request_sha256,
+            connection_generation: preparation_generation,
+            timeline: peer.as_ref().map(WebRtcHostPeer::connection_timeline),
             stage: diagnostic_stage,
             source: BrowserHostDiagnosticSource::Progress,
             elapsed_ms: elapsed_ms(started),
@@ -470,6 +483,9 @@ pub async fn run_browser_host(
             sdk.mark_browser_host_ready(&installation, &request).await?;
             diagnostic_stage = BrowserHostDiagnosticStage::FetchHostPermit;
             config.report(BrowserHostDiagnostic {
+                request_sha256,
+                connection_generation: preparation_generation,
+                timeline: peer.as_ref().map(WebRtcHostPeer::connection_timeline),
                 stage: diagnostic_stage,
                 source: BrowserHostDiagnosticSource::Progress,
                 elapsed_ms: elapsed_ms(started),
@@ -558,6 +574,9 @@ pub async fn run_browser_host(
         });
         diagnostic_stage = BrowserHostDiagnosticStage::PrepareData;
         config.report(BrowserHostDiagnostic {
+            request_sha256,
+            connection_generation: preparation_generation,
+            timeline: peer.as_ref().map(WebRtcHostPeer::connection_timeline),
             stage: diagnostic_stage,
             source: BrowserHostDiagnosticSource::Progress,
             elapsed_ms: elapsed_ms(started),
@@ -593,6 +612,9 @@ pub async fn run_browser_host(
         let binding = session_binding(&permit)?;
         diagnostic_stage = BrowserHostDiagnosticStage::ActivateSession;
         config.report(BrowserHostDiagnostic {
+            request_sha256,
+            connection_generation: preparation_generation,
+            timeline: peer.as_ref().map(WebRtcHostPeer::connection_timeline),
             stage: diagnostic_stage,
             source: BrowserHostDiagnosticSource::Progress,
             elapsed_ms: elapsed_ms(started),
@@ -622,6 +644,9 @@ pub async fn run_browser_host(
         };
         diagnostic_stage = BrowserHostDiagnosticStage::CreatePeer;
         config.report(BrowserHostDiagnostic {
+            request_sha256,
+            connection_generation: preparation_generation,
+            timeline: peer.as_ref().map(WebRtcHostPeer::connection_timeline),
             stage: diagnostic_stage,
             source: BrowserHostDiagnosticSource::Progress,
             elapsed_ms: elapsed_ms(started),
@@ -633,6 +658,7 @@ pub async fn run_browser_host(
             WebRtcHostPeer::new(&sdk, &installation, permit, setup, factory).await?
         };
         peer = Some(host);
+        let mut last_timeline = None;
         let mut last_access_refresh = Instant::now();
         loop {
             diagnostic_stage = BrowserHostDiagnosticStage::HostLoop;
@@ -654,6 +680,19 @@ pub async fn run_browser_host(
                     host.answer_next_offer(&sdk, &installation).await.map_err(BrowserHostError::from)
                 } => result?,
             };
+            let timeline = peer.as_ref().map(WebRtcHostPeer::connection_timeline);
+            if timeline != last_timeline {
+                config.report(BrowserHostDiagnostic {
+                    request_sha256,
+                    connection_generation: preparation_generation,
+                    timeline,
+                    stage: BrowserHostDiagnosticStage::HostLoop,
+                    source: BrowserHostDiagnosticSource::Progress,
+                    elapsed_ms: elapsed_ms(started),
+                    peer: None,
+                });
+                last_timeline = timeline;
+            }
             if answered && !connected {
                 connected = true;
                 if let Some((_connection_generation, lease_sequence, path)) =
@@ -693,6 +732,9 @@ pub async fn run_browser_host(
     if let Err(error) = startup {
         failure = Some(classify_failure(&error));
         diagnostic = Some(BrowserHostDiagnostic {
+            request_sha256,
+            connection_generation: preparation_generation,
+            timeline: peer.as_ref().map(WebRtcHostPeer::connection_timeline),
             stage: diagnostic_stage,
             source: classify_diagnostic_source(&error),
             elapsed_ms: elapsed_ms(started),
@@ -732,6 +774,9 @@ pub async fn run_browser_host(
     if cleanup_failed {
         failure.get_or_insert(BrowserHostFailure::Capture);
         diagnostic.get_or_insert(BrowserHostDiagnostic {
+            request_sha256,
+            connection_generation: preparation_generation,
+            timeline: peer.as_ref().map(WebRtcHostPeer::connection_timeline),
             stage: BrowserHostDiagnosticStage::Shutdown,
             source: BrowserHostDiagnosticSource::ShutdownCleanupFailed,
             elapsed_ms: elapsed_ms(started),
@@ -740,6 +785,9 @@ pub async fn run_browser_host(
     } else if close.is_some_and(|report| report.peer_close_failed) {
         failure.get_or_insert(BrowserHostFailure::Transport);
         diagnostic.get_or_insert(BrowserHostDiagnostic {
+            request_sha256,
+            connection_generation: preparation_generation,
+            timeline: peer.as_ref().map(WebRtcHostPeer::connection_timeline),
             stage: BrowserHostDiagnosticStage::Shutdown,
             source: BrowserHostDiagnosticSource::ShutdownPeerCloseFailed,
             elapsed_ms: elapsed_ms(started),
@@ -748,6 +796,9 @@ pub async fn run_browser_host(
     }
 
     config.report(diagnostic.unwrap_or(BrowserHostDiagnostic {
+        request_sha256,
+        connection_generation: preparation_generation,
+        timeline: peer.as_ref().map(WebRtcHostPeer::connection_timeline),
         stage: BrowserHostDiagnosticStage::Shutdown,
         source: BrowserHostDiagnosticSource::Progress,
         elapsed_ms: elapsed_ms(started),
@@ -890,11 +941,12 @@ fn validate_host_claims(
             return Err(BrowserHostError::UnsupportedPermission);
         }
     }
-    if claims
-        .required_capabilities
-        .iter()
-        .any(|capability| capability != "vp8" && !(supported_audio && capability == "opus"))
-    {
+    if claims.required_capabilities.iter().any(|capability| {
+        !(matches!(
+            capability.as_str(),
+            "vp8" | "webrtc-trickle-v1" | "setup-budget-v1"
+        ) || (supported_audio && capability == "opus"))
+    }) {
         return Err(BrowserHostError::UnsupportedPermission);
     }
     Ok(())
@@ -935,7 +987,12 @@ fn session_binding(permit: &VerifiedPermit) -> Result<SessionBinding, BrowserHos
         supported_capabilities: claims
             .required_capabilities
             .iter()
-            .filter(|capability| capability.as_str() == "vp8" || capability.as_str() == "opus")
+            .filter(|capability| {
+                matches!(
+                    capability.as_str(),
+                    "vp8" | "opus" | "webrtc-trickle-v1" | "setup-budget-v1"
+                )
+            })
             .cloned()
             .collect(),
         local_paths: PathSet::from_wire(&claims.paths)

@@ -125,6 +125,13 @@ impl Session {
     pub fn state(&self) -> SessionState {
         self.state
     }
+    pub fn negotiated_capability(&self, capability: &str) -> bool {
+        self.permit
+            .claims()
+            .required_capabilities
+            .iter()
+            .any(|value| value == capability)
+    }
     /// ICE may select a path after gathering. Selection can change only before
     /// either endpoint proof is consumed, within the original permit deadline.
     pub fn select_path_before_proof(
@@ -223,6 +230,35 @@ impl Session {
         Ok(())
     }
 
+    pub fn is_setup_authorization(&self) -> bool {
+        self.permit.claims().is_setup()
+    }
+
+    /// Establish lifecycle supervision for the proved setup control channel.
+    /// This grants no media/input/business permission; those still use authorize.
+    pub fn check_proved_setup(
+        &mut self,
+        path: Path,
+        monotonic_ms: u64,
+    ) -> Result<(), ContractError> {
+        self.check_live(monotonic_ms)?;
+        if !self.is_setup_authorization()
+            || self.state != SessionState::Active
+            || path != self.path
+            || !self
+                .permit
+                .claims()
+                .permissions
+                .contains(&(Permission::View as i32))
+        {
+            return Err(error(
+                ErrorCode::AuthRequired,
+                "proved setup control channel required",
+            ));
+        }
+        Ok(())
+    }
+
     pub fn authorize(
         &mut self,
         permission: Permission,
@@ -230,6 +266,12 @@ impl Session {
         monotonic_ms: u64,
     ) -> Result<(), ContractError> {
         self.check_live(monotonic_ms)?;
+        if self.permit.claims().is_setup() {
+            return Err(error(
+                ErrorCode::AuthRequired,
+                "setup authorization cannot start media, input or business channels",
+            ));
+        }
         if self.state != SessionState::Active {
             return Err(error(
                 ErrorCode::AuthRequired,

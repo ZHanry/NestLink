@@ -15,6 +15,7 @@ use nestlink_web::browser_data::{LocalDataApproval, LocalDataConsent};
 use nestlink_web::browser_files::BrowserFiles;
 use nestlink_web::browser_identity::{self, BrowserIdentityError};
 use nestlink_web::browser_input::{BrowserInputCapture, BrowserInputLayout};
+use nestlink_web::browser_metrics::MediaStatistics;
 use nestlink_web::browser_peer::{
     BrowserPeer, PeerCancellation, PeerDisplaySnapshot, PeerError, PeerPathMode, SelectedPath,
     network_event_requires_ice_restart,
@@ -45,6 +46,47 @@ thread_local! {
 }
 fn retained_count() -> usize {
     RETAINED_RUNS.with(|runs| runs.borrow().len())
+}
+fn export_media_diagnostic(
+    statistics: Option<MediaStatistics>,
+    run: Option<&RemoteRun>,
+) -> Result<(), ()> {
+    let request_sha256 = run.map(|run| {
+        nestlink_identity::digest(run.id.as_bytes())
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect::<String>()
+    });
+    let report = serde_json::json!({
+        "schema_version": 1, "version": env!("CARGO_PKG_VERSION"),
+        "request_sha256": request_sha256, "receiver": statistics,
+        "measurement": "receiver counter deltas; not end-to-end input latency",
+        "hardware_decoder": null,
+    });
+    let content = serde_json::to_string_pretty(&report).map_err(|_| ())?;
+    let parts = js_sys::Array::new();
+    parts.push(&content.into());
+    let blob = web_sys::Blob::new_with_str_sequence(&parts).map_err(|_| ())?;
+    let url = web_sys::Url::create_object_url_with_blob(&blob).map_err(|_| ())?;
+    let result = (|| {
+        let document = web_sys::window()
+            .and_then(|window| window.document())
+            .ok_or(())?;
+        let anchor = document
+            .create_element("a")
+            .map_err(|_| ())?
+            .dyn_into::<web_sys::HtmlAnchorElement>()
+            .map_err(|_| ())?;
+        anchor.set_href(&url);
+        anchor.set_download("NestLink-0.7.0-RC-diagnostics.json");
+        anchor.click();
+        Ok(())
+    })();
+    spawn_local(async move {
+        TimeoutFuture::new(10_000).await;
+        let _ = web_sys::Url::revoke_object_url(&url);
+    });
+    result
 }
 fn release_clean_run(run: &RemoteRun) {
     if !run.has_pending_cleanup() {
@@ -123,6 +165,7 @@ struct SessionUi {
     displays: RwSignal<Option<PeerDisplaySnapshot>>,
     display_switching: RwSignal<bool>,
     password_offer: RwSignal<Option<PasswordOffer>>,
+    statistics: RwSignal<Option<MediaStatistics>>,
 }
 impl SessionUi {
     fn status(self, message: impl Into<String>) {
@@ -406,6 +449,8 @@ pub fn RemotePanel(
     let data_ready = RwSignal::new(false);
     let displays = RwSignal::new(None::<PeerDisplaySnapshot>);
     let display_switching = RwSignal::new(false);
+    let statistics = RwSignal::new(None::<MediaStatistics>);
+    let tools_open = RwSignal::new(false);
     let pending_cleanup = RwSignal::new(retained_count());
     let status = RwSignal::new(
         t(
@@ -429,6 +474,8 @@ pub fn RemotePanel(
         data_ready.set(false);
         displays.set(None);
         display_switching.set(false);
+        statistics.set(None);
+        tools_open.set(false);
         password_offer.set(None);
         remote_password.set(Zeroizing::new(String::new()));
         exit_remote_fullscreen();
@@ -571,6 +618,7 @@ pub fn RemotePanel(
                     displays,
                     display_switching,
                     password_offer,
+                    statistics,
                 },
             )
             .await;
@@ -582,6 +630,7 @@ pub fn RemotePanel(
                 let _ = data_ready.try_set(false);
                 let _ = displays.try_set(None);
                 let _ = display_switching.try_set(false);
+                let _ = statistics.try_set(None);
                 let _ = password_offer.try_set(None);
                 let _ = remote_password.try_set(Zeroizing::new(String::new()));
                 let _ = status.try_set(t("连接已停止。", "Connection stopped.").into());
@@ -768,6 +817,7 @@ pub fn RemotePanel(
                             <button class="secondary" type="button" on:click=retry_cleanup>{move || t("重试清理", "Retry cleanup")}</button>
                         </Show>
                         <button class="secondary" type="button" on:click=toggle_fullscreen>{move || if fullscreen.get() { t("退出全屏", "Exit fullscreen") } else { t("全屏", "Fullscreen") }}</button>
+                        <button class="secondary" type="button" aria-expanded=move || tools_open.get().to_string() aria-controls="remote-operation-center" on:click=move |_| tools_open.update(|open| *open = !*open)>{move || t("操作中心", "Control center")}</button>
                         <button class="secondary" type="button" on:click=play disabled=move || !active.get()>{move || t("播放画面与声音", "Play video and audio")}</button>
                         <button class="danger" type="button" on:click=stop disabled=move || !active.get()>{move || t("停止连接", "Stop connection")}</button>
                         <button class="secondary" type="button" on:click=close>{move || t("关闭", "Close")}</button>
@@ -781,7 +831,35 @@ pub fn RemotePanel(
                         <li class:current={move || phase.get() == 3} aria-current={move || (phase.get() == 3).then_some("step")}>{move || t("远程会话", "Remote session")}</li>
                     </ol>
                 </Show>
-                <RemoteDisplaySelector snapshot=displays switching=display_switching active select=select_display />
+                <Show when=move || tools_open.get()>
+                    <section id="remote-operation-center" class="remote-operation-center" aria-label=move || t("操作中心", "Control center")>
+                        <RemoteDisplaySelector snapshot=displays switching=display_switching active select=select_display />
+                        <div class="remote-performance">
+                            <h3>{move || t("连接与性能", "Connection and performance")}</h3>
+                            {move || statistics.get().map(|stats| {
+                                let value = |number: Option<f64>, suffix: &str| number.map(|value| format!("{value:.1} {suffix}")).unwrap_or_else(|| t("未观测", "Not observed").into());
+                                view! {
+                                    <dl class="performance-grid">
+                                        <div><dt>{move || t("接收帧率", "Received frame rate")}</dt><dd>{value(stats.fps, "fps")}</dd></div>
+                                        <div><dt>{move || t("视频码率", "Video bitrate")}</dt><dd>{value(stats.kbps, "Kbps")}</dd></div>
+                                        <div><dt>{move || t("网络往返", "Network round trip")}</dt><dd>{value(stats.sample.rtt_ms, "ms")}</dd></div>
+                                        <div><dt>{move || t("区间丢包", "Interval packet loss")}</dt><dd>{value(stats.loss_percent, "%")}</dd></div>
+                                        <div><dt>{move || t("平均解码", "Mean decode time")}</dt><dd>{value(stats.decode_ms, "ms")}</dd></div>
+                                        <div><dt>{move || t("抖动缓冲", "Jitter buffer")}</dt><dd>{value(stats.jitter_buffer_ms, "ms")}</dd></div>
+                                        <div><dt>{move || t("实际编码", "Actual codec")}</dt><dd>{stats.sample.codec.unwrap_or_else(|| t("未观测", "Not observed").into())}</dd></div>
+                                    </dl>
+                                }
+                            })}
+                            <p class="muted">{move || t("每秒采样浏览器接收统计。网络往返、解码与缓冲是不同口径，不能相加当作端到端输入时延。", "Browser receiver statistics are sampled each second. Round trip, decode and buffering measure different stages and do not sum to input-to-picture latency.")}</p>
+                            <button class="secondary" type="button" disabled=move || statistics.get().is_none() on:click=move |_| {
+                                if export_media_diagnostic(statistics.get(), owner.get_value().as_deref()).is_err() {
+                                    problem.set(t("诊断导出失败，请重试。", "Diagnostic export failed. Retry.").into());
+                                }
+                            }>{move || t("导出脱敏诊断", "Export redacted diagnostics")}</button>
+                        </div>
+                        <RemoteDataPanel owner=owner ready=data_ready />
+                    </section>
+                </Show>
                 <div class="remote-stage">
                     <video id="remote-view-video" autoplay playsinline class=move || if picture.get() { "remote-video visible" } else { "remote-video" } aria-label=move || t("远程屏幕", "Remote screen") />
                     <Show when=move || input_control.get() && active.get()>
@@ -791,7 +869,6 @@ pub fn RemotePanel(
                         <div class="remote-wait" aria-live="polite"><p>{move || status.get()}</p></div>
                     </Show>
                 </div>
-                <RemoteDataPanel owner=owner ready=data_ready />
                 <Show when=move || password_offer.get().is_some() && active.get()>
                     <form class="policy-form" on:submit=submit_password>
                         <h3>{move || t("用密码授权本次访问", "Authorize this request with a password")}</h3>
@@ -1068,6 +1145,7 @@ async fn run_session(
     let mut observed_network = network.generation.get();
     let mut last_control_check = performance_ms()?;
     let mut last_media_time = run.video.current_time();
+    let mut previous_media_sample = None;
     loop {
         run.check()?;
         if ui.generation.try_get_untracked() != Some(ui.revision) {
@@ -1120,6 +1198,8 @@ async fn run_session(
             // online/offline event during signaling or path verification must
             // remain pending and trigger one follow-up restart.
             observed_network = current_network;
+            previous_media_sample = None;
+            let _ = ui.statistics.try_set(None);
             ui.picture(false);
             ui.status(t(
                 "网络已变化，正在重新协商连接…",
@@ -1149,6 +1229,17 @@ async fn run_session(
                 .await
                 .map_err(|problem| i18n::peer_error(&problem))?;
             last_control_check = now;
+            // Diagnostics are optional observations. An unavailable statistic
+            // cannot extend a lease or turn a healthy session into an error.
+            if let Ok(sample) = peer.media_sample().await {
+                let stats =
+                    MediaStatistics::between(sample.clone(), previous_media_sample.as_ref());
+                previous_media_sample = Some(sample);
+                let _ = ui.statistics.try_set(Some(stats));
+            } else {
+                previous_media_sample = None;
+                let _ = ui.statistics.try_set(None);
+            }
         }
         let media_time = run.video.current_time();
         if !ui.display_switching.try_get_untracked().unwrap_or(true)

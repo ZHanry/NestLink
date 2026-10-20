@@ -49,6 +49,30 @@ pub(crate) const CHANNELS: [Channel; 8] = [
 ];
 const CAPACITY: [usize; 8] = [64, 8, 8, 1, 4, 4, 1, 1];
 const AUDIO_AGE: Duration = Duration::from_millis(100);
+/// A reliable reference may never be skipped and followed by its deltas.
+/// Expiry therefore terminates this generation; recovery needs fresh proof.
+const VIDEO_WRITE_AGE: Duration = Duration::from_millis(500);
+
+pub(crate) async fn write_media_bounded<W: AsyncWrite + Unpin>(
+    write: &mut W,
+    channel: Channel,
+    payload: &[u8],
+    arrived: Instant,
+) -> io::Result<()> {
+    if channel != Channel::Video {
+        return write_frame(write, channel, payload).await;
+    }
+    let deadline = arrived + VIDEO_WRITE_AGE;
+    if Instant::now() >= deadline {
+        return Err(io::Error::new(
+            io::ErrorKind::TimedOut,
+            "video send deadline exhausted",
+        ));
+    }
+    tokio::time::timeout_at(deadline.into(), write_frame(write, channel, payload))
+        .await
+        .map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "video send deadline exhausted"))?
+}
 #[cfg(test)]
 #[path = "queues/file_disclosure_tests.rs"]
 mod file_disclosure_tests;
@@ -790,7 +814,8 @@ impl<R: AsyncRead + Unpin + Send + 'static, W: AsyncWrite + Unpin + Send + 'stat
                             {
                                 return Ok(false);
                             }
-                            write_frame(&mut write, channel, &payload).await?;
+                            write_media_bounded(&mut write, channel, &payload, queued.arrived)
+                                .await?;
                             Ok(true)
                         },
                         &writer_lease,

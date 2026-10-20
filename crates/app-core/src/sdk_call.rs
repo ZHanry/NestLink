@@ -227,7 +227,23 @@ async fn execute(
         }
         Action::Load { page } => patches.push(match page {
             Page::AccountSecurity => Patch::Security(security(sdk, fence).await?),
-            Page::Devices => Patch::Devices(read(sdk.devices(), fence).await?),
+            Page::Devices => {
+                let mut entries = read(sdk.devices(), fence).await?;
+                if let Some(identity) = identity
+                    && let Some(entry) = entries
+                        .iter()
+                        .find(|entry| entry.device.id == identity.device_id && !entry.revoked)
+                    && write(
+                        sdk.refresh_native_media_features(identity, entry.device.clone()),
+                        effect,
+                        fence,
+                    )
+                    .await?
+                {
+                    entries = read(sdk.devices(), fence).await?;
+                }
+                Patch::Devices(entries)
+            }
             Page::Services => Patch::Services(read(sdk.services(None, 50), fence).await?),
             Page::Requests => Patch::Requests(read(sdk.pending_remote(), fence).await?),
             Page::Accounts => Patch::Accounts(read(sdk.accounts(), fence).await?),

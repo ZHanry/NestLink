@@ -17,6 +17,8 @@ pub struct NativeSessionConfig {
     pub bind_address: SocketAddr,
     pub stun_servers: Vec<SocketAddr>,
     pub use_deployment_stun: bool,
+    pub media_route: crate::MediaRouteMode,
+    pub media_interface_index: Option<u32>,
     pub private_network_prefixes: Vec<String>,
     pub supported_capabilities: Vec<String>,
     pub browser_host: Option<BrowserHostConfig>,
@@ -55,8 +57,16 @@ impl NativeSessionConfig {
             bind_address: SocketAddr::from(([0, 0, 0, 0], 0)),
             stun_servers: Vec::new(),
             use_deployment_stun: true,
+            media_route: crate::MediaRouteMode::System,
+            media_interface_index: None,
             private_network_prefixes: Vec::new(),
-            supported_capabilities: vec!["vp8".into(), "opus".into()],
+            supported_capabilities: {
+                let mut capabilities = vec!["vp8".into(), "opus".into()];
+                if nestlink_media_codec::h264_hardware_available() {
+                    capabilities.push(nestlink_protocol::media::H264_CAPABILITY.into());
+                }
+                capabilities
+            },
             browser_host: None,
             management_login_store: None,
             network,
@@ -71,6 +81,8 @@ impl NativeSessionConfig {
 
     pub fn network_settings(&self) -> NativeNetworkSettings {
         NativeNetworkSettings {
+            media_route: self.media_route,
+            media_interface_index: self.media_interface_index,
             use_deployment_stun: self.use_deployment_stun,
             private_network_prefixes: self.private_network_prefixes.clone(),
         }
@@ -82,6 +94,9 @@ impl NativeSessionConfig {
     ) -> Result<Self, NativeNetworkError> {
         let settings = store.load()?;
         settings.validate()?;
+        settings.apply_route_policy()?;
+        self.media_route = settings.media_route;
+        self.media_interface_index = settings.media_interface_index;
         self.use_deployment_stun = settings.use_deployment_stun;
         self.private_network_prefixes = settings.private_network_prefixes;
         self.network_settings_store = Some(store);
@@ -98,6 +113,9 @@ impl NativeSessionConfig {
             .as_ref()
             .ok_or(NativeNetworkError::Persistence)?;
         let commit = store.save(&settings)?;
+        settings.apply_route_policy()?;
+        self.media_route = settings.media_route;
+        self.media_interface_index = settings.media_interface_index;
         self.use_deployment_stun = settings.use_deployment_stun;
         self.private_network_prefixes = settings.private_network_prefixes;
         Ok(commit)

@@ -1431,6 +1431,8 @@ mod video_bridge_tests {
     fn queued_frame() -> VideoUpdate {
         VideoUpdate::Message(NativeVideoMessage::Frame(
             nestlink_app_ipc::NativeVideoFrame {
+                codec: 0,
+                hardware_decode: false,
                 binding: binding(),
                 layout_epoch: 2,
                 sequence: 1,

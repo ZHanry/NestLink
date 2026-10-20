@@ -1,7 +1,7 @@
 use crate::video::streams;
 use crate::worker::{self, Worker};
 use crate::{ShutdownReport, VideoStream, WorkerMonitor};
-use nestlink_media_codec::{VideoConfig, Vp8Decoder};
+use nestlink_media_codec::{VideoCodec, VideoConfig, VideoDecoder};
 use nestlink_protocol::{
     NativeVideo, NativeVideoFeedback, SCHEMA_VERSION, VIDEO_KEYFRAME_INTERVAL_MS,
     VIDEO_RECOVERY_ATTEMPTS, VIDEO_RECOVERY_MS, VIDEO_RECOVERY_WINDOW_MS, VideoRecoveryReason,
@@ -30,6 +30,8 @@ const EVENT_CAPACITY: usize = 4;
 /// Packed BGRA for presentation. Every encoded reference is decoded before an
 /// older presentation image may be replaced in this per-source mailbox.
 pub struct DecodedVideo {
+    pub codec: u8,
+    pub hardware_decode: bool,
     pub epoch: VideoEpoch,
     pub source: u32,
     pub sequence: u64,
@@ -739,7 +741,8 @@ struct Recovery {
 struct Decoder {
     stream: VideoStream,
     layout: u64,
-    codec: Option<Vp8Decoder>,
+    codec: Option<VideoDecoder>,
+    pending: BTreeMap<u64, (u64, bool)>,
     sequence: u64,
     pts: Option<u64>,
     request_sequence: u64,
@@ -765,6 +768,7 @@ impl Decoder {
         Ok(())
     }
     fn recover(&mut self, reason: VideoRecoveryReason, now: Instant) -> io::Result<()> {
+        self.pending.clear();
         self.codec = None;
         self.deadline(now)?;
         if self.recovery.is_none() || reason == VideoRecoveryReason::DecoderFailure {
@@ -878,37 +882,72 @@ impl Decoder {
             return Ok(None);
         }
         if self.codec.is_none() {
-            self.codec = Some(Vp8Decoder::new(packet.width, packet.height)?);
+            let kind = match nestlink_protocol::NativeVideoCodec::try_from(packet.codec) {
+                Ok(nestlink_protocol::NativeVideoCodec::Vp8) => VideoCodec::Vp8,
+                Ok(nestlink_protocol::NativeVideoCodec::H264Baseline) => VideoCodec::H264Baseline,
+                Err(_) => return Err(io::Error::other("unknown video codec")),
+            };
+            self.codec = Some(VideoDecoder::new(kind, packet.width, packet.height)?);
         }
-        let mut pixels = Zeroizing::new(
-            match self
-                .codec
-                .as_mut()
-                .ok_or_else(|| io::Error::other("missing video decoder"))?
-                .decode(&payload)
-            {
-                Ok(pixels) => pixels,
-                Err(_) => {
-                    // A failed libvpx reference context is destroyed. Repeated
-                    // entropy failures are bounded, never presented as good pixels.
-                    self.recover(VideoRecoveryReason::DecoderFailure, Instant::now())?;
-                    return Ok(None);
-                }
-            },
-        );
+        if self.pending.len() >= 8 {
+            self.recover(VideoRecoveryReason::DecoderFailure, now)?;
+            return Ok(None);
+        }
+        self.pending
+            .insert(packet.pts_90khz, (packet.sequence, packet.repeated_source));
+        let decoded = match self
+            .codec
+            .as_mut()
+            .ok_or_else(|| io::Error::other("missing video decoder"))?
+            .decode(&payload, packet.pts_90khz)
+        {
+            Ok(decoded) => decoded,
+            Err(_) => {
+                // A failed libvpx reference context is destroyed. Repeated
+                // entropy failures are bounded, never presented as good pixels.
+                self.recover(VideoRecoveryReason::DecoderFailure, Instant::now())?;
+                return Ok(None);
+            }
+        };
+        let Some((pixels, output_pts)) = decoded else {
+            return Ok(None);
+        };
+        let (output_sequence, repeated_source) =
+            self.pending.remove(&output_pts).ok_or_else(|| {
+                io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "decoder output has no submitted timestamp",
+                )
+            })?;
+        if self
+            .pending
+            .keys()
+            .next()
+            .is_some_and(|older| *older < output_pts)
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "decoder reordered or skipped baseline output",
+            ));
+        }
+        // Baseline has no reordering. A platform transform may buffer output;
+        // present its real PTS, never relabel it with the latest input time.
+        let mut pixels = Zeroizing::new(pixels);
         // A late decode cannot revive an expired recovery budget.
         self.deadline(Instant::now())?;
         let recovered = self.recovery.take().is_some();
         Ok(Some((
             DecodedVideo {
+                codec: packet.codec as u8,
+                hardware_decode: self.codec.as_ref().is_some_and(VideoDecoder::hardware),
                 epoch,
                 source: packet.source,
-                sequence: packet.sequence,
-                pts_90khz: packet.pts_90khz,
+                sequence: output_sequence,
+                pts_90khz: output_pts,
                 width: packet.width,
                 height: packet.height,
                 pixels: std::mem::take(&mut *pixels),
-                repeated_source: packet.repeated_source,
+                repeated_source,
             },
             recovered,
         )))
@@ -998,6 +1037,14 @@ fn receive(
     mut stop: watch::Receiver<bool>,
 ) -> io::Result<()> {
     let runtime = worker::runtime()?;
+    let codec_kind = if lease
+        .media_capability(nestlink_protocol::media::H264_CAPABILITY)
+        .map_err(io::Error::other)?
+    {
+        1
+    } else {
+        0
+    };
     let mut reports = lease.subscribe_stopped();
     let advertised = matches!(&sources, ReceiveSources::Advertised);
     let (selected, dynamic_sources) = match sources {
@@ -1014,6 +1061,7 @@ fn receive(
                     stream,
                     layout: epoch.layout,
                     codec: None,
+                    pending: BTreeMap::new(),
                     sequence: 0,
                     pts: None,
                     request_sequence: 0,
@@ -1030,7 +1078,7 @@ fn receive(
             if advertised {
                 let current=output.state.lock().map_err(|_| io::Error::other("media output poisoned"))?.selected;
                 if current!=selected_layout {
-                    for codec in codecs.values_mut() {codec.codec=None; codec.recovery=None;}
+                    for codec in codecs.values_mut() {codec.codec=None; codec.pending.clear(); codec.recovery=None;}
                     selected_layout=current;
                     output.recovery_deadline.send_replace(None);
                 }
@@ -1125,6 +1173,9 @@ fn receive(
                     });
                 }
             }
+            if packet.codec != codec_kind {
+                return Err(io::Error::new(io::ErrorKind::InvalidData, "video codec differs from signed negotiation"));
+            }
             let codec = codecs.get_mut(&source).ok_or_else(|| {
                 io::Error::new(io::ErrorKind::InvalidData, "unapproved video source")
             })?;
@@ -1157,7 +1208,7 @@ fn receive(
                     state.stats.completed_recoveries =
                         state.stats.completed_recoveries.saturating_add(1);
                 }
-            } else {
+            } else if codecs.get(&source).is_some_and(|codec| codec.recovery.is_some()) {
                 state.scheduled.retain(|pending|pending.frame.source!=source);
                     state.videos.remove(&source);
                 state.ready.retain(|ready| *ready != source);
@@ -1207,6 +1258,7 @@ fn update_dynamic_layout(
         codec.stream.codec.width = packet.width;
         codec.stream.codec.height = packet.height;
         codec.codec = None;
+        codec.pending.clear();
         // Do not reset recovery, request sequence, attempt budget or media
         // sequence. A resize cannot extend any pending keyframe deadline.
     } else {
@@ -1224,6 +1276,7 @@ fn update_dynamic_layout(
                 },
                 layout: packet.layout_epoch,
                 codec: None,
+                pending: BTreeMap::new(),
                 sequence: 0,
                 pts: None,
                 request_sequence: 0,
@@ -1241,6 +1294,8 @@ mod tests {
 
     fn image(sequence: u64, pts_90khz: u64) -> DecodedVideo {
         DecodedVideo {
+            codec: 0,
+            hardware_decode: false,
             epoch: VideoEpoch {
                 connection: 9,
                 layout: 1,
@@ -1323,6 +1378,7 @@ mod tests {
     fn repeated_resizes_preserve_the_original_recovery_deadline_and_budget() -> io::Result<()> {
         let started = Instant::now();
         let mut packet = NativeVideo {
+            codec: 0,
             schema_version: SCHEMA_VERSION,
             connection_generation: 7,
             layout_epoch: 3,

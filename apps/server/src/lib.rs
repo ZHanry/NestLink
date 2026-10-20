@@ -332,6 +332,10 @@ pub fn router(state: AppState) -> Router {
         .route("/api/v3/devices", get(devices).post(register_device))
         .route("/api/v3/devices/browser", post(register_browser_endpoint))
         .route("/api/v3/devices/{id}", delete(revoke_device))
+        .route(
+            "/api/v3/devices/{id}/features",
+            post(refresh_browser_features),
+        )
         .route("/api/v3/devices/{id}/trust", get(trusted::list))
         .route(
             "/api/v3/devices/{id}/remote-password",
@@ -948,6 +952,22 @@ async fn devices(
         .db(move |s| {
             let p = s.authenticate(&token, now()?)?;
             Ok(Json(json!({"devices":s.devices_at(&p, now()?)?})))
+        })
+        .await
+}
+async fn refresh_browser_features(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+    Json(body): Json<DeviceRegistration>,
+) -> Result<StatusCode, ApiError> {
+    let token = access(&headers)?;
+    state
+        .db(move |s| {
+            let at = now()?;
+            let p = s.authenticate(&token, at)?;
+            s.refresh_browser_features(&p, &id, body, at)?;
+            Ok(StatusCode::NO_CONTENT)
         })
         .await
 }

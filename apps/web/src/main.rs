@@ -1126,7 +1126,7 @@ fn App() -> impl IntoView {
                                             {item.connectable.then(|| {
                                                 let host = RemoteTarget { id: item.id.clone(), name: item.title.clone() };
                                                 view! {
-                                                    <button class="primary" type="button" disabled=move || busy.get() on:click=move |_| remote_target.set(Some(host.clone()))>{move || t("浏览器连接", "Connect in browser")}</button>
+                                                    <button class="primary" type="button" disabled=move || busy.get() on:click=move |_| remote_target.set(Some(host.clone()))>{move || t("进入桌面", "Enter desktop")}</button>
                                                 }
                                             })}
                                             {revocable.then(|| view! {

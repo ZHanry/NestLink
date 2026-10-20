@@ -11,6 +11,7 @@ pub mod browser_files;
 pub mod browser_identity;
 #[cfg(target_arch = "wasm32")]
 pub mod browser_input;
+pub mod browser_metrics;
 pub mod browser_peer;
 #[cfg(target_arch = "wasm32")]
 pub mod browser_rpc;

@@ -92,6 +92,7 @@ impl SignalPayload {
         if let Some(description) = &self.description {
             description.validate(permit)?;
         }
+        self.validate_ice(permit)?;
         Ok(())
     }
 }

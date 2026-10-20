@@ -840,6 +840,7 @@ impl NativeEndpoint {
             return Err(SessionEstablishError::NoCandidates);
         }
         let signal = SignalPayload {
+            ice: None,
             connection_generation: self.permit.claims().connection_generation,
             lease_sequence: self.permit.claims().lease_sequence,
             network_generation,

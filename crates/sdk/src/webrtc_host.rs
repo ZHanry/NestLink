@@ -1,8 +1,8 @@
 //! Native WebRTC answerer for signed browser offers.
 //!
-//! The host never accepts candidate-only (trickle) signaling. It verifies the
+//! The host accepts capability-negotiated cumulative ICE snapshots. It verifies the
 //! controller's signed offer through `Sdk::peer_signals`, negotiates only the
-//! VP8/Opus profile, gathers a complete answer, and signs that answer through
+//! VP8/Opus profile, and signs the answer and negotiated ICE snapshots through
 //! `Sdk::publish_signal`. Media capture must already have been attached to the
 //! authorized session's capture controllers before it is passed here.
 
@@ -74,7 +74,10 @@ use webrtc::{
         candidate::{CandidatePairState, CandidateType},
         mdns::MulticastDnsMode,
     },
-    ice_transport::{ice_gathering_state::RTCIceGatheringState, ice_server::RTCIceServer},
+    ice_transport::{
+        ice_candidate::RTCIceCandidateInit, ice_gathering_state::RTCIceGatheringState,
+        ice_server::RTCIceServer,
+    },
     interceptor::registry::Registry,
     media::Sample,
     peer_connection::{
@@ -186,10 +189,31 @@ pub struct WebRtcHostDiagnostic {
     pub elapsed_ms: u64,
 }
 
+/// Local monotonic timings from peer creation. Missing values mean the stage
+/// was not observed. These are not cross-machine one-way latency estimates.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct WebRtcConnectionTimeline {
+    pub offer_received_ms: Option<u64>,
+    pub answer_published_ms: Option<u64>,
+    pub first_local_candidate_ms: Option<u64>,
+    pub first_remote_candidate_ms: Option<u64>,
+    pub gather_complete_ms: Option<u64>,
+    pub selected_pair_ms: Option<u64>,
+    pub endpoint_proved_ms: Option<u64>,
+    pub running_authorized_ms: Option<u64>,
+    pub first_encoded_ms: Option<u64>,
+    pub first_rtp_write_ms: Option<u64>,
+    pub local_candidate_count: usize,
+    pub remote_candidate_count: usize,
+    pub selected_path: Option<i32>,
+    pub ice_restarts: u64,
+}
+
 #[derive(Clone)]
 struct PeerDiagnosticRecorder {
     started: Instant,
     first: Arc<StdMutex<Option<WebRtcHostDiagnostic>>>,
+    timeline: Arc<StdMutex<WebRtcConnectionTimeline>>,
 }
 
 impl Default for PeerDiagnosticRecorder {
@@ -197,11 +221,53 @@ impl Default for PeerDiagnosticRecorder {
         Self {
             started: Instant::now(),
             first: Arc::new(StdMutex::new(None)),
+            timeline: Arc::new(StdMutex::new(WebRtcConnectionTimeline::default())),
         }
     }
 }
 
 impl PeerDiagnosticRecorder {
+    fn mark(&self, field: fn(&mut WebRtcConnectionTimeline) -> &mut Option<u64>) {
+        let mut timeline = self
+            .timeline
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        field(&mut timeline).get_or_insert(
+            self.started
+                .elapsed()
+                .as_millis()
+                .try_into()
+                .unwrap_or(u64::MAX),
+        );
+    }
+    fn timeline(&self) -> WebRtcConnectionTimeline {
+        *self
+            .timeline
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+    fn candidates(&self, local: bool, count: usize, complete: bool) {
+        if local {
+            self.timeline
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .local_candidate_count = count;
+            if count > 0 {
+                self.mark(|value| &mut value.first_local_candidate_ms);
+            }
+            if complete {
+                self.mark(|value| &mut value.gather_complete_ms);
+            }
+        } else {
+            self.timeline
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .remote_candidate_count = count;
+            if count > 0 {
+                self.mark(|value| &mut value.first_remote_candidate_ms);
+            }
+        }
+    }
     fn record(&self, reason: WebRtcHostDiagnosticReason, io_error_kind: Option<io::ErrorKind>) {
         let diagnostic = WebRtcHostDiagnostic {
             reason,
@@ -578,6 +644,9 @@ pub struct WebRtcHostPeer {
     clock: RuntimeClock,
     cursor: SignalCursor,
     signal_sequence: u64,
+    local_ice_signal: Option<SignalPayload>,
+    remote_offer_sequence: u64,
+    remote_ice: nestlink_protocol::ice::IceSnapshotCursor,
     network_generation: u64,
     stun_urls: Vec<String>,
     turn_credentials: Option<TurnCredentials>,
@@ -630,6 +699,10 @@ impl WebRtcHostPeer {
     /// diagnostic, if one was recorded.
     pub fn diagnostic(&self) -> Option<WebRtcHostDiagnostic> {
         self.diagnostics.get()
+    }
+
+    pub fn connection_timeline(&self) -> WebRtcConnectionTimeline {
+        self.diagnostics.timeline()
     }
 
     /// Creates a VP8/Opus-only peer for the verified host endpoint. The peer
@@ -814,6 +887,9 @@ impl WebRtcHostPeer {
             clock,
             cursor,
             signal_sequence: 0,
+            local_ice_signal: None,
+            remote_offer_sequence: 0,
+            remote_ice: Default::default(),
             network_generation,
             stun_urls,
             turn_credentials,
@@ -887,16 +963,31 @@ impl WebRtcHostPeer {
             .await?;
         self.ensure_open()?;
         let Some(offer) = signals.into_iter().last() else {
+            self.publish_local_ice(sdk, installation).await?;
             return Ok(false);
         };
         let claims = self.current_permit();
         validate_offer(&offer, &claims)?;
+        if offer.ice.is_some() && offer.description_sequence() == self.remote_offer_sequence {
+            self.apply_remote_ice(&offer).await?;
+            self.publish_local_ice(sdk, installation).await?;
+            return Ok(false);
+        }
+        self.diagnostics.mark(|value| &mut value.offer_received_ms);
+        if self.remote_offer_sequence != 0 {
+            self.diagnostics
+                .timeline
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .ice_restarts += 1;
+        }
         self.publish_answer(sdk, installation, &claims, offer)
             .await?;
         if !self.media_started {
             self.select_path_before_endpoint_proof(sdk, installation)
                 .await?;
-            self.complete_endpoint_proof(installation).await?;
+            self.complete_endpoint_proof(Some(sdk), installation)
+                .await?;
             self.start_media()?;
             self.media_started = true;
         }
@@ -1067,6 +1158,9 @@ impl WebRtcHostPeer {
         if self.last_renewal_sequence > claims.claims().lease_sequence {
             return Ok(false);
         }
+        if claims.claims().is_setup() {
+            return Ok(true);
+        }
         let lifetime = claims
             .claims()
             .expires_at_unix_ms
@@ -1202,7 +1296,9 @@ impl WebRtcHostPeer {
         sdk: &Sdk,
         installation: &DeviceIdentity,
     ) -> Result<(), WebRtcHostError> {
-        let (path, local, remote) = self.wait_for_selected_pair(CONNECT_TIMEOUT).await?;
+        let (path, local, remote) = self
+            .wait_for_selected_pair(CONNECT_TIMEOUT, sdk, installation)
+            .await?;
         let permit = self.current_permit();
         if path == Path::Relay {
             let claims = self
@@ -1228,6 +1324,12 @@ impl WebRtcHostPeer {
             .select_path_before_proof(path, setup.clock.sample()?)?;
         setup.path = path;
         self.selected_path = path;
+        self.diagnostics.mark(|value| &mut value.selected_pair_ms);
+        self.diagnostics
+            .timeline
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .selected_path = Some(path as i32);
         self.selected_path_tx.send_replace(Some(path));
         self.path_authority_tx.send_replace(true);
         Ok(())
@@ -1236,6 +1338,8 @@ impl WebRtcHostPeer {
     async fn wait_for_selected_pair(
         &mut self,
         timeout: Duration,
+        sdk: &Sdk,
+        installation: &DeviceIdentity,
     ) -> Result<(Path, String, String), WebRtcHostError> {
         let deadline = Instant::now()
             .checked_add(timeout.min(CONNECT_TIMEOUT))
@@ -1244,6 +1348,9 @@ impl WebRtcHostPeer {
         let mut permit = self.permit_rx.clone();
         let mut cancelled = self.cancel_tx.subscribe();
         loop {
+            if self.local_ice_signal.is_some() {
+                self.exchange_ice(sdk, installation).await?;
+            }
             // During initial ICE negotiation, expiry means no reachable path
             // was established within the signed startup lease.
             if ensure_live(&permit.borrow().clone()).is_err() {
@@ -1454,6 +1561,9 @@ impl WebRtcHostPeer {
         self.peer
             .set_remote_description(RTCSessionDescription::offer(remote.sdp.clone())?)
             .await?;
+        self.remote_offer_sequence = offer.description_sequence();
+        self.remote_ice.reset();
+        self.apply_remote_ice(&offer).await?;
         self.ensure_open()?;
         let answer = self.peer.create_answer(None).await?;
         // Register gathering completion before setting local SDP; gathering can
@@ -1462,11 +1572,14 @@ impl WebRtcHostPeer {
         self.peer.set_local_description(answer).await?;
         // The upstream promise signals completion by closing its channel,
         // rather than sending an item. A closed channel is the normal result.
-        let _ = tokio::time::timeout(ICE_GATHER_TIMEOUT, gathered.recv())
-            .await
-            .map_err(|_| WebRtcHostError::GatherTimeout)?;
+        if offer.ice.is_none() {
+            let _ = tokio::time::timeout(ICE_GATHER_TIMEOUT, gathered.recv())
+                .await
+                .map_err(|_| WebRtcHostError::GatherTimeout)?;
+        }
         self.ensure_open()?;
-        if self.peer.ice_gathering_state() != RTCIceGatheringState::Complete {
+        if offer.ice.is_none() && self.peer.ice_gathering_state() != RTCIceGatheringState::Complete
+        {
             return Err(WebRtcHostError::GatherTimeout);
         }
         let local = self
@@ -1480,12 +1593,23 @@ impl WebRtcHostPeer {
         let description = WebRtcDescription {
             kind: "answer".into(),
             sdp: if cfg!(target_os = "android") {
-                local.sdp.clone()
+                if offer.ice.is_some() {
+                    nestlink_protocol::ice::without_candidates(&local.sdp)
+                } else {
+                    local.sdp.clone()
+                }
             } else {
-                format!("{}a=nestlink-scroll:120\r\n", local.sdp)
+                format!(
+                    "{}a=nestlink-scroll:120\r\n",
+                    if offer.ice.is_some() {
+                        nestlink_protocol::ice::without_candidates(&local.sdp)
+                    } else {
+                        local.sdp.clone()
+                    }
+                )
             },
             dtls_sha256: fingerprint,
-            in_reply_to_sequence: Some(offer.sequence),
+            in_reply_to_sequence: Some(offer.description_sequence()),
         };
         let sequence = self
             .signal_sequence
@@ -1493,6 +1617,15 @@ impl WebRtcHostPeer {
             .filter(|sequence| *sequence <= i64::MAX as u64)
             .ok_or(WebRtcHostError::InvalidOffer)?;
         let answer_payload = SignalPayload {
+            ice: if offer.ice.is_some() {
+                Some(nestlink_protocol::ice::snapshot(
+                    &local.sdp,
+                    sequence,
+                    self.peer.ice_gathering_state() == RTCIceGatheringState::Complete,
+                )?)
+            } else {
+                None
+            },
             connection_generation: permit.claims().connection_generation,
             lease_sequence: permit.claims().lease_sequence,
             network_generation: self.network_generation,
@@ -1503,11 +1636,110 @@ impl WebRtcHostPeer {
         answer_payload.validate(permit.claims())?;
         // A failed/ambiguous publish must never cause sequence reuse.
         self.signal_sequence = sequence;
+        self.local_ice_signal = answer_payload.ice.as_ref().map(|_| answer_payload.clone());
         sdk.publish_signal(installation, permit, answer_payload)
             .await?;
+        self.diagnostics
+            .mark(|value| &mut value.answer_published_ms);
+        self.diagnostics.candidates(
+            true,
+            local
+                .sdp
+                .lines()
+                .filter(|line| line.starts_with("a=candidate:"))
+                .count(),
+            self.peer.ice_gathering_state() == RTCIceGatheringState::Complete,
+        );
         if self.turn_credentials.is_some() {
             self.prepare_turn_binding(sdk, installation, permit, &offer, &remote.sdp, &local.sdp)
                 .await?;
+        }
+        Ok(())
+    }
+
+    async fn apply_remote_ice(&mut self, signal: &SignalPayload) -> Result<(), WebRtcHostError> {
+        let Some(ice) = &signal.ice else {
+            return Ok(());
+        };
+        if ice.description_sequence != self.remote_offer_sequence {
+            return Err(WebRtcHostError::InvalidOffer);
+        }
+        signal.validate(self.current_permit().claims())?;
+        self.diagnostics
+            .candidates(false, ice.candidates.len(), ice.end_of_candidates);
+        for candidate in self.remote_ice.apply(ice)? {
+            self.ensure_open()?;
+            self.peer
+                .add_ice_candidate(RTCIceCandidateInit {
+                    candidate: candidate.candidate,
+                    sdp_mid: candidate.sdp_mid,
+                    sdp_mline_index: Some(candidate.sdp_m_line_index),
+                    username_fragment: Some(candidate.username_fragment),
+                })
+                .await?;
+        }
+        if ice.end_of_candidates {
+            self.peer
+                .add_ice_candidate(RTCIceCandidateInit::default())
+                .await?;
+        }
+        Ok(())
+    }
+
+    async fn publish_local_ice(
+        &mut self,
+        sdk: &Sdk,
+        installation: &DeviceIdentity,
+    ) -> Result<(), WebRtcHostError> {
+        let Some(mut signal) = self.local_ice_signal.clone() else {
+            return Ok(());
+        };
+        self.ensure_open()?;
+        let local = self
+            .peer
+            .local_description()
+            .await
+            .ok_or(WebRtcHostError::InvalidOffer)?;
+        let snapshot = nestlink_protocol::ice::snapshot(
+            &local.sdp,
+            signal.description_sequence(),
+            self.peer.ice_gathering_state() == RTCIceGatheringState::Complete,
+        )?;
+        if signal.ice.as_ref() == Some(&snapshot) {
+            return Ok(());
+        }
+        let permit = self.current_permit();
+        self.signal_sequence = self
+            .signal_sequence
+            .checked_add(1)
+            .ok_or(WebRtcHostError::InvalidOffer)?;
+        signal.sequence = self.signal_sequence;
+        signal.lease_sequence = permit.claims().lease_sequence;
+        signal.ice = Some(snapshot);
+        signal.validate(permit.claims())?;
+        if let Some(ice) = &signal.ice {
+            self.diagnostics
+                .candidates(true, ice.candidates.len(), ice.end_of_candidates);
+        }
+        sdk.publish_signal(installation, &permit, signal.clone())
+            .await?;
+        self.local_ice_signal = Some(signal);
+        Ok(())
+    }
+
+    async fn exchange_ice(
+        &mut self,
+        sdk: &Sdk,
+        installation: &DeviceIdentity,
+    ) -> Result<(), WebRtcHostError> {
+        self.publish_local_ice(sdk, installation).await?;
+        let permit = self.current_permit();
+        for signal in sdk
+            .peer_signals(installation, &permit, &mut self.cursor)
+            .await?
+        {
+            validate_offer(&signal, &permit)?;
+            self.apply_remote_ice(&signal).await?;
         }
         Ok(())
     }
@@ -1760,6 +1992,7 @@ impl WebRtcHostPeer {
 
     async fn complete_endpoint_proof(
         &mut self,
+        sdk: Option<&Sdk>,
         installation: &DeviceIdentity,
     ) -> Result<(), WebRtcHostError> {
         self.ensure_open()?;
@@ -1767,7 +2000,7 @@ impl WebRtcHostPeer {
             return Err(WebRtcHostError::EndpointProof);
         }
         let mut setup = self.setup.take().ok_or(WebRtcHostError::EndpointProof)?;
-        let permit = self.current_permit();
+        let mut permit = self.current_permit();
         let proof = tokio::time::timeout(
             ENDPOINT_PROOF_TIMEOUT,
             self.complete_native_proof(&mut setup, installation, &permit),
@@ -1788,6 +2021,7 @@ impl WebRtcHostPeer {
         // have completed the signed proof exchange.
         self.business_data_proof_complete
             .store(true, Ordering::Release);
+        self.diagnostics.mark(|value| &mut value.endpoint_proved_ms);
 
         let SessionSetup {
             session,
@@ -1805,6 +2039,34 @@ impl WebRtcHostPeer {
                 return Err(error.into());
             }
         };
+        let accepted = WebRtcControl::EndpointProofAccepted {
+            schema_version: SCHEMA_VERSION,
+            session_id: permit.claims().session_id.clone(),
+            connection_generation: permit.claims().connection_generation,
+            lease_sequence: permit.claims().lease_sequence,
+        };
+        if let Err(error) = self.send_control(accepted, &permit).await {
+            let _ = lease.stop(StopReason::Revoked);
+            self.cancel_tx.send_replace(true);
+            let _ = self.peer.close().await;
+            return Err(error);
+        }
+        self.clock = clock.clone();
+        self.lease = Some(lease.clone());
+        if permit.claims().is_setup() {
+            let sdk = sdk.ok_or(WebRtcHostError::Permit)?;
+            self.send_renewal_signature(sdk, installation).await?;
+            while self.current_permit().claims().is_setup() {
+                self.ensure_open()?;
+                self.refresh_authority(sdk, installation).await?;
+                if self.current_permit().claims().is_setup() {
+                    tokio::time::sleep(Duration::from_millis(50)).await;
+                }
+            }
+            permit = self.current_permit();
+        }
+        self.diagnostics
+            .mark(|value| &mut value.running_authorized_ms);
         let Some(factory) = self.media_factory.take() else {
             let _ = lease.stop(StopReason::Revoked);
             self.cancel_tx.send_replace(true);
@@ -1846,20 +2108,6 @@ impl WebRtcHostPeer {
             }
         };
         self.data_runtime = data_runtime;
-        let accepted = WebRtcControl::EndpointProofAccepted {
-            schema_version: SCHEMA_VERSION,
-            session_id: permit.claims().session_id.clone(),
-            connection_generation: permit.claims().connection_generation,
-            lease_sequence: permit.claims().lease_sequence,
-        };
-        if let Err(error) = self.send_control(accepted, &permit).await {
-            let _ = lease.stop(StopReason::Revoked);
-            self.cancel_tx.send_replace(true);
-            let _ = self.peer.close().await;
-            return Err(error);
-        }
-        self.clock = clock;
-        self.lease = Some(lease.clone());
         self.display_authorized
             .store(media.video.catalog.is_some(), Ordering::Release);
         self.media = Some(media);
@@ -2171,6 +2419,7 @@ impl WebRtcHostPeer {
         let video_selection = sources.video.selection.subscribe();
         let sender_gate = video_gate.clone();
         let sender_keyframe = keyframe.clone();
+        let video_diagnostics = self.diagnostics.clone();
         let _feedback = spawn_video_feedback(
             self.video_sender.clone(),
             self.cancel_tx.subscribe(),
@@ -2213,6 +2462,7 @@ impl WebRtcHostPeer {
                             selection: video_selection,
                             gate: sender_gate,
                             runtime: handle,
+                            diagnostics: video_diagnostics,
                         },
                     )
                 })
@@ -2661,6 +2911,15 @@ async fn make_peer_with_configuration(
     let registry: Registry = register_default_interceptors(Registry::new(), &mut media)?;
     let mut settings = SettingEngine::default();
     settings.set_ice_multicast_dns_mode(mdns_mode);
+    let paths = Arc::new(nestlink_platform_network::path::NetworkPathManager::from_default()?);
+    if paths.selected.is_some() {
+        let filter = paths.clone();
+        settings.set_ip_filter(Box::new(move |address| filter.allows_ip(address)));
+        let mut ephemeral = webrtc::ice::udp_network::EphemeralUDP::default();
+        ephemeral.set_socket_factory(Arc::new(move |address| paths.bind_udp(address)));
+        settings.set_udp_network(webrtc::ice::udp_network::UDPNetwork::Ephemeral(ephemeral));
+    }
+
     let api = APIBuilder::new()
         .with_media_engine(media)
         .with_interceptor_registry(registry)
@@ -3544,6 +3803,7 @@ struct VideoSourceContext {
     selection: watch::Receiver<HostVideoSelection>,
     gate: Arc<tokio::sync::Mutex<()>>,
     runtime: Handle,
+    diagnostics: PeerDiagnosticRecorder,
 }
 
 fn run_video_source(
@@ -3562,6 +3822,7 @@ fn run_video_source(
         mut selection,
         gate,
         runtime,
+        diagnostics,
     } = context;
     let mut current_selection = *selection.borrow_and_update();
     let mut encoder = Vp8Encoder::new(current_selection.codec)?;
@@ -3657,6 +3918,7 @@ fn run_video_source(
             current_kbps = requested_kbps;
         }
         let packet = encoder.encode(&captured.frame.pixels, pts, force)?;
+        diagnostics.mark(|value| &mut value.first_encoded_ms);
         ensure_media_permit(&permit, Permission::View)?;
         let sample = Sample {
             data: Bytes::from(packet.data),
@@ -3668,6 +3930,8 @@ fn run_video_source(
         };
         if !write_media_sample(&peer, &track, &sample, &runtime).map_err(io::Error::other)? {
             force_keyframe.store(true, Ordering::Release);
+        } else {
+            diagnostics.mark(|value| &mut value.first_rtp_write_ms);
         }
         last_pts = Some(pts);
         // Encoding and RTP writes consume this frame's period. Adding a full
@@ -4359,7 +4623,7 @@ mod tests {
                         .map_err(|_| io::Error::other("invalid test permission"))
                 })
                 .collect::<Result<_, _>>()?,
-            supported_capabilities: vec!["vp8".into()],
+            supported_capabilities: claims.required_capabilities.clone(),
             local_paths: PathSet::DIRECT,
         })
     }
@@ -4463,6 +4727,9 @@ mod tests {
             clock: RuntimeClock::default(),
             cursor: SignalCursor::new(permit, host_identity)?,
             signal_sequence: 0,
+            local_ice_signal: None,
+            remote_offer_sequence: 0,
+            remote_ice: nestlink_protocol::ice::IceSnapshotCursor::default(),
             network_generation: 1,
             stun_urls: Vec::new(),
             turn_credentials: None,
@@ -4689,6 +4956,7 @@ mod tests {
     #[test]
     fn host_rejects_trickle_candidate_payloads() {
         let mut offer = SignalPayload {
+            ice: None,
             connection_generation: 1,
             lease_sequence: 1,
             network_generation: 1,
@@ -4843,6 +5111,9 @@ mod tests {
             clock: host_setup.clock.clone(),
             cursor: SignalCursor::new(&permit, &host_identity)?,
             signal_sequence: 0,
+            local_ice_signal: None,
+            remote_offer_sequence: 0,
+            remote_ice: nestlink_protocol::ice::IceSnapshotCursor::default(),
             network_generation: 1,
             stun_urls: Vec::new(),
             turn_credentials: None,
@@ -5264,6 +5535,9 @@ mod tests {
             clock,
             cursor: SignalCursor::new(&permit, &host_identity)?,
             signal_sequence: 0,
+            local_ice_signal: None,
+            remote_offer_sequence: 0,
+            remote_ice: nestlink_protocol::ice::IceSnapshotCursor::default(),
             network_generation: 1,
             stun_urls: Vec::new(),
             turn_credentials: None,
@@ -5317,7 +5591,7 @@ mod tests {
         {
             let proof = tokio::time::timeout(
                 ENDPOINT_PROOF_TIMEOUT,
-                host_peer_state.complete_endpoint_proof(&host_identity),
+                host_peer_state.complete_endpoint_proof(None, &host_identity),
             );
             tokio::pin!(proof);
             let middle = tokio::select! {

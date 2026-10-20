@@ -119,17 +119,68 @@ impl Sdk {
             payload,
             signature: URL_SAFE_NO_PAD.encode(installation.identity.sign_action(&proof)?),
         };
-        self.call::<_, serde_json::Value>(
-            Method::POST,
-            &format!(
-                "{}/signals",
-                resource("remote", &permit.claims().session_id)?
-            ),
-            Some(&body),
-            true,
-        )
-        .await
-        .map(|_| ())
+        let path = format!(
+            "{}/signals",
+            resource("remote", &permit.claims().session_id)?
+        );
+        // A response may be lost after commit. Retry the exact signed bytes,
+        // never a new candidate set under the same sequence. The store accepts
+        // exact retries idempotently and rechecks live authorization each time.
+        for attempt in 0..3u32 {
+            #[cfg(not(target_arch = "wasm32"))]
+            let now = u64::try_from(
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map_err(|_| SdkError::Invalid)?
+                    .as_millis(),
+            )
+            .map_err(|_| SdkError::Invalid)?;
+            #[cfg(target_arch = "wasm32")]
+            let now = js_sys::Date::now() as u64;
+            let budget = permit
+                .claims()
+                .expires_at_unix_ms
+                .saturating_sub(now)
+                .min(3_000) as u32;
+            if budget == 0 {
+                return Err(SdkError::Timeout);
+            }
+            let operation =
+                self.call::<_, serde_json::Value>(Method::POST, &path, Some(&body), true);
+            #[cfg(not(target_arch = "wasm32"))]
+            let result = tokio::time::timeout(
+                std::time::Duration::from_millis(u64::from(budget)),
+                operation,
+            )
+            .await
+            .unwrap_or(Err(SdkError::Timeout));
+            #[cfg(target_arch = "wasm32")]
+            let result = match futures_util::future::select(
+                Box::pin(operation),
+                Box::pin(gloo_timers::future::TimeoutFuture::new(budget)),
+            )
+            .await
+            {
+                futures_util::future::Either::Left((result, _)) => result,
+                futures_util::future::Either::Right(_) => Err(SdkError::Timeout),
+            };
+            let retry = match &result {
+                Err(SdkError::Timeout | SdkError::BrowserTransport | SdkError::Transport(_)) => {
+                    true
+                }
+                Err(SdkError::Api(status, _)) => matches!(status.as_u16(), 502..=504),
+                _ => false,
+            };
+            if !retry || attempt == 2 {
+                return result.map(|_| ());
+            }
+            let delay = 100 * (attempt + 1);
+            #[cfg(not(target_arch = "wasm32"))]
+            tokio::time::sleep(std::time::Duration::from_millis(u64::from(delay))).await;
+            #[cfg(target_arch = "wasm32")]
+            gloo_timers::future::TimeoutFuture::new(delay).await;
+        }
+        Err(SdkError::Timeout)
     }
     pub async fn peer_signals(
         &self,

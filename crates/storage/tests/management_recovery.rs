@@ -14,7 +14,7 @@ fn schema_twenty_two_upgrade_preserves_existing_management_login() -> Result {
     let login = store.login("owner", "upgrade-test-password", None, 1000, &vault, &dummy)?;
     drop(store);
     let old = rusqlite::Connection::open(&path)?;
-    old.execute_batch("DROP TABLE management_refresh_receipts; DROP INDEX remote_pending_inbox; PRAGMA user_version=22;")?;
+    old.execute_batch("ALTER TABLE browser_host_readiness DROP COLUMN protocol_features; DROP TABLE management_refresh_receipts; DROP INDEX remote_pending_inbox; PRAGMA user_version=22;")?;
     drop(old);
     let mut upgraded = Store::open(&path, &deployment)?;
     assert_eq!(

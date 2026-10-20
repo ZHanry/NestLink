@@ -236,6 +236,7 @@ fn request(sequence: u64, last_sequence: u64) -> NativeVideoFeedback {
 fn forced(encoder: &mut Vp8Encoder, sequence: u64, pts: u64) -> Result<NativeVideo> {
     let encoded = encoder.encode(&[0, 255, 0, 255].repeat(64 * 48), pts, true)?;
     Ok(NativeVideo {
+        codec: 0,
         schema_version: 1,
         connection_generation: EPOCH.connection,
         layout_epoch: EPOCH.layout,
@@ -470,6 +471,7 @@ async fn repeated_entropy_failures_have_a_fixed_attempt_budget_and_no_output() -
     let mut receiver = VideoReceiver::attach(pair.controller, EPOCH, vec![selected(42)])?;
     for sequence in 1..=4 {
         let packet = NativeVideo {
+            codec: 0,
             schema_version: 1,
             connection_generation: EPOCH.connection,
             layout_epoch: EPOCH.layout,

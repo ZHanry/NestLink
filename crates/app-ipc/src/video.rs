@@ -16,7 +16,7 @@ const KIND_FRAME: u8 = 2;
 const KIND_CLOSED: u8 = 3;
 const PIXEL_BGRA8: u8 = 1;
 const MAX_DIMENSION: u32 = 8192;
-const STREAM_POLL: Duration = Duration::from_millis(33);
+const STREAM_POLL: Duration = Duration::from_millis(8);
 const AUTHORIZATION_POLL: Duration = Duration::from_millis(50);
 const FRAME_SEND_BUDGET: Duration = Duration::from_secs(5);
 
@@ -38,6 +38,8 @@ pub struct NativeVideoLayout {
 }
 
 pub struct NativeVideoFrame {
+    pub codec: u8,
+    pub hardware_decode: bool,
     pub binding: NativeVideoBinding,
     pub layout_epoch: u64,
     pub sequence: u64,
@@ -55,6 +57,8 @@ pub enum NativeVideoMessage {
 
 #[derive(Debug, Clone, Copy)]
 struct Header {
+    codec: u8,
+    hardware_decode: bool,
     kind: u8,
     binding: HeaderBinding,
     layout_epoch: u64,
@@ -67,6 +71,8 @@ struct Header {
 
 #[derive(Debug, Clone, Copy)]
 struct HeaderFields {
+    codec: u8,
+    hardware_decode: bool,
     kind: u8,
     layout_epoch: u64,
     sequence: u64,
@@ -193,6 +199,8 @@ impl VideoClient {
                 self.sequence = header.sequence;
                 self.pts_90khz = header.pts_90khz;
                 Ok(NativeVideoMessage::Frame(NativeVideoFrame {
+                    codec: header.codec,
+                    hardware_decode: header.hardware_decode,
                     binding: self.binding.clone(),
                     layout_epoch: header.layout_epoch,
                     sequence: header.sequence,
@@ -382,6 +390,8 @@ pub(crate) async fn serve_video_stream(
                 let header = encode_header(
                     &binding,
                     HeaderFields {
+                        codec: 0,
+                        hardware_decode: false,
                         kind: KIND_LAYOUT,
                         layout_epoch: layout.layout_epoch,
                         sequence: 0,
@@ -415,6 +425,8 @@ pub(crate) async fn serve_video_stream(
                 let header = encode_header(
                     &binding,
                     HeaderFields {
+                        codec: frame.codec,
+                        hardware_decode: frame.hardware_decode,
                         kind: KIND_FRAME,
                         layout_epoch: frame.epoch.layout,
                         sequence: frame.sequence,
@@ -542,6 +554,8 @@ async fn send_closed(
     if let Ok(header) = encode_header(
         binding,
         HeaderFields {
+            codec: 0,
+            hardware_decode: false,
             kind: KIND_CLOSED,
             layout_epoch: epoch,
             sequence: 0,
@@ -572,6 +586,8 @@ fn encode_header(
     bytes[0..8].copy_from_slice(VIDEO_MAGIC);
     bytes[8] = fields.kind;
     bytes[9] = PIXEL_BGRA8;
+    bytes[10] = fields.codec;
+    bytes[11] = fields.hardware_decode.into();
     bytes[12..48].copy_from_slice(binding.runtime_id.as_bytes());
     bytes[48..84].copy_from_slice(binding.request_id.as_bytes());
     bytes[84..92].copy_from_slice(&binding.ui_generation.to_be_bytes());
@@ -587,7 +603,13 @@ fn encode_header(
 }
 
 fn decode_header(bytes: &[u8; VIDEO_HEADER_BYTES]) -> Result<Header, crate::Error> {
-    if &bytes[0..8] != VIDEO_MAGIC || bytes[9] != PIXEL_BGRA8 || bytes[10] != 0 || bytes[11] != 0 {
+    if &bytes[0..8] != VIDEO_MAGIC
+        || bytes[9] != PIXEL_BGRA8
+        || bytes[10] > 1
+        || bytes[11] > 1
+        || (bytes[10] == 0 && bytes[11] != 0)
+        || (bytes[8] != KIND_FRAME && (bytes[10] != 0 || bytes[11] != 0))
+    {
         return Err(crate::Error::Protocol);
     }
     let runtime_id = std::str::from_utf8(&bytes[12..48]).map_err(|_| crate::Error::Protocol)?;
@@ -596,6 +618,8 @@ fn decode_header(bytes: &[u8; VIDEO_HEADER_BYTES]) -> Result<Header, crate::Erro
         return Err(crate::Error::Protocol);
     }
     Ok(Header {
+        codec: bytes[10],
+        hardware_decode: bytes[11] == 1,
         kind: bytes[8],
         binding: HeaderBinding {
             runtime_id: bytes[12..48]
@@ -678,6 +702,8 @@ mod tests {
         let encoded = encode_header(
             binding,
             HeaderFields {
+                codec: 0,
+                hardware_decode: false,
                 kind: KIND_FRAME,
                 layout_epoch: 2,
                 sequence: 3,
@@ -689,6 +715,8 @@ mod tests {
         )
         .unwrap_or([0; VIDEO_HEADER_BYTES]);
         decode_header(&encoded).unwrap_or(Header {
+            codec: 0,
+            hardware_decode: false,
             kind: 0,
             binding: HeaderBinding {
                 runtime_id: [0; 36],
@@ -739,6 +767,8 @@ mod tests {
         let encoded = encode_header(
             &binding,
             HeaderFields {
+                codec: 0,
+                hardware_decode: false,
                 kind: KIND_FRAME,
                 layout_epoch: 2,
                 sequence: 3,
@@ -752,6 +782,8 @@ mod tests {
         let decoded = decode_header(&encoded);
         assert!(decoded.is_ok());
         let decoded = decoded.unwrap_or(Header {
+            codec: 0,
+            hardware_decode: false,
             kind: 0,
             binding: HeaderBinding {
                 runtime_id: [0; 36],
@@ -783,6 +815,8 @@ mod tests {
             encode_header(
                 &binding,
                 HeaderFields {
+                    codec: 0,
+                    hardware_decode: false,
                     kind: KIND_LAYOUT,
                     layout_epoch: 1,
                     sequence: 0,
@@ -897,6 +931,8 @@ mod tests {
         let encoded = encode_header(
             &binding,
             HeaderFields {
+                codec: 0,
+                hardware_decode: false,
                 kind: KIND_LAYOUT,
                 layout_epoch: 4,
                 sequence: 0,
@@ -914,6 +950,8 @@ mod tests {
         let closed_bytes = encode_header(
             &binding,
             HeaderFields {
+                codec: 0,
+                hardware_decode: false,
                 kind: KIND_CLOSED,
                 layout_epoch: 4,
                 sequence: 0,
@@ -1026,6 +1064,8 @@ mod tests {
             let layout = encode_header(
                 &binding,
                 HeaderFields {
+                    codec: 0,
+                    hardware_decode: false,
                     kind: KIND_LAYOUT,
                     layout_epoch: 2,
                     sequence: 0,
@@ -1039,6 +1079,8 @@ mod tests {
             let frame = encode_header(
                 &binding,
                 HeaderFields {
+                    codec: 0,
+                    hardware_decode: false,
                     kind: KIND_FRAME,
                     layout_epoch: 2,
                     sequence: 1,

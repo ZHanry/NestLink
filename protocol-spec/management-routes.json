@@ -19,6 +19,7 @@
   {"path":"/devices","method":"post","operation":"register_device","request":"DeviceRegistration","status":201,"auth":true},
   {"path":"/devices/browser","method":"post","operation":"register_browser_endpoint","request":"BrowserEndpointRegistration","response":"BrowserEndpointLease","status":201,"auth":true},
   {"path":"/devices/{id}","method":"delete","operation":"revoke_device","request":"RevokeDevice","status":204,"auth":true},
+  {"path":"/devices/{id}/features","method":"post","operation":"refresh_browser_features","request":"DeviceRegistration","status":204,"auth":true},
   {"path":"/devices/{id}/trust","method":"get","operation":"trusted::list","response":"TrustedDevicesResponse","status":200,"auth":true},
   {"path":"/devices/{id}/remote-password","method":"get","operation":"remote_password::inspect","response":"RemotePasswordView","status":200,"auth":true},
   {"path":"/devices/{id}/remote-password","method":"put","operation":"remote_password::configure","request":"RemotePasswordSetup","response":"RevisionResponse","status":200,"auth":true},

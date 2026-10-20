@@ -7,6 +7,19 @@ use crate::{
 };
 use prost::Message;
 
+pub const H264_CAPABILITY: &str = "h264-baseline-v1";
+pub fn negotiated_video_codec(claims: &crate::PermitClaims) -> crate::NativeVideoCodec {
+    if claims
+        .required_capabilities
+        .iter()
+        .any(|value| value == H264_CAPABILITY)
+    {
+        crate::NativeVideoCodec::H264Baseline
+    } else {
+        crate::NativeVideoCodec::Vp8
+    }
+}
+
 fn invalid(reason: &'static str) -> ContractError {
     ContractError::new(ErrorCode::InvalidMessage, reason)
 }
@@ -101,6 +114,24 @@ impl NativeVideo {
         let packet = &self.payload;
         if self.repeated_source && !self.keyframe {
             return Err(invalid("repeated source recovery must be a keyframe"));
+        }
+        match crate::NativeVideoCodec::try_from(self.codec) {
+            Ok(crate::NativeVideoCodec::Vp8) => {}
+            Ok(crate::NativeVideoCodec::H264Baseline) => {
+                if !(packet.starts_with(&[0, 0, 1]) || packet.starts_with(&[0, 0, 0, 1])) {
+                    return Err(invalid("invalid H.264 envelope geometry or Annex B prefix"));
+                }
+                let idr = packet
+                    .windows(4)
+                    .any(|part| part[..3] == [0, 0, 1] && part[3] & 31 == 5);
+                if idr != self.keyframe {
+                    return Err(invalid("H.264 IDR flag differs from native envelope"));
+                }
+                // The media decoder additionally validates all parameter sets,
+                // slice dependencies and SPS geometry before invoking the OS.
+                return Ok(());
+            }
+            Err(_) => return Err(invalid("unknown native video codec")),
         }
         if packet.len() < 3 {
             return Err(invalid("missing VP8 frame header"));

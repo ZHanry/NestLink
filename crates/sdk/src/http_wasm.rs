@@ -6,6 +6,13 @@ use web_sys::{
     AbortController, RequestCache, RequestCredentials, RequestInit, RequestMode, RequestRedirect,
 };
 
+struct AbortOnDrop(AbortController);
+impl Drop for AbortOnDrop {
+    fn drop(&mut self) {
+        self.0.abort();
+    }
+}
+
 pub(super) async fn request<R: DeserializeOwned>(
     _client: &Client,
     origin: &Url,
@@ -24,6 +31,7 @@ pub(super) async fn request<R: DeserializeOwned>(
     init.set_mode(RequestMode::SameOrigin);
     init.set_cache(RequestCache::NoStore);
     let abort = AbortController::new().map_err(|_| SdkError::BrowserTransport)?;
+    let _abort_on_drop = AbortOnDrop(abort.clone());
     init.set_signal(Some(&abort.signal()));
     if let Some(body) = body {
         init.set_body(&JsValue::from_str(&serde_json::to_string(&body)?));

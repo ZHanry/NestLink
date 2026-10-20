@@ -68,5 +68,57 @@ async fn sdk_registers_a_controller_only_browser_identity_with_bounded_expiry()
             .contains(&"controller".into())
     );
     assert!(!registered.device.capabilities.contains(&"host".into()));
+    // An existing persistent browser installation upgrades its protocol support
+    // under the same key; this must neither create a replacement nor add host.
+    let persistent = DeviceIdentity::generate();
+    sdk.enroll(
+        &persistent,
+        "Existing browser".into(),
+        "web".into(),
+        vec!["controller".into(), "vp8".into()],
+        "direct_only".into(),
+    )
+    .await?;
+    let descriptor = sdk
+        .devices()
+        .await?
+        .into_iter()
+        .find(|entry| entry.device.id == persistent.device_id)
+        .ok_or_else(|| std::io::Error::other("persistent browser missing"))?
+        .device;
+    sdk.refresh_browser_features(&persistent, descriptor.clone())
+        .await?;
+    let upgraded = sdk
+        .devices()
+        .await?
+        .into_iter()
+        .find(|entry| entry.device.id == persistent.device_id)
+        .ok_or_else(|| std::io::Error::other("upgraded browser missing"))?
+        .device;
+    assert_eq!(upgraded.id, descriptor.id);
+    assert_eq!(upgraded.public_key, descriptor.public_key);
+    assert!(
+        upgraded
+            .capabilities
+            .iter()
+            .any(|value| value == nestlink_protocol::ice::TRICKLE_CAPABILITY)
+    );
+    assert!(!upgraded.capabilities.iter().any(|value| value == "host"));
+    let mut elevated = upgraded.clone();
+    elevated.capabilities.push("host".into());
+    assert!(
+        sdk.refresh_browser_features(&persistent, elevated)
+            .await
+            .is_err()
+    );
+    let attacker = DeviceIdentity {
+        device_id: persistent.device_id.clone(),
+        identity: nestlink_identity::InstallationIdentity::generate(),
+    };
+    assert!(
+        sdk.refresh_browser_features(&attacker, upgraded)
+            .await
+            .is_err()
+    );
     Ok(())
 }

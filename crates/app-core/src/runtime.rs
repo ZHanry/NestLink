@@ -1148,6 +1148,21 @@ impl CoreHandle {
             .map_err(|_| NativeVideoError::Unauthorized)?;
         Ok(cursor.keyframe_needed(Instant::now()))
     }
+    pub fn native_video_codec(
+        &self,
+        binding: &NativeSessionBinding,
+    ) -> Result<nestlink_media_codec::VideoCodec, NativeVideoError> {
+        let route = self.native_host_video_route(binding)?;
+        let h264 = route
+            .lease
+            .media_capability(nestlink_protocol::media::H264_CAPABILITY)
+            .map_err(|_| NativeVideoError::Unauthorized)?;
+        Ok(if h264 {
+            nestlink_media_codec::VideoCodec::H264Baseline
+        } else {
+            nestlink_media_codec::VideoCodec::Vp8
+        })
+    }
     /// Sends one already encoded frame through the active session's View queue.
     /// Source, layout, connection, sequence and timestamp are checked or
     /// assigned here; callers cannot select a different lease or channel.
@@ -1222,6 +1237,15 @@ impl CoreHandle {
         };
         let delivery_guard = Arc::new(route.gate.guard());
         let mut frame = NativeVideo {
+            codec: if route
+                .lease
+                .media_capability(nestlink_protocol::media::H264_CAPABILITY)
+                .map_err(|_| NativeVideoError::Unauthorized)?
+            {
+                1
+            } else {
+                0
+            },
             schema_version: SCHEMA_VERSION,
             connection_generation: route.connection_generation,
             layout_epoch: binding.layout_epoch,

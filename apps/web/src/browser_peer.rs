@@ -939,11 +939,12 @@ mod wasm {
     use wasm_bindgen_futures::JsFuture;
     use web_sys::{
         Document, Event, MessageEvent, RtcConfiguration, RtcDataChannel, RtcDataChannelInit,
-        RtcDataChannelType, RtcIceCandidatePairStats, RtcIceCandidateStats, RtcIceGatheringState,
-        RtcIceServer, RtcIceTransportPolicy, RtcOfferOptions, RtcPeerConnection,
-        RtcPeerConnectionState, RtcRtpReceiver, RtcRtpTransceiverDirection, RtcRtpTransceiverInit,
-        RtcSdpType, RtcSessionDescriptionInit, RtcStats, RtcStatsIceCandidatePairState,
-        RtcStatsIceCandidateType, RtcStatsReport, RtcStatsType, RtcTrackEvent,
+        RtcDataChannelType, RtcIceCandidateInit, RtcIceCandidatePairStats, RtcIceCandidateStats,
+        RtcIceGatheringState, RtcIceServer, RtcIceTransportPolicy, RtcOfferOptions,
+        RtcPeerConnection, RtcPeerConnectionState, RtcRtpReceiver, RtcRtpTransceiverDirection,
+        RtcRtpTransceiverInit, RtcSdpType, RtcSessionDescriptionInit, RtcStats,
+        RtcStatsIceCandidatePairState, RtcStatsIceCandidateType, RtcStatsReport, RtcStatsType,
+        RtcTrackEvent,
     };
 
     #[derive(Clone)]
@@ -1395,6 +1396,10 @@ mod wasm {
         mode: PeerPathMode,
         cursor: SignalCursor,
         local_sequence: u64,
+        local_offer_sequence: u64,
+        local_ice_signal: Option<SignalPayload>,
+        remote_answer_sequence: u64,
+        remote_ice: nestlink_protocol::ice::IceSnapshotCursor,
         network_generation: u64,
         remote_network_generation: u64,
         local_candidate_addresses: Vec<String>,
@@ -1664,6 +1669,10 @@ mod wasm {
                 mode,
                 cursor,
                 local_sequence: 0,
+                local_offer_sequence: 0,
+                local_ice_signal: None,
+                remote_answer_sequence: 0,
+                remote_ice: Default::default(),
                 network_generation: 1,
                 remote_network_generation: 0,
                 local_candidate_addresses: Vec::new(),
@@ -1961,7 +1970,9 @@ mod wasm {
                 deadline,
             )
             .await?;
-            self.wait_for_ice_gathering(deadline).await?;
+            if !self.trickle_enabled() {
+                self.wait_for_ice_gathering(deadline).await?;
+            }
             let local = self
                 .peer
                 .local_description()
@@ -2035,7 +2046,9 @@ mod wasm {
                 deadline,
             )
             .await?;
-            self.wait_for_ice_gathering(deadline).await?;
+            if !self.trickle_enabled() {
+                self.wait_for_ice_gathering(deadline).await?;
+            }
             let local = self
                 .peer
                 .local_description()
@@ -2067,6 +2080,7 @@ mod wasm {
             }
             let deadline = self.operation_deadline(MAX_OPERATION_MS)?;
             let poll_deadline = self.operation_deadline(timeout_ms)?;
+            self.publish_local_ice(poll_deadline).await?;
             let signals = match bounded_live(
                 async {
                     let sdk = self.sdk.lock().await;
@@ -2092,6 +2106,7 @@ mod wasm {
             for signal in signals {
                 self.ensure_live()?;
                 let description = signal
+                    .clone()
                     .description
                     .ok_or(PeerError::UnsupportedTrickleSignal)?;
                 if description.kind != "answer" {
@@ -2100,7 +2115,14 @@ mod wasm {
                 let offer_sequence = description
                     .in_reply_to_sequence
                     .ok_or(PeerError::SignalRejected)?;
-                if !answer_matches_current_offer(self.local_sequence, offer_sequence)? {
+                if !answer_matches_current_offer(self.local_offer_sequence, offer_sequence)? {
+                    continue;
+                }
+                if signal.ice.is_some()
+                    && self.remote_answer_sequence == signal.description_sequence()
+                {
+                    self.apply_remote_ice(&signal).await?;
+                    saw_answer = true;
                     continue;
                 }
                 let remote = rtc_description(&description, self.permit.claims())?;
@@ -2123,6 +2145,9 @@ mod wasm {
                 )
                 .await?;
                 self.remote_answer_set = true;
+                self.remote_answer_sequence = signal.description_sequence();
+                self.remote_ice.reset();
+                self.apply_remote_ice(&signal).await?;
                 saw_answer = true;
             }
             if saw_answer {
@@ -2200,6 +2225,12 @@ mod wasm {
                     }
                     futures_util::future::Either::Right((_, pending)) => {
                         operation = pending;
+                        if self.trickle_enabled() {
+                            match self.receive_and_apply_answer_with_timeout(1_000).await {
+                                Ok(()) | Err(PeerError::AnswerRequired) => {}
+                                Err(problem) => break Err(problem),
+                            }
+                        }
                         if network_changed() {
                             break Ok(None);
                         }
@@ -2237,6 +2268,16 @@ mod wasm {
             if let Err(problem) = self.renew_from_host().await {
                 self.cancellation().cancel();
                 return Err(problem);
+            }
+            let deadline = self.operation_deadline(MAX_OPERATION_MS)?;
+            while self.permit.claims().is_setup() {
+                if let Err(problem) = self.renew_from_host_before(deadline).await {
+                    self.cancellation().cancel();
+                    return Err(problem);
+                }
+                if self.permit.claims().is_setup() {
+                    self.wait_tick(deadline).await?;
+                }
             }
             Ok(())
         }
@@ -2957,10 +2998,31 @@ mod wasm {
             )
             .await
         }
+        pub async fn media_sample(&self) -> Result<crate::browser_metrics::MediaSample, PeerError> {
+            self.ensure_live()?;
+            let sample = self
+                .await_bounded(
+                    async {
+                        let value = JsFuture::from(self.peer.get_stats())
+                            .await
+                            .map_err(|_| PeerError::BrowserOperation)?;
+                        let report = value
+                            .dyn_into::<RtcStatsReport>()
+                            .map_err(|_| PeerError::BrowserOperation)?;
+                        Ok(crate::browser_metrics::from_report(
+                            &report,
+                            monotonic_ms()?,
+                        ))
+                    },
+                    self.operation_deadline(1_000)?,
+                )
+                .await?;
+            Ok(sample)
+        }
 
         async fn publish_description(
             &mut self,
-            description: WebRtcDescription,
+            mut description: WebRtcDescription,
             network_generation: u64,
             deadline: f64,
         ) -> Result<(), PeerError> {
@@ -2973,7 +3035,20 @@ mod wasm {
                 .checked_add(1)
                 .ok_or(PeerError::SignalRejected)?;
             let claims = self.permit.claims();
+            let ice = if self.trickle_enabled() {
+                let ice = nestlink_protocol::ice::snapshot(
+                    &description.sdp,
+                    next,
+                    self.peer.ice_gathering_state() == RtcIceGatheringState::Complete,
+                )
+                .map_err(|_| PeerError::SignalRejected)?;
+                description.sdp = nestlink_protocol::ice::without_candidates(&description.sdp);
+                Some(ice)
+            } else {
+                None
+            };
             let payload = SignalPayload {
+                ice,
                 connection_generation: claims.connection_generation,
                 lease_sequence: claims.lease_sequence,
                 network_generation,
@@ -2989,7 +3064,7 @@ mod wasm {
                     self.sdk
                         .lock()
                         .await
-                        .publish_signal(&self.identity, &self.permit, payload)
+                        .publish_signal(&self.identity, &self.permit, payload.clone())
                         .await
                         .map_err(|_| PeerError::SignalRejected)
                 },
@@ -2997,7 +3072,101 @@ mod wasm {
             )
             .await?;
             self.local_sequence = next;
+            self.local_offer_sequence = next;
+            self.local_ice_signal = payload.ice.as_ref().map(|_| payload.clone());
             self.network_generation = network_generation;
+            Ok(())
+        }
+
+        fn trickle_enabled(&self) -> bool {
+            self.permit
+                .claims()
+                .required_capabilities
+                .iter()
+                .any(|value| value == nestlink_protocol::ice::TRICKLE_CAPABILITY)
+        }
+
+        async fn publish_local_ice(&mut self, deadline: f64) -> Result<(), PeerError> {
+            let Some(mut signal) = self.local_ice_signal.clone() else {
+                return Ok(());
+            };
+            self.ensure_live()?;
+            let local = self
+                .peer
+                .local_description()
+                .ok_or(PeerError::BrowserOperation)?;
+            let snapshot = nestlink_protocol::ice::snapshot(
+                &local.sdp(),
+                signal.description_sequence(),
+                self.peer.ice_gathering_state() == RtcIceGatheringState::Complete,
+            )
+            .map_err(|_| PeerError::SignalRejected)?;
+            if signal.ice.as_ref() == Some(&snapshot) {
+                return Ok(());
+            }
+            self.local_sequence = self
+                .local_sequence
+                .checked_add(1)
+                .ok_or(PeerError::SignalRejected)?;
+            signal.sequence = self.local_sequence;
+            signal.lease_sequence = self.permit.claims().lease_sequence;
+            signal.ice = Some(snapshot);
+            self.await_bounded(
+                async {
+                    self.sdk
+                        .lock()
+                        .await
+                        .publish_signal(&self.identity, &self.permit, signal.clone())
+                        .await
+                        .map_err(|_| PeerError::SignalRejected)
+                },
+                deadline,
+            )
+            .await?;
+            self.local_ice_signal = Some(signal);
+            Ok(())
+        }
+
+        async fn apply_remote_ice(&mut self, signal: &SignalPayload) -> Result<(), PeerError> {
+            let Some(ice) = &signal.ice else {
+                return Ok(());
+            };
+            if ice.description_sequence != self.remote_answer_sequence {
+                return Err(PeerError::SignalRejected);
+            }
+            signal
+                .validate(self.permit.claims())
+                .map_err(|_| PeerError::SignalRejected)?;
+            for candidate in self
+                .remote_ice
+                .apply(ice)
+                .map_err(|_| PeerError::SignalRejected)?
+            {
+                self.ensure_live()?;
+                let init = RtcIceCandidateInit::new(&candidate.candidate);
+                init.set_sdp_mid(candidate.sdp_mid.as_deref());
+                init.set_sdp_m_line_index(Some(candidate.sdp_m_line_index));
+                js_sys::Reflect::set(
+                    init.as_ref(),
+                    &JsValue::from_str("usernameFragment"),
+                    &JsValue::from_str(&candidate.username_fragment),
+                )
+                .map_err(|_| PeerError::BrowserOperation)?;
+                JsFuture::from(
+                    self.peer
+                        .add_ice_candidate_with_opt_rtc_ice_candidate_init(Some(&init)),
+                )
+                .await
+                .map_err(|_| PeerError::BrowserOperation)?;
+            }
+            if ice.end_of_candidates {
+                JsFuture::from(
+                    self.peer
+                        .add_ice_candidate_with_opt_rtc_ice_candidate_init(None),
+                )
+                .await
+                .map_err(|_| PeerError::BrowserOperation)?;
+            }
             Ok(())
         }
 

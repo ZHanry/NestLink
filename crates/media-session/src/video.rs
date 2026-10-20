@@ -1,6 +1,6 @@
 use crate::worker::{self, Worker};
 use crate::{ShutdownReport, WorkerMonitor};
-use nestlink_media_codec::{VideoConfig, Vp8Encoder};
+use nestlink_media_codec::{VideoCodec, VideoConfig, VideoEncoder};
 use nestlink_protocol::{
     NativeVideo, NativeVideoFeedback, SCHEMA_VERSION, VIDEO_KEYFRAME_INTERVAL_MS,
 };
@@ -144,7 +144,7 @@ impl VideoSender {
     }
 }
 struct Encoder {
-    codec: Vp8Encoder,
+    codec: VideoEncoder,
     config: VideoConfig,
     sequence: u64,
     last_pts: Option<u64>,
@@ -153,6 +153,7 @@ struct Encoder {
     next_keyframe: Instant,
     last_feedback: Option<NativeVideoFeedback>,
     last_pixels: Option<Zeroizing<Vec<u8>>>,
+    pending_sources: BTreeMap<u64, bool>,
 }
 fn apply_feedback(
     bytes: &[u8],
@@ -239,12 +240,20 @@ fn send<D: CaptureDevice>(
         .collect::<Vec<_>>();
     let runtime = worker::runtime()?;
     let origin = Instant::now();
+    let codec_kind = if lease
+        .media_capability(nestlink_protocol::media::H264_CAPABILITY)
+        .map_err(io::Error::other)?
+    {
+        VideoCodec::H264Baseline
+    } else {
+        VideoCodec::Vp8
+    };
     let mut codecs = BTreeMap::new();
     for stream in selected {
         codecs.insert(
             stream.source,
             Encoder {
-                codec: Vp8Encoder::new(stream.codec)?,
+                codec: VideoEncoder::new(codec_kind, stream.codec)?,
                 config: stream.codec,
                 sequence: 0,
                 last_pts: None,
@@ -253,6 +262,7 @@ fn send<D: CaptureDevice>(
                 next_keyframe: origin,
                 last_feedback: None,
                 last_pixels: None,
+                pending_sources: BTreeMap::new(),
             },
         );
     }
@@ -375,12 +385,28 @@ fn send<D: CaptureDevice>(
                 u64::try_from(elapsed.as_nanos() / 1_000_000 * 90).map_err(io::Error::other)?;
             let pts = pts.max(encoder.last_pts.map_or(0, |last| last.saturating_add(1)));
             // poll() has released the lease and platform locks before encoding.
+            if encoder.pending_sources.len() >= 8 {
+                return Err(io::Error::other(
+                    "encoder output delay exceeded bounded metadata queue",
+                ));
+            }
+            encoder.pending_sources.insert(pts, repeated_source);
             let packet = encoder.codec.encode(
                 &pixels,
                 pts,
                 encoder.force_keyframe && now >= encoder.next_keyframe,
             )?;
             encoder.last_pixels = Some(pixels);
+            encoder.last_pts = Some(pts);
+            let Some(packet) = packet else {
+                continue;
+            };
+            let repeated_source = encoder
+                .pending_sources
+                .remove(&packet.pts_90khz)
+                .ok_or_else(|| {
+                    io::Error::other("encoder output has an unknown source timestamp")
+                })?;
             if packet.keyframe {
                 encoder.force_keyframe = false;
                 encoder.next_keyframe = now + Duration::from_millis(VIDEO_KEYFRAME_INTERVAL_MS);
@@ -404,6 +430,10 @@ fn send<D: CaptureDevice>(
                 .filter(|sequence| *sequence <= i64::MAX as u64)
                 .ok_or_else(|| io::Error::other("video sequence exhausted"))?;
             let mut envelope = NativeVideo {
+                codec: match codec_kind {
+                    VideoCodec::Vp8 => 0,
+                    VideoCodec::H264Baseline => 1,
+                },
                 schema_version: SCHEMA_VERSION,
                 connection_generation: epoch.connection,
                 layout_epoch: epoch.layout,

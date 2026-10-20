@@ -280,6 +280,7 @@ impl Fixture {
 
 fn offer(permit: &VerifiedPermit) -> SignalPayload {
     SignalPayload {
+        ice: None,
         connection_generation: permit.claims().connection_generation,
         lease_sequence: permit.claims().lease_sequence,
         network_generation: 1,

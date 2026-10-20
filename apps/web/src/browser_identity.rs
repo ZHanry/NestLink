@@ -107,6 +107,31 @@ async fn ensure_registered(
         {
             return Err(BrowserIdentityError::Mismatch);
         }
+        let server_has_features = sdk
+            .health()
+            .version
+            .split('.')
+            .take(2)
+            .map(str::parse::<u32>)
+            .collect::<Result<Vec<_>, _>>()
+            .is_ok_and(|parts| parts.as_slice() >= [0, 7].as_slice());
+        if server_has_features
+            && [
+                nestlink_protocol::ice::SETUP_CAPABILITY,
+                nestlink_protocol::ice::TRICKLE_CAPABILITY,
+            ]
+            .iter()
+            .any(|feature| {
+                !entry
+                    .device
+                    .capabilities
+                    .iter()
+                    .any(|value| value == feature)
+            })
+        {
+            sdk.refresh_browser_features(identity, entry.device.clone())
+                .await?;
+        }
         return Ok(());
     }
 
@@ -118,7 +143,12 @@ async fn ensure_registered(
             identity,
             "NestLink Web controller".into(),
             "web".into(),
-            vec!["controller".into(), "vp8".into()],
+            vec![
+                "controller".into(),
+                "vp8".into(),
+                nestlink_protocol::ice::TRICKLE_CAPABILITY.into(),
+                nestlink_protocol::ice::SETUP_CAPABILITY.into(),
+            ],
             "direct_preferred".into(),
         )
         .await;

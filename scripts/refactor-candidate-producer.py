@@ -40,7 +40,7 @@ def module(name, path):
 # called or monkeypatched by this separate producer.
 TOOLS = module("candidate_release_utilities", "scripts/refactor-release-producer.py")
 NATIVE = TOOLS.NATIVE
-VERSION = "0.6.0-rc.1"
+VERSION = "0.7.0-rc.1"
 REPOSITORY = "ZHanry/NestLink"
 REPOSITORY_ID = "R_kgDOVNHMvg"
 CURRENT_ROLES = frozenset((
@@ -174,7 +174,7 @@ def cohort(path):
     require(value.get("signing") == SIGNING and value.get("production_update_eligible") is False,
             "Candidate cannot claim production signing or update eligibility")
     require(type(value.get("sequence")) is int and 1 <= value["sequence"] <= 999
-            and value.get("android_version_code") == 600000 + value["sequence"],
+            and value.get("android_version_code") == 700000 + value["sequence"],
             "Invalid candidate version allocation")
     require(type(value.get("source_epoch")) is int and value["source_epoch"] > 0,
             "Candidate source epoch is missing")
@@ -214,7 +214,7 @@ def preflight(args):
              "source_revision": args.source, "sequence": args.sequence,
              "run_id": args.run_id, "run_attempt": args.run_attempt,
              "source_epoch": int(TOOLS.run(["git", "show", "-s", "--format=%ct", args.source]).decode().strip()),
-             "android_version_code": 600000 + args.sequence,
+             "android_version_code": 700000 + args.sequence,
              "android_application_id": "com.zhanry.nestlink.candidate",
              "android_version_name": policy["version"],
              "android_api_range": [30, 36], "oci_base": args.oci_base,

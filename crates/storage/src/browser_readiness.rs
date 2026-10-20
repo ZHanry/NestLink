@@ -111,7 +111,13 @@ impl Store {
         body: BrowserHostReadinessSubmission,
         now: u64,
     ) -> Result<BrowserHostReadiness, StorageError> {
-        let proof = self.browser_host_readiness_transcript(actor, id, now)?;
+        let mut proof = self.browser_host_readiness_transcript(actor, id, now)?;
+        let view = self.remote(actor, id)?;
+        proof.payload_sha256 = digest(&nestlink_protocol::ice::readiness_payload(
+            view.connection_generation,
+            &body.protocol_features,
+        )?)
+        .to_vec();
         verify_device_action(
             &proof,
             &self.device_record_at(&proof.device_id, now)?.public_key,
@@ -120,8 +126,8 @@ impl Store {
         let view = self.remote(actor, id)?;
         let tx = self.connection.unchecked_transaction()?;
         tx.execute(
-            "INSERT INTO browser_host_readiness VALUES(?1,?2,?3) ON CONFLICT(request_id) DO UPDATE SET connection_generation=excluded.connection_generation,ready_until=excluded.ready_until",
-            params![id, view.connection_generation, view.expires_at_unix_ms / 1000],
+            "INSERT INTO browser_host_readiness(request_id,connection_generation,ready_until,protocol_features) VALUES(?1,?2,?3,?4) ON CONFLICT(request_id) DO UPDATE SET connection_generation=excluded.connection_generation,ready_until=excluded.ready_until,protocol_features=excluded.protocol_features",
+            params![id, view.connection_generation, view.expires_at_unix_ms / 1000, serde_json::to_string(&body.protocol_features)?],
         )?;
         audit(
             &tx,

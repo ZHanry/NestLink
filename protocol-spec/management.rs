@@ -368,6 +368,8 @@ pub struct BrowserHostReadiness {
 #[serde(deny_unknown_fields)]
 pub struct BrowserHostReadinessSubmission {
     pub signature: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub protocol_features: Vec<String>,
 }
 #[derive(Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
@@ -608,6 +610,25 @@ pub struct SignalPayload {
     pub sequence: u64,
     pub candidates: Vec<Candidate>,
     pub description: Option<WebRtcDescription>,
+    /// Cumulative, bounded ICE snapshot. Every revision retains its original
+    /// description so polling cannot deliver candidates without their parent.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ice: Option<WebRtcIceSnapshot>,
+}
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct WebRtcIceSnapshot {
+    pub description_sequence: u64,
+    pub candidates: Vec<WebRtcIceCandidate>,
+    pub end_of_candidates: bool,
+}
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct WebRtcIceCandidate {
+    pub candidate: String,
+    pub sdp_mid: Option<String>,
+    pub sdp_m_line_index: u16,
+    pub username_fragment: String,
 }
 #[derive(Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]

@@ -24,7 +24,7 @@ import urllib.request
 
 REPOSITORY = "ZHanry/NestLink"
 REPOSITORY_ID = "R_kgDOVNHMvg"
-VERSION = "0.6.0-rc.1"
+VERSION = "0.7.0-rc.1"
 TAG = "v" + VERSION
 MAX_ASSET_BYTES = 2 * 1024**3
 MANIFEST_NAME = "candidate-build-manifest.json"
@@ -216,14 +216,14 @@ def clean_source(root, revision):
 
 def release_body(revision, checksum):
     return ("NestLink " + VERSION + " 开发候选版。\n\n"
-            "- 隔离认证与信令限流，待审批过滤过期项并分页；修复信令清理停滞，限制事件连接和 TURN 资源。\n"
-            "- Web 支持精确会话恢复和可选保持登录；桌面通过 DPAPI/Secret Service 加密恢复管理登录，刷新响应丢失可恢复同一回执。\n"
-            "- 增加能力协商的滚轮输入，保留权限、序列、租约和撤销边界；Android 被控端明确不支持滚轮。\n"
-            "- 重做桌面/Web 连接、审批、服务与配额任务层，保护草稿并固定反馈；桌面重复启动激活原窗口。\n"
-            "- Android 增加前台审批轮询、失焦释放、有界合并输入队列、组合权限及独立全屏会话工具。\n"
-            "- 51 项问题的代码与验收边界：https://github.com/ZHanry/NestLink/blob/" + revision + "/docs/0.6.0-remediation.md\n\n"
+            "- Windows 媒体 socket 支持跟随系统、优先物理接口和指定接口；实际 ICE 与原生 QUIC 使用同一 socket 工厂。\n"
+            "- 直连能力协商启用累计 Trickle ICE；启动许可与运行短租约分离，30 秒启动预算仍受原授权截止约束。\n"
+            "- Windows 增加 DXGI 采集、GDI 降级恢复和按签名协商的 Media Foundation H.264 硬编硬解；VP8 保留兼容。\n"
+            "- 原生可靠视频加入发送截止、缓冲上界和本地码率/帧率调节；增加进入桌面、操作中心和脱敏实测诊断。\n"
+            "- 完整整改状态与验收边界：https://github.com/ZHanry/NestLink/blob/" + revision + "/docs/refactor/REMEDIATION-0.7.0-RC1.md\n\n"
+            "范围：浏览器仍为 VP8；当前媒体仍有 CPU 像素转换和上传。GPU 零拷贝、H.265、4:4:4/HDR、视频 datagram 尚未实现；1080p60、原 HL↔外部 Edge 百次直连、UU 配对 A/B 和 24 小时长稳尚未完成资格验收。本 RC 不宣称全部报告项目已通过。\n\n"
             "升级：请同时升级服务器、Web 和双方客户端。原生跨网络回退需管理员允许服务器转发及双方 relay；浏览器需可达 STUN，受限网络还需注册 TURN 节点并允许中继。升级不会自动放宽服务器策略，原生 WSS 不能替代浏览器 TURN。\n"
-            "数据库升级到 schema 23；升级前备份，回滚旧版本须恢复升级前备份。恢复登录不会恢复屏幕、输入或文件授权。\n"
+            "数据库升级到 schema 24；升级前备份，回滚旧版本须恢复升级前备份。恢复登录不会恢复屏幕、输入或文件授权。\n"
             "部署与排障：https://github.com/ZHanry/NestLink/blob/" + revision + "/docs/REMOTE-CONNECTION.md\n\n"
             "Source commit: " + revision + ". All 18 product artifacts are bound to this clean source commit.\n"
             "candidate-build-manifest.json SHA-256: " + checksum + ".\n\n"

@@ -1,4 +1,5 @@
 //! OS network notifications are facts that invalidate candidates, never grants.
+pub mod path;
 #[cfg(target_os = "android")]
 use std::sync::{Arc, Mutex};
 #[cfg(any(target_os = "android", test))]

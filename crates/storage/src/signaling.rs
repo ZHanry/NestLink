@@ -147,7 +147,7 @@ impl Store {
                 .as_ref()
                 .is_some_and(|description| {
                     description.kind == "offer"
-                        && answer.in_reply_to_sequence == Some(current_offer.sequence)
+                        && answer.in_reply_to_sequence == Some(current_offer.description_sequence())
                 });
             if offer_view.submission.device_id != permit.controller_device_id || !is_current_offer {
                 return Err(StorageError::Conflict);
@@ -166,6 +166,23 @@ impl Store {
                 || payload.lease_sequence < lease
             {
                 return Err(StorageError::Conflict);
+            }
+            let previous: SignalView = serde_json::from_str(&original)?;
+            if network == payload.network_generation
+                && (payload.ice.is_some() || previous.submission.payload.ice.is_some())
+            {
+                let old = &previous.submission.payload;
+                if payload.description_sequence() != old.description_sequence()
+                    || payload.description != old.description
+                {
+                    return Err(StorageError::Conflict);
+                }
+                let (Some(old_ice), Some(new_ice)) = (&old.ice, &payload.ice) else {
+                    return Err(StorageError::Conflict);
+                };
+                let mut cursor = nestlink_protocol::ice::IceSnapshotCursor::default();
+                cursor.apply(old_ice)?;
+                cursor.apply(new_ice)?;
             }
         }
         let recent: Option<u64> = tx

@@ -249,6 +249,7 @@ fn approve(
             h,
             &view.id,
             nestlink_protocol::api::BrowserHostReadinessSubmission {
+                protocol_features: Vec::new(),
                 signature: URL_SAFE_NO_PAD.encode(key.sign_action(&proof)?),
             },
             now,

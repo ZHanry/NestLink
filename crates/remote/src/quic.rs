@@ -4,7 +4,7 @@
 use crate::{
     ChannelRuntime, LeaseControl, RemoteError, SessionSetup, controller_proof, host_proof,
     lease_io,
-    queues::{CloseQuicOnDrop, Queue, Queued, StopOnDrop, stop_io_result},
+    queues::{CloseQuicOnDrop, Queue, Queued, StopOnDrop, stop_io_result, write_media_bounded},
 };
 use nestlink_identity::InstallationIdentity;
 use nestlink_protocol::{
@@ -278,7 +278,13 @@ pub async fn authorize(
                         {
                             return Ok(false);
                         }
-                        write_frame(&mut write, channel, &queued.frame.payload).await?;
+                        write_media_bounded(
+                            &mut write,
+                            channel,
+                            &queued.frame.payload,
+                            queued.arrived,
+                        )
+                        .await?;
                         Ok(true)
                     },
                     &writer_lease,

@@ -459,6 +459,12 @@
       "BrowserHostReadinessSubmission": {
         "additionalProperties": false,
         "properties": {
+          "protocol_features": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "signature": {
             "type": "string"
           }
@@ -642,7 +648,8 @@
           "IDENTITY_MISMATCH",
           "REPLAY_REJECTED",
           "INTERNAL_ERROR",
-          "RELAY_UNAVAILABLE"
+          "RELAY_UNAVAILABLE",
+          "SETUP_BUDGET_EXHAUSTED"
         ],
         "type": "string"
       },
@@ -3512,6 +3519,17 @@
               }
             ]
           },
+          "ice": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WebRtcIceSnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Cumulative, bounded ICE snapshot. Every revision retains its original\ndescription so polling cannot deliver candidates without their parent."
+          },
           "lease_sequence": {
             "format": "uint64",
             "minimum": 0,
@@ -4450,6 +4468,60 @@
           "dtls_sha256"
         ],
         "type": "object"
+      },
+      "WebRtcIceCandidate": {
+        "additionalProperties": false,
+        "properties": {
+          "candidate": {
+            "type": "string"
+          },
+          "sdp_m_line_index": {
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "sdp_mid": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "username_fragment": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "candidate",
+          "sdp_m_line_index",
+          "username_fragment"
+        ],
+        "type": "object"
+      },
+      "WebRtcIceSnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/WebRtcIceCandidate"
+            },
+            "type": "array"
+          },
+          "description_sequence": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "end_of_candidates": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "description_sequence",
+          "candidates",
+          "end_of_candidates"
+        ],
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -4467,7 +4539,7 @@
   "info": {
     "description": "Generated from protocol-spec/management.rs and management-routes.json.",
     "title": "NestLink management contract",
-    "version": "0.6.0-rc.1"
+    "version": "0.7.0-rc.1"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -5939,6 +6011,106 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RevokeDevice"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/devices/{id}/features": {
+      "post": {
+        "operationId": "refresh_browser_features",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceRegistration"
               }
             }
           },

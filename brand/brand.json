@@ -1,9 +1,9 @@
 {
   "name": "NestLink",
-  "version": "0.6.0-rc.1",
+  "version": "0.7.0-rc.1",
   "style": "device-and-session-workspace",
-  "primary": "#7850B2",
-  "background": "#F6F3FC",
+  "primary": "#1467D5",
+  "background": "#F4F6F9",
   "icon": "icon.svg",
   "icon_sha256": "3486f7a518d48da84a788abbb46ca9229214ddf40f8828dadf2ae2003712cfe8",
   "scrollbars": "visible-when-scrollable",

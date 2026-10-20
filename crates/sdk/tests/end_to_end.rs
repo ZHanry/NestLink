@@ -143,6 +143,7 @@ async fn real_http_sdk_registration_approval_native_quic_and_revoke() -> Result 
     };
     use nestlink_sdk::{SignalCursor, verify_peer_signal};
     let payload = SignalPayload {
+        ice: None,
         connection_generation: 1,
         lease_sequence: 2,
         network_generation: 1,

@@ -56,6 +56,15 @@ enum VideoStatus {
     Streaming,
     Reconnecting,
 }
+struct VideoObservation {
+    codec: u8,
+    hardware: bool,
+    layout: (u64, u32, u32),
+    window: std::time::Instant,
+    frames: u32,
+    fps: Option<f64>,
+    latest: std::time::Instant,
+}
 
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 enum MessageTone {
@@ -154,6 +163,7 @@ pub struct DesktopApp {
     video_sequence: u64,
     video_texture: Option<egui::TextureHandle>,
     video_status: VideoStatus,
+    video_observation: Option<VideoObservation>,
     native_control_enabled: bool,
     native_input_binding: Option<(u64, NativeInputBinding)>,
     native_pressed_keys: BTreeSet<u16>,
@@ -238,6 +248,7 @@ impl DesktopApp {
             video_sequence: 0,
             video_texture: None,
             video_status: VideoStatus::Idle,
+            video_observation: None,
             native_control_enabled: false,
             native_input_binding: None,
             native_pressed_keys: BTreeSet::new(),
@@ -314,6 +325,7 @@ impl DesktopApp {
         self.video_layout = None;
         self.video_sequence = 0;
         self.video_status = VideoStatus::Idle;
+        self.video_observation = None;
     }
     fn release_native_control(&mut self) {
         if let Some((generation, binding)) = self.native_input_binding.take() {
@@ -924,6 +936,33 @@ impl DesktopApp {
                     self.video_layout = Some(next);
                     self.video_sequence = frame.sequence;
                     self.video_status = VideoStatus::Streaming;
+                    let now = std::time::Instant::now();
+                    if self
+                        .video_observation
+                        .as_ref()
+                        .is_none_or(|value| value.layout != next || value.codec != frame.codec)
+                    {
+                        self.video_observation = Some(VideoObservation {
+                            codec: frame.codec,
+                            hardware: frame.hardware_decode,
+                            layout: next,
+                            window: now,
+                            frames: 0,
+                            fps: None,
+                            latest: now,
+                        });
+                    }
+                    if let Some(value) = &mut self.video_observation {
+                        value.hardware = frame.hardware_decode;
+                        value.latest = now;
+                        value.frames = value.frames.saturating_add(1);
+                        let elapsed = now.duration_since(value.window).as_secs_f64();
+                        if elapsed >= 1.0 {
+                            value.fps = Some(f64::from(value.frames) / elapsed);
+                            value.frames = 0;
+                            value.window = now;
+                        }
+                    }
                 }
                 VideoUpdate::Message(nestlink_app_ipc::NativeVideoMessage::Closed(binding)) => {
                     if video_binding_is_current(&binding, snapshot, runtime_id.as_deref())
@@ -1095,7 +1134,7 @@ impl DesktopApp {
             if icons::button(
                 ui,
                 icons::Icon::Settings,
-                self.t("会话工具", "Session tools"),
+                self.t("操作中心", "Control center"),
             )
             .clicked()
             {
@@ -1206,7 +1245,24 @@ impl DesktopApp {
                     egui::ScrollArea::vertical()
                         .id_salt("remote-tools-scroll")
                         .show(ui, |ui| {
-                            ui.heading(self.t("会话工具", "Session tools"));
+                            ui.heading(self.t("操作中心", "Control center"));
+                            if let Some(observed) = &self.video_observation {
+                                ui.strong(self.t("连接与性能", "Connection and performance"));
+                                ui.label(format!("{}: {}", self.t("实际编码", "Actual codec"), if observed.codec == 1 { "H.264 Baseline" } else { "VP8" }));
+                                ui.label(format!("{}: {}", self.t("实际解码", "Actual decoder"), if observed.hardware { self.t("硬件", "Hardware") } else { self.t("软件", "Software") }));
+                                let fps = observed.fps.filter(|_| observed.latest.elapsed() < Duration::from_secs(2))
+                                    .map(|fps| format!("{fps:.1} fps")).unwrap_or_else(|| self.t("未观测", "Not observed").into());
+                                ui.label(format!("{}: {fps}", self.t("画面上传帧率", "Texture upload rate")));
+                                ui.label(format!("{} × {}", observed.layout.1, observed.layout.2));
+                                ui.small(self.t("解码后经 CPU 像素上传呈现；此帧率不代表端到端输入时延。", "Decoded CPU pixels are uploaded for display. This rate does not measure input-to-picture latency."));
+                                if ui.button(self.t("复制脱敏诊断", "Copy redacted diagnostics")).clicked() {
+                                    let report = serde_json::json!({"version": env!("CARGO_PKG_VERSION"), "codec": if observed.codec == 1 {"h264-baseline"} else {"vp8"}, "hardware_decode_observed": observed.hardware,
+                                        "texture_upload_fps": observed.fps.filter(|_| observed.latest.elapsed() < Duration::from_secs(2)), "sample_age_ms": observed.latest.elapsed().as_millis(), "width": observed.layout.1, "height": observed.layout.2,
+                                        "presentation": "cpu-bgra-texture-upload", "network_rtt_ms": null, "end_to_end_latency_ms": null});
+                                    if let Ok(text) = serde_json::to_string_pretty(&report) { ui.ctx().copy_text(text); }
+                                }
+                                ui.separator();
+                            }
                             ui.add_space(10.);
                             ui.horizontal(|ui| {
                                 icons::badge(ui, icons::Icon::Monitor, 28.);
@@ -2427,6 +2483,8 @@ mod video_tests {
 
     fn frame(binding: nestlink_app_ipc::NativeVideoBinding) -> nestlink_app_ipc::NativeVideoFrame {
         nestlink_app_ipc::NativeVideoFrame {
+            codec: 0,
+            hardware_decode: false,
             binding,
             layout_epoch: 2,
             sequence: 7,

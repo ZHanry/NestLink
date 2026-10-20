@@ -1,4 +1,4 @@
-//! Windows GDI capture with per-session native ownership and terminal OS facts.
+//! Windows DXGI capture with a GDI compatibility fallback and terminal OS facts.
 #![allow(unsafe_code)]
 use nestlink_platform_session::{WindowsSessionObserver, WindowsSessionSnapshot};
 use nestlink_remote::{
@@ -36,7 +36,60 @@ const QUEUE_BYTES: usize = 128 * 1024 * 1024;
 const STARTUP: Duration = Duration::from_secs(3);
 const CLEANUP: Duration = Duration::from_millis(150);
 const HEARTBEAT: Duration = Duration::from_millis(250);
-const FRAME_INTERVAL: Duration = Duration::from_millis(33);
+const FRAME_INTERVAL: Duration = Duration::from_micros(16_667);
+
+unsafe extern "C" {
+    fn nl_dxgi_open(
+        monitor: usize,
+        width: u32,
+        height: u32,
+        result: *mut *mut std::ffi::c_void,
+    ) -> i32;
+    fn nl_dxgi_read(state: *mut std::ffi::c_void, pixels: *mut u8, length: usize) -> i32;
+    fn nl_dxgi_close(state: *mut std::ffi::c_void);
+}
+
+// Owned by the capture worker only. The source and staging texture never leave
+// that thread; authorization and platform facts are checked around every read.
+struct DesktopDuplication(*mut std::ffi::c_void);
+impl DesktopDuplication {
+    fn open(monitor: &Monitor, display: Display) -> io::Result<Self> {
+        let mut pointer = null_mut();
+        // SAFETY: the approved monitor was enumerated by Windows; the bridge
+        // returns one owned state or null, and validates the selected geometry.
+        let hr = unsafe {
+            nl_dxgi_open(
+                monitor.handle,
+                display.logical.width,
+                display.logical.height,
+                &mut pointer,
+            )
+        };
+        if hr < 0 || pointer.is_null() {
+            return Err(io::Error::other(format!("DXGI unavailable ({hr:#010x})")));
+        }
+        Ok(Self(pointer))
+    }
+    fn read(&mut self, surface: &Surface) -> io::Result<bool> {
+        // SAFETY: finish all GDI cursor drawing before the bridge writes the
+        // worker-owned DIB. Its validated byte budget is passed explicitly.
+        if unsafe { GdiFlush() } == 0 {
+            return Err(io::Error::last_os_error());
+        }
+        let hr = unsafe { nl_dxgi_read(self.0, surface.bits, surface.bytes) };
+        match hr {
+            0 => Ok(true),
+            1 => Ok(false),
+            _ => Err(io::Error::other(format!("DXGI capture lost ({hr:#010x})"))),
+        }
+    }
+}
+impl Drop for DesktopDuplication {
+    fn drop(&mut self) {
+        // SAFETY: exactly one owner; COM resources are released on their worker.
+        unsafe { nl_dxgi_close(self.0) };
+    }
+}
 
 fn denied(message: &'static str) -> io::Error {
     io::Error::new(io::ErrorKind::PermissionDenied, message)
@@ -587,16 +640,44 @@ enum Target {
         height: u32,
     },
 }
+impl Target {
+    fn monitor(&self) -> Option<&Monitor> {
+        match self {
+            Self::Monitor(monitor) => Some(monitor),
+            #[cfg(test)]
+            Self::OwnedWindow { .. } => None,
+        }
+    }
+}
 struct NativeSource {
     target: Target,
     source: HDC,
     surface: Surface,
+    duplication: Option<DesktopDuplication>,
+    retry_duplication: Instant,
     #[cfg(test)]
     paint: Option<Surface>,
 }
 impl NativeSource {
     fn open(target: Target, display: Display) -> io::Result<Self> {
         let surface = Surface::new(display)?;
+        let duplication = match &target {
+            Target::Monitor(monitor) => match DesktopDuplication::open(monitor, display) {
+                Ok(duplication) => {
+                    eprintln!("capture_backend=dxgi source={}", display.source);
+                    Some(duplication)
+                }
+                Err(error) => {
+                    eprintln!(
+                        "capture_backend=gdi source={} fallback={error}",
+                        display.source
+                    );
+                    None
+                }
+            },
+            #[cfg(test)]
+            Target::OwnedWindow { .. } => None,
+        };
         #[cfg(test)]
         let paint = if matches!(target, Target::OwnedWindow { .. }) {
             Some(Surface::new(display)?)
@@ -637,13 +718,51 @@ impl NativeSource {
             target,
             source,
             surface,
+            duplication,
+            retry_duplication: Instant::now() + Duration::from_secs(2),
             #[cfg(test)]
             paint,
         })
     }
-    fn capture(&mut self) -> io::Result<RawFrame> {
+    fn capture(&mut self) -> io::Result<Option<RawFrame>> {
         let captured_at = Instant::now();
         let d = self.surface.display.logical;
+        // The worker validates the original display/session snapshot before
+        // each call. Recreate only that approved HMONITOR after access/device
+        // loss; retry at a bounded rate while GDI supplies compatibility frames.
+        if self.duplication.is_none() && captured_at >= self.retry_duplication {
+            self.retry_duplication = captured_at + Duration::from_secs(2);
+            if let Some(monitor) = self.target.monitor()
+                && let Ok(duplication) = DesktopDuplication::open(monitor, self.surface.display)
+            {
+                self.duplication = Some(duplication);
+                eprintln!(
+                    "capture_backend=dxgi source={} recovery=true",
+                    self.surface.display.source
+                );
+            }
+        }
+        if let Some(duplication) = &mut self.duplication {
+            match duplication.read(&self.surface) {
+                Ok(false) => return Ok(None),
+                Ok(true) => {
+                    if let Some(cursor) = CursorImage::desktop()? {
+                        cursor.draw(&self.surface)?;
+                    }
+                    return self.surface.read(captured_at).map(Some);
+                }
+                Err(error) => {
+                    // The outer worker still checks the original session,
+                    // monitor and DPI snapshot before delivering any pixels.
+                    eprintln!(
+                        "capture_backend=gdi source={} fallback={error}",
+                        self.surface.display.source
+                    );
+                    self.duplication = None;
+                    self.retry_duplication = captured_at + Duration::from_secs(2);
+                }
+            }
+        }
         let source = match &self.target {
             Target::Monitor(_) => self.source,
             #[cfg(test)]
@@ -711,7 +830,7 @@ impl NativeSource {
         {
             cursor.draw(&self.surface)?;
         }
-        self.surface.read(captured_at)
+        self.surface.read(captured_at).map(Some)
     }
 }
 impl Drop for NativeSource {
@@ -883,7 +1002,9 @@ fn run_observed(
                 return Err(denied("Windows platform changed while capturing"));
             }
             shared.checked()?;
-            shared.publish(frame)?;
+            if let Some(frame) = frame {
+                shared.publish(frame)?;
+            }
         }
         let state = shared
             .state

@@ -20,8 +20,9 @@ thiserror.workspace = true
 
 [dev-dependencies]
 rcgen.workspace = true
-nestlink-server = {path="../../apps/server",version="=0.6.0-rc.1"}
+nestlink-server = {path="../../apps/server",version="=0.7.0-rc.1"}
 nestlink-storage.workspace = true
+nestlink-traversal.workspace = true
 nestlink-platform-files.workspace = true
 tokio.workspace = true
 nestlink-transport-quic.workspace = true

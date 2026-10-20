@@ -21,6 +21,7 @@ enum ErrorCode {
   REPLAY_REJECTED = 16;
   INTERNAL_ERROR = 17;
   RELAY_UNAVAILABLE = 18;
+  SETUP_BUDGET_EXHAUSTED = 19;
 }
 
 enum Path {
@@ -207,6 +208,10 @@ message NativeInputLayout {
 // Native authorized channels only. These are not RTP/WebRTC payload formats.
 // The current connection, approved source and frozen layout are checked by
 // the media session; protobuf validity alone never authorizes media.
+enum NativeVideoCodec {
+  VP8 = 0; // default keeps the v0.6 wire profile
+  H264_BASELINE = 1; // negotiated h264-baseline-v1; bounded Annex B, 8-bit 4:2:0
+}
 message NativeVideo {
   uint32 schema_version = 1;
   uint64 connection_generation = 2;
@@ -217,8 +222,9 @@ message NativeVideo {
   uint32 width = 7;
   uint32 height = 8;
   bool keyframe = 9;
-  bytes payload = 10; // one complete visible 8-bit VP8 frame
+  bytes payload = 10; // one complete access unit of the negotiated codec
   bool repeated_source = 11; // recovery keyframe from cached approved pixels, not a fresh capture
+  NativeVideoCodec codec = 12;
 }
 message NativeAudio {
   uint32 schema_version = 1;

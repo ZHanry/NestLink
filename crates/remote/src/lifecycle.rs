@@ -304,25 +304,40 @@ pub struct LeaseControl {
 impl LeaseControl {
     /// Attach the common lifecycle to a session already proved over another
     /// authenticated carrier (for example WebRTC's reliable control channel).
-    /// Both endpoint proofs and View authorization are checked by `new`.
+    /// A setup permit opens lifecycle supervision only. Every business/capture
+    /// attachment remains denied until a running lease has been installed.
     pub fn from_proved_session(
         session: Session,
         path: Path,
         clock: RuntimeClock,
         lifecycle: SessionLifecycle,
     ) -> Result<Self, RemoteError> {
-        Self::new(session, path, clock, lifecycle)
+        Self::new_inner(session, path, clock, lifecycle, true)
     }
 
     pub(crate) fn new(
-        mut session: Session,
+        session: Session,
         path: Path,
         clock: RuntimeClock,
         lifecycle: SessionLifecycle,
     ) -> Result<Self, RemoteError> {
+        Self::new_inner(session, path, clock, lifecycle, false)
+    }
+
+    fn new_inner(
+        mut session: Session,
+        path: Path,
+        clock: RuntimeClock,
+        lifecycle: SessionLifecycle,
+        allow_setup: bool,
+    ) -> Result<Self, RemoteError> {
         let runtime = tokio::runtime::Handle::try_current().map_err(io::Error::other)?;
         session.check_clock(clock.sample()?)?;
-        session.authorize(Permission::View, path, clock.monotonic_ms())?;
+        if allow_setup && session.is_setup_authorization() {
+            session.check_proved_setup(path, clock.monotonic_ms())?;
+        } else {
+            session.authorize(Permission::View, path, clock.monotonic_ms())?;
+        }
         let (updates, _) = watch::channel(0);
         let (reports, _) = watch::channel(None);
         let (input_permits, _) = watch::channel(None);
@@ -526,6 +541,17 @@ impl LeaseControl {
             return Err(io::Error::new(io::ErrorKind::InvalidInput, "not a media channel").into());
         }
         self.check_channel_binding(channel, generation)
+    }
+    /// Read a signed capability only from this currently authorized media lease.
+    pub fn media_capability(&self, capability: &str) -> Result<bool, RemoteError> {
+        let mut managed = self.inner.lock()?;
+        self.inner.check(&mut managed)?;
+        managed.session.authorize(
+            Permission::View,
+            self.inner.path,
+            self.inner.clock.monotonic_ms(),
+        )?;
+        Ok(managed.session.negotiated_capability(capability))
     }
     /// Recheck a delivered business frame against its original session. Control
     /// is reserved for the connection handshake and cannot be delivered here.

@@ -63,6 +63,9 @@ pub(super) async fn pair_with_transport(quic: bool) -> Result<Pair> {
     pair_with_fault(quic, None).await
 }
 async fn pair_with_fault(quic: bool, dropped_video: Option<u64>) -> Result<Pair> {
+    pair_with_profile(quic, dropped_video, false).await
+}
+async fn pair_with_profile(quic: bool, dropped_video: Option<u64>, h264: bool) -> Result<Pair> {
     let controller = InstallationIdentity::generate();
     let host = InstallationIdentity::generate();
     let clock = RuntimeClock::default();
@@ -82,7 +85,14 @@ async fn pair_with_fault(quic: bool, dropped_video: Option<u64>) -> Result<Pair>
         connection_generation: 9,
         capability_sha256: [9; 32],
         granted_permissions: permissions.clone(),
-        supported_capabilities: vec!["vp8".into()],
+        supported_capabilities: if h264 {
+            vec![
+                "vp8".into(),
+                nestlink_protocol::media::H264_CAPABILITY.into(),
+            ]
+        } else {
+            vec!["vp8".into()]
+        },
         local_paths: PathSet::DIRECT,
     };
     let claims = PermitClaims {
@@ -104,7 +114,7 @@ async fn pair_with_fault(quic: bool, dropped_video: Option<u64>) -> Result<Pair>
         issued_at_unix_ms: now.unix_ms,
         expires_at_unix_ms: now.unix_ms + 15000,
         capability_sha256: vec![9; 32],
-        required_capabilities: vec!["vp8".into()],
+        required_capabilities: binding.supported_capabilities.clone(),
     };
     let signer = PermitSigner::generate();
     let permit = signer.sign(&claims)?.encode_to_vec();
@@ -305,6 +315,83 @@ async fn authorized_capture_vp8_roundtrip_multiple_sources_and_other_channels() 
     video_roundtrip(false).await?;
     video_roundtrip(true).await
 }
+#[cfg(windows)]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn negotiated_h264_roundtrip_recovers_a_reference_gap_and_stops_on_revoke() -> Result {
+    let mut pair = pair_with_profile(false, Some(3), true).await?;
+    let frames = Arc::new(Mutex::new(VecDeque::new()));
+    let stopped = Arc::new(AtomicBool::new(false));
+    let stream = VideoStream {
+        source: 42,
+        codec: VideoConfig {
+            width: 320,
+            height: 240,
+            fps: 30,
+            bitrate_kbps: 2_000,
+        },
+    };
+    let mut sender = VideoSender::attach(
+        &mut pair.host,
+        Capture {
+            frames: frames.clone(),
+            stopped: stopped.clone(),
+        },
+        EPOCH,
+        vec![Display {
+            source: 42,
+            logical: InputLayout {
+                left: 0,
+                top: 0,
+                width: 320,
+                height: 240,
+            },
+        }],
+        vec![stream],
+    )?;
+    let mut receiver = VideoReceiver::attach(pair.controller, EPOCH, vec![stream])?;
+    let mut presented = 0;
+    let deadline = Instant::now() + Duration::from_secs(8);
+    while Instant::now() < deadline {
+        frames
+            .lock()
+            .map_err(|_| "fixture poisoned")?
+            .push_back(RawFrame {
+                source: 42,
+                width: 320,
+                height: 240,
+                captured_at: Instant::now(),
+                pixels: [32, 160, 64, 255].repeat(320 * 240),
+            });
+        tokio::time::sleep(Duration::from_millis(45)).await;
+        if let Some(frame) = receiver.poll_video()? {
+            assert!(frame.sequence > presented);
+            assert_eq!(frame.epoch, EPOCH);
+            assert_eq!(frame.pixels.len(), 320 * 240 * 4);
+            assert!(
+                frame
+                    .pixels
+                    .chunks_exact(4)
+                    .step_by(137)
+                    .all(|pixel| (i32::from(pixel[1]) - 160).abs() < 20 && pixel[3] == 255)
+            );
+            presented = frame.sequence;
+        }
+        if presented > 5 && receiver.stats().completed_recoveries > 0 {
+            break;
+        }
+    }
+    assert!(presented > 5, "H.264 produced no post-gap decoded frame");
+    assert!(receiver.stats().completed_recoveries > 0);
+    pair.revoke.send_replace(Some(StopReason::Revoked));
+    wait_until(|| Ok(stopped.load(Ordering::SeqCst) && receiver.monitor().status().finished))
+        .await?;
+    assert!(receiver.poll_video().is_err());
+    assert_eq!(
+        sender.shutdown(StopReason::Revoked)?,
+        ShutdownReport::Joined
+    );
+    Ok(())
+}
 async fn video_roundtrip(quic: bool) -> Result {
     let mut pair = pair_with_transport(quic).await?;
     let frames = Arc::new(Mutex::new(VecDeque::new()));
@@ -400,6 +487,7 @@ async fn video_roundtrip(quic: bool) -> Result {
 fn envelope(encoder: &mut Vp8Encoder, sequence: u64, pts: u64) -> Result<NativeVideo> {
     let packet = encoder.encode(&[0, 255, 0, 255].repeat(64 * 48), pts, false)?;
     Ok(NativeVideo {
+        codec: 0,
         schema_version: 1,
         connection_generation: EPOCH.connection,
         layout_epoch: EPOCH.layout,

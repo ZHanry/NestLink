@@ -322,7 +322,9 @@ impl LoopbackPair {
         let host_lease = take_proved_lease(host_setup)?;
         let controller_lease = take_proved_lease(controller_setup)?;
         self.host.lease = Some(host_lease.clone());
-        self.host.publish_input_permit(permit)?;
+        if !permit.claims().is_setup() {
+            self.host.publish_input_permit(permit)?;
+        }
         self.host.proof_complete.store(true, Ordering::Release);
         Ok((host_lease, controller_lease))
     }
@@ -1212,7 +1214,7 @@ async fn idle_offer_poll_renews_over_sctp_and_http_then_rejects_revocation() -> 
         .mark_browser_host_ready(&host_identity, &prepared)
         .await?;
     let mut permit = controller_sdk.permit(&request.id).await?;
-    let original_expiry = permit.claims().expires_at_unix_ms;
+    let mut original_expiry = permit.claims().expires_at_unix_ms;
     assert_ne!(
         controller_sdk.remote(&request.id).await?.expires_at_unix_ms,
         original_expiry
@@ -1249,6 +1251,49 @@ async fn idle_offer_poll_renews_over_sctp_and_http_then_rejects_revocation() -> 
             .clone();
         let (host_lease, controller_lease) =
             pair.prove(&permit, &controller, &host_identity).await?;
+        assert!(permit.claims().is_setup());
+        assert!(
+            host_lease
+                .check_media_binding(nestlink_transport_stream::Channel::Video, 1)
+                .is_err()
+        );
+        assert!(pair.host.input_permits_tx.borrow().is_none());
+        assert!(
+            pair.host
+                .send_renewal_signature(&host_sdk, &host_identity)
+                .await?
+        );
+        let bytes = tokio::time::timeout(
+            Duration::from_secs(3),
+            pair.controller_control_messages.recv(),
+        )
+        .await?
+        .ok_or_else(|| io::Error::other("setup renewal signature missing"))?;
+        let WebRtcControl::HostRenewalSignature {
+            signature,
+            lease_sequence: 2,
+            ..
+        } = WebRtcControl::decode_validated(&bytes, permit.claims())?
+        else {
+            return Err(io::Error::other("unexpected setup activation message").into());
+        };
+        let view = controller_sdk.remote(&request.id).await?;
+        let started = controller_clock.monotonic_ms();
+        let running = controller_sdk
+            .renew_permit(&controller, &view, &permit, signature)
+            .await?;
+        assert!(!running.claims().is_setup());
+        assert_eq!(
+            running.claims().expires_at_unix_ms - running.claims().issued_at_unix_ms,
+            15_000
+        );
+        controller_lease.renew(running.clone(), started)?;
+        pair.host
+            .refresh_authority_inner(&host_sdk, &host_identity, true)
+            .await?;
+        host_lease.check_media_binding(nestlink_transport_stream::Channel::Video, 1)?;
+        permit = running;
+        original_expiry = permit.claims().expires_at_unix_ms;
         let records = Arc::new(std::sync::Mutex::new(Vec::new()));
         let epoch = InputEpoch {
             input: 1,
@@ -1322,7 +1367,7 @@ async fn idle_offer_poll_renews_over_sctp_and_http_then_rejects_revocation() -> 
         );
         assert!(pair.controller_control_messages.try_recv().is_err());
 
-        for next_sequence in 2..=3 {
+        for next_sequence in 3..=4 {
             let claims = permit.claims();
             let due_at = claims.issued_at_unix_ms
                 + (claims.expires_at_unix_ms - claims.issued_at_unix_ms) / 3;
@@ -1393,7 +1438,7 @@ async fn idle_offer_poll_renews_over_sctp_and_http_then_rejects_revocation() -> 
                     .await
                     .is_err()
             );
-            if next_sequence == 2 {
+            if next_sequence == 3 {
                 // Browser authority has advanced, while host still has lease 1.
                 send_browser_control(&pair.controller_control, &fresh, input_frame(&fresh, 1))
                     .await?;
@@ -1420,7 +1465,7 @@ async fn idle_offer_poll_renews_over_sctp_and_http_then_rejects_revocation() -> 
                     .await?
             );
             assert_eq!(pair.host.current_permit().digest(), fresh.digest());
-            if next_sequence == 2 {
+            if next_sequence == 3 {
                 wait_for_input_records(&records, |items| actions(items) == 1).await?;
             } else {
                 // Reverse race: host is now on lease 3, but an old lease-2 frame

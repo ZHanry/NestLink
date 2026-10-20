@@ -35,6 +35,7 @@ fn packet(source: u32, layout: u64, sequence: u64, pts: u64) -> Result<NativeVid
     let mut encoder = Vp8Encoder::new(selected(source).codec)?;
     let encoded = encoder.encode(&[0, 255, 0, 255].repeat(64 * 48), pts, true)?;
     Ok(NativeVideo {
+        codec: 0,
         schema_version: 1,
         connection_generation: EPOCH.connection,
         layout_epoch: layout,

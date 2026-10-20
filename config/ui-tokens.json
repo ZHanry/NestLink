@@ -2,25 +2,25 @@
   "schema_version": 1,
   "product": "NestLink",
   "light": {
-    "primary": "#7850B2",
-    "primary_text": "#684298",
-    "canvas": "#F6F3FC",
-    "sidebar": "#EEE8F8",
+    "primary": "#1467D5",
+    "primary_text": "#0D56B4",
+    "canvas": "#F4F6F9",
+    "sidebar": "#EBEFF5",
     "surface": "#FFFFFF",
-    "text": "#2E2540",
-    "muted": "#6E617C",
-    "border": "#8E7BA3",
+    "text": "#172337",
+    "muted": "#516079",
+    "border": "#8795A6",
     "danger": "#B42336"
   },
   "dark": {
-    "primary": "#BC9BE9",
-    "primary_text": "#D2B7F3",
-    "canvas": "#191420",
-    "sidebar": "#211A2C",
-    "surface": "#2A2236",
-    "text": "#F4EFFB",
-    "muted": "#BDB0CE",
-    "border": "#927DAA",
+    "primary": "#88B6FF",
+    "primary_text": "#A9CAFF",
+    "canvas": "#151D29",
+    "sidebar": "#1C2737",
+    "surface": "#243247",
+    "text": "#F0F5FC",
+    "muted": "#B6C4D8",
+    "border": "#8295AE",
     "danger": "#FFA8B4"
   },
   "type": {
@@ -60,11 +60,11 @@
   "state": {
     "primary_action_text": {
       "light": "#FFFFFF",
-      "dark": "#21152F"
+      "dark": "#102A4C"
     },
     "focus": {
-      "light": "#684298",
-      "dark": "#D2B7F3"
+      "light": "#0D56B4",
+      "dark": "#A9CAFF"
     },
     "warning": {
       "light": "#966313",

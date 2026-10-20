@@ -247,3 +247,9 @@ dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
 .remote-session { margin: auto; width: calc(100vw - 32px); height: calc(100dvh - 32px); max-width: 1500px; max-height: none; color: var(--ink); border: 1px solid var(--line); }
 .remote-session::backdrop { background: #181322aa; }
 .remote-session .remote-toolbar { position: sticky; top: -1px; }
+.remote-operation-center { flex: 0 0 auto; padding: 16px; background: var(--canvas); border-block: 1px solid var(--line); }
+.remote-performance { padding: 0 8px 12px; }
+.performance-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 16px 24px; margin: 16px 0; }
+.performance-grid div { min-width: 0; }
+.performance-grid dt { color: var(--subtle); font-size: var(--text-small); margin-bottom: 4px; }
+.performance-grid dd { margin: 0; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }

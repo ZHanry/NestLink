@@ -139,6 +139,8 @@ mod tests {
         assert_eq!(store.load()?, NativeNetworkSettings::default());
         assert!(NativeNetworkFileStore::open(&directory).is_err());
         let chosen = NativeNetworkSettings {
+            media_route: Default::default(),
+            media_interface_index: None,
             use_deployment_stun: false,
             private_network_prefixes: vec!["192.168.20.0/24".into()],
         };

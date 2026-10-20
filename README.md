@@ -1,6 +1,6 @@
 # NestLink
 
-自托管远程控制与服务发布。当前版本为 **0.6.0 RC1**（`0.6.0-rc.1`）。本次集中整改登录恢复、后台资源边界、滚轮输入及桌面/Web/Android 任务流程，详见[整改记录](docs/0.6.0-remediation.md)和[更新记录](CHANGELOG.md)。
+自托管远程控制与服务发布。当前版本为 **0.7.0 RC1**（`0.7.0-rc.1`）。本次集中整改登录恢复、后台资源边界、滚轮输入及桌面/Web/Android 任务流程，详见[整改记录](docs/0.7.0-remediation.md)和[更新记录](CHANGELOG.md)。
 
 [English](README.en.md) · [候选发行](https://github.com/ZHanry/NestLink/releases) · [构建说明](docs/refactor/CANDIDATE-BUILD.md) · [实现与检查记录](docs/refactor/IMPLEMENTATION.md)
 
