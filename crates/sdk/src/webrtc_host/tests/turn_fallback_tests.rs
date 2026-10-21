@@ -1020,6 +1020,14 @@ async fn complete_trickle_sets_require_the_existing_dual_signed_relay_binding() 
         let mut peer = fixture.peer(&host).await?;
         let expected = install_signed_binding(&fixture, &peer, &controller, &host, 5_000, false)?;
         let snapshot = |host: bool, complete: bool| -> TestResult<SignalPayload> {
+            // A relay-only permit rejects srflx candidates before TURN binding
+            // validation. Exercise the same exact signed peers with candidates
+            // allowed by each permit, rather than bypassing that path policy.
+            let candidate_type = if paths == PathSet::RELAY {
+                "relay"
+            } else {
+                "srflx"
+            };
             let address = if host {
                 "1.1.1.1 40001"
             } else {
@@ -1027,7 +1035,7 @@ async fn complete_trickle_sets_require_the_existing_dual_signed_relay_binding() 
             };
             let fingerprint = std::iter::repeat_n("AB", 32).collect::<Vec<_>>().join(":");
             let sdp = format!(
-                "v=0\r\na=fingerprint:sha-256 {fingerprint}\r\na=ice-ufrag:abc123\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=mid:0\r\na=candidate:1 1 UDP 100 {address} typ srflx\r\n"
+                "v=0\r\na=fingerprint:sha-256 {fingerprint}\r\na=ice-ufrag:abc123\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=mid:0\r\na=candidate:1 1 UDP 100 {address} typ {candidate_type}\r\n"
             );
             let signal = SignalPayload {
                 ice: Some(nestlink_protocol::ice::snapshot(&sdp, 1, complete)?),
