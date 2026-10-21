@@ -272,13 +272,27 @@ async fn actual_control_channel_renews_and_admin_revocation_stops_node_under_two
     guard.admit(1, || Ok(()))?;
     tokio::time::timeout(Duration::from_secs(6), async {
         loop {
-            let page: NodeUsagePage = http.get(&usage_url).bearer_auth(token)
-                .send().await?.error_for_status()?.json().await?;
-            if page.entries.first().is_some_and(|entry| entry.admitted_bytes == 513) { break; }
+            let page: NodeUsagePage = http
+                .get(&usage_url)
+                .bearer_auth(token)
+                .send()
+                .await?
+                .error_for_status()?
+                .json()
+                .await?;
+            if page
+                .entries
+                .first()
+                .is_some_and(|entry| entry.admitted_bytes == 513)
+            {
+                break;
+            }
             tokio::time::sleep(Duration::from_millis(25)).await;
         }
         Ok::<(), reqwest::Error>(())
-    }).await.map_err(|_| "resumed usage was not durably confirmed")??;
+    })
+    .await
+    .map_err(|_| "resumed usage was not durably confirmed")??;
     let lease = control.current_lease()?;
     let corrupt = NodeIdentity::generate().sign_usage(&NodeUsageClaims {
         schema_version: SCHEMA_VERSION,
