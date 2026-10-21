@@ -10,6 +10,7 @@ mod icons;
 #[cfg(test)]
 mod layout_tests;
 mod lists;
+mod local_session_window;
 mod management;
 mod native_displays;
 mod native_input;

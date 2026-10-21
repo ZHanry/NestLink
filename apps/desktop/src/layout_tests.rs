@@ -350,6 +350,107 @@ fn incoming_requests_and_browser_host_lifecycle_do_not_push_device_controls() {
     }
 }
 
+fn browser_popup_snapshot() -> Snapshot {
+    use nestlink_app_core::BrowserHostView;
+    let mut snapshot = enrolled_snapshot();
+    snapshot.browser_host.data = Some(Arc::new(BrowserHostView {
+        request_id: "00000000-0000-4000-8000-000000000010".into(),
+        connection_generation: 1,
+        lease_sequence: 1,
+        status: BrowserHostStatus::Connected,
+        host_view_authorized: true,
+        binding: None,
+        displays: Default::default(),
+        data: Default::default(),
+        path: Some(1),
+        stop_reason: None,
+        stop_effects: None,
+        cleanup: None,
+        failure: None,
+    }));
+    snapshot
+}
+
+#[test]
+fn local_session_popup_action_stays_still_when_polling_reports_an_error() {
+    use nestlink_app_core::{Failure, FailureKind};
+    let size = egui::vec2(1200., 800.);
+    let mut workspace = Workspace::new(browser_popup_snapshot());
+    workspace.app.remote.browser_host_details = true;
+    for _ in 0..5 {
+        workspace.frame(size, Vec::new());
+    }
+    let baseline = workspace.bounds("停止会话");
+    assert_eq!(baseline.len(), 1);
+    for frame in 0..12 {
+        let mut snapshot = browser_popup_snapshot();
+        if frame % 2 == 0 {
+            snapshot.browser_host.loading = Some(serde_json::from_str("1").expect("operation ID"));
+            snapshot.browser_host.error = Some(Failure {
+                kind: FailureKind::Transport,
+                status: Some(503),
+                code: None,
+            });
+        }
+        workspace.app.bridge.layout_snapshot(snapshot);
+        workspace.frame(size, Vec::new());
+        assert_eq!(
+            workspace.bounds("停止会话"),
+            baseline,
+            "popup moved at {frame}"
+        );
+    }
+}
+
+#[test]
+fn local_session_popup_closes_when_an_error_arrives_during_a_click() {
+    use nestlink_app_core::{Failure, FailureKind};
+    for size in [egui::vec2(1200., 800.), egui::vec2(760., 560.)] {
+        let mut workspace = Workspace::new(browser_popup_snapshot());
+        workspace.app.remote.browser_host_details = true;
+        for _ in 0..5 {
+            workspace.frame(size, Vec::new());
+        }
+        let close = workspace.bounds("关闭");
+        assert_eq!(close.len(), 1);
+        let position = close[0].center();
+        workspace.frame(
+            size,
+            vec![
+                egui::Event::PointerMoved(position),
+                egui::Event::PointerButton {
+                    pos: position,
+                    button: egui::PointerButton::Primary,
+                    pressed: true,
+                    modifiers: Default::default(),
+                },
+            ],
+        );
+        let mut snapshot = browser_popup_snapshot();
+        snapshot.browser_host.error = Some(Failure {
+            kind: FailureKind::Transport,
+            status: Some(503),
+            code: None,
+        });
+        workspace.app.bridge.layout_snapshot(snapshot);
+        workspace.frame(size, Vec::new());
+        assert_eq!(workspace.bounds("关闭"), close);
+        workspace.frame(
+            size,
+            vec![egui::Event::PointerButton {
+                pos: position,
+                button: egui::PointerButton::Primary,
+                pressed: false,
+                modifiers: Default::default(),
+            }],
+        );
+        assert!(
+            !workspace.app.remote.browser_host_details,
+            "polling swallowed the popup close click"
+        );
+    }
+}
+
 #[test]
 fn selecting_devices_and_refreshing_long_names_keep_the_entry_visible_and_fixed() {
     for size in [

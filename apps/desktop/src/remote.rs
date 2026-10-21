@@ -648,47 +648,57 @@ impl DesktopApp {
         });
         if self.remote.browser_host_details {
             let mut open = true;
-            egui::Window::new(self.t("本机被控", "Local sessions"))
-                .id(egui::Id::new("browser-host-details"))
-                .default_width(560.)
-                .open(&mut open)
-                .show(ui.ctx(), |ui| {
-                    egui::ScrollArea::vertical()
-                        .id_salt("browser-host-details-scroll")
-                        .max_height(460.)
-                        .show(ui, |ui| {
-                            self.browser_host_panel(ui, snapshot);
-                            let local = snapshot
-                                .installation
-                                .as_ref()
-                                .map(|local| local.device_id.as_str());
-                            if snapshot
-                                .native_session
-                                .data
-                                .as_ref()
-                                .is_some_and(|session| {
-                                    session.host_view_authorized
-                                        || snapshot
-                                            .requests
-                                            .data
-                                            .as_deref()
-                                            .into_iter()
-                                            .flatten()
-                                            .chain(snapshot.selected_request.data.as_deref())
-                                            .any(|request| {
-                                                request.id == session.request_id
-                                                    && request.connection_generation
-                                                        == session.connection_generation
-                                                    && Some(request.host_device_id.as_str())
-                                                        == local
-                                            })
-                                })
-                            {
-                                self.native_session_panel(ui, snapshot);
-                            }
-                        });
-                });
-            self.remote.browser_host_details = open;
+            let mut close_clicked = false;
+            crate::local_session_window::show(
+                ui.ctx(),
+                self.t("本机被控", "Local sessions"),
+                &mut open,
+                |ui| {
+                    crate::local_session_window::body(ui, |ui| {
+                        self.browser_host_panel(ui, snapshot);
+                        let local = snapshot
+                            .installation
+                            .as_ref()
+                            .map(|local| local.device_id.as_str());
+                        if snapshot
+                            .native_session
+                            .data
+                            .as_ref()
+                            .is_some_and(|session| {
+                                session.host_view_authorized
+                                    || snapshot
+                                        .requests
+                                        .data
+                                        .as_deref()
+                                        .into_iter()
+                                        .flatten()
+                                        .chain(snapshot.selected_request.data.as_deref())
+                                        .any(|request| {
+                                            request.id == session.request_id
+                                                && request.connection_generation
+                                                    == session.connection_generation
+                                                && Some(request.host_device_id.as_str()) == local
+                                        })
+                            })
+                        {
+                            self.native_session_panel(ui, snapshot);
+                        }
+                    });
+                    close_clicked = crate::local_session_window::footer(ui, |ui| {
+                        let close = ui
+                            .add_sized([84., 40.], egui::Button::new(self.t("关闭", "Close")))
+                            .clicked();
+                        if let Some(command) =
+                            crate::browser_displays::approval_button(ui, snapshot, self.english)
+                        {
+                            self.send(snapshot, command);
+                        }
+                        self.browser_host_stop_button(ui, snapshot);
+                        close
+                    });
+                },
+            );
+            self.remote.browser_host_details = open && !close_clicked;
         }
         self.remote_device_picker(ui, snapshot);
         self.native_session_panel(ui, snapshot);
@@ -937,24 +947,37 @@ impl DesktopApp {
     }
 
     fn browser_host_panel(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
+        let status = if let Some(error) = &snapshot.browser_host.error {
+            egui::RichText::new(widgets::failure(error, self.english))
+                .color(ui.visuals().error_fg_color)
+        } else if snapshot.browser_host.loading.is_some() {
+            egui::RichText::new(self.t("正在更新会话状态…", "Updating session status…"))
+        } else {
+            egui::RichText::new("")
+        };
+        ui.allocate_ui_with_layout(
+            egui::vec2(ui.available_width(), 32.),
+            egui::Layout::left_to_right(egui::Align::Center),
+            |ui| {
+                ui.set_min_height(32.);
+                ui.add(egui::Label::new(status.clone()).truncate())
+                    .on_hover_text(status);
+            },
+        );
         let Some(host) = snapshot.browser_host.data.as_ref() else {
-            if snapshot.browser_host.loading.is_some() || snapshot.browser_host.error.is_some() {
-                widgets::section(ui, &snapshot.browser_host, self.english);
-            } else {
-                ui.label(self.t(
-                    "当前没有浏览器共享会话。",
-                    "There is no browser sharing session.",
-                ));
-            }
+            ui.label(self.t(
+                "当前没有浏览器共享会话。",
+                "There is no browser sharing session.",
+            ));
             return;
         };
-        widgets::section(ui, &snapshot.browser_host, self.english);
         self.browser_data_panel.reconcile(
             host.binding.clone(),
             snapshot.generation,
             (host.status == BrowserHostStatus::Connected).then_some(&host.data),
         );
         ui.add_space(8.);
+        ui.push_id(("browser-host-session", &host.request_id, host.connection_generation), |ui| {
         egui::Frame::group(ui.style()).show(ui, |ui| {
             ui.horizontal_wrapped(|ui| {
                 ui.label(
@@ -1011,25 +1034,8 @@ impl DesktopApp {
                 "浏览器宿主支持屏幕查看、文件共享和剪贴板。Windows/Linux 还支持输入和系统音频；Wayland 当前不提供浏览器剪贴板授权。",
                 "Browser hosting supports screen viewing, file sharing and clipboard. Windows/Linux also support input and system audio; browser clipboard approval is unavailable on Wayland.",
             ));
-            match host.status {
-                BrowserHostStatus::Establishing => {
-                    if let Some(operation) = snapshot.browser_host.loading
-                        && ui.button(self.t("取消连接", "Cancel connection")).clicked()
-                    {
-                        self.send(snapshot, Command::Cancel { operation });
-                    }
-                }
-                BrowserHostStatus::Connected => {
-                    if ui.button(self.t("停止会话", "Stop session")).clicked() {
-                        self.action(
-                            snapshot,
-                            Action::StopBrowserHost {
-                                request_id: host.request_id.clone(),
-                                connection_generation: host.connection_generation,
-                            },
-                        );
-                    }
-                    if let Some(action) = self.browser_data_panel.show(ui, self.english, &host.data)
+            if host.status == BrowserHostStatus::Connected
+                    && let Some(action) = self.browser_data_panel.show(ui, self.english, &host.data)
                         && let Some(binding) = host.binding.clone()
                     {
                         let submission = if self.connected {
@@ -1051,11 +1057,49 @@ impl DesktopApp {
                                 "The local approval was not sent. Check the daemon connection.",
                             ));
                         }
-                    }
-                }
-                BrowserHostStatus::Stopping | BrowserHostStatus::Stopped | BrowserHostStatus::Failed => {}
             }
         });
+        });
+    }
+
+    fn browser_host_stop_button(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
+        let host = snapshot.browser_host.data.as_ref();
+        let establishing = host.is_some_and(|host| host.status == BrowserHostStatus::Establishing);
+        let enabled = host.is_some_and(|host| host.status == BrowserHostStatus::Connected)
+            || (establishing && snapshot.browser_host.loading.is_some());
+        if ui
+            .add_enabled(
+                enabled,
+                egui::Button::new(self.t(
+                    if establishing {
+                        "取消连接"
+                    } else {
+                        "停止会话"
+                    },
+                    if establishing {
+                        "Cancel connection"
+                    } else {
+                        "Stop session"
+                    },
+                ))
+                .min_size(egui::vec2(120., 40.)),
+            )
+            .clicked()
+        {
+            if establishing {
+                if let Some(operation) = snapshot.browser_host.loading {
+                    self.send(snapshot, Command::Cancel { operation });
+                }
+            } else if let Some(host) = host {
+                self.action(
+                    snapshot,
+                    Action::StopBrowserHost {
+                        request_id: host.request_id.clone(),
+                        connection_generation: host.connection_generation,
+                    },
+                );
+            }
+        }
     }
     fn remote_password_host_panel(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         use nestlink_protocol::api::RemotePasswordSettings;
