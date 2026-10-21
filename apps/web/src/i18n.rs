@@ -183,6 +183,37 @@ fn api_error(code: nestlink_protocol::ErrorCode) -> &'static str {
 
 pub fn peer_error(error: &crate::browser_peer::PeerError) -> String {
     use crate::browser_peer::PeerError;
+    if let PeerError::ManagementFailure(failure) = error {
+        use nestlink_protocol::diagnostics::ConnectionFailure as F;
+        let (zh, en) = match failure {
+            F::SignInRequired => ("登录已失效，请重新登录。", "Sign in again to continue."),
+            F::InvalidAuthorization | F::AuthorizationRevoked => (
+                "服务器拒绝了当前会话授权，连接已停止。",
+                "The server rejected the session authorization.",
+            ),
+            F::AuthorizationExpired | F::StartupAuthorizationExpired => (
+                "会话授权已到期，请重新连接。",
+                "Session authorization expired. Connect again.",
+            ),
+            F::EndpointMismatch => (
+                "设备身份核验失败，连接已停止。",
+                "Device identity verification failed.",
+            ),
+            F::ManagementTransport => (
+                "连接管理服务暂时无法访问。",
+                "The connection management service could not be reached.",
+            ),
+            F::InvalidResponse => (
+                "服务器返回的连接信息无效。",
+                "The server returned invalid connection information.",
+            ),
+            _ => (
+                "连接管理请求未能完成，请导出连接诊断。",
+                "The connection management request failed. Export connection diagnostics.",
+            ),
+        };
+        return formatted(zh.into(), en.into());
+    }
     let chinese = match error {
         PeerError::InvalidIceConfiguration => "部署的连接发现配置无效。",
         PeerError::InvalidPathMode => "所选连接方式无效。",
@@ -204,6 +235,7 @@ pub fn peer_error(error: &crate::browser_peer::PeerError) -> String {
         PeerError::BrowserUnavailable => "此浏览器不支持 WebRTC。",
         PeerError::BrowserOperation => "浏览器未能完成媒体连接操作。",
         PeerError::SignalRejected => "设备签名信令核验失败，连接已拒绝。",
+        PeerError::ManagementFailure(_) => "连接管理请求未能完成。",
     };
     formatted(chinese.into(), error.to_string())
 }

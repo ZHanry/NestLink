@@ -45,6 +45,29 @@ class ConnectionTimelineTests(unittest.TestCase):
         self.assertIsNone(report['controller_local_durations_ms']['offer_to_verified_path'])
         self.assertIsNone(report['controller_first_failure'])
 
+    def test_turn_operation_failure_survives_cleanup_without_free_form_text(self):
+        for stage in ('turn_credentials_refresh', 'turn_binding_read', 'turn_binding_validate', 'turn_binding_sign', 'track_await_authorization'):
+            with self.subTest(stage=stage):
+                first = dict(elapsed_ms=10, stage=stage, failure='invalid_authorization', message='secret')
+                self.trace['first_failure'] = first
+                self.host[0]['peer_timeline']['first_turn_failure'] = first
+                report = timeline.correlate(self.trace, self.host, self.server)
+                self.assertEqual(report['controller_first_failure']['stage'], stage)
+                self.assertEqual(report['host_turn_failures'][0]['failure'], 'invalid_authorization')
+                self.assertNotIn('secret', json.dumps(report))
+
+    def test_missing_ice_traffic_is_not_reported_as_zero_or_as_a_verified_path(self):
+        group = dict(pairs=3, in_progress=2, succeeded=0, failed=1, nominated=0,
+                     requests_sent=None, requests_received=None, responses_sent=None, responses_received=None,
+                     address='secret-192.0.2.1')
+        self.trace['last_ice_check'] = dict(elapsed_ms=8, direct=group, relay=group, unknown=group)
+        report = timeline.correlate(self.trace, [], [])
+        self.assertIsNone(report['controller_last_ice_check']['direct']['requests_sent'])
+        self.assertNotIn('secret', json.dumps(report))
+        group['pairs'] = True
+        with self.assertRaises(ValueError):
+            timeline.correlate(self.trace, [], [])
+
     def test_other_generation_and_request_do_not_leak_into_report(self):
         self.host[0]["connection_generation"] = 8
         self.server[0]["request_sha256"] = "d" * 64

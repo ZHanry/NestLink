@@ -7,7 +7,7 @@ use std::collections::VecDeque;
 
 pub const TIMELINE_EVENT_LIMIT: usize = 128;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ConnectionStage {
     RequestStarted,
@@ -33,6 +33,11 @@ pub enum ConnectionStage {
     PathChecking,
     TurnBindingExpired,
     TurnBindingReady,
+    TurnCredentialsRefresh,
+    TurnBindingRead,
+    TurnBindingValidate,
+    TurnBindingSign,
+    TrackAwaitAuthorization,
     PathVerified,
     EndpointProved,
     RunningAuthorized,
@@ -44,7 +49,7 @@ pub enum ConnectionStage {
     Stopped,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ConnectionFailure {
     Unclassified,
@@ -191,6 +196,29 @@ pub struct ConnectionObservation {
     pub failure: Option<ConnectionFailure>,
 }
 
+/// Aggregate ICE checks only. No candidate IDs, addresses, ports or SDP.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct IceCheckPath {
+    pub pairs: u64,
+    pub in_progress: u64,
+    pub succeeded: u64,
+    pub failed: u64,
+    pub nominated: u64,
+    /// None means the implementation does not expose an implemented counter.
+    pub requests_sent: Option<u64>,
+    pub requests_received: Option<u64>,
+    pub responses_sent: Option<u64>,
+    pub responses_received: Option<u64>,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct IceCheckSnapshot {
+    pub elapsed_ms: u64,
+    pub direct: IceCheckPath,
+    pub relay: IceCheckPath,
+    pub unknown: IceCheckPath,
+}
+
 #[derive(Clone, Debug, Serialize)]
 pub struct ConnectionTimeline {
     pub schema_version: u8,
@@ -203,6 +231,7 @@ pub struct ConnectionTimeline {
     pub events: VecDeque<ConnectionObservation>,
     pub dropped_events: u64,
     pub first_failure: Option<ConnectionObservation>,
+    pub last_ice_check: Option<IceCheckSnapshot>,
 }
 impl ConnectionTimeline {
     pub fn new(request: &str, generation: u64, started_unix_ms: u64) -> Self {
@@ -216,6 +245,7 @@ impl ConnectionTimeline {
             events: VecDeque::new(),
             dropped_events: 0,
             first_failure: None,
+            last_ice_check: None,
         }
     }
     /// Attach a verified permit's correlation keys to pre-permit observations.

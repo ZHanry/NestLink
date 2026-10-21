@@ -46,7 +46,7 @@ pub(super) fn optional_turn_result<T>(
     }
 }
 
-fn is_turn_availability_error(error: &WebRtcHostError) -> bool {
+pub(super) fn is_turn_availability_error(error: &WebRtcHostError) -> bool {
     match error {
         WebRtcHostError::RelayUnavailable | WebRtcHostError::Sdk(SdkError::Timeout) => true,
         WebRtcHostError::Sdk(SdkError::Api(status, code)) => {

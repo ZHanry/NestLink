@@ -82,6 +82,7 @@ pub enum PeerError {
     BrowserUnavailable,
     BrowserOperation,
     SignalRejected,
+    ManagementFailure(nestlink_protocol::diagnostics::ConnectionFailure),
 }
 
 impl std::fmt::Display for PeerError {
@@ -109,6 +110,7 @@ impl std::fmt::Display for PeerError {
             Self::BrowserUnavailable => "browser WebRTC is unavailable",
             Self::BrowserOperation => "browser WebRTC operation failed",
             Self::SignalRejected => "signed signaling was rejected",
+            Self::ManagementFailure(_) => "the management operation was rejected",
         };
         formatter.write_str(message)
     }
@@ -131,6 +133,7 @@ impl PeerError {
     pub fn diagnostic_failure(&self) -> nestlink_protocol::diagnostics::ConnectionFailure {
         use nestlink_protocol::diagnostics::ConnectionFailure as F;
         match self {
+            Self::ManagementFailure(failure) => *failure,
             Self::InvalidIceConfiguration | Self::InvalidPathMode => F::InvalidConfiguration,
             Self::InvalidPermit => F::InvalidAuthorization,
             Self::EndpointMismatch => F::EndpointMismatch,
@@ -544,7 +547,7 @@ fn turn_sdk_error(error: nestlink_sdk::SdkError) -> PeerError {
         {
             PeerError::RelayUnavailable
         }
-        _ => PeerError::SignalRejected,
+        error => PeerError::ManagementFailure(error.diagnostic_failure()),
     }
 }
 
@@ -784,7 +787,8 @@ mod tests {
             assert_eq!(turn_sdk_error(error), PeerError::RelayUnavailable);
         }
         for error in [SdkError::Trust, SdkError::Invalid, SdkError::SignIn] {
-            assert_eq!(turn_sdk_error(error), PeerError::SignalRejected);
+            let failure = error.diagnostic_failure();
+            assert_eq!(turn_sdk_error(error), PeerError::ManagementFailure(failure));
         }
         for (status, code) in [
             (503u16, ErrorCode::RelayUnavailable),
@@ -802,10 +806,9 @@ mod tests {
             (409, ErrorCode::ReplayRejected),
             (401, ErrorCode::RelayUnavailable),
         ] {
-            assert_eq!(
-                turn_sdk_error(SdkError::Api(status.try_into()?, code)),
-                PeerError::SignalRejected
-            );
+            let error = SdkError::Api(status.try_into()?, code);
+            let failure = error.diagnostic_failure();
+            assert_eq!(turn_sdk_error(error), PeerError::ManagementFailure(failure));
         }
         Ok(())
     }
@@ -1924,6 +1927,18 @@ mod wasm {
             failure
         }
 
+        fn turn_failure(&self, stage: ConnectionStage, problem: PeerError) -> PeerError {
+            // Optional availability failures may be retried by the caller.
+            // Preserve the first fatal operation before cleanup closes peers.
+            if !matches!(problem, PeerError::RelayUnavailable | PeerError::TimedOut) {
+                self.diagnostics.failure_at(
+                    stage,
+                    problem.diagnostic_failure_for_setup(self.permit.claims().is_setup()),
+                );
+            }
+            problem
+        }
+
         pub fn data_channels(&self) -> Result<BrowserDataChannels, PeerError> {
             self.ensure_live()?;
             if !self.proof_complete.get() {
@@ -1951,6 +1966,7 @@ mod wasm {
             let cancelled = self.cancelled.clone();
             let mode = self.mode;
             let proof_complete = self.proof_complete.clone();
+            let diagnostics = self.diagnostics.clone();
             let handler = Closure::wrap(Box::new(move |event: RtcTrackEvent| {
                 let track = event.track();
                 track.set_enabled(false);
@@ -1980,20 +1996,23 @@ mod wasm {
                 let cancelled = cancelled.clone();
                 let callback = callback.clone();
                 let proof_complete = proof_complete.clone();
+                let diagnostics = diagnostics.clone();
                 wasm_bindgen_futures::spawn_local(async move {
-                    let deadline = match monotonic_ms() {
-                        Ok(now) => now + 10_000.0,
-                        Err(_) => {
-                            track.stop();
-                            return;
-                        }
-                    };
+                    // ontrack fires when the answer is installed, before ICE
+                    // and endpoint proof complete. The owning setup operation
+                    // and signed lease bound this wait; a separate 10s timer
+                    // must not close a still-authorized connection attempt.
                     loop {
-                        if check_authority(&peer, &cancelled, &authority).is_err()
-                            || monotonic_ms().map_or(true, |now| now >= deadline)
-                        {
+                        if let Err(problem) = check_authority(&peer, &cancelled, &authority) {
+                            if problem != PeerError::Cancelled {
+                                diagnostics.failure_at(
+                                    ConnectionStage::TrackAwaitAuthorization,
+                                    problem.diagnostic_failure_for_setup(
+                                        authority.borrow().permit.claims().is_setup(),
+                                    ),
+                                );
+                            }
                             track.stop();
-                            close_peer(&peer, &cancelled);
                             return;
                         }
                         if peer.connection_state() == RtcPeerConnectionState::Connected
@@ -2004,6 +2023,10 @@ mod wasm {
                         }
                         TimeoutFuture::new(POLL_INTERVAL_MS).await;
                     }
+                    let deadline = authority
+                        .borrow()
+                        .permit_deadline_ms
+                        .min(authority.borrow().endpoint_deadline_ms);
                     let result = bounded_live(
                         selected_path_from_peer(&peer),
                         deadline,
@@ -2302,7 +2325,12 @@ mod wasm {
             let mut operation = Box::pin(wait_for_selected_path(
                 &peer, &cancelled, &authority, self.mode, &paths, deadline,
             ));
+            let mut next_ice_sample_ms = 0.0;
             let result = loop {
+                if monotonic_ms().is_ok_and(|now| now >= next_ice_sample_ms) {
+                    self.sample_ice_checks().await;
+                    next_ice_sample_ms = monotonic_ms().unwrap_or(deadline) + 1_000.0;
+                }
                 if network_changed() {
                     break Ok(None);
                 }
@@ -2356,10 +2384,24 @@ mod wasm {
                     } else {
                         self.record_failure(problem);
                     }
+                    self.sample_ice_checks().await;
                     close_peer(&self.peer, &self.cancelled);
                 }
             }
             result
+        }
+
+        async fn sample_ice_checks(&self) {
+            // Best effort and bounded independently of authorization. Missing
+            // diagnostics must neither delay setup nor change its result.
+            let stats = Box::pin(JsFuture::from(self.peer.get_stats()));
+            if let futures_util::future::Either::Left((Ok(value), _)) =
+                select(stats, Box::pin(TimeoutFuture::new(100))).await
+                && let Ok(report) = value.dyn_into::<RtcStatsReport>()
+                && let Ok(snapshot) = ice_checks_from_report(&report)
+            {
+                self.diagnostics.ice_checks(snapshot);
+            }
         }
 
         /// Consume a host signature and renew through the authenticated SDK.
@@ -2928,7 +2970,10 @@ mod wasm {
                     },
                     deadline,
                 )
-                .await?;
+                .await
+                .map_err(|problem| {
+                    self.turn_failure(ConnectionStage::TurnCredentialsRefresh, problem)
+                })?;
             let mut ice = managed_ice_configuration(&credentials)?;
             ice.servers.extend(self.direct_ice.servers.iter().cloned());
             let configuration = rtc_configuration(&ice, self.mode, &self.permit.claims().paths)?;
@@ -3011,12 +3056,20 @@ mod wasm {
                 {
                     return Ok(false);
                 }
-                Err(problem) => return Err(problem),
+                Err(problem) => {
+                    return Err(self.turn_failure(ConnectionStage::TurnBindingRead, problem));
+                }
             };
             if let Some(signed) = state.binding {
                 let binding: nestlink_protocol::TurnPeerBindingClaims =
-                    nestlink_protocol::decode_bounded(&signed.claims, TURN_BINDING_BYTES)
-                        .map_err(|_| PeerError::SignalRejected)?;
+                    nestlink_protocol::decode_bounded(&signed.claims, TURN_BINDING_BYTES).map_err(
+                        |_| {
+                            self.turn_failure(
+                                ConnectionStage::TurnBindingValidate,
+                                PeerError::SignalRejected,
+                            )
+                        },
+                    )?;
                 let credentials = self
                     .turn_credentials
                     .as_ref()
@@ -3028,9 +3081,15 @@ mod wasm {
                     &self.local_candidate_addresses,
                     &self.remote_candidate_addresses,
                     now_ms()?,
-                )?;
+                )
+                .map_err(|problem| {
+                    self.turn_failure(ConnectionStage::TurnBindingValidate, problem)
+                })?;
                 if signed.host_signature.len() != 64 {
-                    return Err(PeerError::SignalRejected);
+                    return Err(self.turn_failure(
+                        ConnectionStage::TurnBindingValidate,
+                        PeerError::SignalRejected,
+                    ));
                 }
                 if !fresh {
                     self.diagnostics
@@ -3069,14 +3128,26 @@ mod wasm {
                         {
                             return Ok(false);
                         }
-                        Err(problem) => return Err(problem),
+                        Err(problem) => {
+                            return Err(
+                                self.turn_failure(ConnectionStage::TurnBindingSign, problem)
+                            );
+                        }
                     };
-                    let full = full.binding.ok_or(PeerError::SignalRejected)?;
+                    let full = full.binding.ok_or_else(|| {
+                        self.turn_failure(
+                            ConnectionStage::TurnBindingValidate,
+                            PeerError::SignalRejected,
+                        )
+                    })?;
                     if full.claims != signed.claims
                         || full.host_signature.len() != 64
                         || full.controller_signature.len() != 64
                     {
-                        return Err(PeerError::SignalRejected);
+                        return Err(self.turn_failure(
+                            ConnectionStage::TurnBindingValidate,
+                            PeerError::SignalRejected,
+                        ));
                     }
                 }
                 let now = now_ms()?;
@@ -4049,6 +4120,73 @@ mod wasm {
             selected.push(path_from_candidate_types(local_relay, remote_relay));
         }
         verify_multiplexed_selected_paths(&selected)
+    }
+
+    fn ice_checks_from_report(
+        report: &RtcStatsReport,
+    ) -> Result<nestlink_protocol::diagnostics::IceCheckSnapshot, PeerError> {
+        let mut snapshot = nestlink_protocol::diagnostics::IceCheckSnapshot::default();
+        let iterator: Iterator = report.values();
+        for _ in 0..4096 {
+            let entry = iterator.next().map_err(|_| PeerError::BrowserOperation)?;
+            if entry.done() {
+                return Ok(snapshot);
+            }
+            let statistic: RtcStats = entry.value().unchecked_into();
+            if statistic.get_type() != Some(RtcStatsType::CandidatePair) {
+                continue;
+            }
+            let pair: RtcIceCandidatePairStats = statistic.unchecked_into();
+            let kind = |id: Option<String>| {
+                id.and_then(|id| report.get(&id))
+                    .map(|value| value.unchecked_into::<RtcIceCandidateStats>())
+                    .and_then(|candidate| candidate.get_candidate_type())
+            };
+            let local = kind(pair.get_local_candidate_id());
+            let remote = kind(pair.get_remote_candidate_id());
+            let path = if local == Some(RtcStatsIceCandidateType::Relayed)
+                || remote == Some(RtcStatsIceCandidateType::Relayed)
+            {
+                &mut snapshot.relay
+            } else if local.is_some() && remote.is_some() {
+                &mut snapshot.direct
+            } else {
+                &mut snapshot.unknown
+            };
+            path.pairs += 1;
+            path.nominated += u64::from(pair.get_nominated() == Some(true));
+            match pair.get_state() {
+                Some(RtcStatsIceCandidatePairState::Inprogress) => path.in_progress += 1,
+                Some(RtcStatsIceCandidatePairState::Succeeded) => path.succeeded += 1,
+                Some(RtcStatsIceCandidatePairState::Failed) => path.failed += 1,
+                _ => {}
+            }
+            let pair_count = path.pairs;
+            let add = |field: &str, total: &mut Option<u64>| {
+                let value = js_sys::Reflect::get(pair.as_ref(), &field.into())
+                    .ok()
+                    .and_then(|value| value.as_f64())
+                    .filter(|n| {
+                        n.is_finite()
+                            && *n >= 0.0
+                            && n.fract() == 0.0
+                            && *n <= 9_007_199_254_740_991.0
+                    })
+                    .map(|value| value as u64);
+                *total = if pair_count == 1 {
+                    value
+                } else {
+                    total
+                        .zip(value)
+                        .map(|(old, value)| old.saturating_add(value))
+                };
+            };
+            add("requestsSent", &mut path.requests_sent);
+            add("requestsReceived", &mut path.requests_received);
+            add("responsesSent", &mut path.responses_sent);
+            add("responsesReceived", &mut path.responses_received);
+        }
+        Err(PeerError::BrowserOperation)
     }
 
     fn verify_multiplexed_selected_paths(

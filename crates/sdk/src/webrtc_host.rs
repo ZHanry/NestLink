@@ -214,6 +214,18 @@ pub struct WebRtcConnectionTimeline {
     pub remote_candidate_count: usize,
     pub selected_path: Option<i32>,
     pub ice_restarts: u64,
+    #[serde(default)]
+    pub first_turn_failure: Option<TurnOperationFailure>,
+    #[serde(default)]
+    pub last_ice_check: Option<nestlink_protocol::diagnostics::IceCheckSnapshot>,
+}
+
+/// Fixed operation and failure labels, recorded before peer teardown.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct TurnOperationFailure {
+    pub elapsed_ms: u64,
+    pub stage: nestlink_protocol::diagnostics::ConnectionStage,
+    pub failure: nestlink_protocol::diagnostics::ConnectionFailure,
 }
 
 #[derive(Clone)]
@@ -240,6 +252,40 @@ impl Default for PeerDiagnosticRecorder {
 }
 
 impl PeerDiagnosticRecorder {
+    fn turn_error(
+        &self,
+        stage: nestlink_protocol::diagnostics::ConnectionStage,
+        error: WebRtcHostError,
+    ) -> WebRtcHostError {
+        // Availability can withdraw optional TURN and continue direct ICE.
+        // Trust, authorization and malformed responses remain fatal.
+        if !turn_policy::is_turn_availability_error(&error) {
+            use nestlink_protocol::diagnostics::ConnectionFailure as F;
+            let failure = match &error {
+                WebRtcHostError::Sdk(error) => error.diagnostic_failure(),
+                WebRtcHostError::TurnBinding => F::SignalingRejected,
+                WebRtcHostError::Contract(_) => F::InvalidResponse,
+                WebRtcHostError::Permit => F::InvalidAuthorization,
+                _ => F::Unclassified,
+            };
+            self.timeline
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .first_turn_failure
+                .get_or_insert(TurnOperationFailure {
+                    elapsed_ms: self
+                        .started
+                        .elapsed()
+                        .as_millis()
+                        .try_into()
+                        .unwrap_or(u64::MAX),
+                    stage,
+                    failure,
+                });
+        }
+        error
+    }
+
     fn signal(&self, local: bool, summary: nestlink_protocol::diagnostics::SignalSummary) {
         let mut timeline = self
             .timeline
@@ -725,6 +771,65 @@ impl WebRtcHostCloseReport {
 }
 
 impl WebRtcHostPeer {
+    async fn sample_ice_checks(&self) {
+        let Ok(report) =
+            tokio::time::timeout(Duration::from_millis(100), self.peer.get_stats()).await
+        else {
+            return;
+        };
+        let mut snapshot = nestlink_protocol::diagnostics::IceCheckSnapshot {
+            elapsed_ms: self
+                .diagnostics
+                .started
+                .elapsed()
+                .as_millis()
+                .try_into()
+                .unwrap_or(u64::MAX),
+            ..Default::default()
+        };
+        let kinds: HashMap<_, _> = report
+            .reports
+            .values()
+            .filter_map(|value| match value {
+                StatsReportType::LocalCandidate(candidate)
+                | StatsReportType::RemoteCandidate(candidate) => {
+                    Some((candidate.id.as_str(), candidate.candidate_type))
+                }
+                _ => None,
+            })
+            .collect();
+        for value in report.reports.values() {
+            let StatsReportType::CandidatePair(pair) = value else {
+                continue;
+            };
+            let local = kinds.get(pair.local_candidate_id.as_str());
+            let remote = kinds.get(pair.remote_candidate_id.as_str());
+            let path =
+                if local == Some(&CandidateType::Relay) || remote == Some(&CandidateType::Relay) {
+                    &mut snapshot.relay
+                } else if local.is_some() && remote.is_some() {
+                    &mut snapshot.direct
+                } else {
+                    &mut snapshot.unknown
+                };
+            path.pairs += 1;
+            path.nominated += u64::from(pair.nominated);
+            match pair.state {
+                CandidatePairState::InProgress => path.in_progress += 1,
+                CandidatePairState::Succeeded => path.succeeded += 1,
+                CandidatePairState::Failed => path.failed += 1,
+                _ => {}
+            }
+            // webrtc-ice currently leaves traffic counters at default zero.
+            // Keep them absent instead of claiming no checks were sent.
+        }
+        self.diagnostics
+            .timeline
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .last_ice_check = Some(snapshot);
+    }
+
     /// Return the first fixed-label peer guard or media worker termination
     /// diagnostic, if one was recorded.
     pub fn diagnostic(&self) -> Option<WebRtcHostDiagnostic> {
@@ -1185,8 +1290,19 @@ impl WebRtcHostPeer {
                 self.network_generation,
                 now,
             )
-            .await?;
-        renewed.authorize(permit, unix_ms()?)?;
+            .await
+            .map_err(|error| {
+                self.diagnostics.turn_error(
+                    nestlink_protocol::diagnostics::ConnectionStage::TurnCredentialsRefresh,
+                    error.into(),
+                )
+            })?;
+        renewed.authorize(permit, unix_ms()?).map_err(|error| {
+            self.diagnostics.turn_error(
+                nestlink_protocol::diagnostics::ConnectionStage::TurnCredentialsRefresh,
+                error.into(),
+            )
+        })?;
         if renewed.claims().grant_sequence != previous_grant_sequence
             || renewed.claims().expires_at_unix_ms != previous_expiry
         {
@@ -1405,6 +1521,15 @@ impl WebRtcHostPeer {
         let mut permit = self.permit_rx.clone();
         let mut cancelled = self.cancel_tx.subscribe();
         loop {
+            let elapsed = self.diagnostics.started.elapsed().as_millis() as u64;
+            if self
+                .diagnostics
+                .timeline()
+                .last_ice_check
+                .is_none_or(|last| elapsed.saturating_sub(last.elapsed_ms) >= 1_000)
+            {
+                self.sample_ice_checks().await;
+            }
             // During initial ICE negotiation, expiry means no reachable path
             // was established within the signed startup lease.
             if ensure_live(&permit.borrow().clone()).is_err() {
@@ -1462,7 +1587,15 @@ impl WebRtcHostPeer {
             .ok_or(WebRtcHostError::TurnBinding)?;
         loop {
             ensure_live(permit)?;
-            let state = sdk.turn_binding_state(installation, permit).await?;
+            let state = sdk
+                .turn_binding_state(installation, permit)
+                .await
+                .map_err(|error| {
+                    self.diagnostics.turn_error(
+                        nestlink_protocol::diagnostics::ConnectionStage::TurnBindingRead,
+                        error.into(),
+                    )
+                })?;
             if let Some(binding) = state.binding {
                 let claims: TurnPeerBindingClaims = nestlink_protocol::decode_bounded(
                     &binding.claims,
@@ -1896,6 +2029,12 @@ impl WebRtcHostPeer {
             self.propose_turn_binding(sdk, installation, permit, &context, true),
         )
         .await;
+        let result = result.map_err(|error| {
+            self.diagnostics.turn_error(
+                nestlink_protocol::diagnostics::ConnectionStage::TurnBindingValidate,
+                error,
+            )
+        });
         let Some(ready) = optional_turn_result(permit, optional, result)? else {
             return self.disable_optional_turn().await;
         };
@@ -1923,6 +2062,12 @@ impl WebRtcHostPeer {
             self.propose_turn_binding(sdk, installation, &permit, &context, false),
         )
         .await;
+        let result = result.map_err(|error| {
+            self.diagnostics.turn_error(
+                nestlink_protocol::diagnostics::ConnectionStage::TurnBindingValidate,
+                error,
+            )
+        });
         let Some(ready) = optional_turn_result(&permit, optional, result)? else {
             return self.disable_optional_turn().await;
         };
@@ -1987,7 +2132,15 @@ impl WebRtcHostPeer {
         {
             return Err(WebRtcHostError::TurnBinding);
         }
-        let state = sdk.turn_binding_state(installation, permit).await?;
+        let state = sdk
+            .turn_binding_state(installation, permit)
+            .await
+            .map_err(|error| {
+                self.diagnostics.turn_error(
+                    nestlink_protocol::diagnostics::ConnectionStage::TurnBindingRead,
+                    error.into(),
+                )
+            })?;
         // State verification may fetch the peer key over HTTP. Use the time
         // after that await for every remaining-life decision, never the time
         // at which the request was started.
@@ -2118,7 +2271,13 @@ impl WebRtcHostPeer {
             sdk.prove_turn_peers(installation, permit, &claims),
         )
         .await
-        .map_err(|_| WebRtcHostError::RelayUnavailable)??;
+        .map_err(|_| WebRtcHostError::RelayUnavailable)?
+        .map_err(|error| {
+            self.diagnostics.turn_error(
+                nestlink_protocol::diagnostics::ConnectionStage::TurnBindingSign,
+                error.into(),
+            )
+        })?;
         let signed = proved.binding.ok_or(WebRtcHostError::TurnBinding)?;
         if signed.claims != claims.encode_to_vec()
             || signed.host_signature.len() != 64
@@ -4584,6 +4743,43 @@ mod tests {
     mod turn_fallback_tests;
 
     type TestResult<T = ()> = Result<T, Box<dyn Error + Send + Sync>>;
+
+    #[test]
+    fn turn_diagnostics_preserve_first_fatal_operation_and_old_records() -> TestResult {
+        use nestlink_protocol::diagnostics::{ConnectionFailure as F, ConnectionStage as S};
+        let recorder = PeerDiagnosticRecorder::default();
+        let _ = recorder.turn_error(S::TurnBindingRead, WebRtcHostError::RelayUnavailable);
+        assert!(recorder.timeline().first_turn_failure.is_none());
+        let _ = recorder.turn_error(
+            S::TurnBindingSign,
+            WebRtcHostError::Sdk(SdkError::Api(
+                reqwest::StatusCode::FORBIDDEN,
+                nestlink_protocol::ErrorCode::PermissionRequired,
+            )),
+        );
+        let first = recorder
+            .timeline()
+            .first_turn_failure
+            .ok_or("missing fatal observation")?;
+        assert_eq!(
+            (first.stage, first.failure),
+            (S::TurnBindingSign, F::InvalidAuthorization)
+        );
+        let _ = recorder.turn_error(S::TurnBindingRead, WebRtcHostError::Sdk(SdkError::Trust));
+        assert_eq!(recorder.timeline().first_turn_failure, Some(first));
+        let mut json = serde_json::to_value(recorder.timeline())?;
+        assert_eq!(json["first_turn_failure"]["stage"], "turn_binding_sign");
+        json.as_object_mut()
+            .ok_or("timeline object missing")?
+            .remove("first_turn_failure");
+        json.as_object_mut()
+            .ok_or("timeline object missing")?
+            .remove("last_ice_check");
+        let old: WebRtcConnectionTimeline = serde_json::from_value(json)?;
+        assert!(old.first_turn_failure.is_none());
+        assert!(old.last_ice_check.is_none());
+        Ok(())
+    }
 
     #[test]
     fn media_sample_write_failures_are_transient_only_during_peer_recovery() {

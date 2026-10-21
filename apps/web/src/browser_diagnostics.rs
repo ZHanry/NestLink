@@ -82,6 +82,15 @@ mod wasm {
                 .map_or(ConnectionStage::RequestStarted, |event| event.stage);
             self.observe(stage, None, Some(failure));
         }
+        pub fn failure_at(&self, stage: ConnectionStage, failure: ConnectionFailure) {
+            self.observe(stage, None, Some(failure));
+        }
+        pub fn ice_checks(&self, mut snapshot: nestlink_protocol::diagnostics::IceCheckSnapshot) {
+            if let Some(now) = monotonic_ms() {
+                snapshot.elapsed_ms = (now - self.started_ms).max(0.0) as u64;
+                self.timeline.borrow_mut().last_ice_check = Some(snapshot);
+            }
+        }
         fn observe(
             &self,
             stage: ConnectionStage,

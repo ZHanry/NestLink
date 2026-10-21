@@ -24,12 +24,25 @@ pub(super) fn body(ui: &mut egui::Ui, contents: impl FnOnce(&mut egui::Ui)) {
     // Reserve the separator (one point), its surrounding spacing and a 44px
     // action row even when there is no session, a short error or a long list.
     let height = (ui.available_height() - 45. - 2. * ui.spacing().item_spacing.y).max(0.);
-    egui::ScrollArea::vertical()
+    let rect = egui::Rect::from_min_size(
+        ui.available_rect_before_wrap().min,
+        egui::vec2(ui.available_width(), height),
+    );
+    // A vertical-only ScrollArea expands horizontally to an unwrapped child,
+    // even inside Window::fixed_size. Never propagate that child's measured
+    // minimum size to the window or to the persistent action row.
+    let mut body = ui.new_child(
+        egui::UiBuilder::new()
+            .id_salt("local-session-body")
+            .max_rect(rect),
+    );
+    body.set_clip_rect(rect.intersect(ui.clip_rect()));
+    egui::ScrollArea::both()
         .id_salt("browser-host-details-scroll")
         .max_height(height)
         .auto_shrink([false, false])
-        .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysVisible)
-        .show(ui, contents);
+        .show(&mut body, contents);
+    ui.advance_cursor_after_rect(rect);
 }
 
 pub(super) fn footer<R>(ui: &mut egui::Ui, contents: impl FnOnce(&mut egui::Ui) -> R) -> R {
@@ -50,6 +63,52 @@ pub(super) fn footer<R>(ui: &mut egui::Ui, contents: impl FnOnce(&mut egui::Ui) 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn unwrapped_details_cannot_expand_the_dialog_or_move_its_actions() {
+        let context = egui::Context::default();
+        context.global_style_mut(|style| {
+            style.spacing.interact_size = egui::vec2(40., 40.);
+            style.spacing.item_spacing = egui::vec2(10., 9.);
+            style.spacing.button_padding = egui::vec2(12., 9.);
+        });
+        let size = egui::vec2(760., 560.);
+        let mut baseline = None;
+        for frame in 0..16 {
+            let mut geometry = None;
+            let _ = context.run_ui(
+                egui::RawInput {
+                    screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, size)),
+                    ..Default::default()
+                },
+                |ui| {
+                    if let Some(window) = show(ui.ctx(), "Local sessions", &mut true, |ui| {
+                        body(ui, |ui| {
+                            egui::Frame::group(ui.style()).show(ui, |ui| {
+                                if frame > 4 && frame % 2 == 0 {
+                                    ui.horizontal(|ui| {
+                                        ui.monospace("Unwrapped diagnostic values ".repeat(12));
+                                    });
+                                } else {
+                                    ui.label("Preparing local displays");
+                                }
+                            });
+                        });
+                        footer(ui, |ui| {
+                            ui.add_sized([84., 40.], egui::Button::new("Close")).rect
+                        })
+                    }) {
+                        geometry = window.inner.map(|button| (window.response.rect, button));
+                    }
+                },
+            );
+            if frame == 4 {
+                baseline = geometry;
+            } else if frame > 4 {
+                assert_eq!(geometry, baseline, "details moved actions at frame {frame}");
+            }
+        }
+    }
 
     #[test]
     fn error_and_long_diagnostics_cannot_resize_dialog_or_move_footer() {
@@ -103,8 +162,17 @@ mod tests {
 
     #[test]
     fn footer_click_survives_content_changing_between_pointer_down_and_up() {
+        for scale in [1., 1.25, 1.5, 2.] {
+            for stop in [false, true] {
+                refreshed_footer_click(scale, stop);
+            }
+        }
+    }
+
+    fn refreshed_footer_click(scale: f32, stop: bool) {
         let context = egui::Context::default();
-        let size = egui::vec2(760., 560.);
+        context.set_pixels_per_point(scale);
+        let size = egui::vec2(1140., 840.) / scale;
         let mut position = egui::Pos2::ZERO;
         let mut clicks = 0;
         for frame in 0..10 {
@@ -131,11 +199,19 @@ mod tests {
                     show(ui.ctx(), "Local sessions", &mut true, |ui| {
                         body(ui, |ui| {
                             for _ in 0..if frame >= 6 { 20 } else { 1 } {
-                                ui.label("The refreshed error and diagnostics are longer");
+                                ui.horizontal(|ui| {
+                                    ui.monospace(if frame >= 6 {
+                                        "Unwrapped refreshed diagnostic ".repeat(12)
+                                    } else {
+                                        "Preparing".into()
+                                    });
+                                });
                             }
                         });
                         footer(ui, |ui| {
-                            let button = ui.add_sized([120., 40.], egui::Button::new("Close"));
+                            let close = ui.add_sized([84., 40.], egui::Button::new("Close"));
+                            let stop_button = ui.add_sized([84., 40.], egui::Button::new("Stop"));
+                            let button = if stop { stop_button } else { close };
                             if frame == 4 {
                                 position = button.rect.center();
                             }
@@ -147,6 +223,6 @@ mod tests {
                 },
             );
         }
-        assert_eq!(clicks, 1, "a polling update swallowed the footer click");
+        assert_eq!(clicks, 1, "missed click at scale {scale}, stop {stop}");
     }
 }

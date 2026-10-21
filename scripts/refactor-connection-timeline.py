@@ -9,6 +9,7 @@ SIGNAL_FIELDS = ("network_generation", "sequence", "description_sequence", "leas
 STAGES = {"peer_created", "local_description_set", "signal_submitted", "signal_consumed",
           "remote_description_set", "local_candidates", "remote_candidates", "gather_complete",
           "path_checking", "turn_binding_expired", "turn_binding_ready",
+          "turn_credentials_refresh", "turn_binding_read", "turn_binding_validate", "turn_binding_sign", "track_await_authorization",
           "path_verified", "endpoint_proved", "running_authorized", "display_selected",
           "first_packet_observed", "first_decoded_frame_observed", "first_video_progress_observed",
           "ice_restart", "stopped"}
@@ -53,6 +54,29 @@ def failure_observation(event, stages):
             or event.get('stage') not in stages or event.get('failure') not in FAILURES):
         raise ValueError('invalid fixed failure observation')
     return {key: event[key] for key in ('elapsed_ms', 'stage', 'failure')}
+
+
+def ice_check_observation(snapshot):
+    if snapshot is None:
+        return None
+    if not isinstance(snapshot, dict) or not integer(snapshot.get('elapsed_ms')):
+        raise ValueError('invalid ICE observation time')
+    result = {'elapsed_ms': snapshot['elapsed_ms']}
+    for path in ('direct', 'relay', 'unknown'):
+        group = snapshot.get(path)
+        if not isinstance(group, dict):
+            raise ValueError('invalid ICE path summary')
+        result[path] = {}
+        for field in ('pairs', 'in_progress', 'succeeded', 'failed', 'nominated',
+                      'requests_sent', 'requests_received', 'responses_sent', 'responses_received'):
+            value = group.get(field)
+            if value is None and field.startswith(('requests_', 'responses_')):
+                result[path][field] = None
+            elif not integer(value):
+                raise ValueError('invalid ICE counter')
+            else:
+                result[path][field] = value
+    return result
 
 
 def preflight_observations(trace):
@@ -123,6 +147,8 @@ def correlate(controller, host_records, server_records):
             note(local if stage == "signal_submitted" else remote, event["signal"],
                  "controller_submitted" if stage == "signal_submitted" else "controller_consumed")
     host_stages = {}
+    host_failures = []
+    host_ice = None
     matched_hosts = matched_server = 0
     for record in host_records:
         if not isinstance(record, dict):
@@ -137,6 +163,12 @@ def correlate(controller, host_records, server_records):
         if fingerprint(peer.get("local_device_sha256")) != remote or fingerprint(peer.get("remote_device_sha256")) != local:
             raise ValueError("host endpoint binding differs")
         matched_hosts += 1
+        failure = failure_observation(peer.get('first_turn_failure'), STAGES)
+        if failure is not None and failure not in host_failures:
+            host_failures.append(failure)
+        ice = ice_check_observation(peer.get('last_ice_check'))
+        if ice is not None and (host_ice is None or ice['elapsed_ms'] > host_ice['elapsed_ms']):
+            host_ice = ice
         for key in HOST_STAGES:
             value = peer.get(key)
             if value is not None:
@@ -182,6 +214,9 @@ def correlate(controller, host_records, server_records):
     return {"schema_version": 1, "request_sha256": request, "connection_generation": generation,
             "controller_preflight": preflight, "peer_observations_available": True,
             "controller_first_failure": failure_observation(trace.get('first_failure'), STAGES),
+            "host_turn_failures": host_failures,
+            "controller_last_ice_check": ice_check_observation(trace.get('last_ice_check')),
+            "host_last_ice_check": host_ice,
             "matched_host_records": matched_hosts, "matched_server_records": matched_server,
             "controller_stage_elapsed_ms": durations, "host_stage_elapsed_ms": host_stages,
             "controller_local_durations_ms": {
