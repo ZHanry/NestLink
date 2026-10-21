@@ -721,6 +721,7 @@ pub struct WebRtcHostPeer {
     cursor: SignalCursor,
     signal_sequence: u64,
     local_ice_signal: Option<SignalPayload>,
+    remote_ice_signal: Option<SignalPayload>,
     remote_offer_sequence: u64,
     remote_ice: nestlink_protocol::ice::IceSnapshotCursor,
     network_generation: u64,
@@ -1046,6 +1047,7 @@ impl WebRtcHostPeer {
             cursor,
             signal_sequence: 0,
             local_ice_signal: None,
+            remote_ice_signal: None,
             remote_offer_sequence: 0,
             remote_ice: Default::default(),
             network_generation,
@@ -1129,10 +1131,19 @@ impl WebRtcHostPeer {
         self.ensure_open()?;
         let Some(offer) = signals.into_iter().last() else {
             self.publish_local_ice(sdk, installation).await?;
+            self.prepare_completed_ice_turn_binding(sdk, installation)
+                .await?;
             return Ok(false);
         };
         let claims = self.current_permit();
         validate_offer(&offer, &claims)?;
+        if offer.ice.is_some() && offer.description_sequence() == self.remote_offer_sequence {
+            self.apply_remote_ice(&offer).await?;
+            self.publish_local_ice(sdk, installation).await?;
+            self.prepare_completed_ice_turn_binding(sdk, installation)
+                .await?;
+            return Ok(false);
+        }
         self.diagnostics.signal(
             false,
             nestlink_protocol::diagnostics::SignalSummary::from_payload(&offer),
@@ -1785,6 +1796,14 @@ impl WebRtcHostPeer {
             .await?;
         self.remote_offer_sequence = offer.description_sequence();
         self.remote_ice.reset();
+        self.remote_ice_signal = None;
+        if offer.ice.is_some() {
+            self.turn_binding_context = None;
+            self.turn_binding_claims = None;
+            if self.selected_path == Path::Relay {
+                self.path_authority_tx.send_replace(false);
+            }
+        }
         self.apply_remote_ice(&offer).await?;
         self.ensure_open()?;
         let answer = self.peer.create_answer(None).await?;
@@ -1882,7 +1901,7 @@ impl WebRtcHostPeer {
         );
         self.refresh_turn_allocation(sdk, installation, permit, false)
             .await?;
-        if self.turn_credentials.is_some() {
+        if self.turn_credentials.is_some() && offer.ice.is_none() {
             self.prepare_turn_binding(sdk, installation, permit, &offer, &remote.sdp, &local.sdp)
                 .await?;
         }
@@ -1943,6 +1962,7 @@ impl WebRtcHostPeer {
                 .add_ice_candidate(RTCIceCandidateInit::default())
                 .await?;
         }
+        self.remote_ice_signal = Some(signal.clone());
         Ok(())
     }
 
@@ -2005,7 +2025,47 @@ impl WebRtcHostPeer {
             validate_offer(&signal, &permit)?;
             self.apply_remote_ice(&signal).await?;
         }
+        self.prepare_completed_ice_turn_binding(sdk, installation)
+            .await?;
         Ok(())
+    }
+
+    async fn prepare_completed_ice_turn_binding(
+        &mut self,
+        sdk: &Sdk,
+        installation: &DeviceIdentity,
+    ) -> Result<(), WebRtcHostError> {
+        if self.turn_credentials.is_none() || self.turn_binding_context.is_some() {
+            return Ok(());
+        }
+        let (Some(local), Some(remote)) = (&self.local_ice_signal, &self.remote_ice_signal) else {
+            return Ok(());
+        };
+        if ![local, remote]
+            .iter()
+            .all(|signal| signal.ice.as_ref().is_some_and(|ice| ice.end_of_candidates))
+        {
+            return Ok(());
+        }
+        let controller_candidates =
+            nestlink_protocol::turn::completed_signal_candidate_addresses(remote)?;
+        let host_candidates = nestlink_protocol::turn::completed_signal_candidate_addresses(local)?;
+        let (Some(controller_candidates), Some(host_candidates)) =
+            (controller_candidates, host_candidates)
+        else {
+            if self.optional_turn_allowed() {
+                return self.disable_optional_turn().await;
+            }
+            return Err(WebRtcHostError::RelayUnavailable);
+        };
+        let context = TurnBindingContext {
+            controller_network_generation: remote.network_generation,
+            host_network_generation: self.network_generation,
+            controller_candidates,
+            host_candidates,
+        };
+        self.turn_binding_context = Some(context);
+        self.maintain_turn_binding(sdk, installation).await
     }
 
     async fn prepare_turn_binding(
@@ -5083,6 +5143,7 @@ mod tests {
             cursor: SignalCursor::new(permit, host_identity)?,
             signal_sequence: 0,
             local_ice_signal: None,
+            remote_ice_signal: None,
             remote_offer_sequence: 0,
             remote_ice: nestlink_protocol::ice::IceSnapshotCursor::default(),
             network_generation: 1,
@@ -5467,6 +5528,7 @@ mod tests {
             cursor: SignalCursor::new(&permit, &host_identity)?,
             signal_sequence: 0,
             local_ice_signal: None,
+            remote_ice_signal: None,
             remote_offer_sequence: 0,
             remote_ice: nestlink_protocol::ice::IceSnapshotCursor::default(),
             network_generation: 1,
@@ -5891,6 +5953,7 @@ mod tests {
             cursor: SignalCursor::new(&permit, &host_identity)?,
             signal_sequence: 0,
             local_ice_signal: None,
+            remote_ice_signal: None,
             remote_offer_sequence: 0,
             remote_ice: nestlink_protocol::ice::IceSnapshotCursor::default(),
             network_generation: 1,

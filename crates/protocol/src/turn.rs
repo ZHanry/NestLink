@@ -46,6 +46,32 @@ pub fn ice_candidate_addresses(sdp: &str) -> Result<Vec<String>, ContractError> 
     optional_ice_candidate_addresses(sdp)?.ok_or_else(invalid)
 }
 
+/// Freeze relay peers only after a validated cumulative snapshot is complete.
+/// The caller must validate the signed signal and advance IceSnapshotCursor
+/// first. Partial snapshots grant no forwarding authority; completed snapshots
+/// cannot subsequently grow. Legacy complete-SDP signaling is unchanged.
+pub fn completed_signal_candidate_addresses(
+    signal: &crate::api::SignalPayload,
+) -> Result<Option<Vec<String>>, ContractError> {
+    let description = signal.description.as_ref().ok_or_else(invalid)?;
+    let Some(ice) = &signal.ice else {
+        return optional_ice_candidate_addresses(&description.sdp);
+    };
+    if !ice.end_of_candidates {
+        return Ok(None);
+    }
+    let mut sdp = description.sdp.clone();
+    for candidate in &ice.candidates {
+        if candidate.candidate.contains(['\r', '\n', '\0']) {
+            return Err(invalid());
+        }
+        sdp.push_str("\r\na=");
+        sdp.push_str(&candidate.candidate);
+        sdp.push_str("\r\n");
+    }
+    optional_ice_candidate_addresses(&sdp)
+}
+
 /// Inspect an already validated signed SDP without granting TURN authority.
 /// A valid LAN/mDNS-only description has no public TURN peers; callers may
 /// still use a separately authorized direct path. Signing a TURN binding must
@@ -650,4 +676,55 @@ mod tests {
         assert!(serde_json::from_value::<crate::api::TurnBindingState>(state_json).is_err());
         Ok(())
     }
+}
+#[test]
+fn partial_snapshots_grant_no_relay_peers_and_completion_freezes_the_exact_public_set()
+-> Result<(), Box<dyn std::error::Error>> {
+    let sdp = concat!(
+        "v=0\r\na=ice-ufrag:abc123\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=mid:0\r\n",
+        "a=candidate:1 1 UDP 100 192.168.1.10 5000 typ host\r\n",
+        "a=candidate:2 1 UDP 90 8.8.8.8 5001 typ srflx\r\n",
+    );
+    let partial = crate::ice::snapshot(sdp, 1, false)?;
+    let mut signal = crate::api::SignalPayload {
+        ice: Some(partial.clone()),
+        connection_generation: 1,
+        lease_sequence: 1,
+        network_generation: 1,
+        sequence: 1,
+        candidates: vec![],
+        description: Some(crate::api::WebRtcDescription {
+            kind: "offer".into(),
+            sdp: crate::ice::without_candidates(sdp),
+            dtls_sha256: vec![1; 32],
+            in_reply_to_sequence: None,
+        }),
+    };
+    let mut cursor = crate::ice::IceSnapshotCursor::default();
+    cursor.apply(&partial)?;
+    assert_eq!(completed_signal_candidate_addresses(&signal)?, None);
+    let full_sdp = format!("{sdp}a=candidate:3 1 UDP 80 1.1.1.1 6000 typ relay\r\n");
+    let complete = crate::ice::snapshot(&full_sdp, 1, true)?;
+    cursor.apply(&complete)?;
+    signal.ice = Some(complete.clone());
+    assert_eq!(
+        completed_signal_candidate_addresses(&signal)?,
+        Some(vec!["1.1.1.1:6000".into(), "8.8.8.8:5001".into()])
+    );
+    assert!(cursor.apply(&partial).is_err());
+    let widened = crate::ice::snapshot(
+        &format!("{full_sdp}a=candidate:4 1 UDP 70 9.9.9.9 7000 typ relay\r\n"),
+        1,
+        true,
+    )?;
+    assert!(cursor.apply(&widened).is_err());
+    // A completed snapshot has exactly the same address policy as legacy
+    // complete SDP; signed strings cannot grant private relay access.
+    signal.ice.as_mut().ok_or("snapshot missing")?.candidates[1].candidate =
+        "candidate:2 1 UDP 90 169.254.169.254 5001 typ srflx".into();
+    assert!(completed_signal_candidate_addresses(&signal).is_err());
+    signal.ice.as_mut().ok_or("snapshot missing")?.candidates[1].candidate =
+            "candidate:2 1 UDP 90 8.8.8.8 5001 typ srflx\r\na=candidate:4 1 UDP 70 9.9.9.9 7000 typ relay".into();
+    assert!(completed_signal_candidate_addresses(&signal).is_err());
+    Ok(())
 }

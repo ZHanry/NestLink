@@ -158,6 +158,16 @@ fn enroll_browser_with_features(
     now: u64,
     features: &[&str],
 ) -> Result<nestlink_protocol::api::BrowserEndpointLease> {
+    enroll_browser_with_features_and_mode(s, p, identity, now, features, "direct_only")
+}
+fn enroll_browser_with_features_and_mode(
+    s: &mut Store,
+    p: &Principal,
+    identity: &InstallationIdentity,
+    now: u64,
+    features: &[&str],
+    path_mode: &str,
+) -> Result<nestlink_protocol::api::BrowserEndpointLease> {
     let challenge = s.enrollment_challenge(p, now)?;
     let mut registration = BrowserEndpointRegistration {
         challenge_id: challenge.id,
@@ -171,7 +181,7 @@ fn enroll_browser_with_features(
                 .chain(features.iter().copied())
                 .map(str::to_owned)
                 .collect(),
-            path_mode: "direct_only".into(),
+            path_mode: path_mode.into(),
         },
         signature: String::new(),
     };

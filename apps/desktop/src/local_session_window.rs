@@ -17,17 +17,38 @@ pub(super) fn show<R>(
         .fixed_size(size)
         .collapsible(false)
         .open(open)
-        .show(context, contents)
+        .show(context, |ui| {
+            // Resize::fixed_size sets the layout limit, but egui still measures
+            // the child's minimum size. Keep that measurement independent of
+            // polling widgets (including nested native-session panels).
+            let rect = egui::Rect::from_min_size(ui.available_rect_before_wrap().min, size);
+            let mut fixed = ui.new_child(
+                egui::UiBuilder::new()
+                    .id_salt("local-session-fixed-content")
+                    .max_rect(rect),
+            );
+            fixed.set_clip_rect(rect.intersect(ui.clip_rect()));
+            let bounds_id = fixed.id().with("local-session-bounds");
+            fixed.data_mut(|data| data.insert_temp(bounds_id, rect));
+            let result = contents(&mut fixed);
+            ui.advance_cursor_after_rect(rect);
+            result
+        })
+}
+
+fn bounds(ui: &egui::Ui) -> egui::Rect {
+    // Ui::max_rect itself expands when a child raises its minimum size. Save
+    // the original budget before rendering any state-dependent widgets.
+    ui.data(|data| data.get_temp(ui.id().with("local-session-bounds")))
+        .unwrap_or_else(|| ui.max_rect())
 }
 
 pub(super) fn body(ui: &mut egui::Ui, contents: impl FnOnce(&mut egui::Ui)) {
     // Reserve the separator (one point), its surrounding spacing and a 44px
     // action row even when there is no session, a short error or a long list.
-    let height = (ui.available_height() - 45. - 2. * ui.spacing().item_spacing.y).max(0.);
-    let rect = egui::Rect::from_min_size(
-        ui.available_rect_before_wrap().min,
-        egui::vec2(ui.available_width(), height),
-    );
+    let bounds = bounds(ui);
+    let height = (bounds.height() - 45. - 2. * ui.spacing().item_spacing.y).max(0.);
+    let rect = egui::Rect::from_min_size(bounds.min, egui::vec2(bounds.width(), height));
     // A vertical-only ScrollArea expands horizontally to an unwrapped child,
     // even inside Window::fixed_size. Never propagate that child's measured
     // minimum size to the window or to the persistent action row.
@@ -46,23 +67,75 @@ pub(super) fn body(ui: &mut egui::Ui, contents: impl FnOnce(&mut egui::Ui)) {
 }
 
 pub(super) fn footer<R>(ui: &mut egui::Ui, contents: impl FnOnce(&mut egui::Ui) -> R) -> R {
-    ui.add(egui::Separator::default().spacing(1.));
-    // A persistent subtree also keeps widget IDs stable between pointer down
-    // and up when the number of widgets in the scrolling contents changes.
-    ui.push_id("local-session-footer", |ui| {
-        ui.allocate_ui_with_layout(
-            egui::vec2(ui.available_width(), 44.),
-            egui::Layout::right_to_left(egui::Align::Center),
-            contents,
-        )
-        .inner
-    })
-    .inner
+    // Position actions from the fixed container, never from the preceding
+    // cursor/minimum size. Clip overflow as well as isolating measurement.
+    let bounds = bounds(ui);
+    let rect =
+        egui::Rect::from_min_max(egui::pos2(bounds.left(), bounds.bottom() - 44.), bounds.max);
+    let separator_y = rect.top() - ui.spacing().item_spacing.y;
+    ui.painter().hline(
+        rect.x_range(),
+        separator_y,
+        ui.visuals().widgets.noninteractive.bg_stroke,
+    );
+    let mut actions = ui.new_child(
+        egui::UiBuilder::new()
+            .id_salt("local-session-footer")
+            .max_rect(rect)
+            .layout(egui::Layout::right_to_left(egui::Align::Center)),
+    );
+    actions.set_clip_rect(rect.intersect(ui.clip_rect()));
+    let result = contents(&mut actions);
+    ui.advance_cursor_after_rect(rect);
+    result
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn actions_stay_at_the_bottom_when_preceding_minimum_size_changes() {
+        let context = egui::Context::default();
+        let mut baseline = None;
+        for frame in 0..20 {
+            let mut geometry = None;
+            let _ = context.run_ui(
+                egui::RawInput {
+                    screen_rect: Some(egui::Rect::from_min_size(
+                        egui::Pos2::ZERO,
+                        egui::vec2(900., 680.),
+                    )),
+                    ..Default::default()
+                },
+                |ui| {
+                    if let Some(window) = show(ui.ctx(), "Local sessions", &mut true, |ui| {
+                        body(ui, |ui| {
+                            ui.label("Session state");
+                        });
+                        // egui minimums and cursor movement are advisory. Even
+                        // a refreshed subtree that exceeds its budget cannot
+                        // move the persistent actions or expand the window.
+                        if frame > 4 && frame % 2 == 0 {
+                            ui.set_min_size(egui::vec2(1800., 2000.));
+                            ui.add_space(400.);
+                        }
+                        footer(ui, |ui| {
+                            ui.add_sized([84., 40.], egui::Button::new("Close")).rect
+                        })
+                    }) {
+                        geometry = window.inner.map(|button| (window.response.rect, button));
+                    }
+                },
+            );
+            if frame == 4 {
+                baseline = geometry;
+            }
+            if frame > 4 {
+                assert_eq!(geometry, baseline, "minimum moved actions at frame {frame}");
+            }
+        }
+    }
 
     #[test]
     fn unwrapped_details_cannot_expand_the_dialog_or_move_its_actions() {

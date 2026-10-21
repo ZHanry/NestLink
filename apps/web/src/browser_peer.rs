@@ -562,9 +562,78 @@ fn managed_candidate_addresses(mode: PeerPathMode, sdp: &str) -> Result<Vec<Stri
     }
 }
 
+#[cfg(any(target_arch = "wasm32", test))]
+fn managed_signal_candidate_addresses(
+    mode: PeerPathMode,
+    signal: &nestlink_protocol::api::SignalPayload,
+) -> Result<Vec<String>, PeerError> {
+    let Some(ice) = &signal.ice else {
+        return managed_candidate_addresses(
+            mode,
+            &signal
+                .description
+                .as_ref()
+                .ok_or(PeerError::SignalRejected)?
+                .sdp,
+        );
+    };
+    if !ice.end_of_candidates {
+        return Ok(Vec::new());
+    }
+    match nestlink_protocol::turn::completed_signal_candidate_addresses(signal)
+        .map_err(|_| PeerError::SignalRejected)?
+    {
+        Some(addresses) => Ok(addresses),
+        None if mode == PeerPathMode::RelayOnly => Err(PeerError::RelayUnavailable),
+        None => Ok(Vec::new()),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn relay_mode_waits_for_complete_trickle_candidates_before_freezing_its_allowlist()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let sdp = "v=0\r\na=ice-ufrag:abc123\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=mid:0\r\na=candidate:1 1 UDP 90 8.8.8.8 5001 typ srflx\r\n";
+        let mut signal = nestlink_protocol::api::SignalPayload {
+            ice: Some(nestlink_protocol::ice::snapshot(sdp, 1, false)?),
+            connection_generation: 1,
+            lease_sequence: 1,
+            network_generation: 1,
+            sequence: 1,
+            candidates: vec![],
+            description: Some(nestlink_protocol::api::WebRtcDescription {
+                kind: "answer".into(),
+                sdp: nestlink_protocol::ice::without_candidates(sdp),
+                dtls_sha256: vec![1; 32],
+                in_reply_to_sequence: Some(1),
+            }),
+        };
+        for mode in [PeerPathMode::DirectPreferred, PeerPathMode::RelayOnly] {
+            assert_eq!(
+                managed_signal_candidate_addresses(mode, &signal),
+                Ok(Vec::new())
+            );
+        }
+        signal
+            .ice
+            .as_mut()
+            .ok_or("snapshot missing")?
+            .end_of_candidates = true;
+        assert_eq!(
+            managed_signal_candidate_addresses(PeerPathMode::RelayOnly, &signal),
+            Ok(vec!["8.8.8.8:5001".into()])
+        );
+        signal.ice.as_mut().ok_or("snapshot missing")?.candidates[0].candidate =
+            "candidate:1 1 UDP 90 192.168.1.1 5001 typ relay".into();
+        assert_eq!(
+            managed_signal_candidate_addresses(PeerPathMode::RelayOnly, &signal),
+            Err(PeerError::SignalRejected)
+        );
+        Ok(())
+    }
 
     #[test]
     fn setup_expiry_does_not_reclassify_endpoint_expiry_or_running_authority() {
@@ -2254,11 +2323,6 @@ mod wasm {
                     .sdp
                     .lines()
                     .any(|line| line == "a=nestlink-scroll:120");
-                if self.turn_credentials.is_some() {
-                    self.remote_candidate_addresses =
-                        managed_candidate_addresses(self.mode, &description.sdp)?;
-                    self.remote_network_generation = signal.network_generation;
-                }
                 self.await_bounded(
                     async {
                         JsFuture::from(self.peer.set_remote_description(&remote))
@@ -2989,6 +3053,17 @@ mod wasm {
 
         async fn await_turn_binding(&mut self, deadline: f64) -> Result<(), PeerError> {
             loop {
+                // Relay-only also needs to pump the cumulative snapshots while
+                // waiting. Forwarding stays closed until both sets complete.
+                if self.trickle_enabled()
+                    && (self.local_candidate_addresses.is_empty()
+                        || self.remote_candidate_addresses.is_empty())
+                {
+                    match self.receive_and_apply_answer_with_timeout(1_000).await {
+                        Ok(()) | Err(PeerError::AnswerRequired) => {}
+                        Err(problem) => return Err(problem),
+                    }
+                }
                 if self.poll_turn_binding(deadline).await? {
                     return Ok(());
                 }
@@ -3026,7 +3101,7 @@ mod wasm {
             if self.local_candidate_addresses.is_empty()
                 || self.remote_candidate_addresses.is_empty()
             {
-                if self.mode == PeerPathMode::RelayOnly {
+                if self.mode == PeerPathMode::RelayOnly && !self.trickle_enabled() {
                     return Err(PeerError::RelayUnavailable);
                 }
                 return Ok(false);
@@ -3277,10 +3352,6 @@ mod wasm {
             network_generation: u64,
             deadline: f64,
         ) -> Result<(), PeerError> {
-            if self.turn_credentials.is_some() {
-                self.local_candidate_addresses =
-                    managed_candidate_addresses(self.mode, &description.sdp)?;
-            }
             let next = self
                 .local_sequence
                 .checked_add(1)
@@ -3324,6 +3395,10 @@ mod wasm {
             .await?;
             self.local_sequence = next;
             self.local_offer_sequence = next;
+            if self.turn_credentials.is_some() {
+                self.local_candidate_addresses =
+                    managed_signal_candidate_addresses(self.mode, &payload)?;
+            }
             self.local_ice_signal = payload.ice.as_ref().map(|_| payload.clone());
             self.network_generation = network_generation;
             self.diagnostics
@@ -3393,10 +3468,26 @@ mod wasm {
                 self.diagnostics.mark(ConnectionStage::GatherComplete);
             }
             self.local_ice_signal = Some(signal);
+            if self.turn_credentials.is_some() {
+                self.local_candidate_addresses = managed_signal_candidate_addresses(
+                    self.mode,
+                    self.local_ice_signal
+                        .as_ref()
+                        .ok_or(PeerError::SignalRejected)?,
+                )?;
+            }
             Ok(())
         }
 
         async fn apply_remote_ice(&mut self, signal: &SignalPayload) -> Result<(), PeerError> {
+            if signal.ice.is_none() {
+                if self.turn_credentials.is_some() {
+                    self.remote_candidate_addresses =
+                        managed_signal_candidate_addresses(self.mode, signal)?;
+                    self.remote_network_generation = signal.network_generation;
+                }
+                return Ok(());
+            }
             let Some(ice) = &signal.ice else {
                 return Ok(());
             };
@@ -3438,6 +3529,11 @@ mod wasm {
             }
             self.diagnostics
                 .signal(ConnectionStage::RemoteCandidates, signal);
+            if self.turn_credentials.is_some() {
+                self.remote_candidate_addresses =
+                    managed_signal_candidate_addresses(self.mode, signal)?;
+                self.remote_network_generation = signal.network_generation;
+            }
             Ok(())
         }
 

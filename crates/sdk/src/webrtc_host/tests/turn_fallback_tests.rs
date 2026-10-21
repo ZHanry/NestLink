@@ -15,6 +15,183 @@ use nestlink_protocol::{
 use reqwest::StatusCode;
 use std::sync::atomic::AtomicU64;
 
+#[tokio::test]
+async fn trickle_answers_before_slow_stun_and_completes_a_signed_direct_connection() -> TestResult {
+    for paths in [PathSet::DIRECT, PathSet::BOTH] {
+        let controller = DeviceIdentity::generate();
+        let host = DeviceIdentity::generate();
+        let blackhole = tokio::net::UdpSocket::bind("127.0.0.1:0").await?;
+        let fixture = Fixture::with_features(
+            &controller,
+            &host,
+            paths,
+            TurnReply::Capacity,
+            Vec::new(),
+            &[nestlink_protocol::ice::TRICKLE_CAPABILITY],
+        )
+        .await?;
+        let mut peer =
+            test_host_peer_state(&fixture.permit, &host, controller.identity.public_key()).await?;
+        peer.peer.close().await?;
+        // Inject a local transport fixture at peer construction. Deployment
+        // discovery continues to reject loopback/private STUN endpoints.
+        let (native, video, audio, sender) = make_peer(
+            &fixture.permit,
+            false,
+            None,
+            &[format!("stun:{}", blackhole.local_addr()?)],
+        )
+        .await?;
+        peer.peer = native;
+        peer.video_track = video;
+        peer.audio_track = audio;
+        peer.video_sender = sender;
+        let browser = make_browser_peer().await?;
+        browser
+            .create_data_channel(WEBRTC_CONTROL_LABEL, None)
+            .await?;
+        let mut browser_gathered = browser.gathering_complete_promise().await;
+        browser
+            .set_local_description(browser.create_offer(None).await?)
+            .await?;
+        let original = browser.local_description().await.ok_or("missing offer")?;
+        let mut offer = SignalPayload {
+            ice: Some(nestlink_protocol::ice::snapshot(&original.sdp, 1, false)?),
+            connection_generation: fixture.permit.claims().connection_generation,
+            lease_sequence: fixture.permit.claims().lease_sequence,
+            network_generation: 1,
+            sequence: 1,
+            candidates: Vec::new(),
+            description: Some(WebRtcDescription {
+                kind: "offer".into(),
+                sdp: nestlink_protocol::ice::without_candidates(&original.sdp),
+                dtls_sha256: dtls_fingerprint(&original.sdp)?,
+                in_reply_to_sequence: None,
+            }),
+        };
+        tokio::time::timeout(
+            Duration::from_secs(2),
+            peer.publish_answer(&fixture.sdk, &host, &fixture.permit, offer.clone()),
+        )
+        .await??;
+        assert_ne!(
+            peer.peer.ice_gathering_state(),
+            RTCIceGatheringState::Complete
+        );
+        assert!(peer.turn_binding_context.is_none());
+        assert!(peer.turn_binding_claims.is_none());
+        assert!(!peer.proof_complete.load(Ordering::Acquire));
+        // Verify the actual published device signature before installing its SDP.
+        let submission = fixture
+            .signals
+            .lock()
+            .map_err(|_| "signal lock")?
+            .drain(..)
+            .next()
+            .ok_or("missing early answer")?;
+        let mut cursor = SignalCursor::new(&fixture.permit, &controller)?;
+        let answer = crate::verify_peer_signal(
+            &fixture.permit,
+            &controller,
+            nestlink_protocol::api::SignalView {
+                account_id: fixture.permit.claims().account_id.clone(),
+                public_key: URL_SAFE_NO_PAD.encode(host.identity.public_key()),
+                submission,
+            },
+            &mut cursor,
+        )?
+        .ok_or("answer was not fresh")?;
+        assert!(
+            !answer
+                .ice
+                .as_ref()
+                .ok_or("missing initial snapshot")?
+                .end_of_candidates
+        );
+        // The unresolved STUN exchange stays alive; it has not been skipped to
+        // make the timing assertion pass. It receives no response in this test.
+        let mut request = [0; 512];
+        let _ = tokio::time::timeout(Duration::from_secs(2), blackhole.recv_from(&mut request))
+            .await??;
+        let mut gathered = peer.peer.gathering_complete_promise().await;
+        let _ = tokio::time::timeout(Duration::from_secs(8), gathered.recv()).await?;
+        peer.publish_local_ice(&fixture.sdk, &host).await?;
+        let completed = fixture
+            .signals
+            .lock()
+            .map_err(|_| "signal lock")?
+            .pop()
+            .ok_or("missing completed answer")?;
+        let completed = crate::verify_peer_signal(
+            &fixture.permit,
+            &controller,
+            nestlink_protocol::api::SignalView {
+                account_id: fixture.permit.claims().account_id.clone(),
+                public_key: URL_SAFE_NO_PAD.encode(host.identity.public_key()),
+                submission: completed,
+            },
+            &mut cursor,
+        )?
+        .ok_or("completion was not fresh")?;
+        assert!(
+            completed
+                .ice
+                .as_ref()
+                .ok_or("missing completed snapshot")?
+                .end_of_candidates
+        );
+        browser
+            .set_remote_description(RTCSessionDescription::answer(
+                answer
+                    .description
+                    .as_ref()
+                    .ok_or("missing answer SDP")?
+                    .sdp
+                    .clone(),
+            )?)
+            .await?;
+        let mut ice_cursor = nestlink_protocol::ice::IceSnapshotCursor::default();
+        for snapshot in [answer.ice.as_ref(), completed.ice.as_ref()] {
+            for candidate in ice_cursor.apply(snapshot.ok_or("missing snapshot")?)? {
+                browser
+                    .add_ice_candidate(RTCIceCandidateInit {
+                        candidate: candidate.candidate,
+                        sdp_mid: candidate.sdp_mid,
+                        sdp_mline_index: Some(candidate.sdp_m_line_index),
+                        username_fragment: Some(candidate.username_fragment),
+                    })
+                    .await?;
+            }
+        }
+        let _ = tokio::time::timeout(Duration::from_secs(2), browser_gathered.recv()).await?;
+        offer.sequence += 1;
+        offer.ice = Some(nestlink_protocol::ice::snapshot(
+            &browser
+                .local_description()
+                .await
+                .ok_or("missing gathered offer")?
+                .sdp,
+            1,
+            true,
+        )?);
+        peer.apply_remote_ice(&offer).await?;
+        tokio::time::timeout(Duration::from_secs(5), async {
+            while peer.peer.connection_state() != RTCPeerConnectionState::Connected
+                || browser.connection_state() != RTCPeerConnectionState::Connected
+            {
+                tokio::time::sleep(Duration::from_millis(20)).await;
+            }
+        })
+        .await?;
+        assert_eq!(selected_ice_pair(&peer.peer).await?.0, Path::Direct);
+        assert!(!peer.proof_complete.load(Ordering::Acquire));
+        assert!(peer.media.is_none());
+        peer.close().await?;
+        browser.close().await?;
+    }
+    Ok(())
+}
+
 #[derive(Clone, Copy)]
 enum TurnReply {
     Capacity,
@@ -35,6 +212,7 @@ struct Fixture {
     key_delay_ms: Arc<AtomicU64>,
     deny_peer_keys: Arc<AtomicBool>,
     key_reads: Arc<AtomicU32>,
+    signals: Arc<std::sync::Mutex<Vec<nestlink_protocol::api::SignalSubmission>>>,
 }
 
 impl Drop for Fixture {
@@ -62,9 +240,23 @@ impl Fixture {
         reply: TurnReply,
         stun_servers: Vec<std::net::SocketAddr>,
     ) -> TestResult<Self> {
+        Self::with_features(controller, host, paths, reply, stun_servers, &[]).await
+    }
+
+    async fn with_features(
+        controller: &DeviceIdentity,
+        host: &DeviceIdentity,
+        paths: PathSet,
+        reply: TurnReply,
+        stun_servers: Vec<std::net::SocketAddr>,
+        features: &[&str],
+    ) -> TestResult<Self> {
         let signer = Arc::new(PermitSigner::generate());
         let mut claims = test_permit(controller, host)?.claims().clone();
         claims.paths = paths.to_wire();
+        claims
+            .required_capabilities
+            .extend(features.iter().map(|v| (*v).to_owned()));
         let signed = signer.sign(&claims)?;
         let permit = verify_permit(&signed.encode_to_vec(), &signer.public_key())?;
         let permit_response = serde_json::json!({
@@ -112,11 +304,28 @@ impl Fixture {
         let key_reads = Arc::new(AtomicU32::new(0));
         let reads = key_reads.clone();
         let path = format!("{API_BASE}/remote/{}", claims.session_id);
+        let signals = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let published = signals.clone();
         let discovery = nestlink_protocol::api::NativeDiscoveryConfig {
             deployment_id: claims.deployment_id.clone(),
             stun_servers,
         };
         let app = Router::new()
+            .route(
+                &format!("{path}/signals"),
+                post(
+                    move |Json(signal): Json<nestlink_protocol::api::SignalSubmission>| {
+                        let published = published.clone();
+                        async move {
+                            published
+                                .lock()
+                                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                                .push(signal);
+                            StatusCode::NO_CONTENT
+                        }
+                    },
+                ),
+            )
             .route(
                 &format!("{API_BASE}/network/discovery"),
                 get(move || async move { Json(discovery) }),
@@ -302,6 +511,7 @@ impl Fixture {
             key_delay_ms,
             deny_peer_keys,
             key_reads,
+            signals,
         })
     }
 
@@ -791,6 +1001,72 @@ fn install_signed_binding(
         binding: Some(signed),
     };
     Ok(context)
+}
+
+#[tokio::test]
+async fn complete_trickle_sets_require_the_existing_dual_signed_relay_binding() -> TestResult {
+    for paths in [PathSet::BOTH, PathSet::RELAY] {
+        let controller = DeviceIdentity::generate();
+        let host = DeviceIdentity::generate();
+        let fixture = Fixture::with_features(
+            &controller,
+            &host,
+            paths,
+            TurnReply::Granted,
+            Vec::new(),
+            &[nestlink_protocol::ice::TRICKLE_CAPABILITY],
+        )
+        .await?;
+        let mut peer = fixture.peer(&host).await?;
+        let expected = install_signed_binding(&fixture, &peer, &controller, &host, 5_000, false)?;
+        let snapshot = |host: bool, complete: bool| -> TestResult<SignalPayload> {
+            let address = if host {
+                "1.1.1.1 40001"
+            } else {
+                "8.8.8.8 40000"
+            };
+            let fingerprint = std::iter::repeat_n("AB", 32).collect::<Vec<_>>().join(":");
+            let sdp = format!(
+                "v=0\r\na=fingerprint:sha-256 {fingerprint}\r\na=ice-ufrag:abc123\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=mid:0\r\na=candidate:1 1 UDP 100 {address} typ srflx\r\n"
+            );
+            let signal = SignalPayload {
+                ice: Some(nestlink_protocol::ice::snapshot(&sdp, 1, complete)?),
+                connection_generation: fixture.permit.claims().connection_generation,
+                lease_sequence: fixture.permit.claims().lease_sequence,
+                network_generation: 1,
+                sequence: 1,
+                candidates: Vec::new(),
+                description: Some(WebRtcDescription {
+                    kind: if host { "answer" } else { "offer" }.into(),
+                    sdp: nestlink_protocol::ice::without_candidates(&sdp),
+                    dtls_sha256: vec![0xab; 32],
+                    in_reply_to_sequence: host.then_some(1),
+                }),
+            };
+            signal.validate(fixture.permit.claims())?;
+            Ok(signal)
+        };
+        peer.local_ice_signal = Some(snapshot(true, true)?);
+        peer.remote_ice_signal = Some(snapshot(false, false)?);
+        peer.prepare_completed_ice_turn_binding(&fixture.sdk, &host)
+            .await?;
+        assert!(peer.turn_binding_context.is_none());
+        assert!(peer.turn_binding_claims.is_none());
+        peer.remote_ice_signal = Some(snapshot(false, true)?);
+        peer.prepare_completed_ice_turn_binding(&fixture.sdk, &host)
+            .await?;
+        let actual = peer
+            .turn_binding_context
+            .as_ref()
+            .ok_or("missing frozen context")?;
+        assert_eq!(actual.controller_candidates, expected.controller_candidates);
+        assert_eq!(actual.host_candidates, expected.host_candidates);
+        assert!(peer.turn_binding_claims.is_some());
+        assert!(!peer.proof_complete.load(Ordering::Acquire));
+        assert!(peer.media.is_none());
+        peer.close().await?;
+    }
+    Ok(())
 }
 
 #[tokio::test]

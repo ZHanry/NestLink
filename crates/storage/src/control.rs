@@ -906,13 +906,9 @@ impl Store {
                 nestlink_protocol::ice::TRICKLE_CAPABILITY,
                 nestlink_protocol::ice::SETUP_CAPABILITY,
             ] {
-                // TURN binding continues to use its complete-SDP profile until
-                // cumulative candidate binding has a separate qualification.
-                if feature == nestlink_protocol::ice::TRICKLE_CAPABILITY
-                    && view.paths != [nestlink_protocol::Path::Direct as i32]
-                {
-                    continue;
-                }
+                // Direct checks start with the initial SDP. Relay forwarding
+                // stays closed until both complete candidate snapshots have
+                // been bound by the two endpoint signatures.
                 if features.iter().any(|value| value == feature)
                     && c.capabilities.iter().any(|value| value == feature)
                 {

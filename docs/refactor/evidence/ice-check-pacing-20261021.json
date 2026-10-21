@@ -1,0 +1,23 @@
+{
+  "kind": "real-udp-ice-temporary-loss-regression",
+  "test": "direct_ice_recovers_when_the_first_four_seconds_of_checks_are_lost",
+  "test_source": "crates/sdk/tests/ice_retry.rs",
+  "method": "Two real localhost UDP ICE agents and a bidirectional source-filtered UDP forwarder; discard all packets for four seconds, then forward without modifying payloads",
+  "before": {
+    "fork_revision": "de4c249da842287b7eca623aa0628b527bcabf82",
+    "result": "failed",
+    "error": "Elapsed(())",
+    "operation_timeout_seconds": 10,
+    "test_elapsed_seconds": 10.04
+  },
+  "after": {
+    "fork_revision": "2484d8dcc1416bdd8ab5b27d8d0653f2af76d51a",
+    "result": "passed",
+    "test_elapsed_seconds": 5.89,
+    "payload": "direct-after-initial-loss"
+  },
+  "origin": "Observed local cargo test outputs; harness includes the product integration test source unchanged",
+  "limits": "No browser, external NAT, Clash TUN, desktop capture or physical-interface acceptance; original Edge regression remains failed",
+  "test_source_sha256": "27b3ff88a8be205bff07f7024e9a176acee7691e74f3e730c38da278d2ab5bfa",
+  "test_source_normalization": "UTF-8 with LF newlines"
+}
