@@ -155,10 +155,17 @@ impl Fixture {
                 get(move || {
                     let state = state_response.clone();
                     async move {
-                        let mut state = state
+                        let stored = state
                             .lock()
-                            .unwrap_or_else(std::sync::PoisonError::into_inner)
-                            .clone();
+                            .unwrap_or_else(std::sync::PoisonError::into_inner);
+                        let mut state = TurnBindingState {
+                            controller_allocation_id: stored.controller_allocation_id.clone(),
+                            host_allocation_id: stored.host_allocation_id.clone(),
+                            controller_expires_at_unix_ms: stored.controller_expires_at_unix_ms,
+                            host_expires_at_unix_ms: stored.host_expires_at_unix_ms,
+                            binding: stored.binding.clone(),
+                        };
+                        drop(stored);
                         // Match production: filter at the state read, before
                         // the SDK's separately delayed peer-key request.
                         if state.binding.as_ref().is_some_and(|binding| {
