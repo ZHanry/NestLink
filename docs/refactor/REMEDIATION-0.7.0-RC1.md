@@ -270,3 +270,17 @@ GitHub Linux 实际通过了提前 answer 后的签名直连测试、4秒初始�
 测试数据改为该分支允许的 relay 候选；DirectPreferred 分支继续使用 srflx。未放宽产品
 路径校验、候选 allowlist 或双签要求。修正后的精确源码仍须重新通过所有规定检查，
 完整候选8尚未派发，HL/网页/线上服务仍为612bf5b，真实验收仍未通过。
+
+### f7fdb23 完整检查中的恢复日志锁修复
+
+修正 RelayOnly 测试数据后，GitHub Linux SDK 相关测试通过，但平台文件库的重启恢复
+测试返回 `WouldBlock: download journal already has an owner`。下载恢复日志只关闭
+持锁描述符；并发 fork 在 exec 前继承同一 open file description 时，关闭父进程描述符
+不能立即释放锁。上传配额日志已有显式 unlock，下载日志遗漏了相同处理。
+下载日志现于最后一个实际持有者析构时显式解锁；存活持有者期间仍拒绝第二个打开者。
+新增 Unix 回归以 dup 精确模拟继承描述符，覆盖旧持有者退出后可重开，以及迟到的继承
+描述符关闭不会解除新持有者的锁。没有增加重试来掩盖失败，也未放宽单一持有者校验。
+本机 Windows 的15项下载恢复测试通过；新增继承描述符回归仅适用于 Unix，仍待 GitHub
+Linux 实际执行，不将 Windows 的通过结果当作该项回归的证据。
+该修改仍须通过精确源码的完整检查；f7fdb23 已暂停派发，隔离 schema24 预演成功
+仅为升级准备证据，线上服务、Web 与 HL 均未更新，原场景与弹窗实际验收仍为 failed。

@@ -101,6 +101,34 @@ fn stable_singleton_and_established_missing_ledger_fail_closed() -> io::Result<(
 }
 
 #[test]
+#[cfg(unix)]
+fn inherited_descriptor_cannot_keep_a_departed_journal_owner_locked() -> io::Result<()> {
+    let temporary = tempfile::tempdir()?;
+    let state = state_directory(temporary.path())?;
+    let store = DownloadRecoveryStore::open(&state, 100, 4)?;
+    // dup shares the same open file description as a descriptor inherited by
+    // fork, so the race is exercised without relying on process scheduling.
+    let inherited = store._owner.try_clone()?;
+    assert_eq!(
+        DownloadRecoveryStore::open(&state, 100, 4)
+            .err()
+            .map(|error| error.kind()),
+        Some(io::ErrorKind::WouldBlock)
+    );
+    drop(store);
+    let replacement = DownloadRecoveryStore::open(&state, 100, 4)?;
+    drop(inherited);
+    assert_eq!(
+        DownloadRecoveryStore::open(&state, 100, 4)
+            .err()
+            .map(|error| error.kind()),
+        Some(io::ErrorKind::WouldBlock)
+    );
+    assert!(replacement.list()?.0.is_empty());
+    Ok(())
+}
+
+#[test]
 fn restart_keeps_reservation_and_waiting_facts_without_a_live_owner_or_consent() -> io::Result<()> {
     let temporary = tempfile::tempdir()?;
     let state = state_directory(temporary.path())?;

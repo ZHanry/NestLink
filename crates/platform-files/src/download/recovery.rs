@@ -411,6 +411,14 @@ pub struct DownloadRecoveryStore {
     _owner: std::fs::File,
     state: Mutex<State>,
 }
+impl Drop for DownloadRecoveryStore {
+    fn drop(&mut self) {
+        // A concurrent fork can inherit this open file description before
+        // CLOEXEC closes it. Release the lock when the last real owner leaves,
+        // without waiting for an unrelated child to exec or exit.
+        let _ = self._owner.unlock();
+    }
+}
 impl DownloadRecoveryStore {
     pub fn open(
         private_state_dir: &Path,
