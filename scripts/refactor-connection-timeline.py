@@ -8,6 +8,7 @@ HASH = re.compile(r"[0-9a-f]{64}\Z")
 SIGNAL_FIELDS = ("network_generation", "sequence", "description_sequence", "lease_sequence")
 STAGES = {"peer_created", "local_description_set", "signal_submitted", "signal_consumed",
           "remote_description_set", "local_candidates", "remote_candidates", "gather_complete",
+          "path_checking", "turn_binding_expired", "turn_binding_ready",
           "path_verified", "endpoint_proved", "running_authorized", "display_selected",
           "first_packet_observed", "first_decoded_frame_observed", "first_video_progress_observed",
           "ice_restart", "stopped"}

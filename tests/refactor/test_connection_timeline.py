@@ -37,6 +37,14 @@ class ConnectionTimelineTests(unittest.TestCase):
         self.assertTrue(report["signals"][0]["accepted_without_consumption_observation"])
         self.assertFalse(report["signals"][0]["recipient_consumption_observed"])
 
+    def test_expired_optional_binding_does_not_count_as_path_verification(self):
+        self.trace['events'] = [dict(elapsed_ms=n, stage=stage) for n, stage in [
+            (1, 'remote_description_set'), (2, 'path_checking'),
+            (3, 'turn_binding_expired'), (4, 'turn_binding_ready')]]
+        report = timeline.correlate(self.trace, [], [])
+        self.assertIsNone(report['controller_local_durations_ms']['offer_to_verified_path'])
+        self.assertIsNone(report['controller_first_failure'])
+
     def test_other_generation_and_request_do_not_leak_into_report(self):
         self.host[0]["connection_generation"] = 8
         self.server[0]["request_sha256"] = "d" * 64
