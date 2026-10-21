@@ -8,6 +8,8 @@
 
 mod data;
 mod input;
+#[cfg(any(windows, test))]
+mod network;
 mod rate;
 mod turn_policy;
 pub use data::{HostDataClaims, HostDataFactory, HostDataOwner};
@@ -983,6 +985,13 @@ impl WebRtcHostPeer {
         installation: &DeviceIdentity,
     ) -> Result<bool, WebRtcHostError> {
         self.ensure_open()?;
+        // TURN grants may be shorter than the setup permit. Keep the same
+        // allocation alive while waiting for the first offer as well.
+        if self.lease.is_none() {
+            let permit = self.current_permit();
+            self.refresh_turn_allocation(sdk, installation, &permit, false)
+                .await?;
+        }
         if self.lease.is_some() && self.last_refresh.elapsed() >= SIGNAL_REFRESH_INTERVAL {
             self.refresh_authority(sdk, installation).await?;
         }
@@ -1160,6 +1169,11 @@ impl WebRtcHostPeer {
         let allocation_id = current.claims().allocation_id.clone();
         let previous_grant_sequence = current.claims().grant_sequence;
         let previous_expiry = current.claims().expires_at_unix_ms;
+        if previous_expiry <= now {
+            // An expired optional allocation may be withdrawn; it must never
+            // be revived or prevent an already authorized direct path.
+            return Err(WebRtcHostError::RelayUnavailable);
+        }
         if !force && previous_expiry > now.saturating_add(TURN_RENEWAL_WINDOW.as_millis() as u64) {
             return Ok(());
         }
@@ -1391,9 +1405,6 @@ impl WebRtcHostPeer {
         let mut permit = self.permit_rx.clone();
         let mut cancelled = self.cancel_tx.subscribe();
         loop {
-            if self.local_ice_signal.is_some() {
-                self.exchange_ice(sdk, installation).await?;
-            }
             // During initial ICE negotiation, expiry means no reachable path
             // was established within the signed startup lease.
             if ensure_live(&permit.borrow().clone()).is_err() {
@@ -1413,6 +1424,17 @@ impl WebRtcHostPeer {
                     return Err(WebRtcHostError::Closed);
                 }
                 _ => {}
+            }
+            let current = self.current_permit();
+            self.refresh_turn_allocation(sdk, installation, &current, false)
+                .await?;
+            if self.turn_credentials.is_some()
+                && self.last_turn_binding_check.elapsed() >= TURN_BINDING_MAINTAIN_INTERVAL
+            {
+                self.maintain_turn_binding(sdk, installation).await?;
+            }
+            if self.local_ice_signal.is_some() {
+                self.exchange_ice(sdk, installation).await?;
             }
             let remaining = deadline
                 .checked_duration_since(Instant::now())
@@ -1616,8 +1638,13 @@ impl WebRtcHostPeer {
         // The upstream promise signals completion by closing its channel,
         // rather than sending an item. A closed channel is the normal result.
         if offer.ice.is_none() {
-            let _ = tokio::time::timeout(ICE_GATHER_TIMEOUT, gathered.recv())
-                .await
+            let _ = self
+                .maintain_turn_during_setup(
+                    sdk,
+                    installation,
+                    tokio::time::timeout(ICE_GATHER_TIMEOUT, gathered.recv()),
+                )
+                .await?
                 .map_err(|_| WebRtcHostError::GatherTimeout)?;
         }
         self.ensure_open()?;
@@ -1696,11 +1723,41 @@ impl WebRtcHostPeer {
                 .count(),
             self.peer.ice_gathering_state() == RTCIceGatheringState::Complete,
         );
+        self.refresh_turn_allocation(sdk, installation, permit, false)
+            .await?;
         if self.turn_credentials.is_some() {
             self.prepare_turn_binding(sdk, installation, permit, &offer, &remote.sdp, &local.sdp)
                 .await?;
         }
         Ok(())
+    }
+
+    /// Pump allocation renewal while an independent setup operation is pending.
+    /// Renewal still needs a current signed grant; neither an expired grant nor
+    /// the original setup permit can be extended by this wait.
+    async fn maintain_turn_during_setup<T>(
+        &mut self,
+        sdk: &Sdk,
+        installation: &DeviceIdentity,
+        operation: impl std::future::Future<Output = T>,
+    ) -> Result<T, WebRtcHostError> {
+        tokio::pin!(operation);
+        let mut cancelled = self.cancel_tx.subscribe();
+        loop {
+            self.ensure_open()?;
+            let permit = self.current_permit();
+            tokio::select! {
+                biased;
+                _ = cancelled.changed() => return Err(WebRtcHostError::Closed),
+                result = self.refresh_turn_allocation(sdk, installation, &permit, false) => result?,
+            }
+            tokio::select! {
+                biased;
+                _ = cancelled.changed() => return Err(WebRtcHostError::Closed),
+                result = &mut operation => return Ok(result),
+                _ = tokio::time::sleep(TURN_BINDING_MAINTAIN_INTERVAL) => {},
+            }
+        }
     }
 
     async fn apply_remote_ice(&mut self, signal: &SignalPayload) -> Result<(), WebRtcHostError> {
@@ -2961,6 +3018,8 @@ async fn make_peer_with_configuration(
     let registry: Registry = register_default_interceptors(Registry::new(), &mut media)?;
     let mut settings = SettingEngine::default();
     settings.set_ice_multicast_dns_mode(mdns_mode);
+    #[cfg(windows)]
+    settings.set_vnet(Some(Arc::new(network::os_ice_network()?)));
     let paths = Arc::new(nestlink_platform_network::path::NetworkPathManager::from_default()?);
     if paths.selected.is_some() {
         let filter = paths.clone();

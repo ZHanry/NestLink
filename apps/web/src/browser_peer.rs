@@ -2035,7 +2035,7 @@ mod wasm {
             if self.offer_published {
                 return Err(PeerError::OfferRequired);
             }
-            let deadline = self.operation_deadline(timeout_ms)?;
+            let deadline = self.renewable_operation_deadline(timeout_ms)?;
             let offer = self
                 .await_bounded(
                     async {
@@ -2106,7 +2106,7 @@ mod wasm {
             timeout_ms: u32,
             next_generation: u64,
         ) -> Result<(), PeerError> {
-            let deadline = self.operation_deadline(timeout_ms)?;
+            let deadline = self.renewable_operation_deadline(timeout_ms)?;
             if self.turn_credentials.is_some() {
                 self.authority.borrow_mut().path.turn_bound = false;
                 self.refresh_turn_credentials(next_generation, true, deadline)
@@ -2169,8 +2169,11 @@ mod wasm {
             if !self.offer_published {
                 return Err(PeerError::OfferRequired);
             }
-            let deadline = self.operation_deadline(MAX_OPERATION_MS)?;
-            let poll_deadline = self.operation_deadline(timeout_ms)?;
+            let deadline = self.renewable_operation_deadline(MAX_OPERATION_MS)?;
+            // Answer polling begins before a TURN peer binding exists. Renew
+            // the allocation independently instead of waiting for that binding.
+            self.maintain_turn_allocation_before(deadline).await?;
+            let poll_deadline = self.renewable_operation_deadline(timeout_ms)?;
             self.publish_local_ice(poll_deadline).await?;
             let signals = match bounded_live(
                 async {
@@ -2286,7 +2289,7 @@ mod wasm {
             if !self.remote_answer_set {
                 return Err(PeerError::AnswerRequired);
             }
-            let deadline = self.operation_deadline(timeout_ms)?;
+            let deadline = self.renewable_operation_deadline(timeout_ms)?;
             // Keep the WebRTC wait independent of `self` so lease renewal can
             // be consumed while the browser is waiting for the candidate pair.
             let peer = self.peer.clone();
@@ -2832,25 +2835,14 @@ mod wasm {
         }
 
         async fn maintain_turn_before(&mut self, deadline_limit: f64) -> Result<(), PeerError> {
-            self.ensure_live()?;
-            if self.authority.borrow().path.selected == Some(SelectedPath::Direct) {
-                self.disable_optional_turn()?;
-                self.resume_tracks()?;
-                return Ok(());
-            }
-            let Some(credentials) = &self.turn_credentials else {
-                return Ok(());
-            };
-            let now = now_ms()?;
-            let refresh = credentials.claims().expires_at_unix_ms.saturating_sub(now) <= 3_000;
-            let deadline = self
-                .operation_deadline(MAX_OPERATION_MS)?
-                .min(deadline_limit);
             let result = async {
-                if refresh {
-                    self.refresh_turn_credentials(self.network_generation, false, deadline)
-                        .await?;
+                self.maintain_turn_allocation_before(deadline_limit).await?;
+                if self.turn_credentials.is_none() {
+                    return Ok(());
                 }
+                let deadline = self
+                    .renewable_operation_deadline(MAX_OPERATION_MS)?
+                    .min(deadline_limit);
                 if !self.authority.borrow().path.turn_bound {
                     self.pause_tracks();
                     self.await_turn_binding(deadline).await?;
@@ -2863,6 +2855,39 @@ mod wasm {
                 self.cancellation().cancel();
             }
             result
+        }
+
+        /// Allocation renewal does not require a remote SDP or peer binding.
+        /// Gathering and answer polling must service this shorter node lease.
+        async fn maintain_turn_allocation_before(
+            &mut self,
+            deadline_limit: f64,
+        ) -> Result<(), PeerError> {
+            self.ensure_live()?;
+            if self.authority.borrow().path.selected == Some(SelectedPath::Direct) {
+                self.disable_optional_turn()?;
+                self.resume_tracks()?;
+                return Ok(());
+            }
+            let Some(credentials) = &self.turn_credentials else {
+                return Ok(());
+            };
+            let now = now_ms()?;
+            let monotonic_now = monotonic_ms()?;
+            let refresh = credentials.claims().expires_at_unix_ms.saturating_sub(now) <= 3_000
+                || self
+                    .authority
+                    .borrow()
+                    .turn_deadline_ms
+                    .is_some_and(|limit| limit - monotonic_now <= 3_000.0);
+            let deadline = self
+                .renewable_operation_deadline(MAX_OPERATION_MS)?
+                .min(deadline_limit);
+            if refresh {
+                self.refresh_turn_credentials(self.network_generation, false, deadline)
+                    .await?;
+            }
+            Ok(())
         }
 
         async fn refresh_turn_credentials(
@@ -2932,6 +2957,10 @@ mod wasm {
                         Ok(_) | Err(PeerError::NoSelectedPath) => {}
                         Err(problem) => return Err(problem),
                     }
+                }
+                self.maintain_turn_allocation_before(deadline).await?;
+                if self.turn_credentials.is_none() {
+                    return Ok(());
                 }
                 if self.local_candidate_addresses.is_empty()
                     || self.remote_candidate_addresses.is_empty()
@@ -3320,6 +3349,8 @@ mod wasm {
                 // every bounded poll so a network restart cannot hold the
                 // previous permit until its expiry edge.
                 self.renew_from_host_before(gather_deadline).await?;
+                self.maintain_turn_allocation_before(gather_deadline)
+                    .await?;
                 if self.peer.ice_gathering_state() == RtcIceGatheringState::Complete {
                     self.diagnostics.mark(ConnectionStage::GatherComplete);
                     return Ok(());

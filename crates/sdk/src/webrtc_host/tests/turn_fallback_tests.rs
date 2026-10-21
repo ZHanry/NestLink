@@ -20,6 +20,8 @@ enum TurnReply {
     Forbidden,
     BadSignature,
     Granted,
+    ShortGrant,
+    ShortGrantThenForbidden,
 }
 
 struct Fixture {
@@ -128,8 +130,10 @@ impl Fixture {
                     let permit = turn_permit.clone();
                     let signer = turn_signer.clone();
                     async move {
-                        count.fetch_add(1, Ordering::AcqRel);
-                        if matches!(reply, TurnReply::Capacity | TurnReply::Forbidden) {
+                        let sequence = count.fetch_add(1, Ordering::AcqRel) + 1;
+                        if matches!(reply, TurnReply::Capacity | TurnReply::Forbidden)
+                            || (matches!(reply, TurnReply::ShortGrantThenForbidden) && sequence > 1)
+                        {
                             let (status, code) = if matches!(reply, TurnReply::Capacity) {
                                 (StatusCode::TOO_MANY_REQUESTS, ErrorCode::CapacityExceeded)
                             } else {
@@ -158,10 +162,17 @@ impl Fixture {
                                 lease_sequence: p.lease_sequence,
                                 permit_sha256: permit.digest().to_vec(),
                                 request_sha256: digest(&transcript.encode_to_vec()).to_vec(),
-                                grant_sequence: 1,
+                                grant_sequence: u64::from(sequence),
                                 endpoint_revision: 1,
                                 issued_at_unix_ms: unix_ms()?,
-                                expires_at_unix_ms: p.expires_at_unix_ms,
+                                expires_at_unix_ms: if matches!(
+                                    reply,
+                                    TurnReply::ShortGrant | TurnReply::ShortGrantThenForbidden
+                                ) {
+                                    p.expires_at_unix_ms.min(unix_ms()? + 4_000)
+                                } else {
+                                    p.expires_at_unix_ms
+                                },
                                 username: "nestlink-test".into(),
                                 realm: "nestlink".into(),
                                 password: "A".repeat(43),
@@ -619,5 +630,107 @@ async fn optional_turn_operation_has_a_fixed_wait_budget() -> TestResult {
         Err(WebRtcHostError::Sdk(SdkError::Timeout))
     ));
     assert!(started.elapsed() < Duration::from_secs(5));
+    Ok(())
+}
+
+#[tokio::test]
+async fn setup_wait_renews_short_signed_grants_without_waiting_for_peer_binding() -> TestResult {
+    let controller = DeviceIdentity::generate();
+    let host = DeviceIdentity::generate();
+    let fixture = Fixture::new(&controller, &host, PathSet::BOTH, TurnReply::ShortGrant).await?;
+    let mut peer = fixture.peer(&host).await?;
+    let first = peer.turn_credentials.as_ref().ok_or("missing grant")?;
+    let allocation = first.claims().allocation_id.clone();
+    let first_expiry = first.claims().expires_at_unix_ms;
+    let initial_permit = peer.current_permit().signed_envelope().to_vec();
+    peer.maintain_turn_during_setup(
+        &fixture.sdk,
+        &host,
+        tokio::time::sleep(Duration::from_secs(5)),
+    )
+    .await?;
+    assert!(
+        unix_ms()? > first_expiry,
+        "wait did not cross the first node lease"
+    );
+    let renewed = peer
+        .turn_credentials
+        .as_ref()
+        .ok_or("missing renewed grant")?;
+    renewed.authorize(&fixture.permit, unix_ms()?)?;
+    assert_eq!(renewed.claims().allocation_id, allocation);
+    assert!(renewed.claims().grant_sequence > 1);
+    assert!(fixture.reservations.load(Ordering::Acquire) > 1);
+    assert_eq!(peer.current_permit().signed_envelope(), initial_permit);
+    assert!(peer.turn_binding_context.is_none());
+    assert!(!peer.proof_complete.load(Ordering::Acquire));
+    assert!(peer.media.is_none());
+    peer.close().await?;
+    Ok(())
+}
+
+#[tokio::test]
+async fn setup_renewal_does_not_swallow_management_denial() -> TestResult {
+    let controller = DeviceIdentity::generate();
+    let host = DeviceIdentity::generate();
+    let fixture = Fixture::new(
+        &controller,
+        &host,
+        PathSet::BOTH,
+        TurnReply::ShortGrantThenForbidden,
+    )
+    .await?;
+    let mut peer = fixture.peer(&host).await?;
+    let result = peer
+        .maintain_turn_during_setup(
+            &fixture.sdk,
+            &host,
+            tokio::time::sleep(Duration::from_secs(5)),
+        )
+        .await;
+    assert!(matches!(
+        result,
+        Err(WebRtcHostError::Sdk(SdkError::Api(
+            StatusCode::FORBIDDEN,
+            ErrorCode::PermissionRequired
+        )))
+    ));
+    assert!(!peer.proof_complete.load(Ordering::Acquire));
+    peer.close().await?;
+    Ok(())
+}
+
+#[tokio::test]
+async fn setup_renewal_wait_stops_on_cancellation_and_keeps_the_operation_budget() -> TestResult {
+    let controller = DeviceIdentity::generate();
+    let host = DeviceIdentity::generate();
+    for cancel in [false, true] {
+        let fixture =
+            Fixture::new(&controller, &host, PathSet::BOTH, TurnReply::ShortGrant).await?;
+        let mut peer = fixture.peer(&host).await?;
+        let cancelled = peer.cancel_tx.clone();
+        let trigger = async {
+            if cancel {
+                tokio::time::sleep(Duration::from_millis(100)).await;
+                cancelled.send_replace(true);
+            }
+        };
+        let started = Instant::now();
+        let (result, ()) = tokio::join!(
+            peer.maintain_turn_during_setup(
+                &fixture.sdk,
+                &host,
+                tokio::time::timeout(Duration::from_millis(400), std::future::pending::<()>()),
+            ),
+            trigger,
+        );
+        if cancel {
+            assert!(matches!(result, Err(WebRtcHostError::Closed)));
+        } else {
+            assert!(matches!(result, Ok(Err(_))));
+        }
+        assert!(started.elapsed() < Duration::from_secs(2));
+        peer.close().await?;
+    }
     Ok(())
 }
