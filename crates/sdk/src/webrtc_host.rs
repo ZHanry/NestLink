@@ -820,14 +820,26 @@ impl WebRtcHostPeer {
                 CandidatePairState::Failed => path.failed += 1,
                 _ => {}
             }
-            // webrtc-ice currently leaves traffic counters at default zero.
-            // Keep them absent instead of claiming no checks were sent.
+            // The reviewed ICE fork implements these counters at authenticated
+            // receive and successful socket write sites.
+            for (aggregate, value) in [
+                (&mut path.requests_sent, pair.requests_sent),
+                (&mut path.requests_received, pair.requests_received),
+                (&mut path.responses_sent, pair.responses_sent),
+                (&mut path.responses_received, pair.responses_received),
+            ] {
+                *aggregate = Some(aggregate.unwrap_or(0).saturating_add(value));
+            }
         }
-        self.diagnostics
-            .timeline
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-            .last_ice_check = Some(snapshot);
+        nestlink_protocol::diagnostics::IceCheckSnapshot::retain_latest(
+            &mut self
+                .diagnostics
+                .timeline
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .last_ice_check,
+            snapshot,
+        );
     }
 
     /// Return the first fixed-label peer guard or media worker termination

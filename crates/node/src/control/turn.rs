@@ -37,6 +37,8 @@ struct TrackedGrant {
     pending_binding: Option<TrackedBinding>,
     last_binding: Option<BindingWatermark>,
     revoked: bool,
+    /// A local socket close is terminal for this allocation, not the node.
+    ended: bool,
 }
 
 #[derive(Clone)]
@@ -274,11 +276,28 @@ fn accept_snapshot(
                 )
             });
         match local.grants.get(&id) {
+            Some(old) if old.ended => {
+                // Retain a tombstone through the newest signed expiry. Never
+                // reinstall a credential whose socket has already closed.
+                if let Some(tracked) = local.grants.get_mut(&id) {
+                    tracked.claims = claims;
+                }
+                continue;
+            }
             Some(old) if claims.grant_sequence == old.claims.grant_sequence => continue,
-            Some(_) => context
-                .authorization
-                .renew_grant(grant)
-                .map_err(|_| Error::Control)?,
+            Some(_) => match context.authorization.renew_grant(grant) {
+                Ok(()) => {}
+                Err(TurnGrantError::AllocationEnded) => {
+                    if let Some(tracked) = local.grants.get_mut(&id) {
+                        tracked.ended = true;
+                        tracked.claims = claims;
+                        tracked.activated_binding = None;
+                        tracked.pending_binding = None;
+                    }
+                    continue;
+                }
+                Err(_) => return Err(Error::Control),
+            },
             None => context
                 .authorization
                 .install_grant(grant)
@@ -292,6 +311,7 @@ fn accept_snapshot(
                 pending_binding,
                 last_binding,
                 revoked: false,
+                ended: false,
             },
         );
     }
@@ -316,6 +336,9 @@ fn accept_snapshot(
         };
         if tracked.revoked {
             return Err(authorization_error(ErrorCode::ReplayRejected));
+        }
+        if tracked.ended {
+            continue;
         }
         let reused = if let Some(existing) = &tracked.activated_binding {
             if existing.digest == activation.binding_sha256 {
@@ -923,6 +946,69 @@ mod tests {
 
     fn test_id(value: u8) -> String {
         format!("{value:08x}-1111-4111-8111-111111111111")
+    }
+
+    #[test]
+    fn renewing_a_closed_allocation_keeps_other_sessions_and_the_node_alive() -> TestResult {
+        let node = TestNode::new()?;
+        let mut local = node.install_initial_grant()?;
+        let first_id = test_id(6);
+        let first_username = format!("nl:{first_id}");
+        let client = SocketAddr::from(([192, 0, 2, 10], 55000));
+        assert!(node.authorization.authorize_allocation(
+            &first_username,
+            "deployment.example",
+            client,
+        ));
+        assert!(node.authorization.allocation_ready(&first_username, client));
+        node.authorization
+            .allocation_closed(&first_username, client);
+
+        let mut closed = local
+            .grants
+            .get(&first_id)
+            .ok_or("missing grant")?
+            .claims
+            .clone();
+        closed.grant_sequence += 1;
+        closed.expires_at_unix_ms += 1_000;
+        let mut other = closed.clone();
+        other.allocation_id = test_id(10);
+        other.session_id = test_id(11);
+        other.username = format!("nl:{}", other.allocation_id);
+        other.grant_sequence = 1;
+        let other_username = other.username.clone();
+        let (query, request, request_started) = node.query()?;
+        let claims = node.peer_snapshot(&query, 2, vec![closed.clone(), other.clone()], None)?;
+        let signed = node.signer.sign_turn_resource_snapshot(&claims)?;
+        node.accept(&query, &request, request_started, &signed, &mut local)?;
+        assert!(local.grants.get(&first_id).is_some_and(|grant| grant.ended));
+        assert!(!node.authorization.authorize_allocation(
+            &first_username,
+            "deployment.example",
+            client,
+        ));
+        assert!(node.authorization.authorize_allocation(
+            &other_username,
+            "deployment.example",
+            client,
+        ));
+        assert!(node.authorization.allocation_ready(&other_username, client));
+
+        // A subsequent control renewal cannot revive the closed socket or
+        // truncate the local replay tombstone to its original expiry.
+        closed.grant_sequence += 1;
+        closed.expires_at_unix_ms += 1_000;
+        let (query, request, request_started) = node.query()?;
+        let claims = node.peer_snapshot(&query, 3, vec![closed.clone(), other], None)?;
+        let signed = node.signer.sign_turn_resource_snapshot(&claims)?;
+        node.accept(&query, &request, request_started, &signed, &mut local)?;
+        let tracked = local.grants.get(&first_id).ok_or("tombstone lost")?;
+        assert!(tracked.ended);
+        assert_eq!(tracked.claims.expires_at_unix_ms, closed.expires_at_unix_ms);
+        assert_eq!(node.authorization.active_allocations(), 1);
+        assert!(node.state.lock().map_err(|_| "node state poisoned")?.ready);
+        Ok(())
     }
 
     #[test]

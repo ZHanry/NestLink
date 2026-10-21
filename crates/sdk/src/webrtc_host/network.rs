@@ -133,6 +133,24 @@ mod tests {
             );
             assert_eq!(first.connection_state(), RTCPeerConnectionState::Connected);
             assert_eq!(second.connection_state(), RTCPeerConnectionState::Connected);
+            for peer in [&first, &second] {
+                let report = peer.get_stats().await;
+                let pairs: Vec<_> = report
+                    .reports
+                    .values()
+                    .filter_map(|entry| {
+                        if let webrtc::stats::StatsReportType::CandidatePair(pair) = entry {
+                            Some(pair)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+                assert!(pairs.iter().any(|pair| pair.requests_sent > 0));
+                assert!(pairs.iter().any(|pair| pair.requests_received > 0));
+                assert!(pairs.iter().any(|pair| pair.responses_sent > 0));
+                assert!(pairs.iter().any(|pair| pair.responses_received > 0));
+            }
             Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
         };
         let result = tokio::time::timeout(Duration::from_secs(10), exchange).await;

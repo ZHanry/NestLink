@@ -183,14 +183,23 @@ pub(crate) async fn run(
         addresses.udp, addresses.tcp, addresses.tls, turn_config.realm
     );
 
-    tokio::select! {
-        _ = shutdown() => {},
-        _ = wait_until_stopped(&mut stopped) => {},
-    }
-    control.stop();
+    let control_failed = tokio::select! {
+        _ = shutdown() => false,
+        _ = wait_until_stopped(&mut stopped) => true,
+    };
+    let control_result = if control_failed {
+        // Await before stop() can abort the worker and erase its error.
+        control.wait_finished().await
+    } else {
+        control.stop();
+        Ok(())
+    };
     online_tx.send_replace(false);
     service.shutdown().await?;
     let _ = lease_monitor.await;
+    // The stopped watch carries no reason. A control failure must not silently
+    // exit with status zero after the listeners have been cleaned up.
+    control_result?;
     Ok(())
 }
 

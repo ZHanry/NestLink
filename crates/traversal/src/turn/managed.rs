@@ -127,6 +127,8 @@ impl Drop for TurnAllocationGrant {
 pub enum TurnGrantError {
     #[error("TURN grant is malformed or outside its limits")]
     InvalidGrant,
+    #[error("TURN allocation has already ended and cannot be renewed")]
+    AllocationEnded,
     #[error("TURN authorization registry is full")]
     RegistryFull,
     #[error("TURN allocation id or username is already installed")]
@@ -356,10 +358,7 @@ impl TurnAuthorization {
             .ok_or(TurnGrantError::GrantNotFound)?;
 
         let allocation = state.allocation.load(Ordering::Acquire);
-        if !state.live.load(Ordering::Acquire)
-            || matches!(allocation, ALLOCATION_CLOSED | ALLOCATION_REVOKED)
-            || !same_authority(&state.grant, &grant)
-        {
+        if !same_authority(&state.grant, &grant) {
             return Err(TurnGrantError::InvalidGrant);
         }
 
@@ -367,8 +366,13 @@ impl TurnAuthorization {
             .lease
             .lock()
             .map_err(|_| TurnGrantError::StateUnavailable)?;
-        if now >= lease.deadline
-            || grant.grant_sequence <= lease.grant_sequence
+        if !state.live.load(Ordering::Acquire)
+            || matches!(allocation, ALLOCATION_CLOSED | ALLOCATION_REVOKED)
+            || now >= lease.deadline
+        {
+            return Err(TurnGrantError::AllocationEnded);
+        }
+        if grant.grant_sequence <= lease.grant_sequence
             || grant.lease_sequence < lease.lease_sequence
             || (grant.lease_sequence == lease.lease_sequence
                 && grant.permit_sha256 != lease.permit_sha256)
@@ -376,13 +380,17 @@ impl TurnAuthorization {
                 && grant.permit_sha256 == lease.permit_sha256)
             || grant.expires_at_unix_ms <= lease.expires_at_unix_ms
             || grant.deadline <= lease.deadline
-            || !state.live.load(Ordering::Acquire)
+        {
+            return Err(TurnGrantError::InvalidGrant);
+        }
+        // The service may close the allocation while the grant is validated.
+        if !state.live.load(Ordering::Acquire)
             || matches!(
                 state.allocation.load(Ordering::Acquire),
                 ALLOCATION_CLOSED | ALLOCATION_REVOKED
             )
         {
-            return Err(TurnGrantError::InvalidGrant);
+            return Err(TurnGrantError::AllocationEnded);
         }
         let session_lease_advanced = grant.lease_sequence > lease.lease_sequence;
         lease.grant_sequence = grant.grant_sequence;
@@ -1695,7 +1703,7 @@ mod tests {
         renewal.expires_at_unix_ms += 60_000;
         assert_eq!(
             authorization.renew_grant(renewal),
-            Err(TurnGrantError::InvalidGrant)
+            Err(TurnGrantError::AllocationEnded)
         );
 
         let state = authorization

@@ -218,6 +218,16 @@ pub struct IceCheckSnapshot {
     pub relay: IceCheckPath,
     pub unknown: IceCheckPath,
 }
+impl IceCheckSnapshot {
+    /// Closing a peer may return an empty report. Retain the last checklist
+    /// instead of replacing the only useful failure evidence with that report.
+    pub fn retain_latest(previous: &mut Option<Self>, next: Self) {
+        let has_pairs = next.direct.pairs > 0 || next.relay.pairs > 0 || next.unknown.pairs > 0;
+        if has_pairs || previous.is_none() {
+            *previous = Some(next);
+        }
+    }
+}
 
 #[derive(Clone, Debug, Serialize)]
 pub struct ConnectionTimeline {
@@ -316,6 +326,41 @@ pub fn request_hash(request: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn closing_report_preserves_last_checks_but_live_checks_can_advance() {
+        let mut last = None;
+        IceCheckSnapshot::retain_latest(&mut last, IceCheckSnapshot::default());
+        let checked = IceCheckSnapshot {
+            elapsed_ms: 100,
+            direct: IceCheckPath {
+                pairs: 3,
+                failed: 3,
+                requests_sent: Some(21),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        IceCheckSnapshot::retain_latest(&mut last, checked);
+        IceCheckSnapshot::retain_latest(
+            &mut last,
+            IceCheckSnapshot {
+                elapsed_ms: 200,
+                ..Default::default()
+            },
+        );
+        assert_eq!(last, Some(checked));
+        let advanced = IceCheckSnapshot {
+            elapsed_ms: 300,
+            relay: IceCheckPath {
+                pairs: 1,
+                succeeded: 1,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        IceCheckSnapshot::retain_latest(&mut last, advanced);
+        assert_eq!(last, Some(advanced));
+    }
     #[test]
     fn preflight_binding_cannot_mix_requests_generations_or_endpoint_identities()
     -> Result<(), Box<dyn std::error::Error>> {
