@@ -97,6 +97,7 @@ mod tests {
                 lease_sequence: 1,
                 candidate_count: 2,
                 end_of_candidates: false,
+                candidate_profile: Default::default(),
             },
         }
     }

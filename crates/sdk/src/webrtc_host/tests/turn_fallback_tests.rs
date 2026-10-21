@@ -13,6 +13,7 @@ use nestlink_protocol::{
     api::{ErrorResponse, HealthResponse, Principal, TurnBindingState, TurnCredentialRequest},
 };
 use reqwest::StatusCode;
+use std::sync::atomic::AtomicU64;
 
 #[derive(Clone, Copy)]
 enum TurnReply {
@@ -30,6 +31,10 @@ struct Fixture {
     reservations: Arc<AtomicU32>,
     server: JoinHandle<()>,
     stop_owners: std::sync::Mutex<Vec<watch::Sender<Option<StopReason>>>>,
+    binding_state: Arc<std::sync::Mutex<TurnBindingState>>,
+    key_delay_ms: Arc<AtomicU64>,
+    deny_peer_keys: Arc<AtomicBool>,
+    key_reads: Arc<AtomicU32>,
 }
 
 impl Drop for Fixture {
@@ -92,6 +97,20 @@ impl Fixture {
         let reservation_count = reservations.clone();
         let turn_permit = permit.clone();
         let turn_signer = signer.clone();
+        let binding_state = Arc::new(std::sync::Mutex::new(TurnBindingState {
+            controller_allocation_id: None,
+            host_allocation_id: None,
+            controller_expires_at_unix_ms: None,
+            host_expires_at_unix_ms: None,
+            binding: None,
+        }));
+        let state_response = binding_state.clone();
+        let key_delay_ms = Arc::new(AtomicU64::new(0));
+        let delay = key_delay_ms.clone();
+        let deny_peer_keys = Arc::new(AtomicBool::new(false));
+        let deny_keys = deny_peer_keys.clone();
+        let key_reads = Arc::new(AtomicU32::new(0));
+        let reads = key_reads.clone();
         let path = format!("{API_BASE}/remote/{}", claims.session_id);
         let discovery = nestlink_protocol::api::NativeDiscoveryConfig {
             deployment_id: claims.deployment_id.clone(),
@@ -109,18 +128,50 @@ impl Fixture {
             .route(&path, get(move || async move { Json(remote_response) }))
             .route(
                 &format!("{path}/peer-keys"),
-                get(move || async move { Json(keys_response) }),
+                get(move || {
+                    let response = keys_response.clone();
+                    let delay = delay.clone();
+                    let deny_keys = deny_keys.clone();
+                    let reads = reads.clone();
+                    async move {
+                        reads.fetch_add(1, Ordering::AcqRel);
+                        tokio::time::sleep(Duration::from_millis(delay.load(Ordering::Acquire)))
+                            .await;
+                        if deny_keys.load(Ordering::Acquire) {
+                            return (
+                                StatusCode::FORBIDDEN,
+                                Json(ErrorResponse {
+                                    code: ErrorCode::PermissionRequired,
+                                }),
+                            )
+                                .into_response();
+                        }
+                        Json(response).into_response()
+                    }
+                }),
             )
             .route(
                 &format!("{path}/turn-peers"),
-                get(|| async {
-                    Json(TurnBindingState {
-                        controller_allocation_id: None,
-                        host_allocation_id: None,
-                        controller_expires_at_unix_ms: None,
-                        host_expires_at_unix_ms: None,
-                        binding: None,
-                    })
+                get(move || {
+                    let state = state_response.clone();
+                    async move {
+                        let mut state = state
+                            .lock()
+                            .unwrap_or_else(std::sync::PoisonError::into_inner)
+                            .clone();
+                        // Match production: filter at the state read, before
+                        // the SDK's separately delayed peer-key request.
+                        if state.binding.as_ref().is_some_and(|binding| {
+                            TurnPeerBindingClaims::decode(binding.claims.as_slice()).is_ok_and(
+                                |claims| {
+                                    unix_ms().is_ok_and(|now| claims.expires_at_unix_ms <= now)
+                                },
+                            )
+                        }) {
+                            state.binding = None;
+                        }
+                        Json(state)
+                    }
                 }),
             )
             .route(
@@ -240,6 +291,10 @@ impl Fixture {
             reservations,
             server,
             stop_owners: std::sync::Mutex::new(Vec::new()),
+            binding_state,
+            key_delay_ms,
+            deny_peer_keys,
+            key_reads,
         })
     }
 
@@ -666,6 +721,136 @@ async fn setup_wait_renews_short_signed_grants_without_waiting_for_peer_binding(
     assert!(!peer.proof_complete.load(Ordering::Acquire));
     assert!(peer.media.is_none());
     peer.close().await?;
+    Ok(())
+}
+
+fn install_signed_binding(
+    fixture: &Fixture,
+    peer: &WebRtcHostPeer,
+    controller: &DeviceIdentity,
+    host: &DeviceIdentity,
+    lifetime_ms: u64,
+    corrupt_signature: bool,
+) -> TestResult<TurnBindingContext> {
+    let p = fixture.permit.claims();
+    let credentials = peer
+        .turn_credentials
+        .as_ref()
+        .ok_or("missing credentials")?
+        .claims();
+    let context = TurnBindingContext {
+        controller_network_generation: 1,
+        host_network_generation: peer.network_generation,
+        controller_candidates: vec!["8.8.8.8:40000".into()],
+        host_candidates: vec!["1.1.1.1:40001".into()],
+    };
+    let now = unix_ms()?;
+    let claims = TurnPeerBindingClaims {
+        schema_version: SCHEMA_VERSION,
+        deployment_id: p.deployment_id.clone(),
+        security_epoch: p.security_epoch,
+        session_id: p.session_id.clone(),
+        temporary_identity: p.controller_device_id.clone(),
+        purpose: TurnPurpose::BrowserWebRtc as i32,
+        controller_allocation_id: id(25),
+        host_allocation_id: credentials.allocation_id.clone(),
+        controller_device_id: p.controller_device_id.clone(),
+        host_device_id: p.host_device_id.clone(),
+        controller_key_sha256: p.controller_key_sha256.clone(),
+        host_key_sha256: p.host_key_sha256.clone(),
+        controller_network_generation: context.controller_network_generation,
+        host_network_generation: context.host_network_generation,
+        connection_generation: p.connection_generation,
+        lease_sequence: p.lease_sequence,
+        permit_sha256: fixture.permit.digest().to_vec(),
+        controller_candidates: context.controller_candidates.clone(),
+        host_candidates: context.host_candidates.clone(),
+        issued_at_unix_ms: now,
+        expires_at_unix_ms: (now + lifetime_ms).min(credentials.expires_at_unix_ms),
+    };
+    let mut signed = nestlink_protocol::SignedTurnPeerBinding {
+        claims: claims.encode_to_vec(),
+        controller_signature: controller.identity.sign_turn_peer_binding(&claims)?,
+        host_signature: host.identity.sign_turn_peer_binding(&claims)?,
+    };
+    if corrupt_signature {
+        signed.controller_signature[0] ^= 1;
+    }
+    *fixture.binding_state.lock().map_err(|_| "binding lock")? = TurnBindingState {
+        controller_allocation_id: Some(claims.controller_allocation_id),
+        host_allocation_id: Some(claims.host_allocation_id),
+        controller_expires_at_unix_ms: Some(credentials.expires_at_unix_ms),
+        host_expires_at_unix_ms: Some(credentials.expires_at_unix_ms),
+        binding: Some(signed),
+    };
+    Ok(context)
+}
+
+#[tokio::test]
+async fn verified_binding_expiring_during_peer_key_http_never_authorizes_relay() -> TestResult {
+    let controller = DeviceIdentity::generate();
+    let host = DeviceIdentity::generate();
+    for paths in [PathSet::BOTH, PathSet::RELAY] {
+        let fixture = Fixture::new(&controller, &host, paths, TurnReply::Granted).await?;
+        let mut peer = fixture.peer(&host).await?;
+        let permit_bytes = peer.current_permit().signed_envelope().to_vec();
+        let context = install_signed_binding(&fixture, &peer, &controller, &host, 500, false)?;
+        fixture.key_delay_ms.store(700, Ordering::Release);
+        assert!(
+            !peer
+                .propose_turn_binding(&fixture.sdk, &host, &fixture.permit, &context, true)
+                .await?
+        );
+        assert!(peer.turn_binding_claims.is_none());
+        assert!(!peer.proof_complete.load(Ordering::Acquire));
+        assert!(peer.media.is_none());
+        assert!(
+            fixture.key_reads.load(Ordering::Acquire) > 0,
+            "response must expire during peer-key HTTP verification"
+        );
+        assert_eq!(peer.current_permit().signed_envelope(), permit_bytes);
+
+        // A fresh, independently signed response can become ready; expiry
+        // does not silently extend or reuse the old signed claims/allowlist.
+        fixture.key_delay_ms.store(0, Ordering::Release);
+        let fresh_context =
+            install_signed_binding(&fixture, &peer, &controller, &host, 5_000, false)?;
+        assert_eq!(
+            context.controller_candidates,
+            fresh_context.controller_candidates
+        );
+        assert!(
+            peer.propose_turn_binding(&fixture.sdk, &host, &fixture.permit, &context, true)
+                .await?
+        );
+        let ready = peer
+            .turn_binding_claims
+            .as_ref()
+            .ok_or("missing fresh binding")?;
+        assert!(ready.expires_at_unix_ms > unix_ms()?);
+        peer.close().await?;
+    }
+    Ok(())
+}
+
+#[tokio::test]
+async fn expired_binding_does_not_hide_forgery_or_management_denial() -> TestResult {
+    let controller = DeviceIdentity::generate();
+    let host = DeviceIdentity::generate();
+    for deny_keys in [false, true] {
+        let fixture = Fixture::new(&controller, &host, PathSet::BOTH, TurnReply::Granted).await?;
+        let mut peer = fixture.peer(&host).await?;
+        let context = install_signed_binding(&fixture, &peer, &controller, &host, 500, !deny_keys)?;
+        fixture.key_delay_ms.store(700, Ordering::Release);
+        fixture.deny_peer_keys.store(deny_keys, Ordering::Release);
+        let result = peer
+            .propose_turn_binding(&fixture.sdk, &host, &fixture.permit, &context, true)
+            .await;
+        assert!(optional_turn_result(&fixture.permit, true, result).is_err());
+        assert!(peer.turn_binding_claims.is_none());
+        assert!(!peer.proof_complete.load(Ordering::Acquire));
+        peer.close().await?;
+    }
     Ok(())
 }
 

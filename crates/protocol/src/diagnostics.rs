@@ -30,6 +30,9 @@ pub enum ConnectionStage {
     LocalCandidates,
     RemoteCandidates,
     GatherComplete,
+    PathChecking,
+    TurnBindingExpired,
+    TurnBindingReady,
     PathVerified,
     EndpointProved,
     RunningAuthorized,
@@ -85,10 +88,74 @@ pub struct SignalSummary {
     pub lease_sequence: u64,
     pub candidate_count: usize,
     pub end_of_candidates: bool,
+    #[serde(default)]
+    pub candidate_profile: CandidateProfile,
+}
+
+/// Counts from signed signaling only; no address, port, foundation or SDP is
+/// retained. These observations never grant candidate or relay authority.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CandidateProfile {
+    pub host_v4: usize,
+    pub host_v6: usize,
+    pub host_mdns: usize,
+    pub srflx_v4: usize,
+    pub srflx_v6: usize,
+    pub relay_v4: usize,
+    pub relay_v6: usize,
+    pub tcp: usize,
+    pub other: usize,
+}
+impl CandidateProfile {
+    fn add(&mut self, candidate: &str) {
+        let candidate = candidate
+            .trim_start_matches("a=")
+            .trim_start_matches("candidate:");
+        let fields: Vec<_> = candidate.split_ascii_whitespace().collect();
+        if fields.len() < 8 || fields[6] != "typ" {
+            self.other += 1;
+            return;
+        }
+        if fields[2].eq_ignore_ascii_case("tcp") {
+            self.tcp += 1;
+            return;
+        }
+        if !fields[2].eq_ignore_ascii_case("udp") {
+            self.other += 1;
+            return;
+        }
+        use std::net::IpAddr;
+        let counter = match (fields[7], fields[4].parse::<IpAddr>()) {
+            ("host", Ok(IpAddr::V4(_))) => &mut self.host_v4,
+            ("host", Ok(IpAddr::V6(_))) => &mut self.host_v6,
+            ("host", Err(_)) if fields[4].ends_with(".local") => &mut self.host_mdns,
+            ("srflx", Ok(IpAddr::V4(_))) => &mut self.srflx_v4,
+            ("srflx", Ok(IpAddr::V6(_))) => &mut self.srflx_v6,
+            ("relay", Ok(IpAddr::V4(_))) => &mut self.relay_v4,
+            ("relay", Ok(IpAddr::V6(_))) => &mut self.relay_v6,
+            _ => &mut self.other,
+        };
+        *counter += 1;
+    }
 }
 impl SignalSummary {
     pub fn from_payload(payload: &SignalPayload) -> Self {
+        let mut candidate_profile = CandidateProfile::default();
+        if let Some(ice) = &payload.ice {
+            for candidate in &ice.candidates {
+                candidate_profile.add(&candidate.candidate);
+            }
+        } else if let Some(description) = &payload.description {
+            for candidate in description
+                .sdp
+                .lines()
+                .filter(|line| line.starts_with("a=candidate:"))
+            {
+                candidate_profile.add(candidate);
+            }
+        }
         Self {
+            candidate_profile,
             network_generation: payload.network_generation,
             sequence: payload.sequence,
             description_sequence: payload.description_sequence(),
@@ -266,9 +333,51 @@ mod tests {
             (4, 2, 1)
         );
         let serialized = serde_json::to_string(&summary)?;
+        assert_eq!(summary.candidate_profile.host_v4, 1);
         for private in ["private-credential", "192.0.2.1", "5000", "sdp", "dtls"] {
             assert!(!serialized.contains(private));
         }
+        Ok(())
+    }
+    #[test]
+    fn candidate_profile_counts_address_families_and_transport_without_retaining_them()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let mut profile = CandidateProfile::default();
+        for candidate in [
+            "a=candidate:1 1 UDP 100 192.0.2.1 5000 typ host",
+            "candidate:2 1 udp 100 2001:db8::1 5001 typ host",
+            "candidate:3 1 UDP 100 private-name.local 5002 typ host",
+            "candidate:4 1 UDP 100 192.0.2.2 5003 typ srflx",
+            "candidate:5 1 UDP 100 2001:db8::2 5004 typ srflx",
+            "candidate:6 1 UDP 100 192.0.2.3 5005 typ relay",
+            "candidate:7 1 UDP 100 2001:db8::3 5006 typ relay",
+            "candidate:8 1 TCP 100 192.0.2.4 5007 typ host tcptype active",
+            "malformed",
+        ] {
+            profile.add(candidate);
+        }
+        assert_eq!(
+            profile,
+            CandidateProfile {
+                host_v4: 1,
+                host_v6: 1,
+                host_mdns: 1,
+                srflx_v4: 1,
+                srflx_v6: 1,
+                relay_v4: 1,
+                relay_v6: 1,
+                tcp: 1,
+                other: 1,
+            }
+        );
+        let json = serde_json::to_string(&profile)?;
+        for private in ["192.0.2", "2001:db8", "private-name", "5000"] {
+            assert!(!json.contains(private));
+        }
+        let legacy: SignalSummary = serde_json::from_str(
+            r#"{"network_generation":1,"sequence":1,"description_sequence":1,"lease_sequence":1,"candidate_count":1,"end_of_candidates":false}"#,
+        )?;
+        assert_eq!(legacy.candidate_profile, CandidateProfile::default());
         Ok(())
     }
     #[test]

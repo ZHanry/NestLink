@@ -276,7 +276,7 @@ fn validate_managed_binding(
     controller_candidates: &[String],
     host_candidates: &[String],
     now_ms: u64,
-) -> Result<(), PeerError> {
+) -> Result<bool, PeerError> {
     binding.validate().map_err(|_| PeerError::SignalRejected)?;
     if binding.deployment_id != credentials.deployment_id
         || binding.security_epoch != credentials.security_epoch
@@ -292,12 +292,15 @@ fn validate_managed_binding(
         || binding.controller_candidates != controller_candidates
         || binding.host_candidates != host_candidates
         || binding.issued_at_unix_ms > now_ms
-        || binding.expires_at_unix_ms <= now_ms
         || binding.expires_at_unix_ms > credentials.expires_at_unix_ms
     {
         return Err(PeerError::SignalRejected);
     }
-    Ok(())
+    // The SDK has verified the signatures before this check. A response may
+    // cross its short binding deadline while fetching the peer key. It grants
+    // no relay authority, but is not evidence of a forged signal. Check all
+    // context first so expiry cannot hide a candidate/identity mismatch.
+    Ok(binding.expires_at_unix_ms > now_ms)
 }
 
 fn validate_ice_url(value: &str) -> Result<bool, PeerError> {
@@ -914,10 +917,11 @@ mod tests {
                 now,
             )
         };
-        assert_eq!(check(&binding, 4, 2_000), Ok(()));
+        assert_eq!(check(&binding, 4, 2_000), Ok(true));
         assert!(check(&binding, 3, 2_000).is_err());
         assert!(check(&binding, 4, 999).is_err());
-        assert!(check(&binding, 4, 5_000).is_err());
+        assert_eq!(check(&binding, 4, 5_000), Ok(false));
+        assert_eq!(check(&binding, 4, 6_000), Ok(false));
         let mut changed = binding.clone();
         changed.controller_candidates.push("9.9.9.9:42002".into());
         assert!(check(&changed, 4, 2_000).is_err());
@@ -939,6 +943,7 @@ mod tests {
         let mut changed = binding.clone();
         changed.permit_sha256[0] ^= 1;
         assert!(check(&changed, 4, 2_000).is_err());
+        assert!(check(&changed, 4, 6_000).is_err());
     }
 
     #[test]
@@ -2249,12 +2254,9 @@ mod wasm {
                 saw_answer = true;
             }
             if saw_answer {
-                if self.turn_credentials.is_some()
-                    && let Err(problem) = self.await_turn_binding(deadline).await
-                {
-                    self.cancellation().cancel();
-                    return Err(problem);
-                }
+                // Path checking must start as soon as the verified answer is
+                // installed. TURN binding is serviced by the path wait; it
+                // cannot hold the direct path behind a separate polling loop.
                 Ok(())
             } else {
                 Err(PeerError::AnswerRequired)
@@ -2290,6 +2292,7 @@ mod wasm {
                 return Err(PeerError::AnswerRequired);
             }
             let deadline = self.renewable_operation_deadline(timeout_ms)?;
+            self.diagnostics.mark_once(ConnectionStage::PathChecking);
             // Keep the WebRTC wait independent of `self` so lease renewal can
             // be consumed while the browser is waiting for the candidate pair.
             let peer = self.peer.clone();
@@ -2941,82 +2944,105 @@ mod wasm {
 
         async fn await_turn_binding(&mut self, deadline: f64) -> Result<(), PeerError> {
             loop {
-                self.ensure_live()?;
-                if self.mode == PeerPathMode::DirectPreferred
-                    && self.peer.connection_state() == RtcPeerConnectionState::Connected
-                {
-                    match self
-                        .await_bounded(selected_path_from_peer(&self.peer), deadline)
-                        .await
-                    {
-                        Ok(SelectedPath::Direct) => {
-                            verify_live_path(&self.authority, SelectedPath::Direct)?;
-                            self.disable_optional_turn()?;
-                            return Ok(());
-                        }
-                        Ok(_) | Err(PeerError::NoSelectedPath) => {}
-                        Err(problem) => return Err(problem),
-                    }
-                }
-                self.maintain_turn_allocation_before(deadline).await?;
-                if self.turn_credentials.is_none() {
+                if self.poll_turn_binding(deadline).await? {
                     return Ok(());
                 }
-                if self.local_candidate_addresses.is_empty()
-                    || self.remote_candidate_addresses.is_empty()
-                {
-                    if self.mode == PeerPathMode::RelayOnly {
-                        return Err(PeerError::RelayUnavailable);
-                    }
-                    self.wait_tick(deadline).await?;
-                    continue;
+                // An optional binding never delays the next ICE/path check.
+                // Relay paths still cannot be selected until it is complete.
+                if !self.authority.borrow().path.requires_turn() {
+                    return Ok(());
                 }
-                let request_deadline = if self.mode == PeerPathMode::DirectPreferred {
-                    deadline.min(monotonic_ms()? + 3_000.0)
-                } else {
-                    deadline
-                };
-                let state = self
-                    .await_bounded(
-                        async {
-                            self.sdk
-                                .lock()
-                                .await
-                                .turn_binding_state(&self.identity, &self.permit)
-                                .await
-                                .map_err(turn_sdk_error)
-                        },
-                        request_deadline,
-                    )
-                    .await;
-                let state = match state {
-                    Ok(state) => state,
-                    Err(PeerError::RelayUnavailable | PeerError::TimedOut)
-                        if self.mode == PeerPathMode::DirectPreferred =>
-                    {
-                        self.wait_tick(deadline).await?;
-                        continue;
+                self.wait_tick(deadline).await?;
+            }
+        }
+
+        async fn poll_turn_binding(&mut self, deadline: f64) -> Result<bool, PeerError> {
+            self.ensure_live()?;
+            if self.mode == PeerPathMode::DirectPreferred
+                && self.peer.connection_state() == RtcPeerConnectionState::Connected
+            {
+                match self
+                    .await_bounded(selected_path_from_peer(&self.peer), deadline)
+                    .await
+                {
+                    Ok(SelectedPath::Direct) => {
+                        verify_live_path(&self.authority, SelectedPath::Direct)?;
+                        self.disable_optional_turn()?;
+                        return Ok(true);
                     }
+                    Ok(_) | Err(PeerError::NoSelectedPath) => {}
                     Err(problem) => return Err(problem),
-                };
-                if let Some(signed) = state.binding {
-                    let binding: nestlink_protocol::TurnPeerBindingClaims =
-                        nestlink_protocol::decode_bounded(&signed.claims, TURN_BINDING_BYTES)
-                            .map_err(|_| PeerError::SignalRejected)?;
-                    let credentials = self
-                        .turn_credentials
-                        .as_ref()
-                        .ok_or(PeerError::RelayUnavailable)?;
-                    validate_managed_binding(
-                        &binding,
-                        credentials.claims(),
-                        self.remote_network_generation,
-                        &self.local_candidate_addresses,
-                        &self.remote_candidate_addresses,
-                        now_ms()?,
-                    )?;
-                    if signed.host_signature.len() != 64 {
-                        return Err(PeerError::SignalRejected);
+                }
+            }
+            self.maintain_turn_allocation_before(deadline).await?;
+            if self.turn_credentials.is_none() {
+                return Ok(true);
+            }
+            if self.local_candidate_addresses.is_empty()
+                || self.remote_candidate_addresses.is_empty()
+            {
+                if self.mode == PeerPathMode::RelayOnly {
+                    return Err(PeerError::RelayUnavailable);
+                }
+                return Ok(false);
+            }
+            let request_deadline = if self.mode == PeerPathMode::DirectPreferred {
+                deadline.min(monotonic_ms()? + 3_000.0)
+            } else {
+                deadline
+            };
+            let state = self
+                .await_bounded(
+                    async {
+                        self.sdk
+                            .lock()
+                            .await
+                            .turn_binding_state(&self.identity, &self.permit)
+                            .await
+                            .map_err(turn_sdk_error)
+                    },
+                    request_deadline,
+                )
+                .await;
+            let state = match state {
+                Ok(state) => state,
+                Err(PeerError::RelayUnavailable | PeerError::TimedOut)
+                    if self.mode == PeerPathMode::DirectPreferred =>
+                {
+                    return Ok(false);
+                }
+                Err(problem) => return Err(problem),
+            };
+            if let Some(signed) = state.binding {
+                let binding: nestlink_protocol::TurnPeerBindingClaims =
+                    nestlink_protocol::decode_bounded(&signed.claims, TURN_BINDING_BYTES)
+                        .map_err(|_| PeerError::SignalRejected)?;
+                let credentials = self
+                    .turn_credentials
+                    .as_ref()
+                    .ok_or(PeerError::RelayUnavailable)?;
+                let fresh = validate_managed_binding(
+                    &binding,
+                    credentials.claims(),
+                    self.remote_network_generation,
+                    &self.local_candidate_addresses,
+                    &self.remote_candidate_addresses,
+                    now_ms()?,
+                )?;
+                if signed.host_signature.len() != 64 {
+                    return Err(PeerError::SignalRejected);
+                }
+                if !fresh {
+                    self.diagnostics
+                        .mark_once(ConnectionStage::TurnBindingExpired);
+                    return Ok(false);
+                }
+                // Reposting an already countersigned binding adds a race
+                // with expiry and an unnecessary peer-key HTTP round trip.
+                if signed.controller_signature.len() != 64 {
+                    let remaining = binding.expires_at_unix_ms.saturating_sub(now_ms()?);
+                    if remaining <= 1_000 {
+                        return Ok(false);
                     }
                     let full = self
                         .await_bounded(
@@ -3028,11 +3054,12 @@ mod wasm {
                                     .await
                                     .map_err(turn_sdk_error)
                             },
-                            if self.mode == PeerPathMode::DirectPreferred {
+                            (if self.mode == PeerPathMode::DirectPreferred {
                                 deadline.min(monotonic_ms()? + 3_000.0)
                             } else {
                                 deadline
-                            },
+                            })
+                            .min(monotonic_ms()? + remaining as f64),
                         )
                         .await;
                     let full = match full {
@@ -3040,8 +3067,7 @@ mod wasm {
                         Err(PeerError::RelayUnavailable | PeerError::TimedOut)
                             if self.mode == PeerPathMode::DirectPreferred =>
                         {
-                            self.wait_tick(deadline).await?;
-                            continue;
+                            return Ok(false);
                         }
                         Err(problem) => return Err(problem),
                     };
@@ -3052,19 +3078,22 @@ mod wasm {
                     {
                         return Err(PeerError::SignalRejected);
                     }
-                    let now = now_ms()?;
-                    let remaining = binding
-                        .expires_at_unix_ms
-                        .checked_sub(now)
-                        .filter(|n| *n > 0)
-                        .ok_or(PeerError::Expired)?;
-                    self.authority.borrow_mut().turn_binding_deadline_ms =
-                        Some(monotonic_ms()? + remaining as f64);
-                    self.authority.borrow_mut().path.turn_bound = true;
-                    return Ok(());
                 }
-                self.wait_tick(deadline).await?;
+                let now = now_ms()?;
+                let remaining = binding.expires_at_unix_ms.saturating_sub(now);
+                if remaining == 0 {
+                    self.diagnostics
+                        .mark_once(ConnectionStage::TurnBindingExpired);
+                    return Ok(false);
+                }
+                self.authority.borrow_mut().turn_binding_deadline_ms =
+                    Some(monotonic_ms()? + remaining as f64);
+                self.authority.borrow_mut().path.turn_bound = true;
+                self.diagnostics
+                    .mark_once(ConnectionStage::TurnBindingReady);
+                return Ok(true);
             }
+            Ok(false)
         }
 
         fn disable_optional_turn(&mut self) -> Result<(), PeerError> {

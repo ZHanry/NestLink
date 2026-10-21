@@ -1473,6 +1473,9 @@ impl WebRtcHostPeer {
                     && binding.controller_signature.len() == 64
                     && binding.host_signature.len() == 64
                 {
+                    if claims.expires_at_unix_ms <= unix_ms()? {
+                        return Err(WebRtcHostError::RelayUnavailable);
+                    }
                     return Ok(());
                 }
             }
@@ -1506,6 +1509,15 @@ impl WebRtcHostPeer {
                     .turn_binding_claims
                     .as_ref()
                     .ok_or(WebRtcHostError::TurnBinding)?;
+                let now = unix_ms()?;
+                if claims.expires_at_unix_ms <= now
+                    || self
+                        .turn_credentials
+                        .as_ref()
+                        .is_none_or(|credentials| credentials.claims().expires_at_unix_ms <= now)
+                {
+                    return Err(WebRtcHostError::RelayUnavailable);
+                }
                 if claims.host_network_generation != self.network_generation
                     || !claims
                         .host_candidates
@@ -1976,6 +1988,14 @@ impl WebRtcHostPeer {
             return Err(WebRtcHostError::TurnBinding);
         }
         let state = sdk.turn_binding_state(installation, permit).await?;
+        // State verification may fetch the peer key over HTTP. Use the time
+        // after that await for every remaining-life decision, never the time
+        // at which the request was started.
+        let now = unix_ms()?;
+        ensure_live(permit)?;
+        if host_credentials.expires_at_unix_ms <= now {
+            return Err(WebRtcHostError::RelayUnavailable);
+        }
         let Some(controller_allocation_id) = state.controller_allocation_id.clone() else {
             if required {
                 return Err(WebRtcHostError::RelayUnavailable);
@@ -2060,12 +2080,17 @@ impl WebRtcHostPeer {
                 && previous.host_network_generation == fresh_claims.host_network_generation
                 && previous.controller_candidates == fresh_claims.controller_candidates
                 && previous.host_candidates == fresh_claims.host_candidates
-                && previous.expires_at_unix_ms > now
                 && previous.expires_at_unix_ms <= fresh_claims.expires_at_unix_ms;
             if !matches_context {
                 if required {
                     return Err(WebRtcHostError::TurnBinding);
                 }
+                return Ok(false);
+            }
+            if previous.expires_at_unix_ms <= now {
+                // This verified response expired in transit. The next state
+                // read will omit it and permit a fresh, separately signed
+                // binding. Do not authorize relay or fail a direct attempt.
                 return Ok(false);
             }
             full_signature =
@@ -2084,13 +2109,26 @@ impl WebRtcHostPeer {
             self.turn_binding_claims = Some(claims);
             return Ok(false);
         }
-        let proved = sdk.prove_turn_peers(installation, permit, &claims).await?;
+        let remaining = claims.expires_at_unix_ms.saturating_sub(unix_ms()?);
+        if remaining <= 1_000 {
+            return Ok(false);
+        }
+        let proved = tokio::time::timeout(
+            Duration::from_millis(remaining),
+            sdk.prove_turn_peers(installation, permit, &claims),
+        )
+        .await
+        .map_err(|_| WebRtcHostError::RelayUnavailable)??;
         let signed = proved.binding.ok_or(WebRtcHostError::TurnBinding)?;
         if signed.claims != claims.encode_to_vec()
             || signed.host_signature.len() != 64
             || (!signed.controller_signature.is_empty() && signed.controller_signature.len() != 64)
         {
             return Err(WebRtcHostError::TurnBinding);
+        }
+        ensure_live(permit)?;
+        if claims.expires_at_unix_ms <= unix_ms()? {
+            return Ok(false);
         }
         let full_signature = signed.controller_signature.len() == 64;
         self.turn_binding_claims = Some(claims);
