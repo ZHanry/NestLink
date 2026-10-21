@@ -771,7 +771,7 @@ impl WebRtcHostCloseReport {
 }
 
 impl WebRtcHostPeer {
-    async fn sample_ice_checks(&self) {
+    async fn sample_ice_checks(&mut self) {
         let Ok(report) =
             tokio::time::timeout(Duration::from_millis(100), self.peer.get_stats()).await
         else {
