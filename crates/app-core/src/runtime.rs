@@ -3841,13 +3841,29 @@ impl Actor {
             return;
         }
         let mut current = current.as_ref().clone();
+        let Ok((displays, initial_source)) =
+            crate::session_displays::default_session_displays(&offer.displays)
+        else {
+            host.cancel.send_replace(true);
+            return;
+        };
+        let sources: Vec<_> = displays.iter().map(|display| display.source).collect();
+        // View was authorized before this task started. Bind the current local
+        // display set to that exact request; no second user approval is needed.
+        host.display_approval
+            .send_replace(Some(BrowserHostDisplayApproval {
+                binding: offer.binding.clone(),
+                catalog: offer.catalog.clone(),
+                sources: sources.clone(),
+                initial_source,
+            }));
         current.binding = Some(offer.binding);
         current.displays = crate::BrowserHostDisplayView {
             catalog: Some(offer.catalog),
-            displays: offer.displays,
-            approval_required: true,
-            approved_sources: Vec::new(),
-            initial_source: None,
+            displays,
+            approval_required: false,
+            approved_sources: sources,
+            initial_source: Some(initial_source),
         };
         self.view.browser_host.data = Some(Arc::new(current));
         self.publish();

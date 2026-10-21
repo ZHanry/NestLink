@@ -309,6 +309,9 @@ async fn open_socket(
         .write_buffer_size(0)
         .max_write_buffer_size(CHUNK * 2);
     let outer = async {
+        let connector = Some(tokio_tungstenite::Connector::Rustls(Arc::new(
+            tls::public_client_config().map_err(|_| Error::Tls)?,
+        )));
         // Plaintext development traffic must stay on loopback even if a
         // localhost resolver has been misconfigured. Pin it before the request.
         let address = if address.is_none() && url.scheme() == "ws" {
@@ -337,11 +340,11 @@ async fn open_socket(
                 .await
                 .map_err(|_| Error::WebSocket)?;
             tcp.set_nodelay(true).map_err(|_| Error::WebSocket)?;
-            tokio_tungstenite::client_async_tls_with_config(request, tcp, Some(config), None)
+            tokio_tungstenite::client_async_tls_with_config(request, tcp, Some(config), connector)
                 .await
                 .map_err(|_| Error::WebSocket)
         } else {
-            tokio_tungstenite::connect_async_with_config(request, Some(config), true)
+            tokio_tungstenite::connect_async_tls_with_config(request, Some(config), true, connector)
                 .await
                 .map_err(|_| Error::WebSocket)
         }

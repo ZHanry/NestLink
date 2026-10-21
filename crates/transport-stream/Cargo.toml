@@ -10,6 +10,7 @@ nestlink-identity.workspace = true
 nestlink-protocol.workspace = true
 tokio.workspace = true
 rustls.workspace = true
+webpki-roots.workspace = true
 tokio-rustls.workspace = true
 rcgen.workspace = true
 x509-parser.workspace = true

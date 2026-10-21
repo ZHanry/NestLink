@@ -19,7 +19,6 @@ struct NoticeKey {
 enum Phase {
     Request,
     Preparing,
-    Screen,
     Sharing,
     Stopping,
 }
@@ -90,7 +89,6 @@ fn current_notice(snapshot: &Snapshot) -> Option<Notice> {
             match host.status {
                 BrowserHostStatus::Connected => Phase::Sharing,
                 BrowserHostStatus::Stopping => Phase::Stopping,
-                _ if host.displays.approval_required => Phase::Screen,
                 _ => Phase::Preparing,
             },
             host.path,
@@ -353,7 +351,6 @@ fn notice_ui(
                     egui::RichText::new(match notice.phase {
                         Phase::Request => t("有设备请求连接", "Incoming connection"),
                         Phase::Preparing => t("正在准备远程连接", "Preparing remote access"),
-                        Phase::Screen => t("请选择共享屏幕", "Choose a screen to share"),
                         Phase::Sharing => t("本机正在共享", "This computer is being shared"),
                         Phase::Stopping => t("正在断开连接", "Disconnecting"),
                     })
@@ -479,10 +476,6 @@ fn notice_ui(
                             "查看权限后批准，也可以直接拒绝。",
                             "Review the requested access or deny it.",
                         ),
-                        Phase::Screen => t(
-                            "批准屏幕后才会发送画面。",
-                            "Video starts only after you approve a screen.",
-                        ),
                         _ => t(
                             "主窗口收起后，此提示仍保留。",
                             "This notice stays visible when the main window is hidden.",
@@ -564,7 +557,7 @@ mod tests {
                 },
             ],
         );
-        for phase in [Phase::Screen, Phase::Sharing, Phase::Preparing] {
+        for phase in [Phase::Sharing, Phase::Preparing] {
             notice.phase = phase;
             notice.peer = "很长的远端设备名称 Long remote name ".repeat(100);
             notice.path = Some(1);

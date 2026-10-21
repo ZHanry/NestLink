@@ -592,27 +592,11 @@ impl DesktopApp {
         // updates must not insert content above the user's device controls.
         ui.horizontal(|ui| {
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                let host = &snapshot.browser_host;
-                let approval = host
-                    .data
-                    .as_ref()
-                    .is_some_and(|host| host.displays.approval_required);
                 if ui
                     .add_enabled(
                         true,
-                        egui::Button::new(self.t(
-                            if approval {
-                                "批准屏幕共享"
-                            } else {
-                                "本机被控"
-                            },
-                            if approval {
-                                "Approve sharing"
-                            } else {
-                                "Local sessions"
-                            },
-                        ))
-                        .min_size(egui::vec2(164., 40.)),
+                        egui::Button::new(self.t("本机被控", "Local sessions"))
+                            .min_size(egui::vec2(164., 40.)),
                     )
                     .clicked()
                 {
@@ -688,11 +672,6 @@ impl DesktopApp {
                         let close = ui
                             .add_sized([84., 40.], egui::Button::new(self.t("关闭", "Close")))
                             .clicked();
-                        if let Some(command) =
-                            crate::browser_displays::approval_button(ui, snapshot, self.english)
-                        {
-                            self.send(snapshot, command);
-                        }
                         self.browser_host_stop_button(ui, snapshot);
                         close
                     });
@@ -986,8 +965,8 @@ impl DesktopApp {
                 );
                 ui.label(match host.status {
                     BrowserHostStatus::Establishing => self.t(
-                        if host.displays.approval_required { "等待本机批准共享屏幕" } else if host.lease_sequence == 0 { "正在准备屏幕" } else { "正在协商连接" },
-                        if host.displays.approval_required { "Approve a local screen" } else if host.lease_sequence == 0 { "Preparing displays" } else { "Negotiating connection" }),
+                        if host.lease_sequence == 0 { "正在准备屏幕" } else { "正在协商连接" },
+                        if host.lease_sequence == 0 { "Preparing displays" } else { "Negotiating connection" }),
                     BrowserHostStatus::Connected => self.t("已连接", "Connected"),
                     BrowserHostStatus::Stopping => self.t("正在停止", "Stopping"),
                     BrowserHostStatus::Stopped => self.t("已停止", "Stopped"),

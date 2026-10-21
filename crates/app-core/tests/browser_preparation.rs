@@ -17,9 +17,12 @@ use std::{
     time::Duration,
 };
 use support::*;
-use tokio::sync::watch;
+use tokio::sync::{Notify, watch};
 
-struct Capture(Arc<AtomicUsize>);
+struct Capture {
+    starts: Arc<AtomicUsize>,
+    preparation: Option<Arc<Notify>>,
+}
 impl BrowserHostCaptureProvider for Capture {
     fn prepare_request<'a>(
         &'a self,
@@ -33,8 +36,12 @@ impl BrowserHostCaptureProvider for Capture {
                 + 'a,
         >,
     > {
-        let starts = self.0.clone();
+        let starts = self.starts.clone();
+        let preparation = self.preparation.clone();
         Box::pin(async move {
+            if let Some(preparation) = preparation {
+                preparation.notified().await;
+            }
             Ok(PreparedBrowserCapture::new(
                 vec![DisplayDescriptor {
                     source: 1,
@@ -69,12 +76,16 @@ impl BrowserHostCaptureProvider for Capture {
 
 async fn setup(
     server: &Server,
+    preparation: Option<Arc<Notify>>,
 ) -> Result<(AppCore, CoreHandle, Sdk, RemoteView, Arc<AtomicUsize>)> {
     let identity = DeviceIdentity::generate();
     let host_id = identity.device_id.clone();
     let starts = Arc::new(AtomicUsize::new(0));
     let mut config = NativeSessionConfig::new(Arc::new(NetworkMonitor::start()?))
-        .with_browser_host(BrowserHostConfig::new(Arc::new(Capture(starts.clone()))));
+        .with_browser_host(BrowserHostConfig::new(Arc::new(Capture {
+            starts: starts.clone(),
+            preparation: preparation.clone(),
+        })));
     // Browser preparation must also work with native auto-listening disabled
     // (the Android browser-host configuration).
     config.listen_for_native_requests = false;
@@ -127,39 +138,23 @@ async fn setup(
     })?)
     .await?;
     wait_view(&host, |view| {
-        view.browser_host
-            .data
-            .as_ref()
-            .is_some_and(|host| host.displays.approval_required)
+        view.browser_host.data.as_ref().is_some_and(|host| {
+            host.status == BrowserHostStatus::Establishing
+                && (preparation.is_some() || host.displays.catalog.is_some())
+        })
     })
     .await?;
     Ok((core, host, sdk, request, starts))
 }
 
-async fn approve(host: &CoreHandle) -> Result {
-    let view = host.snapshot();
-    let offer = view.browser_host.data.as_ref().ok_or("no host")?;
-    host.approve_browser_host_displays(
-        offer.binding.clone().ok_or("no binding")?,
-        view.generation,
-        offer.displays.catalog.clone().ok_or("no catalog")?,
-        vec![1],
-        1,
-    )
-    .await?;
-    Ok(())
-}
-
 #[tokio::test]
-async fn automatic_host_waits_past_old_lease_then_receives_fresh_permit_and_stays_stopped() -> Result
-{
+async fn authorized_host_becomes_ready_without_a_second_display_approval_and_stays_stopped()
+-> Result {
     let server = Server::start(None).await?;
-    let (mut core, host, sdk, request, starts) = setup(&server).await?;
-    assert!(sdk.permit(&request.id).await.is_err());
+    let (mut core, host, sdk, request, starts) = setup(&server, None).await?;
     tokio::time::sleep(Duration::from_secs(16)).await;
     assert_eq!(sdk.remote(&request.id).await?.lease_sequence, 0);
     assert_eq!(starts.load(Ordering::SeqCst), 0);
-    approve(&host).await?;
     tokio::time::timeout(Duration::from_secs(5), async {
         while !sdk.browser_host_readiness(&request.id).await?.ready {
             tokio::time::sleep(Duration::from_millis(20)).await;
@@ -167,6 +162,17 @@ async fn automatic_host_waits_past_old_lease_then_receives_fresh_permit_and_stay
         Ok::<(), nestlink_sdk::SdkError>(())
     })
     .await??;
+    let display_view = host
+        .snapshot()
+        .browser_host
+        .data
+        .as_ref()
+        .ok_or("no host")?
+        .displays
+        .clone();
+    assert!(!display_view.approval_required);
+    assert_eq!(display_view.approved_sources, vec![1]);
+    assert_eq!(display_view.initial_source, Some(1));
     let permit = sdk.permit(&request.id).await?;
     assert!(permit.claims().is_setup());
     assert_eq!(
@@ -208,16 +214,19 @@ async fn automatic_host_waits_past_old_lease_then_receives_fresh_permit_and_stay
 }
 
 #[tokio::test]
-async fn revoked_request_cannot_become_ready_after_local_display_approval() -> Result {
+async fn revoked_request_cannot_become_ready_after_display_enumeration() -> Result {
     let server = Server::start(None).await?;
-    let (mut core, host, sdk, request, starts) = setup(&server).await?;
+    let preparation = Arc::new(Notify::new());
+    let (mut core, host, sdk, request, starts) = setup(&server, Some(preparation.clone())).await?;
     sdk.revoke_remote(&request.id).await?;
-    approve(&host).await?;
+    preparation.notify_one();
     wait_view(&host, |view| {
-        view.browser_host
-            .data
-            .as_ref()
-            .is_some_and(|host| host.status == BrowserHostStatus::Failed)
+        view.browser_host.data.as_ref().is_some_and(|host| {
+            matches!(
+                host.status,
+                BrowserHostStatus::Failed | BrowserHostStatus::Stopped
+            )
+        })
     })
     .await?;
     assert!(sdk.browser_host_readiness(&request.id).await.is_err());
@@ -234,9 +243,8 @@ async fn revoked_request_cannot_become_ready_after_local_display_approval() -> R
 async fn stopping_during_in_flight_host_ready_write_does_not_wait_for_http_timeout() -> Result {
     let gate = Gate::suffix("/browser-host-ready", "POST");
     let server = Server::start(Some(gate.clone())).await?;
-    let (mut core, host, _, request, starts) = setup(&server).await?;
     gate.arm();
-    approve(&host).await?;
+    let (mut core, host, _, request, starts) = setup(&server, None).await?;
     gate.entered().await?;
     let generation = host
         .snapshot()

@@ -11,6 +11,7 @@ nestlink-protocol.workspace = true
 nestlink-identity.workspace = true
 nestlink-session.workspace = true
 nestlink-traversal.workspace = true
+nestlink-transport-stream.workspace = true
 nestlink-platform-security.workspace = true
 tokio.workspace = true
 tokio-tungstenite.workspace = true

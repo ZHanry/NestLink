@@ -1434,7 +1434,16 @@ async fn app_core_owns_proved_session_and_revocation_waits_for_cleanup() -> Resu
             .approve_native_displays(&session_binding, &candidate_key, vec![0, 99], 0)
             .is_err()
     );
-    host_handle.approve_native_displays(&session_binding, &candidate_key, vec![0, 1], 0)?;
+    let displays = host_handle.native_displays(&session_binding)?;
+    assert!(!displays.local_approval_required);
+    assert_eq!(displays.approved_sources, vec![0, 1]);
+    assert_eq!(displays.initial_source, Some(0));
+    assert!(
+        host_handle
+            .approve_native_displays(&session_binding, &candidate_key, vec![0, 1], 0)
+            .is_err(),
+        "a late display approval cannot replace the session display set"
+    );
     host_handle
         .configure_native_video_stream(&session_binding, 0, 64, 48, 1)
         .await?;

@@ -523,3 +523,38 @@ fn selecting_devices_and_refreshing_long_names_keep_the_entry_visible_and_fixed(
         }
     }
 }
+
+#[test]
+fn local_session_popup_has_no_second_display_approval() {
+    use nestlink_app_core::{BrowserHostDisplayView, DisplayDescriptor};
+    let mut snapshot = browser_popup_snapshot();
+    let host = Arc::make_mut(snapshot.browser_host.data.as_mut().expect("host"));
+    host.displays = BrowserHostDisplayView {
+        catalog: Some(nestlink_app_core::DisplayCatalogKey {
+            request_id: host.request_id.clone(),
+            connection_generation: 1,
+            revision: 1,
+            sha256: [1; 32],
+        }),
+        displays: vec![DisplayDescriptor {
+            source: 1,
+            left: 0,
+            top: 0,
+            width: 1920,
+            height: 1080,
+            label: "Main display".into(),
+        }],
+        approval_required: false,
+        approved_sources: vec![1],
+        initial_source: Some(1),
+    };
+    let mut workspace = Workspace::new(snapshot);
+    workspace.app.remote.browser_host_details = true;
+    for _ in 0..5 {
+        workspace.frame(egui::vec2(1200., 800.), Vec::new());
+    }
+    assert!(workspace.bounds("批准并开始共享").is_empty());
+    assert!(workspace.bounds("选择允许浏览器查看的屏幕").is_empty());
+    assert_eq!(workspace.bounds("停止会话").len(), 1);
+    assert_eq!(workspace.bounds("关闭").len(), 1);
+}

@@ -283,11 +283,9 @@ async fn pair_with_gate(gate: Option<Arc<Gate>>) -> Result<Pair> {
         }],
         false,
     )?;
-    let catalog = host_handle
-        .native_displays(&binding)?
-        .catalog
-        .ok_or("display catalogue missing")?;
-    host_handle.approve_native_displays(&binding, &catalog, vec![0], 0)?;
+    let displays = host_handle.native_displays(&binding)?;
+    assert!(!displays.local_approval_required);
+    assert_eq!(displays.approved_sources, vec![0]);
     host_handle
         .configure_native_video_stream(&binding, 0, 64, 48, 1)
         .await?;

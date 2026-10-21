@@ -461,7 +461,15 @@ async fn lease_pump(
         .max_frame_size(Some((NODE_MESSAGE_BYTES + 128) as usize));
     let (mut socket, _) = tokio::time::timeout(
         Duration::from_secs(15),
-        tokio_tungstenite::connect_async_with_config(config.url()?.as_str(), Some(options), false),
+        tokio_tungstenite::connect_async_tls_with_config(
+            config.url()?.as_str(),
+            Some(options),
+            false,
+            Some(tokio_tungstenite::Connector::Rustls(Arc::new(
+                nestlink_transport_stream::tls::public_client_config()
+                    .map_err(|_| Error::Control)?,
+            ))),
+        ),
     )
     .await
     .map_err(|_| Error::Control)?

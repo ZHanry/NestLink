@@ -10,6 +10,18 @@ use rustls::{
 };
 use std::sync::Arc;
 
+/// Public HTTPS/WSS authority verification, separate from installation-key
+/// pinning inside a relay. Keep the bundled roots on the patched 1.x line.
+pub fn public_client_config() -> Result<ClientConfig, Error> {
+    let roots = rustls::RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+    Ok(
+        ClientConfig::builder_with_provider(Arc::new(ring::default_provider()))
+            .with_safe_default_protocol_versions()?
+            .with_root_certificates(roots)
+            .with_no_client_auth(),
+    )
+}
+
 /// Service carriers reuse the installation-key pin and TLS transcript verifier,
 /// while negotiating a distinct application protocol and service-only proofs.
 pub fn service_client_config(

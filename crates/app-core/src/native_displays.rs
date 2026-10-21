@@ -638,9 +638,9 @@ impl CoreHandle {
         }
         Ok(frame)
     }
-    /// Windows/X11 call this after bounded read-only enumeration. Portal calls
-    /// it with exactly the OS-approved stable source set. No remote input can
-    /// turn an unapproved candidate into capture authority.
+    /// Bind current displays to this proved, authorized host session. Portal
+    /// sources remain restricted to the exact OS grant. Windows/X11 use the
+    /// session's View authorization without a second display confirmation.
     pub fn publish_native_display_candidates(
         &self,
         binding: &NativeSessionBinding,
@@ -649,9 +649,15 @@ impl CoreHandle {
     ) -> io::Result<()> {
         displays.sort_by_key(|d| d.source);
         validate_candidates(&displays).map_err(io::Error::other)?;
-        if system_approved {
+        let initial_source = if system_approved {
             validate_displays(&displays).map_err(io::Error::other)?;
-        }
+            displays[0].source
+        } else {
+            let (selected, initial) = crate::session_displays::default_session_displays(&displays)
+                .map_err(io::Error::other)?;
+            displays = selected;
+            initial
+        };
         let key = catalog_key(
             &binding.request_id,
             binding.connection_generation,
@@ -671,11 +677,9 @@ impl CoreHandle {
         state.candidates = Some((key.clone(), displays.clone()));
         state.view.catalog = Some(key);
         state.view.displays = displays.clone();
-        state.view.local_approval_required = !system_approved;
-        if system_approved {
-            state.view.approved_sources = displays.iter().map(|d| d.source).collect();
-            state.view.initial_source = displays.first().map(|d| d.source);
-        }
+        state.view.local_approval_required = false;
+        state.view.approved_sources = displays.iter().map(|d| d.source).collect();
+        state.view.initial_source = Some(initial_source);
         Ok(())
     }
     /// OS resize of an already granted, fixed source set. This supports

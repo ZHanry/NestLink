@@ -15,6 +15,7 @@ mod native_session;
 mod runtime;
 #[cfg(not(target_arch = "wasm32"))]
 mod sdk_call;
+mod session_displays;
 #[cfg(not(target_arch = "wasm32"))]
 pub use browser_host::*;
 #[cfg(not(target_arch = "wasm32"))]
