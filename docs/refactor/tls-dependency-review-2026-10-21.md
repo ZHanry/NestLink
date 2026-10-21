@@ -23,3 +23,7 @@ relay, node-control and SDK tests remain part of the required workspace suite.
 Validation before CI: locked dependency tree contains only webpki-roots1.0.10
 and rustls-webpki0.103.16. Full cargo-deny and cross-platform tests must pass
 for the final source revision before building the next candidate.
+
+The separately locked browser/native fixture is also synchronized to 0.7 path
+packages, the same eefd2137 dependency fork, and the two patched TLS packages.
+Its lock file must resolve with --locked before any fixture evidence is used.

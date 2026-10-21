@@ -41,7 +41,7 @@ pub(super) fn RemoteDisplaySelector(
                 <span role="status" aria-live="polite">{move || if switching.get() {
                     t("正在切换…", "Switching…")
                 } else {
-                    t("仅显示设备本机批准的屏幕", "Displays approved on the remote device")
+                    t("本次会话可用的屏幕", "Displays available in this session")
                 }}</span>
             </div>
         </Show>

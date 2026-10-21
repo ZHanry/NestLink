@@ -1112,8 +1112,8 @@ async fn run_session(
     run.diagnostics.mark(ConnectionStage::ApprovalGranted);
     let _ = ui.phase.try_set(1);
     ui.status(t(
-        "权限已批准，等待被控设备选择并批准共享屏幕…",
-        "Access approved. Waiting for the host to choose and approve a screen…",
+        "权限已批准，正在准备远端桌面…",
+        "Access approved. Preparing the remote desktop…",
     ));
     let preparation_deadline = performance_ms()? + 60_000.0;
     run.diagnostics.mark(ConnectionStage::AwaitHostReadiness);
@@ -1122,7 +1122,7 @@ async fn run_session(
         if performance_ms()? >= preparation_deadline {
             run.diagnostics
                 .failure(ConnectionFailure::HostReadinessTimeout);
-            return Err(t("被控设备尚未完成屏幕准备，请在被控端选择并批准屏幕后重试。", "The host did not finish screen preparation. Choose and approve a screen on the host, then try again.").into());
+            return Err(t("被控设备未能完成桌面准备，请确认设备在线后重试。", "The host did not finish preparing the desktop. Check that it is online, then try again.").into());
         }
         let readiness = managed_request(&run, async {
             run.sdk.lock().await.browser_host_readiness(&run.id).await
@@ -1181,17 +1181,21 @@ async fn run_session(
     peer.complete_endpoint_proof()
         .await
         .map_err(|problem| diagnosed_peer_error(&peer, problem))?;
-    ui.status(t(
-        "正在读取本机批准的显示器…",
-        "Loading displays approved on the remote device…",
-    ));
+    ui.status(t("正在读取远端显示器…", "Loading remote displays…"));
     let catalog = peer
         .wait_for_display_catalog(5_000)
         .await
         .map_err(|problem| diagnosed_peer_error(&peer, problem))?;
     let initial_source = catalog
         .displays
-        .first()
+        .iter()
+        .find(|display| {
+            display.left <= 0
+                && display.top <= 0
+                && i64::from(display.left) + i64::from(display.width) > 0
+                && i64::from(display.top) + i64::from(display.height) > 0
+        })
+        .or_else(|| catalog.displays.first())
         .map(|item| item.source)
         .ok_or_else(|| i18n::peer_error(&PeerError::SignalRejected))?;
     let _ = ui.displays.try_set(Some(catalog));

@@ -894,7 +894,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -1315,7 +1315,7 @@ dependencies = [
  "tokio",
  "tokio-rustls",
  "tower-service",
- "webpki-roots 1.0.9",
+ "webpki-roots",
 ]
 
 [[package]]
@@ -1699,13 +1699,15 @@ checksum = "1d87ecb2933e8aeadb3e3a02b828fed80a7528047e68b4f424523a0981a3a084"
 
 [[package]]
 name = "nestlink-app-core"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "nestlink-auth",
  "nestlink-identity",
+ "nestlink-media-codec",
  "nestlink-media-session",
  "nestlink-platform-clipboard",
+ "nestlink-platform-network",
  "nestlink-platform-security",
  "nestlink-policy",
  "nestlink-protocol",
@@ -1723,7 +1725,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-auth"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "argon2",
  "base64 0.22.1",
@@ -1764,7 +1766,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-connectivity"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "nestlink-policy",
  "nestlink-protocol",
@@ -1773,7 +1775,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-identity"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "ed25519-dalek",
@@ -1789,7 +1791,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-local-ipc"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "hkdf",
  "nestlink-auth",
@@ -1810,7 +1812,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-media-codec"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "cc",
  "serde",
@@ -1821,7 +1823,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-media-session"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "nestlink-media-codec",
  "nestlink-protocol",
@@ -1834,7 +1836,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-node"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "futures-util",
@@ -1843,6 +1845,7 @@ dependencies = [
  "nestlink-platform-security",
  "nestlink-protocol",
  "nestlink-session",
+ "nestlink-transport-stream",
  "nestlink-traversal",
  "prost",
  "reqwest",
@@ -1859,7 +1862,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-operations"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "argon2",
  "chacha20poly1305",
@@ -1877,7 +1880,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-clipboard"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "futures-util",
  "libc",
@@ -1893,7 +1896,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-files"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "cap-fs-ext",
  "cap-std",
@@ -1914,16 +1917,18 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-network"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
+ "if-addrs",
  "libc",
+ "socket2 0.6.5",
  "tokio",
  "windows-sys 0.61.2",
 ]
 
 [[package]]
 name = "nestlink-platform-security"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "rustix",
  "windows-sys 0.61.2",
@@ -1932,7 +1937,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-platform-session"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "futures-util",
  "libc",
@@ -1944,7 +1949,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-policy"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "nestlink-protocol",
  "serde",
@@ -1952,7 +1957,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-protocol"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "prost",
  "prost-build",
@@ -1970,7 +1975,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-remote"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "nestlink-identity",
  "nestlink-platform-network",
@@ -1987,7 +1992,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-sdk"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "bytes",
@@ -2030,7 +2035,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-server"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "axum",
  "base64 0.22.1",
@@ -2066,7 +2071,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-session"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "nestlink-identity",
  "nestlink-policy",
@@ -2076,7 +2081,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-storage"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "nestlink-auth",
@@ -2094,10 +2099,11 @@ dependencies = [
 
 [[package]]
 name = "nestlink-transport-quic"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "nestlink-identity",
+ "nestlink-platform-network",
  "nestlink-protocol",
  "nestlink-transport-stream",
  "nestlink-traversal",
@@ -2110,7 +2116,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-transport-stream"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "nestlink-identity",
  "nestlink-protocol",
@@ -2119,12 +2125,13 @@ dependencies = [
  "thiserror 2.0.21",
  "tokio",
  "tokio-rustls",
+ "webpki-roots",
  "x509-parser 0.18.1",
 ]
 
 [[package]]
 name = "nestlink-transport-wss"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "futures-util",
@@ -2143,7 +2150,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-traversal"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "hmac",
@@ -2156,7 +2163,7 @@ dependencies = [
 
 [[package]]
 name = "nestlink-turn-service"
-version = "0.6.0-rc.1"
+version = "0.7.0-rc.1"
 dependencies = [
  "async-trait",
  "futures-util",
@@ -2199,7 +2206,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2668,7 +2675,7 @@ dependencies = [
  "once_cell",
  "socket2 0.6.5",
  "tracing",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2879,7 +2886,7 @@ dependencies = [
  "wasm-bindgen-futures",
  "wasm-streams 0.4.2",
  "web-sys",
- "webpki-roots 1.0.9",
+ "webpki-roots",
 ]
 
 [[package]]
@@ -2980,7 +2987,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -3019,9 +3026,9 @@ dependencies = [
 
 [[package]]
 name = "rustls-webpki"
-version = "0.103.15"
+version = "0.103.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3c3cf1d8b1e7d4927e2d154c3fcb02979afb9939629c62cd9048d4f07b60ac2"
+checksum = "4443b1b6d39d7c663139942cc4558262562d2c84123bb6282ef177009ca8b281"
 dependencies = [
  "ring",
  "rustls-pki-types",
@@ -3436,7 +3443,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -3586,7 +3593,6 @@ dependencies = [
  "tokio",
  "tokio-rustls",
  "tungstenite",
- "webpki-roots 0.26.11",
 ]
 
 [[package]]
@@ -3831,7 +3837,7 @@ dependencies = [
 [[package]]
 name = "turn"
 version = "0.17.2"
-source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.6-rc#de472a33a82553d9aac9ab7c77ba9c7ad606cf86"
+source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.7-rc#eefd2137214ae5babcf703d8f808febed94ad505"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -4086,18 +4092,9 @@ dependencies = [
 
 [[package]]
 name = "webpki-roots"
-version = "0.26.11"
+version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "521bc38abb08001b01866da9f51eb7c5d647a19260e00054a8c7fd5f9e57f7a9"
-dependencies = [
- "webpki-roots 1.0.9",
-]
-
-[[package]]
-name = "webpki-roots"
-version = "1.0.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7dcd9d09a39985f5344844e66b0c530a33843579125f23e21e9f0f220850f22a"
+checksum = "1c1c8e20c8a38fc7d65abfe74eb7280e4aa667e8eec8bc84996d2874810748d9"
 dependencies = [
  "rustls-pki-types",
 ]
@@ -4162,7 +4159,7 @@ dependencies = [
 [[package]]
 name = "webrtc-ice"
 version = "0.14.0"
-source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.6-rc#de472a33a82553d9aac9ab7c77ba9c7ad606cf86"
+source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.7-rc#eefd2137214ae5babcf703d8f808febed94ad505"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -4866,14 +4863,9 @@ dependencies = [
 [[patch.unused]]
 name = "leptos_macro"
 version = "0.8.19"
-source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.6-rc#de472a33a82553d9aac9ab7c77ba9c7ad606cf86"
-
-[[patch.unused]]
-name = "objc2-foundation"
-version = "0.2.2"
-source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.6-rc#de472a33a82553d9aac9ab7c77ba9c7ad606cf86"
+source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.7-rc#eefd2137214ae5babcf703d8f808febed94ad505"
 
 [[patch.unused]]
 name = "tachys"
 version = "0.2.19"
-source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.6-rc#de472a33a82553d9aac9ab7c77ba9c7ad606cf86"
+source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.7-rc#eefd2137214ae5babcf703d8f808febed94ad505"
