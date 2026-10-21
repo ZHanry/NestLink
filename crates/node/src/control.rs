@@ -123,6 +123,8 @@ pub enum Error {
     Configuration,
     #[error("node control connection stopped, failed or timed out")]
     Control,
+    #[error("node control transport was interrupted")]
+    Transport,
     #[error("node {stage} failed: {cause}")]
     Phase {
         stage: &'static str,
@@ -456,10 +458,67 @@ async fn lease_pump(
     );
     let issuer = config.issuer()?;
     let mut report_sequence = 0u64;
+    let mut active = false;
+    let initial_deadline = Instant::now() + Duration::from_secs(15);
+    let mut retry_delay = Duration::from_millis(250);
+    loop {
+        let result = lease_channel(
+            &config,
+            &identity,
+            &runtime_id,
+            &state,
+            started,
+            &client,
+            &report_url,
+            &issuer,
+            &mut report_sequence,
+            &mut active,
+        )
+        .await;
+        if !matches!(result, Err(Error::Transport)) {
+            return result;
+        }
+        // Reconnecting cannot mint time or clear the gate's sequence/policy
+        // watermarks. An expired, revoked or invalid lease remains terminal.
+        let budget = if active {
+            Duration::from_secs(15)
+        } else {
+            initial_deadline
+                .checked_duration_since(Instant::now())
+                .ok_or(Error::Control)?
+        };
+        supervise_lease(
+            &state,
+            started,
+            active,
+            budget,
+            tokio::time::sleep(retry_delay),
+        )
+        .await?;
+        retry_delay = (retry_delay * 2).min(Duration::from_secs(1));
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+async fn lease_channel(
+    config: &NodeConfig,
+    identity: &NodeIdentity,
+    runtime_id: &str,
+    state: &Arc<Mutex<Runtime>>,
+    started: Instant,
+    client: &reqwest::Client,
+    report_url: &str,
+    issuer: &[u8; 32],
+    report_sequence: &mut u64,
+    active: &mut bool,
+) -> Result<(), Error> {
     let options = WebSocketConfig::default()
         .max_message_size(Some((NODE_MESSAGE_BYTES + 128) as usize))
         .max_frame_size(Some((NODE_MESSAGE_BYTES + 128) as usize));
-    let (mut socket, _) = tokio::time::timeout(
+    let connection = supervise_lease(
+        state,
+        started,
+        *active,
         Duration::from_secs(15),
         tokio_tungstenite::connect_async_tls_with_config(
             config.url()?.as_str(),
@@ -471,10 +530,8 @@ async fn lease_pump(
             ))),
         ),
     )
-    .await
-    .map_err(|_| Error::Control)?
-    .map_err(|_| Error::Control)?;
-    let mut active = false;
+    .await?;
+    let (mut socket, _) = connection.map_err(transport_error)?;
     loop {
         // Separate timer keeps lease/clock checks running during blocked network IO.
         let exchange = async {
@@ -489,12 +546,12 @@ async fn lease_pump(
             {
                 return Err(Error::Control);
             }
-            let proof = identity.prove(&challenge, &runtime_id)?;
+            let proof = identity.prove(&challenge, runtime_id)?;
             let requested = sample(started)?.monotonic_ms;
             socket
                 .send(WsMessage::Binary(proof.encode_to_vec().into()))
                 .await
-                .map_err(|_| Error::Control)?;
+                .map_err(transport_error)?;
             let lease = receive(&mut socket).await?;
             state.lock().map_err(|_| Error::Control)?.gate.accept(
                 &lease,
@@ -516,7 +573,7 @@ async fn lease_pump(
                     runtime_generation: lease.runtime_generation,
                     policy_revision: lease.policy_revision,
                     lease_sequence: lease.lease_sequence,
-                    report_sequence: report_sequence
+                    report_sequence: (*report_sequence)
                         .checked_add(1)
                         .filter(|n| *n <= i64::MAX as u64)
                         .ok_or(Error::Control)?,
@@ -526,7 +583,7 @@ async fn lease_pump(
                     sampled_at_unix_ms: now.unix_ms,
                 }
             };
-            report(&client, &report_url, &identity, &issuer, &claims, started)
+            report(client, report_url, identity, issuer, &claims, started)
                 .await
                 .map_err(|cause| Error::Phase {
                     stage: "usage confirmation",
@@ -535,21 +592,51 @@ async fn lease_pump(
             let mut state = state.lock().map_err(|_| Error::Control)?;
             state.gate.check_live(sample(started)?)?;
             state.ready = true;
-            report_sequence = claims.report_sequence;
+            *report_sequence = claims.report_sequence;
             Ok::<(), Error>(())
         };
-        tokio::pin!(exchange);
-        let mut tick = tokio::time::interval(Duration::from_millis(100));
-        tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
-        let timeout = tokio::time::sleep(Duration::from_secs(if active { 12 } else { 6 }));
-        tokio::pin!(timeout);
-        loop {
-            tokio::select! {biased;
-                _=&mut timeout=>return Err(Error::Control),
-                _=tick.tick()=>{if active {let mut state=state.lock().map_err(|_|Error::Control)?;let now=sample(started)?;state.gate.check_live(now)?;state.resources.expire(now);}},
-                result=&mut exchange=>{result?;active=true;break;}
-            }
+        supervise_lease(
+            state,
+            started,
+            *active,
+            Duration::from_secs(if *active { 12 } else { 6 }),
+            exchange,
+        )
+        .await??;
+        *active = true;
+    }
+}
+
+async fn supervise_lease<T>(
+    state: &Arc<Mutex<Runtime>>,
+    started: Instant,
+    active: bool,
+    timeout: Duration,
+    operation: impl std::future::Future<Output = T>,
+) -> Result<T, Error> {
+    tokio::pin!(operation);
+    let mut tick = tokio::time::interval(Duration::from_millis(100));
+    tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    let timeout = tokio::time::sleep(timeout);
+    tokio::pin!(timeout);
+    loop {
+        tokio::select! {biased;
+            _=&mut timeout=>return Err(Error::Control),
+            _=tick.tick()=>{if active {let mut state=state.lock().map_err(|_|Error::Control)?;let now=sample(started)?;state.gate.check_live(now)?;state.resources.expire(now);}},
+            result=&mut operation=>return Ok(result),
         }
+    }
+}
+
+fn transport_error(error: tokio_tungstenite::tungstenite::Error) -> Error {
+    use tokio_tungstenite::tungstenite::Error as WsError;
+    match error {
+        WsError::ConnectionClosed | WsError::AlreadyClosed | WsError::Io(_) => Error::Transport,
+        WsError::Protocol(
+            tokio_tungstenite::tungstenite::error::ProtocolError::ResetWithoutClosingHandshake,
+        ) => Error::Transport,
+        WsError::Http(response) if response.status().is_server_error() => Error::Transport,
+        _ => Error::Control,
     }
 }
 async fn report(
@@ -614,15 +701,30 @@ async fn report(
     Err(Error::Control)
 }
 async fn receive(socket: &mut Socket) -> Result<Vec<u8>, Error> {
-    match socket
-        .next()
-        .await
-        .ok_or(Error::Control)?
-        .map_err(|_| Error::Control)?
-    {
-        WsMessage::Binary(bytes) if bytes.len() as u64 <= NODE_MESSAGE_BYTES + 128 => {
-            Ok(bytes.to_vec())
+    loop {
+        match socket
+            .next()
+            .await
+            .ok_or(Error::Transport)?
+            .map_err(transport_error)?
+        {
+            WsMessage::Binary(bytes) if bytes.len() as u64 <= NODE_MESSAGE_BYTES + 128 => {
+                return Ok(bytes.to_vec());
+            }
+            WsMessage::Ping(_) | WsMessage::Pong(_) => continue,
+            // Legacy servers use an empty close for authorization rejection.
+            // A TCP reset/EOF is separately classified as interrupted transport.
+            WsMessage::Close(None) => return Err(Error::Control),
+            WsMessage::Close(Some(frame)) => {
+                use tokio_tungstenite::tungstenite::protocol::frame::coding::CloseCode;
+                return Err(match frame.code {
+                    CloseCode::Normal | CloseCode::Away | CloseCode::Restart | CloseCode::Again => {
+                        Error::Transport
+                    }
+                    _ => Error::Control,
+                });
+            }
+            _ => return Err(Error::Control),
         }
-        _ => Err(Error::Control),
     }
 }

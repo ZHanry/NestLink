@@ -16,6 +16,67 @@ use nestlink_server::{AppState, router};
 use nestlink_storage::Store;
 use serde_json::Value;
 use std::time::{Duration, Instant};
+
+/// A raw TCP proxy interrupts only the first upgraded control connection;
+/// HTTP, the real control server, its database and subsequent sockets stay live.
+struct InterruptingProxy {
+    task: tokio::task::JoinHandle<()>,
+    interrupt: tokio::sync::watch::Sender<bool>,
+}
+impl Drop for InterruptingProxy {
+    fn drop(&mut self) {
+        self.task.abort();
+    }
+}
+impl InterruptingProxy {
+    fn start(listener: tokio::net::TcpListener, backend: std::net::SocketAddr) -> Self {
+        let (interrupt, receiver) = tokio::sync::watch::channel(false);
+        let connections = std::sync::Arc::new(std::sync::atomic::AtomicU64::new(0));
+        let task = tokio::spawn(async move {
+            let mut owners = tokio::task::JoinSet::new();
+            loop {
+                tokio::select! {
+                    accepted = listener.accept() => {
+                        let Ok((mut incoming, _)) = accepted else { break; };
+                        let mut interrupted = receiver.clone();
+                        let connections = connections.clone();
+                        owners.spawn(async move {
+                            use tokio::io::{AsyncReadExt, AsyncWriteExt};
+                            let mut head = Vec::new();
+                            let mut buffer = [0; 2048];
+                            while !head.windows(4).any(|part| part == b"\r\n\r\n") {
+                                let count = incoming.read(&mut buffer).await?;
+                                if count == 0 || head.len() + count > 16384 {
+                                    return Ok::<(), std::io::Error>(());
+                                }
+                                head.extend_from_slice(&buffer[..count]);
+                            }
+                            let line = head.split(|byte| *byte == b'\n').next().unwrap_or_default();
+                            let control = line.starts_with(b"GET /api/v3/nodes/") && line.ends_with(b"/control HTTP/1.1\r");
+                            let first = control && connections.fetch_add(1, std::sync::atomic::Ordering::SeqCst) == 0;
+                            let mut outgoing = tokio::net::TcpStream::connect(backend).await?;
+                            outgoing.write_all(&head).await?;
+                            if first {
+                                tokio::select! {
+                                    result = tokio::io::copy_bidirectional(&mut incoming, &mut outgoing) => { result?; },
+                                    _ = interrupted.changed() => {},
+                                }
+                            } else {
+                                tokio::io::copy_bidirectional(&mut incoming, &mut outgoing).await?;
+                            }
+                            Ok(())
+                        });
+                    }
+                    Some(_) = owners.join_next(), if !owners.is_empty() => {},
+                }
+            }
+        });
+        Self { task, interrupt }
+    }
+    fn disconnect_control(&self) {
+        self.interrupt.send_replace(true);
+    }
+}
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 struct Abort(tokio::task::JoinHandle<()>);
 impl Drop for Abort {
@@ -40,7 +101,9 @@ async fn actual_control_channel_renews_and_admin_revocation_stops_node_under_two
     let policy_issuer = signer.node_policy_signer()?.public_key();
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
     let address = listener.local_addr()?;
-    let origin = format!("http://{address}");
+    let proxy_listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+    let origin = format!("http://{}", proxy_listener.local_addr()?);
+    let proxy = InterruptingProxy::start(proxy_listener, address);
     let app = router(AppState::new(
         store,
         VaultKey::from_bytes([5; 32]),
@@ -179,6 +242,44 @@ async fn actual_control_channel_renews_and_admin_revocation_stops_node_under_two
         .into());
     }
     usage??;
+    // A proxy reload severs transport, not signed authority. Resume within the
+    // same runtime and preserve all counters, while respecting real server
+    // renewal throttling and usage acknowledgement rules.
+    let before_interruption = control.current_lease()?;
+    let recovering = Instant::now();
+    proxy.disconnect_control();
+    tokio::time::timeout(Duration::from_secs(5), async {
+        loop {
+            let lease = control.current_lease()?;
+            if lease.lease_sequence > before_interruption.lease_sequence {
+                assert_eq!(lease.runtime_id, before_interruption.runtime_id);
+                assert_eq!(
+                    lease.runtime_generation,
+                    before_interruption.runtime_generation
+                );
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(25)).await;
+        }
+        Ok::<(), Box<dyn std::error::Error>>(())
+    })
+    .await
+    .map_err(|_| "proxy interruption did not resume within five seconds")??;
+    assert!(recovering.elapsed() < Duration::from_secs(5));
+    assert!(!*control.stopped().borrow());
+    assert_eq!(control.counters()?.admitted_bytes, 512);
+    assert_eq!(control.counters()?.opened_connections, 1);
+    guard.admit(1, || Ok(()))?;
+    tokio::time::timeout(Duration::from_secs(6), async {
+        loop {
+            let page: NodeUsagePage = http.get(&usage_url).bearer_auth(token)
+                .send().await?.error_for_status()?.json().await?;
+            if page.entries.first().is_some_and(|entry| entry.admitted_bytes == 513) { break; }
+            tokio::time::sleep(Duration::from_millis(25)).await;
+        }
+        Ok::<(), reqwest::Error>(())
+    }).await.map_err(|_| "resumed usage was not durably confirmed")??;
+    let lease = control.current_lease()?;
     let corrupt = NodeIdentity::generate().sign_usage(&NodeUsageClaims {
         schema_version: SCHEMA_VERSION,
         deployment_id: lease.deployment_id.clone(),
@@ -242,7 +343,7 @@ async fn actual_control_channel_renews_and_admin_revocation_stops_node_under_two
     assert_eq!(page.entries.len(), 2);
     assert!(!page.entries[0].current);
     assert!(page.entries[1].current);
-    assert_eq!(page.entries[0].admitted_bytes, 512);
+    assert_eq!(page.entries[0].admitted_bytes, 513);
     assert_eq!(page.entries[1].admitted_bytes, 0);
     let start = Instant::now();
     http.delete(format!("{origin}/api/v3/nodes/{id}"))

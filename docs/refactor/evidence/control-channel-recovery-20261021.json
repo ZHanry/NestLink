@@ -1,0 +1,10 @@
+{
+  "recorded_at": "2026-10-21T14:33:43.161674+00:00",
+  "baseline_source": "2d250eab40d79def10305ba97b823733c5d89fed",
+  "fixed_control_file_sha256": "1afbaec9eab39151d189f09b9840767fa80eb45155340ca4da72d217516d056d",
+  "baseline_new_cases_failed": 3,
+  "fixed_control_cases_passed": 8,
+  "transport": "real loopback HTTP and WebSocket; signed fixture authority",
+  "production_proxy_reload_acceptance": "pending",
+  "deployed": false
+}
