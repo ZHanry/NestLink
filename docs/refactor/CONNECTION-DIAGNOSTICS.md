@@ -48,8 +48,9 @@ Web 的 `controller_preflight_timeline` 覆盖身份加载、创建请求、等�
 系统 UDP 表，不导出候选 IP 或 ICE 凭据。时间从记录器创建起计算，不能跨端相减。
 超出容量的事件计入 `dropped_events`，首个接收退出和首个错误不会被后续关闭覆盖。
 
-`sends_accepted` 只表示发送调用接受了整个 STUN 消息；零字节/短写单记
-`short_sends`，它们都不是物理网卡出口证据。`datagrams_received` 位于
+`sends_accepted` 只表示发送调用返回的长度等于 STUN 消息长度；返回长度不等时单记
+`short_sends`。当前 TURN 连接可返回封装后的长度，因此中继的这个字段不能证明发生短写；
+这些计数都不是物理网卡出口证据。`datagrams_received` 位于
 `recv_from` 成功返回之后，协议校验之前。只有同时检查 receiver_ready、退出原因、
 错误和接收计数，才能判断接收任务的状态。错误仅输出类型、固定分类及可用 OS 码；
 上游已经转为自由文本的错误仍无法恢复其原始类型，不根据文本猜测 TURN 原因。
@@ -70,3 +71,10 @@ Web 的 `controller_preflight_timeline` 覆盖身份加载、创建请求、等�
 取证前分别确认存储自检和真实窗口心跳存在，再检查本次打开弹窗是否出现
 `button_geometry` / `window_geometry`。缺文件或缺几何不能作为“按钮稳定”的依据。
 这些记录不含桌面内容、键盘文本或用户授权凭据。
+
+`surface` 区分 `local_session`（“本机被控”窗口）和 `request_task`（“连接与授权”弹窗）；
+旧记录没有此字段时按 `local_session` 解释。各自缓存几何与按钮状态，不能跨弹窗比较。
+`request_task` 沿用通用字段名：`stop` / `stop_rect` / `stop_clicked` 表示“取消连接”，
+`close` 表示“关闭详情”；`local_session` 的 `stop` 表示停止本机会话。
+心跳分别记录 `dialog_requested` 和 `request_task_requested`。固定 viewport、DPI 和窗口起点
+之后才比较同一 surface 的按钮位移；sizing pass 的临时矩形不作为可见按钮。

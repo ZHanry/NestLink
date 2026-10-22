@@ -14,10 +14,30 @@ pub(super) struct Geometry {
     pub sizing_pass: bool,
 }
 
+#[derive(Clone, Copy)]
+pub(super) enum Surface {
+    LocalSession,
+    RequestTask,
+}
+impl Surface {
+    fn index(self) -> usize {
+        match self {
+            Self::LocalSession => 0,
+            Self::RequestTask => 1,
+        }
+    }
+    fn name(self) -> &'static str {
+        match self {
+            Self::LocalSession => "local_session",
+            Self::RequestTask => "request_task",
+        }
+    }
+}
+
 #[derive(Default)]
 pub(super) struct Recorder {
-    last: Option<(egui::Rect, egui::Rect, Geometry)>,
-    last_buttons: Option<serde_json::Value>,
+    last: [Option<(egui::Rect, egui::Rect, Geometry, f32)>; 2],
+    last_buttons: [Option<serde_json::Value>; 2],
     samples: VecDeque<serde_json::Value>,
     last_write: Option<Instant>,
     last_heartbeat: Option<Instant>,
@@ -25,6 +45,7 @@ pub(super) struct Recorder {
     frames: u64,
     revision: u64,
     requested: bool,
+    request_task_requested: bool,
     records: u64,
     invalid_geometry: u64,
     empty_directory: u64,
@@ -56,6 +77,9 @@ impl Recorder {
         self.revision = revision;
         self.requested = requested;
     }
+    pub(super) fn request_task_requested(&mut self, requested: bool) {
+        self.request_task_requested = requested;
+    }
     pub(super) fn finish_frame(&mut self, directory: &Path, context: &egui::Context) {
         if self
             .last_heartbeat
@@ -66,6 +90,7 @@ impl Recorder {
                 "viewport_id":format!("{:?}",context.viewport_id()),
                 "viewport":coordinates(context.content_rect()), "pixels_per_point":context.pixels_per_point(),
                 "dialog_requested":self.requested,"geometry_records":self.records,
+                "request_task_requested":self.request_task_requested,
                 "invalid_geometry":self.invalid_geometry,"empty_directory":self.empty_directory,
                 "last_write_error":self.last_write_error,
             }));
@@ -79,8 +104,19 @@ impl Recorder {
         close: &egui::Response,
         stop: &egui::Response,
     ) {
+        self.buttons_for(Surface::LocalSession, context, close, stop);
+    }
+    pub(super) fn buttons_for(
+        &mut self,
+        surface: Surface,
+        context: &egui::Context,
+        close: &egui::Response,
+        stop: &egui::Response,
+    ) {
         let details = serde_json::json!({
             "event":"button_geometry", "viewport_id":format!("{:?}",context.viewport_id()),
+            "surface":surface.name(),
+            "pixels_per_point":context.pixels_per_point(),
             "close_id":format!("{:016x}",close.id.value()),"close_rect":coordinates(close.rect),
             "close_interact_rect":coordinates(close.interact_rect),"close_enabled":close.enabled(),
             "stop_id":format!("{:016x}",stop.id.value()),"stop_rect":coordinates(stop.rect),
@@ -88,13 +124,14 @@ impl Recorder {
         });
         let pressed = context.input(|input| input.pointer.any_pressed());
         let released = context.input(|input| input.pointer.any_released());
-        if self.last_buttons.as_ref() != Some(&details) || pressed || released {
-            self.last_buttons = Some(details.clone());
+        if self.last_buttons[surface.index()].as_ref() != Some(&details) || pressed || released {
+            self.last_buttons[surface.index()] = Some(details.clone());
             self.push(details);
         }
         if pressed || released {
             self.push(serde_json::json!({
                 "event":"pointer","pressed":pressed,"released":released,
+                "surface":surface.name(),
                 "position":context.input(|input| input.pointer.interact_pos()).map(|p|[p.x,p.y]),
                 "close_clicked":close.clicked(),"stop_clicked":stop.clicked(),
                 "close_contains_pointer":close.contains_pointer(),"stop_contains_pointer":stop.contains_pointer(),
@@ -103,6 +140,16 @@ impl Recorder {
     }
     pub(super) fn record(
         &mut self,
+        directory: &Path,
+        context: &egui::Context,
+        window: egui::Rect,
+        geometry: Geometry,
+    ) {
+        self.record_for(Surface::LocalSession, directory, context, window, geometry);
+    }
+    pub(super) fn record_for(
+        &mut self,
+        surface: Surface,
         directory: &Path,
         context: &egui::Context,
         window: egui::Rect,
@@ -120,22 +167,23 @@ impl Recorder {
         if let Some(index) = rectangles.iter().position(|rect| !rect.is_finite()) {
             self.invalid_geometry = self.invalid_geometry.saturating_add(1);
             if self.invalid_geometry == 1 {
-                self.push(serde_json::json!({"event":"geometry_rejected","rectangle_index":index}));
+                self.push(serde_json::json!({"event":"geometry_rejected","rectangle_index":index,"surface":surface.name()}));
             }
             self.flush(directory);
             return;
         }
         let pressed = context.input(|input| input.pointer.any_pressed());
         let released = context.input(|input| input.pointer.any_released());
-        let current = (viewport, window, geometry);
-        if self.last != Some(current) || pressed || released {
+        let current = (viewport, window, geometry, context.pixels_per_point());
+        if self.last[surface.index()] != Some(current) || pressed || released {
             self.push(serde_json::json!({
                 "event":"window_geometry","viewport_id":format!("{:?}",context.viewport_id()),
+                "surface":surface.name(),
                 "pixels_per_point":context.pixels_per_point(),"viewport":coordinates(viewport),"window":coordinates(window),
                 "content":coordinates(geometry.content),"close":coordinates(geometry.close),"stop":coordinates(geometry.stop),
                 "sizing_pass":geometry.sizing_pass,"pointer_pressed":pressed,"pointer_released":released,
             }));
-            self.last = Some(current);
+            self.last[surface.index()] = Some(current);
         }
         self.flush(directory);
     }

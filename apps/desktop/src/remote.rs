@@ -757,59 +757,6 @@ impl DesktopApp {
         }
         ui.add_space(20.);
         widgets::section(ui, &snapshot.selected_request, self.english);
-        if self.remote.flow.as_ref().is_some_and(|flow| flow.is_busy())
-            || (snapshot
-                .selected_request
-                .data
-                .as_ref()
-                .is_some_and(|request| {
-                    self.remote.selected.as_deref() == Some(request.id.as_str())
-                }))
-        {
-            let context = ui.ctx().clone();
-            let mut close = false;
-            egui::Modal::new(egui::Id::new("remote-request-task")).show(&context, |ui| {
-                ui.set_width((context.content_rect().width() - 48.).clamp(280., 620.));
-                ui.heading(self.t("连接与授权", "Connection and approval"));
-                egui::ScrollArea::vertical()
-                    .max_height((context.content_rect().height() - 180.).clamp(180., 460.))
-                    .auto_shrink([false, false])
-                    .id_salt("request-task-scroll")
-                    .show(ui, |ui| {
-                        self.connection_progress(ui, snapshot);
-                        if let Some(request) = &snapshot.selected_request.data
-                            && self.remote.selected.as_deref() == Some(request.id.as_str())
-                        {
-                            self.request_details(ui, snapshot, request);
-                        }
-                    });
-                ui.separator();
-                ui.horizontal(|ui| {
-                    if ui
-                        .add_enabled_ui(self.connection_can_cancel(), |ui| {
-                            icons::button(ui, Icon::Close, self.t("取消连接", "Cancel connection"))
-                        })
-                        .inner
-                        .clicked()
-                    {
-                        self.cancel_remote_connection(snapshot);
-                        close = true;
-                    }
-                    close |= ui
-                        .add_enabled(
-                            !self.remote.flow.as_ref().is_some_and(|flow| flow.is_busy()),
-                            egui::Button::new(self.t("关闭详情", "Close details")),
-                        )
-                        .clicked();
-                });
-            });
-            if close
-                || (!self.remote.flow.as_ref().is_some_and(|flow| flow.is_busy())
-                    && context.input(|i| i.key_pressed(egui::Key::Escape)))
-            {
-                self.remote.selected = None;
-            }
-        }
         self.transfer_panels(ui, snapshot);
         ui.add_space(20.);
         egui::CollapsingHeader::new(self.t("本机访问设置", "Host access settings")).show(
@@ -830,6 +777,96 @@ impl DesktopApp {
             "仅在访问获准且连接可用时显示远端画面。",
             "The remote screen appears after access is approved and the connection is ready.",
         ));
+    }
+
+    pub(crate) fn show_connection_task(&mut self, context: &egui::Context, snapshot: &Snapshot) {
+        let busy = self.remote.flow.as_ref().is_some_and(|flow| flow.is_busy());
+        let requested = self.screen == crate::Screen::Remote
+            && self.connected
+            && !self.exiting
+            && snapshot.authentication == nestlink_app_core::Authentication::SignedIn
+            && snapshot
+                .server
+                .as_ref()
+                .is_some_and(|server| server.verified_health.is_some())
+            && (busy
+                || snapshot
+                    .selected_request
+                    .data
+                    .as_ref()
+                    .is_some_and(|request| {
+                        self.remote.selected.as_deref() == Some(request.id.as_str())
+                    }));
+        self.layout_diagnostics.request_task_requested(requested);
+        if !requested {
+            return;
+        }
+        let modal = crate::request_task_dialog::show(
+            context,
+            self.t("连接与授权", "Connection and approval"),
+            |ui| {
+                let content = crate::request_task_dialog::bounds(ui);
+                let sizing_pass = ui.is_sizing_pass();
+                crate::request_task_dialog::body(ui, |ui| {
+                    self.connection_progress(ui, snapshot);
+                    if let Some(request) = &snapshot.selected_request.data
+                        && self.remote.selected.as_deref() == Some(request.id.as_str())
+                    {
+                        self.request_details(ui, snapshot, request);
+                    }
+                });
+                let (cancel, close) = crate::request_task_dialog::footer(ui, |ui| {
+                    let cancel = ui
+                        .add_enabled_ui(self.connection_can_cancel(), |ui| {
+                            ui.put(
+                                crate::request_task_dialog::action_rect(ui, false),
+                                egui::Button::new(self.t("取消连接", "Cancel connection")),
+                            )
+                        })
+                        .inner;
+                    let close = ui
+                        .add_enabled_ui(!busy, |ui| {
+                            ui.put(
+                                crate::request_task_dialog::action_rect(ui, true),
+                                egui::Button::new(self.t("关闭详情", "Close details")),
+                            )
+                        })
+                        .inner;
+                    (cancel, close)
+                });
+                let geometry = crate::layout_diagnostics::Geometry {
+                    content,
+                    close: close.rect,
+                    stop: cancel.rect,
+                    sizing_pass,
+                };
+                (geometry, close, cancel)
+            },
+        );
+        let (geometry, close, cancel) = modal.inner;
+        let surface = crate::layout_diagnostics::Surface::RequestTask;
+        self.layout_diagnostics
+            .buttons_for(surface, context, &close, &cancel);
+        self.layout_diagnostics.record_for(
+            surface,
+            &self.directory,
+            context,
+            modal.response.rect,
+            geometry,
+        );
+        if cancel.clicked() {
+            self.cancel_remote_connection(snapshot);
+        }
+        if cancel.clicked()
+            || close.clicked()
+            || (!busy
+                && self.pending_confirmation.is_none()
+                && modal.is_top_modal
+                && !modal.any_popup_open
+                && context.input(|i| i.key_pressed(egui::Key::Escape)))
+        {
+            self.remote.selected = None;
+        }
     }
 
     fn native_session_panel(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {

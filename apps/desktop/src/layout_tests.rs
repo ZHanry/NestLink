@@ -371,6 +371,125 @@ fn browser_popup_snapshot() -> Snapshot {
     snapshot
 }
 
+fn request_task_snapshot(status: &str) -> Snapshot {
+    let mut snapshot = browser_popup_snapshot();
+    let request = nestlink_protocol::api::RemoteView {
+        id: "00000000-0000-4000-8000-000000000010".into(),
+        controller_device_id: "00000000-0000-4000-8000-000000000002".into(),
+        host_device_id: "00000000-0000-4000-8000-000000000001".into(),
+        permissions: vec![1, 2, 3, 4, 5, 6, 7],
+        paths: vec![1, 2],
+        nonce: "test-only-nonce".into(),
+        policy_revision: 1,
+        expires_at_unix_ms: u64::MAX,
+        status: status.into(),
+        lease_sequence: u64::from(status == "approved"),
+        connection_generation: 1,
+        trust_revision: None,
+        password_revision: None,
+    };
+    snapshot.selected_request.data = Some(Arc::new(request.clone()));
+    snapshot.requests.data = Some(Arc::new(vec![request]));
+    snapshot
+}
+
+#[test]
+fn request_task_closes_when_approval_state_and_errors_change_during_a_click() {
+    use nestlink_app_core::{Failure, FailureKind};
+    for scale in [1., 1.25, 1.5, 2.] {
+        for size in [egui::vec2(1200., 800.), egui::vec2(760., 560.)] {
+            let mut workspace = Workspace::new(request_task_snapshot("pending"));
+            workspace.context.set_pixels_per_point(scale);
+            workspace.app.remote.selected = Some("00000000-0000-4000-8000-000000000010".into());
+            for _ in 0..5 {
+                workspace.frame(size, Vec::new());
+            }
+            let close = workspace.bounds("关闭详情");
+            assert_eq!(close.len(), 1);
+            let position = close[0].center();
+            workspace.frame(
+                size,
+                vec![
+                    egui::Event::PointerMoved(position),
+                    egui::Event::PointerButton {
+                        pos: position,
+                        button: egui::PointerButton::Primary,
+                        pressed: true,
+                        modifiers: Default::default(),
+                    },
+                ],
+            );
+            let mut snapshot = request_task_snapshot("approved");
+            snapshot.revision = 2;
+            snapshot.selected_request.error = Some(Failure {
+                kind: FailureKind::Transport,
+                status: Some(503),
+                code: None,
+            });
+            workspace.app.bridge.layout_snapshot(snapshot);
+            workspace.frame(size, Vec::new());
+            assert_eq!(
+                workspace.bounds("关闭详情"),
+                close,
+                "refresh moved close at scale {scale}"
+            );
+            workspace.frame(
+                size,
+                vec![egui::Event::PointerButton {
+                    pos: position,
+                    button: egui::PointerButton::Primary,
+                    pressed: false,
+                    modifiers: Default::default(),
+                }],
+            );
+            assert!(
+                workspace.app.remote.selected.is_none(),
+                "refresh swallowed request-task close"
+            );
+        }
+    }
+}
+
+#[test]
+fn full_app_records_the_request_task_surface_in_the_private_layout_log() {
+    let directory = std::env::temp_dir().join(format!(
+        "nestlink-request-task-{}-{}",
+        std::process::id(),
+        uuid::Uuid::new_v4()
+    ));
+    nestlink_platform_security::new_private_directory(&directory).expect("private test state");
+    let result = std::panic::catch_unwind(|| {
+        let mut workspace = Workspace::new(request_task_snapshot("pending"));
+        workspace.app.directory = directory.clone();
+        workspace.app.remote.selected = Some("00000000-0000-4000-8000-000000000010".into());
+        workspace.frame(egui::vec2(1200., 800.), Vec::new());
+        std::thread::sleep(Duration::from_millis(1100));
+        workspace.frame(egui::vec2(1200., 800.), Vec::new());
+        let text = std::fs::read_to_string(directory.join("local-session-layout.jsonl"))
+            .expect("layout log");
+        let rows: Vec<serde_json::Value> = text
+            .lines()
+            .map(|line| serde_json::from_str(line).expect("record"))
+            .collect();
+        assert!(
+            rows.iter()
+                .any(|row| row["event"] == "frame_heartbeat"
+                    && row["request_task_requested"] == true)
+        );
+        assert!(rows.iter().any(|row| row["event"] == "window_geometry"
+            && row["surface"] == "request_task"
+            && row["sizing_pass"] == false));
+        assert!(
+            rows.iter()
+                .any(|row| row["event"] == "button_geometry" && row["surface"] == "request_task")
+        );
+    });
+    std::fs::remove_dir_all(directory).expect("remove private test state");
+    if let Err(error) = result {
+        std::panic::resume_unwind(error);
+    }
+}
+
 #[test]
 fn full_app_popup_records_geometry_and_heartbeat_in_private_state_directory() {
     let directory = std::env::temp_dir().join(format!(

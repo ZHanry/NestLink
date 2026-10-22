@@ -21,6 +21,7 @@ pub mod picker;
 mod privileged_input;
 mod remote;
 mod remote_flow;
+mod request_task_dialog;
 mod services;
 pub mod theme;
 mod tray;
@@ -2210,6 +2211,7 @@ impl eframe::App for DesktopApp {
                         });
                     });
             });
+        self.show_connection_task(&context, &snapshot);
         self.confirmations(&context, &snapshot);
         self.layout_diagnostics
             .finish_frame(&self.directory, &context);
