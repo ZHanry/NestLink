@@ -134,7 +134,7 @@ pub fn button_at(ui: &mut egui::Ui, rect: egui::Rect, icon: Icon, label: &str) -
 }
 
 fn button_icon(ui: &egui::Ui, icon: Icon, response: &egui::Response) {
-    let color = ui.style().interact(&response).text_color();
+    let color = ui.style().interact(response).text_color();
     paint(
         ui,
         icon,
