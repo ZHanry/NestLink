@@ -3303,6 +3303,7 @@ async fn make_peer_with_configuration(
     settings.set_vnet(Some(Arc::new(network::os_ice_network()?)));
     let paths = Arc::new(nestlink_platform_network::path::NetworkPathManager::from_default()?);
     let mut ephemeral = webrtc::ice::udp_network::EphemeralUDP::default();
+    ephemeral.set_bounded_port_discovery(permit.claims().paths.contains(&(Path::Direct as i32)));
     if let Some(observer) = observer {
         ephemeral.set_connectivity_observer(observer);
     }

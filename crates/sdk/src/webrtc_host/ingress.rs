@@ -20,6 +20,10 @@ pub struct IceIngressCounters {
     pub integrity_rejected: u64,
     pub unknown_remote_response: u64,
     pub send_errors: u64,
+    #[serde(default)]
+    pub port_discovery_probes: u64,
+    #[serde(default)]
+    pub port_discovery_authenticated: u64,
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -61,7 +65,7 @@ pub struct SocketDiagnostic {
 
 pub(super) struct IngressRecorder {
     attached: AtomicBool,
-    counters: [[AtomicU64; 10]; 2],
+    counters: [[AtomicU64; 12]; 2],
     sockets: Mutex<SocketSnapshot>,
     started: std::time::Instant,
 }
@@ -104,6 +108,8 @@ impl IngressRecorder {
                 ConnectivityEvent::IntegrityRejected => 7,
                 ConnectivityEvent::UnknownRemoteResponse => 8,
                 ConnectivityEvent::SendError => 9,
+                ConnectivityEvent::PortDiscoveryProbe => 10,
+                ConnectivityEvent::PortDiscoveryAuthenticated => 11,
                 ConnectivityEvent::Socket(_) => return,
             };
             recorder.counters[path][index].fetch_add(1, Ordering::Relaxed);
@@ -208,6 +214,8 @@ impl IngressRecorder {
                 integrity_rejected: at(7),
                 unknown_remote_response: at(8),
                 send_errors: at(9),
+                port_discovery_probes: at(10),
+                port_discovery_authenticated: at(11),
             }
         };
         Some(IceIngressSnapshot {

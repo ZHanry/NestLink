@@ -3837,7 +3837,7 @@ dependencies = [
 [[package]]
 name = "turn"
 version = "0.17.2"
-source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.7-rc#2484d8dcc1416bdd8ab5b27d8d0653f2af76d51a"
+source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.7-rc#36e015e2d2e29d239f4a91c3f099c0ae9af89be4"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -4159,7 +4159,7 @@ dependencies = [
 [[package]]
 name = "webrtc-ice"
 version = "0.14.0"
-source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.7-rc#2484d8dcc1416bdd8ab5b27d8d0653f2af76d51a"
+source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.7-rc#36e015e2d2e29d239f4a91c3f099c0ae9af89be4"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -4863,9 +4863,9 @@ dependencies = [
 [[patch.unused]]
 name = "leptos_macro"
 version = "0.8.19"
-source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.7-rc#2484d8dcc1416bdd8ab5b27d8d0653f2af76d51a"
+source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.7-rc#36e015e2d2e29d239f4a91c3f099c0ae9af89be4"
 
 [[patch.unused]]
 name = "tachys"
 version = "0.2.19"
-source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.7-rc#2484d8dcc1416bdd8ab5b27d8d0653f2af76d51a"
+source = "git+https://github.com/ZHanry/NestLink-dependencies.git?branch=nestlink-0.7-rc#36e015e2d2e29d239f4a91c3f099c0ae9af89be4"

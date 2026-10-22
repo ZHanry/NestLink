@@ -2,7 +2,7 @@
   "schema_version": 1,
   "repository": "https://github.com/ZHanry/NestLink-dependencies.git",
   "branch": "nestlink-0.7-rc",
-  "commit": "ad90958a5d4be7e55082130b41586dd9966a6f2e",
+  "commit": "36e015e2d2e29d239f4a91c3f099c0ae9af89be4",
   "packages": {
     "turn": {
       "version": "0.17.2",
@@ -11,8 +11,8 @@
     },
     "webrtc-ice": {
       "version": "0.14.0",
-      "snapshot_sha256": "3bdf0a94afb8c1e4c4a3a9892d126a163acc80ac9afc094d4697b40b9ccf3d7e",
-      "file_count": 63
+      "snapshot_sha256": "e95ac0211aed55d10125c08e287346d6103dc25254e620fafd7f8cb407e25640",
+      "file_count": 64
     },
     "leptos_macro": {
       "version": "0.8.19",
