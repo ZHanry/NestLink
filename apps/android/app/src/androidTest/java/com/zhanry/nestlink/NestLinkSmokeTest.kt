@@ -416,7 +416,7 @@ class NestLinkSmokeTest {
                         if (binding == hostSessionBindingJson) "stale_browser_binding" else "Android SDK handle is invalid",
                         error.message,
                     )
-                    assertDescriptorClosed(detached)
+                    assertFixtureDescriptorsReleased(selected)
                     detached = -1
                 }
                 assertArrayEquals(expected, selected.readBytes())
@@ -449,7 +449,7 @@ class NestLinkSmokeTest {
                             "; SAF destination was cleared",
                         error.message,
                     )
-                    assertDescriptorClosed(detached)
+                    assertFixtureDescriptorsReleased(destination)
                     detached = -1
                 }
                 assertEquals(0L, destination.length())
@@ -497,9 +497,22 @@ class NestLinkSmokeTest {
         .put("connection_generation", 1L)
         .toString()
 
-    private fun assertDescriptorClosed(descriptor: Int) {
-        val error = assertThrows(ErrnoException::class.java) { Os.readlink("/proc/self/fd/$descriptor") }
-        assertEquals(OsConstants.ENOENT, error.errno)
+    private fun assertFixtureDescriptorsReleased(ownedFile: java.io.File) {
+        // Native ownership ends before JNI returns, but another app thread may
+        // immediately reuse that integer. Check the fixture's resource identity,
+        // including a leaked cleanup duplicate, instead of demanding a vacant slot.
+        val path = ownedFile.canonicalPath
+        val descriptors = checkNotNull(java.io.File("/proc/self/fd").list())
+        val retained = descriptors.filter { descriptor ->
+            val target = try {
+                Os.readlink("/proc/self/fd/$descriptor")
+            } catch (error: ErrnoException) {
+                if (error.errno != OsConstants.ENOENT) throw error
+                null
+            }
+            target == path || target == "$path (deleted)"
+        }
+        assertTrue("JNI retained ${retained.size} descriptors for its fixture", retained.isEmpty())
     }
 
     private fun closeRetainedTestDescriptor(descriptor: Int, ownedFile: java.io.File) {
