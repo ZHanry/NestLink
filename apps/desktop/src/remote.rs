@@ -818,9 +818,11 @@ impl DesktopApp {
                 let (cancel, close) = crate::request_task_dialog::footer(ui, |ui| {
                     let cancel = ui
                         .add_enabled_ui(self.connection_can_cancel(), |ui| {
-                            ui.put(
+                            icons::button_at(
+                                ui,
                                 crate::request_task_dialog::action_rect(ui, false),
-                                egui::Button::new(self.t("取消连接", "Cancel connection")),
+                                Icon::Close,
+                                self.t("取消连接", "Cancel connection"),
                             )
                         })
                         .inner;

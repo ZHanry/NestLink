@@ -123,6 +123,17 @@ pub fn paint(ui: &egui::Ui, icon: Icon, center: Pos2, size: f32, color: Color32)
 
 pub fn button(ui: &mut egui::Ui, icon: Icon, label: &str) -> egui::Response {
     let response = ui.button(format!("     {label}"));
+    button_icon(ui, icon, &response);
+    response
+}
+
+pub fn button_at(ui: &mut egui::Ui, rect: egui::Rect, icon: Icon, label: &str) -> egui::Response {
+    let response = ui.put(rect, egui::Button::new(format!("     {label}")));
+    button_icon(ui, icon, &response);
+    response
+}
+
+fn button_icon(ui: &egui::Ui, icon: Icon, response: &egui::Response) {
     let color = ui.style().interact(&response).text_color();
     paint(
         ui,
@@ -131,7 +142,6 @@ pub fn button(ui: &mut egui::Ui, icon: Icon, label: &str) -> egui::Response {
         18.,
         color,
     );
-    response
 }
 
 pub fn badge(ui: &mut egui::Ui, icon: Icon, size: f32) {
