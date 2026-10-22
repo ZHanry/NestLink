@@ -140,6 +140,8 @@ pub use native_relay::RelayRoute;
 #[cfg(not(target_arch = "wasm32"))]
 pub use node_relay::{NativeRelayRoute, NodeQuicRoute, NodeRelayRoute};
 #[cfg(all(test, not(target_arch = "wasm32")))]
+mod management_login_tests;
+#[cfg(all(test, not(target_arch = "wasm32")))]
 mod native_tests;
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod session_refresh_tests;
@@ -248,7 +250,12 @@ impl Sdk {
         })
     }
     pub fn management_origin(&self) -> &str {
-        self.origin.as_str()
+        // Url stores a root path, whereas the management origin contract does
+        // not include a trailing slash (including when restored into AppCore).
+        self.origin
+            .as_str()
+            .strip_suffix('/')
+            .unwrap_or(self.origin.as_str())
     }
     /// Secret-bearing recovery data for the daemon's OS-protected store only.
     pub fn export_login(&self) -> Result<Option<zeroize::Zeroizing<Vec<u8>>>, SdkError> {
@@ -257,7 +264,7 @@ impl Sdk {
         };
         Ok(Some(zeroize::Zeroizing::new(serde_json::to_vec(
             &serde_json::json!({
-                "origin": self.origin.as_str(), "deployment_id": self.trust.deployment_id,
+                "origin": self.management_origin(), "deployment_id": self.trust.deployment_id,
                 "permit_issuer": self.trust.permit_issuer,
                 "login": LoginResponse { principal: login.principal.clone(), access_token: login.access.expose().into(),
                     refresh_token: login.refresh.expose().into(), generation: login.generation, refresh_expires: login.refresh_expires }
@@ -273,8 +280,9 @@ impl Sdk {
             login: LoginResponse,
         }
         let saved: Saved = serde_json::from_slice(bytes)?;
+        let origin = saved_management_origin(&saved.origin)?;
         let mut sdk = Self::connect(
-            &saved.origin,
+            &origin,
             DeploymentTrust {
                 deployment_id: saved.deployment_id,
                 permit_issuer: saved.permit_issuer,
@@ -1320,6 +1328,14 @@ fn resource(kind: &str, id: &str) -> Result<String, SdkError> {
         return Err(SdkError::Invalid);
     }
     Ok(format!("/{kind}/{id}"))
+}
+fn saved_management_origin(input: &str) -> Result<String, SdkError> {
+    // Older exports used Url::as_str(), which appends a root slash. Accept
+    // exactly that legacy spelling while retaining the normal origin checks:
+    // paths, queries, userinfo, insecure schemes and further normalization fail.
+    let canonical = input.strip_suffix('/').unwrap_or(input);
+    parse_origin(canonical, false)?;
+    Ok(canonical.to_owned())
 }
 fn parse_origin(input: &str, allow_loopback: bool) -> Result<Url, SdkError> {
     let origin = Url::parse(input).map_err(|_| SdkError::Invalid)?;
