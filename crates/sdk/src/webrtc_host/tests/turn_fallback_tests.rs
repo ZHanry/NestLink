@@ -40,6 +40,7 @@ async fn trickle_answers_before_slow_stun_and_completes_a_signed_direct_connecti
             false,
             None,
             &[format!("stun:{}", blackhole.local_addr()?)],
+            None,
         )
         .await?;
         peer.peer = native;
@@ -599,7 +600,7 @@ async fn initial_native_ice_gatherer_actually_uses_stun_and_publishes_srflx() ->
         #[allow(unreachable_code)]
         Ok::<(), std::io::Error>(())
     });
-    let (peer, _, _, _) = make_peer(&permit, false, None, &[endpoint]).await?;
+    let (peer, _, _, _) = make_peer(&permit, false, None, &[endpoint], None).await?;
     let mut complete = peer.gathering_complete_promise().await;
     peer.set_local_description(peer.create_offer(None).await?)
         .await?;

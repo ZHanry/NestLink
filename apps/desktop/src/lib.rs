@@ -7,6 +7,7 @@ mod connection;
 mod files;
 mod host_notice;
 mod icons;
+mod layout_diagnostics;
 #[cfg(test)]
 mod layout_tests;
 mod lists;
@@ -183,6 +184,7 @@ pub struct DesktopApp {
     remote_inspection_completed: bool,
     remote_inspection_succeeded: bool,
     host_notice: host_notice::HostNoticeState,
+    layout_diagnostics: layout_diagnostics::Recorder,
 }
 impl DesktopApp {
     pub fn new(
@@ -285,6 +287,7 @@ impl DesktopApp {
             remote_inspection_completed: false,
             remote_inspection_succeeded: false,
             host_notice: host_notice::HostNoticeState::default(),
+            layout_diagnostics: layout_diagnostics::Recorder::default(),
         }
     }
     fn t(&self, zh: &'static str, en: &'static str) -> &'static str {

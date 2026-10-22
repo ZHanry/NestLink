@@ -8,14 +8,20 @@ use webrtc::{
         },
         mdns::MulticastDnsMode,
         network_type::NetworkType,
+        udp_network::{ConnectivityEvent, ConnectivityObserver, EphemeralUDP, UDPNetwork},
     },
     util::Conn,
 };
 
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
-async fn endpoint() -> Result<(Agent, SocketAddr)> {
+async fn endpoint(observer: Option<ConnectivityObserver>) -> Result<(Agent, SocketAddr)> {
+    let mut network = EphemeralUDP::default();
+    if let Some(observer) = observer {
+        network.set_connectivity_observer(observer);
+    }
     let agent = Agent::new(AgentConfig {
+        udp_network: UDPNetwork::Ephemeral(network),
         network_types: vec![NetworkType::Udp4],
         candidate_types: vec![webrtc::ice::candidate::CandidateType::Host],
         multicast_dns_mode: MulticastDnsMode::Disabled,
@@ -59,8 +65,8 @@ fn proxy_candidate(address: SocketAddr) -> Result<Arc<dyn Candidate + Send + Syn
 
 #[tokio::test]
 async fn direct_ice_recovers_when_the_first_four_seconds_of_checks_are_lost() -> Result {
-    let (a, address_a) = endpoint().await?;
-    let (b, address_b) = endpoint().await?;
+    let (a, address_a) = endpoint(None).await?;
+    let (b, address_b) = endpoint(None).await?;
     let forward_a = UdpSocket::bind("127.0.0.1:0").await?;
     let forward_b = UdpSocket::bind("127.0.0.1:0").await?;
     a.add_remote_candidate(&proxy_candidate(forward_a.local_addr()?)?)?;
@@ -107,5 +113,96 @@ async fn direct_ice_recovers_when_the_first_four_seconds_of_checks_are_lost() ->
     b.close().await?;
     forwarder.abort();
     result??;
+    Ok(())
+}
+
+#[tokio::test]
+async fn ingress_evidence_records_rejected_udp_and_preserves_authenticated_connectivity() -> Result
+{
+    use webrtc::stun::{
+        agent::TransactionId,
+        attributes::ATTR_USERNAME,
+        fingerprint::FINGERPRINT,
+        integrity::MessageIntegrity,
+        message::{BINDING_REQUEST, Message},
+        textattrs::Username,
+    };
+    let events = Arc::new(std::sync::Mutex::new(Vec::new()));
+    let observed = events.clone();
+    let observer: ConnectivityObserver = Arc::new(move |_, event| {
+        observed
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .push(event);
+    });
+    let (a, address_a) = endpoint(Some(observer)).await?;
+    let (b, _) = endpoint(None).await?;
+    for candidate in b.get_local_candidates().await? {
+        a.add_remote_candidate(&candidate)?;
+    }
+    for candidate in a.get_local_candidates().await? {
+        b.add_remote_candidate(&candidate)?;
+    }
+    let (a_ufrag, a_pwd) = a.get_local_user_credentials().await;
+    let (b_ufrag, b_pwd) = b.get_local_user_credentials().await;
+    let (_cancel_a, rx_a) = mpsc::channel(1);
+    let (_cancel_b, rx_b) = mpsc::channel(1);
+    let result = tokio::time::timeout(Duration::from_secs(5), async {
+        let dial = async {
+            let sender = UdpSocket::bind("127.0.0.1:0").await?;
+            let mut message = Message::new();
+            message.build(&[
+                Box::new(TransactionId::new()),
+                Box::new(BINDING_REQUEST),
+                Box::new(Username::new(ATTR_USERNAME, "wrong:browser".into())),
+                Box::new(MessageIntegrity::new_short_term_integrity(
+                    "wrong-password".into(),
+                )),
+                Box::new(FINGERPRINT),
+            ])?;
+            sender.send_to(&message.raw, address_a).await?;
+            loop {
+                if events
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner)
+                    .contains(&ConnectivityEvent::UsernameRejected)
+                {
+                    break;
+                }
+                tokio::task::yield_now().await;
+            }
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(b.dial(rx_b, a_ufrag, a_pwd).await?)
+        };
+        let (a_conn, b_conn) = tokio::try_join!(
+            async {
+                Ok::<_, Box<dyn std::error::Error + Send + Sync>>(
+                    a.accept(rx_a, b_ufrag, b_pwd).await?,
+                )
+            },
+            dial
+        )?;
+        b_conn.send(b"authenticated-after-rejection").await?;
+        let mut bytes = [0; 64];
+        let count = a_conn.recv(&mut bytes).await?;
+        assert_eq!(&bytes[..count], b"authenticated-after-rejection");
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+    })
+    .await;
+    a.close().await?;
+    b.close().await?;
+    result??;
+    let events = events
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    assert!(events.contains(&ConnectivityEvent::DatagramReceived));
+    assert!(events.contains(&ConnectivityEvent::BindingRequestReceived));
+    assert!(events.contains(&ConnectivityEvent::BindingResponseReceived));
+    assert_eq!(
+        events
+            .iter()
+            .filter(|event| **event == ConnectivityEvent::UsernameRejected)
+            .count(),
+        1
+    );
     Ok(())
 }

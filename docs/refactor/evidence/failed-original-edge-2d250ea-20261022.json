@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "observed_date": "2026-10-22",
+  "source_revision": "2d250eab40d79def10305ba97b823733c5d89fed",
+  "environment": {
+    "host": "HL, Clash TUN enabled",
+    "controller": "original external Edge, home broadband"
+  },
+  "actual_connection": "failed",
+  "actual_popup_stability": "failed",
+  "request_sha256": "2a2e9e740b0167c768f1379a3ebcab3aef005d95e39fb656d6ead3dc878d782b",
+  "installed_files": [
+    {
+      "role": "desktop",
+      "matches_frozen_payload": true,
+      "sha256": "2288f67bbf560ac0e0e899bcd0ea7c90a0b0949eab6d08273ffdafb33db7a3ef"
+    },
+    {
+      "role": "daemon",
+      "matches_frozen_payload": true,
+      "sha256": "fd6809adcccae90196653b906089388e42550738dac652ff72fa3b2d677978c3"
+    }
+  ],
+  "last_ice_check": {
+    "direct": {
+      "failed": 0,
+      "in_progress": 16,
+      "nominated": 0,
+      "pairs": 16,
+      "requests_received": 0,
+      "requests_sent": 96,
+      "responses_received": 0,
+      "responses_sent": 0,
+      "succeeded": 0
+    },
+    "elapsed_ms": 11079,
+    "relay": {
+      "failed": 0,
+      "in_progress": 9,
+      "nominated": 0,
+      "pairs": 9,
+      "requests_received": 0,
+      "requests_sent": 33,
+      "responses_received": 0,
+      "responses_sent": 0,
+      "succeeded": 0
+    },
+    "unknown": {
+      "failed": 0,
+      "in_progress": 0,
+      "nominated": 0,
+      "pairs": 0,
+      "requests_received": null,
+      "requests_sent": null,
+      "responses_received": null,
+      "responses_sent": null,
+      "succeeded": 0
+    }
+  },
+  "selected_pair": false,
+  "endpoint_proof": false,
+  "first_frame": false,
+  "server_restarts_during_attempt": 0,
+  "limits": [
+    "Existing receive counters count authenticated ICE messages, not every datagram.",
+    "The last authorization error was recorded during request revocation; it does not identify the ICE failure.",
+    "SDP was already purged; no byte-for-byte endpoint SDP comparison was possible.",
+    "The previous ten-minute capture did not cover this attempt.",
+    "Physical-interface UDP echo to the server passed 9/9; this is not external peer connectivity."
+  ],
+  "local_followup_checks": {
+    "ice_ingress_rejection_and_authenticated_transfer": "passed isolated production-source tests",
+    "initial_four_second_packet_loss": "passed isolated production-source test",
+    "popup_geometry_and_cross_refresh_clicks": "5 passed isolated production-source tests",
+    "full_product_checks": "pending GitHub",
+    "actual_followup": "not yet deployed or tested"
+  },
+  "release_eligible": false
+}

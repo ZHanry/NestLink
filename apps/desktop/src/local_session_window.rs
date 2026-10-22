@@ -36,7 +36,7 @@ pub(super) fn show<R>(
         })
 }
 
-fn bounds(ui: &egui::Ui) -> egui::Rect {
+pub(super) fn bounds(ui: &egui::Ui) -> egui::Rect {
     // Ui::max_rect itself expands when a child raises its minimum size. Save
     // the original budget before rendering any state-dependent widgets.
     ui.data(|data| data.get_temp(ui.id().with("local-session-bounds")))
@@ -85,14 +85,70 @@ pub(super) fn footer<R>(ui: &mut egui::Ui, contents: impl FnOnce(&mut egui::Ui) 
             .layout(egui::Layout::right_to_left(egui::Align::Center)),
     );
     actions.set_clip_rect(rect.intersect(ui.clip_rect()));
+    let bounds_id = actions.id().with("local-session-bounds");
+    actions.data_mut(|data| data.insert_temp(bounds_id, rect));
     let result = contents(&mut actions);
     ui.advance_cursor_after_rect(rect);
     result
 }
 
+/// Separate slots avoid row measurement and vertical centering participating
+/// in the actions' geometry (including invisible sizing passes).
+pub(super) fn action_rect(ui: &egui::Ui, close: bool) -> egui::Rect {
+    let bounds = bounds(ui);
+    let width = if close { 84. } else { 120. };
+    let right = bounds.right()
+        - if close {
+            0.
+        } else {
+            84. + ui.spacing().item_spacing.x
+        };
+    egui::Rect::from_min_size(
+        egui::pos2(right - width, bounds.top() + 2.),
+        egui::vec2(width, 40.),
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn explicit_action_slots_survive_sizing_passes_and_disabled_state() {
+        let context = egui::Context::default();
+        let rect = egui::Rect::from_min_size(egui::pos2(30., 50.), egui::vec2(560., 480.));
+        for sizing in [false, true, false, true] {
+            let _ = context.run_ui(Default::default(), |ui| {
+                let mut builder = egui::UiBuilder::new().max_rect(rect);
+                if sizing {
+                    builder = builder.sizing_pass();
+                }
+                let mut fixed = ui.new_child(builder);
+                let key = fixed.id().with("local-session-bounds");
+                fixed.data_mut(|data| data.insert_temp(key, rect));
+                body(&mut fixed, |ui| {
+                    ui.label("diagnostic details ".repeat(120));
+                });
+                footer(&mut fixed, |ui| {
+                    let close = action_rect(ui, true);
+                    let actual = ui.put(close, egui::Button::new("Close").min_size(close.size()));
+                    assert_eq!(actual.rect, close, "close changed during sizing={sizing}");
+                    let stop = action_rect(ui, false);
+                    let actual = ui
+                        .add_enabled_ui(!sizing, |ui| {
+                            ui.put(
+                                stop,
+                                egui::Button::new("Stop session").min_size(stop.size()),
+                            )
+                        })
+                        .inner;
+                    assert_eq!(actual.rect, stop, "stop changed during sizing={sizing}");
+                    assert_eq!(stop.top(), close.top());
+                    assert_eq!(close.bottom(), rect.bottom() - 2.);
+                });
+            });
+        }
+    }
 
     #[test]
     fn actions_stay_at_the_bottom_when_preceding_minimum_size_changes() {
@@ -282,8 +338,18 @@ mod tests {
                             }
                         });
                         footer(ui, |ui| {
-                            let close = ui.add_sized([84., 40.], egui::Button::new("Close"));
-                            let stop_button = ui.add_sized([84., 40.], egui::Button::new("Stop"));
+                            let close = action_rect(ui, true);
+                            let close =
+                                ui.put(close, egui::Button::new("Close").min_size(close.size()));
+                            let stop_rect = action_rect(ui, false);
+                            let stop_button = ui
+                                .add_enabled_ui(true, |ui| {
+                                    ui.put(
+                                        stop_rect,
+                                        egui::Button::new("Stop").min_size(stop_rect.size()),
+                                    )
+                                })
+                                .inner;
                             let button = if stop { stop_button } else { close };
                             if frame == 4 {
                                 position = button.rect.center();

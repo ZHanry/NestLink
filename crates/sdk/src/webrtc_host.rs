@@ -7,9 +7,11 @@
 //! authorized session's capture controllers before it is passed here.
 
 mod data;
+mod ingress;
 mod input;
 #[cfg(any(windows, test))]
 mod network;
+pub use ingress::{IceIngressCounters, IceIngressSnapshot};
 mod rate;
 mod turn_policy;
 pub use data::{HostDataClaims, HostDataFactory, HostDataOwner};
@@ -218,6 +220,8 @@ pub struct WebRtcConnectionTimeline {
     pub first_turn_failure: Option<TurnOperationFailure>,
     #[serde(default)]
     pub last_ice_check: Option<nestlink_protocol::diagnostics::IceCheckSnapshot>,
+    #[serde(default)]
+    pub ice_ingress: Option<IceIngressSnapshot>,
 }
 
 /// Fixed operation and failure labels, recorded before peer teardown.
@@ -230,6 +234,7 @@ pub struct TurnOperationFailure {
 
 #[derive(Clone)]
 struct PeerDiagnosticRecorder {
+    ingress: Arc<ingress::IngressRecorder>,
     started: Instant,
     first: Arc<StdMutex<Option<WebRtcHostDiagnostic>>>,
     timeline: Arc<StdMutex<WebRtcConnectionTimeline>>,
@@ -238,6 +243,7 @@ struct PeerDiagnosticRecorder {
 impl Default for PeerDiagnosticRecorder {
     fn default() -> Self {
         Self {
+            ingress: Arc::new(ingress::IngressRecorder::default()),
             started: Instant::now(),
             first: Arc::new(StdMutex::new(None)),
             timeline: Arc::new(StdMutex::new(WebRtcConnectionTimeline {
@@ -317,10 +323,12 @@ impl PeerDiagnosticRecorder {
         );
     }
     fn timeline(&self) -> WebRtcConnectionTimeline {
-        *self
+        let mut result = *self
             .timeline
             .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        result.ice_ingress = self.ingress.snapshot();
+        result
     }
     fn candidates(&self, local: bool, count: usize, complete: bool) {
         if local {
@@ -953,6 +961,7 @@ impl WebRtcHostPeer {
         } else {
             None
         };
+        let diagnostics = PeerDiagnosticRecorder::default();
         let (peer, video_track, audio_track, video_sender) = make_peer(
             &fresh,
             fresh
@@ -961,13 +970,13 @@ impl WebRtcHostPeer {
                 .contains(&(Permission::Audio as i32)),
             turn_credentials.as_ref(),
             &stun_urls,
+            Some(diagnostics.ingress.observer()),
         )
         .await?;
         let (permit_tx, permit_rx) = watch::channel(fresh.clone());
         let display_transaction_gate = Arc::new(Mutex::new(()));
         let (state_tx, state_rx) = watch::channel(peer.connection_state());
         let (cancel_tx, cancel_rx) = watch::channel(false);
-        let diagnostics = PeerDiagnosticRecorder::default();
         {
             let mut timeline = diagnostics
                 .timeline
@@ -1148,11 +1157,6 @@ impl WebRtcHostPeer {
             false,
             nestlink_protocol::diagnostics::SignalSummary::from_payload(&offer),
         );
-        if offer.ice.is_some() && offer.description_sequence() == self.remote_offer_sequence {
-            self.apply_remote_ice(&offer).await?;
-            self.publish_local_ice(sdk, installation).await?;
-            return Ok(false);
-        }
         self.diagnostics.mark(|value| &mut value.offer_received_ms);
         if self.remote_offer_sequence != 0 {
             self.diagnostics
@@ -1944,6 +1948,10 @@ impl WebRtcHostPeer {
             return Err(WebRtcHostError::InvalidOffer);
         }
         signal.validate(self.current_permit().claims())?;
+        self.diagnostics.signal(
+            false,
+            nestlink_protocol::diagnostics::SignalSummary::from_payload(signal),
+        );
         self.diagnostics
             .candidates(false, ice.candidates.len(), ice.end_of_candidates);
         for candidate in self.remote_ice.apply(ice)? {
@@ -3180,6 +3188,7 @@ async fn make_peer(
     with_audio: bool,
     turn_credentials: Option<&TurnCredentials>,
     stun_urls: &[String],
+    observer: Option<webrtc::ice::udp_network::ConnectivityObserver>,
 ) -> Result<
     (
         Arc<RTCPeerConnection>,
@@ -3199,6 +3208,7 @@ async fn make_peer(
         MulticastDnsMode::QueryOnly,
         turn_credentials,
         stun_urls,
+        observer,
     )
     .await
 }
@@ -3217,7 +3227,7 @@ async fn make_peer_with_mdns(
     ),
     WebRtcHostError,
 > {
-    make_peer_with_configuration(permit, with_audio, mdns_mode, None, &[]).await
+    make_peer_with_configuration(permit, with_audio, mdns_mode, None, &[], None).await
 }
 
 async fn make_peer_with_configuration(
@@ -3226,6 +3236,7 @@ async fn make_peer_with_configuration(
     mdns_mode: MulticastDnsMode,
     turn_credentials: Option<&TurnCredentials>,
     stun_urls: &[String],
+    observer: Option<webrtc::ice::udp_network::ConnectivityObserver>,
 ) -> Result<
     (
         Arc<RTCPeerConnection>,
@@ -3290,13 +3301,16 @@ async fn make_peer_with_configuration(
     #[cfg(windows)]
     settings.set_vnet(Some(Arc::new(network::os_ice_network()?)));
     let paths = Arc::new(nestlink_platform_network::path::NetworkPathManager::from_default()?);
+    let mut ephemeral = webrtc::ice::udp_network::EphemeralUDP::default();
+    if let Some(observer) = observer {
+        ephemeral.set_connectivity_observer(observer);
+    }
     if paths.selected.is_some() {
         let filter = paths.clone();
         settings.set_ip_filter(Box::new(move |address| filter.allows_ip(address)));
-        let mut ephemeral = webrtc::ice::udp_network::EphemeralUDP::default();
         ephemeral.set_socket_factory(Arc::new(move |address| paths.bind_udp(address)));
-        settings.set_udp_network(webrtc::ice::udp_network::UDPNetwork::Ephemeral(ephemeral));
     }
+    settings.set_udp_network(webrtc::ice::udp_network::UDPNetwork::Ephemeral(ephemeral));
 
     let api = APIBuilder::new()
         .with_media_engine(media)

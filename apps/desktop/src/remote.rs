@@ -633,11 +633,13 @@ impl DesktopApp {
         if self.remote.browser_host_details {
             let mut open = true;
             let mut close_clicked = false;
-            crate::local_session_window::show(
+            let window = crate::local_session_window::show(
                 ui.ctx(),
                 self.t("本机被控", "Local sessions"),
                 &mut open,
                 |ui| {
+                    let content = crate::local_session_window::bounds(ui);
+                    let sizing_pass = ui.is_sizing_pass();
                     crate::local_session_window::body(ui, |ui| {
                         self.browser_host_panel(ui, snapshot);
                         let local = snapshot
@@ -668,15 +670,34 @@ impl DesktopApp {
                             self.native_session_panel(ui, snapshot);
                         }
                     });
-                    close_clicked = crate::local_session_window::footer(ui, |ui| {
-                        let close = ui
-                            .add_sized([84., 40.], egui::Button::new(self.t("关闭", "Close")))
-                            .clicked();
-                        self.browser_host_stop_button(ui, snapshot);
-                        close
+                    let (close, stop) = crate::local_session_window::footer(ui, |ui| {
+                        let close = ui.put(
+                            crate::local_session_window::action_rect(ui, true),
+                            egui::Button::new(self.t("关闭", "Close"))
+                                .min_size(egui::vec2(84., 40.)),
+                        );
+                        let stop = self.browser_host_stop_button(ui, snapshot);
+                        (close, stop)
                     });
+                    close_clicked = close.clicked();
+                    crate::layout_diagnostics::Geometry {
+                        content,
+                        close: close.rect,
+                        stop: stop.rect,
+                        sizing_pass,
+                    }
                 },
             );
+            if let Some(window) = window
+                && let Some(geometry) = window.inner
+            {
+                self.layout_diagnostics.record(
+                    &self.directory,
+                    ui.ctx(),
+                    window.response.rect,
+                    geometry,
+                );
+            }
             self.remote.browser_host_details = open && !close_clicked;
         }
         self.remote_device_picker(ui, snapshot);
@@ -1041,30 +1062,37 @@ impl DesktopApp {
         });
     }
 
-    fn browser_host_stop_button(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
+    fn browser_host_stop_button(
+        &mut self,
+        ui: &mut egui::Ui,
+        snapshot: &Snapshot,
+    ) -> egui::Response {
         let host = snapshot.browser_host.data.as_ref();
         let establishing = host.is_some_and(|host| host.status == BrowserHostStatus::Establishing);
         let enabled = host.is_some_and(|host| host.status == BrowserHostStatus::Connected)
             || (establishing && snapshot.browser_host.loading.is_some());
-        if ui
-            .add_enabled(
-                enabled,
-                egui::Button::new(self.t(
-                    if establishing {
-                        "取消连接"
-                    } else {
-                        "停止会话"
-                    },
-                    if establishing {
-                        "Cancel connection"
-                    } else {
-                        "Stop session"
-                    },
-                ))
-                .min_size(egui::vec2(120., 40.)),
-            )
-            .clicked()
-        {
+        let rect = crate::local_session_window::action_rect(ui, false);
+        let response = ui
+            .add_enabled_ui(enabled, |ui| {
+                ui.put(
+                    rect,
+                    egui::Button::new(self.t(
+                        if establishing {
+                            "取消连接"
+                        } else {
+                            "停止会话"
+                        },
+                        if establishing {
+                            "Cancel connection"
+                        } else {
+                            "Stop session"
+                        },
+                    ))
+                    .min_size(egui::vec2(120., 40.)),
+                )
+            })
+            .inner;
+        if response.clicked() {
             if establishing {
                 if let Some(operation) = snapshot.browser_host.loading {
                     self.send(snapshot, Command::Cancel { operation });
@@ -1079,6 +1107,7 @@ impl DesktopApp {
                 );
             }
         }
+        response
     }
     fn remote_password_host_panel(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         use nestlink_protocol::api::RemotePasswordSettings;
