@@ -39,3 +39,34 @@ Web 的 `controller_preflight_timeline` 覆盖身份加载、创建请求、等�
 尚未有明确类型的底层失败保持 unclassified，不能从错误字符串猜测原因。
 诊断采样失败、时钟缺失或本地存储失败不改变媒体权限、租约、
 撤销或连接状态，也不延长运行期限。
+
+## ICE 接收任务和 socket 边界
+
+宿主 `peer_timeline.ice_ingress.sockets` 保留最多 16 个本地候选的
+接收任务创建、等待初始化、初始化信号关闭/滞后、开始接收、正常关闭、
+提前关闭、任务取消和接收错误。每个候选使用本地不透明 key、本地端口和地址族关联
+系统 UDP 表，不导出候选 IP 或 ICE 凭据。时间从记录器创建起计算，不能跨端相减。
+超出容量的事件计入 `dropped_events`，首个接收退出和首个错误不会被后续关闭覆盖。
+
+`sends_accepted` 只表示发送调用接受了整个 STUN 消息；零字节/短写单记
+`short_sends`，它们都不是物理网卡出口证据。`datagrams_received` 位于
+`recv_from` 成功返回之后，协议校验之前。只有同时检查 receiver_ready、退出原因、
+错误和接收计数，才能判断接收任务的状态。错误仅输出类型、固定分类及可用 OS 码；
+上游已经转为自由文本的错误仍无法恢复其原始类型，不根据文本猜测 TURN 原因。
+
+## 桌面弹窗诊断自检
+
+已安装的 `nestlink-desktop.exe --check-diagnostics --state-dir <目录>`
+只检验私有诊断文件的写入和读回，生成 `desktop-diagnostics-check.json`；
+不启动窗口或远控，不修改安装身份、密码或会话。此自检通过仍不能证明 UI 路径已执行。
+
+实际 App::ui 每秒记录一次 `frame_heartbeat`，即使弹窗未打开；
+`local-session-layout.jsonl` 仍限制 96 条 / 64 KiB、每秒最多写入一次。
+记录包含 viewport ID、DPI、快照 revision、弹窗请求状态及累计几何次数。
+弹窗记录按钮 ID、可见矩形、交互矩形和启用状态；按下/松开记录指针坐标及点击结果。
+无效坐标单记 `geometry_rejected`，空目录次数和写入错误保留到后续心跳；
+写入恢复后仍可读到此前的 `write_failed`。
+
+取证前分别确认存储自检和真实窗口心跳存在，再检查本次打开弹窗是否出现
+`button_geometry` / `window_geometry`。缺文件或缺几何不能作为“按钮稳定”的依据。
+这些记录不含桌面内容、键盘文本或用户授权凭据。

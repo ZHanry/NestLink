@@ -680,6 +680,7 @@ impl DesktopApp {
                         (close, stop)
                     });
                     close_clicked = close.clicked();
+                    self.layout_diagnostics.buttons(ui.ctx(), &close, &stop);
                     crate::layout_diagnostics::Geometry {
                         content,
                         close: close.rect,

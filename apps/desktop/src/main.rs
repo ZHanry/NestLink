@@ -13,6 +13,9 @@ struct Args {
     /// Isolated NestLink v15 user state. Never reads legacy client settings.
     #[arg(long)]
     state_dir: Option<PathBuf>,
+    /// Verify private diagnostic persistence without starting the desktop.
+    #[arg(long, hide = true)]
+    check_diagnostics: bool,
     /// Private child-process entry point for a cancellable native chooser.
     #[arg(long, hide = true, value_parser = ["file", "folder"])]
     native_file_selector: Option<String>,
@@ -50,6 +53,10 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let install_start =
         nestlink_local_ipc::maintenance::InstallationStartup::acquire(&std::env::current_exe()?)?;
     let directory = install_start.state_directory(&directory)?;
+    if args.check_diagnostics {
+        nestlink_desktop::check_layout_diagnostics(&directory)?;
+        return Ok(());
+    }
     let _desktop_lifetime = nestlink_local_ipc::maintenance::DesktopLease::acquire(&directory)?;
     drop(install_start);
     nestlink_desktop::picker::configure_maintenance_directory(&directory)?;

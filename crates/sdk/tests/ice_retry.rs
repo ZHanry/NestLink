@@ -8,7 +8,9 @@ use webrtc::{
         },
         mdns::MulticastDnsMode,
         network_type::NetworkType,
-        udp_network::{ConnectivityEvent, ConnectivityObserver, EphemeralUDP, UDPNetwork},
+        udp_network::{
+            ConnectivityEvent, ConnectivityObserver, EphemeralUDP, SocketStage, UDPNetwork,
+        },
     },
     util::Conn,
 };
@@ -250,6 +252,21 @@ async fn ingress_evidence_records_rejected_udp_and_preserves_authenticated_conne
     assert!(events.contains(&ConnectivityEvent::DatagramReceived));
     assert!(events.contains(&ConnectivityEvent::BindingRequestReceived));
     assert!(events.contains(&ConnectivityEvent::BindingResponseReceived));
+    for stage in [
+        SocketStage::CandidateStarted,
+        SocketStage::ReceiverSpawned,
+        SocketStage::WaitingForStart,
+        SocketStage::ReceiverReady,
+        SocketStage::DatagramReceived,
+        SocketStage::SendAccepted,
+    ] {
+        assert!(
+            events.iter().any(
+                |event| matches!(event, ConnectivityEvent::Socket(socket) if socket.stage == stage)
+            ),
+            "missing {stage:?}"
+        );
+    }
     assert_eq!(
         events
             .iter()
@@ -257,5 +274,43 @@ async fn ingress_evidence_records_rejected_udp_and_preserves_authenticated_conne
             .count(),
         1
     );
+    Ok(())
+}
+
+#[tokio::test]
+async fn receiver_wait_and_close_are_observable_before_any_peer_starts() -> Result {
+    let events = Arc::new(std::sync::Mutex::new(Vec::new()));
+    let observed = events.clone();
+    let observer: ConnectivityObserver = Arc::new(move |_, event| {
+        observed
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .push(event);
+    });
+    let (agent, address) = endpoint(Some(observer)).await?;
+    let wait_for = |stages: Vec<SocketStage>| {
+        let events = events.clone();
+        async move {
+            tokio::time::timeout(Duration::from_secs(2), async {
+                loop {
+                    if events.lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().any(|event| matches!(event, ConnectivityEvent::Socket(socket) if stages.contains(&socket.stage) && socket.port == address.port())) { break; }
+                    tokio::task::yield_now().await;
+                }
+            }).await
+        }
+    };
+    wait_for(vec![SocketStage::WaitingForStart]).await?;
+    agent.close().await?;
+    // Agent::close also drops the initialization sender; either selected close
+    // path is valid and the diagnostic must report the actual one.
+    wait_for(vec![
+        SocketStage::ReceiverClosedBeforeStart,
+        SocketStage::ReceiverClosed,
+    ])
+    .await?;
+    let events = events
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    assert!(!events.iter().any(|event| matches!(event, ConnectivityEvent::Socket(socket) if socket.stage == SocketStage::ReceiverAborted)));
     Ok(())
 }

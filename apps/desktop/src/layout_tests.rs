@@ -372,6 +372,55 @@ fn browser_popup_snapshot() -> Snapshot {
 }
 
 #[test]
+fn full_app_popup_records_geometry_and_heartbeat_in_private_state_directory() {
+    let directory = std::env::temp_dir().join(format!(
+        "nestlink-app-layout-{}-{}",
+        std::process::id(),
+        uuid::Uuid::new_v4()
+    ));
+    nestlink_platform_security::new_private_directory(&directory).expect("private test state");
+    let result = std::panic::catch_unwind(|| {
+        super::check_layout_diagnostics(&directory).expect("installed storage check");
+        let mut workspace = Workspace::new(browser_popup_snapshot());
+        workspace.app.directory = directory.clone();
+        workspace.app.remote.browser_host_details = true;
+        let size = egui::vec2(1200., 800.);
+        for _ in 0..5 {
+            workspace.frame(size, Vec::new());
+        }
+        std::thread::sleep(std::time::Duration::from_millis(1050));
+        workspace.frame(size, Vec::new());
+        let log = nestlink_platform_security::read_private(
+            &directory.join("local-session-layout.jsonl"),
+            65_536,
+        )
+        .expect("production full-app log");
+        let rows: Vec<serde_json::Value> = std::str::from_utf8(&log)
+            .expect("utf8")
+            .lines()
+            .map(|line| serde_json::from_str(line).expect("jsonl"))
+            .collect();
+        for event in ["frame_heartbeat", "window_geometry", "button_geometry"] {
+            assert!(
+                rows.iter().any(|row| row["event"] == event),
+                "missing {event}"
+            );
+        }
+        assert!(rows.iter().any(|row| {
+            row["event"] == "frame_heartbeat"
+                && row["dialog_requested"] == true
+                && row["geometry_records"]
+                    .as_u64()
+                    .is_some_and(|count| count > 0)
+        }));
+    });
+    let _ = std::fs::remove_dir_all(directory);
+    if let Err(error) = result {
+        std::panic::resume_unwind(error);
+    }
+}
+
+#[test]
 fn local_session_popup_action_stays_still_when_polling_reports_an_error() {
     use nestlink_app_core::{Failure, FailureKind};
     let size = egui::vec2(1200., 800.);

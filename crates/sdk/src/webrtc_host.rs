@@ -11,7 +11,7 @@ mod ingress;
 mod input;
 #[cfg(any(windows, test))]
 mod network;
-pub use ingress::{IceIngressCounters, IceIngressSnapshot};
+pub use ingress::{IceIngressCounters, IceIngressSnapshot, SocketDiagnostic, SocketSnapshot};
 mod rate;
 mod turn_policy;
 pub use data::{HostDataClaims, HostDataFactory, HostDataOwner};
@@ -242,9 +242,10 @@ struct PeerDiagnosticRecorder {
 
 impl Default for PeerDiagnosticRecorder {
     fn default() -> Self {
+        let started = Instant::now();
         Self {
-            ingress: Arc::new(ingress::IngressRecorder::default()),
-            started: Instant::now(),
+            ingress: Arc::new(ingress::IngressRecorder::new(started)),
+            started,
             first: Arc::new(StdMutex::new(None)),
             timeline: Arc::new(StdMutex::new(WebRtcConnectionTimeline {
                 started_unix_ms: SystemTime::now()

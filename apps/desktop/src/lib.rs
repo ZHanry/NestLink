@@ -2052,6 +2052,8 @@ impl eframe::App for DesktopApp {
     fn ui(&mut self, parent: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let context = parent.ctx().clone();
         let snapshot = self.bridge.snapshot();
+        self.layout_diagnostics
+            .begin_frame(snapshot.revision, self.remote.browser_host_details);
         if self.generation != snapshot.generation {
             self.clear_private_view(&context);
             self.generation = snapshot.generation;
@@ -2209,7 +2211,14 @@ impl eframe::App for DesktopApp {
                     });
             });
         self.confirmations(&context, &snapshot);
+        self.layout_diagnostics
+            .finish_frame(&self.directory, &context);
     }
+}
+
+/// Verify installed diagnostic persistence without starting a GUI or session.
+pub fn check_layout_diagnostics(directory: &std::path::Path) -> std::io::Result<()> {
+    layout_diagnostics::storage_check(directory)
 }
 
 fn cleanup_phase(status: Option<OperationStatus>, english: bool) -> &'static str {
