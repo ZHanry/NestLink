@@ -816,25 +816,22 @@ impl DesktopApp {
                     }
                 });
                 let (cancel, close) = crate::request_task_dialog::footer(ui, |ui| {
-                    let cancel = ui
-                        .add_enabled_ui(self.connection_can_cancel(), |ui| {
+                    crate::request_task_dialog::actions(
+                        ui,
+                        self.connection_can_cancel(),
+                        !busy,
+                        |ui, rect| {
                             icons::button_at(
                                 ui,
-                                crate::request_task_dialog::action_rect(ui, false),
+                                rect,
                                 Icon::Close,
                                 self.t("取消连接", "Cancel connection"),
                             )
-                        })
-                        .inner;
-                    let close = ui
-                        .add_enabled_ui(!busy, |ui| {
-                            ui.put(
-                                crate::request_task_dialog::action_rect(ui, true),
-                                egui::Button::new(self.t("关闭详情", "Close details")),
-                            )
-                        })
-                        .inner;
-                    (cancel, close)
+                        },
+                        |ui, rect| {
+                            ui.put(rect, egui::Button::new(self.t("关闭详情", "Close details")))
+                        },
+                    )
                 });
                 let geometry = crate::layout_diagnostics::Geometry {
                     content,

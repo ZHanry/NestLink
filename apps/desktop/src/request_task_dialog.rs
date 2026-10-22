@@ -104,7 +104,28 @@ pub(super) fn action_rect(ui: &egui::Ui, close: bool) -> egui::Rect {
     )
 }
 
+pub(super) fn actions(
+    ui: &mut egui::Ui,
+    cancel_enabled: bool,
+    close_enabled: bool,
+    cancel: impl FnOnce(&mut egui::Ui, egui::Rect) -> egui::Response,
+    close: impl FnOnce(&mut egui::Ui, egui::Rect) -> egui::Response,
+) -> (egui::Response, egui::Response) {
+    // Enabled scopes inherit the remaining cursor budget. Resolve both slots
+    // from the saved footer before the first scope advances that cursor.
+    let cancel_rect = action_rect(ui, false);
+    let close_rect = action_rect(ui, true);
+    let cancel = ui
+        .add_enabled_ui(cancel_enabled, |ui| cancel(ui, cancel_rect))
+        .inner;
+    let close = ui
+        .add_enabled_ui(close_enabled, |ui| close(ui, close_rect))
+        .inner;
+    (cancel, close)
+}
+
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
 
@@ -113,6 +134,7 @@ mod tests {
         let mut spread = Vec::new();
         for legacy in [true, false] {
             let context = egui::Context::default();
+            crate::theme::fonts(&context).expect("system UI fonts");
             let mut positions = Vec::new();
             for frame in 0..20 {
                 let mut position = None;
@@ -190,6 +212,72 @@ mod tests {
     }
 
     #[test]
+    fn enabled_action_scopes_keep_close_inside_the_footer_and_clickable() {
+        let context = egui::Context::default();
+        let mut pointer = None;
+        let mut clicks = 0;
+        for frame in 0..10 {
+            let events = if let Some(pos) = pointer
+                && matches!(frame, 6 | 8)
+            {
+                vec![
+                    egui::Event::PointerMoved(pos),
+                    egui::Event::PointerButton {
+                        pos,
+                        button: egui::PointerButton::Primary,
+                        pressed: frame == 6,
+                        modifiers: Default::default(),
+                    },
+                ]
+            } else {
+                Vec::new()
+            };
+            let _ = context.run_ui(
+                egui::RawInput {
+                    screen_rect: Some(egui::Rect::from_min_size(
+                        egui::Pos2::ZERO,
+                        egui::vec2(1200., 800.),
+                    )),
+                    events,
+                    ..Default::default()
+                },
+                |parent| {
+                    let modal = show(parent.ctx(), "Connection and approval", |ui| {
+                        body(ui, |ui| {
+                            ui.label(if frame < 7 { "Pending" } else { "Approved" });
+                        });
+                        footer(ui, |ui| {
+                            let budget = bounds(ui);
+                            let (_, close) = actions(
+                                ui,
+                                false,
+                                true,
+                                |ui, rect| ui.put(rect, egui::Button::new("Cancel")),
+                                |ui, rect| ui.put(rect, egui::Button::new("Close")),
+                            );
+                            (budget, close)
+                        })
+                    });
+                    let (budget, close) = modal.inner;
+                    if frame == 5 {
+                        assert!(
+                            budget.contains_rect(close.rect),
+                            "close outside footer: {close:?}, budget {budget:?}"
+                        );
+                        assert!(
+                            close.interact_rect.contains(close.rect.center()),
+                            "close center clipped"
+                        );
+                        pointer = Some(close.rect.center());
+                    }
+                    clicks += usize::from(close.clicked());
+                },
+            );
+        }
+        assert_eq!(clicks, 1, "enabled scopes swallowed close");
+    }
+
+    #[test]
     fn body_overflow_cannot_resize_the_task_or_shift_its_actions() {
         for scale in [1., 1.25, 1.5, 2.] {
             for size in [egui::vec2(1200., 800.), egui::vec2(760., 560.)] {
@@ -216,18 +304,15 @@ mod tests {
                                     }
                                 });
                                 footer(ui, |ui| {
-                                    let cancel = ui.put(
-                                        action_rect(ui, false),
-                                        egui::Button::new("Cancel connection"),
+                                    let (cancel, close) = actions(
+                                        ui,
+                                        true,
+                                        frame % 2 == 0,
+                                        |ui, rect| {
+                                            ui.put(rect, egui::Button::new("Cancel connection"))
+                                        },
+                                        |ui, rect| ui.put(rect, egui::Button::new("Close details")),
                                     );
-                                    let close = ui
-                                        .add_enabled_ui(frame % 2 == 0, |ui| {
-                                            ui.put(
-                                                action_rect(ui, true),
-                                                egui::Button::new("Close details"),
-                                            )
-                                        })
-                                        .inner;
                                     (cancel.id, cancel.rect, close.id, close.rect)
                                 })
                             });

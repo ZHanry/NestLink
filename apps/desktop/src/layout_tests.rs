@@ -444,7 +444,7 @@ fn request_task_closes_when_approval_state_and_errors_change_during_a_click() {
             );
             assert!(
                 workspace.app.remote.selected.is_none(),
-                "refresh swallowed request-task close"
+                "refresh swallowed request-task close at scale {scale}, size {size:?}, position {position:?}"
             );
         }
     }
