@@ -3308,8 +3308,8 @@ async fn make_peer_with_configuration(
     if paths.selected.is_some() {
         let filter = paths.clone();
         settings.set_ip_filter(Box::new(move |address| filter.allows_ip(address)));
-        ephemeral.set_socket_factory(Arc::new(move |address| paths.bind_udp(address)));
     }
+    ephemeral.set_socket_factory(Arc::new(move |address| paths.bind_udp(address)));
     settings.set_udp_network(webrtc::ice::udp_network::UDPNetwork::Ephemeral(ephemeral));
 
     let api = APIBuilder::new()

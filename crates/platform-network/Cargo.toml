@@ -11,7 +11,7 @@ if-addrs.workspace = true
 socket2 = "=0.6.5"
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.61.2", features = ["Win32_NetworkManagement_IpHelper", "Win32_NetworkManagement_Ndis", "Win32_Networking_WinSock", "Win32_System_SystemInformation", "Win32_System_WindowsProgramming"] }
+windows-sys = { version = "0.61.2", features = ["Win32_NetworkManagement_IpHelper", "Win32_NetworkManagement_Ndis", "Win32_Networking_WinSock", "Win32_System_IO", "Win32_System_SystemInformation", "Win32_System_WindowsProgramming"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = "0.2.190"

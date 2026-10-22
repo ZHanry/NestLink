@@ -20,6 +20,10 @@ async fn endpoint(observer: Option<ConnectivityObserver>) -> Result<(Agent, Sock
     if let Some(observer) = observer {
         network.set_connectivity_observer(observer);
     }
+    endpoint_with_network(network).await
+}
+
+async fn endpoint_with_network(network: EphemeralUDP) -> Result<(Agent, SocketAddr)> {
     let agent = Agent::new(AgentConfig {
         udp_network: UDPNetwork::Ephemeral(network),
         network_types: vec![NetworkType::Udp4],
@@ -45,6 +49,55 @@ async fn endpoint(observer: Option<ConnectivityObserver>) -> Result<(Agent, Sock
         agent,
         SocketAddr::new(candidate.address().parse()?, candidate.port()),
     ))
+}
+
+#[cfg(windows)]
+#[tokio::test]
+async fn unreachable_udp_candidate_does_not_end_the_production_socket_receiver() -> Result {
+    use nestlink_platform_network::path::{NetworkPathManager, RoutePolicy};
+    let paths = NetworkPathManager::new(RoutePolicy::System)?;
+    let mut network = EphemeralUDP::default();
+    network.set_socket_factory(Arc::new(move |address| paths.bind_udp(address)));
+    let (a, _) = endpoint_with_network(network).await?;
+    let (b, _) = endpoint(None).await?;
+    let unused = UdpSocket::bind("127.0.0.1:0").await?;
+    let closed_address = unused.local_addr()?;
+    drop(unused);
+    let local_candidates = a.get_local_candidates().await?;
+    let socket = local_candidates
+        .first()
+        .and_then(|c| c.get_conn())
+        .ok_or("missing candidate socket")?;
+    // Windows reports ICMP Port Unreachable as WSAECONNRESET on the next
+    // recv_from. The ICE receiver must still handle a later valid candidate.
+    socket
+        .send_to(b"unreachable-candidate", closed_address)
+        .await?;
+    tokio::time::sleep(Duration::from_millis(100)).await;
+    for candidate in b.get_local_candidates().await? {
+        a.add_remote_candidate(&candidate)?;
+    }
+    for candidate in &local_candidates {
+        b.add_remote_candidate(candidate)?;
+    }
+    let (a_ufrag, a_pwd) = a.get_local_user_credentials().await;
+    let (b_ufrag, b_pwd) = b.get_local_user_credentials().await;
+    let (_cancel_a, rx_a) = mpsc::channel(1);
+    let (_cancel_b, rx_b) = mpsc::channel(1);
+    let result = tokio::time::timeout(Duration::from_secs(4), async {
+        let (a_conn, b_conn) =
+            tokio::try_join!(a.accept(rx_a, b_ufrag, b_pwd), b.dial(rx_b, a_ufrag, a_pwd))?;
+        b_conn.send(b"valid-peer-after-icmp").await?;
+        let mut bytes = [0; 64];
+        let length = a_conn.recv(&mut bytes).await?;
+        assert_eq!(&bytes[..length], b"valid-peer-after-icmp");
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+    })
+    .await;
+    a.close().await?;
+    b.close().await?;
+    result??;
+    Ok(())
 }
 
 fn proxy_candidate(address: SocketAddr) -> Result<Arc<dyn Candidate + Send + Sync>> {

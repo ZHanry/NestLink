@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "observed_date": "2026-10-22",
+  "platform": "local Windows normal user",
+  "production_component": "NetworkPathManager::bind_udp and webrtc-ice candidate recv loop",
+  "trigger": "A real UDP datagram sent from the candidate socket to a closed loopback port before a valid ICE peer joins.",
+  "before": {
+    "raw_socket_error_kind": "ConnectionReset",
+    "raw_socket_os_error": 10054,
+    "socket_remained_usable": true,
+    "production_source_ice_test": "failed",
+    "failure": "4 second ICE timeout",
+    "elapsed_seconds": 4.13
+  },
+  "after": {
+    "change": "SIO_UDP_CONNRESET=false before binding; use the production socket factory for all native WebRTC ICE route modes.",
+    "raw_socket": "No reset delivered; later valid UDP received on the same socket.",
+    "production_source_ice_test": "passed",
+    "all_isolated_ingress_and_loss_tests": 4
+  },
+  "authentication_unchanged": true,
+  "original_external_edge_cause_confirmed": false,
+  "limits": [
+    "Real loopback ICMP and authenticated ICE exercise the production source; the harness does not compile the complete product.",
+    "This reproduces a concrete Windows receive-loop defect. There is no historical receive-error evidence proving that this caused the original external Edge failures.",
+    "Full GitHub checks and actual external Edge/HL verification remain required."
+  ],
+  "prior_source_quality": {
+    "source_revision": "db299fe70b379a980110692cfbbd0be4815feea3",
+    "linux": "passed",
+    "windows": "failed",
+    "failed_test": "signed_discovery::establish_automatically_uses_signed_shared_relay_allocation_for_relay_only",
+    "failure": "close receipt not acknowledged; active=0,pending=0,acknowledged=0",
+    "workflow_run": 39708269343,
+    "candidate_dispatched": false
+  },
+  "release_eligible": false
+}

@@ -86,6 +86,35 @@ pub(super) fn path_interfaces() -> io::Result<Vec<super::path::NetworkInterface>
     Ok(interfaces.into_values().collect())
 }
 
+pub(super) fn configure_media_datagrams(socket: &socket2::Socket) -> io::Result<()> {
+    use std::{mem::size_of, os::windows::io::AsRawSocket};
+    use windows_sys::Win32::Networking::WinSock::{SIO_UDP_CONNRESET, WSAGetLastError, WSAIoctl};
+    // One closed ICE destination must not terminate reception for every other
+    // candidate on the same UDP socket. Windows otherwise delivers its ICMP
+    // Port Unreachable as WSAECONNRESET to an unrelated later recv_from.
+    let enabled: i32 = 0;
+    let mut returned = 0;
+    // SAFETY: synchronous documented BOOL input; live owned socket, no output
+    // buffer or overlapped operation, and no pointer retained after this call.
+    let result = unsafe {
+        WSAIoctl(
+            socket.as_raw_socket() as usize,
+            SIO_UDP_CONNRESET,
+            (&enabled as *const i32).cast(),
+            size_of::<i32>() as u32,
+            std::ptr::null_mut(),
+            0,
+            &mut returned,
+            std::ptr::null_mut(),
+            None,
+        )
+    };
+    if result != 0 {
+        return Err(io::Error::from_raw_os_error(unsafe { WSAGetLastError() }));
+    }
+    Ok(())
+}
+
 pub(super) fn bind_media_interface(
     socket: &socket2::Socket,
     index: u32,

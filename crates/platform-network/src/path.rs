@@ -149,6 +149,8 @@ impl NetworkPathManager {
             socket.set_only_v6(true)?;
         }
         #[cfg(windows)]
+        super::windows::configure_media_datagrams(&socket)?;
+        #[cfg(windows)]
         if let Some(interface) = &self.selected {
             super::windows::bind_media_interface(&socket, interface.index, address.is_ipv6())?;
         }

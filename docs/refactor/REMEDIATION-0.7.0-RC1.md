@@ -313,3 +313,24 @@ last_remote_signal，避免诊断仍停留在初始offer；这不证明之前丢
 这些是诊断补全及布局加强，尚未解释实机跳动根因，也不是实际修复验收。
 完整产品检查、候选构建继续在GitHub；此次代码尚未部署。报告其余工作包及全部实测门槛
 仍须完成，主PR保持草稿，不打标签、不创建Release，服务器没有编译。
+
+
+### Windows UDP ICMP 导致 ICE 接收任务提前退出的可复现修复
+
+生产NetworkPathManager工厂创建的socket向本机已关闭UDP端口发送后，Windows下一次
+recv_from返回ConnectionReset/10054；同一socket随后仍可收到合法数据。现有ICE接收
+任务遇任意recv错误即退出，因而该单个候选的ICMP错误会停止所有其他候选的接收。
+真实生产源码ICE回归先向关闭端口发包再加入合法对等端：旧工厂4秒内无法建链，测试failed；
+修复后正常认证建链并传输业务测试字节，现有4秒丢包、拒绝无效包后认证等合计4项通过。
+[复现及边界](evidence/windows-udp-icmp-20261022.json)不将此缺陷认定为原公网失败的已证实首因。
+
+Windows媒体UDP工厂现在在bind前用SIO_UDP_CONNRESET=false关闭这种跨目的端的ICMP重置，
+正常socket创建失败仍返回错误。原生WebRTC在系统选路模式下也使用相同生产工厂；选定接口
+的IP过滤和实际接口选项保持。未改变ICE用户名、完整性、签名、授权或正常收包校验。
+原HL↔Edge仍须新版实测，按钮仍须实机坐标验收。
+
+db299fe的Linux全量、Web、Android、Secret scan及CodeQL通过，Windows全量在原有
+node_relay自动RelayOnly会话关闭回执测试失败（active=0,pending=0,acknowledged=0）；
+没有跳过、降低断言或直接归因于本次UDP缺陷。候选9等待器已停止，没有派发或安装db299fe。
+新源码继续执行完整GitHub检查，若关闭回执再次失败则继续定位；发布门禁保持未满足。
+该版本镜像只在隔离schema24副本预演，线上、Web和HL仍为2d250ea。
