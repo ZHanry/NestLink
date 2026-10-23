@@ -24,7 +24,10 @@ use nestlink_protocol::{
 };
 use prost::Message as ProstMessage;
 use std::{
-    sync::{Arc, Mutex},
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicU64, Ordering},
+    },
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 pub type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
@@ -44,6 +47,9 @@ pub enum Mode {
     WrongAck,
     LostFirstAck,
     UnavailableReport,
+    Reconnect,
+    ReconnectUnavailable,
+    ReconnectWrongIssuer,
 }
 struct Inner {
     key: [u8; 32],
@@ -52,6 +58,7 @@ struct Inner {
     last_ack: Mutex<Option<(Vec<u8>, NodeUsageAckClaims)>>,
     reports: Mutex<Vec<Vec<u8>>>,
     shutdown: tokio::sync::watch::Receiver<bool>,
+    connections: AtomicU64,
 }
 pub struct Fixture {
     task: tokio::task::JoinHandle<()>,
@@ -66,6 +73,9 @@ impl Drop for Fixture {
     }
 }
 impl Fixture {
+    pub fn connections(&self) -> u64 {
+        self.state.connections.load(Ordering::SeqCst)
+    }
     pub fn reports(&self) -> Result<Vec<Vec<u8>>> {
         Ok(self
             .state
@@ -76,17 +86,36 @@ impl Fixture {
     }
 }
 async fn upgrade(State(state): State<Arc<Inner>>, ws: WebSocketUpgrade) -> Response {
+    let connection = state.connections.fetch_add(1, Ordering::SeqCst) + 1;
+    if state.mode == Mode::ReconnectUnavailable && connection > 1 {
+        return StatusCode::SERVICE_UNAVAILABLE.into_response();
+    }
     ws.on_upgrade(move |mut socket|async move {
         let exchange=async {
-            let challenge=NodeChallenge{schema_version:SCHEMA_VERSION,deployment_id:id(1),security_epoch:99,node_id:id(2),node_key_sha256:digest(&state.key).to_vec(),request_id:id(3),nonce:vec![9;32],expires_at_unix_ms:now()?+5000};
+            let challenge=NodeChallenge{schema_version:SCHEMA_VERSION,deployment_id:id(1),security_epoch:99,node_id:id(2),node_key_sha256:digest(&state.key).to_vec(),request_id:uuid::Uuid::new_v4().to_string(),nonce:vec![connection as u8;32],expires_at_unix_ms:now()?+5000};
             socket.send(Message::Binary(challenge.encode_to_vec().into())).await?;
             let Some(Ok(Message::Binary(bytes)))=socket.recv().await else {return Err("missing proof".into());};
             let proof:NodeProof=decode_bounded(&bytes,NODE_MESSAGE_BYTES)?;
             assert_eq!(proof.challenge.as_ref(),Some(&challenge));
             verify_proof(&proof,&state.key)?;
             let issued=now()?;
-            let lease=NodeLeaseClaims {schema_version:SCHEMA_VERSION,deployment_id:id(1),security_epoch:99,node_id:id(2),node_key_sha256:digest(&state.key).to_vec(),request_id:id(3),nonce:vec![9;32],roles:vec![NodeRole::NodeRelay as i32],policy_revision:1,lease_sequence:1,issued_at_unix_ms:issued,expires_at_unix_ms:issued+10000,server_forwarding_allowed:true,public_ingress_allowed:false,max_connections:1,bytes_per_second:1024,runtime_id:proof.runtime_id,runtime_generation:1};
-            socket.send(Message::Binary(state.issuer.sign(&lease)?.encode_to_vec().into())).await?;
+            let lease=NodeLeaseClaims {schema_version:SCHEMA_VERSION,deployment_id:id(1),security_epoch:99,node_id:id(2),node_key_sha256:digest(&state.key).to_vec(),request_id:challenge.request_id.clone(),nonce:challenge.nonce.clone(),roles:vec![NodeRole::NodeRelay as i32],policy_revision:1,lease_sequence:connection,issued_at_unix_ms:issued,expires_at_unix_ms:issued+10000,server_forwarding_allowed:true,public_ingress_allowed:false,max_connections:1,bytes_per_second:1024,runtime_id:proof.runtime_id,runtime_generation:1};
+            let signed = if state.mode == Mode::ReconnectWrongIssuer && connection > 1 {
+                PermitSigner::generate().node_policy_signer()?.sign(&lease)?
+            } else { state.issuer.sign(&lease)? };
+            socket.send(Message::Binary(signed.encode_to_vec().into())).await?;
+            if connection == 1 && matches!(state.mode, Mode::Reconnect | Mode::ReconnectUnavailable | Mode::ReconnectWrongIssuer) {
+                for _ in 0..100 {
+                    if !state.reports.lock().map_err(|_| "poisoned reports")?.is_empty() { break; }
+                    tokio::time::sleep(Duration::from_millis(10)).await;
+                }
+                tokio::time::sleep(Duration::from_millis(100)).await;
+                socket.send(Message::Close(Some(axum::extract::ws::CloseFrame {
+                    code: 1001,
+                    reason: "proxy restart".into(),
+                }))).await?;
+                return Ok(());
+            }
             // No renewal, but the separate HTTP reporter remains available.
             let mut shutdown=state.shutdown.clone();
             tokio::select!{_=tokio::time::sleep(Duration::from_secs(20))=>{},_=shutdown.changed()=>{}}
@@ -105,12 +134,24 @@ async fn report(State(state): State<Arc<Inner>>, Json(signed): Json<SignedNodeUs
             return Ok(StatusCode::SERVICE_UNAVAILABLE.into_response());
         }
         let mut last = state.last_ack.lock().map_err(|_| "poisoned ack")?;
-        let mut ack = if let Some((bytes, ack)) = last.as_ref() {
-            assert_eq!(
-                bytes, &signed.claims,
-                "retry must preserve exact signed claim bytes"
-            );
-            ack.clone()
+        let repeated = if let Some((bytes, ack)) = last.as_ref() {
+            if c.report_sequence == ack.report_sequence {
+                assert_eq!(
+                    bytes, &signed.claims,
+                    "retry must preserve exact signed claim bytes"
+                );
+                Some(ack.clone())
+            } else {
+                assert_eq!(c.report_sequence, ack.report_sequence + 1);
+                assert_eq!(c.runtime_id, ack.runtime_id);
+                assert_eq!(c.runtime_generation, ack.runtime_generation);
+                None
+            }
+        } else {
+            None
+        };
+        let mut ack = if let Some(ack) = repeated {
+            ack
         } else {
             let ack = NodeUsageAckClaims {
                 schema_version: SCHEMA_VERSION,
@@ -154,6 +195,7 @@ pub async fn peer(mode: Mode) -> Result<(NodeControl, Fixture)> {
         last_ack: Mutex::new(None),
         reports: Mutex::new(Vec::new()),
         shutdown: receiver,
+        connections: AtomicU64::new(0),
     });
     let app = Router::new()
         .route("/api/v3/nodes/{id}/control", get(upgrade))

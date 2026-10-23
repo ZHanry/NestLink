@@ -160,10 +160,26 @@ pub(super) async fn upgrade(
         .max_frame_size((NODE_MESSAGE_BYTES + 128) as usize)
         .on_upgrade(move |mut socket| async move {
             let _slot = slot;
-            let _ = serve(&mut socket, state, id, initial).await;
+            let result = serve(&mut socket, state, id, initial).await;
+            // Distinguish recoverable overload/restart from terminal authority
+            // rejection. An intentional revoke must never look like a proxy
+            // disconnect to the reconnecting node.
+            let (code, reason) = match result {
+                Ok(()) => (1000, "control completed"),
+                Err(ApiError(status, _)) if status == StatusCode::TOO_MANY_REQUESTS => {
+                    (1013, "control retry later")
+                }
+                Err(ApiError(status, _)) if status.is_server_error() => {
+                    (1012, "control temporarily unavailable")
+                }
+                Err(_) => (1008, "control authorization ended"),
+            };
             let _ = tokio::time::timeout(
                 Duration::from_millis(700),
-                socket.send(Message::Close(None)),
+                socket.send(Message::Close(Some(axum::extract::ws::CloseFrame {
+                    code,
+                    reason: reason.into(),
+                }))),
             )
             .await;
         }))
