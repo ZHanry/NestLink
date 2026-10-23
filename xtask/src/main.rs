@@ -159,9 +159,33 @@ mod tests {
 
     #[test]
     fn git_forks_require_the_reviewed_package_version_branch_and_commit() {
-        let forks = json!({"repository":"https://example.com/dependencies.git", "branch":"reviewed", "commit":"abc", "packages":{"turn":{"version":"0.17.2"}}});
+        let forks = json!({
+            "schema_version": 2,
+            "repository": "https://example.com/dependencies.git",
+            "branch": "reviewed",
+            "commit": "abc",
+            "packages": {
+                "turn@0.17.2": {"name": "turn", "version": "0.17.2", "directory": "turn"},
+                "turn@0.11.0": {"name": "turn", "version": "0.11.0", "directory": "turn-client"}
+            }
+        });
         let approved = json!({"name":"turn", "version":"0.17.2", "source":"git+https://example.com/dependencies.git?branch=reviewed#abc"});
         assert!(reviewed_git_dependency(&approved, &forks));
+        let mut client = approved.clone();
+        client["version"] = json!("0.11.0");
+        assert!(reviewed_git_dependency(&client, &forks));
+        let mut missing_client = forks.clone();
+        missing_client["packages"]
+            .as_object_mut()
+            .unwrap()
+            .remove("turn@0.11.0");
+        assert!(!reviewed_git_dependency(&client, &missing_client));
+        let mut old_schema = forks.clone();
+        old_schema["schema_version"] = json!(1);
+        assert!(!reviewed_git_dependency(&approved, &old_schema));
+        let mut wrong_identity = forks.clone();
+        wrong_identity["packages"]["turn@0.17.2"]["name"] = json!("another-package");
+        assert!(!reviewed_git_dependency(&approved, &wrong_identity));
         for (field, replacement) in [
             ("name", "other-package"),
             ("version", "0.17.3"),

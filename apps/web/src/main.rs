@@ -1338,7 +1338,7 @@ fn DesktopWorkspace(
                         let status = item.status.clone();
                         view! {
                             <button class=move || if selected.with(|chosen| chosen.as_ref().is_some_and(|v| v.key == active_key)) { "record device-record selected" } else { "record device-record" } type="button" aria-pressed=move || selected.with(|chosen| chosen.as_ref().is_some_and(|v| v.key == pressed_key)) on:click=move |_| selected.set(Some(row.clone()))>
-                                <span class="device-symbol"><WorkspaceIcon kind=Section::Desktop /></span><span class="record-main"><strong title=item.title.clone()>{item.title}</strong><small>{move || status.current()}</small></span>
+                                <span class="device-symbol"><WorkspaceIcon kind=Section::Desktop /></span><span class="record-main"><strong title=item.title.clone()>{item.title.clone()}</strong><small>{move || status.current()}</small></span>
                             </button>
                         }
                     } />
@@ -1351,7 +1351,7 @@ fn DesktopWorkspace(
                     let status = item.status.clone();
                     let detail = item.detail.clone();
                     view! {
-                        <header class="desktop-detail-head"><button class="text-button back-to-devices" type="button" on:click=move |_| selected.set(None)>{move || t("返回设备", "Back to devices")}</button><h2 title=item.title.clone()>{item.title}</h2><p>{move || status.current()}</p></header>
+                        <header class="desktop-detail-head"><button class="text-button back-to-devices" type="button" on:click=move |_| selected.set(None)>{move || t("返回设备", "Back to devices")}</button><h2 title=item.title.clone()>{item.title.clone()}</h2><p>{move || status.current()}</p></header>
                         <div class="desktop-detail-body">
                             <div class="desktop-preview"><WorkspaceIcon kind=Section::Desktop /><h3>{move || t("准备打开远程桌面", "Ready to open the remote desktop")}</h3><p>{move || t("选择本次访问权限，发起连接后由主机确认。连接建立后在这里查看画面并操作。", "Choose access for this session, then request the host's approval. View and control the desktop once connected.")}</p></div>
                             <dl class="device-facts"><dt>{move || t("设备 ID", "Device ID")}</dt><dd><code>{item.id}</code></dd><dt>{move || t("设备信息", "Device details")}</dt><dd>{move || detail.current()}</dd></dl>

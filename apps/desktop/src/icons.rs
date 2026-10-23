@@ -11,7 +11,6 @@ pub enum Icon {
     List,
     Settings,
     Refresh,
-    Keyboard,
     Audio,
     Close,
     Copy,
@@ -119,13 +118,6 @@ pub fn paint(ui: &egui::Ui, icon: Icon, center: Pos2, size: f32, color: Color32)
             ));
             line((20., 3.), (20., 9.));
             line((14., 9.), (20., 9.));
-        }
-        Icon::Keyboard => {
-            rect((2., 5.), (22., 19.), 2.);
-            for x in [6., 10., 14., 18.] {
-                line((x, 9.), (x, 10.));
-            }
-            line((7., 15.), (17., 15.));
         }
         Icon::Audio => {
             line((3., 9.), (7., 9.));
