@@ -15,6 +15,11 @@ netlink socket 后立即取得唯一 `OwnedFd`，现在将其移动到新的
 `unsafe { AsyncFd::register(fd) }`，并说明安全前提：注册期间不复制、关闭或替换
 描述符；接收只借用；析构先撤销注册，再由 `OwnedFd` 关闭描述符。
 
+新接口返回携带原描述符的 `AsyncFdRegisterError<OwnedFd>`。显式转换为调用方的
+`io::Error`；注册失败时错误中的 `OwnedFd` 随转换释放，避免泄漏。GitHub
+`40036223445` 和 ARM 构建 `40036367613` 暴露了初次迁移漏掉这一步的类型错误，
+本次修正后继续由同样的检查验证。
+
 验证要求保持 GitHub 的 cargo-deny、Clippy、完整 Windows/Linux 套件、真实隔离
 netlink IPv4/IPv6/路由事件测试和浏览器/原生宿主集成。只有修复后的同提交全部通过，
 才可以生成候选成品；原版本的其他成功检查不替代新版本验证。
