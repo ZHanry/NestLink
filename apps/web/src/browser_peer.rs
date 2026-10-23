@@ -2319,6 +2319,12 @@ mod wasm {
                     continue;
                 }
                 let remote = rtc_description(&description, self.permit.claims())?;
+                let local = self
+                    .peer
+                    .local_description()
+                    .ok_or(PeerError::SignalRejected)?;
+                nestlink_protocol::webrtc::video::validate_answer(&local.sdp(), &description.sdp)
+                    .map_err(|_| PeerError::CodecUnavailable)?;
                 self.input_state.borrow_mut().scroll_supported = description
                     .sdp
                     .lines()

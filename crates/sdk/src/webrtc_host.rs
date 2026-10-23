@@ -2,7 +2,7 @@
 //!
 //! The host accepts capability-negotiated cumulative ICE snapshots. It verifies the
 //! controller's signed offer through `Sdk::peer_signals`, negotiates only the
-//! VP8/Opus profile, and signs the answer and negotiated ICE snapshots through
+//! VP8/H.264/Opus profile, and signs the answer and negotiated ICE snapshots through
 //! `Sdk::publish_signal`. Media capture must already have been attached to the
 //! authorized session's capture controllers before it is passed here.
 
@@ -13,6 +13,9 @@ mod input;
 mod network;
 pub use ingress::{IceIngressCounters, IceIngressSnapshot, SocketDiagnostic, SocketSnapshot};
 mod rate;
+mod video;
+use nestlink_protocol::webrtc::video::VideoFormat;
+pub use video::HostVideoPreflight;
 mod turn_policy;
 pub use data::{HostDataClaims, HostDataFactory, HostDataOwner};
 use data::{HostDataRuntime, PendingDataChannel};
@@ -23,7 +26,7 @@ use turn_policy::{bounded_turn_operation, optional_turn_result};
 use super::{DeviceIdentity, Sdk, SdkError, SignalCursor, TurnCredentials};
 use bytes::Bytes;
 use nestlink_identity::{VerifiedPermit, verify_endpoint_proof};
-use nestlink_media_codec::{OpusConfig, OpusEncoder, VideoConfig, Vp8Encoder};
+use nestlink_media_codec::{OpusConfig, OpusEncoder, VideoConfig};
 use nestlink_protocol::{
     ContractError, EndpointProofClaims, NativeProof, Path, Permission, SCHEMA_VERSION,
     TurnPeerBindingClaims, TurnPurpose,
@@ -102,7 +105,10 @@ use webrtc::{
         rtp_codec::{RTCRtpCodecCapability, RTCRtpCodecParameters, RTPCodecType},
     },
     stats::StatsReportType,
-    track::track_local::track_local_static_sample::TrackLocalStaticSample,
+    track::track_local::{
+        TrackLocalWriter, track_local_static_rtp::TrackLocalStaticRTP,
+        track_local_static_sample::TrackLocalStaticSample,
+    },
 };
 
 const ICE_GATHER_TIMEOUT: Duration = Duration::from_secs(15);
@@ -135,7 +141,7 @@ pub enum WebRtcHostError {
     Remote(#[from] RemoteError),
     #[error("host permit is expired or does not authorize this media session")]
     Permit,
-    #[error("browser signal is not a complete VP8/Opus offer for this permit")]
+    #[error("browser signal has no supported video/audio offer for this permit")]
     InvalidOffer,
     #[error("the host can only use a permitted direct ICE path until trusted TURN is configured")]
     DirectPathRequired,
@@ -746,7 +752,9 @@ pub struct WebRtcHostPeer {
     last_renewal_sequence: u64,
     controller_key: [u8; 32],
     media: Option<HostMediaSources>,
-    video_track: Arc<TrackLocalStaticSample>,
+    video_track: Arc<TrackLocalStaticRTP>,
+    video_preflight: Option<HostVideoPreflight>,
+    video_format: VideoFormat,
     audio_track: Option<Arc<TrackLocalStaticSample>>,
     video_sender: Arc<webrtc::rtp_transceiver::rtp_sender::RTCRtpSender>,
     media_started: bool,
@@ -755,6 +763,7 @@ pub struct WebRtcHostPeer {
     lease_stop_failed: Option<bool>,
     input_worker: Option<JoinHandle<()>>,
     display_worker: Option<JoinHandle<()>>,
+    media_workers: Vec<JoinHandle<()>>,
     data_runtime: Option<HostDataRuntime>,
     diagnostics: PeerDiagnosticRecorder,
     cleanup_complete: bool,
@@ -768,12 +777,14 @@ pub struct WebRtcHostCloseReport {
     pub peer_close_failed: bool,
     pub input_worker_cleanup_failed: bool,
     pub data_worker_cleanup_failed: bool,
+    pub media_worker_cleanup_failed: bool,
 }
 impl WebRtcHostCloseReport {
     pub fn cleanup_failed(self) -> bool {
         self.lease_stop_failed
             || self.input_worker_cleanup_failed
             || self.data_worker_cleanup_failed
+            || self.media_worker_cleanup_failed
             || self
                 .stop
                 .is_some_and(|report| matches!(report.cleanup, CleanupStatus::Failed(_)))
@@ -862,7 +873,9 @@ impl WebRtcHostPeer {
         self.diagnostics.timeline()
     }
 
-    /// Creates a VP8/Opus-only peer for the verified host endpoint. The peer
+    /// Creates a VP8/Opus peer for the verified host endpoint. Windows hosts can
+    /// opt into probed H.264 through approved source metadata before answering.
+    /// The peer
     /// uses direct ICE only; it never consumes TURN credentials from a signal.
     pub async fn new<F>(
         sdk: &Sdk,
@@ -1076,12 +1089,15 @@ impl WebRtcHostPeer {
             video_track,
             audio_track,
             video_sender,
+            video_preflight: None,
+            video_format: VideoFormat::Vp8,
             media_started: false,
             stop_monitor,
             lease_stop_worker: None,
             lease_stop_failed: None,
             input_worker: None,
             display_worker: None,
+            media_workers: Vec::new(),
             data_runtime: None,
             diagnostics,
             cleanup_complete: false,
@@ -1742,16 +1758,22 @@ impl WebRtcHostPeer {
         let input_worker_cleanup_failed =
             drain_input_worker(&mut self.input_worker, INPUT_WORKER_DRAIN_TIMEOUT).await;
         let data_worker_cleanup_failed = drain_data_runtime(&mut self.data_runtime, reason).await;
+        if let Some(worker) = self.display_worker.take() {
+            self.media_workers.push(worker);
+        }
+        let media_worker_cleanup_failed = drain_media_workers(&mut self.media_workers).await;
         self.cleanup_complete = !lease_stop_failed
             && !peer_close_failed
             && self.input_worker.is_none()
             && self.data_runtime.is_none();
+        self.cleanup_complete &= self.media_workers.is_empty();
         WebRtcHostCloseReport {
             stop,
             lease_stop_failed,
             peer_close_failed,
             input_worker_cleanup_failed,
             data_worker_cleanup_failed,
+            media_worker_cleanup_failed,
         }
     }
 
@@ -1808,6 +1830,7 @@ impl WebRtcHostPeer {
             .description
             .as_ref()
             .ok_or(WebRtcHostError::InvalidOffer)?;
+        self.select_video_codec(&remote.sdp).await?;
         self.peer
             .set_remote_description(RTCSessionDescription::offer(remote.sdp.clone())?)
             .await?;
@@ -1851,6 +1874,8 @@ impl WebRtcHostPeer {
             .await
             .ok_or(WebRtcHostError::InvalidOffer)?;
         validate_media_sdp(&local.sdp, &permit.claims().permissions)?;
+        self.validate_video_answer(&local.sdp)?;
+        nestlink_protocol::webrtc::video::validate_answer(&remote.sdp, &local.sdp)?;
         data::validate_sctp_message_size(&local.sdp)?;
         let fingerprint = dtls_fingerprint(&local.sdp)?;
         let description = WebRtcDescription {
@@ -2486,6 +2511,21 @@ impl WebRtcHostPeer {
             let _ = self.peer.close().await;
             return Err(error);
         }
+        if let Some(preflight) = self.video_preflight {
+            let actual = media.video.selection();
+            if actual.display.source != preflight.source
+                || actual.epoch.connection != preflight.connection_generation
+                || actual.codec.width != preflight.config.width
+                || actual.codec.height != preflight.config.height
+                || actual.codec.fps != preflight.config.fps
+                || actual.codec.bitrate_kbps != preflight.config.bitrate_kbps
+            {
+                let _ = lease.stop(StopReason::PlatformChanged);
+                self.cancel_tx.send_replace(true);
+                let _ = self.peer.close().await;
+                return Err(WebRtcHostError::Permit);
+            }
+        }
         let data_runtime = match HostDataRuntime::start(
             self.peer.clone(),
             lease.clone(),
@@ -2820,13 +2860,15 @@ impl WebRtcHostPeer {
         let sender_gate = video_gate.clone();
         let sender_keyframe = keyframe.clone();
         let video_diagnostics = self.diagnostics.clone();
-        let _feedback = spawn_video_feedback(
+        let video_format = self.video_format;
+        let (prepare_tx, prepare_rx) = std::sync::mpsc::sync_channel(1);
+        self.media_workers.push(spawn_video_feedback(
             self.video_sender.clone(),
             self.cancel_tx.subscribe(),
             keyframe.clone(),
             target_kbps.clone(),
-        );
-        spawn_media_worker(
+        ));
+        self.media_workers.push(spawn_media_worker(
             WebRtcHostDiagnosticReason::VideoWorkerFailed,
             self.diagnostics.clone(),
             peer.clone(),
@@ -2863,6 +2905,8 @@ impl WebRtcHostPeer {
                             gate: sender_gate,
                             runtime: handle,
                             diagnostics: video_diagnostics,
+                            format: video_format,
+                            prepare: prepare_rx,
                         },
                     )
                 })
@@ -2870,7 +2914,7 @@ impl WebRtcHostPeer {
                 .map_err(io::Error::other)??;
                 Ok::<(), io::Error>(())
             },
-        );
+        ));
 
         if let Some(catalog) = display_video.catalog.clone() {
             let messages = self
@@ -2890,6 +2934,7 @@ impl WebRtcHostPeer {
                 video_gate,
                 authority_gate: self.display_transaction_gate.clone(),
                 force_keyframe: keyframe,
+                prepare: prepare_tx,
                 last_sequence: self
                     .display_selection_sequence
                     .ok_or(WebRtcHostError::EndpointProof)?,
@@ -2904,7 +2949,7 @@ impl WebRtcHostPeer {
             let peer = self.peer.clone();
             let selected_path = self.selected_path;
             let handle = Handle::current();
-            spawn_media_worker(
+            self.media_workers.push(spawn_media_worker(
                 WebRtcHostDiagnosticReason::AudioWorkerFailed,
                 self.diagnostics.clone(),
                 peer.clone(),
@@ -2940,7 +2985,7 @@ impl WebRtcHostPeer {
                     .map_err(io::Error::other)??;
                     Ok::<(), io::Error>(())
                 },
-            );
+            ));
         }
         Ok(())
     }
@@ -2953,12 +2998,16 @@ impl Drop for WebRtcHostPeer {
         if self.cleanup_complete {
             return;
         }
+        if let Some(worker) = self.display_worker.take() {
+            self.media_workers.push(worker);
+        }
         let mut owner = InputCleanupOwner {
             peer: self.peer.clone(),
             cancel_tx: self.cancel_tx.clone(),
             lease: self.lease.clone(),
             lease_stop_worker: self.lease_stop_worker.take(),
             input_worker: self.input_worker.take(),
+            media_workers: std::mem::take(&mut self.media_workers),
             data_runtime: self.data_runtime.take(),
             complete: false,
         };
@@ -2966,6 +3015,7 @@ impl Drop for WebRtcHostPeer {
             && owner.lease_stop_worker.is_none()
             && owner.input_worker.is_none()
             && owner.data_runtime.is_none()
+            && owner.media_workers.is_empty()
         {
             owner.complete = true;
             return;
@@ -3014,12 +3064,31 @@ async fn drain_data_runtime(runtime: &mut Option<HostDataRuntime>, reason: StopR
     }
 }
 
+async fn drain_media_workers(workers: &mut Vec<JoinHandle<()>>) -> bool {
+    // Await by mutable reference so cancellation retains every join owner.
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(2);
+    while let Some(worker) = workers.last_mut() {
+        match tokio::time::timeout_at(deadline, &mut *worker).await {
+            Ok(Ok(())) => {
+                let _ = workers.pop();
+            }
+            Ok(Err(_)) => {
+                let _ = workers.pop();
+                return true;
+            }
+            Err(_) => return true,
+        }
+    }
+    false
+}
+
 struct InputCleanupOwner {
     peer: Arc<RTCPeerConnection>,
     cancel_tx: watch::Sender<bool>,
     lease: Option<LeaseControl>,
     lease_stop_worker: Option<JoinHandle<Result<(), RemoteError>>>,
     input_worker: Option<JoinHandle<()>>,
+    media_workers: Vec<JoinHandle<()>>,
     data_runtime: Option<HostDataRuntime>,
     complete: bool,
 }
@@ -3033,7 +3102,12 @@ impl InputCleanupOwner {
             drain_input_worker(&mut self.input_worker, INPUT_WORKER_DRAIN_TIMEOUT).await;
         let data_worker_cleanup_failed =
             drain_data_runtime(&mut self.data_runtime, StopReason::ExplicitExit).await;
-        if lease_stop_failed || input_worker_cleanup_failed || data_worker_cleanup_failed {
+        let media_worker_cleanup_failed = drain_media_workers(&mut self.media_workers).await;
+        if lease_stop_failed
+            || input_worker_cleanup_failed
+            || data_worker_cleanup_failed
+            || media_worker_cleanup_failed
+        {
             eprintln!("NestLink WebRTC cleanup did not finish; cleanup ownership is retained");
             self.complete = true;
             std::mem::forget(self);
@@ -3097,6 +3171,7 @@ impl Drop for InputCleanupOwner {
             lease: self.lease.take(),
             lease_stop_worker: self.lease_stop_worker.take(),
             input_worker: self.input_worker.take(),
+            media_workers: std::mem::take(&mut self.media_workers),
             data_runtime: self.data_runtime.take(),
             complete: false,
         };
@@ -3208,7 +3283,7 @@ async fn make_peer(
 ) -> Result<
     (
         Arc<RTCPeerConnection>,
-        Arc<TrackLocalStaticSample>,
+        Arc<TrackLocalStaticRTP>,
         Option<Arc<TrackLocalStaticSample>>,
         Arc<webrtc::rtp_transceiver::rtp_sender::RTCRtpSender>,
     ),
@@ -3237,7 +3312,7 @@ async fn make_peer_with_mdns(
 ) -> Result<
     (
         Arc<RTCPeerConnection>,
-        Arc<TrackLocalStaticSample>,
+        Arc<TrackLocalStaticRTP>,
         Option<Arc<TrackLocalStaticSample>>,
         Arc<webrtc::rtp_transceiver::rtp_sender::RTCRtpSender>,
     ),
@@ -3256,7 +3331,7 @@ async fn make_peer_with_configuration(
 ) -> Result<
     (
         Arc<RTCPeerConnection>,
-        Arc<TrackLocalStaticSample>,
+        Arc<TrackLocalStaticRTP>,
         Option<Arc<TrackLocalStaticSample>>,
         Arc<webrtc::rtp_transceiver::rtp_sender::RTCRtpSender>,
     ),
@@ -3295,6 +3370,7 @@ async fn make_peer_with_configuration(
         },
         RTPCodecType::Video,
     )?;
+    video::register_h264(&mut media)?;
     if with_audio {
         media.register_codec(
             RTCRtpCodecParameters {
@@ -3339,7 +3415,7 @@ async fn make_peer_with_configuration(
     // before creating the peer, not applied to the peer afterwards.
     let configuration = peer_configuration_with_stun(permit, turn_credentials, stun_urls);
     let peer = Arc::new(api.new_peer_connection(configuration).await?);
-    let video_track = Arc::new(TrackLocalStaticSample::new(
+    let video_track = Arc::new(TrackLocalStaticRTP::new(
         RTCRtpCodecCapability {
             mime_type: MIME_TYPE_VP8.into(),
             clock_rate: 90_000,
@@ -3619,6 +3695,7 @@ struct DisplaySelectionWorker {
     video_gate: Arc<tokio::sync::Mutex<()>>,
     authority_gate: Arc<tokio::sync::Mutex<()>>,
     force_keyframe: Arc<AtomicBool>,
+    prepare: std::sync::mpsc::SyncSender<video::PrepareVideo>,
     last_sequence: u64,
 }
 
@@ -3636,6 +3713,7 @@ fn spawn_display_selection(worker: DisplaySelectionWorker) -> JoinHandle<()> {
         video_gate,
         authority_gate,
         force_keyframe,
+        prepare,
         mut last_sequence,
     } = worker;
     tokio::spawn(async move {
@@ -3689,6 +3767,24 @@ fn spawn_display_selection(worker: DisplaySelectionWorker) -> JoinHandle<()> {
                     guard = selection_gate.lock() => guard,
                 };
                 trace_webrtc_host("display_selection_video_gate_acquired");
+                // Encoder resources stay on the video thread. It services this
+                // command outside the frame gate, so acknowledgement cannot
+                // precede successful preparation of the replacement transform.
+                let descriptor = video.descriptor(source).ok_or(WebRtcHostError::Permit)?;
+                let config = VideoConfig { width: descriptor.width, height: descriptor.height,
+                    ..video.selection().codec };
+                let (prepared_tx, prepared_rx) = tokio::sync::oneshot::channel();
+                prepare.try_send(video::PrepareVideo { source, config, done: prepared_tx })
+                    .map_err(|_| WebRtcHostError::Closed)?;
+                tokio::select! {
+                    biased;
+                    _ = cancelled.changed() => return Err(WebRtcHostError::Closed),
+                    result = tokio::time::timeout(Duration::from_secs(8), prepared_rx) => {
+                        result.map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "video prepare timed out"))?
+                            .map_err(io::Error::other)??;
+                    }
+                }
+                ensure_live(&permits.borrow().clone())?;
                 let video_for_switch = video.clone();
                 let input_for_switch = input.clone();
                 let (selected, input_selected) = tokio::task::spawn_blocking(move || {
@@ -4133,7 +4229,8 @@ fn spawn_media_worker<F>(
     peer: Arc<RTCPeerConnection>,
     cancel: watch::Sender<bool>,
     worker: F,
-) where
+) -> JoinHandle<()>
+where
     F: std::future::Future<Output = io::Result<()>> + Send + 'static,
 {
     tokio::spawn(async move {
@@ -4147,7 +4244,7 @@ fn spawn_media_worker<F>(
             cancel.send_replace(true);
             let _ = peer.close().await;
         }
-    });
+    })
 }
 
 async fn wait_connected_gate(
@@ -4213,11 +4310,13 @@ struct VideoSourceContext {
     gate: Arc<tokio::sync::Mutex<()>>,
     runtime: Handle,
     diagnostics: PeerDiagnosticRecorder,
+    format: VideoFormat,
+    prepare: std::sync::mpsc::Receiver<video::PrepareVideo>,
 }
 
 fn run_video_source(
     source: HostVideoSource,
-    track: Arc<TrackLocalStaticSample>,
+    track: Arc<TrackLocalStaticRTP>,
     context: VideoSourceContext,
 ) -> io::Result<()> {
     let VideoSourceContext {
@@ -4232,9 +4331,15 @@ fn run_video_source(
         gate,
         runtime,
         diagnostics,
+        format,
+        prepare,
     } = context;
     let mut current_selection = *selection.borrow_and_update();
-    let mut encoder = Vp8Encoder::new(current_selection.codec)?;
+    let mut encoder = video::prepare_encoder(format, current_selection.codec)?;
+    let mut writer = video::VideoRtpWriter::new(format)?;
+    let mut prepared_encoder = None;
+    let mut recovery = None;
+    let mut last_encoder_output = Instant::now();
     let mut current_kbps = current_selection.codec.bitrate_kbps;
     let started = Instant::now();
     let mut last_poll_trace = started;
@@ -4253,6 +4358,19 @@ fn run_video_source(
             continue;
         }
         ensure_media_permit(&permit, Permission::View)?;
+        if let Ok(command) = prepare.try_recv() {
+            let replacement = video::prepare_encoder(format, command.config);
+            match replacement {
+                Ok(encoder) => {
+                    prepared_encoder = Some((command.source, encoder));
+                    let _ = command.done.send(Ok(()));
+                }
+                Err(error) => {
+                    let _ = command.done.send(Err(error));
+                }
+            }
+            continue;
+        }
         let now = Instant::now();
         if now < next_frame {
             runtime.block_on(tokio::time::sleep((next_frame - now).min(POLL_INTERVAL)));
@@ -4262,7 +4380,10 @@ fn run_video_source(
         // display-selection transaction. Once selection holds it, no frame
         // from the old epoch can appear after the acknowledgement boundary.
         let frame_gate = gate.clone();
-        let _frame_guard = runtime.block_on(frame_gate.lock());
+        let Ok(_frame_guard) = frame_gate.try_lock() else {
+            runtime.block_on(tokio::time::sleep(POLL_INTERVAL));
+            continue;
+        };
         if *cancel.borrow() {
             return Ok(());
         }
@@ -4275,12 +4396,17 @@ fn run_video_source(
             current_selection = updated;
             trace_video_worker("selection_observed", started, current_selection);
             trace_video_worker("encoder_recreate_started", started, current_selection);
-            encoder = Vp8Encoder::new(current_selection.codec)?;
+            encoder = match prepared_encoder.take() {
+                Some((source, encoder)) if source == current_selection.display.source => encoder,
+                _ => video::prepare_encoder(format, current_selection.codec)?,
+            };
             trace_video_worker("encoder_recreate_completed", started, current_selection);
             current_kbps = current_selection.codec.bitrate_kbps;
             frame_period =
                 Duration::from_nanos(1_000_000_000 / u64::from(current_selection.codec.fps));
             force_keyframe.store(true, Ordering::Release);
+            recovery = None;
+            last_encoder_output = Instant::now();
             next_frame = Instant::now();
         }
         if current_selection.display.source != last_traced_source
@@ -4321,28 +4447,61 @@ fn run_video_source(
             .map_err(io::Error::other)?;
         let pts = pts.max(last_pts.map_or(0, |previous: u64| previous.saturating_add(1)));
         let force = force_keyframe.swap(false, Ordering::AcqRel) || last_pts.is_none();
+        if force && recovery.is_none() {
+            recovery = Some((Instant::now(), pts));
+        }
         let requested_kbps = target_kbps.load(Ordering::Acquire);
         if requested_kbps != current_kbps {
             encoder.set_bitrate(requested_kbps)?;
             current_kbps = requested_kbps;
         }
-        let packet = encoder.encode(&captured.frame.pixels, pts, force)?;
-        diagnostics.mark(|value| &mut value.first_encoded_ms);
-        ensure_media_permit(&permit, Permission::View)?;
-        let sample = Sample {
-            data: Bytes::from(packet.data),
-            timestamp: SystemTime::now(),
-            duration: frame_period,
-            packet_timestamp: packet.pts_90khz as u32,
-            prev_dropped_packets: 0,
-            prev_padding_packets: 0,
-        };
-        if !write_media_sample(&peer, &track, &sample, &runtime).map_err(io::Error::other)? {
+        let step = encoder.encode_step(&captured.frame.pixels, pts, force)?;
+        if step.accepted {
+            last_pts = Some(pts);
+        } else if force {
             force_keyframe.store(true, Ordering::Release);
-        } else {
-            diagnostics.mark(|value| &mut value.first_rtp_write_ms);
         }
-        last_pts = Some(pts);
+        if let Some(packet) = step.output {
+            last_encoder_output = Instant::now();
+            if packet.keyframe
+                && recovery.is_some_and(|(_, requested)| packet.pts_90khz >= requested)
+            {
+                recovery = None;
+            }
+            if let Some(sps) = encoder.h264_sps_info() {
+                video::validate_sps(format, sps)?;
+            }
+            diagnostics.mark(|value| &mut value.first_encoded_ms);
+            ensure_media_permit(&permit, Permission::View)?;
+            if !writer.write(
+                Bytes::from(packet.data),
+                packet.pts_90khz,
+                &track,
+                &video::VideoWriteContext {
+                    peer: &peer,
+                    runtime: &runtime,
+                    permit: &permit,
+                    cancel: &cancel,
+                    selected_path,
+                    path_authority: &path_authority,
+                },
+            )? {
+                force_keyframe.store(true, Ordering::Release);
+            } else {
+                diagnostics.mark(|value| &mut value.first_rtp_write_ms);
+            }
+        }
+        if matches!(format, VideoFormat::H264(_))
+            && (last_encoder_output.elapsed() > Duration::from_secs(3)
+                || recovery.is_some_and(|(requested, _): (Instant, u64)| {
+                    requested.elapsed() > Duration::from_secs(3)
+                }))
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::TimedOut,
+                "H.264 output/keyframe recovery timed out",
+            ));
+        }
         // Encoding and RTP writes consume this frame's period. Adding a full
         // period after that work steadily lowers the configured frame rate.
         // Keep the cadence when on time; an overrun starts a fresh slot so we
@@ -4844,6 +5003,8 @@ mod tests {
     mod input_renewal_tests;
     #[path = "turn_fallback_tests.rs"]
     mod turn_fallback_tests;
+    #[path = "video_tests.rs"]
+    mod video_tests;
 
     type TestResult<T = ()> = Result<T, Box<dyn Error + Send + Sync>>;
 
@@ -5193,12 +5354,15 @@ mod tests {
             video_track,
             audio_track,
             video_sender,
+            video_preflight: None,
+            video_format: VideoFormat::Vp8,
             media_started: false,
             stop_monitor: tokio::spawn(std::future::pending()),
             lease_stop_worker: None,
             lease_stop_failed: None,
             input_worker: None,
             display_worker: None,
+            media_workers: Vec::new(),
             data_runtime: None,
             diagnostics: PeerDiagnosticRecorder::default(),
             cleanup_complete: false,
@@ -5578,12 +5742,15 @@ mod tests {
             video_track,
             audio_track,
             video_sender,
+            video_preflight: None,
+            video_format: VideoFormat::Vp8,
             media_started: false,
             stop_monitor: tokio::spawn(std::future::pending()),
             lease_stop_worker: None,
             lease_stop_failed: None,
             input_worker: None,
             display_worker: None,
+            media_workers: Vec::new(),
             data_runtime: None,
             diagnostics: PeerDiagnosticRecorder::default(),
             cleanup_complete: false,
@@ -6003,12 +6170,15 @@ mod tests {
             video_track,
             audio_track,
             video_sender,
+            video_preflight: None,
+            video_format: VideoFormat::Vp8,
             media_started: false,
             stop_monitor: tokio::spawn(std::future::pending()),
             lease_stop_worker: None,
             lease_stop_failed: None,
             input_worker: None,
             display_worker: None,
+            media_workers: Vec::new(),
             data_runtime: None,
             diagnostics: PeerDiagnosticRecorder::default(),
             cleanup_complete: false,

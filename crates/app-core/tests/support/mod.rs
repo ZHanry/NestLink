@@ -83,6 +83,10 @@ impl Server {
                                 "origin",
                                 axum::http::HeaderValue::from_static("https://manage.example.com"),
                             );
+                            // Rebuild route extensions at this test proxy
+                            // boundary; duplicate Axum path parameters would
+                            // reject Path<String> before the real handler.
+                            request.extensions_mut().clear();
                             match entry.oneshot(request).await {
                                 Ok(response) => response,
                                 Err(never) => match never {},

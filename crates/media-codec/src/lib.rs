@@ -5,10 +5,13 @@ mod opus;
 mod quality;
 mod video;
 mod vp8;
-pub use h264::{H264AccessUnit, H264Validator};
+pub use h264::{H264AccessUnit, H264EncodingLimits, H264SpsInfo, H264Validator};
 pub use opus::{OpusConfig, OpusDecoder, OpusEncoder};
 pub use quality::VideoQuality;
-pub use video::{VideoCodec, VideoDecoder, VideoEncoder, h264_hardware_available};
+pub use video::{
+    H264EncoderProbe, VideoCodec, VideoDecoder, VideoEncodeStep, VideoEncoder,
+    h264_hardware_available, probe_h264_encoder,
+};
 pub use vp8::{EncodedVideo, VideoConfig, Vp8Decoder, Vp8Encoder};
 #[cfg(windows)]
 mod windows_mf;

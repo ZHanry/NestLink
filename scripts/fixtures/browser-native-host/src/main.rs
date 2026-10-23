@@ -741,6 +741,10 @@ async fn run() -> Result {
                             "origin",
                             axum::http::HeaderValue::from_static("https://manage.example.test"),
                         );
+                        // This test proxy starts another routing pass. Axum's
+                        // private path parameters from the outer Router must
+                        // not be appended to the inner Router's parameters.
+                        request.extensions_mut().clear();
                         let response = match entry.oneshot(request).await {
                             Ok(response) => response,
                             Err(never) => match never {},

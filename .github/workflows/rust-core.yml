@@ -87,6 +87,22 @@ jobs:
       - name: Check Windows recovery before the complete workspace suite
         if: runner.os == 'Windows'
         run: python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --test native_recovery
+      - name: Verify actual Media Foundation output with the ordinary token
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $mediaLog = Join-Path $env:RUNNER_TEMP 'nestlink-mf-target-output.log'
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --lib windows_mf::tests:: -- --nocapture 2>&1 | Tee-Object -FilePath $mediaLog
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Retain target codec output and explicit hardware skips
+        if: always() && runner.os == 'Windows'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: nestlink-mf-target-output
+          path: ${{ runner.temp }}/nestlink-mf-target-output.log
+          if-no-files-found: warn
+          retention-days: 14
       - if: runner.os == 'Linux'
         run: cargo test --workspace --locked --no-fail-fast
       - name: Test Windows with the ordinary business-process token

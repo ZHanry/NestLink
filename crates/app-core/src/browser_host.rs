@@ -45,6 +45,7 @@ pub struct BrowserHostDisplayApproval {
 
 pub struct PreparedBrowserCapture {
     pub displays: Vec<DisplayDescriptor>,
+    video_parameters: Option<(u32, u32)>,
     factory: Box<
         dyn FnOnce(
                 BrowserHostDisplayApproval,
@@ -68,8 +69,15 @@ impl PreparedBrowserCapture {
     ) -> Self {
         Self {
             displays,
+            video_parameters: None,
             factory: Box::new(factory),
         }
+    }
+
+    /// Exact frame rate and bitrate that the deferred factory will use.
+    pub fn with_video_parameters(mut self, fps: u32, bitrate_kbps: u32) -> Self {
+        self.video_parameters = Some((fps, bitrate_kbps));
+        self
     }
 }
 
@@ -642,6 +650,26 @@ pub async fn run_browser_host(
             lifecycle: SessionLifecycle::new(stop_rx),
         };
         let media_permit = permit.clone();
+        let video_preflight = prepared
+            .video_parameters
+            .map(|(fps, bitrate_kbps)| {
+                let display = prepared
+                    .displays
+                    .iter()
+                    .find(|display| display.source == approval.initial_source)
+                    .ok_or(BrowserHostError::SessionBinding)?;
+                Ok::<_, BrowserHostError>(nestlink_sdk::webrtc_host::HostVideoPreflight {
+                    source: display.source,
+                    connection_generation: claims.connection_generation,
+                    config: nestlink_media_codec::VideoConfig {
+                        width: display.width,
+                        height: display.height,
+                        fps,
+                        bitrate_kbps,
+                    },
+                })
+            })
+            .transpose()?;
         let mut prepared = Some(prepared.factory);
         let approval_for_media = approval.clone();
         let factory = move |lease| {
@@ -662,11 +690,14 @@ pub async fn run_browser_host(
             elapsed_ms: elapsed_ms(started),
             peer: None,
         });
-        let host = if claims.paths.contains(&(Path::Relay as i32)) {
+        let mut host = if claims.paths.contains(&(Path::Relay as i32)) {
             WebRtcHostPeer::new_with_turn(&sdk, &installation, permit, setup, factory).await?
         } else {
             WebRtcHostPeer::new(&sdk, &installation, permit, setup, factory).await?
         };
+        if let Some(preflight) = video_preflight {
+            host.set_video_preflight(preflight)?;
+        }
         peer = Some(host);
         let mut last_timeline = None;
         let mut last_access_refresh = Instant::now();

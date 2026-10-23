@@ -1,32 +1,54 @@
 #[cfg(windows)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    use nestlink_media_codec::{MfH264Decoder, MfH264Encoder, VideoConfig};
+    use nestlink_media_codec::{
+        H264EncodingLimits, MfH264Decoder, MfH264Encoder, VideoConfig, probe_h264_encoder,
+    };
     use std::{io, time::Instant};
     let args: Vec<_> = std::env::args().skip(1).collect();
-    let width = args.first().map_or(Ok(320), |value| value.parse::<u32>())?;
-    let height = args.get(1).map_or(Ok(240), |value| value.parse::<u32>())?;
+    let width = args
+        .first()
+        .map_or(Ok(1280), |value| value.parse::<u32>())?;
+    let height = args.get(1).map_or(Ok(720), |value| value.parse::<u32>())?;
     let frames = args.get(2).map_or(Ok(120), |value| value.parse::<u64>())?;
+    let fps = args.get(3).map_or(Ok(30), |value| value.parse::<u32>())?;
+    let bitrate_kbps = args.get(4).map_or(Ok(4000), |value| value.parse::<u32>())?;
+    let config = VideoConfig {
+        width,
+        height,
+        fps,
+        bitrate_kbps,
+    };
+    let target_probe = probe_h264_encoder(
+        config,
+        Some(H264EncodingLimits {
+            max_level_idc: 42,
+            require_constrained_baseline: false,
+        }),
+    )?;
+    println!(
+        "target_probe width={width} height={height} fps={fps} bitrate_kbps={bitrate_kbps} actual_profile_level_id={} encoder_hardware_observed={} copy_path=cpu_bgra_nv12 performance_qualified=false browser_hardware_decode=unknown",
+        target_probe.sps.profile_level_id(),
+        target_probe.hardware
+    );
     if !(12..=600).contains(&frames) {
         return Err(io::Error::other("probe requires 12-600 synthetic frames").into());
     }
     for hardware in [true, false] {
-        let config = VideoConfig {
-            width,
-            height,
-            fps: 60,
-            bitrate_kbps: 2_000,
-        };
         let mut encoder = match MfH264Encoder::new(config, hardware) {
             Ok(encoder) => encoder,
             Err(error) => {
-                println!("hardware={hardware} encoder_creation=unavailable reason={error}");
+                println!(
+                    "SKIP hardware_requested={hardware} encoder_creation=unavailable reason={error}"
+                );
                 continue;
             }
         };
         let mut decoder = match MfH264Decoder::new(width, height, hardware) {
             Ok(decoder) => decoder,
             Err(error) => {
-                println!("hardware={hardware} decoder_creation=unavailable reason={error}");
+                println!(
+                    "SKIP hardware_requested={hardware} decoder_creation=unavailable reason={error}"
+                );
                 continue;
             }
         };
@@ -39,7 +61,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let pixels = [32, 160, 64, 255].repeat((width * height) as usize);
         for frame in 0..frames {
             let encoding = Instant::now();
-            let packet = encoder.encode(&pixels, frame * 1500, frame.is_multiple_of(30))?;
+            let packet = encoder.encode(
+                &pixels,
+                frame * 90_000 / u64::from(fps),
+                frame.is_multiple_of(u64::from(fps)),
+            )?;
             encode_times.push(encoding.elapsed().as_micros());
             if let Some(packet) = packet {
                 encoded += 1;
@@ -94,6 +120,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 percentile(&reset_times, 95)
             );
         }
+        println!(
+            "actual_profile_level_id={}",
+            encoder
+                .sps_info()
+                .ok_or_else(|| io::Error::other("missing actual SPS"))?
+                .profile_level_id()
+        );
         println!(
             "hardware_requested={hardware} encoder_hardware_observed={} decoder_hardware_observed={} encoded={encoded} decoded={decoded} width={width} height={height} elapsed_ms={} synthetic_pipeline_fps={:.1} copy_path=cpu_bgra_nv12",
             encoder.hardware(),

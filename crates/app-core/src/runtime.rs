@@ -6073,6 +6073,7 @@ mod tests {
             peer_close_failed: false,
             input_worker_cleanup_failed: false,
             data_worker_cleanup_failed: true,
+            media_worker_cleanup_failed: false,
         };
 
         assert!(close.cleanup_failed());

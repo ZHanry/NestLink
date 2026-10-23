@@ -1,4 +1,6 @@
-//! Restricted VP8/Opus WebRTC profile and bounded peer control messages.
+//! Restricted VP8/H.264/Opus WebRTC profile and bounded peer control messages.
+#[path = "webrtc_video.rs"]
+pub mod video;
 use crate::{ContractError, ErrorCode, Permission, PermitClaims, SCHEMA_VERSION};
 use std::collections::BTreeSet;
 
@@ -252,7 +254,7 @@ fn invalid(reason: &'static str) -> ContractError {
 }
 
 /// Filter a locally generated offer before setLocalDescription and signing.
-/// Only VP8, its RTX repair payload, and Opus can enter this product profile.
+/// Only VP8, supported H.264, their RTX repair payloads, and Opus are allowed.
 pub fn restrict_media_sdp(sdp: &str, permissions: &[i32]) -> Result<String, ContractError> {
     if sdp.len() > 65_536 || sdp.contains('\0') {
         return Err(invalid("invalid SDP budget"));
@@ -284,7 +286,7 @@ pub fn validate_media_sdp(sdp: &str, permissions: &[i32]) -> Result<(), Contract
     } else {
         Err(ContractError::new(
             ErrorCode::CodecUnsupported,
-            "SDP exceeds VP8/Opus profile",
+            "SDP exceeds VP8/H.264/Opus profile",
         ))
     }
 }
@@ -322,6 +324,17 @@ fn filter_section(
     let mut primary = BTreeSet::new();
     let mut repair = BTreeSet::new();
     let mut mappings = BTreeSet::new();
+    let mut formats = std::collections::BTreeMap::new();
+    for line in lines {
+        if let Some(value) = line.strip_prefix("a=fmtp:") {
+            let (payload, parameters) = value
+                .split_once(' ')
+                .ok_or_else(|| invalid("malformed SDP format parameters"))?;
+            if formats.insert(payload, parameters).is_some() {
+                return Err(invalid("duplicate SDP format parameters"));
+            }
+        }
+    }
     for line in lines {
         if let Some(value) = line.strip_prefix("a=rtpmap:") {
             let Some((payload, mapping)) = value.split_once(' ') else {
@@ -333,6 +346,13 @@ fn filter_section(
             if mapping.eq_ignore_ascii_case(codec) && fields[3..].contains(&payload) {
                 primary.insert(payload);
             }
+            if permission == Permission::View
+                && mapping.eq_ignore_ascii_case("h264/90000")
+                && fields[3..].contains(&payload)
+                && video::H264Format::parse(formats.get(payload).copied().unwrap_or(""))?.is_some()
+            {
+                primary.insert(payload);
+            }
             if permission == Permission::View && mapping.eq_ignore_ascii_case("rtx/90000") {
                 repair.insert(payload);
             }
@@ -341,7 +361,7 @@ fn filter_section(
     if primary.is_empty() {
         return Err(ContractError::new(
             ErrorCode::CodecUnsupported,
-            "required VP8/Opus codec unavailable",
+            "supported video/audio codec unavailable",
         ));
     }
     let mut keep = primary.clone();
@@ -395,6 +415,27 @@ mod tests {
     use super::*;
 
     const OFFER: &str = "v=0\r\nm=video 9 UDP/TLS/RTP/SAVPF 96 97 102 103\r\na=rtpmap:96 VP8/90000\r\na=rtpmap:97 rtx/90000\r\na=fmtp:97 apt=96\r\na=rtcp-fb:96 nack pli\r\na=rtpmap:102 H264/90000\r\na=rtpmap:103 rtx/90000\r\na=fmtp:103 apt=102\r\na=rtcp-fb:102 nack\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111 0\r\na=rtpmap:111 opus/48000/2\r\na=rtpmap:0 PCMU/8000\r\n";
+
+    #[test]
+    fn supported_h264_and_bound_repair_survive_local_offer_filter() -> Result<(), ContractError> {
+        let offer = OFFER.replace("a=rtpmap:102 H264/90000\r\n", "a=rtpmap:102 H264/90000\r\na=fmtp:102 packetization-mode=1;profile-level-id=42e029\r\n");
+        let permissions = &[Permission::View as i32, Permission::Audio as i32];
+        let filtered = restrict_media_sdp(&offer, permissions)?;
+        assert!(filtered.contains("m=video 9 UDP/TLS/RTP/SAVPF 96 97 102 103\r\n"));
+        assert!(filtered.contains("a=fmtp:103 apt=102\r\n"));
+        validate_media_sdp(&filtered, permissions)?;
+        assert!(
+            restrict_media_sdp(
+                &offer.replace(
+                    "packetization-mode=1",
+                    "packetization-mode=1;packetization-mode=1"
+                ),
+                permissions
+            )
+            .is_err()
+        );
+        Ok(())
+    }
 
     #[test]
     fn filter_removes_prohibited_codecs_and_their_repair_payloads() -> Result<(), ContractError> {

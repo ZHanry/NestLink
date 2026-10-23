@@ -104,6 +104,101 @@ impl Bits {
     }
 }
 
+/// Actual SPS bytes, suitable for SDP profile-level-id after a real probe.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct H264SpsInfo {
+    pub profile_idc: u8,
+    pub constraints: u8,
+    pub level_idc: u8,
+}
+impl H264SpsInfo {
+    pub fn profile_level_id(self) -> String {
+        format!(
+            "{:02x}{:02x}{:02x}",
+            self.profile_idc, self.constraints, self.level_idc
+        )
+    }
+    pub fn is_constrained_baseline(self) -> bool {
+        self.profile_idc == 66 && self.constraints & 0x40 != 0 && self.constraints & 3 == 0
+    }
+}
+
+/// H.264 Baseline limits agreed before creating the stream. Level 1b is not
+/// supported; it needs constraint_set3 interpretation rather than numeric order.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct H264EncodingLimits {
+    pub max_level_idc: u8,
+    pub require_constrained_baseline: bool,
+}
+impl H264EncodingLimits {
+    pub fn validate_config(self, config: crate::VideoConfig) -> io::Result<()> {
+        let (max_fs, max_mbps, max_kbps): (u64, u64, u32) = match self.max_level_idc {
+            10 => (99, 1485, 64),
+            11 => (396, 3000, 192),
+            12 => (396, 6000, 384),
+            13 => (396, 11880, 768),
+            20 => (396, 11880, 2000),
+            21 => (792, 19800, 4000),
+            22 => (1620, 20250, 4000),
+            30 => (1620, 40500, 10000),
+            31 => (3600, 108000, 14000),
+            32 => (5120, 216000, 20000),
+            40 => (8192, 245760, 20000),
+            41 => (8192, 245760, 50000),
+            42 => (8704, 522240, 50000),
+            50 => (22080, 589824, 135000),
+            51 => (36864, 983040, 240000),
+            52 => (36864, 2073600, 240000),
+            _ => {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "unsupported H.264 level",
+                ));
+            }
+        };
+        let width_mbs = u64::from(config.width).div_ceil(16);
+        let height_mbs = u64::from(config.height).div_ceil(16);
+        let fs = width_mbs * height_mbs;
+        if !config.width.is_multiple_of(2)
+            || !config.height.is_multiple_of(2)
+            || fs == 0
+            || fs > max_fs
+            || fs * u64::from(config.fps) > max_mbps
+            || width_mbs * width_mbs > max_fs * 8
+            || height_mbs * height_mbs > max_fs * 8
+            || !(1..=120).contains(&config.fps)
+            || config.width > 8192
+            || config.height > 8192
+            || u64::from(config.width) * u64::from(config.height) * 4 > 64 * 1024 * 1024
+            || !(64..=100_000).contains(&config.bitrate_kbps)
+            || config.bitrate_kbps > max_kbps
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "target exceeds negotiated H.264 level",
+            ));
+        }
+        Ok(())
+    }
+    pub fn validate_sps(self, info: H264SpsInfo) -> io::Result<()> {
+        if !matches!(
+            info.level_idc,
+            10 | 11 | 12 | 13 | 20 | 21 | 22 | 30 | 31 | 32 | 40 | 41 | 42 | 50 | 51 | 52
+        ) || info.profile_idc != 66
+            || info.constraints & 3 != 0
+            || (self.require_constrained_baseline && !info.is_constrained_baseline())
+            || info.level_idc > self.max_level_idc
+            || (info.level_idc == 11 && info.constraints & 0x10 != 0)
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "SPS exceeds negotiated H.264 profile/level",
+            ));
+        }
+        Ok(())
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct H264Validator {
     width: u32,
@@ -111,10 +206,13 @@ pub struct H264Validator {
     sps: BTreeMap<u32, Vec<u8>>,
     pps: BTreeMap<u32, (u32, Vec<u8>)>,
     started: bool,
+    limits: Option<H264EncodingLimits>,
+    info: Option<H264SpsInfo>,
 }
 #[derive(Clone, Copy, Debug)]
 pub struct H264AccessUnit {
     pub keyframe: bool,
+    pub sps: Option<H264SpsInfo>,
 }
 impl H264Validator {
     #[cfg(windows)]
@@ -122,6 +220,7 @@ impl H264Validator {
         self.sps.clear();
         self.pps.clear();
         self.started = false;
+        self.info = None;
     }
     pub fn new(width: u32, height: u32) -> io::Result<Self> {
         if width == 0
@@ -140,7 +239,17 @@ impl H264Validator {
             sps: BTreeMap::new(),
             pps: BTreeMap::new(),
             started: false,
+            limits: None,
+            info: None,
         })
+    }
+    pub fn with_limits(width: u32, height: u32, limits: H264EncodingLimits) -> io::Result<Self> {
+        let mut validator = Self::new(width, height)?;
+        validator.limits = Some(limits);
+        Ok(validator)
+    }
+    pub fn sps_info(&self) -> Option<H264SpsInfo> {
+        self.info
     }
     pub fn validate(&mut self, data: &[u8]) -> io::Result<H264AccessUnit> {
         // A rejected packet must not leave a partially updated parameter table.
@@ -155,6 +264,19 @@ impl H264Validator {
                     if next.sps.get(&id).is_some_and(|old| old != nal) {
                         return Err(invalid());
                     }
+                    let mut bits = Bits::new(nal, 4096)?;
+                    let info = H264SpsInfo {
+                        profile_idc: bits.read(8)? as u8,
+                        constraints: bits.read(8)? as u8,
+                        level_idc: bits.read(8)? as u8,
+                    };
+                    if let Some(limits) = next.limits {
+                        limits.validate_sps(info)?;
+                    }
+                    if next.info.is_some_and(|old| old != info) {
+                        return Err(invalid());
+                    }
+                    next.info = Some(info);
                     next.sps.insert(id, nal.to_vec());
                 }
                 8 => {
@@ -206,11 +328,20 @@ impl H264Validator {
         }
         next.started = true;
         *self = next;
-        Ok(H264AccessUnit { keyframe })
+        Ok(H264AccessUnit {
+            keyframe,
+            sps: self.info,
+        })
     }
     fn validate_sps(&self, nal: &[u8]) -> io::Result<u32> {
         let mut bits = Bits::new(nal, 4096)?;
-        if bits.read(8)? != 66 || bits.read(8)? & 3 != 0 || bits.read(8)? > 52 {
+        if bits.read(8)? != 66
+            || bits.read(8)? & 3 != 0
+            || !matches!(
+                bits.read(8)?,
+                10 | 11 | 12 | 13 | 20 | 21 | 22 | 30 | 31 | 32 | 40 | 41 | 42 | 50 | 51 | 52
+            )
+        {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
                 "unsupported profile or level",
@@ -333,6 +464,77 @@ mod tests {
         );
         assert!(parser.validate(&[0, 0, 1, 0x41, 0xa0]).is_err()); // B slice
         assert!(parser.validate(&[0, 0, 1, 0xe5, 0xb8]).is_err()); // forbidden bit
+        Ok(())
+    }
+    #[test]
+    fn actual_sps_identity_and_negotiated_target_limits_are_enforced() -> io::Result<()> {
+        let limits = H264EncodingLimits {
+            max_level_idc: 31,
+            require_constrained_baseline: true,
+        };
+        let target = crate::VideoConfig {
+            width: 1280,
+            height: 720,
+            fps: 30,
+            bitrate_kbps: 4000,
+        };
+        limits.validate_config(target)?;
+        assert!(
+            limits
+                .validate_config(crate::VideoConfig { fps: 60, ..target })
+                .is_err()
+        );
+        assert!(
+            limits
+                .validate_config(crate::VideoConfig {
+                    width: 1920,
+                    height: 1080,
+                    ..target
+                })
+                .is_err()
+        );
+        assert!(
+            limits
+                .validate_config(crate::VideoConfig {
+                    bitrate_kbps: 14001,
+                    ..target
+                })
+                .is_err()
+        );
+        let mut packet = sps(19, 14, 66, 1);
+        packet.extend_from_slice(&[0, 0, 1, 0x68, 0xce, 0x38, 0x80, 0, 0, 1, 0x65, 0xb8, 0x40]);
+        let unit = H264Validator::with_limits(320, 240, limits)?.validate(&packet)?;
+        let info = unit.sps.ok_or_else(invalid)?;
+        assert_eq!(info.profile_level_id(), "42c01f");
+        assert!(info.is_constrained_baseline());
+        let mut too_high = packet.clone();
+        too_high[7] = 40;
+        assert!(
+            H264Validator::with_limits(320, 240, limits)?
+                .validate(&too_high)
+                .is_err()
+        );
+        let mut baseline_only = packet;
+        baseline_only[6] = 0x80;
+        assert!(
+            H264Validator::new(320, 240)?
+                .validate(&baseline_only)
+                .is_ok()
+        );
+        assert!(
+            H264Validator::with_limits(320, 240, limits)?
+                .validate(&baseline_only)
+                .is_err()
+        );
+        assert!(
+            limits
+                .validate_sps(H264SpsInfo {
+                    level_idc: 11,
+                    constraints: 0xd0,
+                    ..info
+                })
+                .is_err()
+        );
         Ok(())
     }
     #[test]

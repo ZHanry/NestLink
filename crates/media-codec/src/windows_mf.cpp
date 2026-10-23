@@ -15,17 +15,30 @@
 #include <cstring>
 #include <memory>
 #include <new>
+#include <array>
 using Microsoft::WRL::ComPtr;
 namespace {
 constexpr size_t raw_limit = 64 * 1024 * 1024;
 constexpr size_t packet_limit = 8 * 1024 * 1024;
+struct BufferedOutput {
+    std::unique_ptr<uint8_t[]> bytes;
+    size_t length = 0, capacity = 0;
+    uint64_t pts = 0;
+    void reset() noexcept {
+        if (bytes) SecureZeroMemory(bytes.get(), capacity);
+        bytes.reset(); length = 0; capacity = 0; pts = 0;
+    }
+    ~BufferedOutput() { reset(); }
+};
 struct Codec {
     ComPtr<IMFTransform> transform;
     ComPtr<IMFMediaEventGenerator> events;
     ComPtr<ID3D11Device> device;
     ComPtr<ID3D11DeviceContext> context;
     ComPtr<IMFDXGIDeviceManager> manager;
-    uint32_t width = 0, height = 0, fps = 0;
+    uint32_t width = 0, height = 0, fps = 0, level = 0;
+    std::array<BufferedOutput, 2> ready;
+    size_t ready_head = 0, ready_size = 0, ready_bytes = 0;
     uint32_t output_height = 0, output_pitch = 0;
     bool encoder = false, hardware = false, hardware_used = false, com = false, mf = false;
     DWORD thread = GetCurrentThreadId();
@@ -35,6 +48,7 @@ struct Codec {
             transform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
             transform->ProcessMessage(MFT_MESSAGE_NOTIFY_END_STREAMING, 0);
         }
+        for (auto& entry : ready) entry.reset();
         events.Reset(); transform.Reset(); manager.Reset(); context.Reset(); device.Reset();
         if (mf) MFShutdown();
         if (com) CoUninitialize();
@@ -67,6 +81,7 @@ HRESULT media_type(Codec& state, bool compressed, uint32_t kbps, IMFMediaType** 
     if (compressed && state.encoder) {
         type->SetUINT32(MF_MT_AVG_BITRATE, kbps * 1000);
         type->SetUINT32(MF_MT_MPEG2_PROFILE, 66); // H.264 Baseline, no B frames.
+        if (state.level) type->SetUINT32(MF_MT_MPEG2_LEVEL, state.level);
     }
     *result = type.Detach();
     return S_OK;
@@ -215,10 +230,13 @@ HRESULT choose_decoder_output(Codec& state) {
     }
     return MF_E_INVALIDMEDIATYPE;
 }
-HRESULT output(Codec& state, uint8_t* destination, size_t capacity, size_t* length, uint64_t* pts) {
+HRESULT output(Codec& state, uint8_t* destination, size_t capacity, size_t* length, uint64_t* pts, DWORD wait_ms) {
     *length = 0;
     if (state.events) {
-        HRESULT hr = wait_event(state, false, 30);
+        HRESULT hr = poll_events(state);
+        if (FAILED(hr)) return hr;
+        if (!state.output_events && !wait_ms) return S_FALSE;
+        hr = wait_event(state, false, wait_ms);
         if (hr != S_OK) return hr;
     }
     for (unsigned attempt = 0; attempt < 2; ++attempt) {
@@ -319,7 +337,7 @@ HRESULT output(Codec& state, uint8_t* destination, size_t capacity, size_t* leng
 } // namespace
 
 extern "C" int32_t nl_mf_open(uint32_t encoder, uint32_t hardware_only, uint32_t width,
-    uint32_t height, uint32_t fps, uint32_t kbps, void** result) noexcept {
+    uint32_t height, uint32_t fps, uint32_t kbps, uint32_t level, void** result) noexcept {
     if (!result) return E_POINTER;
     *result = nullptr;
     if (!width || !height || (width|height)&1 || width > 8192 || height > 8192 ||
@@ -333,7 +351,7 @@ extern "C" int32_t nl_mf_open(uint32_t encoder, uint32_t hardware_only, uint32_t
     hr = MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET);
     if (FAILED(hr)) return hr;
     state->mf = true; state->encoder = encoder != 0; state->hardware = hardware_only != 0;
-    state->width = width; state->height = height; state->fps = fps;
+    state->width = width; state->height = height; state->fps = fps; state->level = level;
     state->output_height = height; state->output_pitch = width;
     MFT_REGISTER_TYPE_INFO raw{MFMediaType_Video, MFVideoFormat_NV12};
     MFT_REGISTER_TYPE_INFO compressed{MFMediaType_Video, MFVideoFormat_H264};
@@ -357,7 +375,7 @@ extern "C" int32_t nl_mf_open(uint32_t encoder, uint32_t hardware_only, uint32_t
             ComPtr<IMFTransform> transform;
             last = choices[index]->ActivateObject(IID_PPV_ARGS(&transform));
             if (SUCCEEDED(last)) last = configure(*state, transform.Get(), kbps);
-            if (FAILED(last)) { state->events.Reset(); state->transform.Reset(); state->input_events = 0; state->output_events = 0; }
+            if (FAILED(last)) { state->events.Reset(); state->transform.Reset(); state->manager.Reset(); state->context.Reset(); state->device.Reset(); state->input_events = 0; state->output_events = 0; }
         }
         choices[index]->Release();
     }
@@ -365,49 +383,120 @@ extern "C" int32_t nl_mf_open(uint32_t encoder, uint32_t hardware_only, uint32_t
     if (!state->transform) return last;
     *result = state.release(); return S_OK;
 }
+namespace {
+// The bridge owns at most two outputs, with a combined 64 MiB budget. Drain
+// before submitting input, including when a synchronous MFT says NOTACCEPTING.
+HRESULT collect_output(Codec& state, size_t capacity, DWORD wait_ms) {
+    if (state.ready_size >= 2 || capacity > raw_limit - state.ready_bytes) return S_FALSE;
+    auto& next = state.ready[(state.ready_head + state.ready_size) % 2];
+    next.bytes.reset(new (std::nothrow) uint8_t[capacity]);
+    if (!next.bytes) return E_OUTOFMEMORY;
+    next.capacity = capacity;
+    HRESULT hr = output(state, next.bytes.get(), capacity, &next.length, &next.pts, wait_ms);
+    if (hr != S_OK) { next.reset(); return hr; }
+    if (!next.length || next.length > capacity) { next.reset(); return E_UNEXPECTED; }
+    state.ready_bytes += capacity;
+    ++state.ready_size;
+    return S_OK;
+}
+// Shared by the live MFT pump and deterministic boundary tests. S_FALSE is
+// bounded backpressure; only a negative HRESULT is fatal. No accepted sample
+// can be submitted twice, including when output belongs to a previous sample.
+template<class Ready, class Input, class Drain, class Room, class Pause>
+HRESULT pump_input(Ready ready, Input input, Drain drain, Room room, Pause pause) {
+    for (unsigned attempt = 0; attempt < 4; ++attempt) {
+        HRESULT hr = ready();
+        if (FAILED(hr)) return hr;
+        if (hr == S_OK) {
+            hr = input();
+            if (SUCCEEDED(hr)) return S_OK;
+            if (hr != MF_E_NOTACCEPTING) return hr;
+        }
+        hr = drain();
+        if (FAILED(hr)) return hr;
+        if (!room()) return S_FALSE;
+        pause();
+    }
+    return S_FALSE;
+}
+int32_t process(Codec& state, const uint8_t* input, size_t input_length,
+    uint64_t pts, uint32_t force_keyframe, uint32_t submit,
+    uint8_t* destination, size_t capacity, size_t* length, uint64_t* output_pts) {
+    // No input is retained across calls. A sample is retried only after
+    // NOTACCEPTING, and is never submitted again once ProcessInput succeeds.
+    const size_t plane = static_cast<size_t>(state.width)*state.height;
+    if (state.encoder ? (input_length != plane*4 || capacity > packet_limit) :
+        (input_length == 0 || input_length > packet_limit || capacity != plane*4)) return E_INVALIDARG;
+    HRESULT hr = collect_output(state, capacity, 0);
+    if (FAILED(hr)) return hr;
+    bool accepted = false;
+    if (submit && state.ready_size < 2 && capacity <= raw_limit - state.ready_bytes) {
+        if (state.encoder && force_keyframe) {
+            hr = set_codec_value(state.transform.Get(), CODECAPI_AVEncVideoForceKeyFrame, 1);
+            if (FAILED(hr)) hr = set_codec_value(state.transform.Get(), CODECAPI_AVEncVideoForceKeyFrame, 1, true);
+            if (FAILED(hr)) return hr;
+        }
+        ComPtr<IMFSample> sample;
+        ComPtr<IMFMediaBuffer> buffer;
+        hr = MFCreateSample(&sample);
+        if (FAILED(hr)) return hr;
+        const size_t size = state.encoder ? plane*3/2 : input_length;
+        hr = MFCreateMemoryBuffer(static_cast<DWORD>(size), &buffer);
+        if (FAILED(hr)) return hr;
+        BYTE* bytes = nullptr;
+        hr = buffer->Lock(&bytes, nullptr, nullptr);
+        if (FAILED(hr)) return hr;
+        if (state.encoder) to_nv12(input, bytes, state.width, state.height);
+        else std::memcpy(bytes, input, size);
+        buffer->Unlock();
+        hr = buffer->SetCurrentLength(static_cast<DWORD>(size));
+        if (SUCCEEDED(hr)) hr = sample->AddBuffer(buffer.Get());
+        if (SUCCEEDED(hr)) hr = sample->SetSampleTime(static_cast<LONGLONG>(pts*1000/9));
+        if (SUCCEEDED(hr)) hr = sample->SetSampleDuration(10000000/state.fps);
+        if (FAILED(hr)) return hr;
+        hr = pump_input(
+            [&]() -> HRESULT {
+                HRESULT status = poll_events(state);
+                if (FAILED(status)) return status;
+                return !state.events || state.input_events ? S_OK : S_FALSE;
+            },
+            [&]() -> HRESULT {
+                if (state.events) --state.input_events;
+                return state.transform->ProcessInput(0, sample.Get(), 0);
+            },
+            [&]() { return collect_output(state, capacity, 0); },
+            [&]() { return state.ready_size < 2 && capacity <= raw_limit - state.ready_bytes; },
+            []() { Sleep(1); });
+        if (FAILED(hr)) return hr;
+        accepted = hr == S_OK;
+    }
+    if ((accepted || !submit) && !state.ready_size) {
+        hr = collect_output(state, capacity, 8);
+        if (FAILED(hr)) return hr;
+    }
+    if (!state.ready_size) return accepted ? 1 : 3;
+    auto& next = state.ready[state.ready_head];
+    if (next.length > capacity) return E_UNEXPECTED;
+    std::memcpy(destination, next.bytes.get(), next.length);
+    *length = next.length; *output_pts = next.pts;
+    state.ready_bytes -= next.capacity;
+    next.reset();
+    state.ready_head = (state.ready_head + 1) % 2;
+    --state.ready_size;
+    return accepted ? 0 : 2;
+}
+} // namespace
 extern "C" int32_t nl_mf_process(void* opaque, const uint8_t* input, size_t input_length,
-    uint64_t pts, uint32_t force_keyframe, uint8_t* destination, size_t capacity,
+    uint64_t pts, uint32_t force_keyframe, uint32_t submit, uint8_t* destination, size_t capacity,
     size_t* length, uint64_t* output_pts) noexcept {
     auto* state = static_cast<Codec*>(opaque);
     if (!state || !input || !destination || !length || !output_pts || state->thread != GetCurrentThreadId() ||
-        pts > INT64_MAX / 1000 || capacity > raw_limit || input_length > raw_limit) return E_INVALIDARG;
-    *length = 0;
-    const size_t plane = static_cast<size_t>(state->width)*state->height;
-    if (state->encoder ? (input_length != plane*4 || capacity > packet_limit) :
-        (input_length == 0 || input_length > packet_limit || capacity != plane*4)) return E_INVALIDARG;
-    if (state->events) {
-        HRESULT hr = wait_event(*state, true, 200);
-        if (hr != S_OK) return hr == S_FALSE ? MF_E_NOTACCEPTING : hr;
-    }
-    if (state->encoder && force_keyframe) {
-        // This property takes VT_UI4 on the Microsoft encoder. Some vendor
-        // transforms expose VT_BOOL; check both, never silently ignore a
-        // rejected recovery request.
-        HRESULT force_hr = set_codec_value(state->transform.Get(), CODECAPI_AVEncVideoForceKeyFrame, 1);
-        if (FAILED(force_hr)) force_hr = set_codec_value(state->transform.Get(), CODECAPI_AVEncVideoForceKeyFrame, 1, true);
-        if (FAILED(force_hr)) return force_hr;
-    }
-    ComPtr<IMFSample> sample;
-    ComPtr<IMFMediaBuffer> buffer;
-    HRESULT hr = MFCreateSample(&sample);
-    if (FAILED(hr)) return hr;
-    const size_t size = state->encoder ? plane*3/2 : input_length;
-    hr = MFCreateMemoryBuffer(static_cast<DWORD>(size), &buffer);
-    if (FAILED(hr)) return hr;
-    BYTE* bytes = nullptr;
-    hr = buffer->Lock(&bytes, nullptr, nullptr);
-    if (FAILED(hr)) return hr;
-    if (state->encoder) to_nv12(input, bytes, state->width, state->height);
-    else std::memcpy(bytes, input, size);
-    buffer->Unlock();
-    hr = buffer->SetCurrentLength(static_cast<DWORD>(size));
-    if (SUCCEEDED(hr)) hr = sample->AddBuffer(buffer.Get());
-    if (SUCCEEDED(hr)) hr = sample->SetSampleTime(static_cast<LONGLONG>(pts*1000/9));
-    if (SUCCEEDED(hr)) hr = sample->SetSampleDuration(10000000/state->fps);
-    if (FAILED(hr)) return hr;
-    hr = state->transform->ProcessInput(0, sample.Get(), 0);
-    if (FAILED(hr)) return hr;
-    return output(*state, destination, capacity, length, output_pts);
+        pts > INT64_MAX / 1000 || !capacity || capacity > raw_limit || input_length > raw_limit) return E_INVALIDARG;
+    *length = 0; *output_pts = 0;
+    // 0 accepted+output; 1 accepted+no output; 2 backpressure+old output;
+    // 3 backpressure+no output. Negative HRESULTs alone are fatal.
+    return process(*state, input, input_length, pts, force_keyframe, submit,
+        destination, capacity, length, output_pts);
 }
 extern "C" int32_t nl_mf_bitrate(void* opaque, uint32_t kbps) noexcept {
     auto* state = static_cast<Codec*>(opaque);
@@ -420,6 +509,8 @@ extern "C" int32_t nl_mf_flush_decoder(void* opaque) noexcept {
     HRESULT hr = S_OK;
     state->input_events = 0;
     state->output_events = 0;
+    for (auto& entry : state->ready) entry.reset();
+    state->ready_head = 0; state->ready_size = 0; state->ready_bytes = 0;
     if (state->events) {
         // Drain the old stream before flushing. Flush may itself publish fresh
         // NeedInput credits; draining afterwards would discard those credits.
@@ -441,3 +532,29 @@ extern "C" uint32_t nl_mf_hardware_used(void* opaque) noexcept {
     return state && state->thread == GetCurrentThreadId() && state->hardware_used ? 1 : 0;
 }
 extern "C" void nl_mf_close(void* opaque) noexcept { delete static_cast<Codec*>(opaque); }
+
+// Deterministic tests of the exact pump used above, without a GPU or COM MFT.
+extern "C" uint32_t nl_mf_backpressure_contract() noexcept {
+    unsigned calls = 0, drains = 0;
+    bool ordered = true;
+    HRESULT hr = pump_input([]() { return S_OK; }, [&]() {
+        ++calls;
+        if (calls == 1) return MF_E_NOTACCEPTING;
+        ordered = drains == 1;
+        return S_OK;
+    }, [&]() { ++drains; return S_OK; }, []() { return true; }, []() {});
+    uint32_t result = hr == S_OK && calls == 2 && drains == 1 && ordered ? 1 : 0;
+    calls = 0; drains = 0;
+    hr = pump_input([]() { return S_OK; }, [&]() { ++calls; return S_OK; },
+        [&]() { ++drains; return S_OK; }, []() { return true; }, []() {});
+    if (hr == S_OK && calls == 1 && !drains) result |= 2;
+    calls = 0;
+    hr = pump_input([]() { return S_OK; }, [&]() { ++calls; return MF_E_NOTACCEPTING; },
+        []() { return S_FALSE; }, []() { return true; }, []() {});
+    if (hr == S_FALSE && calls == 4) result |= 4;
+    calls = 0; drains = 0;
+    hr = pump_input([]() { return S_FALSE; }, [&]() { ++calls; return S_OK; },
+        [&]() { ++drains; return S_OK; }, []() { return false; }, []() {});
+    if (hr == S_FALSE && !calls && drains == 1) result |= 8;
+    return result;
+}

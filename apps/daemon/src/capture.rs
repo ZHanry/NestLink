@@ -437,9 +437,8 @@ async fn prepare_windows(
         .map(|(_, display)| display.clone())
         .collect::<Vec<_>>();
     let candidates = descriptors.clone();
-    Ok(PreparedBrowserCapture::new(
-        descriptors,
-        move |approval, lease, permit| {
+    Ok(
+        PreparedBrowserCapture::new(descriptors, move |approval, lease, permit| {
             // This starts pixel capture only after WebRTC mutual proof.
             let selected = offered
                 .iter()
@@ -483,8 +482,9 @@ async fn prepare_windows(
             host_media(
                 capture, displays, approval, candidates, lease, permit, input,
             )
-        },
-    ))
+        })
+        .with_video_parameters(30, 4_000),
+    )
 }
 
 #[cfg(target_os = "linux")]

@@ -240,7 +240,9 @@ mod tests {
 
     #[test]
     fn editor_fields_preserve_canonical_protocol_configuration() {
-        let config = draft().config().expect("valid editor fields");
+        let Ok(config) = draft().config() else {
+            panic!("valid editor fields must produce a configuration");
+        };
         assert_eq!(config.public_ports, vec![1024, 29100, 65535]);
         assert_eq!(config.service_suffix, "services.example.test");
         assert_eq!(config.management_hostname, "manage.example.test");
