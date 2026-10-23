@@ -77,8 +77,8 @@ pub(super) fn encoder(format: VideoFormat, config: VideoConfig) -> io::Result<Vi
     match format {
         VideoFormat::Vp8 => VideoEncoder::new(nestlink_media_codec::VideoCodec::Vp8, config),
         VideoFormat::H264(value) => {
-            if config.width % 2 != 0
-                || config.height % 2 != 0
+            if !config.width.is_multiple_of(2)
+                || !config.height.is_multiple_of(2)
                 || !value.supports(config.width, config.height, config.fps, config.bitrate_kbps)
             {
                 return Err(io::Error::new(
@@ -149,8 +149,8 @@ impl WebRtcHostPeer {
             let mut attempted = Vec::new();
             for remote in candidates {
                 let config = preflight.config;
-                if config.width % 2 != 0
-                    || config.height % 2 != 0
+                if !config.width.is_multiple_of(2)
+                    || !config.height.is_multiple_of(2)
                     || !remote.supports(
                         config.width,
                         config.height,

@@ -58,10 +58,10 @@ pub fn offered_formats(sdp: &str) -> Result<Vec<(u8, VideoFormat)>, ContractErro
         if let Some(mapping) = mappings.get(pt) {
             if mapping.eq_ignore_ascii_case("vp8/90000") {
                 result.push((number, VideoFormat::Vp8));
-            } else if mapping.eq_ignore_ascii_case("h264/90000") {
-                if let Some(format) = H264Format::parse(formats.get(pt).copied().unwrap_or(""))? {
-                    result.push((number, VideoFormat::H264(format)));
-                }
+            } else if mapping.eq_ignore_ascii_case("h264/90000")
+                && let Some(format) = H264Format::parse(formats.get(pt).copied().unwrap_or(""))?
+            {
+                result.push((number, VideoFormat::H264(format)));
             }
         }
     }

@@ -620,7 +620,8 @@ mod tests {
         let mut idrs = 0;
         let mut reset_pts = 0;
         for frame in 0..18 {
-            let Some(packet) = encoder.encode(&pixels, frame * 3000, frame % 6 == 0)? else {
+            let Some(packet) = encoder.encode(&pixels, frame * 3000, frame.is_multiple_of(6))?
+            else {
                 continue;
             };
             if packet.keyframe {

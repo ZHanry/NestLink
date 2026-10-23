@@ -103,6 +103,41 @@ jobs:
           path: ${{ runner.temp }}/nestlink-mf-target-output.log
           if-no-files-found: warn
           retention-days: 14
+      - name: Build the owned synthetic target probe for HL on GitHub
+        if: runner.os == 'Windows'
+        run: python scripts/refactor-windows-normal-user.py cargo build --locked -p nestlink-media-codec --example windows-h264-probe
+      - name: Bind the target probe to this exact source and run
+        if: runner.os == 'Windows'
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, shutil
+          source = pathlib.Path('target/debug/examples/windows-h264-probe.exe')
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'nestlink-mf-target-probe'
+          output.mkdir()
+          copied = output / source.name
+          shutil.copyfile(source, copied)
+          manifest = {
+              'source_revision': os.environ['GITHUB_SHA'],
+              'repository': os.environ['GITHUB_REPOSITORY'],
+              'run_id': os.environ['GITHUB_RUN_ID'],
+              'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'purpose': 'owned-synthetic-target-probe-only',
+              'filename': copied.name,
+              'bytes': copied.stat().st_size,
+              'sha256': hashlib.sha256(copied.read_bytes()).hexdigest(),
+              'build_profile': 'debug',
+              'performance_qualified': False,
+              'physical_capture': False,
+          }
+          (output / 'probe-build.json').write_text(json.dumps(manifest, indent=2) + '\n')
+      - name: Retain the exact-source Windows target probe
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: nestlink-mf-target-probe
+          path: ${{ runner.temp }}/nestlink-mf-target-probe/
+          if-no-files-found: error
+          retention-days: 14
       - if: runner.os == 'Linux'
         run: cargo test --workspace --locked --no-fail-fast
       - name: Test Windows with the ordinary business-process token
@@ -127,6 +162,8 @@ jobs:
         with:
           persist-credentials: false
       - run: rustup target add wasm32-unknown-unknown
+      - name: Check protocol lint before platform codec builds finish
+        run: cargo clippy --locked -p nestlink-protocol --all-targets -- -D warnings
       - run: cargo check --locked --target wasm32-unknown-unknown -p nestlink-protocol -p nestlink-policy -p nestlink-connectivity -p nestlink-sdk -p nestlink-web
   linux-network-events:
     runs-on: ubuntu-latest
