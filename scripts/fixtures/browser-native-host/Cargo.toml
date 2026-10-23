@@ -28,7 +28,7 @@ serde_json = "=1.0.154"
 sha2 = "=0.10.9"
 tempfile = "=3.27.0"
 tower = { version = "=0.5.3", features = ["util"] }
-tokio = { version = "=1.53.2", features = ["rt-multi-thread", "macros", "net", "time", "sync", "io-util"] }
+tokio = { version = "=1.53.3", features = ["rt-multi-thread", "macros", "net", "time", "sync", "io-util"] }
 
 [patch.crates-io]
 turn = { version = "=0.17.2", git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "main" }

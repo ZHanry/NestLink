@@ -41,7 +41,10 @@ pub(super) fn subscribe() -> io::Result<AsyncFd<OwnedFd>> {
     {
         return Err(io::Error::last_os_error());
     }
-    AsyncFd::new(fd)
+    // SAFETY: this socket is uniquely held by OwnedFd, which moves into AsyncFd.
+    // No code duplicates, closes or replaces its descriptor while registered;
+    // receive only borrows it, and AsyncFd deregisters before OwnedFd closes it.
+    unsafe { AsyncFd::register(fd) }
 }
 fn receive(fd: &OwnedFd) -> io::Result<Option<Reason>> {
     let mut buffer = [0u8; 16_384];

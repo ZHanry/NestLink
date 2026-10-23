@@ -97,7 +97,7 @@ md-5 = "0.10.6"
 zeroize = { version = "1.9.0", features = ["derive"] }
 base64 = "0.22.1"
 subtle = "2.6.1"
-tokio = { version = "1.48.0", features = ["rt-multi-thread", "macros", "net", "signal", "time", "sync", "io-util"] }
+tokio = { version = "1.53.3", features = ["rt-multi-thread", "macros", "net", "signal", "time", "sync", "io-util"] }
 axum = { version = "0.8.6", features = ["ws"] }
 tower = { version = "0.5.2", features = ["util"] }
 clap = { version = "4.5.50", features = ["derive"] }
