@@ -40,10 +40,19 @@ async function values(page) { return page.$$eval(INPUTS, els => els.map(el => el
 async function fill(page, fields) {
   const inputs = await page.$$(INPUTS);
   check(inputs.length === 4, 'Expected four real editor fields');
-  for (let i = 0; i < fields.length; i++) { await inputs[i].click({ clickCount: 3 }); await inputs[i].press('Backspace'); await inputs[i].type(fields[i]); }
+  for (let i = 0; i < fields.length; i++) {
+    await page.locator(PANEL + ' label:nth-of-type(' + (i + 1) + ') input').fill(fields[i]);
+  }
+  check(JSON.stringify(await values(page)) === JSON.stringify(fields), 'Real editor field entry must replace each complete value');
 }
-async function save(page) { await clickText(page, PANEL + ' button', 'Save public ingress'); await settled(page); }
-async function read(page) { await clickText(page, PANEL + ' button', 'Read again (replace draft)'); await settled(page); }
+async function request(page, method, text) {
+  const response = page.waitForResponse(r => r.request().method() === method && active.paths.has(new URL(r.url()).pathname), { timeout: 8000 });
+  await clickText(page, PANEL + ' button', text);
+  await response;
+  await settled(page);
+}
+async function save(page) { await request(page, 'PUT', 'Save public ingress'); }
+async function read(page) { await request(page, 'GET', 'Read again (replace draft)'); }
 async function signIn(page, ready) {
   await page.goto(ready.origin, { waitUntil: 'networkidle0' });
   await page.locator('.language-selector button[lang="en"]').click();
@@ -129,6 +138,7 @@ async function run(page, ready, report) {
         panel_present: !!panel,
         aria_busy: panel?.getAttribute('aria-busy') ?? null,
         alert_present: !!panel?.querySelector('[role="alert"]'),
+        alert_text: panel?.querySelector('[role="alert"]')?.textContent.trim().slice(0, 500) ?? null,
         save_disabled: panel?.querySelector('button.primary')?.disabled ?? null,
         input_count: panel?.querySelectorAll('input').length ?? 0,
       };
