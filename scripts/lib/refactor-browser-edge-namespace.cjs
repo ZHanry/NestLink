@@ -120,6 +120,20 @@ async function run(page, ready, report) {
     check(facts.failures.filter(f => f.method === 'PUT' && f.status === 409).length === 1, 'Expected exactly one real CAS rejection');
     check(facts.failures.filter(f => f.method === 'PUT' && f.status === 403).length === 1, 'Expected exactly one real management-hostname rejection');
     facts.passed = true;
+  } catch (error) {
+    // Preserve the actual panel before finally returns to the desktop page.
+    // These are fixed state labels, not editor values or authentication data.
+    facts.failure_state = await page.evaluate(selector => {
+      const panel = document.querySelector(selector);
+      return {
+        panel_present: !!panel,
+        aria_busy: panel?.getAttribute('aria-busy') ?? null,
+        alert_present: !!panel?.querySelector('[role="alert"]'),
+        save_disabled: panel?.querySelector('button.primary')?.disabled ?? null,
+        input_count: panel?.querySelectorAll('input').length ?? 0,
+      };
+    }, PANEL).catch(() => ({ inspection_failed: true }));
+    throw error;
   } finally {
     active = null;
     if (sibling) await sibling.close();

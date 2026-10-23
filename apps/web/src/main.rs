@@ -1143,7 +1143,7 @@ fn App() -> impl IntoView {
                                             let status = item.status.clone();
                                             view! {
                                                 <button class=move || if selected.with(|chosen| chosen.as_ref().is_some_and(|v| v.key == active_key)) { "record selected" } else { "record" }
-                                                    type="button" aria-pressed=move || selected.with(|chosen| chosen.as_ref().is_some_and(|v| v.key == pressed_key))
+                                                    type="button" aria-pressed=move || selected.with(|chosen| chosen.as_ref().is_some_and(|v| v.key == pressed_key)).to_string()
                                                     on:click=move |_| { if !selected.with_untracked(|chosen| chosen.as_ref().is_some_and(|v| v.key == row.key)) { selected.set(Some(row.clone())); } }>
                                                     <span class="record-main"><strong>{item.title}</strong><small>{move || detail.current()}</small></span>
                                                     <span class="record-status">{move || status.current()}</span>
@@ -1339,7 +1339,7 @@ fn DesktopWorkspace(
                         let pressed_key = item.key.clone();
                         let status = item.status.clone();
                         view! {
-                            <button class=move || if selected.with(|chosen| chosen.as_ref().is_some_and(|v| v.key == active_key)) { "record device-record selected" } else { "record device-record" } type="button" aria-pressed=move || selected.with(|chosen| chosen.as_ref().is_some_and(|v| v.key == pressed_key)) on:click=move |_| selected.set(Some(row.clone()))>
+                            <button class=move || if selected.with(|chosen| chosen.as_ref().is_some_and(|v| v.key == active_key)) { "record device-record selected" } else { "record device-record" } type="button" aria-pressed=move || selected.with(|chosen| chosen.as_ref().is_some_and(|v| v.key == pressed_key)).to_string() on:click=move |_| selected.set(Some(row.clone()))>
                                 <span class="device-symbol"><WorkspaceIcon kind=Section::Desktop /></span><span class="record-main"><strong title=item.title.clone()>{item.title.clone()}</strong><small>{move || status.current()}</small></span>
                             </button>
                         }

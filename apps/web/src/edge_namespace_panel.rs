@@ -205,7 +205,7 @@ pub(super) fn EdgeNamespacePanel(
         request.run(false);
     });
     view! {
-        <section class="policy-form form-stack" aria-label=move || t("服务公网入口", "Public service ingress") aria-busy=move || busy.get()>
+        <section class="policy-form form-stack" aria-label=move || t("服务公网入口", "Public service ingress") aria-busy=move || busy.get().to_string()>
             <h3>{move || t("服务公网入口", "Public service ingress")}</h3>
             <p class="muted">{move || revision.get().map(|v| format!("{} {v}", t("配置版本", "Configuration revision"))).unwrap_or_else(|| t("尚未读取配置版本", "No configuration revision loaded").into())}</p>
             <button class="secondary" type="button" disabled=move || busy.get() on:click=move |_| request.run(false)>{move || if busy.get() { t("正在处理…", "Working…") } else { t("重新读取（替换草稿）", "Read again (replace draft)") }}</button>
