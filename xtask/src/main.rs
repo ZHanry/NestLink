@@ -175,10 +175,7 @@ mod tests {
         client["version"] = json!("0.11.0");
         assert!(reviewed_git_dependency(&client, &forks));
         let mut missing_client = forks.clone();
-        missing_client["packages"]
-            .as_object_mut()
-            .unwrap()
-            .remove("turn@0.11.0");
+        missing_client["packages"] = json!({"turn@0.17.2": forks["packages"]["turn@0.17.2"]});
         assert!(!reviewed_git_dependency(&client, &missing_client));
         let mut old_schema = forks.clone();
         old_schema["schema_version"] = json!(1);
