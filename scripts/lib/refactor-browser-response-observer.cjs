@@ -541,4 +541,66 @@ function createPermitResponseObserver({ session, origin, disconnectedEvent, fact
   } });
 }
 
-module.exports = { createPermitResponseObserver };
+// Steady Chromium runs need the same early, owned CDP observation as impairment
+// runs. Puppeteer's default-session response.json() can lose a Fetch body after
+// the application consumes/drops it; a later getResponseBody is not evidence.
+// This owner observes header-time streams and completed-response fallback on one
+// session, with bounded durable buffers, without changing network conditions.
+async function preparePermitResponseObservation({ page, origin, facts, ...options }) {
+  const destination = new URL(origin);
+  if (destination.origin !== origin || destination.protocol !== 'https:' || destination.hostname !== '127.0.0.1' ||
+      !destination.port || !page?.createCDPSession || page.url() !== 'about:blank' || !facts || typeof facts !== 'object') {
+    throw new Error('Permit response observation requires a fresh owned HTTPS loopback page');
+  }
+  const parameters = Object.freeze({ maxTotalBufferSize: defaults.maxBodyBytes * defaults.maxPending,
+    maxResourceBufferSize: defaults.maxBodyBytes, maxPostDataSize: 0, enableDurableMessages: true });
+  const lifecycle = facts.session_owner = {
+    source: 'Dedicated steady-run CDP session; no network emulation or request interception',
+    network_enable_parameters: parameters, session_created: false, prepared_before_navigation: false,
+    network_disabled: false, session_detached: false, cleanup_errors: [], closed: false, passed: false,
+  };
+  let session = null, observer = null, closePromise;
+  const owner = Object.freeze({ close() {
+    if (closePromise) return closePromise;
+    closePromise = (async () => {
+      const errors = [];
+      const attempt = async (operation, task) => {
+        try { await task(); }
+        catch { errors.push(operation); lifecycle.cleanup_errors.push(operation); }
+      };
+      // A partial setup or failed drain must still disable and detach its exact
+      // owned session. Never disable Puppeteer's own session or any other page.
+      if (observer) await attempt('response-observer', () => observer.close());
+      if (session) {
+        await attempt('network-disable', async () => {
+          await session.send('Network.disable');
+          lifecycle.network_disabled = true;
+        });
+        await attempt('session-detach', async () => {
+          await session.detach();
+          lifecycle.session_detached = true;
+        });
+      }
+      lifecycle.closed = true;
+      lifecycle.passed = errors.length === 0 && facts.passed === true && lifecycle.prepared_before_navigation &&
+        lifecycle.network_disabled && lifecycle.session_detached;
+      if (errors.length) throw new Error('Owned permit response observation cleanup failed');
+    })();
+    return closePromise;
+  } });
+  try {
+    session = await page.createCDPSession();
+    lifecycle.session_created = true;
+    observer = createPermitResponseObserver({ ...options, session, origin, facts });
+    // The observer must own listeners before Network.enable/navigation can
+    // deliver the first request. Body reads use only this same session.
+    await session.send('Network.enable', parameters);
+    lifecycle.prepared_before_navigation = true;
+    return owner;
+  } catch {
+    try { await owner.close(); } catch { /* Fixed cleanup categories remain in facts. */ }
+    throw new Error('Could not prepare owned permit response observation');
+  }
+}
+
+module.exports = { createPermitResponseObserver, preparePermitResponseObservation };

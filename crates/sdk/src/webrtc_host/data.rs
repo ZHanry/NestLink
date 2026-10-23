@@ -174,30 +174,32 @@ impl HostDataRuntime {
     pub(super) async fn start(
         peer: Arc<RTCPeerConnection>,
         lease: LeaseControl,
-        permit: VerifiedPermit,
+        proved_permit: VerifiedPermit,
         permit_rx: watch::Receiver<VerifiedPermit>,
         pending: Arc<Mutex<HashMap<WebRtcDataChannel, PendingDataChannel>>>,
         cancel: watch::Sender<bool>,
         mut factory: Option<HostDataFactory>,
     ) -> Result<Option<Self>, WebRtcHostError> {
-        let kinds = authorized_channels(&permit);
+        let kinds = authorized_channels(&proved_permit);
         if kinds.is_empty() {
             return Ok(None);
         }
         let factory = factory.take().ok_or(WebRtcHostError::BusinessDataChannel)?;
-        let digest = permit_digest(&permit)?;
+        // This identity is immutable across setup activation and later lease
+        // renewals. The live lease and permit_rx still authorize each payload.
+        let digest = permit_digest(&proved_permit)?;
         let bindings: Vec<_> = kinds
             .iter()
             .copied()
-            .map(|kind| WebRtcDataBinding::for_permit(permit.claims(), digest, kind))
+            .map(|kind| WebRtcDataBinding::for_permit(proved_permit.claims(), digest, kind))
             .collect::<Result<_, _>>()?;
         let mut channels = wait_for_channels(&kinds, pending, &cancel).await?;
 
         let transport_channels: Vec<_> = kinds.iter().copied().map(transport_channel).collect();
-        let generation = permit.claims().connection_generation;
+        let generation = proved_permit.claims().connection_generation;
         let (external, ports) =
             ExternalChannelRuntime::new(lease.clone(), generation, &transport_channels)?;
-        let claims = make_claims(&external, &permit)?;
+        let claims = make_claims(&external, &proved_permit)?;
         let owner = factory(claims)?;
 
         let mut workers = Vec::with_capacity(kinds.len());

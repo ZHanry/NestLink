@@ -45,6 +45,10 @@ def completed_receipts():
         "persistent_controller_preserved", "ui_cleanup_complete", "renewal_sequence_valid")}
     browser.update({"page_errors": [], "api_failures": [], "response_inspection_errors": [],
         "workspace_ui": completed_workspace_ui(),
+        "permit_response_observer": {"passed": True, "closed": True, "listeners_removed": True,
+            "pending": 0, "errors": [], "session_owner": {
+                **{key: True for key in ("session_created", "prepared_before_navigation",
+                    "network_disabled", "session_detached", "closed", "passed")}, "cleanup_errors": []}},
         "error": None, "pending_response_observations_after_close": 0,
         "capture_profile": {"name": "smoke", "width": 320, "height": 180, "fps": 10,
                             "duration_seconds": 36, "with_audio": True},
@@ -74,6 +78,19 @@ def completed_receipts():
 
 
 class NativeRunnerTests(unittest.TestCase):
+    def test_response_observer_and_actual_session_cleanup_cannot_be_skipped(self):
+        for replacement in (None, {}, {"passed": True}):
+            receipts = completed_receipts()
+            receipts[0]["permit_response_observer"] = replacement
+            self.assertIn("permit-response-observer", RUNNER.validate_receipts(*receipts))
+        for field in ("session_created", "prepared_before_navigation", "network_disabled", "session_detached", "closed", "passed"):
+            receipts = completed_receipts()
+            receipts[0]["permit_response_observer"]["session_owner"][field] = False
+            self.assertIn("permit-response-session-owner", RUNNER.validate_receipts(*receipts))
+        receipts = completed_receipts()
+        receipts[0]["permit_response_observer"]["pending"] = 1
+        self.assertIn("permit-response-observer", RUNNER.validate_receipts(*receipts))
+
     def test_workspace_helper_cannot_be_skipped_or_report_partial_coverage(self):
         receipts = completed_receipts()
         receipts[0].pop("workspace_ui")

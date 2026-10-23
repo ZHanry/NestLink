@@ -2397,7 +2397,8 @@ impl WebRtcHostPeer {
             return Err(WebRtcHostError::EndpointProof);
         }
         let mut setup = self.setup.take().ok_or(WebRtcHostError::EndpointProof)?;
-        let mut permit = self.current_permit();
+        let proved_permit = self.current_permit();
+        let mut permit = proved_permit.clone();
         let proof = tokio::time::timeout(
             ENDPOINT_PROOF_TIMEOUT,
             self.complete_native_proof(&mut setup, installation, &permit),
@@ -2488,7 +2489,9 @@ impl WebRtcHostPeer {
         let data_runtime = match HostDataRuntime::start(
             self.peer.clone(),
             lease.clone(),
-            permit.clone(),
+            // Business envelopes retain the identity proved over SCTP. Setup
+            // activation above advances the live lease, not this binding.
+            proved_permit,
             self.permit_rx.clone(),
             self.pending_data_channels.clone(),
             self.cancel_tx.clone(),

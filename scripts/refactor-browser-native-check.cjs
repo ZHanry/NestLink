@@ -9,6 +9,7 @@ const crypto = require('node:crypto');
 const { performance } = require('node:perf_hooks');
 const { videoInterval, audioInterval } = require('./lib/refactor-browser-media-metrics.cjs');
 const { prepareNetworkDamage, exerciseNetworkDamage } = require('./lib/refactor-browser-network-damage.cjs');
+const { preparePermitResponseObservation } = require('./lib/refactor-browser-response-observer.cjs');
 const ownedData = require('./lib/refactor-browser-owned-data.cjs');
 const workspaceUi = require('./lib/refactor-browser-workspace-ui.cjs');
 
@@ -99,6 +100,7 @@ async function sample(page) {
 async function main() {
   let browser, page;
   let networkDamage;
+  let responseOwner;
   let responseHandler;
   let observationsClosed = false;
   const pendingResponses = new Set();
@@ -109,18 +111,23 @@ async function main() {
       args: args.engine === 'chrome' ? ['--no-first-run', '--no-default-browser-check', '--ignore-certificate-errors-spki-list=' + tls.leaf_spki_sha256_base64] : [], timeout: 30000 });
     report.browser_version = await browser.version();
     page = await ownedData.createPage(browser, ready, args, tls);
+    const observationOptions = { disconnectedEvent: CDPSessionEvent.Disconnected,
+      onClaims: (operation, claims) => {
+        (operation === 'permit' ? report.initial_permits : report.renewals).push(claims);
+      },
+      onError: diagnostic => {
+        report.response_inspection_errors.push(diagnostic);
+        report.error ??= 'Could not inspect an actual successful permit or renewal response';
+      } };
     if (args['exercise-network-damage'] === 'true') {
       report.network_damage = {};
       report.permit_response_observer = {};
       networkDamage = await prepareNetworkDamage({ page, origin: ready.origin, facts: report.network_damage,
-        responseObserver: { disconnectedEvent: CDPSessionEvent.Disconnected, facts: report.permit_response_observer,
-          onClaims: (operation, claims) => {
-            (operation === 'permit' ? report.initial_permits : report.renewals).push(claims);
-          },
-          onError: diagnostic => {
-            report.response_inspection_errors.push(diagnostic);
-            report.error ??= 'Could not inspect an actual successful permit or renewal response';
-          } } });
+        responseObserver: { ...observationOptions, facts: report.permit_response_observer } });
+    } else if (args.engine === 'chrome') {
+      report.permit_response_observer = {};
+      responseOwner = await preparePermitResponseObservation({ ...observationOptions, page,
+        origin: ready.origin, facts: report.permit_response_observer });
     }
     await ownedData.install(page, ready, args);
     page.setDefaultTimeout(30000);
@@ -137,10 +144,10 @@ async function main() {
         report.successful_revocations.push({ path: operation, status: response.status(),
           observed_monotonic_ms: observedMonotonic, observed_unix_ms: observedUnix });
       }
-      // The network-damage owner's early session observes these exact response
-      // bodies after loadingFinished. Do not issue a competing default-session
-      // body read; this handler still retains API failures and revocations.
-      if (networkDamage) return;
+      // The owned early CDP session observes these exact response streams. Do
+      // not issue a competing default-session body read; this handler still
+      // retains API failures and revocations. Firefox keeps its native observer.
+      if (networkDamage || responseOwner) return;
       const initialPermit = operation.endsWith('/permit') && response.request().method() === 'POST';
       if ((!operation.endsWith('/renew') && !initialPermit) || response.status() !== 200) return;
       let inspectionStage = 'response-json';
@@ -489,6 +496,10 @@ async function main() {
       try { await networkDamage.close(); }
       catch (error) { cleanupErrors.push('Owned network damage close: ' + String(error.message).slice(0, 300)); }
     }
+    if (responseOwner) {
+      try { await responseOwner.close(); }
+      catch (error) { cleanupErrors.push('Owned response observer close: ' + String(error.message).slice(0, 300)); }
+    }
     if (browser) {
       try { await browser.close(); report.browser_closed = true; }
       catch (error) { cleanupErrors.push('Browser close: ' + String(error.message).slice(0, 300)); }
@@ -536,6 +547,8 @@ async function main() {
     report.renewal_sequence_valid = report.renewals.every((renewal, index, all) =>
       renewal.lease_sequence === index + 2 && (!index || renewal.connection_generation === all[0].connection_generation));
     if (report.error !== null || report.page_errors.length !== 0 || report.api_failures.length !== 0 || !report.renewal_sequence_valid ||
+        (args.engine === 'chrome' && report.permit_response_observer?.passed !== true) ||
+        (responseOwner && report.permit_response_observer?.session_owner?.passed !== true) ||
         (args['exercise-network-damage'] === 'true' && report.network_damage?.passed !== true)) {
       report.passed = false;
       process.exitCode = 1;

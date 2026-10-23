@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { EventEmitter } = require('node:events');
-const { createPermitResponseObserver } = require('../../scripts/lib/refactor-browser-response-observer.cjs');
+const { createPermitResponseObserver, preparePermitResponseObservation } = require('../../scripts/lib/refactor-browser-response-observer.cjs');
 const { prepareNetworkDamage } = require('../../scripts/lib/refactor-browser-network-damage.cjs');
 
 const origin = 'https://127.0.0.1:43817';
@@ -809,4 +809,123 @@ test('raw buffers are released before either a claims or safe error callback is 
     assert.equal(callbacks, 1);
     noPrivateOutput(facts);
   }
+});
+
+function steadyPage({ send, detach } = {}) {
+  const session = new EventEmitter(), calls = [], facts = {}, claims = [], errors = [];
+  session.send = async (method, params) => {
+    calls.push({ method, params });
+    return send ? send(method, params, session) : {};
+  };
+  session.detach = async () => { calls.push({ method: 'detach' }); if (detach) await detach(); };
+  const page = { url: () => 'about:blank', createCDPSession: async () => session };
+  const prepare = () => preparePermitResponseObservation({ page, origin, facts,
+    disconnectedEvent: disconnected, onClaims: (operation, value) => claims.push({ operation, value }),
+    onError: error => errors.push(error) });
+  return { session, calls, facts, claims, errors, page, prepare };
+}
+
+function steadyRequest(session, terminal = 'finished') {
+  session.emit('Network.requestWillBeSent', { requestId: '17.9', request: { url: permitUrl, method: 'POST' } });
+  session.emit('Network.responseReceived', { requestId: '17.9', response: { url: permitUrl, status: 200 } });
+  if (terminal === 'finished') session.emit('Network.loadingFinished', { requestId: '17.9', encodedDataLength: 1024 });
+  if (terminal === 'canceled') session.emit('Network.loadingFailed', { requestId: '17.9', errorText: 'net::ERR_ABORTED', canceled: true });
+}
+
+test('steady Chromium registers its observer before bounded Network.enable and never changes network conditions', async () => {
+  const value = steadyPage({ send: async (method, params, session) => {
+    if (method === 'Network.enable') {
+      assert.deepEqual(params, { maxTotalBufferSize: 8 * 1024 * 1024, maxResourceBufferSize: 256 * 1024,
+        maxPostDataSize: 0, enableDurableMessages: true });
+      assert.equal(session.listenerCount('Network.requestWillBeSent'), 1);
+      steadyRequest(session, 'canceled');
+    } else if (method === 'Network.streamResourceContent') {
+      assert.deepEqual(params, { requestId: '17.9' });
+      return { bufferedData: Buffer.from(JSON.stringify(body())).toString('base64') };
+    } else if (method !== 'Network.disable') throw new Error('Unexpected command, including late default body reads');
+    return {};
+  } });
+  const owner = await value.prepare();
+  await owner.close();
+  assert.equal(value.facts.passed, true);
+  assert.equal(value.facts.session_owner.passed, true);
+  assert.equal(value.facts.session_owner.prepared_before_navigation, true);
+  assert.equal(value.facts.canceled_loads, 1);
+  assert.equal(value.facts.normal_loads, 0);
+  assert.equal(value.facts.network_all_completed_normally, false);
+  assert.equal(value.claims.length, 1);
+  assert.deepEqual(value.calls.map(call => call.method), ['Network.enable', 'Network.streamResourceContent', 'Network.disable', 'detach']);
+  assert.equal(value.session.eventNames().length, 0);
+  noPrivateOutput(value.facts);
+});
+
+test('steady completed-response fallback reads the exact request in the same session without manufacturing a terminal', async () => {
+  const value = steadyPage({ send: async (method, params) => {
+    if (method === 'Network.streamResourceContent') throw new Error('stream-unavailable');
+    if (method === 'Network.getResponseBody') {
+      assert.deepEqual(params, { requestId: '17.9' });
+      return { body: JSON.stringify(body()), base64Encoded: false };
+    }
+    return {};
+  } });
+  const owner = await value.prepare();
+  steadyRequest(value.session);
+  await owner.close();
+  assert.equal(value.facts.session_owner.passed, true);
+  assert.equal(value.facts.normal_loads, 1);
+  assert.equal(value.facts.failed_loads, 0);
+  assert.equal(value.facts.observations[0].stream.fallback_used, true);
+  assert.equal(value.facts.observations[0].stream.raw_buffers_cleared, true);
+  noPrivateOutput(value.facts);
+});
+
+test('steady shutdown drains pending same-session streams before disable and is idempotent', async () => {
+  let resolveStream;
+  const value = steadyPage({ send: (method) => method === 'Network.streamResourceContent'
+    ? new Promise(resolve => { resolveStream = resolve; }) : Promise.resolve({}) });
+  const owner = await value.prepare();
+  steadyRequest(value.session);
+  const close = owner.close();
+  assert.equal(owner.close(), close);
+  assert.equal(value.calls.some(call => call.method === 'Network.disable'), false);
+  resolveStream({ bufferedData: Buffer.from(JSON.stringify(body())).toString('base64') });
+  await close;
+  assert.equal(value.facts.session_owner.passed, true);
+  assert.equal(value.facts.pending, 0);
+  assert.deepEqual(value.calls.slice(-2).map(call => call.method), ['Network.disable', 'detach']);
+});
+
+test('steady setup and drain failures still release the owned session without retaining private exceptions', async () => {
+  const setup = steadyPage({ send: async method => { if (method === 'Network.enable') throw new Error(privateToken); return {}; } });
+  await assert.rejects(setup.prepare(), /Could not prepare owned/);
+  assert.deepEqual(setup.calls.map(call => call.method), ['Network.enable', 'Network.disable', 'detach']);
+  assert.equal(setup.facts.session_owner.closed, true);
+  assert.equal(setup.facts.session_owner.passed, false);
+  assert.equal(setup.session.eventNames().length, 0);
+  noPrivateOutput(setup.facts);
+  const drain = steadyPage({ send: async method => {
+    if (method === 'Network.streamResourceContent' || method === 'Network.disable') throw new Error(privateToken);
+    return {};
+  } });
+  const owner = await drain.prepare();
+  steadyRequest(drain.session, 'canceled');
+  await assert.rejects(owner.close(), /cleanup failed/);
+  assert.equal(drain.facts.passed, false);
+  assert.equal(drain.facts.session_owner.passed, false);
+  assert.equal(drain.facts.session_owner.session_detached, true);
+  assert.equal(drain.session.eventNames().length, 0);
+  assert.deepEqual(drain.facts.session_owner.cleanup_errors, ['response-observer', 'network-disable']);
+  noPrivateOutput(drain.facts);
+});
+
+test('steady observation rejects previously navigated or unowned pages before creating a session', async () => {
+  const value = steadyPage();
+  value.page.url = () => origin;
+  await assert.rejects(value.prepare(), /fresh owned HTTPS loopback page/);
+  assert.equal(value.calls.length, 0);
+  for (const other of ['http://127.0.0.1:43817', 'https://example.com:43817', origin + '/path']) {
+    await assert.rejects(preparePermitResponseObservation({ page: { ...value.page, url: () => 'about:blank' },
+      origin: other, facts: {} }), /fresh owned HTTPS loopback page/);
+  }
+  assert.equal(value.calls.length, 0);
 });

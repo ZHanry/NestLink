@@ -18,10 +18,11 @@ schema 14 增加双方安装证明的重连交换与持久回执：严格递增�
 
 审计 schema 9 区分管理登录、已验签安装、用途绑定设备凭据、本地操作、未认证尝试和操作者未知的历史记录；事务核对账号/登录/设备关联。已实现业务的关键状态变化携带操作者，新增远控申请、首次许可、恢复码实际消费及固定密码计算前的尝试记录，重试不重复记录同一次状态转换。审计只保存必要身份 UUID，不保存登录名、密码、令牌、因子、签名或业务载荷；中继/edge/TURN allocation、公开服务与配额事件随对应业务继续实现。
 
-使用 Rust 1.96.0，在 monorepo 根目录构建：
+构建和打包统一由 GitHub Actions 使用 Rust 1.96.0 执行。部署前下载同一干净源码提交生成的后端包与材料清单，并核验文件大小、SHA-256 和对应检查结果；构建入口见 [RC 构建](CANDIDATE-BUILD.md)。使用者电脑和部署服务器只运行核验过的产物，不承担编译或打包。
+
+GitHub runner 中的源码构建命令为 `cargo build --locked -p nestlink-server`。部署服务器使用下载包内的可执行文件初始化和运行服务：
 
 ```text
-cargo build --locked -p nestlink-server
 nestlink-server init --directory <新目录> --management-origin https://console.example.com
 nestlink-server bootstrap --config <新目录>/server.toml --username admin --password-file <私密密码文件>
 nestlink-server check --config <新目录>/server.toml
@@ -53,4 +54,4 @@ nestlink-server stun --listen 0.0.0.0:28744
 
 受管 TURN 由 `node-turn --config <node.toml>` 运行，并从节点配置旁读取私密 `turn.toml`；`--turn-config` 可指定其他路径。该命令只接受启用 `relay` 角色的节点，等待 NodeControl 的第一份有效租约后再绑定 UDP/TCP/TLS 监听，并将 TURN grant 注册表和终止租约 watch 共用给 `nestlink-turn-service`。部署配置模板、PEM 证书链/私钥要求、官方证书续期和 relay public pool 防火墙说明见 [NODE-TURN-DEPLOYMENT.md](NODE-TURN-DEPLOYMENT.md) 与 [node-turn.toml](config-templates/node-turn.toml)。运行监听不会自动发布管理面 endpoint，也不代替真实公网 DNS、TLS 签发、NAT/防火墙和跨网验证。
 
-STUN 进程独立监听配置的 UDP 地址，默认 28744；它仅返回实际源 IP/端口，不建立转发 allocation。请求最大 512 字节，每 IP 每秒最多 10 个、全局每秒最多 1000 个，速率缓存有界。用 `--listen [::]:28744` 可运行 IPv6 地址发现；是否双栈由 OS bind 行为决定，不能以监听成功代替 IPv4/IPv6 跨网验收。控制配置的 `stun_servers` 通过登录后的 `/api/v3/network/discovery` 提供给已核验部署的原生端点和 WebRTC 双方，默认空，不硬编码公共服务。桌面和 Android 的私网拨号范围只由本机用户批准和持久保存，部署响应不能授予该权限。详见 [原生网络设置](NATIVE-NETWORK-SETTINGS.md)；生产防火墙与跨网验收仍需实际环境。
+STUN 进程独立监听配置的 UDP 地址，默认 28744；它仅返回实际源 IP/端口，不建立转发 allocation。请求最大 512 字节，每 IP 每秒最多 10 个、全局每秒最多 1000 个，速率缓存有界。用 `--listen [::]:28744` 可运行 IPv6 地址发现；是否双栈由 OS bind 行为决定，不能以监听成功代替 IPv4/IPv6 跨网验收。控制配置的 `stun_servers` 通过登录后的 `/api/v3/network/discovery` 提供给已核验部署的原生端点和 WebRTC 双方，默认空，不硬编码公共服务。Windows 桌面端的私网拨号范围只由本机用户批准和持久保存，部署响应不能授予该权限。详见 [原生网络设置](NATIVE-NETWORK-SETTINGS.md)；生产防火墙与跨网验收仍需实际环境。

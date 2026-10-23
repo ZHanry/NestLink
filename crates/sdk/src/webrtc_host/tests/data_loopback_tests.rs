@@ -328,6 +328,184 @@ impl LoopbackPair {
         self.host.proof_complete.store(true, Ordering::Release);
         Ok((host_lease, controller_lease))
     }
+
+    async fn activate_setup_data(
+        &mut self,
+        management: &ManagedDataFixture,
+        controller: &DeviceIdentity,
+        host_identity: &DeviceIdentity,
+        factory: HostDataFactory,
+    ) -> TestResult<(LeaseControl, LeaseControl, VerifiedPermit)> {
+        let permit = &management.permit;
+        assert!(permit.claims().is_setup());
+        let mut controller_setup = self
+            .controller_setup
+            .take()
+            .ok_or_else(|| io::Error::other("controller setup already consumed"))?;
+        self.host.setup = Some(
+            self.host_setup
+                .take()
+                .ok_or_else(|| io::Error::other("host setup already consumed"))?,
+        );
+        let generation = permit.claims().connection_generation;
+        self.host.media_factory = Some(Box::new(move |lease| {
+            let display = Display {
+                source: 1,
+                logical: InputLayout {
+                    left: 0,
+                    top: 0,
+                    width: 320,
+                    height: 180,
+                },
+            };
+            let epoch = VideoEpoch {
+                layout: 1,
+                connection: generation,
+            };
+            let capture = VideoController::attach(lease, EmptyCapture, epoch, vec![display])?;
+            let video = HostVideoSource::new(
+                capture,
+                epoch,
+                display,
+                VideoConfig {
+                    width: 320,
+                    height: 180,
+                    fps: 10,
+                    bitrate_kbps: 500,
+                },
+            );
+            Ok(HostMediaSources::new(video, None).with_data_factory(factory))
+        }));
+
+        let transcript = controller_setup.session.proof_transcript();
+        let signature = controller.identity.prove(&transcript)?;
+        controller_setup.session.confirm_endpoint(
+            EndpointRole::Controller,
+            &controller.identity.public_key(),
+            &signature,
+            controller_setup.clock.monotonic_ms(),
+        )?;
+        let opening = WebRtcControl::EndpointProof {
+            schema_version: SCHEMA_VERSION,
+            session_id: permit.claims().session_id.clone(),
+            connection_generation: permit.claims().connection_generation,
+            lease_sequence: permit.claims().lease_sequence,
+            proof: NativeProof {
+                transcript: Some(transcript.clone()),
+                signature,
+                peer_transcript_signature: Vec::new(),
+            },
+        };
+        self.controller_control
+            .send(&Bytes::from(opening.encode_validated(permit.claims())?))
+            .await?;
+
+        let control = self.controller_control.clone();
+        let messages = &mut self.controller_control_messages;
+        let controller_activation = async {
+            let middle = tokio::time::timeout(Duration::from_secs(3), messages.recv())
+                .await?
+                .ok_or_else(|| io::Error::other("host setup proof response missing"))?;
+            let WebRtcControl::EndpointProof { proof, .. } =
+                WebRtcControl::decode_validated(&middle, permit.claims())?
+            else {
+                return Err(io::Error::other("host sent an unexpected setup proof message").into());
+            };
+            let host_transcript = proof
+                .transcript
+                .ok_or_else(|| io::Error::other("host setup proof transcript missing"))?;
+            matches_endpoint_transcript(&transcript, &host_transcript)?;
+            verify_endpoint_proof(
+                &host_transcript,
+                &host_identity.identity.public_key(),
+                &proof.signature,
+            )?;
+            verify_endpoint_proof(
+                &transcript,
+                &host_identity.identity.public_key(),
+                &proof.peer_transcript_signature,
+            )?;
+            controller_setup.session.confirm_endpoint(
+                EndpointRole::Host,
+                &host_identity.identity.public_key(),
+                &proof.peer_transcript_signature,
+                controller_setup.clock.monotonic_ms(),
+            )?;
+            let final_proof = WebRtcControl::EndpointProof {
+                schema_version: SCHEMA_VERSION,
+                session_id: permit.claims().session_id.clone(),
+                connection_generation: permit.claims().connection_generation,
+                lease_sequence: permit.claims().lease_sequence,
+                proof: NativeProof {
+                    transcript: Some(host_transcript.clone()),
+                    signature: controller.identity.prove(&host_transcript)?,
+                    peer_transcript_signature: Vec::new(),
+                },
+            };
+            control
+                .send(&Bytes::from(final_proof.encode_validated(permit.claims())?))
+                .await?;
+            let accepted = tokio::time::timeout(Duration::from_secs(3), messages.recv())
+                .await?
+                .ok_or_else(|| io::Error::other("host setup proof acceptance missing"))?;
+            assert!(matches!(
+                WebRtcControl::decode_validated(&accepted, permit.claims())?,
+                WebRtcControl::EndpointProofAccepted { .. }
+            ));
+            let clock = controller_setup.clock.clone();
+            let controller_lease = take_proved_lease(controller_setup)?;
+            assert!(
+                controller_lease
+                    .check_media_binding(nestlink_transport_stream::Channel::Video, generation)
+                    .is_err()
+            );
+            let bytes = tokio::time::timeout(Duration::from_secs(3), messages.recv())
+                .await?
+                .ok_or_else(|| io::Error::other("host setup activation signature missing"))?;
+            let WebRtcControl::HostRenewalSignature {
+                signature,
+                lease_sequence: 2,
+                ..
+            } = WebRtcControl::decode_validated(&bytes, permit.claims())?
+            else {
+                return Err(io::Error::other("expected signed setup activation").into());
+            };
+            let view = management
+                .controller_sdk
+                .remote(&permit.claims().session_id)
+                .await?;
+            let started = clock.monotonic_ms();
+            let running = management
+                .controller_sdk
+                .renew_permit(controller, &view, permit, signature)
+                .await?;
+            controller_lease.renew(running.clone(), started)?;
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>((controller_lease, running))
+        };
+        // This is the production entry point: proof, signed setup activation,
+        // media factory and HostDataRuntime initialization remain one path.
+        let (host_result, controller_result) = tokio::join!(
+            tokio::time::timeout(
+                Duration::from_secs(10),
+                self.host
+                    .complete_endpoint_proof(Some(&management.host_sdk), host_identity),
+            ),
+            controller_activation,
+        );
+        host_result??;
+        let (controller_lease, running) = controller_result?;
+        assert!(!running.claims().is_setup());
+        assert_eq!(running.claims().lease_sequence, 2);
+        assert_ne!(running.digest(), permit.digest());
+        assert_eq!(self.host.current_permit().digest(), running.digest());
+        assert!(self.host.data_runtime.is_some());
+        assert!(self.host.proof_complete.load(Ordering::Acquire));
+        let host_lease =
+            self.host.lease.clone().ok_or_else(|| {
+                io::Error::other("production activation did not retain its lease")
+            })?;
+        Ok((host_lease, controller_lease, running))
+    }
 }
 
 fn take_proved_lease(setup: SessionSetup) -> TestResult<LeaseControl> {
@@ -825,15 +1003,137 @@ fn make_service_state(permit: &VerifiedPermit, source: Vec<u8>) -> ServiceState 
     }
 }
 
+struct ManagedDataFixture {
+    _server: RenewalServer,
+    controller_sdk: Sdk,
+    host_sdk: Sdk,
+    permit: VerifiedPermit,
+}
+
+impl ManagedDataFixture {
+    async fn new(controller: &DeviceIdentity, host: &DeviceIdentity) -> TestResult<Self> {
+        use nestlink_auth::{Secret, VaultKey, random_id};
+        use nestlink_protocol::api::{ApprovalChoice, RemoteRequest};
+        use nestlink_server::{AppState, router};
+        use nestlink_storage::Store;
+
+        let deployment_id = random_id();
+        let signer = nestlink_identity::PermitSigner::generate();
+        let issuer = signer.public_key();
+        let trust = || crate::DeploymentTrust {
+            deployment_id: deployment_id.clone(),
+            permit_issuer: issuer,
+        };
+        let password = "webrtc-proved-data-binding-regression-password";
+        let mut store = Store::in_memory(&deployment_id)?;
+        store.bootstrap_admin("admin", password)?;
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+        let origin = format!("http://{}", listener.local_addr()?);
+        let app = router(AppState::new(
+            store,
+            VaultKey::from_bytes([64; 32]),
+            signer,
+            origin.clone(),
+            false,
+        )?);
+        let server = RenewalServer(tokio::spawn(async move {
+            let _ = axum::serve(listener, app).await;
+        }));
+        let mut controller_sdk = Sdk::connect(&origin, trust(), true).await?;
+        controller_sdk
+            .login("admin".into(), Secret::from_text(password.into()), None)
+            .await?;
+        let mut host_sdk = Sdk::connect(&origin, trust(), true).await?;
+        host_sdk
+            .login("admin".into(), Secret::from_text(password.into()), None)
+            .await?;
+        controller_sdk
+            .register_browser_endpoint(controller, "Data controller".into(), "direct_only".into())
+            .await?;
+        host_sdk
+            .enroll(
+                host,
+                "Data host".into(),
+                "windows".into(),
+                vec!["host".into(), "vp8".into()],
+                "direct_only".into(),
+            )
+            .await?;
+        let permissions: Vec<_> = DATA_PERMISSIONS.iter().map(|value| *value as i32).collect();
+        let request = controller_sdk
+            .create_remote(RemoteRequest {
+                id: random_id(),
+                controller_device_id: controller.device_id.clone(),
+                host_device_id: host.device_id.clone(),
+                permissions: permissions.clone(),
+                path_mode: "direct_only".into(),
+            })
+            .await?;
+        host_sdk
+            .approve(
+                host,
+                &request,
+                ApprovalChoice {
+                    approved: true,
+                    permissions,
+                    paths: vec![Path::Direct as i32],
+                },
+            )
+            .await?;
+        let prepared = host_sdk.remote(&request.id).await?;
+        host_sdk.mark_browser_host_ready(host, &prepared).await?;
+        let permit = controller_sdk.permit(&request.id).await?;
+        assert!(permit.claims().is_setup());
+        Ok(Self {
+            _server: server,
+            controller_sdk,
+            host_sdk,
+            permit,
+        })
+    }
+}
+
 #[tokio::test]
 async fn proved_webrtc_business_channels_run_real_file_and_clipboard_rpcs_and_clean_owners()
 -> TestResult {
+    run_proved_data_rpcs(false).await
+}
+
+#[tokio::test]
+async fn production_setup_activation_keeps_proved_data_binding_through_renewal_and_revocation()
+-> TestResult {
+    run_proved_data_rpcs(true).await
+}
+
+async fn run_proved_data_rpcs(activate_setup: bool) -> TestResult {
     let controller = DeviceIdentity::generate();
     let host_identity = DeviceIdentity::generate();
-    let permit =
-        test_permit_with_permissions(&controller, &host_identity, DATA_PERMISSIONS.to_vec())?;
+    let management = if activate_setup {
+        Some(ManagedDataFixture::new(&controller, &host_identity).await?)
+    } else {
+        None
+    };
+    let permit = if let Some(management) = &management {
+        management.permit.clone()
+    } else {
+        test_permit_with_permissions(&controller, &host_identity, DATA_PERMISSIONS.to_vec())?
+    };
+    // Match BrowserDataChannels: capture the signed channel identity before
+    // offering or proving the connection, never after setup activation.
+    let kinds = data::authorized_channels(&permit);
+    let permit_digest = data::permit_digest(&permit)?;
+    let controller_bindings: Vec<_> = kinds
+        .iter()
+        .copied()
+        .map(|kind| WebRtcDataBinding::for_permit(permit.claims(), permit_digest, kind))
+        .collect::<Result<_, _>>()?;
     let mut pair = LoopbackPair::connected(&permit, &controller, &host_identity).await?;
-    let (host_lease, controller_lease) = pair.prove(&permit, &controller, &host_identity).await?;
+    let controller_clock = pair
+        .controller_setup
+        .as_ref()
+        .ok_or_else(|| io::Error::other("controller setup missing"))?
+        .clock
+        .clone();
     let file_payload: Vec<_> = (0..FILE_PAYLOAD_BYTES as usize + 19)
         .map(|index| (index % 251) as u8)
         .collect();
@@ -886,38 +1186,53 @@ async fn proved_webrtc_business_channels_run_real_file_and_clipboard_rpcs_and_cl
         }))
     });
 
-    let runtime = data::HostDataRuntime::start(
-        pair.host.peer.clone(),
-        host_lease,
-        permit.clone(),
-        pair.host.permit_rx.clone(),
-        pair.host.pending_data_channels.clone(),
-        pair.host.cancel_tx.clone(),
-        Some(factory),
-    )
-    .await?
-    .ok_or_else(|| io::Error::other("data permissions did not start a runtime"))?;
-    pair.host.data_runtime = Some(runtime);
+    let (controller_lease, mut running_permit) = if let Some(management) = &management {
+        let (host_lease, controller_lease, running) = pair
+            .activate_setup_data(management, &controller, &host_identity, factory)
+            .await?;
+        host_lease.check_media_binding(
+            nestlink_transport_stream::Channel::Video,
+            permit.claims().connection_generation,
+        )?;
+        (controller_lease, running)
+    } else {
+        let (host_lease, controller_lease) =
+            pair.prove(&permit, &controller, &host_identity).await?;
+        let runtime = data::HostDataRuntime::start(
+            pair.host.peer.clone(),
+            host_lease,
+            permit.clone(),
+            pair.host.permit_rx.clone(),
+            pair.host.pending_data_channels.clone(),
+            pair.host.cancel_tx.clone(),
+            Some(factory),
+        )
+        .await?
+        .ok_or_else(|| io::Error::other("data permissions did not start a runtime"))?;
+        pair.host.data_runtime = Some(runtime);
+        (controller_lease, permit.clone())
+    };
 
-    let kinds = data::authorized_channels(&permit);
     let channels: Vec<_> = kinds.iter().copied().map(data::transport_channel).collect();
     let (mut controller_external, ports) = ExternalChannelRuntime::new(
         controller_lease.clone(),
         permit.claims().connection_generation,
         &channels,
     )?;
-    let permit_digest = data::permit_digest(&permit)?;
-    let (controller_permit_tx, controller_permit_rx) = watch::channel(permit.clone());
+    let (controller_permit_tx, controller_permit_rx) = watch::channel(running_permit.clone());
     let (controller_cancel, _) = watch::channel(false);
     pair.controller_cancel = controller_cancel.clone();
     let mut controller_workers: Vec<JoinHandle<Result<(), RemoteError>>> = Vec::new();
-    for ((kind, port), data_binding) in kinds.iter().copied().zip(ports).zip(
-        kinds
-            .iter()
-            .copied()
-            .map(|kind| WebRtcDataBinding::for_permit(permit.claims(), permit_digest, kind)),
-    ) {
-        let binding = data_binding?;
+    for ((kind, port), binding) in kinds.iter().copied().zip(ports).zip(controller_bindings) {
+        assert_eq!(*binding.permit_sha256(), permit.digest());
+        assert_eq!(binding.lease_sequence(), permit.claims().lease_sequence);
+        if management.is_some() {
+            assert_ne!(*binding.permit_sha256(), running_permit.digest());
+            assert_ne!(
+                binding.lease_sequence(),
+                running_permit.claims().lease_sequence
+            );
+        }
         let (channel, incoming) = pair
             .controller_business
             .remove(&kind)
@@ -952,6 +1267,56 @@ async fn proved_webrtc_business_channels_run_real_file_and_clipboard_rpcs_and_cl
     let roots = file_read.list_roots(&nestlink_auth::random_id()).await?;
     assert_eq!(roots.len(), 1);
     assert_eq!(roots[0].root_id, state.file_read_root);
+    if let Some(management) = &management {
+        // Keep the same SCTP streams and fragment bindings through a second
+        // genuine signed renewal; subsequent file bytes must still pass.
+        let claims = running_permit.claims();
+        let due_at =
+            claims.issued_at_unix_ms + (claims.expires_at_unix_ms - claims.issued_at_unix_ms) / 3;
+        tokio::time::sleep(Duration::from_millis(
+            due_at.saturating_sub(unix_ms()?).saturating_add(1),
+        ))
+        .await;
+        assert!(
+            pair.host
+                .send_renewal_signature(&management.host_sdk, &host_identity)
+                .await?
+        );
+        let bytes = tokio::time::timeout(
+            Duration::from_secs(3),
+            pair.controller_control_messages.recv(),
+        )
+        .await?
+        .ok_or_else(|| io::Error::other("running data renewal signature missing"))?;
+        let WebRtcControl::HostRenewalSignature {
+            signature,
+            lease_sequence: 3,
+            ..
+        } = WebRtcControl::decode_validated(&bytes, running_permit.claims())?
+        else {
+            return Err(io::Error::other("expected signed running data renewal").into());
+        };
+        let view = management
+            .controller_sdk
+            .remote(&permit.claims().session_id)
+            .await?;
+        let started = controller_clock.monotonic_ms();
+        let fresh = management
+            .controller_sdk
+            .renew_permit(&controller, &view, &running_permit, signature)
+            .await?;
+        controller_lease.renew(fresh.clone(), started)?;
+        controller_permit_tx.send_replace(fresh.clone());
+        pair.host
+            .refresh_authority(&management.host_sdk, &host_identity)
+            .await?;
+        assert_eq!(pair.host.current_permit().digest(), fresh.digest());
+        assert!(!*pair.host.cancel_tx.borrow());
+        running_permit = fresh;
+        let renewed_roots = file_read.list_roots(&nestlink_auth::random_id()).await?;
+        assert_eq!(renewed_roots.len(), 1);
+        assert_eq!(renewed_roots[0].root_id, state.file_read_root);
+    }
     let mut download = file_read
         .open(
             &nestlink_auth::random_id(),
@@ -1084,15 +1449,27 @@ async fn proved_webrtc_business_channels_run_real_file_and_clipboard_rpcs_and_cl
     clipboard_write.retire()?;
     drop(clipboard_transport);
 
+    let stop_reason = if let Some(management) = &management {
+        management
+            .controller_sdk
+            .revoke_remote(&permit.claims().session_id)
+            .await?;
+        assert!(
+            pair.host
+                .refresh_authority(&management.host_sdk, &host_identity)
+                .await
+                .is_err()
+        );
+        StopReason::Revoked
+    } else {
+        StopReason::ExplicitExit
+    };
     // Stop controller workers before closing the host peer. This lets each
     // worker observe its cancellation signal instead of treating a transport
     // close as an unexpected worker failure during cleanup.
     controller_cancel.send_replace(true);
-    controller_permit_tx.send_replace(permit.clone());
-    let close_report = pair
-        .host
-        .close_with_reason_report(StopReason::ExplicitExit)
-        .await;
+    controller_permit_tx.send_replace(running_permit);
+    let close_report = pair.host.close_with_reason_report(stop_reason).await;
     assert!(!close_report.lease_stop_failed);
     assert!(!close_report.peer_close_failed);
     assert!(!close_report.data_worker_cleanup_failed);
@@ -1108,10 +1485,18 @@ async fn proved_webrtc_business_channels_run_real_file_and_clipboard_rpcs_and_cl
         .ok_or_else(|| io::Error::other("service owner was not created"))?;
     assert!(evidence.file_read.status().finished);
     assert!(evidence.file_write.status().finished);
+    assert!(
+        evidence
+            .file_write
+            .status()
+            .transfers
+            .values()
+            .all(|state| { state.file_closed && state.temporary_removed })
+    );
     assert!(evidence.clipboard.status().finished);
     assert_eq!(evidence.shutdown_calls.load(Ordering::Acquire), 1);
 
-    controller_lease.stop(StopReason::ExplicitExit)?;
+    controller_lease.stop(stop_reason)?;
     pair.controller_peer.close().await?;
     for worker in controller_workers {
         tokio::time::timeout(Duration::from_secs(3), worker).await???;

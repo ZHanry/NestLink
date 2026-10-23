@@ -76,4 +76,4 @@ cargo test --locked -p nestlink-sdk --test service_web_publication \
 
 测试检查请求体和 Host 保留、内部凭据移除、签名续租、停止后的本地任务结束、Caddy 子树实际清空及后续公网请求未触达后端。全部成功后才在唯一 `web-acceptance-<UUID>` 子目录生成 `acceptance-passed.json`。保留日志、运行环境、二进制哈希和该成功收据作为证据；失败或未运行时不得填写通过。
 
-本机跨公网回流仍不能证明公司网络或手机流量访问成功；正式发布还需从所要求的独立外网执行访问、断网、撤销、重连验收，并记录真实客户端平台。Android 支持范围按用户确认收敛为 11–16，Android 10 不在验收范围内。
+本机跨公网回流仍不能证明公司网络或手机流量访问成功；正式发布还需从所要求的独立外网执行访问、断网、撤销、重连验收，并记录真实客户端平台。当前客户端验收范围为 Windows 桌面端和 Web 端，Linux x64/ARM64 保留后端服务验收；范围以 [product-scope.json](../../config/product-scope.json) 为准。Android 已移出当前产品和发布验收范围。

@@ -264,6 +264,14 @@ def validate_receipts(browser, host, data, database, exit_codes):
         require(browser.get(field) == [], "browser-" + field)
     require(browser.get("error") is None and not browser.get("cleanup_errors"), "browser-errors")
     require(browser.get("pending_response_observations_after_close") == 0, "response-observers")
+    observer = browser.get("permit_response_observer", {})
+    require(isinstance(observer, dict) and observer.get("passed") is True
+            and observer.get("closed") is True and observer.get("listeners_removed") is True
+            and observer.get("pending") == 0 and observer.get("errors") == [], "permit-response-observer")
+    owner = observer.get("session_owner", {}) if isinstance(observer, dict) else {}
+    require(isinstance(owner, dict) and all(owner.get(key) is True for key in (
+        "session_created", "prepared_before_navigation", "network_disabled", "session_detached", "closed", "passed"))
+        and owner.get("cleanup_errors") == [], "permit-response-session-owner")
     profile = browser.get("capture_profile", {})
     require(all(profile.get(key) == value for key, value in {
         "name": "smoke", "width": 320, "height": 180, "fps": 10,
