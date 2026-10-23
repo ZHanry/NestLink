@@ -514,16 +514,15 @@ impl DesktopApp {
                                 session.status,
                                 NativeSessionStatus::Establishing | NativeSessionStatus::Connected
                             )
-                        }) {
-                            if ui.button(self.t("断开连接", "Disconnect")).clicked() {
-                                self.action(
-                                    snapshot,
-                                    Action::StopNativeSession {
-                                        request_id: session.request_id.clone(),
-                                        connection_generation: session.connection_generation,
-                                    },
-                                );
-                            }
+                        }) && ui.button(self.t("断开连接", "Disconnect")).clicked()
+                        {
+                            self.action(
+                                snapshot,
+                                Action::StopNativeSession {
+                                    request_id: session.request_id.clone(),
+                                    connection_generation: session.connection_generation,
+                                },
+                            );
                         }
                     });
             });
@@ -595,14 +594,13 @@ impl DesktopApp {
                                     )
                                     .truncate(),
                                 );
-                                if let Some(id) = local_id {
-                                    if ui
+                                if let Some(id) = local_id
+                                    && ui
                                         .small_button(self.t("复制 ID", "Copy ID"))
                                         .on_hover_text(id)
                                         .clicked()
-                                    {
-                                        ui.ctx().copy_text(id.into());
-                                    }
+                                {
+                                    ui.ctx().copy_text(id.into());
                                 }
                                 if local.is_none()
                                     && snapshot.devices.loading.is_none()

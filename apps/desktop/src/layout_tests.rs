@@ -176,6 +176,18 @@ fn bounded_remote_workspace_keeps_connection_action_visible_after_section_change
             viewport.contains_rect(baseline[0]),
             "connect action outside viewport: {baseline:?}"
         );
+        let audio = workspace.bounds("系统声音");
+        let view_only = workspace.bounds("仅查看");
+        assert_eq!(audio.len(), 1);
+        assert_eq!(view_only.len(), 1);
+        assert!(
+            viewport.contains_rect(audio[0]),
+            "audio option outside the minimum workspace"
+        );
+        assert!(
+            audio[0].top() > view_only[0].bottom(),
+            "connection options inherited a horizontal parent layout"
+        );
         workspace.click(size, "本机访问");
         assert!(
             workspace.bounds("进入桌面").is_empty(),
@@ -476,6 +488,22 @@ fn request_task_closes_when_approval_state_and_errors_change_during_a_click() {
             }
             let close = workspace.bounds("关闭详情");
             assert_eq!(close.len(), 1);
+            workspace.frame(
+                size,
+                vec![
+                    egui::Event::PointerMoved(egui::pos2(size.x * 0.5, size.y * 0.5)),
+                    egui::Event::MouseWheel {
+                        unit: egui::MouseWheelUnit::Point,
+                        delta: egui::vec2(0., -240.),
+                        modifiers: Default::default(),
+                    },
+                ],
+            );
+            assert_eq!(
+                workspace.bounds("关闭详情"),
+                close,
+                "scroll moved the request-task footer"
+            );
             let position = close[0].center();
             workspace.frame(
                 size,

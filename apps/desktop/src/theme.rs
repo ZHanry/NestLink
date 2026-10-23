@@ -265,8 +265,8 @@ pub fn icon(size: u32) -> io::Result<egui::IconData> {
             for sy in (y * source.height / size)..((y + 1) * source.height / size) {
                 for sx in (x * source.width / size)..((x + 1) * source.width / size) {
                     let offset = ((sy * source.width + sx) * 4) as usize;
-                    for channel in 0..4 {
-                        sum[channel] += u32::from(source.rgba[offset + channel]);
+                    for (channel, total) in sum.iter_mut().enumerate() {
+                        *total += u32::from(source.rgba[offset + channel]);
                     }
                     count += 1;
                 }
