@@ -495,6 +495,7 @@ fn request_task_closes_when_approval_state_and_errors_change_during_a_click() {
                     egui::Event::MouseWheel {
                         unit: egui::MouseWheelUnit::Point,
                         delta: egui::vec2(0., -240.),
+                        phase: egui::TouchPhase::Move,
                         modifiers: Default::default(),
                     },
                 ],

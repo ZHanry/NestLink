@@ -291,8 +291,10 @@ async function main() {
     // Its logout must not replace or revoke this page's bearer session, nor
     // the native host's login. The first page must still establish and renew
     // the real media session below after the shared cookies are cleared.
-    const sibling = await browser.newPage();
+    const sibling = await page.browserContext().newPage();
     try {
+      check(sibling.browserContext() === page.browserContext(),
+        'Concurrent sign-in must use the actual controller browser context');
       await sibling.goto(ready.origin, { waitUntil: 'networkidle0' });
       await sibling.locator('.entry-panel button.primary').click();
       await sibling.waitForSelector('#username', { visible: true });

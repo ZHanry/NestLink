@@ -313,6 +313,11 @@ async function main() {
   const button = name => page.getByRole('button', { name, exact: true });
   const workspace = () => waitFor(() => page.locator('.workspace').isVisible(), 'Workspace missing');
   const idleRemote = () => waitFor(() => page.locator('#remote-session').getByRole('button', { name: 'Request connection', exact: true }).isEnabled(), 'Remote cleanup did not finish');
+  const selectAccessMethod = async method => {
+    const permissions = page.locator('[aria-controls="remote-permissions"]');
+    if (await permissions.getAttribute('aria-expanded') !== 'true') await permissions.click();
+    await page.getByLabel('Access method', { exact: false }).selectOption(method);
+  };
   await test('production-trust-and-sign-in', async () => {
     await page.goto(origin, { waitUntil: 'networkidle' });
     await button('English').click();
@@ -325,15 +330,15 @@ async function main() {
   });
   await test('trusted-denial-cleans-and-manual-retry-works', async () => {
     await page.getByRole('button', { name: new RegExp(hostName) }).click();
-    await button('Connect in browser').click();
-    await page.getByLabel('Access method', { exact: false }).selectOption('trusted_device');
+    await button('Enter desktop').click();
+    await selectAccessMethod('trusted_device');
     const normalCount = count('POST', /^\/api\/v3\/remote$/);
     await button('Request connection').click();
     await waitFor(() => latest('POST', /^\/api\/v3\/remote\/trusted$/)?.status === 403, 'Trusted denial missing');
     await idleRemote();
     check(count('POST', /^\/api\/v3\/remote$/) === normalCount, 'Trusted request silently fell back');
     check(!(await button('Retry cleanup').isVisible()), 'Denied request retained cleanup owner');
-    await page.getByLabel('Access method', { exact: false }).selectOption('local_approval');
+    await selectAccessMethod('local_approval');
     await button('Request connection').click();
     await waitFor(() => count('POST', /^\/api\/v3\/remote$/) === normalCount + 1, 'Manual retry did not create request');
     await waitFor(async () => (await requiredApi('GET', '/remote')).requests.length === 1, 'Manual request not pending');
@@ -356,7 +361,7 @@ async function main() {
     report.fullscreen_validation_limit = 'Headless Chromium CDP Escape did not invoke the browser default in retained attempt10; this check uses the real external document.exitFullscreen API. Physical Escape remains installed-product acceptance.';
   });
   const requestPassword = async () => {
-    await page.getByLabel('Access method', { exact: false }).selectOption('password');
+    await selectAccessMethod('password');
     await button('Request connection').click();
     await page.locator('#remote-access-password').waitFor({ state: 'visible' });
     check((await page.locator('#remote-session').innerText()).includes('Host password revision ' + passwordRevision), 'Password revision not disclosed');

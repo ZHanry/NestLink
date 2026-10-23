@@ -6,14 +6,11 @@ pub enum Icon {
     Monitor,
     Devices,
     Share,
-    Network,
     Account,
-    List,
     Settings,
     Refresh,
     Audio,
     Close,
-    Copy,
 }
 
 /// Display the original PNG asset, shared with the window and tray icon.
@@ -75,25 +72,16 @@ pub fn paint(ui: &egui::Ui, icon: Icon, center: Pos2, size: f32, color: Color32)
                 line((15., 23.), (21., 23.));
             }
         }
-        Icon::Share | Icon::Network => {
+        Icon::Share => {
             for (x, y) in [(12., 4.), (4., 19.), (20., 19.)] {
                 ui.painter().circle_stroke(p(x, y), 2.5 * scale, stroke);
             }
             line((10.8, 6.5), (5.2, 16.5));
             line((13.2, 6.5), (18.8, 16.5));
-            if matches!(icon, Icon::Network) {
-                line((6.5, 19.), (17.5, 19.));
-            }
         }
         Icon::Account => {
             ui.painter().circle_stroke(p(12., 7.), 4. * scale, stroke);
             rect((4., 14.), (20., 23.), 4.);
-        }
-        Icon::List => {
-            for y in [5., 12., 19.] {
-                line((3., y), (5., y));
-                line((9., y), (21., y));
-            }
         }
         Icon::Settings => {
             ui.painter().circle_stroke(center, 7. * scale, stroke);
@@ -132,13 +120,6 @@ pub fn paint(ui: &egui::Ui, icon: Icon, center: Pos2, size: f32, color: Color32)
         Icon::Close => {
             line((6., 6.), (18., 18.));
             line((6., 18.), (18., 6.));
-        }
-        Icon::Copy => {
-            rect((8., 8.), (22., 22.), 2.);
-            line((4., 16.), (2., 16.));
-            line((2., 16.), (2., 2.));
-            line((2., 2.), (16., 2.));
-            line((16., 2.), (16., 4.));
         }
     }
 }
