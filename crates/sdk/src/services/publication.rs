@@ -95,45 +95,6 @@ impl Drop for Revoke {
     }
 }
 impl Sdk {
-    pub async fn service_edge_namespace(
-        &self,
-        node: &str,
-    ) -> Result<ServiceEdgeNamespaceView, SdkError> {
-        let view: ServiceEdgeNamespaceView = self
-            .required(
-                Method::GET,
-                &format!("{}/service-namespace", resource("nodes", node)?),
-                None::<&()>,
-            )
-            .await?;
-        view.config.validate()?;
-        if view.node_id != node || view.revision == 0 {
-            return Err(SdkError::Trust);
-        }
-        Ok(view)
-    }
-    pub async fn set_service_edge_namespace(
-        &self,
-        node: &str,
-        body: &ServiceEdgeNamespaceUpdate,
-    ) -> Result<ServiceEdgeNamespaceView, SdkError> {
-        body.config.validate()?;
-        let view: ServiceEdgeNamespaceView = self
-            .required(
-                Method::PUT,
-                &format!("{}/service-namespace", resource("nodes", node)?),
-                Some(body),
-            )
-            .await?;
-        view.config.validate()?;
-        if view.node_id != node
-            || Some(view.revision) != body.expected_revision.checked_add(1)
-            || view.config != body.config
-        {
-            return Err(SdkError::Trust);
-        }
-        Ok(view)
-    }
     /// Consumes local consent so it cannot be silently reused by a second host
     /// owner. `host` is the same installation identity that signed target consent.
     pub async fn start_service_host(

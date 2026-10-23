@@ -19,7 +19,7 @@ use nestlink_identity::{PermitSigner, VerifiedPermit};
 use nestlink_media_codec::VideoConfig;
 use nestlink_protocol::{
     Path, Permission,
-    api::ApprovalChoice,
+    api::{ApprovalChoice, NodeRegistration},
     native_displays::{DisplayDescriptor, catalog_key},
 };
 use nestlink_remote::{
@@ -56,6 +56,7 @@ use std::{
     time::{Duration, Instant},
 };
 use tokio::sync::{oneshot, watch};
+use tower::ServiceExt;
 
 type Result<T = ()> = std::result::Result<T, Box<dyn Error + Send + Sync>>;
 type Assets = HashMap<String, (String, Vec<u8>)>;
@@ -309,7 +310,8 @@ impl BrowserHostCaptureProvider for Provider {
     > {
         Box::pin(async move {
             let binding = nestlink_app_core::browser_host_binding(request_id, permit)?;
-            self.prepare_request(&binding, &permit.claims().permissions, cancel).await
+            self.prepare_request(&binding, &permit.claims().permissions, cancel)
+                .await
         })
     }
     fn prepare_request<'a>(
@@ -317,7 +319,13 @@ impl BrowserHostCaptureProvider for Provider {
         binding: &'a nestlink_app_core::BrowserHostBinding,
         _permissions: &'a [i32],
         _cancel: watch::Receiver<bool>,
-    ) -> Pin<Box<dyn Future<Output = std::result::Result<PreparedBrowserCapture, BrowserHostError>> + Send + 'a>> {
+    ) -> Pin<
+        Box<
+            dyn Future<Output = std::result::Result<PreparedBrowserCapture, BrowserHostError>>
+                + Send
+                + 'a,
+        >,
+    > {
         let facts = self.0.clone();
         let profile = self.1;
         let with_audio = self.2;
@@ -690,6 +698,10 @@ async fn run() -> Result {
     // signs its configured origin; HTTPS and secure cookies remain enabled.
     let browser_listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
     let browser_backend_origin = format!("http://{}", browser_listener.local_addr()?);
+    // Explicit fixture proxy: namespace writes use a configured DNS management
+    // entry sharing the real Store; production DNS/origin validation stays intact.
+    let namespace_entry =
+        router(control_state.for_management_entry("https://manage.example.test".into(), true));
     let app = router(control_state.for_management_entry(browser_origin.to_owned(), true))
         .fallback(move |uri: Uri| {
             let assets = assets.clone();
@@ -718,6 +730,31 @@ async fn run() -> Result {
                 started: probe_started,
             },
             record_management,
+        ))
+        .layer(middleware::from_fn(
+            move |mut request: Request, next: Next| {
+                let entry = namespace_entry.clone();
+                async move {
+                    if request.uri().path().ends_with("/service-namespace") {
+                        let delay = request.method() == axum::http::Method::GET;
+                        request.headers_mut().insert(
+                            "origin",
+                            axum::http::HeaderValue::from_static("https://manage.example.test"),
+                        );
+                        let response = match entry.oneshot(request).await {
+                            Ok(response) => response,
+                            Err(never) => match never {},
+                        };
+                        // Delay an actual server response, never synthesize its body/status.
+                        if delay {
+                            tokio::time::sleep(Duration::from_millis(750)).await;
+                        }
+                        response
+                    } else {
+                        next.run(request).await
+                    }
+                }
+            },
         ));
     // The two routers now own the shared runtime. Release this setup owner so
     // joining both servers also releases the SQLite handle before cleanup.
@@ -741,6 +778,12 @@ async fn run() -> Result {
     let result = async {
         let mut sdk = Sdk::connect(&origin, DeploymentTrust { deployment_id: deployment_id.clone(), permit_issuer }, true).await?;
         sdk.login("fixture-admin".into(), Secret::from_text(password.clone()), None).await?;
+        let mut edge_nodes = Vec::new();
+        for name in ["Owned namespace edge A", "Owned namespace edge B"] {
+            let id = random_id();
+            sdk.register_node(NodeRegistration { id: id.clone(), name: name.into(), public_key: URL_SAFE_NO_PAD.encode(random_bytes::<32>()), roles: vec![2], max_connections: 8, bytes_per_second: 1048576 }).await?;
+            edge_nodes.push(json!({"id":id,"name":name}));
+        }
         let installation = Arc::new(DeviceIdentity::generate());
         let mut capabilities = vec!["host".into(), "vp8".into()];
         if with_audio { capabilities.push("opus".into()); }
@@ -752,6 +795,7 @@ async fn run() -> Result {
         sdk.enroll(&installation, "Owned synthetic media fixture".into(), platform.into(), capabilities, "direct_only".into()).await?;
         let ready = json!({"scope":"Ephemeral local development fixture; synthetic owned pixels, real Core/WebRTC/VP8", "origin":browser_origin, "native_management_origin":origin, "browser_backend_origin":browser_backend_origin, "deployment_id":deployment_id, "permit_issuer":URL_SAFE_NO_PAD.encode(permit_issuer), "username":"fixture-admin", "password":password, "host_device_id":installation.device_id,
             "capture_profile":{"name":profile_name,"width":profile.width,"height":profile.height,"fps":profile.fps,"duration_seconds":duration_seconds,"lifetime_seconds":lifetime.as_secs(),"with_audio":with_audio},
+            "edge_namespace":{"management_hostname":"manage.example.test","nodes":edge_nodes},
             "owned_data":owned_data.as_ref().map(|data| data.descriptor()),
             "owned_multidisplay":owned_multidisplay.as_ref().map(|multi| multi.descriptor())});
         std::fs::write(evidence.join("ready.json"), serde_json::to_vec_pretty(&ready)?)?;

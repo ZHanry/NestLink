@@ -141,6 +141,7 @@ jobs:
           node --check scripts/refactor-browser-native-check.cjs
           node --check scripts/lib/refactor-browser-owned-data.cjs
           node --check scripts/lib/refactor-browser-workspace-ui.cjs
+          node --check scripts/lib/refactor-browser-edge-namespace.cjs
           node --test tests/refactor/test_browser_response_observer.cjs tests/refactor/test_browser_workspace_ui.cjs
       - name: Install native codec build tools
         run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config libpipewire-0.3-dev

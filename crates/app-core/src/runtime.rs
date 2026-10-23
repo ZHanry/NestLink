@@ -4003,9 +4003,23 @@ impl Actor {
         }
 
         let report = exit.stop;
-        let stop_reason = report
-            .map(|report| map_stop_reason(report.reason))
-            .or_else(|| exit.failure.map(browser_host_stop_reason));
+        let confirmed_remote_end = exit
+            .confirmed_remote_end
+            .filter(|_| !exit.cleanup_failed && !exit.peer_close_failed);
+        let stop_reason = confirmed_remote_end
+            .map(|end| match end {
+                crate::browser_host::ConfirmedRemoteEnd::Revoked => {
+                    NativeSessionStopReason::Revoked
+                }
+                crate::browser_host::ConfirmedRemoteEnd::Expired => {
+                    NativeSessionStopReason::Expired
+                }
+            })
+            .or_else(|| {
+                report
+                    .map(|report| map_stop_reason(report.reason))
+                    .or_else(|| exit.failure.map(browser_host_stop_reason))
+            });
         let stop_effects = report.map(|report| {
             map_report_effects(
                 report.effects.cancel_channels,
@@ -4016,13 +4030,12 @@ impl Actor {
         });
         let cleanup = browser_host_cleanup(report, exit.cleanup_failed);
         let cleanup_failed = exit.cleanup_failed || cleanup == Some(NativeSessionCleanup::Failed);
-        let failure = exit
-            .failure
-            .filter(|failure| *failure != BrowserHostFailure::Cancelled)
-            .map(browser_host_failure)
-            .or_else(|| {
-                cleanup_failed.then(|| Failure::local(FailureKind::NativeSessionUnavailable))
-            });
+        let failure = browser_host_terminal_failure(
+            exit.failure,
+            confirmed_remote_end.is_some(),
+            cleanup_failed,
+            exit.peer_close_failed,
+        );
         let status = if failure.is_some() {
             BrowserHostStatus::Failed
         } else {
@@ -5758,6 +5771,20 @@ mod browser_host_data_contract_tests {
     }
 }
 
+fn browser_host_terminal_failure(
+    failure: Option<BrowserHostFailure>,
+    confirmed_remote_end: bool,
+    cleanup_failed: bool,
+    peer_close_failed: bool,
+) -> Option<Failure> {
+    failure
+        .filter(|failure| *failure != BrowserHostFailure::Cancelled)
+        .filter(|_| !confirmed_remote_end || cleanup_failed || peer_close_failed)
+        .map(browser_host_failure)
+        .or_else(|| cleanup_failed.then(|| Failure::local(FailureKind::NativeSessionUnavailable)))
+        .or_else(|| peer_close_failed.then(|| browser_host_failure(BrowserHostFailure::Transport)))
+}
+
 fn browser_host_failure(failure: BrowserHostFailure) -> Failure {
     let kind = match failure {
         BrowserHostFailure::Cancelled => FailureKind::NativeSessionCancelled,
@@ -5829,6 +5856,30 @@ async fn next_job(active: &mut Option<Active>) -> Job {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
+    #[test]
+    fn browser_host_remote_end_never_hides_shutdown_failure() {
+        use super::*;
+        assert!(
+            browser_host_terminal_failure(Some(BrowserHostFailure::Transport), true, false, false)
+                .is_none()
+        );
+        assert!(
+            browser_host_terminal_failure(Some(BrowserHostFailure::Transport), false, false, false)
+                .is_some()
+        );
+        assert!(
+            browser_host_terminal_failure(Some(BrowserHostFailure::Cancelled), false, false, false)
+                .is_none()
+        );
+        for candidate in [
+            None,
+            Some(BrowserHostFailure::Cancelled),
+            Some(BrowserHostFailure::Transport),
+        ] {
+            assert!(browser_host_terminal_failure(candidate, true, true, false).is_some());
+            assert!(browser_host_terminal_failure(candidate, true, false, true).is_some());
+        }
+    }
     use super::*;
 
     fn browser_host_display_approval_fixture() -> (Snapshot, BrowserHostBinding, DisplayCatalogKey)

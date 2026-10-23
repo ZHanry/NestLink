@@ -10,6 +10,82 @@ pub(crate) struct PolicyDraft {
     path: String,
     ingress: String,
 }
+#[derive(Default)]
+pub(crate) struct EdgeNamespacePanel {
+    node_id: Option<String>,
+    draft: Option<EdgeNamespaceDraft>,
+    pending: Option<NamespacePending>,
+    requires_reload: bool,
+    may_initialize: bool,
+    error: Option<String>,
+}
+struct NamespacePending {
+    submission: u64,
+    generation: u64,
+    node_id: String,
+    saving: bool,
+    completed: bool,
+}
+impl EdgeNamespacePanel {
+    pub(crate) fn completed(
+        &mut self,
+        submission: Option<u64>,
+        result: &nestlink_app_core::OperationResult,
+        english: bool,
+    ) {
+        let Some(pending) = &mut self.pending else {
+            return;
+        };
+        if Some(pending.submission) != submission
+            || pending.generation != result.generation
+            || result.kind
+                != if pending.saving {
+                    nestlink_app_core::OperationKind::SetServiceEdgeNamespace
+                } else {
+                    nestlink_app_core::OperationKind::LoadServiceEdgeNamespace
+                }
+        {
+            return;
+        }
+        if result.status == OperationStatus::Succeeded {
+            pending.completed = true;
+        } else {
+            self.may_initialize = !pending.saving
+                && self.draft.is_none()
+                && result
+                    .failure
+                    .as_ref()
+                    .is_some_and(|f| f.status == Some(403));
+            self.requires_reload = true;
+            self.error = Some(widgets::operation_message(result, english));
+            self.pending = None;
+        }
+    }
+    pub(crate) fn disconnected(&mut self) {
+        if let Some(submission) = self.pending.as_ref().map(|pending| pending.submission) {
+            self.rejected(Some(submission));
+        }
+    }
+    pub(crate) fn rejected(&mut self, submission: Option<u64>) {
+        if self
+            .pending
+            .as_ref()
+            .is_some_and(|p| Some(p.submission) == submission)
+        {
+            self.pending = None;
+            self.requires_reload = true;
+            self.may_initialize = false;
+            self.error = Some("请求未完成，请重新读取配置。 / Request did not complete; reload the configuration.".into());
+        }
+    }
+}
+struct EdgeNamespaceDraft {
+    revision: u64,
+    suffix: String,
+    management: String,
+    ports: String,
+    quic: String,
+}
 impl DesktopApp {
     pub(crate) fn devices_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         ui.horizontal(|ui| {
@@ -416,6 +492,25 @@ impl DesktopApp {
                             }
                         });
                         ui.monospace(&view.node.id);
+                        if !view.revoked
+                            && view.node.roles.contains(&2)
+                            && snapshot.principal.as_ref().is_some_and(|p| p.is_admin)
+                            && ui
+                                .button(self.t("公网入口配置", "Public ingress configuration"))
+                                .clicked()
+                        {
+                            self.edge_namespace = EdgeNamespacePanel {
+                                node_id: Some(view.node.id.clone()),
+                                ..Default::default()
+                            };
+                            self.submit_edge_namespace(
+                                snapshot,
+                                Action::LoadServiceEdgeNamespace {
+                                    node_id: view.node.id.clone(),
+                                },
+                                false,
+                            );
+                        }
                         ui.small(format!(
                             "{} connections · {} B/s · generation {}",
                             view.node.max_connections,
@@ -426,6 +521,7 @@ impl DesktopApp {
                 });
             }
         }
+        self.edge_namespace_panel(ui, snapshot);
         widgets::section(ui, &snapshot.node_usage, self.english);
         if let Some(usage) = &snapshot.node_usage.data {
             ui.monospace(&usage.node_id);
@@ -449,6 +545,211 @@ impl DesktopApp {
                     },
                 );
             }
+        }
+    }
+    fn edge_namespace_panel(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
+        use nestlink_protocol::service_plane::publication::{
+            ServiceEdgeNamespace, ServiceEdgeNamespaceUpdate,
+        };
+        let Some(node_id) = self.edge_namespace.node_id.clone() else {
+            return;
+        };
+        let allowed = snapshot.principal.as_ref().is_some_and(|p| p.is_admin)
+            && snapshot.nodes.data.as_ref().is_some_and(|nodes| {
+                nodes
+                    .iter()
+                    .any(|n| n.node.id == node_id && !n.revoked && n.node.roles.contains(&2))
+            });
+        if !allowed {
+            self.edge_namespace = Default::default();
+            return;
+        }
+        let section = &snapshot.service_edge_namespace;
+        if self.edge_namespace.pending.as_ref().is_some_and(|pending| {
+            pending.completed
+                && pending.generation == snapshot.generation
+                && pending.node_id == node_id
+        }) && let Some(view) = section.data.as_ref().filter(|view| view.node_id == node_id)
+        {
+            self.edge_namespace.pending = None;
+            self.edge_namespace.requires_reload = false;
+            self.edge_namespace.may_initialize = false;
+            self.edge_namespace.error = None;
+            self.edge_namespace.draft = Some(EdgeNamespaceDraft {
+                revision: view.revision,
+                suffix: view.config.service_suffix.clone(),
+                management: view.config.management_hostname.clone(),
+                ports: view
+                    .config
+                    .public_ports
+                    .iter()
+                    .map(u16::to_string)
+                    .collect::<Vec<_>>()
+                    .join(", "),
+                quic: view.config.quic_address.clone(),
+            });
+        }
+        ui.add_space(18.);
+        ui.heading(self.t("公网入口", "Public ingress"));
+        ui.monospace(&node_id);
+        if let Some(pending) = &self.edge_namespace.pending {
+            ui.horizontal(|ui| {
+                ui.add(egui::Spinner::new().size(18.));
+                ui.label(if pending.saving {
+                    self.t("正在保存公网入口…", "Saving public ingress…")
+                } else {
+                    self.t("正在读取公网入口…", "Loading public ingress…")
+                });
+            });
+        }
+        if let Some(error) = &self.edge_namespace.error {
+            ui.colored_label(egui::Color32::RED, error);
+        }
+        if self.edge_namespace.requires_reload
+            && self.edge_namespace.pending.is_none()
+            && self.edge_namespace.draft.is_some()
+        {
+            ui.label(self.t(
+                "草稿已保留。请明确重新读取配置后再保存。",
+                "Your draft is retained. Reload the configuration before saving again.",
+            ));
+        }
+        let busy = self.edge_namespace.pending.is_some();
+        if ui
+            .add_enabled(!busy, egui::Button::new(self.t("重新读取", "Reload")))
+            .clicked()
+        {
+            self.submit_edge_namespace(
+                snapshot,
+                Action::LoadServiceEdgeNamespace {
+                    node_id: node_id.clone(),
+                },
+                false,
+            );
+        }
+        let english = self.english;
+        if !busy && self.edge_namespace.draft.is_none() && self.edge_namespace.may_initialize {
+            ui.label(self.t("未读到可编辑配置。仅在尚未配置时选择首次配置；已有配置会拒绝创建。", "No editable configuration was read. Choose first-time setup only for an unconfigured node; existing configuration prevents creation."));
+            if ui.button(self.t("首次配置", "First-time setup")).clicked() {
+                self.edge_namespace.draft = Some(EdgeNamespaceDraft {
+                    revision: 0,
+                    suffix: String::new(),
+                    management: String::new(),
+                    ports: String::new(),
+                    quic: String::new(),
+                });
+                self.edge_namespace.requires_reload = false;
+                self.edge_namespace.may_initialize = false;
+            }
+        }
+        let Some(draft) = &mut self.edge_namespace.draft else {
+            return;
+        };
+        let mut save = false;
+        let requires_reload = self.edge_namespace.requires_reload;
+        ui.add_enabled_ui(!busy, |ui| {
+            ui.label(if english {
+                format!("Configuration version {}", draft.revision)
+            } else {
+                format!("配置版本 {}", draft.revision)
+            });
+            egui::Grid::new("edge-namespace-fields")
+                .num_columns(2)
+                .show(ui, |ui| {
+                    ui.label(if english {
+                        "Service suffix"
+                    } else {
+                        "服务域名后缀"
+                    });
+                    ui.text_edit_singleline(&mut draft.suffix);
+                    ui.end_row();
+                    ui.label(if english {
+                        "Management hostname"
+                    } else {
+                        "管理主机名"
+                    });
+                    ui.text_edit_singleline(&mut draft.management);
+                    ui.end_row();
+                    ui.label(if english {
+                        "Public ports (ascending, unique)"
+                    } else {
+                        "公网端口（递增、不重复）"
+                    });
+                    ui.text_edit_singleline(&mut draft.ports);
+                    ui.end_row();
+                    ui.label(if english {
+                        "QUIC socket address"
+                    } else {
+                        "QUIC 数字地址与端口"
+                    });
+                    ui.text_edit_singleline(&mut draft.quic);
+                    ui.end_row();
+                });
+            save = ui
+                .add_enabled(
+                    !requires_reload,
+                    egui::Button::new(if english { "Save" } else { "保存" }),
+                )
+                .clicked();
+        });
+        if save {
+            let ports = draft
+                .ports
+                .split(',')
+                .map(|p| p.trim().parse::<u16>())
+                .collect::<Result<Vec<_>, _>>();
+            let config = ports
+                .ok()
+                .map(|public_ports| ServiceEdgeNamespace {
+                    service_suffix: draft.suffix.trim().into(),
+                    management_hostname: draft.management.trim().into(),
+                    public_ports,
+                    quic_address: draft.quic.trim().into(),
+                })
+                .filter(|config| config.validate().is_ok());
+            if let Some(config) = config {
+                let update = ServiceEdgeNamespaceUpdate {
+                    expected_revision: draft.revision,
+                    config,
+                };
+                self.submit_edge_namespace(
+                    snapshot,
+                    Action::SetServiceEdgeNamespace { node_id, update },
+                    true,
+                );
+            } else {
+                self.edge_namespace.error = Some(if english { "Check domain names, ascending unique ports, and the numeric QUIC socket address." } else { "请检查域名、递增且不重复的端口，以及 QUIC 数字地址与端口。" }.into());
+            }
+        }
+    }
+    fn submit_edge_namespace(&mut self, snapshot: &Snapshot, action: Action, saving: bool) {
+        self.edge_namespace.requires_reload = true;
+        self.edge_namespace.may_initialize = false;
+        self.edge_namespace.error = None;
+        let submission = self
+            .bridge
+            .submit_tracked(snapshot.generation, Command::Submit { action });
+        if let Some(submission) = submission {
+            self.edge_namespace.pending =
+                self.edge_namespace
+                    .node_id
+                    .clone()
+                    .map(|node_id| NamespacePending {
+                        submission,
+                        generation: snapshot.generation,
+                        node_id,
+                        saving,
+                        completed: false,
+                    });
+        } else {
+            self.edge_namespace.pending = None;
+            self.edge_namespace.error = Some(
+                self.t(
+                    "请求未送出，请重新读取配置。",
+                    "Request was not sent; reload the configuration.",
+                )
+                .into(),
+            );
         }
     }
     pub(crate) fn audit_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {

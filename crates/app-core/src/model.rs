@@ -1,3 +1,4 @@
+use nestlink_protocol::service_plane::publication::ServiceEdgeNamespaceView;
 use nestlink_protocol::{
     ErrorCode,
     api::*,
@@ -369,6 +370,8 @@ pub enum OperationKind {
     Refresh,
     Logout,
     Load,
+    LoadServiceEdgeNamespace,
+    SetServiceEdgeNamespace,
     CreateService,
     UpdateService,
     RevokeService,
@@ -467,6 +470,8 @@ pub struct Snapshot {
     pub devices: Section<Vec<DeviceView>>,
     pub services: Section<ServicePage>,
     pub selected_service: Section<ServiceView>,
+    #[serde(default)]
+    pub service_edge_namespace: Section<ServiceEdgeNamespaceView>,
     pub requests: Section<Vec<RemoteView>>,
     pub selected_request: Section<RemoteView>,
     pub native_session: Section<NativeSessionView>,
@@ -512,6 +517,7 @@ impl Default for Snapshot {
             devices: Section::default(),
             services: Section::default(),
             selected_service: Section::default(),
+            service_edge_namespace: Section::default(),
             requests: Section::default(),
             selected_request: Section::default(),
             native_session: Section::default(),
@@ -547,6 +553,7 @@ impl Snapshot {
         self.devices = Section::default();
         self.services = Section::default();
         self.selected_service = Section::default();
+        self.service_edge_namespace = Section::default();
         self.requests = Section::default();
         self.selected_request = Section::default();
         self.accounts = Section::default();

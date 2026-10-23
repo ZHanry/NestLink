@@ -1,0 +1,10 @@
+{
+  "run": "__NEW_CANONICAL_UUID__",
+  "nonce_hex": "__NEW_RANDOM_32_BYTE_NONCE_AS_64_LOWERCASE_HEX__",
+  "server": "158.180.81.141",
+  "tcp_port": 29101,
+  "udp_port": 29102,
+  "steady_seconds": 30,
+  "duration_seconds": 600,
+  "protocol": "tcp"
+}

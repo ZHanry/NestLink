@@ -3,6 +3,7 @@ use crate::OperationKind;
 use crate::Snapshot;
 use nestlink_auth::Secret;
 use nestlink_protocol::api::*;
+use nestlink_protocol::service_plane::publication::ServiceEdgeNamespaceUpdate;
 use serde::{Deserialize, Serialize};
 
 /// A selected server origin. Empty legacy trust fields select HTTPS discovery;
@@ -76,6 +77,13 @@ pub enum Action {
     },
     InspectService {
         service_id: String,
+    },
+    LoadServiceEdgeNamespace {
+        node_id: String,
+    },
+    SetServiceEdgeNamespace {
+        node_id: String,
+        update: ServiceEdgeNamespaceUpdate,
     },
     CreateService {
         create: ServiceCreate,
@@ -230,6 +238,8 @@ impl Action {
             | Self::LoadTrustedDevices { .. }
             | Self::LoadRemotePassword { .. }
             | Self::LoadRemotePasswordOffer { .. } => OperationKind::Load,
+            Self::LoadServiceEdgeNamespace { .. } => OperationKind::LoadServiceEdgeNamespace,
+            Self::SetServiceEdgeNamespace { .. } => OperationKind::SetServiceEdgeNamespace,
             Self::CreateService { .. } => OperationKind::CreateService,
             Self::UpdateService { .. } => OperationKind::UpdateService,
             Self::RevokeService { .. } => OperationKind::RevokeService,
@@ -307,6 +317,12 @@ impl Action {
             } => short(username) && password(value),
             Self::LoadServicesPage { after_id, limit } => {
                 (1..=100).contains(limit) && after_id.as_ref().is_none_or(|id| valid_id(id))
+            }
+            Self::LoadServiceEdgeNamespace { node_id } => valid_id(node_id),
+            Self::SetServiceEdgeNamespace { node_id, update } => {
+                valid_id(node_id)
+                    && update.expected_revision < i64::MAX as u64
+                    && update.config.validate().is_ok()
             }
             Self::InspectService { service_id } => valid_id(service_id),
             Self::CreateService { create } => {
@@ -431,6 +447,9 @@ impl Action {
             Self::SignIn { .. } | Self::RefreshSession | Self::ChangePassword { .. } => {
                 SectionKey::Security
             }
+            Self::LoadServiceEdgeNamespace { .. } | Self::SetServiceEdgeNamespace { .. } => {
+                SectionKey::ServiceEdgeNamespace
+            }
             Self::LoadServicesPage { .. } => SectionKey::Services,
             Self::InspectService { .. }
             | Self::CreateService { .. }
@@ -472,6 +491,7 @@ pub(crate) enum SectionKey {
     Devices,
     Services,
     SelectedService,
+    ServiceEdgeNamespace,
     Requests,
     SelectedRequest,
     Accounts,
@@ -526,6 +546,14 @@ impl SectionKey {
             Self::Devices => set!(devices),
             Self::Services => set!(services),
             Self::SelectedService => set!(selected_service),
+            Self::ServiceEdgeNamespace => {
+                // A namespace section is scoped to its node. Never retain a previous
+                // node's configuration while a new selection is loading or rejected.
+                if loading.is_some() {
+                    view.service_edge_namespace.data = None;
+                }
+                set!(service_edge_namespace);
+            }
             Self::Requests => set!(requests),
             Self::SelectedRequest => set!(selected_request),
             Self::Accounts => set!(accounts),

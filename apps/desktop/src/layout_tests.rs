@@ -12,6 +12,352 @@ struct Workspace {
     root: Option<egui::accesskit::NodeId>,
 }
 
+#[test]
+fn namespace_ui_requires_explicit_revision_zero_and_isolates_selected_node() {
+    use nestlink_app_core::{Failure, FailureKind};
+    use nestlink_protocol::api::{NodeRegistration, NodeView};
+    use nestlink_protocol::service_plane::publication::{
+        ServiceEdgeNamespace, ServiceEdgeNamespaceView,
+    };
+    let mut snapshot = enrolled_snapshot();
+    snapshot.nodes.data = Some(Arc::new(
+        [
+            "00000000-0000-4000-8000-000000000010",
+            "00000000-0000-4000-8000-000000000011",
+        ]
+        .map(|id| NodeView {
+            node: NodeRegistration {
+                id: id.into(),
+                name: id.into(),
+                public_key: String::new(),
+                roles: vec![2],
+                max_connections: 10,
+                bytes_per_second: 1000,
+            },
+            revoked: false,
+            last_issued_at_unix_ms: 0,
+            runtime_id: None,
+            runtime_generation: 1,
+        })
+        .into_iter()
+        .collect(),
+    ));
+    let size = egui::vec2(1400., 1200.);
+    let mut workspace = Workspace::new(snapshot.clone());
+    workspace.app.bridge.layout_enable_commands();
+    workspace.app.screen = Screen::Nodes;
+    for _ in 0..3 {
+        workspace.frame(size, vec![]);
+    }
+    let select = |workspace: &mut Workspace, index: usize| {
+        let bounds = workspace.bounds("公网入口配置");
+        assert_eq!(bounds.len(), 2);
+        let pos = bounds[index].center();
+        for pressed in [true, false] {
+            workspace.frame(
+                size,
+                vec![
+                    egui::Event::PointerMoved(pos),
+                    egui::Event::PointerButton {
+                        pos,
+                        button: egui::PointerButton::Primary,
+                        pressed,
+                        modifiers: Default::default(),
+                    },
+                ],
+            );
+        }
+    };
+    select(&mut workspace, 0);
+    let submission = namespace_submission(&workspace);
+    snapshot.revision += 1;
+    snapshot.service_edge_namespace.error = Some(Failure {
+        kind: FailureKind::Rejected,
+        code: None,
+        status: Some(403),
+    });
+    workspace.app.bridge.layout_snapshot(snapshot.clone());
+    namespace_completion(&workspace, submission, &snapshot, false, false);
+    workspace.frame(size, vec![]);
+    assert!(
+        workspace.bounds("保存").is_empty(),
+        "denial must not create an editable empty namespace"
+    );
+    workspace.click(size, "首次配置");
+    assert_eq!(workspace.bounds("配置版本 0").len(), 1);
+    assert_eq!(workspace.bounds("保存").len(), 1);
+    workspace.click(size, "重新读取");
+    let submission = namespace_submission(&workspace);
+    snapshot.revision += 1;
+    snapshot.service_edge_namespace.error = None;
+    snapshot.service_edge_namespace.data = Some(Arc::new(ServiceEdgeNamespaceView {
+        node_id: "00000000-0000-4000-8000-000000000010".into(),
+        revision: 5,
+        config: ServiceEdgeNamespace {
+            service_suffix: "services.example.com".into(),
+            management_hostname: "manage.example.com".into(),
+            public_ports: vec![29100],
+            quic_address: "127.0.0.1:29101".into(),
+        },
+    }));
+    workspace.app.bridge.layout_snapshot(snapshot.clone());
+    namespace_completion(&workspace, submission, &snapshot, true, false);
+    workspace.frame(size, vec![]);
+    assert_eq!(workspace.bounds("配置版本 5").len(), 1);
+    for (previous, edited) in [
+        ("services.example.com", "draft.example.com"),
+        ("manage.example.com", "admin.example.com"),
+        ("29100", "29102, 29103"),
+        ("127.0.0.1:29101", "127.0.0.2:29104"),
+    ] {
+        workspace.replace_text(size, previous, edited);
+    }
+    workspace.click(size, "保存");
+    let submission = namespace_submission(&workspace);
+    snapshot.service_edge_namespace.data = None;
+    snapshot.service_edge_namespace.error = Some(Failure {
+        kind: FailureKind::Rejected,
+        code: None,
+        status: Some(409),
+    });
+    workspace.app.bridge.layout_snapshot(snapshot.clone());
+    namespace_completion(&workspace, submission, &snapshot, false, true);
+    workspace.frame(size, vec![]);
+    assert_eq!(
+        workspace.bounds("配置版本 5").len(),
+        1,
+        "CAS failure must retain the user's draft"
+    );
+    for value in [
+        "draft.example.com",
+        "admin.example.com",
+        "29102, 29103",
+        "127.0.0.2:29104",
+    ] {
+        assert_eq!(
+            workspace.bounds(value).len(),
+            1,
+            "save failure must retain {value}"
+        );
+    }
+    assert!(workspace.bounds("首次配置").is_empty());
+    workspace.click(size, "保存");
+    assert!(
+        workspace.app.bridge.layout_submission().is_none(),
+        "save remains locked until an explicit read succeeds"
+    );
+    // Begin a read of A, then choose B before A's reply arrives.
+    workspace.click(size, "重新读取");
+    let late_a = namespace_submission(&workspace);
+    select(&mut workspace, 1);
+    let current_b = namespace_submission(&workspace);
+    snapshot.revision += 1;
+    snapshot.service_edge_namespace.error = None;
+    snapshot.service_edge_namespace.data = Some(Arc::new(ServiceEdgeNamespaceView {
+        node_id: "00000000-0000-4000-8000-000000000010".into(),
+        revision: 6,
+        config: ServiceEdgeNamespace {
+            service_suffix: "a.example.com".into(),
+            management_hostname: "manage.example.com".into(),
+            public_ports: vec![29100],
+            quic_address: "127.0.0.1:29101".into(),
+        },
+    }));
+    // A late successful response for A cannot become B's editable CAS revision.
+    workspace.app.bridge.layout_snapshot(snapshot.clone());
+    namespace_completion(&workspace, late_a, &snapshot, true, false);
+    workspace.frame(size, vec![]);
+    assert!(workspace.bounds("配置版本 5").is_empty());
+    assert!(workspace.bounds("保存").is_empty());
+    let mut denied_a = snapshot.clone();
+    denied_a.service_edge_namespace.error = Some(Failure {
+        kind: FailureKind::Rejected,
+        code: None,
+        status: Some(403),
+    });
+    workspace.app.bridge.layout_snapshot(denied_a.clone());
+    workspace.frame(size, vec![]);
+    let old_error = widgets::failure(
+        denied_a
+            .service_edge_namespace
+            .error
+            .as_ref()
+            .expect("A error"),
+        false,
+    );
+    assert!(
+        workspace.bounds(&old_error).is_empty(),
+        "A section error must not appear in B's panel"
+    );
+    assert_eq!(workspace.bounds("正在读取公网入口…").len(), 1);
+    namespace_completion(&workspace, late_a, &denied_a, false, false);
+    workspace
+        .app
+        .bridge
+        .layout_notice(bridge::Notice::Rejected {
+            submission_id: Some(late_a),
+            reason: nestlink_app_ipc::wire::Rejection::StaleGeneration,
+        });
+    workspace.frame(size, vec![]);
+    assert!(workspace.bounds("首次配置").is_empty());
+    assert!(workspace.bounds("保存").is_empty());
+    snapshot.service_edge_namespace.data = Some(Arc::new(ServiceEdgeNamespaceView {
+        node_id: "00000000-0000-4000-8000-000000000011".into(),
+        revision: 9,
+        config: ServiceEdgeNamespace {
+            service_suffix: "b.example.com".into(),
+            management_hostname: "manage.example.com".into(),
+            public_ports: vec![29100],
+            quic_address: "127.0.0.1:29101".into(),
+        },
+    }));
+    workspace.app.bridge.layout_snapshot(snapshot.clone());
+    namespace_completion(&workspace, current_b, &snapshot, true, false);
+    workspace.frame(size, vec![]);
+    assert_eq!(
+        workspace.bounds("配置版本 9").len(),
+        1,
+        "B's matching reply must finish B's read"
+    );
+    workspace.click(size, "保存");
+    let (submission, command) = workspace.app.bridge.layout_submission().expect("B save");
+    assert!(
+        matches!(command, nestlink_app_ipc::wire::Command::Submit { action: Action::SetServiceEdgeNamespace { node_id, update } } if node_id.ends_with("0011") && update.expected_revision == 9)
+    );
+    snapshot.service_edge_namespace.data =
+        snapshot.service_edge_namespace.data.as_ref().map(|view| {
+            let mut view = (**view).clone();
+            view.revision = 10;
+            Arc::new(view)
+        });
+    workspace.app.bridge.layout_snapshot(snapshot.clone());
+    namespace_completion(&workspace, submission, &snapshot, true, true);
+    workspace.frame(size, vec![]);
+    assert_eq!(workspace.bounds("配置版本 10").len(), 1);
+    let mut stale_section = snapshot.clone();
+    stale_section.service_edge_namespace.error = denied_a.service_edge_namespace.error.clone();
+    stale_section.service_edge_namespace.loading =
+        Some(serde_json::from_str("99").expect("operation ID"));
+    workspace.app.bridge.layout_snapshot(stale_section);
+    workspace.frame(size, vec![]);
+    assert!(workspace.bounds(&old_error).is_empty());
+    assert!(workspace.bounds("正在加载…").is_empty());
+    assert!(workspace.bounds("正在读取公网入口…").is_empty());
+    workspace.app.bridge.layout_snapshot(snapshot.clone());
+    // A's old denial and command rejection cannot unlock first-time setup or
+    // replace B's successful result, even after B has finished.
+    let mut old_a = snapshot.clone();
+    old_a.service_edge_namespace.error = Some(Failure {
+        kind: FailureKind::Rejected,
+        code: None,
+        status: Some(403),
+    });
+    namespace_completion(&workspace, late_a, &old_a, false, false);
+    workspace
+        .app
+        .bridge
+        .layout_notice(bridge::Notice::Rejected {
+            submission_id: Some(late_a),
+            reason: nestlink_app_ipc::wire::Rejection::StaleGeneration,
+        });
+    workspace.frame(size, vec![]);
+    assert_eq!(workspace.bounds("配置版本 10").len(), 1);
+    assert!(workspace.bounds("首次配置").is_empty());
+    workspace.click(size, "保存");
+    let (rejected, command) = workspace
+        .app
+        .bridge
+        .layout_submission()
+        .expect("B second save");
+    assert!(matches!(command, nestlink_app_ipc::wire::Command::Submit {
+        action: Action::SetServiceEdgeNamespace { node_id, update }
+    } if node_id.ends_with("0011") && update.expected_revision == 10));
+    workspace
+        .app
+        .bridge
+        .layout_notice(bridge::Notice::Rejected {
+            submission_id: Some(rejected),
+            reason: nestlink_app_ipc::wire::Rejection::StaleGeneration,
+        });
+    workspace.frame(size, vec![]);
+    assert_eq!(workspace.bounds("配置版本 10").len(), 1);
+    workspace.click(size, "重新读取");
+    let reload = namespace_submission(&workspace);
+    namespace_completion(&workspace, reload, &snapshot, true, false);
+    workspace.frame(size, vec![]);
+    workspace.click(size, "重新读取");
+    let _disconnected = namespace_submission(&workspace);
+    workspace
+        .app
+        .bridge
+        .layout_notice(bridge::Notice::Disconnected);
+    workspace.frame(size, vec![]);
+    assert_eq!(workspace.bounds("配置版本 10").len(), 1);
+    workspace.click(size, "重新读取");
+    let reload = namespace_submission(&workspace);
+    namespace_completion(&workspace, reload, &snapshot, true, false);
+    workspace.frame(size, vec![]);
+    // The default layout bridge rejects sends. A send failure must retain the
+    // draft and expose reload, rather than leaving an operation busy forever.
+    workspace.app.bridge = Bridge::for_layout(snapshot);
+    workspace.click(size, "保存");
+    workspace.frame(size, vec![]);
+    assert_eq!(workspace.bounds("配置版本 10").len(), 1);
+    assert_eq!(workspace.bounds("请求未送出，请重新读取配置。").len(), 1);
+    assert!(workspace.bounds("首次配置").is_empty());
+    workspace.click(size, "重新读取");
+    workspace.frame(size, vec![]);
+    assert_eq!(workspace.bounds("请求未送出，请重新读取配置。").len(), 1);
+}
+
+fn namespace_submission(workspace: &Workspace) -> u64 {
+    while let Some((submission, command)) = workspace.app.bridge.layout_submission() {
+        if matches!(
+            command,
+            nestlink_app_ipc::wire::Command::Submit {
+                action: Action::LoadServiceEdgeNamespace { .. }
+                    | Action::SetServiceEdgeNamespace { .. }
+            }
+        ) {
+            return submission;
+        }
+    }
+    panic!("namespace command was not submitted");
+}
+
+fn namespace_completion(
+    workspace: &Workspace,
+    submission: u64,
+    snapshot: &Snapshot,
+    succeeded: bool,
+    saving: bool,
+) {
+    workspace
+        .app
+        .bridge
+        .layout_notice(bridge::Notice::Completed {
+            submission_id: Some(submission),
+            sensitive: None,
+            result: nestlink_app_core::OperationResult {
+                id: serde_json::from_str("1").expect("operation ID"),
+                generation: snapshot.generation,
+                kind: if saving {
+                    nestlink_app_core::OperationKind::SetServiceEdgeNamespace
+                } else {
+                    nestlink_app_core::OperationKind::LoadServiceEdgeNamespace
+                },
+                status: if succeeded {
+                    OperationStatus::Succeeded
+                } else {
+                    OperationStatus::Failed
+                },
+                remote_effect: nestlink_app_core::RemoteEffect::None,
+                failure: snapshot.service_edge_namespace.error.clone(),
+                output: nestlink_app_core::PublicOutput::None,
+            },
+        });
+}
+
 fn enrolled_snapshot() -> Snapshot {
     let mut snapshot = Snapshot {
         authentication: Authentication::SignedIn,
@@ -138,6 +484,38 @@ impl Workspace {
                 .then(a.min.x.total_cmp(&b.min.x))
         });
         rects
+    }
+
+    fn replace_text(&mut self, size: egui::Vec2, previous: &str, value: &str) {
+        self.click(size, previous);
+        self.frame(
+            size,
+            vec![egui::Event::Key {
+                key: egui::Key::A,
+                physical_key: None,
+                pressed: true,
+                repeat: false,
+                modifiers: egui::Modifiers {
+                    ctrl: true,
+                    command: true,
+                    ..Default::default()
+                },
+            }],
+        );
+        self.frame(
+            size,
+            vec![
+                egui::Event::Key {
+                    key: egui::Key::A,
+                    physical_key: None,
+                    pressed: false,
+                    repeat: false,
+                    modifiers: Default::default(),
+                },
+                egui::Event::Text(value.into()),
+            ],
+        );
+        assert_eq!(self.bounds(value).len(), 1);
     }
 
     fn click(&mut self, size: egui::Vec2, label: &str) {

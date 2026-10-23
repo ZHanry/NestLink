@@ -4,6 +4,7 @@ use crate::{
 };
 use nestlink_auth::random_id;
 use nestlink_protocol::api::*;
+use nestlink_protocol::service_plane::publication::ServiceEdgeNamespaceView;
 use nestlink_sdk::{DeviceIdentity, Sdk, SdkError};
 use std::{
     future::Future,
@@ -45,6 +46,7 @@ pub(crate) enum Patch {
     Devices(Vec<DeviceView>),
     Services(ServicePage),
     SelectedService(ServiceView),
+    ServiceEdgeNamespace(ServiceEdgeNamespaceView),
     Requests(Vec<RemoteView>),
     SelectedRequest(RemoteView),
     Accounts(Vec<AccountView>),
@@ -70,6 +72,7 @@ impl Patch {
             Self::Devices(value) => view.devices.replace(value),
             Self::Services(value) => view.services.replace(value),
             Self::SelectedService(value) => view.selected_service.replace(value),
+            Self::ServiceEdgeNamespace(value) => view.service_edge_namespace.replace(value),
             Self::Requests(value) => view.requests.replace(value),
             Self::SelectedRequest(value) => view.selected_request.replace(value),
             Self::Accounts(value) => view.accounts.replace(value),
@@ -260,6 +263,23 @@ async fn execute(
             patches.push(Patch::Services(
                 read(sdk.services(after_id.as_deref(), limit), fence).await?,
             ));
+        }
+        Action::LoadServiceEdgeNamespace { node_id } => {
+            patches.push(Patch::ServiceEdgeNamespace(
+                read(sdk.service_edge_namespace(&node_id), fence).await?,
+            ));
+        }
+        Action::SetServiceEdgeNamespace { node_id, update } => {
+            let value = write(
+                sdk.set_service_edge_namespace(&node_id, &update),
+                effect,
+                fence,
+            )
+            .await?;
+            response.output = PublicOutput::Revision {
+                revision: value.revision,
+            };
+            patches.push(Patch::ServiceEdgeNamespace(value));
         }
         Action::InspectService { service_id } => {
             patches.push(Patch::SelectedService(

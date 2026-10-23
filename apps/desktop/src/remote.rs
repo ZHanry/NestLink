@@ -1122,7 +1122,7 @@ impl DesktopApp {
                     BrowserHostStatus::Connected => self.t("已连接", "Connected"),
                     BrowserHostStatus::Stopping => self.t("正在停止", "Stopping"),
                     BrowserHostStatus::Stopped => self.t("已停止", "Stopped"),
-                    BrowserHostStatus::Failed => self.t("建立失败", "Failed"),
+                    BrowserHostStatus::Failed => self.t("远控发生错误", "Remote session error"),
                 });
             });
             egui::CollapsingHeader::new(self.t("连接诊断", "Connection diagnostics")).show(ui, |ui| {

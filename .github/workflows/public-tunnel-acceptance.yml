@@ -1,0 +1,140 @@
+name: Owned public tunnel acceptance visitor
+on:
+  workflow_dispatch:
+    inputs:
+      tool_source_revision:
+        description: Reviewed full commit containing these exact acceptance tools
+        type: string
+        required: true
+      protocol:
+        description: One independent run only; finish TCP before a fresh UDP run
+        type: choice
+        options: [tcp, udp]
+        required: true
+      run_uuid:
+        description: Same canonical run UUID as the owned HL responder
+        type: string
+        required: true
+      test_nonce_hex:
+        description: Same 32-byte test nonce; never an account or management credential
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: nestlink-owned-public-tunnel-158-180-81-141
+  cancel-in-progress: false
+jobs:
+  visitor:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      TOOL_SOURCE: ${{ inputs.tool_source_revision }}
+      ACCEPTANCE_RUN: ${{ inputs.run_uuid }}
+      ACCEPTANCE_PROTOCOL: ${{ inputs.protocol }}
+      TEST_NONCE: ${{ inputs.test_nonce_hex }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Validate dispatch before checking out or executing source
+        shell: python
+        run: |
+          import os, re
+          assert os.environ['GITHUB_REF'] == 'refs/heads/main'
+          source = os.environ['TOOL_SOURCE']
+          assert re.fullmatch(r'[0-9a-f]{40}', source)
+          assert source == os.environ['GITHUB_SHA']
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.tool_source_revision }}
+          persist-credentials: false
+      - name: Verify checked out revision before executing repository tools
+        shell: python
+        run: |
+          import os, subprocess
+          assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip() == os.environ['TOOL_SOURCE']
+      - name: Verify acceptance protocol without network
+        run: python3 -B scripts/acceptance/tunnel-public/test_tools_offline.py
+      - name: Validate fixed endpoints and start the bounded visitor
+        shell: python
+        run: |
+          import json, os, pathlib, re, subprocess, uuid
+          source = os.environ['TOOL_SOURCE']
+          assert os.environ["GITHUB_REF"] == "refs/heads/main"
+          assert source == os.environ["GITHUB_SHA"], "Reviewed tools must be the dispatched main commit"
+          run = os.environ['ACCEPTANCE_RUN']
+          nonce = os.environ['TEST_NONCE']
+          assert os.environ["ACCEPTANCE_PROTOCOL"] in ("tcp", "udp")
+          assert re.fullmatch(r'[0-9a-f]{40}', source)
+          assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip() == source
+          assert str(uuid.UUID(run)) == run and re.fullmatch(r'[0-9a-f]{64}', nonce)
+          print('::add-mask::' + nonce)
+          scratch = pathlib.Path(os.environ['RUNNER_TEMP'])
+          config = scratch / 'owned-tunnel-config.json'
+          with os.fdopen(os.open(config, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'w') as stream:
+              json.dump({'run': run, 'nonce_hex': nonce, 'server': '158.180.81.141', 'tcp_port': 29101, 'udp_port': 29102, 'steady_seconds': 30, 'duration_seconds': 600, 'protocol': os.environ['ACCEPTANCE_PROTOCOL']}, stream)
+          output = scratch / 'owned-tunnel-visitor'
+          log = (scratch / 'owned-tunnel-visitor.log').open('xb')
+          child = subprocess.Popen(['python3', '-B', 'scripts/acceptance/tunnel-public/visitor.py', '--config', str(config), '--output', str(output)], stdout=log, stderr=log, start_new_session=True)
+          (scratch / 'owned-tunnel-visitor.pid').write_text(str(child.pid))
+      - name: Wait for source observation window
+        run: python3 -B scripts/acceptance/tunnel-public/wait_marker.py --output "$RUNNER_TEMP/owned-tunnel-visitor" --marker source-probe-ready --timeout 20
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: visitor-source-ready-${{ github.run_id }}
+          path: ${{ runner.temp }}/owned-tunnel-visitor/markers/source-probe-ready.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Wait for the authenticated server source observation
+        run: python3 -B scripts/acceptance/tunnel-public/wait_marker.py --output "$RUNNER_TEMP/owned-tunnel-visitor" --marker source-observed --timeout 95
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: visitor-source-observed-${{ github.run_id }}
+          path: ${{ runner.temp }}/owned-tunnel-visitor/markers/source-observed.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Wait for the selected real path and continuous data
+        run: python3 -B scripts/acceptance/tunnel-public/wait_marker.py --output "$RUNNER_TEMP/owned-tunnel-visitor" --marker ready-to-stop --timeout 245
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: visitor-ready-to-stop-${{ github.run_id }}
+          path: ${{ runner.temp }}/owned-tunnel-visitor/markers/ready-to-stop.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Wait for the authenticated stop arm from the owned HL helper
+        run: python3 -B scripts/acceptance/tunnel-public/wait_marker.py --output "$RUNNER_TEMP/owned-tunnel-visitor" --marker stop-armed --timeout 125
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: visitor-stop-armed-${{ github.run_id }}
+          path: ${{ runner.temp }}/owned-tunnel-visitor/markers/stop-armed.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Require the visitor data checks to finish successfully
+        run: python3 -B scripts/acceptance/tunnel-public/wait_marker.py --output "$RUNNER_TEMP/owned-tunnel-visitor" --marker visitor-done --timeout 100
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: visitor-evidence-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/owned-tunnel-visitor/*.json
+            ${{ runner.temp }}/owned-tunnel-visitor/markers/*.json
+            ${{ runner.temp }}/owned-tunnel-visitor.log
+          if-no-files-found: error
+          retention-days: 14
+      - name: Stop only this job's remaining owned visitor
+        if: always()
+        shell: python
+        run: |
+          import os, pathlib, signal
+          scratch = pathlib.Path(os.environ['RUNNER_TEMP'])
+          owned = scratch / 'owned-tunnel-visitor.pid'
+          if owned.is_file():
+              pid = int(owned.read_text())
+              proc = pathlib.Path('/proc') / str(pid) / 'cmdline'
+              if proc.is_file():
+                  argv = proc.read_bytes().split(b'\0')
+                  script = b'scripts/acceptance/tunnel-public/visitor.py'
+                  output = str(scratch / 'owned-tunnel-visitor').encode()
+                  if script in argv and output in argv and os.getpgid(pid) == pid:
+                      os.killpg(pid, signal.SIGTERM)
+      # The visitor's own 600-second deadline is mandatory. No management API or credential access,
+      # management secret, device key, packaging or server-side build is involved.

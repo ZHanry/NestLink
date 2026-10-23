@@ -343,3 +343,168 @@ async fn committed_service_response_after_logout_cannot_repopulate_another_gener
     );
     Ok(())
 }
+
+fn edge_namespace() -> nestlink_protocol::service_plane::publication::ServiceEdgeNamespace {
+    nestlink_protocol::service_plane::publication::ServiceEdgeNamespace {
+        service_suffix: "services.example.com".into(),
+        management_hostname: "manage.example.com".into(),
+        public_ports: vec![29100, 29101],
+        quic_address: "127.0.0.1:29102".into(),
+    }
+}
+
+#[tokio::test]
+async fn namespace_real_http_requires_explicit_creation_and_preserves_cas() -> Result {
+    use nestlink_protocol::service_plane::publication::ServiceEdgeNamespaceUpdate;
+    let server = Server::namespace_entry(None).await?;
+    let (mut core, handle, create) = prepare(&server).await?;
+    let node_id = create.definition.edge_node_id;
+    let missing = done(handle.submit(Action::LoadServiceEdgeNamespace {
+        node_id: node_id.clone(),
+    })?)
+    .await?;
+    assert_eq!(missing.result.status, OperationStatus::Failed);
+    assert_eq!(
+        missing.result.failure.ok_or("missing denial")?.status,
+        Some(403)
+    );
+    assert!(handle.snapshot().service_edge_namespace.data.is_none());
+    let created = success(handle.submit(Action::SetServiceEdgeNamespace {
+        node_id: node_id.clone(),
+        update: ServiceEdgeNamespaceUpdate {
+            expected_revision: 0,
+            config: edge_namespace(),
+        },
+    })?)
+    .await?;
+    assert!(matches!(
+        created.result.output,
+        PublicOutput::Revision { revision: 1 }
+    ));
+    success(handle.submit(Action::LoadServiceEdgeNamespace {
+        node_id: node_id.clone(),
+    })?)
+    .await?;
+    assert_eq!(
+        handle
+            .snapshot()
+            .service_edge_namespace
+            .data
+            .as_ref()
+            .ok_or("missing namespace")?
+            .revision,
+        1
+    );
+    let other_node = done(handle.submit(Action::LoadServiceEdgeNamespace {
+        node_id: random_id(),
+    })?)
+    .await?;
+    assert_eq!(
+        other_node
+            .result
+            .failure
+            .ok_or("missing other-node denial")?
+            .status,
+        Some(403)
+    );
+    assert!(handle.snapshot().service_edge_namespace.data.is_none());
+    let conflict = done(handle.submit(Action::SetServiceEdgeNamespace {
+        node_id: node_id.clone(),
+        update: ServiceEdgeNamespaceUpdate {
+            expected_revision: 0,
+            config: edge_namespace(),
+        },
+    })?)
+    .await?;
+    assert_eq!(
+        conflict.result.failure.ok_or("missing conflict")?.status,
+        Some(409)
+    );
+    for expected_revision in [i64::MAX as u64, u64::MAX] {
+        assert!(
+            handle
+                .submit(Action::SetServiceEdgeNamespace {
+                    node_id: node_id.clone(),
+                    update: ServiceEdgeNamespaceUpdate {
+                        expected_revision,
+                        config: edge_namespace()
+                    },
+                })
+                .is_err()
+        );
+    }
+    success(handle.submit(Action::CreateAccount {
+        username: "namespace-member".into(),
+        password: password(),
+    })?)
+    .await?;
+    success(handle.logout()?).await?;
+    assert!(handle.snapshot().service_edge_namespace.data.is_none());
+    assert!(handle.snapshot().service_edge_namespace.error.is_none());
+    success(handle.submit(Action::SignIn {
+        username: "namespace-member".into(),
+        password: password(),
+        factor: None,
+    })?)
+    .await?;
+    for action in [
+        Action::LoadServiceEdgeNamespace {
+            node_id: node_id.clone(),
+        },
+        Action::SetServiceEdgeNamespace {
+            node_id,
+            update: ServiceEdgeNamespaceUpdate {
+                expected_revision: 1,
+                config: edge_namespace(),
+            },
+        },
+    ] {
+        let denied = done(handle.submit(action)?).await?;
+        assert_eq!(
+            denied
+                .result
+                .failure
+                .ok_or("missing permission denial")?
+                .status,
+            Some(403)
+        );
+        assert!(handle.snapshot().service_edge_namespace.data.is_none());
+    }
+
+    assert_eq!(
+        core.shutdown(Duration::from_secs(5)).await,
+        ShutdownState::Complete
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn committed_namespace_after_logout_cannot_repopulate_another_generation() -> Result {
+    use nestlink_protocol::service_plane::publication::ServiceEdgeNamespaceUpdate;
+    let gate = Gate::suffix("/service-namespace", "PUT");
+    let server = Server::namespace_entry(Some(gate.clone())).await?;
+    let (mut core, handle, create) = prepare(&server).await?;
+    gate.arm();
+    let writing = handle.submit(Action::SetServiceEdgeNamespace {
+        node_id: create.definition.edge_node_id,
+        update: ServiceEdgeNamespaceUpdate {
+            expected_revision: 0,
+            config: edge_namespace(),
+        },
+    })?;
+    gate.entered().await?;
+    let generation = handle.snapshot().generation;
+    let logout = handle.logout()?;
+    wait_view(&handle, |view| view.generation > generation).await?;
+    gate.unblock();
+    let late = done(writing).await?;
+    assert_eq!(late.result.status, OperationStatus::Superseded);
+    assert_eq!(late.result.remote_effect, RemoteEffect::Committed);
+    success(logout).await?;
+    assert!(handle.snapshot().service_edge_namespace.data.is_none());
+    assert_eq!(
+        core.shutdown(Duration::from_secs(5)).await,
+        ShutdownState::Complete
+    );
+    Ok(())
+}

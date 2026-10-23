@@ -18,6 +18,7 @@ mod remote_panel;
 use nestlink_web::{browser_clipboard, browser_files, browser_rpc};
 
 mod account_security_panel;
+mod edge_namespace_panel;
 mod service_quota_panel;
 mod services_panel;
 
@@ -1143,7 +1144,7 @@ fn App() -> impl IntoView {
                                             view! {
                                                 <button class=move || if selected.with(|chosen| chosen.as_ref().is_some_and(|v| v.key == active_key)) { "record selected" } else { "record" }
                                                     type="button" aria-pressed=move || selected.with(|chosen| chosen.as_ref().is_some_and(|v| v.key == pressed_key))
-                                                    on:click=move |_| selected.set(Some(row.clone()))>
+                                                    on:click=move |_| { if !selected.with_untracked(|chosen| chosen.as_ref().is_some_and(|v| v.key == row.key)) { selected.set(Some(row.clone())); } }>
                                                     <span class="record-main"><strong>{item.title}</strong><small>{move || detail.current()}</small></span>
                                                     <span class="record-status">{move || status.current()}</span>
                                                 </button>
@@ -1181,6 +1182,7 @@ fn App() -> impl IntoView {
                                                 <dt>{move || t("说明", "Description")}</dt><dd>{move || detail.current()}</dd>
                                                 <dt>{move || t("资源 ID", "Resource ID")}</dt><dd><code>{item.id.clone()}</code></dd>
                                             </dl>
+                                            {(is_admin && item.kind == "node").then(|| view! { <edge_namespace_panel::EdgeNamespacePanel api node_id=item.id.clone() session_revision auth_failure /> })}
                                             {item.connectable.then(|| {
                                                 let host = RemoteTarget { id: item.id.clone(), name: item.title.clone() };
                                                 view! {

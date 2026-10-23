@@ -135,6 +135,10 @@ struct QueuedCommand {
     command: Command,
 }
 pub struct Bridge {
+    #[cfg(test)]
+    layout_commands: Option<Receiver<QueuedCommand>>,
+    #[cfg(test)]
+    layout_notices: Option<SyncSender<Notice>>,
     commands: SyncSender<QueuedCommand>,
     next_submission_id: AtomicU64,
     notices: Receiver<Notice>,
@@ -156,10 +160,14 @@ impl Bridge {
     /// Layout tests render the real workspace without starting a daemon or media workers.
     #[cfg(test)]
     pub(crate) fn for_layout(snapshot: Snapshot) -> Self {
+        let (commands, _) = mpsc::sync_channel(16);
+        let (layout_notices, notices) = mpsc::sync_channel(32);
         Self {
-            commands: mpsc::sync_channel(16).0,
+            layout_commands: None,
+            layout_notices: Some(layout_notices),
+            commands,
             next_submission_id: AtomicU64::new(1),
-            notices: mpsc::sync_channel(32).1,
+            notices,
             snapshot: Arc::new(Mutex::new(Arc::new(snapshot))),
             displays: Arc::new(Mutex::new(DisplayMailbox::default())),
             video_update: Arc::new(Mutex::new(None)),
@@ -182,6 +190,28 @@ impl Bridge {
             .snapshot
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner) = Arc::new(snapshot);
+    }
+    #[cfg(test)]
+    pub(crate) fn layout_enable_commands(&mut self) {
+        let (commands, receiver) = mpsc::sync_channel(16);
+        self.commands = commands;
+        self.layout_commands = Some(receiver);
+    }
+    #[cfg(test)]
+    pub(crate) fn layout_submission(&self) -> Option<(u64, Command)> {
+        self.layout_commands
+            .as_ref()?
+            .try_recv()
+            .ok()
+            .map(|queued| (queued.submission_id, queued.command))
+    }
+    #[cfg(test)]
+    pub(crate) fn layout_notice(&self, notice: Notice) {
+        self.layout_notices
+            .as_ref()
+            .expect("layout notice channel")
+            .try_send(notice)
+            .unwrap_or_else(|_| panic!("layout notice queue full"));
     }
 
     pub fn start(directory: PathBuf, context: egui::Context) -> Self {
@@ -283,6 +313,10 @@ impl Bridge {
             }
         });
         Self {
+            #[cfg(test)]
+            layout_commands: None,
+            #[cfg(test)]
+            layout_notices: None,
             commands,
             next_submission_id: AtomicU64::new(1),
             notices,

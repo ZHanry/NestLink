@@ -1,6 +1,6 @@
 # 内网穿透部署与公网验收方案（2026-10-23）
 
-**状态：方案，尚未实施；不能据此标记公网穿透或 RC 验收通过。** 本文基于源码
+**状态：部署及公网产品验收尚未运行；不能据此标记公网穿透或 RC 验收通过。** 本文基于源码
 `967ef9173f19e995d9af6a3e5b940dbd7e3abe6e` 核对现有能力，部署时必须重新绑定实际
 通过质量检查的完整提交、GitHub run/attempt、产物摘要与运行版本。
 
@@ -219,3 +219,15 @@ GitHub runner，必须实际满足这些公网入站条件；普通托管 runner
 `protocol-spec/management.rs`（服务定义与来源 ACL）、
 `crates/sdk/src/services.rs`（本机目标批准）、
 `crates/sdk/tests/service_publication.rs`、`crates/sdk/tests/service_web_publication.rs`。
+
+## 2026-10-24 工具与产品入口进展
+
+本批已实现 Windows/Web 管理端的公网入口读取与保存，保留管理员授权、节点角色、
+显式首次配置和 CAS；保存失败保留草稿，账号/节点切换隔离旧响应。
+实际 GitHub 编译与浏览器验证仍以对应 run 为准。
+
+独立访问器现已位于 [scripts/acceptance/tunnel-public](../../scripts/acceptance/tunnel-public/README.md)，
+工作流为 `public-tunnel-acceptance.yml`。它按 TCP、UDP 两个全新运行顺序执行，
+先由同一服务器 socket 认证回报实际来源并验证端口独占重绑，再经产品路径测量数据、
+续租期间的持续流和停止后的新报文。工具不代替主机批准、产品租约或 ACL 证据。
+此前“还需实现”的访问器清单作为设计依据保留；运行次序以工具 README 为准。

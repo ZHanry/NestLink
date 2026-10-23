@@ -263,6 +263,12 @@ pub struct BrowserHostReady {
     pub path: i32,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ConfirmedRemoteEnd {
+    Revoked,
+    Expired,
+}
+
 pub struct BrowserHostExit {
     pub sdk: Sdk,
     pub request_id: String,
@@ -274,6 +280,8 @@ pub struct BrowserHostExit {
     pub path: Option<i32>,
     pub stop: Option<StopReport>,
     pub cleanup_failed: bool,
+    pub peer_close_failed: bool,
+    pub confirmed_remote_end: Option<ConfirmedRemoteEnd>,
     pub failure: Option<BrowserHostFailure>,
     pub diagnostic: Option<BrowserHostDiagnostic>,
 }
@@ -773,6 +781,7 @@ pub async fn run_browser_host(
     };
     let stop = close.and_then(|report| report.stop);
     let cleanup_failed = close.is_some_and(|report| report.cleanup_failed());
+    let peer_close_failed = close.is_some_and(|report| report.peer_close_failed);
     if cleanup_failed {
         failure.get_or_insert(BrowserHostFailure::Capture);
         diagnostic.get_or_insert(BrowserHostDiagnostic {
@@ -796,6 +805,25 @@ pub async fn run_browser_host(
             peer: None,
         });
     }
+
+    // Authorization rejection is only a candidate: an authenticated read must
+    // confirm the exact established session after all local resources are closed.
+    let authorization_rejected = diagnostic
+        .as_ref()
+        .is_some_and(|diagnostic| authorization_end_candidate(diagnostic.source));
+    let confirmed_remote_end =
+        if connected && authorization_rejected && !cleanup_failed && !peer_close_failed {
+            if let Some(ready) = &ready_info {
+                match tokio::time::timeout(Duration::from_secs(3), sdk.remote(&request_id)).await {
+                    Ok(Ok(remote)) => confirm_remote_end(&ready.binding, &remote),
+                    _ => None,
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        };
 
     config.report(diagnostic.unwrap_or(BrowserHostDiagnostic {
         request_sha256,
@@ -825,8 +853,40 @@ pub async fn run_browser_host(
             .flatten(),
         stop,
         cleanup_failed,
+        peer_close_failed,
+        confirmed_remote_end,
         failure,
         diagnostic,
+    }
+}
+
+fn authorization_end_candidate(source: BrowserHostDiagnosticSource) -> bool {
+    use nestlink_protocol::diagnostics::ConnectionFailure as F;
+    matches!(
+        source,
+        BrowserHostDiagnosticSource::SdkFailure(
+            F::InvalidAuthorization | F::AuthorizationRevoked | F::AuthorizationExpired
+        ) | BrowserHostDiagnosticSource::WebRtcSdkFailure(
+            F::InvalidAuthorization | F::AuthorizationRevoked | F::AuthorizationExpired
+        )
+    )
+}
+
+fn confirm_remote_end(
+    binding: &BrowserHostBinding,
+    remote: &nestlink_protocol::api::RemoteView,
+) -> Option<ConfirmedRemoteEnd> {
+    if remote.id != binding.request_id
+        || remote.controller_device_id != binding.controller_device_id
+        || remote.host_device_id != binding.host_device_id
+        || remote.connection_generation != binding.connection_generation
+    {
+        return None;
+    }
+    match remote.status.as_str() {
+        "revoked" => Some(ConfirmedRemoteEnd::Revoked),
+        "expired" => Some(ConfirmedRemoteEnd::Expired),
+        _ => None,
     }
 }
 
@@ -1074,6 +1134,83 @@ fn classify_diagnostic_source(error: &BrowserHostError) -> BrowserHostDiagnostic
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn remote_end_confirmation_requires_exact_established_session_and_terminal_status() {
+        let binding = BrowserHostBinding {
+            request_id: "request".into(),
+            session_id: "session".into(),
+            controller_device_id: "controller".into(),
+            host_device_id: "host".into(),
+            controller_key_sha256: [1; 32],
+            host_key_sha256: [2; 32],
+            permit_sha256: [3; 32],
+            connection_generation: 7,
+        };
+        let mut remote = nestlink_protocol::api::RemoteView {
+            id: "request".into(),
+            controller_device_id: "controller".into(),
+            host_device_id: "host".into(),
+            permissions: vec![],
+            paths: vec![],
+            nonce: String::new(),
+            policy_revision: 1,
+            expires_at_unix_ms: 0,
+            status: "revoked".into(),
+            lease_sequence: 1,
+            connection_generation: 7,
+            trust_revision: None,
+            password_revision: None,
+        };
+        assert_eq!(
+            confirm_remote_end(&binding, &remote),
+            Some(ConfirmedRemoteEnd::Revoked)
+        );
+        remote.status = "expired".into();
+        assert_eq!(
+            confirm_remote_end(&binding, &remote),
+            Some(ConfirmedRemoteEnd::Expired)
+        );
+        remote.status = "approved".into();
+        assert_eq!(confirm_remote_end(&binding, &remote), None);
+        remote.status = "revoked".into();
+        for mismatch in [
+            BrowserHostBinding {
+                request_id: "other".into(),
+                ..binding.clone()
+            },
+            BrowserHostBinding {
+                controller_device_id: "other".into(),
+                ..binding.clone()
+            },
+            BrowserHostBinding {
+                host_device_id: "other".into(),
+                ..binding.clone()
+            },
+            BrowserHostBinding {
+                connection_generation: 8,
+                ..binding.clone()
+            },
+        ] {
+            assert_eq!(confirm_remote_end(&mismatch, &remote), None);
+        }
+    }
+
+    #[test]
+    fn transport_and_local_cancel_are_never_remote_authorization_candidates() {
+        use nestlink_protocol::diagnostics::ConnectionFailure as F;
+        assert!(authorization_end_candidate(
+            BrowserHostDiagnosticSource::WebRtcSdkFailure(F::InvalidAuthorization)
+        ));
+        for source in [
+            BrowserHostDiagnosticSource::Cancelled,
+            BrowserHostDiagnosticSource::WebRtcEngine,
+            BrowserHostDiagnosticSource::SdkFailure(F::ManagementTransport),
+            BrowserHostDiagnosticSource::WebRtcSdkFailure(F::Unclassified),
+        ] {
+            assert!(!authorization_end_candidate(source));
+        }
+    }
 
     #[test]
     fn host_management_diagnostics_preserve_typed_causes_without_private_error_text() {

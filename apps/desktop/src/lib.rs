@@ -146,6 +146,7 @@ pub struct DesktopApp {
     message_tone: MessageTone,
     pending_confirmation: Option<(String, Command)>,
     policy: Option<management::PolicyDraft>,
+    edge_namespace: management::EdgeNamespacePanel,
     service_panel: services::ServicePanel,
     device_name: String,
     registration_generation: Option<u64>,
@@ -249,6 +250,7 @@ impl DesktopApp {
             message_tone,
             pending_confirmation: None,
             policy: None,
+            edge_namespace: Default::default(),
             service_panel: services::ServicePanel::default(),
             device_name: String::new(),
             registration_generation: None,
@@ -336,6 +338,7 @@ impl DesktopApp {
         self.clipboard_submission = None;
         self.browser_data_submission = None;
         self.policy = None;
+        self.edge_namespace = Default::default();
         self.account_name.clear();
         self.clear_video();
         // Password edit state IDs rotate across generations. Discard the old
@@ -1813,6 +1816,7 @@ impl DesktopApp {
                     }
                 }
                 Notice::Disconnected => {
+                    self.edge_namespace.disconnected();
                     self.privileged_panel.disconnected();
                     self.network_submission = None;
                     self.network_panel
@@ -1856,6 +1860,7 @@ impl DesktopApp {
                     submission_id,
                     reason,
                 } => {
+                    self.edge_namespace.rejected(submission_id);
                     self.privileged_panel.rejected(submission_id);
                     if submission_id.is_some() && submission_id == self.network_submission {
                         self.network_submission = None;
@@ -1932,6 +1937,8 @@ impl DesktopApp {
                     result,
                     sensitive,
                 } => {
+                    self.edge_namespace
+                        .completed(submission_id, &result, self.english);
                     let operation_message = widgets::operation_message(&result, self.english);
                     if let Some(submission_id) = submission_id
                         && self.remote_inspection_submission == Some(submission_id)

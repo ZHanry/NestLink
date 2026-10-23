@@ -257,6 +257,14 @@ def validate_receipts(browser, host, data, database, exit_codes):
 
     require(exit_codes == {"browser": 0, "native": 0}, "process-exit")
     failures.extend(validate_workspace_ui(browser.get("workspace_ui")))
+    namespace = browser.get("edge_namespace_ui", {})
+    for field in ("passed", "forbidden_is_error", "explicit_revision_zero", "create_saved",
+                  "failed_initialization_preserves_draft", "same_node_draft_preserved", "read_saved_configuration", "cas_conflict_preserves_draft",
+                  "conflict_recovered", "slow_old_response_ignored", "node_switch_clears_draft"):
+        require(isinstance(namespace, dict) and namespace.get(field) is True, "edge-namespace-" + field)
+    require(browser.get("edge_namespace_ui_helper_sha256") ==
+            sha256((ROOT / "scripts/lib/refactor-browser-edge-namespace.cjs").read_bytes()),
+            "edge-namespace-helper-source")
     for field in ("passed", "browser_peers_closed", "browser_closed", "cleanup_requested",
                   "persistent_controller_preserved", "ui_cleanup_complete", "renewal_sequence_valid"):
         require(browser.get(field) is True, "browser-" + field)

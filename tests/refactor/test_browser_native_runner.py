@@ -45,6 +45,13 @@ def completed_receipts():
         "persistent_controller_preserved", "ui_cleanup_complete", "renewal_sequence_valid")}
     browser.update({"page_errors": [], "api_failures": [], "response_inspection_errors": [],
         "workspace_ui": completed_workspace_ui(),
+        "edge_namespace_ui": {field: True for field in (
+            "passed", "forbidden_is_error", "explicit_revision_zero", "create_saved",
+            "failed_initialization_preserves_draft", "same_node_draft_preserved",
+            "read_saved_configuration", "cas_conflict_preserves_draft", "conflict_recovered",
+            "slow_old_response_ignored", "node_switch_clears_draft")},
+        "edge_namespace_ui_helper_sha256": RUNNER.sha256(
+            (ROOT / "scripts/lib/refactor-browser-edge-namespace.cjs").read_bytes()),
         "permit_response_observer": {"passed": True, "closed": True, "listeners_removed": True,
             "pending": 0, "errors": [], "session_owner": {
                 **{key: True for key in ("session_created", "prepared_before_navigation",
@@ -78,6 +85,19 @@ def completed_receipts():
 
 
 class NativeRunnerTests(unittest.TestCase):
+    def test_namespace_evidence_and_source_cannot_be_skipped(self):
+        for replacement in (None, {}, {"passed": True}):
+            receipts = completed_receipts()
+            receipts[0]["edge_namespace_ui"] = replacement
+            self.assertTrue(any(item.startswith("edge-namespace-") for item in RUNNER.validate_receipts(*receipts)))
+        for field in completed_receipts()[0]["edge_namespace_ui"]:
+            receipts = completed_receipts()
+            receipts[0]["edge_namespace_ui"][field] = False
+            self.assertIn("edge-namespace-" + field, RUNNER.validate_receipts(*receipts))
+        receipts = completed_receipts()
+        receipts[0]["edge_namespace_ui_helper_sha256"] = "0" * 64
+        self.assertIn("edge-namespace-helper-source", RUNNER.validate_receipts(*receipts))
+
     def test_response_observer_and_actual_session_cleanup_cannot_be_skipped(self):
         for replacement in (None, {}, {"passed": True}):
             receipts = completed_receipts()

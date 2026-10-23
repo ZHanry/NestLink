@@ -2,9 +2,9 @@ name: NestLink Rust core
 on:
   push:
     branches: [main]
-    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'deny.toml', 'config/ui-tokens.json', 'config/product-scope.json', 'config/dependency-forks.json', 'crates/**', 'apps/**', 'packaging/**', 'xtask/**', 'protocol-spec/**', '.cargo/**', 'scripts/refactor-*.py', 'scripts/test-vp8-boundary-sanitizer.sh', 'scripts/test-pipewire-audio-sanitizer.sh', 'tests/refactor/**', 'docs/refactor/native-codecs.lock.json', 'docs/refactor/cargo-notice-supplements.json', '.github/workflows/rust-core.yml']
+    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'deny.toml', 'config/ui-tokens.json', 'config/product-scope.json', 'config/dependency-forks.json', 'crates/**', 'apps/**', 'packaging/**', 'xtask/**', 'protocol-spec/**', '.cargo/**', 'scripts/refactor-*.py', 'scripts/acceptance/**', '.github/workflows/public-tunnel-acceptance.yml', 'scripts/test-vp8-boundary-sanitizer.sh', 'scripts/test-pipewire-audio-sanitizer.sh', 'tests/refactor/**', 'docs/refactor/native-codecs.lock.json', 'docs/refactor/cargo-notice-supplements.json', '.github/workflows/rust-core.yml']
   pull_request:
-    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'deny.toml', 'config/ui-tokens.json', 'config/product-scope.json', 'config/dependency-forks.json', 'crates/**', 'apps/**', 'packaging/**', 'xtask/**', 'protocol-spec/**', '.cargo/**', 'scripts/refactor-*.py', 'scripts/test-vp8-boundary-sanitizer.sh', 'scripts/test-pipewire-audio-sanitizer.sh', 'tests/refactor/**', 'docs/refactor/native-codecs.lock.json', 'docs/refactor/cargo-notice-supplements.json', '.github/workflows/rust-core.yml']
+    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'deny.toml', 'config/ui-tokens.json', 'config/product-scope.json', 'config/dependency-forks.json', 'crates/**', 'apps/**', 'packaging/**', 'xtask/**', 'protocol-spec/**', '.cargo/**', 'scripts/refactor-*.py', 'scripts/acceptance/**', '.github/workflows/public-tunnel-acceptance.yml', 'scripts/test-vp8-boundary-sanitizer.sh', 'scripts/test-pipewire-audio-sanitizer.sh', 'tests/refactor/**', 'docs/refactor/native-codecs.lock.json', 'docs/refactor/cargo-notice-supplements.json', '.github/workflows/rust-core.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -98,6 +98,8 @@ jobs:
         run: bash scripts/test-pipewire-audio-sanitizer.sh
       - name: Browser tool regressions (Node)
         run: node --test tests/refactor/test_browser_response_observer.cjs tests/refactor/test_browser_native_metrics.cjs tests/refactor/test_browser_network_damage.cjs tests/refactor/test_browser_workspace_ui.cjs
+      - name: Owned public tunnel tool regressions without network
+        run: python -B scripts/acceptance/tunnel-public/test_tools_offline.py
       - run: python -m unittest discover -s tests/refactor -p "test_*.py"
       - run: python scripts/refactor-ui-tokens.py --check
       - run: cargo xtask check

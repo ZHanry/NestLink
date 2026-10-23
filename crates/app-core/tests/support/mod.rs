@@ -43,6 +43,15 @@ impl Drop for Server {
 }
 impl Server {
     pub async fn start(gate: Option<Arc<Gate>>) -> Result<Self> {
+        Self::start_with_namespace_entry(gate, false).await
+    }
+    pub async fn namespace_entry(gate: Option<Arc<Gate>>) -> Result<Self> {
+        Self::start_with_namespace_entry(gate, true).await
+    }
+    async fn start_with_namespace_entry(
+        gate: Option<Arc<Gate>>,
+        namespace_entry: bool,
+    ) -> Result<Self> {
         let deployment_id = random_id();
         let signer = PermitSigner::generate();
         let permit_issuer = signer.public_key();
@@ -50,13 +59,41 @@ impl Server {
         store.bootstrap_admin("admin", PASSWORD)?;
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
         let origin = format!("http://{}", listener.local_addr()?);
-        let mut app: Router = router(AppState::new(
+        let state = AppState::new(
             store,
             VaultKey::from_bytes([17; 32]),
             signer,
             origin.clone(),
             false,
-        )?);
+        )?;
+        let mut app: Router = router(state.clone());
+        if namespace_entry {
+            // An explicit test reverse proxy forwards namespace requests into a
+            // configured DNS management entry sharing the real registry. The SDK
+            // retains its loopback trust proof; no business response is mocked.
+            let entry =
+                router(state.for_management_entry("https://manage.example.com".into(), true));
+            app = app.layer(middleware::from_fn(
+                move |mut request: Request, next: Next| {
+                    let entry = entry.clone();
+                    async move {
+                        if request.uri().path().ends_with("/service-namespace") {
+                            use tower::ServiceExt;
+                            request.headers_mut().insert(
+                                "origin",
+                                axum::http::HeaderValue::from_static("https://manage.example.com"),
+                            );
+                            match entry.oneshot(request).await {
+                                Ok(response) => response,
+                                Err(never) => match never {},
+                            }
+                        } else {
+                            next.run(request).await
+                        }
+                    }
+                },
+            ));
+        }
         let forbidden_responses = Arc::new(std::sync::Mutex::new(Vec::new()));
         app = app.layer(middleware::from_fn_with_state(
             forbidden_responses.clone(),

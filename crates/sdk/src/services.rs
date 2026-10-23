@@ -1,7 +1,9 @@
 //! Service configuration and explicit local target consent. No listener or target
 //! connection is created here, and no remote response chooses the local target.
 use crate::*;
-use nestlink_protocol::service_plane::publication::ServicePublicationRequest;
+use nestlink_protocol::service_plane::publication::{
+    ServiceEdgeNamespaceUpdate, ServiceEdgeNamespaceView, ServicePublicationRequest,
+};
 #[cfg(not(target_arch = "wasm32"))]
 use std::net::SocketAddr;
 #[cfg(not(target_arch = "wasm32"))]
@@ -310,6 +312,50 @@ impl Sdk {
             || view.target_sha256.as_deref() != Some(consent.target_sha256.as_str())
             || view.approval_expires_at_unix_ms != Some(body.choice.expires_at_unix_ms)
         {
+            return Err(SdkError::Trust);
+        }
+        Ok(view)
+    }
+}
+
+impl Sdk {
+    pub async fn service_edge_namespace(
+        &self,
+        node: &str,
+    ) -> Result<ServiceEdgeNamespaceView, SdkError> {
+        let view: ServiceEdgeNamespaceView = self
+            .required(
+                Method::GET,
+                &format!("{}/service-namespace", resource("nodes", node)?),
+                None::<&()>,
+            )
+            .await?;
+        view.config.validate()?;
+        if view.node_id != node || view.revision == 0 || view.revision > i64::MAX as u64 {
+            return Err(SdkError::Trust);
+        }
+        Ok(view)
+    }
+    pub async fn set_service_edge_namespace(
+        &self,
+        node: &str,
+        body: &ServiceEdgeNamespaceUpdate,
+    ) -> Result<ServiceEdgeNamespaceView, SdkError> {
+        body.config.validate()?;
+        let next = body
+            .expected_revision
+            .checked_add(1)
+            .filter(|value| *value <= i64::MAX as u64)
+            .ok_or(SdkError::Invalid)?;
+        let view: ServiceEdgeNamespaceView = self
+            .required(
+                Method::PUT,
+                &format!("{}/service-namespace", resource("nodes", node)?),
+                Some(body),
+            )
+            .await?;
+        view.config.validate()?;
+        if view.node_id != node || view.revision != next || view.config != body.config {
             return Err(SdkError::Trust);
         }
         Ok(view)
