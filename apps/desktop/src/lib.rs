@@ -538,23 +538,20 @@ impl DesktopApp {
                 && self.video_status == VideoStatus::Streaming;
             let control_was_enabled = self.native_control_enabled;
             let mut toggle_control = false;
-            ui.horizontal_wrapped(|ui| {
-                icons::badge(ui, icons::Icon::Keyboard, 28.);
-                ui.label(egui::RichText::new(self.t("远程画面", "Remote screen")).strong());
-                ui.small(status);
-                if ui
-                    .add_enabled(
-                        control_ready || self.native_control_enabled,
-                        egui::Button::new(if self.native_control_enabled {
-                            self.t("停止控制", "Stop control")
-                        } else {
-                            self.t("启用键鼠控制", "Enable keyboard and mouse")
-                        }),
-                    )
-                    .clicked()
-                {
-                    toggle_control = true;
-                }
+            let control_width = ui.available_width();
+            widgets::fixed_region(ui, "video-input-toolbar", egui::vec2(control_width, 44.), |ui| {
+                ui.horizontal(|ui| {
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        if ui.add_enabled(control_ready || self.native_control_enabled,
+                            egui::Button::new(if self.native_control_enabled {
+                                self.t("停止控制", "Stop control")
+                            } else { self.t("启用键鼠控制", "Enable keyboard and mouse") })
+                            .min_size(egui::vec2(if self.english { 210. } else { 156. }, 40.))).clicked() {
+                            toggle_control = true;
+                        }
+                        ui.add(egui::Label::new(status).truncate()).on_hover_text(status);
+                    });
+                });
             });
             if toggle_control {
                 if self.native_control_enabled {
@@ -565,19 +562,25 @@ impl DesktopApp {
                         Some((input.ui_generation, input.layout.binding.clone()));
                 }
             }
-            if input.is_none() {
-                ui.small(self.t(
-                    "此会话未提供输入控制权限。",
-                    "Input control is not authorized for this session.",
-                ));
+            let hint = if input.is_none() {
+                let authorized = self.remote_viewport_target.as_ref().and_then(|target|
+                    snapshot.selected_request.data.as_ref().filter(|request| request.id == target.request_id))
+                    .map(|request| request.permissions.contains(&(nestlink_protocol::Permission::Input as i32)));
+                if authorized == Some(false) {
+                    self.t("本次会话未授权键鼠控制。", "Keyboard and mouse control is not authorized for this session.")
+                } else {
+                    self.t("正在等待输入通道就绪。", "Waiting for the input channel.")
+                }
             } else if self.native_control_enabled {
-                ui.small(self.t(
-                    "点击画面后可使用本机键盘和鼠标；失去焦点时会释放按键。",
-                    "Click the screen to use the local keyboard and mouse. Keys are released when focus is lost.",
-                ));
-            }
+                self.t("点击画面后使用键鼠；失去焦点时释放按键。", "Click the screen to use keyboard and mouse. Losing focus releases held inputs.")
+            } else {
+                self.t("输入通道已就绪，可启用键鼠控制。", "The input channel is ready. You can enable keyboard and mouse control.")
+            };
+            widgets::fixed_region(ui, "video-input-hint", egui::vec2(control_width, 22.), |ui| {
+                ui.add(egui::Label::new(egui::RichText::new(hint).small()).truncate()).on_hover_text(hint);
+            });
             let width = ui.available_width().max(1.);
-            let height = (ui.available_height() - 12.).max(180.);
+            let height = (ui.available_height() - 12.).max(1.);
             let (rect, response) = ui.allocate_exact_size(
                 egui::vec2(width, height),
                 egui::Sense::click_and_drag(),
@@ -600,7 +603,7 @@ impl DesktopApp {
                         texture.id(),
                         target_rect,
                         egui::Rect::from_min_max(egui::Pos2::ZERO, egui::Pos2::new(1., 1.)),
-                    theme::color(&self.tokens.media.foreground),
+                    egui::Color32::WHITE,
                     );
                     image_rect = Some(target_rect);
                 }

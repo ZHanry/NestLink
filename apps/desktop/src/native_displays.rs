@@ -13,10 +13,7 @@ impl DesktopApp {
             return;
         };
         let Some(state) = self.bridge.native_displays() else {
-            ui.small(self.t(
-                "正在准备屏幕或等待系统屏幕授权…",
-                "Preparing displays or waiting for system consent…",
-            ));
+            ui.small(self.t("正在准备屏幕…", "Preparing displays…"));
             return;
         };
         if state.catalog.is_none() {
