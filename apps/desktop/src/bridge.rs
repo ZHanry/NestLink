@@ -207,9 +207,10 @@ impl Bridge {
     }
     #[cfg(test)]
     pub(crate) fn layout_notice(&self, notice: Notice) {
-        self.layout_notices
-            .as_ref()
-            .expect("layout notice channel")
+        let Some(sender) = self.layout_notices.as_ref() else {
+            panic!("layout notice channel is unavailable");
+        };
+        sender
             .try_send(notice)
             .unwrap_or_else(|_| panic!("layout notice queue full"));
     }
