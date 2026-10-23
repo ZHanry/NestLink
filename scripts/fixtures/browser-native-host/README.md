@@ -98,7 +98,10 @@ receipts, temporary database removal, browser shutdown and private directory
 removal all pass. It includes sanitized JSON/JSONL and screenshots from an explicit
 allowlist. Account readiness, private keys, browser profiles, databases, raw
 process logs and test payloads are excluded. A failed run keeps its sanitized
-failure evidence and fails the job. These results do not replace original
+failure evidence and fails the job. `negotiation-events.jsonl` retains at most
+200 fixed native event categories and elapsed times; only exact public peer-state
+messages can retain a detail string. It never copies arbitrary native log text.
+These results do not replace original
 HL-to-external-Edge, Windows hardware or physical input acceptance.
 
 The browser probe requires a matching `--owned-data true`, a harness-owned

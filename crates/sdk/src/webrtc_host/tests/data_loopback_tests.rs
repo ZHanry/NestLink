@@ -1157,13 +1157,42 @@ async fn idle_offer_poll_renews_over_sctp_and_http_then_rejects_revocation() -> 
     store.bootstrap_admin("admin", password)?;
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
     let origin = format!("http://{}", listener.local_addr()?);
+    // Hold one genuine signed permit response while the controller commits
+    // its renewal. The following request-view read must observe sequence 2.
+    let crossing = Arc::new(AtomicBool::new(false));
+    let permit_read = Arc::new(tokio::sync::Notify::new());
+    let release_read = Arc::new(tokio::sync::Notify::new());
+    let held_reads = Arc::new(AtomicUsize::new(0));
+    let gate_armed = crossing.clone();
+    let gate_observed = permit_read.clone();
+    let gate_release = release_read.clone();
+    let gate_count = held_reads.clone();
     let app = router(AppState::new(
         store,
         VaultKey::from_bytes([63; 32]),
         signer,
         origin.clone(),
         false,
-    )?);
+    )?)
+    .layer(axum::middleware::from_fn(
+        move |request: axum::extract::Request, next: axum::middleware::Next| {
+            let hold = request.method() == axum::http::Method::GET
+                && request.uri().path().ends_with("/permit")
+                && gate_armed.swap(false, Ordering::AcqRel);
+            let observed = gate_observed.clone();
+            let release = gate_release.clone();
+            let count = gate_count.clone();
+            async move {
+                let response = next.run(request).await;
+                if hold && response.status() == axum::http::StatusCode::OK {
+                    count.fetch_add(1, Ordering::AcqRel);
+                    observed.notify_one();
+                    let _ = tokio::time::timeout(Duration::from_secs(3), release.notified()).await;
+                }
+                response
+            }
+        },
+    ));
     let _server = RenewalServer(tokio::spawn(async move {
         let _ = axum::serve(listener, app).await;
     }));
@@ -1278,19 +1307,30 @@ async fn idle_offer_poll_renews_over_sctp_and_http_then_rejects_revocation() -> 
             return Err(io::Error::other("unexpected setup activation message").into());
         };
         let view = controller_sdk.remote(&request.id).await?;
-        let started = controller_clock.monotonic_ms();
-        let running = controller_sdk
-            .renew_permit(&controller, &view, &permit, signature)
-            .await?;
+        crossing.store(true, Ordering::Release);
+        let (refreshed, renewal) = tokio::join!(
+            pair.host
+                .refresh_authority_inner(&host_sdk, &host_identity, true),
+            async {
+                tokio::time::timeout(Duration::from_secs(3), permit_read.notified()).await?;
+                let started = controller_clock.monotonic_ms();
+                let result = controller_sdk
+                    .renew_permit(&controller, &view, &permit, signature)
+                    .await;
+                release_read.notify_one();
+                Ok::<_, Box<dyn std::error::Error + Send + Sync>>((result?, started))
+            }
+        );
+        let (running, started) = renewal?;
+        refreshed?;
+        assert_eq!(held_reads.load(Ordering::Acquire), 1);
+        assert_eq!(pair.host.current_permit().digest(), running.digest());
         assert!(!running.claims().is_setup());
         assert_eq!(
             running.claims().expires_at_unix_ms - running.claims().issued_at_unix_ms,
             15_000
         );
         controller_lease.renew(running.clone(), started)?;
-        pair.host
-            .refresh_authority_inner(&host_sdk, &host_identity, true)
-            .await?;
         host_lease.check_media_binding(nestlink_transport_stream::Channel::Video, 1)?;
         permit = running;
         original_expiry = permit.claims().expires_at_unix_ms;

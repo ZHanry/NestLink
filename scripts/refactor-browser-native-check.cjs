@@ -10,6 +10,7 @@ const { performance } = require('node:perf_hooks');
 const { videoInterval, audioInterval } = require('./lib/refactor-browser-media-metrics.cjs');
 const { prepareNetworkDamage, exerciseNetworkDamage } = require('./lib/refactor-browser-network-damage.cjs');
 const ownedData = require('./lib/refactor-browser-owned-data.cjs');
+const workspaceUi = require('./lib/refactor-browser-workspace-ui.cjs');
 
 const args = {};
 for (let i = 2; i < process.argv.length; i += 2) args[process.argv[i].replace(/^--/, '')] = process.argv[i + 1];
@@ -41,6 +42,7 @@ report.audio_intervals = [];
 report.metrics_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-media-metrics.cjs'));
 report.network_damage_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-network-damage.cjs'));
 report.response_observer_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-response-observer.cjs'));
+report.workspace_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-workspace-ui.cjs'));
 const progressPath = args.report.replace(/\.json$/, '') + '-progress.jsonl';
 const progress = fs.openSync(progressPath, 'wx');
 const retainSample = value => {
@@ -308,6 +310,7 @@ async function main() {
     } finally {
       await sibling.close();
     }
+    await workspaceUi.workspaces(page, args, report);
     check(await page.$$eval('button.record', nodes => nodes.length) === 1, 'Fixture must initially expose only its own native host');
     await page.locator('button.record').click();
     await page.locator('.detail-pane button.primary').click();
@@ -317,8 +320,10 @@ async function main() {
         'Synthetic audio must be explicitly requested through the actual permission control');
     }
     await ownedData.request(page, ready, args);
+    await workspaceUi.permissions(page, report);
     const requestStarted = performance.now();
     await page.locator('.remote-footer button.primary').click();
+    await workspaceUi.requestStarted(page, report);
     await page.waitForFunction(() => {
       return [...document.querySelectorAll('.remote-actions button.secondary')].some(button =>
         ['播放画面与声音', 'Play video and audio'].some(label => button.textContent.includes(label)) && !button.disabled);
@@ -378,6 +383,7 @@ async function main() {
     retainSample(await sample(page));
     const decodedStarted = performance.now();
     report.steady_observation_started_monotonic_ms = decodedStarted;
+    await workspaceUi.activeLayouts(page, args, report);
     if (args['exercise-ice-restart'] === 'true') {
       report.ice_restart = { trigger: 'Synthetic online event; real signed offer/answer and ICE negotiation',
         requested: true, observed_offer_count: null };
@@ -391,6 +397,7 @@ async function main() {
       retainSample(current);
       report.intervals.push(videoInterval(previous, current, profile));
       if (profile.with_audio) report.audio_intervals.push(audioInterval(previous, current));
+      await workspaceUi.sampleActive(page, report);
     }
     report.decoded_elapsed_seconds = (report.samples.at(-1).monotonic_ms - report.samples[0].monotonic_ms) / 1000;
     report.steady_observation_finished_monotonic_ms = performance.now();
@@ -435,6 +442,7 @@ async function main() {
       'Stopping a session must preserve the enrolled persistent browser identity');
     report.persistent_controller_preserved = true;
     report.ui_cleanup_complete = true;
+    await workspaceUi.close(page, report);
     report.passed = true;
   } catch (error) {
     report.main_failure = String(error.message).slice(0, 1000);

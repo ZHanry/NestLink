@@ -1,5 +1,7 @@
 """The GitHub integration must fail closed and keep ephemeral secrets private."""
 import importlib.util
+import json
+import copy
 from pathlib import Path
 import tempfile
 import unittest
@@ -11,11 +13,38 @@ RUNNER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(RUNNER)
 
 
+def completed_workspace_ui():
+    def geometry(viewport, keys):
+        return {"viewport": viewport, "document_width": viewport["width"], "items": {
+            key: {"count": 1, "visible": True, "hit": True,
+                  "rect": {"x": 1, "y": 2, "width": 30, "height": 40}} for key in keys}}
+
+    session = ("stop", "close", "request", "canvas")
+    ui = {"passed": True, "navigation": [], "active_layouts": [],
+          "steady_layout_samples": [geometry(RUNNER.UI_VIEWPORTS[0], session) for _ in range(3)],
+          "permissions": {"toggled_through_ui": True, "requested_values_preserved": True,
+              "before": [{"tag": tag} for tag in ["INPUT"] * 6 + ["SELECT"] * 2],
+              "initial_frame": geometry(RUNNER.UI_VIEWPORTS[0], session),
+              "reopened_frame": geometry(RUNNER.UI_VIEWPORTS[0], session)},
+          "request_hid_options_without_moving_actions": True,
+          "trusted_clicks": [{"selector": selector, "trusted": True} for selector in RUNNER.UI_REQUIRED_CLICKS],
+          "close_clicked_after_cleanup": True, "screenshots": ["workspace", "tunnel-editor", "remote-narrow"]}
+    for viewport in RUNNER.UI_VIEWPORTS:
+        ui["navigation"].append({"viewport": viewport, "desktop": geometry(viewport, ("connect",)),
+            "tunnels": geometry(viewport, ("create",)), "editor": geometry(viewport, ("save", "close")),
+            "after_scroll": geometry(viewport, ("save", "close")), "native_body_scroll_observed": True,
+            "draft_preserved": True if viewport["width"] == 390 else None})
+        ui["active_layouts"].append({"viewport": viewport, **{
+            field: geometry(viewport, session) for field in ("baseline", "drawer", "options", "restored")}})
+    return ui
+
+
 def completed_receipts():
     browser = {key: True for key in (
         "passed", "browser_peers_closed", "browser_closed", "cleanup_requested",
         "persistent_controller_preserved", "ui_cleanup_complete", "renewal_sequence_valid")}
     browser.update({"page_errors": [], "api_failures": [], "response_inspection_errors": [],
+        "workspace_ui": completed_workspace_ui(),
         "error": None, "pending_response_observations_after_close": 0,
         "capture_profile": {"name": "smoke", "width": 320, "height": 180, "fps": 10,
                             "duration_seconds": 36, "with_audio": True},
@@ -45,6 +74,31 @@ def completed_receipts():
 
 
 class NativeRunnerTests(unittest.TestCase):
+    def test_workspace_helper_cannot_be_skipped_or_report_partial_coverage(self):
+        receipts = completed_receipts()
+        receipts[0].pop("workspace_ui")
+        self.assertIn("workspace-ui-missing", RUNNER.validate_receipts(*receipts))
+        valid = completed_workspace_ui()
+        self.assertEqual(RUNNER.validate_workspace_ui(valid), [])
+        for field in valid:
+            partial = copy.deepcopy(valid)
+            partial.pop(field)
+            with self.subTest(missing=field):
+                self.assertTrue(RUNNER.validate_workspace_ui(partial))
+        for field in ("navigation", "active_layouts"):
+            partial = copy.deepcopy(valid)
+            partial[field].pop()
+            self.assertTrue(RUNNER.validate_workspace_ui(partial))
+        partial = copy.deepcopy(valid)
+        partial["navigation"][-1]["draft_preserved"] = False
+        self.assertIn("workspace-ui-narrow-draft-preserved", RUNNER.validate_workspace_ui(partial))
+        partial = copy.deepcopy(valid)
+        partial["active_layouts"][2].pop("drawer")
+        self.assertIn("workspace-ui-active-2-drawer", RUNNER.validate_workspace_ui(partial))
+        partial = copy.deepcopy(valid)
+        partial["trusted_clicks"][0]["trusted"] = False
+        self.assertIn("workspace-ui-trusted-action-coverage", RUNNER.validate_workspace_ui(partial))
+
     def test_browser_success_requires_every_native_cleanup_receipt(self):
         self.assertEqual(RUNNER.validate_receipts(*completed_receipts()), [])
         for index in (1, 2, 3, 4):
@@ -131,6 +185,53 @@ class NativeRunnerTests(unittest.TestCase):
         message = RUNNER.sanitize("Authorization: Bearer abc123 and eyJhbGciOiJFZCJ9.eyJzdWIiOiJ4In0.signature")
         self.assertNotIn("abc123", message)
         self.assertNotIn("eyJ", message)
+
+    def test_only_reviewed_ui_screenshot_names_are_published(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            private, output = root / "private", root / "public"
+            (private / "probe").mkdir(parents=True)
+            output.mkdir()
+            allowed = {"browser-report-workspace.png", "browser-report-tunnel-editor.png",
+                       "browser-report-remote-narrow.png"}
+            for name in allowed | {"browser-report-unreviewed.png"}:
+                (private / "probe" / name).write_bytes(b"\x89PNG\r\n\x1a\nowned fixture")
+            RUNNER.publish_receipts(private, output, [])
+            self.assertEqual({path.name for path in output.iterdir()}, allowed)
+
+    def test_negotiation_log_only_retains_fixed_categories_and_public_states(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, output = root / "native.log", root / "negotiation-events.jsonl"
+            records = [
+                {"event": "peer_state", "elapsed_since_first_event_ms": 0,
+                 "detail": "ICE connection state changed: checking", "password": "never-publish"},
+                {"event": "ice_start_failed", "elapsed_since_first_event_ms": 7,
+                 "detail": "failed for password never-publish"},
+                {"event": "peer_state", "elapsed_since_first_event_ms": 8,
+                 "detail": "peer connection state changed: connected; secret=never-publish"},
+                {"event": "unknown", "elapsed_since_first_event_ms": 9, "detail": "never-publish"},
+                {"event": "dtls_flight", "elapsed_since_first_event_ms": -1, "detail": "never-publish"},
+                {"event": "dtls_flight", "elapsed_since_first_event_ms": True, "detail": "never-publish"},
+                {"event": ["malformed"], "elapsed_since_first_event_ms": 9},
+            ]
+            source.write_text("raw failure never-publish\n" + "\n".join(json.dumps(item) for item in records), encoding="utf-8")
+            RUNNER.publish_negotiation_events(source, output)
+            result = [json.loads(line) for line in output.read_text(encoding="utf-8").splitlines()]
+            self.assertEqual(len(result), 3)
+            self.assertEqual(result[0]["detail"], "ICE connection state changed: checking")
+            self.assertNotIn("detail", result[1])
+            self.assertNotIn("detail", result[2])
+            self.assertNotIn("never-publish", output.read_text(encoding="utf-8"))
+
+    def test_negotiation_events_are_bounded(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, output = root / "native.log", root / "negotiation-events.jsonl"
+            source.write_text("\n".join(json.dumps({"event": "dtls_flight", "elapsed_since_first_event_ms": index})
+                                        for index in range(250)), encoding="utf-8")
+            RUNNER.publish_negotiation_events(source, output)
+            self.assertEqual(len(output.read_text(encoding="utf-8").splitlines()), 200)
 
     def test_proxy_only_accepts_explicit_loopback_origins(self):
         self.assertEqual(RUNNER.loopback_port("https://127.0.0.1:49321", "https"), 49321)

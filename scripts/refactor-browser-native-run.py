@@ -9,6 +9,7 @@ import base64
 import hashlib
 import http.client
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -32,6 +33,28 @@ JSON_RECEIPTS = (
     "data-result.json", "database-cleanup.json",
 )
 JSONL_RECEIPTS = ("management-stages.jsonl", "input-records.jsonl")
+PNG_RECEIPTS = (
+    "browser-report-video.png", "browser-report-failure.png",
+    "browser-report-workspace.png", "browser-report-tunnel-editor.png", "browser-report-remote-narrow.png",
+)
+NEGOTIATION_EVENTS = frozenset((
+    "ice_remote_response_unmatched", "ice_remote_packet_unmatched", "dtls_flight",
+    "peer_state", "ice_start_failed", "dtls_start_failed",
+))
+PUBLIC_PEER_STATE = re.compile(
+    r"(?:ICE connection state changed: (?:new|checking|connected|completed|failed|disconnected|closed)"
+    r"|peer connection state changed: (?:new|connecting|connected|disconnected|failed|closed)"
+    r"|signaling state changed to (?:stable|have-local-offer|have-remote-offer|have-local-pranswer|have-remote-pranswer|closed))",
+    re.I,
+)
+UI_VIEWPORTS = [{"width": width, "height": height} for width, height in (
+    (1440, 1000), (900, 800), (760, 560), (390, 844))]
+UI_REQUIRED_CLICKS = frozenset((
+    ".sidebar nav button", ".tunnel-heading > button.primary",
+    ".service-editor .dialog-actions button.secondary", ".task-dialog[open] > button",
+    '[aria-controls="remote-permissions"]', '[aria-controls="remote-operation-center"]',
+    ".remote-actions > button:last-child", ".back-to-devices",
+))
 SENSITIVE_KEY = re.compile(
     r"(^|_)(password|secret|token|authorization|cookie|private_key|ice_pwd|ice_ufrag)($|_)", re.I
 )
@@ -80,8 +103,43 @@ def remove_private(directory, temporary_root):
     return not target.exists()
 
 
+def publish_negotiation_events(source, output):
+    """Retain fixed event categories, never arbitrary native log/error text."""
+    if not source.exists():
+        return
+    if source.is_symlink() or not source.is_file() or source.stat().st_size > 512 * 1024:
+        raise ValueError("Expected a bounded regular native negotiation log")
+    events = []
+    for line in source.read_text(encoding="utf-8", errors="replace").splitlines():
+        try:
+            value = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(value, dict):
+            continue
+        category = value.get("event")
+        if not isinstance(category, str) or category not in NEGOTIATION_EVENTS:
+            continue
+        elapsed = value.get("elapsed_since_first_event_ms")
+        if type(elapsed) is not int or not 0 <= elapsed <= 3_600_000:
+            continue
+        event = {"event": category, "elapsed_since_first_event_ms": elapsed}
+        detail = value.get("detail")
+        if event["event"] == "peer_state" and isinstance(detail, str) and PUBLIC_PEER_STATE.fullmatch(detail):
+            event["detail"] = detail
+        events.append(event)
+        if len(events) == 200:
+            break
+    with output.open("x", encoding="utf-8", newline="\n") as stream:
+        for event in events:
+            stream.write(json.dumps(event) + "\n")
+
+
 def publish_receipts(private, output, secrets):
     """An explicit file allowlist keeps ready.json, keys, profiles and DBs private."""
+    # Preserve startup/negotiation categories even when a later receipt is
+    # absent or incomplete. No raw native.log is ever copied to artifacts.
+    publish_negotiation_events(private / "native.log", output / "negotiation-events.jsonl")
     sources = [(private / "probe" / "browser-report.json", "browser-report.json")]
     sources += [(private / "native" / name, name) for name in JSON_RECEIPTS]
     for source, name in sources:
@@ -100,7 +158,7 @@ def publish_receipts(private, output, secrets):
         with (output / name).open("x", encoding="utf-8", newline="\n") as stream:
             for entry in parsed:
                 stream.write(json.dumps(entry, ensure_ascii=False) + "\n")
-    for name in ("browser-report-video.png", "browser-report-failure.png"):
+    for name in PNG_RECEIPTS:
         source = private / "probe" / name
         if source.exists():
             if (source.is_symlink() or not source.is_file()
@@ -108,6 +166,85 @@ def publish_receipts(private, output, secrets):
                     or not source.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")):
                 raise ValueError("Expected a bounded PNG screenshot")
             shutil.copyfile(source, output / name)
+
+
+def validate_workspace_ui(ui):
+    """Require each production UI exercise, not merely an optional helper flag."""
+    failures = []
+
+    def require(condition, label):
+        if not condition:
+            failures.append("workspace-ui-" + label)
+
+    def geometry_complete(snapshot, viewport, keys, hit_keys=None):
+        if not isinstance(snapshot, dict) or snapshot.get("viewport") != viewport:
+            return False
+        if type(snapshot.get("document_width")) not in (int, float):
+            return False
+        items = snapshot.get("items")
+        if not isinstance(items, dict):
+            return False
+        for key in keys:
+            item = items.get(key)
+            if not isinstance(item, dict) or item.get("count") != 1 or item.get("visible") is not True:
+                return False
+            rect = item.get("rect")
+            if not isinstance(rect, dict) or not all(type(rect.get(field)) in (int, float)
+                    and math.isfinite(rect[field]) for field in ("x", "y", "width", "height")):
+                return False
+            if key in (keys if hit_keys is None else hit_keys) and item.get("hit") is not True:
+                return False
+        return True
+
+    if not isinstance(ui, dict):
+        return ["workspace-ui-missing"]
+    require(ui.get("passed") is True, "passed")
+    navigation, active = ui.get("navigation"), ui.get("active_layouts")
+    for name, rows in (("navigation", navigation), ("active-layouts", active)):
+        require(isinstance(rows, list) and len(rows) == len(UI_VIEWPORTS)
+            and all(isinstance(row, dict) and row.get("viewport") == viewport
+                    for row, viewport in zip(rows, UI_VIEWPORTS)), name + "-sizes")
+    if isinstance(navigation, list):
+        for index, row in enumerate(navigation):
+            if not isinstance(row, dict) or index >= len(UI_VIEWPORTS):
+                continue
+            for field, keys in (("desktop", ("connect",)), ("tunnels", ("create",)),
+                                ("editor", ("save", "close")), ("after_scroll", ("save", "close"))):
+                require(geometry_complete(row.get(field), UI_VIEWPORTS[index], keys), f"navigation-{index}-{field}")
+            require(type(row.get("native_body_scroll_observed")) is bool, f"navigation-{index}-scroll-observation")
+        require(len(navigation) == 4 and isinstance(navigation[-1], dict)
+                and navigation[-1].get("draft_preserved") is True, "narrow-draft-preserved")
+    session_keys, session_hits = ("stop", "close", "request", "canvas"), ("stop", "close", "request")
+    if isinstance(active, list):
+        for index, row in enumerate(active):
+            if not isinstance(row, dict) or index >= len(UI_VIEWPORTS):
+                continue
+            for field in ("baseline", "drawer", "options", "restored"):
+                require(geometry_complete(row.get(field), UI_VIEWPORTS[index], session_keys, session_hits),
+                        f"active-{index}-{field}")
+    steady = ui.get("steady_layout_samples")
+    require(isinstance(steady, list) and len(steady) >= 3
+            and all(geometry_complete(item, UI_VIEWPORTS[0], session_keys, session_hits) for item in steady),
+            "steady-layout-samples")
+    permissions = ui.get("permissions", {})
+    if not isinstance(permissions, dict):
+        permissions = {}
+    for field in ("toggled_through_ui", "requested_values_preserved"):
+        require(permissions.get(field) is True, "permissions-" + field)
+    values = permissions.get("before")
+    require(isinstance(values, list) and len(values) == 8
+            and all(isinstance(value, dict) and value.get("tag") == tag
+                    for value, tag in zip(values, ["INPUT"] * 6 + ["SELECT"] * 2)), "permission-controls")
+    for field in ("initial_frame", "reopened_frame"):
+        require(geometry_complete(permissions.get(field), UI_VIEWPORTS[0], session_keys, session_hits), "permissions-" + field)
+    require(ui.get("request_hid_options_without_moving_actions") is True, "request-fixed-actions")
+    clicks = ui.get("trusted_clicks")
+    require(isinstance(clicks, list) and bool(clicks)
+            and all(isinstance(event, dict) and event.get("trusted") is True for event in clicks)
+            and UI_REQUIRED_CLICKS <= {event.get("selector") for event in clicks}, "trusted-action-coverage")
+    require(ui.get("close_clicked_after_cleanup") is True, "close-after-cleanup")
+    require(ui.get("screenshots") == ["workspace", "tunnel-editor", "remote-narrow"], "screenshots")
+    return failures
 
 
 def validate_receipts(browser, host, data, database, exit_codes):
@@ -119,6 +256,7 @@ def validate_receipts(browser, host, data, database, exit_codes):
             failures.append(label)
 
     require(exit_codes == {"browser": 0, "native": 0}, "process-exit")
+    failures.extend(validate_workspace_ui(browser.get("workspace_ui")))
     for field in ("passed", "browser_peers_closed", "browser_closed", "cleanup_requested",
                   "persistent_controller_preserved", "ui_cleanup_complete", "renewal_sequence_valid"):
         require(browser.get(field) is True, "browser-" + field)

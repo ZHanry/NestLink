@@ -1198,12 +1198,24 @@ impl WebRtcHostPeer {
         self.ensure_open()?;
         let previous = self.current_permit();
         let request_started_ms = self.clock.monotonic_ms();
-        let fresh = sdk
+        let mut fresh = sdk
             .host_permit(installation, &previous.claims().session_id)
             .await?;
         ensure_permit_binding(&previous, &fresh, installation)?;
         ensure_live(&fresh)?;
         let view = sdk.remote(&fresh.claims().session_id).await?;
+        // These two management reads are not one snapshot. The controller can
+        // commit the next signed renewal after the permit response was read but
+        // before the request view is read. Reconcile that one-step race with a
+        // fresh verified envelope, keeping the original request clock. Never
+        // accept authority from the view alone or relax the final exact match.
+        if fresh.claims().lease_sequence.checked_add(1) == Some(view.lease_sequence) {
+            fresh = sdk
+                .host_permit(installation, &previous.claims().session_id)
+                .await?;
+            ensure_permit_binding(&previous, &fresh, installation)?;
+            ensure_live(&fresh)?;
+        }
         ensure_remote_view(&view, &fresh)?;
         if fresh.claims().lease_sequence < previous.claims().lease_sequence
             || fresh.claims().lease_sequence > previous.claims().lease_sequence.saturating_add(1)

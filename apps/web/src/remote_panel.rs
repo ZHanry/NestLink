@@ -857,12 +857,12 @@ pub fn RemotePanel(
                     <div class="remote-heading"><h2 id="remote-session-title" title=move || target.get().map(|host| host.name).unwrap_or_default()>{move || target.get().map(|host| host.name).unwrap_or_default()}</h2>
                         <p aria-live="polite">{move || status.get()}</p></div>
                     <div class="remote-actions">
-                        <span class="retry-cleanup-slot"><Show when=move || pending_cleanup.get() != 0 && !active.get()><button class="secondary" type="button" on:click=retry_cleanup>{move || t("重试清理", "Retry cleanup")}</button></Show></span>
-                        <button class="secondary" type="button" on:click=toggle_fullscreen>{move || if fullscreen.get() { t("退出全屏", "Exit fullscreen") } else { t("全屏", "Fullscreen") }}</button>
-                        <button class="secondary" type="button" aria-expanded=move || tools_open.get().to_string() aria-controls="remote-operation-center" on:click=move |_| tools_open.update(|open| *open = !*open)>{move || t("操作中心", "Control center")}</button>
-                        <button class="secondary" type="button" on:click=play disabled=move || !active.get()>{move || t("播放画面与声音", "Play video and audio")}</button>
-                        <button class="danger" type="button" on:click=stop disabled=move || !active.get()>{move || t("停止连接", "Stop connection")}</button>
-                        <button class="secondary" type="button" on:click=close>{move || t("关闭", "Close")}</button>
+                        <span class="retry-cleanup-slot"><Show when=move || pending_cleanup.get() != 0 && !active.get()><button class="secondary" type="button" title=move || t("重试清理", "Retry cleanup") on:click=retry_cleanup>{move || t("重试清理", "Retry cleanup")}</button></Show></span>
+                        <button class="secondary" type="button" title=move || if fullscreen.get() { t("退出全屏", "Exit fullscreen") } else { t("全屏", "Fullscreen") } on:click=toggle_fullscreen>{move || if fullscreen.get() { t("退出全屏", "Exit fullscreen") } else { t("全屏", "Fullscreen") }}</button>
+                        <button class="secondary" type="button" title=move || t("操作中心", "Control center") aria-expanded=move || tools_open.get().to_string() aria-controls="remote-operation-center" on:click=move |_| tools_open.update(|open| *open = !*open)>{move || t("操作中心", "Control center")}</button>
+                        <button class="secondary" type="button" title=move || t("播放画面与声音", "Play video and audio") on:click=play disabled=move || !active.get()>{move || t("播放画面与声音", "Play video and audio")}</button>
+                        <button class="danger" type="button" title=move || t("停止连接", "Stop connection") on:click=stop disabled=move || !active.get()>{move || t("停止连接", "Stop connection")}</button>
+                        <button class="secondary" type="button" title=move || t("关闭", "Close") on:click=close>{move || t("关闭", "Close")}</button>
                     </div>
                 </header>
                 <div class="remote-progress-slot">
