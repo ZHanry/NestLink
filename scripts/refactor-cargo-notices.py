@@ -157,11 +157,29 @@ def local_file(root, relative, budget=4 * 1024 * 1024):
     return path
 
 
-def dependency_fork_source(root, name):
+def dependency_fork_review(policy, name, version=None):
+    require(policy.get('schema_version') == 2, 'Unsupported dependency fork policy')
+    matches = []
+    identities = set()
+    directories = set()
+    for key, review in policy['packages'].items():
+        identity = (review['name'], review['version'])
+        directory = portable(review['directory'])
+        require(len(directory.parts) == 1 and key == '@'.join(identity), 'Invalid dependency fork identity or directory')
+        require(identity not in identities and review['directory'] not in directories, 'Ambiguous dependency fork policy')
+        identities.add(identity)
+        directories.add(review['directory'])
+        if review['name'] == name and (version is None or review['version'] == version):
+            matches.append(review)
+    require(len(matches) == 1, 'Unknown or ambiguous dependency fork version')
+    return matches[0]
+
+
+def dependency_fork_source(root, name, version=None):
     policy = json.loads((root / 'config/dependency-forks.json').read_text(encoding='utf-8'))
-    require(name in policy['packages'], 'Unknown dependency fork')
+    review = dependency_fork_review(policy, name, version)
     cargo = Path(os.environ.get('CARGO_HOME', str(Path.home() / '.cargo')))
-    matches = list((cargo / 'git/checkouts').glob('*/' + policy['commit'][:7] + '/' + name))
+    matches = list((cargo / 'git/checkouts').glob('*/' + policy['commit'][:7] + '/' + review['directory']))
     require(len(matches) == 1, 'Run cargo fetch --locked before testing dependency fork sources')
     return matches[0]
 
@@ -255,11 +273,11 @@ def collect(root, metadata, destination):
         if source and source.startswith('git+'):
             policy = json.loads((root / 'config/dependency-forks.json').read_text(encoding='utf-8'))
             expected_source = 'git+' + policy['repository'] + '?branch=' + policy['branch'] + '#' + policy['commit']
-            require(source == expected_source and item['name'] in policy['packages'], 'Unreviewed Cargo Git source')
+            require(source == expected_source, 'Unreviewed Cargo Git source')
             require(item['id'] not in workspace, 'A dependency fork cannot be first-party')
-            review = policy['packages'][item['name']]
-            require(item['version'] == review['version'], 'Dependency fork version differs')
+            review = dependency_fork_review(policy, item['name'], item['version'])
             package_root = Path(item['manifest_path']).parent.resolve()
+            require(package_root.name == review['directory'], 'Dependency fork directory differs')
             snapshot = hashlib.sha256()
             files = sorted((path for path in package_root.rglob('*') if path.is_file()), key=lambda path: path.relative_to(package_root).as_posix())
             require(len(files) == review['file_count'], 'Dependency fork source inventory differs')

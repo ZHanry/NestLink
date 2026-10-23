@@ -13,9 +13,6 @@ use std::{
 };
 use zeroize::Zeroizing;
 
-mod android;
-pub use android::{AndroidClipboard, AndroidClipboardBridge};
-
 #[cfg(windows)]
 mod windows;
 #[cfg(windows)]

@@ -66,15 +66,6 @@ class NativeSupplyTests(unittest.TestCase):
             with self.assertRaises(SUPPLY.SupplyError):
                 SUPPLY.install_manifest(prefix, receipt["libraries"], target)
 
-    def test_android_sdk_roots_resolve_only_the_pinned_ndk_revision(self):
-        with tempfile.TemporaryDirectory() as scratch:
-            sdk = Path(scratch) / "Android" / "Sdk"
-            ndk = sdk / "ndk" / SUPPLY.ANDROID_NDK["revision"]
-            ndk.mkdir(parents=True)
-            (ndk / "source.properties").write_text("Pkg.Revision = " + SUPPLY.ANDROID_NDK["revision"], encoding="utf-8")
-            self.assertEqual(SUPPLY.resolve_ndk_path(sdk), ndk)
-            self.assertEqual(SUPPLY.resolve_ndk_path(ndk.parent), ndk)
-            self.assertEqual(SUPPLY.resolve_ndk_path(ndk), ndk)
 
     def test_archive_architecture_is_checked_for_every_elf_member(self):
         with tempfile.TemporaryDirectory() as scratch:
@@ -172,17 +163,6 @@ class NativeSupplyTests(unittest.TestCase):
                        name: SUPPLY.inspect_elf_archive(prefix / relative, machine)
                        for name, relative in libraries.items()
                    }}, "files": SUPPLY.install_manifest(prefix, libraries, target)}
-        if target in SUPPLY.ANDROID_TARGETS:
-            ndk = SUPPLY.ANDROID_NDK
-            archive = {key: ndk[key] for key in ("linux_archive_url", "linux_archive_bytes", "linux_archive_sha1", "linux_archive_sha256")}
-            compiler_arch = "aarch64" if target == "aarch64-linux-android" else "x86_64"
-            receipt["validation"]["android_ndk"] = {
-                "abi": target_spec["android_abi"], "target": target, "expected_elf_machine": machine,
-                "compiler_target": f"{compiler_arch}-unknown-linux-android{ndk['api_level']}",
-                "ndk_revision": ndk["revision"], "ndk_host_tag": ndk["host_tag"], "api_level": ndk["api_level"],
-                "source_properties_sha256": "a" * 64, "ndk_archive": archive,
-                "page_size_bytes": ndk["page_size_bytes"], "final_shared_object_linker_flag": ndk["final_shared_object_linker_flag"],
-            }
         for source in lock["sources"]:
             record = {key: source[key] for key in ("name", "version", "commit", "archive_sha256", "archive_bytes")}
             record["source_tree_sha256"] = "1" * 64
@@ -225,18 +205,6 @@ class NativeSupplyTests(unittest.TestCase):
             with self.assertRaises(SUPPLY.SupplyError):
                 SUPPLY.verify_receipt(prefix, TARGET, SUPPLY.DEFAULT_LOCK)
 
-    def test_android_receipt_binds_the_ndk_revision_api_and_page_size(self):
-        target = "aarch64-linux-android"
-        with tempfile.TemporaryDirectory() as scratch:
-            prefix = Path(scratch)
-            receipt = self.make_prefix(prefix, target)
-            SUPPLY.verify_receipt(prefix, target, SUPPLY.DEFAULT_LOCK)
-            for field, value in [("ndk_revision", "26.3.11579264"), ("api_level", 29), ("page_size_bytes", 4096)]:
-                changed = json.loads(json.dumps(receipt))
-                changed["validation"]["android_ndk"][field] = value
-                SUPPLY.write_json(prefix / SUPPLY.RECEIPT, changed)
-                with self.subTest(field=field), self.assertRaises(SUPPLY.SupplyError):
-                    SUPPLY.verify_receipt(prefix, target, SUPPLY.DEFAULT_LOCK)
 
     def test_existing_work_is_preserved_before_any_tool_or_network_call(self):
         with tempfile.TemporaryDirectory() as scratch:

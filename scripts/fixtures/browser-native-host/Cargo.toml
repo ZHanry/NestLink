@@ -30,10 +30,11 @@ tempfile = "=3.27.0"
 tokio = { version = "=1.53.2", features = ["rt-multi-thread", "macros", "net", "time", "sync", "io-util"] }
 
 [patch.crates-io]
-turn = { git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "nestlink-0.7-rc" }
-webrtc-ice = { git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "nestlink-0.7-rc" }
-leptos_macro = { git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "nestlink-0.7-rc" }
-tachys = { git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "nestlink-0.7-rc" }
+turn = { version = "=0.17.2", git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "main" }
+turn-client = { package = "turn", version = "=0.11.0", git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "main" }
+webrtc-ice = { git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "main" }
+leptos_macro = { git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "main" }
+tachys = { git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "main" }
 
 [lints.rust]
 unsafe_code = "forbid"

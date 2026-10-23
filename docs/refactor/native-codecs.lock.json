@@ -57,28 +57,6 @@
         "opus": "lib/libopus.a"
       }
     },
-    "aarch64-linux-android": {
-      "os": "android",
-      "arch": "aarch64",
-      "android_abi": "arm64-v8a",
-      "crt": "bionic",
-      "vpx_target": "arm64-android-gcc",
-      "libraries": {
-        "vpx": "lib/libvpx.a",
-        "opus": "lib/libopus.a"
-      }
-    },
-    "x86_64-linux-android": {
-      "os": "android",
-      "arch": "x86_64",
-      "android_abi": "x86_64",
-      "crt": "bionic",
-      "vpx_target": "x86_64-android-gcc",
-      "libraries": {
-        "vpx": "lib/libvpx.a",
-        "opus": "lib/libopus.a"
-      }
-    },
     "aarch64-unknown-linux-gnu": {
       "os": "linux",
       "arch": "aarch64",
@@ -89,18 +67,6 @@
         "opus": "lib/libopus.a"
       }
     }
-  },
-  "android_ndk": {
-    "revision": "27.2.12479018",
-    "host_tag": "linux-x86_64",
-    "api_level": 30,
-    "page_size_bytes": 16384,
-    "final_shared_object_linker_flag": "-Wl,-z,max-page-size=16384",
-    "repository_url": "https://dl.google.com/android/repository/repository2-3.xml",
-    "linux_archive_url": "https://dl.google.com/android/repository/android-ndk-r27c-linux.zip",
-    "linux_archive_bytes": 663987688,
-    "linux_archive_sha1": "090e8083a715fdb1a3e402d0763c388abb03fb4e",
-    "linux_archive_sha256": "59c2f6dc96743b5daf5d1626684640b20a6bd2b1d85b13156b90333741bad5cc"
   },
   "profile": "release",
   "linkage": "static",
@@ -117,5 +83,5 @@
     "opus_custom_modes": false,
     "opus_nonthreadsafe_pseudostack": false
   },
-  "cross_compilation_policy": "Native Windows x64 and Linux x64/ARM64 builds require matching host architectures and compilers. Android ARM64 and x86_64 are built only on Linux x86_64 with the exact pinned Google NDK revision above. Windows ARM64 remains unsupported. Every ELF static archive object is checked against its target and cannot be relabeled."
+  "cross_compilation_policy": "Windows x64 and Linux x64/ARM64 suppliers run on their native architecture in GitHub Actions. Android is outside the product scope."
 }

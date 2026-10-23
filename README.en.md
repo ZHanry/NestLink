@@ -1,27 +1,23 @@
 # NestLink
 
-Self-hosted remote control and service publishing. The current version is **0.7.0 RC1** (`0.7.0-rc.1`). This candidate fixes authentication recovery, bounded backend resources, wheel input and desktop/Web/Android task flows. See the [remediation record](docs/0.7.0-remediation.md) and [changelog](CHANGELOG.md) for evidence and pending hardware acceptance.
+**Private-network tunneling + remote desktop.** NestLink provides authorized access to internal HTTP, HTTPS, TCP and UDP services alongside remote desktop sessions. The supported clients are **Windows desktop and Web**. The NestLink name and existing logo remain unchanged.
 
-[中文](README.md) · [Releases](https://github.com/ZHanry/NestLink/releases) · [Build instructions](docs/refactor/CANDIDATE-BUILD.md) · [Implementation and checks](docs/refactor/IMPLEMENTATION.md)
+[中文](README.md) · [GitHub build instructions](docs/refactor/CANDIDATE-BUILD.md) · [Remediation acceptance](docs/refactor/REMEDIATION-ACCEPTANCE.md) · [Changelog](CHANGELOG.md)
 
-A shared Rust core handles device identity, authorization, sessions, media, files and service channels. The desktop uses egui + egui_extras, Android uses Kotlin/JNI, and the Web application uses Leptos/WASM. Remote sessions and service publications have separate approvals and lifetimes. Connection authorization supports local approval, trusted devices and passwords.
-
-| Platform | Targets | Deliverables |
+| Component | Targets | Deliverables |
 | --- | --- | --- |
-| Windows x64 | Windows 10/11 | Desktop installer and optional privilege broker package |
-| Linux x64 / ARM64 | Ubuntu 24.04, X11 / GNOME / KDE | Desktop and server DEBs |
-| Android ARM64 / x86_64 | Android 11–16, API 30–36 | Separate ABI APKs |
-| Web | Current stable Chrome / Edge / Firefox | Management, browser remote control and static site |
-| Server / OCI | Linux x64 / ARM64 | Server packages and native architecture OCI archives |
+| Windows desktop | Windows 10/11 x64 | Desktop installer and optional privilege broker package |
+| Web | Current stable Chrome / Edge / Firefox | Device management, private services and browser remote desktop |
+| Linux backend | Ubuntu 24.04 x64 / ARM64 | Server DEBs and OCI image archives |
 
-Connect using the server address, account and password. Server metadata is discovered and verified over HTTPS. Authenticator and recovery-code features have been removed; upgrading preserves passwords and requires a fresh sign-in.
+Windows registers the local computer, publishes private services and hosts remote desktops. The Web client manages devices and connects to authorized services and desktops. A shared Rust core handles identity, authorization, sessions, media, files and channels. Tunnels and remote sessions have separate permissions and lifetimes; access supports local approval, trusted devices and passwords.
 
-An account can sign in on multiple devices and browser pages. Each login renews independently; signing out ends only that login. The desktop sharing notice shows the remote device, permissions and session state, and keeps a disconnect action available while the main window is in the tray.
+Sign in with the server address, account and password. Server configuration is verified over HTTPS. Each device or browser login renews independently, and signing out ends only that login. Remote sessions use one initial authorization; screen, input, audio, files and clipboard permissions remain visible, and the host can stop the session at any time.
 
-Screen, input, multiple displays, audio, files and text clipboard directions require explicit authorization. HTTP, HTTPS, TCP and UDP publications include source ACLs, quotas and revocation. See the [server documentation](docs/refactor/SERVER.md) for deployment.
+Remote desktop automatically prefers the physical network interface for direct connections. Authorized relay remains available when network conditions require it; the actual connection path must be reported honestly. Service publication includes source ACLs, quotas and revocation. See [server deployment](docs/refactor/SERVER.md) and [cross-network setup](docs/REMOTE-CONNECTION.md).
 
-This RC is for subsequent real-world acceptance. Windows packages currently have no Authenticode identity; Android uses a development signer and the isolated `com.zhanry.nestlink.candidate` application ID. Fixed release signing, ARM64 hardware, installed desktops and external networks remain pending. Verify the release SHA-256 values and fixed source manifest before testing.
+**0.7.0 RC1** (`0.7.0-rc.1`) is under remediation. A successful candidate build is not desktop, input, direct-path or installed-product acceptance. Publication requires the applicable report acceptance, bound to the exact source and artifact bytes. Windows Authenticode, update and OCI signing states remain explicit in build materials; development candidates cannot enter the production update channel.
 
-The build workflow produces every platform, source, SBOM, licenses and materials from one clean commit. The internal `v15` protocol and state namespaces remain separate from the public product version. First-party source is Apache-2.0; upstream license texts remain in their source directories and release materials.
+All distribution builds and packaging run on GitHub Actions. User computers and deployment servers consume verified artifacts. One clean commit produces Windows, Web, backend, source, SBOM, licenses and build materials. [product-scope.json](config/product-scope.json) defines the current scope. Android sources, JNI, APK production and CI have been removed; old platform evidence remains historical.
 
-For cross-network access, upgrade the server and both clients, enable server forwarding, and allow relay for both devices and the session. See [connection setup](docs/REMOTE-CONNECTION.md).
+The internal `v15` protocol and state namespaces remain separate from the public version. First-party source is Apache-2.0; upstream licenses remain in source and release materials.

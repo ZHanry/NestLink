@@ -27,42 +27,30 @@ class UiTokenTests(unittest.TestCase):
         changed = deepcopy(self.tokens)
         changed["light"]["primary"] = "#123456"
         changed["state"]["primary_action_text"]["dark"] = "#654321"
-        changed["spacing"]["mobile_screen_padding"] = 31
+        changed["spacing"]["web_mobile_padding"] = 31
         changed["shape"]["control"] = 11
         changed["media"]["canvas"] = "#abcdef"
         changed["layout"]["sidebar_width"] = 240
         changed["layout"]["sidebar_width_compact"] = 190
 
         css = TOKENS.render_css(changed)
-        kotlin = TOKENS.render_android(changed)
 
         self.assertIn("--plum: #123456;", css)
         self.assertIn("--primary-action-text: #654321;", css)
         self.assertIn("--media-canvas: #abcdef;", css)
-        self.assertIn("--font-ui: system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;", css)
+        self.assertIn("--font-ui: " + changed["type"]["css_family"] + ";", css)
+        self.assertIn("--mobile-padding: 31px;", css)
+        self.assertIn("--radius-control: 11px;", css)
         self.assertIn("--sidebar-width: 240px;", css)
         self.assertIn("--sidebar-width-compact: 190px;", css)
-        self.assertIn("val lightPrimary = Color(0xFF123456)", kotlin)
-        self.assertIn("val darkPrimaryActionText = Color(0xFF654321)", kotlin)
-        self.assertIn("val mediaCanvas = Color(0xFFABCDEF)", kotlin)
-        self.assertIn("val lightWarning = Color(0xFF966313)", kotlin)
-        self.assertIn("val darkSuccess = Color(0xFF91D8A8)", kotlin)
-        self.assertIn("RoundedCornerShape(11.dp)", kotlin)
-        self.assertIn("mobileScreenPadding = 31.dp", kotlin)
 
     def test_platform_surfaces_consume_generated_ui_tokens(self):
         web_css = (ROOT / "apps" / "web" / "static" / "nestlink.css").read_text(encoding="utf-8")
-        android_activity = (ROOT / "apps" / "android" / "app" / "src" / "main" / "java" / "com" / "zhanry" / "nestlink" / "MainActivity.kt").read_text(encoding="utf-8")
-        android_canvas = (ROOT / "apps" / "android" / "app" / "src" / "main" / "java" / "com" / "zhanry" / "nestlink" / "RemoteVideoCanvas.kt").read_text(encoding="utf-8")
         desktop = (ROOT / "apps" / "desktop" / "src" / "lib.rs").read_text(encoding="utf-8")
 
         self.assertIn("font-size: var(--text-small)", web_css)
-        self.assertIn("NestLinkUiTokens.mobileScreenPadding", android_activity)
-        self.assertIn("NestLinkUiTokens.mediaCanvas", android_canvas)
-        self.assertIn("NestLinkUiTokens.mediaForeground", android_canvas)
-        self.assertIn("NestLinkUiTokens.lightFocus", android_canvas)
         self.assertIn("self.tokens.media.canvas", desktop)
-        self.assertIn("self.tokens.layout.row_height", (ROOT / "apps" / "desktop" / "src" / "remote.rs").read_text(encoding="utf-8"))
+        self.assertIn("tokens.layout.control_height", (ROOT / "apps" / "desktop" / "src" / "theme.rs").read_text(encoding="utf-8"))
 
     def test_duplicate_keys_and_invalid_numeric_tokens_are_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:

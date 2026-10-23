@@ -52,6 +52,8 @@ def payload(args):
 
 
 def executable_items(data, platform_name, architecture, role):
+    if platform_name == "linux" and role != "server":
+        raise ValueError("Linux distribution artifacts are backend servers only")
     roles = {"server": ("server",), "desktop": ("desktop", "daemon"), "privileged": ("desktop", "daemon", "privileged")}.get(role)
     if roles is None or (role == "privileged" and (platform_name, architecture) != ("windows", "x86_64")):
         raise ValueError("unsupported native installation role")
@@ -123,14 +125,8 @@ def build_deb(args):
         tools = stage / "usr/lib/nestlink-v15-tools" / args.role
         for source in (ROOT / "packaging/linux/lifecycle.py", ROOT / "packaging/native/release_verify.py"):
             copy_file(source, tools / source.name, 0o755 if source.suffix == ".py" else 0o644)
-        if args.role == "desktop":
-            copy_file(ROOT / "packaging/systemd/nestlink-v15-daemon.service", stage / "usr/lib/systemd/user/nestlink-v15-daemon.service")
-            copy_file(ROOT / "packaging/linux/nestlink-v15.desktop", stage / "usr/share/applications/nestlink-v15.desktop")
-            copy_file(ROOT / "brand/icon.svg", stage / "usr/share/icons/hicolor/scalable/apps/nestlink-v15.svg")
-            dependencies = "libc6 (>= 2.39), libgcc-s1, python3 (>= 3.12), openssl, libx11-6, libxrandr2, libxi6, libxfixes3, libxinerama1, libxcursor1, libxkbcommon0, libgl1, libegl1, libwayland-client0, libpipewire-0.3-0, libdbus-1-3, libasound2t64"
-        else:
-            copy_file(ROOT / "packaging/systemd/nestlink-v15-control.service", stage / "usr/lib/systemd/system/nestlink-v15-control.service")
-            dependencies = "libc6 (>= 2.39), libgcc-s1, python3 (>= 3.12), openssl"
+        copy_file(ROOT / "packaging/systemd/nestlink-v15-control.service", stage / "usr/lib/systemd/system/nestlink-v15-control.service")
+        dependencies = "libc6 (>= 2.39), libgcc-s1, python3 (>= 3.12), openssl"
         for notice in sorted((ROOT / "packaging/notices").iterdir()):
             if notice.is_file():
                 copy_file(notice, stage / "usr/share/doc" / package / "notices" / notice.name)
@@ -224,7 +220,7 @@ def main():
         build.add_argument("--openssl", default="openssl")
         if name == "build-deb":
             build.add_argument("--architecture", choices=("x86_64", "aarch64"), required=True)
-            build.add_argument("--role", choices=("desktop", "server"), required=True)
+            build.add_argument("--role", choices=("server",), required=True)
             build.add_argument("--dpkg-deb", default="dpkg-deb")
             build.add_argument("--maintainer", required=True)
         else:

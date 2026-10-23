@@ -31,10 +31,9 @@ body:
       label: Component
       options:
         - Windows remote host
-        - Windows / Web / Android controller
+        - Windows / Web controller
         - Control center
-        - FRP / gateway
-        - Android app
+        - Tunneling / gateway
         - Website
     validations:
       required: true

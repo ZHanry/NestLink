@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SPEC = importlib.util.spec_from_file_location("signatures", ROOT / "scripts/refactor-signatures.py")
 SIGNATURES = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(SIGNATURES)
-TOOLS = {"powershell": "powershell", "apksigner": "apksigner", "aapt2": "aapt2", "java": "java"}
+TOOLS = {"powershell": "powershell"}
 
 
 class SignatureGateTests(unittest.TestCase):
@@ -67,24 +67,6 @@ class SignatureGateTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     SIGNATURES.windows_signature(Path("test.exe"), expected, "powershell")
 
-    def test_android_checks_signature_compatibility_range_identity_package_and_abi(self):
-        expected = "b" * 64
-        signature = "Verified using v2 scheme (APK Signature Scheme v2): true\nSigner #1 certificate SHA-256 digest: " + expected + "\n"
-        for minimum_field in ("minSdkVersion", "sdkVersion"):
-            with self.subTest(minimum_field=minimum_field):
-                badging = f"package: name='io.example.nestlink' versionCode='150000' versionName='15.0.0'\n{minimum_field}:'30'\ntargetSdkVersion:'36'\nnative-code: 'arm64-v8a'\n"
-                with patch.object(SIGNATURES, "run", side_effect=[(0, signature), (0, badging)]) as run:
-                    result = SIGNATURES.android_signature(Path("test.apk"), expected, "io.example.nestlink", "15.0.0", ["arm64-v8a"], "apksigner.jar", "aapt2", "java")
-                self.assertEqual(result["signature_compatibility_sdk_range"], [30, 36])
-                self.assertEqual(result["minimum_sdk"], 30)
-                command = run.call_args_list[0].args[0]
-                self.assertEqual(command[:3], ["java", "-jar", "apksigner.jar"])
-                self.assertEqual(command[command.index("--min-sdk-version") + 1], "30")
-                self.assertIn("--max-sdk-version", command)
-        badging = "package: name='io.example.nestlink' versionCode='150000' versionName='15.0.0'\nminSdkVersion:'30'\ntargetSdkVersion:'36'\nnative-code: 'arm64-v8a'\n"
-        with patch.object(SIGNATURES, "run", side_effect=[(0, signature), (0, badging)]):
-            with self.assertRaises(ValueError):
-                SIGNATURES.android_signature(Path("test.apk"), expected, "io.example.nestlink", "15.0.0", ["x86_64"], "apksigner", "aapt2", "java")
 
     def test_fixed_commit_and_clean_tracked_tree_are_required(self):
         for replies in [[(0, "c" * 40)], [(0, "a" * 40), (0, " M Cargo.toml")]]:

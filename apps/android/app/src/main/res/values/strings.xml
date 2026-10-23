@@ -1,8 +1,0 @@
-<resources>
-    <string name="accessibility_service_label">NestLink 远程触控</string>
-    <string name="accessibility_service_description">仅在本机用户批准远程输入会话时，NestLink 使用系统手势接口注入屏幕触控。不会读取窗口内容。</string>
-    <string name="input_method_label">NestLink 远程文字输入</string>
-    <string name="display_language">显示语言</string>
-    <string name="display_language_system">跟随系统</string>
-    <string name="display_language_save_failed">无法保存语言设置，当前选择未改变。</string>
-</resources>

@@ -46,7 +46,8 @@ class HandoffTests(unittest.TestCase):
         plan = fixture(); plan["acceptance_cases"][0]["status"] = "pending"
         with self.assertRaises(handoff.Blocked): handoff.validate(plan)
         self.assertNotIn("android-api-29", handoff.REQUIRED_CASES)
-        self.assertTrue({"android-api-" + str(api) for api in range(30, 37)} <= handoff.REQUIRED_CASES)
+        self.assertFalse(any(case.startswith("android-") for case in handoff.REQUIRED_CASES))
+        self.assertTrue({"linux-x64-server-installed", "linux-arm64-server-installed"} <= handoff.REQUIRED_CASES)
 
     def test_custody_rejects_modified_bytes_and_duplicate_json(self):
         with tempfile.TemporaryDirectory(prefix="nestlink-handoff-custody-") as temporary:

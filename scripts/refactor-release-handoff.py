@@ -25,8 +25,8 @@ REPOSITORIES = {
     "android": ("ZHanry/home-tunnel-android", "R_kgDOUSDJHw"),
 }
 CURRENT_ROLES = frozenset((
-    "windows-x64-setup", "windows-x64-privileged-setup", "linux-x64-desktop", "linux-arm64-desktop",
-    "linux-x64-server", "linux-arm64-server", "android-arm64", "android-x86_64",
+    "windows-x64-setup", "windows-x64-privileged-setup",
+    "linux-x64-server", "linux-arm64-server",
     "web-static", "oci-x64", "oci-arm64", "source", "sbom", "licenses",
     "materials", "acceptance", "native-payload-manifest", "native-packages-manifest",
 ))
@@ -34,14 +34,14 @@ PRESERVATION_ROLES = frozenset((
     "legacy-source-bundle", "legacy-source-report", "dirty-worktree-backups", "legacy-release-inventory",
 ))
 REQUIRED_CASES = frozenset((
-    "windows-10-installed", "windows-11-installed", "windows-privileged-input", "linux-x64-x11-installed",
-    "linux-arm64-x11-installed", "gnome-wayland-authorized", "kde-wayland-authorized",
-    "android-arm64-physical", "chrome-current", "edge-current", "firefox-current",
+    "windows-10-installed", "windows-11-installed", "windows-privileged-input",
+    "linux-x64-server-installed", "linux-arm64-server-installed",
+    "chrome-current", "edge-current", "firefox-current",
     "company-to-home", "mobile-to-home", "72-hour-soak", "turn-capacity-and-revoke",
-    "signature-windows", "signature-android", "signature-linux-update", "signature-oci",
+    "signature-windows", "signature-linux-update", "signature-oci",
     "install-upgrade-rollback-uninstall", "reinstall-new-identity-retained-data",
     "schema-migration-and-interruption-recovery", "license-and-source-audit",
-) + tuple("android-api-" + str(api) for api in range(30, 37)))
+))
 
 
 class Blocked(ValueError):

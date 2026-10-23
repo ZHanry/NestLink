@@ -1,5 +1,7 @@
 # Android display languages
 
+> 历史记录：Android 客户端已于 2026-10-23 从产品范围、源码和构建清单移除。本文仅保存当时的实现、来源与测试证据，不再作为当前产品要求或构建入口。
+
 Current recorded result, 2026-10-16: Kotlin/JVM attempt 04 compiled main Kotlin,
 JVM tests and instrumentation source, then passed 127 tests in 20 suites with
 zero failures, errors or skips. All five `UiTextTest` regressions passed.

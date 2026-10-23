@@ -1,8 +1,0 @@
-<resources>
-    <string name="accessibility_service_label">NestLink remote touch</string>
-    <string name="accessibility_service_description">NestLink uses system gestures to inject touch only during a remote input session approved by the local user. It does not read window content.</string>
-    <string name="input_method_label">NestLink remote text input</string>
-    <string name="display_language">Language</string>
-    <string name="display_language_system">System</string>
-    <string name="display_language_save_failed">The language preference could not be saved. Your current selection is unchanged.</string>
-</resources>

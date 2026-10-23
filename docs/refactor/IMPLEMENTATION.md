@@ -1,5 +1,7 @@
 # NestLink 实施记录
 
+> 当前范围（2026-10-23）：内网穿透 + 远程桌面，仅 Windows/Web 客户端，Linux 保留后端。本文保留前期实现和历史验收登记；Android 与 Linux 桌面要求已撤销，当前入口见 [平台范围](../../config/product-scope.json) 与 [RC 构建](CANDIDATE-BUILD.md)。全部发行构建在 GitHub，RC 须在实际验收完成后发布。
+
 2026-10-17 Web 账户安全与授权的真实 UI 定向检查 9/9 通过：覆盖独立 HTTPS pin 登录、受信设备拒绝及重试、真实全屏进入/外部退出、密码 scope 变化、错误密码、后端已提交但响应截断后的撤销、重新认证、TOTP/恢复码及改密注销/新密码登录。1061 个输入和固定 Web/server 字节前后未变，自有进程和临时目录已回收；物理 Esc、媒体及本次最终 RC 安装验收仍待执行。证据见 [Web 安全检查](WEB-SECURITY-VERIFICATION.md) 和 [当前检查索引](current-verification-2026-10-17.json)。
 
 2026-10-17 用户最新变更：暂停旧仓库整理，转为新建 `ZHanry/NestLink`、使用全新 Git 历史并发布 **0.1.0 RC1（0.1.0-rc.1）**。旧历史上传已停止，已传部分保留；后文旧仓合并、更名、删除及 15.0.0 交付顺序均作为变更前记录，不再执行。本次目标和证据范围见[新仓 RC 发布说明](NEW-REPOSITORY-RC.md)。

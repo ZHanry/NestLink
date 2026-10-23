@@ -39,11 +39,7 @@ body:
       label: Client platform
       options:
         - Windows x64
-        - Linux amd64
-        - Linux arm64
-        - macOS amd64
-        - macOS arm64
-        - Android arm64
+        - Web browser
     validations:
       required: true
   - type: dropdown

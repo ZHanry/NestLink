@@ -33,30 +33,6 @@
       "windows_certificate_sha256": null
     },
     {
-      "id": "linux-x86_64-desktop",
-      "platform": "linux",
-      "architecture": "x86_64",
-      "role": "desktop",
-      "format": "deb",
-      "path": "NestLink-linux-x64.deb",
-      "bytes": null,
-      "sha256": null,
-      "state_compatibility": null,
-      "payload_manifest_sha256": null
-    },
-    {
-      "id": "linux-aarch64-desktop",
-      "platform": "linux",
-      "architecture": "aarch64",
-      "role": "desktop",
-      "format": "deb",
-      "path": "NestLink-linux-arm64.deb",
-      "bytes": null,
-      "sha256": null,
-      "state_compatibility": null,
-      "payload_manifest_sha256": null
-    },
-    {
       "id": "linux-x86_64-server",
       "platform": "linux",
       "architecture": "x86_64",

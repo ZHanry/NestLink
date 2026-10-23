@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "product": "NestLink",
+  "positioning": [
+    "内网穿透",
+    "远程桌面"
+  ],
+  "clients": {
+    "windows": {
+      "architecture": "x86_64",
+      "systems": [
+        "Windows 10 22H2",
+        "Windows 11"
+      ]
+    },
+    "web": {
+      "browsers": [
+        "Chrome current stable",
+        "Edge current stable",
+        "Firefox current stable"
+      ]
+    }
+  },
+  "backend": {
+    "linux": {
+      "architectures": [
+        "x86_64",
+        "aarch64"
+      ],
+      "distribution": "Ubuntu 24.04"
+    }
+  },
+  "distribution_builds": "github-actions",
+  "retired_clients": [
+    "android",
+    "linux-desktop",
+    "macos-desktop"
+  ],
+  "acceptance": {
+    "original_external_edge_to_hl_direct": "pending",
+    "desktop_frames_and_keyboard_mouse": "pending",
+    "tunnel_http_https_tcp_udp": "pending"
+  }
+}

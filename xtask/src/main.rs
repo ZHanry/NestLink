@@ -15,19 +15,26 @@ fn reviewed_git_dependency(package: &Value, forks: &Value) -> bool {
     let Some(name) = package["name"].as_str() else {
         return false;
     };
-    forks["packages"].get(name).is_some_and(|reviewed| {
-        package["version"] == reviewed["version"]
-            && package["source"].as_str()
-                == Some(
-                    format!(
-                        "git+{}?branch={}#{}",
-                        forks["repository"].as_str().unwrap_or_default(),
-                        forks["branch"].as_str().unwrap_or_default(),
-                        forks["commit"].as_str().unwrap_or_default(),
-                    )
-                    .as_str(),
-                )
-    })
+    let Some(version) = package["version"].as_str() else {
+        return false;
+    };
+    forks["schema_version"] == 2
+        && forks["packages"]
+            .get(format!("{name}@{version}"))
+            .is_some_and(|reviewed| {
+                reviewed["name"] == name
+                    && package["version"] == reviewed["version"]
+                    && package["source"].as_str()
+                        == Some(
+                            format!(
+                                "git+{}?branch={}#{}",
+                                forks["repository"].as_str().unwrap_or_default(),
+                                forks["branch"].as_str().unwrap_or_default(),
+                                forks["commit"].as_str().unwrap_or_default(),
+                            )
+                            .as_str(),
+                        )
+            })
 }
 
 fn run() -> Result<(), Box<dyn std::error::Error>> {

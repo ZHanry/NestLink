@@ -88,7 +88,7 @@ class RepositoryDeliveryTests(unittest.TestCase):
                 actual, uploads, archives = D.local_plan(args)
             self.assertEqual(json.dumps(actual, sort_keys=True), original)
             self.assertEqual(len(archives), 2)
-            self.assertEqual(len(uploads), 23)
+            self.assertEqual(len(uploads), len(D.HANDOFF.CURRENT_ROLES | D.ARCHIVE_ROLES) + 1)
             self.assertFalse(any(item["role"] == "legacy-release-asset" for item in uploads))
             self.assertFalse((Path(scratch) / "absent-old-2gb.blob").exists())
             self.assertIn("90-minute-soak", D.REQUIRED_CASES)

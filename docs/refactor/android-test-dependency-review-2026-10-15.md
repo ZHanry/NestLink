@@ -1,5 +1,7 @@
 # Android JVM test dependency review (2026-10-15)
 
+> 历史记录：Android 客户端已于 2026-10-23 从产品范围、源码和构建清单移除。本文仅保存当时的实现、来源与测试证据，不再作为当前产品要求或构建入口。
+
 `org.json:json:20250517` is pinned as an Android app `testImplementation` dependency so local JVM tests execute against a real `JSONObject`; the Android SDK's JVM test stubs throw `Method ... not mocked` for JSON operations. The dependency is limited to `debugUnitTest` compile/runtime configurations and is not in the app's production or APK dependency graph.
 
 The artifact and its POM were fetched from the Maven Central HTTPS coordinates below and compared byte-for-byte by SHA-256 with the artifacts in the local Gradle cache. The exact hashes are also recorded in [`apps/android/gradle/verification-metadata.xml`](../../apps/android/gradle/verification-metadata.xml); dependency verification remains enabled.

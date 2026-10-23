@@ -1,5 +1,7 @@
 # Android 验收记录（2026-10-16）
 
+> 历史记录：Android 客户端已于 2026-10-23 从产品范围、源码和构建清单移除。本文仅保存当时的实现、来源与测试证据，不再作为当前产品要求或构建入口。
+
 ## 2026-10-17 固定密码 UI 全量 Kotlin/JVM 回归
 
 桌面端与 Android 固定密码授权界面增量后，Android `testDebugUnitTest` 全量通过 **131 项，0 失败、0 错误、0 跳过**。本次使用 `-RerunTasks -NoIncremental`，79 个选定 Android/运行脚本输入在测试期间保持不变；日志与源码回执见[当前验证索引](current-verification-2026-10-17.json)。首次尝试因临时盘符下未解析到 Android SDK，在用例启动前失败；设置本机 SDK 的 `ANDROID_HOME` 和 `ANDROID_SDK_ROOT` 后 attempt02 完成全套测试。该回归只覆盖 Kotlin/JVM 单测，不重新构建 APK，也不替代下方固定 1070 输入的七版模拟器结果或正式签名验收。

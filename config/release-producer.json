@@ -6,11 +6,7 @@
   "native_state_compatibility": "v15-native-state1",
   "update_certificate_sha256": null,
   "windows_certificate_sha256": null,
-  "android_certificate_sha256": null,
   "windows_timestamp_url": null,
   "debian_maintainer": null,
-  "oci_base": null,
-  "android_application_id": "com.zhanry.nestlink",
-  "minimum_android_api": 30,
-  "maximum_android_api": 36
+  "oci_base": null
 }

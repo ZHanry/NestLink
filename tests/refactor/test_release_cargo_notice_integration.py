@@ -40,8 +40,7 @@ class ReleaseNoticeIntegrationTests(unittest.TestCase):
                       'docs/refactor/cargo-notice-supplements.json': b'{"schema_version":1,"packages":[]}',
                       'scripts/refactor-cargo-notices.py': (ROOT / 'scripts/refactor-cargo-notices.py').read_bytes(),
                       'config/release-producer.json': b'{}',
-                      'apps/android/gradle/verification-metadata.xml': b'<fixture/>',
-                      'apps/android/app/gradle.lockfile': b'example:fixture:1.0=releaseRuntimeClasspath\n',
+                      'config/product-scope.json': b'{}',
                       'packaging/notices/fixture-NOTICE': b'fixture existing notice\n'}
             for relative, raw in inputs.items():
                 target = root / relative

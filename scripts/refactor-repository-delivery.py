@@ -38,7 +38,7 @@ TAG = "v15.0.0-preview.1"
 ARCHIVE_ROLES = frozenset(("history-archive-plan", "history-archive-receipt", "final-source-archive-plan", "final-source-archive-receipt"))
 REQUIRED_CASES = (HANDOFF.REQUIRED_CASES - {"72-hour-soak"}) | {"90-minute-soak"}
 COMPLETION = frozenset(("implementation", "targeted_verification", "release_bytes_frozen", "legacy_preservation_review", "user_full_functional_acceptance"))
-SIGNING = frozenset(("windows", "android", "linux_update", "oci"))
+SIGNING = frozenset(("windows", "linux_update", "oci"))
 SIGNING_STATES = frozenset(("not-configured", "development-only", "unverified"))
 
 

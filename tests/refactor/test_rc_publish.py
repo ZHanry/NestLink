@@ -181,7 +181,7 @@ class RCPublicationTests(unittest.TestCase):
                          (producer.REPOSITORY, producer.REPOSITORY_ID, producer.VERSION, producer.SIGNING))
         self.assertEqual(P.CURRENT_ROLES, producer.CURRENT_ROLES)
         self.assertEqual(P.REQUIRED_CASES, producer.REQUIRED_CASES)
-        self.assertEqual((len(P.CURRENT_ROLES), len(P.REQUIRED_CASES)), (18, 30))
+        self.assertEqual((len(P.CURRENT_ROLES), len(P.REQUIRED_CASES)), (14, 19))
         old_spec = importlib.util.spec_from_file_location("formal_release_policy_test", ROOT / "scripts/refactor-release-publish.py")
         old = importlib.util.module_from_spec(old_spec)
         old_spec.loader.exec_module(old)
@@ -192,21 +192,21 @@ class RCPublicationTests(unittest.TestCase):
         self.args.action = "verify"
         result = P.promote(self.args, self.github)
         self.assertEqual(result["status"], "verified")
-        self.assertEqual(result["expected_assets"], 20)
+        self.assertEqual(result["expected_assets"], len(P.CURRENT_ROLES) + 2)
         self.assertEqual(result["existing_assets_verified"], 0)
         self.assertFalse(self.github.writes)
 
     def test_upload_then_publish_reuses_every_verified_asset(self):
         draft = self.upload_draft()
         self.assertEqual(draft["status"], "draft-uploaded")
-        self.assertEqual(len(self.github.assets), 20)
+        self.assertEqual(len(self.github.assets), len(P.CURRENT_ROLES) + 2)
         self.assertFalse(any(method == "PATCH" for method, _ in self.github.calls))
         before = len(self.github.writes)
         self.args.action = "publish"
         result = P.promote(self.args, self.github)
         self.assertEqual(result["status"], "published-prerelease")
         self.assertEqual(len(self.github.writes), before + 1)
-        self.assertEqual(len(result["uploads"]), 20)
+        self.assertEqual(len(result["uploads"]), len(P.CURRENT_ROLES) + 2)
         self.assertTrue(all(item["readback"] == "github-asset-id-sha256" for item in result["uploads"]))
         self.assertFalse(self.github.downloads)
         self.assertEqual(self.github.writes[-1], ("PATCH", BASE + "/releases/17"))
@@ -219,7 +219,7 @@ class RCPublicationTests(unittest.TestCase):
         self.args.action = "verify"
         result = P.promote(self.args, self.github)
         self.assertEqual(result["release_id"], 17)
-        self.assertEqual(result["existing_assets_verified"], 20)
+        self.assertEqual(result["existing_assets_verified"], len(P.CURRENT_ROLES) + 2)
         self.assertIn(("GET", BASE + "/releases"), self.github.calls)
         self.assertIn(("GET", BASE + "/releases/17"), self.github.calls)
         self.assertEqual(self.github.writes, [])
@@ -269,23 +269,24 @@ class RCPublicationTests(unittest.TestCase):
         self.assertEqual(self.github.writes, before)
         self.assertEqual(result["signing"], P.SIGNING)
         self.assertFalse(result["production_update_eligible"])
-        self.assertEqual(result["pending_acceptance_cases"], 30)
+        self.assertEqual(result["pending_acceptance_cases"], len(P.REQUIRED_CASES))
         self.assertEqual(result["report_remediation_acceptance"], "passed")
         self.assertEqual(result["report_acceptance_cases"], 25)
-        self.assertIn("30 pending", self.github.release["body"])
+        self.assertIn(str(len(P.REQUIRED_CASES)) + " pending", self.github.release["body"])
+        self.assertIn("All " + str(len(P.CURRENT_ROLES)) + " product artifacts", self.github.release["body"])
         self.assertIn("pending", self.github.release["body"])
         self.assertTrue(self.github.release["prerelease"])
 
     def test_asset_id_metadata_is_read_even_when_upload_response_has_a_digest(self):
         result = P.promote(self.args, self.github)
         metadata_reads = [path for method, path in self.github.calls if path.startswith(BASE + "/releases/assets/")]
-        self.assertGreaterEqual(len(metadata_reads), 38)
+        self.assertGreaterEqual(len(metadata_reads), 2 * (len(P.CURRENT_ROLES) + 2))
         self.assertTrue(result["remote_asset_readback_verified"])
 
     def test_missing_api_digest_uses_download_by_asset_id_only(self):
         self.github.digest_mode = "absent"
         result = P.promote(self.args, self.github)
-        self.assertEqual(len(set(self.github.downloads)), 20)
+        self.assertEqual(len(set(self.github.downloads)), len(P.CURRENT_ROLES) + 2)
         self.assertTrue(all(item["readback"] == "download-sha256" for item in result["uploads"]))
 
     def test_malformed_or_wrong_api_digest_keeps_release_draft(self):
@@ -319,7 +320,7 @@ class RCPublicationTests(unittest.TestCase):
         self.assertEqual(result["status"], "published-prerelease")
         self.assertEqual(first_ids, {name: self.github.assets[name]["id"] for name in first_ids})
         posts = [path for method, path in self.github.calls if method == "POST" and "/assets?name=" in path]
-        self.assertEqual(len(posts), 20)
+        self.assertEqual(len(posts), len(P.CURRENT_ROLES) + 2)
         self.assertFalse(any(method == "DELETE" for method, _ in self.github.calls))
 
     def test_wrong_repository_node_main_or_tag_blocks_every_write(self):

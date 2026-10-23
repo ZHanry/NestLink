@@ -1,7 +1,7 @@
 //! Authorized native media pipelines. No screen/audio device is opened here.
 //! Each sender/receiver owns a dedicated codec thread; software encoding and
 //! decoding never execute under the authorization lock or on a Tokio executor.
-#![cfg(any(target_os = "windows", target_os = "linux", target_os = "android"))]
+#![cfg(any(target_os = "windows", target_os = "linux"))]
 
 mod audio;
 mod timing;

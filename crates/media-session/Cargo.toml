@@ -5,7 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
-[target.'cfg(any(target_os = "windows", target_os = "linux", target_os = "android"))'.dependencies]
+[target.'cfg(any(target_os = "windows", target_os = "linux"))'.dependencies]
 nestlink-media-codec.workspace = true
 nestlink-protocol.workspace = true
 nestlink-remote.workspace = true
@@ -14,7 +14,7 @@ nestlink-transport-stream.workspace = true
 tokio.workspace = true
 zeroize.workspace = true
 
-[target.'cfg(any(target_os = "windows", target_os = "linux", target_os = "android"))'.dev-dependencies]
+[target.'cfg(any(target_os = "windows", target_os = "linux"))'.dev-dependencies]
 nestlink-auth.workspace = true
 nestlink-identity.workspace = true
 nestlink-policy.workspace = true

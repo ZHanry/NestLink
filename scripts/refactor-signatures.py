@@ -105,32 +105,6 @@ def windows_signature(path, expected, powershell):
     return result
 
 
-def android_signature(path, expected, app_id, version, abis, apksigner, aapt2, java):
-    if Path(apksigner).suffix.lower() in (".bat", ".cmd"):
-        raise Blocked("use apksigner.jar with --java on Windows; batch launch is not supported")
-    signer_command = [java, "-jar", apksigner] if Path(apksigner).suffix.lower() == ".jar" else [apksigner]
-    code, output = run(signer_command + ["verify", "--verbose", "--print-certs",
-                        "--min-sdk-version", "30", "--max-sdk-version", "36", str(path)])
-    if code:
-        raise ValueError("APK signature compatibility verification failed for install SDK range 30–36")
-    signers = re.findall(r"^Signer #\d+ certificate SHA-256 digest:\s*([0-9a-fA-F]{64})\s*$", output, re.MULTILINE)
-    if len(signers) != 1 or signers[0].lower() != expected:
-        raise ValueError("APK fixed signer mismatch or unexpected signer count")
-    if not re.search(r"^Verified using v2 scheme .*:\s*true\s*$", output, re.MULTILINE):
-        raise ValueError("APK Signature Scheme v2 missing")
-    code, badging = run([aapt2, "dump", "badging", str(path)])
-    match = re.search(r"^package: name='([^']+)' versionCode='([0-9]+)' versionName='([^']+)'", badging, re.MULTILINE)
-    if code or not match or match[1] != app_id or match[3] != version:
-        raise ValueError("APK applicationId or release version mismatch")
-    minimum = re.search(r"^(?:minSdkVersion|sdkVersion):'([0-9]+)'", badging, re.MULTILINE)
-    target = re.search(r"^targetSdkVersion:'([0-9]+)'", badging, re.MULTILINE)
-    native = re.search(r"^native-code:(.*)$", badging, re.MULTILINE)
-    actual_abis = re.findall(r"'([^']+)'", native[1]) if native else []
-    if not minimum or minimum[1] != "30" or not target or target[1] != "36" or sorted(actual_abis) != sorted(abis):
-        raise ValueError("APK minimum/target SDK or required native ABI mismatch")
-    return {"certificate_sha256": expected, "application_id": match[1],
-            "version_code": match[2], "version_name": match[3],
-            "signature_compatibility_sdk_range": [30, 36], "minimum_sdk": 30, "target_sdk": 36, "abis": actual_abis, "signature_scheme_v2": True}
 
 
 def verify_source(root, revision):
@@ -163,7 +137,7 @@ def check_plan(plan, root, tools):
         check = {"path": item["path"], "platform": item.get("platform"), "status": "blocked"}
         try:
             platform = item.get("platform")
-            if platform not in ("windows", "android"):
+            if platform != "windows":
                 raise ValueError("unsupported signing platform")
             if not revision_fixed or not fixed_digest(item.get("sha256")):
                 raise Blocked("source revision and final artifact hash are not fixed")
@@ -177,20 +151,9 @@ def check_plan(plan, root, tools):
             check["actual_sha256"] = before
             if before != item["sha256"]:
                 raise ValueError("final artifact hash mismatch")
-            if platform == "windows":
-                if path.suffix.lower() not in (".exe", ".msi", ".msix"):
-                    raise ValueError("unsupported Windows package extension")
-                identity = windows_signature(path, expected, tools["powershell"])
-            else:
-                if path.suffix.lower() != ".apk":
-                    raise ValueError("expected signed APK")
-                app_id = identities.get("android_application_id")
-                if not isinstance(app_id, str) or not re.fullmatch(r"[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*){2,}", app_id):
-                    raise Blocked("new Android applicationId not configured")
-                abis = item.get("abis")
-                if not isinstance(abis, list) or not abis or any(not isinstance(abi, str) or abi not in ("arm64-v8a", "x86_64") for abi in abis) or len(abis) != len(set(abis)):
-                    raise ValueError("APK required ABI set must be fixed")
-                identity = android_signature(path, expected, app_id, plan["release_version"], abis, tools["apksigner"], tools["aapt2"], tools["java"])
+            if path.suffix.lower() not in (".exe", ".msi", ".msix"):
+                raise ValueError("unsupported Windows package extension")
+            identity = windows_signature(path, expected, tools["powershell"])
             if sha256(path) != before:
                 raise ValueError("artifact changed during signature verification")
             check.update(status="passed", identity=identity)
@@ -210,9 +173,6 @@ def main():
     parser.add_argument("--plan", type=Path, default=Path("config/release-signatures.template.json"))
     parser.add_argument("--output", type=Path, default=Path("artifacts/signature-verification.json"))
     parser.add_argument("--powershell", default="powershell.exe")
-    parser.add_argument("--apksigner", default="apksigner")
-    parser.add_argument("--aapt2", default="aapt2")
-    parser.add_argument("--java", default="java")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     try:

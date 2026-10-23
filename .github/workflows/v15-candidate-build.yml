@@ -162,7 +162,7 @@ jobs:
         run: |
           import os, pathlib, subprocess
           scratch = pathlib.Path(os.environ["RUNNER_TEMP"])
-          packages = ["nestlink-desktop", "nestlink-daemon", "nestlink-privileged" if os.name == "nt" else "nestlink-server"]
+          packages = ["nestlink-desktop", "nestlink-daemon", "nestlink-privileged"] if os.name == "nt" else ["nestlink-server"]
           command = ["cargo", "build", "--release", "--locked", "--target", os.environ["RUST_TARGET"]]
           for package in packages:
               command.extend(["-p", package])
@@ -175,72 +175,6 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: rc-development-part-${{ matrix.part }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/part
-          if-no-files-found: error
-          retention-days: 90
-
-  android:
-    needs: preflight
-    runs-on: ubuntu-24.04
-    timeout-minutes: 90
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          ref: ${{ inputs.source_revision }}
-          persist-credentials: false
-      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
-        with:
-          name: rc-development-cohort-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/candidate-cohort
-      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
-        with:
-          distribution: temurin
-          java-version: "17"
-      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
-        with:
-          packages: platform-tools
-      - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a
-        with:
-          gradle-version: "8.13"
-          cache-disabled: true
-      - name: Keep Android product and project outputs outside source
-        shell: python
-        run: |
-          import os, pathlib
-          scratch = pathlib.Path(os.environ["RUNNER_TEMP"])
-          values = {"CARGO_TARGET_DIR": scratch / "rust-build", "GRADLE_USER_HOME": scratch / "gradle-home", "NESTLINK_CANDIDATE_ANDROID_BUILD": scratch / "android-build", "ANDROID_NDK_HOME": pathlib.Path(os.environ["ANDROID_HOME"]) / "ndk/27.2.12479018", "NESTLINK_CODEC_ARM64_PREFIX": scratch / "codecs-aarch64-linux-android/aarch64-linux-android", "NESTLINK_CODEC_X86_64_PREFIX": scratch / "codecs-x86_64-linux-android/x86_64-linux-android"}
-          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as stream:
-              for key, value in values.items():
-                  stream.write(key + "=" + str(value) + "\n")
-      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
-        with:
-          toolchain: "1.96.0"
-          targets: aarch64-linux-android,x86_64-linux-android
-      - name: Install pinned Android tools and build both ABI codec suppliers
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes build-essential cmake ninja-build nasm perl
-          sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018"
-          cargo install cargo-ndk --version 3.5.4 --locked
-          for target in aarch64-linux-android x86_64-linux-android; do
-            python3 -B scripts/refactor-native-codecs.py build --target "$target" \
-              --work-dir "$RUNNER_TEMP/codecs-$target" --cache-dir "$RUNNER_TEMP/codec-sources" \
-              --ndk "$ANDROID_NDK_HOME" --jobs 4
-          done
-      - name: Build isolated development APKs and verify their real signer and 16 KiB JNI
-        shell: python
-        run: |
-          import json, os, pathlib, subprocess
-          scratch = pathlib.Path(os.environ["RUNNER_TEMP"])
-          cohort = json.loads((scratch / "candidate-cohort/candidate-cohort.json").read_text())
-          env = dict(os.environ, NESTLINK_RELEASE_SEQUENCE=str(cohort["sequence"]))
-          init = pathlib.Path("packaging/candidate/android.init.gradle").resolve()
-          subprocess.run(["gradle", "-p", "apps/android", "--no-daemon", "--no-build-cache", "--project-cache-dir", str(scratch / "gradle-project-cache"), "--max-workers=4", "-I", str(init), "-PnestlinkSplitAbi=true", ":app:assembleDebug"], env=env, check=True, timeout=4800)
-          tools = pathlib.Path(os.environ["ANDROID_HOME"]) / "build-tools/36.0.0"
-          subprocess.run(["python3", "-B", "scripts/refactor-candidate-producer.py", "collect-android", "--cohort", str(scratch / "candidate-cohort/candidate-cohort.json"), "--input", str(scratch / "android-build/app/outputs/apk/debug"), "--output", str(scratch / "part"), "--codec-arm64", os.environ["NESTLINK_CODEC_ARM64_PREFIX"], "--codec-x64", os.environ["NESTLINK_CODEC_X86_64_PREFIX"], "--apksigner", str(tools / "lib/apksigner.jar"), "--aapt2", str(tools / "aapt2"), "--zipalign", str(tools / "zipalign")], check=True, timeout=300)
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: rc-development-part-android-${{ github.run_attempt }}
           path: ${{ runner.temp }}/part
           if-no-files-found: error
           retention-days: 90
@@ -364,7 +298,7 @@ jobs:
           retention-days: 90
 
   freeze:
-    needs: [native, android, web-and-metadata, oci]
+    needs: [native, web-and-metadata, oci]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:

@@ -32,22 +32,19 @@ ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_ID = "R_kgDOTz-mRQ"
 NATIVE = {
     "windows-x64": ("x86_64-pc-windows-msvc", "windows-x86_64", ("desktop", "daemon", "privileged")),
-    "linux-x64": ("x86_64-unknown-linux-gnu", "linux-x86_64", ("desktop", "daemon", "server")),
-    "linux-arm64": ("aarch64-unknown-linux-gnu", "linux-aarch64", ("desktop", "daemon", "server")),
+    "linux-x64": ("x86_64-unknown-linux-gnu", "linux-x86_64", ("server",)),
+    "linux-arm64": ("aarch64-unknown-linux-gnu", "linux-aarch64", ("server",)),
 }
-PARTS = frozenset(NATIVE) | {"android", "web"}
+PARTS = frozenset(NATIVE) | {"web"}
 PACKAGE_PATHS = {
     "windows-x64-setup": "NestLink-windows-x64.exe",
     "windows-x64-privileged-setup": "NestLink-windows-x64-privileged.exe",
-    "linux-x64-desktop": "NestLink-linux-x64.deb",
-    "linux-arm64-desktop": "NestLink-linux-arm64.deb",
     "linux-x64-server": "NestLink-server-linux-x64.deb",
     "linux-arm64-server": "NestLink-server-linux-arm64.deb",
 }
-FINAL_ROLES = frozenset(PACKAGE_PATHS) | {"android-arm64", "android-x86_64", "web-static", "oci-x64", "oci-arm64", "source", "sbom", "licenses", "materials", "native-payload-manifest", "native-packages-manifest"}
+FINAL_ROLES = frozenset(PACKAGE_PATHS) | {"web-static", "oci-x64", "oci-arm64", "source", "sbom", "licenses", "materials", "native-payload-manifest", "native-packages-manifest"}
 SECRETS = {
     "windows": ("NESTLINK_WINDOWS_PFX_BASE64", "NESTLINK_WINDOWS_PFX_PASSWORD"),
-    "android": ("NESTLINK_ANDROID_KEYSTORE_BASE64", "NESTLINK_ANDROID_STORE_PASSWORD", "NESTLINK_ANDROID_KEY_ALIAS", "NESTLINK_ANDROID_KEY_PASSWORD"),
     "update": ("NESTLINK_UPDATE_CERTIFICATE_BASE64", "NESTLINK_UPDATE_PRIVATE_KEY_BASE64", "NESTLINK_UPDATE_KEY_PASSWORD"),
 }
 
@@ -160,18 +157,16 @@ def clean_source(revision, version):
 def configuration(path):
     value = json_read(path, maximum=64 * 1024)
     require(set(value) == {"schema_version", "product", "repository_node_id", "version", "native_state_compatibility",
-                           "update_certificate_sha256", "windows_certificate_sha256", "android_certificate_sha256",
-                           "windows_timestamp_url", "debian_maintainer", "oci_base", "android_application_id",
-                           "minimum_android_api", "maximum_android_api"}, "Unknown or missing producer configuration")
+                           "update_certificate_sha256", "windows_certificate_sha256",
+                           "windows_timestamp_url", "debian_maintainer", "oci_base"}, "Unknown or missing producer configuration")
     require(value["schema_version"] == 1 and value["product"] == "NestLink-v15" and value["repository_node_id"] == REPOSITORY_ID and value["version"] == "15.0.0", "Producer identity differs from the approved release")
-    require(value["android_application_id"] == "com.zhanry.nestlink" and (value["minimum_android_api"], value["maximum_android_api"]) == (30, 36), "Android application or agreed platform matrix differs")
     require(isinstance(value["native_state_compatibility"], str) and re.fullmatch(r"v15-native-state[1-9][0-9]*", value["native_state_compatibility"]), "Missing reviewed native state compatibility")
-    missing = [key for key in ("update_certificate_sha256", "windows_certificate_sha256", "android_certificate_sha256") if value[key] is None]
+    missing = [key for key in ("update_certificate_sha256", "windows_certificate_sha256") if value[key] is None]
     missing += [key for key in ("windows_timestamp_url", "debian_maintainer", "oci_base") if value[key] is None]
     if missing:
         raise Blocked("Public release settings are not enrolled: " + ", ".join(missing))
-    require(all(hash_value(value[key]) for key in ("update_certificate_sha256", "windows_certificate_sha256", "android_certificate_sha256")), "Invalid public signing certificate pin")
-    require(value["update_certificate_sha256"] not in {value["windows_certificate_sha256"], value["android_certificate_sha256"]}, "Update signing identity must be independent of platform signing")
+    require(all(hash_value(value[key]) for key in ("update_certificate_sha256", "windows_certificate_sha256")), "Invalid public signing certificate pin")
+    require(value["update_certificate_sha256"] != value["windows_certificate_sha256"], "Update signing identity must be independent of platform signing")
     require(isinstance(value["windows_timestamp_url"], str) and re.fullmatch(r"https://[A-Za-z0-9.-]+(?:/[A-Za-z0-9._/-]*)?", value["windows_timestamp_url"]), "Enroll a fixed HTTPS RFC3161 timestamp endpoint")
     require(isinstance(value["debian_maintainer"], str) and re.fullmatch(r"[^\r\n<>]{1,100} <[^\s<>@]+@[^\s<>@]+>", value["debian_maintainer"]), "Enroll the actual Debian maintainer")
     require(isinstance(value["oci_base"], str) and re.fullmatch(r"ubuntu:24\.04@sha256:[0-9a-f]{64}", value["oci_base"]), "Enroll the Ubuntu 24.04 multi-architecture OCI index digest")
@@ -182,7 +177,6 @@ def validate_cohort(value):
     require(value.get("schema_version") == 1 and value.get("kind") == "nestlink-release-cohort" and value.get("repository_node_id") == REPOSITORY_ID, "Unsupported release cohort")
     require(value.get("version") == "15.0.0" and isinstance(value.get("source_revision"), str) and re.fullmatch(r"[0-9a-f]{40}", value["source_revision"]), "Cohort source/version is not fixed")
     require(type(value.get("release_sequence")) is int and 1 <= value["release_sequence"] <= 999, "Invalid release sequence")
-    require(value.get("android_version_code") == 150000000 + value["release_sequence"], "Cohort Android version allocation differs")
     require(type(value.get("run_id")) is int and value["run_id"] > 0 and type(value.get("run_attempt")) is int and value["run_attempt"] > 0, "Missing CI execution identity")
     require(hash_value(value.get("configuration_sha256")) and type(value.get("source_epoch")) is int and value["source_epoch"] > 0, "Missing immutable configuration/epoch")
 
@@ -193,7 +187,7 @@ def load_cohort(path, *, source=True):
     config_path = ROOT / "config/release-producer.json"
     config = configuration(config_path)
     require(digest(config_path) == value["configuration_sha256"], "Cohort configuration is not the committed public policy")
-    require(value.get("identities") == {key: config[key] for key in ("update_certificate_sha256", "windows_certificate_sha256", "android_certificate_sha256")}, "Cohort signing identities differ")
+    require(value.get("identities") == {key: config[key] for key in ("update_certificate_sha256", "windows_certificate_sha256")}, "Cohort signing identities differ")
     require(value.get("native_state_compatibility") == config["native_state_compatibility"], "Cohort native state compatibility differs")
     schema = re.findall(r"(?m)^pub const SCHEMA_VERSION: i32 = ([0-9]+);$", (ROOT / "crates/storage/src/lib.rs").read_text(encoding="utf-8"))
     require(len(schema) == 1 and value.get("control_state_compatibility") == "v15-control-schema" + schema[0] + "-epoch1", "Cohort control schema differs from its source")
@@ -233,10 +227,9 @@ def preflight(args):
               "run_id": args.run_id, "run_attempt": args.run_attempt,
               "configuration_sha256": digest(args.config),
               "source_epoch": int(run(["git", "show", "-s", "--format=%ct", args.source]).decode().strip()),
-              "android_version_code": 150000000 + args.sequence,
               "native_state_compatibility": config["native_state_compatibility"],
               "control_state_compatibility": "v15-control-schema" + schema[0] + "-epoch1",
-              "identities": {key: config[key] for key in ("update_certificate_sha256", "windows_certificate_sha256", "android_certificate_sha256")}}
+              "identities": {key: config[key] for key in ("update_certificate_sha256", "windows_certificate_sha256")}}
     validate_cohort(cohort)
     create_json(args.output / "cohort.json", cohort)
     report.update(status="ready", cohort_sha256=digest(args.output / "cohort.json"), source_revision=args.source)
@@ -249,7 +242,6 @@ def materialize(args):
     require(not args.output.exists(), "Secret directory must be new")
     args.output.mkdir(mode=0o700, parents=True)
     variables = {"windows": {"NESTLINK_WINDOWS_PFX_BASE64": "windows.pfx"},
-                 "android": {"NESTLINK_ANDROID_KEYSTORE_BASE64": "android.keystore"},
                  "update": {"NESTLINK_UPDATE_CERTIFICATE_BASE64": "update.crt", "NESTLINK_UPDATE_PRIVATE_KEY_BASE64": "update.key"}}[args.group]
     require(all(os.environ.get(key) for key in SECRETS[args.group]), "Required fixed signing secret is missing")
     for key, name in variables.items():
@@ -352,52 +344,6 @@ def collect_native(args):
     receipt(args, args.target, files, evidence)
 
 
-def collect_android(args):
-    cohort, config = load_cohort(args.cohort)
-    outside_source(args.output)
-    signing = module("release_signatures", "scripts/refactor-signatures.py")
-    apk_files = sorted(args.input.glob("*.apk"))
-    require(len(apk_files) == 2, "Release must contain exactly two ABI APKs")
-    files, evidence, seen = [], [], set()
-    for path in apk_files:
-        regular(path)
-        badging = run([args.aapt2, "dump", "badging", path]).decode("utf-8")
-        require("application-debuggable" not in badging and "application-testOnly" not in badging, "Debuggable or test-only APK cannot become a release")
-        match = re.search(r"^native-code:\s*'([^']+)'\s*$", badging, re.M)
-        require(match and match[1] in ("arm64-v8a", "x86_64") and match[1] not in seen, "APK has unexpected or duplicate ABIs")
-        abi = match[1]
-        seen.add(abi)
-        result = signing.android_signature(path, config["android_certificate_sha256"], config["android_application_id"], cohort["version"], [abi], args.apksigner, args.aapt2, args.java)
-        require(int(result["version_code"]) == cohort["android_version_code"], "APK release sequence/versionCode differs")
-        run([args.zipalign, "-c", "-P", "16", "-v", "4", path])
-        with zipfile.ZipFile(path) as archive:
-            names = archive.namelist()
-            require(len(names) == len(set(names)) and len(names) <= 20000, "APK members are duplicated or unbounded")
-            native = [name for name in names if name.endswith(".so")]
-            require(native == ["lib/" + abi + "/libnestlink_android.so"], "APK native library set differs")
-            require(archive.getinfo(native[0]).file_size <= 128 * 1024 * 1024, "APK JNI library exceeds its budget")
-            with tempfile.TemporaryDirectory(prefix="nestlink-apk-check-") as scratch:
-                library = Path(scratch) / "libnestlink_android.so"
-                library.write_bytes(archive.read(native[0]))
-                run([sys.executable, ROOT / "scripts/verify-android-binary.py", "--library", library, "--abi", abi])
-        role = "android-arm64" if abi == "arm64-v8a" else "android-x86_64"
-        destination = args.output / ("NestLink-" + role + ".apk")
-        copy_fixed(path, destination)
-        files.append(file_record(args.output, destination, role))
-        evidence_path = args.output / "evidence" / (role + "-signature.json")
-        create_json(evidence_path, result)
-        evidence.append(file_record(args.output, evidence_path, "apk-signature-and-page-size-verification"))
-    for target, prefix in (("aarch64-linux-android", args.codec_arm64), ("x86_64-linux-android", args.codec_x64)):
-        supplier = module("release_codec_supplier", "scripts/refactor-native-codecs.py")
-        supplier.verify_receipt(prefix, target, ROOT / "docs/refactor/native-codecs.lock.json")
-        destination = args.output / "evidence" / (target + "-codecs.json")
-        copy_fixed(prefix / supplier.RECEIPT, destination)
-        evidence.append(file_record(args.output, destination, "native-codec-receipt"))
-    tools = args.output / "evidence/android-build-tools.json"
-    create_json(tools, {"tools": tool_facts(((args.java, "--version"), ("cargo", "--version"), ("cargo", "ndk", "--version"), (args.aapt2, "version"))),
-                        "apksigner_sha256": digest(Path(shutil.which(args.apksigner) or args.apksigner)), "zipalign_sha256": digest(Path(shutil.which(args.zipalign) or args.zipalign))})
-    evidence.append(file_record(args.output, tools, "android-build-tools"))
-    receipt(args, "android", files, evidence)
 
 
 def tree_files(root, maximum=100000, bytes_limit=2 * 1024**3):
@@ -480,7 +426,7 @@ def verify_parts(cohort_path, bundle):
             require(item["path"].casefold() not in paths, "Release parts overlap")
             paths.add(item["path"].casefold())
             verify_record(bundle, item)
-        expected = {"native-" + part + "-" + role for role in NATIVE[part][2]} if part in NATIVE else {"android-arm64", "android-x86_64"} if part == "android" else {"web-static"}
+        expected = {"native-" + part + "-" + role for role in NATIVE[part][2]} if part in NATIVE else {"web-static"}
         require({item["role"] for item in record["artifacts"]} == expected and len(record["artifacts"]) == len(expected), "Missing or duplicate product role")
         if part in NATIVE:
             _, folder, roles = NATIVE[part]
@@ -784,25 +730,12 @@ def metadata(args):
                          "downloadLocation": item["url"], "filesAnalyzed": False, "licenseConcluded": "NOASSERTION",
                          "licenseDeclared": "BSD-3-Clause", "checksums": [{"algorithm": "SHA256", "checksumValue": item["archive_sha256"]}],
                          "sourceInfo": "Pinned source commit " + item["commit"] + "; complete upstream license/patent notices are in the license archive."})
-    android_dependencies = {}
-    for path in sorted((ROOT / "apps/android").rglob("*.lockfile")):
-        for line in path.read_text(encoding="utf-8").splitlines():
-            match = re.fullmatch(r"([^#:=\s]+):([^:=\s]+):([^=\s]+)=(.*)", line)
-            if match:
-                key = (match[1], match[2], match[3])
-                android_dependencies.setdefault(key, set()).update(filter(None, match[4].split(",")))
-    require(android_dependencies, "Android exact resolved dependency locks are absent")
-    for index, ((group, name, version), scopes) in enumerate(sorted(android_dependencies.items())):
-        packages.append({"SPDXID": "SPDXRef-Maven-" + str(index), "name": group + ":" + name, "versionInfo": version,
-                         "downloadLocation": "NOASSERTION", "filesAnalyzed": False, "licenseConcluded": "NOASSERTION", "licenseDeclared": "NOASSERTION",
-                         "externalRefs": [{"referenceCategory": "PACKAGE-MANAGER", "referenceType": "purl", "referenceLocator": "pkg:maven/" + urllib.parse.quote(group, safe=".") + "/" + urllib.parse.quote(name, safe=".") + "@" + urllib.parse.quote(version, safe=".")}],
-                         "comment": "Exact Gradle lock configurations: " + ",".join(sorted(scopes)) + ". Includes build/test configurations; published license reviews and verification-metadata.xml are retained separately."})
     # OS packages and image-bound system notices are added by the final cohort
     # owner, after both real architecture OCI images are available.
     sbom = {"spdxVersion": "SPDX-2.3", "dataLicense": "CC0-1.0", "SPDXID": "SPDXRef-DOCUMENT",
             "name": "NestLink-" + cohort["version"], "documentNamespace": "https://github.com/ZHanry/NestLink/sbom/" + cohort["source_revision"] + "/" + str(cohort["run_id"]) + "-" + str(cohort["run_attempt"]),
             "creationInfo": {"created": __import__("datetime").datetime.fromtimestamp(cohort["source_epoch"], __import__("datetime").timezone.utc).isoformat().replace("+00:00", "Z"), "creators": ["Tool: nestlink-release-producer-v1"]},
-            "packages": packages, "comment": "Cargo/native/Android exact dependency inventory. OCI system packages are added by the final owner. NOASSERTION records never assert a missing license review passed."}
+            "packages": packages, "comment": "Cargo/native exact dependency inventory. OCI system packages are added by the final owner. NOASSERTION records never assert a missing license review passed."}
     create_json(args.output / "NestLink-build-sbom.spdx.json", sbom)
     with tempfile.TemporaryDirectory(prefix="nestlink-notices-", dir=args.output) as scratch:
         notices = Path(scratch)
@@ -822,10 +755,8 @@ def metadata(args):
         create_json(args.output / "evidence/cargo-notice-index.json", cargo_notice_index)
         pack_tree(notices, args.output / "NestLink-build-licenses.tar.gz", cohort["source_epoch"])
     proof = {"cohort_sha256": digest(args.cohort), "source_revision": cohort["source_revision"], "input_files": {}, "tools": {}}
-    for name in ("Cargo.toml", "Cargo.lock", "rust-toolchain.toml", "docs/refactor/native-codecs.lock.json", "docs/refactor/source-ledger.json", "docs/refactor/cargo-notice-supplements.json", "scripts/refactor-cargo-notices.py", "config/release-producer.json", "apps/android/gradle/verification-metadata.xml"):
+    for name in ("Cargo.toml", "Cargo.lock", "rust-toolchain.toml", "docs/refactor/native-codecs.lock.json", "docs/refactor/source-ledger.json", "docs/refactor/cargo-notice-supplements.json", "scripts/refactor-cargo-notices.py", "config/release-producer.json", "config/product-scope.json"):
         proof["input_files"][name] = digest(ROOT / name)
-    for path in sorted((ROOT / "apps/android").rglob("*.lockfile")):
-        proof["input_files"][path.relative_to(ROOT).as_posix()] = digest(path)
     for command in (("rustc", "--version", "--verbose"), ("cargo", "--version"), (sys.executable, "--version")):
         proof["tools"][Path(command[0]).name] = run(command).decode("utf-8", "replace").strip()
     create_json(args.output / "evidence/source-build-inputs.json", proof)
@@ -842,7 +773,7 @@ def finalize(args):
     require(payload["purpose"] == "native-payload" and packages["purpose"] == "native-packages", "Final native manifests have the wrong purpose")
     require(all(value["source_revision"] == cohort["source_revision"] and value["version"] == cohort["version"] and value["release_sequence"] == cohort["release_sequence"] for value in (payload, packages)), "Native final cohort differs")
     require(all(item.get("payload_manifest_sha256") == digest(args.bundle / "native-payload.json") for item in packages["artifacts"]), "Final packages do not bind the signed payload")
-    artifacts = [item for part in ("android", "web") for item in parts[part]["artifacts"]]
+    artifacts = [item for part in ("web",) for item in parts[part]["artifacts"]]
     for role, name in PACKAGE_PATHS.items():
         artifacts.append(file_record(args.bundle, artifact(args.bundle, name), role))
     extra_parts = {}
@@ -874,7 +805,7 @@ def finalize(args):
                 "downloadLocation": "NOASSERTION", "filesAnalyzed": False, "licenseConcluded": "NOASSERTION", "licenseDeclared": "NOASSERTION",
                 "externalRefs": [{"referenceCategory": "PACKAGE-MANAGER", "referenceType": "purl", "referenceLocator": "pkg:deb/ubuntu/" + urllib.parse.quote(item["name"], safe=".") + "@" + urllib.parse.quote(item["version"], safe=".") + "?arch=" + item["architecture"] + "&distro=ubuntu-24.04"}],
                 "sourceInfo": item["source"], "comment": "Read from var/lib/dpkg/status in exact signed OCI archive " + proof["manifest_digest"] + "; system documentation/copyright files are retained in the license archive."})
-    sbom["comment"] = "Exact Cargo, pinned native sources, resolved Android configurations and actual x64/ARM64 OCI OS packages. Full system notices are archived. NOASSERTION records require the independent license/source acceptance review."
+    sbom["comment"] = "Exact Cargo, pinned native sources and actual x64/ARM64 OCI OS packages. Full system notices are archived. NOASSERTION records require the independent license/source acceptance review."
     create_json(args.output / "NestLink-sbom.spdx.json", sbom)
     artifacts.append(file_record(args.output, args.output / "NestLink-sbom.spdx.json", "sbom"))
     with tempfile.TemporaryDirectory(prefix="nestlink-final-notices-", dir=args.output) as scratch:
@@ -934,11 +865,11 @@ def parser():
     secret = sub.add_parser("materialize-secrets")
     secret.add_argument("--group", choices=SECRETS, required=True)
     secret.add_argument("--output", type=Path, required=True)
-    for action in ("collect-native", "collect-android", "collect-web", "payload-manifest", "package-manifest", "oci-context", "collect-oci", "metadata", "finalize"):
+    for action in ("collect-native", "collect-web", "payload-manifest", "package-manifest", "oci-context", "collect-oci", "metadata", "finalize"):
         command = sub.add_parser(action)
         command.add_argument("--cohort", type=Path, required=True)
         command.add_argument("--output", type=Path, required=True)
-        if action in ("collect-native", "collect-android", "collect-web", "collect-oci"):
+        if action in ("collect-native", "collect-web", "collect-oci"):
             command.add_argument("--input", type=Path, required=True)
         if action in ("payload-manifest", "package-manifest", "oci-context", "collect-oci", "finalize"):
             command.add_argument("--bundle", type=Path, required=True)
@@ -953,11 +884,6 @@ def parser():
         if action == "collect-native":
             command.add_argument("--codec-prefix", type=Path, required=True)
             command.add_argument("--powershell", default="powershell.exe")
-        if action == "collect-android":
-            for name in ("apksigner", "aapt2", "zipalign", "java"):
-                command.add_argument("--" + name, default=name)
-            command.add_argument("--codec-arm64", type=Path, required=True)
-            command.add_argument("--codec-x64", type=Path, required=True)
     return value
 
 
@@ -965,7 +891,7 @@ def main():
     args = parser().parse_args()
     try:
         {"preflight": preflight, "materialize-secrets": materialize, "collect-native": collect_native,
-         "collect-android": collect_android, "collect-web": collect_web, "payload-manifest": payload_manifest,
+         "collect-web": collect_web, "payload-manifest": payload_manifest,
          "package-manifest": package_manifest, "oci-context": oci_context, "collect-oci": collect_oci,
          "metadata": metadata, "finalize": finalize}[args.action](args)
     except Blocked as error:

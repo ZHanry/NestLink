@@ -1,33 +1,50 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "repository": "https://github.com/ZHanry/NestLink-dependencies.git",
-  "branch": "nestlink-0.7-rc",
-  "commit": "36e015e2d2e29d239f4a91c3f099c0ae9af89be4",
+  "branch": "main",
+  "commit": "49b5bd9c922b964f624cfd721f2c1a9f99cd071b",
   "packages": {
-    "turn": {
+    "turn@0.17.2": {
       "version": "0.17.2",
       "snapshot_sha256": "8677b8e6b75b7ca2b2b0b4c3e94c5f89880998d8fc30230b02c66c2b745f18b6",
-      "file_count": 73
+      "file_count": 73,
+      "name": "turn",
+      "directory": "turn"
     },
-    "webrtc-ice": {
+    "webrtc-ice@0.14.0": {
       "version": "0.14.0",
       "snapshot_sha256": "e95ac0211aed55d10125c08e287346d6103dc25254e620fafd7f8cb407e25640",
-      "file_count": 64
+      "file_count": 64,
+      "name": "webrtc-ice",
+      "directory": "webrtc-ice"
     },
-    "leptos_macro": {
+    "leptos_macro@0.8.19": {
       "version": "0.8.19",
       "snapshot_sha256": "0c142bb14baf3488f97cbe3d41f96328a0bdc7386bf1655beedc8aa1a6d32a89",
-      "file_count": 45
+      "file_count": 45,
+      "name": "leptos_macro",
+      "directory": "leptos_macro"
     },
-    "tachys": {
+    "tachys@0.2.19": {
       "version": "0.2.19",
       "snapshot_sha256": "a579cab329ff7ece62aa17bb475eade52b8b29451325f28540ab8932f1b90452",
-      "file_count": 66
+      "file_count": 66,
+      "name": "tachys",
+      "directory": "tachys"
     },
-    "objc2-foundation": {
+    "objc2-foundation@0.2.2": {
       "version": "0.2.2",
       "snapshot_sha256": "62e74309b92aa519ec0fdc9330fca6248f4e18e4ef35a27d810004e5c19a5cf8",
-      "file_count": 237
+      "file_count": 237,
+      "name": "objc2-foundation",
+      "directory": "objc2-foundation"
+    },
+    "turn@0.11.0": {
+      "name": "turn",
+      "directory": "turn-client",
+      "version": "0.11.0",
+      "snapshot_sha256": "f0fa3134c5469e2644ca225d812f0a741cb3482eea15de71e03cd85ad46e1306",
+      "file_count": 77
     }
   }
 }

@@ -21,7 +21,7 @@ fn main() -> io::Result<()> {
     let library = prefix.join("lib");
     let target = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
     assert!(
-        matches!(target.as_str(), "windows" | "linux" | "android"),
+        matches!(target.as_str(), "windows" | "linux"),
         "native codec target not supported"
     );
     let mut bridge = cc::Build::new();
@@ -61,8 +61,6 @@ fn main() -> io::Result<()> {
     if target != "windows" {
         println!("cargo:rustc-link-lib=m");
     }
-    // Android's pthread symbols are supplied by Bionic libc; its NDK has no
-    // separate libpthread. Linux still needs the explicit library.
     if target == "linux" {
         println!("cargo:rustc-link-lib=pthread");
     }

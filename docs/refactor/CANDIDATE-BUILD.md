@@ -1,27 +1,27 @@
 # 用户验收候选构建
 
-`v15-candidate-build.yml` 从新仓库 `ZHanry/NestLink` 的干净源码提交构建 `0.7.0-rc.1`，供用户验收。入口与 `config/candidate-producer.json` 独立固定新仓 node ID `R_kgDOVNHMvg`，不会处理旧仓库。文件名中的 v15 是已有协议/实现名称，对外产品版本为 RC。产物保留 Windows x64 两套安装包、Linux x64/ARM64 桌面与服务端 DEB、Android arm64-v8a/x86_64 APK、Web、两种架构 OCI，以及源码、SBOM、许可证和验收材料。Android 范围为 API 30–36（Android 11–16）。每个 job 最长 90 分钟；这个入口只构建和检查产物，不重复整套产品测试。
+NestLink 定位为 **内网穿透 + 远程桌面**。当前客户端范围为 Windows 桌面和 Web；Linux x64/ARM64 继续提供后端服务。范围以 [`config/product-scope.json`](../../config/product-scope.json) 为准。Android 源码与 CI 已移除，Linux 桌面不再进入发行清单，历史证据不作为当前验收结果。
 
-所有对外产品版本需先统一提交为 `0.7.0-rc.1`。手动运行 **Build NestLink 0.7.0 RC development candidate**，填写：
+全部发行构建、编译和打包在 GitHub Actions 执行。用户电脑与性能有限的服务器只下载、核验并运行产物。`.github/workflows/v15-candidate-build.yml` 从 `ZHanry/NestLink` 的同一个干净提交构建 `0.7.0-rc.1`；node ID 固定为 `R_kgDOVNHMvg`。文件名和协议中的 v15 是内部兼容命名空间。
 
-- `source_revision`：新仓库完整 40 位小写源码提交 SHA。
-- `candidate_sequence`：1–999 的构建序号；首次填写 `1`，Android versionCode 为 `700000 + sequence`（首次为 `700001`）。
-- `oci_base`：已审阅的 `ubuntu:24.04@sha256:<multiarch-index-digest>`。preflight 按 digest 下载原始 index，核对摘要及 amd64/arm64 平台；原始 index 保留在材料包中。
+手动运行 **Build NestLink 0.7.0 RC development candidate**，填写：
 
-成功后下载 `rc-development-candidate-<run_attempt>` artifact。`candidate-build-manifest.json` 绑定新仓身份、RC 版本、18 个交付角色的字节数、SHA256 和源码提交；任何平台、ABI、原生执行文件、构建证据缺失，跨提交/跨 CI 执行混用、字节变化或路径碰撞，都会阻止冻结。原生执行文件在 `files/NestLink-candidate-materials.zip` 的 `native/` 中，Linux 执行位保留。
+- `source_revision`：40 位小写提交 SHA，公开产品版本须已统一为 `0.7.0-rc.1`。
+- `candidate_sequence`：1–999 的候选序号。
+- `oci_base`：已审阅的 `ubuntu:24.04@sha256:<multiarch-index-digest>`。preflight 核对原始 index 的摘要及 amd64/arm64 平台，材料包保留原始 index。
 
-候选签名状态明确为：Windows/更新/OCI `not-configured`，Android `development-only`，`production_update_eligible=false`。Windows 使用独立 AppId 和 `NestLink-RC` 安装/状态目录；普通版为当前用户安装，可选 broker 包只分发 broker 字节，未签名的正式特权激活仍需后续验收。Android 使用实际验证并记录的开发证书，应用 ID 为 `com.zhanry.nestlink.candidate`，versionName 为 `0.7.0-rc.1`；双 ABI 都执行 API 30–36 签名兼容、16 KiB ZIP 对齐及 ELF LOAD 检查。开发证书不作为固定 Release 身份，跨构建更新签名兼容不作承诺。
+构建前及冻结前都要求同一源码的 Rust、Web、秘密扫描和 CodeQL 最新检查成功。矩阵包含 Windows 2022 x64、Ubuntu 24.04 x64 与原生 ARM64 runner。Windows 编译 desktop/daemon/privileged，Linux 仅编译服务端，Web 独立构建；最长单 job 90 分钟。构建工作流不发布 Release，不删除分支，不读取生产签名密钥。
 
-Windows 候选编译器固定为 Inno Setup `6.7.3`。它的安装引导程序为 x86 PE32，使用 `ArchitecturesAllowed=x64compatible` 和 `ArchitecturesInstallIn64BitMode=x64compatible` 限制目标系统并启用 64 位安装模式；这两项不改变引导程序本身的 PE 架构。收集器分别严格校验引导程序为 x86/PE32 Windows GUI 可执行文件、desktop/daemon/privileged 三个实际产品执行文件为 x64；全局 `pe_x64` 校验不变。官方文档说明[64 位安装模式可用于 32 位安装器](https://jrsoftware.org/ishelp/topic_32vs64bitinstalls.htm)，并明确[真正的 64 位安装器及 `SetupArchitecture=x64` 从 Inno Setup 7 才引入](https://jrsoftware.org/ishelp/topic_64bit.htm)。候选包不为引导程序更换已固定的工具链。
+成功后下载 `rc-development-candidate-<run_attempt>`。`candidate-build-manifest.json` 固定 **14 个交付角色**的长度、SHA-256 和源码提交：Windows 两套安装器、Linux 两架构服务端 DEB、Web 静态站点、两架构 OCI、源码、SBOM、许可证、材料、验收材料、native payload 与 package 清单。缺失角色、原生执行文件或构建证据，混用源码/CI 执行、字节变化或路径碰撞都阻止冻结。
 
-每个 Android 单 ABI APK 的原生库精确为 `libnestlink_android.so` 与 Compose 依赖携带的 `libandroidx.graphics.path.so`。后者固定来自 Gradle 已锁定并校验 AAR 摘要的 `androidx.graphics:graphics-path:1.0.1`；收集器核对该依赖锁、AAR 校验 pin，以及 APK 内对应 ABI 库的精确字节数和 SHA256。两项库都必须保持原有 ELF64 ABI 与 16 KiB LOAD 校验，并以未压缩、16 KiB ZIP 数据对齐方式打包；额外库、其它 ABI、字节变化、压缩或错位均会拒绝。各库摘要、对齐和依赖来源记录在对应的开发签名证据中。
+Windows 候选使用独立 AppId 和 `NestLink-RC` 安装/状态目录。Inno Setup 固定为 `6.7.3`：安装引导程序是 x86 PE32 GUI，实际产品执行文件必须是 x64；`ArchitecturesAllowed=x64compatible` 与 `ArchitecturesInstallIn64BitMode=x64compatible` 限定目标安装。可选 broker 包分发权限代理字节，正式签名激活仍须独立验收。卸载保留用户数据。
 
-Linux 包名为 `nestlink-rc-desktop` / `nestlink-rc-server`，安装在 `/opt/nestlink-rc/`；DEB 版本采用 Debian 预发行排序形式 `0.7.0~rc.1`。桌面入口为 `nestlink-rc`，独立状态目录为 `${XDG_STATE_HOME:-$HOME/.local/state}/NestLink-RC`；服务端安装后由操作者显式初始化配置和启动，不自动开放服务。候选安装器保留用户数据。真实安装维护、固定证书升级/回滚和特权激活验收仍待完成。
+Linux 包名为 `nestlink-rc-server`，安装在 `/opt/nestlink-rc/server/`，DEB 版本采用 `0.7.0~rc.1`。安装后由操作者初始化配置并启动，不自动开放服务。两种 OCI 从同一固定 Ubuntu index 在对应原生架构上构建，逐层检查架构、源码/版本标签、非 root 用户、入口及 server/Web 实际字节；OS 依赖和原文许可证随镜像回读证据进入材料包。
 
-两种 OCI 在对应原生 runner 上从同一固定 Ubuntu index 构建，逐层回读检查架构、源码/版本标签、非 root 用户、入口及 server/Web 真实字节。镜像内实际 dpkg 软件清单追加到 SBOM；版权、common-licenses、dpkg/status 和文档链接清单按架构保存在许可证归档。Rust、原生编解码器和 Android 依赖锁、构建工具指纹与回读证据保存在 SBOM/许可证/材料中。
+候选签名状态明确为 Windows、Linux 更新和 OCI `not-configured`，`production_update_eligible=false`。构建材料保留真实身份和摘要。未配置的正式签名不能写成通过，也不能把开发候选作为生产更新授权。
 
-本地入口为 `python -B scripts/refactor-candidate-producer.py --help`。先运行 `preflight --source <SHA> --sequence <N> --run-id <ID> --run-attempt <N> --oci-base <fixed-base> --oci-index <raw-index.json> --output <outside-checkout>/cohort`；后续 `collect-native`、`collect-android`、`collect-web`、`metadata` 收集独立 part，`oci-context` / `collect-oci` 处理镜像，最后 `freeze --cohort <cohort.json> --bundle <merged-parts> --output <new-output>`。所有输出均需在源码目录外的新目录。可用 `--acceptance-evidence <directory>` 为 freeze 增加已经执行的开发检查日志；这些日志不自动变成产品验收通过。
+当前 **19 条平台、安装、签名和公网验收**在构建清单中初始保持 pending，包括 Windows 10/11、两个 Linux 后端架构、Chrome/Edge/Firefox、公司/手机网络、90 分钟稳定性、TURN 容量及撤销、安装升级回滚卸载、重装身份、迁移恢复与来源许可。Android 和 Linux 桌面验收按用户明确缩减的平台范围撤销；剩余门禁不降低。
 
-冻结后的 `candidate-build-manifest.json` 只有在完成[0.7报告全部验收](REMEDIATION-ACCEPTANCE.md)、提供绑定同一构建的审阅证据包后，才可交独立 `refactor-rc-publish.py` 核验并发布新仓 `v0.7.0-rc.1` prerelease。所有 18 条 artifact 的 `source_revision` 相同，路径相对 bundle 根且包含 `files/`；30 条 `acceptance_cases` 均为 `{id,status:"pending",evidence_artifact_id:"acceptance"}`，含 90 分钟 soak。manifest 不含旧仓库归档角色或门槛。候选构建不改名、删仓库、删分支或发布 Release，也不读取/重传旧历史归档。用户随后对冻结字节做全功能验收；成功构建不能授权发布。
+在 GitHub runner 内，`preflight` 冻结 cohort，`collect-native`、`collect-web`、`metadata` 收集 part，`oci-context`/`collect-oci` 处理镜像，`freeze` 校验完整字节及证据。输出必须为源码外的新目录。`--acceptance-evidence` 只附带已执行的检查，不自动将产品验收标为通过。
 
-正式 `v15-release-build.yml`、固定 Release 签名、生产安装/维护校验和正式发布门槛保持不变；候选的 manifest purpose 独立，不能代入生产更新授权。
+冻结后必须完成[报告验收](REMEDIATION-ACCEPTANCE.md)，包含实际外部 Edge ↔ HL 的直连路径、持续桌面画面和键鼠结果，再由独立 `refactor-rc-publish.py` 对同一源码、构建和材料进行核验。构建成功不授权发布；0.7.0 RC 在全部适用整改及验收完成后发布。

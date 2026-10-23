@@ -13,7 +13,6 @@
     "user_full_functional_acceptance": "pending"
   },
   "signing": {
-    "android": "not-configured",
     "linux_update": "not-configured",
     "oci": "not-configured",
     "windows": "not-configured"
@@ -23,22 +22,6 @@
       "id": "acceptance",
       "role": "acceptance",
       "path": "files/acceptance.bin",
-      "bytes": 0,
-      "sha256": null,
-      "source_revision": null
-    },
-    {
-      "id": "android-arm64",
-      "role": "android-arm64",
-      "path": "files/android-arm64.bin",
-      "bytes": 0,
-      "sha256": null,
-      "source_revision": null
-    },
-    {
-      "id": "android-x86_64",
-      "role": "android-x86_64",
-      "path": "files/android-x86_64.bin",
       "bytes": 0,
       "sha256": null,
       "source_revision": null
@@ -84,25 +67,9 @@
       "source_revision": null
     },
     {
-      "id": "linux-arm64-desktop",
-      "role": "linux-arm64-desktop",
-      "path": "files/linux-arm64-desktop.bin",
-      "bytes": 0,
-      "sha256": null,
-      "source_revision": null
-    },
-    {
       "id": "linux-arm64-server",
       "role": "linux-arm64-server",
       "path": "files/linux-arm64-server.bin",
-      "bytes": 0,
-      "sha256": null,
-      "source_revision": null
-    },
-    {
-      "id": "linux-x64-desktop",
-      "role": "linux-x64-desktop",
-      "path": "files/linux-x64-desktop.bin",
       "bytes": 0,
       "sha256": null,
       "source_revision": null
@@ -203,46 +170,6 @@
       "evidence_artifact_id": "acceptance"
     },
     {
-      "id": "android-api-30",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "android-api-31",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "android-api-32",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "android-api-33",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "android-api-34",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "android-api-35",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "android-api-36",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "android-arm64-physical",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
       "id": "chrome-current",
       "status": "pending",
       "evidence_artifact_id": "acceptance"
@@ -263,32 +190,12 @@
       "evidence_artifact_id": "acceptance"
     },
     {
-      "id": "gnome-wayland-authorized",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
       "id": "install-upgrade-rollback-uninstall",
       "status": "pending",
       "evidence_artifact_id": "acceptance"
     },
     {
-      "id": "kde-wayland-authorized",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
       "id": "license-and-source-audit",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "linux-arm64-x11-installed",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "linux-x64-x11-installed",
       "status": "pending",
       "evidence_artifact_id": "acceptance"
     },
@@ -304,11 +211,6 @@
     },
     {
       "id": "schema-migration-and-interruption-recovery",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "signature-android",
       "status": "pending",
       "evidence_artifact_id": "acceptance"
     },
@@ -344,6 +246,16 @@
     },
     {
       "id": "windows-privileged-input",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "linux-x64-server-installed",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "linux-arm64-server-installed",
       "status": "pending",
       "evidence_artifact_id": "acceptance"
     }

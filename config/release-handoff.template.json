@@ -22,22 +22,6 @@
       "source_revision": null
     },
     {
-      "id": "android-arm64",
-      "role": "android-arm64",
-      "path": "files/NestLink-android-arm64-15.0.0.apk",
-      "bytes": null,
-      "sha256": null,
-      "source_revision": null
-    },
-    {
-      "id": "android-x86_64",
-      "role": "android-x86_64",
-      "path": "files/NestLink-android-x86_64-15.0.0.apk",
-      "bytes": null,
-      "sha256": null,
-      "source_revision": null
-    },
-    {
       "id": "dirty-worktree-backups",
       "role": "dirty-worktree-backups",
       "path": "files/NestLink-dirty-worktree-backups-15.0.0.zip",
@@ -78,25 +62,9 @@
       "source_revision": null
     },
     {
-      "id": "linux-arm64-desktop",
-      "role": "linux-arm64-desktop",
-      "path": "files/NestLink-linux-arm64-desktop-15.0.0.deb",
-      "bytes": null,
-      "sha256": null,
-      "source_revision": null
-    },
-    {
       "id": "linux-arm64-server",
       "role": "linux-arm64-server",
       "path": "files/NestLink-linux-arm64-server-15.0.0.deb",
-      "bytes": null,
-      "sha256": null,
-      "source_revision": null
-    },
-    {
-      "id": "linux-x64-desktop",
-      "role": "linux-x64-desktop",
-      "path": "files/NestLink-linux-x64-desktop-15.0.0.deb",
       "bytes": null,
       "sha256": null,
       "source_revision": null
@@ -197,46 +165,6 @@
       "evidence_artifact_id": "acceptance"
     },
     {
-      "id": "android-api-30",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "android-api-31",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "android-api-32",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "android-api-33",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "android-api-34",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "android-api-35",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "android-api-36",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "android-arm64-physical",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
       "id": "chrome-current",
       "status": "pending",
       "evidence_artifact_id": "acceptance"
@@ -257,32 +185,12 @@
       "evidence_artifact_id": "acceptance"
     },
     {
-      "id": "gnome-wayland-authorized",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
       "id": "install-upgrade-rollback-uninstall",
       "status": "pending",
       "evidence_artifact_id": "acceptance"
     },
     {
-      "id": "kde-wayland-authorized",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
       "id": "license-and-source-audit",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "linux-arm64-x11-installed",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "linux-x64-x11-installed",
       "status": "pending",
       "evidence_artifact_id": "acceptance"
     },
@@ -298,11 +206,6 @@
     },
     {
       "id": "schema-migration-and-interruption-recovery",
-      "status": "pending",
-      "evidence_artifact_id": "acceptance"
-    },
-    {
-      "id": "signature-android",
       "status": "pending",
       "evidence_artifact_id": "acceptance"
     },
@@ -338,6 +241,16 @@
     },
     {
       "id": "windows-11-installed",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "linux-x64-server-installed",
+      "status": "pending",
+      "evidence_artifact_id": "acceptance"
+    },
+    {
+      "id": "linux-arm64-server-installed",
       "status": "pending",
       "evidence_artifact_id": "acceptance"
     }

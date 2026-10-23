@@ -41,21 +41,20 @@ REMEDIATION_CASES = frozenset((
 ))
 MAX_REMEDIATION_BYTES = 64 * 1024**2
 CURRENT_ROLES = frozenset((
-    "windows-x64-setup", "windows-x64-privileged-setup", "linux-x64-desktop", "linux-arm64-desktop",
-    "linux-x64-server", "linux-arm64-server", "android-arm64", "android-x86_64",
+    "windows-x64-setup", "windows-x64-privileged-setup",
+    "linux-x64-server", "linux-arm64-server",
     "web-static", "oci-x64", "oci-arm64", "source", "sbom", "licenses", "materials", "acceptance",
     "native-payload-manifest", "native-packages-manifest",
 ))
 REQUIRED_CASES = frozenset((
-    "windows-10-installed", "windows-11-installed", "windows-privileged-input", "linux-x64-x11-installed",
-    "linux-arm64-x11-installed", "gnome-wayland-authorized", "kde-wayland-authorized",
-    "android-arm64-physical", "chrome-current", "edge-current", "firefox-current", "company-to-home",
+    "windows-10-installed", "windows-11-installed", "windows-privileged-input",
+    "linux-x64-server-installed", "linux-arm64-server-installed",
+    "chrome-current", "edge-current", "firefox-current", "company-to-home",
     "mobile-to-home", "90-minute-soak", "turn-capacity-and-revoke", "signature-windows",
-    "signature-android", "signature-linux-update", "signature-oci", "install-upgrade-rollback-uninstall",
+    "signature-linux-update", "signature-oci", "install-upgrade-rollback-uninstall",
     "reinstall-new-identity-retained-data", "schema-migration-and-interruption-recovery", "license-and-source-audit",
-) + tuple("android-api-" + str(api) for api in range(30, 37)))
-SIGNING = {"windows": "not-configured", "android": "development-only",
-           "linux_update": "not-configured", "oci": "not-configured"}
+))
+SIGNING = {"windows": "not-configured", "linux_update": "not-configured", "oci": "not-configured"}
 
 
 def require(value, message):
@@ -318,13 +317,13 @@ def release_body(revision, checksum):
             "升级：请同时升级服务器、Web 和双方客户端。原生跨网络回退需管理员允许服务器转发及双方 relay；浏览器需可达 STUN，受限网络还需注册 TURN 节点并允许中继。升级不会自动放宽服务器策略，原生 WSS 不能替代浏览器 TURN。\n"
             "数据库升级到 schema 24；升级前备份。schema 24 获准业务后须前向修复，禁止恢复旧授权数据库快照。恢复登录不会恢复屏幕、输入或文件授权。\n"
             "部署与排障：https://github.com/ZHanry/NestLink/blob/" + revision + "/docs/REMOTE-CONNECTION.md\n\n"
-            "Source commit: " + revision + ". All 18 product artifacts are bound to this clean source commit.\n"
+            f"Source commit: {revision}. All {len(CURRENT_ROLES)} product artifacts are bound to this clean source commit.\n"
             "candidate-build-manifest.json SHA-256: " + checksum + ".\n\n"
-            "Windows Authenticode, Linux update and OCI signing are not configured. Android uses a development signing key. "
+            "Windows Authenticode, Linux update and OCI signing are not configured. "
             "Production update eligibility: false. Report remediation acceptance: passed with reviewed evidence.\n"
-            "The frozen development manifest retains its 30 pending platform, signing, physical-device and real-network cases; "
+            f"The frozen development manifest retains its {len(REQUIRED_CASES)} pending platform, signing, physical-device and real-network cases; "
             "the separate report evidence does not rewrite that historical checklist or claim formal signing. "
-            "Android support covers Android 11–16 (API 30–36).\n")
+            "Clients support Windows 10/11 x64 and current Web browsers; Linux x64/ARM64 provides backend services.\n")
 
 
 def local_plan(args):
@@ -355,7 +354,7 @@ def local_plan(args):
                     for item in cases) and {item["id"] for item in cases} == REQUIRED_CASES,
             "All 30 agreed RC acceptance cases must remain explicit and pending")
     products = value["artifacts"]
-    require(isinstance(products, list) and len(products) == len(CURRENT_ROLES), "RC must contain all 18 artifact roles")
+    require(isinstance(products, list) and len(products) == len(CURRENT_ROLES), "RC must contain every Windows/Web/backend artifact role")
     uploads, roles, paths, names = [], set(), set(), {MANIFEST_NAME.casefold(), REMEDIATION_NAME.casefold()}
     for item in products:
         require(isinstance(item, dict) and set(item) == {"id", "role", "path", "bytes", "sha256", "source_revision"},

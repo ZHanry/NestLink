@@ -67,13 +67,13 @@ class ProducerTests(unittest.TestCase):
     def cohort(self):
         return {"schema_version": 1, "kind": "nestlink-release-cohort", "repository_node_id": P.REPOSITORY_ID,
                 "version": "15.0.0", "source_revision": "1" * 40, "release_sequence": 1,
-                "android_version_code": 150000001, "run_id": 123, "run_attempt": 2,
+                "run_id": 123, "run_attempt": 2,
                 "source_epoch": 1700000000, "configuration_sha256": "a" * 64}
 
     def policy(self):
         value = json.loads((ROOT / "config/release-producer.json").read_text())
         value.update(update_certificate_sha256="1" * 64, windows_certificate_sha256="2" * 64,
-                     android_certificate_sha256="3" * 64, windows_timestamp_url="https://timestamp.example.test/rfc3161",
+                     windows_timestamp_url="https://timestamp.example.test/rfc3161",
                      debian_maintainer="Maintainer <releases@example.test>", oci_base="ubuntu:24.04@sha256:" + "4" * 64)
         return value
 
@@ -91,7 +91,7 @@ class ProducerTests(unittest.TestCase):
             self.assertEqual(report["status"], "blocked")
             self.assertFalse((output / "cohort.json").exists())
 
-    def test_public_policy_rejects_reused_update_key_api29_and_floating_oci_base(self):
+    def test_public_policy_rejects_reused_update_key_retired_platform_and_floating_oci_base(self):
         with tempfile.TemporaryDirectory() as scratch:
             path = Path(scratch) / "policy.json"
             valid = self.policy()
@@ -108,7 +108,7 @@ class ProducerTests(unittest.TestCase):
         value = self.cohort()
         P.validate_cohort(value)
         for field, invalid in (("version", "15.0.0-dev.1"), ("release_sequence", 0),
-                               ("android_version_code", 150000), ("run_id", True), ("source_revision", "main")):
+                               ("source_epoch", 0), ("run_id", True), ("source_revision", "main")):
             with self.subTest(field=field), self.assertRaises(ValueError):
                 P.validate_cohort({**value, field: invalid})
 
@@ -167,7 +167,7 @@ class ProducerTests(unittest.TestCase):
                 _, folder, roles = P.NATIVE[part]
                 paths = [(folder + "/nestlink-" + role + (".exe" if part == "windows-x64" else ""), "native-" + part + "-" + role) for role in roles]
             else:
-                paths = [("NestLink-android-arm64.apk", "android-arm64"), ("NestLink-android-x86_64.apk", "android-x86_64")] if part == "android" else [("NestLink-web-static.tar.gz", "web-static")]
+                paths = [("NestLink-web-static.tar.gz", "web-static")]
             records = []
             for name, role in paths:
                 path = root / name
@@ -183,7 +183,7 @@ class ProducerTests(unittest.TestCase):
             root = Path(scratch)
             cohort = self.parts(root)
             P.verify_parts(cohort, root)
-            path = root / "parts/android.json"
+            path = root / "parts/web.json"
             value = json.loads(path.read_text())
             value["cohort_sha256"] = "0" * 64
             path.write_text(json.dumps(value))

@@ -15,7 +15,7 @@ class RequiredChecks(unittest.TestCase):
                 for index, name in enumerate(checks.WORKFLOWS)}
 
     def test_exact_sha_success(self):
-        self.assertEqual(len(checks.select_runs("a" * 40, self.fixture())), 5)
+        self.assertEqual(len(checks.select_runs("a" * 40, self.fixture())), len(checks.WORKFLOWS))
 
     def test_missing_wrong_sha_and_untrusted_path_are_rejected(self):
         for field, value in (("head_sha", "b" * 40), ("path", ".github/workflows/other.yml")):
