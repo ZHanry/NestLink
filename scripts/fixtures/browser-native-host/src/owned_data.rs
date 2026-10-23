@@ -98,6 +98,9 @@ impl InputDevice for OwnedInput {
                 }
                 json!({"kind":"pointer","button":button,"down":down,"x":x,"y":y})
             }
+            PlatformInput::Action(InputAction::Scroll { x, y }) => {
+                json!({"kind":"scroll","x":x,"y":y})
+            }
             PlatformInput::Action(InputAction::Text(text)) => {
                 json!({"kind":"text","text":text})
             }
