@@ -250,60 +250,33 @@ pub fn fonts(context: &egui::Context) -> io::Result<bool> {
     context.set_fonts(definition);
     Ok(cjk)
 }
-/// Rasterize the linked-N geometry with rounded transparent corners and 4x AA.
-pub fn icon(size: u32) -> egui::IconData {
-    let primary = tokens()
-        .map(|tokens| color(&tokens.light.primary))
-        .unwrap_or(Color32::from_rgb(120, 80, 178));
-    let segments = [
-        [154., 342., 154., 196.],
-        [154., 196., 200., 150.],
-        [358., 170., 358., 316.],
-        [358., 316., 312., 362.],
-        [190., 190., 322., 322.],
-    ];
+/// Decode the original product asset. Theme changes never recolor the logo.
+pub fn icon(size: u32) -> io::Result<egui::IconData> {
+    let source = eframe::icon_data::from_png_bytes(include_bytes!("../../../brand/nestlink.png"))
+        .map_err(|error| io::Error::other(error.to_string()))?;
+    if !(16..=64).contains(&size) || source.width != source.height || source.width < size {
+        return Err(io::Error::other("invalid product icon dimensions"));
+    }
     let mut rgba = Vec::with_capacity((size * size * 4) as usize);
     for y in 0..size {
         for x in 0..size {
-            let mut sum = [0u32; 4];
-            for sy in 0..4 {
-                for sx in 0..4 {
-                    let point = egui::pos2(
-                        (x as f32 + (sx as f32 + 0.5) / 4.) * 512. / size as f32,
-                        (y as f32 + (sy as f32 + 0.5) / 4.) * 512. / size as f32,
-                    );
-                    let q =
-                        egui::vec2((point.x - 256.).abs() - 132., (point.y - 256.).abs() - 132.);
-                    if egui::vec2(q.x.max(0.), q.y.max(0.)).length() + q.x.max(q.y).min(0.) > 116. {
-                        continue;
+            let mut sum = [0_u32; 4];
+            let mut count = 0;
+            for sy in (y * source.height / size)..((y + 1) * source.height / size) {
+                for sx in (x * source.width / size)..((x + 1) * source.width / size) {
+                    let offset = ((sy * source.width + sx) * 4) as usize;
+                    for channel in 0..4 {
+                        sum[channel] += u32::from(source.rgba[offset + channel]);
                     }
-                    let white = segments.iter().any(|segment| {
-                        let first = egui::pos2(segment[0], segment[1]);
-                        let last = egui::pos2(segment[2], segment[3]);
-                        let delta = last - first;
-                        let fraction =
-                            ((point - first).dot(delta) / delta.length_sq()).clamp(0., 1.);
-                        (point - (first + delta * fraction)).length() <= 22.
-                    });
-                    let pixel = if white { Color32::WHITE } else { primary };
-                    sum[0] += u32::from(pixel.r());
-                    sum[1] += u32::from(pixel.g());
-                    sum[2] += u32::from(pixel.b());
-                    sum[3] += 1;
+                    count += 1;
                 }
             }
-            let count = sum[3];
-            rgba.extend_from_slice(&[
-                sum[0].checked_div(count).unwrap_or(0) as u8,
-                sum[1].checked_div(count).unwrap_or(0) as u8,
-                sum[2].checked_div(count).unwrap_or(0) as u8,
-                (count * 255 / 16) as u8,
-            ]);
+            rgba.extend(sum.map(|value| value.checked_div(count).unwrap_or(0) as u8));
         }
     }
-    egui::IconData {
+    Ok(egui::IconData {
         rgba,
         width: size,
         height: size,
-    }
+    })
 }

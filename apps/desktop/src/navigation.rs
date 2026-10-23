@@ -1,5 +1,5 @@
 use crate::{DesktopApp, Screen, theme, widgets};
-use eframe::egui::{self, Align, Color32, RichText};
+use eframe::egui::{self, Align, RichText};
 use nestlink_app_core::{Action, Page, Snapshot};
 
 impl DesktopApp {
@@ -54,12 +54,12 @@ impl DesktopApp {
         } else {
             &self.tokens.light
         };
-        let fill = theme::color(&palette.sidebar);
+        let fill = theme::color(&palette.surface);
         let border = theme::color(&palette.border);
         let muted = theme::color(&palette.muted);
-        let primary = theme::color(&palette.primary);
-        let width = if context.content_rect().width() < 900. {
-            self.tokens.layout.sidebar_width_compact
+        let compact = context.content_rect().width() < 1000.;
+        let width = if compact {
+            76.
         } else {
             self.tokens.layout.sidebar_width
         };
@@ -70,226 +70,245 @@ impl DesktopApp {
             .frame(
                 egui::Frame::new()
                     .fill(fill)
-                    .inner_margin(16)
+                    .inner_margin(10)
                     .stroke(egui::Stroke::new(1., border)),
             )
             .show_inside(parent, |ui| {
                 egui::Panel::bottom("navigation-footer")
-                    .exact_size(if snapshot.principal.is_some() {
-                        208.
-                    } else {
-                        160.
-                    })
+                    .exact_size(if compact { 224. } else { 214. })
                     .resizable(false)
                     .show_separator_line(false)
                     .frame(egui::Frame::new())
                     .show_inside(ui, |ui| {
-                        ui.spacing_mut().item_spacing.y = 6.;
-                        ui.add_space(4.);
+                        ui.separator();
+                        if let Some(principal) = &snapshot.principal {
+                            let name = principal.name.clone();
+                            if widgets::nav_button(
+                                ui,
+                                widgets::NavIcon::Account,
+                                self.t("账号", "Account"),
+                                self.screen == Screen::Security,
+                            )
+                            .on_hover_text(name)
+                            .clicked()
+                            {
+                                self.navigate(Screen::Security, snapshot);
+                            }
+                        }
                         if widgets::nav_button(
                             ui,
                             widgets::NavIcon::Settings,
-                            self.t("服务器连接", "Server connection"),
+                            self.t("设置", "Settings"),
                             self.screen == Screen::Server,
                         )
                         .clicked()
                         {
                             self.screen = Screen::Server;
                         }
-                        if let Some(principal) = &snapshot.principal {
-                            let name = principal.name.clone();
-                            if widgets::nav_button(
-                                ui,
-                                widgets::NavIcon::Account,
-                                &name,
-                                self.screen == Screen::Security,
-                            )
-                            .clicked()
-                            {
-                                self.navigate(Screen::Security, snapshot);
-                            }
-                        }
-                        ui.separator();
-                        ui.horizontal(|ui| {
-                            if ui
-                                .button(if self.english { "中文" } else { "English" })
-                                .clicked()
-                            {
-                                self.english = !self.english;
-                            }
-                            if ui
-                                .button(self.t(
-                                    if self.dark {
-                                        "浅色外观"
+                        ui.add_enabled_ui(!self.exiting, |ui| {
+                            ui.menu_button(self.t("更多", "More"), |ui| {
+                                if self.connected
+                                    && snapshot.principal.as_ref().is_some_and(|p| p.is_admin)
+                                {
+                                    ui.strong(self.t("管理控制中心", "Administration"));
+                                    for (screen, zh, en) in [
+                                        (Screen::Accounts, "账号管理", "Accounts"),
+                                        (Screen::Network, "网络策略与配额", "Policy and quotas"),
+                                        (Screen::Nodes, "转发节点", "Relay nodes"),
+                                        (Screen::Audit, "审计记录", "Audit log"),
+                                    ] {
+                                        if ui
+                                            .selectable_label(self.screen == screen, self.t(zh, en))
+                                            .clicked()
+                                        {
+                                            self.navigate(screen, snapshot);
+                                            ui.close();
+                                        }
+                                    }
+                                    ui.separator();
+                                }
+                                if ui
+                                    .button(if self.english {
+                                        "切换为中文"
                                     } else {
-                                        "深色外观"
-                                    },
-                                    if self.dark { "Light" } else { "Dark" },
-                                ))
-                                .clicked()
-                            {
-                                self.dark = !self.dark;
-                                theme::apply(context, &self.tokens, self.dark);
-                            }
-                        });
-                        ui.horizontal(|ui| {
-                            ui.label(
-                                RichText::new(format!("v{}", env!("CARGO_PKG_VERSION")))
-                                    .small()
-                                    .color(muted),
-                            );
-                            ui.with_layout(egui::Layout::right_to_left(Align::Center), |ui| {
-                                if ui.small_button(self.t("退出", "Exit")).clicked() {
+                                        "Switch to English"
+                                    })
+                                    .clicked()
+                                {
+                                    self.english = !self.english;
+                                    ui.close();
+                                }
+                                if ui
+                                    .button(self.t(
+                                        if self.dark {
+                                            "使用浅色外观"
+                                        } else {
+                                            "使用深色外观"
+                                        },
+                                        if self.dark {
+                                            "Use light theme"
+                                        } else {
+                                            "Use dark theme"
+                                        },
+                                    ))
+                                    .clicked()
+                                {
+                                    self.dark = !self.dark;
+                                    theme::apply(context, &self.tokens, self.dark);
+                                    ui.close();
+                                }
+                                ui.separator();
+                                if ui
+                                    .button(self.t("退出 NestLink", "Exit NestLink"))
+                                    .clicked()
+                                {
                                     self.exit(snapshot, context);
+                                    ui.close();
                                 }
                             });
                         });
+                        ui.add_space(8.);
+                        ui.add(
+                            egui::Label::new(
+                                RichText::new(format!("v{}", env!("CARGO_PKG_VERSION")))
+                                    .size(if compact { 10. } else { 12. })
+                                    .color(muted),
+                            )
+                            .truncate(),
+                        );
                     });
-                ui.spacing_mut().scroll.floating = false;
-                egui::ScrollArea::vertical()
-                    .id_salt("navigation-menu")
-                    .auto_shrink([false, false])
-                    .show(ui, |ui| {
-                        ui.add_space(6.);
-                        ui.horizontal(|ui| {
-                            let (rect, _) =
-                                ui.allocate_exact_size(egui::vec2(32., 32.), egui::Sense::hover());
-                            ui.painter().rect_filled(rect, 8., primary);
-                            for [x1, y1, x2, y2] in [
-                                [9.6, 21.4, 9.6, 12.3],
-                                [9.6, 12.3, 12.5, 9.4],
-                                [22.4, 10.6, 22.4, 19.8],
-                                [22.4, 19.8, 19.5, 22.6],
-                                [11.9, 11.9, 20.1, 20.1],
-                            ] {
-                                ui.painter().line_segment(
-                                    [rect.min + egui::vec2(x1, y1), rect.min + egui::vec2(x2, y2)],
-                                    (2.7, Color32::WHITE),
+                ui.allocate_ui_with_layout(
+                    egui::vec2(ui.available_width(), 70.),
+                    egui::Layout::top_down(Align::Min),
+                    |ui| {
+                        if compact {
+                            ui.horizontal(|ui| {
+                                ui.add_space(10.);
+                                let (rect, _) = ui.allocate_exact_size(
+                                    egui::vec2(32., 32.),
+                                    egui::Sense::hover(),
                                 );
-                            }
-                            ui.label(RichText::new("NestLink").size(22.).strong());
-                        });
-                        ui.add_space(28.);
-                        let signed_in = snapshot.principal.is_some();
-                        ui.add_enabled_ui(signed_in && self.connected && !self.exiting, |ui| {
-                            for (screen, icon, zh, en) in [
-                                (
-                                    Screen::Remote,
-                                    widgets::NavIcon::Monitor,
-                                    "远程控制",
-                                    "Remote control",
-                                ),
-                                (
-                                    Screen::Services,
-                                    widgets::NavIcon::Share,
-                                    "服务发布",
-                                    "Services",
-                                ),
-                                (
-                                    Screen::Devices,
-                                    widgets::NavIcon::Devices,
-                                    "我的设备",
-                                    "My devices",
-                                ),
-                            ] {
-                                if widgets::nav_button(
-                                    ui,
-                                    icon,
-                                    self.t(zh, en),
-                                    self.screen == screen,
+                                crate::icons::brand(ui, rect);
+                            });
+                        } else {
+                            ui.horizontal(|ui| {
+                                let (rect, _) = ui.allocate_exact_size(
+                                    egui::vec2(32., 32.),
+                                    egui::Sense::hover(),
+                                );
+                                crate::icons::brand(ui, rect);
+                                ui.label(RichText::new("NestLink").size(23.).strong());
+                            });
+                            ui.add_space(4.);
+                            ui.label(
+                                RichText::new(
+                                    self.t("内网穿透 + 远程桌面", "Tunnels + remote desktop"),
                                 )
-                                .clicked()
-                                {
-                                    self.navigate(screen, snapshot);
-                                }
-                            }
-                            if snapshot.principal.as_ref().is_some_and(|p| p.is_admin) {
-                                ui.add_space(22.);
-                                ui.label(
-                                    RichText::new(self.t("管理", "Administration"))
-                                        .small()
-                                        .color(muted),
-                                );
-                                ui.add_space(5.);
-                                for (screen, icon, zh, en) in [
-                                    (
-                                        Screen::Accounts,
-                                        widgets::NavIcon::Account,
-                                        "账号管理",
-                                        "Accounts",
-                                    ),
-                                    (
-                                        Screen::Network,
-                                        widgets::NavIcon::Network,
-                                        "网络策略",
-                                        "Network policy",
-                                    ),
-                                    (
-                                        Screen::Nodes,
-                                        widgets::NavIcon::Share,
-                                        "转发节点",
-                                        "Relay nodes",
-                                    ),
-                                    (
-                                        Screen::Audit,
-                                        widgets::NavIcon::List,
-                                        "审计记录",
-                                        "Audit log",
-                                    ),
-                                ] {
-                                    if widgets::nav_button(
-                                        ui,
-                                        icon,
-                                        self.t(zh, en),
-                                        self.screen == screen,
-                                    )
-                                    .clicked()
-                                    {
-                                        self.navigate(screen, snapshot);
-                                    }
-                                }
-                            }
-                        });
-                    });
+                                .small()
+                                .color(muted),
+                            );
+                        }
+                    },
+                );
+                let signed_in = snapshot.principal.is_some();
+                ui.add_enabled_ui(signed_in && self.connected && !self.exiting, |ui| {
+                    for (screen, icon, zh, en) in [
+                        (
+                            Screen::Remote,
+                            widgets::NavIcon::Monitor,
+                            "远程桌面",
+                            "Desktop",
+                        ),
+                        (
+                            Screen::Services,
+                            widgets::NavIcon::Share,
+                            "内网穿透",
+                            "Tunnels",
+                        ),
+                    ] {
+                        if widgets::nav_button(ui, icon, self.t(zh, en), self.screen == screen)
+                            .clicked()
+                        {
+                            self.navigate(screen, snapshot);
+                        }
+                    }
+                    ui.add_space(18.);
+                    ui.separator();
+                    if widgets::nav_button(
+                        ui,
+                        widgets::NavIcon::Devices,
+                        self.t("设备管理", "Devices"),
+                        self.screen == Screen::Devices,
+                    )
+                    .clicked()
+                    {
+                        self.navigate(Screen::Devices, snapshot);
+                    }
+                });
             });
     }
 
     pub(crate) fn workspace_toolbar(&self, parent: &mut egui::Ui, snapshot: &Snapshot) {
         let (zh, en) = match self.screen {
-            Screen::Remote => ("远程控制", "Remote control"),
-            Screen::Services => ("服务发布", "Service publishing"),
-            Screen::Devices => ("我的设备", "My devices"),
+            Screen::Remote => ("远程桌面", "Remote desktop"),
+            Screen::Services => ("内网穿透", "Intranet tunnels"),
+            Screen::Devices => ("设备管理", "Devices"),
             Screen::Security => ("账号与安全", "Account and security"),
             Screen::Accounts => ("账号管理", "Accounts"),
-            Screen::Network => ("网络策略", "Network policy"),
+            Screen::Network => ("网络策略与配额", "Policy and quotas"),
             Screen::Nodes => ("转发节点", "Relay nodes"),
             Screen::Audit => ("审计记录", "Audit log"),
-            Screen::Server => ("服务器连接", "Server connection"),
+            Screen::Server => ("设置", "Settings"),
         };
         egui::Panel::top("workspace-toolbar")
+            .exact_size(60.)
+            .resizable(false)
             .frame(
                 egui::Frame::new()
-                    .inner_margin(egui::Margin::symmetric(28, 14))
+                    .inner_margin(egui::Margin::symmetric(24, 10))
                     .fill(parent.visuals().window_fill),
             )
             .show_inside(parent, |ui| {
                 ui.horizontal(|ui| {
-                    ui.label(RichText::new(self.t(zh, en)).strong());
+                    ui.label(RichText::new(self.t(zh, en)).size(18.).strong());
                     ui.with_layout(egui::Layout::right_to_left(Align::Center), |ui| {
                         let origin = snapshot
                             .server
                             .as_ref()
                             .map(|s| s.origin.as_str())
                             .unwrap_or(self.t("尚未连接服务器", "No server connected"));
-                        ui.add(
-                            egui::Label::new(
-                                RichText::new(origin)
-                                    .small()
-                                    .color(ui.visuals().weak_text_color()),
-                            )
-                            .truncate(),
-                        )
-                        .on_hover_text(origin);
+                        let width = ui.available_width().min(300.);
+                        ui.allocate_ui_with_layout(
+                            egui::vec2(width, 36.),
+                            egui::Layout::top_down(Align::Max),
+                            |ui| {
+                                ui.add(egui::Label::new(RichText::new(origin).small()).truncate())
+                                    .on_hover_text(origin);
+                                ui.add(
+                                    egui::Label::new(
+                                        RichText::new(self.t(
+                                            if snapshot.server.as_ref().is_some_and(|server| {
+                                                server.verified_health.is_some()
+                                            }) {
+                                                "控制中心已验证"
+                                            } else {
+                                                "等待验证控制中心"
+                                            },
+                                            if snapshot.server.as_ref().is_some_and(|server| {
+                                                server.verified_health.is_some()
+                                            }) {
+                                                "Control center verified"
+                                            } else {
+                                                "Awaiting server verification"
+                                            },
+                                        ))
+                                        .small()
+                                        .color(ui.visuals().weak_text_color()),
+                                    )
+                                    .truncate(),
+                                );
+                            },
+                        );
                     });
                 });
             });

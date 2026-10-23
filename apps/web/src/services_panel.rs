@@ -443,14 +443,14 @@ pub(super) fn ServicesPanel(
         }
     };
     view! {
-        <div class="content-grid">
-            <section class="list-pane" aria-label=move || t("服务目录", "Service catalog")>
-                <div class="section-heading"><div><h2>{move || t("服务目录", "Service catalog")}</h2><p>{move || t("保存入口配置，由主机上的用户单独批准目标。", "Save ingress configuration here. The user on the host separately approves the target.")}</p></div>
-                    <button class="secondary" type="button" disabled=move || busy.get() on:click=move |_| { baseline.set(Editor::new().fingerprint()); editor.set(Some(Editor::new())); confirmation.set(None); }>{move || t("新建服务", "New service")}</button>
+        <div class="tunnel-workspace">
+            <section class="tunnel-directory" aria-label=move || t("服务目录", "Service catalog")>
+                <div class="section-heading tunnel-heading"><div><h2>{move || t("我的穿透服务", "My tunnels")}</h2><p>{move || t("查看入口、主机授权和发布状态。", "Review ingress, host approval, and publication status.")}</p></div>
+                    <button class="primary" type="button" disabled=move || busy.get() on:click=move |_| { baseline.set(Editor::new().fingerprint()); editor.set(Some(Editor::new())); confirmation.set(None); }>{move || t("新建服务", "New service")}</button>
                 </div>
-                <div class="records" aria-live="polite">
+                <div class="tunnel-records" aria-busy=move || busy.get().to_string()>
                     {move || page.get().map(|value| if value.services.is_empty() {
-                        view! { <p class="empty-state">{move || t("尚无服务。创建配置以选择主机、入口和访问来源。", "No services yet. Create a configuration to choose a host, ingress, and allowed sources.")}</p> }.into_any()
+                        view! { <div class="empty-state"><super::WorkspaceIcon kind=super::Section::Services /><h3>{move || t("让内网服务拥有访问入口", "Give an internal service an ingress")}</h3><p>{move || t("新建服务，选择主机、协议和入口，再到主机确认内网目标。", "Create a service, choose its host, protocol, and ingress, then approve the internal target on the host.")}</p></div> }.into_any()
                     } else {
                         value.services.into_iter().map(|service| {
                             let edit = service.clone();
@@ -460,15 +460,16 @@ pub(super) fn ServicesPanel(
                             let ingress = ingress_label(&service.definition.requested_ingress);
                             let revoked = service.approval == ServiceApprovalState::Revoked;
                             let stop_publication = StoredValue::new((service.id.clone(), service.revision));
-                            view! { <article class="policy-form">
-                                <div class="section-heading"><div><h3>{service.definition.name.clone()}</h3><p>{ingress}</p></div><span class="record-status">{publication_status}</span></div>
-                                <p>{status} {move || t(" · 版本 ", " · Revision ")} {service.revision}</p>
-                                <p class="muted">{move || t("主机 ", "Host ")} <code>{service.definition.host_device_id.clone()}</code></p>
+                            view! { <article class="tunnel-record">
+                                <header class="tunnel-record-head"><super::WorkspaceIcon kind=super::Section::Services /><h3 title=service.definition.name.clone()>{service.definition.name.clone()}</h3><span class="status-label">{publication_status}</span></header>
+                                <div class="tunnel-route"><div><span>{move || t("配置入口", "Configured ingress")}</span><code>{ingress}</code></div><span class="route-connector" aria-hidden="true"></span><div><span>{move || t("目标主机", "Target host")}</span><code>{service.definition.host_device_id.clone()}</code></div></div>
+                                <footer class="tunnel-record-foot"><p>{status} <small>{move || t("配置版本 ", "Configuration revision ")}{service.revision}</small></p><div class="tunnel-actions">
                                 <Show when=move || service.publication != ServicePublicationStatus::NotPublished>
                                     <button class="danger" type="button" disabled=move || busy.get() on:click=move |_| { let (id, revision) = stop_publication.get_value(); submit.run(Command::StopPublication { id, revision }); }>{move || t("停止发布", "Stop publication")}</button>
                                 </Show>
                                 <button class="secondary" type="button" disabled=move || busy.get() || revoked on:click=move |_| { baseline.set(Editor::from_view(&edit).fingerprint()); editor.set(Some(Editor::from_view(&edit))); confirmation.set(None); }>{move || t("编辑配置", "Edit configuration")}</button>
                                 <button class="danger" type="button" disabled=move || busy.get() || revoked on:click=move |_| confirmation.set(Some(revoke.clone()))>{move || t("撤销", "Revoke")}</button>
+                                </div></footer>
                             </article> }
                         }).collect_view().into_any()
                     })}
@@ -495,14 +496,18 @@ pub(super) fn ServicesPanel(
                     </super::TaskDialog>
                 </Show>
             </section>
-            <aside class="detail-pane" aria-label=move || t("入口配置", "Ingress configuration")>
-                <Show when=move || editor.with(Option::is_some) fallback=|| view! { <h2>{move || t("选择或创建服务", "Select or create a service")}</h2><p>{move || t("目标地址只在主机本机批准时选择。", "Target addresses are chosen only during local approval on the host.")}</p> }>
+            <aside class="tunnel-guide" aria-label=move || t("发布流程", "Publishing steps")>
+                <h2>{move || t("从内网到访问入口", "From internal service to ingress")}</h2>
+                <ol><li><strong>{move || t("配置入口", "Configure ingress")}</strong><p>{move || t("选择已登记的主机、边缘节点和协议。", "Choose a registered host, edge node, and protocol.")}</p></li><li><strong>{move || t("主机确认目标", "Approve the target")}</strong><p>{move || t("在 Windows 客户端选择内网地址并批准。", "Choose and approve the internal address in the Windows client.")}</p></li><li><strong>{move || t("核对发布状态", "Check publication")}</strong><p>{move || t("以服务返回的发布状态为准；保存配置不等于已发布。", "Use the service's reported publication status. Saving a configuration does not publish it.")}</p></li></ol>
+                <p class="muted">{move || t("修改配置后，原目标批准会失效。", "Changing a configuration invalidates its previous target approval.")}</p>
+                <Show when=move || editor.with(Option::is_some)>
                     <super::TaskDialog open=Signal::derive(move || editor.with(Option::is_some))
                         label=Signal::derive(move || t("入口配置", "Ingress configuration").to_owned()) on_close=editor_close>
-                    <form class="policy-form" on:submit=save>
-                        <h2>{move || t("入口配置", "Ingress configuration")}</h2><p>{move || t("修改配置会使原目标批准失效。", "Changing the configuration invalidates the previous target approval.")}</p>
-                        <p class="form-error" aria-live="polite">{move || editor.with(|value| value.as_ref().and_then(|value| value.definition().err()).unwrap_or(""))}</p>
+                    <form class="service-editor" on:submit=save>
+                        <header class="dialog-head"><h2>{move || editor.with(|value| if value.as_ref().is_some_and(|value| value.revision.is_some()) { t("编辑穿透服务", "Edit tunnel") } else { t("新建穿透服务", "New tunnel") })}</h2><p>{move || t("保存后，请在主机确认内网目标。", "After saving, approve the internal target on the host.")}</p></header>
+                        <div class="service-editor-body">
                         <fieldset class="service-fields" disabled=move || busy.get()>
+                            <section class="form-section"><h3>{move || t("服务与主机", "Service and host")}</h3>
                             {field(editor, Field::Name, "服务名称", "Service name", 128)}
                             <label>{move || t("主机设备（输入名称搜索）", "Host device (search by name)")}
                                 <input list="service-host-options" required=true prop:value=move || editor.with(|v| v.as_ref().map(|v| v.host.clone()).unwrap_or_default()) on:input=move |event| editor.update(|v| if let Some(v) = v { v.host = event_target_value(&event); }) />
@@ -512,6 +517,8 @@ pub(super) fn ServicesPanel(
                                 <input list="service-edge-options" required=true prop:value=move || editor.with(|v| v.as_ref().map(|v| v.edge.clone()).unwrap_or_default()) on:input=move |event| editor.update(|v| if let Some(v) = v { v.edge = event_target_value(&event); }) />
                             </label>
                             <datalist id="service-edge-options"><For each=move || edges.get() key=|v| v.0.clone() children=move |(id,name)| view! { <option value=id>{name}</option> } /></datalist>
+                            </section>
+                            <section class="form-section"><h3>{move || t("访问入口", "Ingress and access")}</h3>
                             <label>{move || t("协议", "Protocol")}<select prop:value=move || editor.with(|v| v.as_ref().map(|v| v.protocol.clone()).unwrap_or_default()) on:change=move |event| editor.update(|v| if let Some(v) = v { v.protocol = event_target_value(&event); })>
                                 <option value="http">"HTTP"</option><option value="https">"HTTPS"</option><option value="tcp">"TCP"</option><option value="udp">"UDP"</option>
                             </select></label>
@@ -519,18 +526,25 @@ pub(super) fn ServicesPanel(
                             <label>{move || t("访问来源（CIDR，每行一项；留空拒绝所有访问）", "Allowed sources (one CIDR per line; leave empty to deny all access)")}
                                 <textarea rows="3" maxlength="2048" prop:value=move || editor.with(|v| v.as_ref().map(|v| v.sources.clone()).unwrap_or_default()) on:input=move |event| editor.update(|v| if let Some(v) = v { v.sources = event_target_value(&event); })></textarea>
                             </label>
+                            </section>
+                            <section class="form-section"><h3>{move || t("资源限制", "Resource limits")}</h3><div class="form-columns">
                             {field(editor, Field::Connections, "最大连接数", "Maximum connections", 3)}
                             {field(editor, Field::Rate, "速率上限（字节/秒）", "Rate limit (bytes/second)", 10)}
                             {field(editor, Field::Bytes, "累计流量上限（字节）", "Total traffic limit (bytes)", 13)}
+                            {field(editor, Field::Idle, "空闲超时（秒）", "Idle timeout (seconds)", 3)}
+                            </div>
                             <p class="muted">{move || editor.with(|v| v.as_ref().map(|v| {
                                 let rate = v.rate.parse::<u64>().unwrap_or_default();
                                 let bytes = v.bytes.parse::<u64>().unwrap_or_default();
                                 localized_format!("速率约 {:.3} MiB/s；累计流量约 {:.3} GiB（1 MiB = 1048576 字节；1 GiB = 1073741824 字节）。", "Rate: {:.3} MiB/s; total: {:.3} GiB (1 MiB = 1048576 bytes; 1 GiB = 1073741824 bytes).", rate as f64 / 1048576., bytes as f64 / 1073741824.)
                             }).unwrap_or_default())}</p>
-                            {field(editor, Field::Idle, "空闲超时（秒）", "Idle timeout (seconds)", 3)}
+                            </section>
+                        </fieldset>
+                        </div>
+                        <footer class="dialog-actions"><p class="form-error" aria-live="polite">{move || editor.with(|value| value.as_ref().and_then(|value| value.definition().err()).unwrap_or(""))}</p><div>
                             <button class="primary" type="submit" disabled=move || busy.get() || editor.with(|v| v.as_ref().is_none_or(Editor::unchanged))>{move || t("保存配置", "Save configuration")}</button>
                             <button class="secondary" type="button" on:click=move |_| editor_close.run(())>{move || t("关闭编辑", "Close editor")}</button>
-                        </fieldset>
+                        </div></footer>
                     </form>
                     </super::TaskDialog>
                 </Show>

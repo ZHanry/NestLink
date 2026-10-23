@@ -1,13 +1,16 @@
 //! Request/approval task layout. Body measurement cannot resize the modal.
 use eframe::egui;
 
+const HEADER_HEIGHT: f32 = 48.;
+const FOOTER_HEIGHT: f32 = 56.;
+
 pub(super) fn show<R>(
     context: &egui::Context,
     title: &str,
     contents: impl FnOnce(&mut egui::Ui) -> R,
 ) -> egui::ModalResponse<R> {
     let viewport = context.content_rect();
-    let frame = egui::Frame::popup(&context.global_style()).inner_margin(16);
+    let frame = egui::Frame::popup(&context.global_style()).inner_margin(20);
     let available = (viewport.size() - egui::vec2(32., 32.)).max(egui::vec2(1., 1.));
     let size =
         egui::vec2(620., 560.).min((available - frame.total_margin().sum()).max(egui::Vec2::ZERO));
@@ -16,8 +19,17 @@ pub(super) fn show<R>(
     egui::Modal::new(id)
         // Anchor a known rectangle, rather than last frame's measured body.
         .area(
-            egui::Modal::default_area(id)
-                .anchor(egui::Align2::LEFT_TOP, (viewport.size() - outer) * 0.5),
+            // Modal::default_area already has a center anchor. A fixed
+            // position must start with an unanchored area, or egui would
+            // recompute that center from last frame's measured size.
+            egui::Area::new(id)
+                .kind(egui::UiKind::Modal)
+                .sense(egui::Sense::hover())
+                .order(egui::Order::Foreground)
+                .interactable(true)
+                .fade_in(false)
+                .fixed_pos(viewport.center() - outer * 0.5)
+                .pivot(egui::Align2::LEFT_TOP),
         )
         .frame(frame)
         .show(context, |ui| {
@@ -30,10 +42,16 @@ pub(super) fn show<R>(
             fixed.set_clip_rect(rect.intersect(ui.clip_rect()));
             let key = fixed.id().with("request-task-bounds");
             fixed.data_mut(|data| data.insert_temp(key, rect));
-            let heading = fixed.heading(title);
-            let body_top = heading.rect.bottom() + fixed.spacing().item_spacing.y;
-            let key = fixed.id().with("request-task-body-top");
-            fixed.data_mut(|data| data.insert_temp(key, body_top));
+            // A translated heading, font replacement or body reflow cannot
+            // move the body or the footer. Their budgets are absolute.
+            let heading = egui::Rect::from_min_size(
+                rect.min,
+                egui::vec2(rect.width(), HEADER_HEIGHT.min(rect.height())),
+            );
+            fixed.put(
+                heading,
+                egui::Label::new(egui::RichText::new(title).size(22.).strong()).truncate(),
+            );
             let result = contents(&mut fixed);
             ui.advance_cursor_after_rect(rect);
             result
@@ -47,10 +65,8 @@ pub(super) fn bounds(ui: &egui::Ui) -> egui::Rect {
 
 pub(super) fn body(ui: &mut egui::Ui, contents: impl FnOnce(&mut egui::Ui)) {
     let bounds = bounds(ui);
-    let top = ui
-        .data(|data| data.get_temp(ui.id().with("request-task-body-top")))
-        .unwrap_or(bounds.top());
-    let bottom = (bounds.bottom() - 44. - 2. * ui.spacing().item_spacing.y - 1.).max(top);
+    let top = (bounds.top() + HEADER_HEIGHT).min(bounds.bottom());
+    let bottom = (bounds.bottom() - FOOTER_HEIGHT - 12.).max(top);
     let rect = egui::Rect::from_min_max(
         egui::pos2(bounds.left(), top),
         egui::pos2(bounds.right(), bottom),
@@ -72,12 +88,15 @@ pub(super) fn body(ui: &mut egui::Ui, contents: impl FnOnce(&mut egui::Ui)) {
 pub(super) fn footer<R>(ui: &mut egui::Ui, contents: impl FnOnce(&mut egui::Ui) -> R) -> R {
     let bounds = bounds(ui);
     let rect = egui::Rect::from_min_max(
-        egui::pos2(bounds.left(), (bounds.bottom() - 44.).max(bounds.top())),
+        egui::pos2(
+            bounds.left(),
+            (bounds.bottom() - FOOTER_HEIGHT).max(bounds.top()),
+        ),
         bounds.max,
     );
     ui.painter().hline(
         rect.x_range(),
-        rect.top() - ui.spacing().item_spacing.y,
+        rect.top(),
         ui.visuals().widgets.noninteractive.bg_stroke,
     );
     let mut footer = ui.new_child(
@@ -99,8 +118,8 @@ pub(super) fn action_rect(ui: &egui::Ui, close: bool) -> egui::Rect {
     let width = ((bounds.width() - gap) * 0.5).clamp(0., 168.);
     let right = bounds.right() - if close { 0. } else { width + gap };
     egui::Rect::from_min_size(
-        egui::pos2(right - width, bounds.top() + 2.),
-        egui::vec2(width, bounds.height().min(40.)),
+        egui::pos2(right - width, bounds.top() + 12.),
+        egui::vec2(width, (bounds.height() - 12.).clamp(0., 40.)),
     )
 }
 

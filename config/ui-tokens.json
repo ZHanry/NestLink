@@ -2,34 +2,34 @@
   "schema_version": 1,
   "product": "NestLink",
   "light": {
-    "primary": "#1467D5",
-    "primary_text": "#0D56B4",
+    "primary": "#7850B2",
+    "primary_text": "#653F9B",
     "canvas": "#F4F6F9",
-    "sidebar": "#EBEFF5",
+    "sidebar": "#ECEEF3",
     "surface": "#FFFFFF",
-    "text": "#172337",
-    "muted": "#516079",
-    "border": "#8795A6",
-    "danger": "#B42336"
+    "text": "#14171F",
+    "muted": "#525B6C",
+    "border": "#858DA0",
+    "danger": "#A81E1E"
   },
   "dark": {
-    "primary": "#88B6FF",
-    "primary_text": "#A9CAFF",
-    "canvas": "#151D29",
-    "sidebar": "#1C2737",
-    "surface": "#243247",
-    "text": "#F0F5FC",
-    "muted": "#B6C4D8",
-    "border": "#8295AE",
-    "danger": "#FFA8B4"
+    "primary": "#B697E3",
+    "primary_text": "#C8AEED",
+    "canvas": "#14171F",
+    "sidebar": "#1C202B",
+    "surface": "#242936",
+    "text": "#F0F3F8",
+    "muted": "#BCC3D2",
+    "border": "#8390A6",
+    "danger": "#FF9393"
   },
   "type": {
     "body": 15,
     "small": 12,
-    "title": 28,
-    "section": 19,
+    "title": 24,
+    "section": 18,
     "family": "OS UI font with a system-installed Chinese fallback; no unreviewed fonts bundled",
-    "css_family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+    "css_family": "\"Segoe UI Variable Text\", \"Segoe UI\", \"Microsoft YaHei UI\", system-ui, sans-serif",
     "css_code_family": "ui-monospace, \"Cascadia Code\", Consolas, monospace"
   },
   "layout": {
@@ -37,10 +37,10 @@
     "desktop_height": 800,
     "minimum_width": 760,
     "minimum_height": 560,
-    "sidebar_width": 208,
-    "sidebar_width_compact": 184,
-    "content_padding": 24,
-    "row_height": 68,
+    "sidebar_width": 180,
+    "sidebar_width_compact": 160,
+    "content_padding": 20,
+    "row_height": 56,
     "control_height": 40
   },
   "spacing": {
@@ -52,31 +52,31 @@
     "web_mobile_padding": 16
   },
   "shape": {
-    "control": 8,
-    "panel": 12,
-    "window": 12,
-    "sheet": 12
+    "control": 6,
+    "panel": 8,
+    "window": 10,
+    "sheet": 8
   },
   "state": {
     "primary_action_text": {
       "light": "#FFFFFF",
-      "dark": "#102A4C"
+      "dark": "#231833"
     },
     "focus": {
-      "light": "#0D56B4",
-      "dark": "#A9CAFF"
+      "light": "#653F9B",
+      "dark": "#C8AEED"
     },
     "warning": {
-      "light": "#966313",
-      "dark": "#F0C875"
+      "light": "#945200",
+      "dark": "#F5BB64"
     },
     "success": {
-      "light": "#316B4A",
-      "dark": "#91D8A8"
+      "light": "#116841",
+      "dark": "#78DEA9"
     },
     "danger_action": {
-      "light": "#A13248",
-      "dark": "#742F43"
+      "light": "#A81E1E",
+      "dark": "#742C36"
     },
     "danger_action_text": {
       "light": "#FFFFFF",
@@ -84,13 +84,13 @@
     }
   },
   "media": {
-    "canvas": "#17131F",
-    "foreground": "#E1DAED"
+    "canvas": "#0B0D10",
+    "foreground": "#F0F3F8"
   },
   "navigation": [
-    "远程控制",
-    "服务发布",
+    "远程桌面",
+    "内网穿透",
     "设备"
   ],
-  "principles": "Blue and light-gray remote workspace. Compact device navigation and one selected-device detail share fixed columns. Connection status, desktop entry, local sharing and disconnect actions keep stable positions during polling. Use NestLink's own linked-N identity. Enrolled is never described as online without evidence."
+  "principles": "Windows and Web workspaces for intranet tunneling and remote desktop. Preserve the original purple linked-N logo. Two primary tasks, fixed connection and tunnel action areas, independent scrolling bodies, and only observed connection states. Status polling never moves pointer targets. Gemini CLI design reviewed against actual capabilities."
 }

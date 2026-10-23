@@ -11,7 +11,7 @@ impl Tray {
     pub fn create(
         context: egui::Context,
     ) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
-        let pixels = super::theme::icon(32);
+        let pixels = super::theme::icon(32)?;
         let inner = nestlink_platform_tray::Tray::create(
             nestlink_platform_tray::Icon {
                 width: pixels.width,

@@ -10,19 +10,24 @@ impl DesktopApp {
             ui.add_space(((ui.available_width() - 460.) / 2.).max(0.));
             ui.vertical(|ui| {
                 ui.set_max_width(460.);
-                ui.heading(self.t("连接你的设备，从这里开始", "Your devices, within reach"));
+                ui.horizontal(|ui| {
+                    let (rect, _) = ui.allocate_exact_size(egui::vec2(32., 32.), egui::Sense::hover());
+                    crate::icons::brand(ui, rect);
+                    ui.heading(self.t("连接控制中心", "Connect your control center"));
+                });
                 ui.add_space(8.);
                 ui.label(
                     RichText::new(self.t(
-                        "输入控制中心地址，连接后即可登录。",
-                        "Enter your control center address to continue to sign in.",
+                        "同一控制中心，管理远程桌面与内网穿透。",
+                        "One control center for remote desktop and intranet tunnels.",
                     ))
                     .color(ui.visuals().weak_text_color()),
                 );
                 ui.add_space(28.);
-                egui::Frame::group(ui.style())
+                egui::Frame::new().fill(ui.visuals().window_fill)
+                    .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
                     .inner_margin(24)
-                    .corner_radius(12)
+                    .corner_radius(8)
                     .show(ui, |ui| {
                         ui.set_width((ui.available_width()).min(412.));
                         ui.label(self.t("服务器地址", "Server address"));
@@ -70,17 +75,14 @@ impl DesktopApp {
                             );
                             self.screen = Screen::Remote;
                         }
-                        if verifying {
-                            ui.horizontal(|ui| {
-                                ui.spinner();
-                                ui.label(
-                                    self.t(
-                                        "正在建立安全连接…",
-                                        "Establishing a secure connection…",
-                                    ),
-                                );
-                            });
-                        }
+                        let status_width = ui.available_width();
+                        widgets::fixed_region(ui, "server-verification-status", egui::vec2(status_width, 34.), |ui| {
+                            if verifying {
+                                ui.horizontal(|ui| { ui.spinner(); ui.small(self.t("正在验证服务器…", "Verifying the control center…")); });
+                            } else {
+                                ui.small(self.t("连接前会验证服务器身份。", "The server identity is verified before sign-in."));
+                            }
+                        });
                         ui.add_space(12.);
                         egui::CollapsingHeader::new(self.t("本地开发设置", "Local development"))
                             .show(ui, |ui| {
@@ -96,8 +98,8 @@ impl DesktopApp {
                     });
                 ui.add_space(18.);
                 ui.small(self.t(
-                    "通过 HTTPS 自动读取服务器配置，连接信息仅用于当前会话。",
-                    "Server configuration is discovered over HTTPS for this session.",
+                    "使用控制中心的 HTTPS 地址。自建服务器的连接设置位于下方。",
+                    "Use the HTTPS address of your control center. Local connection settings are below.",
                 ));
                 if let Some(server) = &snapshot.server {
                     if let Some(error) = &server.error {
@@ -122,7 +124,7 @@ impl DesktopApp {
     pub(crate) fn local_network_settings(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         ui.add_space(24.);
         ui.separator();
-        ui.heading(self.t("本机网络设置", "Local network settings"));
+        ui.heading(self.t("本机连接设置", "Local connection settings"));
         if cfg!(windows) {
             ui.label(self.t(
                 "媒体连接默认优先使用物理网卡，无需在远程控制时选择网络路径。",
@@ -148,21 +150,31 @@ impl DesktopApp {
             ui.add_space(((ui.available_width() - 460.) / 2.).max(0.));
             ui.vertical(|ui| {
                 ui.set_max_width(460.);
-                ui.heading(self.t("欢迎使用 NestLink", "Welcome to NestLink"));
+                ui.horizontal(|ui| {
+                    let (rect, _) = ui.allocate_exact_size(egui::vec2(32., 32.), egui::Sense::hover());
+                    crate::icons::brand(ui, rect);
+                    ui.heading(self.t("登录 NestLink", "Sign in to NestLink"));
+                });
                 ui.add_space(8.);
                 ui.label(
                     RichText::new(self.t(
-                        "登录后，远程控制和服务发布尽在一处。",
-                        "Sign in to manage remote access and published services.",
+                        "连接你的 Windows 电脑，访问内网服务。",
+                        "Connect to your Windows computers and intranet services.",
                     ))
                     .color(ui.visuals().weak_text_color()),
                 );
                 ui.add_space(28.);
-                egui::Frame::group(ui.style())
+                egui::Frame::new().fill(ui.visuals().window_fill)
+                    .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
                     .inner_margin(24)
-                    .corner_radius(12)
+                    .corner_radius(8)
                     .show(ui, |ui| {
                         ui.set_width((ui.available_width()).min(412.));
+                        if let Some(server) = &snapshot.server {
+                            ui.small(self.t("当前控制中心", "Current control center"));
+                            ui.add(egui::Label::new(egui::RichText::new(&server.origin).strong()).truncate()).on_hover_text(&server.origin);
+                            ui.add_space(12.);
+                        }
                         widgets::field(
                             ui,
                             self.t("账号", "Account"),
@@ -226,15 +238,17 @@ impl DesktopApp {
                             widgets::clear_secret_widgets(ui.ctx(), self.generation);
                             self.action(snapshot, action);
                         }
-                        if signing_in {
-                            ui.spinner();
-                        }
-                        if let Some(error) = &snapshot.authentication_error {
-                            ui.colored_label(
-                                ui.visuals().error_fg_color,
-                                widgets::failure(error, self.english),
-                            );
-                        }
+                        let status_width = ui.available_width();
+                        widgets::fixed_region(ui, "sign-in-status", egui::vec2(status_width, 56.), |ui| {
+                            if signing_in {
+                                ui.horizontal(|ui| { ui.spinner(); ui.label(self.t("正在验证账号…", "Verifying your account…")); });
+                            }
+                            if let Some(error) = &snapshot.authentication_error {
+                                egui::ScrollArea::vertical().id_salt("sign-in-error").max_height(56.).show(ui, |ui| {
+                                    ui.colored_label(ui.visuals().error_fg_color, widgets::failure(error, self.english));
+                                });
+                            }
+                        });
                     });
                 ui.add_space(16.);
                 if ui

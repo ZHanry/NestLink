@@ -11,7 +11,16 @@ use nestlink_protocol::api::{ApprovalChoice, DeviceView, RemoteView, TrustChoice
 use std::time::{SystemTime, UNIX_EPOCH};
 use zeroize::Zeroizing;
 
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
+enum RemoteTab {
+    #[default]
+    Devices,
+    Sessions,
+    Host,
+}
+
 pub(crate) struct RemoteForm {
+    tab: RemoteTab,
     pub selected: Option<String>,
     pub(super) host_device_id: Option<String>,
     pub(super) flow: Option<crate::remote_flow::ConnectionFlow>,
@@ -33,6 +42,7 @@ pub(crate) struct RemoteForm {
 impl Default for RemoteForm {
     fn default() -> Self {
         Self {
+            tab: RemoteTab::Devices,
             selected: None,
             host_device_id: None,
             flow: None,
@@ -131,29 +141,29 @@ impl DesktopApp {
                 .any(|view| Some(view.device.id.as_str()) == local_id && !view.revoked)
         });
         let width = ui.available_width();
-        // The supported minimum window still has room for navigation and details.
-        // Neither the number of devices nor loading/empty states changes columns.
-        let navigation_width = if width >= 740. { 220. } else { 168. };
-        let detail_width = (width - navigation_width - 14.).max(240.);
+        let height = ui.available_height().max(220.);
+        let navigation_width = if width >= 760. { 248. } else { 208. };
+        let detail_width = (width - navigation_width - 16.).max(220.);
         ui.horizontal_top(|ui| {
-            ui.spacing_mut().item_spacing.x = 14.;
-            ui.allocate_ui_with_layout(
-                egui::vec2(navigation_width, 400.),
-                egui::Layout::top_down(egui::Align::Min),
+            ui.spacing_mut().item_spacing.x = 16.;
+            widgets::fixed_region(
+                ui,
+                "remote-device-directory",
+                egui::vec2(navigation_width, height),
                 |ui| {
-                    ui.set_width(navigation_width);
                     egui::Frame::new()
-                        .fill(ui.visuals().faint_bg_color)
-                        .inner_margin(12)
+                        .fill(ui.visuals().window_fill)
+                        .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
+                        .inner_margin(14)
                         .corner_radius(8)
                         .show(ui, |ui| self.remote_device_list(ui, snapshot, local_id));
                 },
             );
-            ui.allocate_ui_with_layout(
-                egui::vec2(detail_width, 400.),
-                egui::Layout::top_down(egui::Align::Min),
+            widgets::fixed_region(
+                ui,
+                "remote-device-inspector",
+                egui::vec2(detail_width, height),
                 |ui| {
-                    ui.set_width(detail_width);
                     self.remote_connection_options(ui, snapshot, enrolled);
                 },
             );
@@ -166,73 +176,47 @@ impl DesktopApp {
         snapshot: &Snapshot,
         local_id: Option<&str>,
     ) {
-        let search_label = ui.strong(self.t("全部设备", "All devices"));
+        let heading = ui.strong(self.t("可连接的设备", "Your computers"));
         ui.add(
             egui::TextEdit::singleline(&mut self.remote.search)
                 .desired_width(ui.available_width())
                 .hint_text(if self.english {
-                    "Name or device ID"
+                    "Search computers"
                 } else {
-                    "设备名称或 ID"
+                    "搜索名称或设备 ID"
                 })
+                .margin(egui::vec2(8., 8.))
                 .char_limit(128),
         )
-        .labelled_by(search_label.id);
-        widgets::section(ui, &snapshot.devices, self.english);
-        let local = snapshot
-            .devices
-            .data
-            .as_deref()
-            .into_iter()
-            .flatten()
-            .find(|view| Some(view.device.id.as_str()) == local_id);
-        ui.horizontal(|ui| {
-            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                let label = self.t("复制设备 ID", "Copy device ID");
-                let copy = ui
-                    .add_sized(egui::vec2(36., 32.), egui::Button::new(""))
-                    .on_hover_text(label);
-                copy.widget_info(|| {
-                    egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), label)
-                });
-                icons::paint(
-                    ui,
-                    Icon::Copy,
-                    copy.rect.center(),
-                    18.,
-                    ui.style().interact(&copy).text_color(),
-                );
-                if copy.clicked()
-                    && let Some(id) = local_id
-                {
-                    ui.ctx().copy_text(id.into());
-                }
+        .labelled_by(heading.id);
+        let state_width = ui.available_width();
+        widgets::fixed_region(
+            ui,
+            "device-directory-state",
+            egui::vec2(state_width, 28.),
+            |ui| {
+                let (text, error) = if let Some(error) = &snapshot.devices.error {
+                    (widgets::failure(error, self.english), true)
+                } else if snapshot.devices.loading.is_some() {
+                    (self.t("正在刷新设备", "Refreshing devices").into(), false)
+                } else {
+                    (
+                        self.t("登记状态不代表当前在线", "Enrollment does not imply online")
+                            .into(),
+                        false,
+                    )
+                };
+                let color = if error {
+                    ui.visuals().error_fg_color
+                } else {
+                    ui.visuals().weak_text_color()
+                };
                 ui.add(
-                    egui::Label::new(format!(
-                        "{}: {}",
-                        self.t("本机", "Local"),
-                        local
-                            .map(|view| view.device.name.clone())
-                            .unwrap_or_else(local_computer_name)
-                    ))
-                    .truncate(),
-                );
-            });
-        });
-        if local.is_none()
-            && snapshot.devices.loading.is_none()
-            && ui.button(self.t("重试登记", "Retry enrollment")).clicked()
-        {
-            self.action(
-                snapshot,
-                Action::EnrollLocalDevice {
-                    name: local_computer_name(),
-                    platform: super::management::local_platform().into(),
-                    capabilities: super::management::local_capabilities(),
-                    path_mode: "direct_preferred".into(),
-                },
-            );
-        }
+                    egui::Label::new(egui::RichText::new(&text).small().color(color)).truncate(),
+                )
+                .on_hover_text(text);
+            },
+        );
         ui.separator();
         let query = self.remote.search.trim().to_lowercase();
         let hosts: Vec<_> = snapshot
@@ -251,29 +235,27 @@ impl DesktopApp {
             .collect();
         egui::ScrollArea::vertical()
             .id_salt("remote-device-picker")
-            .max_height(320.)
-            .min_scrolled_height(240.)
-            .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysVisible)
+            .max_height(ui.available_height())
             .auto_shrink([false, false])
+            .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysVisible)
             .show(ui, |ui| {
-                if hosts.is_empty()
-                    && (snapshot.devices.data.is_some() || snapshot.devices.loading.is_none())
-                {
-                    ui.label(self.t(
+                if hosts.is_empty() && snapshot.devices.loading.is_none() {
+                    ui.add_space(12.);
+                    ui.strong(self.t(
                         if query.is_empty() {
-                            "还没有其他电脑"
+                            "添加另一台电脑"
                         } else {
                             "没有匹配的设备"
                         },
                         if query.is_empty() {
-                            "No other computers yet"
+                            "Add another computer"
                         } else {
-                            "No matching devices"
+                            "No matching computers"
                         },
                     ));
-                    ui.small(self.t(
-                        "在另一台电脑登录同一服务器后刷新。",
-                        "Sign in on another computer, then refresh.",
+                    ui.label(self.t(
+                        "在另一台 Windows 电脑登录同一服务器，然后刷新。",
+                        "Sign in to the same server on another Windows computer, then refresh.",
                     ));
                 }
                 for view in hosts {
@@ -282,14 +264,14 @@ impl DesktopApp {
                             self.remote.host_device_id.as_deref() == Some(view.device.id.as_str());
                         let response = ui
                             .add_sized(
-                                egui::vec2(ui.available_width(), 44.),
+                                egui::vec2(ui.available_width(), 52.),
                                 egui::Button::new(&view.device.name)
                                     .selected(selected)
                                     .wrap_mode(egui::TextWrapMode::Truncate),
                             )
                             .on_hover_text(format!(
-                                "{}\n{}",
-                                view.device.name, view.device.platform
+                                "{}\n{}\n{}",
+                                view.device.name, view.device.platform, view.device.id
                             ));
                         if response.clicked() {
                             self.remote.host_device_id = Some(view.device.id.clone());
@@ -305,258 +287,245 @@ impl DesktopApp {
         snapshot: &Snapshot,
         enrolled: bool,
     ) {
+        let selected = snapshot
+            .devices
+            .data
+            .as_deref()
+            .filter(|_| snapshot.devices.error.is_none())
+            .into_iter()
+            .flatten()
+            .find(|view| self.remote.host_device_id.as_deref() == Some(view.device.id.as_str()));
+        let session = snapshot.native_session.data.as_deref().filter(|session| {
+            snapshot
+                .requests
+                .data
+                .as_deref()
+                .into_iter()
+                .flatten()
+                .chain(snapshot.selected_request.data.as_deref())
+                .any(|request| {
+                    request.id == session.request_id
+                        && request.connection_generation == session.connection_generation
+                        && Some(request.controller_device_id.as_str())
+                            == snapshot
+                                .installation
+                                .as_ref()
+                                .map(|local| local.device_id.as_str())
+                        && Some(request.host_device_id.as_str())
+                            == self.remote.host_device_id.as_deref()
+                })
+        });
+        let live = snapshot
+            .native_session
+            .data
+            .as_ref()
+            .is_some_and(|session| {
+                matches!(
+                    session.status,
+                    NativeSessionStatus::Establishing
+                        | NativeSessionStatus::Connected
+                        | NativeSessionStatus::Stopping
+                )
+            });
+        let ready = enrolled
+            && selected.is_some()
+            && !live
+            && !self.remote.flow.as_ref().is_some_and(|flow| flow.is_busy())
+            && snapshot.devices.loading.is_none()
+            && snapshot.devices.error.is_none();
+        let target = session
+            .filter(|session| {
+                !session.host_view_authorized
+                    && matches!(
+                        session.status,
+                        NativeSessionStatus::Establishing | NativeSessionStatus::Connected
+                    )
+            })
+            .map(|session| crate::RemoteViewportTarget {
+                request_id: session.request_id.clone(),
+                connection_generation: session.connection_generation,
+            });
         egui::Frame::new()
             .fill(ui.visuals().window_fill)
             .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
-            .corner_radius(12)
-            .inner_margin(18)
+            .corner_radius(8)
+            .inner_margin(14)
             .show(ui, |ui| {
-                ui.style_mut().spacing.item_spacing.y = 8.;
-                ui.set_min_width((ui.available_width() - 2.).max(0.));
-                let selected = snapshot
-                    .devices
-                    .data
-                    .as_deref()
-                    .filter(|_| snapshot.devices.error.is_none())
-                    .into_iter()
-                    .flatten()
-                    .find(|view| {
-                        self.remote.host_device_id.as_deref() == Some(view.device.id.as_str())
-                    });
-                ui.small(self.t("设备详情", "Device details"));
-                ui.add_sized(
-                    egui::vec2(ui.available_width(), 32.),
-                    egui::Label::new(
-                        egui::RichText::new(
-                            selected
-                                .map(|view| view.device.name.as_str())
-                                .unwrap_or(self.t("选择一台电脑", "Select a computer")),
-                        )
-                        .size(24.)
-                        .strong(),
-                    )
-                    .truncate(),
-                );
-                let session = snapshot.native_session.data.as_deref().filter(|session| {
-                    snapshot
-                        .requests
-                        .data
-                        .as_deref()
-                        .into_iter()
-                        .flatten()
-                        .chain(snapshot.selected_request.data.as_deref())
-                        .any(|request| {
-                            request.id == session.request_id
-                                && request.connection_generation == session.connection_generation
-                                && Some(request.controller_device_id.as_str())
-                                    == snapshot
-                                        .installation
-                                        .as_ref()
-                                        .map(|local| local.device_id.as_str())
-                                && Some(request.host_device_id.as_str())
-                                    == self.remote.host_device_id.as_deref()
-                        })
-                });
-                egui::Frame::new()
-                    .fill(ui.visuals().faint_bg_color)
-                    .inner_margin(8)
-                    .corner_radius(4)
-                    .show(ui, |ui| {
-                        ui.horizontal(|ui| {
-                            ui.with_layout(
-                                egui::Layout::right_to_left(egui::Align::Center),
-                                |ui| {
-                                    let active = session.filter(|session| {
-                                        matches!(
-                                            session.status,
-                                            NativeSessionStatus::Establishing
-                                                | NativeSessionStatus::Connected
-                                        )
-                                    });
-                                    if ui
-                                        .add_enabled(
-                                            active.is_some(),
-                                            egui::Button::new(self.t("断开连接", "Disconnect"))
-                                                .min_size(egui::vec2(100., 32.)),
-                                        )
-                                        .clicked()
-                                        && let Some(session) = active
-                                    {
-                                        self.action(
-                                            snapshot,
-                                            Action::StopNativeSession {
-                                                request_id: session.request_id.clone(),
-                                                connection_generation: session
-                                                    .connection_generation,
-                                            },
-                                        );
-                                    }
-                                    ui.add_sized(
-                                        egui::vec2(ui.available_width(), 24.),
-                                        egui::Label::new(
-                                            match session.map(|session| session.status) {
-                                                Some(NativeSessionStatus::Connected) => self.t(
-                                                    "已建立远程连接",
-                                                    "Remote connection established",
-                                                ),
-                                                Some(NativeSessionStatus::Establishing) => self
-                                                    .t("正在建立连接", "Establishing connection"),
-                                                Some(NativeSessionStatus::Stopping) => {
-                                                    self.t("正在断开连接", "Disconnecting")
-                                                }
-                                                Some(NativeSessionStatus::Failed) => self.t(
-                                                    "连接失败，请查看连接诊断",
-                                                    "Connection failed; see diagnostics",
-                                                ),
-                                                _ if selected.is_some() => self.t(
-                                                    "已登记 · 连接后确认可用状态",
-                                                    "Enrolled; availability checked on connection",
-                                                ),
-                                                _ => self.t(
-                                                    "从左侧选择需要连接的电脑",
-                                                    "Choose a computer on the left",
-                                                ),
-                                            },
-                                        )
-                                        .truncate(),
-                                    );
-                                },
-                            );
-                        });
-                    });
-                let live = snapshot
-                    .native_session
-                    .data
-                    .as_ref()
-                    .is_some_and(|session| {
-                        matches!(
-                            session.status,
-                            NativeSessionStatus::Establishing
-                                | NativeSessionStatus::Connected
-                                | NativeSessionStatus::Stopping
-                        )
-                    });
-                let ready = enrolled
-                    && selected.is_some()
-                    && !live
-                    && !self.remote.flow.as_ref().is_some_and(|flow| flow.is_busy())
-                    && snapshot.devices.loading.is_none()
-                    && snapshot.devices.error.is_none();
-                let target = session
-                    .filter(|session| {
-                        !session.host_view_authorized
-                            && matches!(
-                                session.status,
-                                NativeSessionStatus::Establishing | NativeSessionStatus::Connected
-                            )
-                    })
-                    .map(|session| crate::RemoteViewportTarget {
-                        request_id: session.request_id.clone(),
-                        connection_generation: session.connection_generation,
-                    });
-                egui::Frame::new()
-                    .fill(ui.visuals().faint_bg_color)
-                    .inner_margin(16)
-                    .corner_radius(4)
-                    .show(ui, |ui| {
-                        ui.vertical_centered(|ui| {
-                            icons::badge(ui, Icon::Monitor, 42.);
-                            ui.add_space(8.);
-                            if let Some(target) = target {
-                                if widgets::primary_button(
-                                    ui,
-                                    self.t("显示远控窗口", "Show remote window"),
-                                    self.remote_window_cleanup.is_none(),
-                                )
-                                .clicked()
-                                {
-                                    self.open_remote_viewport(snapshot, target);
-                                }
-                            } else if widgets::primary_button(
+                egui::Panel::bottom("remote-connection-actions")
+                    .exact_size(48.)
+                    .resizable(false)
+                    .show_separator_line(false)
+                    .frame(egui::Frame::new())
+                    .show_inside(ui, |ui| {
+                        if let Some(target) = target {
+                            if widgets::primary_button(
                                 ui,
-                                self.t("进入桌面", "Enter desktop"),
-                                ready,
+                                self.t("显示远控窗口", "Show remote window"),
+                                self.remote_window_cleanup.is_none(),
                             )
                             .clicked()
                             {
-                                self.connect_remote_device(snapshot);
+                                self.open_remote_viewport(snapshot, target);
                             }
-                        });
-                    });
-                ui.label(self.t("访问权限", "Permissions"));
-                ui.horizontal_wrapped(|ui| {
-                    if ui
-                        .selectable_label(
-                            !self.remote.permissions[1],
-                            self.t("仅查看", "View only"),
+                        } else if widgets::primary_button(
+                            ui,
+                            self.t("进入桌面", "Enter desktop"),
+                            ready,
                         )
                         .clicked()
-                    {
-                        self.remote.permissions[1] = false;
-                    }
-                    if ui
-                        .selectable_label(self.remote.permissions[1], self.t("远程控制", "Control"))
-                        .clicked()
-                    {
-                        self.remote.permissions[1] = true;
-                    }
-                });
-                ui.checkbox(
-                    &mut self.remote.permissions[2],
-                    if self.english {
-                        "System audio"
-                    } else {
-                        "系统声音"
-                    },
-                );
-                egui::CollapsingHeader::new(self.t("文件与剪贴板", "Files and clipboard")).show(
-                    ui,
-                    |ui| {
-                        for index in 3..7 {
-                            ui.checkbox(
-                                &mut self.remote.permissions[index],
-                                widgets::permissions(&[(index + 1) as i32], self.english),
-                            );
+                        {
+                            self.connect_remote_device(snapshot);
                         }
-                    },
-                );
-                ui.add_space(12.);
-                egui::CollapsingHeader::new(self.t("更多连接设置", "More connection options"))
+                    });
+                egui::Panel::top("remote-device-heading")
+                    .exact_size(84.)
+                    .resizable(false)
+                    .show_separator_line(false)
+                    .frame(egui::Frame::new())
+                    .show_inside(ui, |ui| {
+                        ui.add(
+                            egui::Label::new(
+                                egui::RichText::new(
+                                    selected
+                                        .map(|view| view.device.name.as_str())
+                                        .unwrap_or(self.t("选择一台电脑", "Select a computer")),
+                                )
+                                .size(22.)
+                                .strong(),
+                            )
+                            .truncate(),
+                        );
+                        let subtitle = selected
+                            .map(|view| view.device.id.as_str())
+                            .unwrap_or(self.t("从左侧设备列表选择", "Choose from the list"));
+                        ui.add(
+                            egui::Label::new(
+                                egui::RichText::new(subtitle)
+                                    .small()
+                                    .color(ui.visuals().weak_text_color()),
+                            )
+                            .truncate(),
+                        )
+                        .on_hover_text(subtitle);
+                        let status = match session.map(|session| session.status) {
+                            Some(NativeSessionStatus::Connected) => {
+                                match session.and_then(|session| session.path) {
+                                    Some(1) => self.t("已连接 · 直连", "Connected · Direct"),
+                                    Some(2) => self.t("已连接 · 中继", "Connected · Relay"),
+                                    _ => self.t("已连接 · 路径待确认", "Connected · Checking path"),
+                                }
+                            }
+                            Some(NativeSessionStatus::Establishing) => {
+                                self.t("正在建立连接", "Establishing connection")
+                            }
+                            Some(NativeSessionStatus::Stopping) => {
+                                self.t("正在断开连接", "Disconnecting")
+                            }
+                            Some(NativeSessionStatus::Failed) => self.t(
+                                "连接失败，查看会话记录",
+                                "Connection failed; see session details",
+                            ),
+                            _ if selected.is_some() => {
+                                self.t("连接后确认可用状态", "Availability checked on connection")
+                            }
+                            _ => self.t("等待选择设备", "Awaiting a device"),
+                        };
+                        ui.add(egui::Label::new(egui::RichText::new(status).small()).truncate())
+                            .on_hover_text(status);
+                        ui.separator();
+                    });
+                egui::ScrollArea::vertical()
+                    .id_salt("remote-connection-options")
+                    .auto_shrink([false, false])
                     .show(ui, |ui| {
-                        ui.label(self.t("授权方式", "Authorization"));
+                        ui.horizontal(|ui| {
+                            if ui
+                                .selectable_label(
+                                    !self.remote.permissions[1],
+                                    self.t("仅查看", "View only"),
+                                )
+                                .clicked()
+                            {
+                                self.remote.permissions[1] = false;
+                            }
+                            if ui
+                                .selectable_label(
+                                    self.remote.permissions[1],
+                                    self.t("控制键鼠", "Control"),
+                                )
+                                .clicked()
+                            {
+                                self.remote.permissions[1] = true;
+                            }
+                        });
                         ui.checkbox(
-                            &mut self.remote.trusted,
+                            &mut self.remote.permissions[2],
                             if self.english {
-                                "Use existing device trust"
+                                "System audio"
                             } else {
-                                "使用已有受信授权"
+                                "系统声音"
                             },
                         );
-                        if !self.remote.trusted {
-                            ui.small(self.t(
-                                "由被控电脑批准本次访问。",
-                                "The host approves this request.",
-                            ));
-                        }
-                        ui.add_space(12.);
-                        ui.label(self.t("连接方式", "Connection route"));
-                        egui::ComboBox::from_id_salt("request-path")
-                            .width(ui.available_width())
-                            .selected_text(path_label(&self.remote.path, self.english))
-                            .show_ui(ui, |ui| {
-                                for path in ["direct_preferred", "direct_only", "relay_only"] {
-                                    ui.selectable_value(
-                                        &mut self.remote.path,
-                                        path.into(),
-                                        path_label(path, self.english),
+                        egui::CollapsingHeader::new(self.t("文件与剪贴板", "Files and clipboard"))
+                            .show(ui, |ui| {
+                                for index in 3..7 {
+                                    ui.checkbox(
+                                        &mut self.remote.permissions[index],
+                                        widgets::permissions(&[(index + 1) as i32], self.english),
                                     );
                                 }
                             });
+                        egui::CollapsingHeader::new(self.t("连接选项", "Connection options")).show(
+                            ui,
+                            |ui| {
+                                ui.checkbox(
+                                    &mut self.remote.trusted,
+                                    if self.english {
+                                        "Use existing device trust"
+                                    } else {
+                                        "使用已有受信授权"
+                                    },
+                                );
+                                if !self.remote.trusted {
+                                    ui.small(self.t(
+                                        "由被控电脑批准本次访问。",
+                                        "The host approves this request.",
+                                    ));
+                                }
+                                ui.label(self.t("连接方式", "Connection route"));
+                                egui::ComboBox::from_id_salt("request-path")
+                                    .width(ui.available_width())
+                                    .selected_text(path_label(&self.remote.path, self.english))
+                                    .show_ui(ui, |ui| {
+                                        for path in
+                                            ["direct_preferred", "direct_only", "relay_only"]
+                                        {
+                                            ui.selectable_value(
+                                                &mut self.remote.path,
+                                                path.into(),
+                                                path_label(path, self.english),
+                                            );
+                                        }
+                                    });
+                            },
+                        );
+                        if let Some(session) = session.filter(|session| {
+                            matches!(
+                                session.status,
+                                NativeSessionStatus::Establishing | NativeSessionStatus::Connected
+                            )
+                        }) {
+                            if ui.button(self.t("断开连接", "Disconnect")).clicked() {
+                                self.action(
+                                    snapshot,
+                                    Action::StopNativeSession {
+                                        request_id: session.request_id.clone(),
+                                        connection_generation: session.connection_generation,
+                                    },
+                                );
+                            }
+                        }
                     });
-                ui.small(self.t(
-                    "仅使用已获批准的权限和连接路径。",
-                    "Only approved permissions and routes are used.",
-                ));
             });
     }
 
@@ -566,70 +535,172 @@ impl DesktopApp {
 
     pub(crate) fn remote_page(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
         reconcile_host_selection(&mut self.remote, snapshot);
-        ui.horizontal(|ui| {
-            ui.heading(self.t("远程控制", "Remote access"));
-            if ui
-                .add_enabled(
-                    snapshot.devices.loading.is_none() && snapshot.requests.loading.is_none(),
-                    egui::Button::new(self.t("刷新", "Refresh")),
-                )
-                .clicked()
-            {
-                self.load(snapshot, Page::Devices);
-                self.load(snapshot, Page::Requests);
-                if let Some(id) = &self.remote.selected {
-                    self.action(
-                        snapshot,
-                        Action::InspectRemote {
-                            request_id: id.clone(),
-                        },
-                    );
-                }
-            }
-        });
         let waiting = incoming_requests(snapshot).count();
-        // This row is always present: incoming requests and host lifecycle
-        // updates must not insert content above the user's device controls.
-        ui.horizontal(|ui| {
-            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                if ui
-                    .add_enabled(
-                        true,
-                        egui::Button::new(self.t("本机被控", "Local sessions"))
-                            .min_size(egui::vec2(164., 40.)),
-                    )
-                    .clicked()
-                {
-                    self.remote.browser_host_details = true;
-                }
-                if ui
-                    .add_enabled(
-                        waiting > 0,
-                        egui::Button::new(self.t("查看并批准", "Review and approve"))
-                            .min_size(egui::vec2(164., 40.)),
-                    )
-                    .clicked()
-                    && let Some(request) = incoming_requests(snapshot).next()
-                {
-                    self.remote.selected = Some(request.id.clone());
-                    self.remote.approval = None;
-                    self.action(
-                        snapshot,
-                        Action::InspectRemote {
-                            request_id: request.id.clone(),
+        let local_id = snapshot
+            .installation
+            .as_ref()
+            .map(|local| local.device_id.as_str());
+        let local = snapshot
+            .devices
+            .data
+            .as_deref()
+            .into_iter()
+            .flatten()
+            .find(|view| Some(view.device.id.as_str()) == local_id && !view.revoked);
+        let workspace_width = ui.available_width();
+        widgets::fixed_region(
+            ui,
+            "local-identity-and-inbox",
+            egui::vec2(workspace_width, 66.),
+            |ui| {
+                ui.horizontal_top(|ui| {
+                    let actions = if self.english { 268. } else { 228. };
+                    let identity_width = (ui.available_width() - actions - 16.).max(140.);
+                    widgets::fixed_region(
+                        ui,
+                        "local-identity",
+                        egui::vec2(identity_width, 64.),
+                        |ui| {
+                            ui.add(
+                                egui::Label::new(
+                                    egui::RichText::new(format!(
+                                        "{}{}",
+                                        self.t("本机 · ", "This PC · "),
+                                        local
+                                            .map(|view| view.device.name.clone())
+                                            .unwrap_or_else(local_computer_name)
+                                    ))
+                                    .size(18.)
+                                    .strong(),
+                                )
+                                .truncate(),
+                            );
+                            ui.horizontal(|ui| {
+                                ui.add(
+                                    egui::Label::new(
+                                        egui::RichText::new(self.t(
+                                            if local.is_some() {
+                                                "已登记"
+                                            } else {
+                                                "尚未登记"
+                                            },
+                                            if local.is_some() {
+                                                "Enrolled"
+                                            } else {
+                                                "Not enrolled"
+                                            },
+                                        ))
+                                        .small()
+                                        .color(ui.visuals().weak_text_color()),
+                                    )
+                                    .truncate(),
+                                );
+                                if let Some(id) = local_id {
+                                    if ui
+                                        .small_button(self.t("复制 ID", "Copy ID"))
+                                        .on_hover_text(id)
+                                        .clicked()
+                                    {
+                                        ui.ctx().copy_text(id.into());
+                                    }
+                                }
+                                if local.is_none()
+                                    && snapshot.devices.loading.is_none()
+                                    && ui.small_button(self.t("重新登记", "Enroll")).clicked()
+                                {
+                                    self.action(
+                                        snapshot,
+                                        Action::EnrollLocalDevice {
+                                            name: local_computer_name(),
+                                            platform: super::management::local_platform().into(),
+                                            capabilities: super::management::local_capabilities(),
+                                            path_mode: "direct_preferred".into(),
+                                        },
+                                    );
+                                }
+                            });
                         },
                     );
-                }
-                ui.add(
-                    egui::Label::new(if self.english {
-                        format!("{waiting} incoming request(s)")
-                    } else {
-                        format!("待批准请求：{waiting}")
-                    })
-                    .truncate(),
-                );
-            });
-        });
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
+                        if ui
+                            .add_sized(
+                                egui::vec2(if self.english { 126. } else { 104. }, 40.),
+                                egui::Button::new(self.t("本机被控", "Local sessions")),
+                            )
+                            .clicked()
+                        {
+                            self.remote.browser_host_details = true;
+                        }
+                        if ui
+                            .add_enabled(
+                                waiting > 0,
+                                egui::Button::new(self.t("查看并批准", "Review request")).min_size(
+                                    egui::vec2(if self.english { 126. } else { 114. }, 40.),
+                                ),
+                            )
+                            .on_hover_text(if self.english {
+                                format!("{waiting} incoming request(s)")
+                            } else {
+                                format!("待批准请求：{waiting}")
+                            })
+                            .clicked()
+                            && let Some(request) = incoming_requests(snapshot).next()
+                        {
+                            self.remote.selected = Some(request.id.clone());
+                            self.remote.approval = None;
+                            self.action(
+                                snapshot,
+                                Action::InspectRemote {
+                                    request_id: request.id.clone(),
+                                },
+                            );
+                        }
+                    });
+                });
+            },
+        );
+        widgets::fixed_region(
+            ui,
+            "remote-workspace-tabs",
+            egui::vec2(workspace_width, 42.),
+            |ui| {
+                ui.horizontal(|ui| {
+                    for (tab, zh, en) in [
+                        (RemoteTab::Devices, "连接设备", "Connect"),
+                        (RemoteTab::Sessions, "会话记录", "Sessions"),
+                        (RemoteTab::Host, "本机访问", "Host access"),
+                    ] {
+                        if ui
+                            .selectable_label(self.remote.tab == tab, self.t(zh, en))
+                            .clicked()
+                        {
+                            self.remote.tab = tab;
+                        }
+                    }
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        if ui
+                            .add_enabled(
+                                snapshot.devices.loading.is_none()
+                                    && snapshot.requests.loading.is_none(),
+                                egui::Button::new(self.t("刷新", "Refresh")),
+                            )
+                            .clicked()
+                        {
+                            self.load(snapshot, Page::Devices);
+                            self.load(snapshot, Page::Requests);
+                            if let Some(id) = &self.remote.selected {
+                                self.action(
+                                    snapshot,
+                                    Action::InspectRemote {
+                                        request_id: id.clone(),
+                                    },
+                                );
+                            }
+                        }
+                    });
+                });
+            },
+        );
         if self.remote.browser_host_details {
             let mut open = true;
             let mut close_clicked = false;
@@ -701,82 +772,107 @@ impl DesktopApp {
             }
             self.remote.browser_host_details = open && !close_clicked;
         }
-        self.remote_device_picker(ui, snapshot);
-        self.native_session_panel(ui, snapshot);
-        ui.add_space(20.);
-        ui.label(
-            egui::RichText::new(self.t(
-                "等待本机批准的请求",
-                "Requests awaiting this device's approval",
-            ))
-            .strong()
-            .size(self.tokens.typography.section),
-        );
-        widgets::section(ui, &snapshot.requests, self.english);
-        if snapshot.requests.data.is_some() {
-            if incoming_requests(snapshot).next().is_none() {
-                ui.label(self.t(
-                    "当前没有待批准请求。",
-                    "There are no requests awaiting approval.",
-                ));
-            }
-            for request in incoming_requests(snapshot) {
-                ui.push_id(&request.id, |ui| {
-                    egui::Frame::group(ui.style()).show(ui, |ui| {
-                        ui.set_min_height(self.tokens.layout.row_height);
-                        ui.horizontal_wrapped(|ui| {
-                            let name = snapshot
-                                .devices
-                                .data
-                                .as_deref()
-                                .into_iter()
-                                .flatten()
-                                .find(|device| device.device.id == request.controller_device_id)
-                                .map(|device| device.device.name.as_str())
-                                .unwrap_or(&request.controller_device_id);
-                            ui.strong(name);
-                            ui.small(self.t("希望连接此设备", "Wants to connect to this device"));
-                            if ui.button(self.t("查看并批准", "Review request")).clicked() {
-                                if self.remote.selected.as_deref() != Some(request.id.as_str()) {
-                                    self.remote.one_time_password = Zeroizing::default();
-                                }
-                                self.remote.selected = Some(request.id.clone());
-                                self.remote.approval = None;
-                                self.action(
-                                    snapshot,
-                                    Action::InspectRemote {
-                                        request_id: request.id.clone(),
-                                    },
-                                );
-                            }
-                        });
-                        ui.small(widgets::permissions(&request.permissions, self.english));
+        match self.remote.tab {
+            RemoteTab::Devices => self.remote_device_picker(ui, snapshot),
+            RemoteTab::Sessions => {
+                egui::ScrollArea::vertical()
+                    .id_salt("remote-session-records")
+                    .auto_shrink([false, false])
+                    .show(ui, |ui| {
+                        self.native_session_panel(ui, snapshot);
+                        self.remote_request_history(ui, snapshot);
+                        self.transfer_panels(ui, snapshot);
                     });
+            }
+            RemoteTab::Host => {
+                egui::ScrollArea::vertical().id_salt("remote-host-access").auto_shrink([false, false]).show(ui, |ui| {
+                    ui.heading(self.t("访问这台电脑", "Access this computer"));
+                    ui.label(self.t("远控请求由你首次批准。已授予的画面权限直接用于本次会话。", "Approve the initial remote request. The granted screen permission applies to that session."));
+                    self.remote_password_host_panel(ui, snapshot);
+                    if let Some(command) = self.privileged_panel.show(ui, snapshot, self.english, self.connected) {
+                        let submission = self.bridge.submit_tracked(snapshot.generation, command);
+                        self.privileged_panel.submitted(submission);
+                    }
                 });
             }
         }
-        ui.add_space(20.);
-        widgets::section(ui, &snapshot.selected_request, self.english);
-        self.transfer_panels(ui, snapshot);
-        ui.add_space(20.);
-        egui::CollapsingHeader::new(self.t("本机访问设置", "Host access settings")).show(
-            ui,
-            |ui| {
-                self.remote_password_host_panel(ui, snapshot);
-                if let Some(command) =
-                    self.privileged_panel
-                        .show(ui, snapshot, self.english, self.connected)
-                {
-                    let submission = self.bridge.submit_tracked(snapshot.generation, command);
-                    self.privileged_panel.submitted(submission);
-                }
-            },
-        );
-        ui.add_space(12.);
-        ui.small(self.t(
-            "仅在访问获准且连接可用时显示远端画面。",
-            "The remote screen appears after access is approved and the connection is ready.",
-        ));
+    }
+
+    fn remote_request_history(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {
+        ui.add_space(14.);
+        ui.heading(self.t("连接请求", "Connection requests"));
+        widgets::section(ui, &snapshot.requests, self.english);
+        if let Some(requests) = &snapshot.requests.data {
+            if requests.is_empty() {
+                ui.label(self.t("暂时没有连接记录。连接设备后，在这里查看授权和会话详情。", "No connection records yet. Connect to a computer to view its authorization and session details here."));
+            }
+            for request in requests.iter().rev() {
+                ui.push_id(&request.id, |ui| {
+                    egui::Frame::new()
+                        .fill(ui.visuals().window_fill)
+                        .inner_margin(12)
+                        .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
+                        .corner_radius(6)
+                        .show(ui, |ui| {
+                            ui.horizontal(|ui| {
+                                ui.with_layout(
+                                    egui::Layout::right_to_left(egui::Align::Center),
+                                    |ui| {
+                                        if ui.button(self.t("查看详情", "View details")).clicked()
+                                        {
+                                            if self.remote.selected.as_deref()
+                                                != Some(request.id.as_str())
+                                            {
+                                                self.remote.one_time_password =
+                                                    Zeroizing::default();
+                                            }
+                                            self.remote.selected = Some(request.id.clone());
+                                            self.remote.approval = None;
+                                            self.action(
+                                                snapshot,
+                                                Action::InspectRemote {
+                                                    request_id: request.id.clone(),
+                                                },
+                                            );
+                                        }
+                                        let status = match request.status.as_str() {
+                                            "pending" => self.t("等待批准", "Awaiting approval"),
+                                            "approved" => self.t("访问已批准", "Access approved"),
+                                            "denied" => self.t("访问已拒绝", "Access denied"),
+                                            "revoked" => self.t("访问已撤销", "Access revoked"),
+                                            _ => self.t("访问已结束", "Access ended"),
+                                        };
+                                        ui.label(status);
+                                        let name = |id: &str| {
+                                            snapshot
+                                                .devices
+                                                .data
+                                                .as_deref()
+                                                .into_iter()
+                                                .flatten()
+                                                .find(|device| device.device.id == id)
+                                                .map(|device| device.device.name.clone())
+                                                .unwrap_or_else(|| id.to_owned())
+                                        };
+                                        ui.add(
+                                            egui::Label::new(
+                                                egui::RichText::new(format!(
+                                                    "{} → {}",
+                                                    name(&request.controller_device_id),
+                                                    name(&request.host_device_id)
+                                                ))
+                                                .strong(),
+                                            )
+                                            .truncate(),
+                                        );
+                                    },
+                                );
+                            });
+                            ui.small(widgets::permissions(&request.permissions, self.english));
+                        });
+                });
+            }
+        }
     }
 
     pub(crate) fn show_connection_task(&mut self, context: &egui::Context, snapshot: &Snapshot) {

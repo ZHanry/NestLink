@@ -17,6 +17,35 @@ pub enum Icon {
     Copy,
 }
 
+/// Display the original PNG asset, shared with the window and tray icon.
+pub fn brand(ui: &egui::Ui, rect: egui::Rect) {
+    let id = egui::Id::new("nestlink-original-brand-texture");
+    let texture = ui
+        .ctx()
+        .data(|data| data.get_temp::<egui::TextureHandle>(id));
+    let texture = texture.or_else(|| {
+        let icon = crate::theme::icon(64).ok()?;
+        let image = egui::ColorImage::from_rgba_unmultiplied(
+            [icon.width as usize, icon.height as usize],
+            &icon.rgba,
+        );
+        let texture = ui
+            .ctx()
+            .load_texture("NestLink logo", image, egui::TextureOptions::LINEAR);
+        ui.ctx()
+            .data_mut(|data| data.insert_temp(id, texture.clone()));
+        Some(texture)
+    });
+    if let Some(texture) = texture {
+        ui.painter().image(
+            texture.id(),
+            rect,
+            egui::Rect::from_min_max(egui::Pos2::ZERO, egui::pos2(1., 1.)),
+            Color32::WHITE,
+        );
+    }
+}
+
 pub fn paint(ui: &egui::Ui, icon: Icon, center: Pos2, size: f32, color: Color32) {
     let scale = size / 24.;
     let p = |x: f32, y: f32| center + egui::vec2(x - 12., y - 12.) * scale;
@@ -39,11 +68,12 @@ pub fn paint(ui: &egui::Ui, icon: Icon, center: Pos2, size: f32, color: Color32)
             line((12., 16.), (12., 21.));
             line((7., 21.), (17., 21.));
             if matches!(icon, Icon::Devices) {
-                let phone = egui::Rect::from_min_max(p(15., 9.), p(23., 23.));
+                let monitor = egui::Rect::from_min_max(p(12., 10.), p(24., 20.));
                 ui.painter()
-                    .rect_filled(phone, 1.5 * scale, ui.visuals().window_fill);
-                rect((15., 9.), (23., 23.), 1.5);
-                line((18., 20.), (20., 20.));
+                    .rect_filled(monitor, 1.5 * scale, ui.visuals().window_fill);
+                rect((12., 10.), (24., 20.), 1.5);
+                line((18., 20.), (18., 23.));
+                line((15., 23.), (21., 23.));
             }
         }
         Icon::Share | Icon::Network => {

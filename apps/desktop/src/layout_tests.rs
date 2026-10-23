@@ -139,6 +139,76 @@ impl Workspace {
         });
         rects
     }
+
+    fn click(&mut self, size: egui::Vec2, label: &str) {
+        let bounds = self.bounds(label);
+        assert_eq!(bounds.len(), 1, "ambiguous or missing control: {label}");
+        let pos = bounds[0].center();
+        for pressed in [true, false] {
+            self.frame(
+                size,
+                vec![
+                    egui::Event::PointerMoved(pos),
+                    egui::Event::PointerButton {
+                        pos,
+                        button: egui::PointerButton::Primary,
+                        pressed,
+                        modifiers: Default::default(),
+                    },
+                ],
+            );
+        }
+    }
+}
+
+#[test]
+fn bounded_remote_workspace_keeps_connection_action_visible_after_section_changes() {
+    use nestlink_app_core::{Failure, FailureKind};
+    for size in [egui::vec2(760., 560.), egui::vec2(1200., 800.)] {
+        let mut workspace = Workspace::new(enrolled_snapshot());
+        for _ in 0..5 {
+            workspace.frame(size, Vec::new());
+        }
+        let baseline = workspace.bounds("进入桌面");
+        assert_eq!(baseline.len(), 1);
+        let viewport = egui::Rect::from_min_size(egui::Pos2::ZERO, size);
+        assert!(
+            viewport.contains_rect(baseline[0]),
+            "connect action outside viewport: {baseline:?}"
+        );
+        workspace.click(size, "本机访问");
+        assert!(
+            workspace.bounds("进入桌面").is_empty(),
+            "host settings did not replace the device workspace"
+        );
+        workspace.click(size, "连接设备");
+        workspace.frame(size, Vec::new());
+        assert_eq!(workspace.bounds("进入桌面"), baseline);
+        for revision in 1..8 {
+            let mut snapshot = enrolled_snapshot();
+            snapshot.revision = revision;
+            if revision % 2 == 0 {
+                snapshot.devices.error = Some(Failure {
+                    kind: FailureKind::Transport,
+                    status: Some(503),
+                    code: None,
+                });
+            } else {
+                Arc::get_mut(snapshot.devices.data.as_mut().expect("devices"))
+                    .expect("owned devices")[1]
+                    .device
+                    .name = "A very long computer name ".repeat(80);
+                snapshot.requests.loading = Some(serde_json::from_str("1").expect("operation id"));
+            }
+            workspace.app.bridge.layout_snapshot(snapshot);
+            workspace.frame(size, Vec::new());
+            assert_eq!(
+                workspace.bounds("进入桌面"),
+                baseline,
+                "polling moved the anchored connect action"
+            );
+        }
+    }
 }
 
 #[test]

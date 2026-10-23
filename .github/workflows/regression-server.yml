@@ -2,7 +2,7 @@ name: Build regression server
 
 on:
   push:
-    branches: ['release/**']
+    branches: ['main', 'release/**']
     paths: ['Cargo.*', 'rust-toolchain.toml', 'crates/**', 'apps/server/**', 'packaging/regression/**', 'packaging/notices/**', 'LICENSE', 'scripts/refactor-cargo-notices.py', 'scripts/refactor-regression-image.py', 'tests/refactor/test_regression_image.py', '.github/workflows/regression-server.yml']
   workflow_dispatch:
 

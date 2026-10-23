@@ -36,7 +36,7 @@ impl DesktopApp {
         }
         egui::CollapsingHeader::new(self.t("登记此设备", "Enroll this device")).default_open(snapshot.devices.data.as_ref().is_some_and(|devices| devices.is_empty())).show(ui,|ui| {
             widgets::field(ui,self.t("设备名称", "Device name"),&mut self.device_name,128);
-            ui.small(self.t("Windows/Linux 工作台登记为控制端和主机，并声明 VP8/Opus 能力；其他平台不声明尚未接入的能力。", "Windows/Linux workspaces enroll as controllers and hosts with VP8/Opus; other platforms do not declare capabilities that are not integrated."));
+            ui.small(self.t("Windows 桌面端登记为控制端与被控主机；实际可用画面、声音和输入能力在会话建立时确认。", "The Windows client enrolls as a controller and host. Available video, audio and input capabilities are confirmed when a session starts."));
             if ui.add_enabled(!self.device_name.trim().is_empty() && snapshot.devices.loading.is_none(),egui::Button::new(self.t("登记", "Enroll"))).clicked() {
                 self.action(snapshot,Action::EnrollLocalDevice {name:self.device_name.trim().into(),platform:local_platform().into(),capabilities:local_capabilities(),path_mode:"direct_preferred".into()});
             }

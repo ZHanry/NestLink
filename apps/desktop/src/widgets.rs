@@ -9,9 +9,29 @@ use zeroize::{Zeroize, Zeroizing};
 
 pub use crate::icons::Icon as NavIcon;
 
+/// Give a live section an immutable layout budget. Child text may scroll or
+/// clip, but its measured minimum size cannot move neighbouring controls.
+pub fn fixed_region<R>(
+    ui: &mut egui::Ui,
+    id: impl std::hash::Hash,
+    size: egui::Vec2,
+    contents: impl FnOnce(&mut egui::Ui) -> R,
+) -> R {
+    let rect = egui::Rect::from_min_size(
+        ui.available_rect_before_wrap().min,
+        size.max(egui::Vec2::ZERO),
+    );
+    let mut child = ui.new_child(egui::UiBuilder::new().id_salt(id).max_rect(rect));
+    child.set_clip_rect(rect.intersect(ui.clip_rect()));
+    let result = contents(&mut child);
+    ui.advance_cursor_after_rect(rect);
+    result
+}
+
 pub fn nav_button(ui: &mut egui::Ui, icon: NavIcon, text: &str, selected: bool) -> egui::Response {
+    let compact = ui.available_width() < 110.;
     let (rect, response) =
-        ui.allocate_exact_size(egui::vec2(ui.available_width(), 42.), egui::Sense::click());
+        ui.allocate_exact_size(egui::vec2(ui.available_width(), 52.), egui::Sense::click());
     response.widget_info(|| {
         egui::WidgetInfo::selected(
             egui::WidgetType::SelectableLabel,
@@ -23,15 +43,15 @@ pub fn nav_button(ui: &mut egui::Ui, icon: NavIcon, text: &str, selected: bool) 
     let visuals = ui.style().interact_selectable(&response, selected);
     if selected || response.hovered() || response.has_focus() {
         let fill = if selected {
-            ui.visuals().selection.bg_fill.gamma_multiply(0.12)
+            ui.visuals().selection.bg_fill.gamma_multiply(0.09)
         } else {
             visuals.weak_bg_fill
         };
-        ui.painter().rect_filled(rect, 7., fill);
+        ui.painter().rect_filled(rect, 6., fill);
     }
     if selected {
         ui.painter().rect_filled(
-            egui::Rect::from_min_size(rect.min + egui::vec2(0., 11.), egui::vec2(3., 20.)),
+            egui::Rect::from_min_size(rect.min + egui::vec2(0., 14.), egui::vec2(3., 24.)),
             2.,
             ui.visuals().selection.bg_fill,
         );
@@ -52,18 +72,30 @@ pub fn nav_button(ui: &mut egui::Ui, icon: NavIcon, text: &str, selected: bool) 
     crate::icons::paint(
         ui,
         icon,
-        rect.left_center() + egui::vec2(24., 0.),
-        22.,
+        if compact {
+            egui::pos2(rect.center().x, rect.top() + 17.)
+        } else {
+            rect.left_center() + egui::vec2(23., 0.)
+        },
+        20.,
         color,
     );
-    ui.painter().text(
-        rect.left_center() + egui::vec2(45., 0.),
-        egui::Align2::LEFT_CENTER,
+    ui.painter().with_clip_rect(rect).text(
+        if compact {
+            egui::pos2(rect.center().x, rect.bottom() - 11.)
+        } else {
+            rect.left_center() + egui::vec2(44., 0.)
+        },
+        if compact {
+            egui::Align2::CENTER_CENTER
+        } else {
+            egui::Align2::LEFT_CENTER
+        },
         text,
-        egui::FontId::proportional(14.),
+        egui::FontId::proportional(if compact { 11. } else { 15. }),
         color,
     );
-    response
+    response.on_hover_text(text)
 }
 
 pub fn primary_button(ui: &mut egui::Ui, text: &str, enabled: bool) -> egui::Response {

@@ -37,6 +37,7 @@ enum Screen {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Section {
+    Desktop,
     Devices,
     Services,
     Quotas,
@@ -50,10 +51,11 @@ enum Section {
 impl Section {
     fn title(self) -> &'static str {
         match self {
-            Self::Devices => t("设备", "Devices"),
-            Self::Services => t("服务发布", "Service publishing"),
+            Self::Desktop => t("远程桌面", "Remote desktop"),
+            Self::Devices => t("设备管理", "Devices"),
+            Self::Services => t("内网穿透", "Tunnels"),
             Self::Quotas => t("服务配额", "Service quotas"),
-            Self::Requests => t("访问请求", "Access requests"),
+            Self::Requests => t("连接记录", "Access requests"),
             Self::Network => t("网络与节点", "Network and nodes"),
             Self::Security => t("账号与安全", "Account and security"),
             Self::Accounts => t("账号", "Account"),
@@ -63,6 +65,7 @@ impl Section {
 
     fn key(self) -> &'static str {
         match self {
+            Self::Desktop => "desktop",
             Self::Devices => "devices",
             Self::Services => "services",
             Self::Quotas => "quotas",
@@ -76,6 +79,8 @@ impl Section {
 
     fn from_key(value: &str) -> Self {
         match value {
+            "desktop" => Self::Desktop,
+            "devices" => Self::Devices,
             "requests" => Self::Requests,
             "services" => Self::Services,
             "quotas" => Self::Quotas,
@@ -83,7 +88,45 @@ impl Section {
             "security" => Self::Security,
             "accounts" => Self::Accounts,
             "audit" => Self::Audit,
-            _ => Self::Devices,
+            _ => Self::Desktop,
+        }
+    }
+
+    fn description(self) -> &'static str {
+        match self {
+            Self::Desktop => t(
+                "选择设备，在浏览器中打开远程桌面。",
+                "Choose a device and open its desktop in your browser.",
+            ),
+            Self::Services => t(
+                "将内网服务发布到指定入口，管理访问来源与运行状态。",
+                "Publish an internal service through an assigned ingress and manage its access.",
+            ),
+            Self::Devices => t(
+                "管理已登记设备和授权。新增被控主机请使用 Windows 客户端。",
+                "Manage registered devices and access. Add a host from the Windows client.",
+            ),
+            Self::Requests => t(
+                "查看远程访问请求及其授权状态。",
+                "Review remote access requests and their authorization.",
+            ),
+            Self::Quotas => t(
+                "按账号、设备、节点和服务查看用量并设置限制。",
+                "Review and limit usage by account, device, node, or service.",
+            ),
+            Self::Network => t(
+                "管理数据节点、连接路径和服务发布策略。",
+                "Manage data nodes, connection paths, and publishing policy.",
+            ),
+            Self::Security => t(
+                "管理当前账号的密码和登录期限。",
+                "Manage your password and sign-in expiry.",
+            ),
+            Self::Accounts => t("管理账号及其访问权限。", "Manage accounts and access."),
+            Self::Audit => t(
+                "查看服务器保留的操作记录。",
+                "Review operations retained by the server.",
+            ),
         }
     }
 }
@@ -208,9 +251,17 @@ fn App() -> impl IntoView {
     #[cfg(not(target_arch = "wasm32"))]
     let origin = String::new();
     let screen = RwSignal::new(Screen::Restoring);
-    let section = RwSignal::new(Section::Devices);
+    let section = RwSignal::new(Section::Desktop);
     let api: Api = StoredValue::new_local(None);
     let principal = RwSignal::new(None::<Principal>);
+    // Token renewal changes expiry, not workspace identity. Keep forms and
+    // pointer targets mounted while the same signed-in account is refreshed.
+    let workspace_user = Memo::new(move |_| {
+        principal.with(|user| {
+            user.as_ref()
+                .map(|user| (user.account_id.clone(), user.name.clone(), user.is_admin))
+        })
+    });
     let rows = RwSignal::new(Vec::<Record>::new());
     let audit_page = RwSignal::new(None::<AuditPageInfo>);
     let empty_text = RwSignal::new(UiCopy::new(
@@ -246,7 +297,7 @@ fn App() -> impl IntoView {
             "No devices yet. Register devices from an approved NestLink client.",
         ));
         selected.set(None);
-        section.set(Section::Devices);
+        section.set(Section::Desktop);
         policy_revision.set(0);
         forwarding.set("deny".to_owned());
         peer_path.set("direct_only".to_owned());
@@ -525,7 +576,7 @@ fn App() -> impl IntoView {
                                         .flatten()
                                 })
                                 .map(|key| Section::from_key(&key))
-                                .unwrap_or(Section::Devices);
+                                .unwrap_or(Section::Desktop);
                             load.run(page.key().to_owned());
                             return;
                         }
@@ -568,7 +619,7 @@ fn App() -> impl IntoView {
                                 api.set_value(Some(Rc::new(futures_util::lock::Mutex::new(sdk))));
                                 screen.set(Screen::Workspace);
                                 busy.set(false);
-                                load.run(Section::Devices.key().to_owned());
+                                load.run(Section::Desktop.key().to_owned());
                                 return;
                             }
                             Err(problem)
@@ -675,7 +726,7 @@ fn App() -> impl IntoView {
                     principal.set(Some(user));
                     screen.set(Screen::Workspace);
                     busy.set(false);
-                    load.run(Section::Devices.key().to_owned());
+                    load.run(Section::Desktop.key().to_owned());
                 }
                 Err(problem) => {
                     error.set(nestlink_web::localized_detail!(
@@ -939,13 +990,13 @@ fn App() -> impl IntoView {
     };
 
     view! {
-        <LanguageSelector />
-        <Show when=move || screen.get() == Screen::Restoring><main class="entry"><h1>{move || t("正在恢复登录…", "Restoring your session…")}</h1><p>{move || t("正在核对服务器和管理会话。", "Verifying the server and management session.")}</p></main></Show>
+        <div class="app-topbar"><span>{move || t("内网穿透 + 远程桌面", "Tunnels + remote desktop")}</span><LanguageSelector /></div>
+        <Show when=move || screen.get() == Screen::Restoring><main class="entry-shell"><Brand /><section class="entry-panel"><h1>{move || t("正在恢复登录…", "Restoring your session…")}</h1><p class="muted">{move || t("正在核对服务器和管理会话。", "Verifying the server and management session.")}</p></section></main></Show>
             <Show when=move || screen.get() == Screen::Trust>
             <main class="entry-shell">
                 <Brand />
                 <section class="entry-panel" aria-labelledby="trust-title">
-                    <p class="entry-kicker">{move || t("连接到你的 NestLink 部署", "Connect to your NestLink deployment")}</p>
+                    <div class="entry-symbol"><WorkspaceIcon kind=Section::Network /></div>
                     <h1 id="trust-title">{move || t("连接服务器", "Connect to server")}</h1>
                     <p class="muted">{move || t("通过 HTTPS 自动读取当前服务器配置，连接后即可登录。", "Discover this server over HTTPS, then sign in with your account.")}</p>
                     <form on:submit=move |event| verify_server.run(event) class="form-stack">
@@ -965,6 +1016,7 @@ fn App() -> impl IntoView {
                 <section class="entry-panel" aria-labelledby="signin-title">
                     <p class="entry-kicker">{move || t("服务器身份已核验", "Server identity verified")}</p>
                     <h1 id="signin-title">{move || t("登录 NestLink", "Sign in to NestLink")}</h1>
+                    <p class="origin-note"><code>{move || display_origin.get_value()}</code></p>
                     <form on:submit=sign_in class="form-stack">
                         <label for="username">{move || t("账号", "Account")}</label>
                         <input id="username" autocomplete="username" prop:value=move || username.get() on:input=move |event| username.set(event_target_value(&event)) />
@@ -986,19 +1038,22 @@ fn App() -> impl IntoView {
 
         <Show when=move || screen.get() == Screen::Workspace>
             {move || {
-                let user = principal.get();
-                let is_admin = user.as_ref().is_some_and(|value| value.is_admin);
+                let user = workspace_user.get();
+                let is_admin = user.as_ref().is_some_and(|value| value.2);
                 view! {
                     <div class="workspace">
                         <aside class="sidebar">
                             <Brand />
                             <nav aria-label=move || t("主导航", "Main navigation")>
-                                <p class="nav-label">{move || t("管理", "Manage")}</p>
+                                <p class="nav-label">{move || t("工作区", "Workspace")}</p>
+                                <NavButton section current=Section::Desktop load busy />
+                                <NavButton section current=Section::Services load busy />
+                                <p class="nav-label nav-group">{move || t("资源", "Resources")}</p>
                                 <NavButton section current=Section::Devices load busy />
                                 <NavButton section current=Section::Requests load busy />
-                                <NavButton section current=Section::Services load busy />
                                 {if is_admin {
                                     view! {
+                                        <p class="nav-label nav-group">{move || t("管理", "Administration")}</p>
                                         <NavButton section current=Section::Quotas load busy />
                                         <NavButton section current=Section::Network load busy />
                                         <NavButton section current=Section::Accounts load busy />
@@ -1007,7 +1062,7 @@ fn App() -> impl IntoView {
                                 } else { ().into_any() }}
                             </nav>
                             <div class="sidebar-foot">
-                                <span class="user-name">{user.as_ref().map(|v| v.name.clone()).unwrap_or_default()}</span>
+                                <span class="user-name">{user.as_ref().map(|v| v.1.clone()).unwrap_or_default()}</span>
                                 <span class="user-role">{move || if is_admin { t("管理员", "Administrator") } else { t("账号", "Account") }}</span>
                                 <button class="text-button" type="button" aria-current=move || (section.get() == Section::Security).then_some("page") disabled=move || busy.get() on:click=move |_| load.run(Section::Security.key().to_owned())>{move || t("账号与安全", "Account and security")}</button>
                                 <button class="text-button" type="button" on:click=sign_out disabled=move || busy.get()>{move || t("退出登录", "Sign out")}</button>
@@ -1016,14 +1071,17 @@ fn App() -> impl IntoView {
                         <main class="content">
                             <header class="page-head">
                                 <div>
-                                    <p class="origin-note">{move || t("当前部署：", "Current deployment: ")} <code>{move || display_origin.get_value()}</code></p>
                                     <h1>{move || section.get().title()}</h1>
+                                    <p>{move || section.get().description()}</p>
                                 </div>
-                                <button class="secondary" type="button" on:click=move |_| load.run(section.get_untracked().key().to_owned()) disabled=move || busy.get()>
+                                <button class="secondary refresh-button" type="button" on:click=move |_| load.run(section.get_untracked().key().to_owned()) disabled=move || busy.get()>
                                     {move || if busy.get() { t("正在更新…", "Updating…") } else { t("刷新", "Refresh") }}
                                 </button>
                             </header>
                             <Feedback error notice />
+                            <Show when=move || section.get() == Section::Desktop>
+                                <DesktopWorkspace rows selected busy remote_target />
+                            </Show>
                             <div hidden=move || section.get() != Section::Services>
                                 <services_panel::ServicesPanel api session_revision refresh=load_revision active=Signal::derive(move || section.get() == Section::Services) auth_failure error notice />
                             </div>
@@ -1033,7 +1091,7 @@ fn App() -> impl IntoView {
                             <Show when=move || section.get() == Section::Security>
                                 <account_security_panel::AccountSecurityPanel api session_revision refresh=load_revision auth_failure password_changed error notice />
                             </Show>
-                            <Show when=move || !matches!(section.get(), Section::Services | Section::Quotas | Section::Security)>
+                            <Show when=move || !matches!(section.get(), Section::Desktop | Section::Services | Section::Quotas | Section::Security)>
                             <div class="content-grid">
                                 <section class="list-pane" aria-label=move || t("当前列表", "Current list")>
                                     {move || (section.get() == Section::Network).then(|| view! {
@@ -1139,6 +1197,7 @@ fn App() -> impl IntoView {
                                 </aside>
                             </div>
                             </Show>
+                            <footer class="deployment-foot"><span>{move || t("当前服务器", "Current server")}</span><code>{move || display_origin.get_value()}</code></footer>
                         </main>
                     </div>
                 }
@@ -1223,6 +1282,96 @@ fn BrandMark(#[prop(optional)] small: bool) -> impl IntoView {
 }
 
 #[component]
+fn WorkspaceIcon(kind: Section) -> impl IntoView {
+    let path = match kind {
+        Section::Desktop => "M3 4h18v12H3z M8 21h8 M12 16v5",
+        Section::Services => "M3 5h6v6H3z M15 13h6v6h-6z M9 8h7v5 M5 11v7h10",
+        Section::Devices => "M3 3h13v10H3z M7 17h5 M10 13v4 M18 9h4v12h-8v-8",
+        Section::Requests => "M5 5h14v16H5z M9 2v6 M15 2v6 M8 12h8 M8 16h5",
+        Section::Quotas => "M4 20V10h4v10 M10 20V4h4v16 M16 20v-7h4v7",
+        Section::Network => "M8 2h8v6H8z M2 16h8v6H2z M14 16h8v6h-8z M12 8v5 M6 16v-3h12v3",
+        Section::Security => "M12 2l8 3v6c0 5-4 9-8 11-4-2-8-6-8-11V5z M8 12l3 3 5-6",
+        Section::Accounts => "M8 3h8v8H8z M4 22v-5l4-3h8l4 3v5",
+        Section::Audit => "M5 2h10l4 4v16H5z M14 2v5h5 M8 11h8 M8 15h8 M8 19h5",
+    };
+    view! { <svg class="workspace-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d=path /></svg> }
+}
+
+#[component]
+fn DesktopWorkspace(
+    rows: RwSignal<Vec<Record>>,
+    selected: RwSignal<Option<Record>>,
+    busy: RwSignal<bool>,
+    remote_target: RwSignal<Option<RemoteTarget>>,
+) -> impl IntoView {
+    let query = RwSignal::new(String::new());
+    let hosts = Memo::new(move |_| {
+        let query = query.get().trim().to_lowercase();
+        rows.with(|rows| {
+            rows.iter()
+                .filter(|row| {
+                    row.connectable
+                        && (query.is_empty()
+                            || row.title.to_lowercase().contains(&query)
+                            || row.id.to_lowercase().contains(&query))
+                })
+                .cloned()
+                .collect::<Vec<_>>()
+        })
+    });
+    view! {
+        <div class="desktop-workspace" class:has-selection=move || selected.with(Option::is_some)>
+            <section class="desktop-directory" aria-label=move || t("可连接设备", "Remote devices")>
+                <header class="directory-head">
+                    <h2>{move || t("我的设备", "My devices")}</h2>
+                    <span class="directory-count">{move || hosts.with(Vec::len)}</span>
+                    <label class="device-search" for="device-search"><span class="visually-hidden">{move || t("搜索设备名或 ID", "Search device name or ID")}</span><input id="device-search" type="search" placeholder=move || t("搜索设备名或 ID", "Search device name or ID") autocomplete="off" prop:value=move || query.get() on:input=move |event| query.set(event_target_value(&event)) /></label>
+                </header>
+                <div class="device-records records" aria-busy=move || busy.get().to_string()>
+                    <Show when=move || hosts.with(Vec::is_empty)>
+                        <div class="empty-state"><WorkspaceIcon kind=Section::Desktop /><h3>{move || if busy.get() { t("正在读取设备", "Loading devices") } else if !query.get().is_empty() { t("没有匹配的设备", "No matching devices") } else { t("还没有被控主机", "No remote hosts yet") }}</h3><p>{move || if !query.get().is_empty() { t("更换名称或设备 ID 后重试。", "Try another name or device ID.") } else { t("在 Windows 客户端登录并完成本机接入后，设备会显示在这里。", "Sign in and enroll the host in the Windows client. It will appear here.") }}</p></div>
+                    </Show>
+                    <For each=move || hosts.get() key=|item| item.key.clone() children=move |item| {
+                        let row = item.clone();
+                        let active_key = item.key.clone();
+                        let pressed_key = item.key.clone();
+                        let status = item.status.clone();
+                        view! {
+                            <button class=move || if selected.with(|chosen| chosen.as_ref().is_some_and(|v| v.key == active_key)) { "record device-record selected" } else { "record device-record" } type="button" aria-pressed=move || selected.with(|chosen| chosen.as_ref().is_some_and(|v| v.key == pressed_key)) on:click=move |_| selected.set(Some(row.clone()))>
+                                <span class="device-symbol"><WorkspaceIcon kind=Section::Desktop /></span><span class="record-main"><strong title=item.title.clone()>{item.title}</strong><small>{move || status.current()}</small></span>
+                            </button>
+                        }
+                    } />
+                </div>
+                <p class="directory-note">{move || t("登记状态不代表当前在线。连接时会核验主机是否就绪。", "Registration does not confirm availability. The host is checked when you connect.")}</p>
+            </section>
+            <section class="desktop-detail detail-pane" aria-label=move || t("连接工作区", "Connection workspace")>
+                {move || if let Some(item) = selected.get() {
+                    let host = RemoteTarget { id: item.id.clone(), name: item.title.clone() };
+                    let status = item.status.clone();
+                    let detail = item.detail.clone();
+                    view! {
+                        <header class="desktop-detail-head"><button class="text-button back-to-devices" type="button" on:click=move |_| selected.set(None)>{move || t("返回设备", "Back to devices")}</button><h2 title=item.title.clone()>{item.title}</h2><p>{move || status.current()}</p></header>
+                        <div class="desktop-detail-body">
+                            <div class="desktop-preview"><WorkspaceIcon kind=Section::Desktop /><h3>{move || t("准备打开远程桌面", "Ready to open the remote desktop")}</h3><p>{move || t("选择本次访问权限，发起连接后由主机确认。连接建立后在这里查看画面并操作。", "Choose access for this session, then request the host's approval. View and control the desktop once connected.")}</p></div>
+                            <dl class="device-facts"><dt>{move || t("设备 ID", "Device ID")}</dt><dd><code>{item.id}</code></dd><dt>{move || t("设备信息", "Device details")}</dt><dd>{move || detail.current()}</dd></dl>
+                            <p class="connection-note">{move || t("优先建立设备间的直接连接。实际路径将在连接后显示。", "A direct device-to-device connection is preferred. The actual path appears after verification.")}</p>
+                        </div>
+                        <footer class="desktop-detail-actions"><span>{move || t("访问权限仅用于本次连接", "Access applies to this connection")}</span><button class="primary" type="button" disabled=move || busy.get() on:click=move |_| remote_target.set(Some(host.clone()))>{move || t("进入桌面", "Enter desktop")}</button></footer>
+                    }.into_any()
+                } else {
+                    view! {
+                        <header class="desktop-detail-head"><h2>{move || t("远程连接", "Remote connection")}</h2><p>{move || t("连接前由你选择设备和权限", "Choose the device and access before connecting")}</p></header>
+                        <div class="desktop-detail-body"><div class="desktop-preview"><WorkspaceIcon kind=Section::Desktop /><h3>{move || t("你的下一次连接，从这里开始", "Your next connection starts here")}</h3><p>{move || t("从左侧选择 Windows 主机，打开远程桌面。文件和剪贴板可在会话操作中心按需使用。", "Select a Windows host to open its desktop. Files and clipboard are available in the session's control center when authorized.")}</p></div></div>
+                        <footer class="desktop-detail-actions"><span>{move || t("先选择一台设备", "Select a device first")}</span><button class="primary" type="button" disabled=true>{move || t("进入桌面", "Enter desktop")}</button></footer>
+                    }.into_any()
+                }}
+            </section>
+        </div>
+    }
+}
+
+#[component]
 fn Feedback(error: RwSignal<String>, notice: RwSignal<String>) -> impl IntoView {
     view! {
         <div class="feedback" aria-live="polite">
@@ -1251,7 +1400,7 @@ fn NavButton(
             aria-current=move || (section.get() == current).then_some("page")
             on:click=move |_| load.run(current.key().to_owned())
         >
-            <span class="nav-marker" aria-hidden="true"></span>{move || current.title()}
+            <WorkspaceIcon kind=current /><span>{move || current.title()}</span>
         </button>
     }
 }
@@ -1275,7 +1424,7 @@ async fn load_records(
             rows: Vec::new(),
             empty: UiCopy::default(),
         },
-        Section::Devices => {
+        Section::Desktop | Section::Devices => {
             let result = sdk.lock().await.devices().await.map_err(UiError::from)?;
             PanelData {
                 rows: result
@@ -1478,6 +1627,7 @@ async fn load_records(
 
 fn list_heading(section: Section) -> &'static str {
     match section {
+        Section::Desktop => t("可连接设备", "Remote devices"),
         Section::Devices => t("已登记设备", "Registered devices"),
         Section::Services => t("服务目录", "Service catalog"),
         Section::Quotas => t("服务配额", "Service quotas"),

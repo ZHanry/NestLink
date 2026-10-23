@@ -13,25 +13,31 @@ and random test account, and approves one View/direct request for its own instal
 Separate HTTP host and HTTPS browser entry points share that temporary database;
 each signs its actual management origin. A pinned upstream Caddy process terminates
 the browser's HTTPS, with secure cookies enabled in the real browser router.
-The readiness file contains only this short-lived test account and public trust
-configuration. Treat it as local test data; do not reuse it in a deployment.
+The readiness file contains a short-lived test account and public trust
+configuration. It stays in the private runner directory and is never uploaded.
 
-Build with the workspace's reviewed native codec supplier and Rust toolchain:
+The `Web production build` GitHub Actions workflow runs this check in its
+`Production Web to native host` job. It downloads `nestlink-web-dist` from the
+same workflow run, builds the reviewed native codec supplier and this optimized
+fixture on GitHub, then runs the production browser probe for 36 seconds with
+audio and owned input/files enabled. Product builds and packaging stay on
+GitHub; this runner refuses to execute outside a GitHub Linux runner.
+
+The fixture's invocation interface is:
 
 ```text
-cargo build --manifest-path scripts/fixtures/browser-native-host/Cargo.toml --locked --offline
-cargo clippy --manifest-path scripts/fixtures/browser-native-host/Cargo.toml --locked --offline --all-targets -- -D warnings
 nestlink-browser-native-host-fixture <production-static-site> <new-evidence-directory> <loopback-https-origin> [smoke|1080p30] [duration-seconds] [audio] [owned-data] [multi-display]
 ```
 
-Run `scripts/refactor-browser-native-check.cjs` with `--ready`, `--report`,
+`scripts/refactor-browser-native-run.py` owns the temporary processes and calls
+`scripts/refactor-browser-native-check.cjs` with `--ready`, `--report`,
 `--tools`, `--executable`, `--tls` and `--engine chrome|firefox`. The tools directory must
-be the already reviewed puppeteer-core 25.14.0 package. Use a fresh browser
-profile. The local runner generates a two-hour loopback certificate: Chromium
-receives only its exact leaf SPKI for that process, while Firefox trusts the
-temporary CA only in that fresh profile's NSS database. Broad certificate-error
-bypass is disabled, and no installed profile or system trust store is changed.
-The runner independently verifies the TLS certificate and IP SAN before browsing.
+be the reviewed puppeteer-core 25.14.0 package. The GitHub job uses Chrome and
+the SHA-256-pinned Caddy v2.11.7 Linux amd64 executable. It generates a one-day
+127.0.0.1 certificate and fresh browser profile. Chrome receives only the exact
+leaf SPKI for that process; broad certificate-error bypass is disabled and no
+installed profile or system trust store is changed. The runner independently
+verifies the TLS certificate, IP SAN and same-run production index before browsing.
 The probe logs in through the actual UI, requests the native host,
 checks real decoded RTP frames over the requested duration (36–1800 seconds)
 and signed management renewals,
@@ -85,6 +91,15 @@ adapter or an ambient user directory. These providers remain behind the ordinary
 signed permit, endpoint proof, permission-scoped claims and real SCTP transports.
 Without this CLI flag or `multi-display`, the fixture provides no input service.
 Files are available only with `owned-data`.
+
+The GitHub evidence artifact is `nestlink-browser-native-evidence`. Its
+`runner-result.json` can pass only when the browser probe, native media/input/file
+receipts, temporary database removal, browser shutdown and private directory
+removal all pass. It includes sanitized JSON/JSONL and screenshots from an explicit
+allowlist. Account readiness, private keys, browser profiles, databases, raw
+process logs and test payloads are excluded. A failed run keeps its sanitized
+failure evidence and fails the job. These results do not replace original
+HL-to-external-Edge, Windows hardware or physical input acceptance.
 
 The browser probe requires a matching `--owned-data true`, a harness-owned
 `--upload-fixture <TLS-attempt-directory>/selected-upload.bin`, and an empty

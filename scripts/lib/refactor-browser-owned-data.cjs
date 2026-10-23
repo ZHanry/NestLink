@@ -280,6 +280,14 @@ async function exercise(page, ready, args, report) {
     'Recorded pointer actions must stay in the actual approved video layout');
 
   data.stage = 'opening-data-panel';
+  const operationCenter = '[aria-controls="remote-operation-center"]';
+  if (await page.$eval(operationCenter, button => button.getAttribute('aria-expanded')) !== 'true') {
+    await page.locator(operationCenter).click();
+  }
+  await page.waitForFunction(() =>
+    document.querySelector('[aria-controls="remote-operation-center"]')?.getAttribute('aria-expanded') === 'true' &&
+    document.querySelector('#remote-operation-center .remote-data-panel'));
+  data.operation_center_opened_through_ui = true;
   data.panel_before = await page.$eval('.remote-data-panel', panel => {
     const summary = panel.querySelector('summary');
     const rect = summary.getBoundingClientRect();
@@ -372,6 +380,11 @@ async function exercise(page, ready, args, report) {
   data.transport_after = await dataTransport(page);
   check(data.transport_after.length === 1 && data.transport_after[0].sctp_state === 'connected',
     'The real SCTP transport did not remain connected after input and file transfer');
+  await page.locator(operationCenter).click();
+  await page.waitForFunction(() =>
+    document.querySelector('[aria-controls="remote-operation-center"]')?.getAttribute('aria-expanded') === 'false' &&
+    !document.querySelector('#remote-operation-center'));
+  data.operation_center_closed_through_ui = true;
 }
 
 async function holdTerminalKey(page, ready, args, report) {

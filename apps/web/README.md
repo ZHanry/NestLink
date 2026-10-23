@@ -2,13 +2,9 @@
 
 The Leptos application builds to a static site served by the Caddy file server at `/usr/share/nestlink/web`.
 
-For a release bundle, install the `wasm32-unknown-unknown` Rust target, Trunk 0.21.14, and `wasm-bindgen-cli` 0.2.129, then run from this directory:
+Production compilation and packaging run on GitHub Actions, using the pinned `wasm32-unknown-unknown` Rust target, Trunk 0.21.14, and `wasm-bindgen-cli` 0.2.129. Do not build release bundles on the operator's PC or deployment server. The output is `dist/`; the production build and artifact-structure check run in [web-build.yml](../../.github/workflows/web-build.yml). Deploy the generated files from one fixed CI run.
 
-```sh
-trunk build --release
-```
-
-The output is `dist/`. The pinned production build and artifact-structure check run in [web-build.yml](../../.github/workflows/web-build.yml). Deploy the generated files from one fixed CI run; do not rebuild them on the server.
+The Windows/Web product has two primary workspaces: **Remote desktop** and **Tunnels**. The desktop workspace contains a searchable host directory and a connection pane with fixed actions. Device management, connection records, account security, quotas and administration remain available below the primary tasks. Registration is explicitly distinct from observed availability. Tunnel rows show configured ingress, host approval and actual publication status; editing configuration does not imply publication. The remote-session frame reserves toolbar, progress, permissions and error regions, while its control center opens over the canvas without shifting connection actions. The service editor has an independently scrolling body and a fixed validation/action footer. Name and original linked-N logo are preserved.
 
 The application provides the authenticated management workbench and a browser remote-control flow. Each deployment/account scope keeps one persistent controller installation: its Ed25519 seed is encrypted with a non-extractable WebCrypto key in IndexedDB and its registered device remains revocable through device management. Reloads and concurrent tabs reuse that identity; damaged or revoked records fail closed. Each remote request separately uses host approval, explicit existing trusted-device approval, or a password bound to the displayed request and host configuration revision. It obtains a verified short-lived permit and uses the managed peer in `src/browser_peer.rs`. It exchanges signed SDP, verifies the permitted direct or trusted TURN path, presents video/audio tracks, sends approved keyboard/pointer/text input, and stops on cancellation or expiry. Answer signaling binds to the exact offer sequence; each endpoint owns its local network generation.
 

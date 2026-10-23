@@ -73,7 +73,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         viewport: eframe::egui::ViewportBuilder::default()
             .with_inner_size([tokens.layout.desktop_width, tokens.layout.desktop_height])
             .with_min_inner_size([tokens.layout.minimum_width, tokens.layout.minimum_height])
-            .with_icon(std::sync::Arc::new(theme::icon(64))),
+            .with_icon(std::sync::Arc::new(theme::icon(64)?)),
         ..Default::default()
     };
     eframe::run_native(

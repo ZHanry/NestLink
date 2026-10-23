@@ -1073,7 +1073,7 @@ impl DesktopApp {
 
         let viewport_id = egui::ViewportId::from_hash_of("nestlink-remote-session");
         let builder = egui::ViewportBuilder::default()
-            .with_title(self.t("NestLink 远程控制", "NestLink Remote Control"))
+            .with_title(self.t("NestLink 远程桌面", "NestLink Remote Desktop"))
             .with_inner_size([1040., 760.])
             .with_min_inner_size([720., 520.]);
         let mut action = RemoteViewportAction::None;
@@ -1111,7 +1111,7 @@ impl DesktopApp {
                         input.focused,
                     )
                 });
-                egui::Window::new(self.t("NestLink 远程控制", "NestLink Remote Control"))
+                egui::Window::new(self.t("NestLink 远程桌面", "NestLink Remote Desktop"))
                     .open(&mut open)
                     .default_size([1040., 760.])
                     .show(viewport, |ui| {
@@ -1153,113 +1153,168 @@ impl DesktopApp {
                     && session.connection_generation == target.connection_generation
             })
         });
-        ui.horizontal_wrapped(|ui| {
-            ui.heading(self.t("远程控制", "Remote control"));
-            if icons::button(
-                ui,
-                icons::Icon::Settings,
-                self.t("操作中心", "Control center"),
+        let mut action = RemoteViewportAction::None;
+        egui::Panel::top("session-toolbar")
+            .exact_size(54.)
+            .resizable(false)
+            .frame(
+                egui::Frame::new()
+                    .fill(ui.visuals().window_fill)
+                    .inner_margin(egui::Margin::symmetric(12, 6)),
             )
-            .clicked()
-            {
-                self.release_native_control();
-                self.remote_tools_open = !self.remote_tools_open;
-            }
-            if ui
-                .button(if fullscreen {
-                    self.t("退出全屏 (Esc)", "Exit fullscreen (Esc)")
-                } else {
-                    self.t("全屏 (F11)", "Fullscreen (F11)")
-                })
-                .clicked()
-            {
-                fullscreen_change = Some(!fullscreen);
-            }
-            if let Some(target) = &target {
-                let name = snapshot
-                    .selected_request
-                    .data
-                    .as_ref()
-                    .filter(|request| request.id == target.request_id)
-                    .and_then(|request| {
-                        snapshot
-                            .devices
-                            .data
-                            .as_deref()?
-                            .iter()
-                            .find(|device| device.device.id == request.host_device_id)
-                    })
-                    .map(|device| device.device.name.as_str());
-                if let Some(name) = name {
-                    ui.strong(name);
-                }
-            }
-            if let Some(session) = session {
-                ui.label(match session.status {
-                    NativeSessionStatus::Establishing => self.t("正在建立", "Establishing"),
-                    NativeSessionStatus::Connected => self.t("已连接", "Connected"),
-                    NativeSessionStatus::Stopping => self.t("正在停止", "Stopping"),
-                    NativeSessionStatus::Stopped => self.t("已停止", "Stopped"),
-                    NativeSessionStatus::Failed => self.t("会话失败", "Session failed"),
+            .show_inside(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        if ui
+                            .add_sized(
+                                egui::vec2(152., 38.),
+                                egui::Button::new(if fullscreen {
+                                    self.t("退出全屏 (Esc)", "Exit fullscreen (Esc)")
+                                } else {
+                                    self.t("全屏 (F11)", "Fullscreen (F11)")
+                                }),
+                            )
+                            .clicked()
+                        {
+                            fullscreen_change = Some(!fullscreen);
+                        }
+                        if ui
+                            .add_enabled(
+                                self.remote_window_cleanup.is_none(),
+                                egui::Button::new(self.t("操作中心", "Control center"))
+                                    .min_size(egui::vec2(112., 38.)),
+                            )
+                            .clicked()
+                        {
+                            self.release_native_control();
+                            self.remote_tools_open = !self.remote_tools_open;
+                        }
+                        let name = target
+                            .as_ref()
+                            .and_then(|target| {
+                                snapshot
+                                    .selected_request
+                                    .data
+                                    .as_ref()
+                                    .filter(|request| request.id == target.request_id)
+                            })
+                            .and_then(|request| {
+                                snapshot
+                                    .devices
+                                    .data
+                                    .as_deref()?
+                                    .iter()
+                                    .find(|device| device.device.id == request.host_device_id)
+                            })
+                            .map(|device| device.device.name.as_str())
+                            .unwrap_or(self.t("远程桌面", "Remote desktop"));
+                        ui.add(
+                            egui::Label::new(egui::RichText::new(name).size(18.).strong())
+                                .truncate(),
+                        )
+                        .on_hover_text(name);
+                    });
                 });
-            } else {
-                ui.label(self.t("会话状态不可用", "Session state unavailable"));
-            }
-        });
+            });
         if let Some(fullscreen) = fullscreen_change {
-            // Release held remote inputs before changing local window state.
             self.release_native_control();
             ui.ctx()
                 .send_viewport_cmd(egui::ViewportCommand::Fullscreen(fullscreen));
         }
-        ui.separator();
-
-        let mut action = RemoteViewportAction::None;
-        if let Some(cleanup) = &self.remote_window_cleanup {
-            ui.horizontal(|ui| {
-                if cleanup.error.is_some() {
-                    ui.colored_label(
-                        ui.visuals().error_fg_color,
-                        self.t("清理未确认完成", "Cleanup is not confirmed"),
+        egui::Panel::bottom("session-control-dock")
+            .exact_size(66.)
+            .resizable(false)
+            .frame(
+                egui::Frame::new()
+                    .fill(ui.visuals().window_fill)
+                    .inner_margin(egui::Margin::symmetric(12, 8)),
+            )
+            .show_inside(ui, |ui| {
+                ui.horizontal_top(|ui| {
+                    let message_width = (ui.available_width() - 244.).max(100.);
+                    widgets::fixed_region(
+                        ui,
+                        "session-state",
+                        egui::vec2(message_width, 48.),
+                        |ui| {
+                            if let Some(cleanup) = &self.remote_window_cleanup {
+                                let message = cleanup.error.as_deref().unwrap_or(self.t(
+                                    "正在结束会话并撤销访问…",
+                                    "Ending the session and revoking access…",
+                                ));
+                                ui.add(egui::Label::new(message).truncate())
+                                    .on_hover_text(message);
+                                ui.add(
+                                    egui::Label::new(
+                                        egui::RichText::new(format!(
+                                            "{} {} / {} {}",
+                                            self.t("本地清理", "Local cleanup"),
+                                            cleanup_phase(cleanup.stop_status, self.english),
+                                            self.t("访问撤销", "Revocation"),
+                                            cleanup_phase(cleanup.revoke_status, self.english)
+                                        ))
+                                        .small(),
+                                    )
+                                    .truncate(),
+                                );
+                            } else {
+                                ui.strong(match session.map(|session| session.status) {
+                                    Some(NativeSessionStatus::Establishing) => {
+                                        self.t("正在建立连接", "Establishing connection")
+                                    }
+                                    Some(NativeSessionStatus::Connected) => {
+                                        self.t("已连接", "Connected")
+                                    }
+                                    Some(NativeSessionStatus::Stopping) => {
+                                        self.t("正在断开", "Disconnecting")
+                                    }
+                                    Some(NativeSessionStatus::Stopped) => {
+                                        self.t("会话已结束", "Session ended")
+                                    }
+                                    Some(NativeSessionStatus::Failed) => {
+                                        self.t("会话失败", "Session failed")
+                                    }
+                                    None => self.t("会话状态不可用", "Session state unavailable"),
+                                });
+                                ui.small(match session.and_then(|session| session.path) {
+                                    Some(1) => self.t(
+                                        "实际连接路径：直连",
+                                        "Observed connection path: direct",
+                                    ),
+                                    Some(2) => self
+                                        .t("实际连接路径：中继", "Observed connection path: relay"),
+                                    _ => {
+                                        self.t("连接路径尚未确认", "Connection path not confirmed")
+                                    }
+                                });
+                            }
+                        },
                     );
-                } else {
-                    ui.spinner();
-                    ui.label(self.t(
-                        "正在撤销访问并确认本地会话清理…",
-                        "Revoking access and confirming local session cleanup…",
-                    ));
-                }
-                if ui
-                    .add_enabled(
-                        cleanup.error.is_some() && self.connected,
-                        egui::Button::new(self.t("重试清理", "Retry cleanup")),
-                    )
-                    .clicked()
-                {
-                    action = RemoteViewportAction::Retry;
-                }
+                    if let Some(cleanup) = &self.remote_window_cleanup {
+                        if ui
+                            .add_enabled(
+                                cleanup.error.is_some() && self.connected,
+                                egui::Button::new(self.t("重试清理", "Retry cleanup"))
+                                    .min_size(egui::vec2(228., 40.)),
+                            )
+                            .clicked()
+                        {
+                            action = RemoteViewportAction::Retry;
+                        }
+                    } else if ui
+                        .add_sized(
+                            egui::vec2(228., 40.),
+                            egui::Button::new(
+                                self.t("结束会话并关闭窗口", "End session and close window"),
+                            ),
+                        )
+                        .clicked()
+                    {
+                        action = RemoteViewportAction::Close;
+                    }
+                });
             });
-            ui.small(format!(
-                "{} · {}",
-                self.t("本地会话", "Local session"),
-                cleanup_phase(cleanup.stop_status, self.english)
-            ));
-            ui.small(format!(
-                "{} · {}",
-                self.t("访问撤销", "Access revocation"),
-                cleanup_phase(cleanup.revoke_status, self.english)
-            ));
-            if let Some(error) = &cleanup.error {
-                ui.colored_label(ui.visuals().error_fg_color, error);
-            }
-        } else if ui
-            .button(self.t("结束会话并关闭窗口", "End session and close window"))
-            .clicked()
-        {
-            action = RemoteViewportAction::Close;
-        }
 
-        ui.add_space(10.);
         if self.remote_tools_open && self.remote_window_cleanup.is_none() {
             let tools_width = (ui.available_width() * 0.38).clamp(260., 360.);
             egui::Panel::right("remote-session-tools")
@@ -2068,11 +2123,13 @@ impl eframe::App for DesktopApp {
         self.navigation(&context, parent, &snapshot);
         self.workspace_toolbar(parent, &snapshot);
         egui::Panel::bottom("operation-notification")
-            .exact_size(60.)
+            .exact_size(44.)
             .resizable(false)
             .show_separator_line(false)
             .frame(egui::Frame::new().inner_margin(egui::Margin::symmetric(12, 8)))
             .show_inside(parent, |ui| {
+                ui.spacing_mut().interact_size.y = 28.;
+                ui.spacing_mut().button_padding.y = 4.;
                 if let Some(message) = self.message.clone() {
                     let message_color = match self.message_tone {
                         MessageTone::Neutral => None,
@@ -2104,13 +2161,13 @@ impl eframe::App for DesktopApp {
                     ui.horizontal(|ui| {
                         let width = (ui.available_width() - 86.).max(0.);
                         ui.allocate_ui_with_layout(
-                            egui::vec2(width, 44.),
+                            egui::vec2(width, 28.),
                             egui::Layout::top_down(egui::Align::Min),
                             |ui| {
                                 ui.set_width(width);
                                 egui::ScrollArea::vertical()
                                     .id_salt("operation-message-text")
-                                    .max_height(44.)
+                                    .max_height(28.)
                                     .auto_shrink([false, false])
                                     .show(ui, |ui| {
                                         if let Some(color) = message_color {
@@ -2123,7 +2180,7 @@ impl eframe::App for DesktopApp {
                         );
                         if ui
                             .add_sized(
-                                egui::vec2(76., 40.),
+                                egui::vec2(76., 28.),
                                 egui::Button::new(self.t("关闭", "Dismiss")),
                             )
                             .on_hover_text(self.t("关闭提示", "Dismiss message"))
@@ -2136,22 +2193,24 @@ impl eframe::App for DesktopApp {
                 }
             });
         egui::Panel::bottom("operation-status")
-            .exact_size(44.)
+            .exact_size(30.)
             .resizable(false)
             .frame(egui::Frame::new().inner_margin(2))
             .show_inside(parent, |ui| {
+                ui.spacing_mut().interact_size.y = 24.;
+                ui.spacing_mut().button_padding.y = 2.;
                 ui.horizontal(|ui| {
-                    ui.set_min_height(40.);
+                    ui.set_min_height(26.);
                     ui.small(self.t(
                         if self.connected {
-                            "本用户守护进程已连接"
+                            "本机服务已连接"
                         } else {
-                            "守护进程未连接"
+                            "本机服务未连接"
                         },
                         if self.connected {
-                            "User daemon connected"
+                            "Local service connected"
                         } else {
-                            "User daemon disconnected"
+                            "Local service disconnected"
                         },
                     ));
                     if snapshot.logout_confirmed == Some(false) {
@@ -2177,6 +2236,21 @@ impl eframe::App for DesktopApp {
                     .inner_margin(self.tokens.layout.content_padding.round() as i8),
             )
             .show_inside(parent, |ui| {
+                // Remote desktop is a bounded workspace. Only the device
+                // directory, options and secondary sections scroll; polling
+                // cannot resize a page above its primary actions.
+                if self.screen == Screen::Remote
+                    && snapshot.authentication == Authentication::SignedIn
+                    && snapshot
+                        .server
+                        .as_ref()
+                        .is_some_and(|server| server.verified_health.is_some())
+                {
+                    ui.add_enabled_ui(self.connected && !self.exiting, |ui| {
+                        self.remote_page(ui, &snapshot);
+                    });
+                    return;
+                }
                 egui::ScrollArea::vertical()
                     .id_salt(("workspace-scroll", self.screen))
                     .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysVisible)

@@ -519,7 +519,7 @@ impl ServicePanel {
         let busy =
             snapshot.services.loading.is_some() || snapshot.selected_service.loading.is_some();
         ui.horizontal(|ui| {
-            ui.heading(t("服务发布", "Services"));
+            ui.heading(t("隧道入口", "Tunnel entries"));
             if ui
                 .add_enabled(!busy, egui::Button::new(t("刷新", "Refresh")))
                 .clicked()
@@ -531,7 +531,14 @@ impl ServicePanel {
                 });
             }
             if ui
-                .add_enabled(!busy, egui::Button::new(t("新建服务", "New service")))
+                .add_enabled(
+                    !busy,
+                    egui::Button::new(
+                        egui::RichText::new(t("新建隧道", "New tunnel"))
+                            .color(ui.visuals().selection.stroke.color),
+                    )
+                    .fill(ui.visuals().selection.bg_fill),
+                )
                 .clicked()
             {
                 self.draft_baseline = Some(Draft::new(snapshot).fingerprint());
@@ -540,135 +547,190 @@ impl ServicePanel {
             }
         });
         ui.label(t(
-            "先保存入口配置，再由目标设备的本机用户批准连接目标。",
-            "Save an ingress configuration, then approve its target on the host device.",
+            "把内网服务发布到访问入口。支持 TCP、UDP、HTTP 和 HTTPS。",
+            "Publish an intranet service through an access entry. TCP, UDP, HTTP and HTTPS are supported.",
         ));
         widgets::section(ui, &snapshot.services, english);
         widgets::section(ui, &snapshot.selected_service, english);
         if let Some(page) = &snapshot.services.data {
             if page.services.is_empty() {
                 ui.add_space(16.);
-                ui.label(t("尚无服务。新建一个配置以选择主机、入口和访问来源。", "No services yet. Create a configuration to choose its host, ingress and visitors."));
-            } else {
-                egui::Grid::new("service-directory")
-                    .num_columns(4)
-                    .striped(true)
-                    .spacing([20., 14.])
-                    .show(ui, |ui| {
-                        for label in [
-                            t("服务", "Service"),
-                            t("入口", "Ingress"),
-                            t("状态", "Status"),
-                            t("操作", "Actions"),
-                        ] {
-                            ui.strong(label);
-                        }
-                        ui.end_row();
-                        for view in &page.services {
-                            ui.vertical(|ui| {
-                                ui.label(&view.definition.name);
-                                ui.small(format!("{} {}", t("版本", "Version"), view.revision));
-                            });
-                            ui.label(ingress_label(&view.definition.requested_ingress));
-                            ui.vertical(|ui| {
-                                ui.label(match view.publication {
-                                    ServicePublicationStatus::NotPublished => {
-                                        t("未发布", "Not published")
-                                    }
-                                    ServicePublicationStatus::Published => t("已发布", "Published"),
-                                    ServicePublicationStatus::Stopping => t("正在停止", "Stopping"),
-                                });
-                                ui.small(match view.approval {
-                                    ServiceApprovalState::Pending => {
-                                        t("等待本机目标批准", "Awaiting local target approval")
-                                    }
-                                    ServiceApprovalState::ApprovedTarget => {
-                                        t("目标已批准", "Target approved")
-                                    }
-                                    ServiceApprovalState::Invalidated => {
-                                        t("目标批准已失效", "Target approval invalidated")
-                                    }
-                                    ServiceApprovalState::Revoked => t("已撤销", "Revoked"),
-                                });
-                            });
-                            ui.push_id(&view.id, |ui| {
-                                ui.horizontal(|ui| {
-                                    let live =
-                                        !busy && view.approval != ServiceApprovalState::Revoked;
-                                    if ui
-                                        .add_enabled(live, egui::Button::new(t("编辑", "Edit")))
-                                        .clicked()
-                                    {
-                                        self.draft_baseline = Some(Draft::edit(view).fingerprint());
-                                        self.draft = Some(Draft::edit(view));
-                                        self.error = None;
-                                    }
-                                    if ui
-                                        .add_enabled(live, egui::Button::new(t("撤销", "Revoke")))
-                                        .clicked()
-                                    {
-                                        self.revoke = Some(view.clone());
-                                    }
-                                    let local_device = snapshot.installation.as_ref().is_some_and(
-                                        |installation| {
-                                            installation.device_id == view.definition.host_device_id
-                                        },
-                                    );
-                                    if local_device
-                                        && matches!(
-                                            &view.definition.requested_ingress,
-                                            ServiceIngress::Tcp { .. }
-                                                | ServiceIngress::Udp { .. }
-                                                | ServiceIngress::Http { .. }
-                                                | ServiceIngress::Https { .. }
-                                        )
-                                        && ui
-                                            .add_enabled(
-                                                live,
-                                                egui::Button::new(t(
-                                                    "本机批准…",
-                                                    "Approve on this device…",
-                                                )),
-                                            )
-                                            .clicked()
-                                    {
-                                        let (protocol, address) =
-                                            match &view.definition.requested_ingress {
-                                                ServiceIngress::Tcp { port } => {
-                                                    ("tcp", format!("127.0.0.1:{port}"))
-                                                }
-                                                ServiceIngress::Udp { port } => {
-                                                    ("udp", format!("127.0.0.1:{port}"))
-                                                }
-                                                ServiceIngress::Http { .. } => {
-                                                    ("http", "127.0.0.1:80".into())
-                                                }
-                                                ServiceIngress::Https { .. } => {
-                                                    ("https", "127.0.0.1:443".into())
-                                                }
-                                            };
-                                        self.local_target = Some(LocalTargetDraft {
-                                            service_id: view.id.clone(),
-                                            protocol: protocol.into(),
-                                            address,
-                                            https_server_name: String::new(),
-                                            https_ca_certificates_der: Vec::new(),
-                                            https_ca_file_name: None,
-                                            tls_error: None,
-                                        });
-                                        self.invalidate_preview();
-                                        self.status_message = None;
-                                        command = Some(Command::Submit {
-                                            action: Action::InspectService {
-                                                service_id: view.id.clone(),
-                                            },
-                                        });
-                                    }
-                                });
-                            });
-                            ui.end_row();
-                        }
+                egui::Frame::new().fill(ui.visuals().window_fill).inner_margin(24).corner_radius(8)
+                    .stroke(ui.visuals().widgets.noninteractive.bg_stroke).show(ui, |ui| {
+                        ui.heading(t("创建第一个内网入口", "Create your first tunnel"));
+                        ui.label(t("先选择 Windows 主机、协议和访问入口，再在目标电脑上确认本机服务地址。", "Choose a Windows host, protocol and access entry, then confirm the local service address on the host."));
+                        ui.small(t("只有节点确认发布后，才显示入口已发布。", "An entry is shown as published only after the node confirms it."));
                     });
+            } else {
+                egui::ScrollArea::horizontal()
+                    .id_salt("tunnel-directory-scroll")
+                    .show(ui, |ui| {
+                        ui.set_min_width(560.);
+                        egui::Grid::new("service-directory")
+                            .min_col_width(72.)
+                            .max_col_width(220.)
+                            .num_columns(4)
+                            .striped(true)
+                            .spacing([20., 14.])
+                            .show(ui, |ui| {
+                                for label in [
+                                    t("隧道 / 目标设备", "Tunnel / host"),
+                                    t("访问入口", "Access entry"),
+                                    t("状态", "Status"),
+                                    t("操作", "Actions"),
+                                ] {
+                                    ui.strong(label);
+                                }
+                                ui.end_row();
+                                for view in &page.services {
+                                    ui.vertical(|ui| {
+                                        ui.add(
+                                            egui::Label::new(
+                                                egui::RichText::new(&view.definition.name).strong(),
+                                            )
+                                            .truncate(),
+                                        )
+                                        .on_hover_text(&view.definition.name);
+                                        let host = snapshot
+                                            .devices
+                                            .data
+                                            .as_deref()
+                                            .into_iter()
+                                            .flatten()
+                                            .find(|device| {
+                                                device.device.id == view.definition.host_device_id
+                                            })
+                                            .map(|device| device.device.name.as_str())
+                                            .unwrap_or(&view.definition.host_device_id);
+                                        ui.add(
+                                            egui::Label::new(
+                                                egui::RichText::new(host)
+                                                    .small()
+                                                    .color(ui.visuals().weak_text_color()),
+                                            )
+                                            .truncate(),
+                                        )
+                                        .on_hover_text(host);
+                                    });
+                                    ui.label(ingress_label(&view.definition.requested_ingress));
+                                    ui.vertical(|ui| {
+                                        ui.label(match view.publication {
+                                            ServicePublicationStatus::NotPublished => {
+                                                t("未发布", "Not published")
+                                            }
+                                            ServicePublicationStatus::Published => {
+                                                t("已发布", "Published")
+                                            }
+                                            ServicePublicationStatus::Stopping => {
+                                                t("正在停止", "Stopping")
+                                            }
+                                        });
+                                        ui.small(match view.approval {
+                                            ServiceApprovalState::Pending => t(
+                                                "等待本机目标批准",
+                                                "Awaiting local target approval",
+                                            ),
+                                            ServiceApprovalState::ApprovedTarget => {
+                                                t("目标已批准", "Target approved")
+                                            }
+                                            ServiceApprovalState::Invalidated => {
+                                                t("目标批准已失效", "Target approval invalidated")
+                                            }
+                                            ServiceApprovalState::Revoked => t("已撤销", "Revoked"),
+                                        });
+                                    });
+                                    ui.push_id(&view.id, |ui| {
+                                        ui.menu_button(t("操作", "Actions"), |ui| {
+                                            let live = !busy
+                                                && view.approval != ServiceApprovalState::Revoked;
+                                            if ui
+                                                .add_enabled(
+                                                    live,
+                                                    egui::Button::new(t("编辑", "Edit")),
+                                                )
+                                                .clicked()
+                                            {
+                                                self.draft_baseline =
+                                                    Some(Draft::edit(view).fingerprint());
+                                                self.draft = Some(Draft::edit(view));
+                                                self.error = None;
+                                                ui.close();
+                                            }
+                                            if ui
+                                                .add_enabled(
+                                                    live,
+                                                    egui::Button::new(t("撤销", "Revoke")),
+                                                )
+                                                .clicked()
+                                            {
+                                                self.revoke = Some(view.clone());
+                                                ui.close();
+                                            }
+                                            let local_device = snapshot
+                                                .installation
+                                                .as_ref()
+                                                .is_some_and(|installation| {
+                                                    installation.device_id
+                                                        == view.definition.host_device_id
+                                                });
+                                            if local_device
+                                                && matches!(
+                                                    &view.definition.requested_ingress,
+                                                    ServiceIngress::Tcp { .. }
+                                                        | ServiceIngress::Udp { .. }
+                                                        | ServiceIngress::Http { .. }
+                                                        | ServiceIngress::Https { .. }
+                                                )
+                                                && ui
+                                                    .add_enabled(
+                                                        live,
+                                                        egui::Button::new(t(
+                                                            "本机批准…",
+                                                            "Approve on this device…",
+                                                        )),
+                                                    )
+                                                    .clicked()
+                                            {
+                                                let (protocol, address) =
+                                                    match &view.definition.requested_ingress {
+                                                        ServiceIngress::Tcp { port } => {
+                                                            ("tcp", format!("127.0.0.1:{port}"))
+                                                        }
+                                                        ServiceIngress::Udp { port } => {
+                                                            ("udp", format!("127.0.0.1:{port}"))
+                                                        }
+                                                        ServiceIngress::Http { .. } => {
+                                                            ("http", "127.0.0.1:80".into())
+                                                        }
+                                                        ServiceIngress::Https { .. } => {
+                                                            ("https", "127.0.0.1:443".into())
+                                                        }
+                                                    };
+                                                self.local_target = Some(LocalTargetDraft {
+                                                    service_id: view.id.clone(),
+                                                    protocol: protocol.into(),
+                                                    address,
+                                                    https_server_name: String::new(),
+                                                    https_ca_certificates_der: Vec::new(),
+                                                    https_ca_file_name: None,
+                                                    tls_error: None,
+                                                });
+                                                self.invalidate_preview();
+                                                self.status_message = None;
+                                                ui.close();
+                                                command = Some(Command::Submit {
+                                                    action: Action::InspectService {
+                                                        service_id: view.id.clone(),
+                                                    },
+                                                });
+                                            }
+                                        });
+                                    });
+                                    ui.end_row();
+                                }
+                            });
+                    });
+                ui.add_space(12.);
                 ui.horizontal(|ui| {
                     if ui
                         .add_enabled(!busy, egui::Button::new(t("第一页", "First page")))
@@ -700,7 +762,7 @@ impl ServicePanel {
         if let Some(host) = &snapshot.local_service_host {
             ui.add_space(12.);
             ui.separator();
-            ui.heading(t("本机服务目标", "Local service target"));
+            ui.heading(t("本机隧道运行状态", "Local tunnel runtime"));
             ui.label(format!(
                 "{} · {} · {}:{} · {} {}",
                 host.service_name,

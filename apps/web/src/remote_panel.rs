@@ -467,6 +467,7 @@ pub fn RemotePanel(
     let display_switching = RwSignal::new(false);
     let statistics = RwSignal::new(None::<MediaStatistics>);
     let tools_open = RwSignal::new(false);
+    let options_open = RwSignal::new(true);
     let pending_cleanup = RwSignal::new(retained_count());
     let status = RwSignal::new(
         t(
@@ -846,18 +847,17 @@ pub fn RemotePanel(
             && !dialog.open()
         {
             let _ = dialog.show_modal();
+            options_open.set(true);
         }
     });
     view! {
         <Show when=move || target.get().is_some()>
             <dialog node_ref=remote_dialog id="remote-session" class="remote-session" aria-labelledby="remote-session-title" on:cancel=move |event: leptos::ev::Event| { event.prevent_default(); reset(); target.set(None); }>
                 <header class="remote-toolbar">
-                    <div><h2 id="remote-session-title">{move || target.get().map(|host| host.name).unwrap_or_default()}</h2>
+                    <div class="remote-heading"><h2 id="remote-session-title" title=move || target.get().map(|host| host.name).unwrap_or_default()>{move || target.get().map(|host| host.name).unwrap_or_default()}</h2>
                         <p aria-live="polite">{move || status.get()}</p></div>
                     <div class="remote-actions">
-                        <Show when=move || pending_cleanup.get() != 0 && !active.get()>
-                            <button class="secondary" type="button" on:click=retry_cleanup>{move || t("重试清理", "Retry cleanup")}</button>
-                        </Show>
+                        <span class="retry-cleanup-slot"><Show when=move || pending_cleanup.get() != 0 && !active.get()><button class="secondary" type="button" on:click=retry_cleanup>{move || t("重试清理", "Retry cleanup")}</button></Show></span>
                         <button class="secondary" type="button" on:click=toggle_fullscreen>{move || if fullscreen.get() { t("退出全屏", "Exit fullscreen") } else { t("全屏", "Fullscreen") }}</button>
                         <button class="secondary" type="button" aria-expanded=move || tools_open.get().to_string() aria-controls="remote-operation-center" on:click=move |_| tools_open.update(|open| *open = !*open)>{move || t("操作中心", "Control center")}</button>
                         <button class="secondary" type="button" on:click=play disabled=move || !active.get()>{move || t("播放画面与声音", "Play video and audio")}</button>
@@ -865,6 +865,7 @@ pub fn RemotePanel(
                         <button class="secondary" type="button" on:click=close>{move || t("关闭", "Close")}</button>
                     </div>
                 </header>
+                <div class="remote-progress-slot">
                 <Show when=move || active.get() || !problem.get().is_empty()>
                     <ol class="remote-progress" aria-label=move || t("连接进度", "Connection progress")>
                         <li class:current={move || phase.get() == 0} class:done={move || phase.get() > 0} aria-current={move || (phase.get() == 0).then_some("step")}>{move || t("请求批准", "Request access")}</li>
@@ -873,8 +874,11 @@ pub fn RemotePanel(
                         <li class:current={move || phase.get() == 3} aria-current={move || (phase.get() == 3).then_some("step")}>{move || t("远程会话", "Remote session")}</li>
                     </ol>
                 </Show>
+                </div>
+                <div class="remote-session-body">
                 <Show when=move || tools_open.get()>
                     <section id="remote-operation-center" class="remote-operation-center" aria-label=move || t("操作中心", "Control center")>
+                        <header class="operation-center-head"><h3>{move || t("操作中心", "Control center")}</h3><button class="text-button" type="button" on:click=move |_| tools_open.set(false)>{move || t("收起", "Hide")}</button></header>
                         <RemoteDisplaySelector snapshot=displays switching=display_switching active select=select_display />
                         <div class="remote-performance">
                             <h3>{move || t("连接与性能", "Connection and performance")}</h3>
@@ -910,11 +914,11 @@ pub fn RemotePanel(
                         <textarea id="remote-input-text" class="remote-input-text" disabled=move || display_switching.get() || !data_ready.get() aria-label=move || t("发送到远程设备的文本", "Text to send to the remote device") placeholder=move || t("点击后输入文本或使用输入法", "Click to type text or use your input method") rows="1"></textarea>
                     </Show>
                     <Show when=move || !picture.get()>
-                        <div class="remote-wait" aria-live="polite"><p>{move || status.get()}</p></div>
+                        <div class="remote-wait" aria-live="polite"><super::WorkspaceIcon kind=super::Section::Desktop /><h3>{move || if active.get() { t("正在建立远程会话", "Connecting to the remote desktop") } else { t("远程桌面", "Remote desktop") }}</h3><p>{move || status.get()}</p></div>
                     </Show>
                 </div>
                 <Show when=move || password_offer.get().is_some() && active.get()>
-                    <form class="policy-form" on:submit=submit_password>
+                    <form class="policy-form remote-password" on:submit=submit_password>
                         <h3>{move || t("用密码授权本次访问", "Authorize this request with a password")}</h3>
                         {move || password_offer.get().map(|offer| view! {
                             <p>{localized_format!("主机密码配置版本 {}", "Host password revision {}", offer.password_revision)}</p>
@@ -930,9 +934,11 @@ pub fn RemotePanel(
                         <button class="primary" type="submit" disabled=move || remote_password.with(|value| value.is_empty())>{move || t("仅授权本次请求", "Authorize this request only")}</button>
                     </form>
                 </Show>
+                </div>
                 <footer class="remote-footer">
-                    <div class="remote-permissions">
-                        <span>{move || t("请求查看画面", "Request screen viewing")}</span>
+                    <div class="remote-permission-controls"><button class="secondary" type="button" aria-controls="remote-permissions" aria-expanded=move || options_open.get().to_string() on:click=move |_| options_open.update(|open| *open = !*open)>{move || t("权限与连接方式", "Access and connection")}</button><span>{move || t("权限按本次请求授予", "Access is granted per request")}</span></div>
+                    <div id="remote-permissions" class="remote-permissions" hidden=move || !options_open.get()>
+                        <span class="remote-access-label">{move || t("本次访问权限", "Access for this session")}<small>{move || t("包含查看画面", "Screen viewing included")}</small></span>
                         <label><input type="checkbox" disabled=move || active.get() prop:checked=move || audio.get() on:change=move |event| audio.set(event_target_checked(&event)) />{move || t("同时请求声音", "Also request audio")}</label>
                         <label><input type="checkbox" disabled=move || active.get() prop:checked=move || input_control.get() on:change=move |event| input_control.set(event_target_checked(&event)) />{move || t("请求键盘和鼠标控制", "Request keyboard and mouse control")}</label>
                         <label><input type="checkbox" disabled=move || active.get() prop:checked=move || file_read.get() on:change=move |event| file_read.set(event_target_checked(&event)) />{move || t("请求文件下载", "Request file downloads")}</label>
@@ -950,9 +956,9 @@ pub fn RemotePanel(
                             <option value="password">{move || t("使用本次密码授权", "Authorize this request with a password")}</option>
                         </select></label>
                     </div>
-                    <button class="primary" type="button" on:click=start disabled=move || active.get()>{move || t("请求连接", "Request connection")}</button>
+                    <button class="primary" type="button" on:click=move |event| { start(event); if active.get_untracked() { options_open.set(false); } } disabled=move || active.get()>{move || t("请求连接", "Request connection")}</button>
                 </footer>
-                <Show when=move || !problem.get().is_empty()><p class="error-message remote-error" role="alert">{move || problem.get()}</p></Show>
+                <div class="remote-error-slot"><Show when=move || !problem.get().is_empty()><p class="error-message remote-error" role="alert">{move || problem.get()}</p></Show></div>
             </dialog>
         </Show>
     }
