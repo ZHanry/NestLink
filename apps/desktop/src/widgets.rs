@@ -21,7 +21,12 @@ pub fn fixed_region<R>(
         ui.available_rect_before_wrap().min,
         size.max(egui::Vec2::ZERO),
     );
-    let mut child = ui.new_child(egui::UiBuilder::new().id_salt(id).max_rect(rect));
+    let mut child = ui.new_child(
+        egui::UiBuilder::new()
+            .id_salt(id)
+            .max_rect(rect)
+            .layout(egui::Layout::top_down(egui::Align::Min)),
+    );
     child.set_clip_rect(rect.intersect(ui.clip_rect()));
     let result = contents(&mut child);
     ui.advance_cursor_after_rect(rect);
