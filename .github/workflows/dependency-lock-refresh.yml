@@ -11,6 +11,12 @@ on:
         description: Reviewed NestLink-dependencies main commit containing the DTLS fix
         required: true
         type: string
+      lock_scope:
+        description: Fixed workspace whose manifest and lock are derived
+        required: true
+        type: choice
+        default: product
+        options: [product, browser-native-fixture]
 
 permissions:
   contents: read
@@ -22,6 +28,7 @@ jobs:
     env:
       EXPECTED_SOURCE: ${{ inputs.source_revision }}
       EXPECTED_DEPENDENCY: ${{ inputs.dependency_revision }}
+      EXPECTED_SCOPE: ${{ inputs.lock_scope }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -38,12 +45,15 @@ jobs:
           actual = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
           assert actual == os.environ['GITHUB_SHA'] == os.environ['EXPECTED_SOURCE']
           assert subprocess.check_output(['git', 'status', '--porcelain=v1', '--untracked-files=all']) == b''
+          manifest = pathlib.Path({'product': 'Cargo.toml',
+                                  'browser-native-fixture': 'scripts/fixtures/browser-native-host/Cargo.toml'}[os.environ['EXPECTED_SCOPE']])
           output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'dtls-lock-evidence'
           output.mkdir()
           with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as environment:
               environment.write('EVIDENCE=' + str(output) + '\n')
-          shutil.copyfile('Cargo.toml', output / 'before.toml')
-          shutil.copyfile('Cargo.lock', output / 'before.lock')
+              environment.write('MANIFEST_PATH=' + manifest.as_posix() + '\n')
+          shutil.copyfile(manifest, output / 'before.toml')
+          shutil.copyfile(manifest.with_name('Cargo.lock'), output / 'before.lock')
       - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
         with:
           toolchain: '1.96.0'
@@ -51,7 +61,7 @@ jobs:
         shell: python
         run: |
           import os, pathlib, tomllib
-          path = pathlib.Path('Cargo.toml')
+          path = pathlib.Path(os.environ['MANIFEST_PATH'])
           text = path.read_text()
           parsed = tomllib.loads(text)
           patches = parsed['patch']['crates-io']
@@ -69,12 +79,12 @@ jobs:
           output = pathlib.Path(os.environ['EVIDENCE'])
           commands = {}
           try:
-              command = ['cargo', 'update', '-p', 'webrtc-ice', '--precise', os.environ['EXPECTED_DEPENDENCY']]
+              command = ['cargo', 'update', '--manifest-path', os.environ['MANIFEST_PATH'], '-p', 'webrtc-ice', '--precise', os.environ['EXPECTED_DEPENDENCY']]
               result = subprocess.run(command, check=False)
               commands['update'] = {'argv': command, 'return_code': result.returncode}
               if result.returncode != 0:
                   raise RuntimeError('Lock resolution failed; retain the original command result')
-              command = ['cargo', 'metadata', '--locked', '--format-version', '1', '--no-deps']
+              command = ['cargo', 'metadata', '--manifest-path', os.environ['MANIFEST_PATH'], '--locked', '--format-version', '1', '--no-deps']
               with (output / 'metadata.json').open('wb') as stream:
                   result = subprocess.run(command, stdout=stream, check=False)
               commands['metadata'] = {'argv': command, 'return_code': result.returncode}
@@ -89,14 +99,16 @@ jobs:
           import hashlib, json, os, pathlib, shutil, subprocess, tomllib
           output = pathlib.Path(os.environ['EVIDENCE'])
           assert output.is_dir()
-          for source, name in [('Cargo.toml', 'Cargo.toml'), ('Cargo.lock', 'Cargo.lock')]:
+          manifest = pathlib.Path(os.environ['MANIFEST_PATH'])
+          expected_paths = {manifest.as_posix(), manifest.with_name('Cargo.lock').as_posix()}
+          for source, name in [(manifest, 'Cargo.toml'), (manifest.with_name('Cargo.lock'), 'Cargo.lock')]:
               shutil.copyfile(source, output / name)
-          diff = subprocess.check_output(['git', 'diff', '--binary', '--', 'Cargo.toml', 'Cargo.lock'])
+          diff = subprocess.check_output(['git', 'diff', '--binary', '--', *sorted(expected_paths)])
           (output / 'derivation.diff').write_bytes(diff)
           status = subprocess.check_output(['git', 'status', '--porcelain=v1', '--untracked-files=all'])
           (output / 'source-status.txt').write_bytes(status)
           changed = [line[3:] for line in status.decode().splitlines()]
-          assertions = {'only_expected_source_paths_changed': set(changed) <= {'Cargo.toml', 'Cargo.lock'}}
+          assertions = {'only_expected_source_paths_changed': set(changed) <= expected_paths}
           evidence_error = None
           try:
               packages = tomllib.loads((output / 'Cargo.lock').read_text())['package']
@@ -122,6 +134,7 @@ jobs:
               'repository': os.environ['GITHUB_REPOSITORY'],
               'source_revision': os.environ['EXPECTED_SOURCE'],
               'dependency_revision': os.environ['EXPECTED_DEPENDENCY'],
+              'lock_scope': os.environ['EXPECTED_SCOPE'], 'manifest_path': manifest.as_posix(),
               'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
               'advisory': 'RUSTSEC-2026-0387', 'assertions': assertions,
               'evidence_error': evidence_error,
