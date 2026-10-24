@@ -38,6 +38,9 @@ async function settled(page) {
 }
 async function values(page) { return page.$$eval(INPUTS, els => els.map(el => el.value)); }
 async function fill(page, fields) {
+  // Locator.fill checks stable bounds on animation frames. A previous writer
+  // may have left this tab in the background, where Chromium pauses frames.
+  await page.bringToFront();
   const inputs = await page.$$(INPUTS);
   check(inputs.length === 4, 'Expected four real editor fields');
   for (let i = 0; i < fields.length; i++) {
@@ -173,6 +176,7 @@ async function run(page, ready, report) {
   } finally {
     active = null;
     if (sibling) await sibling.close();
+    await page.bringToFront();
     await clickText(page, '.sidebar nav button', 'Remote desktop');
     await page.waitForSelector('.desktop-directory button.record', { visible: true, timeout: 5000 });
   }
