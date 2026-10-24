@@ -795,10 +795,11 @@ impl CoreHandle {
                 .selected
                 .clone()
                 .ok_or_else(|| denied("format proposal before display ACK"))?;
-            if let Some(value) = state.formats.confirmed() {
-                if value.display == display && value.format == format {
-                    return Ok(true);
-                }
+            if let Some(value) = state.formats.confirmed()
+                && value.display == display
+                && value.format == format
+            {
+                return Ok(true);
             }
             if let Some(value) = state.formats.pending() {
                 if value.display == display && value.format == format {
