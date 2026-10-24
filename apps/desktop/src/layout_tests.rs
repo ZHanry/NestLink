@@ -1220,7 +1220,7 @@ fn embedded_remote_viewport_stops_gpu_and_uses_cpu() {
         &workspace.context,
         &snapshot,
         true,
-        egui::ViewportClass::Embedded,
+        egui::ViewportClass::EmbeddedWindow,
     ));
     assert!(!workspace.app.gpu_video.active());
     assert!(!workspace.app.gpu_video.ready());
@@ -1232,7 +1232,7 @@ fn embedded_remote_viewport_stops_gpu_and_uses_cpu() {
         &workspace.context,
         &snapshot,
         true,
-        egui::ViewportClass::Embedded,
+        egui::ViewportClass::EmbeddedWindow,
     ));
     assert!(!workspace.app.gpu_video.active());
 }

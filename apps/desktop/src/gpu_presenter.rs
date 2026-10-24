@@ -87,16 +87,16 @@ impl Presenter {
         ui.painter().add(egui::PaintCallback {
             rect,
             callback: Arc::new(egui_glow::CallbackFn::new(move |info, _| {
-                let overlay = context.memory(|memory| {
-                    memory.any_popup_open()
-                        || memory.top_modal_layer().is_some()
-                        || memory.areas().visible_layer_ids().iter().any(|candidate| {
-                            candidate.order > layer.order
-                                && memory
-                                    .area_rect(candidate.id)
-                                    .is_some_and(|area| area.intersects(rect))
-                        })
-                });
+                let overlay = egui::Popup::is_any_open(&context)
+                    || context.memory(|memory| {
+                        memory.top_modal_layer().is_some()
+                            || memory.areas().visible_layer_ids().iter().any(|candidate| {
+                                candidate.order > layer.order
+                                    && memory
+                                        .area_rect(candidate.id)
+                                        .is_some_and(|area| area.intersects(rect))
+                            })
+                    });
                 let Ok(mut state) = state.lock() else {
                     return;
                 };
