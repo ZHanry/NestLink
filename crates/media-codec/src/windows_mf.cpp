@@ -65,7 +65,7 @@ struct Codec {
     ComPtr<IMFDXGIDeviceManager> manager;
     uint32_t width = 0, height = 0, fps = 0, level = 0;
     bool gpu_input = false;
-    uint32_t gpu_calls=0, gpu_accepted=0, gpu_pool_blocked=0, gpu_outputs=0, gpu_need_input=0;
+    uint32_t gpu_calls=0, gpu_accepted=0, gpu_pool_blocked=0, gpu_outputs=0, gpu_need_input=0, gpu_copy_pending=0;
     std::array<ComPtr<ID3D11Texture2D>, 4> gpu_slots;
     std::shared_ptr<GpuRelease> gpu_release;
 
@@ -561,7 +561,15 @@ int32_t process(Codec& state, const uint8_t* input, size_t input_length,
             const ULONGLONG deadline = GetTickCount64() + 16;
             do { hr = state.context->GetData(query.Get(), nullptr, 0, 0); if (hr == S_FALSE) Sleep(0); }
             while (hr == S_FALSE && GetTickCount64() < deadline);
-            if (hr != S_OK) return FAILED(hr) ? hr : HRESULT_FROM_WIN32(WAIT_TIMEOUT);
+            if (hr == S_FALSE) {
+                // The bounded copy wait expired without a device error. This
+                // input was never handed to MF, so preserve unaccepted status.
+                // Commands on this same immediate context remain ordered; the
+                // tracked callback releases the slot after the local sample dies.
+                ++state.gpu_copy_pending;
+                return 3;
+            }
+            if (FAILED(hr)) return hr;
             hr = MFCreateDXGISurfaceBuffer(__uuidof(ID3D11Texture2D), state.gpu_slots[slot].Get(), 0, FALSE, &buffer);
             if (SUCCEEDED(hr)) hr = buffer->SetCurrentLength(static_cast<DWORD>(size));
         } else {
@@ -681,8 +689,8 @@ extern "C" int32_t nl_mf_close_checked(void* opaque) noexcept {
     if (state->gpu_input && state->gpu_release) {
         unsigned busy_slots=0;
         for (const auto& slot : state->gpu_release->busy) if (slot.load(std::memory_order_acquire)) ++busy_slots;
-        std::fprintf(stderr,"host_gpu_mf_stage=close calls=%u accepted=%u pool_blocked=%u output_samples=%u output_need_input=%u busy_slots=%u asynchronous=%u input_credits=%u output_credits=%u\n",
-            state->gpu_calls,state->gpu_accepted,state->gpu_pool_blocked,state->gpu_outputs,state->gpu_need_input,busy_slots,state->events?1u:0u,state->input_events,state->output_events);
+        std::fprintf(stderr,"host_gpu_mf_stage=close calls=%u accepted=%u pool_blocked=%u output_samples=%u output_need_input=%u copy_pending=%u busy_slots=%u asynchronous=%u input_credits=%u output_credits=%u\n",
+            state->gpu_calls,state->gpu_accepted,state->gpu_pool_blocked,state->gpu_outputs,state->gpu_need_input,state->gpu_copy_pending,busy_slots,state->events?1u:0u,state->input_events,state->output_events);
         if (state->transform) {
             state->transform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH,0);
             state->transform->ProcessMessage(MFT_MESSAGE_NOTIFY_END_STREAMING,0);

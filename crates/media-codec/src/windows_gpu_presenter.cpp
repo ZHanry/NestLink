@@ -77,11 +77,19 @@ struct Presenter {
     ComPtr<IMFSample> pending;
     std::array<ComPtr<IMFSample>,8> ready{};
     size_t ready_count=0;
+    size_t ready_high_water=0;
+    uint64_t decoded_outputs=0, retired_pictures=0;
     ComPtr<ID3D11Query> completion;
     struct Timing { uint64_t pts=0,due=0,expires=0; };
     std::array<Timing,8> times{};
     size_t time_head=0,time_size=0;
     ~Presenter() {
+        if (surface && surface->probe_parent) {
+            std::fprintf(stderr,"gpu_native_summary decoded=%llu retired=%llu ready_high_water=%llu pending=%llu\n",
+                static_cast<unsigned long long>(decoded_outputs),static_cast<unsigned long long>(retired_pictures),
+                static_cast<unsigned long long>(ready_high_water),static_cast<unsigned long long>(time_size));
+            std::fflush(stderr);
+        }
         trace(surface,"destructor_black_begin");
         if (swap && context) black(*this);
         trace(surface,"destructor_decoder_flush_begin");
@@ -218,7 +226,12 @@ HRESULT receive(Presenter& p, uint64_t* pts, uint64_t* qpc, uint32_t* submitted,
         p.pending.Reset();
     }
     HRESULT hr=S_OK;
-    if (p.ready_count<p.time_size) {
+    // Retire the decoded picture before asking the decoder for another surface.
+    // Giving ProcessOutput priority under continuous input retained the entire
+    // DXVA surface pool without ever reaching presentation. ProcessOutput could
+    // then block waiting for one of the very samples held here. Keep at most one
+    // ready output; its scheduled due time and GPU-consumption fence still apply.
+    if (!p.ready_count && p.time_size) {
     MFT_OUTPUT_STREAM_INFO info{};
     hr=p.decoder->GetOutputStreamInfo(0,&info); if (FAILED(hr)) return hr;
     // DXVA decoders supply GPU samples; CPU allocation is not a GPU path.
@@ -239,7 +252,9 @@ HRESULT receive(Presenter& p, uint64_t* pts, uint64_t* qpc, uint32_t* submitted,
     const auto value=static_cast<uint64_t>(received_time);
     const auto received_pts=value/1000*9+(value%1000*9+500)/1000;
     if (p.times[(p.time_head+p.ready_count)%p.times.size()].pts!=received_pts) return E_UNEXPECTED;
-    ++p.ready_count; *pts=received_pts;
+    ++p.ready_count; ++p.decoded_outputs;
+    if (p.ready_count>p.ready_high_water) p.ready_high_water=p.ready_count;
+    *pts=received_pts;
     return 2; // Actual MF output receipt, once, independent of presentation timing.
     }
 present_ready:
@@ -260,7 +275,7 @@ present_ready:
     LARGE_INTEGER now{}; QueryPerformanceCounter(&now);
     const auto ticks=static_cast<uint64_t>(now.QuadPart);
     if (timing.due && ticks<timing.due) return S_FALSE;
-    p.ready[p.time_head].Reset(); --p.ready_count;
+    p.ready[p.time_head].Reset(); --p.ready_count; ++p.retired_pictures;
     p.time_head=(p.time_head+1)%p.times.size(); --p.time_size;
     *pts=actual_pts; *qpc=ticks;
     if (timing.expires && ticks>timing.expires) return S_OK; // decoded, deliberately not presented

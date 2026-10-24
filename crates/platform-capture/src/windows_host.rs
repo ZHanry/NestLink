@@ -6,7 +6,13 @@ use nestlink_media_codec::{
     VideoEncoder,
 };
 use nestlink_remote::video::{HostEncodeStep, HostFrame, HostPacket, HostVideoConfig};
-use std::{collections::BTreeMap, ffi::c_void, marker::PhantomData, ptr::NonNull, rc::Rc};
+use std::{
+    collections::{BTreeMap, VecDeque},
+    ffi::c_void,
+    marker::PhantomData,
+    ptr::NonNull,
+    rc::Rc,
+};
 
 unsafe extern "C" {
     fn nl_capture_gpu_open(
@@ -208,6 +214,11 @@ fn gpu_pipeline_with_capture(
     if hr < 0 || texture.is_null() {
         return Err(bridge("synthetic conversion", hr));
     }
+    // A fresh software decoder sees only hardware IDRs from this probe. Keep
+    // the real stream alive: a decoder may release its first picture only once
+    // it has seen the next independent AU, without requiring an EOS shortcut.
+    let mut decoder = MfH264Decoder::new(c.width, c.height, false)?;
+    let mut expected_pts = VecDeque::new();
     let started = Instant::now();
     let mut pts = 1;
     let mut verified = false;
@@ -244,7 +255,16 @@ fn gpu_pipeline_with_capture(
                 continue;
             }
             hardware_idrs += 1;
-            let mut decoder = MfH264Decoder::new(c.width, c.height, false)?;
+            eprintln!(
+                "host_gpu_probe_stage=independent_decode_begin pts={}",
+                packet.pts_90khz
+            );
+            if expected_pts.len() >= 16 {
+                return Err(io::Error::other(
+                    "GPU probe independent decoder ledger full",
+                ));
+            }
+            expected_pts.push_back(packet.pts_90khz);
             let mut decoded = decoder.decode_frame(&packet.data, packet.pts_90khz)?;
             for _ in 0..8 {
                 if decoded.is_some() {
@@ -253,12 +273,23 @@ fn gpu_pipeline_with_capture(
                 check()?;
                 decoded = decoder.drain_frame()?;
             }
+            eprintln!(
+                "host_gpu_probe_stage=independent_decode_end pts={} image={}",
+                packet.pts_90khz,
+                decoded.is_some()
+            );
             let Some((decoded, decoded_pts)) = decoded else {
                 decoder_empty += 1;
                 continue;
             };
+            let expected = expected_pts.pop_front().ok_or_else(|| {
+                io::Error::other("GPU probe independent output without submitted IDR")
+            })?;
+            eprintln!(
+                "host_gpu_probe_stage=independent_output actual_pts={decoded_pts} expected_pts={expected}"
+            );
             let decoded = zeroize::Zeroizing::new(decoded);
-            if decoded_pts != packet.pts_90khz
+            if decoded_pts != expected
                 || decoded.len() != pixels.len()
                 || decoded.chunks_exact(4).any(|p| {
                     (i32::from(p[0]) - 32).abs() > 40

@@ -107,10 +107,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             std::thread::sleep(Duration::from_millis(1));
         }
-        if accepted == 0 || decoded == 0 || submitted == 0 || converted == 0 {
-            return Err(io::Error::other(
-                "GPU probe produced no actual hardware output/submission",
-            ));
+        stage(&format!(
+            "drain_end accepted={accepted} decoded={decoded} completed={completed} converted={converted} submitted={submitted}"
+        ));
+        // Exercise several decoder-surface/IPC-credit pool turnovers. A single
+        // successful frame would miss output starvation under continuous input.
+        if accepted < 16 || decoded < 16 || converted < 16 || submitted == 0 {
+            return Err(io::Error::other(format!(
+                "GPU probe did not sustain hardware output/submission: accepted={accepted} decoded={decoded} converted={converted} submitted={submitted}"
+            )));
         }
         stage("revoke_begin");
         surface.revoke();

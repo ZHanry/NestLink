@@ -84,7 +84,7 @@ fn namespace_ui_requires_explicit_revision_zero_and_isolates_selected_node() {
         "denial must not create an editable empty namespace"
     );
     workspace.click(size, "首次配置");
-    assert_eq!(workspace.bounds("配置版本 0").len(), 1);
+    assert_eq!(workspace.label_bounds("配置版本 0").len(), 1);
     assert_eq!(workspace.bounds("保存").len(), 1);
     workspace.click(size, "重新读取");
     let submission = namespace_submission(&workspace);
@@ -103,7 +103,7 @@ fn namespace_ui_requires_explicit_revision_zero_and_isolates_selected_node() {
     workspace.app.bridge.layout_snapshot(snapshot.clone());
     namespace_completion(&workspace, submission, &snapshot, true, false);
     workspace.frame(size, vec![]);
-    assert_eq!(workspace.bounds("配置版本 5").len(), 1);
+    assert_eq!(workspace.label_bounds("配置版本 5").len(), 1);
     for (previous, edited) in [
         ("services.example.com", "draft.example.com"),
         ("manage.example.com", "admin.example.com"),
@@ -124,7 +124,7 @@ fn namespace_ui_requires_explicit_revision_zero_and_isolates_selected_node() {
     namespace_completion(&workspace, submission, &snapshot, false, true);
     workspace.frame(size, vec![]);
     assert_eq!(
-        workspace.bounds("配置版本 5").len(),
+        workspace.label_bounds("配置版本 5").len(),
         1,
         "CAS failure must retain the user's draft"
     );
@@ -135,7 +135,7 @@ fn namespace_ui_requires_explicit_revision_zero_and_isolates_selected_node() {
         "127.0.0.2:29104",
     ] {
         assert_eq!(
-            workspace.bounds(value).len(),
+            workspace.text_input_bounds(value).len(),
             1,
             "save failure must retain {value}"
         );
@@ -167,7 +167,7 @@ fn namespace_ui_requires_explicit_revision_zero_and_isolates_selected_node() {
     workspace.app.bridge.layout_snapshot(snapshot.clone());
     namespace_completion(&workspace, late_a, &snapshot, true, false);
     workspace.frame(size, vec![]);
-    assert!(workspace.bounds("配置版本 5").is_empty());
+    assert!(workspace.label_bounds("配置版本 5").is_empty());
     assert!(workspace.bounds("保存").is_empty());
     let mut denied_a = snapshot.clone();
     denied_a.service_edge_namespace.error = Some(Failure {
@@ -186,10 +186,10 @@ fn namespace_ui_requires_explicit_revision_zero_and_isolates_selected_node() {
         false,
     );
     assert!(
-        workspace.bounds(&old_error).is_empty(),
+        workspace.label_bounds(&old_error).is_empty(),
         "A section error must not appear in B's panel"
     );
-    assert_eq!(workspace.bounds("正在读取公网入口…").len(), 1);
+    assert_eq!(workspace.label_bounds("正在读取公网入口…").len(), 1);
     namespace_completion(&workspace, late_a, &denied_a, false, false);
     workspace
         .app
@@ -215,7 +215,7 @@ fn namespace_ui_requires_explicit_revision_zero_and_isolates_selected_node() {
     namespace_completion(&workspace, current_b, &snapshot, true, false);
     workspace.frame(size, vec![]);
     assert_eq!(
-        workspace.bounds("配置版本 9").len(),
+        workspace.label_bounds("配置版本 9").len(),
         1,
         "B's matching reply must finish B's read"
     );
@@ -233,16 +233,16 @@ fn namespace_ui_requires_explicit_revision_zero_and_isolates_selected_node() {
     workspace.app.bridge.layout_snapshot(snapshot.clone());
     namespace_completion(&workspace, submission, &snapshot, true, true);
     workspace.frame(size, vec![]);
-    assert_eq!(workspace.bounds("配置版本 10").len(), 1);
+    assert_eq!(workspace.label_bounds("配置版本 10").len(), 1);
     let mut stale_section = snapshot.clone();
     stale_section.service_edge_namespace.error = denied_a.service_edge_namespace.error.clone();
     stale_section.service_edge_namespace.loading =
         Some(serde_json::from_str("99").expect("operation ID"));
     workspace.app.bridge.layout_snapshot(stale_section);
     workspace.frame(size, vec![]);
-    assert!(workspace.bounds(&old_error).is_empty());
-    assert!(workspace.bounds("正在加载…").is_empty());
-    assert!(workspace.bounds("正在读取公网入口…").is_empty());
+    assert!(workspace.label_bounds(&old_error).is_empty());
+    assert!(workspace.label_bounds("正在加载…").is_empty());
+    assert!(workspace.label_bounds("正在读取公网入口…").is_empty());
     workspace.app.bridge.layout_snapshot(snapshot.clone());
     // A's old denial and command rejection cannot unlock first-time setup or
     // replace B's successful result, even after B has finished.
@@ -261,7 +261,7 @@ fn namespace_ui_requires_explicit_revision_zero_and_isolates_selected_node() {
             reason: nestlink_app_ipc::wire::Rejection::StaleGeneration,
         });
     workspace.frame(size, vec![]);
-    assert_eq!(workspace.bounds("配置版本 10").len(), 1);
+    assert_eq!(workspace.label_bounds("配置版本 10").len(), 1);
     assert!(workspace.bounds("首次配置").is_empty());
     workspace.click(size, "保存");
     let (rejected, command) = workspace
@@ -280,7 +280,7 @@ fn namespace_ui_requires_explicit_revision_zero_and_isolates_selected_node() {
             reason: nestlink_app_ipc::wire::Rejection::StaleGeneration,
         });
     workspace.frame(size, vec![]);
-    assert_eq!(workspace.bounds("配置版本 10").len(), 1);
+    assert_eq!(workspace.label_bounds("配置版本 10").len(), 1);
     workspace.click(size, "重新读取");
     let reload = namespace_submission(&workspace);
     namespace_completion(&workspace, reload, &snapshot, true, false);
@@ -292,7 +292,7 @@ fn namespace_ui_requires_explicit_revision_zero_and_isolates_selected_node() {
         .bridge
         .layout_notice(bridge::Notice::Disconnected);
     workspace.frame(size, vec![]);
-    assert_eq!(workspace.bounds("配置版本 10").len(), 1);
+    assert_eq!(workspace.label_bounds("配置版本 10").len(), 1);
     workspace.click(size, "重新读取");
     let reload = namespace_submission(&workspace);
     namespace_completion(&workspace, reload, &snapshot, true, false);
@@ -302,12 +302,18 @@ fn namespace_ui_requires_explicit_revision_zero_and_isolates_selected_node() {
     workspace.app.bridge = Bridge::for_layout(snapshot);
     workspace.click(size, "保存");
     workspace.frame(size, vec![]);
-    assert_eq!(workspace.bounds("配置版本 10").len(), 1);
-    assert_eq!(workspace.bounds("请求未送出，请重新读取配置。").len(), 1);
+    assert_eq!(workspace.label_bounds("配置版本 10").len(), 1);
+    assert_eq!(
+        workspace.label_bounds("请求未送出，请重新读取配置。").len(),
+        1
+    );
     assert!(workspace.bounds("首次配置").is_empty());
     workspace.click(size, "重新读取");
     workspace.frame(size, vec![]);
-    assert_eq!(workspace.bounds("请求未送出，请重新读取配置。").len(), 1);
+    assert_eq!(
+        workspace.label_bounds("请求未送出，请重新读取配置。").len(),
+        1
+    );
 }
 
 fn namespace_submission(workspace: &Workspace) -> u64 {
@@ -464,16 +470,46 @@ impl Workspace {
     }
 
     fn bounds(&self, label: &str) -> Vec<egui::Rect> {
+        self.bounds_with_role(label, None)
+    }
+
+    fn text_input_bounds(&self, value: &str) -> Vec<egui::Rect> {
+        self.bounds_with_role(value, Some(egui::accesskit::Role::TextInput))
+    }
+
+    fn label_bounds(&self, label: &str) -> Vec<egui::Rect> {
+        // Selectable egui labels expose both a Label widget and TextRun
+        // children with the same text. Count semantic labels, retaining the
+        // role-specific text-input lookup and ordinary button lookup.
+        self.bounds_with_role(label, Some(egui::accesskit::Role::Label))
+    }
+
+    fn bounds_with_role(
+        &self,
+        label: &str,
+        role: Option<egui::accesskit::Role>,
+    ) -> Vec<egui::Rect> {
         let mut visible = Vec::new();
         let mut queue: Vec<_> = self.root.into_iter().collect();
         while let Some(id) = queue.pop() {
             if let Some(node) = self.nodes.get(&id) {
+                if role.is_some() && node.label().or_else(|| node.value()) == Some(label) {
+                    // Captured test output preserves the widget/run relationship
+                    // if a later assertion fails in CI.
+                    eprintln!(
+                        "label={label:?} node={id:?} role={:?} bounds={:?} children={:?}",
+                        node.role(),
+                        node.bounds(),
+                        node.children()
+                    );
+                }
                 visible.push(node);
                 queue.extend(node.children());
             }
         }
         let mut rects: Vec<_> = visible
             .into_iter()
+            .filter(|node| role.is_none_or(|role| node.role() == role))
             .filter(|node| node.label().or_else(|| node.value()) == Some(label))
             .filter_map(|node| node.bounds())
             .map(|rect| {
@@ -493,7 +529,8 @@ impl Workspace {
     }
 
     fn replace_text(&mut self, size: egui::Vec2, previous: &str, value: &str) {
-        self.click(size, previous);
+        let bounds = self.text_input_bounds(previous);
+        self.click_bounds(size, previous, bounds);
         self.frame(
             size,
             vec![egui::Event::Key {
@@ -521,11 +558,15 @@ impl Workspace {
                 egui::Event::Text(value.into()),
             ],
         );
-        assert_eq!(self.bounds(value).len(), 1);
+        assert_eq!(self.text_input_bounds(value).len(), 1);
     }
 
     fn click(&mut self, size: egui::Vec2, label: &str) {
         let bounds = self.bounds(label);
+        self.click_bounds(size, label, bounds);
+    }
+
+    fn click_bounds(&mut self, size: egui::Vec2, label: &str, bounds: Vec<egui::Rect>) {
         assert_eq!(bounds.len(), 1, "ambiguous or missing control: {label}");
         let pos = bounds[0].center();
         for pressed in [true, false] {
