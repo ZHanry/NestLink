@@ -22,7 +22,6 @@ jobs:
     env:
       EXPECTED_SOURCE: ${{ inputs.source_revision }}
       EXPECTED_DEPENDENCY: ${{ inputs.dependency_revision }}
-      EVIDENCE: ${{ runner.temp }}/dtls-lock-evidence
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -39,8 +38,10 @@ jobs:
           actual = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
           assert actual == os.environ['GITHUB_SHA'] == os.environ['EXPECTED_SOURCE']
           assert subprocess.check_output(['git', 'status', '--porcelain=v1', '--untracked-files=all']) == b''
-          output = pathlib.Path(os.environ['EVIDENCE'])
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'dtls-lock-evidence'
           output.mkdir()
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as environment:
+              environment.write('EVIDENCE=' + str(output) + '\n')
           shutil.copyfile('Cargo.toml', output / 'before.toml')
           shutil.copyfile('Cargo.lock', output / 'before.lock')
       - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
