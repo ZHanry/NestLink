@@ -31,6 +31,7 @@ tower = { version = "=0.5.3", features = ["util"] }
 tokio = { version = "=1.53.3", features = ["rt-multi-thread", "macros", "net", "time", "sync", "io-util"] }
 
 [patch.crates-io]
+dtls = { version = "=0.13.0", git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "main" }
 turn = { version = "=0.17.2", git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "main" }
 turn-client = { package = "turn", version = "=0.11.0", git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "main" }
 webrtc-ice = { git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "main" }

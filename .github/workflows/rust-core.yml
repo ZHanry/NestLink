@@ -2,9 +2,9 @@ name: NestLink Rust core
 on:
   push:
     branches: [main]
-    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'deny.toml', 'config/ui-tokens.json', 'config/product-scope.json', 'config/dependency-forks.json', 'crates/**', 'apps/**', 'packaging/**', 'xtask/**', 'protocol-spec/**', '.cargo/**', 'scripts/refactor-*.py', 'scripts/acceptance/**', '.github/workflows/public-tunnel-acceptance.yml', 'scripts/test-vp8-boundary-sanitizer.sh', 'scripts/test-pipewire-audio-sanitizer.sh', 'tests/refactor/**', 'docs/refactor/native-codecs.lock.json', 'docs/refactor/cargo-notice-supplements.json', '.github/workflows/rust-core.yml']
+    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'deny.toml', 'config/ui-tokens.json', 'config/product-scope.json', 'config/dependency-forks.json', 'crates/**', 'apps/**', 'packaging/**', 'xtask/**', 'protocol-spec/**', '.cargo/**', 'scripts/refactor-*.py', 'scripts/acceptance/**', 'scripts/fixtures/browser-native-host/**', '.github/workflows/public-tunnel-acceptance.yml', 'scripts/test-vp8-boundary-sanitizer.sh', 'scripts/test-pipewire-audio-sanitizer.sh', 'tests/refactor/**', 'docs/refactor/native-codecs.lock.json', 'docs/refactor/cargo-notice-supplements.json', '.github/workflows/rust-core.yml']
   pull_request:
-    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'deny.toml', 'config/ui-tokens.json', 'config/product-scope.json', 'config/dependency-forks.json', 'crates/**', 'apps/**', 'packaging/**', 'xtask/**', 'protocol-spec/**', '.cargo/**', 'scripts/refactor-*.py', 'scripts/acceptance/**', '.github/workflows/public-tunnel-acceptance.yml', 'scripts/test-vp8-boundary-sanitizer.sh', 'scripts/test-pipewire-audio-sanitizer.sh', 'tests/refactor/**', 'docs/refactor/native-codecs.lock.json', 'docs/refactor/cargo-notice-supplements.json', '.github/workflows/rust-core.yml']
+    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'deny.toml', 'config/ui-tokens.json', 'config/product-scope.json', 'config/dependency-forks.json', 'crates/**', 'apps/**', 'packaging/**', 'xtask/**', 'protocol-spec/**', '.cargo/**', 'scripts/refactor-*.py', 'scripts/acceptance/**', 'scripts/fixtures/browser-native-host/**', '.github/workflows/public-tunnel-acceptance.yml', 'scripts/test-vp8-boundary-sanitizer.sh', 'scripts/test-pipewire-audio-sanitizer.sh', 'tests/refactor/**', 'docs/refactor/native-codecs.lock.json', 'docs/refactor/cargo-notice-supplements.json', '.github/workflows/rust-core.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -336,4 +336,7 @@ jobs:
           persist-credentials: false
       - run: rustup show
       - run: cargo install cargo-deny --version 0.20.2 --locked
-      - run: cargo deny --all-features check
+      - name: Audit the locked product dependency graph
+        run: cargo deny --locked --all-features --config deny.toml check
+      - name: Audit the independent locked browser fixture graph
+        run: cargo deny --manifest-path scripts/fixtures/browser-native-host/Cargo.toml --locked --all-features --config deny.toml check

@@ -78,9 +78,14 @@ If the host fails early, management remains available until the browser creates
 `stop.request` or the original lifetime expires so its real revoke and temporary
 device cleanup can finish without secondary connection failures masking the cause.
 
-The fixture registry versions and checksums must remain a subset of the reviewed
-root Cargo.lock. It introduces no new third-party library version. Keep its
-separate lockfile and preserve failed attempts alongside successful evidence.
+New fixture registry identities, versions and checksums must match the reviewed
+root Cargo.lock. Its separate lock retains three existing registry differences:
+zbus_names 4.3.5 (root 4.3.4), zvariant 5.15.1 and zvariant_derive 5.15.1 (root
+5.15.0). Their checksums and versions are unchanged by the DTLS security update;
+see `docs/refactor/dtls-dependency-review-2026-10-24.md` from the repository root.
+Both locked graphs undergo dependency audit. These baseline differences do not
+exempt advisories. Keep the separate lockfile and preserve failed attempts
+alongside successful evidence.
 
 ## Explicit owned input and files mode
 
