@@ -265,6 +265,24 @@ jobs:
           path: ${{ runner.temp }}/nestlink-hevc-gpu-target-probe/
           if-no-files-found: error
           retention-days: 14
+      - name: Build the controller direction diagnostic with the normal token
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python scripts/refactor-windows-normal-user.py cargo build --locked --release -p nestlink-media-codec --example windows-controller-direction-probe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Bind the controller direction diagnostic to its exact source and run
+        if: runner.os == 'Windows'
+        run: python -B scripts/refactor-controller-direction-artifact.py
+      - name: Retain the separate exact-source controller direction diagnostic
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: nestlink-controller-direction-target-probe
+          path: ${{ runner.temp }}/nestlink-controller-direction-target-probe/
+          if-no-files-found: error
+          retention-days: 14
       - if: runner.os == 'Linux'
         run: cargo test --workspace --locked --no-fail-fast
       - name: Test Windows with the ordinary business-process token

@@ -18,6 +18,7 @@
 #include <cstring>
 #include <array>
 #include <cstdio>
+#include "owner_observation.h"
 using Microsoft::WRL::ComPtr;
 namespace {
 struct Surface {
@@ -60,7 +61,13 @@ LRESULT CALLBACK parent_proc(HWND hwnd, UINT message, WPARAM w, LPARAM l, UINT_P
 }
 struct Presenter;
 HRESULT black(Presenter& p);
+std::atomic<bool> nl_gpu_probe_owner_reserved{false};
 struct Presenter {
+    bool probe_owner_reserved=false; bool checked_shutdown=false;
+    GUID observation_id{}; bool observation_initialized=false;
+    bool probe_color_enabled=false; std::array<uint8_t,4> probe_expected{}; uint32_t probe_tolerance=0;
+    uint64_t probe_colors=0;
+    ComPtr<ID3D11Texture2D> probe_staging;
     Surface* surface=nullptr;
     DWORD thread=GetCurrentThreadId();
     bool com=false, mf=false;
@@ -93,13 +100,14 @@ struct Presenter {
         trace(surface,"destructor_black_begin");
         if (swap && context) black(*this);
         trace(surface,"destructor_decoder_flush_begin");
-        if (decoder) decoder->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH,0);
+        if (decoder && !checked_shutdown) decoder->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH,0);
         for (auto& sample:ready) sample.Reset(); pending.Reset(); completion.Reset(); processor.Reset(); enumerator.Reset();
-        video_context.Reset(); video.Reset(); swap.Reset(); decoder.Reset();
+        probe_staging.Reset(); video_context.Reset(); video.Reset(); swap.Reset(); decoder.Reset();
         manager.Reset(); context.Reset(); device.Reset();
         trace(surface,"destructor_mf_shutdown_begin");
         if (mf) MFShutdown(); if (com) CoUninitialize();
         trace(surface,"destructor_end"); release(surface);
+        if(probe_owner_reserved)nl_gpu_probe_owner_reserved.store(false);
     }
 };
 HRESULT black(Presenter& p) {
@@ -168,7 +176,7 @@ HRESULT output_type(Presenter& p) {
     }
     return MF_E_INVALIDMEDIATYPE;
 }
-HRESULT configure(Presenter& p, UINT fps) {
+HRESULT configure(Presenter& p, UINT fps, UINT kbps) {
     trace(p.surface,"configure_begin");
     trace(p.surface,"d3d11_device_create_begin");
     HRESULT hr=D3D11CreateDevice(nullptr,D3D_DRIVER_TYPE_HARDWARE,nullptr,
@@ -211,6 +219,7 @@ HRESULT configure(Presenter& p, UINT fps) {
     type->SetUINT32(MF_MT_INTERLACE_MODE,MFVideoInterlace_Progressive);
     MFSetAttributeSize(type.Get(),MF_MT_FRAME_SIZE,p.width,p.height);
     MFSetAttributeRatio(type.Get(),MF_MT_FRAME_RATE,fps,1);
+    hr=type->SetUINT32(MF_MT_AVG_BITRATE,kbps*1000);if(FAILED(hr))return hr;
     hr=sdr_type(p,type.Get(),true); if (FAILED(hr)) return hr;
     trace(p.surface,"decoder_set_input_type_begin");
     hr=p.decoder->SetInputType(0,type.Get(),0); if (FAILED(hr)) return hr;
@@ -349,6 +358,32 @@ present_ready:
     hr=p.video_context->VideoProcessorBlt(p.processor.Get(),output.Get(),0,1,&stream);
     if (FAILED(hr)) return hr;
     *converted=1;
+    if(p.probe_color_enabled) {
+        if(!p.surface->probe_parent)return E_ACCESSDENIED;
+        if(!p.probe_staging) {
+            D3D11_TEXTURE2D_DESC staging{};back->GetDesc(&staging);
+            staging.Usage=D3D11_USAGE_STAGING;staging.BindFlags=0;staging.MiscFlags=0;staging.CPUAccessFlags=D3D11_CPU_ACCESS_READ;
+            hr=p.device->CreateTexture2D(&staging,nullptr,&p.probe_staging);if(FAILED(hr))return hr;
+        }
+        p.context->CopyResource(p.probe_staging.Get(),back.Get());p.context->Flush();
+        D3D11_MAPPED_SUBRESOURCE mapped{};const ULONGLONG deadline=GetTickCount64()+50;
+        do { hr=p.context->Map(p.probe_staging.Get(),0,D3D11_MAP_READ,D3D11_MAP_FLAG_DO_NOT_WAIT,&mapped);
+            if(hr==DXGI_ERROR_WAS_STILL_DRAWING)Sleep(1);
+        } while(hr==DXGI_ERROR_WAS_STILL_DRAWING && GetTickCount64()<deadline);
+        if(FAILED(hr))return hr;
+        bool valid=mapped.pData && mapped.RowPitch>=p.width*4;
+        if(valid)for(UINT y=0;y<p.height && valid;++y) {
+            const auto* row=static_cast<const uint8_t*>(mapped.pData)+static_cast<size_t>(y)*mapped.RowPitch;
+            for(UINT x=0;x<p.width && valid;++x)for(UINT channel=0;channel<4;++channel) {
+                const int delta=static_cast<int>(row[x*4+channel])-p.probe_expected[channel];
+                const int tolerance=channel==3?0:static_cast<int>(p.probe_tolerance);
+                if(delta < -tolerance || delta>tolerance)valid=false;
+            }
+        }
+        p.context->Unmap(p.probe_staging.Get(),0);
+        if(!valid)return MF_E_INVALIDMEDIATYPE;
+        ++p.probe_colors;
+    }
     p.pending=sample; p.context->End(p.completion.Get()); p.context->Flush();
     if (!authorized(p)) return E_ABORT;
     trace(p.surface,"swapchain_present_begin");
@@ -452,19 +487,28 @@ extern "C" int32_t nl_gpu_probe_surface(uint32_t width,uint32_t height,void** re
     return S_OK;
 }
 extern "C" void nl_gpu_surface_release(void* handle) noexcept { release(static_cast<Surface*>(handle)); }
-extern "C" int32_t nl_gpu_open(void* surface, uint32_t width, uint32_t height, uint32_t fps, void** result) noexcept {
+extern "C" int32_t nl_gpu_open(void* surface, uint32_t width, uint32_t height, uint32_t fps, uint32_t kbps, void** result) noexcept {
     if (!result) return E_POINTER; *result=nullptr;
+    if(kbps<64 || kbps>100000)return E_INVALIDARG;
     auto* s=static_cast<Surface*>(surface);
     if (!s || !s->live || !width || !height || ((width|height)&1) || width>8192 || height>8192 ||
         static_cast<uint64_t>(width)*height*4>64*1024*1024 || !fps || fps>120) return E_INVALIDARG;
-    std::unique_ptr<Presenter> p(new(std::nothrow) Presenter()); if (!p) return E_OUTOFMEMORY;
+    bool probe_reserved=false;
+    if(s->probe_parent) {
+        bool expected=false;
+        if(!nl_gpu_probe_owner_reserved.compare_exchange_strong(expected,true))return HRESULT_FROM_WIN32(ERROR_BUSY);
+        probe_reserved=true;
+    }
+    std::unique_ptr<Presenter> p(new(std::nothrow) Presenter());
+    if(!p) { if(probe_reserved)nl_gpu_probe_owner_reserved.store(false);return E_OUTOFMEMORY; }
+    p->probe_owner_reserved=probe_reserved;
     ++s->references; p->surface=s; p->width=width; p->height=height;
     trace(s,"com_initialize_begin");
     HRESULT hr=CoInitializeEx(nullptr,COINIT_MULTITHREADED); if (FAILED(hr)) return hr; p->com=true;
     trace(s,"mf_startup_begin");
     hr=MFStartup(MF_VERSION,MFSTARTUP_NOSOCKET); if (FAILED(hr)) return hr; p->mf=true;
     trace(s,"configure_begin");
-    hr=configure(*p,fps); if (FAILED(hr)) return hr;
+    hr=configure(*p,fps,kbps); if (FAILED(hr)) return hr;
     trace(s,"open_end");
     *result=p.release(); return S_OK;
 }
@@ -492,4 +536,37 @@ extern "C" int32_t nl_gpu_step(void* handle, const uint8_t* bytes, size_t length
     }
     return receive(*p,output_pts,qpc,submitted,converted);
 }
-extern "C" void nl_gpu_close(void* handle) noexcept { delete static_cast<Presenter*>(handle); }
+extern "C" int32_t nl_gpu_owner_observation(void* handle,NlOwnerObservation* out) noexcept {
+    auto* p=static_cast<Presenter*>(handle);
+    if(!p || !out || p->thread!=GetCurrentThreadId())return E_INVALIDARG;
+    return nl_observe_owner(p->device.Get(),p->decoded_outputs>0 && p->retired_pictures>0,p->observation_id,p->observation_initialized,out);
+}
+extern "C" int32_t nl_gpu_probe_color(void* handle,const uint8_t* expected,uint32_t tolerance) noexcept {
+    auto* p=static_cast<Presenter*>(handle);
+    if(!p || !expected || p->thread!=GetCurrentThreadId() || !p->surface->probe_parent || p->decoded_outputs || tolerance>64)return E_INVALIDARG;
+    std::memcpy(p->probe_expected.data(),expected,4);p->probe_tolerance=tolerance;p->probe_color_enabled=true;return S_OK;
+}
+extern "C" int32_t nl_gpu_probe_color_count(void* handle,uint64_t* count) noexcept {
+    auto* p=static_cast<Presenter*>(handle);
+    if(!p || !count || p->thread!=GetCurrentThreadId() || !p->surface->probe_parent || !p->probe_color_enabled)return E_INVALIDARG;
+    *count=p->probe_colors;return S_OK;
+}
+extern "C" int32_t nl_gpu_close_checked(void* handle) noexcept {
+    auto* p=static_cast<Presenter*>(handle);if(!p || p->thread!=GetCurrentThreadId())return E_INVALIDARG;
+    // Preserve the existing live-owner teardown; checked completion is probe-only.
+    if(!p->probe_owner_reserved) { delete p;return S_OK; }
+    if(p->pending && p->completion && p->context) {
+        const ULONGLONG deadline=GetTickCount64()+50;HRESULT hr=S_FALSE;p->context->Flush();
+        do { hr=p->context->GetData(p->completion.Get(),nullptr,0,D3D11_ASYNC_GETDATA_DONOTFLUSH);if(hr==S_FALSE)Sleep(1); }
+        while(hr==S_FALSE && GetTickCount64()<deadline);
+        if(hr!=S_OK) { return FAILED(hr)?hr:HRESULT_FROM_WIN32(WAIT_TIMEOUT); }
+    }
+    HRESULT result=S_OK;
+    if(p->decoder) {
+        result=p->decoder->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH,0);
+        const HRESULT end=p->decoder->ProcessMessage(MFT_MESSAGE_NOTIFY_END_STREAMING,0);
+        if(SUCCEEDED(result) && FAILED(end))result=end;
+        p->checked_shutdown=true;
+    }
+    delete p;return result;
+}

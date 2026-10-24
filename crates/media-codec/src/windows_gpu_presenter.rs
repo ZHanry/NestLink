@@ -26,6 +26,7 @@ unsafe extern "C" {
         width: u32,
         height: u32,
         fps: u32,
+        kbps: u32,
         result: *mut *mut c_void,
     ) -> i32;
     fn nl_gpu_step(
@@ -41,7 +42,13 @@ unsafe extern "C" {
         submitted: *mut u32,
         converted: *mut u32,
     ) -> i32;
-    fn nl_gpu_close(handle: *mut c_void);
+    fn nl_gpu_close_checked(handle: *mut c_void) -> i32;
+    fn nl_gpu_owner_observation(
+        handle: *mut c_void,
+        out: *mut crate::owner_observation::RawOwnerObservation,
+    ) -> i32;
+    fn nl_gpu_probe_color(handle: *mut c_void, expected: *const u8, tolerance: u32) -> i32;
+    fn nl_gpu_probe_color_count(handle: *mut c_void, count: *mut u64) -> i32;
 }
 #[link(name = "kernel32")]
 unsafe extern "system" {
@@ -166,14 +173,45 @@ pub struct GpuH264Presenter {
     last_input: Option<u64>,
     last_sequence: Option<u64>,
     failed: bool,
+    closed: bool,
     _thread: PhantomData<Rc<()>>,
 }
 impl GpuH264Presenter {
+    /// Legacy caller default bitrate is not a probe announcement.
     pub fn new(surface: &GpuVideoSurface, width: u32, height: u32, fps: u32) -> io::Result<Self> {
+        Self::with_config(
+            surface,
+            crate::VideoConfig {
+                width,
+                height,
+                fps,
+                bitrate_kbps: 4000,
+            },
+        )
+    }
+    pub fn with_config(surface: &GpuVideoSurface, config: crate::VideoConfig) -> io::Result<Self> {
+        let crate::VideoConfig {
+            width,
+            height,
+            fps,
+            bitrate_kbps,
+        } = config;
+        if !(64..=100_000).contains(&bitrate_kbps) {
+            return Err(io::Error::other("GPU bitrate target outside budget"));
+        }
         let validator = H264Validator::new_sdr(width, height)?;
         let mut handle = std::ptr::null_mut();
         // SAFETY: bridge borrows surface and retains its own native reference.
-        checked(unsafe { nl_gpu_open(surface.0.0.as_ptr(), width, height, fps, &mut handle) })?;
+        checked(unsafe {
+            nl_gpu_open(
+                surface.0.0.as_ptr(),
+                width,
+                height,
+                fps,
+                bitrate_kbps,
+                &mut handle,
+            )
+        })?;
         Ok(Self {
             handle: NonNull::new(handle).ok_or_else(|| io::Error::other("null GPU presenter"))?,
             validator,
@@ -182,8 +220,40 @@ impl GpuH264Presenter {
             last_input: None,
             last_sequence: None,
             failed: false,
+            closed: false,
             _thread: PhantomData,
         })
+    }
+    pub fn owner_observation(&self) -> io::Result<crate::OwnerObservation> {
+        let mut raw = crate::owner_observation::RawOwnerObservation::default();
+        // SAFETY: same live owner; scalar-only initialized out.
+        checked(unsafe { nl_gpu_owner_observation(self.handle.as_ptr(), &mut raw) })?;
+        raw.try_into()
+    }
+    pub(crate) fn enable_probe_color(
+        &mut self,
+        expected: [u8; 4],
+        tolerance: u32,
+    ) -> io::Result<()> {
+        // SAFETY: native requires an owned synthetic probe surface, never a live desktop.
+        checked(unsafe { nl_gpu_probe_color(self.handle.as_ptr(), expected.as_ptr(), tolerance) })
+    }
+    pub(crate) fn probe_color_count(&self) -> io::Result<u64> {
+        let mut count = 0;
+        // SAFETY: same live synthetic owner and initialized scalar out.
+        checked(unsafe { nl_gpu_probe_color_count(self.handle.as_ptr(), &mut count) })?;
+        Ok(count)
+    }
+    pub fn close(mut self) -> io::Result<()> {
+        self.close_owner()
+    }
+    fn close_owner(&mut self) -> io::Result<()> {
+        if self.closed {
+            return Ok(());
+        }
+        self.closed = true;
+        // SAFETY: consumed only once on owner thread; native timeout quarantines.
+        checked(unsafe { nl_gpu_close_checked(self.handle.as_ptr()) })
     }
     pub fn submit(
         &mut self,
@@ -307,9 +377,8 @@ impl GpuH264Presenter {
 }
 impl Drop for GpuH264Presenter {
     fn drop(&mut self) {
-        // SAFETY: !Send/!Sync guarantees destruction on the creating COM worker.
-        unsafe {
-            nl_gpu_close(self.handle.as_ptr());
+        if let Err(error) = self.close_owner() {
+            eprintln!("GPU owner cleanup failed: {error}");
         }
     }
 }

@@ -42,7 +42,13 @@ class GitForkNotices(unittest.TestCase):
             root = Path(scratch)
             index = N.collect(root, self.fixture(root), root / 'notices')
             self.assertEqual(index['status'], 'complete')
-            self.assertEqual(len(index['packages']), 6)
+            self.assertEqual({(p['name'], p['version']) for p in index['packages']}, {
+                ('turn', '0.11.0'), ('turn', '0.17.2'),
+                ('webrtc-ice', '0.14.0'), ('leptos_macro', '0.8.19'),
+                ('tachys', '0.2.19'), ('objc2-foundation', '0.2.2'),
+                ('dtls', '0.13.0'),
+            })
+            self.assertEqual(len(index['packages']), 7)
             self.assertEqual({p['version'] for p in index['packages'] if p['name'] == 'turn'}, {'0.11.0', '0.17.2'})
             for package in index['packages']:
                 self.assertTrue(package['files'])

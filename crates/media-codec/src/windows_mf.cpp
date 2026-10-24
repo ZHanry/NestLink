@@ -21,6 +21,7 @@
 #include <atomic>
 #include <d3d10.h>
 #include <dxgi1_2.h>
+#include "owner_observation.h"
 using Microsoft::WRL::ComPtr;
 namespace {
 constexpr size_t raw_limit = 64 * 1024 * 1024;
@@ -59,6 +60,7 @@ public:
     }
 };
 struct Codec {
+    GUID observation_id{}; bool observation_initialized=false;
     ComPtr<IMFTransform> transform;
     ComPtr<IMFMediaEventGenerator> events;
     ComPtr<ID3D11Device> device;
@@ -356,6 +358,9 @@ HRESULT output(Codec& state, uint8_t* destination, size_t capacity, size_t* leng
                 if (SUCCEEDED(hr)) hr = gpu->GetSubresourceIndex(&subresource);
                 if (FAILED(hr)) return hr;
                 D3D11_TEXTURE2D_DESC desc{}; texture->GetDesc(&desc);
+                ComPtr<ID3D11Device> actual_device;texture->GetDevice(&actual_device);
+                if(actual_device.Get()!=state.device.Get() || desc.MipLevels!=1 || subresource>=desc.ArraySize)
+                    return MF_E_INVALIDMEDIATYPE;
                 if (desc.Width < state.width || desc.Width > state.width+255 ||
                     desc.Height < state.height || desc.Height > state.height+31 ||
                     static_cast<uint64_t>(desc.Width)*desc.Height*3/2 > raw_limit ||
@@ -747,7 +752,14 @@ extern "C" int32_t nl_mf_close_checked(void* opaque) noexcept {
             return HRESULT_FROM_WIN32(WAIT_TIMEOUT);
         }
     }
-    delete state; return S_OK;
+    HRESULT checked_close=S_OK;
+    if(!state->gpu_input && state->transform) {
+        checked_close=state->transform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH,0);
+        const HRESULT end=state->transform->ProcessMessage(MFT_MESSAGE_NOTIFY_END_STREAMING,0);
+        if(SUCCEEDED(checked_close) && FAILED(end))checked_close=end;
+        state->events.Reset();state->transform.Reset();
+    }
+    delete state; return checked_close;
 }
 extern "C" void nl_mf_close(void* opaque) noexcept { (void)nl_mf_close_checked(opaque); }
 
@@ -873,4 +885,10 @@ extern "C" int32_t nl_hevc_begin_drain(void* opaque) noexcept {
     HRESULT hr=s->transform->ProcessMessage(MFT_MESSAGE_NOTIFY_END_OF_STREAM,0);
     if(SUCCEEDED(hr))hr=s->transform->ProcessMessage(MFT_MESSAGE_COMMAND_DRAIN,0);
     return hr;
+}
+
+extern "C" int32_t nl_mf_owner_observation(void* opaque,NlOwnerObservation* out) noexcept {
+    auto* s=static_cast<Codec*>(opaque);
+    if(!s || !out || s->thread!=GetCurrentThreadId())return E_INVALIDARG;
+    return nl_observe_owner(s->device.Get(),s->hardware_used,s->observation_id,s->observation_initialized,out);
 }

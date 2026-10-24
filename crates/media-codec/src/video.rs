@@ -131,7 +131,7 @@ impl VideoEncoder {
         match self {
             Self::Vp8(_) => Ok(()),
             #[cfg(windows)]
-            Self::H264(codec) => codec.inner.close(),
+            Self::H264(codec) => (*codec.inner).close(),
         }
     }
     pub fn drain_encoded(&mut self) -> io::Result<VideoEncodeStep> {
@@ -208,7 +208,7 @@ impl VideoDecoder {
 // coded surface, then removed before display. Input coordinates never change.
 #[cfg(windows)]
 pub struct H264Encoder {
-    inner: crate::MfH264Encoder,
+    inner: Box<crate::MfH264Encoder>,
     width: u32,
     height: u32,
 }
@@ -246,7 +246,7 @@ impl H264Encoder {
             crate::MfH264Encoder::with_limits(config, false, limits)?
         };
         Ok(Self {
-            inner,
+            inner: Box::new(inner),
             width,
             height,
         })
@@ -291,7 +291,7 @@ impl H264Encoder {
 }
 #[cfg(windows)]
 pub struct H264Decoder {
-    inner: crate::MfH264Decoder,
+    inner: Box<crate::MfH264Decoder>,
     width: u32,
     height: u32,
 }
@@ -302,7 +302,7 @@ impl H264Decoder {
         let inner = crate::MfH264Decoder::new(coded_width, coded_height, true)
             .or_else(|_| crate::MfH264Decoder::new(coded_width, coded_height, false))?;
         Ok(Self {
-            inner,
+            inner: Box::new(inner),
             width,
             height,
         })

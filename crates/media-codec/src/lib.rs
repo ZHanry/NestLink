@@ -40,3 +40,15 @@ pub use windows_hevc::{
 };
 #[cfg(windows)]
 mod hevc_probe;
+
+#[cfg(windows)]
+mod owner_observation;
+#[cfg(windows)]
+pub use owner_observation::OwnerObservation;
+#[cfg(windows)]
+mod controller_probe;
+#[cfg(windows)]
+pub use controller_probe::{
+    ControllerProbeBackend, ControllerProbeFixture, ControllerProbeReceipt,
+    build_controller_probe_fixture, probe_controller_cpu, probe_controller_gpu,
+};
