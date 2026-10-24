@@ -529,6 +529,7 @@ impl DesktopApp {
                 }
             };
             let runtime_id = self.bridge.runtime_id();
+            let selected_source = self.bridge.native_displays().and_then(|state| state.selected.map(|selected| selected.source));
             let input = self.bridge.input_layout().filter(|input| {
                 native_input_layout_is_current(
                     input,
@@ -536,6 +537,7 @@ impl DesktopApp {
                     runtime_id.as_deref(),
                     self.video_binding.as_ref(),
                     self.video_layout,
+                    selected_source,
                 )
             });
             if self.native_control_enabled
@@ -867,6 +869,10 @@ impl DesktopApp {
         _viewport_class: egui::ViewportClass,
     ) {
         let runtime_id = self.bridge.runtime_id();
+        let selected_source = self
+            .bridge
+            .native_displays()
+            .and_then(|state| state.selected.map(|selected| selected.source));
         let session = snapshot.native_session.data.as_ref();
         let target_matches = self.remote_viewport_target.as_ref().is_some_and(|target| {
             session.is_some_and(|session| {
@@ -905,7 +911,12 @@ impl DesktopApp {
         while let Some(update) = self.bridge.take_video_update() {
             match update {
                 VideoUpdate::Connecting(binding) => {
-                    if video_binding_is_current(&binding, snapshot, runtime_id.as_deref()) {
+                    if video_binding_is_current(
+                        &binding,
+                        snapshot,
+                        runtime_id.as_deref(),
+                        selected_source,
+                    ) {
                         if self.video_binding.as_ref() != Some(&binding) {
                             self.clear_video();
                             self.video_binding = Some(binding);
@@ -922,6 +933,7 @@ impl DesktopApp {
                         self.video_binding.as_ref(),
                         self.video_layout,
                         (layout.layout_epoch, layout.width, layout.height),
+                        selected_source,
                     ) {
                         continue;
                     }
@@ -947,6 +959,7 @@ impl DesktopApp {
                         self.video_binding.as_ref(),
                         self.video_layout,
                         self.video_sequence,
+                        selected_source,
                     ) {
                         continue;
                     }
@@ -1026,8 +1039,12 @@ impl DesktopApp {
                     }
                 }
                 VideoUpdate::Message(nestlink_app_ipc::NativeVideoMessage::Closed(binding)) => {
-                    if video_binding_is_current(&binding, snapshot, runtime_id.as_deref())
-                        && self.video_binding.as_ref() == Some(&binding)
+                    if video_binding_is_current(
+                        &binding,
+                        snapshot,
+                        runtime_id.as_deref(),
+                        selected_source,
+                    ) && self.video_binding.as_ref() == Some(&binding)
                     {
                         self.release_native_control();
                         self.video_texture = None;
@@ -1038,11 +1055,15 @@ impl DesktopApp {
                 }
                 VideoUpdate::Disconnected(binding) => {
                     if binding.as_ref().is_none_or(|binding| {
-                        video_binding_is_current(binding, snapshot, runtime_id.as_deref())
-                            && self
-                                .video_binding
-                                .as_ref()
-                                .is_none_or(|current| current == binding)
+                        video_binding_is_current(
+                            binding,
+                            snapshot,
+                            runtime_id.as_deref(),
+                            selected_source,
+                        ) && self
+                            .video_binding
+                            .as_ref()
+                            .is_none_or(|current| current == binding)
                     }) {
                         self.release_native_control();
                         self.video_texture = None;
@@ -1057,7 +1078,7 @@ impl DesktopApp {
             }
         }
         if self.video_binding.as_ref().is_some_and(|binding| {
-            !video_binding_is_current(binding, snapshot, runtime_id.as_deref())
+            !video_binding_is_current(binding, snapshot, runtime_id.as_deref(), selected_source)
         }) {
             self.clear_video();
             self.video_status = VideoStatus::Connecting;
@@ -2446,6 +2467,7 @@ fn native_input_layout_is_current(
     runtime_id: Option<&str>,
     video_binding: Option<&nestlink_app_ipc::NativeVideoBinding>,
     video_layout: Option<(u64, u32, u32)>,
+    selected_source: Option<u32>,
 ) -> bool {
     let binding = &input.layout.binding;
     let Some(session) = snapshot.native_session.data.as_ref() else {
@@ -2454,7 +2476,7 @@ fn native_input_layout_is_current(
     input.runtime_id.as_str() == runtime_id.unwrap_or_default()
         && input.ui_generation == snapshot.generation
         && video_binding.is_some_and(|video| {
-            video_binding_is_current(video, snapshot, runtime_id)
+            video_binding_is_current(video, snapshot, runtime_id, selected_source)
                 && video.request_id == binding.request_id
                 && video.connection_generation == binding.connection_generation
                 && video.source == binding.source
@@ -2483,8 +2505,10 @@ fn video_binding_is_current(
     binding: &nestlink_app_ipc::NativeVideoBinding,
     snapshot: &Snapshot,
     runtime_id: Option<&str>,
+    selected_source: Option<u32>,
 ) -> bool {
-    runtime_id == Some(binding.runtime_id.as_str())
+    selected_source == Some(binding.source)
+        && runtime_id == Some(binding.runtime_id.as_str())
         && nestlink_protocol::valid_id(&binding.runtime_id)
         && nestlink_protocol::valid_id(&binding.request_id)
         && binding.ui_generation > 0
@@ -2510,9 +2534,10 @@ fn video_layout_is_current(
     displayed_binding: Option<&nestlink_app_ipc::NativeVideoBinding>,
     displayed_layout: Option<(u64, u32, u32)>,
     candidate_layout: (u64, u32, u32),
+    selected_source: Option<u32>,
 ) -> bool {
     let (layout_epoch, width, height) = candidate_layout;
-    if !video_binding_is_current(binding, snapshot, runtime_id)
+    if !video_binding_is_current(binding, snapshot, runtime_id, selected_source)
         || layout_epoch == 0
         || layout_epoch > i64::MAX as u64
         || !valid_video_geometry(width, height)
@@ -2537,6 +2562,7 @@ fn video_frame_is_current(
     displayed_binding: Option<&nestlink_app_ipc::NativeVideoBinding>,
     displayed_layout: Option<(u64, u32, u32)>,
     displayed_sequence: u64,
+    selected_source: Option<u32>,
 ) -> bool {
     if !video_layout_is_current(
         &frame.binding,
@@ -2545,6 +2571,7 @@ fn video_frame_is_current(
         displayed_binding,
         displayed_layout,
         (frame.layout_epoch, frame.width, frame.height),
+        selected_source,
     ) || frame.sequence == 0
         || frame.sequence > i64::MAX as u64
         || frame.pts_90khz > i64::MAX as u64
@@ -2644,6 +2671,7 @@ mod video_tests {
             Some(RUNTIME_ID),
             Some(&video),
             Some((2, 640, 480)),
+            Some(0),
         ));
 
         input.layout.binding.layout_epoch = 3;
@@ -2653,6 +2681,7 @@ mod video_tests {
             Some(RUNTIME_ID),
             Some(&video),
             Some((2, 640, 480)),
+            Some(0),
         ));
         input.layout.binding.layout_epoch = 2;
         input.runtime_id = "00000000-0000-4000-8000-000000000003".into();
@@ -2662,6 +2691,7 @@ mod video_tests {
             Some(RUNTIME_ID),
             Some(&video),
             Some((2, 640, 480)),
+            Some(0),
         ));
     }
 
@@ -2684,31 +2714,44 @@ mod video_tests {
         let snapshot = connected_snapshot();
         let runtime_id = Some(RUNTIME_ID);
         let binding = binding();
-        assert!(video_binding_is_current(&binding, &snapshot, runtime_id));
+        assert!(video_binding_is_current(
+            &binding,
+            &snapshot,
+            runtime_id,
+            Some(0),
+        ));
 
         let mut old_runtime = binding.clone();
         old_runtime.runtime_id = "00000000-0000-4000-8000-000000000003".into();
         assert!(!video_binding_is_current(
             &old_runtime,
             &snapshot,
-            runtime_id
+            runtime_id,
+            Some(0),
         ));
         assert!(!video_binding_is_current(
             &binding,
             &snapshot,
-            Some("00000000-0000-4000-8000-000000000003")
+            Some("00000000-0000-4000-8000-000000000003"),
+            Some(0),
         ));
 
         let mut old_ui = binding.clone();
         old_ui.ui_generation -= 1;
-        assert!(!video_binding_is_current(&old_ui, &snapshot, runtime_id));
+        assert!(!video_binding_is_current(
+            &old_ui,
+            &snapshot,
+            runtime_id,
+            Some(0),
+        ));
 
         let mut old_request = binding.clone();
         old_request.request_id = "00000000-0000-4000-8000-000000000003".into();
         assert!(!video_binding_is_current(
             &old_request,
             &snapshot,
-            runtime_id
+            runtime_id,
+            Some(0),
         ));
 
         let mut old_connection = binding.clone();
@@ -2716,7 +2759,8 @@ mod video_tests {
         assert!(!video_binding_is_current(
             &old_connection,
             &snapshot,
-            runtime_id
+            runtime_id,
+            Some(0),
         ));
 
         let mut other_source = binding;
@@ -2724,7 +2768,70 @@ mod video_tests {
         assert!(!video_binding_is_current(
             &other_source,
             &snapshot,
-            runtime_id
+            runtime_id,
+            Some(0),
+        ));
+    }
+
+    #[test]
+    fn renderer_accepts_selected_nonzero_source_and_rejects_previous_source() {
+        let snapshot = connected_snapshot();
+        let mut selected = binding();
+        selected.source = 7;
+        assert!(video_binding_is_current(
+            &selected,
+            &snapshot,
+            Some(RUNTIME_ID),
+            Some(7)
+        ));
+        assert!(!video_binding_is_current(
+            &binding(),
+            &snapshot,
+            Some(RUNTIME_ID),
+            Some(7)
+        ));
+        assert!(!video_binding_is_current(
+            &selected,
+            &snapshot,
+            Some(RUNTIME_ID),
+            None
+        ));
+        let picture = frame(selected.clone());
+        assert!(video_frame_is_current(
+            &picture,
+            &snapshot,
+            Some(RUNTIME_ID),
+            None,
+            None,
+            0,
+            Some(7)
+        ));
+        assert!(!video_frame_is_current(
+            &picture,
+            &snapshot,
+            Some(RUNTIME_ID),
+            None,
+            None,
+            0,
+            Some(8)
+        ));
+        let mut input = input_layout();
+        input.layout.binding.source = 7;
+        assert!(native_input_layout_is_current(
+            &input,
+            &snapshot,
+            Some(RUNTIME_ID),
+            Some(&selected),
+            Some((2, 640, 480)),
+            Some(7)
+        ));
+        assert!(!native_input_layout_is_current(
+            &input,
+            &snapshot,
+            Some(RUNTIME_ID),
+            Some(&selected),
+            Some((2, 640, 480)),
+            Some(8)
         ));
     }
 
@@ -2741,6 +2848,7 @@ mod video_tests {
             Some(&binding),
             current_layout,
             (2, 2, 1),
+            Some(0),
         ));
 
         let mut old_layout = frame(binding.clone());
@@ -2752,6 +2860,7 @@ mod video_tests {
             Some(&binding),
             current_layout,
             6,
+            Some(0),
         ));
 
         let mut old_sequence = frame(binding.clone());
@@ -2764,6 +2873,7 @@ mod video_tests {
             Some(&binding),
             current_layout,
             6,
+            Some(0),
         ));
 
         let mut wrong_dimensions = frame(binding.clone());
@@ -2777,6 +2887,7 @@ mod video_tests {
             Some(&binding),
             current_layout,
             6,
+            Some(0),
         ));
 
         let mut next_layout = frame(binding.clone());
@@ -2789,6 +2900,7 @@ mod video_tests {
             Some(&binding),
             current_layout,
             7,
+            Some(0),
         ));
     }
 
@@ -2818,7 +2930,8 @@ mod video_tests {
         assert!(!video_binding_is_current(
             &binding,
             &snapshot,
-            Some(RUNTIME_ID)
+            Some(RUNTIME_ID),
+            Some(0),
         ));
         assert!(!video_layout_is_current(
             &binding,
@@ -2827,6 +2940,7 @@ mod video_tests {
             Some(&binding),
             Some((3, 2, 1)),
             (4, 8192, 8192),
+            Some(0),
         ));
     }
 }

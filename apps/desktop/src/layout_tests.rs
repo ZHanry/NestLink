@@ -430,6 +430,9 @@ impl Workspace {
         );
         app.screen = Screen::Remote;
         app.connected = true;
+        // Layout fixtures start in an already attached workspace; draining
+        // notices must not replace their explicitly selected page on frame one.
+        app.workspace_attached = true;
         Self {
             context,
             app,

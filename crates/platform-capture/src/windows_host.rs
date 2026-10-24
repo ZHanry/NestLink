@@ -211,44 +211,88 @@ fn gpu_pipeline_with_capture(
     let started = Instant::now();
     let mut pts = 1;
     let mut verified = false;
+    let mut attempts = 0u32;
+    let mut accepted = 0u32;
+    let mut outputs = 0u32;
+    let mut hardware_idrs = 0u32;
+    let mut decoder_empty = 0u32;
     for _ in 0..64 {
         check()?;
         if started.elapsed() > Duration::from_millis(1500) {
             break;
         }
+        attempts += 1;
         // SAFETY: validated same-device NV12 synthetic surface owned by capture.
         let step = unsafe { encoder.encode_texture(texture, pts, true)? };
         if step.accepted {
-            pts += 3000;
+            accepted += 1;
+            pts += 90_000 / u64::from(c.fps);
         }
-        if let Some(packet) = step.output
-            && packet.keyframe
-            && encoder.hardware()
-        {
-            let mut decoder = MfH264Decoder::new(c.width, c.height, false)?;
-            let decoded = decoder
-                .decode_frame(&packet.data, packet.pts_90khz)?
-                .or(decoder.drain_frame()?);
-            if let Some((decoded, _)) = decoded {
-                let decoded = zeroize::Zeroizing::new(decoded);
-                if decoded.len() != pixels.len()
-                    || decoded.chunks_exact(4).any(|p| {
-                        (i32::from(p[0]) - 32).abs() > 40
-                            || (i32::from(p[1]) - 96).abs() > 40
-                            || (i32::from(p[2]) - 192).abs() > 40
-                    })
-                {
-                    return Err(io::Error::other("GPU synthetic decoded colors mismatch"));
-                }
-                verified = true;
-                break;
+        if let Some(packet) = step.output {
+            outputs += 1;
+            eprintln!(
+                "host_gpu_probe_stage=encoded pts={} keyframe={} hardware={} bytes={} actual_sps={}",
+                packet.pts_90khz,
+                packet.keyframe,
+                encoder.hardware(),
+                packet.data.len(),
+                encoder
+                    .sps_info()
+                    .map_or_else(|| "missing".into(), |s| s.profile_level_id())
+            );
+            if !packet.keyframe || !encoder.hardware() {
+                continue;
             }
+            hardware_idrs += 1;
+            let mut decoder = MfH264Decoder::new(c.width, c.height, false)?;
+            let mut decoded = decoder.decode_frame(&packet.data, packet.pts_90khz)?;
+            for _ in 0..8 {
+                if decoded.is_some() {
+                    break;
+                }
+                check()?;
+                decoded = decoder.drain_frame()?;
+            }
+            let Some((decoded, decoded_pts)) = decoded else {
+                decoder_empty += 1;
+                continue;
+            };
+            let decoded = zeroize::Zeroizing::new(decoded);
+            if decoded_pts != packet.pts_90khz
+                || decoded.len() != pixels.len()
+                || decoded.chunks_exact(4).any(|p| {
+                    (i32::from(p[0]) - 32).abs() > 40
+                        || (i32::from(p[1]) - 96).abs() > 40
+                        || (i32::from(p[2]) - 192).abs() > 40
+                        || p[3] != 255
+                })
+            {
+                return Err(io::Error::other(
+                    "GPU synthetic independent decoded colors/PTS mismatch",
+                ));
+            }
+            verified = true;
+            break;
         }
     }
+    eprintln!(
+        "host_gpu_probe_stage=summary attempts={attempts} accepted={accepted} outputs={outputs} hardware_idrs={hardware_idrs} independent_decoder_empty={decoder_empty} elapsed_ms={} verified={verified}",
+        started.elapsed().as_millis()
+    );
     if !verified {
-        return Err(io::Error::other(
-            "GPU actual-target surface probe produced no independently decoded hardware IDR",
-        ));
+        let stage = if accepted == 0 {
+            "input_not_accepted"
+        } else if outputs == 0 {
+            "encoder_no_output"
+        } else if hardware_idrs == 0 {
+            "no_hardware_idr"
+        } else {
+            "independent_decoder_no_image"
+        };
+        encoder.close()?;
+        return Err(io::Error::other(format!(
+            "GPU actual-target surface probe failed stage={stage} accepted={accepted} outputs={outputs} hardware_idrs={hardware_idrs} independent_decoder_empty={decoder_empty}"
+        )));
     }
     let info = encoder
         .sps_info()

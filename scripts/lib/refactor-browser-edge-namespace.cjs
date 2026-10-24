@@ -3,6 +3,7 @@
 let active = null;
 const PANEL = '[aria-label="Public service ingress"]';
 const INPUTS = PANEL + ' input';
+const DETAIL = 'aside[aria-label="Selected item details"]';
 function check(value, message) { if (!value) throw new Error('Edge namespace UI: ' + message); }
 function expectedFailure(response) {
   if (!active) return false;
@@ -139,7 +140,15 @@ async function run(page, ready, report) {
     check(!oldResponseArrived, 'Node switch must precede the delayed old response');
     check((await pendingResponse).status() === 200, 'Delayed old response must contain the real saved namespace');
     await settled(page);
-    check(await page.$eval('.detail-pane > h2', el => el.textContent) === fixtures.nodes[1].name, 'Selection changed after old response');
+    // Other sections keep hidden detail panes mounted (for example quotas).
+    // Inspect the actual node detail that owns this namespace editor.
+    const selectedAfterOldResponse = await page.$eval(DETAIL, el => ({
+      name: el.querySelector(':scope > h2')?.textContent.trim(),
+      id: el.querySelector('dl dd code')?.textContent.trim(),
+    }));
+    check(selectedAfterOldResponse.name === fixtures.nodes[1].name
+      && selectedAfterOldResponse.id === fixtures.nodes[1].id, 'Selection changed after old response');
+    facts.selected_node_after_old_response = selectedAfterOldResponse;
     check(await page.$eval(PANEL, el => el.textContent.includes('No configuration revision loaded')), 'Old node revision leaked to new node');
     check((await values(page)).every(v => v === ''), 'Old node configuration leaked to new node');
     facts.slow_old_response_ignored = true; facts.node_switch_clears_draft = true;
@@ -170,6 +179,7 @@ async function run(page, ready, report) {
         alert_text: panel?.querySelector('[role="alert"]')?.textContent.trim().slice(0, 500) ?? null,
         save_disabled: panel?.querySelector('button.primary')?.disabled ?? null,
         input_count: panel?.querySelectorAll('input').length ?? 0,
+        selected_detail_heading: panel?.closest('aside')?.querySelector(':scope > h2')?.textContent.trim() ?? null,
       };
     }, PANEL).catch(() => ({ inspection_failed: true }));
     throw error;

@@ -3371,15 +3371,22 @@ dependencies = [
 name = "nestlink-app-ipc"
 version = "0.7.0-rc.1"
 dependencies = [
+ "axum",
  "nestlink-app-core",
  "nestlink-auth",
+ "nestlink-identity",
  "nestlink-local-ipc",
+ "nestlink-media-codec",
  "nestlink-protocol",
+ "nestlink-sdk",
+ "nestlink-server",
+ "nestlink-storage",
  "serde",
  "serde_json",
  "tempfile",
  "thiserror 2.0.21",
  "tokio",
+ "tower",
  "zeroize",
 ]
 

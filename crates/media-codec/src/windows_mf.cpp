@@ -13,6 +13,7 @@
 #include <wrl/client.h>
 #include <cstdint>
 #include <cstring>
+#include <cstdio>
 #include <memory>
 #include <new>
 #include <array>
@@ -64,6 +65,7 @@ struct Codec {
     ComPtr<IMFDXGIDeviceManager> manager;
     uint32_t width = 0, height = 0, fps = 0, level = 0;
     bool gpu_input = false;
+    uint32_t gpu_calls=0, gpu_accepted=0, gpu_pool_blocked=0, gpu_outputs=0, gpu_need_input=0;
     std::array<ComPtr<ID3D11Texture2D>, 4> gpu_slots;
     std::shared_ptr<GpuRelease> gpu_release;
 
@@ -297,7 +299,7 @@ HRESULT output(Codec& state, uint8_t* destination, size_t capacity, size_t* leng
         ComPtr<IMFSample> sample;
         if (data.pSample == supplied.Get()) sample = supplied;
         else sample.Attach(data.pSample);
-        if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) return S_FALSE;
+        if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) { if (state.gpu_input) ++state.gpu_need_input; return S_FALSE; }
         if (hr == MF_E_TRANSFORM_STREAM_CHANGE && !state.encoder && attempt == 0) {
             hr = choose_decoder_output(state);
             if (FAILED(hr)) return hr;
@@ -362,7 +364,7 @@ HRESULT output(Codec& state, uint8_t* destination, size_t capacity, size_t* leng
         if (!bytes || used > maximum || (state.encoder ? used > capacity : used < static_cast<size_t>(state.output_pitch)*state.output_height*3/2)) {
             buffer->Unlock(); return E_UNEXPECTED;
         }
-        if (state.encoder) { std::memcpy(destination, bytes, used); *length = used; state.hardware_used = state.hardware; }
+        if (state.encoder) { std::memcpy(destination, bytes, used); *length = used; state.hardware_used = state.hardware; if (state.gpu_input) ++state.gpu_outputs; }
         else { from_nv12(bytes, state.output_pitch, state.output_height, destination, state.width, state.height); *length = capacity; }
         buffer->Unlock(); return S_OK;
     }
@@ -516,8 +518,10 @@ int32_t process(Codec& state, const uint8_t* input, size_t input_length,
     HRESULT hr = collect_output(state, capacity, 0);
     if (FAILED(hr)) return hr;
     bool accepted = false;
+    if (gpu) ++state.gpu_calls;
     bool gpu_room = !gpu;
     if (gpu) for (const auto& busy : state.gpu_release->busy) if (!busy.load(std::memory_order_acquire)) gpu_room = true;
+    if (gpu && !gpu_room) ++state.gpu_pool_blocked;
     if (submit && gpu_room && state.ready_size < 2 && capacity <= raw_limit - state.ready_bytes) {
         if (state.encoder && force_keyframe) {
             hr = set_codec_value(state.transform.Get(), CODECAPI_AVEncVideoForceKeyFrame, 1);
@@ -592,8 +596,12 @@ int32_t process(Codec& state, const uint8_t* input, size_t input_length,
             []() { Sleep(1); });
         if (FAILED(hr)) return hr;
         accepted = hr == S_OK;
+        if (gpu && accepted) ++state.gpu_accepted;
     }
-    if ((accepted || !submit) && !state.ready_size) {
+    // A full tracked GPU pool is backpressure, not a reason to spin. Give
+    // the asynchronous MFT its bounded output wait so it can release samples
+    // and return an older AU before the caller retries the unaccepted input.
+    if ((accepted || !submit || (gpu && !gpu_room)) && !state.ready_size) {
         hr = collect_output(state, capacity, 8);
         if (FAILED(hr)) return hr;
     }
@@ -671,6 +679,10 @@ extern "C" int32_t nl_mf_close_checked(void* opaque) noexcept {
     auto* state = static_cast<Codec*>(opaque);
     if (!state || state->thread != GetCurrentThreadId()) return E_INVALIDARG;
     if (state->gpu_input && state->gpu_release) {
+        unsigned busy_slots=0;
+        for (const auto& slot : state->gpu_release->busy) if (slot.load(std::memory_order_acquire)) ++busy_slots;
+        std::fprintf(stderr,"host_gpu_mf_stage=close calls=%u accepted=%u pool_blocked=%u output_samples=%u output_need_input=%u busy_slots=%u asynchronous=%u input_credits=%u output_credits=%u\n",
+            state->gpu_calls,state->gpu_accepted,state->gpu_pool_blocked,state->gpu_outputs,state->gpu_need_input,busy_slots,state->events?1u:0u,state->input_events,state->output_events);
         if (state->transform) {
             state->transform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH,0);
             state->transform->ProcessMessage(MFT_MESSAGE_NOTIFY_END_STREAMING,0);

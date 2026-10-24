@@ -19,5 +19,14 @@ zeroize.workspace = true
 [dev-dependencies]
 tempfile = "3.23.0"
 
+[target.'cfg(windows)'.dev-dependencies]
+axum.workspace = true
+nestlink-identity.workspace = true
+nestlink-media-codec.workspace = true
+nestlink-sdk.workspace = true
+nestlink-server = { path = "../../apps/server", version = "=0.7.0-rc.1" }
+nestlink-storage.workspace = true
+tower.workspace = true
+
 [lints]
 workspace = true

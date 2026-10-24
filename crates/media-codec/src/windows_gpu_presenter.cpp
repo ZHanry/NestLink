@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <cstring>
 #include <array>
+#include <cstdio>
 using Microsoft::WRL::ComPtr;
 namespace {
 struct Surface {
@@ -32,6 +33,10 @@ struct Surface {
     bool probe_parent=false;
     bool clip_added=false;
 };
+// Only the explicitly owned synthetic probe emits these immediate diagnostics.
+void trace(Surface* s, const char* stage) {
+    if (s && s->probe_parent) { std::fprintf(stderr,"gpu_native_stage=%s\n",stage); std::fflush(stderr); }
+}
 void release(Surface* s) { if (s && --s->references==0) delete s; }
 LRESULT CALLBACK child_proc(HWND hwnd, UINT message, WPARAM w, LPARAM l) {
     if (message==WM_NCHITTEST) return HTTRANSPARENT;
@@ -77,12 +82,16 @@ struct Presenter {
     std::array<Timing,8> times{};
     size_t time_head=0,time_size=0;
     ~Presenter() {
+        trace(surface,"destructor_black_begin");
         if (swap && context) black(*this);
+        trace(surface,"destructor_decoder_flush_begin");
         if (decoder) decoder->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH,0);
         for (auto& sample:ready) sample.Reset(); pending.Reset(); completion.Reset(); processor.Reset(); enumerator.Reset();
         video_context.Reset(); video.Reset(); swap.Reset(); decoder.Reset();
         manager.Reset(); context.Reset(); device.Reset();
-        if (mf) MFShutdown(); if (com) CoUninitialize(); release(surface);
+        trace(surface,"destructor_mf_shutdown_begin");
+        if (mf) MFShutdown(); if (com) CoUninitialize();
+        trace(surface,"destructor_end"); release(surface);
     }
 };
 HRESULT black(Presenter& p) {
@@ -121,6 +130,8 @@ HRESULT output_type(Presenter& p) {
     return MF_E_INVALIDMEDIATYPE;
 }
 HRESULT configure(Presenter& p, UINT fps) {
+    trace(p.surface,"configure_begin");
+    trace(p.surface,"d3d11_device_create_begin");
     HRESULT hr=D3D11CreateDevice(nullptr,D3D_DRIVER_TYPE_HARDWARE,nullptr,
         D3D11_CREATE_DEVICE_BGRA_SUPPORT|D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
         nullptr,0,D3D11_SDK_VERSION,&p.device,nullptr,&p.context);
@@ -136,6 +147,7 @@ HRESULT configure(Presenter& p, UINT fps) {
     MFT_REGISTER_TYPE_INFO input{MFMediaType_Video,MFVideoFormat_H264};
     MFT_REGISTER_TYPE_INFO output{MFMediaType_Video,MFVideoFormat_NV12};
     IMFActivate** choices=nullptr; UINT count=0;
+    trace(p.surface,"decoder_enumerate_begin");
     hr=MFTEnumEx(MFT_CATEGORY_VIDEO_DECODER,MFT_ENUM_FLAG_SYNCMFT|MFT_ENUM_FLAG_SORTANDFILTER,
         &input,&output,&choices,&count);
     if (FAILED(hr)) return hr;
@@ -150,6 +162,7 @@ HRESULT configure(Presenter& p, UINT fps) {
     UINT32 aware=0; hr=attrs->GetUINT32(MF_SA_D3D11_AWARE,&aware);
     if (FAILED(hr) || !aware) return MF_E_UNSUPPORTED_D3D_TYPE;
     attrs->SetUINT32(MF_LOW_LATENCY,TRUE);
+    trace(p.surface,"decoder_set_manager_begin");
     hr=p.decoder->ProcessMessage(MFT_MESSAGE_SET_D3D_MANAGER,reinterpret_cast<ULONG_PTR>(p.manager.Get()));
     if (FAILED(hr)) return hr;
     ComPtr<IMFMediaType> type;
@@ -159,7 +172,9 @@ HRESULT configure(Presenter& p, UINT fps) {
     type->SetUINT32(MF_MT_INTERLACE_MODE,MFVideoInterlace_Progressive);
     MFSetAttributeSize(type.Get(),MF_MT_FRAME_SIZE,p.width,p.height);
     MFSetAttributeRatio(type.Get(),MF_MT_FRAME_RATE,fps,1);
+    trace(p.surface,"decoder_set_input_type_begin");
     hr=p.decoder->SetInputType(0,type.Get(),0); if (FAILED(hr)) return hr;
+    trace(p.surface,"decoder_output_type_begin");
     hr=output_type(p); if (FAILED(hr)) return hr;
     ComPtr<IDXGIDevice> dxgi; ComPtr<IDXGIAdapter> adapter; ComPtr<IDXGIFactory2> factory;
     hr=p.device.As(&dxgi); if (FAILED(hr)) return hr;
@@ -169,6 +184,7 @@ HRESULT configure(Presenter& p, UINT fps) {
     desc.Width=p.width; desc.Height=p.height; desc.Format=DXGI_FORMAT_B8G8R8A8_UNORM;
     desc.SampleDesc.Count=1; desc.BufferUsage=DXGI_USAGE_RENDER_TARGET_OUTPUT;
     desc.BufferCount=2; desc.SwapEffect=DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+    trace(p.surface,"swapchain_create_begin");
     hr=factory->CreateSwapChainForHwnd(p.device.Get(),p.surface->child.load(),&desc,nullptr,nullptr,&p.swap);
     if (FAILED(hr)) return hr;
     black(p);
@@ -179,6 +195,7 @@ HRESULT configure(Presenter& p, UINT fps) {
     content.OutputWidth=p.width; content.OutputHeight=p.height;
     content.InputFrameRate={fps,1}; content.OutputFrameRate={fps,1};
     content.Usage=D3D11_VIDEO_USAGE_PLAYBACK_NORMAL;
+    trace(p.surface,"video_processor_create_begin");
     hr=p.video->CreateVideoProcessorEnumerator(&content,&p.enumerator); if (FAILED(hr)) return hr;
     UINT flags=0;
     hr=p.enumerator->CheckVideoProcessorFormat(DXGI_FORMAT_NV12,&flags);
@@ -188,6 +205,7 @@ HRESULT configure(Presenter& p, UINT fps) {
     hr=p.video->CreateVideoProcessor(p.enumerator.Get(),0,&p.processor); if (FAILED(hr)) return hr;
     D3D11_QUERY_DESC query{D3D11_QUERY_EVENT,0};
     hr=p.device->CreateQuery(&query,&p.completion); if (FAILED(hr)) return hr;
+    trace(p.surface,"decoder_begin_streaming_begin");
     hr=p.decoder->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING,0); if (FAILED(hr)) return hr;
     return p.decoder->ProcessMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM,0);
 }
@@ -206,7 +224,9 @@ HRESULT receive(Presenter& p, uint64_t* pts, uint64_t* qpc, uint32_t* submitted,
     // DXVA decoders supply GPU samples; CPU allocation is not a GPU path.
     if (!(info.dwFlags&(MFT_OUTPUT_STREAM_PROVIDES_SAMPLES|MFT_OUTPUT_STREAM_CAN_PROVIDE_SAMPLES))) return MF_E_UNSUPPORTED_D3D_TYPE;
     MFT_OUTPUT_DATA_BUFFER data{}; DWORD status=0;
+    trace(p.surface,"decoder_process_output_begin");
     hr=p.decoder->ProcessOutput(0,1,&data,&status);
+    trace(p.surface,"decoder_process_output_end");
     if (data.pEvents) data.pEvents->Release();
     auto& received=p.ready[(p.time_head+p.ready_count)%p.ready.size()];
     received.Attach(data.pSample);
@@ -277,12 +297,15 @@ present_ready:
     p.video_context->VideoProcessorSetOutputColorSpace(p.processor.Get(),&rgb);
     D3D11_VIDEO_PROCESSOR_STREAM stream{}; stream.Enable=TRUE; stream.pInputSurface=input.Get();
     if (!authorized(p)) return E_ABORT;
+    trace(p.surface,"video_processor_blt_begin");
     hr=p.video_context->VideoProcessorBlt(p.processor.Get(),output.Get(),0,1,&stream);
     if (FAILED(hr)) return hr;
     *converted=1;
     p.pending=sample; p.context->End(p.completion.Get()); p.context->Flush();
     if (!authorized(p)) return E_ABORT;
+    trace(p.surface,"swapchain_present_begin");
     hr=p.swap->Present(0,DXGI_PRESENT_DO_NOT_WAIT);
+    trace(p.surface,"swapchain_present_end");
     *submitted=(hr==S_OK)?1u:0u;
     if (FAILED(hr) && hr!=DXGI_ERROR_WAS_STILL_DRAWING) return hr;
     QueryPerformanceCounter(&now); *qpc=static_cast<uint64_t>(now.QuadPart);
@@ -388,9 +411,13 @@ extern "C" int32_t nl_gpu_open(void* surface, uint32_t width, uint32_t height, u
         static_cast<uint64_t>(width)*height*4>64*1024*1024 || !fps || fps>120) return E_INVALIDARG;
     std::unique_ptr<Presenter> p(new(std::nothrow) Presenter()); if (!p) return E_OUTOFMEMORY;
     ++s->references; p->surface=s; p->width=width; p->height=height;
+    trace(s,"com_initialize_begin");
     HRESULT hr=CoInitializeEx(nullptr,COINIT_MULTITHREADED); if (FAILED(hr)) return hr; p->com=true;
+    trace(s,"mf_startup_begin");
     hr=MFStartup(MF_VERSION,MFSTARTUP_NOSOCKET); if (FAILED(hr)) return hr; p->mf=true;
+    trace(s,"configure_begin");
     hr=configure(*p,fps); if (FAILED(hr)) return hr;
+    trace(s,"open_end");
     *result=p.release(); return S_OK;
 }
 extern "C" int32_t nl_gpu_step(void* handle, const uint8_t* bytes, size_t length, uint64_t pts, uint64_t due, uint64_t expires,
@@ -407,7 +434,9 @@ extern "C" int32_t nl_gpu_step(void* handle, const uint8_t* bytes, size_t length
         std::memcpy(dest,bytes,length); buffer->Unlock(); buffer->SetCurrentLength(static_cast<DWORD>(length));
         hr=MFCreateSample(&sample); if (FAILED(hr)) return hr;
         sample->AddBuffer(buffer.Get()); sample->SetSampleTime(static_cast<LONGLONG>(pts*1000/9));
+        trace(p->surface,"decoder_process_input_begin");
         hr=p->decoder->ProcessInput(0,sample.Get(),0);
+        trace(p->surface,"decoder_process_input_end");
         if (SUCCEEDED(hr)) {
             *accepted=1; p->times[(p->time_head+p->time_size)%p->times.size()]={pts,due,expires}; ++p->time_size;
         }
