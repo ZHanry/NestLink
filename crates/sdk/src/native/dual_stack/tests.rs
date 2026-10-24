@@ -63,7 +63,7 @@ fn setup(
     Ok(SessionSetup {
         session: Session::activate(
             permit.clone(),
-            session_binding(permit.claims(), options)?,
+            session_binding(permit, options, None, role, now.unix_ms)?,
             Path::Direct,
             now.monotonic_ms,
             now,
