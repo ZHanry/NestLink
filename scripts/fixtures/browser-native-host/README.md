@@ -87,6 +87,11 @@ Both locked graphs undergo dependency audit. These baseline differences do not
 exempt advisories. Keep the separate lockfile and preserve failed attempts
 alongside successful evidence.
 
+Each first-party path dependency also declares the exact inherited product
+version. The dependency policy rejects an implicit wildcard even for an owned
+path. Adding these manifest constraints leaves the reviewed lock bytes intact;
+GitHub must confirm that the graph still resolves with `--locked`.
+
 ## Explicit owned input and files mode
 
 `owned-data` also approves Input, FileRead and FileWrite for the one temporary

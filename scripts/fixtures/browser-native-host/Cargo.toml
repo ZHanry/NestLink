@@ -9,18 +9,18 @@ publish = false
 resolver = "2"
 
 [dependencies]
-nestlink-app-core = { path = "../../../crates/app-core" }
-nestlink-sdk = { path = "../../../crates/sdk" }
-nestlink-server = { path = "../../../apps/server" }
-nestlink-storage = { path = "../../../crates/storage" }
-nestlink-auth = { path = "../../../crates/auth" }
-nestlink-identity = { path = "../../../crates/identity" }
-nestlink-protocol = { path = "../../../crates/protocol" }
-nestlink-remote = { path = "../../../crates/remote" }
-nestlink-media-codec = { path = "../../../crates/media-codec" }
-nestlink-platform-files = { path = "../../../crates/platform-files" }
-nestlink-platform-security = { path = "../../../crates/platform-security" }
-nestlink-session = { path = "../../../crates/session" }
+nestlink-app-core = { version = "=0.7.0-rc.1", path = "../../../crates/app-core" }
+nestlink-sdk = { version = "=0.7.0-rc.1", path = "../../../crates/sdk" }
+nestlink-server = { version = "=0.7.0-rc.1", path = "../../../apps/server" }
+nestlink-storage = { version = "=0.7.0-rc.1", path = "../../../crates/storage" }
+nestlink-auth = { version = "=0.7.0-rc.1", path = "../../../crates/auth" }
+nestlink-identity = { version = "=0.7.0-rc.1", path = "../../../crates/identity" }
+nestlink-protocol = { version = "=0.7.0-rc.1", path = "../../../crates/protocol" }
+nestlink-remote = { version = "=0.7.0-rc.1", path = "../../../crates/remote" }
+nestlink-media-codec = { version = "=0.7.0-rc.1", path = "../../../crates/media-codec" }
+nestlink-platform-files = { version = "=0.7.0-rc.1", path = "../../../crates/platform-files" }
+nestlink-platform-security = { version = "=0.7.0-rc.1", path = "../../../crates/platform-security" }
+nestlink-session = { version = "=0.7.0-rc.1", path = "../../../crates/session" }
 axum = "=0.8.9"
 base64 = "=0.22.1"
 log = "=0.4.34"
