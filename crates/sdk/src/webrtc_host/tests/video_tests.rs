@@ -49,6 +49,136 @@ fn h264_rtp_fragments_reassemble_and_preserve_output_pts() -> TestResult {
     Ok(())
 }
 
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn expired_video_au_fences_queued_delta_frames_until_a_complete_keyframe() -> TestResult {
+    let controller = DeviceIdentity::generate();
+    let identity = DeviceIdentity::generate();
+    let permit = test_permit(&controller, &identity)?;
+    let (host, track, _, _) =
+        make_peer_with_mdns(&permit, false, MulticastDnsMode::Disabled).await?;
+    let browser = make_browser_peer().await?;
+    let (remote_tx, mut remote_rx) = mpsc::channel(1);
+    browser.on_track(Box::new(move |remote, _, _| {
+        let remote_tx = remote_tx.clone();
+        Box::pin(async move {
+            let _ = remote_tx.send(remote).await;
+        })
+    }));
+
+    let result: TestResult = async {
+        let offer = browser.create_offer(None).await?;
+        let mut gathered = browser.gathering_complete_promise().await;
+        browser.set_local_description(offer).await?;
+        tokio::time::timeout(Duration::from_secs(10), gathered.recv()).await?;
+        host.set_remote_description(browser.local_description().await.ok_or("missing offer")?)
+            .await?;
+        let answer = host.create_answer(None).await?;
+        let mut gathered = host.gathering_complete_promise().await;
+        host.set_local_description(answer).await?;
+        tokio::time::timeout(Duration::from_secs(10), gathered.recv()).await?;
+        browser
+            .set_remote_description(host.local_description().await.ok_or("missing answer")?)
+            .await?;
+        tokio::time::timeout(Duration::from_secs(15), async {
+            while host.connection_state() != RTCPeerConnectionState::Connected
+                || browser.connection_state() != RTCPeerConnectionState::Connected
+            {
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+        })
+        .await?;
+
+        let runtime = Handle::current();
+        let sending_peer = host.clone();
+        tokio::task::spawn_blocking(move || -> io::Result<()> {
+            let (_permit_tx, permit_rx) = watch::channel(permit);
+            let (_cancel_tx, cancel_rx) = watch::channel(false);
+            let (_authority_tx, authority_rx) = watch::channel(true);
+            let mut writer = video::VideoRtpWriter::new(VideoFormat::Vp8)?;
+            // Transport-only samples: no capture, encoder, decoder or product
+            // remote-session permission is opened by this regression.
+            let data = Bytes::from_static(&[0x10, 0x00, 0x9d, 0x01, 0x2a, 0x10, 0x00]);
+            let context = |deadline| video::VideoWriteContext {
+                peer: &sending_peer,
+                runtime: &runtime,
+                permit: &permit_rx,
+                cancel: &cancel_rx,
+                selected_path: Path::Direct,
+                path_authority: &authority_rx,
+                deadline,
+            };
+            assert!(!writer.write(
+                data.clone(),
+                0,
+                false,
+                &track,
+                &context(Instant::now() + Duration::from_secs(1)),
+            )?);
+            assert!(writer.write(
+                data.clone(),
+                3000,
+                true,
+                &track,
+                &context(Instant::now() + Duration::from_secs(1)),
+            )?);
+            assert!(!writer.write(
+                data.clone(),
+                6000,
+                false,
+                &track,
+                &context(Instant::now() - Duration::from_millis(1)),
+            )?);
+            assert!(!writer.write(
+                data.clone(),
+                9000,
+                false,
+                &track,
+                &context(Instant::now() + Duration::from_secs(1)),
+            )?);
+            assert!(writer.write(
+                data.clone(),
+                12000,
+                true,
+                &track,
+                &context(Instant::now() + Duration::from_secs(1)),
+            )?);
+            assert!(writer.write(
+                data,
+                15000,
+                false,
+                &track,
+                &context(Instant::now() + Duration::from_secs(1)),
+            )?);
+            Ok(())
+        })
+        .await??;
+        let remote = tokio::time::timeout(Duration::from_secs(3), remote_rx.recv())
+            .await?
+            .ok_or("missing remote video track")?;
+        let mut timestamps = Vec::new();
+        for _ in 0..3 {
+            let (packet, _) =
+                tokio::time::timeout(Duration::from_secs(3), remote.read_rtp()).await??;
+            timestamps.push(packet.header.timestamp);
+        }
+        assert_eq!(timestamps[1].wrapping_sub(timestamps[0]), 9000);
+        assert_eq!(timestamps[2].wrapping_sub(timestamps[1]), 3000);
+        assert!(
+            tokio::time::timeout(Duration::from_millis(80), remote.read_rtp())
+                .await
+                .is_err()
+        );
+        Ok(())
+    }
+    .await;
+    let browser_closed = browser.close().await;
+    let host_closed = host.close().await;
+    result?;
+    browser_closed?;
+    host_closed?;
+    Ok(())
+}
+
 #[tokio::test]
 async fn legacy_host_selects_vp8_before_answer_and_pins_it_on_restart() -> TestResult {
     let controller = DeviceIdentity::generate();

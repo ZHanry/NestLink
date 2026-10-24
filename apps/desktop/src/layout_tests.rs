@@ -1206,3 +1206,33 @@ fn local_session_popup_has_no_second_display_approval() {
     assert_eq!(workspace.bounds("停止会话").len(), 1);
     assert_eq!(workspace.bounds("关闭").len(), 1);
 }
+
+#[cfg(windows)]
+#[test]
+fn embedded_remote_viewport_stops_gpu_and_uses_cpu() {
+    let snapshot = enrolled_snapshot();
+    let mut workspace = Workspace::new(snapshot.clone());
+    workspace.app.gpu_video = gpu_video::GpuVideo::layout_active_presenter();
+    workspace.app.native_control_enabled = true;
+    workspace.app.native_ime_composing = true;
+    assert!(workspace.app.gpu_video.active());
+    assert!(!workspace.app.update_gpu_video(
+        &workspace.context,
+        &snapshot,
+        true,
+        egui::ViewportClass::Embedded,
+    ));
+    assert!(!workspace.app.gpu_video.active());
+    assert!(!workspace.app.gpu_video.ready());
+    assert!(!workspace.app.native_control_enabled);
+    assert!(!workspace.app.native_ime_composing);
+    assert_eq!(workspace.app.bridge.compressed_authority_deadline(), 0);
+    // Remaining embedded frames must not create a replacement GPU owner.
+    assert!(!workspace.app.update_gpu_video(
+        &workspace.context,
+        &snapshot,
+        true,
+        egui::ViewportClass::Embedded,
+    ));
+    assert!(!workspace.app.gpu_video.active());
+}

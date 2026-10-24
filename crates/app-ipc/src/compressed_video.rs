@@ -233,10 +233,11 @@ static TICKETS: OnceLock<Mutex<HashMap<[u8; 32], Ticket>>> = OnceLock::new();
 fn tickets() -> &'static Mutex<HashMap<[u8; 32], Ticket>> {
     TICKETS.get_or_init(|| Mutex::new(HashMap::new()))
 }
+type OpenedCompressedVideo = (CompressedContext, u32, u32, [u8; 32], Arc<AtomicBool>);
 pub(crate) fn open(
     core: &CoreHandle,
     binding: NativeVideoBinding,
-) -> Result<(CompressedContext, u32, u32, [u8; 32], Arc<AtomicBool>), Error> {
+) -> Result<OpenedCompressedVideo, Error> {
     qpc()?;
     if core.snapshot().generation != binding.ui_generation {
         return Err(Error::Protocol);
@@ -271,20 +272,17 @@ pub(crate) fn take_ticket(
     runtime: &str,
     generation: u64,
 ) -> Result<(CompressedContext, Arc<AtomicBool>), Error> {
-    let t = tickets()
-        .lock()
-        .map_err(|_| Error::Protocol)?
-        .remove(&ticket)
-        .ok_or(Error::Protocol)?;
-    if t.created.elapsed() > Duration::from_secs(2)
-        || t.context.binding.runtime_id != runtime
-        || t.context.binding.ui_generation != generation
-    {
+    let mut entries = tickets().lock().map_err(|_| Error::Protocol)?;
+    let t = entries.get(&ticket).ok_or(Error::Protocol)?;
+    if t.created.elapsed() >= Duration::from_secs(2) || !t.active.load(Ordering::Acquire) {
+        entries.remove(&ticket);
         return Err(Error::Protocol);
     }
-    if !t.active.load(Ordering::Acquire) {
+    // A different authenticated runtime/UI cannot consume the owner's ticket.
+    if t.context.binding.runtime_id != runtime || t.context.binding.ui_generation != generation {
         return Err(Error::Protocol);
     }
+    let t = entries.remove(&ticket).ok_or(Error::Protocol)?;
     Ok((t.context, t.active))
 }
 fn current(
@@ -331,14 +329,9 @@ pub(crate) async fn serve_control(
     let (mut read, mut write, _owner) = connection.into_duplex()?;
     let (tx, mut rx) = tokio::sync::mpsc::channel(16);
     let reader = tokio::spawn(async move {
-        loop {
-            match read.receive::<ClientControl>().await {
-                Ok(v) => {
-                    if tx.send(v).await.is_err() {
-                        break;
-                    }
-                }
-                Err(_) => break,
+        while let Ok(v) = read.receive::<ClientControl>().await {
+            if tx.send(v).await.is_err() {
+                break;
             }
         }
     });
@@ -633,6 +626,179 @@ impl CompressedDataRx {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{Client, ExitRequest, serve, wire::Rejection};
+    use nestlink_app_core::{AppCore, Limits, ShutdownState};
+    use nestlink_local_ipc::LocalServer;
+    use tokio::{sync::mpsc, task::JoinSet};
+
+    type TestResult<T = ()> = Result<T, Box<dyn std::error::Error + Send + Sync>>;
+
+    // Same authenticated LocalServer/AppCore/serve fixture as tests/runtime.rs.
+    async fn client(
+        server: &LocalServer,
+        root: &Path,
+        core: CoreHandle,
+        exit: mpsc::Sender<ExitRequest>,
+        tasks: &mut JoinSet<Result<(), Error>>,
+    ) -> TestResult<Client> {
+        let connecting = Client::connect(root);
+        let accepting = async { server.accept().await?.authenticate().await };
+        let (client, accepted) = tokio::join!(connecting, accepting);
+        tasks.spawn(serve(accepted?, core, exit));
+        Ok(client?)
+    }
+
+    fn issue_ticket(runtime: &str, generation: u64, age: Duration) -> TestResult<[u8; 32]> {
+        let ticket = nestlink_auth::random_bytes();
+        let context = CompressedContext {
+            binding: NativeCompressedBinding {
+                runtime_id: runtime.into(),
+                ui_generation: generation,
+                request_id: "ticket-owner".into(),
+                connection_generation: 1,
+                source: 1,
+                stream_id: nestlink_auth::random_bytes(),
+                stream_epoch: 1,
+            },
+            catalog_revision: 1,
+            selection_sequence: 1,
+            layout_epoch: 1,
+            decode_epoch: 1,
+            configuration_id: 1,
+        };
+        // Only issuance is seeded: these tests exercise the actual TLS request
+        // validator and data-open dispatch without creating a remote media lease.
+        tickets()
+            .lock()
+            .map_err(|_| std::io::Error::other("tickets poisoned"))?
+            .insert(
+                ticket,
+                Ticket {
+                    context,
+                    created: Instant::now() - age,
+                    active: Arc::new(AtomicBool::new(true)),
+                },
+            );
+        Ok(ticket)
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn tls_data_ticket_rejects_other_runtime_ui_replay_and_expiry() -> TestResult {
+        let temporary = tempfile::tempdir()?;
+        let root = temporary.path().join("owner");
+        let other_root = temporary.path().join("other-runtime");
+        let server = LocalServer::bind(&root).await?;
+        let other = LocalServer::bind(&other_root).await?;
+        let mut core = AppCore::start(Limits::default())?;
+        let handle = core.handle();
+        let generation = handle.snapshot().generation;
+        let (exit, _requests) = mpsc::channel(1);
+        let mut tasks = JoinSet::new();
+        let ticket = issue_ticket(server.runtime_id(), generation, Duration::ZERO)?;
+
+        let mut wrong_runtime = client(
+            &other,
+            &other_root,
+            handle.clone(),
+            exit.clone(),
+            &mut tasks,
+        )
+        .await?;
+        assert!(matches!(
+            wrong_runtime
+                .request(generation, Command::OpenNativeCompressedData { ticket })
+                .await?
+                .result,
+            Reply::Rejected {
+                reason: Rejection::Invalid
+            }
+        ));
+        let mut owner = client(&server, &root, handle.clone(), exit.clone(), &mut tasks).await?;
+        assert!(matches!(
+            owner
+                .request(generation + 1, Command::OpenNativeCompressedData { ticket })
+                .await?
+                .result,
+            Reply::Rejected {
+                reason: Rejection::StaleGeneration
+            }
+        ));
+        // Neither failed connection may consume the correct owner's ticket.
+        assert!(matches!(
+            owner
+                .request(generation, Command::OpenNativeCompressedData { ticket })
+                .await?
+                .result,
+            Reply::CompressedDataOpened
+        ));
+        drop(owner);
+
+        let mut replay = client(&server, &root, handle.clone(), exit.clone(), &mut tasks).await?;
+        assert!(matches!(
+            replay
+                .request(generation, Command::OpenNativeCompressedData { ticket })
+                .await?
+                .result,
+            Reply::Rejected {
+                reason: Rejection::Invalid
+            }
+        ));
+
+        // Backdating the issuance timestamp avoids wall-clock sleeps while the
+        // real dispatch still enforces the two-second monotonic TTL.
+        let expired = issue_ticket(server.runtime_id(), generation, Duration::from_secs(3))?;
+        assert!(matches!(
+            replay
+                .request(
+                    generation,
+                    Command::OpenNativeCompressedData { ticket: expired }
+                )
+                .await?
+                .result,
+            Reply::Rejected {
+                reason: Rejection::Invalid
+            }
+        ));
+
+        // Reach the ticket's UI check (rather than just the outer request check)
+        // with a current request carrying a ticket issued for a different UI.
+        let future_ui = issue_ticket(server.runtime_id(), generation + 1, Duration::ZERO)?;
+        assert!(matches!(
+            replay
+                .request(
+                    generation,
+                    Command::OpenNativeCompressedData { ticket: future_ui }
+                )
+                .await?
+                .result,
+            Reply::Rejected {
+                reason: Rejection::Invalid
+            }
+        ));
+        {
+            let mut entries = tickets()
+                .lock()
+                .map_err(|_| std::io::Error::other("tickets poisoned"))?;
+            assert!(entries.remove(&future_ui).is_some());
+            assert!(!entries.contains_key(&expired));
+        }
+
+        drop(wrong_runtime);
+        drop(replay);
+        server.stop();
+        other.stop();
+        tasks.abort_all();
+        while let Some(joined) = tasks.join_next().await {
+            if let Err(error) = joined {
+                assert!(error.is_cancelled());
+            }
+        }
+        assert_eq!(
+            core.shutdown(Duration::from_secs(2)).await,
+            ShutdownState::Complete
+        );
+        Ok(())
+    }
 
     #[test]
     fn stale_decode_requires_every_other_context_field_to_match() {

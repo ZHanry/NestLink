@@ -34,6 +34,15 @@ impl Default for GpuVideo {
     }
 }
 impl GpuVideo {
+    #[cfg(test)]
+    pub(super) fn layout_active_presenter() -> Self {
+        Self {
+            enabled: true,
+            presenter: Some(Presenter::new(640, 480, 1)),
+            submitted: true,
+            ..Self::default()
+        }
+    }
     pub fn stop(&mut self) {
         self.pending = None;
         self.pending_prepare = None;
@@ -78,13 +87,21 @@ impl DesktopApp {
         context: &egui::Context,
         snapshot: &Snapshot,
         interested: bool,
+        viewport_class: egui::ViewportClass,
     ) -> bool {
         self.poll_gpu_cleanup(context);
         let gpu = &mut self.gpu_video;
+        // Embedded egui windows share the root HWND. Only a real native remote
+        // viewport may discover/create the child surface; otherwise use CPU.
+        let interested = interested && viewport_class == egui::ViewportClass::Immediate;
         self.bridge
             .enable_compressed_video(gpu.enabled && interested);
         if !gpu.enabled || !interested {
+            let was_active = gpu.active();
             gpu.stop();
+            if was_active {
+                self.release_native_control();
+            }
             return false;
         }
         context.request_repaint_after(Duration::from_millis(16));

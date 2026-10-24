@@ -864,6 +864,7 @@ impl DesktopApp {
         snapshot: &Snapshot,
         visible: bool,
         focused: bool,
+        _viewport_class: egui::ViewportClass,
     ) {
         let runtime_id = self.bridge.runtime_id();
         let session = snapshot.native_session.data.as_ref();
@@ -888,7 +889,7 @@ impl DesktopApp {
             self.release_native_control();
         }
         #[cfg(windows)]
-        if self.update_gpu_video(context, snapshot, interested) {
+        if self.update_gpu_video(context, snapshot, interested, _viewport_class) {
             let _ = self.bridge.take_video_update();
             return;
         }
@@ -1126,7 +1127,7 @@ impl DesktopApp {
                         input.focused,
                     )
                 });
-                self.update_video(viewport, snapshot, visible, focused);
+                self.update_video(viewport, snapshot, visible, focused, class);
                 let mut viewport_ui = egui::Ui::new(
                     viewport.clone(),
                     egui::Id::new("nestlink-remote-session-ui"),
@@ -1151,7 +1152,7 @@ impl DesktopApp {
                     .open(&mut open)
                     .default_size([1040., 760.])
                     .show(viewport, |ui| {
-                        self.update_video(viewport, snapshot, visible, focused);
+                        self.update_video(viewport, snapshot, visible, focused, class);
                         action = self.remote_viewport_contents(ui, snapshot);
                     });
                 if !open {

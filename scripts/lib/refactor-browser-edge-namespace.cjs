@@ -53,14 +53,20 @@ async function request(page, method, text) {
 }
 async function save(page) { await request(page, 'PUT', 'Save public ingress'); }
 async function read(page) { await request(page, 'GET', 'Read again (replace draft)'); }
-async function signIn(page, ready) {
+async function signIn(page, ready, facts) {
+  facts.stage = 'concurrent_navigation';
   await page.goto(ready.origin, { waitUntil: 'networkidle0' });
+  facts.stage = 'concurrent_language';
   await page.locator('.language-selector button[lang="en"]').click();
+  facts.stage = 'concurrent_trust';
   await page.locator('.entry-panel button.primary').click();
+  facts.stage = 'concurrent_signin_fields';
   await page.waitForSelector('#username', { visible: true });
   await page.locator('#username').fill(ready.username);
   await page.locator('#password').fill(ready.password);
+  facts.stage = 'concurrent_signin_submit';
   await page.locator('.entry-panel button.primary').click();
+  facts.stage = 'concurrent_workspace';
   await page.waitForSelector('button.record', { visible: true });
 }
 async function run(page, ready, report) {
@@ -97,20 +103,29 @@ async function run(page, ready, report) {
     facts.read_saved_configuration = true;
     // A second production SDK login reads revision 1 and writes revision 2.
     sibling = await page.browserContext().newPage();
-    await signIn(sibling, ready); await network(sibling); await node(sibling, fixtures.nodes[0].name); await settled(sibling);
+    sibling.setDefaultTimeout(8000);
+    await signIn(sibling, ready, facts);
+    facts.stage = 'concurrent_network';
+    await network(sibling);
+    facts.stage = 'concurrent_node';
+    await node(sibling, fixtures.nodes[0].name); await settled(sibling);
     const second = [...first]; second[2] = '29100, 29102';
+    facts.stage = 'concurrent_write';
     await fill(sibling, second); await save(sibling);
     check(await sibling.$eval(PANEL, el => el.textContent.includes('Configuration revision 2')), 'Concurrent real writer must advance revision');
+    facts.stage = 'stale_primary_write';
     await fill(page, draft); await save(page);
     check(JSON.stringify(await values(page)) === JSON.stringify(draft), 'CAS conflict discarded draft');
     check(await page.$eval(PANEL + ' button.primary', el => el.disabled), 'CAS conflict must require re-read');
     check(await page.$eval(PANEL + ' [role="alert"]', el => el.textContent.trim().length > 0), 'CAS conflict must be visible');
     facts.cas_conflict_preserves_draft = true;
+    facts.stage = 'conflict_readback';
     await read(page);
     check(JSON.stringify(await values(page)) === JSON.stringify(second), 'Conflict recovery must load committed revision');
     facts.conflict_recovered = true;
     // Observe an actual request, switch selection while its real HTTP response
     // is delayed by the fixture, then wait for that old response to finish.
+    facts.stage = 'old_response_node_switch';
     const pendingRequest = page.waitForRequest(r => r.method() === 'GET' && new URL(r.url()).pathname === '/api/v3/nodes/' + fixtures.nodes[0].id + '/service-namespace');
     let oldResponseArrived = false;
     const pendingResponse = page.waitForResponse(r => r.request().method() === 'GET' && new URL(r.url()).pathname === '/api/v3/nodes/' + fixtures.nodes[0].id + '/service-namespace');
@@ -128,8 +143,19 @@ async function run(page, ready, report) {
     check(facts.failures.filter(f => f.method === 'GET' && f.status === 403).length === 3, 'Expected exactly three real uninitialized namespace reads');
     check(facts.failures.filter(f => f.method === 'PUT' && f.status === 409).length === 1, 'Expected exactly one real CAS rejection');
     check(facts.failures.filter(f => f.method === 'PUT' && f.status === 403).length === 1, 'Expected exactly one real management-hostname rejection');
-    facts.passed = true;
+    facts.stage = 'complete'; facts.passed = true;
   } catch (error) {
+    if (sibling) {
+      facts.concurrent_failure_state = await sibling.evaluate(() => ({
+        trust_present: !!document.querySelector('#trust-title'),
+        signin_present: !!document.querySelector('#signin-title'),
+        workspace_present: !!document.querySelector('.workspace'),
+        username_present: !!document.querySelector('#username'),
+        language_present: !!document.querySelector('.language-selector button[lang="en"]'),
+        entry_action_disabled: document.querySelector('.entry-panel button.primary')?.disabled ?? null,
+        namespace_present: !!document.querySelector('[aria-label="Public service ingress"]'),
+      })).catch(() => ({ inspection_failed: true }));
+    }
     // Preserve the actual panel before finally returns to the desktop page.
     // These are fixed state labels, not editor values or authentication data.
     facts.failure_state = await page.evaluate(selector => {

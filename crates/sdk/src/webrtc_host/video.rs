@@ -626,14 +626,20 @@ impl VideoRtpWriter {
                     }
                 }
             });
-            if let Err(error) = result {
-                if *context.cancel.borrow()
-                    || Instant::now() >= context.deadline
-                    || is_transient_media_write_state(context.peer.connection_state())
-                {
-                    return Ok(false);
+            match result {
+                // An unbound or paused track can return success with zero
+                // bytes. It has not restored the receiver's reference chain.
+                Ok(0) => return Ok(false),
+                Ok(_) => {}
+                Err(error) => {
+                    if *context.cancel.borrow()
+                        || Instant::now() >= context.deadline
+                        || is_transient_media_write_state(context.peer.connection_state())
+                    {
+                        return Ok(false);
+                    }
+                    return Err(error);
                 }
-                return Err(error);
             }
         }
         Ok(true)

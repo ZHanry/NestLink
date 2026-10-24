@@ -4500,11 +4500,8 @@ fn run_video_source(
         let frame_period = encoder.frame_period(current_selection.codec.fps);
         if let Some(packet) = step.output {
             last_encoder_output = Instant::now();
-            if packet.keyframe
-                && recovery.is_some_and(|(_, requested)| packet.pts_90khz >= requested)
-            {
-                recovery = None;
-            }
+            let completes_recovery = packet.keyframe
+                && recovery.is_some_and(|(_, requested)| packet.pts_90khz >= requested);
             if let Some(sps) = encoder.sps() {
                 video::validate_sps(format, sps)?;
             }
@@ -4527,6 +4524,12 @@ fn run_video_source(
             )? {
                 force_keyframe.store(true, Ordering::Release);
             } else {
+                // Encoding an IDR is insufficient if that AU was abandoned
+                // during transport. Preserve the original recovery deadline
+                // until an independent frame has been written completely.
+                if completes_recovery {
+                    recovery = None;
+                }
                 diagnostics.mark(|value| &mut value.first_rtp_write_ms);
             }
         }
