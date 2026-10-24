@@ -1,6 +1,7 @@
 //! Bounded compressed-reference handoff. Transfer acceptance is deliberately
 //! distinct from real decoder output: only the latter refunds a reference.
-use nestlink_media_codec::H264Validator;
+use crate::legacy_format::LegacyPrepare;
+use nestlink_media_codec::VideoCodec;
 use std::{
     collections::{BTreeMap, VecDeque},
     io,
@@ -68,7 +69,7 @@ pub(crate) struct ExternalSink {
     fenced: bool,
     pub recover: bool,
     pub completed: VecDeque<(u64, u64, bool)>,
-    validator: H264Validator,
+    prepare: LegacyPrepare,
     delivery: u64,
     bytes: usize,
     queued: VecDeque<(Instant, ExternalAccessUnit)>,
@@ -85,12 +86,15 @@ impl ExternalSink {
             fenced: false,
             recover: true,
             completed: VecDeque::new(),
-            validator: H264Validator::new(width, height)?,
+            prepare: LegacyPrepare::new(VideoCodec::H264Baseline, width, height)?,
             delivery: 0,
             bytes: 0,
             queued: VecDeque::new(),
             pending: BTreeMap::new(),
         })
+    }
+    pub fn surface(&self) -> crate::LegacySurface {
+        self.prepare.surface()
     }
     // Keep wire identity, scheduling and admission time explicit at this boundary.
     #[allow(clippy::too_many_arguments)]
@@ -120,10 +124,7 @@ impl ExternalSink {
         if self.recover && !keyframe {
             return Ok(false);
         }
-        let unit = self.validator.validate(&payload)?;
-        if unit.keyframe != keyframe {
-            return Err(io::Error::other("external H264 IDR flag mismatch"));
-        }
+        self.prepare.validate(&payload, keyframe)?;
         self.delivery = self
             .delivery
             .checked_add(1)
@@ -187,7 +188,7 @@ impl ExternalSink {
         self.pending.clear();
         self.completed.clear();
         self.bytes = 0;
-        self.validator = H264Validator::new(self.width, self.height)?;
+        self.prepare = LegacyPrepare::new(VideoCodec::H264Baseline, self.width, self.height)?;
         self.prepared = false;
         self.recover = true;
         Ok(())
@@ -284,6 +285,26 @@ mod tests {
             320,
             240,
         )
+    }
+    #[test]
+    fn prepared_legacy_surface_rejects_bad_au_before_issuing_credit() -> io::Result<()> {
+        let mut s = sink()?;
+        assert_eq!(
+            s.surface().color,
+            nestlink_protocol::media_format::Color::SDR_BT709_LIMITED
+        );
+        let context = s.context.clone();
+        s.feedback(&context, VideoSinkFeedback::Prepared)?;
+        let now = Instant::now();
+        assert!(
+            s.push(1, 90, true, false, now, Zeroizing::new(vec![1, 2, 3]), now)
+                .is_err()
+        );
+        assert_eq!(s.delivery, 0);
+        assert_eq!(s.bytes, 0);
+        assert!(s.pending.is_empty());
+        assert!(s.queued.is_empty());
+        Ok(())
     }
     #[test]
     fn queued_unissued_unit_cannot_refund_credit() -> io::Result<()> {

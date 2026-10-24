@@ -263,9 +263,10 @@ impl H264Validator {
             info: None,
         })
     }
-    /// The native GPU presenter negotiates only SDR BT.709 limited output.
-    #[cfg(any(windows, test))]
-    pub(crate) fn new_sdr(width: u32, height: u32) -> io::Result<Self> {
+    /// Validate the existing SDR BT.709 limited pixel contract before decode.
+    /// Absent VUI inherits that legacy contract; an explicit conflict is rejected.
+    /// This constructor does not establish a signed remote format negotiation.
+    pub fn new_sdr(width: u32, height: u32) -> io::Result<Self> {
         let mut validator = Self::new(width, height)?;
         validator.sdr_color = true;
         Ok(validator)

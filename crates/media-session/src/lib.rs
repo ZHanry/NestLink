@@ -10,7 +10,9 @@ pub use timing::{
     SessionMediaTiming, SessionPlayoutClock,
 };
 pub mod external;
+mod legacy_format;
 mod receiver;
+pub use legacy_format::{LegacyPrepare, LegacySurface};
 mod video;
 mod worker;
 pub use audio::{AudioReceiver, AudioSender, AudioStats, AudioStream};

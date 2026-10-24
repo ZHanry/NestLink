@@ -144,6 +144,7 @@ impl VideoSender {
     }
 }
 struct Encoder {
+    prepare: crate::legacy_format::LegacyPrepare,
     codec: VideoEncoder,
     config: VideoConfig,
     sequence: u64,
@@ -253,6 +254,11 @@ fn send<D: CaptureDevice>(
         codecs.insert(
             stream.source,
             Encoder {
+                prepare: crate::legacy_format::LegacyPrepare::new(
+                    codec_kind,
+                    stream.codec.width,
+                    stream.codec.height,
+                )?,
                 codec: VideoEncoder::new(codec_kind, stream.codec)?,
                 config: stream.codec,
                 sequence: 0,
@@ -401,6 +407,10 @@ fn send<D: CaptureDevice>(
             let Some(packet) = packet else {
                 continue;
             };
+            // Validate actual emitted bytes and real configured target before
+            // making this packet visible to the authorized transport.
+            let sps = encoder.prepare.validate(&packet.data, packet.keyframe)?;
+            let _actual_format = encoder.prepare.configured(encoder.config, sps)?;
             let repeated_source = encoder
                 .pending_sources
                 .remove(&packet.pts_90khz)

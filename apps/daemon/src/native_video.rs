@@ -968,6 +968,7 @@ fn stream_capture<D: CaptureDevice>(
 ) -> (VideoController<D>, StreamExit) {
     let mut active: Option<NativeVideoBinding> = None;
     let mut encoder: Option<VideoEncoder> = None;
+    let mut legacy_prepare: Option<(nestlink_media_session::LegacyPrepare, VideoConfig)> = None;
     let mut owner_encoding = false;
     let mut owner_output_seen = false;
     let mut pending_sources = std::collections::BTreeMap::new();
@@ -1043,6 +1044,14 @@ fn stream_capture<D: CaptureDevice>(
                 fps: target_fps,
                 bitrate_kbps: BITRATE_KBPS,
             };
+            legacy_prepare = match nestlink_media_session::LegacyPrepare::new(
+                codec_kind,
+                config.width,
+                config.height,
+            ) {
+                Ok(prepare) => Some((prepare, config)),
+                Err(_) => return (controller, StreamExit::CaptureFailed),
+            };
             owner_encoding = if codec_kind == VideoCodec::H264Baseline {
                 match controller.host_configure(HostVideoConfig {
                     source: binding.source,
@@ -1117,6 +1126,15 @@ fn stream_capture<D: CaptureDevice>(
                 }
                 owner_output_seen = true;
                 let packet = &mut output.packet;
+                let Some((prepare, config)) = legacy_prepare.as_mut() else {
+                    return (controller, StreamExit::CaptureFailed);
+                };
+                let admitted = prepare
+                    .validate(&packet.data, packet.keyframe)
+                    .and_then(|sps| prepare.configured(*config, sps));
+                if admitted.is_err() {
+                    return (controller, StreamExit::CaptureFailed);
+                }
                 let sent = if output.repeated {
                     runtime.block_on(core.send_native_video_recovery_frame(
                         identity,
@@ -1208,6 +1226,15 @@ fn stream_capture<D: CaptureDevice>(
                 continue;
             }
         };
+        let Some((prepare, config)) = legacy_prepare.as_mut() else {
+            return (controller, StreamExit::CaptureFailed);
+        };
+        let admitted = prepare
+            .validate(&encoded.data, encoded.keyframe)
+            .and_then(|sps| prepare.configured(*config, sps));
+        if admitted.is_err() {
+            return (controller, StreamExit::CaptureFailed);
+        }
         let Some(repeated) = pending_sources.remove(&encoded.pts_90khz) else {
             return (controller, StreamExit::CaptureFailed);
         };

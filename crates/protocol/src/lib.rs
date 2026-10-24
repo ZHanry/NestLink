@@ -10,6 +10,7 @@ pub mod ice;
 pub mod input;
 pub use input::valid_scroll;
 pub mod media;
+pub mod media_format;
 pub mod native_displays;
 pub mod node_discovery;
 pub mod node_resources;

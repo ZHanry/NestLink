@@ -30,6 +30,9 @@ const EVENT_CAPACITY: usize = 4;
 /// Packed BGRA for presentation. Every encoded reference is decoded before an
 /// older presentation image may be replaced in this per-source mailbox.
 pub struct DecodedVideo {
+    /// Encoded YUV source conversion; does not label the returned BGRA as
+    /// limited-range RGB, establish capture transfer, or prove display HDR.
+    pub source_color: nestlink_protocol::media_format::Color,
     pub codec: u8,
     pub hardware_decode: bool,
     pub epoch: VideoEpoch,
@@ -412,6 +415,17 @@ impl VideoPresentation {
         Ok(external
             .as_ref()
             .map(|s| (s.context.clone(), s.width, s.height)))
+    }
+    pub fn external_surface(&self) -> io::Result<Option<crate::LegacySurface>> {
+        self.lease
+            .check_media_binding(Channel::Video, self.connection_generation)
+            .map_err(io::Error::other)?;
+        let external = self
+            .output
+            .external
+            .lock()
+            .map_err(|_| io::Error::other("external sink poisoned"))?;
+        Ok(external.as_ref().map(|sink| sink.surface()))
     }
     pub fn poll_external(&self) -> io::Result<Option<crate::external::ExternalAccessUnit>> {
         self.lease
@@ -1090,6 +1104,7 @@ struct Decoder {
     stream: VideoStream,
     layout: u64,
     codec: Option<VideoDecoder>,
+    prepare: Option<crate::legacy_format::LegacyPrepare>,
     awaiting_keyframe: bool,
     pending: BTreeMap<u64, (u64, bool)>,
     sequence: u64,
@@ -1104,6 +1119,7 @@ impl Decoder {
             stream,
             layout,
             codec: None,
+            prepare: None,
             awaiting_keyframe: true,
             pending: BTreeMap::new(),
             sequence: 0,
@@ -1133,6 +1149,7 @@ impl Decoder {
     fn recover(&mut self, reason: VideoRecoveryReason, now: Instant) -> io::Result<()> {
         self.deadline(now)?;
         self.pending.clear();
+        self.prepare = None;
         if reason == VideoRecoveryReason::DecoderFailure {
             self.codec = None;
         } else if !self.awaiting_keyframe {
@@ -1269,6 +1286,19 @@ impl Decoder {
         if !self.accept_input(&packet, epoch, now)? {
             return Ok(None);
         }
+        if self.prepare.is_none() {
+            self.prepare = Some(crate::legacy_format::LegacyPrepare::from_wire(
+                packet.codec,
+                packet.width,
+                packet.height,
+            )?);
+        }
+        let prepare = self
+            .prepare
+            .as_mut()
+            .ok_or_else(|| io::Error::other("missing legacy Prepare"))?;
+        prepare.validate(&payload, packet.keyframe)?;
+        let color = prepare.surface().color;
         if self.codec.is_none() {
             let kind = match nestlink_protocol::NativeVideoCodec::try_from(packet.codec) {
                 Ok(nestlink_protocol::NativeVideoCodec::Vp8) => VideoCodec::Vp8,
@@ -1327,6 +1357,7 @@ impl Decoder {
         let recovered = self.recovery.take().is_some();
         Ok(Some((
             DecodedVideo {
+                source_color: color,
                 codec: packet.codec as u8,
                 hardware_decode: self.codec.as_ref().is_some_and(VideoDecoder::hardware),
                 epoch,
@@ -1425,6 +1456,7 @@ fn prepare_display_decoder(
 ) -> io::Result<()> {
     for codec in codecs.values_mut() {
         codec.codec = None;
+        codec.prepare = None;
         codec.awaiting_keyframe = true;
         codec.pending.clear();
         if current.is_none_or(|(layout, _)| layout.source != codec.stream.source) {
@@ -1459,6 +1491,12 @@ fn prepare_display_decoder(
             .map_err(|_| io::Error::other("external sink poisoned"))?;
         let uses_external = external.is_some();
         if !uses_external {
+            // Validate typed surface before creating the selected decoder.
+            decoder.prepare = Some(crate::legacy_format::LegacyPrepare::new(
+                kind,
+                layout.width,
+                layout.height,
+            )?);
             decoder.codec = Some(VideoDecoder::new(kind, layout.width, layout.height)?);
         }
         let external_prepared = external.as_ref().is_none_or(|s| {
@@ -1527,6 +1565,11 @@ fn receive(
             lease
                 .check_media_binding(Channel::Video, epoch.connection)
                 .map_err(io::Error::other)?;
+            decoder.prepare = Some(crate::legacy_format::LegacyPrepare::new(
+                kind,
+                decoder.stream.codec.width,
+                decoder.stream.codec.height,
+            )?);
             decoder.codec = Some(VideoDecoder::new(
                 kind,
                 decoder.stream.codec.width,
@@ -1789,6 +1832,7 @@ fn update_dynamic_layout(
         codec.stream.codec.width = packet.width;
         codec.stream.codec.height = packet.height;
         codec.codec = None;
+        codec.prepare = None;
         codec.awaiting_keyframe = true;
         codec.pending.clear();
         // Do not reset recovery, request sequence, attempt budget or media
@@ -1808,6 +1852,7 @@ fn update_dynamic_layout(
                 },
                 layout: packet.layout_epoch,
                 codec: None,
+                prepare: None,
                 awaiting_keyframe: true,
                 pending: BTreeMap::new(),
                 sequence: 0,
@@ -1825,8 +1870,235 @@ fn update_dynamic_layout(
 mod tests {
     use super::*;
 
+    // Parser fixtures intentionally do not pretend to be a decodable picture.
+    // Bad input traverses real Decoder::decode and must fail before a platform
+    // decoder can be created/submitted. Good input below proves admission only.
+    fn admission_test_idr(width: u32, height: u32) -> Vec<u8> {
+        fn ue(bits: &mut String, value: u32) {
+            let value = format!("{:b}", value + 1);
+            bits.push_str(&"0".repeat(value.len() - 1));
+            bits.push_str(&value);
+        }
+        let mut bits = String::from("010000101100000000011111");
+        for value in [0, 0, 2, 1] {
+            ue(&mut bits, value);
+        }
+        bits.push('0');
+        ue(&mut bits, width / 16 - 1);
+        ue(&mut bits, height / 16 - 1);
+        bits.push_str("11001"); // progressive/direct, no crop/VUI, RBSP stop
+        while !bits.len().is_multiple_of(8) {
+            bits.push('0');
+        }
+        let mut data = vec![0, 0, 0, 1, 0x67];
+        for chunk in bits.as_bytes().chunks(8) {
+            let byte = chunk.iter().fold(0, |value, bit| value * 2 + (bit - b'0'));
+            if data.ends_with(&[0, 0]) && byte <= 3 {
+                data.push(3);
+            }
+            data.push(byte);
+        }
+        data.extend_from_slice(&[0, 0, 1, 0x68, 0xce, 0x38, 0x80, 0, 0, 1, 0x65, 0xb8, 0x40]);
+        data
+    }
+    fn admission_test_decoder() -> Decoder {
+        Decoder::new(
+            VideoStream {
+                source: 42,
+                codec: VideoConfig {
+                    width: 320,
+                    height: 240,
+                    fps: 30,
+                    bitrate_kbps: 1000,
+                },
+            },
+            1,
+        )
+    }
+    fn admission_test_packet(
+        sequence: u64,
+        layout: u64,
+        width: u32,
+        height: u32,
+        keyframe: bool,
+    ) -> NativeVideo {
+        NativeVideo {
+            schema_version: SCHEMA_VERSION,
+            codec: 1,
+            connection_generation: 9,
+            layout_epoch: layout,
+            source: 42,
+            sequence,
+            pts_90khz: sequence * 90,
+            width,
+            height,
+            keyframe,
+            payload: Vec::new(),
+            repeated_source: false,
+        }
+    }
+
+    #[test]
+    fn cpu_admission_rejects_bad_au_and_geometry_without_pending_or_submission() -> io::Result<()> {
+        let mut decoder = admission_test_decoder();
+        // An existing accounting entry must not be cleared or replaced by an
+        // admission error. No fabricated codec or successful GPU output exists.
+        decoder.pending.insert(777, (55, false));
+        let pending = decoder.pending.clone();
+        let epoch = VideoEpoch {
+            connection: 9,
+            layout: 1,
+        };
+        let now = Instant::now();
+        for (sequence, bytes) in [(1, vec![1, 2, 3]), (2, admission_test_idr(640, 480))] {
+            let error = match decoder.decode(
+                admission_test_packet(sequence, 1, 320, 240, true),
+                Zeroizing::new(bytes),
+                epoch,
+                now,
+            ) {
+                Err(error) => error,
+                Ok(_) => panic!("bad AU must reject before CPU decoder creation/submission"),
+            };
+            // In particular, reaching the unavailable H264 backend on Linux
+            // and returning Unsupported must not masquerade as this rejection.
+            assert_eq!(error.kind(), io::ErrorKind::InvalidData);
+            assert!(error.to_string().contains("H.264"));
+            assert!(decoder.codec.is_none());
+            assert_eq!(decoder.pending, pending);
+            // Valid metadata remains consumed, matching existing anti-replay.
+            assert_eq!(decoder.sequence, sequence);
+            assert_eq!(decoder.pts, Some(sequence * 90));
+        }
+        // Metadata geometry conflicts reject before consuming even metadata.
+        assert!(
+            decoder
+                .decode(
+                    admission_test_packet(3, 1, 640, 480, true),
+                    Zeroizing::new(admission_test_idr(640, 480)),
+                    epoch,
+                    now
+                )
+                .is_err()
+        );
+        assert_eq!(decoder.sequence, 2);
+        assert_eq!(decoder.pending, pending);
+        assert!(decoder.codec.is_none());
+        Ok(())
+    }
+
+    #[test]
+    fn cpu_resize_recovery_retires_old_sps_and_requires_new_epoch_keyframe() -> io::Result<()> {
+        let now = Instant::now();
+        let mut decoder = admission_test_decoder();
+        let mut prepare = crate::LegacyPrepare::new(VideoCodec::H264Baseline, 320, 240)?;
+        prepare.validate(&admission_test_idr(320, 240), true)?;
+        prepare.validate(&[0, 0, 1, 0x41, 0xe0], false)?;
+        decoder.prepare = Some(prepare);
+        decoder.awaiting_keyframe = false;
+        decoder.sequence = 7;
+        decoder.pts = Some(630);
+        decoder.request_sequence = 5;
+        decoder.recover(VideoRecoveryReason::ReferenceGap, now)?;
+        let deadline = decoder.recovery_deadline();
+        let attempts = decoder.attempts.len();
+        assert!(decoder.prepare.is_none());
+        assert!(decoder.awaiting_keyframe);
+
+        // Test recovery independently of resize: its replacement admission
+        // history cannot accept a delta. Reaccept an old-layout IDR at this
+        // admission-only boundary so resize must retire nonempty history too.
+        let mut old_layout_prepare = crate::LegacyPrepare::new(VideoCodec::H264Baseline, 320, 240)?;
+        assert!(
+            old_layout_prepare
+                .validate(&[0, 0, 1, 0x41, 0xe0], false)
+                .is_err()
+        );
+        old_layout_prepare.validate(&admission_test_idr(320, 240), true)?;
+        decoder.prepare = Some(old_layout_prepare);
+
+        let mut codecs = BTreeMap::from([(42, decoder)]);
+        let delta = admission_test_packet(8, 2, 640, 480, false);
+        assert!(update_dynamic_layout(&delta, &mut codecs, now)?);
+        let decoder = codecs
+            .get_mut(&42)
+            .ok_or_else(|| io::Error::other("fixture decoder missing"))?;
+        assert_eq!(decoder.layout, 2);
+        assert!(decoder.prepare.is_none());
+        let epoch = VideoEpoch {
+            connection: 9,
+            layout: 2,
+        };
+        assert!(
+            decoder
+                .decode(delta, Zeroizing::new(vec![0, 0, 1, 0x41, 0xe0]), epoch, now)?
+                .is_none()
+        );
+        assert!(decoder.codec.is_none());
+        assert!(decoder.pending.is_empty());
+        assert_eq!(decoder.sequence, 8);
+        assert_eq!(decoder.pts, Some(720));
+        // Replaying the dropped delta is still rejected; reset never launders
+        // sequence/PTS or extends the original recovery budget.
+        assert!(
+            decoder
+                .decode(
+                    admission_test_packet(8, 2, 640, 480, false),
+                    Zeroizing::new(vec![0, 0, 1, 0x41, 0xe0]),
+                    epoch,
+                    now
+                )
+                .is_err()
+        );
+        assert_eq!(decoder.recovery_deadline(), deadline);
+        assert_eq!(decoder.attempts.len(), attempts);
+        assert_eq!(decoder.request_sequence, 5);
+        // Lying about the keyframe bit cannot reuse old SPS/PPS history either.
+        let error = match decoder.decode(
+            admission_test_packet(9, 2, 640, 480, true),
+            Zeroizing::new(vec![0, 0, 1, 0x41, 0xe0]),
+            epoch,
+            now,
+        ) {
+            Err(error) => error,
+            Ok(_) => panic!("old delta cannot bootstrap a new epoch"),
+        };
+        assert_eq!(error.kind(), io::ErrorKind::InvalidData);
+        assert!(decoder.codec.is_none());
+        assert!(decoder.pending.is_empty());
+        let fresh_packet = admission_test_packet(10, 2, 640, 480, true);
+        assert!(decoder.accept_input(&fresh_packet, epoch, now)?);
+        let prepare = decoder
+            .prepare
+            .as_mut()
+            .ok_or_else(|| io::Error::other("new epoch Prepare missing"))?;
+        // Exercise the same real admission gate used by Decoder::decode, but
+        // stop before platform resources: this is not a fake decode success.
+        assert!(
+            prepare
+                .validate(&admission_test_idr(320, 240), true)
+                .is_err()
+        );
+        assert!(
+            prepare
+                .validate(&admission_test_idr(640, 480), true)?
+                .is_some()
+        );
+        assert_eq!(
+            (prepare.surface().width, prepare.surface().height),
+            (640, 480)
+        );
+        assert_eq!(decoder.recovery_deadline(), deadline);
+        assert_eq!(decoder.sequence, 10);
+        assert_eq!(decoder.pts, Some(900));
+        assert!(decoder.pending.is_empty());
+        assert!(decoder.codec.is_none());
+        Ok(())
+    }
+
     fn image(sequence: u64, pts_90khz: u64) -> DecodedVideo {
         DecodedVideo {
+            source_color: nestlink_protocol::media_format::Color::LEGACY_VP8_BT601,
             codec: 0,
             hardware_decode: false,
             epoch: VideoEpoch {
