@@ -114,6 +114,63 @@ class SourceReadbackTests(unittest.TestCase):
         self.assertEqual(code, 124)
         self.assertEqual(values[-1]["phase"], "fixture-finally")
 
+    def prepare_lock(self):
+        (self.root / "Cargo.lock").write_bytes(b"# fixture\nversion = 3\n")
+        self.git("add", "Cargo.lock")
+        self.git("commit", "--quiet", "-m", "lock fixture")
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        return Path(temporary.name)
+
+    def test_lock_evidence_preserves_bytes_diff_and_original_failure(self):
+        directory = self.prepare_lock()
+        original = (self.root / "Cargo.lock").read_bytes()
+        command = [sys.executable, "-c", "from pathlib import Path; Path('Cargo.lock').write_bytes(b'changed\\n'); raise SystemExit(23)"]
+        with contextlib.redirect_stdout(io.StringIO()):
+            code = READBACK.guarded(self.root, "lock", command, self.root, 10, directory)
+        self.assertEqual(code, 23)
+        self.assertEqual((directory / "before.lock").read_bytes(), original)
+        self.assertEqual((directory / "after.lock").read_bytes(), b"changed\n")
+        evidence = json.loads((directory / "lock-evidence.json").read_text())
+        for key, filename in (("before", "before.lock"), ("after", "after.lock"), ("diff", "Cargo.lock.diff")):
+            data = (directory / filename).read_bytes()
+            self.assertEqual(evidence[key]["bytes"], len(data))
+            self.assertEqual(evidence[key]["sha256"], hashlib.sha256(data).hexdigest())
+        self.assertEqual((directory / "Cargo.lock.diff").read_bytes(), self.git("diff", "--no-ext-diff", "--binary", "--", "Cargo.lock"))
+
+    def test_metadata_failure_timeout_and_missing_cargo_continue_build(self):
+        directory = self.prepare_lock()
+        real_run = subprocess.run
+        for failure, expected in ((subprocess.CompletedProcess([], 42), 42),
+                                  (subprocess.TimeoutExpired("cargo", 120), 124),
+                                  (FileNotFoundError("cargo"), 127)):
+            builds = []
+            def fake_run(command, **kwargs):
+                if command[0] == "cargo":
+                    if isinstance(failure, Exception):
+                        raise failure
+                    return failure
+                if command[0] == "fake-build":
+                    builds.append(command)
+                    return subprocess.CompletedProcess(command, 23)
+                return real_run(command, **kwargs)
+            with self.subTest(expected=expected), patch.object(READBACK.subprocess, "run", side_effect=fake_run), contextlib.redirect_stdout(io.StringIO()):
+                code = READBACK.guarded(self.root, "metadata", ["fake-build"], self.root, 10, directory, True)
+            self.assertEqual(code, 23)
+            self.assertEqual(len(builds), 1)
+            evidence = json.loads((directory / "lock-evidence.json").read_text())
+            self.assertEqual(evidence["locked_metadata_no_deps_exit_code"], expected)
+            self.assertEqual(evidence["before"], evidence["after_metadata"])
+
+    def test_cli_rejects_lock_evidence_inside_source(self):
+        result = subprocess.run([sys.executable, "-B", str(SCRIPT), "--root", str(self.root),
+                                 "--phase", "lock", "--lock-evidence-dir", str(self.root / "evidence"),
+                                 "--", sys.executable, "-c", "raise SystemExit(23)"],
+                                check=False, capture_output=True)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn(b"outside the source tree", result.stderr)
+        self.assertFalse((self.root / "evidence").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -223,11 +223,19 @@ jobs:
         run: |
           import os, pathlib, subprocess
           scratch = pathlib.Path(os.environ["RUNNER_TEMP"])
-          subprocess.run(["python3", "-B", "scripts/refactor-candidate-source-readback.py", "--phase", "candidate-web-build", "--cwd", "apps/web", "--", "trunk", "build", "--release", "--locked=true", "--skip-version-check", "--dist", str(scratch / "web-dist")], check=True, timeout=4900)
+          subprocess.run(["python3", "-B", "scripts/refactor-candidate-source-readback.py", "--phase", "candidate-web-build", "--cwd", "apps/web", "--lock-evidence-dir", str(scratch / "web-source-lock-evidence"), "--metadata-preflight", "--", "trunk", "build", "--release", "--locked=true", "--skip-version-check", "--dist", str(scratch / "web-dist")], check=True, timeout=5100)
           common = ["python3", "-B", "scripts/refactor-candidate-producer.py"]
           cohort = str(scratch / "candidate-cohort/candidate-cohort.json")
           subprocess.run(common + ["collect-web", "--cohort", cohort, "--input", str(scratch / "web-dist"), "--output", str(scratch / "web-part")], check=True, timeout=300)
           subprocess.run(common + ["metadata", "--cohort", cohort, "--output", str(scratch / "metadata-part")], check=True, timeout=900)
+      - name: Retain fixed Cargo.lock evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: candidate-web-source-lock-evidence-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/web-source-lock-evidence
+          if-no-files-found: warn
+          retention-days: 14
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: rc-development-part-web-${{ github.run_attempt }}

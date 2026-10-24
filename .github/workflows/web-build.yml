@@ -91,7 +91,15 @@ jobs:
             'wasm-opt version 133 (version_133)'
           printf '%s\n' "$binaryen_dir/binaryen-version_133/bin" >> "$GITHUB_PATH"
       - name: Build the release site
-        run: python3 -B scripts/refactor-candidate-source-readback.py --phase release-web-build --cwd apps/web -- trunk build --release --locked --skip-version-check
+        run: python3 -B scripts/refactor-candidate-source-readback.py --phase release-web-build --cwd apps/web --lock-evidence-dir "${{ runner.temp }}/web-source-lock-evidence" --metadata-preflight -- trunk build --release --locked --skip-version-check
+      - name: Retain fixed Cargo.lock evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: release-web-source-lock-evidence-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/web-source-lock-evidence
+          if-no-files-found: warn
+          retention-days: 14
       - name: Verify static output for Caddy
         shell: python
         run: |
