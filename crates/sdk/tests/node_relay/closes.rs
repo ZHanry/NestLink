@@ -11,8 +11,10 @@ impl Fixture {
         .await
         .map_err(|error| {
             format!(
-                "fixture close receipt was not acknowledged: {error}; status={:?}",
-                self.control.close_report_status()
+                "fixture close receipt was not acknowledged: {error}; status={:?}; counters={:?}; pending_candidates={:?}",
+                self.control.close_report_status(),
+                self.control.counters(),
+                self.selector.pending_candidates(),
             )
         })??;
         assert_eq!(

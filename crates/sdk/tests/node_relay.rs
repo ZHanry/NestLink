@@ -99,6 +99,18 @@ impl Fixture {
         wss_bound: &str,
         drop_commit: bool,
     ) -> Result<Self> {
+        Self::with_response_faults(byte_limit, quic_bound, wss_bound, drop_commit, false).await
+    }
+    async fn with_independent_quic_bound(quic_bound: &str) -> Result<Self> {
+        Self::with_response_faults(None, quic_bound, "127.0.0.1:0", false, true).await
+    }
+    async fn with_response_faults(
+        byte_limit: Option<u64>,
+        quic_bound: &str,
+        wss_bound: &str,
+        drop_commit: bool,
+        block_combined_relay: bool,
+    ) -> Result<Self> {
         let deployment = random_id();
         let signer = PermitSigner::generate();
         let issuer = signer.public_key();
@@ -127,6 +139,18 @@ impl Fixture {
                 let once = once.clone();
                 let fault = fault.clone();
                 async move {
+                    // This fixture can require the independent signed node.
+                    // Automatic establishment otherwise also races the
+                    // management-origin combined WSS relay (also Path::Relay).
+                    if block_combined_relay
+                        && request.method() == axum::http::Method::GET
+                        && request.uri().path().starts_with("/api/v3/remote/")
+                        && request.uri().path().ends_with("/relay")
+                    {
+                        let mut response = axum::response::Response::new(axum::body::Body::empty());
+                        *response.status_mut() = axum::http::StatusCode::SERVICE_UNAVAILABLE;
+                        return response;
+                    }
                     let commit = request.method() == axum::http::Method::POST
                         && request.uri().path().ends_with("/reconnect");
                     let close = request.method() == axum::http::Method::POST

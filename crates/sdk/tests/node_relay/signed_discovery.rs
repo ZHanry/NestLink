@@ -114,7 +114,7 @@ async fn establish_automatically_uses_signed_shared_relay_allocation_for_relay_o
         Ok(address) => address,
         Err(_) => return Ok(()),
     };
-    let mut f = Fixture::with_quic_bound(None, "0.0.0.0:0").await?;
+    let mut f = Fixture::with_independent_quic_bound("0.0.0.0:0").await?;
     approve_quic_endpoint(&mut f, address).await?;
     let (_cancel, cancel) = watch::channel(false);
     let (mut controller, mut host) = tokio::try_join!(
@@ -131,6 +131,17 @@ async fn establish_automatically_uses_signed_shared_relay_allocation_for_relay_o
     .map_err(|error| format!("automatic relay-only establishment failed: {error:?}"))?;
     assert_eq!(controller.candidate.path(), Path::Relay);
     assert_eq!(host.candidate.path(), Path::Relay);
+    for candidate in [&controller.candidate, &host.candidate] {
+        assert_eq!(candidate.transport, nestlink_protocol::api::Transport::Quic);
+        assert_eq!(candidate.address.ip(), address);
+        assert_eq!(
+            candidate.address.port().to_string(),
+            f.quic_uri
+                .rsplit(':')
+                .next()
+                .ok_or("fixture QUIC port missing")?
+        );
+    }
     let payload = vec![0x5a; 64 * 1024];
     let (sent, received) = tokio::join!(
         controller.channels.send(Channel::Video, &payload),
@@ -144,6 +155,14 @@ async fn establish_automatically_uses_signed_shared_relay_allocation_for_relay_o
     );
     sent?;
     assert_eq!(received?.payload, b"relay-only reply");
+    // A successful relay path is not sufficient: the independent node must
+    // have admitted both peers and the actual business bytes before close.
+    let counters = f.control.counters()?;
+    assert_eq!(
+        counters.opened_connections, 2,
+        "independent node counters={counters:?}"
+    );
+    assert!(counters.admitted_bytes >= (payload.len() + b"relay-only reply".len()) as u64);
     controller
         .control
         .stop(nestlink_sdk::StopReason::ExplicitExit)?;
