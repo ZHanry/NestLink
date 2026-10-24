@@ -1,0 +1,140 @@
+name: Derive reviewed DTLS security lock
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_revision:
+        description: Exact main source to derive the lock from
+        required: true
+        type: string
+      dependency_revision:
+        description: Reviewed NestLink-dependencies main commit containing the DTLS fix
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  derive-lock:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      EXPECTED_SOURCE: ${{ inputs.source_revision }}
+      EXPECTED_DEPENDENCY: ${{ inputs.dependency_revision }}
+      EVIDENCE: ${{ runner.temp }}/dtls-lock-evidence
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Validate fixed repository and exact main source
+        shell: python
+        run: |
+          import json, os, pathlib, re, shutil, subprocess
+          assert os.environ['GITHUB_REPOSITORY'] == 'ZHanry/NestLink'
+          assert os.environ['GITHUB_EVENT_NAME'] == 'workflow_dispatch'
+          assert os.environ['GITHUB_REF'] == 'refs/heads/main'
+          for key in ('EXPECTED_SOURCE', 'EXPECTED_DEPENDENCY'):
+              assert re.fullmatch('[0-9a-f]{40}', os.environ[key]), key
+          actual = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          assert actual == os.environ['GITHUB_SHA'] == os.environ['EXPECTED_SOURCE']
+          assert subprocess.check_output(['git', 'status', '--porcelain=v1', '--untracked-files=all']) == b''
+          output = pathlib.Path(os.environ['EVIDENCE'])
+          output.mkdir()
+          shutil.copyfile('Cargo.toml', output / 'before.toml')
+          shutil.copyfile('Cargo.lock', output / 'before.lock')
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: '1.96.0'
+      - name: Add the fixed DTLS compatibility patch in the derivation checkout
+        shell: python
+        run: |
+          import os, pathlib, tomllib
+          path = pathlib.Path('Cargo.toml')
+          text = path.read_text()
+          parsed = tomllib.loads(text)
+          patches = parsed['patch']['crates-io']
+          assert 'dtls' not in patches, 'Already patched: review a new derivation workflow'
+          expected = {'git': 'https://github.com/ZHanry/NestLink-dependencies.git', 'branch': 'main'}
+          assert patches['webrtc-ice'] == expected
+          anchor = '[patch.crates-io]\n'
+          assert text.count(anchor) == 1
+          entry = 'dtls = { version = "=0.13.0", git = "https://github.com/ZHanry/NestLink-dependencies.git", branch = "main" }\n'
+          path.write_text(text.replace(anchor, anchor + entry))
+      - name: Derive the lock on GitHub without compiling the product
+        shell: python
+        run: |
+          import json, os, pathlib, subprocess
+          output = pathlib.Path(os.environ['EVIDENCE'])
+          commands = {}
+          try:
+              command = ['cargo', 'update', '-p', 'webrtc-ice', '--precise', os.environ['EXPECTED_DEPENDENCY']]
+              result = subprocess.run(command, check=False)
+              commands['update'] = {'argv': command, 'return_code': result.returncode}
+              if result.returncode != 0:
+                  raise RuntimeError('Lock resolution failed; retain the original command result')
+              command = ['cargo', 'metadata', '--locked', '--format-version', '1', '--no-deps']
+              with (output / 'metadata.json').open('wb') as stream:
+                  result = subprocess.run(command, stdout=stream, check=False)
+              commands['metadata'] = {'argv': command, 'return_code': result.returncode}
+              if result.returncode != 0:
+                  raise RuntimeError('Locked metadata failed; retain the original command result')
+          finally:
+              (output / 'command-results.json').write_text(json.dumps(commands, indent=2) + '\n')
+      - name: Retain exact derived files and dependency assertions
+        if: always()
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, shutil, subprocess, tomllib
+          output = pathlib.Path(os.environ['EVIDENCE'])
+          assert output.is_dir()
+          for source, name in [('Cargo.toml', 'Cargo.toml'), ('Cargo.lock', 'Cargo.lock')]:
+              shutil.copyfile(source, output / name)
+          diff = subprocess.check_output(['git', 'diff', '--binary', '--', 'Cargo.toml', 'Cargo.lock'])
+          (output / 'derivation.diff').write_bytes(diff)
+          status = subprocess.check_output(['git', 'status', '--porcelain=v1', '--untracked-files=all'])
+          (output / 'source-status.txt').write_bytes(status)
+          changed = [line[3:] for line in status.decode().splitlines()]
+          assertions = {'only_expected_source_paths_changed': set(changed) <= {'Cargo.toml', 'Cargo.lock'}}
+          evidence_error = None
+          try:
+              packages = tomllib.loads((output / 'Cargo.lock').read_text())['package']
+              dependencies = [item for item in packages if item['name'] == 'crypto-bigint']
+              dtls = [item for item in packages if item['name'] == 'dtls']
+              ice = [item for item in packages if item['name'] == 'webrtc-ice']
+              metadata = json.loads((output / 'metadata.json').read_bytes())
+              commands = json.loads((output / 'command-results.json').read_bytes())
+              required_source = 'git+https://github.com/ZHanry/NestLink-dependencies.git?branch=main#' + os.environ['EXPECTED_DEPENDENCY']
+              assertions.update({
+                  'crypto_bigint_exactly_0_7_6': len(dependencies) == 1 and dependencies[0]['version'] == '0.7.6',
+                  'dtls_exact_reviewed_source': len(dtls) == 1 and dtls[0]['version'] == '0.13.0' and dtls[0].get('source') == required_source,
+                  'ice_exact_reviewed_source': len(ice) == 1 and ice[0].get('source') == required_source,
+                  'all_forks_same_reviewed_commit': all(item.get('source') == required_source for item in packages if item.get('source', '').startswith('git+https://github.com/ZHanry/NestLink-dependencies.git?branch=main#')),
+                  'both_cargo_commands_succeeded': all(commands.get(key, {}).get('return_code') == 0 for key in ('update', 'metadata')),
+                  'metadata_v1_json': isinstance(metadata, dict) and metadata.get('version') == 1,
+              })
+          except (OSError, ValueError, KeyError, TypeError) as error:
+              evidence_error = {'class': type(error).__name__, 'reason': str(error)[:400]}
+              assertions['dependency_evidence_complete'] = False
+          receipt = {
+              'schema_version': 1, 'purpose': 'dtls-security-lock-derivation-only',
+              'repository': os.environ['GITHUB_REPOSITORY'],
+              'source_revision': os.environ['EXPECTED_SOURCE'],
+              'dependency_revision': os.environ['EXPECTED_DEPENDENCY'],
+              'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'advisory': 'RUSTSEC-2026-0387', 'assertions': assertions,
+              'evidence_error': evidence_error,
+              'product_compilation_performed': False, 'quality_or_acceptance_claimed': False,
+              'files': [{'path': item.name, 'bytes': item.stat().st_size,
+                         'sha256': hashlib.sha256(item.read_bytes()).hexdigest()}
+                        for item in sorted(output.iterdir()) if item.is_file()],
+          }
+          (output / 'derivation-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          assert all(assertions.values()), 'Derivation incomplete; retain the failed evidence and review it'
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: dtls-security-lock-derivation-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/dtls-lock-evidence/
+          if-no-files-found: error
+          retention-days: 14
