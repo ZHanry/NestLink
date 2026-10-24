@@ -191,6 +191,8 @@ jobs:
         with:
           ref: ${{ inputs.source_revision }}
           persist-credentials: false
+      - name: Read back Web checkout before tool installation
+        run: python3 -B scripts/refactor-candidate-source-readback.py --phase candidate-web-checkout
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
           name: rc-development-cohort-${{ github.run_attempt }}
@@ -221,7 +223,7 @@ jobs:
         run: |
           import os, pathlib, subprocess
           scratch = pathlib.Path(os.environ["RUNNER_TEMP"])
-          subprocess.run(["trunk", "build", "--release", "--locked=true", "--skip-version-check", "--dist", str(scratch / "web-dist")], cwd="apps/web", check=True, timeout=4800)
+          subprocess.run(["python3", "-B", "scripts/refactor-candidate-source-readback.py", "--phase", "candidate-web-build", "--cwd", "apps/web", "--", "trunk", "build", "--release", "--locked=true", "--skip-version-check", "--dist", str(scratch / "web-dist")], check=True, timeout=4900)
           common = ["python3", "-B", "scripts/refactor-candidate-producer.py"]
           cohort = str(scratch / "candidate-cohort/candidate-cohort.json")
           subprocess.run(common + ["collect-web", "--cohort", cohort, "--input", str(scratch / "web-dist"), "--output", str(scratch / "web-part")], check=True, timeout=300)

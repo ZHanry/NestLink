@@ -6,6 +6,8 @@ on:
       - "apps/web/**"
       - "config/ui-tokens.json"
       - "scripts/refactor-ui-tokens.py"
+      - "scripts/refactor-candidate-source-readback.py"
+      - "tests/refactor/test_candidate_source_readback.py"
       - "tests/refactor/test_ui_tokens.py"
       - "tests/refactor/test_browser_native_runner.py"
       - "tests/refactor/test_browser_response_observer.cjs"
@@ -25,6 +27,8 @@ on:
       - "apps/web/**"
       - "config/ui-tokens.json"
       - "scripts/refactor-ui-tokens.py"
+      - "scripts/refactor-candidate-source-readback.py"
+      - "tests/refactor/test_candidate_source_readback.py"
       - "tests/refactor/test_ui_tokens.py"
       - "tests/refactor/test_browser_native_runner.py"
       - "tests/refactor/test_browser_response_observer.cjs"
@@ -55,6 +59,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - name: Verify source readback helper and initial checkout
+        run: |
+          python3 -B -m unittest discover -s tests/refactor -p "test_candidate_source_readback.py"
+          python3 -B scripts/refactor-candidate-source-readback.py --phase release-web-checkout
       - name: Check generated cross-platform UI tokens
         run: |
           python3 scripts/refactor-ui-tokens.py --check
@@ -83,8 +91,7 @@ jobs:
             'wasm-opt version 133 (version_133)'
           printf '%s\n' "$binaryen_dir/binaryen-version_133/bin" >> "$GITHUB_PATH"
       - name: Build the release site
-        working-directory: apps/web
-        run: trunk build --release --locked --skip-version-check
+        run: python3 -B scripts/refactor-candidate-source-readback.py --phase release-web-build --cwd apps/web -- trunk build --release --locked --skip-version-check
       - name: Verify static output for Caddy
         shell: python
         run: |

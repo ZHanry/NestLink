@@ -92,7 +92,10 @@ def configuration():
 def clean_source(revision, version):
     require(isinstance(revision, str) and re.fullmatch(r"[0-9a-f]{40}", revision), "Full lowercase source commit is required")
     require(TOOLS.run(["git", "rev-parse", "HEAD"]).decode().strip() == revision, "Checked-out source differs from the RC cohort")
-    require(not TOOLS.run(["git", "status", "--porcelain", "--untracked-files=all"]).strip(), "RC requires clean source including untracked files")
+    status = TOOLS.run(["git", "status", "--porcelain", "--untracked-files=all"])
+    require(not status.strip(), "RC requires clean source including untracked files; git status: "
+            + repr(status[:8192].decode("utf-8", errors="backslashreplace"))
+            + (" [truncated]" if len(status) > 8192 else ""))
     data = tomllib.loads((ROOT / "Cargo.toml").read_text(encoding="utf-8"))
     require(data["workspace"]["package"]["version"] == version == VERSION, "Commit the unified RC product version before dispatch")
     require(all(value.get("version") == "=" + version for key, value in data["workspace"]["dependencies"].items()
