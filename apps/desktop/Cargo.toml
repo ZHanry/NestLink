@@ -24,5 +24,9 @@ tokio.workspace = true
 zeroize.workspace = true
 uuid.workspace = true
 
+[target.'cfg(windows)'.dependencies]
+nestlink-media-codec.workspace = true
+egui_glow = { version = "=0.34.3", default-features = false }
+
 [lints]
 workspace = true

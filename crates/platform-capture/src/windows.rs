@@ -258,7 +258,7 @@ struct State {
     ended_at: Option<Instant>,
 }
 struct Shared {
-    stopped: AtomicBool,
+    stopped: Arc<AtomicBool>,
     invalidated: Arc<AtomicBool>,
     state: Mutex<State>,
     wake: Condvar,
@@ -268,7 +268,7 @@ struct Shared {
 impl Shared {
     fn new() -> Self {
         Self {
-            stopped: AtomicBool::new(false),
+            stopped: Arc::new(AtomicBool::new(false)),
             invalidated: Arc::new(AtomicBool::new(false)),
             state: Mutex::new(State {
                 frames: VecDeque::new(),
@@ -1101,3 +1101,7 @@ impl Drop for WindowsCapture {
 
 #[cfg(test)]
 mod tests;
+
+#[path = "windows_host.rs"]
+mod host;
+pub use host::{WindowsHostCapture, probe_windows_gpu_h264};

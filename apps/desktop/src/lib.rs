@@ -5,6 +5,10 @@ mod browser_displays;
 mod clipboard;
 mod connection;
 mod files;
+#[cfg(windows)]
+mod gpu_presenter;
+#[cfg(windows)]
+mod gpu_video;
 mod host_notice;
 mod icons;
 mod layout_diagnostics;
@@ -170,6 +174,8 @@ pub struct DesktopApp {
     video_texture: Option<egui::TextureHandle>,
     video_status: VideoStatus,
     video_observation: Option<VideoObservation>,
+    #[cfg(windows)]
+    gpu_video: gpu_video::GpuVideo,
     native_control_enabled: bool,
     native_input_binding: Option<(u64, NativeInputBinding)>,
     native_pressed_keys: BTreeSet<u16>,
@@ -274,6 +280,8 @@ impl DesktopApp {
             video_texture: None,
             video_status: VideoStatus::Idle,
             video_observation: None,
+            #[cfg(windows)]
+            gpu_video: gpu_video::GpuVideo::default(),
             native_control_enabled: false,
             native_input_binding: None,
             native_pressed_keys: BTreeSet::new(),
@@ -346,6 +354,8 @@ impl DesktopApp {
         widgets::clear_secret_widgets(context, self.generation);
     }
     fn clear_video(&mut self) {
+        #[cfg(windows)]
+        self.gpu_video.stop();
         self.release_native_control();
         self.video_texture = None;
         self.video_binding = None;
@@ -353,6 +363,13 @@ impl DesktopApp {
         self.video_sequence = 0;
         self.video_status = VideoStatus::Idle;
         self.video_observation = None;
+    }
+    fn video_image_ready(&self) -> bool {
+        #[cfg(windows)]
+        if self.gpu_video.ready() {
+            return true;
+        }
+        self.video_texture.is_some()
     }
     fn release_native_control(&mut self) {
         if let Some((generation, binding)) = self.native_input_binding.take() {
@@ -494,7 +511,7 @@ impl DesktopApp {
                             && session.connection_generation == target.connection_generation
                     })
             });
-            let status = match (connected, self.video_status, self.video_texture.is_some()) {
+            let status = match (connected, self.video_status, self.video_image_ready()) {
                 (false, _, _) => {
                     self.t("建立会话后将在此显示", "Start a session to view its screen")
                 }
@@ -537,7 +554,7 @@ impl DesktopApp {
                 self.release_native_control();
             }
             let control_ready = input.is_some()
-                && self.video_texture.is_some()
+                && self.video_image_ready()
                 && self.video_status == VideoStatus::Streaming;
             let control_was_enabled = self.native_control_enabled;
             let mut toggle_control = false;
@@ -594,6 +611,14 @@ impl DesktopApp {
                 theme::color(&self.tokens.media.canvas),
             );
             let mut image_rect = None;
+            #[cfg(windows)]
+            if self.gpu_video.active() && let Some((_,image_width,image_height))=self.video_layout {
+                let size=egui::vec2(image_width as f32,image_height as f32);
+                let scale=(rect.width()/size.x).min(rect.height()/size.y);
+                let target=egui::Rect::from_center_size(rect.center(),size*scale);
+                self.gpu_video.paint(ui,target);
+                if self.gpu_video.submitted {image_rect=Some(target);}
+            }
             if let (Some(texture), Some((_, image_width, image_height))) =
                 (&self.video_texture, self.video_layout)
             {
@@ -861,6 +886,11 @@ impl DesktopApp {
         self.bridge.set_input_interest(interested && focused);
         if !focused {
             self.release_native_control();
+        }
+        #[cfg(windows)]
+        if self.update_gpu_video(context, snapshot, interested) {
+            let _ = self.bridge.take_video_update();
+            return;
         }
         if !interested {
             self.release_native_control();
@@ -1322,6 +1352,15 @@ impl DesktopApp {
             });
 
         if self.remote_tools_open && self.remote_window_cleanup.is_none() {
+            #[cfg(windows)]
+            if self.gpu_video.active() {
+                ui.label(format!(
+                    "GPU blit: {} · submitted: {} · QPC {:?} · scanout unverified",
+                    self.gpu_video.converted_count,
+                    self.gpu_video.submitted_count,
+                    self.gpu_video.last_submitted_qpc
+                ));
+            }
             let tools_width = (ui.available_width() * 0.38).clamp(260., 360.);
             egui::Panel::right("remote-session-tools")
                 .exact_size(tools_width)
@@ -2058,6 +2097,8 @@ impl DesktopApp {
 }
 impl eframe::App for DesktopApp {
     fn logic(&mut self, context: &egui::Context, frame: &mut eframe::Frame) {
+        #[cfg(windows)]
+        self.poll_gpu_cleanup(context);
         if nestlink_local_ipc::maintenance::DesktopInstance::take_activation(&self.directory) {
             self.hidden = false;
             tray::restore(context);
@@ -2420,7 +2461,6 @@ fn native_input_layout_is_current(
         && session.status == NativeSessionStatus::Connected
         && binding.request_id == session.request_id
         && binding.connection_generation == session.connection_generation
-        && binding.source == 0
         && binding.input_epoch > 0
         && binding.input_epoch <= i64::MAX as u64
         && binding.layout_epoch > 0
@@ -2443,8 +2483,7 @@ fn video_binding_is_current(
     snapshot: &Snapshot,
     runtime_id: Option<&str>,
 ) -> bool {
-    binding.source == 0
-        && runtime_id == Some(binding.runtime_id.as_str())
+    runtime_id == Some(binding.runtime_id.as_str())
         && nestlink_protocol::valid_id(&binding.runtime_id)
         && nestlink_protocol::valid_id(&binding.request_id)
         && binding.ui_generation > 0

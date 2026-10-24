@@ -397,6 +397,9 @@ fn receive<D: AudioPlaybackDevice>(
             lease
                 .check_media_binding(Channel::Audio, packet.connection_generation)
                 .map_err(io::Error::other)?;
+            if let Some(clock) = clock.as_ref() {
+                clock.presentation_time(packet.pts_48khz, 48_000, Instant::now())?;
+            }
             let decoded = decoder.decode(packet)?;
             lease
                 .check_media_binding(Channel::Audio, stream.binding.connection)

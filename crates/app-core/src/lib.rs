@@ -24,3 +24,6 @@ pub use native_session::*;
 pub use nestlink_media_session::{DecodedVideo, VideoLayout};
 #[cfg(not(target_arch = "wasm32"))]
 pub use runtime::*;
+
+#[cfg(not(target_arch = "wasm32"))]
+pub use nestlink_media_session::native_video_qpc;

@@ -43,17 +43,21 @@ fn main() -> io::Result<()> {
         cc::Build::new()
             .cpp(true)
             .std("c++17")
+            .flag_if_supported("/EHsc")
             .file("src/windows_mf.cpp")
+            .file("src/windows_gpu_presenter.cpp")
             .warnings(true)
             .warnings_into_errors(true)
             .static_crt(false)
             .compile("nestlink_mf_bridge");
         for library in [
-            "mfplat", "mf", "mfuuid", "ole32", "oleaut32", "strmiids", "d3d11", "dxgi",
+            "mfplat", "mf", "mfuuid", "ole32", "oleaut32", "strmiids", "d3d11", "dxgi", "opengl32",
+            "comctl32", "user32", "gdi32",
         ] {
             println!("cargo:rustc-link-lib={library}");
         }
         println!("cargo:rerun-if-changed=src/windows_mf.cpp");
+        println!("cargo:rerun-if-changed=src/windows_gpu_presenter.cpp");
     }
     println!("cargo:rustc-link-search=native={}", library.display());
     println!("cargo:rustc-link-lib=static=vpx");

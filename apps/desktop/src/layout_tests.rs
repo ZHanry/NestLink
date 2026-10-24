@@ -439,6 +439,9 @@ impl Workspace {
     }
 
     fn frame(&mut self, size: egui::Vec2, events: Vec<egui::Event>) {
+        // The native runner drains bridge replies in App::logic before ui.
+        // Exercise that same state transition without maintenance/tray work.
+        self.app.notices(&self.context);
         let output = self.context.run_ui(
             egui::RawInput {
                 screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, size)),

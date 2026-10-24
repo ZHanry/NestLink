@@ -1,14 +1,17 @@
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-changed=src/dxgi.cpp");
+    println!("cargo:rerun-if-changed=src/dxgi_gpu.cpp");
     if std::env::var("CARGO_CFG_TARGET_OS")? == "windows" {
         cc::Build::new()
             .cpp(true)
             .file("src/dxgi.cpp")
+            .file("src/dxgi_gpu.cpp")
             .std("c++17")
+            .flag_if_supported("/EHsc")
             .warnings(true)
             .warnings_into_errors(true)
             .compile("nestlink_dxgi_capture");
-        for library in ["d3d11", "dxgi"] {
+        for library in ["d3d11", "dxgi", "gdi32", "user32", "runtimeobject", "ole32"] {
             println!("cargo:rustc-link-lib={library}");
         }
     }

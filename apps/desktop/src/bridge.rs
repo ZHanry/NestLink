@@ -95,6 +95,57 @@ pub enum VideoUpdate {
     Message(NativeVideoMessage),
     Disconnected(Option<NativeVideoBinding>),
 }
+pub use nestlink_app_ipc::compressed_video::{
+    ClientControl as CompressedVideoFeedback, CompressedContext,
+};
+pub enum CompressedVideoUpdate {
+    Preparing {
+        context: CompressedContext,
+        width: u32,
+        height: u32,
+    },
+    AccessUnit {
+        context: CompressedContext,
+        delivery_sequence: u64,
+        native_sequence: u64,
+        pts_90khz: u64,
+        due_qpc: u64,
+        not_after_qpc: u64,
+        keyframe: bool,
+        payload: zeroize::Zeroizing<Vec<u8>>,
+    },
+    Stopped,
+}
+struct CompressedBridgeState {
+    enabled: tokio::sync::watch::Sender<bool>,
+    updates: Mutex<VecDeque<CompressedVideoUpdate>>,
+    feedback: tokio::sync::mpsc::Sender<CompressedVideoFeedback>,
+    deadline: AtomicU64,
+}
+impl CompressedBridgeState {
+    fn new() -> (
+        Arc<Self>,
+        tokio::sync::mpsc::Receiver<CompressedVideoFeedback>,
+    ) {
+        let (feedback, rx) = tokio::sync::mpsc::channel(32);
+        (
+            Arc::new(Self {
+                enabled: tokio::sync::watch::channel(false).0,
+                updates: Mutex::new(VecDeque::new()),
+                feedback,
+                deadline: AtomicU64::new(0),
+            }),
+            rx,
+        )
+    }
+    fn stop(&self) {
+        self.deadline.store(0, Ordering::Release);
+        if let Ok(mut q) = self.updates.lock() {
+            q.clear();
+            q.push_back(CompressedVideoUpdate::Stopped);
+        }
+    }
+}
 #[derive(Clone)]
 pub struct InputLayoutUpdate {
     pub runtime_id: String,
@@ -135,6 +186,7 @@ struct QueuedCommand {
     command: Command,
 }
 pub struct Bridge {
+    compressed: Arc<CompressedBridgeState>,
     #[cfg(test)]
     layout_commands: Option<Receiver<QueuedCommand>>,
     #[cfg(test)]
@@ -163,6 +215,7 @@ impl Bridge {
         let (commands, _) = mpsc::sync_channel(16);
         let (layout_notices, notices) = mpsc::sync_channel(32);
         Self {
+            compressed: CompressedBridgeState::new().0,
             layout_commands: None,
             layout_notices: Some(layout_notices),
             commands,
@@ -216,6 +269,8 @@ impl Bridge {
     }
 
     pub fn start(directory: PathBuf, context: egui::Context) -> Self {
+        let (compressed, compressed_feedback) = CompressedBridgeState::new();
+        let video_compressed = compressed.clone();
         let (commands, incoming) = mpsc::sync_channel(16);
         let (outgoing, notices) = mpsc::sync_channel(32);
         let snapshot = Arc::new(Mutex::new(Arc::new(Snapshot::default())));
@@ -289,6 +344,8 @@ impl Bridge {
                         runtime_id: video_runtime_id,
                         displays: video_displays,
                     },
+                    video_compressed,
+                    compressed_feedback,
                 ));
             }
         });
@@ -314,6 +371,7 @@ impl Bridge {
             }
         });
         Self {
+            compressed,
             #[cfg(test)]
             layout_commands: None,
             #[cfg(test)]
@@ -442,6 +500,33 @@ impl Bridge {
                 true
             }
         });
+    }
+    pub fn enable_compressed_video(&self, enabled: bool) {
+        self.compressed.enabled.send_if_modified(|v| {
+            if *v == enabled {
+                false
+            } else {
+                *v = enabled;
+                true
+            }
+        });
+        if !enabled {
+            self.compressed.stop();
+        }
+    }
+    pub fn compressed_authority_deadline(&self) -> u64 {
+        self.compressed.deadline.load(Ordering::Acquire)
+    }
+    pub fn compressed_authorized(&self) -> bool {
+        let deadline = self.compressed_authority_deadline();
+        deadline != 0
+            && nestlink_app_ipc::compressed_video::qpc().is_ok_and(|(now, _)| now < deadline)
+    }
+    pub fn take_compressed_update(&self) -> Option<CompressedVideoUpdate> {
+        self.compressed.updates.lock().ok()?.pop_front()
+    }
+    pub fn compressed_feedback(&self, feedback: CompressedVideoFeedback) -> bool {
+        self.compressed.feedback.try_send(feedback).is_ok()
     }
 
     pub fn runtime_id(&self) -> Option<String> {
@@ -963,6 +1048,150 @@ fn clear_video_update(updates: &Arc<Mutex<Option<VideoUpdate>>>) {
 /// Owns one binary stream at a time. Receive futures stay pinned while the
 /// lightweight state poll runs, so a snapshot check never cancels a partial
 /// frame and then tries to reuse the poisoned connection.
+async fn run_compressed_session(
+    directory: &Path,
+    snapshot: &Arc<Mutex<Arc<Snapshot>>>,
+    runtime_id: &Arc<Mutex<Option<String>>>,
+    displays: &SharedDisplays,
+    target: &VideoTarget,
+    interested: &tokio::sync::watch::Receiver<bool>,
+    stopped: &mut tokio::sync::watch::Receiver<bool>,
+    context: &egui::Context,
+    shared: &Arc<CompressedBridgeState>,
+    feedback: &mut tokio::sync::mpsc::Receiver<CompressedVideoFeedback>,
+) {
+    use nestlink_app_ipc::compressed_video::{
+        CompressedVideoClient, NativeCompressedOpen, ServerControl,
+    };
+    let open = NativeCompressedOpen {
+        ui_generation: target.ui_generation,
+        request_id: target.request_id.clone(),
+        connection_generation: target.connection_generation,
+        source: target.source,
+    };
+    let client = match CompressedVideoClient::open(directory, open).await {
+        Ok(client) => client,
+        Err(_) => {
+            shared.stop();
+            shared.enabled.send_replace(false);
+            context.request_repaint();
+            return;
+        }
+    };
+    let mut binding = client.context.clone();
+    let (mut tx, mut control, mut data, _owner) = client.split();
+    let (control_tx, mut controls) = tokio::sync::mpsc::channel(16);
+    let control_reader = tokio::spawn(async move {
+        loop {
+            let message = control.receive().await;
+            let terminal = message.is_err();
+            if control_tx.send(message).await.is_err() || terminal {
+                break;
+            }
+        }
+    });
+    let (data_tx, mut units) = tokio::sync::mpsc::channel(1);
+    let data_reader = tokio::spawn(async move {
+        loop {
+            let unit = data.receive().await;
+            let terminal = unit.is_err();
+            if data_tx.send(unit).await.is_err() || terminal {
+                break;
+            }
+        }
+    });
+    struct Readers(tokio::task::JoinHandle<()>, tokio::task::JoinHandle<()>);
+    impl Drop for Readers {
+        fn drop(&mut self) {
+            self.0.abort();
+            self.1.abort();
+        }
+    }
+    let _readers = Readers(control_reader, data_reader);
+    let mut active = false;
+    let mut authority_sequence = 0;
+    let mut authority_seen = false;
+    let mut control_closed = false;
+    let mut closing = false;
+    let mut close_deadline = None;
+    loop {
+        let target_live = video_target(snapshot, runtime_id, *interested.borrow(), displays)
+            .as_ref()
+            == Some(target);
+        let now = nestlink_app_ipc::compressed_video::qpc().ok().map(|v| v.0);
+        let expired =
+            authority_seen && now.is_none_or(|n| n >= shared.deadline.load(Ordering::Acquire));
+        if !closing && (*stopped.borrow() || !*shared.enabled.borrow() || !target_live || expired) {
+            closing = true;
+            active = false;
+            shared.stop();
+            context.request_repaint();
+            let _ = tx
+                .send(CompressedVideoFeedback::Fence {
+                    context: binding.clone(),
+                })
+                .await;
+            close_deadline = Some(tokio::time::Instant::now() + Duration::from_millis(250));
+        }
+        if close_deadline.is_some_and(|d| tokio::time::Instant::now() >= d) {
+            // Presenter ownership remains pending; never fabricate joined.
+            shared.enabled.send_replace(false);
+            return;
+        }
+        tokio::select! {biased;
+            message=controls.recv(),if !control_closed=>{
+                if message.as_ref().is_none_or(|v|v.is_err()){control_closed=true;}
+                match message {
+                    Some(Ok(ServerControl::Prepare{context:next,width,height,qpc_frequency})) if !closing=>{
+                        if next.binding.stream_id!=binding.binding.stream_id || nestlink_app_ipc::compressed_video::qpc().map_or(true,|v|v.1!=qpc_frequency){break;}
+                        active=false;shared.deadline.store(0,Ordering::Release);authority_seen=false;
+                        binding=next;
+                        if let Ok(mut queue)=shared.updates.lock(){queue.clear();queue.push_back(CompressedVideoUpdate::Preparing{context:binding.clone(),width,height});}
+                        context.request_repaint();
+                    }
+                    Some(Ok(ServerControl::Activate{context:next})) if next==binding && !closing=>active=true,
+                    Some(Ok(ServerControl::Authority{context:next,sequence,not_after_qpc})) if next==binding && !closing=>{
+                        if sequence<=authority_sequence {break;}
+                        let Ok((now,freq))=nestlink_app_ipc::compressed_video::qpc() else{break;};
+                        if not_after_qpc<=now || not_after_qpc.saturating_sub(now)>freq*150/1000{break;}
+                        authority_sequence=sequence;authority_seen=true;shared.deadline.store(not_after_qpc,Ordering::Release);context.request_repaint();
+                    }
+                    Some(Ok(ServerControl::Stop{..}))|Some(Err(_))|None=>{
+                        if !closing{closing=true;active=false;shared.stop();context.request_repaint();close_deadline=Some(tokio::time::Instant::now()+Duration::from_millis(250));}
+                    }
+                    _=>{}
+                }
+            }
+            response=feedback.recv()=>{
+                let Some(response)=response else{break;};
+                if response.context()!=&binding{continue;}
+                let joined=matches!(&response,CompressedVideoFeedback::Stopped{joined:true,..});
+                if tx.send(response).await.is_err(){break;}
+                if joined{shared.stop();context.request_repaint();return;}
+            }
+            unit=units.recv(),if !closing && active=>{
+                let Some(Ok(unit))=unit else{break;};
+                if unit.context!=binding{continue;}
+                if !active{break;}
+                let mut full=false;
+                if let Ok(mut queue)=shared.updates.lock(){
+                    let bytes=queue.iter().map(|u|match u{CompressedVideoUpdate::AccessUnit{payload,..}=>payload.len(),_=>0}).sum::<usize>();
+                    if queue.len()>=8 || bytes.saturating_add(unit.payload.len())>32*1024*1024{queue.clear();full=true;}
+                    else{queue.push_back(CompressedVideoUpdate::AccessUnit{context:unit.context,delivery_sequence:unit.delivery_sequence,
+                        native_sequence:unit.native_sequence,pts_90khz:unit.pts_90khz,due_qpc:unit.due_qpc,
+                        not_after_qpc:unit.not_after_qpc,keyframe:unit.keyframe,payload:unit.payload});}
+                }else{break;}
+                if full{active=false;shared.deadline.store(0,Ordering::Release);let _=tx.send(CompressedVideoFeedback::NeedKeyframe{context:binding.clone()}).await;}
+                context.request_repaint();
+            }
+            _=tokio::time::sleep(Duration::from_millis(10))=>{},
+        }
+    }
+    shared.stop();
+    shared.enabled.send_replace(false);
+    context.request_repaint();
+}
+
 async fn run_video(
     directory: PathBuf,
     snapshot: Arc<Mutex<Arc<Snapshot>>>,
@@ -971,6 +1200,8 @@ async fn run_video(
     mut stopped: tokio::sync::watch::Receiver<bool>,
     context: egui::Context,
     media: NativeMediaContext,
+    compressed: Arc<CompressedBridgeState>,
+    mut compressed_feedback: tokio::sync::mpsc::Receiver<CompressedVideoFeedback>,
 ) {
     let NativeMediaContext {
         runtime_id,
@@ -992,6 +1223,22 @@ async fn run_video(
             }
             continue;
         };
+        if *compressed.enabled.borrow() {
+            run_compressed_session(
+                &directory,
+                &snapshot,
+                &runtime_id,
+                &displays,
+                &target,
+                &interested,
+                &mut stopped,
+                &context,
+                &compressed,
+                &mut compressed_feedback,
+            )
+            .await;
+            continue;
+        }
 
         let open = VideoClient::open(
             &directory,
@@ -1057,6 +1304,7 @@ async fn run_video(
             tokio::pin!(receive);
             loop {
                 if *stopped.borrow()
+                    || *compressed.enabled.borrow()
                     || video_target(&snapshot, &runtime_id, *interested.borrow(), &displays)
                         .as_ref()
                         != Some(&target)
@@ -1634,6 +1882,8 @@ mod video_bridge_tests {
                 runtime_id,
                 displays: Arc::new(Mutex::new(DisplayMailbox::default())),
             },
+            CompressedBridgeState::new().0,
+            tokio::sync::mpsc::channel(32).1,
         ));
 
         tokio::time::timeout(Duration::from_millis(250), async {
@@ -1669,6 +1919,8 @@ mod video_bridge_tests {
                 runtime_id,
                 displays: Arc::new(Mutex::new(DisplayMailbox::default())),
             },
+            CompressedBridgeState::new().0,
+            tokio::sync::mpsc::channel(32).1,
         ));
         tokio::time::timeout(Duration::from_millis(250), async {
             loop {

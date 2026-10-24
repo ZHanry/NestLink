@@ -122,7 +122,7 @@ pub enum PlayoutDecision {
 impl SessionPlayoutClock {
     /// Map both rates through one immutable remote-to-local origin. Late audio
     /// device attachment never reanchors a video session or drains old PCM.
-    pub fn schedule(&self, pts: u64, rate: u32, now: Instant) -> io::Result<PlayoutDecision> {
+    pub fn presentation_time(&self, pts: u64, rate: u32, now: Instant) -> io::Result<Instant> {
         if rate == 0 || pts > i64::MAX as u64 {
             return Err(io::Error::other("invalid media presentation clock"));
         }
@@ -138,9 +138,10 @@ impl SessionPlayoutClock {
         } else {
             local.checked_sub(Duration::from_nanos(first - nanos))
         };
-        let Some(due) = due else {
-            return Ok(PlayoutDecision::DropLate);
-        };
+        due.ok_or_else(|| io::Error::other("media presentation clock overflow"))
+    }
+    pub fn schedule(&self, pts: u64, rate: u32, now: Instant) -> io::Result<PlayoutDecision> {
+        let due = self.presentation_time(pts, rate, now)?;
         if due.saturating_duration_since(now) > MAX_PLAYOUT_AHEAD {
             return Ok(PlayoutDecision::DropFuture);
         }

@@ -2362,3 +2362,349 @@ async fn source_handoff_releases_before_select_without_terminal_reset_and_fails_
     }
     Ok(())
 }
+
+// GPU host hooks must preserve the original lease and acceptance boundary.
+#[derive(Default)]
+struct HostFixture {
+    frames: std::collections::VecDeque<nestlink_remote::video::HostFrame>,
+    steps: std::collections::VecDeque<nestlink_remote::video::HostEncodeStep>,
+    supported: bool,
+}
+struct HostFixtureDevice {
+    state: Arc<Mutex<HostFixture>>,
+    cancelled: Arc<std::sync::atomic::AtomicBool>,
+}
+impl CaptureDevice for HostFixtureDevice {
+    fn check(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+    fn poll_frame(&mut self) -> io::Result<Option<RawFrame>> {
+        Ok(None)
+    }
+    fn cancellation(&self) -> Option<Arc<std::sync::atomic::AtomicBool>> {
+        Some(self.cancelled.clone())
+    }
+    fn reset(&mut self) -> io::Result<()> {
+        self.cancelled
+            .store(true, std::sync::atomic::Ordering::SeqCst);
+        Ok(())
+    }
+    fn host_configure(&mut self, _: nestlink_remote::video::HostVideoConfig) -> io::Result<bool> {
+        Ok(self
+            .state
+            .lock()
+            .map_err(|_| io::Error::other("fixture poisoned"))?
+            .supported)
+    }
+    fn host_capture(
+        &mut self,
+        _: u32,
+        _: bool,
+    ) -> io::Result<Option<nestlink_remote::video::HostFrame>> {
+        Ok(self
+            .state
+            .lock()
+            .map_err(|_| io::Error::other("fixture poisoned"))?
+            .frames
+            .pop_front())
+    }
+    fn host_encode(
+        &mut self,
+        _: u64,
+        _: u64,
+        _: bool,
+    ) -> io::Result<nestlink_remote::video::HostEncodeStep> {
+        self.state
+            .lock()
+            .map_err(|_| io::Error::other("fixture poisoned"))?
+            .steps
+            .pop_front()
+            .ok_or_else(|| io::Error::other("fixture step absent"))
+    }
+    fn host_drain(&mut self) -> io::Result<nestlink_remote::video::HostEncodeStep> {
+        self.host_encode(0, 0, false)
+    }
+}
+fn host_fixture_config(source: u32) -> nestlink_remote::video::HostVideoConfig {
+    nestlink_remote::video::HostVideoConfig {
+        source,
+        width: 2,
+        height: 2,
+        fps: 60,
+        bitrate_kbps: 4000,
+        max_level_idc: 42,
+        require_constrained_baseline: false,
+    }
+}
+fn host_fixture_frame(
+    ticket: u64,
+    source: u32,
+    repeated: bool,
+) -> nestlink_remote::video::HostFrame {
+    let now = std::time::Instant::now();
+    nestlink_remote::video::HostFrame {
+        ticket,
+        source,
+        generation: 1,
+        width: 2,
+        height: 2,
+        captured_at: if repeated {
+            now - Duration::from_secs(10)
+        } else {
+            now
+        },
+        encode_at: now,
+        repeated,
+    }
+}
+fn host_fixture_step(accepted: bool, pts: Option<u64>) -> nestlink_remote::video::HostEncodeStep {
+    nestlink_remote::video::HostEncodeStep {
+        accepted,
+        hardware: true,
+        output: pts.map(|pts_90khz| nestlink_remote::video::HostPacket {
+            pts_90khz,
+            keyframe: true,
+            data: vec![1, 2, 3],
+        }),
+    }
+}
+#[tokio::test]
+async fn host_gpu_acceptance_delayed_pts_zero_cached_recovery_and_revoke() -> Result {
+    let (session, clock, _, _) = active(15000)?;
+    let (_keep, stop) = watch::channel(None);
+    let (_peer, stream) = tokio::io::duplex(4096);
+    let (read, write) = split(stream);
+    let runtime =
+        AuthorizedConnection::new(read, write, session, Path::Direct, clock, stop)?.into_channels();
+    let lease = runtime.lease_control();
+    let shared = Arc::new(Mutex::new(HostFixture {
+        supported: true,
+        ..HostFixture::default()
+    }));
+    let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let display = Display {
+        source: 42,
+        logical: InputLayout {
+            left: -2,
+            top: 0,
+            width: 2,
+            height: 2,
+        },
+    };
+    let video = VideoController::attach(
+        lease.clone(),
+        HostFixtureDevice {
+            state: shared.clone(),
+            cancelled: cancelled.clone(),
+        },
+        VideoEpoch {
+            layout: 1,
+            connection: 9,
+        },
+        vec![display],
+    )?;
+    assert!(video.host_configure(host_fixture_config(42))?);
+    {
+        let mut f = shared
+            .lock()
+            .map_err(|_| io::Error::other("fixture poisoned"))?;
+        f.frames.extend([
+            host_fixture_frame(1, 42, false),
+            host_fixture_frame(2, 42, true),
+        ]);
+        f.steps.extend([
+            host_fixture_step(true, None),
+            host_fixture_step(false, Some(0)),
+            host_fixture_step(true, Some(1)),
+        ]);
+    }
+    let first = video.host_capture(true)?.ok_or("missing first frame")?;
+    assert!(!first.frame.repeated); // PLI permits reuse but does not demand it.
+    assert!(video.host_encode(first, 0, true)?.accepted);
+    let recovery = video.host_capture(true)?.ok_or("missing cached frame")?;
+    assert!(recovery.frame.captured_at.elapsed() > Duration::from_secs(1));
+    let backpressure = video.host_encode(recovery, 1, true)?;
+    assert!(!backpressure.accepted);
+    assert_eq!(
+        backpressure
+            .output
+            .ok_or("missing delayed output")?
+            .packet
+            .pts_90khz,
+        0
+    );
+    let retry = video.host_encode(recovery, 1, true)?;
+    assert!(
+        retry.accepted
+            && retry
+                .output
+                .is_some_and(|p| p.repeated && p.packet.pts_90khz == 1)
+    );
+    lease.stop(StopReason::Revoked)?;
+    assert!(cancelled.load(std::sync::atomic::Ordering::SeqCst));
+    assert!(video.host_capture(false).is_err());
+    Ok(())
+}
+#[tokio::test]
+async fn host_gpu_staged_source_epoch_and_unaccepted_drain_are_fenced() -> Result {
+    let (session, clock, _, _) = active(15000)?;
+    let (_keep, stop) = watch::channel(None);
+    let (_peer, stream) = tokio::io::duplex(4096);
+    let (read, write) = split(stream);
+    let runtime =
+        AuthorizedConnection::new(read, write, session, Path::Direct, clock, stop)?.into_channels();
+    let lease = runtime.lease_control();
+    let shared = Arc::new(Mutex::new(HostFixture::default()));
+    let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let displays = [42, 43]
+        .into_iter()
+        .map(|source| Display {
+            source,
+            logical: InputLayout {
+                left: 0,
+                top: 0,
+                width: 2,
+                height: 2,
+            },
+        })
+        .collect();
+    let video = VideoController::attach_selected(
+        lease.clone(),
+        HostFixtureDevice {
+            state: shared.clone(),
+            cancelled,
+        },
+        VideoEpoch {
+            layout: 1,
+            connection: 9,
+        },
+        displays,
+        42,
+    )?;
+    assert!(!video.host_configure(host_fixture_config(43))?);
+    lease.check_media_binding(Channel::Video, 9)?;
+    {
+        let mut f = shared
+            .lock()
+            .map_err(|_| io::Error::other("fixture poisoned"))?;
+        f.supported = true;
+        f.frames.push_back(host_fixture_frame(3, 43, false));
+        f.steps.extend([
+            host_fixture_step(false, None),
+            host_fixture_step(false, Some(99)),
+        ]);
+    }
+    assert!(video.host_configure(host_fixture_config(43))?);
+    video.select_source(
+        43,
+        VideoEpoch {
+            layout: 2,
+            connection: 9,
+        },
+    )?;
+    let frame = video.host_capture(false)?.ok_or("missing selected frame")?;
+    assert_eq!(frame.epoch.layout, 2);
+    assert!(!video.host_encode(frame, 99, false)?.accepted);
+    assert!(video.host_drain().is_err()); // Unaccepted PTS cannot become deliverable.
+    Ok(())
+}
+
+struct BlockingHostFixture {
+    cancelled: Arc<std::sync::atomic::AtomicBool>,
+    entered: std::sync::mpsc::SyncSender<()>,
+    finish: std::sync::mpsc::Receiver<()>,
+}
+impl CaptureDevice for BlockingHostFixture {
+    fn check(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+    fn poll_frame(&mut self) -> io::Result<Option<RawFrame>> {
+        Ok(None)
+    }
+    fn cancellation(&self) -> Option<Arc<std::sync::atomic::AtomicBool>> {
+        Some(self.cancelled.clone())
+    }
+    fn reset(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+    fn host_configure(&mut self, _: nestlink_remote::video::HostVideoConfig) -> io::Result<bool> {
+        Ok(true)
+    }
+    fn host_capture(
+        &mut self,
+        _: u32,
+        _: bool,
+    ) -> io::Result<Option<nestlink_remote::video::HostFrame>> {
+        Ok(Some(host_fixture_frame(1, 42, false)))
+    }
+    fn host_encode(
+        &mut self,
+        _: u64,
+        pts: u64,
+        _: bool,
+    ) -> io::Result<nestlink_remote::video::HostEncodeStep> {
+        self.entered.send(()).map_err(io::Error::other)?;
+        self.finish
+            .recv_timeout(Duration::from_secs(3))
+            .map_err(io::Error::other)?;
+        Ok(host_fixture_step(true, Some(pts)))
+    }
+}
+#[tokio::test]
+async fn revoke_signals_owner_before_waiting_and_discards_inflight_codec_output() -> Result {
+    let (session, clock, _, _) = active(15000)?;
+    let (_keep, stop) = watch::channel(None);
+    let (_peer, stream) = tokio::io::duplex(4096);
+    let (read, write) = split(stream);
+    let mut runtime =
+        AuthorizedConnection::new(read, write, session, Path::Direct, clock, stop)?.into_channels();
+    let lease = runtime.lease_control();
+    let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let (entered, started) = std::sync::mpsc::sync_channel(1);
+    let (finish, release) = std::sync::mpsc::channel();
+    let video = Arc::new(VideoController::attach(
+        lease.clone(),
+        BlockingHostFixture {
+            cancelled: cancelled.clone(),
+            entered,
+            finish: release,
+        },
+        VideoEpoch {
+            layout: 1,
+            connection: 9,
+        },
+        vec![Display {
+            source: 42,
+            logical: InputLayout {
+                left: 0,
+                top: 0,
+                width: 2,
+                height: 2,
+            },
+        }],
+    )?);
+    assert!(video.host_configure(host_fixture_config(42))?);
+    let frame = video.host_capture(false)?.ok_or("missing host frame")?;
+    let worker = {
+        let video = video.clone();
+        std::thread::spawn(move || video.host_encode(frame, 0, true))
+    };
+    started.recv_timeout(Duration::from_secs(1))?;
+    let before = std::time::Instant::now();
+    lease.stop(StopReason::Revoked)?;
+    assert!(before.elapsed() < Duration::from_secs(1));
+    assert!(cancelled.load(std::sync::atomic::Ordering::SeqCst));
+    finish.send(())?;
+    assert!(
+        worker
+            .join()
+            .map_err(|_| io::Error::other("fixture worker panicked"))?
+            .is_err()
+    );
+    let report = tokio::time::timeout(Duration::from_secs(1), runtime.wait_stopped()).await??;
+    assert_eq!(
+        report.cleanup,
+        CleanupStatus::Failed(io::ErrorKind::TimedOut)
+    );
+    Ok(())
+}

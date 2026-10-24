@@ -1,0 +1,22 @@
+# Windows host GPU capture and H.264
+
+`WindowsHostCapture` keeps approved monitor capture, GPU conversion and MF on one owner thread. The Send facade transfers bounded commands, metadata tickets and encoded byte packets. `VideoController` checks the same View lease, source/geometry, connection/layout epoch and accepted PTS ledger around owner work; cancellation is signalled before cleanup waits on capture state. Backend code never calls back into the lease/core.
+
+The first route is exact-adapter Desktop Duplication → owned GDI-compatible BGRA → D3D11 video processor NV12 → same-device MF H.264. Four immutable-in-flight MF textures use tracked-sample release callbacks containing only atomic slot flags; ProcessInput acceptance alone never releases a texture. GPU copy completion is checked before MF handoff. A successful startup requires an actual-target synthetic surface encode and independently decoded IDR/SPS/color check. Synthetic probe state is retired before real frames. Negotiated profile/level limits apply to every encoded access unit. Native permits Baseline through level 4.2; WebRTC passes its exact negotiated limits.
+
+WGC uses public approved-HMONITOR interop and runtime detection only when DXGI cannot open. It never uses a picker or adds application display approval. WGC StartCapture is deferred until an authorized capture request. Owner polls a two-frame free-threaded pool; callbacks own no GPU frame. Frame size/device, monitor/session/DPI facts and item closure are checked. Unsupported API/policy/format, odd dimensions, rotation and HDR use the established CPU path. GPU dirty/move reconstruction and HDR normalization are not implemented.
+
+Initial GPU probe failure pins software in that generation. Device loss discards tickets, references and recovery content, advances generation and starts a new software stream/IDR; a bounded same-approved-output GPU retry is allowed after loss. CPU encoding is configured and paced at at most 30 fps. Host drain collects delayed MF output without resubmitting input. Cached recovery keeps actual `captured_at`; only `encode_at` advances. Both are retained in output metadata.
+
+Bounds: one data command in the queue, one current capture ticket, 16 accepted PTS entries, four MF surface slots, existing two-packet/64 MiB MF output budget, 64 MiB raw frame and 128 MiB approved aggregate raw geometry. Stop is an atomic latch independent of command queue. Lease cleanup uses a bounded try-lock so a stuck owner operation cannot hold the watchdog or revocation indefinitely. Unfinished worker handles are retained in a bounded registry admitting at most four active/quarantined workers. Cleanup retains the original 150 ms deadline. If a vendor retains an input sample after flush/transform release, checked close reports a timeout and quarantines the entire native owner allocation rather than freeing/reusing its textures; further GPU opens on that thread are denied. A stuck OS call cannot be preempted. Worker cleanup failure remains an error, not successful teardown.
+
+This is not a zero-copy claim. Desktop pixels are copied on GPU, converted and copied into tracked MF input textures. Cursor composition currently uses a GDI-compatible GPU surface to preserve alpha and monochrome AND/XOR semantics; driver-internal readback is unknown. Successful source wiring does not qualify performance or hardware support. Required Windows GPU evidence remains actual non-default/multiple adapters, target 1080p60 throughput/latency, cursor/rotation/monitor/session changes, device loss, immediate revoke and retained-sample teardown. Hosted no-GPU runs must explicitly SKIP hardware and test CPU fallback. Product builds and tests run on GitHub CI. HL may run the downloaded, hash-verified GitHub-built synthetic probes with a normal user token; no product compilation or packaging runs on the development PC or server.
+
+
+Synthetic-only hardware coverage (no monitor enumeration, DXGI/WGC or screen pixels):
+
+```text
+windows-gpu-h264-probe.exe 1920 1080 60 4000 42
+```
+
+The example reports `hardware_surface_probe=passed` only after actual surface input, independently decoded IDR and observed SPS validation. Unsupported hardware reports `hardware_surface_probe=SKIP` with the reason; this does not qualify 1080p60 performance. The synthetic factory uses a default hardware adapter and the same device for conversion and encode; production capture continues to select the exact approved monitor adapter.

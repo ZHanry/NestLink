@@ -47,7 +47,10 @@ use nestlink_remote::{
     CleanupStatus, LeaseControl, RemoteError, RuntimeClock, SessionSetup, StopReport,
     audio::{AudioBinding, AudioCaptureController, AudioCaptureDevice, CapturedAudio},
     input::{InputAction, InputController, InputDevice, InputEpoch, InputEvent, InputLayout},
-    video::{CaptureDevice, CapturedVideo, Display, VideoController, VideoEpoch},
+    video::{
+        CaptureDevice, CapturedHostFrame, CapturedVideo, Display, HostVideoConfig, HostVideoStep,
+        VideoController, VideoEpoch,
+    },
 };
 use nestlink_session::{EndpointRole, SessionState, StopReason};
 use prost::Message;
@@ -417,6 +420,16 @@ struct HostVideoSelection {
 trait VideoPoll: Send + Sync {
     fn poll(&self) -> Result<Option<CapturedVideo>, RemoteError>;
     fn select_source(&self, source: u32, epoch: VideoEpoch) -> Result<Display, RemoteError>;
+    fn host_configure(&self, config: HostVideoConfig) -> Result<bool, RemoteError>;
+    fn host_capture(&self, allow_cached: bool) -> Result<Option<CapturedHostFrame>, RemoteError>;
+    fn host_encode(
+        &self,
+        frame: CapturedHostFrame,
+        pts: u64,
+        keyframe: bool,
+    ) -> Result<HostVideoStep, RemoteError>;
+    fn host_drain(&self) -> Result<HostVideoStep, RemoteError>;
+    fn host_set_bitrate(&self, kbps: u32) -> Result<(), RemoteError>;
 }
 impl<D: CaptureDevice> VideoPoll for VideoController<D> {
     fn poll(&self) -> Result<Option<CapturedVideo>, RemoteError> {
@@ -425,6 +438,27 @@ impl<D: CaptureDevice> VideoPoll for VideoController<D> {
 
     fn select_source(&self, source: u32, epoch: VideoEpoch) -> Result<Display, RemoteError> {
         VideoController::select_source(self, source, epoch)
+    }
+
+    fn host_configure(&self, config: HostVideoConfig) -> Result<bool, RemoteError> {
+        VideoController::host_configure(self, config)
+    }
+    fn host_capture(&self, allow_cached: bool) -> Result<Option<CapturedHostFrame>, RemoteError> {
+        VideoController::host_capture(self, allow_cached)
+    }
+    fn host_encode(
+        &self,
+        frame: CapturedHostFrame,
+        pts: u64,
+        keyframe: bool,
+    ) -> Result<HostVideoStep, RemoteError> {
+        VideoController::host_encode(self, frame, pts, keyframe)
+    }
+    fn host_drain(&self) -> Result<HostVideoStep, RemoteError> {
+        VideoController::host_drain(self)
+    }
+    fn host_set_bitrate(&self, kbps: u32) -> Result<(), RemoteError> {
+        VideoController::host_set_bitrate(self, kbps)
     }
 }
 
@@ -4335,7 +4369,12 @@ fn run_video_source(
         prepare,
     } = context;
     let mut current_selection = *selection.borrow_and_update();
-    let mut encoder = video::prepare_encoder(format, current_selection.codec)?;
+    let mut encoder = video::HostEncoder::prepare(
+        &source,
+        current_selection.display.source,
+        format,
+        current_selection.codec,
+    )?;
     let mut writer = video::VideoRtpWriter::new(format)?;
     let mut prepared_encoder = None;
     let mut recovery = None;
@@ -4344,8 +4383,6 @@ fn run_video_source(
     let started = Instant::now();
     let mut last_poll_trace = started;
     let mut last_traced_source = current_selection.display.source;
-    let mut frame_period =
-        Duration::from_nanos(1_000_000_000 / u64::from(current_selection.codec.fps));
     let mut next_frame = started;
     let mut last_pts = None;
     loop {
@@ -4359,7 +4396,8 @@ fn run_video_source(
         }
         ensure_media_permit(&permit, Permission::View)?;
         if let Ok(command) = prepare.try_recv() {
-            let replacement = video::prepare_encoder(format, command.config);
+            let replacement =
+                video::HostEncoder::prepare(&source, command.source, format, command.config);
             match replacement {
                 Ok(encoder) => {
                     prepared_encoder = Some((command.source, encoder));
@@ -4398,12 +4436,15 @@ fn run_video_source(
             trace_video_worker("encoder_recreate_started", started, current_selection);
             encoder = match prepared_encoder.take() {
                 Some((source, encoder)) if source == current_selection.display.source => encoder,
-                _ => video::prepare_encoder(format, current_selection.codec)?,
+                _ => video::HostEncoder::prepare(
+                    &source,
+                    current_selection.display.source,
+                    format,
+                    current_selection.codec,
+                )?,
             };
             trace_video_worker("encoder_recreate_completed", started, current_selection);
             current_kbps = current_selection.codec.bitrate_kbps;
-            frame_period =
-                Duration::from_nanos(1_000_000_000 / u64::from(current_selection.codec.fps));
             force_keyframe.store(true, Ordering::Release);
             recovery = None;
             last_encoder_output = Instant::now();
@@ -4416,51 +4457,41 @@ fn run_video_source(
             last_traced_source = current_selection.display.source;
             last_poll_trace = Instant::now();
         }
-        let captured = source.poll().map_err(io::Error::other)?;
-        let Some(captured) = captured else {
-            drop(_frame_guard);
-            runtime.block_on(tokio::time::sleep(POLL_INTERVAL));
-            continue;
-        };
-        let now = Instant::now();
-        if captured.epoch != current_selection.epoch
-            || captured.display.source != current_selection.display.source
-            || captured.frame.source != current_selection.display.source
-            || captured.frame.width != current_selection.codec.width
-            || captured.frame.height != current_selection.codec.height
-            || captured.frame.validate().is_err()
-            || captured.frame.captured_at > now
-            || now.duration_since(captured.frame.captured_at) > MAX_VIDEO_FRAME_AGE
-        {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "captured video does not match its approved source/epoch/geometry",
-            ));
-        }
-        ensure_media_permit(&permit, Permission::View)?;
-        let elapsed = captured
-            .frame
-            .captured_at
-            .checked_duration_since(started)
-            .unwrap_or_default();
-        let pts = u64::try_from(elapsed.as_nanos().saturating_mul(90_000) / 1_000_000_000)
-            .map_err(io::Error::other)?;
-        let pts = pts.max(last_pts.map_or(0, |previous: u64| previous.saturating_add(1)));
-        let force = force_keyframe.swap(false, Ordering::AcqRel) || last_pts.is_none();
-        if force && recovery.is_none() {
-            recovery = Some((Instant::now(), pts));
-        }
         let requested_kbps = target_kbps.load(Ordering::Acquire);
         if requested_kbps != current_kbps {
-            encoder.set_bitrate(requested_kbps)?;
+            encoder.set_bitrate(&source, requested_kbps)?;
             current_kbps = requested_kbps;
         }
-        let step = encoder.encode_step(&captured.frame.pixels, pts, force)?;
-        if step.accepted {
-            last_pts = Some(pts);
-        } else if force {
-            force_keyframe.store(true, Ordering::Release);
-        }
+        let captured = encoder.capture(&source, force_keyframe.load(Ordering::Acquire))?;
+        let had_input = captured.is_some();
+        let step = if let Some(captured) = captured {
+            captured.validate(current_selection)?;
+            ensure_media_permit(&permit, Permission::View)?;
+            let elapsed = captured
+                .encode_at()
+                .checked_duration_since(started)
+                .unwrap_or_default();
+            let pts = u64::try_from(elapsed.as_nanos().saturating_mul(90_000) / 1_000_000_000)
+                .map_err(io::Error::other)?;
+            let pts = pts.max(last_pts.map_or(0, |previous: u64| previous.saturating_add(1)));
+            let force = force_keyframe.swap(false, Ordering::AcqRel) || last_pts.is_none();
+            if force && recovery.is_none() {
+                recovery = Some((Instant::now(), pts));
+            }
+            let step = encoder.encode(&source, captured, pts, force, current_selection, format)?;
+            if step.accepted {
+                last_pts = Some(pts);
+            } else if force {
+                force_keyframe.store(true, Ordering::Release);
+            }
+            step
+        } else {
+            // An asynchronous MFT may have output even when DXGI reports an
+            // unchanged desktop. Draining never invents a new captured frame.
+            encoder.drain(&source, current_selection, format)?
+        };
+        let had_output = step.output.is_some();
+        let frame_period = encoder.frame_period(current_selection.codec.fps);
         if let Some(packet) = step.output {
             last_encoder_output = Instant::now();
             if packet.keyframe
@@ -4468,7 +4499,7 @@ fn run_video_source(
             {
                 recovery = None;
             }
-            if let Some(sps) = encoder.h264_sps_info() {
+            if let Some(sps) = encoder.sps() {
                 video::validate_sps(format, sps)?;
             }
             diagnostics.mark(|value| &mut value.first_encoded_ms);
@@ -4484,6 +4515,7 @@ fn run_video_source(
                     cancel: &cancel,
                     selected_path,
                     path_authority: &path_authority,
+                    deadline: video::packet_deadline(started, packet.pts_90khz)?,
                 },
             )? {
                 force_keyframe.store(true, Ordering::Release);
@@ -4492,7 +4524,7 @@ fn run_video_source(
             }
         }
         if matches!(format, VideoFormat::H264(_))
-            && (last_encoder_output.elapsed() > Duration::from_secs(3)
+            && ((had_input && last_encoder_output.elapsed() > Duration::from_secs(3))
                 || recovery.is_some_and(|(requested, _): (Instant, u64)| {
                     requested.elapsed() > Duration::from_secs(3)
                 }))
@@ -4501,6 +4533,11 @@ fn run_video_source(
                 io::ErrorKind::TimedOut,
                 "H.264 output/keyframe recovery timed out",
             ));
+        }
+        if !had_input && !had_output {
+            drop(_frame_guard);
+            runtime.block_on(tokio::time::sleep(POLL_INTERVAL));
+            continue;
         }
         // Encoding and RTP writes consume this frame's period. Adding a full
         // period after that work steadily lowers the configured frame rate.

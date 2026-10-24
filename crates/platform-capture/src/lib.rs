@@ -1,8 +1,10 @@
-//! First-party platform capture. No codec or application authorization here.
+//! First-party capture and Windows owner-thread capture/encode. No grants originate here.
 #[cfg(windows)]
 mod windows;
 #[cfg(windows)]
-pub use windows::{WindowsCapture, WindowsCaptureSource};
+pub use windows::{
+    WindowsCapture, WindowsCaptureSource, WindowsHostCapture, probe_windows_gpu_h264,
+};
 #[cfg(target_os = "linux")]
 mod pipewire;
 #[cfg(target_os = "linux")]

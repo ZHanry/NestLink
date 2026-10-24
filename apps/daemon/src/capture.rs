@@ -445,7 +445,7 @@ async fn prepare_windows(
                 .filter(|(_, display)| approval.sources.contains(&display.source))
                 .map(|(source, _)| source.clone())
                 .collect::<Vec<_>>();
-            let mut capture = WindowsCapture::open(selected)?;
+            let mut capture = nestlink_platform_capture::WindowsHostCapture::open(selected)?;
             let displays = capture.displays().to_vec();
             let display = displays
                 .iter()

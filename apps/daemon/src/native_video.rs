@@ -14,7 +14,9 @@ use nestlink_app_core::{
 };
 use nestlink_media_codec::{VideoCodec, VideoConfig, VideoEncoder, VideoQuality};
 use nestlink_remote::input::InputDevice;
-use nestlink_remote::video::{CaptureDevice, Display, RawFrame, VideoController};
+use nestlink_remote::video::{
+    CaptureDevice, Display, HostEncodeStep, HostFrame, HostVideoConfig, RawFrame, VideoController,
+};
 #[cfg(target_os = "linux")]
 use std::sync::Mutex;
 use std::{
@@ -449,7 +451,7 @@ async fn prepare_capture(
         let privileged = privileged.clone();
         let connection_generation = identity.connection_generation;
         let (device, input) = tokio::task::spawn_blocking(move || {
-            let mut device = WindowsCapture::open(selected)?;
+            let mut device = nestlink_platform_capture::WindowsHostCapture::open(selected)?;
             let input = if input_enabled {
                 let opened = privileged
                     .open(
@@ -789,6 +791,35 @@ async fn prepare_wayland_remote(
 
 struct ErasedCapture(Box<dyn CaptureDevice>);
 impl CaptureDevice for ErasedCapture {
+    fn reset_before(&mut self, deadline: Instant) -> io::Result<()> {
+        self.0.reset_before(deadline)
+    }
+
+    fn cancellation(&self) -> Option<Arc<std::sync::atomic::AtomicBool>> {
+        self.0.cancellation()
+    }
+    fn discard_pending_frames(&mut self) -> io::Result<()> {
+        self.0.discard_pending_frames()
+    }
+    fn host_configure(&mut self, c: HostVideoConfig) -> io::Result<bool> {
+        self.0.host_configure(c)
+    }
+    fn host_capture(&mut self, source: u32, repeated: bool) -> io::Result<Option<HostFrame>> {
+        self.0.host_capture(source, repeated)
+    }
+    fn host_encode(&mut self, ticket: u64, pts: u64, keyframe: bool) -> io::Result<HostEncodeStep> {
+        self.0.host_encode(ticket, pts, keyframe)
+    }
+    fn host_drain(&mut self) -> io::Result<HostEncodeStep> {
+        self.0.host_drain()
+    }
+    fn host_set_bitrate(&mut self, kbps: u32) -> io::Result<()> {
+        self.0.host_set_bitrate(kbps)
+    }
+    fn poll_frame_for(&mut self, source: u32) -> io::Result<Option<RawFrame>> {
+        self.0.poll_frame_for(source)
+    }
+
     fn check(&mut self) -> io::Result<()> {
         self.0.check()
     }
@@ -864,6 +895,38 @@ struct StableDisplayCapture {
     approved: Vec<u32>,
 }
 impl CaptureDevice for StableDisplayCapture {
+    fn reset_before(&mut self, deadline: Instant) -> io::Result<()> {
+        self.inner.reset_before(deadline)
+    }
+
+    fn cancellation(&self) -> Option<Arc<std::sync::atomic::AtomicBool>> {
+        self.inner.cancellation()
+    }
+    fn discard_pending_frames(&mut self) -> io::Result<()> {
+        self.inner.discard_pending_frames()
+    }
+    fn host_configure(&mut self, c: HostVideoConfig) -> io::Result<bool> {
+        if !self.approved.contains(&c.source) {
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "unapproved host source",
+            ));
+        }
+        self.inner.host_configure(c)
+    }
+    fn host_capture(&mut self, source: u32, repeated: bool) -> io::Result<Option<HostFrame>> {
+        self.inner.host_capture(source, repeated)
+    }
+    fn host_encode(&mut self, ticket: u64, pts: u64, keyframe: bool) -> io::Result<HostEncodeStep> {
+        self.inner.host_encode(ticket, pts, keyframe)
+    }
+    fn host_drain(&mut self) -> io::Result<HostEncodeStep> {
+        self.inner.host_drain()
+    }
+    fn host_set_bitrate(&mut self, kbps: u32) -> io::Result<()> {
+        self.inner.host_set_bitrate(kbps)
+    }
+
     fn check(&mut self) -> io::Result<()> {
         self.inner.check()
     }
@@ -901,6 +964,8 @@ fn stream_capture<D: CaptureDevice>(
 ) -> (VideoController<D>, StreamExit) {
     let mut active: Option<NativeVideoBinding> = None;
     let mut encoder: Option<VideoEncoder> = None;
+    let mut owner_encoding = false;
+    let mut owner_output_seen = false;
     let mut pending_sources = std::collections::BTreeMap::new();
     let mut pixels = Zeroizing::new(Vec::new());
     let origin = Instant::now();
@@ -926,7 +991,11 @@ fn stream_capture<D: CaptureDevice>(
         };
         // Drain the bounded capture pipeline during negotiation, retaining no
         // pixels from an old selection and leaving its original grant alive.
-        let captured = match controller.poll() {
+        let captured = match if owner_encoding {
+            Ok(None)
+        } else {
+            controller.poll()
+        } {
             Ok(frame) => frame,
             Err(_) => return (controller, StreamExit::CaptureFailed),
         };
@@ -964,18 +1033,37 @@ fn stream_capture<D: CaptureDevice>(
                 FPS
             };
             quality = VideoQuality::new(target_fps, BITRATE_KBPS, Instant::now());
-            encoder = match VideoEncoder::new(
-                codec_kind,
-                VideoConfig {
-                    width: binding.width,
-                    height: binding.height,
-                    fps: target_fps,
-                    bitrate_kbps: BITRATE_KBPS,
-                },
-            ) {
-                Ok(encoder) => Some(encoder),
-                Err(_) => return (controller, StreamExit::CaptureFailed),
+            let config = VideoConfig {
+                width: binding.width,
+                height: binding.height,
+                fps: target_fps,
+                bitrate_kbps: BITRATE_KBPS,
             };
+            owner_encoding = if codec_kind == VideoCodec::H264Baseline {
+                match controller.host_configure(HostVideoConfig {
+                    source: binding.source,
+                    width: config.width,
+                    height: config.height,
+                    fps: config.fps,
+                    bitrate_kbps: config.bitrate_kbps,
+                    max_level_idc: 42,
+                    require_constrained_baseline: false,
+                }) {
+                    Ok(enabled) => enabled,
+                    Err(_) => return (controller, StreamExit::CaptureFailed),
+                }
+            } else {
+                false
+            };
+            encoder = if owner_encoding {
+                None
+            } else {
+                match VideoEncoder::new(codec_kind, config) {
+                    Ok(e) => Some(e),
+                    Err(_) => return (controller, StreamExit::CaptureFailed),
+                }
+            };
+            owner_output_seen = false;
             active = Some(binding);
             selected_since = Instant::now();
             first_deadline = selected_since + FIRST_FRAME_TIMEOUT;
@@ -992,6 +1080,84 @@ fn stream_capture<D: CaptureDevice>(
             }
             Err(_) => return (controller, StreamExit::TransportFailed),
         };
+        if owner_encoding {
+            let started = Instant::now();
+            let frame = match controller.host_capture(keyframe) {
+                Ok(f) => f,
+                Err(_) => return (controller, StreamExit::CaptureFailed),
+            };
+            let step = if let Some(frame) = frame {
+                let previous = source_pts.entry(binding.source).or_default();
+                let clock = match core.native_video_capture_pts(identity, frame.frame.encode_at) {
+                    Ok(p) => p,
+                    Err(_) => return (controller, StreamExit::CaptureFailed),
+                };
+                let pts = clock.max(previous.saturating_add(1));
+                *previous = pts;
+                controller.host_encode(frame, pts, keyframe)
+            } else {
+                controller.host_drain()
+            };
+            let step = match step {
+                Ok(s) => s,
+                Err(_) => return (controller, StreamExit::CaptureFailed),
+            };
+            let encoding_time = started.elapsed();
+            let enqueue = Instant::now();
+            if let Some(mut output) = step.output {
+                if output.source != binding.source
+                    || output.epoch.layout != binding.layout_epoch
+                    || output.epoch.connection != identity.connection_generation
+                {
+                    return (controller, StreamExit::CaptureFailed);
+                }
+                owner_output_seen = true;
+                let packet = &mut output.packet;
+                let sent = if output.repeated {
+                    runtime.block_on(core.send_native_video_recovery_frame(
+                        identity,
+                        binding,
+                        packet.pts_90khz,
+                        std::mem::take(&mut packet.data),
+                    ))
+                } else {
+                    runtime.block_on(core.send_native_video_frame(
+                        identity,
+                        binding,
+                        packet.pts_90khz,
+                        packet.keyframe,
+                        std::mem::take(&mut packet.data),
+                    ))
+                };
+                if sent.is_err()
+                    && !core
+                        .native_displays(identity)
+                        .is_ok_and(|s| s.pending.is_some())
+                {
+                    return (controller, StreamExit::TransportFailed);
+                }
+            } else if !owner_output_seen && Instant::now() >= first_deadline {
+                return (controller, StreamExit::CaptureFailed);
+            }
+            if let Some(kbps) = quality.observe(Instant::now(), encoding_time, enqueue.elapsed())
+                && controller.host_set_bitrate(kbps).is_err()
+            {
+                return (controller, StreamExit::CaptureFailed);
+            }
+            let fps = if step.hardware {
+                quality.fps()
+            } else {
+                quality.fps().min(FPS)
+            };
+            next_frame += Duration::from_nanos(1_000_000_000 / u64::from(fps));
+            let delay = next_frame.saturating_duration_since(Instant::now());
+            if !delay.is_zero() {
+                thread::sleep(delay);
+            } else {
+                next_frame = Instant::now();
+            }
+            continue;
+        }
         let fresh = captured.filter(|frame| {
             frame.frame.source == binding.source && frame.frame.captured_at >= selected_since
         });
@@ -1020,18 +1186,23 @@ fn stream_capture<D: CaptureDevice>(
         let Some(encoder) = encoder.as_mut() else {
             return (controller, StreamExit::CaptureFailed);
         };
-        if pending_sources.len() >= 8 {
+        if pending_sources.len() >= 16 {
             return (controller, StreamExit::CaptureFailed);
         }
-        pending_sources.insert(pts, repeated);
         let encoding_started = Instant::now();
-        let encoded = match encoder.encode(&pixels, pts, keyframe || repeated) {
-            Ok(Some(encoded)) => encoded,
-            Ok(None) => {
+        let step = match encoder.encode_step(&pixels, pts, keyframe || repeated) {
+            Ok(step) => step,
+            Err(_) => return (controller, StreamExit::CaptureFailed),
+        };
+        if step.accepted {
+            pending_sources.insert(pts, repeated);
+        }
+        let encoded = match step.output {
+            Some(encoded) => encoded,
+            None => {
                 thread::sleep(CAPTURE_TICK);
                 continue;
             }
-            Err(_) => return (controller, StreamExit::CaptureFailed),
         };
         let Some(repeated) = pending_sources.remove(&encoded.pts_90khz) else {
             return (controller, StreamExit::CaptureFailed);

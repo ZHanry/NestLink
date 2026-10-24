@@ -9,15 +9,19 @@ pub use timing::{
     AudioCaptureTimeline, MAX_PLAYOUT_LATE, PLAYOUT_DELAY, PlayoutDecision, SessionCaptureClock,
     SessionMediaTiming, SessionPlayoutClock,
 };
+pub mod external;
 mod receiver;
 mod video;
 mod worker;
 pub use audio::{AudioReceiver, AudioSender, AudioStats, AudioStream};
 pub use receiver::{
-    DecodedVideo, VideoLayout, VideoPresentation, VideoReceiver, VideoReceiverStats,
+    DecodedVideo, ExternalVideoCleanup, VideoLayout, VideoPresentation, VideoReceiver,
+    VideoReceiverStats,
 };
 pub use video::{VideoSender, VideoSenderStats, VideoStream};
 pub use worker::{ShutdownReport, WorkerMonitor, WorkerStatus};
 
 #[cfg(test)]
 mod tests;
+
+pub use nestlink_media_codec::gpu_qpc as native_video_qpc;

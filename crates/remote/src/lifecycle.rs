@@ -302,6 +302,16 @@ pub struct LeaseControl {
     inner: Arc<Inner>,
 }
 impl LeaseControl {
+    /// Bounded local media authority for a same-machine receipt. Observation
+    /// never extends the signed lease and is rechecked at every media chunk.
+    pub fn media_authority_remaining(
+        &self,
+        channel: Channel,
+        generation: u64,
+    ) -> Result<Duration, RemoteError> {
+        self.check_media_binding(channel, generation)?;
+        self.remaining()
+    }
     /// Attach the common lifecycle to a session already proved over another
     /// authenticated carrier (for example WebRTC's reliable control channel).
     /// A setup permit opens lifecycle supervision only. Every business/capture

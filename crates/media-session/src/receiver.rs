@@ -149,6 +149,8 @@ enum DecoderReadiness {
     Display(VideoLayout, u64),
 }
 struct Output {
+    consumer_revision: std::sync::atomic::AtomicU64,
+    external: Mutex<Option<crate::external::ExternalSink>>,
     playout: Option<crate::SessionPlayoutClock>,
     state: Mutex<State>,
     changes: watch::Sender<u64>,
@@ -156,6 +158,16 @@ struct Output {
     prepared: watch::Sender<DecoderReadiness>,
 }
 impl Output {
+    fn advance_consumer(&self) -> io::Result<()> {
+        self.consumer_revision
+            .fetch_update(
+                std::sync::atomic::Ordering::AcqRel,
+                std::sync::atomic::Ordering::Acquire,
+                |v| v.checked_add(1).filter(|n| *n <= i64::MAX as u64),
+            )
+            .map(|_| ())
+            .map_err(|_| io::Error::other("video consumer generation exhausted"))
+    }
     fn check_recovery_deadline(&self) -> io::Result<()> {
         if self
             .recovery_deadline
@@ -177,6 +189,8 @@ impl Output {
         let (recovery_deadline, _) = watch::channel(None);
         let (prepared, _) = watch::channel(DecoderReadiness::Unprepared);
         Arc::new(Self {
+            consumer_revision: std::sync::atomic::AtomicU64::new(1),
+            external: Mutex::new(None),
             playout,
             state: Mutex::new(State {
                 scheduled: VecDeque::new(),
@@ -234,6 +248,12 @@ impl Output {
         state.selected = None;
         state.last_selected = None;
         drop(state);
+        if let Ok(mut external) = self.external.lock() {
+            if let Some(sink) = external.as_mut() {
+                let c = sink.context.clone();
+                let _ = sink.feedback(&c, crate::external::VideoSinkFeedback::Fence);
+            }
+        }
         self.prepared.send_replace(DecoderReadiness::Unprepared);
         self.wake();
     }
@@ -253,7 +273,213 @@ pub struct VideoPresentation {
     lease: LeaseControl,
     connection_generation: u64,
 }
+/// Cleanup-only capability retained independently of revoked display routes.
+/// It cannot consume bytes, prepare a decoder, extend a lease or present.
+#[derive(Clone)]
+pub struct ExternalVideoCleanup {
+    output: Arc<Output>,
+    stream_id: [u8; 16],
+}
+impl ExternalVideoCleanup {
+    pub fn fence(&self) -> io::Result<()> {
+        let mut external = self
+            .output
+            .external
+            .lock()
+            .map_err(|_| io::Error::other("external sink poisoned"))?;
+        if let Some(sink) = external
+            .as_mut()
+            .filter(|s| s.context.stream_id == self.stream_id)
+        {
+            let context = sink.context.clone();
+            sink.feedback(&context, crate::external::VideoSinkFeedback::Fence)?;
+        }
+        Ok(())
+    }
+    pub fn joined(&self, context: &crate::external::VideoSinkContext) -> io::Result<()> {
+        let mut external = self
+            .output
+            .external
+            .lock()
+            .map_err(|_| io::Error::other("external sink poisoned"))?;
+        let sink = external
+            .as_mut()
+            .filter(|s| s.context.stream_id == self.stream_id)
+            .ok_or_else(|| io::Error::other("external owner retired"))?;
+        sink.feedback(
+            context,
+            crate::external::VideoSinkFeedback::Stopped { joined: true },
+        )?;
+        self.output.advance_consumer()?;
+        *external = None;
+        drop(external);
+        self.output.wake();
+        Ok(())
+    }
+}
 impl VideoPresentation {
+    pub fn external_cleanup(
+        &self,
+        context: &crate::external::VideoSinkContext,
+    ) -> io::Result<ExternalVideoCleanup> {
+        let external = self
+            .output
+            .external
+            .lock()
+            .map_err(|_| io::Error::other("external sink poisoned"))?;
+        if !external.as_ref().is_some_and(|s| &s.context == context) {
+            return Err(io::Error::other("external owner differs"));
+        }
+        Ok(ExternalVideoCleanup {
+            output: self.output.clone(),
+            stream_id: context.stream_id,
+        })
+    }
+    pub fn authority_remaining(&self) -> io::Result<Duration> {
+        self.lease
+            .media_authority_remaining(Channel::Video, self.connection_generation)
+            .map_err(io::Error::other)
+    }
+    /// Atomically replaces the CPU consumer; the network channel remains owned
+    /// by its original authorized receiver worker.
+    pub fn open_external(&self, context: crate::external::VideoSinkContext) -> io::Result<()> {
+        self.lease
+            .check_media_binding(Channel::Video, self.connection_generation)
+            .map_err(io::Error::other)?;
+        if !self
+            .lease
+            .media_capability(nestlink_protocol::media::H264_CAPABILITY)
+            .map_err(io::Error::other)?
+        {
+            return Err(io::Error::other(
+                "external decoding requires negotiated H264",
+            ));
+        }
+        let mut external = self
+            .output
+            .external
+            .lock()
+            .map_err(|_| io::Error::other("external sink poisoned"))?;
+        if external.is_some() {
+            return Err(io::Error::other("video consumer already claimed"));
+        }
+        let mut state = self
+            .output
+            .state
+            .lock()
+            .map_err(|_| io::Error::other("media output poisoned"))?;
+        let layout = state
+            .selected
+            .filter(|v| {
+                v.source == context.source
+                    && v.epoch.connection == context.connection_generation
+                    && v.epoch.layout == context.layout_epoch
+            })
+            .ok_or_else(|| io::Error::other("external selection differs"))?;
+        if state.closed
+            || state.catalog.as_ref().map(|(key, _)| key.revision) != Some(context.catalog_revision)
+        {
+            return Err(io::Error::other("external catalogue differs"));
+        }
+        self.output.advance_consumer()?;
+        *external = Some(crate::external::ExternalSink::new(
+            context,
+            layout.width,
+            layout.height,
+        )?);
+        state.videos.clear();
+        state.scheduled.clear();
+        state.ready.clear();
+        self.output
+            .prepared
+            .send_replace(DecoderReadiness::Unprepared);
+        drop(state);
+        drop(external);
+        self.output.wake();
+        Ok(())
+    }
+    pub fn external_context(
+        &self,
+    ) -> io::Result<Option<(crate::external::VideoSinkContext, u32, u32)>> {
+        self.lease
+            .check_media_binding(Channel::Video, self.connection_generation)
+            .map_err(io::Error::other)?;
+        let external = self
+            .output
+            .external
+            .lock()
+            .map_err(|_| io::Error::other("external sink poisoned"))?;
+        Ok(external
+            .as_ref()
+            .map(|s| (s.context.clone(), s.width, s.height)))
+    }
+    pub fn poll_external(&self) -> io::Result<Option<crate::external::ExternalAccessUnit>> {
+        self.lease
+            .check_media_binding(Channel::Video, self.connection_generation)
+            .map_err(io::Error::other)?;
+        let mut external = self
+            .output
+            .external
+            .lock()
+            .map_err(|_| io::Error::other("external sink poisoned"))?;
+        Ok(external
+            .as_mut()
+            .and_then(crate::external::ExternalSink::pop))
+    }
+    pub fn external_feedback(
+        &self,
+        context: &crate::external::VideoSinkContext,
+        feedback: crate::external::VideoSinkFeedback,
+    ) -> io::Result<()> {
+        self.lease
+            .check_media_binding(Channel::Video, self.connection_generation)
+            .map_err(io::Error::other)?;
+        let mut external = self
+            .output
+            .external
+            .lock()
+            .map_err(|_| io::Error::other("external sink poisoned"))?;
+        let sink = external
+            .as_mut()
+            .ok_or_else(|| io::Error::other("no external consumer"))?;
+        sink.feedback(context, feedback)?;
+        if sink.prepared {
+            let layout = VideoLayout {
+                epoch: VideoEpoch {
+                    connection: context.connection_generation,
+                    layout: context.layout_epoch,
+                },
+                source: context.source,
+                width: sink.width,
+                height: sink.height,
+            };
+            self.output
+                .prepared
+                .send_replace(DecoderReadiness::Display(layout, context.catalog_revision));
+        }
+        drop(external);
+        self.output.wake();
+        Ok(())
+    }
+    /// Only a joined presenter may release ownership and reopen the CPU sink.
+    pub fn close_external(&self, context: &crate::external::VideoSinkContext) -> io::Result<()> {
+        let mut external = self
+            .output
+            .external
+            .lock()
+            .map_err(|_| io::Error::other("external sink poisoned"))?;
+        if !external
+            .as_ref()
+            .is_some_and(|s| &s.context == context && s.stopped)
+        {
+            return Err(io::Error::other("external cleanup ownership pending"));
+        }
+        self.output.advance_consumer()?;
+        *external = None;
+        drop(external);
+        self.output.wake();
+        Ok(())
+    }
     async fn wait_prepared(&self, expected: DecoderReadiness) -> io::Result<()> {
         let mut prepared = self.output.prepared.subscribe();
         let mut reports = self.lease.subscribe_stopped();
@@ -823,7 +1049,27 @@ impl VideoReceiver {
     }
     pub fn shutdown(&mut self, reason: StopReason) -> io::Result<ShutdownReport> {
         self.output.close();
-        self.worker.shutdown(reason)
+        let worker = self.worker.shutdown(reason)?;
+        let deadline = Instant::now() + Duration::from_millis(250);
+        loop {
+            let pending = self
+                .output
+                .external
+                .lock()
+                .map_err(|_| io::Error::other("external sink poisoned"))?
+                .as_ref()
+                .is_some_and(|s| !s.stopped);
+            if !pending {
+                return Ok(worker);
+            }
+            if Instant::now() >= deadline {
+                return Err(io::Error::new(
+                    io::ErrorKind::TimedOut,
+                    "external presenter ownership pending",
+                ));
+            }
+            std::thread::sleep(Duration::from_millis(2));
+        }
     }
 }
 impl Drop for VideoReceiver {
@@ -979,13 +1225,12 @@ impl Decoder {
                 .min(recovery.started + Duration::from_millis(VIDEO_RECOVERY_MS))
         })
     }
-    fn decode(
+    fn accept_input(
         &mut self,
-        packet: NativeVideo,
-        payload: Zeroizing<Vec<u8>>,
+        packet: &NativeVideo,
         epoch: VideoEpoch,
         now: Instant,
-    ) -> io::Result<Option<(DecodedVideo, bool)>> {
+    ) -> io::Result<bool> {
         self.deadline(now)?;
         if packet.connection_generation != epoch.connection
             || packet.layout_epoch != epoch.layout
@@ -1010,6 +1255,18 @@ impl Decoder {
         }
         if self.awaiting_keyframe && !packet.keyframe {
             self.recover(VideoRecoveryReason::KeyframeMissing, now)?;
+            return Ok(false);
+        }
+        Ok(true)
+    }
+    fn decode(
+        &mut self,
+        packet: NativeVideo,
+        payload: Zeroizing<Vec<u8>>,
+        epoch: VideoEpoch,
+        now: Instant,
+    ) -> io::Result<Option<(DecodedVideo, bool)>> {
+        if !self.accept_input(&packet, epoch, now)? {
             return Ok(None);
         }
         if self.codec.is_none() {
@@ -1170,9 +1427,11 @@ fn prepare_display_decoder(
         codec.codec = None;
         codec.awaiting_keyframe = true;
         codec.pending.clear();
-        codec.recovery = None;
+        if current.is_none_or(|(layout, _)| layout.source != codec.stream.source) {
+            codec.recovery = None;
+        }
     }
-    output.recovery_deadline.send_replace(None);
+    output.set_recovery_deadline(codecs.values().filter_map(Decoder::recovery_deadline).min())?;
     if let Some((layout, revision)) = current {
         lease
             .check_media_binding(Channel::Video, layout.epoch.connection)
@@ -1194,7 +1453,20 @@ fn prepare_display_decoder(
         decoder.layout = layout.epoch.layout;
         decoder.stream.codec.width = layout.width;
         decoder.stream.codec.height = layout.height;
-        decoder.codec = Some(VideoDecoder::new(kind, layout.width, layout.height)?);
+        let external = output
+            .external
+            .lock()
+            .map_err(|_| io::Error::other("external sink poisoned"))?;
+        let uses_external = external.is_some();
+        if !uses_external {
+            decoder.codec = Some(VideoDecoder::new(kind, layout.width, layout.height)?);
+        }
+        let external_prepared = external.as_ref().is_none_or(|s| {
+            s.prepared
+                && s.context.source == layout.source
+                && s.context.layout_epoch == layout.epoch.layout
+        });
+        drop(external);
         lease
             .check_media_binding(Channel::Video, layout.epoch.connection)
             .map_err(io::Error::other)?;
@@ -1202,7 +1474,8 @@ fn prepare_display_decoder(
             .state
             .lock()
             .map_err(|_| io::Error::other("media output poisoned"))?;
-        if state.selected == Some(layout)
+        if external_prepared
+            && state.selected == Some(layout)
             && state.catalog.as_ref().map(|(key, _)| key.revision) == Some(revision)
             && !state.closed
         {
@@ -1267,6 +1540,7 @@ fn receive(
     }
     runtime.block_on(async {
         let mut selected_layout: Option<(VideoLayout, u64)>=None;
+        let mut external_stamp=None;
         let mut changes=output.changes.subscribe();
         loop {
             if advertised {
@@ -1277,6 +1551,45 @@ fn receive(
                 if current!=selected_layout {
                     prepare_display_decoder(&mut codecs, current, kind, &lease, &output)?;
                     selected_layout=current;
+                }
+            }
+            {
+                let mut external=output.external.lock().map_err(|_|io::Error::other("external sink poisoned"))?;
+                if let Some(sink)=external.as_mut(){
+                    if selected_layout.is_none_or(|(layout,_)|layout.source!=sink.context.source || layout.epoch.layout!=sink.context.layout_epoch){
+                        let context=sink.context.clone();sink.feedback(&context,crate::external::VideoSinkFeedback::Fence)?;
+                    }
+                    if sink.check_pressure(Instant::now())? {
+                        if let Some(codec)=codecs.get_mut(&sink.context.source){codec.recover(VideoRecoveryReason::ReferenceGap,Instant::now())?;}
+                    }
+                }
+                let stamp=external.as_ref().map(|s|(s.context.stream_id,s.context.decode_epoch));
+                if stamp!=external_stamp {
+                    if let Some((layout,_))=selected_layout {
+                        if let Some(codec)=codecs.get_mut(&layout.source) {
+                            codec.codec=None;
+                            codec.pending.clear();
+                            codec.awaiting_keyframe=true;
+                            if stamp.is_none(){codec.recover(VideoRecoveryReason::ReferenceGap,Instant::now())?;}
+                        }
+                    }
+                    external_stamp=stamp;
+                    if stamp.is_none(){selected_layout=None;}
+                }
+                if let Some(sink)=external.as_mut() {
+                    if let Some(codec)=codecs.get_mut(&sink.context.source) {
+                        if sink.prepared && codec.awaiting_keyframe && codec.recovery.is_none(){codec.recover(VideoRecoveryReason::KeyframeMissing,Instant::now())?;}
+                        while let Some((sequence,pts,idr))=sink.completed.pop_front() {
+                            let expected=codec.pending.first_key_value().map(|(pts,(seq,_))|(*seq,*pts));
+                            if expected!=Some((sequence,pts)) { return Err(io::Error::other("external decoder output ledger mismatch")); }
+                            codec.pending.remove(&pts);
+                            codec.deadline(Instant::now())?;
+                            if idr && codec.recovery.take().is_some() {
+                                let mut state=output.state.lock().map_err(|_|io::Error::other("media output poisoned"))?;
+                                state.stats.completed_recoveries=state.stats.completed_recoveries.saturating_add(1);
+                            }
+                        }
+                    }
                 }
             }
             output.check_recovery_deadline()?;
@@ -1295,7 +1608,7 @@ fn receive(
                 }
             }
             output.set_recovery_deadline(codecs.values().filter_map(Decoder::recovery_deadline).min())?;
-            let wake = codecs.values().filter_map(Decoder::wakeup).min();
+            let wake = codecs.values().filter_map(Decoder::wakeup).chain(external_stamp.map(|_|Instant::now()+Duration::from_millis(10))).min();
             let frame = tokio::select! { biased;
                 _ = stop.changed() => { output.check_recovery_deadline()?; return Ok(()); }
                 _ = reports.changed() => { output.check_recovery_deadline()?; return Ok(()); }
@@ -1377,7 +1690,32 @@ fn receive(
             })?;
             // libvpx runs outside all authorization/output locks on this thread.
             let codec_epoch = VideoEpoch { layout: codec.layout, connection: epoch.connection };
-            let decoded = codec.decode(packet, payload, codec_epoch, Instant::now())?;
+            // Establish the shared A/V mapping at validated media ingress,
+            // before CPU decode or the external FIFO can add scheduling delay.
+            let now=Instant::now();
+            let due=if let Some(clock)=output.playout.as_ref(){clock.presentation_time(packet.pts_90khz,90_000,now)?}else{now};
+            let mut external=output.external.lock().map_err(|_|io::Error::other("external sink poisoned"))?;
+            let consumer_revision=output.consumer_revision.load(std::sync::atomic::Ordering::Acquire);
+            let decoded=if let Some(sink)=external.as_mut() {
+                if sink.context.source!=packet.source || sink.context.layout_epoch!=packet.layout_epoch {
+                    return Err(io::Error::other("external selection changed before fencing"));
+                }
+                let reference_gap=codec.sequence.checked_add(1)!=Some(packet.sequence);
+                if sink.prepared && codec.accept_input(&packet,codec_epoch,now)? {
+                    let gap=reference_gap || codec.pending.len()>=8;
+                    if gap { sink.reset()?; codec.recover(VideoRecoveryReason::ReferenceGap,now)?; }
+                    else {
+                        let pts=packet.pts_90khz;
+                        let sequence=packet.sequence;
+                        if sink.push(sequence,pts,packet.keyframe,packet.repeated_source,due,payload,now)? {
+                            codec.awaiting_keyframe=false;
+                            codec.pending.insert(pts,(sequence,packet.repeated_source));
+                        }else { codec.recover(VideoRecoveryReason::ReferenceGap,now)?; }
+                    }
+                }
+                None
+            }else{codec.decode(packet,payload,codec_epoch,now)?};
+            drop(external);
             output.set_recovery_deadline(codecs.values().filter_map(Decoder::recovery_deadline).min())?;
             lease
                 .check_media_binding(Channel::Video, epoch.connection)
@@ -1394,6 +1732,7 @@ fn receive(
             }
             if advertised && state.selected.is_none_or(|layout| layout.source!=source || layout.epoch!=codec_epoch) {continue;}
             if let Some((decoded, recovered)) = decoded {
+                if output.consumer_revision.load(std::sync::atomic::Ordering::Acquire)!=consumer_revision{continue;}
                 if let Some(clock)=output.playout.as_ref(){
                     state.queue_video(clock, decoded, Instant::now())?;
                 }else{

@@ -122,6 +122,23 @@ impl VideoEncoder {
             Self::H264(codec) => codec.encode(bgra, pts, keyframe),
         }
     }
+    pub fn close(self) -> io::Result<()> {
+        match self {
+            Self::Vp8(_) => Ok(()),
+            #[cfg(windows)]
+            Self::H264(codec) => codec.inner.close(),
+        }
+    }
+    pub fn drain_encoded(&mut self) -> io::Result<VideoEncodeStep> {
+        match self {
+            Self::Vp8(_) => Ok(VideoEncodeStep {
+                accepted: false,
+                output: None,
+            }),
+            #[cfg(windows)]
+            Self::H264(codec) => codec.inner.drain_encoded(),
+        }
+    }
     pub fn set_bitrate(&mut self, kbps: u32) -> io::Result<()> {
         match self {
             Self::Vp8(codec) => codec.set_bitrate(kbps),

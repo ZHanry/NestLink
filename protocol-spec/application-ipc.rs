@@ -25,6 +25,12 @@ pub struct Request {
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "command", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Command {
+    OpenNativeCompressedVideo {
+        open: crate::compressed_video::NativeCompressedOpen,
+    },
+    OpenNativeCompressedData {
+        ticket: [u8; 32],
+    },
     #[serde(deserialize_with = "empty_command")]
     Snapshot,
     /// Changes only this device's locally persisted dialing consent.
@@ -158,7 +164,9 @@ impl Command {
                 | Self::Completion { .. }
                 | Self::GetNativeClipboardStatus
                 | Self::GetNativeDisplays { .. }
-                | Self::PrivilegedInput { action: PrivilegedInputAction::Status }
+                | Self::PrivilegedInput {
+                    action: PrivilegedInputAction::Status
+                }
         )
     }
 }
@@ -205,6 +213,11 @@ pub struct Response {
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "reply", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Reply {
+    CompressedVideoOpened {
+        context: crate::compressed_video::CompressedContext,
+        ticket: [u8; 32],
+    },
+    CompressedDataOpened,
     Snapshot,
     NativeNetworkConfigured {
         result:

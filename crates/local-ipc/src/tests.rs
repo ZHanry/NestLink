@@ -3,6 +3,52 @@ use serde_json::json;
 type TestResult<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 #[tokio::test]
+async fn duplex_partial_prefix_cancel_poison_is_shared_with_writer() -> TestResult {
+    let temporary = tempfile::tempdir()?;
+    let directory = temporary.path().join("state");
+    let daemon = LocalServer::bind(&directory).await?;
+    let (mut client, accepted) = pair(&daemon, &directory).await?;
+    let (mut read, mut write, _owner) = accepted.into_duplex()?;
+    client.stream.write_all(&[0, 0]).await?;
+    client.stream.flush().await?;
+    assert!(
+        tokio::time::timeout(Duration::from_millis(20), read.receive_bytes(4096))
+            .await
+            .is_err()
+    );
+    assert!(matches!(
+        write.send(&json!({"must":"fail"})).await,
+        Err(Error::Stopped)
+    ));
+    assert!(matches!(
+        read.receive_bytes(4096).await,
+        Err(Error::Stopped)
+    ));
+    Ok(())
+}
+
+#[tokio::test]
+async fn duplex_owner_drop_wakes_idle_reader_and_retires_writer() -> TestResult {
+    let temporary = tempfile::tempdir()?;
+    let directory = temporary.path().join("state");
+    let daemon = LocalServer::bind(&directory).await?;
+    let (_client, accepted) = pair(&daemon, &directory).await?;
+    let (mut read, mut write, owner) = accepted.into_duplex()?;
+    let pending = tokio::spawn(async move { read.receive_bytes(4096).await });
+    tokio::task::yield_now().await;
+    drop(owner);
+    assert!(matches!(
+        tokio::time::timeout(Duration::from_millis(100), pending).await??,
+        Err(Error::Stopped)
+    ));
+    assert!(matches!(
+        write.send(&json!({"must":"fail"})).await,
+        Err(Error::Stopped)
+    ));
+    Ok(())
+}
+
+#[tokio::test]
 async fn cancelling_a_partial_frame_receive_permanently_retires_that_stream() -> TestResult {
     let temporary = tempfile::tempdir()?;
     let directory = temporary.path().join("state");

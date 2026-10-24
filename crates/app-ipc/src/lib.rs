@@ -1,6 +1,7 @@
 //! Typed normal-user daemon IPC. Remote business rules remain in app-core/SDK.
 pub mod browser_data;
 pub mod clipboard;
+pub mod compressed_video;
 pub mod files;
 pub mod privileged_input;
 mod video;
@@ -449,12 +450,53 @@ async fn serve_requests(
         let generation = snapshot.generation;
         let mut exit_delivery = None;
         let mut video_stream = None;
+        let mut compressed_control = None;
+        let mut compressed_data = None;
         let mut result = if request.command.mutates() && request.expected_generation != generation {
             Reply::Rejected {
                 reason: Rejection::StaleGeneration,
             }
         } else {
             match request.command {
+                Command::OpenNativeCompressedVideo { open } => {
+                    let binding = NativeVideoBinding {
+                        runtime_id: connection.runtime_id().to_owned(),
+                        ui_generation: request.expected_generation,
+                        request_id: open.request_id,
+                        connection_generation: open.connection_generation,
+                        source: open.source,
+                    };
+                    if open.ui_generation != request.expected_generation {
+                        Reply::Rejected {
+                            reason: Rejection::Invalid,
+                        }
+                    } else {
+                        match compressed_video::open(&core, binding) {
+                            Ok((context, _width, _height, ticket, active)) => {
+                                compressed_control = Some((context.clone(), ticket, active));
+                                Reply::CompressedVideoOpened { context, ticket }
+                            }
+                            Err(_) => Reply::Rejected {
+                                reason: Rejection::Invalid,
+                            },
+                        }
+                    }
+                }
+                Command::OpenNativeCompressedData { ticket } => {
+                    match compressed_video::take_ticket(
+                        ticket,
+                        connection.runtime_id(),
+                        request.expected_generation,
+                    ) {
+                        Ok(data) => {
+                            compressed_data = Some(data);
+                            Reply::CompressedDataOpened
+                        }
+                        Err(_) => Reply::Rejected {
+                            reason: Rejection::Invalid,
+                        },
+                    }
+                }
                 Command::Snapshot => Reply::Snapshot,
                 Command::PrivilegedInput { action } => Reply::PrivilegedInput {
                     generation: request.expected_generation,
@@ -886,6 +928,13 @@ async fn serve_requests(
             let _ = delivered.send(());
         }
         sent?;
+        if let Some((context, ticket, active)) = compressed_control {
+            return compressed_video::serve_control(connection, core, context, ticket, active)
+                .await;
+        }
+        if let Some((context, active)) = compressed_data {
+            return compressed_video::serve_data(connection, core, context, active).await;
+        }
         if let Some(binding) = video_stream {
             return video::serve_video_stream(connection, core, binding).await;
         }

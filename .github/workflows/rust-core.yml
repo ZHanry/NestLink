@@ -138,6 +138,64 @@ jobs:
           path: ${{ runner.temp }}/nestlink-mf-target-probe/
           if-no-files-found: error
           retention-days: 14
+      - name: Build the synthetic GPU probes on GitHub
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python scripts/refactor-windows-normal-user.py cargo build --locked -p nestlink-platform-capture --example windows-gpu-h264-probe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo build --locked -p nestlink-media-codec --example windows-gpu-presenter-probe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Observe GPU output or explicit hardware skips with the ordinary token
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $gpuLog = Join-Path $env:RUNNER_TEMP 'nestlink-gpu-target-output.log'
+          python scripts/refactor-windows-normal-user.py python scripts/refactor-windows-gpu-probes.py 2>&1 | Tee-Object -FilePath $gpuLog
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Bind GPU probes to the exact source, run, and file hashes
+        if: runner.os == 'Windows'
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, shutil
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'nestlink-gpu-target-probes'
+          output.mkdir()
+          probes = []
+          for name in ['windows-gpu-h264-probe', 'windows-gpu-presenter-probe']:
+              source = pathlib.Path('target/debug/examples') / (name + '.exe')
+              copied = output / source.name
+              shutil.copyfile(source, copied)
+              probes.append({
+                  'filename': copied.name,
+                  'bytes': copied.stat().st_size,
+                  'sha256': hashlib.sha256(copied.read_bytes()).hexdigest(),
+                  'physical_capture': False,
+                  'shows_own_test_window': name == 'windows-gpu-presenter-probe',
+              })
+          manifest = {
+              'source_revision': os.environ['GITHUB_SHA'],
+              'repository': os.environ['GITHUB_REPOSITORY'],
+              'run_id': os.environ['GITHUB_RUN_ID'],
+              'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'purpose': 'owned-synthetic-gpu-target-probes-only',
+              'build_profile': 'debug',
+              'performance_qualified': False,
+              'scanout_verified': False,
+              'probes': probes,
+          }
+          (output / 'probes-build.json').write_text(json.dumps(manifest, indent=2) + '\n')
+      - name: Retain exact-source GPU probes and observations
+        if: always() && runner.os == 'Windows'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: nestlink-gpu-target-probes
+          path: |
+            ${{ runner.temp }}/nestlink-gpu-target-probes/
+            ${{ runner.temp }}/nestlink-gpu-target-output.log
+          if-no-files-found: warn
+          retention-days: 14
       - if: runner.os == 'Linux'
         run: cargo test --workspace --locked --no-fail-fast
       - name: Test Windows with the ordinary business-process token

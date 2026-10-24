@@ -3451,10 +3451,12 @@ dependencies = [
  "clap",
  "eframe",
  "egui_extras",
+ "egui_glow",
  "nestlink-app-core",
  "nestlink-app-ipc",
  "nestlink-auth",
  "nestlink-local-ipc",
+ "nestlink-media-codec",
  "nestlink-platform-files",
  "nestlink-platform-security",
  "nestlink-platform-tray",
@@ -3610,6 +3612,7 @@ dependencies = [
  "libc",
  "nestlink-auth",
  "nestlink-identity",
+ "nestlink-media-codec",
  "nestlink-platform-input",
  "nestlink-platform-session",
  "nestlink-policy",
@@ -3622,6 +3625,7 @@ dependencies = [
  "tempfile",
  "tokio",
  "windows-sys 0.61.2",
+ "zeroize",
  "zbus",
 ]
 

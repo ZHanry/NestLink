@@ -31,9 +31,29 @@ unsafe extern "C" {
         written: *mut usize,
         output_pts: *mut u64,
     ) -> i32;
+    fn nl_mf_open_gpu(
+        device: *mut c_void,
+        width: u32,
+        height: u32,
+        fps: u32,
+        kbps: u32,
+        level: u32,
+        result: *mut *mut c_void,
+    ) -> i32;
+    fn nl_mf_process_gpu(
+        handle: *mut c_void,
+        texture: *mut c_void,
+        pts: u64,
+        keyframe: u32,
+        submit: u32,
+        output: *mut u8,
+        capacity: usize,
+        written: *mut usize,
+        output_pts: *mut u64,
+    ) -> i32;
     fn nl_mf_bitrate(handle: *mut c_void, kbps: u32) -> i32;
     fn nl_mf_flush_decoder(handle: *mut c_void) -> i32;
-    fn nl_mf_close(handle: *mut c_void);
+    fn nl_mf_close_checked(handle: *mut c_void) -> i32;
     fn nl_mf_hardware_used(handle: *mut c_void) -> u32;
 }
 
@@ -112,6 +132,7 @@ struct Transform {
     raw_bytes: usize,
     timestamps: TimestampLedger,
     failed: bool,
+    closed: bool,
     // COM initialization/shutdown and transform calls stay on one worker.
     _thread: PhantomData<Rc<()>>,
 }
@@ -141,8 +162,80 @@ impl Transform {
             raw_bytes,
             timestamps: TimestampLedger::default(),
             failed: false,
+            closed: false,
             _thread: PhantomData,
         })
+    }
+    unsafe fn new_gpu(config: VideoConfig, device: *mut c_void, level: u8) -> io::Result<Self> {
+        let raw_bytes = geometry(config)?;
+        let mut handle = std::ptr::null_mut();
+        // SAFETY: caller supplies a live owner-thread D3D11 device; bridge retains it.
+        let code = unsafe {
+            nl_mf_open_gpu(
+                device,
+                config.width,
+                config.height,
+                config.fps,
+                config.bitrate_kbps,
+                u32::from(level),
+                &mut handle,
+            )
+        };
+        if code < 0 {
+            return Err(failed("GPU creation", code));
+        }
+        Ok(Self {
+            handle: NonNull::new(handle).ok_or_else(|| failed("GPU creation", code))?,
+            raw_bytes,
+            timestamps: TimestampLedger::default(),
+            failed: false,
+            closed: false,
+            _thread: PhantomData,
+        })
+    }
+    unsafe fn process_gpu(
+        &mut self,
+        texture: *mut c_void,
+        pts: u64,
+        keyframe: bool,
+        output: &mut [u8],
+    ) -> io::Result<(bool, Option<(usize, u64)>)> {
+        if self.failed
+            || texture.is_null()
+            || self.timestamps.last_input.is_some_and(|last| pts <= last)
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "stale GPU input",
+            ));
+        }
+        let mut written = 0;
+        let mut output_pts = 0;
+        // SAFETY: caller's NV12 texture is live on this device and owner thread.
+        let code = unsafe {
+            nl_mf_process_gpu(
+                self.handle.as_ptr(),
+                texture,
+                pts,
+                keyframe.into(),
+                (self.timestamps.pending.len() < 16).into(),
+                output.as_mut_ptr(),
+                output.len(),
+                &mut written,
+                &mut output_pts,
+            )
+        };
+        if code < 0 {
+            self.failed = true;
+            return Err(failed("GPU processing", code));
+        }
+        let result = self
+            .timestamps
+            .record(code, pts, written, output.len(), output_pts);
+        if result.is_err() {
+            self.failed = true;
+        }
+        result
     }
     fn process(
         &mut self,
@@ -208,12 +301,25 @@ impl Transform {
         progress
     }
 }
+impl Transform {
+    fn close(&mut self) -> io::Result<()> {
+        if self.closed {
+            return Ok(());
+        }
+        self.closed = true;
+        // SAFETY: single owner on its creating thread. Timeout quarantines native
+        // state; its input textures must not be reused or released elsewhere.
+        let code = unsafe { nl_mf_close_checked(self.handle.as_ptr()) };
+        if code < 0 {
+            return Err(failed("cleanup (native state quarantined)", code));
+        }
+        Ok(())
+    }
+}
 impl Drop for Transform {
     fn drop(&mut self) {
-        // SAFETY: single thread-confined owner; destruction balances COM/MF
-        // initialization only after all transform/device resources are freed.
-        unsafe {
-            nl_mf_close(self.handle.as_ptr());
+        if let Err(error) = self.close() {
+            eprintln!("{error}");
         }
     }
 }
@@ -258,6 +364,55 @@ impl MfH264Encoder {
             config,
         })
     }
+    /// Creates a hardware surface encoder on exactly the supplied device.
+    /// # Safety
+    /// `device` must be a live ID3D11Device pointer created on this thread. All
+    /// subsequent calls and destruction must remain on this thread.
+    pub unsafe fn with_gpu_device(
+        config: VideoConfig,
+        limits: H264EncodingLimits,
+        device: *mut c_void,
+    ) -> io::Result<Self> {
+        limits.validate_config(config)?;
+        // SAFETY: delegated caller contract; the bridge takes its own reference.
+        let inner = unsafe { Transform::new_gpu(config, device, limits.max_level_idc)? };
+        Ok(Self {
+            inner,
+            scratch: vec![0; PACKET_BYTES],
+            validator: H264Validator::with_limits(config.width, config.height, limits)?,
+            parameters: Vec::new(),
+            recovery_requested: Some(0),
+            limits: Some(limits),
+            config,
+        })
+    }
+    /// # Safety
+    /// `texture` is a live ID3D11Texture2D NV12 surface with the configured size
+    /// on the exact device supplied at creation. It is borrowed only for this
+    /// call; the bridge copies into a bounded tracked-sample pool before return.
+    pub unsafe fn encode_texture(
+        &mut self,
+        texture: *mut c_void,
+        pts: u64,
+        force_keyframe: bool,
+    ) -> io::Result<VideoEncodeStep> {
+        if force_keyframe && self.recovery_requested.is_none() {
+            self.recovery_requested = Some(pts);
+        }
+        // SAFETY: delegated caller contract; context/sample ownership stays native.
+        let (accepted, output) = unsafe {
+            self.inner.process_gpu(
+                texture,
+                pts,
+                self.recovery_requested.is_some(),
+                &mut self.scratch,
+            )?
+        };
+        self.finish_step(accepted, output)
+    }
+    pub fn close(mut self) -> io::Result<()> {
+        self.inner.close()
+    }
     pub fn hardware(&self) -> bool {
         // SAFETY: thread-confined live transform; reads an observed output fact.
         unsafe { nl_mf_hardware_used(self.inner.handle.as_ptr()) != 0 }
@@ -297,6 +452,13 @@ impl MfH264Encoder {
             self.recovery_requested.is_some(),
             &mut self.scratch,
         )?;
+        self.finish_step(accepted, output)
+    }
+    fn finish_step(
+        &mut self,
+        accepted: bool,
+        output: Option<(usize, u64)>,
+    ) -> io::Result<VideoEncodeStep> {
         let Some((length, pts_90khz)) = output else {
             return Ok(VideoEncodeStep {
                 accepted,
@@ -352,6 +514,11 @@ impl MfH264Encoder {
                 data,
             }),
         })
+    }
+    /// Collect delayed output without inventing or resubmitting input.
+    pub fn drain_encoded(&mut self) -> io::Result<VideoEncodeStep> {
+        let output = self.inner.receive(&mut self.scratch)?;
+        self.finish_step(false, output)
     }
     pub fn set_bitrate(&mut self, kbps: u32) -> io::Result<()> {
         if self.inner.failed || !(64..=100_000).contains(&kbps) {
@@ -663,5 +830,17 @@ mod tests {
         );
         assert!(encoder.encode(&pixels, 1, false).is_err());
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod gpu_input_tests {
+    unsafe extern "C" {
+        fn nl_mf_gpu_pool_contract() -> u32;
+    }
+    #[test]
+    fn tracked_input_pool_reuses_only_released_slots_and_callback_outlives_owner() {
+        // SAFETY: deterministic native pool/callback test, no OS GPU allocation.
+        assert_eq!(unsafe { nl_mf_gpu_pool_contract() }, 1);
     }
 }

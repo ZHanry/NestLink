@@ -16,6 +16,9 @@
 #include <memory>
 #include <new>
 #include <array>
+#include <atomic>
+#include <d3d10.h>
+#include <dxgi1_2.h>
 using Microsoft::WRL::ComPtr;
 namespace {
 constexpr size_t raw_limit = 64 * 1024 * 1024;
@@ -30,6 +33,29 @@ struct BufferedOutput {
     }
     ~BufferedOutput() { reset(); }
 };
+// Callback owns only release flags; no GPU/context operation occurs on MF threads.
+struct GpuRelease { std::array<std::atomic<bool>, 4> busy{}; };
+class SampleReleased final : public IMFAsyncCallback {
+    std::atomic<ULONG> refs{1};
+    std::shared_ptr<GpuRelease> release;
+    size_t slot;
+public:
+    SampleReleased(std::shared_ptr<GpuRelease> state, size_t index) noexcept : release(state), slot(index) {}
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, void** out) override {
+        if (!out) return E_POINTER;
+        *out = nullptr;
+        if (iid == __uuidof(IUnknown) || iid == __uuidof(IMFAsyncCallback)) {
+            *out = static_cast<IMFAsyncCallback*>(this); AddRef(); return S_OK;
+        }
+        return E_NOINTERFACE;
+    }
+    ULONG STDMETHODCALLTYPE AddRef() override { return ++refs; }
+    ULONG STDMETHODCALLTYPE Release() override { auto n = --refs; if (!n) delete this; return n; }
+    HRESULT STDMETHODCALLTYPE GetParameters(DWORD*, DWORD*) override { return E_NOTIMPL; }
+    HRESULT STDMETHODCALLTYPE Invoke(IMFAsyncResult*) override {
+        release->busy[slot].store(false, std::memory_order_release); return S_OK;
+    }
+};
 struct Codec {
     ComPtr<IMFTransform> transform;
     ComPtr<IMFMediaEventGenerator> events;
@@ -37,6 +63,10 @@ struct Codec {
     ComPtr<ID3D11DeviceContext> context;
     ComPtr<IMFDXGIDeviceManager> manager;
     uint32_t width = 0, height = 0, fps = 0, level = 0;
+    bool gpu_input = false;
+    std::array<ComPtr<ID3D11Texture2D>, 4> gpu_slots;
+    std::shared_ptr<GpuRelease> gpu_release;
+
     std::array<BufferedOutput, 2> ready;
     size_t ready_head = 0, ready_size = 0, ready_bytes = 0;
     uint32_t output_height = 0, output_pitch = 0;
@@ -49,7 +79,9 @@ struct Codec {
             transform->ProcessMessage(MFT_MESSAGE_NOTIFY_END_STREAMING, 0);
         }
         for (auto& entry : ready) entry.reset();
-        events.Reset(); transform.Reset(); manager.Reset(); context.Reset(); device.Reset();
+        events.Reset(); transform.Reset();
+        for (auto& texture : gpu_slots) texture.Reset();
+        gpu_release.reset(); manager.Reset(); context.Reset(); device.Reset();
         if (mf) MFShutdown();
         if (com) CoUninitialize();
     }
@@ -101,7 +133,8 @@ HRESULT configure(Codec& state, IMFTransform* transform, uint32_t kbps) {
         UINT32 d3d = FALSE;
         if (state.hardware && SUCCEEDED(attributes->GetUINT32(MF_SA_D3D11_AWARE, &d3d)) && d3d) {
             D3D_FEATURE_LEVEL level{};
-            HRESULT hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr,
+            HRESULT hr = S_OK;
+            if (!state.device) hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr,
                 D3D11_CREATE_DEVICE_BGRA_SUPPORT | D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
                 nullptr, 0, D3D11_SDK_VERSION, &state.device, &level, &state.context);
             if (SUCCEEDED(hr)) {
@@ -113,8 +146,9 @@ HRESULT configure(Codec& state, IMFTransform* transform, uint32_t kbps) {
             }
             if (FAILED(hr) && state.hardware) return hr;
         }
-        if (state.hardware && !state.encoder && !state.manager) return MF_E_UNSUPPORTED_D3D_TYPE;
+        if (state.hardware && (!state.encoder || state.gpu_input) && !state.manager) return MF_E_UNSUPPORTED_D3D_TYPE;
     }
+    if (state.gpu_input && !state.manager) return MF_E_UNSUPPORTED_D3D_TYPE;
     // Optional properties vary by vendor. Successful stream creation and a real
     // probe decide availability; an adapter's marketing name never does.
     set_codec_value(transform, CODECAPI_AVLowLatencyMode, 1, true);
@@ -336,10 +370,12 @@ HRESULT output(Codec& state, uint8_t* destination, size_t capacity, size_t* leng
 }
 } // namespace
 
-extern "C" int32_t nl_mf_open(uint32_t encoder, uint32_t hardware_only, uint32_t width,
-    uint32_t height, uint32_t fps, uint32_t kbps, uint32_t level, void** result) noexcept {
+extern thread_local bool gpu_teardown_failed;
+static int32_t open_codec(ID3D11Device* supplied_device, uint32_t encoder, uint32_t hardware_only, uint32_t width,
+    uint32_t height, uint32_t fps, uint32_t kbps, uint32_t level, void** result) {
     if (!result) return E_POINTER;
     *result = nullptr;
+    if (supplied_device && gpu_teardown_failed) return MF_E_SHUTDOWN;
     if (!width || !height || (width|height)&1 || width > 8192 || height > 8192 ||
         static_cast<uint64_t>(width)*height*4 > raw_limit || !fps || fps > 120 || kbps > 100000)
         return E_INVALIDARG;
@@ -353,12 +389,51 @@ extern "C" int32_t nl_mf_open(uint32_t encoder, uint32_t hardware_only, uint32_t
     state->mf = true; state->encoder = encoder != 0; state->hardware = hardware_only != 0;
     state->width = width; state->height = height; state->fps = fps; state->level = level;
     state->output_height = height; state->output_pitch = width;
+    if (supplied_device) {
+        state->gpu_input = true; state->device = supplied_device;
+        supplied_device->GetImmediateContext(&state->context);
+        ComPtr<ID3D10Multithread> protection;
+        hr = state->context.As(&protection);
+        if (FAILED(hr)) return hr;
+        protection->SetMultithreadProtected(TRUE);
+        // Four immutable-in-flight input surfaces, including all retained MFT samples.
+        if (static_cast<uint64_t>(width)*height*3/2*4 > 128*1024*1024) return E_OUTOFMEMORY;
+        state->gpu_release = std::shared_ptr<GpuRelease>(new (std::nothrow) GpuRelease());
+        if (!state->gpu_release) return E_OUTOFMEMORY;
+        D3D11_TEXTURE2D_DESC desc{};
+        desc.Width = width; desc.Height = height; desc.MipLevels = 1; desc.ArraySize = 1;
+        desc.Format = DXGI_FORMAT_NV12; desc.SampleDesc.Count = 1;
+        desc.Usage = D3D11_USAGE_DEFAULT; desc.BindFlags = D3D11_BIND_RENDER_TARGET;
+        for (auto& texture : state->gpu_slots) {
+            hr = supplied_device->CreateTexture2D(&desc, nullptr, &texture);
+            if (FAILED(hr)) return hr;
+        }
+    }
     MFT_REGISTER_TYPE_INFO raw{MFMediaType_Video, MFVideoFormat_NV12};
     MFT_REGISTER_TYPE_INFO compressed{MFMediaType_Video, MFVideoFormat_H264};
     IMFActivate** choices = nullptr; UINT32 count = 0;
+    // Prefer adapter-targeted enumeration when supported by this Windows runtime.
+    using Enum2 = HRESULT (WINAPI*)(GUID, UINT32, const MFT_REGISTER_TYPE_INFO*, const MFT_REGISTER_TYPE_INFO*, IMFAttributes*, IMFActivate***, UINT32*);
+    const auto enum2_address = GetProcAddress(GetModuleHandleW(L"mfplat.dll"),"MFTEnum2");
+    Enum2 enum2 = nullptr;
+    static_assert(sizeof(enum2) == sizeof(enum2_address), "Windows function pointer size");
+    std::memcpy(&enum2, &enum2_address, sizeof(enum2));
+    if (supplied_device && enum2) {
+        ComPtr<IDXGIDevice> dxgi; ComPtr<IDXGIAdapter> adapter; DXGI_ADAPTER_DESC desc{};
+        hr = supplied_device->QueryInterface(IID_PPV_ARGS(&dxgi));
+        if (SUCCEEDED(hr)) hr = dxgi->GetAdapter(&adapter);
+        if (SUCCEEDED(hr)) hr = adapter->GetDesc(&desc);
+        ComPtr<IMFAttributes> attributes;
+        if (SUCCEEDED(hr)) hr = MFCreateAttributes(&attributes,1);
+        const UINT64 luid = static_cast<UINT64>(static_cast<UINT32>(desc.AdapterLuid.HighPart)) << 32 | desc.AdapterLuid.LowPart;
+        if (SUCCEEDED(hr)) hr = attributes->SetUINT64(MFT_ENUM_ADAPTER_LUID,luid);
+        if (SUCCEEDED(hr)) hr = enum2(MFT_CATEGORY_VIDEO_ENCODER,MFT_ENUM_FLAG_SORTANDFILTER|MFT_ENUM_FLAG_HARDWARE,
+            &raw,&compressed,attributes.Get(),&choices,&count);
+    } else {
     hr = MFTEnumEx(state->encoder ? MFT_CATEGORY_VIDEO_ENCODER : MFT_CATEGORY_VIDEO_DECODER,
         MFT_ENUM_FLAG_SORTANDFILTER | (hardware_only ? MFT_ENUM_FLAG_HARDWARE : MFT_ENUM_FLAG_SYNCMFT),
         state->encoder ? &raw : &compressed, state->encoder ? &compressed : &raw, &choices, &count);
+    }
     if (FAILED(hr)) return hr;
     // The system H.264 decoder is a synchronous MFT which becomes DXVA/D3D11
     // accelerated when given a device manager. It is not listed as a hardware
@@ -375,13 +450,24 @@ extern "C" int32_t nl_mf_open(uint32_t encoder, uint32_t hardware_only, uint32_t
             ComPtr<IMFTransform> transform;
             last = choices[index]->ActivateObject(IID_PPV_ARGS(&transform));
             if (SUCCEEDED(last)) last = configure(*state, transform.Get(), kbps);
-            if (FAILED(last)) { state->events.Reset(); state->transform.Reset(); state->manager.Reset(); state->context.Reset(); state->device.Reset(); state->input_events = 0; state->output_events = 0; }
+            if (FAILED(last)) { state->events.Reset(); state->transform.Reset(); state->manager.Reset(); if (!state->gpu_input) { state->context.Reset(); state->device.Reset(); } state->input_events = 0; state->output_events = 0; }
         }
         choices[index]->Release();
     }
     CoTaskMemFree(choices);
     if (!state->transform) return last;
     *result = state.release(); return S_OK;
+}
+extern "C" int32_t nl_mf_open(uint32_t encoder, uint32_t hardware_only, uint32_t width,
+    uint32_t height, uint32_t fps, uint32_t kbps, uint32_t level, void** result) noexcept {
+    try { return open_codec(nullptr, encoder, hardware_only, width, height, fps, kbps, level, result); }
+    catch (...) { return E_OUTOFMEMORY; }
+}
+extern "C" int32_t nl_mf_open_gpu(void* device, uint32_t width, uint32_t height,
+    uint32_t fps, uint32_t kbps, uint32_t level, void** result) noexcept {
+    if (!device) return E_INVALIDARG;
+    try { return open_codec(static_cast<ID3D11Device*>(device), 1, 1, width, height, fps, kbps, level, result); }
+    catch (...) { return E_OUTOFMEMORY; }
 }
 namespace {
 // The bridge owns at most two outputs, with a combined 64 MiB budget. Drain
@@ -421,16 +507,18 @@ HRESULT pump_input(Ready ready, Input input, Drain drain, Room room, Pause pause
 }
 int32_t process(Codec& state, const uint8_t* input, size_t input_length,
     uint64_t pts, uint32_t force_keyframe, uint32_t submit,
-    uint8_t* destination, size_t capacity, size_t* length, uint64_t* output_pts) {
+    uint8_t* destination, size_t capacity, size_t* length, uint64_t* output_pts, ID3D11Texture2D* gpu = nullptr) {
     // No input is retained across calls. A sample is retried only after
     // NOTACCEPTING, and is never submitted again once ProcessInput succeeds.
     const size_t plane = static_cast<size_t>(state.width)*state.height;
-    if (state.encoder ? (input_length != plane*4 || capacity > packet_limit) :
-        (input_length == 0 || input_length > packet_limit || capacity != plane*4)) return E_INVALIDARG;
+    if (submit && (state.encoder ? ((!gpu && input_length != plane*4) || capacity > packet_limit) :
+        (input_length == 0 || input_length > packet_limit || capacity != plane*4))) return E_INVALIDARG;
     HRESULT hr = collect_output(state, capacity, 0);
     if (FAILED(hr)) return hr;
     bool accepted = false;
-    if (submit && state.ready_size < 2 && capacity <= raw_limit - state.ready_bytes) {
+    bool gpu_room = !gpu;
+    if (gpu) for (const auto& busy : state.gpu_release->busy) if (!busy.load(std::memory_order_acquire)) gpu_room = true;
+    if (submit && gpu_room && state.ready_size < 2 && capacity <= raw_limit - state.ready_bytes) {
         if (state.encoder && force_keyframe) {
             hr = set_codec_value(state.transform.Get(), CODECAPI_AVEncVideoForceKeyFrame, 1);
             if (FAILED(hr)) hr = set_codec_value(state.transform.Get(), CODECAPI_AVEncVideoForceKeyFrame, 1, true);
@@ -438,18 +526,53 @@ int32_t process(Codec& state, const uint8_t* input, size_t input_length,
         }
         ComPtr<IMFSample> sample;
         ComPtr<IMFMediaBuffer> buffer;
-        hr = MFCreateSample(&sample);
-        if (FAILED(hr)) return hr;
         const size_t size = state.encoder ? plane*3/2 : input_length;
-        hr = MFCreateMemoryBuffer(static_cast<DWORD>(size), &buffer);
-        if (FAILED(hr)) return hr;
-        BYTE* bytes = nullptr;
-        hr = buffer->Lock(&bytes, nullptr, nullptr);
-        if (FAILED(hr)) return hr;
-        if (state.encoder) to_nv12(input, bytes, state.width, state.height);
-        else std::memcpy(bytes, input, size);
-        buffer->Unlock();
-        hr = buffer->SetCurrentLength(static_cast<DWORD>(size));
+        if (gpu) {
+            D3D11_TEXTURE2D_DESC desc{}; gpu->GetDesc(&desc);
+            ComPtr<ID3D11Device> input_device; gpu->GetDevice(&input_device);
+            if (!state.gpu_input || input_device.Get() != state.device.Get() ||
+                desc.Width != state.width || desc.Height != state.height || desc.Format != DXGI_FORMAT_NV12)
+                return MF_E_UNSUPPORTED_D3D_TYPE;
+            size_t slot = state.gpu_slots.size();
+            for (size_t i = 0; i < state.gpu_slots.size(); ++i) {
+                bool available = false;
+                if (state.gpu_release->busy[i].compare_exchange_strong(available, true, std::memory_order_acq_rel)) { slot = i; break; }
+            }
+            if (slot == state.gpu_slots.size()) return E_UNEXPECTED;
+            ComPtr<IMFTrackedSample> tracked;
+            hr = MFCreateTrackedSample(&tracked);
+            if (SUCCEEDED(hr)) hr = tracked.As(&sample);
+            ComPtr<IMFAsyncCallback> callback;
+            callback.Attach(new (std::nothrow) SampleReleased(state.gpu_release, slot));
+            if (!callback) hr = E_OUTOFMEMORY;
+            if (SUCCEEDED(hr)) hr = tracked->SetAllocator(callback.Get(), nullptr);
+            if (FAILED(hr)) { state.gpu_release->busy[slot].store(false); return hr; }
+            state.context->CopyResource(state.gpu_slots[slot].Get(), gpu);
+            // MF may consume through another context. Complete our copy before handoff.
+            D3D11_QUERY_DESC query_desc{D3D11_QUERY_EVENT, 0};
+            ComPtr<ID3D11Query> query;
+            hr = state.device->CreateQuery(&query_desc, &query);
+            if (FAILED(hr)) return hr;
+            state.context->End(query.Get()); state.context->Flush();
+            const ULONGLONG deadline = GetTickCount64() + 16;
+            do { hr = state.context->GetData(query.Get(), nullptr, 0, 0); if (hr == S_FALSE) Sleep(0); }
+            while (hr == S_FALSE && GetTickCount64() < deadline);
+            if (hr != S_OK) return FAILED(hr) ? hr : HRESULT_FROM_WIN32(WAIT_TIMEOUT);
+            hr = MFCreateDXGISurfaceBuffer(__uuidof(ID3D11Texture2D), state.gpu_slots[slot].Get(), 0, FALSE, &buffer);
+            if (SUCCEEDED(hr)) hr = buffer->SetCurrentLength(static_cast<DWORD>(size));
+        } else {
+            if (state.gpu_input) return E_INVALIDARG;
+            hr = MFCreateSample(&sample);
+            if (SUCCEEDED(hr)) hr = MFCreateMemoryBuffer(static_cast<DWORD>(size), &buffer);
+            if (FAILED(hr)) return hr;
+            BYTE* bytes = nullptr;
+            hr = buffer->Lock(&bytes, nullptr, nullptr);
+            if (FAILED(hr)) return hr;
+            if (state.encoder) to_nv12(input, bytes, state.width, state.height);
+            else std::memcpy(bytes, input, size);
+            buffer->Unlock();
+            hr = buffer->SetCurrentLength(static_cast<DWORD>(size));
+        }
         if (SUCCEEDED(hr)) hr = sample->AddBuffer(buffer.Get());
         if (SUCCEEDED(hr)) hr = sample->SetSampleTime(static_cast<LONGLONG>(pts*1000/9));
         if (SUCCEEDED(hr)) hr = sample->SetSampleDuration(10000000/state.fps);
@@ -498,6 +621,16 @@ extern "C" int32_t nl_mf_process(void* opaque, const uint8_t* input, size_t inpu
     return process(*state, input, input_length, pts, force_keyframe, submit,
         destination, capacity, length, output_pts);
 }
+extern "C" int32_t nl_mf_process_gpu(void* opaque, void* texture, uint64_t pts,
+    uint32_t force_keyframe, uint32_t submit, uint8_t* destination, size_t capacity,
+    size_t* length, uint64_t* output_pts) noexcept {
+    auto* state = static_cast<Codec*>(opaque);
+    if (!state || !state->gpu_input || !texture || !destination || !length || !output_pts ||
+        state->thread != GetCurrentThreadId() || pts > INT64_MAX / 1000 || !capacity || capacity > packet_limit) return E_INVALIDARG;
+    *length = 0; *output_pts = 0;
+    return process(*state, nullptr, 0, pts, force_keyframe, submit, destination, capacity, length, output_pts,
+        static_cast<ID3D11Texture2D*>(texture));
+}
 extern "C" int32_t nl_mf_bitrate(void* opaque, uint32_t kbps) noexcept {
     auto* state = static_cast<Codec*>(opaque);
     if (!state || !state->encoder || state->thread != GetCurrentThreadId() || kbps < 64 || kbps > 100000) return E_INVALIDARG;
@@ -531,7 +664,35 @@ extern "C" uint32_t nl_mf_hardware_used(void* opaque) noexcept {
     auto* state = static_cast<Codec*>(opaque);
     return state && state->thread == GetCurrentThreadId() && state->hardware_used ? 1 : 0;
 }
-extern "C" void nl_mf_close(void* opaque) noexcept { delete static_cast<Codec*>(opaque); }
+// A stuck vendor sample retains its entire state instead of freeing a texture
+// that MF may still read. At most one failed GPU owner is admitted per thread.
+thread_local bool gpu_teardown_failed = false;
+extern "C" int32_t nl_mf_close_checked(void* opaque) noexcept {
+    auto* state = static_cast<Codec*>(opaque);
+    if (!state || state->thread != GetCurrentThreadId()) return E_INVALIDARG;
+    if (state->gpu_input && state->gpu_release) {
+        if (state->transform) {
+            state->transform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH,0);
+            state->transform->ProcessMessage(MFT_MESSAGE_NOTIFY_END_STREAMING,0);
+        }
+        state->events.Reset(); state->transform.Reset();
+        const ULONGLONG deadline = GetTickCount64()+50;
+        bool busy = true;
+        do {
+            busy = false;
+            for (const auto& slot : state->gpu_release->busy) if (slot.load(std::memory_order_acquire)) busy = true;
+            if (busy) Sleep(1);
+        } while (busy && GetTickCount64()<deadline);
+        if (busy) {
+            gpu_teardown_failed = true;
+            for (auto& entry : state->ready) entry.reset();
+            // Deliberate bounded quarantine, never reused or released off owner.
+            return HRESULT_FROM_WIN32(WAIT_TIMEOUT);
+        }
+    }
+    delete state; return S_OK;
+}
+extern "C" void nl_mf_close(void* opaque) noexcept { (void)nl_mf_close_checked(opaque); }
 
 // Deterministic tests of the exact pump used above, without a GPU or COM MFT.
 extern "C" uint32_t nl_mf_backpressure_contract() noexcept {
@@ -557,4 +718,30 @@ extern "C" uint32_t nl_mf_backpressure_contract() noexcept {
         [&]() { ++drains; return S_OK; }, []() { return false; }, []() {});
     if (hr == S_FALSE && !calls && drains == 1) result |= 8;
     return result;
+}
+
+
+// The actual allocator callback contains no COM/GPU owner and survives owner
+// mailbox release. Exercise slot exclusivity and completion without hardware.
+extern "C" uint32_t nl_mf_gpu_pool_contract() noexcept {
+    try {
+        auto release = std::make_shared<GpuRelease>();
+        for (auto& busy : release->busy) {
+            bool expected = false;
+            if (!busy.compare_exchange_strong(expected,true)) return 0;
+            expected = false;
+            if (busy.compare_exchange_strong(expected,true)) return 0;
+        }
+        ComPtr<IMFAsyncCallback> callback;
+        callback.Attach(new (std::nothrow) SampleReleased(release,2));
+        if (!callback) return 0;
+        if (FAILED(callback->Invoke(nullptr)) || release->busy[2].load() || !release->busy[1].load()) return 0;
+        bool expected = false;
+        if (!release->busy[2].compare_exchange_strong(expected,true)) return 0;
+        auto weak = std::weak_ptr<GpuRelease>(release);
+        release.reset();
+        if (weak.expired() || FAILED(callback->Invoke(nullptr))) return 0;
+        callback.Reset();
+        return weak.expired() ? 1 : 0;
+    } catch (...) { return 0; }
 }

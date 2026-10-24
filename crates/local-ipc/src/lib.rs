@@ -9,9 +9,11 @@ use tokio::{
     sync::{OwnedSemaphorePermit, Semaphore, watch},
 };
 use zeroize::Zeroizing;
+mod duplex;
 pub mod instance;
 pub mod maintenance;
 mod state;
+pub use duplex::{LocalDuplexOwner, LocalRead, LocalWrite};
 #[cfg(test)]
 mod tests;
 pub use state::initialize_directory;

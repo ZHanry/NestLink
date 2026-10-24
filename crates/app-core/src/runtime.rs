@@ -31,8 +31,11 @@ use service_host::{
 };
 #[path = "native_audio.rs"]
 mod native_audio;
+#[path = "native_compressed.rs"]
+mod native_compressed;
 use native_audio::NativeAudioRoute;
 pub use native_audio::{NativeAudioBinding, NativeAudioError, NativeAudioRole};
+pub use native_compressed::*;
 #[path = "native_clipboard.rs"]
 mod native_clipboard;
 use native_clipboard::NativeClipboardRoute;
