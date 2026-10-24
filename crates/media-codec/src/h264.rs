@@ -130,32 +130,50 @@ pub struct H264EncodingLimits {
     pub max_level_idc: u8,
     pub require_constrained_baseline: bool,
 }
+// Baseline subset of H.264 Annex A, shared by target and actual SPS checks.
+struct LevelLimits {
+    max_fs: u64,
+    max_mbps: u64,
+    max_kbps: u32,
+    max_dpb_mbs: u64,
+}
+fn level_limits(level: u8) -> Option<LevelLimits> {
+    let (max_fs, max_mbps, max_kbps, max_dpb_mbs) = match level {
+        10 => (99, 1485, 64, 396),
+        11 => (396, 3000, 192, 900),
+        12 => (396, 6000, 384, 2376),
+        13 => (396, 11880, 768, 2376),
+        20 => (396, 11880, 2000, 2376),
+        21 => (792, 19800, 4000, 4752),
+        22 => (1620, 20250, 4000, 8100),
+        30 => (1620, 40500, 10000, 8100),
+        31 => (3600, 108000, 14000, 18000),
+        32 => (5120, 216000, 20000, 20480),
+        40 => (8192, 245760, 20000, 32768),
+        41 => (8192, 245760, 50000, 32768),
+        42 => (8704, 522240, 50000, 34816),
+        50 => (22080, 589824, 135000, 110400),
+        51 => (36864, 983040, 240000, 184320),
+        52 => (36864, 2073600, 240000, 184320),
+        _ => return None,
+    };
+    Some(LevelLimits {
+        max_fs,
+        max_mbps,
+        max_kbps,
+        max_dpb_mbs,
+    })
+}
 impl H264EncodingLimits {
     pub fn validate_config(self, config: crate::VideoConfig) -> io::Result<()> {
-        let (max_fs, max_mbps, max_kbps): (u64, u64, u32) = match self.max_level_idc {
-            10 => (99, 1485, 64),
-            11 => (396, 3000, 192),
-            12 => (396, 6000, 384),
-            13 => (396, 11880, 768),
-            20 => (396, 11880, 2000),
-            21 => (792, 19800, 4000),
-            22 => (1620, 20250, 4000),
-            30 => (1620, 40500, 10000),
-            31 => (3600, 108000, 14000),
-            32 => (5120, 216000, 20000),
-            40 => (8192, 245760, 20000),
-            41 => (8192, 245760, 50000),
-            42 => (8704, 522240, 50000),
-            50 => (22080, 589824, 135000),
-            51 => (36864, 983040, 240000),
-            52 => (36864, 2073600, 240000),
-            _ => {
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidInput,
-                    "unsupported H.264 level",
-                ));
-            }
-        };
+        let LevelLimits {
+            max_fs,
+            max_mbps,
+            max_kbps,
+            ..
+        } = level_limits(self.max_level_idc).ok_or_else(|| {
+            io::Error::new(io::ErrorKind::InvalidInput, "unsupported H.264 level")
+        })?;
         let width_mbs = u64::from(config.width).div_ceil(16);
         let height_mbs = u64::from(config.height).div_ceil(16);
         let fs = width_mbs * height_mbs;
@@ -335,13 +353,11 @@ impl H264Validator {
     }
     fn validate_sps(&self, nal: &[u8]) -> io::Result<u32> {
         let mut bits = Bits::new(nal, 4096)?;
-        if bits.read(8)? != 66
-            || bits.read(8)? & 3 != 0
-            || !matches!(
-                bits.read(8)?,
-                10 | 11 | 12 | 13 | 20 | 21 | 22 | 30 | 31 | 32 | 40 | 41 | 42 | 50 | 51 | 52
-            )
-        {
+        let profile = bits.read(8)?;
+        let constraints = bits.read(8)?;
+        let level = bits.read(8)? as u8;
+        let limits = level_limits(level).ok_or_else(invalid)?;
+        if profile != 66 || constraints & 3 != 0 || (level == 11 && constraints & 0x10 != 0) {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
                 "unsupported profile or level",
@@ -363,7 +379,7 @@ impl H264Validator {
                 ));
             }
         }
-        bits.ue(4).map_err(|_| {
+        let refs = bits.ue(4).map_err(|_| {
             io::Error::new(
                 io::ErrorKind::InvalidData,
                 "reference surface budget exceeded",
@@ -372,6 +388,21 @@ impl H264Validator {
         bits.read(1)?; // gaps_in_frame_num_value_allowed_flag
         let coded_width = (bits.ue(511)? + 1) * 16;
         let coded_height = (bits.ue(511)? + 1) * 16;
+        let width_mbs = u64::from(coded_width / 16);
+        let height_mbs = u64::from(coded_height / 16);
+        let fs = width_mbs * height_mbs;
+        if fs > limits.max_fs
+            || width_mbs * width_mbs > limits.max_fs * 8
+            || height_mbs * height_mbs > limits.max_fs * 8
+            || fs * u64::from(refs.max(1)) > limits.max_dpb_mbs
+            || coded_width != self.width.div_ceil(16) * 16
+            || coded_height != self.height.div_ceil(16) * 16
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "H.264 coded surface or level budget exceeded",
+            ));
+        }
         if bits.read(1)? != 1 {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
@@ -409,8 +440,18 @@ mod tests {
     use super::*;
     // Build just the tested baseline SPS header, including rbsp trailing bits.
     fn sps(width_mbs: u32, height_mbs: u32, profile: u8, refs: u32) -> Vec<u8> {
+        sps_cropped(width_mbs, height_mbs, profile, refs, 31, None)
+    }
+    fn sps_cropped(
+        width_mbs: u32,
+        height_mbs: u32,
+        profile: u8,
+        refs: u32,
+        level: u8,
+        crop: Option<[u32; 4]>,
+    ) -> Vec<u8> {
         let mut bits = String::new();
-        for byte in [profile, 0xc0, 31] {
+        for byte in [profile, 0xc0, level] {
             bits.push_str(&format!("{byte:08b}"));
         }
         for value in [0, 0, 2, refs] {
@@ -419,7 +460,16 @@ mod tests {
         bits.push('0');
         ue(&mut bits, width_mbs);
         ue(&mut bits, height_mbs);
-        bits.push_str("11001");
+        bits.push_str("11"); // progressive and direct_8x8_inference_flag
+        if let Some(crop) = crop {
+            bits.push('1');
+            for offset in crop {
+                ue(&mut bits, offset);
+            }
+        } else {
+            bits.push('0');
+        }
+        bits.push_str("01"); // no VUI; rbsp_stop_one_bit
         while !bits.len().is_multiple_of(8) {
             bits.push('0');
         }
@@ -437,6 +487,43 @@ mod tests {
         let value = format!("{:b}", value + 1);
         bits.push_str(&"0".repeat(value.len() - 1));
         bits.push_str(&value);
+    }
+    #[test]
+    fn actual_coded_geometry_level_and_dpb_are_bounded() -> io::Result<()> {
+        // Normal 16-pixel alignment: eight bottom pixels cropped from 1088.
+        let normal = sps_cropped(119, 67, 66, 4, 40, Some([0, 0, 0, 4]));
+        assert!(
+            H264Validator::new(1920, 1080)?
+                .validate_sps(&normal[4..])
+                .is_ok()
+        );
+        // Same displayed 320x240, but a hidden 640x480 decoder allocation.
+        let padded = sps_cropped(39, 29, 66, 1, 31, Some([0, 160, 0, 120]));
+        assert!(
+            H264Validator::new(320, 240)?
+                .validate_sps(&padded[4..])
+                .is_err()
+        );
+        let too_many_mbs = sps_cropped(79, 44, 66, 1, 30, None);
+        assert!(
+            H264Validator::new(1280, 720)?
+                .validate_sps(&too_many_mbs[4..])
+                .is_err()
+        );
+        // Level 1.1 allows 900 decoded MBs: 396 MBs times two refs fits,
+        // while three refs exceed it despite remaining below the four-ref cap.
+        let fits_dpb = sps_cropped(21, 17, 66, 2, 11, None);
+        let exceeds_dpb = sps_cropped(21, 17, 66, 3, 11, None);
+        let parser = H264Validator::new(352, 288)?;
+        assert!(parser.validate_sps(&fits_dpb[4..]).is_ok());
+        assert!(parser.validate_sps(&exceeds_dpb[4..]).is_err());
+        let refs_over_cap = sps_cropped(19, 14, 66, 5, 31, None);
+        assert!(
+            H264Validator::new(320, 240)?
+                .validate_sps(&refs_over_cap[4..])
+                .is_err()
+        );
+        Ok(())
     }
     #[test]
     fn geometry_profile_references_and_initial_idr_are_enforced() -> io::Result<()> {

@@ -98,6 +98,8 @@ pub enum VideoUpdate {
 pub use nestlink_app_ipc::compressed_video::{
     ClientControl as CompressedVideoFeedback, CompressedContext,
 };
+// These updates are consumed by the Windows native GPU presenter.
+#[cfg_attr(not(target_os = "windows"), allow(dead_code))]
 pub enum CompressedVideoUpdate {
     Preparing {
         context: CompressedContext,
@@ -119,6 +121,7 @@ pub enum CompressedVideoUpdate {
 struct CompressedBridgeState {
     enabled: tokio::sync::watch::Sender<bool>,
     updates: Mutex<VecDeque<CompressedVideoUpdate>>,
+    #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
     feedback: tokio::sync::mpsc::Sender<CompressedVideoFeedback>,
     deadline: AtomicU64,
 }
@@ -186,6 +189,8 @@ struct QueuedCommand {
     command: Command,
 }
 pub struct Bridge {
+    // The UI-facing compressed APIs below have a Windows-only consumer.
+    #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
     compressed: Arc<CompressedBridgeState>,
     #[cfg(test)]
     layout_commands: Option<Receiver<QueuedCommand>>,
@@ -501,6 +506,7 @@ impl Bridge {
             }
         });
     }
+    #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
     pub fn enable_compressed_video(&self, enabled: bool) {
         self.compressed.enabled.send_if_modified(|v| {
             if *v == enabled {
@@ -514,17 +520,21 @@ impl Bridge {
             self.compressed.stop();
         }
     }
+    #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
     pub fn compressed_authority_deadline(&self) -> u64 {
         self.compressed.deadline.load(Ordering::Acquire)
     }
+    #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
     pub fn compressed_authorized(&self) -> bool {
         let deadline = self.compressed_authority_deadline();
         deadline != 0
             && nestlink_app_ipc::compressed_video::qpc().is_ok_and(|(now, _)| now < deadline)
     }
+    #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
     pub fn take_compressed_update(&self) -> Option<CompressedVideoUpdate> {
         self.compressed.updates.lock().ok()?.pop_front()
     }
+    #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
     pub fn compressed_feedback(&self, feedback: CompressedVideoFeedback) -> bool {
         self.compressed.feedback.try_send(feedback).is_ok()
     }
@@ -1048,6 +1058,8 @@ fn clear_video_update(updates: &Arc<Mutex<Option<VideoUpdate>>>) {
 /// Owns one binary stream at a time. Receive futures stay pinned while the
 /// lightweight state poll runs, so a snapshot check never cancels a partial
 /// frame and then tries to reuse the poisoned connection.
+// Keep session identity, UI interest and independent feedback ownership explicit.
+#[allow(clippy::too_many_arguments)]
 async fn run_compressed_session(
     directory: &Path,
     snapshot: &Arc<Mutex<Arc<Snapshot>>>,
@@ -1156,8 +1168,8 @@ async fn run_compressed_session(
                         if not_after_qpc<=now || not_after_qpc.saturating_sub(now)>freq*150/1000{break;}
                         authority_sequence=sequence;authority_seen=true;shared.deadline.store(not_after_qpc,Ordering::Release);context.request_repaint();
                     }
-                    Some(Ok(ServerControl::Stop{..}))|Some(Err(_))|None=>{
-                        if !closing{closing=true;active=false;shared.stop();context.request_repaint();close_deadline=Some(tokio::time::Instant::now()+Duration::from_millis(250));}
+                    Some(Ok(ServerControl::Stop{..}))|Some(Err(_))|None if !closing=>{
+                        closing=true;active=false;shared.stop();context.request_repaint();close_deadline=Some(tokio::time::Instant::now()+Duration::from_millis(250));
                     }
                     _=>{}
                 }
@@ -1192,6 +1204,8 @@ async fn run_compressed_session(
     context.request_repaint();
 }
 
+// The CPU mailbox and compressed feedback retain independent ownership here.
+#[allow(clippy::too_many_arguments)]
 async fn run_video(
     directory: PathBuf,
     snapshot: Arc<Mutex<Arc<Snapshot>>>,

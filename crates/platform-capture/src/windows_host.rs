@@ -221,26 +221,27 @@ fn gpu_pipeline_with_capture(
         if step.accepted {
             pts += 3000;
         }
-        if let Some(packet) = step.output {
-            if packet.keyframe && encoder.hardware() {
-                let mut decoder = MfH264Decoder::new(c.width, c.height, false)?;
-                let decoded = decoder
-                    .decode_frame(&packet.data, packet.pts_90khz)?
-                    .or(decoder.drain_frame()?);
-                if let Some((decoded, _)) = decoded {
-                    let decoded = zeroize::Zeroizing::new(decoded);
-                    if decoded.len() != pixels.len()
-                        || decoded.chunks_exact(4).any(|p| {
-                            (i32::from(p[0]) - 32).abs() > 40
-                                || (i32::from(p[1]) - 96).abs() > 40
-                                || (i32::from(p[2]) - 192).abs() > 40
-                        })
-                    {
-                        return Err(io::Error::other("GPU synthetic decoded colors mismatch"));
-                    }
-                    verified = true;
-                    break;
+        if let Some(packet) = step.output
+            && packet.keyframe
+            && encoder.hardware()
+        {
+            let mut decoder = MfH264Decoder::new(c.width, c.height, false)?;
+            let decoded = decoder
+                .decode_frame(&packet.data, packet.pts_90khz)?
+                .or(decoder.drain_frame()?);
+            if let Some((decoded, _)) = decoded {
+                let decoded = zeroize::Zeroizing::new(decoded);
+                if decoded.len() != pixels.len()
+                    || decoded.chunks_exact(4).any(|p| {
+                        (i32::from(p[0]) - 32).abs() > 40
+                            || (i32::from(p[1]) - 96).abs() > 40
+                            || (i32::from(p[2]) - 192).abs() > 40
+                    })
+                {
+                    return Err(io::Error::other("GPU synthetic decoded colors mismatch"));
                 }
+                verified = true;
+                break;
             }
         }
     }
@@ -836,11 +837,9 @@ impl Owner {
                     i
                 };
                 let (m, d) = &self.targets[index];
-                if !self.raw.contains_key(&d.source) {
-                    self.raw.insert(
-                        d.source,
-                        NativeSource::open(Target::Monitor(m.clone()), *d)?,
-                    );
+                if let std::collections::btree_map::Entry::Vacant(entry) = self.raw.entry(d.source)
+                {
+                    entry.insert(NativeSource::open(Target::Monitor(m.clone()), *d)?);
                 }
                 Ok(Reply::Raw(
                     self.raw
