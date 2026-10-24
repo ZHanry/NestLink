@@ -225,6 +225,7 @@ pub struct H264Validator {
     pps: BTreeMap<u32, (u32, Vec<u8>)>,
     started: bool,
     limits: Option<H264EncodingLimits>,
+    sdr_color: bool,
     info: Option<H264SpsInfo>,
 }
 #[derive(Clone, Copy, Debug)]
@@ -258,8 +259,16 @@ impl H264Validator {
             pps: BTreeMap::new(),
             started: false,
             limits: None,
+            sdr_color: false,
             info: None,
         })
+    }
+    /// The native GPU presenter negotiates only SDR BT.709 limited output.
+    #[cfg(any(windows, test))]
+    pub(crate) fn new_sdr(width: u32, height: u32) -> io::Result<Self> {
+        let mut validator = Self::new(width, height)?;
+        validator.sdr_color = true;
+        Ok(validator)
     }
     pub fn with_limits(width: u32, height: u32, limits: H264EncodingLimits) -> io::Result<Self> {
         let mut validator = Self::new(width, height)?;
@@ -430,7 +439,35 @@ impl H264Validator {
                 "H.264 geometry differs from the negotiated surface",
             ));
         }
-        bits.read(1)?; // vui_parameters_present_flag must at least be present
+        let vui = bits.read(1)?; // vui_parameters_present_flag must be present
+        if self.sdr_color && vui != 0 {
+            // Reuse the bounded SPS cursor after geometry validation. Absence
+            // inherits the negotiated contract; an explicit conflict cannot be
+            // hidden by setting MF output attributes.
+            if bits.read(1)? != 0 && bits.read(8)? == 255 {
+                bits.read(16)?;
+                bits.read(16)?;
+            }
+            if bits.read(1)? != 0 {
+                bits.read(1)?;
+            } // overscan
+            if bits.read(1)? != 0 {
+                bits.read(3)?; // video_format
+                let full_range = bits.read(1)? != 0;
+                let description = bits.read(1)? != 0;
+                let color = if description {
+                    [bits.read(8)?, bits.read(8)?, bits.read(8)?]
+                } else {
+                    [1, 1, 1]
+                };
+                if full_range || color != [1, 1, 1] {
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidData,
+                        "GPU H.264 color is not SDR BT.709 limited",
+                    ));
+                }
+            }
+        }
         Ok(id)
     }
 }
@@ -631,5 +668,100 @@ mod tests {
         assert!(nals(&[0, 0, 1, 0x67].repeat(257)).is_err());
         assert!(Bits::new(&[0x67, 0, 0, 3, 5], 4096).is_err());
         assert!(Bits::new(&[0x67, 0, 0, 3], 4096).is_err());
+    }
+}
+
+#[cfg(test)]
+mod color_tests {
+    use super::H264Validator;
+    fn validate_sdr_color(bytes: &[u8]) -> std::io::Result<u32> {
+        let nal = super::nals(bytes)?;
+        H264Validator::new_sdr(640, 480)?.validate_sps(nal[0])
+    }
+
+    fn sps(color: Option<(bool, [u8; 3])>) -> Vec<u8> {
+        match color {
+            Some((full, values)) => sps_vui(true, true, Some(values), full),
+            None => sps_vui(false, false, None, false),
+        }
+    }
+    fn sps_vui(vui: bool, signal: bool, color: Option<[u8; 3]>, full: bool) -> Vec<u8> {
+        let mut bits = Vec::<bool>::new();
+        fn write(bits: &mut Vec<bool>, value: u32, count: u32) {
+            for shift in (0..count).rev() {
+                bits.push(value & (1 << shift) != 0);
+            }
+        }
+        fn ue(bits: &mut Vec<bool>, value: u32) {
+            let code = value + 1;
+            let count = 32 - code.leading_zeros();
+            for _ in 1..count {
+                bits.push(false);
+            }
+            write(bits, code, count);
+        }
+        write(&mut bits, 66, 8);
+        write(&mut bits, 0, 8);
+        write(&mut bits, 31, 8);
+        for value in [0, 0, 2, 1] {
+            ue(&mut bits, value);
+        }
+        bits.push(false);
+        ue(&mut bits, 39);
+        ue(&mut bits, 29);
+        bits.extend([true, true, false, vui]);
+        if vui {
+            bits.extend([false, false, signal]); // aspect, overscan, video signal
+            if signal {
+                write(&mut bits, 5, 3);
+                bits.extend([full, color.is_some()]);
+                if let Some(values) = color {
+                    for value in values {
+                        write(&mut bits, u32::from(value), 8);
+                    }
+                }
+            }
+            // chroma location, timing, NAL/VCL HRD, picture structure,
+            // and bitstream restriction flags are all absent.
+            bits.extend([false; 6]);
+        }
+        bits.push(true);
+        while !bits.len().is_multiple_of(8) {
+            bits.push(false);
+        }
+        let mut data = vec![0, 0, 1, 0x67];
+        let mut zeros = 0;
+        for chunk in bits.chunks_exact(8) {
+            let byte = chunk
+                .iter()
+                .fold(0u8, |value, bit| (value << 1) | u8::from(*bit));
+            if zeros >= 2 && byte <= 3 {
+                data.push(3);
+                zeros = 0;
+            }
+            data.push(byte);
+            zeros = if byte == 0 { zeros + 1 } else { 0 };
+        }
+        data
+    }
+
+    #[test]
+    fn sdr_contract_accepts_absent_or_matching_vui() {
+        assert!(validate_sdr_color(&sps(None)).is_ok());
+        assert!(validate_sdr_color(&sps(Some((false, [1, 1, 1])))).is_ok());
+        assert!(validate_sdr_color(&sps_vui(true, false, None, false)).is_ok());
+        assert!(validate_sdr_color(&sps_vui(true, true, None, false)).is_ok());
+    }
+
+    #[test]
+    fn sdr_contract_rejects_explicit_color_conflicts_and_truncation() {
+        assert!(validate_sdr_color(&sps(Some((true, [1, 1, 1])))).is_err());
+        assert!(validate_sdr_color(&sps_vui(true, true, None, true)).is_err());
+        for values in [[9, 1, 1], [1, 16, 1], [1, 1, 6], [2, 2, 2], [0, 0, 0]] {
+            assert!(validate_sdr_color(&sps(Some((false, values)))).is_err());
+        }
+        let mut truncated = sps(Some((false, [1, 1, 1])));
+        truncated.truncate(truncated.len() - 2);
+        assert!(validate_sdr_color(&truncated).is_err());
     }
 }

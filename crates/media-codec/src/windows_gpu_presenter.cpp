@@ -120,6 +120,36 @@ bool authorized(Presenter& p) {
     if (child) PostMessageW(child,WM_APP+41,0,0);
     return false;
 }
+// The transport/CPU conversion contract is SDR BT.709 limited. Negotiate it
+// explicitly: MF decoder available types may omit color attributes entirely.
+// Never overwrite a concrete conflicting declaration from the decoder.
+HRESULT sdr_type(Presenter& p, IMFMediaType* type, bool negotiate) {
+    const char* names[]={"matrix","range","primaries","transfer"};
+    const GUID* keys[]={&MF_MT_YUV_MATRIX,&MF_MT_VIDEO_NOMINAL_RANGE,
+        &MF_MT_VIDEO_PRIMARIES,&MF_MT_TRANSFER_FUNCTION};
+    const UINT32 expected[]={MFVideoTransferMatrix_BT709,MFNominalRange_16_235,
+        MFVideoPrimaries_BT709,MFVideoTransFunc_709};
+    for (size_t i=0;i<4;++i) {
+        UINT32 value=0;
+        const HRESULT found=type->GetUINT32(*keys[i],&value);
+        if (p.surface->probe_parent) {
+            std::fprintf(stderr,"gpu_native_color phase=%s attribute=%s hr=0x%08lx value=%u expected=%u\n",
+                negotiate?"negotiate":"actual",names[i],
+                static_cast<unsigned long>(found),value,expected[i]);
+            std::fflush(stderr);
+        }
+        if (FAILED(found) && found!=MF_E_ATTRIBUTENOTFOUND) return found;
+        // Only a missing attribute can inherit the negotiated contract.
+        // Explicit Unknown or conflicting values remain unsupported.
+        if (SUCCEEDED(found) && value!=expected[i]) return MF_E_INVALIDMEDIATYPE;
+        if (!negotiate && (FAILED(found) || value!=expected[i])) return MF_E_INVALIDMEDIATYPE;
+        if (negotiate) {
+            const HRESULT hr=type->SetUINT32(*keys[i],expected[i]);
+            if (FAILED(hr)) return hr;
+        }
+    }
+    return S_OK;
+}
 HRESULT output_type(Presenter& p) {
     for (DWORD i=0;i<64;++i) {
         ComPtr<IMFMediaType> t;
@@ -133,6 +163,7 @@ HRESULT output_type(Presenter& p) {
         if (SUCCEEDED(t->GetBlob(MF_MT_MINIMUM_DISPLAY_APERTURE,reinterpret_cast<UINT8*>(&area),static_cast<UINT32>(sizeof(area)),&actual)) &&
             (actual!=sizeof(area) || area.OffsetX.value || area.OffsetX.fract || area.OffsetY.value || area.OffsetY.fract ||
              area.Area.cx!=static_cast<LONG>(p.width) || area.Area.cy!=static_cast<LONG>(p.height))) return MF_E_INVALIDMEDIATYPE;
+        hr=sdr_type(p,t.Get(),true); if (FAILED(hr)) return hr;
         return p.decoder->SetOutputType(0,t.Get(),0);
     }
     return MF_E_INVALIDMEDIATYPE;
@@ -180,6 +211,7 @@ HRESULT configure(Presenter& p, UINT fps) {
     type->SetUINT32(MF_MT_INTERLACE_MODE,MFVideoInterlace_Progressive);
     MFSetAttributeSize(type.Get(),MF_MT_FRAME_SIZE,p.width,p.height);
     MFSetAttributeRatio(type.Get(),MF_MT_FRAME_RATE,fps,1);
+    hr=sdr_type(p,type.Get(),true); if (FAILED(hr)) return hr;
     trace(p.surface,"decoder_set_input_type_begin");
     hr=p.decoder->SetInputType(0,type.Get(),0); if (FAILED(hr)) return hr;
     trace(p.surface,"decoder_output_type_begin");
@@ -263,10 +295,9 @@ present_ready:
     if (!sample) return E_UNEXPECTED;
     ComPtr<IMFMediaType> actual_type;
     hr=p.decoder->GetOutputCurrentType(0,&actual_type); if (FAILED(hr)) return hr;
-    UINT32 matrix=0,range=0;
-    if (FAILED(actual_type->GetUINT32(MF_MT_YUV_MATRIX,&matrix)) || matrix!=MFVideoTransferMatrix_BT709 ||
-        FAILED(actual_type->GetUINT32(MF_MT_VIDEO_NOMINAL_RANGE,&range)) || range!=MFNominalRange_16_235)
-        return MF_E_INVALIDMEDIATYPE; // explicit SDR subset, otherwise CPU fallback
+    trace(p.surface,"decoded_output_color_validate_begin");
+    hr=sdr_type(p,actual_type.Get(),false); if (FAILED(hr)) return hr;
+    trace(p.surface,"decoded_output_color_validate_end");
     LONGLONG time=0; hr=sample->GetSampleTime(&time);
     if (FAILED(hr) || time<0) return E_UNEXPECTED;
     const auto actual_pts=static_cast<uint64_t>(time)/1000*9+(static_cast<uint64_t>(time)%1000*9+500)/1000;
@@ -306,9 +337,11 @@ present_ready:
     p.video_context->VideoProcessorSetOutputTargetRect(p.processor.Get(),TRUE,&rect);
     p.video_context->VideoProcessorSetStreamFrameFormat(p.processor.Get(),0,D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE);
     // Configuration is SDR BT.709 limited only; other color is rejected above.
-    D3D11_VIDEO_PROCESSOR_COLOR_SPACE color{}; color.YCbCr_Matrix=1; color.Nominal_Range=1;
+    D3D11_VIDEO_PROCESSOR_COLOR_SPACE color{}; color.YCbCr_Matrix=1;
+    color.Nominal_Range=D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_16_235;
     p.video_context->VideoProcessorSetStreamColorSpace(p.processor.Get(),0,&color);
     D3D11_VIDEO_PROCESSOR_COLOR_SPACE rgb{}; rgb.RGB_Range=0;
+    rgb.Nominal_Range=D3D11_VIDEO_PROCESSOR_NOMINAL_RANGE_0_255;
     p.video_context->VideoProcessorSetOutputColorSpace(p.processor.Get(),&rgb);
     D3D11_VIDEO_PROCESSOR_STREAM stream{}; stream.Enable=TRUE; stream.pInputSurface=input.Get();
     if (!authorized(p)) return E_ABORT;

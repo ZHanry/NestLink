@@ -170,7 +170,7 @@ pub struct GpuH264Presenter {
 }
 impl GpuH264Presenter {
     pub fn new(surface: &GpuVideoSurface, width: u32, height: u32, fps: u32) -> io::Result<Self> {
-        let validator = H264Validator::new(width, height)?;
+        let validator = H264Validator::new_sdr(width, height)?;
         let mut handle = std::ptr::null_mut();
         // SAFETY: bridge borrows surface and retains its own native reference.
         checked(unsafe { nl_gpu_open(surface.0.0.as_ptr(), width, height, fps, &mut handle) })?;

@@ -286,17 +286,39 @@ fn namespace_ui_requires_explicit_revision_zero_and_isolates_selected_node() {
     namespace_completion(&workspace, reload, &snapshot, true, false);
     workspace.frame(size, vec![]);
     workspace.click(size, "重新读取");
-    let _disconnected = namespace_submission(&workspace);
+    let disconnected = namespace_submission(&workspace);
     workspace
         .app
         .bridge
         .layout_notice(bridge::Notice::Disconnected);
     workspace.frame(size, vec![]);
-    assert_eq!(workspace.label_bounds("配置版本 10").len(), 1);
-    workspace.click(size, "重新读取");
-    let reload = namespace_submission(&workspace);
-    namespace_completion(&workspace, reload, &snapshot, true, false);
+    // The real notice handler clears private views on daemon disconnect.
+    // An old completion must not resurrect that cleared draft or selection.
+    assert!(workspace.label_bounds("配置版本 10").is_empty());
+    assert!(workspace.bounds("保存").is_empty());
+    assert!(workspace.bounds("首次配置").is_empty());
+    namespace_completion(&workspace, disconnected, &snapshot, true, false);
     workspace.frame(size, vec![]);
+    assert!(workspace.label_bounds("配置版本 10").is_empty());
+    assert!(workspace.bounds("保存").is_empty());
+    workspace
+        .app
+        .bridge
+        .layout_notice(bridge::Notice::Connected);
+    workspace.frame(size, vec![]);
+    select(&mut workspace, 1);
+    let reconnected = namespace_submission(&workspace);
+    // Even after reconnecting and selecting B again, an old operation cannot
+    // finish the new read or restore its editable revision.
+    namespace_completion(&workspace, disconnected, &snapshot, true, false);
+    workspace.frame(size, vec![]);
+    assert!(workspace.label_bounds("配置版本 10").is_empty());
+    assert!(workspace.bounds("保存").is_empty());
+    assert_eq!(workspace.label_bounds("正在读取公网入口…").len(), 1);
+    namespace_completion(&workspace, reconnected, &snapshot, true, false);
+    workspace.frame(size, vec![]);
+    assert_eq!(workspace.label_bounds("配置版本 10").len(), 1);
+    assert_eq!(workspace.text_input_bounds("b.example.com").len(), 1);
     // The default layout bridge rejects sends. A send failure must retain the
     // draft and expose reload, rather than leaving an operation busy forever.
     workspace.app.bridge = Bridge::for_layout(snapshot);
