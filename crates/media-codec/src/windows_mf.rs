@@ -127,9 +127,9 @@ impl TimestampLedger {
         Ok((accepted, Some((written, output_pts))))
     }
 }
-struct Transform {
-    handle: NonNull<c_void>,
-    raw_bytes: usize,
+pub(super) struct Transform {
+    pub(super) handle: NonNull<c_void>,
+    pub(super) raw_bytes: usize,
     timestamps: TimestampLedger,
     failed: bool,
     closed: bool,
@@ -137,6 +137,72 @@ struct Transform {
     _thread: PhantomData<Rc<()>>,
 }
 impl Transform {
+    pub(super) fn begin_hevc_drain(&mut self) -> io::Result<()> {
+        unsafe extern "C" {
+            fn nl_hevc_begin_drain(handle: *mut c_void) -> i32;
+        }
+        if self.failed || self.closed {
+            return Err(io::Error::other("failed HEVC owner cannot drain"));
+        }
+        // SAFETY: owned live owner-thread transform; native rejects repeats/non-HEVC.
+        let hr = unsafe { nl_hevc_begin_drain(self.handle.as_ptr()) };
+        if hr < 0 {
+            self.failed = true;
+            return Err(io::Error::other(format!(
+                "HEVC begin drain failed {hr:#010x}"
+            )));
+        }
+        Ok(())
+    }
+    pub(super) fn pending_frames(&self) -> usize {
+        self.timestamps.pending.len()
+    }
+    /// Prototype-only explicit HEVC open; pump/PTS/teardown are shared with H.264.
+    pub(super) unsafe fn new_hevc(
+        config: VideoConfig,
+        device: *mut c_void,
+        encoder: bool,
+        hardware: bool,
+    ) -> io::Result<Self> {
+        unsafe extern "C" {
+            fn nl_hevc_open(
+                device: *mut c_void,
+                encoder: u32,
+                hardware: u32,
+                width: u32,
+                height: u32,
+                fps: u32,
+                kbps: u32,
+                result: *mut *mut c_void,
+            ) -> i32;
+        }
+        let raw_bytes = geometry(config)?;
+        let mut handle = std::ptr::null_mut();
+        // SAFETY: caller retains an owner-thread D3D device, or null for software decode.
+        let hr = unsafe {
+            nl_hevc_open(
+                device,
+                encoder.into(),
+                hardware.into(),
+                config.width,
+                config.height,
+                config.fps,
+                config.bitrate_kbps,
+                &mut handle,
+            )
+        };
+        if hr < 0 {
+            return Err(failed("HEVC creation", hr));
+        }
+        Ok(Self {
+            handle: NonNull::new(handle).ok_or_else(|| failed("HEVC null transform", hr))?,
+            raw_bytes,
+            timestamps: TimestampLedger::default(),
+            failed: false,
+            closed: false,
+            _thread: PhantomData,
+        })
+    }
     fn new(config: VideoConfig, encoder: bool, hardware: bool, level: u8) -> io::Result<Self> {
         let raw_bytes = geometry(config)?;
         let mut handle = std::ptr::null_mut();
@@ -193,7 +259,7 @@ impl Transform {
             _thread: PhantomData,
         })
     }
-    unsafe fn process_gpu(
+    pub(super) unsafe fn process_gpu(
         &mut self,
         texture: *mut c_void,
         pts: u64,
@@ -237,7 +303,7 @@ impl Transform {
         }
         result
     }
-    fn process(
+    pub(super) fn process(
         &mut self,
         input: &[u8],
         pts: u64,
@@ -246,8 +312,9 @@ impl Transform {
     ) -> io::Result<(bool, Option<(usize, u64)>)> {
         self.exchange(input, pts, keyframe, output, true)
     }
-    fn receive(&mut self, output: &mut [u8]) -> io::Result<Option<(usize, u64)>> {
-        // Decoder-only drain: the placeholder is never submitted to the MFT.
+    pub(super) fn receive(&mut self, output: &mut [u8]) -> io::Result<Option<(usize, u64)>> {
+        // No-submit receive: decoder poll or explicit HEVC finite-stream EOS drain.
+        // The placeholder is never submitted to the MFT.
         let pts = self.timestamps.last_input.map_or(0, |pts| pts + 1);
         Ok(self.exchange(&[0], pts, false, output, false)?.1)
     }
@@ -302,7 +369,7 @@ impl Transform {
     }
 }
 impl Transform {
-    fn close(&mut self) -> io::Result<()> {
+    pub(super) fn close(&mut self) -> io::Result<()> {
         if self.closed {
             return Ok(());
         }

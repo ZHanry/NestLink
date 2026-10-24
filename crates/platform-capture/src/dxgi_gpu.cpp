@@ -31,7 +31,7 @@ struct GpuCapture {
     ComPtr<ID3D11VideoProcessor> processor;
     ComPtr<ID3D11VideoProcessorInputView> input;
     ComPtr<ID3D11VideoProcessorOutputView> output;
-    uint32_t width = 0, height = 0;
+    uint32_t width = 0, height = 0, backend = 0; // 0 unknown/synthetic, 1 DXGI, 2 WGC
     LONG left = 0, top = 0;
     LUID luid{};
     std::shared_ptr<std::atomic<bool>> closed;
@@ -233,6 +233,7 @@ extern "C" int32_t nl_capture_gpu_open(uintptr_t monitor, uint32_t width, uint32
             }
             hr = create_surfaces(s.get(),width,height,fps);
             if (FAILED(hr)) return hr;
+            s->backend = s->duplication ? 1u : 2u;
             s->width = width; s->height = height; s->left = desc.DesktopCoordinates.left; s->top = desc.DesktopCoordinates.top;
             *result = s.release(); return S_OK;
         }
@@ -243,6 +244,14 @@ extern "C" int32_t nl_capture_gpu_device(void* opaque, void** device, uint64_t* 
     auto* s = static_cast<GpuCapture*>(opaque);
     if (!s || !device || !luid || s->thread != GetCurrentThreadId()) return E_INVALIDARG;
     *device = s->device.Get();
+    *luid = static_cast<uint64_t>(static_cast<uint32_t>(s->luid.HighPart)) << 32 | s->luid.LowPart;
+    return S_OK;
+}
+// Owner-local scalar metadata only. Does not open/enumerate/capture a source.
+extern "C" int32_t nl_capture_gpu_observation(void* opaque, uint32_t* backend, uint64_t* luid) noexcept {
+    auto* s = static_cast<GpuCapture*>(opaque);
+    if (!s || !backend || !luid || s->thread != GetCurrentThreadId()) return E_INVALIDARG;
+    *backend = s->backend;
     *luid = static_cast<uint64_t>(static_cast<uint32_t>(s->luid.HighPart)) << 32 | s->luid.LowPart;
     return S_OK;
 }

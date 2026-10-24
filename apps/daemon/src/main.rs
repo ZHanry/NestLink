@@ -6,6 +6,8 @@ mod maintenance;
 mod native_audio;
 mod native_clipboard;
 mod native_files;
+#[cfg(windows)]
+mod native_gpu_diagnostics;
 mod native_video;
 mod privileged_input;
 mod session_store;
@@ -492,6 +494,10 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         write_quota,
     ));
     let mut privileged_task = privileged_input.spawn_monitor(core.handle());
+    #[cfg(windows)]
+    let mut native_gpu_diagnostics = native_gpu_diagnostics::Recorder::new(state_dir.clone());
+    #[cfg(windows)]
+    let mut native_gpu_tick = tokio::time::interval(Duration::from_secs(1));
     let mut native_capture = native_video::spawn_native_video_capture(
         core.handle(),
         _native_clipboard.clone(),
@@ -559,6 +565,12 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 core.handle().clear_native_video_stream();
                 break;
             },
+            _ = async {
+                #[cfg(windows)] { native_gpu_tick.tick().await; }
+                #[cfg(not(windows))] std::future::pending::<()>().await;
+            } => {
+                #[cfg(windows)] native_gpu_diagnostics.flush(false).await;
+            },
             accepted = server.accept() => {
                 match accepted {
                     Ok(pending) => {
@@ -608,6 +620,12 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     if let Err(error) = native_capture.join().await {
         cleanup_confirmed = false;
         service_error.get_or_insert(error);
+    }
+    #[cfg(windows)]
+    native_gpu_diagnostics.flush(true).await;
+    #[cfg(windows)]
+    if native_gpu_diagnostics.write_failed() {
+        eprintln!("native_gpu_diagnostics_write_failed=true durability=unknown");
     }
     if let Err(error) = native_audio.join().await {
         cleanup_confirmed = false;

@@ -1,4 +1,5 @@
-// First-party bounded Media Foundation H.264 bridge. Worker-thread ownership,
+// First-party bounded Media Foundation bridge; HEVC diagnostic extension draft.
+// Worker-thread ownership,
 // no shared handles or pointers cross the application IPC boundary.
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -64,7 +65,7 @@ struct Codec {
     ComPtr<ID3D11DeviceContext> context;
     ComPtr<IMFDXGIDeviceManager> manager;
     uint32_t width = 0, height = 0, fps = 0, level = 0;
-    bool gpu_input = false;
+    bool gpu_input = false, hevc = false, drain_started = false, drain_complete = false;
     uint32_t gpu_calls=0, gpu_accepted=0, gpu_pool_blocked=0, gpu_outputs=0, gpu_need_input=0, gpu_copy_pending=0;
     std::array<ComPtr<ID3D11Texture2D>, 4> gpu_slots;
     std::shared_ptr<GpuRelease> gpu_release;
@@ -103,7 +104,7 @@ HRESULT media_type(Codec& state, bool compressed, uint32_t kbps, IMFMediaType** 
     HRESULT hr = MFCreateMediaType(&type);
     if (FAILED(hr)) return hr;
     type->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
-    type->SetGUID(MF_MT_SUBTYPE, compressed ? MFVideoFormat_H264 : MFVideoFormat_NV12);
+    type->SetGUID(MF_MT_SUBTYPE, compressed ? (state.hevc ? MFVideoFormat_HEVC : MFVideoFormat_H264) : MFVideoFormat_NV12);
     type->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
     MFSetAttributeSize(type.Get(), MF_MT_FRAME_SIZE, state.width, state.height);
     MFSetAttributeRatio(type.Get(), MF_MT_FRAME_RATE, state.fps, 1);
@@ -112,12 +113,24 @@ HRESULT media_type(Codec& state, bool compressed, uint32_t kbps, IMFMediaType** 
     type->SetUINT32(MF_MT_VIDEO_PRIMARIES, MFVideoPrimaries_BT709);
     type->SetUINT32(MF_MT_TRANSFER_FUNCTION, MFVideoTransFunc_709);
     type->SetUINT32(MF_MT_VIDEO_NOMINAL_RANGE, MFNominalRange_16_235);
+    if (compressed && state.hevc) type->SetUINT32(MF_MT_MPEG2_PROFILE, 1); // Main 4:2:0 8-bit, not Main10.
     if (compressed && state.encoder) {
         type->SetUINT32(MF_MT_AVG_BITRATE, kbps * 1000);
-        type->SetUINT32(MF_MT_MPEG2_PROFILE, 66); // H.264 Baseline, no B frames.
+        type->SetUINT32(MF_MT_MPEG2_PROFILE, state.hevc ? 1u : 66u); // HEVC Main / H.264 Baseline; NV12 only.
         if (state.level) type->SetUINT32(MF_MT_MPEG2_LEVEL, state.level);
     }
     *result = type.Detach();
+    return S_OK;
+}
+HRESULT hevc_sdr(IMFMediaType* type, bool negotiate) {
+    const GUID* keys[] = {&MF_MT_YUV_MATRIX, &MF_MT_VIDEO_PRIMARIES, &MF_MT_TRANSFER_FUNCTION, &MF_MT_VIDEO_NOMINAL_RANGE};
+    const UINT32 expected[] = {MFVideoTransferMatrix_BT709, MFVideoPrimaries_BT709, MFVideoTransFunc_709, MFNominalRange_16_235};
+    for (size_t i=0;i<4;++i) {
+        UINT32 value=0; HRESULT hr=type->GetUINT32(*keys[i],&value);
+        if (hr==MF_E_ATTRIBUTENOTFOUND && negotiate) hr=type->SetUINT32(*keys[i],expected[i]);
+        else if (SUCCEEDED(hr) && value!=expected[i]) return MF_E_INVALIDMEDIATYPE;
+        if (FAILED(hr)) return hr;
+    }
     return S_OK;
 }
 HRESULT configure(Codec& state, IMFTransform* transform, uint32_t kbps) {
@@ -172,6 +185,15 @@ HRESULT configure(Codec& state, IMFTransform* transform, uint32_t kbps) {
         if (SUCCEEDED(hr)) hr = transform->SetOutputType(0, raw.Get(), 0);
     }
     if (FAILED(hr)) return hr;
+    if (state.hevc) {
+        ComPtr<IMFMediaType> actual_raw;
+        hr = state.encoder ? transform->GetInputCurrentType(0,&actual_raw) : transform->GetOutputCurrentType(0,&actual_raw);
+        GUID subtype{};
+        if (SUCCEEDED(hr)) hr=actual_raw->GetGUID(MF_MT_SUBTYPE,&subtype);
+        if (SUCCEEDED(hr) && subtype!=MFVideoFormat_NV12) hr=MF_E_INVALIDMEDIATYPE;
+        if (SUCCEEDED(hr)) hr=hevc_sdr(actual_raw.Get(),false);
+        if (FAILED(hr)) return hr;
+    }
     hr = transform->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
     if (SUCCEEDED(hr)) hr = transform->ProcessMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM, 0);
     return hr;
@@ -190,6 +212,7 @@ HRESULT poll_events(Codec& state) {
         MediaEventType type{};
         hr = event->GetType(&type);
         if (FAILED(hr)) return hr;
+        if (state.hevc && type == METransformDrainComplete) state.drain_complete = true;
         if (type == METransformNeedInput) ++state.input_events;
         if (type == METransformHaveOutput) ++state.output_events;
     }
@@ -259,6 +282,7 @@ HRESULT choose_decoder_output(Codec& state) {
         if (FAILED(type->GetUINT32(MF_MT_DEFAULT_STRIDE, &pitch))) pitch = width;
         if (pitch < width || pitch > width+512 || static_cast<uint64_t>(pitch)*height*3/2 > raw_limit)
             return MF_E_INVALIDMEDIATYPE;
+        if (state.hevc) { hr=hevc_sdr(type.Get(),true); if (FAILED(hr)) return hr; }
         hr = state.transform->SetOutputType(0, type.Get(), 0);
         if (FAILED(hr)) continue;
         state.output_height = height; state.output_pitch = pitch;
@@ -299,7 +323,11 @@ HRESULT output(Codec& state, uint8_t* destination, size_t capacity, size_t* leng
         ComPtr<IMFSample> sample;
         if (data.pSample == supplied.Get()) sample = supplied;
         else sample.Attach(data.pSample);
-        if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) { if (state.gpu_input) ++state.gpu_need_input; return S_FALSE; }
+        if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
+            if (state.gpu_input) ++state.gpu_need_input;
+            if (state.hevc && state.drain_started && !state.events) state.drain_complete = true;
+            return S_FALSE;
+        }
         if (hr == MF_E_TRANSFORM_STREAM_CHANGE && !state.encoder && attempt == 0) {
             hr = choose_decoder_output(state);
             if (FAILED(hr)) return hr;
@@ -307,6 +335,12 @@ HRESULT output(Codec& state, uint8_t* destination, size_t capacity, size_t* leng
         }
         if (FAILED(hr)) return hr;
         if (!sample) return E_UNEXPECTED;
+        if (state.hevc) {
+            ComPtr<IMFMediaType> actual;
+            hr=state.transform->GetOutputCurrentType(0,&actual);
+            if (SUCCEEDED(hr)) hr=hevc_sdr(actual.Get(),false);
+            if (FAILED(hr)) return hr;
+        }
         LONGLONG time = 0;
         if (FAILED(sample->GetSampleTime(&time)) || time < 0) return E_UNEXPECTED;
         *pts = static_cast<uint64_t>(time) / 1000 * 9 + (static_cast<uint64_t>(time) % 1000 * 9 + 500) / 1000;
@@ -374,7 +408,7 @@ HRESULT output(Codec& state, uint8_t* destination, size_t capacity, size_t* leng
 
 extern thread_local bool gpu_teardown_failed;
 static int32_t open_codec(ID3D11Device* supplied_device, uint32_t encoder, uint32_t hardware_only, uint32_t width,
-    uint32_t height, uint32_t fps, uint32_t kbps, uint32_t level, void** result) {
+    uint32_t height, uint32_t fps, uint32_t kbps, uint32_t level, void** result, bool hevc=false) {
     if (!result) return E_POINTER;
     *result = nullptr;
     if (supplied_device && gpu_teardown_failed) return MF_E_SHUTDOWN;
@@ -388,31 +422,33 @@ static int32_t open_codec(ID3D11Device* supplied_device, uint32_t encoder, uint3
     state->com = true;
     hr = MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET);
     if (FAILED(hr)) return hr;
-    state->mf = true; state->encoder = encoder != 0; state->hardware = hardware_only != 0;
+    state->mf = true; state->encoder = encoder != 0; state->hardware = hardware_only != 0; state->hevc=hevc;
     state->width = width; state->height = height; state->fps = fps; state->level = level;
     state->output_height = height; state->output_pitch = width;
     if (supplied_device) {
-        state->gpu_input = true; state->device = supplied_device;
+        state->gpu_input = state->encoder; state->device = supplied_device;
         supplied_device->GetImmediateContext(&state->context);
         ComPtr<ID3D10Multithread> protection;
         hr = state->context.As(&protection);
         if (FAILED(hr)) return hr;
         protection->SetMultithreadProtected(TRUE);
-        // Four immutable-in-flight input surfaces, including all retained MFT samples.
-        if (static_cast<uint64_t>(width)*height*3/2*4 > 128*1024*1024) return E_OUTOFMEMORY;
-        state->gpu_release = std::shared_ptr<GpuRelease>(new (std::nothrow) GpuRelease());
-        if (!state->gpu_release) return E_OUTOFMEMORY;
-        D3D11_TEXTURE2D_DESC desc{};
-        desc.Width = width; desc.Height = height; desc.MipLevels = 1; desc.ArraySize = 1;
-        desc.Format = DXGI_FORMAT_NV12; desc.SampleDesc.Count = 1;
-        desc.Usage = D3D11_USAGE_DEFAULT; desc.BindFlags = D3D11_BIND_RENDER_TARGET;
-        for (auto& texture : state->gpu_slots) {
-            hr = supplied_device->CreateTexture2D(&desc, nullptr, &texture);
-            if (FAILED(hr)) return hr;
+        if (state->encoder) {
+            // Four immutable-in-flight input surfaces, including all retained MFT samples.
+            if (static_cast<uint64_t>(width)*height*3/2*4 > 128*1024*1024) return E_OUTOFMEMORY;
+            state->gpu_release = std::shared_ptr<GpuRelease>(new (std::nothrow) GpuRelease());
+            if (!state->gpu_release) return E_OUTOFMEMORY;
+            D3D11_TEXTURE2D_DESC desc{};
+            desc.Width = width; desc.Height = height; desc.MipLevels = 1; desc.ArraySize = 1;
+            desc.Format = DXGI_FORMAT_NV12; desc.SampleDesc.Count = 1;
+            desc.Usage = D3D11_USAGE_DEFAULT; desc.BindFlags = D3D11_BIND_RENDER_TARGET;
+            for (auto& texture : state->gpu_slots) {
+                hr = supplied_device->CreateTexture2D(&desc, nullptr, &texture);
+                if (FAILED(hr)) return hr;
+            }
         }
     }
     MFT_REGISTER_TYPE_INFO raw{MFMediaType_Video, MFVideoFormat_NV12};
-    MFT_REGISTER_TYPE_INFO compressed{MFMediaType_Video, MFVideoFormat_H264};
+    MFT_REGISTER_TYPE_INFO compressed{MFMediaType_Video, hevc ? MFVideoFormat_HEVC : MFVideoFormat_H264};
     IMFActivate** choices = nullptr; UINT32 count = 0;
     // Prefer adapter-targeted enumeration when supported by this Windows runtime.
     using Enum2 = HRESULT (WINAPI*)(GUID, UINT32, const MFT_REGISTER_TYPE_INFO*, const MFT_REGISTER_TYPE_INFO*, IMFAttributes*, IMFActivate***, UINT32*);
@@ -420,7 +456,7 @@ static int32_t open_codec(ID3D11Device* supplied_device, uint32_t encoder, uint3
     Enum2 enum2 = nullptr;
     static_assert(sizeof(enum2) == sizeof(enum2_address), "Windows function pointer size");
     std::memcpy(&enum2, &enum2_address, sizeof(enum2));
-    if (supplied_device && enum2) {
+    if (supplied_device && state->encoder && enum2) {
         ComPtr<IDXGIDevice> dxgi; ComPtr<IDXGIAdapter> adapter; DXGI_ADAPTER_DESC desc{};
         hr = supplied_device->QueryInterface(IID_PPV_ARGS(&dxgi));
         if (SUCCEEDED(hr)) hr = dxgi->GetAdapter(&adapter);
@@ -510,6 +546,7 @@ HRESULT pump_input(Ready ready, Input input, Drain drain, Room room, Pause pause
 int32_t process(Codec& state, const uint8_t* input, size_t input_length,
     uint64_t pts, uint32_t force_keyframe, uint32_t submit,
     uint8_t* destination, size_t capacity, size_t* length, uint64_t* output_pts, ID3D11Texture2D* gpu = nullptr) {
+    if (state.hevc && state.drain_started && submit) return MF_E_NOTACCEPTING;
     // No input is retained across calls. A sample is retried only after
     // NOTACCEPTING, and is never submitted again once ProcessInput succeeds.
     const size_t plane = static_cast<size_t>(state.width)*state.height;
@@ -764,4 +801,76 @@ extern "C" uint32_t nl_mf_gpu_pool_contract() noexcept {
         callback.Reset();
         return weak.expired() ? 1 : 0;
     } catch (...) { return 0; }
+}
+
+// Explicit prototype entry points. No product VideoCodec/wire identity is changed.
+extern "C" int32_t nl_hevc_open(void* device, uint32_t encoder, uint32_t hardware,
+    uint32_t width,uint32_t height,uint32_t fps,uint32_t kbps,void** result) noexcept {
+    if (encoder && (!device || !hardware)) return E_INVALIDARG;
+    try { return open_codec(static_cast<ID3D11Device*>(device),encoder,hardware,width,height,fps,kbps,0,result,true); }
+    catch (...) { return E_OUTOFMEMORY; }
+}
+// Scalar receipt from the live transform, never a vendor-name inference.
+extern "C" int32_t nl_hevc_observation(void* opaque,uint64_t* luid,uint32_t* flags) noexcept {
+    auto* s=static_cast<Codec*>(opaque);
+    if (!s || !s->hevc || !luid || !flags || s->thread!=GetCurrentThreadId()) return E_INVALIDARG;
+    *flags=(s->events?1u:0u)|(s->manager?2u:0u)|(s->hardware_used?4u:0u)|(s->gpu_input?8u:0u)|
+        (s->drain_started?16u:0u)|(s->drain_complete?32u:0u);
+    *luid=0;
+    if (s->device) {
+        ComPtr<IDXGIDevice> dxgi;ComPtr<IDXGIAdapter> adapter;DXGI_ADAPTER_DESC desc{};
+        HRESULT hr=s->device.As(&dxgi);if(SUCCEEDED(hr))hr=dxgi->GetAdapter(&adapter);
+        if(SUCCEEDED(hr))hr=adapter->GetDesc(&desc);if(FAILED(hr))return hr;
+        *luid=static_cast<uint64_t>(static_cast<uint32_t>(desc.AdapterLuid.HighPart))<<32|desc.AdapterLuid.LowPart;
+    }
+    return S_OK;
+}
+namespace {
+struct HevcSyntheticSource {
+    ComPtr<ID3D11Device> device;ComPtr<ID3D11DeviceContext> context;ComPtr<ID3D11Texture2D> texture;
+    DWORD thread=GetCurrentThreadId();
+};
+}
+// Synthetic upload only: no monitor enumeration, capture API, HWND or desktop read.
+extern "C" int32_t nl_hevc_synthetic_open(uint32_t width,uint32_t height,void** result) noexcept {
+    if(!result)return E_POINTER;*result=nullptr;
+    if(!width||!height||((width|height)&1)||width>1920||height>1080)return E_INVALIDARG;
+    try {
+        std::unique_ptr<HevcSyntheticSource> s(new(std::nothrow) HevcSyntheticSource());if(!s)return E_OUTOFMEMORY;
+        HRESULT hr=D3D11CreateDevice(nullptr,D3D_DRIVER_TYPE_HARDWARE,nullptr,D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
+            nullptr,0,D3D11_SDK_VERSION,&s->device,nullptr,&s->context);if(FAILED(hr))return hr;
+        D3D11_TEXTURE2D_DESC d{};d.Width=width;d.Height=height;d.MipLevels=1;d.ArraySize=1;
+        d.Format=DXGI_FORMAT_NV12;d.SampleDesc.Count=1;d.Usage=D3D11_USAGE_DEFAULT;d.BindFlags=D3D11_BIND_RENDER_TARGET;
+        hr=s->device->CreateTexture2D(&d,nullptr,&s->texture);if(FAILED(hr))return hr;
+        const size_t plane=static_cast<size_t>(width)*height;
+        std::unique_ptr<uint8_t[]> bgra(new(std::nothrow) uint8_t[plane*4]);
+        std::unique_ptr<uint8_t[]> nv12(new(std::nothrow) uint8_t[plane*3/2]);if(!bgra||!nv12)return E_OUTOFMEMORY;
+        // Four solid quadrants expose matrix/range and channel mistakes.
+        const uint8_t colors[4][4]={{32,96,192,255},{192,96,32,255},{16,16,16,255},{224,224,224,255}};
+        for(uint32_t y=0;y<height;++y)for(uint32_t x=0;x<width;++x)
+            std::memcpy(bgra.get()+(static_cast<size_t>(y)*width+x)*4,colors[(x>=width/2?1:0)+(y>=height/2?2:0)],4);
+        to_nv12(bgra.get(),nv12.get(),width,height);
+        s->context->UpdateSubresource(s->texture.Get(),0,nullptr,nv12.get(),width,0);s->context->Flush();
+        SecureZeroMemory(bgra.get(),plane*4);SecureZeroMemory(nv12.get(),plane*3/2);
+        *result=s.release();return S_OK;
+    }catch(...){return E_OUTOFMEMORY;}
+}
+extern "C" int32_t nl_hevc_synthetic_borrow(void* opaque,void** device,void** texture) noexcept {
+    auto* s=static_cast<HevcSyntheticSource*>(opaque);
+    if(!s||!device||!texture||s->thread!=GetCurrentThreadId())return E_INVALIDARG;
+    *device=s->device.Get();*texture=s->texture.Get();return S_OK;
+}
+extern "C" void nl_hevc_synthetic_close(void* opaque) noexcept {
+    auto* s=static_cast<HevcSyntheticSource*>(opaque);if(s&&s->thread==GetCurrentThreadId())delete s;
+}
+
+// A finite diagnostic stream ends once, then receives all already-accepted output.
+// This entry point is HEVC-only; no H264 product drain/latency semantics change.
+extern "C" int32_t nl_hevc_begin_drain(void* opaque) noexcept {
+    auto* s=static_cast<Codec*>(opaque);
+    if(!s || !s->hevc || s->thread!=GetCurrentThreadId() || s->drain_started) return MF_E_INVALIDREQUEST;
+    s->drain_started=true;
+    HRESULT hr=s->transform->ProcessMessage(MFT_MESSAGE_NOTIFY_END_OF_STREAM,0);
+    if(SUCCEEDED(hr))hr=s->transform->ProcessMessage(MFT_MESSAGE_COMMAND_DRAIN,0);
+    return hr;
 }

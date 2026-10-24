@@ -30,3 +30,13 @@ pub fn gpu_qpc() -> std::io::Result<(u64, u64)> {
         "Windows QPC unavailable",
     ))
 }
+
+#[cfg(windows)]
+mod windows_hevc;
+#[cfg(windows)]
+pub use windows_hevc::{
+    HevcBackendObservation, HevcProbeDecoder, HevcProbeEncoder, HevcProbePacket,
+    HevcSyntheticSource,
+};
+#[cfg(windows)]
+mod hevc_probe;

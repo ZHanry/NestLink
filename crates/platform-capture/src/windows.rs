@@ -1104,4 +1104,7 @@ mod tests;
 
 #[path = "windows_host.rs"]
 mod host;
-pub use host::{WindowsHostCapture, probe_windows_gpu_h264};
+pub use host::{
+    HostObservation, HostObservationSink, WindowsHostCapture, probe_windows_gpu_h264,
+    reap_finished_host_workers,
+};

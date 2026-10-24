@@ -29,6 +29,7 @@ unsafe extern "C" {
         result: *mut *mut c_void,
     ) -> i32;
     fn nl_capture_gpu_device(state: *mut c_void, device: *mut *mut c_void, luid: *mut u64) -> i32;
+    fn nl_capture_gpu_observation(state: *mut c_void, backend: *mut u32, luid: *mut u64) -> i32;
     fn nl_capture_gpu_frame(state: *mut c_void, repeated: u32, texture: *mut *mut c_void) -> i32;
     fn nl_capture_gpu_probe(
         state: *mut c_void,
@@ -38,6 +39,37 @@ unsafe extern "C" {
     ) -> i32;
     fn nl_capture_gpu_discard(state: *mut c_void);
     fn nl_capture_gpu_close(state: *mut c_void);
+}
+/// Real host-owner facts. No pixel, encoded payload, identity or grant is stored.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct HostObservation {
+    pub generation: u64,
+    pub source: Option<u32>,
+    pub width: Option<u32>,
+    pub height: Option<u32>,
+    pub target_fps: Option<u32>,
+    /// 1 GPU DXGI, 2 GPU WGC, 3 CPU DXGI readback, 4 CPU GDI. None unknown.
+    pub capture_backend: Option<u32>,
+    pub adapter_luid: Option<u64>,
+    pub encoder_hardware: Option<bool>,
+    pub actual_sps: Option<[u8; 3]>,
+    pub captures: u64,
+    pub cached_captures: u64,
+    pub accepted: u64,
+    pub encoded_outputs: u64,
+    pub last_accepted_pts: Option<u64>,
+    pub last_output_pts: Option<u64>,
+    pub pipeline_failures: u64,
+    pub failed: bool,
+    pub stop_requested: bool,
+    pub cleanup_ok: Option<bool>,
+    pub worker_joined: bool,
+    pub join_panicked: Option<bool>,
+}
+pub type HostObservationSink = Arc<dyn Fn(HostObservation) + Send + Sync>;
+struct HostFinalizer {
+    observation: Arc<Mutex<HostObservation>>,
+    sink: HostObservationSink,
 }
 struct GpuCapture {
     handle: NonNull<c_void>,
@@ -348,6 +380,7 @@ fn gpu_pipeline_with_capture(
     }))
 }
 
+#[derive(Clone, Copy)]
 enum Operation {
     Configure(HostVideoConfig),
     Capture(u32, bool),
@@ -374,7 +407,26 @@ struct WorkerRegistry {
     count: usize,
     retired: Vec<(thread::JoinHandle<()>, WorkerReservation)>,
 }
-struct WorkerReservation;
+struct WorkerReservation {
+    finalizer: Option<HostFinalizer>,
+}
+impl WorkerReservation {
+    fn confirm_join(&mut self, panicked: Option<bool>) {
+        if let Some(finalizer) = self.finalizer.take() {
+            let snapshot = if let Ok(mut value) = finalizer.observation.lock() {
+                value.worker_joined = true;
+                value.join_panicked = panicked;
+                value.failed |= panicked == Some(true);
+                Some(*value)
+            } else {
+                None
+            };
+            if let Some(snapshot) = snapshot {
+                (finalizer.sink)(snapshot);
+            }
+        }
+    }
+}
 fn workers() -> &'static Mutex<WorkerRegistry> {
     static REGISTRY: std::sync::OnceLock<Mutex<WorkerRegistry>> = std::sync::OnceLock::new();
     REGISTRY.get_or_init(|| {
@@ -391,7 +443,8 @@ impl Drop for WorkerReservation {
         }
     }
 }
-fn reserve_worker() -> io::Result<WorkerReservation> {
+/// Join only already-finished quarantined owners; no driver or media wait.
+pub fn reap_finished_host_workers() -> io::Result<()> {
     let mut finished = Vec::new();
     {
         let mut state = workers()
@@ -406,10 +459,14 @@ fn reserve_worker() -> io::Result<WorkerReservation> {
             }
         }
     }
-    for (handle, reservation) in finished {
-        let _ = handle.join();
+    for (handle, mut reservation) in finished {
+        reservation.confirm_join(Some(handle.join().is_err()));
         drop(reservation);
     }
+    Ok(())
+}
+fn reserve_worker() -> io::Result<WorkerReservation> {
+    reap_finished_host_workers()?;
     let mut state = workers()
         .lock()
         .map_err(|_| io::Error::other("host worker registry poisoned"))?;
@@ -420,16 +477,24 @@ fn reserve_worker() -> io::Result<WorkerReservation> {
         ));
     }
     state.count += 1;
-    Ok(WorkerReservation)
+    Ok(WorkerReservation { finalizer: None })
 }
 /// Send facade; its worker owns every COM object, texture, capture and encoder.
 pub struct WindowsHostCapture {
     capture: WindowsCapture,
     commands: mpsc::SyncSender<Command>,
     reservation: Option<WorkerReservation>,
+    observation: Arc<Mutex<HostObservation>>,
+    observation_sink: Option<HostObservationSink>,
 }
 impl WindowsHostCapture {
     pub fn open(sources: Vec<WindowsCaptureSource>) -> io::Result<Self> {
+        Self::open_with_observer(sources, None)
+    }
+    pub fn open_with_observer(
+        sources: Vec<WindowsCaptureSource>,
+        sink: Option<HostObservationSink>,
+    ) -> io::Result<Self> {
         let original = sources
             .first()
             .ok_or_else(|| denied("no approved display"))?
@@ -455,7 +520,15 @@ impl WindowsHostCapture {
         if total > QUEUE_BYTES {
             return Err(io::Error::other("approved capture budget exceeded"));
         }
-        let reservation = reserve_worker()?;
+        let mut reservation = reserve_worker()?;
+        let observation = Arc::new(Mutex::new(HostObservation::default()));
+        if let Some(sink) = &sink {
+            reservation.finalizer = Some(HostFinalizer {
+                observation: observation.clone(),
+                sink: sink.clone(),
+            });
+        }
+        let worker_observation = observation.clone();
         let shared = Arc::new(Shared::new());
         let worker_shared = shared.clone();
         let (commands, receiver) = mpsc::sync_channel(1);
@@ -470,11 +543,16 @@ impl WindowsHostCapture {
                         targets,
                         receiver,
                         ready.clone(),
+                        &worker_observation,
                     )
                 }))
                 .unwrap_or_else(|_| Err(io::Error::other("Windows host video worker panicked")));
                 if let Err(e) = &result {
                     let _ = ready.try_send(Err(io::Error::new(e.kind(), e.to_string())));
+                }
+                if let Ok(mut value) = worker_observation.lock() {
+                    value.failed |= result.is_err();
+                    value.cleanup_ok = result.is_ok().then_some(true);
                 }
                 worker_shared.finish(result);
             })?;
@@ -487,6 +565,8 @@ impl WindowsHostCapture {
             },
             commands,
             reservation: Some(reservation),
+            observation,
+            observation_sink: sink,
         };
         match readiness.recv_timeout(STARTUP) {
             Ok(Ok(())) => Ok(this),
@@ -515,15 +595,38 @@ impl WindowsHostCapture {
             .recv_timeout(STARTUP)
             .map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "host command deadline"))??;
         self.check()?;
+        self.emit_observation();
         Ok(value)
+    }
+    fn emit_observation(&self) {
+        let value = self.observation.lock().ok().map(|value| *value);
+        if let (Some(sink), Some(value)) = (&self.observation_sink, value) {
+            sink(value);
+        }
+    }
+    fn reset_observed(&mut self) -> io::Result<()> {
+        if let Ok(mut value) = self.observation.lock() {
+            value.stop_requested = true;
+        }
+        let result = self.capture.reset();
+        if self.capture.worker.is_none()
+            && let Some(reservation) = &mut self.reservation
+        {
+            reservation.confirm_join(result.is_ok().then_some(false));
+        }
+        self.emit_observation();
+        result
     }
 }
 impl Drop for WindowsHostCapture {
     fn drop(&mut self) {
-        let _ = self.capture.reset();
+        let _ = self.reset_observed();
         if let Some(handle) = self.capture.worker.take() {
             if handle.is_finished() {
-                let _ = handle.join();
+                let panicked = handle.join().is_err();
+                if let Some(reservation) = &mut self.reservation {
+                    reservation.confirm_join(Some(panicked));
+                }
             } else if let Some(reservation) = self.reservation.take() {
                 // Registry count includes this retained owner; no more than four
                 // live/unfinished workers can be created by these facades.
@@ -593,10 +696,10 @@ impl CaptureDevice for WindowsHostCapture {
     fn reset_before(&mut self, deadline: Instant) -> io::Result<()> {
         let current = self.capture.cleanup_deadline.get_or_insert(deadline);
         *current = (*current).min(deadline);
-        self.capture.reset()
+        self.reset_observed()
     }
     fn reset(&mut self) -> io::Result<()> {
-        self.capture.reset()
+        self.reset_observed()
     }
 }
 struct Owner {
@@ -612,8 +715,88 @@ struct Owner {
     retry: Instant,
     activated: bool,
     retry_gpu: bool,
+    observation: HostObservation,
 }
 impl Owner {
+    fn observe(
+        &mut self,
+        op: Operation,
+        reply: &io::Result<Reply>,
+        shared: &Mutex<HostObservation>,
+    ) {
+        if self.observation.generation != self.generation {
+            self.observation = HostObservation {
+                generation: self.generation,
+                pipeline_failures: self.observation.pipeline_failures,
+                failed: self.observation.failed,
+                ..HostObservation::default()
+            };
+        }
+        let value = &mut self.observation;
+        if let Some(config) = self.config {
+            value.source = Some(config.source);
+            value.width = Some(config.width);
+            value.height = Some(config.height);
+            value.target_fps = Some(config.fps);
+        }
+        match &self.pipeline {
+            Some(Pipeline::Gpu(p)) => {
+                let mut backend = 0;
+                let mut luid = 0;
+                // SAFETY: synchronous scalar getter on this exact capture owner.
+                let hr = unsafe {
+                    nl_capture_gpu_observation(p.capture.handle.as_ptr(), &mut backend, &mut luid)
+                };
+                value.capture_backend = if hr >= 0 && matches!(backend, 1 | 2) {
+                    Some(backend)
+                } else {
+                    None
+                };
+                value.adapter_luid = (hr >= 0 && matches!(backend, 1 | 2)).then_some(luid);
+                value.actual_sps = p
+                    .encoder
+                    .sps_info()
+                    .map(|s| [s.profile_idc, s.constraints, s.level_idc]);
+                // hardware() is an observed output fact, not transform-open proof.
+                value.encoder_hardware = value.actual_sps.map(|_| p.encoder.hardware());
+            }
+            Some(Pipeline::Cpu { source, .. }) => {
+                value.capture_backend = Some(if source.duplication.is_some() { 3 } else { 4 });
+                value.adapter_luid = None;
+                value.encoder_hardware = Some(false);
+                value.actual_sps = None;
+            }
+            None => {
+                value.capture_backend = None;
+                value.adapter_luid = None;
+                value.encoder_hardware = None;
+                value.actual_sps = None;
+            }
+        }
+        if let Ok(Reply::Frame(Some(frame))) = reply {
+            value.captures = value.captures.saturating_add(1);
+            value.cached_captures = value
+                .cached_captures
+                .saturating_add(u64::from(frame.repeated));
+        }
+        if let Ok(Reply::Step(step)) = reply {
+            if step.accepted
+                && let Operation::Encode(_, pts, _) = op
+            {
+                value.accepted = value.accepted.saturating_add(1);
+                value.last_accepted_pts = Some(pts);
+            }
+            if let Some(packet) = &step.output {
+                value.encoded_outputs = value.encoded_outputs.saturating_add(1);
+                value.last_output_pts = Some(packet.pts_90khz);
+            }
+        }
+        value.failed |= reply.is_err();
+        if let Ok(mut current) = shared.lock() {
+            value.stop_requested |= current.stop_requested;
+            *current = *value;
+        }
+    }
     fn close(&mut self) -> io::Result<()> {
         self.raw.clear();
         if let Some(p) = self.pipeline.take() {
@@ -645,6 +828,7 @@ impl Owner {
             .find(|(_, d)| d.source == c.source)
             .cloned()
             .ok_or_else(|| denied("lost source unapproved"))?;
+        self.observation.pipeline_failures = self.observation.pipeline_failures.saturating_add(1);
         eprintln!("host_encoder_loss={error}");
         self.close()?;
         self.advance()?;
@@ -764,6 +948,8 @@ impl Owner {
                     Ok(v) => v,
                     Err(e) => {
                         check()?;
+                        self.observation.pipeline_failures =
+                            self.observation.pipeline_failures.saturating_add(1);
                         eprintln!("host_gpu_device_loss={e}");
                         self.close()?;
                         self.advance()?;
@@ -998,6 +1184,7 @@ fn owner(
     targets: Vec<(Monitor, Display)>,
     commands: mpsc::Receiver<Command>,
     ready: mpsc::SyncSender<io::Result<()>>,
+    observation: &Mutex<HostObservation>,
 ) -> io::Result<()> {
     let _dpi = DpiScope::enter()?;
     let mut observer = WindowsSessionObserver::open(shared.invalidated.clone(), true)?;
@@ -1016,6 +1203,7 @@ fn owner(
             retry: Instant::now(),
             activated: false,
             retry_gpu: false,
+            observation: HostObservation::default(),
         };
         ready
             .send(Ok(()))
@@ -1031,7 +1219,9 @@ fn owner(
                         let mut check = || facts(&shared, &original, &observer);
                         check()?;
                         let value = owner.process(command.operation, &mut check);
-                        check()?; // Never publish a reply after revocation/fact change.
+                        check()?;
+                        owner.observe(command.operation, &value, observation);
+                        // Never publish a reply after revocation/fact change.
                         let failed = value
                             .as_ref()
                             .is_err_and(|e| e.kind() != io::ErrorKind::Unsupported);

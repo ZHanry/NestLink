@@ -6,6 +6,8 @@ mod clipboard;
 mod connection;
 mod files;
 #[cfg(windows)]
+mod gpu_diagnostics;
+#[cfg(windows)]
 mod gpu_presenter;
 #[cfg(windows)]
 mod gpu_video;
@@ -1392,6 +1394,15 @@ impl DesktopApp {
                         .id_salt("remote-tools-scroll")
                         .show(ui, |ui| {
                             ui.heading(self.t("操作中心", "Control center"));
+                            #[cfg(windows)]
+                            if self.gpu_video.has_diagnostics() {
+                                ui.small(self.t("原生 GPU 接收端诊断；扫描输出未验证", "Native GPU receiver diagnostics; scanout unverified"));
+                                if ui.button(self.t("复制脱敏诊断", "Copy redacted diagnostics")).clicked()
+                                    && let Some(report) = self.gpu_video.diagnostics_export()
+                                    && let Ok(text) = serde_json::to_string_pretty(&report) {
+                                    ui.ctx().copy_text(text);
+                                }
+                            }
                             if let Some(observed) = &self.video_observation {
                                 ui.strong(self.t("连接与性能", "Connection and performance"));
                                 ui.label(format!("{}: {}", self.t("实际编码", "Actual codec"), if observed.codec == 1 { "H.264 Baseline" } else { "VP8" }));

@@ -450,8 +450,12 @@ async fn prepare_capture(
             .ok_or_else(|| io::Error::other("no initial input layout"))?;
         let privileged = privileged.clone();
         let connection_generation = identity.connection_generation;
+        let diagnostics = crate::native_gpu_diagnostics::observer(connection_generation);
         let (device, input) = tokio::task::spawn_blocking(move || {
-            let mut device = nestlink_platform_capture::WindowsHostCapture::open(selected)?;
+            let mut device = nestlink_platform_capture::WindowsHostCapture::open_with_observer(
+                selected,
+                Some(diagnostics),
+            )?;
             let input = if input_enabled {
                 let opened = privileged
                     .open(

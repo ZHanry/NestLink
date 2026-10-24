@@ -5,6 +5,7 @@ use gpu_presenter::{AccessUnit, Event, Presenter};
 
 pub(super) struct GpuVideo {
     enabled: bool,
+    diagnostics: super::gpu_diagnostics::Recorder,
     context: Option<CompressedContext>,
     presenter: Option<Presenter>,
     retiring: Option<(CompressedContext, Presenter)>,
@@ -19,6 +20,7 @@ pub(super) struct GpuVideo {
 impl Default for GpuVideo {
     fn default() -> Self {
         Self {
+            diagnostics: super::gpu_diagnostics::Recorder::default(),
             enabled: std::env::var_os("NESTLINK_DESKTOP_GPU_PRESENT").is_some_and(|v| v == "1"),
             context: None,
             presenter: None,
@@ -59,6 +61,14 @@ impl GpuVideo {
             presenter.paint(ui, rect, false);
         }
     }
+    pub fn has_diagnostics(&self) -> bool {
+        self.diagnostics.has_observations()
+    }
+    pub fn diagnostics_export(&self) -> Option<serde_json::Value> {
+        self.diagnostics
+            .has_observations()
+            .then(|| self.diagnostics.export())
+    }
     pub fn active(&self) -> bool {
         self.presenter.is_some()
     }
@@ -70,7 +80,16 @@ impl DesktopApp {
     pub(super) fn poll_gpu_cleanup(&mut self, context: &egui::Context) {
         if let Some((binding, presenter)) = &mut self.gpu_video.retiring {
             context.request_repaint_after(Duration::from_millis(16));
-            if presenter.join_if_finished()
+            let joined = presenter.join_if_finished();
+            if let Some(value) = presenter.observation() {
+                self.gpu_video.diagnostics.observe(binding, value, joined);
+            }
+            if joined {
+                self.gpu_video
+                    .diagnostics
+                    .track_terminal(presenter.observation_handle());
+            }
+            if joined
                 && self
                     .bridge
                     .compressed_feedback(CompressedVideoFeedback::Stopped {
@@ -80,6 +99,17 @@ impl DesktopApp {
             {
                 self.gpu_video.retiring = None;
             }
+        }
+        if let (Some(binding), Some(presenter)) =
+            (&self.gpu_video.context, &self.gpu_video.presenter)
+            && let Some(value) = presenter.observation()
+        {
+            self.gpu_video.diagnostics.observe(binding, value, false);
+        }
+        self.gpu_video.diagnostics.read_terminal(&self.directory);
+        self.gpu_video.diagnostics.flush(&self.directory);
+        if self.gpu_video.diagnostics.needs_flush() {
+            context.request_repaint_after(Duration::from_secs(1));
         }
     }
     pub(super) fn update_gpu_video(
@@ -141,7 +171,11 @@ impl DesktopApp {
                 if gpu.generation == 0 {
                     failed = true;
                 } else {
-                    gpu.presenter = Some(Presenter::new(width, height, gpu.generation));
+                    gpu.presenter = Some(
+                        Presenter::new(width, height, gpu.generation).with_terminal_sink(
+                            super::gpu_diagnostics::TerminalSink::new(&self.directory, &binding),
+                        ),
+                    );
                     self.video_texture = None;
                     self.video_observation = None;
                     self.video_binding = Some(nestlink_app_ipc::NativeVideoBinding {
@@ -275,7 +309,11 @@ impl DesktopApp {
                         failed = true;
                         break;
                     }
-                    gpu.presenter = Some(Presenter::new(width, height, gpu.generation));
+                    gpu.presenter = Some(
+                        Presenter::new(width, height, gpu.generation).with_terminal_sink(
+                            super::gpu_diagnostics::TerminalSink::new(&self.directory, &binding),
+                        ),
+                    );
                     gpu.context = Some(binding.clone());
                     self.video_texture = None;
                     self.video_observation = None;

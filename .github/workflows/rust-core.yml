@@ -196,6 +196,75 @@ jobs:
             ${{ runner.temp }}/nestlink-gpu-target-output.log
           if-no-files-found: warn
           retention-days: 14
+      - name: Build the independent HEVC GPU diagnostic artifact with the normal token
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-media-codec --example windows-hevc-gpu-probe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo build --locked --release -p nestlink-media-codec --example windows-hevc-gpu-probe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Bind the HEVC diagnostic executable to its exact source and run
+        if: runner.os == 'Windows'
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, shutil, subprocess
+          revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          if revision != os.environ['GITHUB_SHA']:
+              raise SystemExit('HEVC diagnostic source revision differs from this workflow run')
+          source_paths = [
+              'Cargo.lock', 'rust-toolchain.toml', 'docs/refactor/native-codecs.lock.json',
+              'crates/media-codec/Cargo.toml', 'crates/media-codec/build.rs',
+              'crates/media-codec/src/windows_mf.cpp', 'crates/media-codec/src/windows_mf.rs',
+              'crates/media-codec/src/windows_hevc.rs', 'crates/media-codec/src/hevc_probe.rs',
+              'crates/media-codec/src/lib.rs', 'crates/media-codec/src/h264.rs',
+              'crates/media-codec/examples/windows-hevc-gpu-probe.rs',
+              'scripts/refactor-windows-normal-user.py', '.github/workflows/rust-core.yml',
+          ]
+          subprocess.run(['git', 'diff', '--exit-code', 'HEAD', '--', *source_paths], check=True)
+          target = pathlib.Path(os.environ.get('CARGO_TARGET_DIR') or 'target')
+          if os.environ.get('CARGO_BUILD_TARGET'):
+              target /= os.environ['CARGO_BUILD_TARGET']
+          source = target / 'release/examples/windows-hevc-gpu-probe.exe'
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'nestlink-hevc-gpu-target-probe'
+          output.mkdir()
+          copied = output / source.name
+          shutil.copyfile(source, copied)
+          manifest = {
+              'schema': 1,
+              'source_revision': revision,
+              'repository': os.environ['GITHUB_REPOSITORY'],
+              'run_id': os.environ['GITHUB_RUN_ID'],
+              'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'workflow': os.environ['GITHUB_WORKFLOW'],
+              'purpose': 'owned-synthetic-hevc-gpu-target-probe-only',
+              'filename': copied.name,
+              'bytes': copied.stat().st_size,
+              'sha256': hashlib.sha256(copied.read_bytes()).hexdigest(),
+              'build_profile': 'release',
+              'build_command': 'cargo build --locked --release -p nestlink-media-codec --example windows-hevc-gpu-probe',
+              'build_identity': 'verified-medium-non-admin-token',
+              'executed_on_github': False,
+              'target_validation': 'pending-authorized-target-execution',
+              'hevc_product_support_claimed': False,
+              'physical_capture': False,
+              'scanout_verified': False,
+              'performance_qualified': False,
+              'source_files': [
+                  {'path': name, 'sha256': hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()}
+                  for name in source_paths
+              ],
+          }
+          (output / 'hevc-probe-build.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+      - name: Retain the separate exact-source HEVC target diagnostic
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: nestlink-hevc-gpu-target-probe
+          path: ${{ runner.temp }}/nestlink-hevc-gpu-target-probe/
+          if-no-files-found: error
+          retention-days: 14
       - if: runner.os == 'Linux'
         run: cargo test --workspace --locked --no-fail-fast
       - name: Test Windows with the ordinary business-process token

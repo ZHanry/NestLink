@@ -3,7 +3,8 @@
 mod windows;
 #[cfg(windows)]
 pub use windows::{
-    WindowsCapture, WindowsCaptureSource, WindowsHostCapture, probe_windows_gpu_h264,
+    HostObservation, HostObservationSink, WindowsCapture, WindowsCaptureSource, WindowsHostCapture,
+    probe_windows_gpu_h264, reap_finished_host_workers,
 };
 #[cfg(target_os = "linux")]
 mod pipewire;

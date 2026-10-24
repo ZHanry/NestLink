@@ -1,4 +1,5 @@
 //! UI-owned child window and a bounded, cancellation-owned MF/D3D worker.
+use crate::gpu_diagnostics::{ReceiverObservation, TerminalSink};
 use eframe::egui;
 use nestlink_media_codec::{GpuH264Presenter, GpuVideoSurface};
 use std::{
@@ -48,7 +49,9 @@ pub struct Presenter {
     cancel: Arc<AtomicBool>,
     queued_bytes: Arc<AtomicU64>,
     queued_units: Arc<AtomicU64>,
-    worker: Option<thread::JoinHandle<()>>,
+    worker: Option<thread::JoinHandle<ReceiverObservation>>,
+    observation: Arc<Mutex<ReceiverObservation>>,
+    terminal_sink: Option<TerminalSink>,
     input: Option<mpsc::SyncSender<AccessUnit>>,
     events: Option<mpsc::Receiver<Event>>,
     config: (u32, u32),
@@ -56,6 +59,9 @@ pub struct Presenter {
     visible: Arc<AtomicBool>,
 }
 impl Presenter {
+    pub fn observation_handle(&self) -> Arc<Mutex<ReceiverObservation>> {
+        self.observation.clone()
+    }
     pub fn new(width: u32, height: u32, generation: u64) -> Self {
         Self {
             paint: Arc::new(Mutex::new(PaintState {
@@ -69,12 +75,23 @@ impl Presenter {
             queued_bytes: Arc::new(AtomicU64::new(0)),
             queued_units: Arc::new(AtomicU64::new(0)),
             worker: None,
+            terminal_sink: None,
+            observation: Arc::new(Mutex::new(ReceiverObservation {
+                generation,
+                width,
+                height,
+                ..ReceiverObservation::default()
+            })),
             input: None,
             events: None,
             config: (width, height),
             failure_reported: false,
             visible: Arc::new(AtomicBool::new(false)),
         }
+    }
+    pub fn with_terminal_sink(mut self, sink: TerminalSink) -> Self {
+        self.terminal_sink = Some(sink);
+        self
     }
     /// Call only in the real native remote viewport. No GL/D3D interop occurs.
     pub fn paint(&self, ui: &egui::Ui, rect: egui::Rect, overlay_blocked: bool) {
@@ -141,6 +158,11 @@ impl Presenter {
             })),
         });
     }
+    pub fn observation(&self) -> Option<ReceiverObservation> {
+        let mut value = self.observation.try_lock().ok()?.clone();
+        value.revoked = self.cancel.load(Ordering::Acquire);
+        Some(value)
+    }
     pub fn visible(&self) -> bool {
         self.visible.load(Ordering::Acquire)
     }
@@ -180,22 +202,34 @@ impl Presenter {
                 let bytes = self.queued_bytes.clone();
                 let units = self.queued_units.clone();
                 let (width, height) = self.config;
+                let observation = self.observation.clone();
+                let mut observed = self
+                    .observation
+                    .lock()
+                    .map(|value| value.clone())
+                    .unwrap_or_default();
                 match thread::Builder::new()
                     .name("nestlink-gpu-presenter".into())
                     .spawn(move || {
+                        observed.worker_started = true;
                         let outcome = run(
                             surface,
                             (width, height),
                             rx,
                             &event_tx,
                             &cancel,
-                            &bytes,
-                            &units,
+                            (&bytes, &units),
+                            (&mut observed, &observation),
                         );
                         if let Err(error) = outcome {
+                            observed.failed = true;
                             let _ = event_tx.try_send(Event::Failed(error.to_string()));
                         }
                         let _ = event_tx.try_send(Event::Exited);
+                        // The returned snapshot is consumed only after a real join.
+                        // Intermediate try_lock publication can skip a sample,
+                        // but never loses the worker's cumulative final facts.
+                        observed
                     }) {
                     Ok(worker) => {
                         self.worker = Some(worker);
@@ -280,7 +314,12 @@ impl Presenter {
             .is_some_and(thread::JoinHandle::is_finished)
             && let Some(worker) = self.worker.take()
         {
-            let _ = worker.join();
+            record_join(
+                &self.observation,
+                worker.join(),
+                self.cancel.load(Ordering::Acquire),
+                self.terminal_sink.as_ref(),
+            );
         }
         if self.worker.is_none()
             && self.cancel.load(Ordering::Acquire)
@@ -302,12 +341,20 @@ impl Drop for Presenter {
             // Retain the join owner even when UI closes while a driver call runs.
             let pending = Arc::new(Mutex::new(Some(worker)));
             let owned = pending.clone();
+            let observation = self.observation.clone();
+            let terminal_sink = self.terminal_sink.clone();
+            let cancel = self.cancel.clone();
             if thread::Builder::new()
                 .name("nestlink-gpu-cleanup".into())
                 .spawn(move || {
                     let worker = owned.lock().ok().and_then(|mut value| value.take());
                     if let Some(worker) = worker {
-                        let _ = worker.join();
+                        record_join(
+                            &observation,
+                            worker.join(),
+                            cancel.load(Ordering::Acquire),
+                            terminal_sink.as_ref(),
+                        );
                     }
                 })
                 .is_err()
@@ -317,16 +364,50 @@ impl Drop for Presenter {
         }
     }
 }
+fn record_join(
+    shared: &Arc<Mutex<ReceiverObservation>>,
+    result: thread::Result<ReceiverObservation>,
+    revoked: bool,
+    sink: Option<&TerminalSink>,
+) {
+    let mut final_value = match result {
+        Ok(value) => value,
+        Err(_) => {
+            let mut value = shared.lock().map(|value| value.clone()).unwrap_or_default();
+            value.failed = true;
+            value.worker_panicked = true;
+            value
+        }
+    };
+    final_value.worker_joined = true;
+    final_value.revoked = revoked;
+    final_value.terminal_write_pending = sink.is_some();
+    final_value.terminal_write_durable = None;
+    if let Ok(mut value) = shared.lock() {
+        *value = final_value.clone();
+    }
+    // The durable consumer is retained with the same JoinHandle in Drop; it
+    // does not depend on another UI frame or an IPC feedback acknowledgement.
+    if let Some(sink) = sink {
+        sink.enqueue(final_value, shared.clone());
+    }
+}
 fn run(
     surface: GpuVideoSurface,
     size: (u32, u32),
     input: mpsc::Receiver<AccessUnit>,
     events: &mpsc::SyncSender<Event>,
     cancel: &AtomicBool,
-    bytes: &AtomicU64,
-    units: &AtomicU64,
+    queued: (&AtomicU64, &AtomicU64),
+    telemetry: (&mut ReceiverObservation, &Mutex<ReceiverObservation>),
 ) -> io::Result<()> {
+    let (bytes, units) = queued;
+    let (observed, observation) = telemetry;
     let mut decoder = GpuH264Presenter::new(&surface, size.0, size.1, 30)?;
+    observed.decoder_opened = true;
+    observed.qpc_frequency = nestlink_media_codec::gpu_qpc()
+        .ok()
+        .map(|(_, frequency)| frequency);
     events
         .try_send(Event::Prepared)
         .map_err(|_| io::Error::other("GPU event owner unavailable"))?;
@@ -354,6 +435,8 @@ fn run(
             if pending.is_empty() {
                 progress = Instant::now();
             }
+            observed.accepted = observed.accepted.saturating_add(1);
+            observed.last_accepted_pts = Some(unit.pts_90khz);
             pending.push_back((
                 unit.delivery_sequence,
                 unit.native_sequence,
@@ -367,6 +450,8 @@ fn run(
             if native_sequence != sequence {
                 return Err(io::Error::other("GPU output sequence mismatch"));
             }
+            observed.decoded = observed.decoded.saturating_add(1);
+            observed.last_decoded_pts = Some(pts_90khz);
             bytes.fetch_sub(length, Ordering::AcqRel);
             units.fetch_sub(1, Ordering::AcqRel);
             events
@@ -379,12 +464,26 @@ fn run(
             progress = Instant::now();
         }
         if let Some(picture) = step.picture {
+            observed.retired = observed.retired.saturating_add(1);
+            observed.last_retired_pts = Some(picture.pts_90khz);
+            if picture.gpu_converted {
+                observed.converted = observed.converted.saturating_add(1);
+            }
+            if let Some(qpc) = picture.submitted_qpc {
+                observed.submitted = observed.submitted.saturating_add(1);
+                observed.last_submitted_qpc = Some(qpc);
+                observed.last_submitted_pts = Some(picture.pts_90khz);
+            }
             events
                 .try_send(Event::Presented {
                     submitted_qpc: picture.submitted_qpc,
                     gpu_converted: picture.gpu_converted,
                 })
                 .map_err(|_| io::Error::other("GPU event queue exhausted"))?;
+        }
+        // Diagnostic contention never blocks media or changes delivery credit.
+        if let Ok(mut value) = observation.try_lock() {
+            *value = observed.clone();
         }
         if (!pending.is_empty() || front.is_some()) && progress.elapsed() > Duration::from_secs(2) {
             return Err(io::Error::new(
@@ -437,15 +536,39 @@ mod tests {
         let (done, wait) = mpsc::channel();
         presenter.worker = Some(thread::spawn(move || {
             let _ = wait.recv();
+            ReceiverObservation {
+                generation: 1,
+                worker_started: true,
+                decoder_opened: true,
+                accepted: 1,
+                decoded: 1,
+                last_accepted_pts: Some(0),
+                last_decoded_pts: Some(0),
+                ..ReceiverObservation::default()
+            }
         }));
         presenter.stop();
         assert!(!presenter.join_if_finished());
+        assert!(
+            !presenter
+                .observation()
+                .ok_or_else(|| io::Error::other("observation unavailable"))?
+                .worker_joined
+        );
         done.send(()).map_err(io::Error::other)?;
         let deadline = Instant::now() + Duration::from_secs(1);
         while !presenter.join_if_finished() && Instant::now() < deadline {
             thread::sleep(Duration::from_millis(1));
         }
         assert!(presenter.join_if_finished());
+        let final_value = presenter
+            .observation()
+            .ok_or_else(|| io::Error::other("final observation unavailable"))?;
+        assert!(final_value.worker_joined && final_value.revoked);
+        assert_eq!(final_value.last_decoded_pts, Some(0));
+        assert_eq!(final_value.accepted, 1);
+        assert_eq!(final_value.decoded, 1);
+        assert_eq!(final_value.submitted, 0);
         Ok(())
     }
 }
