@@ -918,6 +918,9 @@ mod tests {
         let sink = TerminalSink {
             directory: directory.clone(),
             scope: Scope {
+                catalog_sha256: [0; 32],
+                format_epoch: 0,
+                format_sha256: [0; 32],
                 source: 3,
                 connection_generation: 2,
                 stream_epoch: 4,
