@@ -202,6 +202,10 @@ impl Drop for HevcProbeEncoder {
         self.scratch.zeroize();
     }
 }
+/// A diagnostic BGRA picture paired with the actual MF output PTS.
+pub type HevcProbePicture = (Vec<u8>, u64);
+/// Input acceptance and an optional independently timestamped decoded picture.
+pub type HevcProbeDecodeStep = (bool, Option<HevcProbePicture>);
 pub struct HevcProbeDecoder {
     inner: Transform,
     config: VideoConfig,
@@ -233,10 +237,7 @@ impl HevcProbeDecoder {
             authority,
         })
     }
-    pub fn submit(
-        &mut self,
-        packet: &HevcProbePacket,
-    ) -> io::Result<(bool, Option<(Vec<u8>, u64)>)> {
+    pub fn submit(&mut self, packet: &HevcProbePacket) -> io::Result<HevcProbeDecodeStep> {
         authorized(&self.authority)?;
         let mut next = self.validator.clone();
         next.validate(&packet.data, self.config.width, self.config.height)?;
@@ -252,7 +253,7 @@ impl HevcProbeDecoder {
             output.map(|(size, pts)| (self.scratch[..size].to_vec(), pts)),
         ))
     }
-    pub fn poll(&mut self) -> io::Result<Option<(Vec<u8>, u64)>> {
+    pub fn poll(&mut self) -> io::Result<Option<HevcProbePicture>> {
         authorized(&self.authority)?;
         let output = self.inner.receive(&mut self.scratch)?;
         authorized(&self.authority)?;

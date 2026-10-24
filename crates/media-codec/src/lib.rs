@@ -35,8 +35,8 @@ pub fn gpu_qpc() -> std::io::Result<(u64, u64)> {
 mod windows_hevc;
 #[cfg(windows)]
 pub use windows_hevc::{
-    HevcBackendObservation, HevcProbeDecoder, HevcProbeEncoder, HevcProbePacket,
-    HevcSyntheticSource,
+    HevcBackendObservation, HevcProbeDecodeStep, HevcProbeDecoder, HevcProbeEncoder,
+    HevcProbePacket, HevcProbePicture, HevcSyntheticSource,
 };
 #[cfg(windows)]
 mod hevc_probe;
