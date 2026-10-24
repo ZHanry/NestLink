@@ -161,10 +161,9 @@ impl FormatConfirmation {
 mod tests {
     use super::*;
     use crate::{media_format::FrameRate, native_displays::DisplayCatalogKey};
-    fn value() -> FormatSelection {
-        let format =
-            VideoFormat::legacy_h264(30, 320, 240, FrameRate::new(30, 1).unwrap(), 1000).unwrap();
-        FormatSelection {
+    fn value() -> Result<FormatSelection, ContractError> {
+        let format = VideoFormat::legacy_h264(30, 320, 240, FrameRate::new(30, 1)?, 1000)?;
+        Ok(FormatSelection {
             display: DisplaySelection {
                 catalog: DisplayCatalogKey {
                     request_id: "12345678-1234-4234-8234-123456789abc".into(),
@@ -179,14 +178,15 @@ mod tests {
             },
             format_epoch: 1,
             format,
-            format_sha256: format.digest().unwrap(),
-        }
+            format_sha256: format.digest()?,
+        })
     }
     #[test]
-    fn exact_canonical_roundtrip_rejects_tail_kind_version_hash_and_truncation() {
-        let envelope = FormatEnvelope::Propose(value());
-        let bytes = envelope.encode().unwrap();
-        assert_eq!(FormatEnvelope::decode(&bytes).unwrap(), envelope);
+    fn exact_canonical_roundtrip_rejects_tail_kind_version_hash_and_truncation()
+    -> Result<(), ContractError> {
+        let envelope = FormatEnvelope::Propose(value()?);
+        let bytes = envelope.encode()?;
+        assert_eq!(FormatEnvelope::decode(&bytes)?, envelope);
         for end in 0..bytes.len() {
             assert!(FormatEnvelope::decode(&bytes[..end]).is_err());
         }
@@ -203,16 +203,16 @@ mod tests {
             bad[index] = byte;
             assert!(FormatEnvelope::decode(&bad).is_err());
         }
+        Ok(())
     }
     #[test]
-    fn proposal_ack_requires_exact_signed_format_and_binding_and_never_overwrites() {
-        let first = value();
-        let formats = FormatSet::new(vec![first.format]).unwrap();
+    fn proposal_ack_requires_exact_signed_format_and_binding_and_never_overwrites()
+    -> Result<(), ContractError> {
+        let first = value()?;
+        let formats = FormatSet::new(vec![first.format])?;
         let mut state = FormatConfirmation::default();
         assert!(state.acknowledge(&first).is_err());
-        state
-            .stage(first.clone(), &first.display, &formats)
-            .unwrap();
+        state.stage(first.clone(), &first.display, &formats)?;
         assert!(
             state
                 .stage(first.clone(), &first.display, &formats)
@@ -222,7 +222,7 @@ mod tests {
         wrong.display.layout_epoch += 1;
         assert!(state.acknowledge(&wrong).is_err());
         assert!(state.confirmed().is_none());
-        state.acknowledge(&first).unwrap();
+        state.acknowledge(&first)?;
         assert_eq!(state.confirmed(), Some(&first));
         assert!(
             state
@@ -231,9 +231,7 @@ mod tests {
         );
         let mut second = first.clone();
         second.format_epoch = 2;
-        state
-            .stage(second.clone(), &second.display, &formats)
-            .unwrap();
+        state.stage(second.clone(), &second.display, &formats)?;
         state.cancel();
         assert!(state.confirmed().is_none());
         assert!(
@@ -242,16 +240,15 @@ mod tests {
                 .is_err()
         );
         second.format_epoch = 3;
-        let empty = FormatSet::new(vec![]).unwrap();
+        let empty = FormatSet::new(vec![])?;
         assert!(
             state
                 .stage(second.clone(), &second.display, &empty)
                 .is_err()
         );
-        state
-            .stage(second.clone(), &second.display, &formats)
-            .unwrap();
-        state.acknowledge(&second).unwrap();
+        state.stage(second.clone(), &second.display, &formats)?;
+        state.acknowledge(&second)?;
+        Ok(())
     }
 }
 /// Explicit outer discriminator; malformed recognized envelopes never fall back.

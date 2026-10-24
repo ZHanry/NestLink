@@ -2137,6 +2137,7 @@ fn update_dynamic_layout(
         codecs.insert(
             packet.source,
             Decoder {
+                format: None,
                 stream: VideoStream {
                     source: packet.source,
                     codec: VideoConfig {

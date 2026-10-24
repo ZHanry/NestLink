@@ -75,7 +75,7 @@ fn video_feedback_wire_budget_and_required_domains_are_bounded() -> Result {
     assert_eq!(message.encode_validated()?, wire);
     assert_eq!(NativeVideoFeedback::decode_validated(&wire)?, message);
     for case in 0..7 {
-        let mut invalid = message;
+        let mut invalid = message.clone();
         match case {
             0 => invalid.schema_version = 2,
             1 => invalid.connection_generation = 0,
