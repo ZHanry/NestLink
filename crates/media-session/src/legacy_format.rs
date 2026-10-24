@@ -190,16 +190,17 @@ mod tests {
         idr_color(None)
     }
     fn idr_color(color: Option<(bool, [u8; 3])>) -> Vec<u8> {
-        idr_geometry(color, 19, 14, None)
+        idr_geometry(color, 31, 19, 14, None)
     }
     fn idr_geometry(
         color: Option<(bool, [u8; 3])>,
+        level_idc: u8,
         width_mbs: u32,
         height_mbs: u32,
         crop: Option<[u32; 4]>,
     ) -> Vec<u8> {
         // Same bounded progressive Baseline fixture shape as media-codec tests.
-        let mut bits = String::from("010000101100000000011111");
+        let mut bits = format!("0100001011000000{level_idc:08b}");
         for value in [0u32, 0, 2, 1] {
             ue(&mut bits, value);
         }
@@ -250,7 +251,13 @@ mod tests {
     #[test]
     fn actual_crop_and_constraints_survive_sender_receipt_and_rejection() -> io::Result<()> {
         let mut prepare = LegacyPrepare::new(VideoCodec::H264Baseline, 1920, 1080)?;
-        let encoded = idr_geometry(None, 119, 67, Some([0, 0, 0, 4]));
+        // 8160 macroblocks exceed Level 3.1's 3600-macroblock limit.
+        assert!(
+            prepare
+                .validate(&idr_geometry(None, 31, 119, 67, Some([0, 0, 0, 4])), true)
+                .is_err()
+        );
+        let encoded = idr_geometry(None, 40, 119, 67, Some([0, 0, 0, 4]));
         // A forged frame flag must not commit the parsed geometry or SPS.
         assert!(prepare.validate(&encoded, false).is_err());
         assert_eq!(
@@ -278,7 +285,7 @@ mod tests {
         // and cannot silently replace the current parameter-set history.
         assert!(
             prepare
-                .validate(&idr_geometry(None, 119, 67, Some([0, 0, 4, 0])), true)
+                .validate(&idr_geometry(None, 40, 119, 67, Some([0, 0, 4, 0])), true)
                 .is_err()
         );
         assert_eq!(

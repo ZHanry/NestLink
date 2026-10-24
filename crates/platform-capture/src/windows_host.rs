@@ -160,7 +160,7 @@ struct GpuPipeline {
     texture: Option<NonNull<c_void>>,
 }
 enum Pipeline {
-    Gpu(GpuPipeline),
+    Gpu(Box<GpuPipeline>),
     Cpu {
         encoder: VideoEncoder,
         source: Box<NativeSource>,
@@ -171,6 +171,7 @@ impl Pipeline {
     fn close(self) -> io::Result<()> {
         match self {
             Self::Gpu(p) => {
+                let p = *p;
                 let result = p.encoder.close();
                 drop(p.capture);
                 result
@@ -380,13 +381,13 @@ fn gpu_pipeline_with_capture(
     // A clean transform separates synthetic PTS/reference state from real media.
     let encoder =
         unsafe { MfH264Encoder::with_gpu_device(codec_config(c), codec_limits(c), device)? };
-    Ok(Pipeline::Gpu(GpuPipeline {
+    Ok(Pipeline::Gpu(Box::new(GpuPipeline {
         encoder,
         probed_sps: info,
         probed_geometry: geometry,
         capture,
         texture: None,
-    }))
+    })))
 }
 
 #[derive(Clone, Copy)]
@@ -1136,6 +1137,7 @@ impl Owner {
                     if let Some(p) = self.pipeline.take() {
                         self.pipeline = Some(match p {
                             Pipeline::Gpu(p) => {
+                                let p = *p;
                                 p.encoder.close()?;
                                 let device = p.capture.device()?;
                                 // No old pool remains while allocating replacement.
@@ -1146,13 +1148,13 @@ impl Owner {
                                         device,
                                     )?
                                 };
-                                Pipeline::Gpu(GpuPipeline {
+                                Pipeline::Gpu(Box::new(GpuPipeline {
                                     encoder,
                                     probed_sps: p.probed_sps,
                                     probed_geometry: p.probed_geometry,
                                     capture: p.capture,
                                     texture: None,
-                                })
+                                }))
                             }
                             Pipeline::Cpu {
                                 encoder, source, ..
