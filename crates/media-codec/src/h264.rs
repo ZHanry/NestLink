@@ -217,6 +217,14 @@ impl H264EncodingLimits {
     }
 }
 
+/// Geometry observed by the bounded progressive Baseline SPS parser.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct H264Geometry {
+    pub coded_width: u32,
+    pub coded_height: u32,
+    /// Left, right, top, bottom in luma samples, not encoded crop units.
+    pub crop: [u32; 4],
+}
 #[derive(Clone, Debug)]
 pub struct H264Validator {
     width: u32,
@@ -227,6 +235,7 @@ pub struct H264Validator {
     limits: Option<H264EncodingLimits>,
     sdr_color: bool,
     info: Option<H264SpsInfo>,
+    geometry: Option<H264Geometry>,
 }
 #[derive(Clone, Copy, Debug)]
 pub struct H264AccessUnit {
@@ -240,6 +249,7 @@ impl H264Validator {
         self.pps.clear();
         self.started = false;
         self.info = None;
+        self.geometry = None;
     }
     pub fn new(width: u32, height: u32) -> io::Result<Self> {
         if width == 0
@@ -261,6 +271,7 @@ impl H264Validator {
             limits: None,
             sdr_color: false,
             info: None,
+            geometry: None,
         })
     }
     /// Validate the existing SDR BT.709 limited pixel contract before decode.
@@ -276,6 +287,9 @@ impl H264Validator {
         validator.limits = Some(limits);
         Ok(validator)
     }
+    pub fn sps_geometry(&self) -> Option<H264Geometry> {
+        self.geometry
+    }
     pub fn sps_info(&self) -> Option<H264SpsInfo> {
         self.info
     }
@@ -286,7 +300,7 @@ impl H264Validator {
         for nal in nals(data)? {
             match nal[0] & 31 {
                 7 => {
-                    let id = next.validate_sps(nal).map_err(|error| {
+                    let (id, geometry) = next.validate_sps(nal).map_err(|error| {
                         io::Error::new(error.kind(), format!("H.264 SPS: {error}"))
                     })?;
                     if next.sps.get(&id).is_some_and(|old| old != nal) {
@@ -304,6 +318,10 @@ impl H264Validator {
                     if next.info.is_some_and(|old| old != info) {
                         return Err(invalid());
                     }
+                    if next.geometry.is_some_and(|old| old != geometry) {
+                        return Err(invalid());
+                    }
+                    next.geometry = Some(geometry);
                     next.info = Some(info);
                     next.sps.insert(id, nal.to_vec());
                 }
@@ -361,7 +379,7 @@ impl H264Validator {
             sps: self.info,
         })
     }
-    fn validate_sps(&self, nal: &[u8]) -> io::Result<u32> {
+    fn validate_sps(&self, nal: &[u8]) -> io::Result<(u32, H264Geometry)> {
         let mut bits = Bits::new(nal, 4096)?;
         let profile = bits.read(8)?;
         let constraints = bits.read(8)?;
@@ -469,7 +487,14 @@ impl H264Validator {
                 }
             }
         }
-        Ok(id)
+        Ok((
+            id,
+            H264Geometry {
+                coded_width,
+                coded_height,
+                crop: [left * 2, right * 2, top * 2, bottom * 2],
+            },
+        ))
     }
 }
 
@@ -677,7 +702,9 @@ mod color_tests {
     use super::H264Validator;
     fn validate_sdr_color(bytes: &[u8]) -> std::io::Result<u32> {
         let nal = super::nals(bytes)?;
-        H264Validator::new_sdr(640, 480)?.validate_sps(nal[0])
+        H264Validator::new_sdr(640, 480)?
+            .validate_sps(nal[0])
+            .map(|(id, _)| id)
     }
 
     fn sps(color: Option<(bool, [u8; 3])>) -> Vec<u8> {

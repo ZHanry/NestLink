@@ -5,7 +5,7 @@ mod opus;
 mod quality;
 mod video;
 mod vp8;
-pub use h264::{H264AccessUnit, H264EncodingLimits, H264SpsInfo, H264Validator};
+pub use h264::{H264AccessUnit, H264EncodingLimits, H264Geometry, H264SpsInfo, H264Validator};
 pub use opus::{OpusConfig, OpusDecoder, OpusEncoder};
 pub use quality::VideoQuality;
 pub use video::{

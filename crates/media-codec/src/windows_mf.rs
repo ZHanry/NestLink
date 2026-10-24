@@ -495,6 +495,9 @@ impl MfH264Encoder {
     pub fn sps_info(&self) -> Option<H264SpsInfo> {
         self.validator.sps_info()
     }
+    pub fn sps_geometry(&self) -> Option<crate::H264Geometry> {
+        self.validator.sps_geometry()
+    }
     /// Backpressured input was not consumed and may be retried at the same PTS.
     /// Output can belong to an earlier accepted input. Only fatal errors poison
     /// the transform; delayed output never clears a pending recovery request.
@@ -646,23 +649,29 @@ impl MfH264Decoder {
         self.validator.reset_for_keyframe();
         Ok(())
     }
+    /// Legacy geometry-only construction. The rate/ceiling are local defaults,
+    /// never evidence for a signed format catalog. Target probes use with_config.
     pub fn new(width: u32, height: u32, hardware_only: bool) -> io::Result<Self> {
+        Self::with_config(
+            VideoConfig {
+                width,
+                height,
+                fps: 60,
+                bitrate_kbps: 4_000,
+            },
+            hardware_only,
+        )
+    }
+    /// Create the actual transform with the explicit tested target configuration.
+    /// This is functional admission, not a sustained-rate qualification.
+    pub fn with_config(config: VideoConfig, hardware_only: bool) -> io::Result<Self> {
+        geometry(config)?;
         Ok(Self {
-            validator: H264Validator::new(width, height)?,
+            validator: H264Validator::new(config.width, config.height)?,
             queued: VecDeque::new(),
             queued_bytes: 0,
             last_queued: None,
-            inner: Transform::new(
-                VideoConfig {
-                    width,
-                    height,
-                    fps: 60,
-                    bitrate_kbps: 4_000,
-                },
-                false,
-                hardware_only,
-                0,
-            )?,
+            inner: Transform::new(config, false, hardware_only, 0)?,
         })
     }
     pub fn hardware(&self) -> bool {

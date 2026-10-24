@@ -8,6 +8,8 @@ fn hevc(width: u32, height: u32, fps: u32, level: u8) -> VideoFormat {
         codec: Codec::Hevc,
         profile: Profile::HevcMain,
         level,
+        h264_constraints: 0,
+        geometry: Geometry::uncropped(width, height),
         tier: Tier::Main,
         chroma: Chroma::Yuv420,
         bit_depth: BitDepth::Eight,
@@ -306,12 +308,13 @@ fn digest_has_stable_field_order_big_endian_encoding_and_domain() {
     let format = VideoFormat::legacy_vp8(640, 480, rate(30), 4000)
         .unwrap_or_else(|error| panic!("valid fixture rejected: {error}"));
     let expected = [
-        0, 1, 1, 1, 0, 0, 1, 8, 0, 0, 3, 1, 0, 0, 2, 128, 0, 0, 1, 224, 0, 0, 0, 30, 0, 0, 0, 1, 0,
-        0, 15, 160,
+        0, 2, 1, 1, 0, 0, 0, 1, 8, 0, 0, 3, 1, 0, 0, 2, 128, 0, 0, 1, 224, 0, 0, 2, 128, 0, 0, 1,
+        224, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 0, 0, 0, 1, 0, 0, 15,
+        160,
     ];
     assert_eq!(format.canonical(), expected);
     let mut hash = Sha256::new();
-    hash.update(b"nestlink/media-format/v1\0");
+    hash.update(b"nestlink/media-format/v2\0");
     hash.update(expected);
     let expected_digest: [u8; 32] = hash.finalize().into();
     assert_eq!(
@@ -320,12 +323,12 @@ fn digest_has_stable_field_order_big_endian_encoding_and_domain() {
             .unwrap_or_else(|error| panic!("valid fixture rejected: {error}")),
         expected_digest
     );
-    // Independent Python hashlib result over the explicit32 bytes above and
+    // Independent Python hashlib result over the explicit57 bytes above and
     // literal domain, not generated via Rust canonical()/digest().
     let golden = [
-        0xbe, 0x1e, 0x18, 0x87, 0xf3, 0x40, 0xc9, 0xd7, 0x7a, 0x9a, 0x24, 0x3f, 0xb9, 0x48, 0x20,
-        0x61, 0xc8, 0x6f, 0x4b, 0xda, 0x36, 0x16, 0xaf, 0xb9, 0x9e, 0x3c, 0x19, 0x3d, 0xca, 0xfc,
-        0x37, 0x84,
+        0x40, 0xa5, 0x52, 0x9b, 0xe8, 0x4a, 0xb1, 0x2a, 0x2a, 0xb1, 0x87, 0x8d, 0x78, 0xe8, 0xe,
+        0x46, 0xab, 0x36, 0xb1, 0x56, 0xd2, 0x72, 0x82, 0x3, 0xa5, 0x61, 0xcd, 0x18, 0xc2, 0xa5,
+        0x1b, 0xd5,
     ];
     assert_eq!(
         format
@@ -392,9 +395,9 @@ fn empty_no_common_duplicates_and_excess_entries_are_distinct_outcomes() {
             .is_err()
     );
     assert!(FormatSet::from_versioned(0, vec![a]).is_err());
-    assert!(FormatSet::from_versioned(2, vec![a]).is_err());
+    assert!(FormatSet::from_versioned(1, vec![a]).is_err());
     assert_eq!(
-        FormatSet::from_versioned(1, vec![a])
+        FormatSet::from_versioned(2, vec![a])
             .unwrap_or_else(|error| panic!("valid fixture rejected: {error}")),
         set(&[a])
     );
@@ -416,5 +419,77 @@ fn syntax_support_is_not_a_backend_capability_announcement() {
             .select(&[hevc])
             .unwrap_or_else(|error| panic!("valid fixture rejected: {error}")),
         None
+    );
+}
+
+#[test]
+fn observed_h264_digest_binds_constraint_flags_and_crop_origin() {
+    let a = VideoFormat::h264_observed(
+        42,
+        0xc0,
+        Geometry {
+            coded_width: 1920,
+            coded_height: 1088,
+            crop: [0, 0, 0, 8],
+        },
+        1920,
+        1080,
+        rate(60),
+        12_000,
+    )
+    .unwrap_or_else(|e| panic!("{e}"));
+    let b = VideoFormat {
+        h264_constraints: 0x40,
+        ..a
+    };
+    let c = VideoFormat {
+        geometry: Geometry {
+            crop: [0, 0, 8, 0],
+            ..a.geometry
+        },
+        ..a
+    };
+    assert_ne!(a.digest().ok(), b.digest().ok());
+    assert_ne!(a.digest().ok(), c.digest().ok());
+    assert!(!set(&[a]).contains(&b));
+    assert!(!set(&[a]).contains(&c));
+    assert!(
+        VideoFormat {
+            h264_constraints: 3,
+            ..a
+        }
+        .validate()
+        .is_err()
+    );
+    assert!(
+        VideoFormat {
+            geometry: Geometry {
+                crop: [0, 0, 0, u32::MAX],
+                ..a.geometry
+            },
+            ..a
+        }
+        .validate()
+        .is_err()
+    );
+    assert!(
+        VideoFormat {
+            geometry: Geometry {
+                crop: [0, 0, 0, 7],
+                ..a.geometry
+            },
+            ..a
+        }
+        .validate()
+        .is_err()
+    );
+    assert!(
+        VideoFormat {
+            level: 11,
+            h264_constraints: 0x10,
+            ..a
+        }
+        .validate()
+        .is_err()
     );
 }

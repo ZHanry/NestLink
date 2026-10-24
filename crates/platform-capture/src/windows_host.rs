@@ -155,6 +155,7 @@ impl GpuCapture {
 struct GpuPipeline {
     encoder: MfH264Encoder,
     probed_sps: H264SpsInfo,
+    probed_geometry: nestlink_media_codec::H264Geometry,
     capture: GpuCapture,
     texture: Option<NonNull<c_void>>,
 }
@@ -249,7 +250,7 @@ fn gpu_pipeline_with_capture(
     // A fresh software decoder sees only hardware IDRs from this probe. Keep
     // the real stream alive: a decoder may release its first picture only once
     // it has seen the next independent AU, without requiring an EOS shortcut.
-    let mut decoder = MfH264Decoder::new(c.width, c.height, false)?;
+    let mut decoder = MfH264Decoder::with_config(codec_config(c), false)?;
     let mut expected_pts = VecDeque::new();
     let started = Instant::now();
     let mut pts = 1;
@@ -286,6 +287,10 @@ fn gpu_pipeline_with_capture(
             if !packet.keyframe || !encoder.hardware() {
                 continue;
             }
+            // Preserve the exact bounded SDR SPS geometry used by this probe;
+            // independent decode alone does not describe crop or color.
+            let mut admission = nestlink_media_codec::H264Validator::new_sdr(c.width, c.height)?;
+            admission.validate(&packet.data)?;
             hardware_idrs += 1;
             eprintln!(
                 "host_gpu_probe_stage=independent_decode_begin pts={}",
@@ -360,6 +365,9 @@ fn gpu_pipeline_with_capture(
     let info = encoder
         .sps_info()
         .ok_or_else(|| io::Error::other("GPU probe missing SPS"))?;
+    let geometry = encoder
+        .sps_geometry()
+        .ok_or_else(|| io::Error::other("GPU probe missing SPS geometry"))?;
     eprintln!(
         "host_gpu_probe=passed target={}x{}@{} actual_sps={} performance_qualified=false",
         c.width,
@@ -375,6 +383,7 @@ fn gpu_pipeline_with_capture(
     Ok(Pipeline::Gpu(GpuPipeline {
         encoder,
         probed_sps: info,
+        probed_geometry: geometry,
         capture,
         texture: None,
     }))
@@ -1140,6 +1149,7 @@ impl Owner {
                                 Pipeline::Gpu(GpuPipeline {
                                     encoder,
                                     probed_sps: p.probed_sps,
+                                    probed_geometry: p.probed_geometry,
                                     capture: p.capture,
                                     texture: None,
                                 })
@@ -1260,8 +1270,8 @@ pub fn probe_windows_gpu_h264(
         require_constrained_baseline: limits.require_constrained_baseline,
     };
     let p = gpu_pipeline_with_capture(capture, c, &mut || Ok(()))?;
-    let sps = match &p {
-        Pipeline::Gpu(p) => p.probed_sps,
+    let (sps, geometry) = match &p {
+        Pipeline::Gpu(p) => (p.probed_sps, p.probed_geometry),
         Pipeline::Cpu { .. } => {
             return Err(io::Error::other("synthetic GPU unexpectedly fell back"));
         }
@@ -1269,6 +1279,8 @@ pub fn probe_windows_gpu_h264(
     p.close()?;
     Ok(H264EncoderProbe {
         config,
+        encoded_config: config,
+        geometry,
         sps,
         hardware: true,
     })

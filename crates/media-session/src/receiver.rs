@@ -1287,7 +1287,7 @@ impl Decoder {
             return Ok(None);
         }
         if self.prepare.is_none() {
-            self.prepare = Some(crate::legacy_format::LegacyPrepare::from_wire(
+            self.prepare = Some(crate::legacy_format::LegacyPrepare::from_wire_cpu_visible(
                 packet.codec,
                 packet.width,
                 packet.height,
@@ -1492,7 +1492,7 @@ fn prepare_display_decoder(
         let uses_external = external.is_some();
         if !uses_external {
             // Validate typed surface before creating the selected decoder.
-            decoder.prepare = Some(crate::legacy_format::LegacyPrepare::new(
+            decoder.prepare = Some(crate::legacy_format::LegacyPrepare::new_cpu_visible(
                 kind,
                 layout.width,
                 layout.height,
@@ -1565,7 +1565,7 @@ fn receive(
             lease
                 .check_media_binding(Channel::Video, epoch.connection)
                 .map_err(io::Error::other)?;
-            decoder.prepare = Some(crate::legacy_format::LegacyPrepare::new(
+            decoder.prepare = Some(crate::legacy_format::LegacyPrepare::new_cpu_visible(
                 kind,
                 decoder.stream.codec.width,
                 decoder.stream.codec.height,
@@ -1938,6 +1938,71 @@ mod tests {
         }
     }
 
+    #[cfg(windows)]
+    #[test]
+    fn cpu_lazy_odd_decode_admits_actual_encoder_output_and_crops_visible_pixels() -> io::Result<()>
+    {
+        let config = VideoConfig {
+            width: 321,
+            height: 241,
+            fps: 30,
+            bitrate_kbps: 2000,
+        };
+        let mut encoder =
+            nestlink_media_codec::VideoEncoder::new(VideoCodec::H264Baseline, config)?;
+        let mut decoder = Decoder::new(
+            VideoStream {
+                source: 42,
+                codec: config,
+            },
+            1,
+        );
+        let epoch = VideoEpoch {
+            connection: 9,
+            layout: 1,
+        };
+        let mut sender_prepare =
+            crate::LegacyPrepare::new_cpu_visible(VideoCodec::H264Baseline, 321, 241)?;
+        let pixels = [32, 160, 64, 255].repeat(321 * 241);
+        let mut submitted = 0u64;
+        let mut sequence = 0u64;
+        let mut observed = false;
+        // Real encoder AUs only; these bytes must also reach the actual CPU
+        // receiver decoder rather than stopping at the parser boundary.
+        for _ in 0..128 {
+            let step = encoder.encode_step(&pixels, submitted * 3000, submitted == 0)?;
+            submitted += u64::from(step.accepted);
+            if let Some(encoded) = step.output {
+                let sps = sender_prepare.validate(&encoded.data, encoded.keyframe)?;
+                let actual = sender_prepare.configured(config, sps)?;
+                assert_eq!((actual.width, actual.height), (322, 242));
+                sequence += 1;
+                let mut packet = admission_test_packet(sequence, 1, 321, 241, encoded.keyframe);
+                packet.pts_90khz = encoded.pts_90khz;
+                if let Some((frame, _)) =
+                    decoder.decode(packet, Zeroizing::new(encoded.data), epoch, Instant::now())?
+                {
+                    assert_eq!((frame.width, frame.height), (321, 241));
+                    assert_eq!(frame.pixels.len(), 321 * 241 * 4);
+                    assert!(
+                        frame
+                            .pixels
+                            .chunks_exact(4)
+                            .step_by(137)
+                            .all(|p| (i32::from(p[1]) - 160).abs() < 20 && p[3] == 255)
+                    );
+                    assert_eq!(
+                        (decoder.stream.codec.width, decoder.stream.codec.height),
+                        (321, 241)
+                    );
+                    observed = true;
+                    break;
+                }
+            }
+        }
+        assert!(observed, "actual odd-sized H264 output never decoded");
+        Ok(())
+    }
     #[test]
     fn cpu_admission_rejects_bad_au_and_geometry_without_pending_or_submission() -> io::Result<()> {
         let mut decoder = admission_test_decoder();

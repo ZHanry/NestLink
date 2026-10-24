@@ -1044,7 +1044,7 @@ fn stream_capture<D: CaptureDevice>(
                 fps: target_fps,
                 bitrate_kbps: BITRATE_KBPS,
             };
-            legacy_prepare = match nestlink_media_session::LegacyPrepare::new(
+            legacy_prepare = match nestlink_media_session::LegacyPrepare::new_cpu_visible(
                 codec_kind,
                 config.width,
                 config.height,

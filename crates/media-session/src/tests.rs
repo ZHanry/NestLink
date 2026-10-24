@@ -318,6 +318,15 @@ async fn authorized_capture_vp8_roundtrip_multiple_sources_and_other_channels() 
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn negotiated_h264_roundtrip_recovers_a_reference_gap_and_stops_on_revoke() -> Result {
+    h264_roundtrip_geometry(320, 240).await
+}
+#[cfg(windows)]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn negotiated_h264_odd_visible_sender_and_cpu_receiver_preserve_layout() -> Result {
+    h264_roundtrip_geometry(321, 241).await
+}
+#[cfg(windows)]
+async fn h264_roundtrip_geometry(width: u32, height: u32) -> Result {
     let mut pair = pair_with_profile(false, Some(3), true).await?;
     let host_stop = pair.host.lease_control().subscribe_stopped();
     let controller_stop = pair.controller.lease_control().subscribe_stopped();
@@ -326,8 +335,8 @@ async fn negotiated_h264_roundtrip_recovers_a_reference_gap_and_stops_on_revoke(
     let stream = VideoStream {
         source: 42,
         codec: VideoConfig {
-            width: 320,
-            height: 240,
+            width,
+            height,
             fps: 30,
             bitrate_kbps: 2_000,
         },
@@ -346,8 +355,8 @@ async fn negotiated_h264_roundtrip_recovers_a_reference_gap_and_stops_on_revoke(
             logical: InputLayout {
                 left: 0,
                 top: 0,
-                width: 320,
-                height: 240,
+                width,
+                height,
             },
         }],
         vec![stream],
@@ -360,10 +369,10 @@ async fn negotiated_h264_roundtrip_recovers_a_reference_gap_and_stops_on_revoke(
             .map_err(|_| "fixture poisoned")?
             .push_back(RawFrame {
                 source: 42,
-                width: 320,
-                height: 240,
+                width,
+                height,
                 captured_at: Instant::now(),
-                pixels: [32, 160, 64, 255].repeat(320 * 240),
+                pixels: [32, 160, 64, 255].repeat((width * height) as usize),
             });
         tokio::time::sleep(Duration::from_millis(45)).await;
         let frame = receiver.poll_video().map_err(|error| {
@@ -379,7 +388,8 @@ async fn negotiated_h264_roundtrip_recovers_a_reference_gap_and_stops_on_revoke(
         if let Some(frame) = frame {
             assert!(frame.sequence > presented);
             assert_eq!(frame.epoch, EPOCH);
-            assert_eq!(frame.pixels.len(), 320 * 240 * 4);
+            assert_eq!((frame.width, frame.height), (width, height));
+            assert_eq!(frame.pixels.len(), (width * height * 4) as usize);
             assert!(
                 frame
                     .pixels

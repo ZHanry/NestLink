@@ -254,7 +254,7 @@ fn send<D: CaptureDevice>(
         codecs.insert(
             stream.source,
             Encoder {
-                prepare: crate::legacy_format::LegacyPrepare::new(
+                prepare: crate::legacy_format::LegacyPrepare::new_cpu_visible(
                     codec_kind,
                     stream.codec.width,
                     stream.codec.height,

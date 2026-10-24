@@ -7,7 +7,9 @@ claims or IPC messages, or enable production HEVC, 4:4:4, ten-bit or HDR.
 `protocol::media_format` validates exact codec/profile/level, chroma, depth,
 color, geometry, rational frame rate and bitrate tuples. Intersection preserves
 whole tuples; it cannot combine one endpoint's resolution with another entry's
-frame rate. Canonical format/set digests have separate domains. These data
+frame rate. Canonical version two includes the actual H264 constraint flags,
+coded geometry and crop in luma samples, separately from displayed dimensions.
+Canonical format/set digests have separate domains. These data
 structures and digests are not hardware evidence or authorization.
 
 The configured media-session sender and both actual daemon producers validate
@@ -23,6 +25,20 @@ history. Existing authority, sequence/PTS anti-replay, source/layout/generation,
 credit accounting, deadlines and real cleanup checks remain required. External
 Prepare and dynamic CPU decoder placeholders do not establish a wire bitrate or
 frame-rate contract.
+
+The CPU encoder/decoder wrapper continues to support odd visible dimensions:
+321x241 is replicated to a 322x242 H264 input, which may have 336x256 coded
+geometry and SPS crop, then decoded BGRA is cropped back to 321x241. The actual
+SPS display dimensions and crop are recorded without rewriting them as an odd
+4:2:0 SPS surface. Native layout and input coordinates retain visible dimensions.
+External/GPU surfaces retain strict even-dimension admission. Regressions use
+the actual CPU encoder, lazy decoder and authorized sender/receiver roundtrip;
+their execution remains subject to the Windows GitHub result.
+
+Windows target probe receipts retain the requested configuration separately
+from the actual encoded configuration, SPS constraints and crop. Probe decoder
+setup uses the requested configuration rather than legacy default rate/bitrate.
+These receipts are diagnostics and do not establish signed directional support.
 
 Decoded output records encoded source-color information: legacy VP8 uses BT601
 limited YUV with unspecified primaries/transfer; legacy H264 uses the existing
@@ -40,7 +56,8 @@ M04 remains incomplete. The next atomic increment must bind actual directional
 backend/adapter probe results to device announcements, the approved DB request
 snapshot, signed allowed-format scope, renewal/reconnection, SessionBinding,
 versioned selection/ack and IPC/data tickets. It must retain every existing
-authority and credit identity. Exact SPS constraint flags and coded/display/crop
-geometry require explicit representation before becoming a signed format digest.
+authority and credit identity. The internal exact SPS constraint flags and
+coded/display/crop representation must be bound to that approved authority
+before its digest can authorize a negotiated production format.
 Production HEVC, P010/ten-bit, actual 4:4:4 and high-frame qualified combinations
 then need positive resource creation, fallback and hardware/network acceptance.

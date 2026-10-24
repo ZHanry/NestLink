@@ -2,7 +2,9 @@
 //! Rate/bitrate exist only at the configured sender; never invent them from
 //! receiver placeholder VideoConfig values or an external Prepare's geometry.
 use nestlink_media_codec::{H264SpsInfo, H264Validator, VideoCodec, VideoConfig};
-use nestlink_protocol::media_format::{BitDepth, Chroma, Codec, Color, FrameRate, VideoFormat};
+use nestlink_protocol::media_format::{
+    BitDepth, Chroma, Codec, Color, FrameRate, Geometry, VideoFormat,
+};
 use std::io;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -51,13 +53,39 @@ impl LegacyPrepare {
             h264,
         })
     }
-    pub fn from_wire(codec: i32, width: u32, height: u32) -> io::Result<Self> {
-        let codec = match nestlink_protocol::NativeVideoCodec::try_from(codec) {
-            Ok(nestlink_protocol::NativeVideoCodec::Vp8) => VideoCodec::Vp8,
-            Ok(nestlink_protocol::NativeVideoCodec::H264Baseline) => VideoCodec::H264Baseline,
-            Err(_) => return Err(io::Error::other("unsupported legacy codec")),
+    /// CPU VideoEncoder/VideoDecoder preserve visible geometry but replicate
+    /// odd edges into an even H264 input surface, then crop decoded BGRA back.
+    /// External surfaces must use strict new(), since they have no such wrapper.
+    pub fn new_cpu_visible(codec: VideoCodec, width: u32, height: u32) -> io::Result<Self> {
+        let (encoded_width, encoded_height) = if codec == VideoCodec::H264Baseline {
+            (
+                width
+                    .checked_add(width % 2)
+                    .ok_or_else(|| io::Error::other("visible geometry overflow"))?,
+                height
+                    .checked_add(height % 2)
+                    .ok_or_else(|| io::Error::other("visible geometry overflow"))?,
+            )
+        } else {
+            (width, height)
         };
-        Self::new(codec, width, height)
+        let mut prepare = Self::new(codec, encoded_width, encoded_height)?;
+        prepare.surface.width = width;
+        prepare.surface.height = height;
+        Ok(prepare)
+    }
+    pub fn from_wire_cpu_visible(codec: i32, width: u32, height: u32) -> io::Result<Self> {
+        Self::new_cpu_visible(Self::wire_codec(codec)?, width, height)
+    }
+    pub fn from_wire(codec: i32, width: u32, height: u32) -> io::Result<Self> {
+        Self::new(Self::wire_codec(codec)?, width, height)
+    }
+    fn wire_codec(codec: i32) -> io::Result<VideoCodec> {
+        match nestlink_protocol::NativeVideoCodec::try_from(codec) {
+            Ok(nestlink_protocol::NativeVideoCodec::Vp8) => Ok(VideoCodec::Vp8),
+            Ok(nestlink_protocol::NativeVideoCodec::H264Baseline) => Ok(VideoCodec::H264Baseline),
+            Err(_) => Err(io::Error::other("unsupported legacy codec")),
+        }
     }
     pub fn surface(&self) -> LegacySurface {
         self.surface
@@ -115,10 +143,23 @@ impl LegacyPrepare {
                 {
                     return Err(io::Error::other("unsupported actual H264 profile or level"));
                 }
-                VideoFormat::legacy_h264(
+                let actual = self
+                    .h264
+                    .as_ref()
+                    .and_then(H264Validator::sps_geometry)
+                    .ok_or_else(|| io::Error::other("actual H264 SPS geometry required"))?;
+                VideoFormat::h264_observed(
                     info.level_idc,
-                    config.width,
-                    config.height,
+                    info.constraints,
+                    Geometry {
+                        coded_width: actual.coded_width,
+                        coded_height: actual.coded_height,
+                        crop: actual.crop,
+                    },
+                    // Actual SPS display dimensions of the CPU even copy.
+                    // Surface/native metadata keep the original visible size.
+                    config.width + config.width % 2,
+                    config.height + config.height % 2,
                     rate,
                     config.bitrate_kbps,
                 )
@@ -149,15 +190,31 @@ mod tests {
         idr_color(None)
     }
     fn idr_color(color: Option<(bool, [u8; 3])>) -> Vec<u8> {
+        idr_geometry(color, 19, 14, None)
+    }
+    fn idr_geometry(
+        color: Option<(bool, [u8; 3])>,
+        width_mbs: u32,
+        height_mbs: u32,
+        crop: Option<[u32; 4]>,
+    ) -> Vec<u8> {
         // Same bounded progressive Baseline fixture shape as media-codec tests.
         let mut bits = String::from("010000101100000000011111");
         for value in [0u32, 0, 2, 1] {
             ue(&mut bits, value);
         }
         bits.push('0');
-        ue(&mut bits, 19);
-        ue(&mut bits, 14);
-        bits.push_str("110"); // frame-only/direct, no crop
+        ue(&mut bits, width_mbs);
+        ue(&mut bits, height_mbs);
+        bits.push_str("11"); // frame-only/direct
+        if let Some(crop) = crop {
+            bits.push('1');
+            for value in crop {
+                ue(&mut bits, value);
+            }
+        } else {
+            bits.push('0');
+        }
         if let Some((full, values)) = color {
             bits.push_str("1001"); // VUI; no aspect/overscan, video signal present
             bits.push_str("101"); // unspecified video_format
@@ -189,6 +246,63 @@ mod tests {
         let value = format!("{:b}", value + 1);
         bits.push_str(&"0".repeat(value.len() - 1));
         bits.push_str(&value);
+    }
+    #[test]
+    fn actual_crop_and_constraints_survive_sender_receipt_and_rejection() -> io::Result<()> {
+        let mut prepare = LegacyPrepare::new(VideoCodec::H264Baseline, 1920, 1080)?;
+        let encoded = idr_geometry(None, 119, 67, Some([0, 0, 0, 4]));
+        // A forged frame flag must not commit the parsed geometry or SPS.
+        assert!(prepare.validate(&encoded, false).is_err());
+        assert_eq!(
+            prepare.h264.as_ref().and_then(H264Validator::sps_geometry),
+            None
+        );
+        let sps = prepare.validate(&encoded, true)?;
+        let target = VideoConfig {
+            width: 1920,
+            height: 1080,
+            fps: 30,
+            bitrate_kbps: 1000,
+        };
+        let format = prepare.configured(target, sps)?;
+        assert_eq!(format.h264_constraints, 0xc0);
+        assert_eq!(
+            format.geometry,
+            Geometry {
+                coded_width: 1920,
+                coded_height: 1088,
+                crop: [0, 0, 0, 8]
+            }
+        );
+        // Same displayed size with a different crop origin is a different SPS,
+        // and cannot silently replace the current parameter-set history.
+        assert!(
+            prepare
+                .validate(&idr_geometry(None, 119, 67, Some([0, 0, 4, 0])), true)
+                .is_err()
+        );
+        assert_eq!(
+            prepare.configured(target, sps)?.digest().ok(),
+            format.digest().ok()
+        );
+        Ok(())
+    }
+    #[test]
+    fn odd_visible_cpu_geometry_does_not_widen_external_or_unknown_codec() -> io::Result<()> {
+        let prepare = LegacyPrepare::new_cpu_visible(VideoCodec::H264Baseline, 321, 241)?;
+        assert_eq!(
+            (prepare.surface().width, prepare.surface().height),
+            (321, 241)
+        );
+        assert!(LegacyPrepare::new(VideoCodec::H264Baseline, 321, 241).is_err());
+        assert!(LegacyPrepare::from_wire(1, 321, 241).is_err());
+        assert!(LegacyPrepare::from_wire_cpu_visible(2, 321, 241).is_err());
+        assert!(LegacyPrepare::new_cpu_visible(VideoCodec::H264Baseline, 0, 241).is_err());
+        assert!(LegacyPrepare::new_cpu_visible(VideoCodec::H264Baseline, u32::MAX, 241).is_err());
+        // An otherwise64MiB visible image whose even copy exceeds budget must
+        // fail before allocation just as the actual codec wrapper does.
+        assert!(LegacyPrepare::new_cpu_visible(VideoCodec::H264Baseline, 4095, 4097).is_err());
+        Ok(())
     }
     #[test]
     fn actual_sps_and_sender_target_are_checked_before_format_receipt() -> io::Result<()> {

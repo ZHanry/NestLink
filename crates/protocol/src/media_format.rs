@@ -3,11 +3,11 @@
 use crate::{ContractError, ErrorCode, RAW_FRAME_BYTES, VIDEO_DIMENSION};
 use sha2::{Digest, Sha256};
 
-const VERSION: u16 = 1;
+const VERSION: u16 = 2;
 const MAX_FORMATS: usize = 64;
 const MAX_FPS: u32 = 144;
-const FORMAT_DOMAIN: &[u8] = b"nestlink/media-format/v1\0";
-const SET_DOMAIN: &[u8] = b"nestlink/media-format-set/v1\0";
+const FORMAT_DOMAIN: &[u8] = b"nestlink/media-format/v2\0";
+const SET_DOMAIN: &[u8] = b"nestlink/media-format-set/v2\0";
 type Result<T> = std::result::Result<T, ContractError>;
 fn invalid(reason: &'static str) -> ContractError {
     ContractError::new(ErrorCode::InvalidMessage, reason)
@@ -112,12 +112,85 @@ impl FrameRate {
     }
 }
 
+/// Coded luma samples and crop offsets in luma samples (never SPS crop units).
+/// Display width/height remain explicit in VideoFormat and must equal the crop.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub struct Geometry {
+    pub coded_width: u32,
+    pub coded_height: u32,
+    /// Left, right, top, bottom, in luma samples.
+    pub crop: [u32; 4],
+}
+impl Geometry {
+    pub const fn uncropped(width: u32, height: u32) -> Self {
+        Self {
+            coded_width: width,
+            coded_height: height,
+            crop: [0; 4],
+        }
+    }
+    fn validate(self, format: VideoFormat) -> Result<()> {
+        let [left, right, top, bottom] = self.crop;
+        let cropped_width = left
+            .checked_add(right)
+            .and_then(|v| self.coded_width.checked_sub(v));
+        let cropped_height = top
+            .checked_add(bottom)
+            .and_then(|v| self.coded_height.checked_sub(v));
+        let bytes_per_pixel = if format.bit_depth == BitDepth::Ten {
+            8
+        } else {
+            4
+        };
+        // Existing H264 validator permits bounded macroblock padding above the
+        // 64MiB display budget. Keep that independent coded-surface limit.
+        let budget = if format.codec == Codec::H264 {
+            65 * 1024 * 1024
+        } else {
+            RAW_FRAME_BYTES
+        };
+        if cropped_width != Some(format.width)
+            || cropped_height != Some(format.height)
+            || self.coded_width == 0
+            || self.coded_height == 0
+            || u64::from(self.coded_width) > VIDEO_DIMENSION
+            || u64::from(self.coded_height) > VIDEO_DIMENSION
+            || u64::from(self.coded_width) * u64::from(self.coded_height) * bytes_per_pixel > budget
+        {
+            return Err(invalid("invalid coded/display/crop geometry"));
+        }
+        match format.codec {
+            Codec::Vp8 if self != Self::uncropped(format.width, format.height) => {
+                return Err(invalid("VP8 does not expose SPS cropping"));
+            }
+            Codec::H264
+                if !self.coded_width.is_multiple_of(16)
+                    || !self.coded_height.is_multiple_of(16)
+                    || self.crop.iter().any(|v| !v.is_multiple_of(2)) =>
+            {
+                return Err(invalid("unsupported progressive H264 crop units"));
+            }
+            // HEVC remains syntax-only. No production PTL/parser contract is
+            // claimed; retain the existing restricted uncropped catalog.
+            Codec::Hevc if self != Self::uncropped(format.width, format.height) => {
+                return Err(invalid("HEVC crop requires a future SPS contract"));
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct VideoFormat {
     pub codec: Codec,
     pub profile: Profile,
     /// H264 level_idc, HEVC general_level_idc; zero only for VP8.
     pub level: u8,
+    /// Exact SPS constraint_set0..5 flags and reserved_zero_2bits byte.
+    /// Zero for non-H264 syntax; not an HEVC PTL representation.
+    pub h264_constraints: u8,
+    pub geometry: Geometry,
     pub tier: Tier,
     pub chroma: Chroma,
     pub bit_depth: BitDepth,
@@ -132,6 +205,7 @@ pub struct VideoFormat {
 }
 impl VideoFormat {
     pub fn validate(self) -> Result<()> {
+        self.geometry.validate(self)?;
         self.frame_rate.validate()?;
         self.color.validate(self.bit_depth)?;
         let width = u64::from(self.width);
@@ -164,6 +238,7 @@ impl VideoFormat {
         match (self.codec, self.profile) {
             (Codec::Vp8, Profile::Vp8) => {
                 if !legacy_pixels
+                    || self.h264_constraints != 0
                     || self.level != 0
                     || self.tier != Tier::NotApplicable
                     || self.color != Color::LEGACY_VP8_BT601
@@ -173,6 +248,8 @@ impl VideoFormat {
             }
             (Codec::H264, Profile::H264Baseline) => {
                 if !legacy_pixels
+                    || self.h264_constraints & 3 != 0
+                    || (self.level == 11 && self.h264_constraints & 0x10 != 0)
                     || self.tier != Tier::NotApplicable
                     || self.color != Color::SDR_BT709_LIMITED
                 {
@@ -180,8 +257,8 @@ impl VideoFormat {
                 }
                 let (max_fs, max_mbps, max_kbps) =
                     h264_limits(self.level).ok_or_else(|| invalid("unsupported H264 level"))?;
-                let columns = width.div_ceil(16);
-                let rows = height.div_ceil(16);
+                let columns = u64::from(self.geometry.coded_width / 16);
+                let rows = u64::from(self.geometry.coded_height / 16);
                 if columns * rows > max_fs
                     || columns * columns > max_fs * 8
                     || rows * rows > max_fs * 8
@@ -197,9 +274,12 @@ impl VideoFormat {
                 // coded luma and uncropped display, aligned to the minimum 8x8
                 // luma block. Display area alone undercounts padded geometry.
                 // Actual SPS validation must require exact coded dimensions
-                // and zero crop. Padded/cropped streams need an explicit later
-                // coded/display/crop model, not implicit rounding here.
-                if !self.width.is_multiple_of(8) || !self.height.is_multiple_of(8) {
+                // and zero crop. Extending this catalog needs an actual HEVC
+                // SPS/PTL parser and backend evidence, not implicit rounding.
+                if self.h264_constraints != 0
+                    || !self.width.is_multiple_of(8)
+                    || !self.height.is_multiple_of(8)
+                {
                     return Err(invalid("HEVC requires uncropped 8-aligned coded geometry"));
                 }
                 let pixels_valid = match self.profile {
@@ -242,6 +322,7 @@ impl VideoFormat {
     pub fn legacy_vp8(width: u32, height: u32, fps: FrameRate, kbps: u32) -> Result<Self> {
         Self::legacy(Codec::Vp8, Profile::Vp8, 0, width, height, fps, kbps)
     }
+    /// Target description only. Actual sender receipts use h264_observed.
     pub fn legacy_h264(
         level: u8,
         width: u32,
@@ -259,6 +340,21 @@ impl VideoFormat {
             kbps,
         )
     }
+    pub fn h264_observed(
+        level: u8,
+        constraints: u8,
+        geometry: Geometry,
+        width: u32,
+        height: u32,
+        fps: FrameRate,
+        kbps: u32,
+    ) -> Result<Self> {
+        let mut format = Self::legacy_h264(level, width, height, fps, kbps)?;
+        format.h264_constraints = constraints;
+        format.geometry = geometry;
+        format.validate()?;
+        Ok(format)
+    }
     fn legacy(
         codec: Codec,
         profile: Profile,
@@ -272,6 +368,26 @@ impl VideoFormat {
             codec,
             profile,
             level,
+            h264_constraints: 0,
+            geometry: if codec == Codec::H264 {
+                let coded_width = width
+                    .checked_add(15)
+                    .ok_or_else(|| invalid("geometry overflow"))?
+                    / 16
+                    * 16;
+                let coded_height = height
+                    .checked_add(15)
+                    .ok_or_else(|| invalid("geometry overflow"))?
+                    / 16
+                    * 16;
+                Geometry {
+                    coded_width,
+                    coded_height,
+                    crop: [0, coded_width - width, 0, coded_height - height],
+                }
+            } else {
+                Geometry::uncropped(width, height)
+            },
             tier: Tier::NotApplicable,
             chroma: Chroma::Yuv420,
             bit_depth: BitDepth::Eight,
@@ -290,12 +406,13 @@ impl VideoFormat {
     }
 
     fn canonical(self) -> Vec<u8> {
-        let mut bytes = Vec::with_capacity(32);
+        let mut bytes = Vec::with_capacity(57);
         bytes.extend_from_slice(&VERSION.to_be_bytes());
         bytes.extend_from_slice(&[
             self.codec as u8,
             self.profile as u8,
             self.level,
+            self.h264_constraints,
             self.tier as u8,
             self.chroma as u8,
             self.bit_depth as u8,
@@ -307,6 +424,12 @@ impl VideoFormat {
         for value in [
             self.width,
             self.height,
+            self.geometry.coded_width,
+            self.geometry.coded_height,
+            self.geometry.crop[0],
+            self.geometry.crop[1],
+            self.geometry.crop[2],
+            self.geometry.crop[3],
             self.frame_rate.numerator,
             self.frame_rate.denominator,
             self.max_kbps,

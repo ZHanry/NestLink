@@ -26,7 +26,12 @@ pub struct VideoEncodeStep {
 }
 #[derive(Clone, Copy, Debug)]
 pub struct H264EncoderProbe {
+    /// Requested target; odd visible dimensions may be rounded for the codec.
     pub config: VideoConfig,
+    /// Actual display dimensions supplied to the encoder and independent decoder.
+    pub encoded_config: VideoConfig,
+    /// Actual SPS coded dimensions and crop, retained before resource shutdown.
+    pub geometry: crate::H264Geometry,
     pub sps: H264SpsInfo,
     /// Observed encoded output from a hardware MFT, not a zero-copy claim.
     pub hardware: bool,
@@ -358,7 +363,7 @@ pub fn probe_h264_encoder(
                         frame == 0,
                     )?;
                     if let Some(packet) = step.output {
-                        let mut independent = crate::H264Validator::new(width, height)?;
+                        let mut independent = crate::H264Validator::new_sdr(width, height)?;
                         let unit = independent.validate(&packet.data)?;
                         if !unit.keyframe {
                             return Err(io::Error::other(
@@ -378,7 +383,7 @@ pub fn probe_h264_encoder(
                         }
                         // A fresh software MFT decodes this IDR by itself. Do
                         // not infer browser GPU decoding from this owned probe.
-                        let mut decoder = crate::MfH264Decoder::new(width, height, false)?;
+                        let mut decoder = crate::MfH264Decoder::with_config(coded, false)?;
                         let mut decoded = decoder.decode_frame(&packet.data, packet.pts_90khz)?;
                         for _ in 0..8 {
                             if decoded.is_some() {
@@ -406,6 +411,10 @@ pub fn probe_h264_encoder(
                         }
                         return Ok(H264EncoderProbe {
                             config,
+                            encoded_config: coded,
+                            geometry: independent
+                                .sps_geometry()
+                                .ok_or_else(|| io::Error::other("probe SPS geometry missing"))?,
                             sps,
                             hardware: encoder.hardware(),
                         });
@@ -487,6 +496,13 @@ mod tests {
                 },
                 Some(limits),
             )?;
+            assert_eq!(probe.encoded_config.width, width);
+            assert_eq!(probe.encoded_config.height, height);
+            assert_eq!(probe.geometry.coded_width, width.div_ceil(16) * 16);
+            assert_eq!(probe.geometry.coded_height, height.div_ceil(16) * 16);
+            let [left, right, top, bottom] = probe.geometry.crop;
+            assert_eq!(probe.geometry.coded_width - left - right, width);
+            assert_eq!(probe.geometry.coded_height - top - bottom, height);
             assert_eq!(
                 (
                     probe.config.width,
