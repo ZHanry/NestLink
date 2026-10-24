@@ -654,6 +654,26 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     }
 }
 
+fn parse_native_media_target(value: &str) -> Result<nestlink_media_codec::VideoConfig, String> {
+    let (size, rate) = value
+        .split_once('@')
+        .ok_or("expected WIDTHxHEIGHT@FPS:KBPS")?;
+    let (width, height) = size.split_once('x').ok_or("expected WIDTHxHEIGHT")?;
+    let (fps, kbps) = rate.split_once(':').ok_or("expected FPS:KBPS")?;
+    let parse = |part: &str| {
+        part.parse::<u32>()
+            .map_err(|_| "target values must be unsigned integers".to_owned())
+    };
+    let target = nestlink_media_codec::VideoConfig {
+        width: parse(width)?,
+        height: parse(height)?,
+        fps: parse(fps)?,
+        bitrate_kbps: parse(kbps)?,
+    };
+    nestlink_app_core::NativeMediaProvider::cpu_software(target).map_err(|e| e.to_string())?;
+    Ok(target)
+}
+
 #[cfg(test)]
 mod quota_cli_tests {
     use super::*;
@@ -756,24 +776,4 @@ mod quota_cli_tests {
         );
         Ok(())
     }
-}
-
-fn parse_native_media_target(value: &str) -> Result<nestlink_media_codec::VideoConfig, String> {
-    let (size, rate) = value
-        .split_once('@')
-        .ok_or("expected WIDTHxHEIGHT@FPS:KBPS")?;
-    let (width, height) = size.split_once('x').ok_or("expected WIDTHxHEIGHT")?;
-    let (fps, kbps) = rate.split_once(':').ok_or("expected FPS:KBPS")?;
-    let parse = |part: &str| {
-        part.parse::<u32>()
-            .map_err(|_| "target values must be unsigned integers".to_owned())
-    };
-    let target = nestlink_media_codec::VideoConfig {
-        width: parse(width)?,
-        height: parse(height)?,
-        fps: parse(fps)?,
-        bitrate_kbps: parse(kbps)?,
-    };
-    nestlink_app_core::NativeMediaProvider::cpu_software(target).map_err(|e| e.to_string())?;
-    Ok(target)
 }

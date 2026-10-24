@@ -213,7 +213,7 @@ impl DesktopApp {
                             .filter(|selected| {
                                 selected.id == request.id && selected.nonce == request.nonce
                             })
-                            .and_then(|_| snapshot.selected_media_scope.data.as_deref());
+                            .and(snapshot.selected_media_scope.data.as_deref());
                         let choice = ApprovalChoice {
                             approved: false,
                             permissions: Vec::new(),
