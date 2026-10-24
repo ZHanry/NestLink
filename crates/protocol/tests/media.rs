@@ -6,6 +6,8 @@ use prost::Message;
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 fn video() -> NativeVideo {
     NativeVideo {
+        format_epoch: 0,
+        format_sha256: Vec::new(),
         codec: 0,
         schema_version: 1,
         connection_generation: 9,
@@ -58,6 +60,8 @@ fn independent_native_wire_vectors_fix_field_numbers_and_clocks() -> Result {
 fn video_feedback_wire_budget_and_required_domains_are_bounded() -> Result {
     use nestlink_protocol::{NativeVideoFeedback, VIDEO_FEEDBACK_BYTES, VideoRecoveryReason};
     let message = NativeVideoFeedback {
+        format_epoch: 0,
+        format_sha256: Vec::new(),
         schema_version: 1,
         connection_generation: 9,
         layout_epoch: 7,
@@ -225,4 +229,36 @@ fn opus_packet_bytes_and_channel_identity_are_bounded() -> Result {
     sound.payload.push(0);
     assert!(sound.validate().is_err());
     Ok(())
+}
+
+#[test]
+fn format_epoch_digest_shape_is_strict_for_video_and_recovery() {
+    for (epoch, hash) in [
+        (0, vec![1; 32]),
+        (1, vec![]),
+        (1, vec![0; 32]),
+        (u64::MAX, vec![1; 32]),
+        (1, vec![1; 31]),
+    ] {
+        let mut frame = video();
+        frame.format_epoch = epoch;
+        frame.format_sha256 = hash.clone();
+        assert!(frame.validate().is_err());
+        let feedback = nestlink_protocol::NativeVideoFeedback {
+            schema_version: 1,
+            connection_generation: 9,
+            layout_epoch: 7,
+            source: 3,
+            request_sequence: 1,
+            last_sequence: 0,
+            reason: 1,
+            format_epoch: epoch,
+            format_sha256: hash,
+        };
+        assert!(feedback.validate().is_err());
+    }
+    let mut frame = video();
+    frame.format_epoch = 1;
+    frame.format_sha256 = vec![1; 32];
+    assert!(frame.validate().is_ok());
 }

@@ -371,7 +371,7 @@ impl Store {
         request: RemoteRequest,
         now: u64,
     ) -> Result<RemoteView, StorageError> {
-        self.create_remote_kind(actor, request, now, false)
+        self.create_remote_kind(actor, request, now, false, false)
     }
     pub fn create_trusted_remote(
         &mut self,
@@ -379,7 +379,22 @@ impl Store {
         request: RemoteRequest,
         now: u64,
     ) -> Result<RemoteView, StorageError> {
-        self.create_remote_kind(actor, request, now, true)
+        self.create_remote_kind(actor, request, now, true, false)
+    }
+    pub fn create_media_remote(
+        &mut self,
+        actor: &Principal,
+        body: nestlink_protocol::api::MediaRemoteRequest,
+        now: u64,
+    ) -> Result<RemoteView, StorageError> {
+        if body.media_format_version != 2
+            || !self.media_issuance_enabled_for_request(&body.request.id)
+        {
+            return Err(StorageError::Invalid(
+                "media authority runtime is not enabled",
+            ));
+        }
+        self.create_remote_kind(actor, body.request, now, false, true)
     }
     fn create_remote_kind(
         &mut self,
@@ -387,6 +402,7 @@ impl Store {
         request: RemoteRequest,
         now: u64,
         trusted: bool,
+        media: bool,
     ) -> Result<RemoteView, StorageError> {
         require_id(&request.id)?;
         require_id(&request.controller_device_id)?;
@@ -470,6 +486,7 @@ impl Store {
             if account == actor.account_id
                 && original == request_json
                 && original_trust.is_some() == trusted
+                && self.frozen_media_scope(&request.id)?.is_some() == media
             {
                 return self.remote(actor, &request.id);
             }
@@ -486,6 +503,14 @@ impl Store {
             }
         }
         tx.execute("INSERT INTO remote_requests(id,controller_device_id,host_device_id,controller_account_id,permissions_json,paths_json,capability_sha256,nonce,policy_revision,expires,status,request_json,management_session_id,trust_revision) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14)",params![request.id,request.controller_device_id,request.host_device_id,actor.account_id,serde_json::to_string(&request.permissions)?,serde_json::to_string(&paths.to_wire())?,digest(&serde_json::to_vec(&common)?),random_bytes::<32>(),revision,now+60,if trusted{"approved"}else{"pending"},request_json,actor.session_id,trust.map(|trust|trust.revision)])?;
+        if media {
+            let scope =
+                self.intersect_media(&request.controller_device_id, &request.host_device_id, now)?;
+            tx.execute(
+                "INSERT INTO remote_media_scopes(request_id,json,sha256) VALUES(?1,?2,?3)",
+                params![request.id, serde_json::to_string(&scope)?, scope.sha256],
+            )?;
+        }
         if trusted {
             tx.execute("INSERT INTO sessions(id,controller_device_id,host_device_id,connection_generation) VALUES(?1,?2,?3,1)",params![request.id,request.controller_device_id,request.host_device_id])?;
         }
@@ -623,7 +648,7 @@ impl Store {
         })
         .collect()
     }
-    pub fn approval_transcript(
+    pub(crate) fn approval_transcript_base(
         &self,
         actor: &Principal,
         id: &str,
@@ -654,6 +679,35 @@ impl Store {
             expires_at_unix_ms: view.expires_at_unix_ms,
         })
     }
+    pub fn approval_transcript(
+        &self,
+        actor: &Principal,
+        id: &str,
+        choice: &ApprovalChoice,
+        now: u64,
+    ) -> Result<DeviceActionClaims, StorageError> {
+        if self.frozen_media_scope(id)?.is_some() {
+            return Err(StorageError::Forbidden);
+        }
+        self.approval_transcript_base(actor, id, choice, now)
+    }
+    pub fn approve_media_remote(
+        &mut self,
+        actor: &Principal,
+        id: &str,
+        body: nestlink_protocol::api::MediaApprovalSubmission,
+        now: u64,
+    ) -> Result<(), StorageError> {
+        let transcript = self.media_approval_transcript(actor, id, &body.choice, now)?;
+        self.apply_remote_approval(
+            actor,
+            id,
+            body.choice.choice,
+            &body.signature,
+            now,
+            transcript,
+        )
+    }
     pub fn approve_remote(
         &mut self,
         actor: &Principal,
@@ -663,6 +717,17 @@ impl Store {
         now: u64,
     ) -> Result<(), StorageError> {
         let transcript = self.approval_transcript(actor, id, &choice, now)?;
+        self.apply_remote_approval(actor, id, choice, signature, now, transcript)
+    }
+    fn apply_remote_approval(
+        &mut self,
+        actor: &Principal,
+        id: &str,
+        choice: ApprovalChoice,
+        signature: &str,
+        now: u64,
+        transcript: DeviceActionClaims,
+    ) -> Result<(), StorageError> {
         let host = self.device_record_at(&transcript.device_id, now)?;
         verify_device_action(&transcript, &host.public_key, &decode_signature(signature)?)?;
         let view = self.remote(actor, id)?;
@@ -718,6 +783,7 @@ impl Store {
                 |r| r.get(0),
             )?;
             let claims: PermitClaims = serde_json::from_str(&json)?;
+            self.validate_issued_media_scope(id, &claims, now)?;
             self.device_record_at(&view.host_device_id, now)?;
             let controller_expiry = self.device_expiration_ms(&view.controller_device_id)?;
             let host_expiry = self.device_expiration_ms(&view.host_device_id)?;
@@ -764,6 +830,7 @@ impl Store {
         let json = json.ok_or(StorageError::Forbidden)?;
         let claims: PermitClaims = serde_json::from_str(&json)?;
         claims.validate()?;
+        self.validate_issued_media_scope(id, &claims, now_ms / 1000)?;
         let generation: u64 = self.connection.query_row("SELECT r.connection_generation FROM remote_requests r JOIN sessions s ON s.id=r.id WHERE r.id=?1 AND r.connection_generation=s.connection_generation", [id], |r| r.get(0))?;
         let controller = self.device_record_at(&claims.controller_device_id, now_ms / 1000)?;
         let host = self.device_record_at(&claims.host_device_id, now_ms / 1000)?;
@@ -882,7 +949,24 @@ impl Store {
         )?;
         let controller_expiry = self.device_expiration_ms(&view.controller_device_id)?;
         let host_expiry = self.device_expiration_ms(&view.host_device_id)?;
+        let media_scope = self.frozen_media_scope(id)?;
+        let (media_format_version, media_formats, media_format_sha256) =
+            if let Some(scope) = media_scope {
+                if !self.media_issuance_enabled_for_request(id) {
+                    return Err(StorageError::Invalid(
+                        "media authority runtime is not enabled",
+                    ));
+                }
+                self.require_media_still_available(id, &scope, now)?;
+                (scope.version, scope.formats, scope.sha256)
+            } else {
+                (0, Vec::new(), Vec::new())
+            };
         let mut required_capabilities = vec!["vp8".to_owned()];
+        if media_format_version != 0 {
+            required_capabilities
+                .push(nestlink_protocol::media_authority::FORMAT_CAPABILITY.into());
+        }
         if !self.is_browser_controller(&view.controller_device_id)?
             && c.capabilities
                 .iter()
@@ -922,8 +1006,14 @@ impl Store {
                 [id],
                 |row| row.get(0),
             )?;
-            required_capabilities =
-                serde_json::from_str::<PermitClaims>(&previous)?.required_capabilities;
+            let previous = serde_json::from_str::<PermitClaims>(&previous)?;
+            if previous.media_format_version != media_format_version
+                || previous.media_formats != media_formats
+                || previous.media_format_sha256 != media_format_sha256
+            {
+                return Err(StorageError::Forbidden);
+            }
+            required_capabilities = previous.required_capabilities;
         }
         let setup = sequence == 1
             && required_capabilities
@@ -965,6 +1055,9 @@ impl Store {
             .into());
         }
         let claims = PermitClaims {
+            media_format_version,
+            media_formats,
+            media_format_sha256,
             schema_version: SCHEMA_VERSION,
             deployment_id: self.deployment_id()?,
             security_epoch: self.security_epoch()?,
@@ -1132,3 +1225,7 @@ pub(crate) fn validate_permissions(permissions: &[i32]) -> Result<(), StorageErr
     }
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "media_authority_tests.rs"]
+mod media_authority_tests;

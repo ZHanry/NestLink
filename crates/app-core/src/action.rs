@@ -152,6 +152,13 @@ pub enum Action {
         expected_policy_revision: u64,
         choice: ApprovalChoice,
     },
+    ApproveMediaRemote {
+        request_id: String,
+        expected_nonce: String,
+        expected_policy_revision: u64,
+        choice: ApprovalChoice,
+        reviewed_scope: nestlink_protocol::media_authority::FrozenMediaScope,
+    },
     RevokeRemote {
         request_id: String,
     },
@@ -246,7 +253,9 @@ impl Action {
             Self::EnrollLocalDevice { .. } => OperationKind::EnrollDevice,
             Self::RevokeDevice { .. } => OperationKind::RevokeDevice,
             Self::RequestRemote { .. } => OperationKind::RequestRemote,
-            Self::ApproveRemote { .. } => OperationKind::ApproveRemote,
+            Self::ApproveRemote { .. } | Self::ApproveMediaRemote { .. } => {
+                OperationKind::ApproveRemote
+            }
             Self::RevokeRemote { .. } => OperationKind::RevokeRemote,
             Self::IssueRemotePermit { .. } => OperationKind::IssueRemotePermit,
             Self::StartNativeSession { .. } => OperationKind::StartNativeSession,
@@ -284,6 +293,7 @@ impl Action {
             Self::EnrollLocalDevice { .. }
                 | Self::RequestRemote { .. }
                 | Self::ApproveRemote { .. }
+                | Self::ApproveMediaRemote { .. }
                 | Self::StartNativeSession { .. }
                 | Self::StopNativeSession { .. }
                 | Self::StartBrowserHost { .. }
@@ -371,6 +381,19 @@ impl Action {
                 path_mode,
                 ..
             } => valid_id(host_device_id) && permissions.len() <= 7 && short(path_mode),
+            Self::ApproveMediaRemote {
+                request_id,
+                expected_nonce,
+                choice,
+                reviewed_scope,
+                ..
+            } => {
+                valid_id(request_id)
+                    && short(expected_nonce)
+                    && choice.permissions.len() <= 7
+                    && choice.paths.len() <= 2
+                    && reviewed_scope.validate().is_ok()
+            }
             Self::ApproveRemote {
                 request_id,
                 expected_nonce,
@@ -458,7 +481,9 @@ impl Action {
             Self::LoadAudit { .. } => SectionKey::Audit,
             Self::LoadNodeUsage { .. } => SectionKey::NodeUsage,
             Self::EnrollLocalDevice { .. } | Self::RevokeDevice { .. } => SectionKey::Devices,
-            Self::ApproveRemote { .. } | Self::RevokeRemote { .. } => SectionKey::Requests,
+            Self::ApproveRemote { .. }
+            | Self::ApproveMediaRemote { .. }
+            | Self::RevokeRemote { .. } => SectionKey::Requests,
             Self::StartNativeSession { .. } | Self::StopNativeSession { .. } => {
                 SectionKey::NativeSession
             }

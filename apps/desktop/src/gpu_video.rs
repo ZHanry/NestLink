@@ -40,7 +40,16 @@ impl GpuVideo {
     pub(super) fn layout_active_presenter() -> Self {
         Self {
             enabled: true,
-            presenter: Some(Presenter::new(640, 480, 1)),
+            presenter: Some(Presenter::new(
+                nestlink_media_codec::VideoConfig {
+                    width: 640,
+                    height: 480,
+                    fps: 30,
+                    bitrate_kbps: 4000,
+                },
+                1,
+                gpu_presenter::test_context(),
+            )),
             submitted: true,
             ..Self::default()
         }
@@ -171,11 +180,20 @@ impl DesktopApp {
                 if gpu.generation == 0 {
                     failed = true;
                 } else {
-                    gpu.presenter = Some(
-                        Presenter::new(width, height, gpu.generation).with_terminal_sink(
+                    gpu.presenter = match Presenter::for_context(
+                        width,
+                        height,
+                        gpu.generation,
+                        binding.clone(),
+                    ) {
+                        Ok(presenter) => Some(presenter.with_terminal_sink(
                             super::gpu_diagnostics::TerminalSink::new(&self.directory, &binding),
-                        ),
-                    );
+                        )),
+                        Err(_) => {
+                            failed = true;
+                            None
+                        }
+                    };
                     self.video_texture = None;
                     self.video_observation = None;
                     self.video_binding = Some(nestlink_app_ipc::NativeVideoBinding {
@@ -193,11 +211,15 @@ impl DesktopApp {
         }
         if let Some(presenter) = &mut gpu.presenter {
             presenter.authority_deadline(self.bridge.compressed_authority_deadline());
-            for event in presenter.poll() {
+            for (event_context, event) in presenter.poll() {
                 let Some(binding) = gpu.context.clone() else {
                     failed = true;
                     break;
                 };
+                if event_context.as_ref() != &binding {
+                    failed = true;
+                    break;
+                }
                 match event {
                     Event::Prepared => {
                         if !self
@@ -309,11 +331,20 @@ impl DesktopApp {
                         failed = true;
                         break;
                     }
-                    gpu.presenter = Some(
-                        Presenter::new(width, height, gpu.generation).with_terminal_sink(
+                    gpu.presenter = match Presenter::for_context(
+                        width,
+                        height,
+                        gpu.generation,
+                        binding.clone(),
+                    ) {
+                        Ok(presenter) => Some(presenter.with_terminal_sink(
                             super::gpu_diagnostics::TerminalSink::new(&self.directory, &binding),
-                        ),
-                    );
+                        )),
+                        Err(_) => {
+                            failed = true;
+                            None
+                        }
+                    };
                     gpu.context = Some(binding.clone());
                     self.video_texture = None;
                     self.video_observation = None;
@@ -344,17 +375,23 @@ impl DesktopApp {
                         failed = true;
                         break;
                     }
+                    let Some(presenter) = &gpu.presenter else {
+                        failed = true;
+                        break;
+                    };
+                    let owner_context = presenter.context();
+                    if owner_context.as_ref() != &binding {
+                        failed = true;
+                        break;
+                    }
                     let unit = AccessUnit {
+                        context: owner_context,
                         delivery_sequence,
                         native_sequence,
                         pts_90khz,
                         due_qpc,
                         not_after_qpc,
                         payload,
-                    };
-                    let Some(presenter) = &gpu.presenter else {
-                        failed = true;
-                        break;
                     };
                     if let Err(unit) = presenter.submit(unit) {
                         gpu.pending = Some(unit);
@@ -387,7 +424,8 @@ fn compressed_current(
     displays: Option<&nestlink_app_core::NativeDisplayState>,
 ) -> bool {
     let binding = &context.binding;
-    runtime == Some(binding.runtime_id.as_str())
+    context.validate().is_ok()
+        && runtime == Some(binding.runtime_id.as_str())
         && snapshot.generation == binding.ui_generation
         && snapshot.native_session.data.as_ref().is_some_and(|s| {
             s.status == NativeSessionStatus::Connected
@@ -395,12 +433,16 @@ fn compressed_current(
                 && s.connection_generation == binding.connection_generation
         })
         && displays
+            .filter(|d| {
+                d.format_epoch == context.format_epoch && d.format_sha256 == context.format_sha256
+            })
             .and_then(|d| d.selected.as_ref())
             .is_some_and(|selected| {
                 selected.source == binding.source
                     && selected.layout_epoch == context.layout_epoch
                     && selected.sequence == context.selection_sequence
                     && selected.catalog.revision == context.catalog_revision
+                    && selected.catalog.sha256 == context.catalog_sha256
                     && selected.catalog.request_id == binding.request_id
                     && selected.catalog.connection_generation == binding.connection_generation
             })

@@ -34,6 +34,9 @@ fn layout() -> Layout {
 fn fixture() -> (PermitSigner, PermitClaims, TrustPins) {
     let signer = PermitSigner::from_seed([1; 32]);
     let claims = PermitClaims {
+        media_format_version: 0,
+        media_formats: Vec::new(),
+        media_format_sha256: Vec::new(),
         schema_version: SCHEMA_VERSION,
         deployment_id: id(1),
         security_epoch: 1,

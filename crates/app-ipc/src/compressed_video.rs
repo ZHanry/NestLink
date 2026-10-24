@@ -29,9 +29,61 @@ pub struct NativeCompressedBinding {
     pub stream_id: [u8; 16],
     pub stream_epoch: u64,
 }
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+/// Canonical format bytes, never a serde representation of an enum layout.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(transparent)]
+pub struct WireVideoFormat(Vec<u8>);
+impl WireVideoFormat {
+    pub fn new(format: nestlink_protocol::media_format::VideoFormat) -> Result<Self, Error> {
+        let bytes = format.encode().map_err(|_| Error::Protocol)?;
+        if bytes.len() != 57 {
+            return Err(Error::Protocol);
+        }
+        Ok(Self(bytes))
+    }
+    pub fn decode(&self) -> Result<nestlink_protocol::media_format::VideoFormat, Error> {
+        if self.0.len() != 57 {
+            return Err(Error::Protocol);
+        }
+        nestlink_protocol::media_format::VideoFormat::decode(&self.0).map_err(|_| Error::Protocol)
+    }
+}
+impl<'de> Deserialize<'de> for WireVideoFormat {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = Self(Vec::<u8>::deserialize(deserializer)?);
+        value.decode().map_err(serde::de::Error::custom)?;
+        Ok(value)
+    }
+}
+fn required_format<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<Option<WireVideoFormat>, D::Error> {
+    Option::<WireVideoFormat>::deserialize(deserializer)
+}
+#[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
+struct RawCompressedContext {
+    ipc_version: u16,
+    catalog_sha256: [u8; 32],
+    format_epoch: u64,
+    format_sha256: [u8; 32],
+    #[serde(deserialize_with = "required_format")]
+    format: Option<WireVideoFormat>,
+    binding: NativeCompressedBinding,
+    catalog_revision: u64,
+    selection_sequence: u64,
+    layout_epoch: u64,
+    decode_epoch: u64,
+    configuration_id: u64,
+}
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(try_from = "RawCompressedContext")]
 pub struct CompressedContext {
+    pub ipc_version: u16,
+    pub catalog_sha256: [u8; 32],
+    pub format_epoch: u64,
+    pub format_sha256: [u8; 32],
+    pub format: Option<WireVideoFormat>,
     pub binding: NativeCompressedBinding,
     pub catalog_revision: u64,
     pub selection_sequence: u64,
@@ -39,9 +91,66 @@ pub struct CompressedContext {
     pub decode_epoch: u64,
     pub configuration_id: u64,
 }
+impl TryFrom<RawCompressedContext> for CompressedContext {
+    type Error = Error;
+    fn try_from(raw: RawCompressedContext) -> Result<Self, Error> {
+        let context = Self {
+            ipc_version: raw.ipc_version,
+            catalog_sha256: raw.catalog_sha256,
+            format_epoch: raw.format_epoch,
+            format_sha256: raw.format_sha256,
+            format: raw.format,
+            binding: raw.binding,
+            catalog_revision: raw.catalog_revision,
+            selection_sequence: raw.selection_sequence,
+            layout_epoch: raw.layout_epoch,
+            decode_epoch: raw.decode_epoch,
+            configuration_id: raw.configuration_id,
+        };
+        context.validate()?;
+        Ok(context)
+    }
+}
+
 impl CompressedContext {
-    fn domain(&self) -> VideoSinkContext {
-        VideoSinkContext {
+    pub fn validate(&self) -> Result<(), Error> {
+        if self.ipc_version != 2 || self.format_epoch > i64::MAX as u64 {
+            return Err(Error::Protocol);
+        }
+        match &self.format {
+            None if self.format_epoch == 0 && self.format_sha256 == [0; 32] => Ok(()),
+            Some(wire)
+                if self.format_epoch > 0
+                    && self.catalog_sha256 != [0; 32]
+                    && self.format_sha256 != [0; 32] =>
+            {
+                let format = wire.decode()?;
+                if format.codec != nestlink_protocol::media_format::Codec::H264
+                    || format.digest().map_err(|_| Error::Protocol)? != self.format_sha256
+                {
+                    return Err(Error::Protocol);
+                }
+                Ok(())
+            }
+            _ => Err(Error::Protocol),
+        }
+    }
+    pub fn video_format(
+        &self,
+    ) -> Result<Option<nestlink_protocol::media_format::VideoFormat>, Error> {
+        self.validate()?;
+        self.format
+            .as_ref()
+            .map(WireVideoFormat::decode)
+            .transpose()
+    }
+    fn domain(&self) -> Result<VideoSinkContext, Error> {
+        self.validate()?;
+        Ok(VideoSinkContext {
+            catalog_sha256: self.catalog_sha256,
+            format_epoch: self.format_epoch,
+            format_sha256: self.format_sha256,
+            format: self.video_format()?,
             connection_generation: self.binding.connection_generation,
             source: self.binding.source,
             stream_id: self.binding.stream_id,
@@ -51,7 +160,7 @@ impl CompressedContext {
             layout_epoch: self.layout_epoch,
             decode_epoch: self.decode_epoch,
             configuration_id: self.configuration_id,
-        }
+        })
     }
     fn session(&self) -> NativeSessionBinding {
         NativeSessionBinding {
@@ -59,8 +168,13 @@ impl CompressedContext {
             connection_generation: self.binding.connection_generation,
         }
     }
-    fn from_domain(binding: &NativeVideoBinding, c: VideoSinkContext) -> Self {
-        Self {
+    fn from_domain(binding: &NativeVideoBinding, c: VideoSinkContext) -> Result<Self, Error> {
+        let context = Self {
+            ipc_version: 2,
+            catalog_sha256: c.catalog_sha256,
+            format_epoch: c.format_epoch,
+            format_sha256: c.format_sha256,
+            format: c.format.map(WireVideoFormat::new).transpose()?,
             binding: NativeCompressedBinding {
                 runtime_id: binding.runtime_id.clone(),
                 ui_generation: binding.ui_generation,
@@ -75,7 +189,9 @@ impl CompressedContext {
             layout_epoch: c.layout_epoch,
             decode_epoch: c.decode_epoch,
             configuration_id: c.configuration_id,
-        }
+        };
+        context.validate()?;
+        Ok(context)
     }
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -254,7 +370,7 @@ pub(crate) fn open(
     let (domain, width, height) = core
         .open_native_compressed(&session, binding.source)
         .map_err(|_| Error::Protocol)?;
-    let context = CompressedContext::from_domain(&binding, domain);
+    let context = CompressedContext::from_domain(&binding, domain)?;
     let ticket = nestlink_auth::random_bytes();
     let active = Arc::new(AtomicBool::new(true));
     entries.insert(
@@ -274,6 +390,7 @@ pub(crate) fn take_ticket(
 ) -> Result<(CompressedContext, Arc<AtomicBool>), Error> {
     let mut entries = tickets().lock().map_err(|_| Error::Protocol)?;
     let t = entries.get(&ticket).ok_or(Error::Protocol)?;
+    t.context.validate()?;
     if t.created.elapsed() >= Duration::from_secs(2) || !t.active.load(Ordering::Acquire) {
         entries.remove(&ticket);
         return Err(Error::Protocol);
@@ -289,6 +406,7 @@ fn current(
     core: &CoreHandle,
     context: &CompressedContext,
 ) -> Result<(CompressedContext, u32, u32), Error> {
+    context.validate()?;
     if core.snapshot().generation != context.binding.ui_generation {
         return Err(Error::Protocol);
     }
@@ -296,7 +414,11 @@ fn current(
         .native_compressed_context(&context.session())
         .map_err(|_| Error::Protocol)?
         .ok_or(Error::Protocol)?;
-    if c.stream_id != context.binding.stream_id || c.stream_epoch != context.binding.stream_epoch {
+    if c.source != context.binding.source
+        || c.connection_generation != context.binding.connection_generation
+        || c.stream_id != context.binding.stream_id
+        || c.stream_epoch != context.binding.stream_epoch
+    {
         return Err(Error::Protocol);
     }
     let binding = NativeVideoBinding {
@@ -306,7 +428,19 @@ fn current(
         connection_generation: context.binding.connection_generation,
         source: context.binding.source,
     };
-    Ok((CompressedContext::from_domain(&binding, c), w, h))
+    let mut next = CompressedContext::from_domain(&binding, c)?;
+    // Decode recovery may change only decoder/configuration epochs on this ticket.
+    // A selection/catalog/format change must retire and join the old owner first.
+    let decode_epoch = next.decode_epoch;
+    let configuration_id = next.configuration_id;
+    next.decode_epoch = context.decode_epoch;
+    next.configuration_id = context.configuration_id;
+    if &next != context {
+        return Err(Error::Protocol);
+    }
+    next.decode_epoch = decode_epoch;
+    next.configuration_id = configuration_id;
+    Ok((next, w, h))
 }
 pub(crate) async fn serve_control(
     connection: LocalStream,
@@ -316,7 +450,7 @@ pub(crate) async fn serve_control(
     active: Arc<AtomicBool>,
 ) -> Result<(), Error> {
     let cleanup = core
-        .native_compressed_cleanup(&initial.domain())
+        .native_compressed_cleanup(&initial.domain()?)
         .map_err(|_| Error::Protocol)?;
     struct Active(Arc<AtomicBool>, nestlink_app_core::ExternalVideoCleanup);
     impl Drop for Active {
@@ -330,6 +464,9 @@ pub(crate) async fn serve_control(
     let (tx, mut rx) = tokio::sync::mpsc::channel(16);
     let reader = tokio::spawn(async move {
         while let Ok(v) = read.receive::<ClientControl>().await {
+            if v.context().validate().is_err() {
+                break;
+            }
             if tx.send(v).await.is_err() {
                 break;
             }
@@ -361,7 +498,7 @@ pub(crate) async fn serve_control(
                     feedback=rx.recv()=>{
                         let feedback=feedback.ok_or(Error::Protocol)?;
                         let ClientControl::Stopped{context:receipt,joined:true}=feedback else{continue;};
-                        if receipt==context{cleanup.joined(&receipt.domain()).map_err(|_|Error::Protocol)?;return Ok(());}
+                        if receipt==context{cleanup.joined(&receipt.domain()?).map_err(|_|Error::Protocol)?;return Ok(());}
                     }
                     _=tokio::time::sleep_until(deadline)=>return Err(Error::Protocol),
                 }}
@@ -397,11 +534,11 @@ pub(crate) async fn serve_control(
                         let recovering=matches!(&feedback,ClientControl::NeedKeyframe{..});
                         let stopped=matches!(&feedback,ClientControl::Stopped{joined:true,..});
                         let fence=matches!(&feedback,ClientControl::Fence{..});
-                        if stopped{cleanup.joined(&context.domain()).map_err(|_|Error::Protocol)?;return Ok(());}
+                        if stopped{cleanup.joined(&context.domain()?).map_err(|_|Error::Protocol)?;return Ok(());}
                         // Once fenced, only the actual owner-join receipt can
                         // advance cleanup. Late decoder output cannot reset it.
                         if closing {continue;}
-                        core.native_compressed_feedback(&context.session(),&context.domain(),feedback.domain()).map_err(|_|Error::Protocol)?;
+                        core.native_compressed_feedback(&context.session(),&context.domain()?,feedback.domain()).map_err(|_|Error::Protocol)?;
                         if fence {closing=true;closing_deadline=Some(Instant::now()+Duration::from_secs(2));_active.0.store(false,Ordering::Release);write.send(&ServerControl::Stop{context:context.clone()}).await?;}
                         if is_prepared{acknowledged=true;write.send(&ServerControl::Activate{context:context.clone()}).await?;}
                         if recovering{break;}
@@ -418,7 +555,7 @@ pub(crate) async fn serve_control(
         let context = prepared.as_ref().unwrap_or(&initial);
         let _ = core.native_compressed_feedback(
             &context.session(),
-            &context.domain(),
+            &context.domain()?,
             VideoSinkFeedback::Fence,
         );
     }
@@ -448,7 +585,7 @@ pub(crate) async fn serve_data(
         }
         let (context, _, _) = current(&core, &initial)?;
         let Some(unit) = core
-            .poll_native_compressed(&context.session(), &context.domain())
+            .poll_native_compressed(&context.session(), &context.domain()?)
             .map_err(|_| Error::Protocol)?
         else {
             tokio::select! {biased;_=&mut disconnected=>return Err(Error::Protocol),_=tokio::time::sleep(Duration::from_millis(4))=>{}};
@@ -456,7 +593,7 @@ pub(crate) async fn serve_data(
         };
         let (due_qpc, not_after_qpc) = due_qpc(unit.due)?;
         let h = AccessHeader {
-            magic: *b"NLCMP001",
+            magic: *b"NLCMP002",
             context: context.clone(),
             delivery_sequence: unit.delivery_sequence,
             native_sequence: unit.native_sequence,
@@ -536,6 +673,7 @@ impl CompressedVideoClient {
         let Reply::CompressedVideoOpened { context, ticket } = reply else {
             return Err(Error::Protocol);
         };
+        context.validate()?;
         let (data, reply) = handshake(
             directory,
             generation,
@@ -581,19 +719,29 @@ impl CompressedVideoClient {
 }
 impl CompressedControlTx {
     pub async fn send(&mut self, feedback: ClientControl) -> Result<(), Error> {
+        feedback.context().validate()?;
         self.0.send(&feedback).await?;
         Ok(())
     }
 }
 impl CompressedControlRx {
     pub async fn receive(&mut self) -> Result<ServerControl, Error> {
-        Ok(self.0.receive().await?)
+        let control: ServerControl = self.0.receive().await?;
+        let context = match &control {
+            ServerControl::Prepare { context, .. }
+            | ServerControl::Activate { context }
+            | ServerControl::Authority { context, .. }
+            | ServerControl::Stop { context } => context,
+        };
+        context.validate()?;
+        Ok(control)
     }
 }
 impl CompressedDataRx {
     pub async fn receive(&mut self) -> Result<CompressedAccessUnit, Error> {
         let h: AccessHeader = self.read.receive().await?;
-        if h.magic != *b"NLCMP001"
+        h.context.validate()?;
+        if h.magic != *b"NLCMP002"
             || h.context.binding.stream_id != self.stream_id
             || h.delivery_sequence != self.delivery.checked_add(1).ok_or(Error::Protocol)?
             || h.native_sequence == 0
@@ -651,6 +799,11 @@ mod tests {
     fn issue_ticket(runtime: &str, generation: u64, age: Duration) -> TestResult<[u8; 32]> {
         let ticket = nestlink_auth::random_bytes();
         let context = CompressedContext {
+            ipc_version: 2,
+            catalog_sha256: [0; 32],
+            format_epoch: 0,
+            format_sha256: [0; 32],
+            format: None,
             binding: NativeCompressedBinding {
                 runtime_id: runtime.into(),
                 ui_generation: generation,
@@ -803,6 +956,11 @@ mod tests {
     #[test]
     fn stale_decode_requires_every_other_context_field_to_match() {
         let current = CompressedContext {
+            ipc_version: 2,
+            catalog_sha256: [0; 32],
+            format_epoch: 0,
+            format_sha256: [0; 32],
+            format: None,
             binding: NativeCompressedBinding {
                 runtime_id: "runtime".into(),
                 ui_generation: 1,
@@ -831,8 +989,80 @@ mod tests {
         wrong = old.clone();
         wrong.binding.source += 1;
         assert!(!stale_decode_context(&wrong, &current));
+        for field in 0..4 {
+            let mut altered = old.clone();
+            match field {
+                0 => altered.catalog_sha256[0] ^= 1,
+                1 => altered.format_epoch += 1,
+                2 => altered.format_sha256[0] ^= 1,
+                _ => altered.ipc_version += 1,
+            }
+            assert!(!stale_decode_context(&altered, &current));
+        }
         wrong = old;
         wrong.selection_sequence += 1;
         assert!(!stale_decode_context(&wrong, &current));
+    }
+    #[test]
+    fn compressed_v2_requires_exact_format_identity_and_canonical_bytes() -> TestResult {
+        use nestlink_protocol::media_format::{FrameRate, VideoFormat};
+        let format = VideoFormat::legacy_h264(31, 640, 480, FrameRate::new(30, 1)?, 2000)?;
+        let context = CompressedContext {
+            ipc_version: 2,
+            catalog_sha256: [1; 32],
+            format_epoch: 1,
+            format_sha256: format.digest()?,
+            format: Some(WireVideoFormat::new(format)?),
+            binding: NativeCompressedBinding {
+                runtime_id: "runtime".into(),
+                ui_generation: 1,
+                request_id: "request".into(),
+                connection_generation: 1,
+                source: 1,
+                stream_id: [1; 16],
+                stream_epoch: 1,
+            },
+            catalog_revision: 1,
+            selection_sequence: 1,
+            layout_epoch: 1,
+            decode_epoch: 1,
+            configuration_id: 1,
+        };
+        let encoded = serde_json::to_value(&context)?;
+        assert_eq!(
+            serde_json::from_value::<CompressedContext>(encoded.clone())?,
+            context
+        );
+        for field in [
+            "ipc_version",
+            "catalog_sha256",
+            "format_epoch",
+            "format_sha256",
+            "format",
+        ] {
+            let mut missing = encoded.clone();
+            missing.as_object_mut().ok_or("object")?.remove(field);
+            assert!(serde_json::from_value::<CompressedContext>(missing).is_err());
+        }
+        let mut wrong = encoded.clone();
+        wrong["ipc_version"] = serde_json::json!(1);
+        assert!(serde_json::from_value::<CompressedContext>(wrong).is_err());
+        let mut wrong = encoded.clone();
+        wrong["format_sha256"] = serde_json::json!(vec![0; 32]);
+        assert!(serde_json::from_value::<CompressedContext>(wrong).is_err());
+        for bytes in [vec![0; 56], vec![0; 58], vec![0; 57]] {
+            let mut wrong = encoded.clone();
+            wrong["format"] = serde_json::json!(bytes);
+            assert!(serde_json::from_value::<CompressedContext>(wrong).is_err());
+        }
+        let mut legacy = context.clone();
+        legacy.format_epoch = 0;
+        legacy.format_sha256 = [0; 32];
+        legacy.format = None;
+        assert!(legacy.validate().is_ok());
+        let mut wrong = legacy;
+        wrong.format_epoch = 1;
+        assert!(wrong.validate().is_err());
+        Ok(())
     }
 }

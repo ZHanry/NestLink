@@ -198,6 +198,7 @@ async fn real_http_sdk_registration_approval_native_quic_and_revoke() -> Result 
     assert!(verify_peer_signal(&initial, &controller, envelope, &mut cursor).is_err());
     let claims = permit.claims();
     let binding = SessionBinding {
+        media: None,
         deployment_id: claims.deployment_id.clone(),
         security_epoch: claims.security_epoch,
         session_id: claims.session_id.clone(),
@@ -737,6 +738,7 @@ async fn relay_roundtrip(revocation: RelayRevocation) -> Result {
     drop(h_route);
     let claims = permit.claims();
     let binding = SessionBinding {
+        media: None,
         deployment_id: claims.deployment_id.clone(),
         security_epoch: claims.security_epoch,
         session_id: claims.session_id.clone(),

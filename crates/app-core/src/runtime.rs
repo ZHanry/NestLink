@@ -399,7 +399,7 @@ impl NativeVideoCursor {
                 binding: Some(history.binding),
                 sequence: history.sequence,
                 pts_90khz: history.pts_90khz,
-                last_feedback: history.last_feedback,
+                last_feedback: history.last_feedback.clone(),
                 last_keyframe: history.last_keyframe,
                 ..NativeVideoCursor::default()
             };
@@ -564,9 +564,20 @@ struct NativeVideoRoute {
     sender: ChannelSender,
     lease: LeaseControl,
     gate: Arc<HostVideoGate>,
+    format_gate: Arc<HostVideoGate>,
     send_order: AsyncMutex<()>,
     cursor: Mutex<NativeVideoCursor>,
     timing: SessionMediaTiming,
+}
+struct NativeVideoDeliveryGuard {
+    display: HostVideoDeliveryGuard,
+    format: HostVideoDeliveryGuard,
+}
+impl DeliveryGuard for NativeVideoDeliveryGuard {
+    fn check(&self) -> io::Result<()> {
+        self.display.check()?;
+        self.format.check()
+    }
 }
 struct GuardedNativeCapture<D: CaptureDevice> {
     device: D,
@@ -641,6 +652,7 @@ struct NativeVideoPresentationRoute {
 impl NativeVideoRoute {
     fn retire(&self) {
         self.gate.retire();
+        self.format_gate.retire();
         let _ = self.sender.discard_video();
     }
 
@@ -1149,6 +1161,18 @@ impl CoreHandle {
             .lease
             .check_media_binding(Channel::Video, route.connection_generation)
             .map_err(|_| NativeVideoError::Unauthorized)?;
+        if route
+            .lease
+            .media_formats()
+            .map_err(|_| NativeVideoError::Unauthorized)?
+            .is_some()
+            && self
+                .native_confirmed_video_format(session_binding)
+                .map_err(|_| NativeVideoError::Unauthorized)?
+                .is_none()
+        {
+            return Ok(true);
+        }
         Ok(cursor.keyframe_needed(Instant::now()))
     }
     pub fn native_video_codec(
@@ -1219,6 +1243,26 @@ impl CoreHandle {
         // Keep prepared references in order, while leaving the short cursor
         // lock available to feedback and encoder queries under backpressure.
         let _send_order = route.ordered_send().await?;
+        let negotiated = route
+            .lease
+            .media_formats()
+            .map_err(|_| NativeVideoError::Unauthorized)?;
+        let confirmed = self
+            .native_confirmed_video_format(&session_binding)
+            .map_err(|_| NativeVideoError::Unauthorized)?;
+        if let Some(formats) = &negotiated {
+            let value = confirmed
+                .as_ref()
+                .filter(|v| {
+                    v.display.source == source_binding.source
+                        && v.display.layout_epoch == source_binding.layout_epoch
+                        && formats.contains(&v.format)
+                })
+                .ok_or(NativeVideoError::Unauthorized)?;
+            if !route.format_gate.is_active() || value.format_epoch == 0 {
+                return Err(NativeVideoError::Unauthorized);
+            }
+        }
         let (binding, sequence, keyframe_deadline) = {
             let mut cursor = route
                 .cursor
@@ -1238,8 +1282,15 @@ impl CoreHandle {
             };
             (binding, sequence, deadline)
         };
-        let delivery_guard = Arc::new(route.gate.guard());
+        let delivery_guard = Arc::new(NativeVideoDeliveryGuard {
+            display: route.gate.guard(),
+            format: route.format_gate.guard(),
+        });
         let mut frame = NativeVideo {
+            format_epoch: confirmed.as_ref().map_or(0, |v| v.format_epoch),
+            format_sha256: confirmed
+                .as_ref()
+                .map_or_else(Vec::new, |v| v.format_sha256.to_vec()),
             codec: if route
                 .lease
                 .media_capability(nestlink_protocol::media::H264_CAPABILITY)
@@ -2200,6 +2251,14 @@ impl Actor {
                 None,
                 PublicOutput::None,
             ));
+            if let Some(active) = self
+                .active
+                .as_ref()
+                .filter(|active| active.envelope.is_none())
+            {
+                // User commands supersede background probe/inbox work promptly.
+                active.cancellation.store(true, Ordering::Release);
+            }
             self.pending.push_back(envelope);
         }
         self.publish();
@@ -3355,6 +3414,7 @@ impl Actor {
             PublicOutput::None,
         ));
         let identity = self.identity.clone();
+        let native_config = self.native.clone();
         let cancellation = Arc::new(AtomicBool::new(false));
         let fence = sdk_call::DispatchFence {
             generation: self.shared.generation.clone(),
@@ -3377,7 +3437,16 @@ impl Actor {
             native_connection_generation: None,
             service_host_runtime_id: None,
             future: Box::pin(async move {
-                Job::Operation(sdk_call::run(client.sdk, identity, action, fence).await)
+                Job::Operation(
+                    sdk_call::run_with_native_config(
+                        client.sdk,
+                        identity,
+                        action,
+                        fence,
+                        native_config,
+                    )
+                    .await,
+                )
             }),
         });
         self.publish();
@@ -4799,6 +4868,12 @@ impl Actor {
                         gate: Arc::new(HostVideoGate {
                             state: Mutex::new(HostVideoGateState::default()),
                         }),
+                        format_gate: Arc::new(HostVideoGate {
+                            state: Mutex::new(HostVideoGateState {
+                                active: true,
+                                ..HostVideoGateState::default()
+                            }),
+                        }),
                         send_order: AsyncMutex::new(()),
                         cursor: Mutex::new(NativeVideoCursor::default()),
                         timing: media_timing.clone(),
@@ -6105,6 +6180,8 @@ mod tests {
         cursor.keyframe_pending = false;
         cursor.last_keyframe = Some(now);
         let request = NativeVideoFeedback {
+            format_epoch: 0,
+            format_sha256: Vec::new(),
             schema_version: SCHEMA_VERSION,
             connection_generation: 7,
             layout_epoch: 3,
@@ -6113,11 +6190,11 @@ mod tests {
             last_sequence: 1,
             reason: nestlink_protocol::VideoRecoveryReason::DecoderFailure as i32,
         };
-        cursor.feedback(request).unwrap();
+        cursor.feedback(request.clone()).unwrap();
         assert!(!cursor.keyframe_needed(now));
         assert!(cursor.keyframe_needed(now + Duration::from_millis(VIDEO_KEYFRAME_INTERVAL_MS)));
         cursor.keyframe_pending = false;
-        cursor.feedback(request).unwrap();
+        cursor.feedback(request.clone()).unwrap();
         assert!(
             !cursor.keyframe_pending,
             "a duplicate cannot force another keyframe"
@@ -6125,19 +6202,19 @@ mod tests {
         for conflicting in [
             NativeVideoFeedback {
                 source: 1,
-                ..request
+                ..request.clone()
             },
             NativeVideoFeedback {
                 last_sequence: 2,
-                ..request
+                ..request.clone()
             },
             NativeVideoFeedback {
                 reason: 2,
-                ..request
+                ..request.clone()
             },
             NativeVideoFeedback {
                 request_sequence: 3,
-                ..request
+                ..request.clone()
             },
         ] {
             assert!(cursor.feedback(conflicting).is_err());
@@ -6160,7 +6237,7 @@ mod tests {
         cursor
             .feedback(NativeVideoFeedback {
                 request_sequence: 2,
-                ..request
+                ..request.clone()
             })
             .unwrap();
         assert!(
@@ -6171,7 +6248,7 @@ mod tests {
             cursor
                 .feedback(NativeVideoFeedback {
                     layout_epoch: 4,
-                    ..request
+                    ..request.clone()
                 })
                 .is_err()
         );
@@ -6195,6 +6272,8 @@ mod tests {
         cursor.bind(first, false).unwrap();
         assert_eq!(cursor.reserve(90).unwrap(), 1);
         let request = NativeVideoFeedback {
+            format_epoch: 0,
+            format_sha256: Vec::new(),
             schema_version: SCHEMA_VERSION,
             connection_generation: 7,
             layout_epoch: 1,
@@ -6203,7 +6282,7 @@ mod tests {
             last_sequence: 1,
             reason: nestlink_protocol::VideoRecoveryReason::DecoderFailure as i32,
         };
-        cursor.feedback(request).unwrap();
+        cursor.feedback(request.clone()).unwrap();
         cursor.bind(second, false).unwrap();
         assert_eq!(
             cursor.reserve(45).unwrap(),
@@ -6214,7 +6293,7 @@ mod tests {
         cursor
             .feedback(NativeVideoFeedback {
                 request_sequence: 2,
-                ..request
+                ..request.clone()
             })
             .unwrap();
         assert!(
@@ -6234,14 +6313,14 @@ mod tests {
         assert_eq!(cursor.reserve(91).unwrap(), 2);
         assert_eq!(cursor.last_feedback.as_ref().unwrap().request_sequence, 2);
         assert!(
-            cursor.feedback(request).is_err(),
+            cursor.feedback(request.clone()).is_err(),
             "source feedback history cannot reset"
         );
         cursor.keyframe_pending = false;
         cursor
             .feedback(NativeVideoFeedback {
                 request_sequence: 3,
-                ..request
+                ..request.clone()
             })
             .unwrap();
         assert!(!cursor.keyframe_pending);
@@ -6274,6 +6353,8 @@ mod tests {
         cursor.reserve(2).unwrap();
         cursor
             .feedback(NativeVideoFeedback {
+                format_epoch: 0,
+                format_sha256: Vec::new(),
                 schema_version: SCHEMA_VERSION,
                 connection_generation: 7,
                 layout_epoch: 1,

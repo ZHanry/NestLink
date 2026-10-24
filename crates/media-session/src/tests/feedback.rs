@@ -261,6 +261,8 @@ async fn busy_source_cannot_starve_a_static_sources_recovery_keyframe() -> Resul
 
 fn request(sequence: u64, last_sequence: u64) -> NativeVideoFeedback {
     NativeVideoFeedback {
+        format_epoch: 0,
+        format_sha256: Vec::new(),
         schema_version: 1,
         connection_generation: EPOCH.connection,
         layout_epoch: EPOCH.layout,
@@ -273,6 +275,8 @@ fn request(sequence: u64, last_sequence: u64) -> NativeVideoFeedback {
 fn forced(encoder: &mut Vp8Encoder, sequence: u64, pts: u64) -> Result<NativeVideo> {
     let encoded = encoder.encode(&[0, 255, 0, 255].repeat(64 * 48), pts, true)?;
     Ok(NativeVideo {
+        format_epoch: 0,
+        format_sha256: Vec::new(),
         codec: 0,
         schema_version: 1,
         connection_generation: EPOCH.connection,
@@ -508,6 +512,8 @@ async fn repeated_entropy_failures_have_a_fixed_attempt_budget_and_no_output() -
     let mut receiver = VideoReceiver::attach(pair.controller, EPOCH, vec![selected(42)])?;
     for sequence in 1..=4 {
         let packet = NativeVideo {
+            format_epoch: 0,
+            format_sha256: Vec::new(),
             codec: 0,
             schema_version: 1,
             connection_generation: EPOCH.connection,

@@ -563,6 +563,43 @@ impl LeaseControl {
         )?;
         Ok(managed.session.negotiated_capability(capability))
     }
+    /// Exact format scope from the verified permit under the current View lease.
+    pub fn media_formats(
+        &self,
+    ) -> Result<Option<nestlink_protocol::media_format::FormatSet>, RemoteError> {
+        let mut managed = self.inner.lock()?;
+        self.inner.check(&mut managed)?;
+        managed.session.authorize(
+            Permission::View,
+            self.inner.path,
+            self.inner.clock.monotonic_ms(),
+        )?;
+        Ok(managed.session.media_formats()?)
+    }
+    /// Backend identity from the generation-bound local executable evidence.
+    pub fn local_media_backend(
+        &self,
+        direction: nestlink_protocol::media_authority::MediaDirection,
+    ) -> Result<Option<String>, RemoteError> {
+        let mut managed = self.inner.lock()?;
+        self.inner.check(&mut managed)?;
+        managed.session.authorize(
+            Permission::View,
+            self.inner.path,
+            self.inner.clock.monotonic_ms(),
+        )?;
+        match managed.session.local_media_binding() {
+            Some(binding) if binding.local_direction() == direction => {
+                Ok(Some(binding.backend().to_owned()))
+            }
+            Some(_) => Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "local media direction differs",
+            )
+            .into()),
+            None => Ok(None),
+        }
+    }
     /// Recheck a delivered business frame against its original session. Control
     /// is reserved for the connection handshake and cannot be delivered here.
     pub fn check_channel_binding(
@@ -779,6 +816,25 @@ impl LeaseControl {
         managed.session.stop(reason);
         self.inner.reconcile(&mut managed);
         Ok(())
+    }
+    /// Refresh validated local evidence inside the still-live signed scope.
+    /// The application separately controls actual execution owner stop/join.
+    pub fn refresh_local_media_binding(
+        &self,
+        frozen: &nestlink_protocol::media_authority::FrozenMediaScope,
+        local: &nestlink_protocol::media_authority::MediaAnnouncement,
+        role: nestlink_session::EndpointRole,
+    ) -> Result<(), RemoteError> {
+        let mut managed = self.inner.lock()?;
+        self.inner.check(&mut managed)?;
+        let sample = self.inner.clock.sample()?;
+        let result = managed
+            .session
+            .refresh_local_media_binding(frozen, local, role, sample)
+            .map_err(RemoteError::from);
+        self.inner.reconcile(&mut managed);
+        result?;
+        self.inner.check(&mut managed)
     }
     pub fn renew(
         &self,

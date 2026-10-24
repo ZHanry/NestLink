@@ -175,6 +175,12 @@ pub(super) struct Scope {
     layout_epoch: u64,
     decode_epoch: u64,
     configuration_id: u64,
+    #[serde(default)]
+    catalog_sha256: [u8; 32],
+    #[serde(default)]
+    format_epoch: u64,
+    #[serde(default)]
+    format_sha256: [u8; 32],
 }
 impl Scope {
     fn new(context: &CompressedContext) -> Self {
@@ -187,6 +193,9 @@ impl Scope {
             layout_epoch: context.layout_epoch,
             decode_epoch: context.decode_epoch,
             configuration_id: context.configuration_id,
+            catalog_sha256: context.catalog_sha256,
+            format_epoch: context.format_epoch,
+            format_sha256: context.format_sha256,
         }
     }
 }
@@ -784,6 +793,11 @@ mod tests {
 
     fn context() -> CompressedContext {
         CompressedContext {
+            ipc_version: 2,
+            catalog_sha256: [0; 32],
+            format_epoch: 0,
+            format_sha256: [0; 32],
+            format: None,
             binding: NativeCompressedBinding {
                 runtime_id: "private-runtime-marker".into(),
                 request_id: "private-request-marker".into(),
@@ -945,6 +959,11 @@ mod tests {
     #[test]
     fn bounded_history_preserves_terminal_and_redacts_identity() -> std::io::Result<()> {
         let context = CompressedContext {
+            ipc_version: 2,
+            catalog_sha256: [0; 32],
+            format_epoch: 0,
+            format_sha256: [0; 32],
+            format: None,
             binding: NativeCompressedBinding {
                 runtime_id: "private-runtime-marker".into(),
                 request_id: "private-request-marker".into(),

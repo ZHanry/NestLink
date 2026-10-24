@@ -60,7 +60,54 @@ struct ScheduledVideo {
     at: Instant,
     frame: DecodedVideo,
 }
+// Remember only identities this receiver actually prepared. Eviction is fail-closed.
+const RETIRED_FORMAT_CAPACITY: usize = 32;
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct FormatIdentity {
+    connection: u64,
+    epoch: u64,
+    digest: Vec<u8>,
+    source: u32,
+    layout: u64,
+}
+impl FormatIdentity {
+    fn selection(value: &nestlink_protocol::native_media_format::FormatSelection) -> Self {
+        Self {
+            connection: value.display.catalog.connection_generation,
+            epoch: value.format_epoch,
+            digest: value.format_sha256.to_vec(),
+            source: value.display.source,
+            layout: value.display.layout_epoch,
+        }
+    }
+    fn packet(value: &NativeVideo) -> Self {
+        Self {
+            connection: value.connection_generation,
+            epoch: value.format_epoch,
+            digest: value.format_sha256.clone(),
+            source: value.source,
+            layout: value.layout_epoch,
+        }
+    }
+}
+fn current_or_retired(
+    current: Option<&FormatIdentity>,
+    retired: &VecDeque<FormatIdentity>,
+    incoming: &FormatIdentity,
+) -> io::Result<bool> {
+    if current == Some(incoming) {
+        return Ok(true);
+    }
+    if retired.contains(incoming) {
+        return Ok(false);
+    }
+    Err(io::Error::other(
+        "video format epoch/digest or selection differs",
+    ))
+}
 struct State {
+    retired_formats: VecDeque<FormatIdentity>,
+    format: Option<nestlink_protocol::native_media_format::FormatSelection>,
     scheduled: VecDeque<ScheduledVideo>,
     videos: BTreeMap<u32, DecodedVideo>,
     layouts: BTreeMap<u32, VideoLayout>,
@@ -74,6 +121,18 @@ struct State {
     stats: VideoReceiverStats,
 }
 impl State {
+    fn retire_format(&mut self) {
+        if let Some(value) = self.format.take() {
+            let identity = FormatIdentity::selection(&value);
+            if !self.retired_formats.contains(&identity) {
+                if self.retired_formats.len() == RETIRED_FORMAT_CAPACITY {
+                    self.retired_formats.pop_front();
+                }
+                self.retired_formats.push_back(identity);
+            }
+        }
+    }
+
     fn queue_video(
         &mut self,
         clock: &crate::SessionPlayoutClock,
@@ -196,6 +255,8 @@ impl Output {
             external: Mutex::new(None),
             playout,
             state: Mutex::new(State {
+                format: None,
+                retired_formats: VecDeque::new(),
                 scheduled: VecDeque::new(),
                 videos: BTreeMap::new(),
                 layouts: BTreeMap::new(),
@@ -249,6 +310,7 @@ impl Output {
         state.events.clear();
         state.catalog = None;
         state.selected = None;
+        state.retire_format();
         state.last_selected = None;
         drop(state);
         if let Ok(mut external) = self.external.lock()
@@ -321,6 +383,107 @@ impl ExternalVideoCleanup {
     }
 }
 impl VideoPresentation {
+    pub async fn retire_external_for_format(&self) -> io::Result<()> {
+        let deadline = Instant::now() + Duration::from_secs(2);
+        loop {
+            self.lease
+                .check_media_binding(Channel::Video, self.connection_generation)
+                .map_err(io::Error::other)?;
+            {
+                let mut external = self
+                    .output
+                    .external
+                    .lock()
+                    .map_err(|_| io::Error::other("external sink poisoned"))?;
+                let Some(sink) = external.as_mut() else {
+                    return Ok(());
+                };
+                let context = sink.context.clone();
+                sink.feedback(&context, crate::external::VideoSinkFeedback::Fence)?;
+            }
+            self.output.wake();
+            if Instant::now() >= deadline {
+                return Err(io::Error::new(
+                    io::ErrorKind::TimedOut,
+                    "old external consumer has not joined",
+                ));
+            }
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+    }
+    /// Stages exact signed format before ACK. The worker destroys old decoder
+    /// references and signals readiness only after configuring the new target.
+    pub fn prepare_format(
+        &self,
+        value: &nestlink_protocol::native_media_format::FormatSelection,
+    ) -> io::Result<()> {
+        self.lease
+            .check_media_binding(Channel::Video, self.connection_generation)
+            .map_err(io::Error::other)?;
+        let formats = self
+            .lease
+            .media_formats()
+            .map_err(io::Error::other)?
+            .ok_or_else(|| io::Error::other("format absent from verified permit"))?;
+        value
+            .authorized(&value.display, &formats)
+            .map_err(io::Error::other)?;
+        let external = self
+            .output
+            .external
+            .lock()
+            .map_err(|_| io::Error::other("external sink poisoned"))?;
+        if external.is_some() {
+            return Err(io::Error::other(
+                "external consumer must stop and join before format switch",
+            ));
+        }
+        let mut state = self
+            .output
+            .state
+            .lock()
+            .map_err(|_| io::Error::other("media output poisoned"))?;
+        let layout = state
+            .selected
+            .filter(|layout| {
+                layout.source == value.display.source
+                    && layout.epoch.layout == value.display.layout_epoch
+                    && layout.epoch.connection == value.display.catalog.connection_generation
+            })
+            .ok_or_else(|| io::Error::other("format selection changed"))?;
+        if state.closed
+            || state.catalog.as_ref().map(|(key, _)| key) != Some(&value.display.catalog)
+        {
+            return Err(io::Error::other("format catalogue changed"));
+        }
+        crate::negotiated_format::configured_target(value, layout.width, layout.height, true)?;
+        if self
+            .lease
+            .local_media_backend(nestlink_protocol::media_authority::MediaDirection::Decode)
+            .map_err(io::Error::other)?
+            .as_deref()
+            != Some("cpu-software")
+        {
+            return Err(io::Error::other(
+                "no executable confirmed software decoder backend",
+            ));
+        }
+        if state.format.as_ref() != Some(value) {
+            state.retire_format();
+        }
+        state.format = Some(value.clone());
+        state.scheduled.clear();
+        state.videos.clear();
+        state.ready.clear();
+        self.output.advance_consumer()?;
+        self.output
+            .prepared
+            .send_replace(DecoderReadiness::Unprepared);
+        drop(state);
+        drop(external);
+        self.output.wake();
+        Ok(())
+    }
     pub fn external_cleanup(
         &self,
         context: &crate::external::VideoSinkContext,
@@ -346,6 +509,7 @@ impl VideoPresentation {
     /// Atomically replaces the CPU consumer; the network channel remains owned
     /// by its original authorized receiver worker.
     pub fn open_external(&self, context: crate::external::VideoSinkContext) -> io::Result<()> {
+        context.validate_format()?;
         self.lease
             .check_media_binding(Channel::Video, self.connection_generation)
             .map_err(io::Error::other)?;
@@ -379,7 +543,35 @@ impl VideoPresentation {
                     && v.epoch.layout == context.layout_epoch
             })
             .ok_or_else(|| io::Error::other("external selection differs"))?;
+        let signed_formats = self.lease.media_formats().map_err(io::Error::other)?;
+        if let Some(formats) = signed_formats {
+            if self
+                .lease
+                .local_media_backend(nestlink_protocol::media_authority::MediaDirection::Decode)
+                .map_err(io::Error::other)?
+                .as_deref()
+                != Some("gpu-presenter")
+            {
+                return Err(io::Error::other(
+                    "external GPU backend absent from local executable evidence",
+                ));
+            }
+            let confirmed = state
+                .format
+                .as_ref()
+                .ok_or_else(|| io::Error::other("compressed open before confirmed format"))?;
+            if !formats.contains(&confirmed.format)
+                || context.format_epoch != confirmed.format_epoch
+                || context.format_sha256 != confirmed.format_sha256
+                || context.format != Some(confirmed.format)
+            {
+                return Err(io::Error::other("compressed format context differs"));
+            }
+        } else if context.format_epoch != 0 || context.format.is_some() {
+            return Err(io::Error::other("compressed format on legacy lease"));
+        }
         if state.closed
+            || state.catalog.as_ref().map(|(key, _)| key.sha256) != Some(context.catalog_sha256)
             || state.catalog.as_ref().map(|(key, _)| key.revision) != Some(context.catalog_revision)
         {
             return Err(io::Error::other("external catalogue differs"));
@@ -619,6 +811,7 @@ impl VideoPresentation {
                 ));
             }
             state.selected = None;
+            state.retire_format();
             state.scheduled.clear();
             state.videos.clear();
             state.layouts.clear();
@@ -686,6 +879,7 @@ impl VideoPresentation {
                 .prepared
                 .send_replace(DecoderReadiness::Unprepared);
         }
+        state.retire_format();
         state.selected = Some(layout);
         state.last_selected = Some(layout);
         drop(state);
@@ -706,6 +900,7 @@ impl VideoPresentation {
             .lock()
             .map_err(|_| io::Error::other("media output poisoned"))?;
         state.selected = None;
+        state.retire_format();
         state.scheduled.clear();
         state.videos.clear();
         state.layouts.clear();
@@ -1101,6 +1296,7 @@ struct Recovery {
     reason: VideoRecoveryReason,
 }
 struct Decoder {
+    format: Option<nestlink_protocol::native_media_format::FormatSelection>,
     stream: VideoStream,
     layout: u64,
     codec: Option<VideoDecoder>,
@@ -1118,6 +1314,7 @@ impl Decoder {
         Self {
             stream,
             layout,
+            format: None,
             codec: None,
             prepare: None,
             awaiting_keyframe: true,
@@ -1216,6 +1413,11 @@ impl Decoder {
             request_sequence: sequence,
             last_sequence: self.sequence,
             reason: recovery.reason as i32,
+            format_epoch: self.format.as_ref().map_or(0, |v| v.format_epoch),
+            format_sha256: self
+                .format
+                .as_ref()
+                .map_or_else(Vec::new, |v| v.format_sha256.to_vec()),
         })
         .encode()
         .map_err(io::Error::other)?;
@@ -1297,7 +1499,15 @@ impl Decoder {
             .prepare
             .as_mut()
             .ok_or_else(|| io::Error::other("missing legacy Prepare"))?;
-        prepare.validate(&payload, packet.keyframe)?;
+        let sps = prepare.validate(&payload, packet.keyframe)?;
+        if let Some(format) = &self.format {
+            crate::negotiated_format::receipt_matches(
+                prepare,
+                self.stream.codec,
+                sps,
+                format.format,
+            )?;
+        }
         let color = prepare.surface().color;
         if self.codec.is_none() {
             let kind = match nestlink_protocol::NativeVideoCodec::try_from(packet.codec) {
@@ -1305,7 +1515,11 @@ impl Decoder {
                 Ok(nestlink_protocol::NativeVideoCodec::H264Baseline) => VideoCodec::H264Baseline,
                 Err(_) => return Err(io::Error::other("unknown video codec")),
             };
-            self.codec = Some(VideoDecoder::new(kind, packet.width, packet.height)?);
+            self.codec = Some(if self.format.is_some() {
+                VideoDecoder::with_config_software(kind, self.stream.codec)?
+            } else {
+                VideoDecoder::new(kind, packet.width, packet.height)?
+            });
         }
         self.awaiting_keyframe = false;
         if self.pending.len() >= 8 {
@@ -1454,6 +1668,12 @@ fn prepare_display_decoder(
     lease: &LeaseControl,
     output: &Output,
 ) -> io::Result<()> {
+    let format = output
+        .state
+        .lock()
+        .map_err(|_| io::Error::other("media output poisoned"))?
+        .format
+        .clone();
     for codec in codecs.values_mut() {
         codec.codec = None;
         codec.prepare = None;
@@ -1485,6 +1705,60 @@ fn prepare_display_decoder(
         decoder.layout = layout.epoch.layout;
         decoder.stream.codec.width = layout.width;
         decoder.stream.codec.height = layout.height;
+        let format_changed = decoder.format.as_ref() != format.as_ref();
+        decoder.format = format.clone();
+        if format_changed {
+            decoder.request_sequence = 0;
+            decoder.recovery = None;
+        }
+        let signed_formats = lease.media_formats().map_err(io::Error::other)?;
+        let negotiated = signed_formats.is_some();
+        if let Some(formats) = signed_formats {
+            if lease
+                .local_media_backend(nestlink_protocol::media_authority::MediaDirection::Decode)
+                .map_err(io::Error::other)?
+                .as_deref()
+                != Some("cpu-software")
+            {
+                return Err(io::Error::other(
+                    "initial CPU decoder lacks local software evidence",
+                ));
+            }
+            let config = formats
+                .formats()
+                .iter()
+                .filter_map(|format| {
+                    crate::negotiated_format::format_target(
+                        *format,
+                        layout.width,
+                        layout.height,
+                        true,
+                    )
+                    .ok()
+                })
+                .filter(|(codec, _)| *codec == kind)
+                .map(|(_, config)| config)
+                .max_by_key(|config| (config.fps, config.bitrate_kbps))
+                .ok_or_else(|| {
+                    io::Error::other("selected display has no executable signed CPU target")
+                })?;
+            decoder.stream.codec = config;
+        }
+        if let Some(value) = &format {
+            let (actual_kind, config) = crate::negotiated_format::configured_target(
+                value,
+                layout.width,
+                layout.height,
+                true,
+            )?;
+            if actual_kind != kind {
+                return Err(io::Error::other(
+                    "confirmed format codec differs from signed codec marker",
+                ));
+            }
+            decoder.stream.codec = config;
+            decoder.format = Some(value.clone());
+        }
         let external = output
             .external
             .lock()
@@ -1497,7 +1771,11 @@ fn prepare_display_decoder(
                 layout.width,
                 layout.height,
             )?);
-            decoder.codec = Some(VideoDecoder::new(kind, layout.width, layout.height)?);
+            decoder.codec = Some(if format.is_some() || negotiated {
+                VideoDecoder::with_config_software(kind, decoder.stream.codec)?
+            } else {
+                VideoDecoder::new(kind, layout.width, layout.height)?
+            });
         }
         let external_prepared = external.as_ref().is_none_or(|s| {
             s.prepared
@@ -1583,6 +1861,7 @@ fn receive(
     }
     runtime.block_on(async {
         let mut selected_layout: Option<(VideoLayout, u64)>=None;
+        let mut selected_format:Option<nestlink_protocol::native_media_format::FormatSelection>=None;
         let mut external_stamp=None;
         let mut changes=output.changes.subscribe();
         loop {
@@ -1591,6 +1870,8 @@ fn receive(
                     let state=output.state.lock().map_err(|_| io::Error::other("media output poisoned"))?;
                     state.selected.zip(state.catalog.as_ref().map(|(key, _)| key.revision))
                 };
+                let current_format=output.state.lock().map_err(|_|io::Error::other("media output poisoned"))?.format.clone();
+                if current_format!=selected_format {selected_layout=None;selected_format=current_format;}
                 if current!=selected_layout {
                     prepare_display_decoder(&mut codecs, current, kind, &lease, &output)?;
                     selected_layout=current;
@@ -1669,6 +1950,21 @@ fn receive(
             lease
                 .check_media_binding(Channel::Video, packet.connection_generation)
                 .map_err(io::Error::other)?;
+            let signed_formats=lease.media_formats().map_err(io::Error::other)?;
+            {
+                let state=output.state.lock().map_err(|_|io::Error::other("media output poisoned"))?;
+                match signed_formats {
+                    Some(ref formats)=>{
+                        let current=state.format.as_ref().map(FormatIdentity::selection);
+                        // Other QUIC streams may still carry exact retired AUs after a switch.
+                        // This runs after wire/lease validation and before decoder, credit or pixels.
+                        if !current_or_retired(current.as_ref(), &state.retired_formats, &FormatIdentity::packet(&packet))? { continue; }
+                        let confirmed=state.format.as_ref().ok_or_else(||io::Error::other("video arrived before confirmed format"))?;
+                        confirmed.authorized(&confirmed.display,formats).map_err(io::Error::other)?;
+                    }
+                    None=>if packet.format_epoch!=0 || !packet.format_sha256.is_empty(){return Err(io::Error::other("format fields on legacy video"));}
+                }
+            }
             let source = packet.source;
             if let Some(sources) = &dynamic_sources {
                 let allowed=if advertised {
@@ -1923,6 +2219,8 @@ mod tests {
         keyframe: bool,
     ) -> NativeVideo {
         NativeVideo {
+            format_epoch: 0,
+            format_sha256: Vec::new(),
             schema_version: SCHEMA_VERSION,
             codec: 1,
             connection_generation: 9,
@@ -2248,6 +2546,8 @@ mod tests {
     fn repeated_resizes_preserve_the_original_recovery_deadline_and_budget() -> io::Result<()> {
         let started = Instant::now();
         let mut packet = NativeVideo {
+            format_epoch: 0,
+            format_sha256: Vec::new(),
             codec: 0,
             schema_version: SCHEMA_VERSION,
             connection_generation: 7,
@@ -2341,6 +2641,52 @@ mod tests {
                 .map(|error| error.kind()),
             Some(io::ErrorKind::TimedOut)
         );
+        Ok(())
+    }
+    #[test]
+    fn retired_format_transit_drops_exact_old_and_preserves_current_progress() -> io::Result<()> {
+        let old = FormatIdentity {
+            connection: 7,
+            epoch: 1,
+            digest: vec![1; 32],
+            source: 42,
+            layout: 3,
+        };
+        let new = FormatIdentity {
+            epoch: 2,
+            digest: vec![2; 32],
+            layout: 4,
+            ..old.clone()
+        };
+        let retired = VecDeque::from([old.clone()]);
+        // Pending format/display clear, then ready new target: both discard old transit.
+        assert!(!current_or_retired(None, &retired, &old)?);
+        assert!(!current_or_retired(Some(&new), &retired, &old)?);
+        assert!(current_or_retired(Some(&new), &retired, &new)?);
+        for foreign in [
+            FormatIdentity {
+                epoch: 3,
+                ..new.clone()
+            },
+            FormatIdentity {
+                digest: vec![9; 32],
+                ..old.clone()
+            },
+            FormatIdentity {
+                source: 99,
+                ..old.clone()
+            },
+            FormatIdentity {
+                layout: 99,
+                ..old.clone()
+            },
+            FormatIdentity {
+                connection: 8,
+                ..old.clone()
+            },
+        ] {
+            assert!(current_or_retired(Some(&new), &retired, &foreign).is_err());
+        }
         Ok(())
     }
 }

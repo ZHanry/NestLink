@@ -5,6 +5,10 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
+[features]
+default = []
+media-runtime-test-support = ["nestlink-session/media-runtime-test-support"]
+
 [dependencies]
 nestlink-auth.workspace = true
 nestlink-protocol.workspace = true

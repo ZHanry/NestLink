@@ -1,6 +1,7 @@
 mod audit;
 pub mod config;
 mod connection_diagnostics;
+mod media_authority;
 mod native_discovery;
 mod node_control;
 mod node_discovery;
@@ -335,6 +336,16 @@ pub fn router(state: AppState) -> Router {
         .route("/api/v3/devices", get(devices).post(register_device))
         .route("/api/v3/devices/browser", post(register_browser_endpoint))
         .route("/api/v3/devices/{id}", delete(revoke_device))
+        .route(
+            "/api/v3/devices/{id}/media/{direction}",
+            get(media_authority::get).put(media_authority::replace),
+        )
+        .route("/api/v3/remote/media", post(media_authority::request))
+        .route("/api/v3/remote/{id}/media", get(media_authority::scope))
+        .route(
+            "/api/v3/remote/{id}/media/approval",
+            post(media_authority::approve),
+        )
         .route(
             "/api/v3/devices/{id}/features",
             post(refresh_browser_features),

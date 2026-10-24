@@ -5,6 +5,12 @@ use nestlink_protocol::{
     ContractError, EndpointProofClaims, ErrorCode, Path, Permission, SCHEMA_VERSION,
 };
 use rand_core::{OsRng, RngCore};
+#[cfg(all(feature = "media-runtime-test-support", not(debug_assertions)))]
+compile_error!("media-runtime-test-support is restricted to debug regression builds");
+#[cfg(feature = "media-runtime-test-support")]
+pub const MEDIA_REGRESSION_REQUEST_ID: &str = "b4cc8c40-2812-4fb0-bd74-989c6b385401";
+#[cfg(feature = "media-runtime-test-support")]
+pub const MEDIA_REGRESSION_SESSION_ID: &str = "b4cc8c40-2812-4fb0-bd74-989c6b385402";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SessionBinding {
@@ -23,6 +29,129 @@ pub struct SessionBinding {
     pub granted_permissions: Vec<Permission>,
     pub supported_capabilities: Vec<String>,
     pub local_paths: PathSet,
+    pub media: Option<MediaSessionBinding>,
+}
+
+/// Validated signed-scope/local-announcement data. The provider must separately
+/// retain and continuously check the actual probe owner and generation.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MediaSessionBinding {
+    direction: nestlink_protocol::media_authority::MediaDirection,
+    probe: nestlink_protocol::media_authority::ProbeIdentity,
+    expires_at_unix_ms: u64,
+    formats: Vec<Vec<u8>>,
+    sha256: Vec<u8>,
+    device_id: String,
+    revision: u64,
+}
+impl MediaSessionBinding {
+    pub fn from_local_announcement(
+        permit: &VerifiedPermit,
+        frozen: &nestlink_protocol::media_authority::FrozenMediaScope,
+        local: &nestlink_protocol::media_authority::MediaAnnouncement,
+        role: EndpointRole,
+        now_unix_ms: u64,
+    ) -> Result<Self, ContractError> {
+        use nestlink_protocol::media_authority::{MediaDirection, permit_formats};
+        let claims = permit.claims();
+        let signed = permit_formats(claims)?.ok_or_else(|| {
+            error(
+                ErrorCode::InvalidMessage,
+                "media binding requires signed scope",
+            )
+        })?;
+        let scope = frozen.validate()?;
+        let available = local.validate(now_unix_ms)?;
+        let (direction, device, revision) = match role {
+            EndpointRole::Controller => (
+                MediaDirection::Decode,
+                &claims.controller_device_id,
+                frozen.controller_revision,
+            ),
+            EndpointRole::Host => (
+                MediaDirection::Encode,
+                &claims.host_device_id,
+                frozen.host_revision,
+            ),
+        };
+        if frozen.version != claims.media_format_version
+            || frozen.formats != claims.media_formats
+            || frozen.sha256 != claims.media_format_sha256
+            || scope != signed
+            || local.direction != direction
+            || &local.device_id != device
+            || local.revision < revision
+            || signed
+                .formats()
+                .iter()
+                .any(|format| !available.formats().contains(format))
+        {
+            return Err(error(
+                ErrorCode::IdentityMismatch,
+                "local media evidence does not cover frozen signed scope",
+            ));
+        }
+        Ok(Self {
+            direction,
+            probe: local.probe.clone(),
+            expires_at_unix_ms: local.expires_at_unix_ms,
+            formats: claims.media_formats.clone(),
+            sha256: claims.media_format_sha256.clone(),
+            device_id: device.clone(),
+            revision: local.revision,
+        })
+    }
+    /// Data validation only. A changed probe requires a new actual observation,
+    /// a higher revision/generation, and provider-controlled stop/join of the old
+    /// execution owner before replacement. Historical probe and live execution
+    /// identities are distinct; this method establishes neither currentness.
+    pub fn refresh_from_local_announcement(
+        &self,
+        permit: &VerifiedPermit,
+        frozen: &nestlink_protocol::media_authority::FrozenMediaScope,
+        local: &nestlink_protocol::media_authority::MediaAnnouncement,
+        role: EndpointRole,
+        now_unix_ms: u64,
+    ) -> Result<Self, ContractError> {
+        let next = Self::from_local_announcement(permit, frozen, local, role, now_unix_ms)?;
+        let replaced = next.probe != self.probe;
+        if (replaced
+            && (next.probe.generation <= self.probe.generation || next.revision <= self.revision))
+            || next.direction != self.direction
+            || next.device_id != self.device_id
+            || next.formats != self.formats
+            || next.sha256 != self.sha256
+            || next.revision < self.revision
+            || next.expires_at_unix_ms < self.expires_at_unix_ms
+        {
+            return Err(error(
+                ErrorCode::IdentityMismatch,
+                "media refresh changed scope or did not advance probe evidence",
+            ));
+        }
+        Ok(next)
+    }
+    pub fn local_direction(&self) -> nestlink_protocol::media_authority::MediaDirection {
+        self.direction
+    }
+    pub fn backend(&self) -> &str {
+        &self.probe.backend
+    }
+    pub fn probe_generation(&self) -> u64 {
+        self.probe.generation
+    }
+    pub fn resource_id(&self) -> &str {
+        &self.probe.resource_id
+    }
+    pub fn adapter_luid(&self) -> Option<u64> {
+        self.probe.adapter_luid
+    }
+    pub fn driver_version(&self) -> Option<u64> {
+        self.probe.driver_version
+    }
+    pub fn expires_at_unix_ms(&self) -> u64 {
+        self.expires_at_unix_ms
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -67,6 +196,8 @@ pub struct StopEffects {
 }
 
 pub struct Session {
+    #[cfg(feature = "media-runtime-test-support")]
+    media_regression: bool,
     binding: SessionBinding,
     permit: VerifiedPermit,
     path: Path,
@@ -87,11 +218,33 @@ impl Session {
         request_started_ms: u64,
         now: ClockSample,
     ) -> Result<Self, ContractError> {
-        validate_binding(&permit, &binding, path)?;
+        Self::activate_with_rollout(permit, binding, path, request_started_ms, now, false)
+    }
+    fn activate_with_rollout(
+        permit: VerifiedPermit,
+        binding: SessionBinding,
+        path: Path,
+        request_started_ms: u64,
+        now: ClockSample,
+        allow_regression: bool,
+    ) -> Result<Self, ContractError> {
+        validate_binding_with_rollout(&permit, &binding, path, allow_regression)?;
+        if binding
+            .media
+            .as_ref()
+            .is_some_and(|local| now.unix_ms >= local.expires_at_unix_ms)
+        {
+            return Err(error(
+                ErrorCode::LeaseExpired,
+                "local media evidence expired before activation",
+            ));
+        }
         let deadline_ms = lease_deadline(&permit, request_started_ms, now)?;
         let mut challenge = [0; 32];
         OsRng.fill_bytes(&mut challenge);
         Ok(Self {
+            #[cfg(feature = "media-runtime-test-support")]
+            media_regression: allow_regression,
             binding,
             permit,
             path,
@@ -103,6 +256,41 @@ impl Session {
             proved: 0,
             challenge,
         })
+    }
+
+    /// Explicit debug-only fixture entry. Normal activation always keeps rollout closed.
+    #[cfg(feature = "media-runtime-test-support")]
+    pub fn activate_media_runtime_regression(
+        permit: VerifiedPermit,
+        binding: SessionBinding,
+        path: Path,
+        request_started_ms: u64,
+        now: ClockSample,
+        request_id: &str,
+    ) -> Result<Self, ContractError> {
+        if request_id != MEDIA_REGRESSION_REQUEST_ID
+            || binding.session_id != MEDIA_REGRESSION_SESSION_ID
+            || permit.claims().session_id != MEDIA_REGRESSION_SESSION_ID
+            || binding.media.is_none()
+            || nestlink_protocol::media_authority::permit_formats(permit.claims())?.is_none()
+        {
+            return Err(error(
+                ErrorCode::PlatformUnsupported,
+                "unscoped media regression activation",
+            ));
+        }
+        Self::activate_with_rollout(permit, binding, path, request_started_ms, now, true)
+    }
+    fn validate_current_binding(
+        &self,
+        permit: &VerifiedPermit,
+        path: Path,
+    ) -> Result<(), ContractError> {
+        #[cfg(feature = "media-runtime-test-support")]
+        let allow = self.media_regression;
+        #[cfg(not(feature = "media-runtime-test-support"))]
+        let allow = false;
+        validate_binding_with_rollout(permit, &self.binding, path, allow)
     }
 
     /// Start endpoint proof after transport setup using an already retained
@@ -125,6 +313,47 @@ impl Session {
     pub fn state(&self) -> SessionState {
         self.state
     }
+    /// Scope from the already verified signature, never the latest device catalog.
+    pub fn local_media_binding(&self) -> Option<&MediaSessionBinding> {
+        self.binding.media.as_ref()
+    }
+    /// Caller must validate the actual retained owner immediately before this
+    /// data update; any failed refresh terminates the existing session.
+    pub fn refresh_local_media_binding(
+        &mut self,
+        frozen: &nestlink_protocol::media_authority::FrozenMediaScope,
+        local: &nestlink_protocol::media_authority::MediaAnnouncement,
+        role: EndpointRole,
+        now: ClockSample,
+    ) -> Result<(), ContractError> {
+        self.check_clock(now)?;
+        let refreshed = self
+            .binding
+            .media
+            .as_ref()
+            .ok_or_else(|| {
+                error(
+                    ErrorCode::IdentityMismatch,
+                    "session has no local media binding",
+                )
+            })?
+            .refresh_from_local_announcement(&self.permit, frozen, local, role, now.unix_ms);
+        match refreshed {
+            Ok(binding) => {
+                self.binding.media = Some(binding);
+                Ok(())
+            }
+            Err(failure) => {
+                self.stop(StopReason::PlatformChanged);
+                Err(failure)
+            }
+        }
+    }
+    pub fn media_formats(
+        &self,
+    ) -> Result<Option<nestlink_protocol::media_format::FormatSet>, ContractError> {
+        nestlink_protocol::media_authority::permit_formats(self.permit.claims())
+    }
     pub fn negotiated_capability(&self, capability: &str) -> bool {
         self.permit
             .claims()
@@ -146,7 +375,7 @@ impl Session {
                 "path selection follows endpoint proof",
             ));
         }
-        validate_binding(&self.permit, &self.binding, path)?;
+        self.validate_current_binding(&self.permit, path)?;
         if self.path != path {
             self.path = path;
             OsRng.fill_bytes(&mut self.challenge);
@@ -319,7 +548,7 @@ impl Session {
                 "wall clock moved backwards; reauthorization required",
             ));
         }
-        validate_binding(&permit, &self.binding, self.path)?;
+        self.validate_current_binding(&permit, self.path)?;
         if request_started_ms <= self.last_request_ms
             || permit.claims().lease_sequence <= self.permit.claims().lease_sequence
             || permit.claims().issued_at_unix_ms < self.permit.claims().issued_at_unix_ms
@@ -330,6 +559,9 @@ impl Session {
         if permit.claims().permissions != self.permit.claims().permissions
             || permit.claims().paths != self.permit.claims().paths
             || permit.claims().required_capabilities != self.permit.claims().required_capabilities
+            || permit.claims().media_format_version != self.permit.claims().media_format_version
+            || permit.claims().media_formats != self.permit.claims().media_formats
+            || permit.claims().media_format_sha256 != self.permit.claims().media_format_sha256
         {
             return Err(error(
                 ErrorCode::PermissionRequired,
@@ -392,17 +624,66 @@ impl Session {
             self.stop(StopReason::ClockInvalid);
             return Err(error(ErrorCode::LeaseExpired, "wall clock moved backwards"));
         }
+        if self
+            .binding
+            .media
+            .as_ref()
+            .is_some_and(|local| now.unix_ms >= local.expires_at_unix_ms)
+        {
+            self.stop(StopReason::PlatformChanged);
+            return Err(error(
+                ErrorCode::LeaseExpired,
+                "local media evidence expired",
+            ));
+        }
         self.last_unix_ms = now.unix_ms;
         Ok(())
     }
 }
 
-fn validate_binding(
+fn validate_binding_with_rollout(
     permit: &VerifiedPermit,
     b: &SessionBinding,
     path: Path,
+    allow_regression: bool,
 ) -> Result<(), ContractError> {
     let c = permit.claims();
+    if let Some(local) = &b.media {
+        use nestlink_protocol::media_authority::MediaDirection;
+        let device = match local.direction {
+            MediaDirection::Encode => &c.host_device_id,
+            MediaDirection::Decode => &c.controller_device_id,
+        };
+        if local.formats != c.media_formats
+            || local.sha256 != c.media_format_sha256
+            || &local.device_id != device
+        {
+            return Err(error(
+                ErrorCode::IdentityMismatch,
+                "local media binding changed signed scope",
+            ));
+        }
+    }
+    let scoped_regression = {
+        #[cfg(feature = "media-runtime-test-support")]
+        {
+            allow_regression
+                && b.session_id == MEDIA_REGRESSION_SESSION_ID
+                && c.session_id == MEDIA_REGRESSION_SESSION_ID
+                && b.media.is_some()
+        }
+        #[cfg(not(feature = "media-runtime-test-support"))]
+        {
+            let _ = allow_regression;
+            false
+        }
+    };
+    if nestlink_protocol::media_authority::permit_formats(c)?.is_some() && !scoped_regression {
+        return Err(error(
+            ErrorCode::PlatformUnsupported,
+            "signed media requires local direction evidence and selection runtime",
+        ));
+    }
     if c.deployment_id != b.deployment_id
         || c.security_epoch != b.security_epoch
         || c.session_id != b.session_id

@@ -1,5 +1,5 @@
 //! Discrete format data validation; never authority or evidence of a backend probe.
-//! No wire/permit negotiation is added by this internal legacy-admission slice.
+//! Canonical data shared by legacy admission and explicit signed media scope.
 use crate::{ContractError, ErrorCode, RAW_FRAME_BYTES, VIDEO_DIMENSION};
 use sha2::{Digest, Sha256};
 
@@ -405,6 +405,56 @@ impl VideoFormat {
         Ok(format)
     }
 
+    /// Strict portable representation shared by authority, selection and IPC.
+    pub fn encode(self) -> Result<Vec<u8>> {
+        self.validate()?;
+        Ok(self.canonical())
+    }
+    pub fn decode(bytes: &[u8]) -> Result<Self> {
+        if bytes.len() != 57 || bytes[..2] != VERSION.to_be_bytes() {
+            return Err(invalid("invalid canonical video format envelope"));
+        }
+        let u32_at = |offset| {
+            u32::from_be_bytes([
+                bytes[offset],
+                bytes[offset + 1],
+                bytes[offset + 2],
+                bytes[offset + 3],
+            ])
+        };
+        let format = Self {
+            codec: Codec::try_from(u32::from(bytes[2]))?,
+            profile: Profile::try_from(u32::from(bytes[3]))?,
+            level: bytes[4],
+            h264_constraints: bytes[5],
+            tier: Tier::try_from(u32::from(bytes[6]))?,
+            chroma: Chroma::try_from(u32::from(bytes[7]))?,
+            bit_depth: BitDepth::try_from(u32::from(bytes[8]))?,
+            color: Color {
+                primaries: Primaries::try_from(u32::from(bytes[9]))?,
+                transfer: Transfer::try_from(u32::from(bytes[10]))?,
+                matrix: Matrix::try_from(u32::from(bytes[11]))?,
+                range: Range::try_from(u32::from(bytes[12]))?,
+            },
+            width: u32_at(13),
+            height: u32_at(17),
+            geometry: Geometry {
+                coded_width: u32_at(21),
+                coded_height: u32_at(25),
+                crop: [u32_at(29), u32_at(33), u32_at(37), u32_at(41)],
+            },
+            frame_rate: FrameRate {
+                numerator: u32_at(45),
+                denominator: u32_at(49),
+            },
+            max_kbps: u32_at(53),
+        };
+        format.validate()?;
+        if format.canonical() != bytes {
+            return Err(invalid("noncanonical video format"));
+        }
+        Ok(format)
+    }
     fn canonical(self) -> Vec<u8> {
         let mut bytes = Vec::with_capacity(57);
         bytes.extend_from_slice(&VERSION.to_be_bytes());

@@ -2690,6 +2690,7 @@ mod wasm {
             let deadline = self.operation_deadline(3_000)?;
             let claims = self.permit.claims();
             let binding = SessionBinding {
+                media: None,
                 deployment_id: claims.deployment_id.clone(),
                 security_epoch: claims.security_epoch,
                 session_id: claims.session_id.clone(),

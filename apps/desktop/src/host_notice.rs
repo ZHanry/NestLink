@@ -206,19 +206,44 @@ impl DesktopApp {
                 }
                 Choice::Reject if notice.phase == Phase::Request => {
                     if let Some(request) = &notice.request {
-                        self.action(
-                            snapshot,
-                            Action::ApproveRemote {
+                        let scope = snapshot
+                            .selected_request
+                            .data
+                            .as_deref()
+                            .filter(|selected| {
+                                selected.id == request.id && selected.nonce == request.nonce
+                            })
+                            .and_then(|_| snapshot.selected_media_scope.data.as_deref());
+                        let choice = ApprovalChoice {
+                            approved: false,
+                            permissions: Vec::new(),
+                            paths: Vec::new(),
+                        };
+                        let action = match scope {
+                            Some(Some(scope)) => Action::ApproveMediaRemote {
                                 request_id: request.id.clone(),
                                 expected_nonce: request.nonce.clone(),
                                 expected_policy_revision: request.policy_revision,
-                                choice: ApprovalChoice {
-                                    approved: false,
-                                    permissions: Vec::new(),
-                                    paths: Vec::new(),
-                                },
+                                choice,
+                                reviewed_scope: scope.clone(),
                             },
-                        );
+                            Some(None) => Action::ApproveRemote {
+                                request_id: request.id.clone(),
+                                expected_nonce: request.nonce.clone(),
+                                expected_policy_revision: request.policy_revision,
+                                choice,
+                            },
+                            None => {
+                                self.hidden = false;
+                                tray::restore(context);
+                                self.screen = Screen::Remote;
+                                self.remote.selected = Some(request.id.clone());
+                                Action::InspectRemote {
+                                    request_id: request.id.clone(),
+                                }
+                            }
+                        };
+                        self.action(snapshot, action);
                     }
                 }
                 Choice::Disconnect

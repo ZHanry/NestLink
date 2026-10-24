@@ -21,6 +21,9 @@ fn fixture() -> (
     let controller = InstallationIdentity::from_seed([2; 32]);
     let host = InstallationIdentity::from_seed([3; 32]);
     let claims = PermitClaims {
+        media_format_version: 0,
+        media_formats: Vec::new(),
+        media_format_sha256: Vec::new(),
         schema_version: SCHEMA_VERSION,
         deployment_id: id(1),
         security_epoch: 1,
@@ -42,6 +45,7 @@ fn fixture() -> (
         required_capabilities: vec!["vp8".into()],
     };
     let binding = SessionBinding {
+        media: None,
         deployment_id: id(1),
         security_epoch: 1,
         session_id: id(2),
@@ -875,4 +879,125 @@ fn proof_activation_requires_a_renewal_request_newer_than_activation() {
         assert_eq!(session.deadline_ms(), 16_000);
     }
     assert!(session.renew(renewed, 10_001, response_clock).is_ok());
+}
+
+#[test]
+fn local_media_binding_refresh_requires_advanced_probe_and_preserves_signed_scope()
+-> Result<(), Box<dyn std::error::Error>> {
+    use nestlink_protocol::media_authority::{
+        FORMAT_CAPABILITY, FrozenMediaScope, MediaAnnouncement, MediaDirection, ProbeIdentity,
+    };
+    use nestlink_protocol::media_format::{FormatSet, FrameRate, VideoFormat};
+    use nestlink_session::MediaSessionBinding;
+    let (signer, _, _, mut claims, mut binding) = fixture();
+    let format = VideoFormat::legacy_h264(31, 320, 240, FrameRate::new(30, 1)?, 2000)?;
+    let set = FormatSet::new(vec![format])?;
+    claims.required_capabilities = vec![FORMAT_CAPABILITY.into()];
+    claims.media_format_version = 2;
+    claims.media_formats = vec![format.encode()?];
+    claims.media_format_sha256 = set.digest().to_vec();
+    let permit = verified(&signer, &claims);
+    let frozen = FrozenMediaScope {
+        version: 2,
+        controller_revision: 1,
+        host_revision: 2,
+        formats: claims.media_formats.clone(),
+        sha256: claims.media_format_sha256.clone(),
+    };
+    // Synthetic data exercises contract validation; it is not a live owner.
+    let mut local = MediaAnnouncement {
+        version: 2,
+        device_id: claims.host_device_id.clone(),
+        direction: MediaDirection::Encode,
+        revision: 2,
+        expires_at_unix_ms: 1_010_000,
+        probe: ProbeIdentity {
+            generation: 1,
+            resource_id: id(8),
+            backend: "cpu-software".into(),
+            adapter_luid: None,
+            driver_version: None,
+        },
+        formats: claims.media_formats.clone(),
+    };
+    let data = MediaSessionBinding::from_local_announcement(
+        &permit,
+        &frozen,
+        &local,
+        EndpointRole::Host,
+        1_000_000,
+    )?;
+    assert_eq!(data.backend(), "cpu-software");
+    assert_eq!(data.local_direction(), MediaDirection::Encode);
+    assert!(
+        MediaSessionBinding::from_local_announcement(
+            &permit,
+            &frozen,
+            &local,
+            EndpointRole::Controller,
+            1_000_000
+        )
+        .is_err()
+    );
+    local.revision = 3;
+    local.expires_at_unix_ms = 1_020_000;
+    let refreshed = data.refresh_from_local_announcement(
+        &permit,
+        &frozen,
+        &local,
+        EndpointRole::Host,
+        1_001_000,
+    )?;
+    assert_eq!(refreshed.expires_at_unix_ms(), 1_020_000);
+    local.probe.generation = 2;
+    local.probe.resource_id = id(9);
+    assert!(
+        data.refresh_from_local_announcement(
+            &permit,
+            &frozen,
+            &local,
+            EndpointRole::Host,
+            1_001_000
+        )
+        .is_ok()
+    );
+    local.revision = 2;
+    assert!(
+        data.refresh_from_local_announcement(
+            &permit,
+            &frozen,
+            &local,
+            EndpointRole::Host,
+            1_001_000
+        )
+        .is_err()
+    );
+    local.probe.generation = 1;
+    local.formats.clear();
+    assert!(
+        data.refresh_from_local_announcement(
+            &permit,
+            &frozen,
+            &local,
+            EndpointRole::Host,
+            1_001_000
+        )
+        .is_err()
+    );
+    binding.media = Some(data);
+    binding.supported_capabilities = vec![FORMAT_CAPABILITY.into()];
+    assert!(
+        Session::activate(
+            permit,
+            binding,
+            Path::Direct,
+            1000,
+            ClockSample {
+                monotonic_ms: 1000,
+                unix_ms: 1_000_000
+            }
+        )
+        .is_err()
+    );
+    Ok(())
 }

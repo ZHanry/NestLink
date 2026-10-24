@@ -14,6 +14,9 @@ fn fixture(paths: Vec<Path>) -> Result<(DeviceIdentity, DeviceIdentity, Verified
         .as_millis()
         .try_into()?;
     let claims = PermitClaims {
+        media_format_version: 0,
+        media_formats: Vec::new(),
+        media_format_sha256: Vec::new(),
         schema_version: SCHEMA_VERSION,
         deployment_id: nestlink_auth::random_id(),
         security_epoch: 1,

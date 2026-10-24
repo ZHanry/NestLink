@@ -53,6 +53,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "nestlink.v1.RelayAllocationClaims.node_endpoint_revision",
         "#[serde(default)]",
     );
+    for field in [
+        "media_format_version",
+        "media_formats",
+        "media_format_sha256",
+    ] {
+        config.field_attribute(
+            format!("nestlink.v1.PermitClaims.{field}"),
+            "#[serde(default)]",
+        );
+    }
+    for message in ["NativeVideo", "NativeVideoFeedback"] {
+        for field in ["format_epoch", "format_sha256"] {
+            config.field_attribute(
+                format!("nestlink.v1.{message}.{field}"),
+                "#[serde(default)]",
+            );
+        }
+    }
     config.enum_attribute(
         "nestlink.v1.ErrorCode",
         "#[serde(rename_all = \"SCREAMING_SNAKE_CASE\")]",

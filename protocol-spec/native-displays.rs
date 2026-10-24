@@ -452,6 +452,8 @@ mod tests {
         };
         let messages = [
             DisplayEnvelope::Recovery(NativeVideoFeedback {
+                format_epoch: 0,
+                format_sha256: Vec::new(),
                 schema_version: crate::SCHEMA_VERSION,
                 connection_generation: 2,
                 layout_epoch: 2,
@@ -496,7 +498,8 @@ mod tests {
         Ok(())
     }
     #[test]
-    fn catalog_is_atomic_exact_and_cannot_reorder_or_expand_authority() -> Result<(), ContractError> {
+    fn catalog_is_atomic_exact_and_cannot_reorder_or_expand_authority() -> Result<(), ContractError>
+    {
         let d = displays();
         let key = catalog_key("12345678-1234-4234-8234-123456789abc", 2, 1, &d)?;
         let mut assembler = CatalogAssembler::default();

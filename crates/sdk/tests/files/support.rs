@@ -103,6 +103,9 @@ impl Sessions {
         let mut claims = previous
             .map(|s| s.claims.clone())
             .unwrap_or_else(|| PermitClaims {
+                media_format_version: 0,
+                media_formats: Vec::new(),
+                media_format_sha256: Vec::new(),
                 schema_version: SCHEMA_VERSION,
                 deployment_id: random_id(),
                 security_epoch: 1,
@@ -132,6 +135,7 @@ impl Sessions {
             Session::activate(
                 permit.clone(),
                 SessionBinding {
+                    media: None,
                     deployment_id: claims.deployment_id.clone(),
                     security_epoch: claims.security_epoch,
                     session_id: claims.session_id.clone(),

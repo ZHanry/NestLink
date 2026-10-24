@@ -1155,7 +1155,7 @@ async fn run_compressed_session(
                 if message.as_ref().is_none_or(|v|v.is_err()){control_closed=true;}
                 match message {
                     Some(Ok(ServerControl::Prepare{context:next,width,height,qpc_frequency})) if !closing=>{
-                        if next.binding.stream_id!=binding.binding.stream_id || nestlink_app_ipc::compressed_video::qpc().map_or(true,|v|v.1!=qpc_frequency){break;}
+                        if next.validate().is_err() || next.binding != binding.binding || next.catalog_revision != binding.catalog_revision || next.catalog_sha256 != binding.catalog_sha256 || next.selection_sequence != binding.selection_sequence || next.layout_epoch != binding.layout_epoch || next.format_epoch != binding.format_epoch || next.format_sha256 != binding.format_sha256 || next.format != binding.format || nestlink_app_ipc::compressed_video::qpc().map_or(true,|v|v.1!=qpc_frequency){break;}
                         active=false;shared.deadline.store(0,Ordering::Release);authority_seen=false;
                         binding=next;
                         if let Ok(mut queue)=shared.updates.lock(){queue.clear();queue.push_back(CompressedVideoUpdate::Preparing{context:binding.clone(),width,height});}
@@ -1794,6 +1794,8 @@ mod video_bridge_tests {
             input_epoch: 2,
         };
         displays.lock().map_err(|_| "fixture poisoned")?.state = Some(NativeDisplayState {
+            format_epoch: 0,
+            format_sha256: [0; 32],
             is_host: false,
             catalog: Some(key.clone()),
             displays: Vec::new(),

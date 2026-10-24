@@ -14,7 +14,11 @@ impl NativeDiscoveryConfig {
     /// Formatting SocketAddr preserves brackets around IPv6 literals.
     pub fn webrtc_stun_urls(&self) -> Result<Vec<String>, crate::ContractError> {
         self.validate()?;
-        Ok(self.stun_servers.iter().map(|address| format!("stun:{address}")).collect())
+        Ok(self
+            .stun_servers
+            .iter()
+            .map(|address| format!("stun:{address}"))
+            .collect())
     }
 
     pub fn validate(&self) -> Result<(), crate::ContractError> {
@@ -972,5 +976,32 @@ pub struct ServiceTargetChoice {
 pub struct ServiceTargetApproval {
     pub challenge_id: String,
     pub choice: ServiceTargetChoice,
+    pub signature: String,
+}
+
+/// Separate endpoints preserve the exact legacy registration/request JSON.
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct MediaAnnouncementSubmission {
+    pub challenge_id: String,
+    pub announcement: crate::media_authority::MediaAnnouncement,
+    pub signature: String,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct MediaRemoteRequest {
+    pub request: RemoteRequest,
+    pub media_format_version: u32,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct MediaApprovalChoice {
+    pub choice: ApprovalChoice,
+    pub media_format_sha256: Vec<u8>,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct MediaApprovalSubmission {
+    pub choice: MediaApprovalChoice,
     pub signature: String,
 }

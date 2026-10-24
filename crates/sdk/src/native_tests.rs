@@ -31,6 +31,9 @@ fn permit_with_paths(
         .as_millis()
         .try_into()?;
     let claims = PermitClaims {
+        media_format_version: 0,
+        media_formats: Vec::new(),
+        media_format_sha256: Vec::new(),
         schema_version: SCHEMA_VERSION,
         deployment_id: id(1),
         security_epoch: 77,
@@ -60,6 +63,7 @@ fn permit_with_paths(
 fn binding(p: &VerifiedPermit) -> Result<SessionBinding> {
     let c = p.claims();
     Ok(SessionBinding {
+        media: None,
         deployment_id: c.deployment_id.clone(),
         security_epoch: c.security_epoch,
         session_id: c.session_id.clone(),

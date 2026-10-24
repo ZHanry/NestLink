@@ -22,6 +22,7 @@ pub struct NativeSessionConfig {
     pub private_network_prefixes: Vec<String>,
     pub supported_capabilities: Vec<String>,
     pub browser_host: Option<BrowserHostConfig>,
+    pub media_provider: Option<crate::NativeMediaProvider>,
     pub management_login_store: Option<Arc<dyn ManagementLoginStore>>,
     network: Arc<NetworkMonitor>,
     pub(crate) network_settings_store: Option<Arc<dyn NativeNetworkSettingsStore>>,
@@ -68,12 +69,38 @@ impl NativeSessionConfig {
                 capabilities
             },
             browser_host: None,
+            media_provider: None,
             management_login_store: None,
             network,
             network_settings_store: None,
         }
     }
 
+    /// One explicit product target; CPU direction probes run only on the
+    /// provider's bounded background worker, never during UI configuration.
+    pub fn with_cpu_media_target(
+        mut self,
+        target: nestlink_media_codec::VideoConfig,
+    ) -> std::io::Result<Self> {
+        self.media_provider = Some(crate::NativeMediaProvider::cpu_software(target)?);
+        if !self
+            .supported_capabilities
+            .iter()
+            .any(|s| s == nestlink_protocol::media::H264_CAPABILITY)
+        {
+            self.supported_capabilities
+                .push(nestlink_protocol::media::H264_CAPABILITY.into());
+        }
+        if !self
+            .supported_capabilities
+            .iter()
+            .any(|s| s == nestlink_protocol::media_authority::FORMAT_CAPABILITY)
+        {
+            self.supported_capabilities
+                .push(nestlink_protocol::media_authority::FORMAT_CAPABILITY.into());
+        }
+        Ok(self)
+    }
     pub fn with_browser_host(mut self, config: BrowserHostConfig) -> Self {
         self.browser_host = Some(config);
         self

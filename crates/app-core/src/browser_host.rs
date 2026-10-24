@@ -1058,6 +1058,7 @@ fn preferred_path(paths: &[i32]) -> Result<Path, BrowserHostError> {
 fn session_binding(permit: &VerifiedPermit) -> Result<SessionBinding, BrowserHostError> {
     let claims = permit.claims();
     Ok(SessionBinding {
+        media: None,
         deployment_id: claims.deployment_id.clone(),
         security_epoch: claims.security_epoch,
         session_id: claims.session_id.clone(),

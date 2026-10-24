@@ -87,6 +87,9 @@ jobs:
       - name: Check Windows recovery before the complete workspace suite
         if: runner.os == 'Windows'
         run: python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --test native_recovery
+      - name: Debug scoped signed media Core ACK and actual software AU regression
+        if: runner.os == 'Windows'
+        run: python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib --features media-runtime-test-support positive_signed_software_core_ack_au -- --nocapture
       - name: Verify actual Media Foundation output with the ordinary token
         if: runner.os == 'Windows'
         shell: pwsh

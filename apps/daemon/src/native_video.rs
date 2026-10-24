@@ -26,7 +26,7 @@ use std::{
     time::{Duration, Instant},
 };
 use tokio::{sync::watch, task::JoinHandle};
-use zeroize::Zeroizing;
+use zeroize::{Zeroize, Zeroizing};
 
 const LAYOUT_EPOCH: u64 = 1;
 const FPS: u32 = 30;
@@ -969,6 +969,7 @@ fn stream_capture<D: CaptureDevice>(
     let mut active: Option<NativeVideoBinding> = None;
     let mut encoder: Option<VideoEncoder> = None;
     let mut legacy_prepare: Option<(nestlink_media_session::LegacyPrepare, VideoConfig)> = None;
+    let mut negotiated_target = false;
     let mut owner_encoding = false;
     let mut owner_output_seen = false;
     let mut pending_sources = std::collections::BTreeMap::new();
@@ -1037,13 +1038,63 @@ fn stream_capture<D: CaptureDevice>(
             } else {
                 FPS
             };
-            quality = VideoQuality::new(target_fps, BITRATE_KBPS, Instant::now());
-            let config = VideoConfig {
-                width: binding.width,
-                height: binding.height,
-                fps: target_fps,
-                bitrate_kbps: BITRATE_KBPS,
+            let formats = match core.native_video_formats(identity) {
+                Ok(value) => value,
+                Err(_) => return (controller, StreamExit::SessionEnded),
             };
+            negotiated_target = formats.is_some();
+            if negotiated_target
+                && core
+                    .native_video_encoder_backend(identity)
+                    .ok()
+                    .flatten()
+                    .as_deref()
+                    != Some("cpu-software")
+            {
+                return (controller, StreamExit::CaptureFailed);
+            }
+            let mut execution_format = None;
+            let config = if let Some(formats) = formats {
+                let codec = if codec_kind == VideoCodec::H264Baseline {
+                    nestlink_protocol::media_format::Codec::H264
+                } else {
+                    nestlink_protocol::media_format::Codec::Vp8
+                };
+                let width = binding.width
+                    + (u32::from(codec_kind == VideoCodec::H264Baseline) * (binding.width & 1));
+                let height = binding.height
+                    + (u32::from(codec_kind == VideoCodec::H264Baseline) * (binding.height & 1));
+                let target = formats
+                    .formats()
+                    .iter()
+                    .filter(|format| {
+                        format.codec == codec
+                            && format.width == width
+                            && format.height == height
+                            && format.frame_rate.denominator == 1
+                            && (1..=120).contains(&format.frame_rate.numerator)
+                            && (64..=100_000).contains(&format.max_kbps)
+                    })
+                    .max_by_key(|format| (format.frame_rate.numerator, format.max_kbps));
+                let Some(target) = target else {
+                    return (controller, StreamExit::CaptureFailed);
+                };
+                execution_format = Some(*target);
+                VideoConfig {
+                    width: binding.width,
+                    height: binding.height,
+                    fps: target.frame_rate.numerator,
+                    bitrate_kbps: target.max_kbps,
+                }
+            } else {
+                VideoConfig {
+                    width: binding.width,
+                    height: binding.height,
+                    fps: target_fps,
+                    bitrate_kbps: BITRATE_KBPS,
+                }
+            };
+            quality = VideoQuality::new(config.fps, config.bitrate_kbps, Instant::now());
             legacy_prepare = match nestlink_media_session::LegacyPrepare::new_cpu_visible(
                 codec_kind,
                 config.width,
@@ -1052,7 +1103,7 @@ fn stream_capture<D: CaptureDevice>(
                 Ok(prepare) => Some((prepare, config)),
                 Err(_) => return (controller, StreamExit::CaptureFailed),
             };
-            owner_encoding = if codec_kind == VideoCodec::H264Baseline {
+            owner_encoding = if codec_kind == VideoCodec::H264Baseline && !negotiated_target {
                 match controller.host_configure(HostVideoConfig {
                     source: binding.source,
                     width: config.width,
@@ -1071,7 +1122,19 @@ fn stream_capture<D: CaptureDevice>(
             encoder = if owner_encoding {
                 None
             } else {
-                match VideoEncoder::new(codec_kind, config) {
+                match if negotiated_target && codec_kind == VideoCodec::H264Baseline {
+                    VideoEncoder::new_h264_software(
+                        config,
+                        match execution_format.and_then(|format| {
+                            nestlink_media_session::software_h264_execution_limits(format).ok()
+                        }) {
+                            Some(limits) => limits,
+                            None => return (controller, StreamExit::CaptureFailed),
+                        },
+                    )
+                } else {
+                    VideoEncoder::new(codec_kind, config)
+                } {
                     Ok(e) => Some(e),
                     Err(_) => return (controller, StreamExit::CaptureFailed),
                 }
@@ -1132,8 +1195,18 @@ fn stream_capture<D: CaptureDevice>(
                 let admitted = prepare
                     .validate(&packet.data, packet.keyframe)
                     .and_then(|sps| prepare.configured(*config, sps));
-                if admitted.is_err() {
-                    return (controller, StreamExit::CaptureFailed);
+                let actual = match admitted {
+                    Ok(actual) => actual,
+                    Err(_) => return (controller, StreamExit::CaptureFailed),
+                };
+                match runtime.block_on(core.propose_native_video_format(identity, actual)) {
+                    Ok(true) => {}
+                    Ok(false) => {
+                        packet.data.zeroize();
+                        thread::sleep(Duration::from_nanos(1_000_000_000 / u64::from(config.fps)));
+                        continue;
+                    }
+                    Err(_) => return (controller, StreamExit::CaptureFailed),
                 }
                 let sent = if output.repeated {
                     runtime.block_on(core.send_native_video_recovery_frame(
@@ -1161,12 +1234,16 @@ fn stream_capture<D: CaptureDevice>(
             } else if !owner_output_seen && Instant::now() >= first_deadline {
                 return (controller, StreamExit::CaptureFailed);
             }
-            if let Some(kbps) = quality.observe(Instant::now(), encoding_time, enqueue.elapsed())
+            if !negotiated_target
+                && let Some(kbps) =
+                    quality.observe(Instant::now(), encoding_time, enqueue.elapsed())
                 && controller.host_set_bitrate(kbps).is_err()
             {
                 return (controller, StreamExit::CaptureFailed);
             }
-            let fps = if step.hardware {
+            let fps = if negotiated_target {
+                legacy_prepare.as_ref().map_or(1, |(_, config)| config.fps)
+            } else if step.hardware {
                 quality.fps()
             } else {
                 quality.fps().min(FPS)
@@ -1219,7 +1296,7 @@ fn stream_capture<D: CaptureDevice>(
         if step.accepted {
             pending_sources.insert(pts, repeated);
         }
-        let encoded = match step.output {
+        let mut encoded = match step.output {
             Some(encoded) => encoded,
             None => {
                 thread::sleep(CAPTURE_TICK);
@@ -1232,12 +1309,22 @@ fn stream_capture<D: CaptureDevice>(
         let admitted = prepare
             .validate(&encoded.data, encoded.keyframe)
             .and_then(|sps| prepare.configured(*config, sps));
-        if admitted.is_err() {
-            return (controller, StreamExit::CaptureFailed);
-        }
+        let actual = match admitted {
+            Ok(actual) => actual,
+            Err(_) => return (controller, StreamExit::CaptureFailed),
+        };
         let Some(repeated) = pending_sources.remove(&encoded.pts_90khz) else {
             return (controller, StreamExit::CaptureFailed);
         };
+        match runtime.block_on(core.propose_native_video_format(identity, actual)) {
+            Ok(true) => {}
+            Ok(false) => {
+                encoded.data.zeroize();
+                thread::sleep(Duration::from_nanos(1_000_000_000 / u64::from(config.fps)));
+                continue;
+            }
+            Err(_) => return (controller, StreamExit::CaptureFailed),
+        }
         let encoding_time = encoding_started.elapsed();
         let enqueue_started = Instant::now();
         let sent = if repeated {
@@ -1263,13 +1350,16 @@ fn stream_capture<D: CaptureDevice>(
         {
             return (controller, StreamExit::TransportFailed);
         }
-        if let Some(kbps) =
-            quality.observe(Instant::now(), encoding_time, enqueue_started.elapsed())
+        if !negotiated_target
+            && let Some(kbps) =
+                quality.observe(Instant::now(), encoding_time, enqueue_started.elapsed())
             && encoder.set_bitrate(kbps).is_err()
         {
             return (controller, StreamExit::CaptureFailed);
         }
-        let fps = if encoder.hardware() {
+        let fps = if negotiated_target {
+            config.fps
+        } else if encoder.hardware() {
             quality.fps()
         } else {
             quality.fps().min(FPS)

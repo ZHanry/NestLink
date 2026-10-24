@@ -30,38 +30,63 @@ impl Actor {
             .native
             .as_ref()
             .is_some_and(|config| config.listen_for_native_requests);
+        let provider = self.native.as_ref().and_then(|n| n.media_provider.clone());
+        let cancellation = Arc::new(AtomicBool::new(false));
+        let probe_fence = sdk_call::DispatchFence {
+            generation: self.shared.generation.clone(),
+            expected: generation,
+            closing: self.shared.closing.clone(),
+            cancelled: cancellation.clone(),
+        };
         self.active = Some(Active {
             envelope: None,
             server: Some(client.server.clone()),
             section: None,
             cancelled: None,
-            cancellation: Arc::new(AtomicBool::new(false)),
+            cancellation,
             secret: None,
             remote_revoke: None,
             native_request_id: None,
             native_connection_generation: None,
             service_host_runtime_id: None,
             future: Box::pin(async move {
-                let result = tokio::time::timeout(Duration::from_secs(2), async {
-                    let native = async {
-                        if native_enabled {
-                            client.sdk.ready_native_remote(&identity).await
-                        } else {
-                            Ok(Vec::new())
-                        }
-                    };
-                    let browser = async {
-                        if browser_enabled {
-                            client.sdk.ready_browser_remote(&identity).await
-                        } else {
-                            Ok(Vec::new())
-                        }
-                    };
-                    tokio::try_join!(native, browser)
-                })
-                .await
-                .map_err(|_| Failure::local(FailureKind::Timeout))
-                .and_then(|result| result.map_err(Failure::from));
+                let published = if let Some(provider) = provider {
+                    provider
+                        .publish(
+                            &client.sdk,
+                            &identity,
+                            nestlink_protocol::media_authority::MediaDirection::Encode,
+                            &probe_fence,
+                        )
+                        .await
+                        .map(|_| ())
+                        .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))
+                } else {
+                    Ok(())
+                };
+                let result = match published {
+                    Err(error) => Err(error),
+                    Ok(()) => tokio::time::timeout(Duration::from_secs(2), async {
+                        let native = async {
+                            if native_enabled {
+                                client.sdk.ready_native_remote(&identity).await
+                            } else {
+                                Ok(Vec::new())
+                            }
+                        };
+                        let browser = async {
+                            if browser_enabled {
+                                client.sdk.ready_browser_remote(&identity).await
+                            } else {
+                                Ok(Vec::new())
+                            }
+                        };
+                        tokio::try_join!(native, browser)
+                    })
+                    .await
+                    .map_err(|_| Failure::local(FailureKind::Timeout))
+                    .and_then(|result| result.map_err(Failure::from)),
+                };
                 Job::NativeInboxPolled {
                     client,
                     generation,

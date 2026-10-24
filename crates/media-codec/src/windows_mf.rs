@@ -480,6 +480,21 @@ impl MfH264Encoder {
     pub fn close(mut self) -> io::Result<()> {
         self.inner.close()
     }
+    pub fn owner_observation(&self) -> io::Result<crate::OwnerObservation> {
+        unsafe extern "C" {
+            fn nl_mf_owner_observation(
+                handle: *mut c_void,
+                out: *mut crate::owner_observation::RawOwnerObservation,
+            ) -> i32;
+        }
+        let mut raw = crate::owner_observation::RawOwnerObservation::default();
+        // SAFETY: same thread-confined live owner, initialized scalar-only out.
+        let code = unsafe { nl_mf_owner_observation(self.inner.handle.as_ptr(), &mut raw) };
+        if code < 0 {
+            return Err(failed("encoder owner observation", code));
+        }
+        raw.try_into()
+    }
     pub fn hardware(&self) -> bool {
         // SAFETY: thread-confined live transform; reads an observed output fact.
         unsafe { nl_mf_hardware_used(self.inner.handle.as_ptr()) != 0 }

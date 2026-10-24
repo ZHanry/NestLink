@@ -38,6 +38,12 @@ struct Surface {
 void trace(Surface* s, const char* stage) {
     if (s && s->probe_parent) { std::fprintf(stderr,"gpu_native_stage=%s\n",stage); std::fflush(stderr); }
 }
+void trace_result(Surface* s, const char* stage, HRESULT hr) {
+    if (s && s->probe_parent) {
+        std::fprintf(stderr,"gpu_native_result stage=%s hr=0x%08lx\n",stage,static_cast<unsigned long>(hr));
+        std::fflush(stderr);
+    }
+}
 void release(Surface* s) { if (s && --s->references==0) delete s; }
 LRESULT CALLBACK child_proc(HWND hwnd, UINT message, WPARAM w, LPARAM l) {
     if (message==WM_NCHITTEST) return HTTRANSPARENT;
@@ -162,7 +168,19 @@ HRESULT output_type(Presenter& p) {
     for (DWORD i=0;i<64;++i) {
         ComPtr<IMFMediaType> t;
         HRESULT hr=p.decoder->GetOutputAvailableType(0,i,&t);
+        trace_result(p.surface,"output_available_type",hr);
         if (FAILED(hr)) return hr;
+        if (p.surface->probe_parent) {
+            GUID subtype{}; UINT32 coded_w=0,coded_h=0; MFVideoArea display{}; UINT32 display_size=0;
+            const HRESULT sub_hr=t->GetGUID(MF_MT_SUBTYPE,&subtype);
+            const HRESULT size_hr=MFGetAttributeSize(t.Get(),MF_MT_FRAME_SIZE,&coded_w,&coded_h);
+            const HRESULT area_hr=t->GetBlob(MF_MT_MINIMUM_DISPLAY_APERTURE,reinterpret_cast<UINT8*>(&display),static_cast<UINT32>(sizeof(display)),&display_size);
+            std::fprintf(stderr,"gpu_native_output_candidate index=%lu subtype_hr=0x%08lx nv12=%u size_hr=0x%08lx coded=%ux%u required=%ux%u aperture_hr=0x%08lx aperture_bytes=%u origin=%d:%u,%d:%u display=%ldx%ld\n",
+                static_cast<unsigned long>(i),static_cast<unsigned long>(sub_hr),SUCCEEDED(sub_hr)&&subtype==MFVideoFormat_NV12,
+                static_cast<unsigned long>(size_hr),coded_w,coded_h,p.width,p.height,static_cast<unsigned long>(area_hr),display_size,
+                display.OffsetX.value,display.OffsetX.fract,display.OffsetY.value,display.OffsetY.fract,display.Area.cx,display.Area.cy);
+            std::fflush(stderr);
+        }
         GUID sub{};
         if (FAILED(t->GetGUID(MF_MT_SUBTYPE,&sub)) || sub!=MFVideoFormat_NV12) continue;
         UINT32 w=0,h=0;
@@ -172,7 +190,9 @@ HRESULT output_type(Presenter& p) {
             (actual!=sizeof(area) || area.OffsetX.value || area.OffsetX.fract || area.OffsetY.value || area.OffsetY.fract ||
              area.Area.cx!=static_cast<LONG>(p.width) || area.Area.cy!=static_cast<LONG>(p.height))) return MF_E_INVALIDMEDIATYPE;
         hr=sdr_type(p,t.Get(),true); if (FAILED(hr)) return hr;
-        return p.decoder->SetOutputType(0,t.Get(),0);
+        hr=p.decoder->SetOutputType(0,t.Get(),0);
+        trace_result(p.surface,"decoder_set_output_type",hr);
+        return hr;
     }
     return MF_E_INVALIDMEDIATYPE;
 }
@@ -281,11 +301,12 @@ HRESULT receive(Presenter& p, uint64_t* pts, uint64_t* qpc, uint32_t* submitted,
     trace(p.surface,"decoder_process_output_begin");
     hr=p.decoder->ProcessOutput(0,1,&data,&status);
     trace(p.surface,"decoder_process_output_end");
+    trace_result(p.surface,"decoder_process_output",hr);
     if (data.pEvents) data.pEvents->Release();
     auto& received=p.ready[(p.time_head+p.ready_count)%p.ready.size()];
     received.Attach(data.pSample);
     if (hr==MF_E_TRANSFORM_NEED_MORE_INPUT) {received.Reset();goto present_ready;}
-    if (hr==MF_E_TRANSFORM_STREAM_CHANGE) { received.Reset();hr=output_type(p); return FAILED(hr)?hr:S_FALSE; }
+    if (hr==MF_E_TRANSFORM_STREAM_CHANGE) { received.Reset();trace(p.surface,"stream_change_output_type_begin");hr=output_type(p);trace_result(p.surface,"stream_change_output_type",hr); return FAILED(hr)?hr:S_FALSE; }
     if (FAILED(hr)) {received.Reset();return hr;}
     if (!received) return E_UNEXPECTED;
     LONGLONG received_time=0; hr=received->GetSampleTime(&received_time);

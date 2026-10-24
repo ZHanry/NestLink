@@ -21,6 +21,7 @@ mod http_wasm;
 use http_wasm::request;
 use url::Url;
 mod diagnostics;
+mod media_authority;
 
 #[derive(Debug, thiserror::Error)]
 pub enum SdkError {

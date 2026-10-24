@@ -27,3 +27,8 @@ pub use runtime::*;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use nestlink_media_session::native_video_qpc;
+
+#[cfg(not(target_arch = "wasm32"))]
+mod native_media_provider;
+#[cfg(not(target_arch = "wasm32"))]
+pub use native_media_provider::NativeMediaProvider;

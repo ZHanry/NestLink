@@ -49,6 +49,7 @@ pub(crate) enum Patch {
     ServiceEdgeNamespace(ServiceEdgeNamespaceView),
     Requests(Vec<RemoteView>),
     SelectedRequest(RemoteView),
+    SelectedMediaScope(Option<nestlink_protocol::media_authority::FrozenMediaScope>),
     Accounts(Vec<AccountView>),
     Policy(PolicyResponse),
     PathLimits(Vec<PathLimit>),
@@ -74,7 +75,11 @@ impl Patch {
             Self::SelectedService(value) => view.selected_service.replace(value),
             Self::ServiceEdgeNamespace(value) => view.service_edge_namespace.replace(value),
             Self::Requests(value) => view.requests.replace(value),
-            Self::SelectedRequest(value) => view.selected_request.replace(value),
+            Self::SelectedRequest(value) => {
+                view.selected_request.replace(value);
+                view.selected_media_scope = crate::Section::default();
+            }
+            Self::SelectedMediaScope(value) => view.selected_media_scope.replace(value),
             Self::Accounts(value) => view.accounts.replace(value),
             Self::Policy(value) => view.policy.replace(value),
             Self::PathLimits(value) => view.path_limits.replace(value),
@@ -161,11 +166,12 @@ async fn security(sdk: &Sdk, fence: &DispatchFence) -> Result<MeResponse, Failur
     Ok(me)
 }
 
-pub(crate) async fn run(
+pub(crate) async fn run_with_native_config(
     sdk: Sdk,
     identity: Option<Arc<DeviceIdentity>>,
     action: Action,
     fence: DispatchFence,
+    native: Option<crate::NativeSessionConfig>,
 ) -> Response {
     let reauthentication = action.reauthentication();
     let sign_in = matches!(action, Action::SignIn { .. });
@@ -178,7 +184,14 @@ pub(crate) async fn run(
         patches: Vec::new(),
         session_lost: false,
     };
-    let result = execute(&mut response, identity.as_deref(), action, &fence).await;
+    let result = execute(
+        &mut response,
+        identity.as_deref(),
+        action,
+        &fence,
+        native.as_ref(),
+    )
+    .await;
     if let Err(failure) = result {
         if !sign_in && failure.authentication_rejected() {
             // A bad reauthentication factor is not evidence that a management
@@ -209,6 +222,7 @@ async fn execute(
     identity: Option<&DeviceIdentity>,
     action: Action,
     fence: &DispatchFence,
+    native: Option<&crate::NativeSessionConfig>,
 ) -> Result<(), Failure> {
     fence.check()?;
     let sdk = &mut response.sdk;
@@ -331,9 +345,14 @@ async fn execute(
         } => patches.push(Patch::NodeUsage(
             read(sdk.node_usage(&node_id, after_generation, limit), fence).await?,
         )),
-        Action::InspectRemote { request_id } => patches.push(Patch::SelectedRequest(
-            read(sdk.remote(&request_id), fence).await?,
-        )),
+        Action::InspectRemote { request_id } => {
+            patches.push(Patch::SelectedRequest(
+                read(sdk.remote(&request_id), fence).await?,
+            ));
+            patches.push(Patch::SelectedMediaScope(
+                read(sdk.remote_media_scope(&request_id), fence).await?,
+            ));
+        }
         Action::IssueRemotePermit { request_id } => {
             let permit = write(sdk.permit(&request_id), effect, fence).await?;
             response.output = PublicOutput::Revision {
@@ -376,7 +395,21 @@ async fn execute(
             };
             let value = match access {
                 RemoteAccess::LocalApproval => {
-                    write(sdk.create_remote(request), effect, fence).await?
+                    if let Some(provider) = native.and_then(|n| n.media_provider.as_ref()) {
+                        let _announcement = provider
+                            .publish(
+                                sdk,
+                                local()?,
+                                nestlink_protocol::media_authority::MediaDirection::Decode,
+                                fence,
+                            )
+                            .await
+                            .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?;
+                        fence.check()?;
+                        write(sdk.request_media_remote(request), effect, fence).await?
+                    } else {
+                        write(sdk.create_remote(request), effect, fence).await?
+                    }
                 }
                 RemoteAccess::TrustedDevice => {
                     write(sdk.create_trusted_remote(request), effect, fence).await?
@@ -400,11 +433,75 @@ async fn execute(
             {
                 return Err(Failure::local(FailureKind::Trust));
             }
+            if read(sdk.remote_media_scope(&request_id), fence)
+                .await?
+                .is_some()
+            {
+                return Err(Failure::local(FailureKind::Trust));
+            }
             write(sdk.approve(local()?, &view, choice), effect, fence).await?;
             patches.push(Patch::Requests(read(sdk.pending_remote(), fence).await?));
             patches.push(Patch::SelectedRequest(
                 read(sdk.remote(&request_id), fence).await?,
             ));
+        }
+        Action::ApproveMediaRemote {
+            request_id,
+            expected_nonce,
+            expected_policy_revision,
+            choice,
+            reviewed_scope,
+        } => {
+            let view = read(sdk.remote(&request_id), fence).await?;
+            if view.nonce != expected_nonce
+                || view.policy_revision != expected_policy_revision
+                || view.status != "pending"
+                || read(sdk.remote_media_scope(&request_id), fence)
+                    .await?
+                    .as_ref()
+                    != Some(&reviewed_scope)
+            {
+                return Err(Failure::local(FailureKind::Trust));
+            }
+            if choice.approved {
+                let provider = native
+                    .and_then(|n| n.media_provider.as_ref())
+                    .ok_or_else(|| Failure::local(FailureKind::NativeSessionUnavailable))?;
+                let announcement = provider
+                    .publish(
+                        sdk,
+                        local()?,
+                        nestlink_protocol::media_authority::MediaDirection::Encode,
+                        fence,
+                    )
+                    .await
+                    .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?;
+                let available = announcement
+                    .validate(unix_ms()?)
+                    .map_err(|_| Failure::local(FailureKind::Trust))?;
+                let scope = reviewed_scope
+                    .validate()
+                    .map_err(|_| Failure::local(FailureKind::Trust))?;
+                if scope
+                    .formats()
+                    .iter()
+                    .any(|format| !available.formats().contains(format))
+                {
+                    return Err(Failure::local(FailureKind::Trust));
+                }
+                fence.check()?;
+            }
+            write(
+                sdk.approve_media_remote(local()?, &view, choice, &reviewed_scope),
+                effect,
+                fence,
+            )
+            .await?;
+            patches.push(Patch::Requests(read(sdk.pending_remote(), fence).await?));
+            patches.push(Patch::SelectedRequest(
+                read(sdk.remote(&request_id), fence).await?,
+            ));
+            patches.push(Patch::SelectedMediaScope(Some(reviewed_scope)));
         }
         Action::RevokeRemote { request_id } => {
             write(sdk.revoke_remote(&request_id), effect, fence).await?;
@@ -569,4 +666,13 @@ async fn execute(
         }
     }
     Ok(())
+}
+
+fn unix_ms() -> Result<u64, Failure> {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|_| Failure::local(FailureKind::Trust))?
+        .as_millis()
+        .try_into()
+        .map_err(|_| Failure::local(FailureKind::Trust))
 }

@@ -5130,6 +5130,9 @@ mod tests {
     ) -> TestResult<VerifiedPermit> {
         let now = unix_ms()?;
         let claims = PermitClaims {
+            media_format_version: 0,
+            media_formats: Vec::new(),
+            media_format_sha256: Vec::new(),
             schema_version: SCHEMA_VERSION,
             deployment_id: id(1),
             security_epoch: 1,
@@ -5257,6 +5260,7 @@ mod tests {
     fn test_binding(permit: &VerifiedPermit) -> TestResult<SessionBinding> {
         let claims = permit.claims();
         Ok(SessionBinding {
+            media: None,
             deployment_id: claims.deployment_id.clone(),
             security_epoch: claims.security_epoch,
             session_id: claims.session_id.clone(),

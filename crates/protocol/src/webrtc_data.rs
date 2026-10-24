@@ -414,6 +414,9 @@ mod tests {
     fn claims(permission: Permission) -> PermitClaims {
         let id = |n: u32| format!("{n:08}-1111-4111-8111-111111111111");
         PermitClaims {
+            media_format_version: 0,
+            media_formats: Vec::new(),
+            media_format_sha256: Vec::new(),
             schema_version: SCHEMA_VERSION,
             deployment_id: id(1),
             session_id: id(2),

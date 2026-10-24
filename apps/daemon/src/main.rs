@@ -45,6 +45,9 @@ struct Args {
     /// Administrator-approved private network prefixes for LAN candidates.
     #[arg(long = "private-network-prefix")]
     private_network_prefixes: Vec<String>,
+    /// Exact finite CPU media target, e.g. 1920x1080@30:4000. No implied presets.
+    #[arg(long, value_parser=parse_native_media_target)]
+    native_media_target: Option<nestlink_media_codec::VideoConfig>,
 }
 
 #[derive(Subcommand)]
@@ -446,6 +449,9 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let network = Arc::new(nestlink_sdk::NetworkMonitor::start()?);
     let browser_data_registry = Arc::new(browser_data::BrowserHostDataRegistry::default());
     let mut native = nestlink_app_core::NativeSessionConfig::new(network);
+    if let Some(target) = args.native_media_target {
+        native = native.with_cpu_media_target(target)?;
+    }
     native.listen_for_native_requests = true;
     native.bind_address = args.native_bind;
     native.stun_servers = args.stun_servers;
@@ -750,4 +756,24 @@ mod quota_cli_tests {
         );
         Ok(())
     }
+}
+
+fn parse_native_media_target(value: &str) -> Result<nestlink_media_codec::VideoConfig, String> {
+    let (size, rate) = value
+        .split_once('@')
+        .ok_or("expected WIDTHxHEIGHT@FPS:KBPS")?;
+    let (width, height) = size.split_once('x').ok_or("expected WIDTHxHEIGHT")?;
+    let (fps, kbps) = rate.split_once(':').ok_or("expected FPS:KBPS")?;
+    let parse = |part: &str| {
+        part.parse::<u32>()
+            .map_err(|_| "target values must be unsigned integers".to_owned())
+    };
+    let target = nestlink_media_codec::VideoConfig {
+        width: parse(width)?,
+        height: parse(height)?,
+        fps: parse(fps)?,
+        bitrate_kbps: parse(kbps)?,
+    };
+    nestlink_app_core::NativeMediaProvider::cpu_software(target).map_err(|e| e.to_string())?;
+    Ok(target)
 }

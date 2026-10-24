@@ -175,6 +175,39 @@ impl VideoDecoder {
             Self::H264(codec) => codec.inner.reset_for_keyframe().map(|()| true),
         }
     }
+    /// Explicit software owner; never silently upgrades to an unprobed GPU.
+    pub fn with_config_software(codec: VideoCodec, config: VideoConfig) -> io::Result<Self> {
+        match codec {
+            VideoCodec::Vp8 => Ok(Self::Vp8(Vp8Decoder::new(config.width, config.height)?)),
+            #[cfg(windows)]
+            VideoCodec::H264Baseline => Ok(Self::H264(H264Decoder::with_config_software(config)?)),
+            #[cfg(not(windows))]
+            VideoCodec::H264Baseline => {
+                let _ = config;
+                Err(io::Error::new(
+                    io::ErrorKind::Unsupported,
+                    "H.264 decoder unavailable on this platform",
+                ))
+            }
+        }
+    }
+    /// Exact negotiated timing/bitrate target; raw visible geometry may require
+    /// the existing CPU-only even padding and presentation crop wrapper.
+    pub fn with_config(codec: VideoCodec, config: VideoConfig) -> io::Result<Self> {
+        match codec {
+            VideoCodec::Vp8 => Ok(Self::Vp8(Vp8Decoder::new(config.width, config.height)?)),
+            #[cfg(windows)]
+            VideoCodec::H264Baseline => Ok(Self::H264(H264Decoder::with_config(config)?)),
+            #[cfg(not(windows))]
+            VideoCodec::H264Baseline => {
+                let _ = config;
+                Err(io::Error::new(
+                    io::ErrorKind::Unsupported,
+                    "H.264 decoder unavailable on this platform",
+                ))
+            }
+        }
+    }
     pub fn new(codec: VideoCodec, width: u32, height: u32) -> io::Result<Self> {
         match codec {
             VideoCodec::Vp8 => Ok(Self::Vp8(Vp8Decoder::new(width, height)?)),
@@ -297,6 +330,44 @@ pub struct H264Decoder {
 }
 #[cfg(windows)]
 impl H264Decoder {
+    fn with_config_software(config: VideoConfig) -> io::Result<Self> {
+        let (width, height) = (config.width, config.height);
+        let (coded_width, coded_height) = coded_size(width, height)?;
+        let inner = crate::MfH264Decoder::with_config(
+            VideoConfig {
+                width: coded_width,
+                height: coded_height,
+                ..config
+            },
+            false,
+        )?;
+        if inner.hardware() {
+            return Err(io::Error::other(
+                "software decoder unexpectedly returned hardware output",
+            ));
+        }
+        Ok(Self {
+            inner: Box::new(inner),
+            width,
+            height,
+        })
+    }
+    fn with_config(config: VideoConfig) -> io::Result<Self> {
+        let (width, height) = (config.width, config.height);
+        let (coded_width, coded_height) = coded_size(width, height)?;
+        let encoded = VideoConfig {
+            width: coded_width,
+            height: coded_height,
+            ..config
+        };
+        let inner = crate::MfH264Decoder::with_config(encoded, true)
+            .or_else(|_| crate::MfH264Decoder::with_config(encoded, false))?;
+        Ok(Self {
+            inner: Box::new(inner),
+            width,
+            height,
+        })
+    }
     fn new(width: u32, height: u32) -> io::Result<Self> {
         let (coded_width, coded_height) = coded_size(width, height)?;
         let inner = crate::MfH264Decoder::new(coded_width, coded_height, true)

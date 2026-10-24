@@ -10,8 +10,10 @@ pub mod ice;
 pub mod input;
 pub use input::valid_scroll;
 pub mod media;
+pub mod media_authority;
 pub mod media_format;
 pub mod native_displays;
+pub mod native_media_format;
 pub mod node_discovery;
 pub mod node_resources;
 pub mod nodes;
@@ -69,6 +71,7 @@ impl PermitClaims {
                 .any(|value| value == ice::SETUP_CAPABILITY)
     }
     pub fn validate(&self) -> Result<(), ContractError> {
+        media_authority::permit_formats(self)?;
         let invalid = |reason| ContractError::new(ErrorCode::InvalidMessage, reason);
         if self.schema_version != SCHEMA_VERSION {
             return Err(ContractError::new(

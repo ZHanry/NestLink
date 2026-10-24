@@ -48,6 +48,18 @@ fn budget(actual: usize, maximum: u64) -> Result<(), ContractError> {
     }
     Ok(())
 }
+fn format_identity(epoch: u64, hash: &[u8]) -> Result<(), ContractError> {
+    if (epoch == 0 && hash.is_empty())
+        || (epoch > 0
+            && epoch <= i64::MAX as u64
+            && hash.len() == 32
+            && hash.iter().any(|byte| *byte != 0))
+    {
+        Ok(())
+    } else {
+        Err(invalid("invalid native video format identity"))
+    }
+}
 impl NativeVideoFeedback {
     pub fn decode_validated(bytes: &[u8]) -> Result<Self, ContractError> {
         let message: Self = decode_bounded(bytes, VIDEO_FEEDBACK_BYTES)?;
@@ -66,6 +78,7 @@ impl NativeVideoFeedback {
             self.last_sequence,
         )?;
         budget(self.encoded_len(), VIDEO_FEEDBACK_BYTES)?;
+        format_identity(self.format_epoch, &self.format_sha256)?;
         if self.layout_epoch == 0
             || self.layout_epoch > i64::MAX as u64
             || !matches!(
@@ -100,6 +113,7 @@ impl NativeVideo {
             self.pts_90khz,
         )?;
         budget(self.encoded_len(), FRAME_BYTES)?;
+        format_identity(self.format_epoch, &self.format_sha256)?;
         if self.layout_epoch == 0 || self.layout_epoch > i64::MAX as u64 {
             return Err(invalid("invalid native video layout epoch"));
         }

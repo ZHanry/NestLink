@@ -1,7 +1,8 @@
 //! UI-owned child window and a bounded, cancellation-owned MF/D3D worker.
+use crate::bridge::CompressedContext;
 use crate::gpu_diagnostics::{ReceiverObservation, TerminalSink};
 use eframe::egui;
-use nestlink_media_codec::{GpuH264Presenter, GpuVideoSurface};
+use nestlink_media_codec::{GpuH264Presenter, GpuVideoSurface, VideoConfig};
 use std::{
     collections::VecDeque,
     io,
@@ -15,7 +16,53 @@ use std::{
 };
 use zeroize::Zeroizing;
 
+pub(super) fn gpu_config(
+    context: &CompressedContext,
+    width: u32,
+    height: u32,
+) -> io::Result<VideoConfig> {
+    context.validate().map_err(io::Error::other)?;
+    if width == 0
+        || height == 0
+        || width > 8192
+        || height > 8192
+        || !width.is_multiple_of(2)
+        || !height.is_multiple_of(2)
+        || u64::from(width) * u64::from(height) * 4 > 64 * 1024 * 1024
+    {
+        return Err(io::Error::other(
+            "GPU requires bounded even visible geometry",
+        ));
+    }
+    let (fps, bitrate_kbps) =
+        if let Some(format) = context.video_format().map_err(io::Error::other)? {
+            if format.width != width
+                || format.height != height
+                || format.frame_rate.denominator != 1
+                || !(1..=120).contains(&format.frame_rate.numerator)
+            {
+                return Err(io::Error::other(
+                    "confirmed format is not executable by the GPU owner",
+                ));
+            }
+            (format.frame_rate.numerator, format.max_kbps)
+        } else {
+            // Legacy local defaults are never an executable negotiated-format receipt.
+            (30, 4000)
+        };
+    if !(64..=100_000).contains(&bitrate_kbps) {
+        return Err(io::Error::other("GPU bitrate is outside executable bounds"));
+    }
+    Ok(VideoConfig {
+        width,
+        height,
+        fps,
+        bitrate_kbps,
+    })
+}
+
 pub struct AccessUnit {
+    pub context: Arc<CompressedContext>,
     pub delivery_sequence: u64,
     pub native_sequence: u64,
     pub pts_90khz: u64,
@@ -54,15 +101,32 @@ pub struct Presenter {
     terminal_sink: Option<TerminalSink>,
     input: Option<mpsc::SyncSender<AccessUnit>>,
     events: Option<mpsc::Receiver<Event>>,
-    config: (u32, u32),
+    config: VideoConfig,
+    context: Arc<CompressedContext>,
     failure_reported: bool,
     visible: Arc<AtomicBool>,
 }
 impl Presenter {
+    pub fn for_context(
+        width: u32,
+        height: u32,
+        generation: u64,
+        context: CompressedContext,
+    ) -> io::Result<Self> {
+        Ok(Self::new(
+            gpu_config(&context, width, height)?,
+            generation,
+            context,
+        ))
+    }
+    pub fn context(&self) -> Arc<CompressedContext> {
+        self.context.clone()
+    }
     pub fn observation_handle(&self) -> Arc<Mutex<ReceiverObservation>> {
         self.observation.clone()
     }
-    pub fn new(width: u32, height: u32, generation: u64) -> Self {
+    pub fn new(config: VideoConfig, generation: u64, context: CompressedContext) -> Self {
+        let VideoConfig { width, height, .. } = config;
         Self {
             paint: Arc::new(Mutex::new(PaintState {
                 generation,
@@ -84,7 +148,8 @@ impl Presenter {
             })),
             input: None,
             events: None,
-            config: (width, height),
+            config,
+            context: Arc::new(context),
             failure_reported: false,
             visible: Arc::new(AtomicBool::new(false)),
         }
@@ -174,7 +239,7 @@ impl Presenter {
             }
         }
     }
-    pub fn poll(&mut self) -> Vec<Event> {
+    pub fn poll(&mut self) -> Vec<(Arc<CompressedContext>, Event)> {
         let mut result = Vec::new();
         if !self.failure_reported
             && let Ok(state) = self.paint.lock()
@@ -201,7 +266,8 @@ impl Presenter {
                 let cancel = self.cancel.clone();
                 let bytes = self.queued_bytes.clone();
                 let units = self.queued_units.clone();
-                let (width, height) = self.config;
+                let config = self.config;
+                let owner_context = self.context.clone();
                 let observation = self.observation.clone();
                 let mut observed = self
                     .observation
@@ -214,7 +280,7 @@ impl Presenter {
                         observed.worker_started = true;
                         let outcome = run(
                             surface,
-                            (width, height),
+                            (config, owner_context),
                             rx,
                             &event_tx,
                             &cancel,
@@ -254,8 +320,14 @@ impl Presenter {
             result.push(Event::Exited);
         }
         result
+            .into_iter()
+            .map(|event| (self.context.clone(), event))
+            .collect()
     }
     pub fn submit(&self, unit: AccessUnit) -> Result<(), AccessUnit> {
+        if unit.context != self.context {
+            return Err(unit);
+        }
         let Some(input) = &self.input else {
             return Err(unit);
         };
@@ -394,7 +466,7 @@ fn record_join(
 }
 fn run(
     surface: GpuVideoSurface,
-    size: (u32, u32),
+    target: (VideoConfig, Arc<CompressedContext>),
     input: mpsc::Receiver<AccessUnit>,
     events: &mpsc::SyncSender<Event>,
     cancel: &AtomicBool,
@@ -403,7 +475,14 @@ fn run(
 ) -> io::Result<()> {
     let (bytes, units) = queued;
     let (observed, observation) = telemetry;
-    let mut decoder = GpuH264Presenter::new(&surface, size.0, size.1, 30)?;
+    let (config, owner_context) = target;
+    let expected = gpu_config(&owner_context, config.width, config.height)?;
+    if config.fps != expected.fps || config.bitrate_kbps != expected.bitrate_kbps {
+        return Err(io::Error::other(
+            "GPU worker target differs from confirmed format",
+        ));
+    }
+    let mut decoder = GpuH264Presenter::with_config(&surface, config)?;
     observed.decoder_opened = true;
     observed.qpc_frequency = nestlink_media_codec::gpu_qpc()
         .ok()
@@ -419,6 +498,11 @@ fn run(
             front = input.try_recv().ok();
         }
         let step = if let Some(unit) = &front {
+            if unit.context != owner_context {
+                return Err(io::Error::other(
+                    "GPU input belongs to another format owner",
+                ));
+            }
             decoder.submit_scheduled(
                 unit.native_sequence,
                 unit.pts_90khz,
@@ -498,10 +582,36 @@ fn run(
 }
 
 #[cfg(test)]
+pub(super) fn test_context() -> CompressedContext {
+    CompressedContext {
+        ipc_version: 2,
+        catalog_sha256: [1; 32],
+        format_epoch: 0,
+        format_sha256: [0; 32],
+        format: None,
+        binding: nestlink_app_ipc::compressed_video::NativeCompressedBinding {
+            runtime_id: "runtime".into(),
+            ui_generation: 1,
+            request_id: "request".into(),
+            connection_generation: 1,
+            source: 1,
+            stream_id: [1; 16],
+            stream_epoch: 1,
+        },
+        catalog_revision: 1,
+        selection_sequence: 1,
+        layout_epoch: 1,
+        decode_epoch: 1,
+        configuration_id: 1,
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
     fn unit(sequence: u64, bytes: usize) -> AccessUnit {
         AccessUnit {
+            context: Arc::new(test_context()),
             delivery_sequence: sequence,
             native_sequence: sequence,
             pts_90khz: sequence * 3000,
@@ -511,10 +621,55 @@ mod tests {
         }
     }
     #[test]
+    fn confirmed_gpu_target_preserves_rate_and_rejects_odd_fractional_or_foreign_geometry()
+    -> Result<(), Box<dyn std::error::Error>> {
+        use nestlink_app_ipc::compressed_video::WireVideoFormat;
+        use nestlink_protocol::media_format::{FrameRate, VideoFormat};
+        let mut context = test_context();
+        let format = VideoFormat::legacy_h264(31, 640, 480, FrameRate::new(60, 1)?, 3000)?;
+        context.format_epoch = 1;
+        context.format_sha256 = format.digest()?;
+        context.format = Some(WireVideoFormat::new(format)?);
+        let config = gpu_config(&context, 640, 480)?;
+        assert_eq!(
+            (config.width, config.height, config.fps, config.bitrate_kbps),
+            (640, 480, 60, 3000)
+        );
+        assert!(gpu_config(&context, 321, 241).is_err());
+        assert!(gpu_config(&context, 642, 480).is_err());
+        let fractional =
+            VideoFormat::legacy_h264(31, 640, 480, FrameRate::new(30000, 1001)?, 3000)?;
+        context.format_sha256 = fractional.digest()?;
+        context.format = Some(WireVideoFormat::new(fractional)?);
+        assert!(gpu_config(&context, 640, 480).is_err());
+        for bitrate_kbps in [1, 100_001] {
+            let mut out_of_bounds = format;
+            out_of_bounds.max_kbps = bitrate_kbps;
+            context.format_sha256 = out_of_bounds.digest()?;
+            context.format = Some(WireVideoFormat::new(out_of_bounds)?);
+            assert!(gpu_config(&context, 640, 480).is_err());
+        }
+        let legacy = gpu_config(&test_context(), 640, 480)?;
+        assert_eq!((legacy.fps, legacy.bitrate_kbps), (30, 4000));
+        assert!(gpu_config(&test_context(), 321, 241).is_err());
+        Ok(())
+    }
+    #[test]
     fn accepted_reference_does_not_refund_decoder_credit() -> io::Result<()> {
-        let mut presenter = Presenter::new(640, 480, 1);
+        let mut presenter =
+            Presenter::new(gpu_config(&test_context(), 640, 480)?, 1, test_context());
         let (tx, rx) = mpsc::sync_channel(8);
         presenter.input = Some(tx);
+        for field in 0..3 {
+            let mut foreign = unit(1, 16);
+            match field {
+                0 => Arc::make_mut(&mut foreign.context).format_epoch += 1,
+                1 => Arc::make_mut(&mut foreign.context).format_sha256[0] ^= 1,
+                _ => Arc::make_mut(&mut foreign.context).catalog_sha256[0] ^= 1,
+            }
+            assert!(presenter.submit(foreign).is_err());
+        }
+        assert_eq!(presenter.queued_units.load(Ordering::Acquire), 0);
         for sequence in 1..=8 {
             assert!(presenter.submit(unit(sequence, 16)).is_ok());
         }
@@ -532,7 +687,8 @@ mod tests {
     }
     #[test]
     fn cancelled_worker_is_not_reported_joined_early() -> io::Result<()> {
-        let mut presenter = Presenter::new(640, 480, 1);
+        let mut presenter =
+            Presenter::new(gpu_config(&test_context(), 640, 480)?, 1, test_context());
         let (done, wait) = mpsc::channel();
         presenter.worker = Some(thread::spawn(move || {
             let _ = wait.recv();

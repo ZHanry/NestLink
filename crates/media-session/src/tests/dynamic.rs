@@ -13,6 +13,8 @@ fn keyframe(width: u32, height: u32, layout: u64, sequence: u64, pts: u64) -> Re
         true,
     )?;
     Ok(NativeVideo {
+        format_epoch: 0,
+        format_sha256: Vec::new(),
         codec: 0,
         schema_version: 1,
         connection_generation: EPOCH.connection,

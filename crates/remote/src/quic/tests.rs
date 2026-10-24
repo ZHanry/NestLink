@@ -122,6 +122,7 @@ impl Fixture {
         let controller = InstallationIdentity::generate();
         let clock = RuntimeClock::default();
         let binding = SessionBinding {
+            media: None,
             deployment_id: random_id(),
             security_epoch: 1,
             session_id: random_id(),
@@ -140,6 +141,9 @@ impl Fixture {
         };
         let now = clock.sample()?;
         let claims = PermitClaims {
+            media_format_version: 0,
+            media_formats: Vec::new(),
+            media_format_sha256: Vec::new(),
             schema_version: 1,
             deployment_id: binding.deployment_id.clone(),
             security_epoch: 1,

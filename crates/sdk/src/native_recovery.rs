@@ -143,9 +143,33 @@ fn binding(
     permissions: &[Permission],
     capabilities: &[String],
     local_paths: PathSet,
+    media: Option<&crate::native::NativeMediaEvidence>,
+    local_id: &str,
 ) -> Result<SessionBinding, SdkError> {
     let c = permit.claims();
+    let role = if local_id == c.controller_device_id {
+        EndpointRole::Controller
+    } else if local_id == c.host_device_id {
+        EndpointRole::Host
+    } else {
+        return Err(SdkError::Trust);
+    };
+    let now: u64 = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|_| SdkError::Trust)?
+        .as_millis()
+        .try_into()
+        .map_err(|_| SdkError::Trust)?;
+    let media = match (
+        nestlink_protocol::media_authority::permit_formats(c)?,
+        media,
+    ) {
+        (None, None) => None,
+        (Some(_), Some(evidence)) => Some(evidence.bind(permit, role, now)?),
+        _ => return Err(SdkError::Trust),
+    };
     Ok(SessionBinding {
+        media,
         deployment_id: c.deployment_id.clone(),
         security_epoch: c.security_epoch,
         session_id: c.session_id.clone(),
@@ -183,8 +207,19 @@ impl Sdk {
         &self,
         local: &DeviceIdentity,
         peer_key: &[u8; 32],
+        failed: NativeSession,
+        config: RelayRecoveryConfig<'_>,
+    ) -> Result<RecoveredNativeSession, RecoveryError> {
+        self.recover_native_relay_with_media(local, peer_key, failed, config, None)
+            .await
+    }
+    pub async fn recover_native_relay_with_media(
+        &self,
+        local: &DeviceIdentity,
+        peer_key: &[u8; 32],
         mut failed: NativeSession,
         config: RelayRecoveryConfig<'_>,
+        media: Option<crate::native::NativeMediaEvidence>,
     ) -> Result<RecoveredNativeSession, RecoveryError> {
         let RelayRecoveryConfig {
             endpoint,
@@ -247,7 +282,14 @@ impl Sdk {
             let clock = nestlink_remote::RuntimeClock::default();
             Session::activate(
                 budget.permit().clone(),
-                binding(budget.permit(), &permissions, &capabilities, local_paths)?,
+                binding(
+                    budget.permit(),
+                    &permissions,
+                    &capabilities,
+                    local_paths,
+                    media.as_ref(),
+                    &local.device_id,
+                )?,
                 Path::Relay,
                 0,
                 clock.sample().map_err(nestlink_remote::RemoteError::from)?,
@@ -365,7 +407,14 @@ impl Sdk {
             let clock = receipt.runtime_clock()?;
             let session = Session::activate(
                 receipt.permit().clone(),
-                binding(receipt.permit(), &permissions, &capabilities, local_paths)?,
+                binding(
+                    receipt.permit(),
+                    &permissions,
+                    &capabilities,
+                    local_paths,
+                    media.as_ref(),
+                    &local.device_id,
+                )?,
                 connection.candidate.path(),
                 0,
                 clock.sample().map_err(nestlink_remote::RemoteError::from)?,

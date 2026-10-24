@@ -23,6 +23,7 @@ pub fn runtime(control: bool) -> Result<Runtime> {
     let clock = RuntimeClock::default();
     let now = clock.sample()?;
     let binding = SessionBinding {
+        media: None,
         deployment_id: random_id(),
         security_epoch: 1,
         session_id: random_id(),
@@ -40,6 +41,9 @@ pub fn runtime(control: bool) -> Result<Runtime> {
         local_paths: PathSet::DIRECT,
     };
     let claims = PermitClaims {
+        media_format_version: 0,
+        media_formats: Vec::new(),
+        media_format_sha256: Vec::new(),
         schema_version: 1,
         deployment_id: binding.deployment_id.clone(),
         security_epoch: 1,

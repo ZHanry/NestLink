@@ -235,6 +235,13 @@ fn send<D: CaptureDevice>(
         selected,
         stats,
     } = context;
+    // Generic fixed-source sender has no authenticated NLMF selection route.
+    // V2 native producers use AppCore's exact proposal/ACK send gate instead.
+    if lease.media_formats().map_err(io::Error::other)?.is_some() {
+        return Err(io::Error::other(
+            "fixed-source video sender cannot activate negotiated formats",
+        ));
+    }
     let capture_sources = selected
         .iter()
         .map(|stream| stream.source)
@@ -440,6 +447,8 @@ fn send<D: CaptureDevice>(
                 .filter(|sequence| *sequence <= i64::MAX as u64)
                 .ok_or_else(|| io::Error::other("video sequence exhausted"))?;
             let mut envelope = NativeVideo {
+                format_epoch: 0,
+                format_sha256: Vec::new(),
                 codec: match codec_kind {
                     VideoCodec::Vp8 => 0,
                     VideoCodec::H264Baseline => 1,

@@ -52,3 +52,8 @@ pub use controller_probe::{
     ControllerProbeBackend, ControllerProbeFixture, ControllerProbeReceipt,
     build_controller_probe_fixture, probe_controller_cpu, probe_controller_gpu,
 };
+
+#[cfg(windows)]
+mod cpu_direction_probe;
+#[cfg(windows)]
+pub use cpu_direction_probe::{CpuDirectionProbe, probe_cpu_decode, probe_cpu_encode};

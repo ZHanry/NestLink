@@ -144,7 +144,11 @@ fn readonly_existing(path: &Path, deployment_id: &str) -> Result<Store, StorageE
             "existing snapshot integrity check failed",
         ));
     }
-    Ok(Store { connection })
+    Ok(Store {
+        connection,
+        #[cfg(test)]
+        media_regression_requests: std::collections::BTreeSet::new(),
+    })
 }
 
 fn check_size(page_size: u64, pages: u64) -> Result<(), StorageError> {

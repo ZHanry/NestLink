@@ -290,10 +290,44 @@ pub(super) async fn prove_endpoint(
 ) -> Result<NativeSession, Failure> {
     fence.check()?;
     let (cancel_sender, cancel_receiver) = watch::channel(false);
-    let establish = endpoint.establish(
+    let media =
+        if nestlink_protocol::media_authority::permit_formats(endpoint.verified_permit().claims())
+            .map_err(|_| Failure::local(FailureKind::Trust))?
+            .is_some()
+        {
+            let provider = config
+                .media_provider
+                .as_ref()
+                .ok_or_else(|| Failure::local(FailureKind::NativeSessionUnavailable))?;
+            let claims = endpoint.verified_permit().claims();
+            let direction = if identity.device_id == claims.controller_device_id {
+                nestlink_protocol::media_authority::MediaDirection::Decode
+            } else {
+                nestlink_protocol::media_authority::MediaDirection::Encode
+            };
+            let local = provider
+                .publish(&client.sdk, identity, direction, &fence)
+                .await
+                .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?;
+            fence.check()?;
+            let frozen = client
+                .sdk
+                .remote_media_scope(&claims.session_id)
+                .await
+                .map_err(Failure::from)?
+                .ok_or_else(|| Failure::local(FailureKind::Trust))?;
+            fence.check()?;
+            Some(nestlink_sdk::native::NativeMediaEvidence { frozen, local })
+        } else {
+            None
+        };
+    let establish = endpoint.establish_with_media(
         &client.sdk,
         identity,
-        options,
+        nestlink_sdk::native::NativeMediaSessionOptions {
+            session: options,
+            media,
+        },
         &[],
         config.stun_servers.clone(),
         cancel_receiver,

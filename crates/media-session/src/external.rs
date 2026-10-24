@@ -20,10 +20,30 @@ pub struct VideoSinkContext {
     pub stream_id: [u8; 16],
     pub stream_epoch: u64,
     pub catalog_revision: u64,
+    pub catalog_sha256: [u8; 32],
+    pub format_epoch: u64,
+    pub format_sha256: [u8; 32],
+    pub format: Option<nestlink_protocol::media_format::VideoFormat>,
     pub selection_sequence: u64,
     pub layout_epoch: u64,
     pub decode_epoch: u64,
     pub configuration_id: u64,
+}
+impl VideoSinkContext {
+    pub fn validate_format(&self) -> io::Result<()> {
+        match (self.format_epoch, self.format) {
+            (0, None) if self.format_sha256 == [0; 32] => Ok(()),
+            (epoch, Some(format))
+                if epoch > 0
+                    && epoch <= i64::MAX as u64
+                    && self.catalog_sha256 != [0; 32]
+                    && format.digest().map_err(io::Error::other)? == self.format_sha256 =>
+            {
+                Ok(())
+            }
+            _ => Err(io::Error::other("invalid compressed format context")),
+        }
+    }
 }
 pub struct ExternalAccessUnit {
     pub context: VideoSinkContext,
@@ -77,6 +97,13 @@ pub(crate) struct ExternalSink {
 }
 impl ExternalSink {
     pub fn new(context: VideoSinkContext, width: u32, height: u32) -> io::Result<Self> {
+        context.validate_format()?;
+        if let Some(format) = context.format {
+            let (codec, _) = crate::negotiated_format::format_target(format, width, height, false)?;
+            if codec != VideoCodec::H264Baseline {
+                return Err(io::Error::other("external consumer requires H264"));
+            }
+        }
         Ok(Self {
             context,
             width,
@@ -124,7 +151,12 @@ impl ExternalSink {
         if self.recover && !keyframe {
             return Ok(false);
         }
-        self.prepare.validate(&payload, keyframe)?;
+        let sps = self.prepare.validate(&payload, keyframe)?;
+        if let Some(format) = self.context.format {
+            let (_, config) =
+                crate::negotiated_format::format_target(format, self.width, self.height, false)?;
+            crate::negotiated_format::receipt_matches(&self.prepare, config, sps, format)?;
+        }
         self.delivery = self
             .delivery
             .checked_add(1)
@@ -277,6 +309,10 @@ mod tests {
                 stream_id: [1; 16],
                 stream_epoch: 1,
                 catalog_revision: 1,
+                catalog_sha256: [0; 32],
+                format_epoch: 0,
+                format_sha256: [0; 32],
+                format: None,
                 selection_sequence: 1,
                 layout_epoch: 1,
                 decode_epoch: 1,
@@ -285,6 +321,34 @@ mod tests {
             320,
             240,
         )
+    }
+    #[test]
+    fn context_rejects_missing_format_and_digest_before_issuing_a_ticket() -> io::Result<()> {
+        let legacy = sink()?.context;
+        let mut invalid = legacy.clone();
+        invalid.format_epoch = 1;
+        assert!(invalid.validate_format().is_err());
+        invalid = legacy.clone();
+        invalid.format_sha256 = [1; 32];
+        assert!(invalid.validate_format().is_err());
+        let format = nestlink_protocol::media_format::VideoFormat::legacy_h264(
+            30,
+            320,
+            240,
+            nestlink_protocol::media_format::FrameRate::new(30, 1).map_err(io::Error::other)?,
+            1000,
+        )
+        .map_err(io::Error::other)?;
+        invalid = legacy;
+        invalid.format_epoch = 1;
+        invalid.format = Some(format);
+        invalid.format_sha256 = format.digest().map_err(io::Error::other)?;
+        assert!(invalid.validate_format().is_err());
+        invalid.catalog_sha256 = [1; 32];
+        assert!(invalid.validate_format().is_ok());
+        invalid.format_sha256[0] ^= 1;
+        assert!(invalid.validate_format().is_err());
+        Ok(())
     }
     #[test]
     fn prepared_legacy_surface_rejects_bad_au_before_issuing_credit() -> io::Result<()> {

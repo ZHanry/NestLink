@@ -72,6 +72,7 @@ async fn pair_with_profile(quic: bool, dropped_video: Option<u64>, h264: bool) -
     let now = clock.sample()?;
     let permissions = vec![Permission::View, Permission::Audio, Permission::FileRead];
     let binding = SessionBinding {
+        media: None,
         deployment_id: random_id(),
         security_epoch: 1,
         session_id: random_id(),
@@ -96,6 +97,9 @@ async fn pair_with_profile(quic: bool, dropped_video: Option<u64>, h264: bool) -
         local_paths: PathSet::DIRECT,
     };
     let claims = PermitClaims {
+        media_format_version: 0,
+        media_formats: Vec::new(),
+        media_format_sha256: Vec::new(),
         schema_version: 1,
         deployment_id: binding.deployment_id.clone(),
         security_epoch: 1,
@@ -510,6 +514,8 @@ async fn video_roundtrip(quic: bool) -> Result {
 fn envelope(encoder: &mut Vp8Encoder, sequence: u64, pts: u64) -> Result<NativeVideo> {
     let packet = encoder.encode(&[0, 255, 0, 255].repeat(64 * 48), pts, false)?;
     Ok(NativeVideo {
+        format_epoch: 0,
+        format_sha256: Vec::new(),
         codec: 0,
         schema_version: 1,
         connection_generation: EPOCH.connection,

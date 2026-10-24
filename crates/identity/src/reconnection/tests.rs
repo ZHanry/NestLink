@@ -3,6 +3,9 @@ type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 fn fixture() -> Result<(PermitClaims, ReconnectionSubmission, PermitClaims)> {
     let id = |n| format!("{n:08}-1111-4111-8111-111111111111");
     let previous = PermitClaims {
+        media_format_version: 0,
+        media_formats: Vec::new(),
+        media_format_sha256: Vec::new(),
         schema_version: SCHEMA_VERSION,
         deployment_id: id(1),
         security_epoch: 8,
@@ -134,5 +137,32 @@ fn grant_purpose_signature_and_envelope_budget_fail_closed() -> Result {
         )
         .is_err()
     );
+    Ok(())
+}
+
+#[test]
+fn successor_preserves_complete_media_format_scope_not_only_legacy_capability_digest() -> Result {
+    use nestlink_protocol::media_format::{FormatSet, FrameRate, VideoFormat};
+    let (mut previous, mut request, mut next) = fixture()?;
+    let format = VideoFormat::legacy_h264(31, 320, 240, FrameRate::new(30, 1)?, 2000)?;
+    let set = FormatSet::new(vec![format])?;
+    previous
+        .required_capabilities
+        .push(nestlink_protocol::media_authority::FORMAT_CAPABILITY.into());
+    previous.media_format_version = 2;
+    previous.media_formats = vec![format.encode()?];
+    previous.media_format_sha256 = set.digest().to_vec();
+    request.choice.previous_permit_sha256 =
+        URL_SAFE_NO_PAD.encode(digest(&previous.encode_to_vec()));
+    next.media_format_version = 2;
+    next.media_formats = previous.media_formats.clone();
+    next.media_format_sha256 = previous.media_format_sha256.clone();
+    next.required_capabilities = previous.required_capabilities.clone();
+    validate_successor(&previous, &next, &request.choice)?;
+    let changed = VideoFormat::legacy_h264(31, 320, 240, FrameRate::new(30, 1)?, 1000)?;
+    let changed_set = FormatSet::new(vec![changed])?;
+    next.media_formats = vec![changed.encode()?];
+    next.media_format_sha256 = changed_set.digest().to_vec();
+    assert!(validate_successor(&previous, &next, &request.choice).is_err());
     Ok(())
 }

@@ -62,6 +62,9 @@ message PermitClaims {
   uint64 expires_at_unix_ms = 17;
   bytes capability_sha256 = 18;
   repeated string required_capabilities = 19;
+  uint32 media_format_version = 20;
+  repeated bytes media_formats = 21; // Strict canonical VideoFormat v2, 57 bytes each.
+  bytes media_format_sha256 = 22;
 }
 
 // Signature covers the exact claims bytes plus the session-permit domain.
@@ -99,6 +102,7 @@ enum DeviceAction {
   TURN_ALLOCATE = 14;
   APPROVE_SERVICE_TARGET = 15;
   PREPARE_BROWSER_HOST = 16;
+  ANNOUNCE_MEDIA = 17;
 }
 
 message DeviceActionClaims {
@@ -225,6 +229,8 @@ message NativeVideo {
   bytes payload = 10; // one complete access unit of the negotiated codec
   bool repeated_source = 11; // recovery keyframe from cached approved pixels, not a fresh capture
   NativeVideoCodec codec = 12;
+  uint64 format_epoch = 13;
+  bytes format_sha256 = 14;
 }
 message NativeAudio {
   uint32 schema_version = 1;
@@ -252,6 +258,8 @@ message NativeVideoFeedback {
   uint64 request_sequence = 5;
   uint64 last_sequence = 6;
   VideoRecoveryReason reason = 7;
+  uint64 format_epoch = 8;
+  bytes format_sha256 = 9;
 }
 
 enum NodeRole {

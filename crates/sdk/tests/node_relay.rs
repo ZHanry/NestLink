@@ -523,6 +523,7 @@ async fn authorize_native(
         .map(|clocks| clocks[if controller { 0 } else { 1 }].clone())
         .unwrap_or_default();
     let binding = SessionBinding {
+        media: None,
         deployment_id: p.deployment_id.clone(),
         security_epoch: p.security_epoch,
         session_id: p.session_id.clone(),

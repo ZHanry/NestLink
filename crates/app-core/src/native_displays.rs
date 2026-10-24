@@ -6,6 +6,9 @@ use nestlink_protocol::native_displays::{
 pub use nestlink_protocol::native_displays::{
     DisplayCatalogKey, DisplayDescriptor, DisplaySelection,
 };
+use nestlink_protocol::native_media_format::{
+    FeedbackEnvelope, FormatConfirmation, FormatEnvelope, FormatSelection,
+};
 use nestlink_remote::input::InputLayout;
 use serde::{Deserialize, Serialize};
 
@@ -31,6 +34,8 @@ pub struct NativeDisplayState {
     pub catalog_acknowledged: bool,
     pub selected: Option<DisplaySelection>,
     pub pending: Option<NativeDisplayRequest>,
+    pub format_epoch: u64,
+    pub format_sha256: [u8; 32],
 }
 struct State {
     view: NativeDisplayState,
@@ -40,6 +45,7 @@ struct State {
     published: bool,
     prepared: Option<DisplaySelection>,
     deadline: Option<Instant>,
+    formats: FormatConfirmation,
 }
 pub(super) struct NativeDisplayRoute {
     shared: Weak<Shared>,
@@ -99,6 +105,8 @@ impl NativeDisplayRoute {
                     catalog_acknowledged: false,
                     selected: None,
                     pending: None,
+                    format_epoch: 0,
+                    format_sha256: [0; 32],
                 },
                 candidates: None,
                 system_approved: false,
@@ -106,6 +114,7 @@ impl NativeDisplayRoute {
                 published: false,
                 prepared: None,
                 deadline: None,
+                formats: FormatConfirmation::default(),
             }),
         });
         let owned = route.clone();
@@ -145,6 +154,9 @@ impl NativeDisplayRoute {
         if let Ok(mut state) = self.state.lock() {
             state.view.displays.clear();
             state.view.approved_sources.clear();
+            state.formats.cancel();
+            state.view.format_epoch = 0;
+            state.view.format_sha256 = [0; 32];
             state.view.selected = None;
             state.view.pending = None;
             state.prepared = None;
@@ -152,6 +164,23 @@ impl NativeDisplayRoute {
         }
     }
     async fn send(&self, message: DisplayEnvelope) -> io::Result<()> {
+        self.check()?;
+        let bytes = message.encode().map_err(io::Error::other)?;
+        match tokio::time::timeout(
+            DISPLAY_SEND_BUDGET,
+            self.sender.send(Channel::VideoFeedback, &bytes),
+        )
+        .await
+        {
+            Ok(Ok(())) => self.check(),
+            Ok(Err(error)) => Err(io::Error::other(error)),
+            Err(_) => Err(io::Error::new(
+                io::ErrorKind::TimedOut,
+                "display control delivery exceeded budget",
+            )),
+        }
+    }
+    async fn send_format(&self, message: FormatEnvelope) -> io::Result<()> {
         self.check()?;
         let bytes = message.encode().map_err(io::Error::other)?;
         match tokio::time::timeout(
@@ -237,14 +266,110 @@ impl NativeDisplayRoute {
                 }
                 return Err(error);
             }
-            let message = DisplayEnvelope::decode(&payload).map_err(io::Error::other)?;
-            if let Err(error) = self.handle(message).await {
+            let negotiated = self
+                .lease
+                .media_formats()
+                .map_err(io::Error::other)?
+                .is_some();
+            let message =
+                FeedbackEnvelope::decode(&payload, negotiated).map_err(io::Error::other)?;
+            let result = match message {
+                FeedbackEnvelope::Display(value) => self.handle(value).await,
+                FeedbackEnvelope::Format(value) => self.handle_format(value).await,
+            };
+            if let Err(error) = result {
                 if native_channel::terminal_io_error(&error, &stopped) {
                     return Ok(());
                 }
                 return Err(error);
             }
         }
+    }
+    async fn handle_format(&self, message: FormatEnvelope) -> io::Result<()> {
+        self.check()?;
+        let formats = self
+            .lease
+            .media_formats()
+            .map_err(io::Error::other)?
+            .ok_or_else(|| denied("format control absent from signed scope"))?;
+        match message {
+            FormatEnvelope::Propose(value) => {
+                self.check_catalog(&value.display.catalog)?;
+                {
+                    let mut state = self
+                        .state
+                        .lock()
+                        .map_err(|_| io::Error::other("display state poisoned"))?;
+                    if state.view.is_host {
+                        return Err(invalid("controller format proposal direction"));
+                    }
+                    let display = state
+                        .view
+                        .selected
+                        .clone()
+                        .ok_or_else(|| denied("format proposal before selected display"))?;
+                    state
+                        .formats
+                        .stage(value.clone(), &display, &formats)
+                        .map_err(io::Error::other)?;
+                    state.view.format_epoch = 0;
+                    state.view.format_sha256 = [0; 32];
+                    state.deadline = Some(Instant::now() + DISPLAY_HANDSHAKE_BUDGET);
+                }
+                let presentation = self.presentation()?.presentation.clone();
+                presentation.retire_external_for_format().await?;
+                presentation.prepare_format(&value)?;
+                presentation.wait_display_ready(&value.display).await?;
+                self.send_format(FormatEnvelope::Ack(value.clone())).await?;
+                let mut state = self
+                    .state
+                    .lock()
+                    .map_err(|_| io::Error::other("display state poisoned"))?;
+                if state.view.selected.as_ref() != Some(&value.display) {
+                    return Err(denied("display changed while preparing format"));
+                }
+                state
+                    .formats
+                    .acknowledge(&value)
+                    .map_err(io::Error::other)?;
+                state.view.format_epoch = value.format_epoch;
+                state.view.format_sha256 = value.format_sha256;
+                state.deadline = None;
+            }
+            FormatEnvelope::Ack(value) => {
+                let _order = self.order.lock().await;
+                self.check_catalog(&value.display.catalog)?;
+                let video = self.video()?;
+                let mut state = self
+                    .state
+                    .lock()
+                    .map_err(|_| io::Error::other("display state poisoned"))?;
+                if !state.view.is_host || state.view.selected.as_ref() != Some(&value.display) {
+                    return Err(invalid("format ACK direction or display changed"));
+                }
+                value
+                    .authorized(&value.display, &formats)
+                    .map_err(io::Error::other)?;
+                state
+                    .formats
+                    .acknowledge(&value)
+                    .map_err(io::Error::other)?;
+                state.view.format_epoch = value.format_epoch;
+                state.view.format_sha256 = value.format_sha256;
+                state.deadline = None;
+                drop(state);
+                {
+                    let mut cursor = video
+                        .cursor
+                        .lock()
+                        .map_err(|_| io::Error::other("video cursor poisoned"))?;
+                    cursor.last_feedback = None;
+                    cursor.keyframe_pending = true;
+                }
+                video.format_gate.open().map_err(io::Error::other)?;
+            }
+        }
+        Ok(())
     }
     async fn handle(&self, message: DisplayEnvelope) -> io::Result<()> {
         let is_host = self
@@ -255,6 +380,33 @@ impl NativeDisplayRoute {
             .is_host;
         match message {
             DisplayEnvelope::Recovery(request) if is_host => {
+                if self
+                    .lease
+                    .media_formats()
+                    .map_err(io::Error::other)?
+                    .is_some()
+                {
+                    let state = self
+                        .state
+                        .lock()
+                        .map_err(|_| io::Error::other("display state poisoned"))?;
+                    let Some(format) = state.formats.confirmed() else {
+                        return Ok(());
+                    };
+                    if request.format_epoch < format.format_epoch {
+                        return Ok(());
+                    }
+                    if request.format_epoch != format.format_epoch
+                        || request.format_sha256.as_slice() != format.format_sha256
+                        || request.source != format.display.source
+                        || request.layout_epoch != format.display.layout_epoch
+                    {
+                        return Err(invalid("recovery format context differs"));
+                    }
+                } else if request.format_epoch != 0 || !request.format_sha256.is_empty() {
+                    return Err(invalid("format recovery on legacy lease"));
+                }
+
                 if request.connection_generation != self.binding.connection_generation {
                     return Err(invalid("feedback connection changed"));
                 }
@@ -401,6 +553,9 @@ impl NativeDisplayRoute {
                         .lock()
                         .map_err(|_| io::Error::other("display state poisoned"))?;
                     validate_request(&state, &request)?;
+                    if state.formats.pending().is_some() {
+                        return Err(invalid("format confirmation is pending"));
+                    }
                     if state.view.pending.as_ref() == Some(&request) {
                         state.prepared.clone()
                     } else if state
@@ -472,6 +627,9 @@ impl NativeDisplayRoute {
                         {
                             return Err(invalid("input epoch does not match proved permission"));
                         }
+                        state.formats.cancel();
+                        state.view.format_epoch = 0;
+                        state.view.format_sha256 = [0; 32];
                         state.view.selected = Some(selection.clone());
                         state.view.pending = None;
                         state.deadline = None;
@@ -508,6 +666,9 @@ impl NativeDisplayRoute {
                         if state.prepared.as_ref() != Some(&selection) {
                             return Err(invalid("selection ACK changed prepared binding"));
                         }
+                        state.formats.cancel();
+                        state.view.format_epoch = 0;
+                        state.view.format_sha256 = [0; 32];
                         state.view.selected = Some(selection);
                         state.view.pending = None;
                         state.prepared = None;
@@ -569,6 +730,102 @@ impl Shared {
     }
 }
 impl CoreHandle {
+    pub fn native_video_encoder_backend(
+        &self,
+        binding: &NativeSessionBinding,
+    ) -> io::Result<Option<String>> {
+        self.display_route(binding)?
+            .lease
+            .local_media_backend(nestlink_protocol::media_authority::MediaDirection::Encode)
+            .map_err(io::Error::other)
+    }
+    pub fn native_video_formats(
+        &self,
+        binding: &NativeSessionBinding,
+    ) -> io::Result<Option<nestlink_protocol::media_format::FormatSet>> {
+        self.display_route(binding)?
+            .lease
+            .media_formats()
+            .map_err(io::Error::other)
+    }
+    pub fn native_confirmed_video_format(
+        &self,
+        binding: &NativeSessionBinding,
+    ) -> io::Result<Option<FormatSelection>> {
+        let route = self.display_route(binding)?;
+        let state = route
+            .state
+            .lock()
+            .map_err(|_| io::Error::other("display state poisoned"))?;
+        if state.view.pending.is_some() || state.prepared.is_some() {
+            return Ok(None);
+        }
+        Ok(state
+            .formats
+            .confirmed()
+            .filter(|v| state.view.selected.as_ref() == Some(&v.display))
+            .cloned())
+    }
+    /// The caller supplies the actual same-owner parsed AU receipt. This API
+    /// cannot publish a format outside the verified permit or bypass its ACK.
+    pub async fn propose_native_video_format(
+        &self,
+        binding: &NativeSessionBinding,
+        format: nestlink_protocol::media_format::VideoFormat,
+    ) -> io::Result<bool> {
+        let route = self.display_route(binding)?;
+        let _order = route.order.lock().await;
+        let Some(formats) = route.lease.media_formats().map_err(io::Error::other)? else {
+            return Ok(true);
+        };
+        let video = route.video()?;
+        let _send_order = video.ordered_send().await.map_err(io::Error::other)?;
+        let value = {
+            let mut state = route
+                .state
+                .lock()
+                .map_err(|_| io::Error::other("display state poisoned"))?;
+            if !state.view.is_host {
+                return Err(denied(
+                    "only the host may propose the actual encoder format",
+                ));
+            }
+            let display = state
+                .view
+                .selected
+                .clone()
+                .ok_or_else(|| denied("format proposal before display ACK"))?;
+            if let Some(value) = state.formats.confirmed() {
+                if value.display == display && value.format == format {
+                    return Ok(true);
+                }
+            }
+            if let Some(value) = state.formats.pending() {
+                if value.display == display && value.format == format {
+                    return Ok(false);
+                }
+                return Err(invalid("format proposal already pending"));
+            }
+            let value = FormatSelection {
+                display,
+                format_epoch: state.formats.next_epoch().map_err(io::Error::other)?,
+                format,
+                format_sha256: format.digest().map_err(io::Error::other)?,
+            };
+            state
+                .formats
+                .stage(value.clone(), &value.display, &formats)
+                .map_err(io::Error::other)?;
+            state.view.format_epoch = 0;
+            state.view.format_sha256 = [0; 32];
+            video.format_gate.pause();
+            video.sender.discard_video().map_err(io::Error::other)?;
+            state.deadline = Some(Instant::now() + DISPLAY_HANDSHAKE_BUDGET);
+            value
+        };
+        route.send_format(FormatEnvelope::Propose(value)).await?;
+        Ok(false)
+    }
     fn display_route(&self, binding: &NativeSessionBinding) -> io::Result<Arc<NativeDisplayRoute>> {
         let snapshot = self.snapshot();
         if self.shared.closing.load(Ordering::Acquire)
@@ -1051,3 +1308,7 @@ impl Drop for DisplaySwitchGuard {
         }
     }
 }
+
+#[cfg(all(test, windows, feature = "media-runtime-test-support"))]
+#[path = "native_displays/positive_runtime_test.rs"]
+mod positive_runtime_test;

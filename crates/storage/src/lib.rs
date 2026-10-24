@@ -6,7 +6,7 @@ use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, params};
 use std::{path::Path, time::Duration};
 
 pub const APPLICATION_ID: i32 = 1_313_622_833;
-pub const SCHEMA_VERSION: i32 = 24;
+pub const SCHEMA_VERSION: i32 = 25;
 const MIGRATION: &str = include_str!("../migrations/001_initial.sql");
 const CONTROL_MIGRATION: &str = include_str!("../migrations/002_control.sql");
 const SCOPES_MIGRATION: &str = include_str!("../migrations/003_policy_scopes.sql");
@@ -34,6 +34,7 @@ pub mod accounts;
 pub mod auditing;
 pub mod browser_readiness;
 pub mod control;
+pub mod media_authority;
 pub mod node_discovery;
 pub mod node_resources;
 pub mod node_usage;
@@ -74,6 +75,8 @@ pub enum StorageError {
 
 pub struct Store {
     connection: Connection,
+    #[cfg(test)]
+    media_regression_requests: std::collections::BTreeSet<String>,
 }
 
 impl Store {
@@ -304,7 +307,17 @@ impl Store {
             transaction.pragma_update(None, "user_version", 24)?;
             transaction.commit()?;
         }
-        Ok(Self { connection })
+        if version < 25 {
+            let transaction = connection.transaction()?;
+            transaction.execute_batch(include_str!("../migrations/025_media_authority.sql"))?;
+            transaction.pragma_update(None, "user_version", 25)?;
+            transaction.commit()?;
+        }
+        Ok(Self {
+            connection,
+            #[cfg(test)]
+            media_regression_requests: std::collections::BTreeSet::new(),
+        })
     }
 
     pub fn security_epoch(&self) -> Result<u64, StorageError> {

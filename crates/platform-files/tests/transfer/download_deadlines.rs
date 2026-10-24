@@ -401,6 +401,7 @@ fn short_lived_channels(lifetime: Duration) -> Result<ShortChannels> {
     let clock = RuntimeClock::default();
     let now = clock.sample()?;
     let binding = SessionBinding {
+        media: None,
         deployment_id: random_id(),
         security_epoch: 1,
         session_id: random_id(),
@@ -418,6 +419,9 @@ fn short_lived_channels(lifetime: Duration) -> Result<ShortChannels> {
         local_paths: PathSet::DIRECT,
     };
     let claims = PermitClaims {
+        media_format_version: 0,
+        media_formats: Vec::new(),
+        media_format_sha256: Vec::new(),
         schema_version: SCHEMA_VERSION,
         deployment_id: binding.deployment_id.clone(),
         security_epoch: binding.security_epoch,

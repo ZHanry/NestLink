@@ -474,6 +474,8 @@ pub struct Snapshot {
     pub service_edge_namespace: Section<ServiceEdgeNamespaceView>,
     pub requests: Section<Vec<RemoteView>>,
     pub selected_request: Section<RemoteView>,
+    #[serde(default)]
+    pub selected_media_scope: Section<Option<nestlink_protocol::media_authority::FrozenMediaScope>>,
     pub native_session: Section<NativeSessionView>,
     /// This installation's explicit local dialing consent; never server data.
     pub native_network: crate::NativeNetworkSettings,
@@ -520,6 +522,7 @@ impl Default for Snapshot {
             service_edge_namespace: Section::default(),
             requests: Section::default(),
             selected_request: Section::default(),
+            selected_media_scope: Section::default(),
             native_session: Section::default(),
             native_network: crate::NativeNetworkSettings::default(),
             native_network_revision: 0,
@@ -556,6 +559,7 @@ impl Snapshot {
         self.service_edge_namespace = Section::default();
         self.requests = Section::default();
         self.selected_request = Section::default();
+        self.selected_media_scope = Section::default();
         self.accounts = Section::default();
         self.policy = Section::default();
         self.path_limits = Section::default();

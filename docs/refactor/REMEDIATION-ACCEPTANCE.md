@@ -82,3 +82,8 @@ UU 使用用户已安装的4.40.1.2090，保存参考版本和UI全状态、100/
 归档 `work/diagnostic-attempt-4407106-20261023-083909/request-146e98d3-final.json`
 SHA-256 为 `4a823abde3952eac34fe15967dcab9db09e630fee420afa5fd8b49f560de5c4c`。
 这次结果不更改前述失败历史，也不能替代 `original-edge-100`、性能、长稳或后续源码回归。
+
+2026-10-24：签名方向能力、首次批准格式快照、原生格式 ACK、IPC 与 CPU provider
+已完成一批接入。默认生产新格式继续关闭，实际执行 owner 接管及双端原生续租
+驱动仍未完成。具体代码行为、测试边界及剩余条件见
+[M04 接入记录](M04-SIGNED-MEDIA-INTEGRATION.md)，不得据此将 M04 或体验 case 改为通过。

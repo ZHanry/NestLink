@@ -541,6 +541,10 @@ async fn two_tls_connections_reuse_decoded_credit_and_release_only_after_owner_j
             tokio::time::sleep(Duration::from_millis(5)).await;
         }
         let retired = VideoSinkContext {
+            catalog_sha256: context.catalog_sha256,
+            format_epoch: context.format_epoch,
+            format_sha256: context.format_sha256,
+            format: context.video_format()?,
             connection_generation: context.binding.connection_generation,
             source: context.binding.source,
             stream_id: context.binding.stream_id,

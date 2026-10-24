@@ -326,7 +326,7 @@ mod password_only_migration {
             "DROP TABLE management_refresh_receipts; DROP INDEX remote_pending_inbox;",
         )?;
         store.connection.pragma_update(None, "user_version", 20)?;
-        let Store { connection } = store;
+        let Store { connection, .. } = store;
         let mut migrated = Store::initialize(connection, &deployment)?;
         let cleared: bool = migrated.connection.query_row("SELECT totp_ciphertext IS NULL AND totp_pending IS NULL AND totp_pending_expires IS NULL AND totp_last_step IS NULL FROM account_security", [], |row| row.get(0))?;
         assert!(cleared);

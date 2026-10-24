@@ -270,7 +270,8 @@ fn validate_action(claims: &nestlink_protocol::DeviceActionClaims) -> Result<(),
         || claims.expires_at_unix_ms == 0
         || !matches!(
             DeviceAction::try_from(claims.action),
-            Ok(DeviceAction::Register
+            Ok(DeviceAction::AnnounceMedia
+                | DeviceAction::Register
                 | DeviceAction::RegisterBrowserEndpoint
                 | DeviceAction::Approve
                 | DeviceAction::PrepareBrowserHost

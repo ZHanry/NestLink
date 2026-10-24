@@ -44,6 +44,9 @@ fn active() -> Result<(Session, RuntimeClock)> {
     let clock = RuntimeClock::default();
     let now = clock.sample()?;
     let claims = PermitClaims {
+        media_format_version: 0,
+        media_formats: Vec::new(),
+        media_format_sha256: Vec::new(),
         schema_version: SCHEMA_VERSION,
         deployment_id: random_id(),
         security_epoch: 1,
@@ -71,6 +74,7 @@ fn active() -> Result<(Session, RuntimeClock)> {
         required_capabilities: vec!["vp8".into()],
     };
     let binding = SessionBinding {
+        media: None,
         deployment_id: claims.deployment_id.clone(),
         security_epoch: 1,
         session_id: claims.session_id.clone(),

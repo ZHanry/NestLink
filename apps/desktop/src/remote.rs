@@ -1631,6 +1631,26 @@ impl DesktopApp {
             self.remote_password_offer_panel(ui, snapshot, request, busy);
         }
         if is_host && request.status == "pending" && request_is_current {
+            let scope_loaded = snapshot.selected_media_scope.data.is_some();
+            if let Some(Some(scope)) = snapshot.selected_media_scope.data.as_deref()
+                && let Ok(formats) = scope.validate()
+            {
+                for f in formats.formats() {
+                    ui.label(format!(
+                        "H.264 · {} × {} · {:.2} fps",
+                        f.width,
+                        f.height,
+                        f64::from(f.frame_rate.numerator) / f64::from(f.frame_rate.denominator)
+                    ));
+                }
+            }
+            if !scope_loaded {
+                ui.label(if self.english {
+                    "Refresh the request to review video formats."
+                } else {
+                    "请刷新请求以查看视频格式。"
+                });
+            }
             if self.remote.approval.as_ref().is_none_or(|draft| {
                 draft.id != request.id
                     || draft.nonce != request.nonce
@@ -1687,7 +1707,10 @@ impl DesktopApp {
                 ui.horizontal(|ui| {
                     if ui
                         .add_enabled(
-                            !busy && draft.permissions[0] && !draft.paths.is_empty(),
+                            !busy
+                                && scope_loaded
+                                && draft.permissions[0]
+                                && !draft.paths.is_empty(),
                             egui::Button::new(if self.english {
                                 "Approve selected permissions"
                             } else {
@@ -1709,23 +1732,34 @@ impl DesktopApp {
                     }
                 });
                 if let Some(approved) = choice {
-                    let action = Action::ApproveRemote {
-                        request_id: draft.id.clone(),
-                        expected_nonce: draft.nonce.clone(),
-                        expected_policy_revision: draft.policy_revision,
-                        choice: ApprovalChoice {
-                            approved,
-                            permissions: if approved {
-                                selected(&draft.permissions)
-                            } else {
-                                Vec::new()
-                            },
-                            paths: if approved {
-                                draft.paths.clone()
-                            } else {
-                                Vec::new()
-                            },
+                    let choice = ApprovalChoice {
+                        approved,
+                        permissions: if approved {
+                            selected(&draft.permissions)
+                        } else {
+                            Vec::new()
                         },
+                        paths: if approved {
+                            draft.paths.clone()
+                        } else {
+                            Vec::new()
+                        },
+                    };
+                    let action = match snapshot.selected_media_scope.data.as_deref() {
+                        Some(Some(scope)) => Action::ApproveMediaRemote {
+                            request_id: draft.id.clone(),
+                            expected_nonce: draft.nonce.clone(),
+                            expected_policy_revision: draft.policy_revision,
+                            choice,
+                            reviewed_scope: scope.clone(),
+                        },
+                        Some(None) => Action::ApproveRemote {
+                            request_id: draft.id.clone(),
+                            expected_nonce: draft.nonce.clone(),
+                            expected_policy_revision: draft.policy_revision,
+                            choice,
+                        },
+                        None => return,
                     };
                     self.action(snapshot, action);
                 }

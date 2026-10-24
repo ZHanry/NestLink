@@ -375,6 +375,36 @@ pub struct NativeSessionOptions {
     pub supported_capabilities: Vec<String>,
     pub local_paths: PathSet,
 }
+/// Locally supplied direction evidence; remote announcements alone must not
+/// be used to construct this value by the application provider.
+#[derive(Clone, Debug)]
+pub struct NativeMediaEvidence {
+    pub frozen: nestlink_protocol::media_authority::FrozenMediaScope,
+    pub local: nestlink_protocol::media_authority::MediaAnnouncement,
+}
+impl NativeMediaEvidence {
+    pub(super) fn bind(
+        &self,
+        permit: &VerifiedPermit,
+        role: EndpointRole,
+        now: u64,
+    ) -> Result<nestlink_session::MediaSessionBinding, SdkError> {
+        Ok(
+            nestlink_session::MediaSessionBinding::from_local_announcement(
+                permit,
+                &self.frozen,
+                &self.local,
+                role,
+                now,
+            )?,
+        )
+    }
+}
+/// Separate entry point keeps legacy callers explicit and source compatible.
+pub struct NativeMediaSessionOptions {
+    pub session: NativeSessionOptions,
+    pub media: Option<NativeMediaEvidence>,
+}
 /// Explicit local dialing scope. Public unicast is permitted; private/ULA
 /// destinations require an administrator-configured prefix, and metadata,
 /// loopback and link-local remain blocked even inside a permitted prefix.
@@ -506,6 +536,19 @@ pub struct NativeSessionControl {
     lease: nestlink_remote::LeaseControl,
 }
 impl NativeSessionControl {
+    /// Caller must obtain this evidence from its actual local direction provider.
+    /// A closed historical probe UUID never replaces the live media owner UUID.
+    pub fn renew_with_media(
+        &self,
+        permit: VerifiedPermit,
+        request_started_ms: u64,
+        evidence: &NativeMediaEvidence,
+        role: EndpointRole,
+    ) -> Result<(), nestlink_remote::RemoteError> {
+        self.lease
+            .refresh_local_media_binding(&evidence.frozen, &evidence.local, role)?;
+        self.lease.renew(permit, request_started_ms)
+    }
     /// Request terminal teardown. The first stop reason wins.
     pub fn stop(&self, reason: StopReason) -> Result<(), nestlink_remote::RemoteError> {
         self.lease.stop(reason).map(|_| ())
@@ -731,6 +774,9 @@ impl NativeEndpoint {
     /// peers discover a signed relay node and derive the same allocation ID.
     /// Relay-only sessions advertise a route candidate so the signed signaling
     /// exchange can rendezvous even though there are no direct candidates.
+    pub fn verified_permit(&self) -> &VerifiedPermit {
+        &self.permit
+    }
     pub async fn establish(
         &self,
         sdk: &Sdk,
@@ -738,8 +784,34 @@ impl NativeEndpoint {
         options: NativeSessionOptions,
         routes: &[NativeRelayRoute<'_>],
         stun_servers: Vec<SocketAddr>,
+        cancel: watch::Receiver<bool>,
+    ) -> Result<NativeSession, SessionEstablishError> {
+        self.establish_with_media(
+            sdk,
+            local,
+            NativeMediaSessionOptions {
+                session: options,
+                media: None,
+            },
+            routes,
+            stun_servers,
+            cancel,
+        )
+        .await
+    }
+    pub async fn establish_with_media(
+        &self,
+        sdk: &Sdk,
+        local: &DeviceIdentity,
+        options: NativeMediaSessionOptions,
+        routes: &[NativeRelayRoute<'_>],
+        stun_servers: Vec<SocketAddr>,
         mut cancel: watch::Receiver<bool>,
     ) -> Result<NativeSession, SessionEstablishError> {
+        let NativeMediaSessionOptions {
+            session: options,
+            media,
+        } = options;
         self.validate_local(local, &options, routes)?;
         self.check()?;
         self.ensure_current_permit(sdk, local, cancel.clone())
@@ -955,7 +1027,13 @@ impl NativeEndpoint {
         let clock = RuntimeClock::default();
         let request_started_ms = clock.monotonic_ms();
         let sample = clock.sample().map_err(nestlink_remote::RemoteError::from)?;
-        let binding = session_binding(self.permit.claims(), options)?;
+        let binding = session_binding(
+            &self.permit,
+            options,
+            media.as_ref(),
+            self.role,
+            sample.unix_ms,
+        )?;
         let path = connection.candidate.path();
         let session = Session::activate(
             self.permit.clone(),
@@ -1631,10 +1709,23 @@ fn fixed_digest(value: &[u8]) -> Result<[u8; 32], SessionEstablishError> {
 }
 
 fn session_binding(
-    claims: &nestlink_protocol::PermitClaims,
+    permit: &VerifiedPermit,
     options: NativeSessionOptions,
+    evidence: Option<&NativeMediaEvidence>,
+    role: EndpointRole,
+    now_unix_ms: u64,
 ) -> Result<SessionBinding, SessionEstablishError> {
+    let claims = permit.claims();
+    let media = match (
+        nestlink_protocol::media_authority::permit_formats(claims)?,
+        evidence,
+    ) {
+        (None, None) => None,
+        (Some(_), Some(evidence)) => Some(evidence.bind(permit, role, now_unix_ms)?),
+        _ => return Err(SessionEstablishError::Binding),
+    };
     Ok(SessionBinding {
+        media,
         deployment_id: claims.deployment_id.clone(),
         security_epoch: claims.security_epoch,
         session_id: claims.session_id.clone(),
