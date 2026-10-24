@@ -287,7 +287,7 @@ async fn native_pair(server: &Server) -> Result<NativePair> {
         request_id: request.id.clone(),
     })?;
     let host_start = host_handle.submit(Action::StartNativeSession {
-        request_id: request.id,
+        request_id: request.id.clone(),
     })?;
     tokio::try_join!(success(controller_start), success(host_start))?;
     let binding = host_handle
