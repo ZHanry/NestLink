@@ -4462,7 +4462,13 @@ fn run_video_source(
             encoder.set_bitrate(&source, requested_kbps)?;
             current_kbps = requested_kbps;
         }
-        let captured = encoder.capture(&source, force_keyframe.load(Ordering::Acquire))?;
+        // An asynchronous transform may need another input before releasing
+        // its first IDR. Keep recovery eligible for the retained authorized
+        // frame even after the initial input consumed the keyframe request.
+        let captured = encoder.capture(
+            &source,
+            force_keyframe.load(Ordering::Acquire) || recovery.is_some(),
+        )?;
         let had_input = captured.is_some();
         let step = if let Some(captured) = captured {
             captured.validate(current_selection)?;
@@ -4507,6 +4513,7 @@ fn run_video_source(
             if !writer.write(
                 Bytes::from(packet.data),
                 packet.pts_90khz,
+                packet.keyframe,
                 &track,
                 &video::VideoWriteContext {
                     peer: &peer,

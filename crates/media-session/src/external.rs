@@ -92,6 +92,8 @@ impl ExternalSink {
             pending: BTreeMap::new(),
         })
     }
+    // Keep wire identity, scheduling and admission time explicit at this boundary.
+    #[allow(clippy::too_many_arguments)]
     pub fn push(
         &mut self,
         sequence: u64,

@@ -530,6 +530,7 @@ pub(super) struct VideoRtpWriter {
     payloader: Box<dyn webrtc::rtp::packetizer::Payloader + Send + Sync>,
     sequence: Box<dyn webrtc::rtp::sequence::Sequencer + Send + Sync>,
     timestamp_base: u32,
+    awaiting_keyframe: bool,
 }
 
 impl VideoRtpWriter {
@@ -540,6 +541,7 @@ impl VideoRtpWriter {
                 .map_err(io::Error::other)?,
             sequence: Box::new(webrtc::rtp::sequence::new_random_sequencer()),
             timestamp_base: uuid::Uuid::new_v4().as_u128() as u32,
+            awaiting_keyframe: true,
         })
     }
 
@@ -571,6 +573,25 @@ impl VideoRtpWriter {
     }
 
     pub(super) fn write(
+        &mut self,
+        data: Bytes,
+        pts: u64,
+        keyframe: bool,
+        track: &TrackLocalStaticRTP,
+        context: &VideoWriteContext<'_>,
+    ) -> io::Result<bool> {
+        if self.awaiting_keyframe && !keyframe {
+            return Ok(false);
+        }
+        let sent = self.write_access_unit(data, pts, track, context)?;
+        // A partially sent or expired AU breaks the reference chain. Already
+        // buffered P frames cannot repair it, even if they meet their own age
+        // budget; wait for a complete independent frame before sending them.
+        self.awaiting_keyframe = !sent;
+        Ok(sent)
+    }
+
+    fn write_access_unit(
         &mut self,
         data: Bytes,
         pts: u64,

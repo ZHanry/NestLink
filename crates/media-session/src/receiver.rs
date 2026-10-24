@@ -248,11 +248,11 @@ impl Output {
         state.selected = None;
         state.last_selected = None;
         drop(state);
-        if let Ok(mut external) = self.external.lock() {
-            if let Some(sink) = external.as_mut() {
-                let c = sink.context.clone();
-                let _ = sink.feedback(&c, crate::external::VideoSinkFeedback::Fence);
-            }
+        if let Ok(mut external) = self.external.lock()
+            && let Some(sink) = external.as_mut()
+        {
+            let c = sink.context.clone();
+            let _ = sink.feedback(&c, crate::external::VideoSinkFeedback::Fence);
         }
         self.prepared.send_replace(DecoderReadiness::Unprepared);
         self.wake();
@@ -1559,25 +1559,22 @@ fn receive(
                     if selected_layout.is_none_or(|(layout,_)|layout.source!=sink.context.source || layout.epoch.layout!=sink.context.layout_epoch){
                         let context=sink.context.clone();sink.feedback(&context,crate::external::VideoSinkFeedback::Fence)?;
                     }
-                    if sink.check_pressure(Instant::now())? {
-                        if let Some(codec)=codecs.get_mut(&sink.context.source){codec.recover(VideoRecoveryReason::ReferenceGap,Instant::now())?;}
+                    if sink.check_pressure(Instant::now())? && let Some(codec)=codecs.get_mut(&sink.context.source) {
+                        codec.recover(VideoRecoveryReason::ReferenceGap,Instant::now())?;
                     }
                 }
                 let stamp=external.as_ref().map(|s|(s.context.stream_id,s.context.decode_epoch));
                 if stamp!=external_stamp {
-                    if let Some((layout,_))=selected_layout {
-                        if let Some(codec)=codecs.get_mut(&layout.source) {
+                    if let Some((layout,_))=selected_layout && let Some(codec)=codecs.get_mut(&layout.source) {
                             codec.codec=None;
                             codec.pending.clear();
                             codec.awaiting_keyframe=true;
                             if stamp.is_none(){codec.recover(VideoRecoveryReason::ReferenceGap,Instant::now())?;}
-                        }
                     }
                     external_stamp=stamp;
                     if stamp.is_none(){selected_layout=None;}
                 }
-                if let Some(sink)=external.as_mut() {
-                    if let Some(codec)=codecs.get_mut(&sink.context.source) {
+                if let Some(sink)=external.as_mut() && let Some(codec)=codecs.get_mut(&sink.context.source) {
                         if sink.prepared && codec.awaiting_keyframe && codec.recovery.is_none(){codec.recover(VideoRecoveryReason::KeyframeMissing,Instant::now())?;}
                         while let Some((sequence,pts,idr))=sink.completed.pop_front() {
                             let expected=codec.pending.first_key_value().map(|(pts,(seq,_))|(*seq,*pts));
@@ -1589,7 +1586,6 @@ fn receive(
                                 state.stats.completed_recoveries=state.stats.completed_recoveries.saturating_add(1);
                             }
                         }
-                    }
                 }
             }
             output.check_recovery_deadline()?;
