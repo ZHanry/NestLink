@@ -350,9 +350,9 @@ jobs:
           import hashlib, json, os, pathlib, subprocess
           source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
           assert source == os.environ['GITHUB_SHA']
-          changed = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
+          changed = subprocess.check_output(['git', 'diff', '--name-only', '-z']).decode('utf-8').split('\0')[:-1]
           assert set(changed) <= {'protocol-spec/openapi.json'}, changed
-          tracked = subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
+          tracked = subprocess.check_output(['git', 'ls-files', '-z']).decode('utf-8').split('\0')[:-1]
           inputs = {name: hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()
                     for name in tracked if name != 'protocol-spec/openapi.json'}
           output = pathlib.Path('protocol-spec/openapi.json')
