@@ -19,6 +19,9 @@
 #include <new>
 #include <array>
 #include <atomic>
+#if defined(NESTLINK_DEBUG_WIPE_TIMING)
+#include <chrono>
+#endif
 #include <d3d10.h>
 #include <dxgi1_2.h>
 #include "owner_observation.h"
@@ -30,8 +33,26 @@ struct BufferedOutput {
     std::unique_ptr<uint8_t[]> bytes;
     size_t length = 0, capacity = 0;
     uint64_t pts = 0;
+#if defined(NESTLINK_DEBUG_WIPE_TIMING)
+    unsigned diagnostic_wipes = 0;
+#endif
     void reset() noexcept {
-        if (bytes) SecureZeroMemory(bytes.get(), capacity);
+        if (bytes) {
+#if defined(NESTLINK_DEBUG_WIPE_TIMING)
+            const bool observe = diagnostic_wipes < 4;
+            const auto started = observe ? std::chrono::steady_clock::now() : std::chrono::steady_clock::time_point{};
+#endif
+            SecureZeroMemory(bytes.get(), capacity);
+#if defined(NESTLINK_DEBUG_WIPE_TIMING)
+            if (observe) {
+                const auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
+                    std::chrono::steady_clock::now() - started).count();
+                ++diagnostic_wipes;
+                std::fprintf(stderr, "mf output wipe: slot_wipe=%u capacity=%zu length=%zu elapsed_us=%lld\n",
+                    diagnostic_wipes, capacity, length, static_cast<long long>(elapsed));
+            }
+#endif
+        }
         bytes.reset(); length = 0; capacity = 0; pts = 0;
     }
     ~BufferedOutput() { reset(); }

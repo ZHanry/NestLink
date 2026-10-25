@@ -146,6 +146,7 @@ fn readonly_existing(path: &Path, deployment_id: &str) -> Result<Store, StorageE
     }
     Ok(Store {
         connection,
+        internal_software_media_candidate: None,
         #[cfg(test)]
         media_regression_requests: std::collections::BTreeSet::new(),
     })

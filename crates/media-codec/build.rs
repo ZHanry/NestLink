@@ -41,7 +41,8 @@ fn main() -> io::Result<()> {
     }
     bridge.compile("nestlink_codec_bridge");
     if target == "windows" {
-        cc::Build::new()
+        let mut mf_bridge = cc::Build::new();
+        mf_bridge
             .cpp(true)
             .std("c++17")
             .flag_if_supported("/EHsc")
@@ -49,8 +50,13 @@ fn main() -> io::Result<()> {
             .file("src/windows_gpu_presenter.cpp")
             .warnings(true)
             .warnings_into_errors(true)
-            .static_crt(false)
-            .compile("nestlink_mf_bridge");
+            .static_crt(false);
+        if env::var("PROFILE").as_deref() == Ok("debug")
+            && env::var("DEBUG").as_deref() == Ok("true")
+        {
+            mf_bridge.define("NESTLINK_DEBUG_WIPE_TIMING", None);
+        }
+        mf_bridge.compile("nestlink_mf_bridge");
         for library in [
             "mfplat", "mf", "mfuuid", "ole32", "oleaut32", "strmiids", "d3d11", "dxgi", "opengl32",
             "comctl32", "user32", "gdi32",

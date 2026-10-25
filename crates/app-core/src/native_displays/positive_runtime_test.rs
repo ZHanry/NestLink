@@ -209,6 +209,7 @@ impl Drop for PresentationObserver {
 }
 
 struct ActualEncoder {
+    requests_seen: std::sync::atomic::AtomicUsize,
     requests: Option<std::sync::mpsc::Sender<()>>,
     packets: std::sync::mpsc::Receiver<
         io::Result<(
@@ -240,7 +241,12 @@ impl ActualEncoder {
                 Zeroizing::new([16, 128, 240, 255].repeat((config.width * config.height) as usize));
             let mut last_accepted_pts = None;
             let mut pending_pts = None;
+            let mut request = 0usize;
             while receive.recv().is_ok() {
+                request += 1;
+                let request_started = Instant::now();
+                let mut encode_elapsed = Duration::ZERO;
+                let mut accepted_count = 0usize;
                 let result = (|| {
                     for _ in 0..256 {
                         let pts = match pending_pts {
@@ -253,8 +259,11 @@ impl ActualEncoder {
                                 last_accepted_pts,
                             )?,
                         };
+                        let step_started = Instant::now();
                         let step = encoder.encode_step(&pixels, pts, true)?;
+                        encode_elapsed += step_started.elapsed();
                         if step.accepted {
+                            accepted_count += 1;
                             last_accepted_pts = Some(pts);
                             pending_pts = None;
                         } else {
@@ -262,15 +271,32 @@ impl ActualEncoder {
                             pending_pts = Some(pts);
                         }
                         if let Some(packet) = step.output {
+                            let prepare_started = Instant::now();
                             let sps = prepare.validate(&packet.data, packet.keyframe)?;
                             let format = prepare.configured(config, sps)?;
-                            return Ok((
-                                packet,
-                                format,
-                                encoder.execution_receipt().ok_or_else(|| {
-                                    io::Error::other("actual output lacks execution receipt")
-                                })?,
-                            ));
+                            let execution = encoder.execution_receipt().ok_or_else(|| {
+                                io::Error::other("actual output lacks execution receipt")
+                            })?;
+                            if request <= 9 {
+                                let origin = *capture_origin
+                                    .lock()
+                                    .map_err(|_| io::Error::other("fixture clock poisoned"))?;
+                                let output_clock_pts = capture_pts(origin, Instant::now(), None)?;
+                                eprintln!(
+                                    "fixture encode: request={} last_input_pts={} output_pts={} accepted_count={} encode_step_us={} prepare_receipt_us={} request_us={} capture_to_output_us={}",
+                                    request,
+                                    pts,
+                                    packet.pts_90khz,
+                                    accepted_count,
+                                    encode_elapsed.as_micros(),
+                                    prepare_started.elapsed().as_micros(),
+                                    request_started.elapsed().as_micros(),
+                                    u128::from(output_clock_pts.saturating_sub(packet.pts_90khz))
+                                        * 1_000_000
+                                        / 90_000
+                                );
+                            }
+                            return Ok((packet, format, execution));
                         }
                     }
                     Err(io::Error::other("actual software encoder produced no AU"))
@@ -282,6 +308,7 @@ impl ActualEncoder {
             encoder.close()
         });
         Self {
+            requests_seen: std::sync::atomic::AtomicUsize::new(0),
             requests: Some(requests),
             packets,
             worker: Some(worker),
@@ -294,8 +321,19 @@ impl ActualEncoder {
         nestlink_protocol::media_format::VideoFormat,
         nestlink_media_codec::ExecutionReceipt,
     )> {
+        let request = self.requests_seen.fetch_add(1, Ordering::Relaxed) + 1;
+        let started = Instant::now();
         self.requests.as_ref().ok_or("encoder closed")?.send(())?;
-        Ok(self.packets.recv_timeout(Duration::from_secs(10))??)
+        let output = self.packets.recv_timeout(Duration::from_secs(10))??;
+        if request <= 9 {
+            eprintln!(
+                "fixture next: request={} output_pts={} next_wait_us={}",
+                request,
+                output.0.pts_90khz,
+                started.elapsed().as_micros()
+            );
+        }
+        Ok(output)
     }
     fn close(mut self) -> TestResult {
         self.requests.take();
@@ -735,6 +773,7 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
         .map_err(|_| "fixture clock poisoned")? =
         first_au_capture_origin(first.pts_90khz, Instant::now())?;
     let mut observer = PresentationObserver::start(&controller, &session_binding, &selection);
+    let send_started = Instant::now();
     host.send_native_video_execution_frame(
         &session_binding,
         source,
@@ -745,11 +784,16 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
         first_execution.clone(),
     )
     .await?;
+    eprintln!(
+        "fixture send: phase=initial request=0 send_us={}",
+        send_started.elapsed().as_micros()
+    );
     let mut decoded = None;
     // Some software decoders buffer; submit additional real independent IDRs.
-    for _ in 0..8 {
+    for request in 1..=8 {
         let (packet, receipt, execution) = encoder.next()?;
         assert_eq!(receipt, actual);
+        let send_started = Instant::now();
         host.send_native_video_execution_frame(
             &session_binding,
             source,
@@ -760,6 +804,10 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
             execution,
         )
         .await?;
+        eprintln!(
+            "fixture send: phase=initial request={request} send_us={}",
+            send_started.elapsed().as_micros()
+        );
         tokio::time::sleep(Duration::from_millis(35)).await;
         if let Some(frame) = observer.take_if_ready().await? {
             decoded = Some(frame);
@@ -886,6 +934,7 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     );
     let mut replacement_observer =
         PresentationObserver::start(&controller, &session_binding, &selection);
+    let send_started = Instant::now();
     host.send_native_video_execution_frame(
         &session_binding,
         source,
@@ -896,10 +945,15 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
         fresh_execution,
     )
     .await?;
+    eprintln!(
+        "fixture send: phase=replacement request=0 send_us={}",
+        send_started.elapsed().as_micros()
+    );
     let mut replacement_pixels = false;
-    for _ in 0..8 {
+    for request in 1..=8 {
         let (packet, receipt, execution) = encoder.next()?;
         assert_eq!(receipt, actual);
+        let send_started = Instant::now();
         host.send_native_video_execution_frame(
             &session_binding,
             source,
@@ -910,6 +964,10 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
             execution,
         )
         .await?;
+        eprintln!(
+            "fixture send: phase=replacement request={request} send_us={}",
+            send_started.elapsed().as_micros()
+        );
         tokio::time::sleep(Duration::from_millis(35)).await;
         if let Some(frame) = replacement_observer.take_if_ready().await? {
             assert!(!frame.hardware_decode);

@@ -1990,7 +1990,7 @@ enum Job {
         request_id: String,
         core_generation: u64,
         expected_connection_generation: Option<u64>,
-        result: Result<EstablishedNativeSession, Failure>,
+        result: Box<Result<EstablishedNativeSession, Failure>>,
     },
     NativePermitPolled {
         client: Client,
@@ -3685,7 +3685,7 @@ impl Actor {
                     request_id,
                     core_generation: generation,
                     expected_connection_generation,
-                    result,
+                    result: Box::new(result),
                 }
             }),
         });
@@ -4528,7 +4528,7 @@ impl Actor {
                     request_id,
                     core_generation,
                     expected_connection_generation,
-                    result,
+                    *result,
                 );
                 return;
             }

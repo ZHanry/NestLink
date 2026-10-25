@@ -190,7 +190,7 @@ impl Actor {
                     request_id,
                     core_generation,
                     expected_connection_generation,
-                    result,
+                    result: Box::new(result),
                 }
             }),
         });
