@@ -30,6 +30,7 @@ const EVENT_CAPACITY: usize = 4;
 /// Packed BGRA for presentation. Every encoded reference is decoded before an
 /// older presentation image may be replaced in this per-source mailbox.
 pub struct DecodedVideo {
+    execution: Option<nestlink_media_codec::ExecutionReceipt>,
     /// Encoded YUV source conversion; does not label the returned BGRA as
     /// limited-range RGB, establish capture transfer, or prove display HDR.
     pub source_color: nestlink_protocol::media_format::Color,
@@ -106,6 +107,7 @@ fn current_or_retired(
     ))
 }
 struct State {
+    execution: Option<nestlink_media_codec::ExecutionReceipt>,
     retired_formats: VecDeque<FormatIdentity>,
     format: Option<nestlink_protocol::native_media_format::FormatSelection>,
     scheduled: VecDeque<ScheduledVideo>,
@@ -122,6 +124,9 @@ struct State {
 }
 impl State {
     fn retire_format(&mut self) {
+        if let Some(execution) = self.execution.take() {
+            execution.fence();
+        }
         if let Some(value) = self.format.take() {
             let identity = FormatIdentity::selection(&value);
             if !self.retired_formats.contains(&identity) {
@@ -256,6 +261,7 @@ impl Output {
             playout,
             state: Mutex::new(State {
                 format: None,
+                execution: None,
                 retired_formats: VecDeque::new(),
                 scheduled: VecDeque::new(),
                 videos: BTreeMap::new(),
@@ -383,6 +389,22 @@ impl ExternalVideoCleanup {
     }
 }
 impl VideoPresentation {
+    pub fn current_execution(&self) -> io::Result<Option<nestlink_media_codec::ExecutionReceipt>> {
+        self.lease
+            .check_media_binding(Channel::Video, self.connection_generation)
+            .map_err(io::Error::other)?;
+        let state = self
+            .output
+            .state
+            .lock()
+            .map_err(|_| io::Error::other("media output poisoned"))?;
+        let value = state.execution.clone();
+        if let Some(value) = &value {
+            value.check_current()?;
+        }
+        Ok(value)
+    }
+
     pub async fn retire_external_for_format(&self) -> io::Result<()> {
         let deadline = Instant::now() + Duration::from_secs(2);
         loop {
@@ -967,6 +989,22 @@ impl VideoPresentation {
                 .pop_front()
                 .and_then(|source| state.videos.remove(&source))
         };
+        if let Some(frame) = &frame {
+            if let Some(receipt) = &frame.execution {
+                receipt.check_decoded(frame.pts_90khz, &frame.pixels)?;
+                if state
+                    .execution
+                    .as_ref()
+                    .map(|value| value.identity())
+                    .transpose()?
+                    != Some(receipt.identity()?)
+                {
+                    return Err(io::Error::other("pixel execution generation retired"));
+                }
+            } else if state.format.is_some() {
+                return Err(io::Error::other("negotiated pixels lack execution receipt"));
+            }
+        }
         drop(state);
         if let Err(error) = self
             .lease
@@ -1310,6 +1348,15 @@ struct Decoder {
     attempts: VecDeque<Instant>,
 }
 impl Decoder {
+    fn retire_codec(&mut self) -> io::Result<()> {
+        if let Some(codec) = self.codec.take() {
+            if matches!(&codec, VideoDecoder::Execution { .. }) {
+                codec.close()?;
+            }
+        }
+        Ok(())
+    }
+
     fn new(stream: VideoStream, layout: u64) -> Self {
         Self {
             stream,
@@ -1348,7 +1395,10 @@ impl Decoder {
         self.pending.clear();
         self.prepare = None;
         if reason == VideoRecoveryReason::DecoderFailure {
-            self.codec = None;
+            if self.format.is_some() {
+                return Err(io::Error::other("confirmed execution decoder failed"));
+            }
+            self.retire_codec()?;
         } else if !self.awaiting_keyframe {
             // Recreating a GPU transform for every omitted reference can stall
             // the reliable reader long enough to exhaust its video deadline.
@@ -1358,7 +1408,7 @@ impl Decoder {
                 .as_mut()
                 .is_some_and(|codec| codec.reset_for_keyframe().unwrap_or(false));
             if !reused {
-                self.codec = None;
+                self.retire_codec()?;
             }
         }
         self.awaiting_keyframe = true;
@@ -1516,7 +1566,9 @@ impl Decoder {
                 Err(_) => return Err(io::Error::other("unknown video codec")),
             };
             self.codec = Some(if self.format.is_some() {
-                VideoDecoder::with_config_software(kind, self.stream.codec)?
+                return Err(io::Error::other(
+                    "confirmed execution requires fresh prepare and ACK",
+                ));
             } else {
                 VideoDecoder::new(kind, packet.width, packet.height)?
             });
@@ -1535,7 +1587,16 @@ impl Decoder {
             .decode(&payload, packet.pts_90khz)
         {
             Ok(decoded) => decoded,
-            Err(_) => {
+            Err(error) => {
+                // Debug CI needs the actual platform rejection, not only the
+                // later recovery timeout. Never include encoded bytes/pixels.
+                #[cfg(debug_assertions)]
+                eprintln!(
+                    "native video decode rejected: kind={:?}; {error}",
+                    error.kind()
+                );
+                #[cfg(not(debug_assertions))]
+                let _ = error;
                 // A failed libvpx reference context is destroyed. Repeated
                 // entropy failures are bounded, never presented as good pixels.
                 self.recover(VideoRecoveryReason::DecoderFailure, Instant::now())?;
@@ -1565,12 +1626,24 @@ impl Decoder {
         }
         // Baseline has no reordering. A platform transform may buffer output;
         // present its real PTS, never relabel it with the latest input time.
+        let execution = self
+            .codec
+            .as_ref()
+            .and_then(VideoDecoder::execution_receipt);
+        if let Some(format) = &self.format {
+            let receipt = execution
+                .as_ref()
+                .ok_or_else(|| io::Error::other("decoded pixels lack live owner receipt"))?;
+            crate::execution_receipt_matches(receipt, format.format)?;
+            receipt.check_decoded(output_pts, &pixels)?;
+        }
         let mut pixels = Zeroizing::new(pixels);
         // A late decode cannot revive an expired recovery budget.
         self.deadline(Instant::now())?;
         let recovered = self.recovery.take().is_some();
         Ok(Some((
             DecodedVideo {
+                execution,
                 source_color: color,
                 codec: packet.codec as u8,
                 hardware_decode: self.codec.as_ref().is_some_and(VideoDecoder::hardware),
@@ -1675,7 +1748,7 @@ fn prepare_display_decoder(
         .format
         .clone();
     for codec in codecs.values_mut() {
-        codec.codec = None;
+        codec.retire_codec()?;
         codec.prepare = None;
         codec.awaiting_keyframe = true;
         codec.pending.clear();
@@ -1713,6 +1786,7 @@ fn prepare_display_decoder(
         }
         let signed_formats = lease.media_formats().map_err(io::Error::other)?;
         let negotiated = signed_formats.is_some();
+        let mut execution_format = None;
         if let Some(formats) = signed_formats {
             if lease
                 .local_media_backend(nestlink_protocol::media_authority::MediaDirection::Decode)
@@ -1735,14 +1809,15 @@ fn prepare_display_decoder(
                         true,
                     )
                     .ok()
+                    .map(|(kind, config)| (*format, kind, config))
                 })
-                .filter(|(codec, _)| *codec == kind)
-                .map(|(_, config)| config)
-                .max_by_key(|config| (config.fps, config.bitrate_kbps))
+                .filter(|(_, codec, _)| *codec == kind)
+                .max_by_key(|(_, _, config)| (config.fps, config.bitrate_kbps))
                 .ok_or_else(|| {
                     io::Error::other("selected display has no executable signed CPU target")
                 })?;
-            decoder.stream.codec = config;
+            execution_format = Some(config.0);
+            decoder.stream.codec = config.2;
         }
         if let Some(value) = &format {
             let (actual_kind, config) = crate::negotiated_format::configured_target(
@@ -1757,6 +1832,7 @@ fn prepare_display_decoder(
                 ));
             }
             decoder.stream.codec = config;
+            execution_format = Some(value.format);
             decoder.format = Some(value.clone());
         }
         let external = output
@@ -1772,7 +1848,11 @@ fn prepare_display_decoder(
                 layout.height,
             )?);
             decoder.codec = Some(if format.is_some() || negotiated {
-                VideoDecoder::with_config_software(kind, decoder.stream.codec)?
+                VideoDecoder::with_execution_target(crate::h264_execution_target(
+                    execution_format
+                        .ok_or_else(|| io::Error::other("missing signed execution target"))?,
+                    decoder.stream.codec,
+                )?)?
             } else {
                 VideoDecoder::new(kind, layout.width, layout.height)?
             });
@@ -1786,7 +1866,7 @@ fn prepare_display_decoder(
         lease
             .check_media_binding(Channel::Video, layout.epoch.connection)
             .map_err(io::Error::other)?;
-        let state = output
+        let mut state = output
             .state
             .lock()
             .map_err(|_| io::Error::other("media output poisoned"))?;
@@ -1795,6 +1875,15 @@ fn prepare_display_decoder(
             && state.catalog.as_ref().map(|(key, _)| key.revision) == Some(revision)
             && !state.closed
         {
+            state.execution = decoder
+                .codec
+                .as_ref()
+                .map(VideoDecoder::current_execution)
+                .transpose()?
+                .flatten();
+            if negotiated && !uses_external && state.execution.is_none() {
+                return Err(io::Error::other("decoder readiness lacks live execution"));
+            }
             output
                 .prepared
                 .send_replace(DecoderReadiness::Display(layout, revision));
@@ -1859,7 +1948,7 @@ fn receive(
             .map_err(io::Error::other)?;
         output.prepared.send_replace(DecoderReadiness::Fixed);
     }
-    runtime.block_on(async {
+    let outcome=runtime.block_on(async {
         let mut selected_layout: Option<(VideoLayout, u64)>=None;
         let mut selected_format:Option<nestlink_protocol::native_media_format::FormatSelection>=None;
         let mut external_stamp=None;
@@ -2049,7 +2138,16 @@ fn receive(
                     }
                 }
                 None
-            }else{codec.decode(packet,payload,codec_epoch,now)?};
+            }else{
+                match codec.decode(packet,payload,codec_epoch,now) {
+                    Ok(decoded)=>decoded,
+                    Err(error)=>{
+                        #[cfg(debug_assertions)]
+                        eprintln!("native video admission failed: kind={:?}; {error}", error.kind());
+                        return Err(error);
+                    }
+                }
+            };
             drop(external);
             output.set_recovery_deadline(codecs.values().filter_map(Decoder::recovery_deadline).min())?;
             lease
@@ -2068,6 +2166,14 @@ fn receive(
             if advertised && state.selected.is_none_or(|layout| layout.source!=source || layout.epoch!=codec_epoch) {continue;}
             if let Some((decoded, recovered)) = decoded {
                 if output.consumer_revision.load(std::sync::atomic::Ordering::Acquire)!=consumer_revision{continue;}
+                if let Some(receipt) = &decoded.execution {
+                    receipt.check_decoded(decoded.pts_90khz, &decoded.pixels)?;
+                    if state.execution.as_ref().map(|value| value.identity()).transpose()? != Some(receipt.identity()?) {
+                        return Err(io::Error::other("queued pixel execution generation retired"));
+                    }
+                } else if state.format.is_some() {
+                    return Err(io::Error::other("negotiated queued pixels lack execution receipt"));
+                }
                 if let Some(clock)=output.playout.as_ref(){
                     state.queue_video(clock, decoded, Instant::now())?;
                 }else{
@@ -2085,7 +2191,14 @@ fn receive(
                 state.stats.discarded_frames = state.stats.discarded_frames.saturating_add(1);
             }
         }
-    })
+    });
+    let mut retired = Ok(());
+    for decoder in codecs.values_mut() {
+        if let Err(error) = decoder.retire_codec() {
+            retired = Err(error);
+        }
+    }
+    outcome.and(retired)
 }
 
 fn update_dynamic_layout(
@@ -2127,7 +2240,7 @@ fn update_dynamic_layout(
         codec.layout = packet.layout_epoch;
         codec.stream.codec.width = packet.width;
         codec.stream.codec.height = packet.height;
-        codec.codec = None;
+        codec.retire_codec()?;
         codec.prepare = None;
         codec.awaiting_keyframe = true;
         codec.pending.clear();
@@ -2462,6 +2575,7 @@ mod tests {
 
     fn image(sequence: u64, pts_90khz: u64) -> DecodedVideo {
         DecodedVideo {
+            execution: None,
             source_color: nestlink_protocol::media_format::Color::LEGACY_VP8_BT601,
             codec: 0,
             hardware_decode: false,

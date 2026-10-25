@@ -291,6 +291,20 @@ jobs:
       - name: Test Windows with the ordinary business-process token
         if: runner.os == 'Windows'
         run: python scripts/refactor-windows-normal-user.py cargo test --workspace --locked --no-fail-fast
+      - name: Debug scoped native renewal regressions on Linux
+        if: runner.os == 'Linux'
+        run: |
+          cargo test --locked -p nestlink-session --features media-runtime-test-support native_renewal_tests
+          cargo test --locked -p nestlink-sdk --features media-runtime-test-support native_renewal
+      - name: Debug scoped native renewal regressions with the ordinary Windows token
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-session --features media-runtime-test-support native_renewal_tests
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-sdk --features media-runtime-test-support native_renewal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - if: runner.os == 'Linux'
         run: bash scripts/test-vp8-boundary-sanitizer.sh
       - if: runner.os == 'Linux'

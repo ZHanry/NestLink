@@ -2712,3 +2712,202 @@ async fn revoke_signals_owner_before_waiting_and_discards_inflight_codec_output(
     );
     Ok(())
 }
+
+struct RenewalFence {
+    gate: Arc<Mutex<()>>,
+    reject: bool,
+    stop: Option<watch::Sender<Option<StopReason>>>,
+}
+impl nestlink_remote::native_renewal::NativeExecutionFence for RenewalFence {
+    fn with_current(&self, operation: &mut dyn FnMut() -> io::Result<()>) -> io::Result<()> {
+        let _guard = self
+            .gate
+            .lock()
+            .map_err(|_| io::Error::other("fence poisoned"))?;
+        if self.reject {
+            return Err(io::Error::other("owner retired"));
+        }
+        if let Some(stop) = &self.stop {
+            stop.send_replace(Some(StopReason::Revoked));
+        }
+        operation()
+    }
+}
+struct RenewalReentry {
+    gate: Arc<Mutex<()>>,
+    unfenced: Arc<std::sync::atomic::AtomicBool>,
+    stops: Arc<std::sync::atomic::AtomicUsize>,
+}
+impl nestlink_remote::StopHandler for RenewalReentry {
+    fn check(&mut self) -> io::Result<()> {
+        if self.gate.try_lock().is_err() {
+            self.unfenced
+                .store(false, std::sync::atomic::Ordering::Release);
+        }
+        Ok(())
+    }
+    fn stop(&mut self, _: StopReason, _: nestlink_session::StopEffects) -> io::Result<()> {
+        if self.gate.try_lock().is_err() {
+            self.unfenced
+                .store(false, std::sync::atomic::Ordering::Release);
+        }
+        self.stops.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        Ok(())
+    }
+}
+fn renewal_invalid_media(
+    claims: &PermitClaims,
+) -> (
+    nestlink_protocol::media_authority::FrozenMediaScope,
+    nestlink_protocol::media_authority::MediaAnnouncement,
+) {
+    use nestlink_protocol::media_authority::*;
+    (
+        FrozenMediaScope {
+            version: 2,
+            controller_revision: 1,
+            host_revision: 1,
+            formats: Vec::new(),
+            sha256: vec![0; 32],
+        },
+        MediaAnnouncement {
+            version: 2,
+            device_id: claims.host_device_id.clone(),
+            direction: MediaDirection::Encode,
+            revision: 1,
+            expires_at_unix_ms: claims.expires_at_unix_ms,
+            probe: ProbeIdentity {
+                generation: 1,
+                resource_id: claims.resource_id.clone(),
+                backend: "cpu-software".into(),
+                adapter_luid: None,
+                driver_version: None,
+            },
+            formats: Vec::new(),
+        },
+    )
+}
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn atomic_renewal_callbacks_and_cleanup_run_outside_execution_fence() -> Result {
+    for reject in [false, true] {
+        let (session, clock, signer, mut claims) = active(15000)?;
+        let gate = Arc::new(Mutex::new(()));
+        let unfenced = Arc::new(std::sync::atomic::AtomicBool::new(true));
+        let stops = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let (_stop, receiver) = watch::channel(None);
+        let mut lifecycle = SessionLifecycle::new(receiver);
+        lifecycle.resources = Some(Box::new(RenewalReentry {
+            gate: gate.clone(),
+            unfenced: unfenced.clone(),
+            stops: stops.clone(),
+        }));
+        let lease =
+            LeaseControl::from_proved_session(session, Path::Direct, clock.clone(), lifecycle)?;
+        let permits = lease.subscribe_input_permits()?;
+        let (frozen, local) = renewal_invalid_media(&claims);
+        claims.lease_sequence = 2;
+        let next = verify_permit(&signer.sign(&claims)?.encode_to_vec(), &signer.public_key())?;
+        let fence = RenewalFence {
+            gate,
+            reject,
+            stop: None,
+        };
+        assert!(
+            lease
+                .renew_with_local_media(
+                    next,
+                    clock.monotonic_ms() + 1,
+                    1,
+                    &frozen,
+                    &local,
+                    EndpointRole::Host,
+                    &fence
+                )
+                .is_err()
+        );
+        assert!(unfenced.load(std::sync::atomic::Ordering::Acquire));
+        assert_eq!(stops.load(std::sync::atomic::Ordering::Acquire), 1);
+        assert!(permits.borrow().is_none());
+    }
+    Ok(())
+}
+#[tokio::test]
+async fn atomic_renewal_external_stop_wins_inside_execution_fence() -> Result {
+    let (session, clock, signer, mut claims) = active(15000)?;
+    let (stop, receiver) = watch::channel(None);
+    let lease = LeaseControl::from_proved_session(
+        session,
+        Path::Direct,
+        clock.clone(),
+        SessionLifecycle::new(receiver),
+    )?;
+    let permits = lease.subscribe_input_permits()?;
+    let (frozen, local) = renewal_invalid_media(&claims);
+    claims.lease_sequence = 2;
+    let next = verify_permit(&signer.sign(&claims)?.encode_to_vec(), &signer.public_key())?;
+    let fence = RenewalFence {
+        gate: Arc::new(Mutex::new(())),
+        reject: false,
+        stop: Some(stop),
+    };
+    assert!(
+        lease
+            .renew_with_local_media(
+                next,
+                clock.monotonic_ms() + 1,
+                1,
+                &frozen,
+                &local,
+                EndpointRole::Host,
+                &fence
+            )
+            .is_err()
+    );
+    assert!(permits.borrow().is_none());
+    assert_eq!(
+        lease
+            .subscribe_stopped()
+            .borrow()
+            .as_ref()
+            .map(|r| r.reason),
+        Some(StopReason::Revoked)
+    );
+    Ok(())
+}
+#[tokio::test]
+async fn atomic_renewal_expiry_cannot_publish_successor() -> Result {
+    let (session, clock, signer, mut claims) = active(500)?;
+    let (_stop, receiver) = watch::channel(None);
+    let lease = LeaseControl::from_proved_session(
+        session,
+        Path::Direct,
+        clock.clone(),
+        SessionLifecycle::new(receiver),
+    )?;
+    let permits = lease.subscribe_input_permits()?;
+    let (frozen, local) = renewal_invalid_media(&claims);
+    claims.lease_sequence = 2;
+    claims.expires_at_unix_ms = claims.issued_at_unix_ms + 15000;
+    let next = verify_permit(&signer.sign(&claims)?.encode_to_vec(), &signer.public_key())?;
+    tokio::time::sleep(Duration::from_millis(600)).await;
+    let fence = RenewalFence {
+        gate: Arc::new(Mutex::new(())),
+        reject: false,
+        stop: None,
+    };
+    assert!(
+        lease
+            .renew_with_local_media(
+                next,
+                clock.monotonic_ms(),
+                1,
+                &frozen,
+                &local,
+                EndpointRole::Host,
+                &fence
+            )
+            .is_err()
+    );
+    assert!(permits.borrow().is_none());
+    Ok(())
+}

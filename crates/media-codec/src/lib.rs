@@ -57,3 +57,9 @@ pub use controller_probe::{
 mod cpu_direction_probe;
 #[cfg(windows)]
 pub use cpu_direction_probe::{CpuDirectionProbe, probe_cpu_decode, probe_cpu_encode};
+
+mod execution;
+pub use execution::{
+    ExecutionDirection, ExecutionIdentity, ExecutionOutput, ExecutionReceipt, ExecutionTicket,
+    H264ExecutionTarget, SoftwareH264Execution,
+};

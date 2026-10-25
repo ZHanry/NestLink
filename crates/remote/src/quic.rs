@@ -127,6 +127,12 @@ pub async fn authorize(
     }).await.map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "QUIC session setup budget exhausted"))??;
     let lease = LeaseControl::new(session, path, clock, lifecycle)?;
     guard.lease = Some(lease.clone());
+    let renewal = if lease.native_renewal_required()? {
+        crate::native_renewal::negotiate(&mut control_read, &mut control_write, &lease).await?;
+        Some(crate::native_renewal::pair(&lease))
+    } else {
+        None
+    };
     let (binding, generation, channels) = lease.transport_binding()?;
     let audio = channels.contains(&Channel::Audio);
     let reliable: Vec<_> = channels
@@ -362,27 +368,78 @@ pub async fn authorize(
             }
         }
     }));
+    let mut reserved_read = Some(control_read);
+    let mut reserved_write = Some(control_write);
+    let renewal_port = if let Some((port, mut io)) = renewal {
+        let mut read = reserved_read
+            .take()
+            .ok_or_else(|| invalid("renewal read owner missing"))?;
+        let mut write = reserved_write
+            .take()
+            .ok_or_else(|| invalid("renewal write owner missing"))?;
+        let reader_lease = lease.clone();
+        tasks.push(spawn(&lease, &incoming, &outgoing, async move {
+            loop {
+                let frame = lease_io(
+                    read_channel_frame(
+                        &mut read,
+                        Channel::Control,
+                        nestlink_protocol::native_renewal::MAX_BYTES,
+                    ),
+                    &reader_lease,
+                )
+                .await?;
+                io.incoming
+                    .try_send(frame.payload)
+                    .map_err(|_| invalid("native control queue overflow or closed"))?;
+            }
+        }));
+        let writer_lease = lease.clone();
+        tasks.push(spawn(&lease, &incoming, &outgoing, async move {
+            loop {
+                let bytes = lease_io(
+                    async {
+                        io.outgoing
+                            .recv()
+                            .await
+                            .ok_or_else(|| invalid("native control owner closed"))
+                    },
+                    &writer_lease,
+                )
+                .await?;
+                lease_io(
+                    write_frame(&mut write, Channel::Control, &bytes),
+                    &writer_lease,
+                )
+                .await?;
+            }
+        }));
+        Some(port)
+    } else {
+        None
+    };
     // Failure, idle revoke, network change, drop or panic closes the actual
     // connection, including blocked streams and queued native datagrams.
     let monitor_lease = lease.clone();
     let monitor = connection.clone();
     tasks.push(spawn(&lease, &incoming, &outgoing, async move {
         let _guard = CloseQuicOnDrop(monitor.clone(), monitor_lease.clone());
-        let _write = control_write;
+        let _write = reserved_write;
         lease_io(async {
             tokio::select! { biased;
                 error = monitor.closed() => Err(io::Error::other(error)),
                 result = monitor.accept_uni() => match result { Ok(_) => Err(invalid("unexpected extra QUIC business stream")), Err(error) => Err(io::Error::other(error)) },
                 result = monitor.accept_bi() => match result { Ok(_) => Err(invalid("unexpected extra QUIC control stream")), Err(error) => Err(io::Error::other(error)) },
-                result = control_read.read_u8() => match result { Ok(_) => Err(invalid("reserved proof stream received extra data")), Err(error) => Err(error) },
+                result = async {match &mut reserved_read {Some(read)=>read.read_u8().await,None=>std::future::pending().await}} => match result { Ok(_) => Err(invalid("reserved proof stream received extra data")), Err(error) => Err(error) },
             }
         }, &monitor_lease).await
     }));
     guard.lease = None;
     guard.connection = None;
-    Ok(ChannelRuntime::quic(
-        lease, incoming, outgoing, tasks, connection, endpoint,
-    ))
+    Ok(
+        ChannelRuntime::quic(lease, incoming, outgoing, tasks, connection, endpoint)
+            .with_native_renewal(renewal_port),
+    )
 }
 
 fn fragment_audio(

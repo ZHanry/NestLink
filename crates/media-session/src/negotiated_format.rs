@@ -102,6 +102,49 @@ pub fn software_h264_execution_limits(
     Ok(limits)
 }
 
+/// Convert a signed exact format into a codec owner target, including visible padding.
+pub fn h264_execution_target(
+    format: VideoFormat,
+    visible: VideoConfig,
+) -> io::Result<nestlink_media_codec::H264ExecutionTarget> {
+    software_h264_execution_limits(format)?;
+    let (kind, actual) = format_target(format, visible.width, visible.height, true)?;
+    if kind != VideoCodec::H264Baseline
+        || actual.fps != visible.fps
+        || actual.bitrate_kbps != visible.bitrate_kbps
+    {
+        return Err(io::Error::other(
+            "execution config differs from exact signed target",
+        ));
+    }
+    nestlink_media_codec::H264ExecutionTarget::new(
+        visible,
+        nestlink_media_codec::H264SpsInfo {
+            profile_idc: 66,
+            constraints: format.h264_constraints,
+            level_idc: format.level,
+        },
+        nestlink_media_codec::H264Geometry {
+            coded_width: format.geometry.coded_width,
+            coded_height: format.geometry.coded_height,
+            crop: format.geometry.crop,
+        },
+        format.digest().map_err(io::Error::other)?,
+    )
+}
+pub fn execution_receipt_matches(
+    receipt: &nestlink_media_codec::ExecutionReceipt,
+    format: VideoFormat,
+) -> io::Result<()> {
+    receipt.check_current()?;
+    if receipt.target() != h264_execution_target(format, receipt.target().config())? {
+        return Err(io::Error::other(
+            "live execution differs from signed format",
+        ));
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod execution_limits_tests {
     use super::*;

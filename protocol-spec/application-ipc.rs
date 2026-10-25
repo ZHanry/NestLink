@@ -108,6 +108,11 @@ pub enum Command {
         sources: Vec<u32>,
         initial_source: u32,
     },
+    /// On-demand whitelist from the live verified lease. None publication is
+    /// scoped discovery for this exact service/revision, not a global listing.
+    GetLocalServiceLeaseObservation {
+        request: nestlink_app_core::ServiceLeaseObservationRequest,
+    },
     /// Creates a one-use, short-lived preview from the selected Core service
     /// and a literal local SocketAddr. The server never supplies the target.
     PreviewLocalServiceHost {
@@ -164,6 +169,7 @@ impl Command {
                 | Self::Completion { .. }
                 | Self::GetNativeClipboardStatus
                 | Self::GetNativeDisplays { .. }
+                | Self::GetLocalServiceLeaseObservation { .. }
                 | Self::PrivilegedInput {
                     action: PrivilegedInputAction::Status
                 }
@@ -268,6 +274,9 @@ pub enum Reply {
     },
     BrowserHostDisplaysApproved {
         result: Result<(), nestlink_app_core::BrowserHostDisplayError>,
+    },
+    LocalServiceLeaseObservation {
+        observation: nestlink_app_core::ServiceLeaseObservation,
     },
     LocalServiceHostPreview {
         preview: LocalServiceHostPreview,

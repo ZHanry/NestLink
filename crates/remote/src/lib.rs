@@ -5,6 +5,7 @@ pub mod clipboard;
 pub mod files;
 pub mod input;
 mod lifecycle;
+pub mod native_renewal;
 mod queues;
 pub mod quic;
 pub mod upload;
@@ -233,6 +234,7 @@ fn finish_proof(
 
 /// Owns the raw transport, so business callers cannot skip authorization checks.
 pub struct AuthorizedConnection<R, W> {
+    renewal: Option<(native_renewal::NativeRenewalPort, native_renewal::ControlIo)>,
     read: R,
     write: W,
     lease: LeaseControl,
@@ -273,7 +275,26 @@ impl<R: AsyncRead + Unpin, W: AsyncWrite + Unpin> AuthorizedConnection<R, W> {
         lifecycle: SessionLifecycle,
     ) -> Result<Self, RemoteError> {
         let lease = LeaseControl::new(session, path, clock, lifecycle)?;
-        Ok(Self { read, write, lease })
+        Ok(Self {
+            read,
+            write,
+            lease,
+            renewal: None,
+        })
+    }
+    /// Optional only for signed media sessions; legacy sessions retain their
+    /// original wire protocol. This is called only after mutual proof completes.
+    pub async fn negotiate_native_renewal(mut self) -> Result<Self, RemoteError> {
+        if self.lease.native_renewal_required()? {
+            if let Err(error) =
+                native_renewal::negotiate(&mut self.read, &mut self.write, &self.lease).await
+            {
+                self.lease.stop(nestlink_session::StopReason::Revoked)?;
+                return Err(error);
+            }
+            self.renewal = Some(native_renewal::pair(&self.lease));
+        }
+        Ok(self)
     }
     pub fn lease_control(&self) -> LeaseControl {
         self.lease.clone()

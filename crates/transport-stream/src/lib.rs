@@ -102,7 +102,7 @@ pub async fn write_frame<W: AsyncWrite + Unpin>(
     stream.flush().await
 }
 pub async fn read_frame<R: AsyncRead + Unpin>(stream: &mut R) -> io::Result<Frame> {
-    read_frame_inner(stream, None, usize::MAX).await
+    read_frame_inner(stream, None, usize::MAX, usize::MAX).await
 }
 /// Check a bound stream's channel and its additional budget before allocating
 /// the body. A Video-sized frame on an Input stream must not allocate 8 MiB.
@@ -111,12 +111,21 @@ pub async fn read_channel_frame<R: AsyncRead + Unpin>(
     expected: Channel,
     budget: usize,
 ) -> io::Result<Frame> {
-    read_frame_inner(stream, Some(expected), budget).await
+    read_frame_inner(stream, Some(expected), budget, usize::MAX).await
+}
+/// A post-proof native stream caps Control before allocation without reducing
+/// the approved video/file budgets. Ordinary frame readers keep their contract.
+pub async fn read_frame_control_bounded<R: AsyncRead + Unpin>(
+    stream: &mut R,
+    control_budget: usize,
+) -> io::Result<Frame> {
+    read_frame_inner(stream, None, usize::MAX, control_budget).await
 }
 async fn read_frame_inner<R: AsyncRead + Unpin>(
     stream: &mut R,
     expected: Option<Channel>,
     budget: usize,
+    control_budget: usize,
 ) -> io::Result<Frame> {
     if stream.read_u8().await? != 1 {
         return Err(io::Error::new(
@@ -132,7 +141,16 @@ async fn read_frame_inner<R: AsyncRead + Unpin>(
         ));
     }
     let size = stream.read_u32().await? as usize;
-    if size > channel.budget().min(budget) {
+    if size
+        > channel
+            .budget()
+            .min(budget)
+            .min(if channel == Channel::Control {
+                control_budget
+            } else {
+                usize::MAX
+            })
+    {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
             "channel frame exceeds budget",

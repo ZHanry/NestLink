@@ -72,6 +72,12 @@ impl Worker {
                 {
                     result = Ok(());
                 }
+                // One bounded diagnostic per worker exit. Platform io errors
+                // contain failure descriptions, never encoded media or pixels.
+                #[cfg(debug_assertions)]
+                if let Err(error) = &result {
+                    eprintln!("media worker exited: kind={:?}; {error}", error.kind());
+                }
                 let _ = if result.is_ok() {
                     worker_lease.stop_if_running(StopReason::ExplicitExit)
                 } else {

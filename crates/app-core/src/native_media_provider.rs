@@ -11,7 +11,7 @@ use nestlink_protocol::{
 use std::{
     io,
     sync::{
-        Arc, Mutex, OnceLock,
+        Arc, Mutex, OnceLock, Weak,
         atomic::{AtomicBool, AtomicU64, Ordering},
     },
     thread,
@@ -37,15 +37,100 @@ struct ProbeJob {
     id: u64,
     cancel: Arc<AtomicBool>,
     worker: thread::JoinHandle<io::Result<ProbeResult>>,
+    prewarm: Option<Prewarm>,
 }
-fn reap_abandoned(slot: &mut Option<ProbeJob>) {
-    if slot
-        .as_ref()
-        .is_some_and(|job| job.cancel.load(Ordering::Acquire) && job.worker.is_finished())
-        && let Some(job) = slot.take()
-    {
-        let _ = job.worker.join();
+struct Prewarm {
+    state: Weak<Mutex<ProviderState>>,
+    device_id: String,
+    direction: MediaDirection,
+    fence: crate::sdk_call::DispatchFence,
+    start: Instant,
+}
+#[derive(Default)]
+enum ProbeSlot {
+    #[default]
+    Idle,
+    Running(ProbeJob),
+    // An io::Error cannot prove every native owner completed checked close.
+    // Neither cancellation nor join alone may authorize a replacement owner.
+    Poisoned,
+}
+impl ProbeSlot {
+    fn finish(&mut self) -> io::Result<(u64, ProbeResult)> {
+        let Self::Running(job) = std::mem::replace(self, Self::Poisoned) else {
+            return Err(io::Error::other("probe owner unavailable"));
+        };
+        let receipt = job
+            .worker
+            .join()
+            .map_err(|_| io::Error::other("CPU probe worker panicked; slot poisoned"))??;
+        *self = Self::Idle;
+        Ok((job.id, receipt))
     }
+}
+fn reap_abandoned(slot: &mut ProbeSlot) {
+    let ProbeSlot::Running(job) = slot else {
+        return;
+    };
+    if let Some(prewarm) = &job.prewarm
+        && (prewarm.fence.check().is_err()
+            || prewarm.state.upgrade().is_none()
+            || prewarm.start.elapsed() >= Duration::from_secs(30))
+    {
+        job.cancel.store(true, Ordering::Release);
+    }
+    if !job.worker.is_finished() || (job.prewarm.is_none() && !job.cancel.load(Ordering::Acquire)) {
+        return;
+    }
+    let cancelled = job.cancel.load(Ordering::Acquire);
+    let prewarm = job.prewarm.take();
+    let result = slot.finish();
+    if let Some(prewarm) = prewarm
+        && !cancelled
+        && prewarm.fence.check().is_ok()
+        && let Some(state) = prewarm.state.upgrade()
+        && let Ok(mut state) = state.lock()
+        && prewarm.fence.check().is_ok()
+    {
+        match result.and_then(|(id, receipt)| {
+            make_announcement(id, &prewarm.device_id, prewarm.direction, receipt)
+        }) {
+            Ok(local) => {
+                match prewarm.direction {
+                    MediaDirection::Encode => state.encode = Some(local),
+                    MediaDirection::Decode => state.decode = Some(local),
+                }
+                state.fallback_reason = None;
+            }
+            Err(error) => state.fallback_reason = Some(error.to_string()),
+        }
+    }
+}
+fn make_announcement(
+    id: u64,
+    device_id: &str,
+    direction: MediaDirection,
+    receipt: ProbeResult,
+) -> io::Result<MediaAnnouncement> {
+    let announcement = MediaAnnouncement {
+        version: 2,
+        device_id: device_id.into(),
+        direction,
+        revision: id,
+        expires_at_unix_ms: now()?
+            .checked_add(240_000)
+            .ok_or_else(|| io::Error::other("probe expiry overflow"))?,
+        probe: ProbeIdentity {
+            generation: id,
+            resource_id: receipt.resource_id,
+            backend: "cpu-software".into(),
+            adapter_luid: None,
+            driver_version: None,
+        },
+        formats: vec![receipt.format.encode().map_err(io::Error::other)?],
+    };
+    announcement.validate(now()?).map_err(io::Error::other)?;
+    Ok(announcement)
 }
 struct ProbeRequest(Arc<AtomicBool>);
 impl Drop for ProbeRequest {
@@ -53,9 +138,9 @@ impl Drop for ProbeRequest {
         self.0.store(true, Ordering::Release);
     }
 }
-fn slot() -> &'static Mutex<Option<ProbeJob>> {
-    static SLOT: OnceLock<Mutex<Option<ProbeJob>>> = OnceLock::new();
-    SLOT.get_or_init(|| Mutex::new(None))
+fn slot() -> &'static Mutex<ProbeSlot> {
+    static SLOT: OnceLock<Mutex<ProbeSlot>> = OnceLock::new();
+    SLOT.get_or_init(|| Mutex::new(ProbeSlot::Idle))
 }
 fn now() -> io::Result<u64> {
     SystemTime::now()
@@ -65,14 +150,19 @@ fn now() -> io::Result<u64> {
         .try_into()
         .map_err(io::Error::other)
 }
+fn checked_next_id(old: u64, wall: u64) -> Option<u64> {
+    let next = wall.max(old.checked_add(1)?);
+    (next <= i64::MAX as u64).then_some(next)
+}
 fn next_id() -> io::Result<u64> {
     static ID: AtomicU64 = AtomicU64::new(0);
     let wall = now()?;
     ID.fetch_update(Ordering::AcqRel, Ordering::Acquire, |old| {
-        Some(wall.max(old.saturating_add(1)))
+        checked_next_id(old, wall)
     })
-    .map(|old| wall.max(old.saturating_add(1)))
-    .map_err(|_| io::Error::other("probe generation unavailable"))
+    .ok()
+    .and_then(|old| checked_next_id(old, wall))
+    .ok_or_else(|| io::Error::other("probe generation exhausted"))
 }
 impl NativeMediaProvider {
     pub fn cpu_software(target: VideoConfig) -> io::Result<Self> {
@@ -179,6 +269,103 @@ impl NativeMediaProvider {
         }
         Ok(local)
     }
+    /// Renewal polls supervise the retained native worker; no detached async task.
+    /// A valid cached receipt keeps its original expiry while the next real probe runs.
+    pub(crate) async fn publish_for_renewal(
+        &self,
+        sdk: &nestlink_sdk::Sdk,
+        identity: &nestlink_sdk::DeviceIdentity,
+        direction: MediaDirection,
+        fence: &crate::sdk_call::DispatchFence,
+    ) -> io::Result<MediaAnnouncement> {
+        let start = Instant::now();
+        let local = loop {
+            fence.check().map_err(|_| {
+                io::Error::new(io::ErrorKind::Interrupted, "renewal preparation superseded")
+            })?;
+            let (existing, poisoned) = self.renewal_poll(&identity.device_id, direction, fence)?;
+            if let Some(local) = existing {
+                break local;
+            }
+            if poisoned {
+                return Err(io::Error::other(
+                    "CPU probe cleanup unknown; replacement prohibited",
+                ));
+            }
+            if start.elapsed() >= Duration::from_secs(30) {
+                return Err(io::Error::new(
+                    io::ErrorKind::TimedOut,
+                    "renewal preparation budget; native owner retained",
+                ));
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        };
+        fence.check().map_err(|_| {
+            io::Error::new(io::ErrorKind::Interrupted, "renewal publication superseded")
+        })?;
+        local.validate(now()?).map_err(io::Error::other)?;
+        let previous = fenced_network(
+            fence,
+            sdk.media_announcement(&identity.device_id, direction),
+        )
+        .await?;
+        if previous.as_ref() != Some(&local) {
+            local.validate(now()?).map_err(io::Error::other)?;
+            fenced_network(
+                fence,
+                sdk.publish_media_announcement(identity, local.clone(), now()?),
+            )
+            .await?;
+        }
+        fence.check().map_err(|_| {
+            io::Error::new(io::ErrorKind::Interrupted, "renewal publication superseded")
+        })?;
+        local.validate(now()?).map_err(io::Error::other)?;
+        Ok(local)
+    }
+    fn renewal_poll(
+        &self,
+        device_id: &str,
+        direction: MediaDirection,
+        fence: &crate::sdk_call::DispatchFence,
+    ) -> io::Result<(Option<MediaAnnouncement>, bool)> {
+        let mut registry = slot()
+            .lock()
+            .map_err(|_| io::Error::other("probe slot poisoned"))?;
+        reap_abandoned(&mut registry);
+        let wall = now()?;
+        let existing = {
+            let state = self
+                .state
+                .lock()
+                .map_err(|_| io::Error::other("media provider poisoned"))?;
+            cached(&state, device_id, direction, wall)
+        };
+        let needs_probe = prewarm_needed(existing.as_ref(), wall);
+        if needs_probe && matches!(*registry, ProbeSlot::Idle) {
+            let id = next_id()?;
+            let cancel = Arc::new(AtomicBool::new(false));
+            let worker_cancel = cancel.clone();
+            let target = self.target;
+            let worker = thread::Builder::new()
+                .name("nestlink-media-renewal-probe".into())
+                .spawn(move || run_probe(target, direction, &worker_cancel))?;
+            *registry = ProbeSlot::Running(ProbeJob {
+                id,
+                cancel,
+                worker,
+                prewarm: Some(Prewarm {
+                    state: Arc::downgrade(&self.state),
+                    device_id: device_id.into(),
+                    direction,
+                    fence: fence.clone(),
+                    start: Instant::now(),
+                }),
+            });
+        }
+        let poisoned = matches!(*registry, ProbeSlot::Poisoned);
+        Ok((existing, poisoned))
+    }
     async fn execute(
         &self,
         device_id: &str,
@@ -194,7 +381,7 @@ impl NativeMediaProvider {
             // A timed out caller cannot release an owner still inside a driver.
             // Reap it only after the real OS thread has ended and been joined.
             reap_abandoned(&mut guard);
-            if guard.is_some() {
+            if !matches!(*guard, ProbeSlot::Idle) {
                 return Err(io::Error::new(
                     io::ErrorKind::WouldBlock,
                     "previous CPU probe owner still active or quarantined",
@@ -205,10 +392,11 @@ impl NativeMediaProvider {
             let worker = thread::Builder::new()
                 .name("nestlink-media-direction-probe".into())
                 .spawn(move || run_probe(target, direction, &worker_cancel))?;
-            *guard = Some(ProbeJob {
+            *guard = ProbeSlot::Running(ProbeJob {
                 id,
                 cancel: cancel.clone(),
                 worker,
+                prewarm: None,
             });
         }
         let _request = ProbeRequest(cancel.clone());
@@ -231,39 +419,35 @@ impl NativeMediaProvider {
                 let mut guard = slot()
                     .lock()
                     .map_err(|_| io::Error::other("probe slot poisoned"))?;
-                if guard
-                    .as_ref()
-                    .is_some_and(|j| j.id == id && j.worker.is_finished())
+                if matches!(&*guard, ProbeSlot::Running(job) if job.id == id && job.worker.is_finished())
                 {
-                    let job = guard
-                        .take()
-                        .ok_or_else(|| io::Error::other("probe owner lost"))?;
-                    break job
-                        .worker
-                        .join()
-                        .map_err(|_| io::Error::other("CPU probe worker panicked"))??;
+                    break guard.finish()?.1;
                 }
             }
             tokio::time::sleep(Duration::from_millis(20)).await;
         };
-        let announcement = MediaAnnouncement {
-            version: 2,
-            device_id: device_id.into(),
-            direction,
-            revision: id,
-            expires_at_unix_ms: now()?.saturating_add(240_000),
-            probe: ProbeIdentity {
-                generation: id,
-                resource_id: receipt.resource_id,
-                backend: "cpu-software".into(),
-                adapter_luid: None,
-                driver_version: None,
-            },
-            formats: vec![receipt.format.encode().map_err(io::Error::other)?],
-        };
-        announcement.validate(now()?).map_err(io::Error::other)?;
-        Ok(announcement)
+        make_announcement(id, device_id, direction, receipt)
     }
+}
+fn prewarm_needed(value: Option<&MediaAnnouncement>, wall: u64) -> bool {
+    value.is_none_or(|a| a.expires_at_unix_ms <= wall.saturating_add(60_000))
+}
+fn cached(
+    state: &ProviderState,
+    device_id: &str,
+    direction: MediaDirection,
+    wall: u64,
+) -> Option<MediaAnnouncement> {
+    let value = match direction {
+        MediaDirection::Encode => &state.encode,
+        MediaDirection::Decode => &state.decode,
+    };
+    value
+        .as_ref()
+        .filter(|a| {
+            a.device_id == device_id && a.direction == direction && a.validate(wall).is_ok()
+        })
+        .cloned()
 }
 async fn fenced_network<T>(
     fence: &crate::sdk_call::DispatchFence,
@@ -379,35 +563,180 @@ mod tests {
             assert!(NativeMediaProvider::cpu_software(bad).is_err());
         }
     }
+    // Synthetic results test registry transitions only. They are not evidence of
+    // native checked close; cpu_direction_probe's Windows regressions supply that.
+    fn receipt() -> io::Result<ProbeResult> {
+        Ok(ProbeResult {
+            format: VideoFormat::legacy_h264(
+                31,
+                640,
+                480,
+                nestlink_protocol::media_format::FrameRate::new(30, 1).map_err(io::Error::other)?,
+                4000,
+            )
+            .map_err(io::Error::other)?,
+            resource_id: nestlink_auth::random_id(),
+        })
+    }
+    fn wait_finished(slot: &ProbeSlot) -> io::Result<()> {
+        let deadline = Instant::now() + Duration::from_secs(1);
+        while matches!(slot,ProbeSlot::Running(job) if !job.worker.is_finished()) {
+            if Instant::now() >= deadline {
+                return Err(io::Error::other("fixture worker did not finish"));
+            }
+            thread::sleep(Duration::from_millis(1));
+        }
+        Ok(())
+    }
+    fn fence() -> crate::sdk_call::DispatchFence {
+        crate::sdk_call::DispatchFence {
+            generation: Arc::new(AtomicU64::new(1)),
+            expected: 1,
+            closing: Arc::new(AtomicBool::new(false)),
+            cancelled: Arc::new(AtomicBool::new(false)),
+        }
+    }
     #[test]
-    fn cancelled_probe_slot_stays_reserved_until_actual_worker_join() -> io::Result<()> {
-        let cancel = Arc::new(AtomicBool::new(false));
+    fn cancelled_error_and_panicked_probe_join_never_authorize_slot_reuse() -> io::Result<()> {
+        for panic in [false, true] {
+            let cancel = Arc::new(AtomicBool::new(true));
+            let worker = thread::spawn(move || {
+                if panic {
+                    panic!("synthetic worker panic");
+                }
+                Err(io::Error::other("synthetic unknown cleanup"))
+            });
+            let mut slot = ProbeSlot::Running(ProbeJob {
+                id: 1,
+                cancel,
+                worker,
+                prewarm: None,
+            });
+            wait_finished(&slot)?;
+            reap_abandoned(&mut slot);
+            assert!(matches!(slot, ProbeSlot::Poisoned));
+            reap_abandoned(&mut slot);
+            assert!(matches!(slot, ProbeSlot::Poisoned));
+        }
+        Ok(())
+    }
+    #[test]
+    fn successful_abandoned_probe_releases_only_after_actual_join() -> io::Result<()> {
+        let cancel = Arc::new(AtomicBool::new(true));
         let (finish, wait) = std::sync::mpsc::channel();
         let worker = thread::spawn(move || {
-            let _ = wait.recv();
-            Err(io::Error::other("synthetic test worker"))
+            wait.recv().map_err(io::Error::other)?;
+            receipt()
         });
-        let mut job = Some(ProbeJob {
+        let mut slot = ProbeSlot::Running(ProbeJob {
             id: 1,
             cancel: cancel.clone(),
             worker,
+            prewarm: None,
         });
-        cancel.store(true, Ordering::Release);
-        reap_abandoned(&mut job);
-        assert!(job.is_some());
+        reap_abandoned(&mut slot);
+        assert!(matches!(slot, ProbeSlot::Running(_)));
         finish.send(()).map_err(io::Error::other)?;
-        let deadline = Instant::now() + Duration::from_secs(1);
-        while job.as_ref().is_some_and(|j| !j.worker.is_finished()) && Instant::now() < deadline {
-            thread::sleep(Duration::from_millis(1));
-        }
-        // A completed non-abandoned result still belongs to its waiting caller.
+        wait_finished(&slot)?;
         cancel.store(false, Ordering::Release);
-        reap_abandoned(&mut job);
-        assert!(job.is_some());
+        reap_abandoned(&mut slot);
+        assert!(matches!(slot, ProbeSlot::Running(_)));
         cancel.store(true, Ordering::Release);
-        reap_abandoned(&mut job);
-        assert!(job.is_none());
+        reap_abandoned(&mut slot);
+        assert!(matches!(slot, ProbeSlot::Idle));
         Ok(())
+    }
+    #[test]
+    fn cache_boundary_expiry_device_and_direction_never_extend_original_receipt() -> io::Result<()>
+    {
+        let device = nestlink_auth::random_id();
+        let local = make_announcement(1, &device, MediaDirection::Encode, receipt()?)?;
+        let expiry = local.expires_at_unix_ms;
+        let state = ProviderState {
+            encode: Some(local.clone()),
+            ..Default::default()
+        };
+        for remaining in [60_001, 60_000, 1] {
+            let selected = cached(&state, &device, MediaDirection::Encode, expiry - remaining)
+                .ok_or_else(|| io::Error::other("valid cache rejected"))?;
+            assert_eq!(selected, local);
+            assert_eq!(
+                prewarm_needed(Some(&selected), expiry - remaining),
+                remaining <= 60_000
+            );
+        }
+        assert!(cached(&state, &device, MediaDirection::Encode, expiry).is_none());
+        assert!(
+            cached(
+                &state,
+                &nestlink_auth::random_id(),
+                MediaDirection::Encode,
+                expiry - 1
+            )
+            .is_none()
+        );
+        assert!(cached(&state, &device, MediaDirection::Decode, expiry - 1).is_none());
+        Ok(())
+    }
+    #[test]
+    fn prewarm_completion_requires_current_dispatch_and_retains_single_pending_worker()
+    -> io::Result<()> {
+        for scenario in 0..5 {
+            let state = Arc::new(Mutex::new(ProviderState::default()));
+            let fence = fence();
+            let (finish, wait) = std::sync::mpsc::channel();
+            let worker = thread::spawn(move || {
+                wait.recv().map_err(io::Error::other)?;
+                receipt()
+            });
+            let mut slot = ProbeSlot::Running(ProbeJob {
+                id: 2,
+                cancel: Arc::new(AtomicBool::new(false)),
+                worker,
+                prewarm: Some(Prewarm {
+                    state: Arc::downgrade(&state),
+                    device_id: nestlink_auth::random_id(),
+                    direction: MediaDirection::Encode,
+                    fence: fence.clone(),
+                    start: if scenario == 4 {
+                        Instant::now() - Duration::from_secs(31)
+                    } else {
+                        Instant::now()
+                    },
+                }),
+            });
+            for _ in 0..3 {
+                reap_abandoned(&mut slot);
+                assert!(matches!(&slot,ProbeSlot::Running(job) if job.id==2));
+            }
+            match scenario {
+                1 => fence.generation.store(2, Ordering::Release),
+                2 => fence.closing.store(true, Ordering::Release),
+                3 => fence.cancelled.store(true, Ordering::Release),
+                _ => {}
+            }
+            finish.send(()).map_err(io::Error::other)?;
+            wait_finished(&slot)?;
+            reap_abandoned(&mut slot);
+            assert!(matches!(slot, ProbeSlot::Idle));
+            assert_eq!(
+                state
+                    .lock()
+                    .map_err(|_| io::Error::other("fixture state poisoned"))?
+                    .encode
+                    .is_some(),
+                scenario == 0
+            );
+        }
+        Ok(())
+    }
+    #[test]
+    fn generation_exhaustion_never_saturates_or_reuses_identifier() {
+        assert_eq!(checked_next_id(7, 5), Some(8));
+        assert_eq!(checked_next_id(7, 10), Some(10));
+        assert_eq!(checked_next_id(i64::MAX as u64, 1), None);
+        assert_eq!(checked_next_id(u64::MAX, 1), None);
+        assert_eq!(checked_next_id(0, u64::MAX), None);
     }
     #[test]
     fn dropping_probe_waiter_marks_owner_for_quarantine_and_actual_join() {

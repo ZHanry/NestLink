@@ -61,8 +61,8 @@ fn media_announcement_signature_challenge_and_monotonic_withdrawal_are_enforced(
             .is_err()
     );
     assert!(
-        s.media_announcement(&p, &id, MediaDirection::Encode, 1200)
-            .is_err()
+        s.media_announcement(&p, &id, MediaDirection::Encode, 1200)?
+            .is_none()
     );
     s.revoke_device_as(&p, &random_id(), &id, 1001)?;
     assert!(

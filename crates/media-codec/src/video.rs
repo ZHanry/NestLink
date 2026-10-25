@@ -38,11 +38,41 @@ pub struct H264EncoderProbe {
 }
 
 pub enum VideoEncoder {
+    Execution {
+        broker: crate::SoftwareH264Execution,
+        last: Option<crate::ExecutionReceipt>,
+    },
     Vp8(Vp8Encoder),
     #[cfg(windows)]
     H264(H264Encoder),
 }
 impl VideoEncoder {
+    pub fn with_execution_target(target: crate::H264ExecutionTarget) -> io::Result<Self> {
+        Ok(Self::Execution {
+            broker: crate::SoftwareH264Execution::start(crate::ExecutionDirection::Encode, target)?,
+            last: None,
+        })
+    }
+    pub fn current_execution(&self) -> io::Result<Option<crate::ExecutionReceipt>> {
+        match self {
+            Self::Execution { broker, .. } => broker.current().map(Some),
+            _ => Ok(None),
+        }
+    }
+    pub fn execution_receipt(&self) -> Option<crate::ExecutionReceipt> {
+        match self {
+            Self::Execution { last, .. } => last.clone(),
+            _ => None,
+        }
+    }
+    #[cfg(windows)]
+    pub(crate) fn owner_observation(&self) -> io::Result<crate::OwnerObservation> {
+        match self {
+            Self::H264(value) => value.inner.owner_observation(),
+            _ => Err(io::Error::other("not a direct native encoder owner")),
+        }
+    }
+
     /// Create and retain this encoder on the dedicated media worker. MF owners
     /// are !Send and must be destroyed on the same thread that created them.
     pub fn new_h264(config: VideoConfig, limits: H264EncodingLimits) -> io::Result<Self> {
@@ -83,6 +113,10 @@ impl VideoEncoder {
     }
     pub fn h264_sps_info(&self) -> Option<H264SpsInfo> {
         match self {
+            Self::Execution { broker, last } => last
+                .as_ref()
+                .and_then(|_| broker.current().ok())
+                .map(|value| value.target().sps()),
             Self::Vp8(_) => None,
             #[cfg(windows)]
             Self::H264(codec) => codec.inner.sps_info(),
@@ -95,6 +129,16 @@ impl VideoEncoder {
         keyframe: bool,
     ) -> io::Result<VideoEncodeStep> {
         match self {
+            Self::Execution { broker, last } => {
+                *last = None;
+                match broker.submit_encode(bgra.to_vec(), pts, keyframe)?.wait()? {
+                    crate::ExecutionOutput::Encoded(step, receipt) => {
+                        *last = receipt;
+                        Ok(step)
+                    }
+                    _ => Err(io::Error::other("execution encode response differs")),
+                }
+            }
             Self::Vp8(codec) => Ok(VideoEncodeStep {
                 accepted: true,
                 output: Some(codec.encode(bgra, pts, keyframe)?),
@@ -122,6 +166,7 @@ impl VideoEncoder {
         keyframe: bool,
     ) -> io::Result<Option<EncodedVideo>> {
         match self {
+            Self::Execution { .. } => Ok(self.encode_step(bgra, pts, keyframe)?.output),
             Self::Vp8(codec) => codec.encode(bgra, pts, keyframe).map(Some),
             #[cfg(windows)]
             Self::H264(codec) => codec.encode(bgra, pts, keyframe),
@@ -129,6 +174,7 @@ impl VideoEncoder {
     }
     pub fn close(self) -> io::Result<()> {
         match self {
+            Self::Execution { mut broker, .. } => broker.shutdown(),
             Self::Vp8(_) => Ok(()),
             #[cfg(windows)]
             Self::H264(codec) => (*codec.inner).close(),
@@ -136,6 +182,16 @@ impl VideoEncoder {
     }
     pub fn drain_encoded(&mut self) -> io::Result<VideoEncodeStep> {
         match self {
+            Self::Execution { broker, last } => {
+                *last = None;
+                match broker.submit_drain()?.wait()? {
+                    crate::ExecutionOutput::Encoded(step, receipt) => {
+                        *last = receipt;
+                        Ok(step)
+                    }
+                    _ => Err(io::Error::other("execution drain response differs")),
+                }
+            }
             Self::Vp8(_) => Ok(VideoEncodeStep {
                 accepted: false,
                 output: None,
@@ -146,6 +202,9 @@ impl VideoEncoder {
     }
     pub fn set_bitrate(&mut self, kbps: u32) -> io::Result<()> {
         match self {
+            Self::Execution { .. } => {
+                Err(io::Error::other("signed execution bitrate is immutable"))
+            }
             Self::Vp8(codec) => codec.set_bitrate(kbps),
             #[cfg(windows)]
             Self::H264(codec) => codec.inner.set_bitrate(kbps),
@@ -153,6 +212,7 @@ impl VideoEncoder {
     }
     pub fn hardware(&self) -> bool {
         match self {
+            Self::Execution { .. } => false,
             Self::Vp8(_) => false,
             #[cfg(windows)]
             Self::H264(codec) => codec.inner.hardware(),
@@ -161,15 +221,57 @@ impl VideoEncoder {
 }
 
 pub enum VideoDecoder {
+    Execution {
+        broker: crate::SoftwareH264Execution,
+        last: Option<crate::ExecutionReceipt>,
+    },
     Vp8(Vp8Decoder),
     #[cfg(windows)]
     H264(H264Decoder),
 }
 impl VideoDecoder {
+    pub fn with_execution_target(target: crate::H264ExecutionTarget) -> io::Result<Self> {
+        Ok(Self::Execution {
+            broker: crate::SoftwareH264Execution::start(crate::ExecutionDirection::Decode, target)?,
+            last: None,
+        })
+    }
+    pub fn current_execution(&self) -> io::Result<Option<crate::ExecutionReceipt>> {
+        match self {
+            Self::Execution { broker, .. } => broker.current().map(Some),
+            _ => Ok(None),
+        }
+    }
+    pub fn execution_receipt(&self) -> Option<crate::ExecutionReceipt> {
+        match self {
+            Self::Execution { last, .. } => last.clone(),
+            _ => None,
+        }
+    }
+    pub fn close(self) -> io::Result<()> {
+        match self {
+            Self::Execution { mut broker, .. } => broker.shutdown(),
+            Self::Vp8(_) => Ok(()),
+            #[cfg(windows)]
+            Self::H264(value) => (*value.inner).close(),
+        }
+    }
+    #[cfg(windows)]
+    pub(crate) fn owner_observation(&self) -> io::Result<crate::OwnerObservation> {
+        match self {
+            Self::H264(value) => value.inner.owner_observation(),
+            _ => Err(io::Error::other("not a direct native decoder owner")),
+        }
+    }
+
     /// Reuse an H.264 transform after discarding buffered references. Other
     /// backends request recreation. Callers must wait for an independent IDR.
     pub fn reset_for_keyframe(&mut self) -> io::Result<bool> {
         match self {
+            Self::Execution { broker, last } => {
+                *last = None;
+                broker.reset().map(|()| true)
+            }
             Self::Vp8(_) => Ok(false),
             #[cfg(windows)]
             Self::H264(codec) => codec.inner.reset_for_keyframe().map(|()| true),
@@ -222,6 +324,18 @@ impl VideoDecoder {
     }
     pub fn decode(&mut self, packet: &[u8], pts: u64) -> io::Result<Option<(Vec<u8>, u64)>> {
         match self {
+            Self::Execution { broker, last } => {
+                *last = None;
+                match broker.submit_decode(packet.to_vec(), pts)?.wait()? {
+                    crate::ExecutionOutput::Decoded(output) => {
+                        Ok(output.map(|(pixels, pts, receipt)| {
+                            *last = Some(receipt);
+                            (pixels, pts)
+                        }))
+                    }
+                    _ => Err(io::Error::other("execution decode response differs")),
+                }
+            }
             Self::Vp8(codec) => codec.decode(packet).map(|pixels| Some((pixels, pts))),
             #[cfg(windows)]
             Self::H264(codec) => codec.decode(packet, pts),
@@ -229,6 +343,7 @@ impl VideoDecoder {
     }
     pub fn hardware(&self) -> bool {
         match self {
+            Self::Execution { .. } => false,
             Self::Vp8(_) => false,
             #[cfg(windows)]
             Self::H264(codec) => codec.inner.hardware(),

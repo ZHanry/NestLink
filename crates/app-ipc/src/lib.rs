@@ -595,6 +595,19 @@ async fn serve_requests(
                         )
                         .await,
                 },
+                Command::GetLocalServiceLeaseObservation {
+                    request: observation_request,
+                } => match core
+                    .local_service_lease_observation(
+                        connection.runtime_id().to_owned(),
+                        request.expected_generation,
+                        observation_request,
+                    )
+                    .await
+                {
+                    Ok(observation) => Reply::LocalServiceLeaseObservation { observation },
+                    Err(error) => rejection(error),
+                },
                 Command::PreviewLocalServiceHost {
                     service_id,
                     service_revision,

@@ -6,6 +6,9 @@ mod native_network;
 pub use action::*;
 pub use model::*;
 pub use native_network::*;
+pub use nestlink_protocol::service_plane::observation::{
+    ServiceLeaseObservation, ServiceLeaseObservationRequest,
+};
 
 #[cfg(not(target_arch = "wasm32"))]
 mod browser_host;

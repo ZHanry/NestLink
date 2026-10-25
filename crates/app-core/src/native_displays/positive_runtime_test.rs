@@ -106,18 +106,25 @@ fn key(host: bool) -> NativeSessionKey {
 struct ActualEncoder {
     requests: Option<std::sync::mpsc::Sender<()>>,
     packets: std::sync::mpsc::Receiver<
-        io::Result<(EncodedVideo, nestlink_protocol::media_format::VideoFormat)>,
+        io::Result<(
+            EncodedVideo,
+            nestlink_protocol::media_format::VideoFormat,
+            nestlink_media_codec::ExecutionReceipt,
+        )>,
     >,
     worker: Option<std::thread::JoinHandle<io::Result<()>>>,
 }
 impl ActualEncoder {
-    fn start(config: VideoConfig, target: nestlink_protocol::media_format::VideoFormat) -> Self {
+    fn start(
+        config: VideoConfig,
+        target: nestlink_protocol::media_format::VideoFormat,
+        pts_base: u64,
+    ) -> Self {
         let (requests, receive) = std::sync::mpsc::channel();
         let (send, packets) = std::sync::mpsc::channel();
         let worker = std::thread::spawn(move || {
-            let mut encoder = VideoEncoder::new_h264_software(
-                config,
-                nestlink_media_session::software_h264_execution_limits(target)?,
+            let mut encoder = VideoEncoder::with_execution_target(
+                nestlink_media_session::h264_execution_target(target, config)?,
             )?;
             let mut prepare = nestlink_media_session::LegacyPrepare::new(
                 nestlink_media_codec::VideoCodec::H264Baseline,
@@ -132,14 +139,20 @@ impl ActualEncoder {
                     for _ in 0..256 {
                         let step = encoder.encode_step(
                             &pixels,
-                            1 + accepted * 90_000 / u64::from(config.fps),
+                            pts_base + accepted * 90_000 / u64::from(config.fps),
                             true,
                         )?;
                         accepted += u64::from(step.accepted);
                         if let Some(packet) = step.output {
                             let sps = prepare.validate(&packet.data, packet.keyframe)?;
                             let format = prepare.configured(config, sps)?;
-                            return Ok((packet, format));
+                            return Ok((
+                                packet,
+                                format,
+                                encoder.execution_receipt().ok_or_else(|| {
+                                    io::Error::other("actual output lacks execution receipt")
+                                })?,
+                            ));
                         }
                     }
                     Err(io::Error::other("actual software encoder produced no AU"))
@@ -156,7 +169,13 @@ impl ActualEncoder {
             worker: Some(worker),
         }
     }
-    fn next(&self) -> TestResult<(EncodedVideo, nestlink_protocol::media_format::VideoFormat)> {
+    fn next(
+        &self,
+    ) -> TestResult<(
+        EncodedVideo,
+        nestlink_protocol::media_format::VideoFormat,
+        nestlink_media_codec::ExecutionReceipt,
+    )> {
         self.requests.as_ref().ok_or("encoder closed")?.send(())?;
         Ok(self.packets.recv_timeout(Duration::from_secs(10))??)
     }
@@ -419,6 +438,7 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
             presentation: receiver.presentation(),
         })));
     let video = Arc::new(NativeVideoRoute {
+        execution: Mutex::new(None),
         request_id: nestlink_session::MEDIA_REGRESSION_REQUEST_ID.into(),
         connection_generation: 9,
         sender: host_channels.sender(),
@@ -477,9 +497,14 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     until(|| Ok(host.native_displays(&session_binding)?.selected.as_ref() == Some(&selection)))
         .await?;
     assert!(video.gate.is_active()); // Actual encoder may progress before NLMF ACK.
-    let encoder =
-        ActualEncoder::start(config, *set.formats().first().ok_or("empty signed target")?);
-    let (first, actual) = encoder.next()?;
+    let encoder = ActualEncoder::start(
+        config,
+        *set.formats().first().ok_or("empty signed target")?,
+        1,
+    );
+    let (first, actual, first_execution) = encoder.next()?;
+    host.register_native_video_execution(&session_binding, first_execution.clone())
+        .await?;
     assert!(first.keyframe);
     assert!(set.contains(&actual));
     let source = NativeVideoBinding {
@@ -555,25 +580,57 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
         host.propose_native_video_format(&session_binding, actual)
             .await?
     );
-    host.send_native_video_frame(
+    assert!(
+        host.send_native_video_frame(
+            &session_binding,
+            source,
+            first.pts_90khz,
+            first.keyframe,
+            first.data.clone()
+        )
+        .await
+        .is_err()
+    );
+    let mut altered = first.data.clone();
+    if let Some(byte) = altered.first_mut() {
+        *byte ^= 1;
+    }
+    assert!(
+        host.send_native_video_execution_frame(
+            &session_binding,
+            source,
+            first.pts_90khz,
+            first.keyframe,
+            false,
+            altered,
+            first_execution.clone()
+        )
+        .await
+        .is_err()
+    );
+    host.send_native_video_execution_frame(
         &session_binding,
         source,
         first.pts_90khz,
         first.keyframe,
+        false,
         first.data,
+        first_execution.clone(),
     )
     .await?;
     let mut decoded = None;
     // Some software decoders buffer; submit additional real independent IDRs.
     for _ in 0..8 {
-        let (packet, receipt) = encoder.next()?;
+        let (packet, receipt, execution) = encoder.next()?;
         assert_eq!(receipt, actual);
-        host.send_native_video_frame(
+        host.send_native_video_execution_frame(
             &session_binding,
             source,
             packet.pts_90khz,
             packet.keyframe,
+            false,
             packet.data,
+            execution,
         )
         .await?;
         tokio::time::sleep(Duration::from_millis(35)).await;
@@ -584,7 +641,13 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
             break;
         }
     }
-    let frame = decoded.ok_or("actual software AU produced no decoded pixels")?;
+    let frame = decoded.ok_or_else(|| {
+        format!(
+            "actual software AU produced no decoded pixels; receiver={:?}; stats={:?}",
+            receiver.monitor().status(),
+            receiver.stats()
+        )
+    })?;
     assert!(!frame.hardware_decode);
     assert_eq!((frame.width, frame.height), (config.width, config.height));
     assert_eq!(frame.epoch.connection, 9);
@@ -624,10 +687,123 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
             == Some(&request))
     })
     .await?;
-    let (packet, receipt) = encoder.next()?;
+    let (packet, receipt, execution) = encoder.next()?;
     assert_eq!(receipt, actual);
-    host.send_native_video_recovery_frame(&session_binding, source, packet.pts_90khz, packet.data)
+    let next_start = packet.pts_90khz + 3000;
+    host.send_native_video_execution_frame(
+        &session_binding,
+        source,
+        packet.pts_90khz,
+        packet.keyframe,
+        true,
+        packet.data,
+        execution,
+    )
+    .await?;
+    let decoder_before =
+        controller.native_media_execution(&session_binding, MediaDirection::Decode)?;
+    let encoder_before = host.native_media_execution(&session_binding, MediaDirection::Encode)?;
+    encoder.close()?;
+    assert!(encoder_before.retired_joined());
+    assert!(encoder_before.check_current().is_err());
+    assert!(decoder_before.check_current().is_ok()); // Encode cannot retire Decode's slot.
+    let encoder = ActualEncoder::start(config, actual, next_start);
+    let (fresh, receipt, fresh_execution) = encoder.next()?;
+    assert_eq!(receipt, actual);
+    assert!(fresh_execution.identity()?.generation() > encoder_before.identity()?.generation());
+    host.register_native_video_execution(&session_binding, fresh_execution.clone())
         .await?;
+    assert!(
+        !host
+            .propose_native_video_format(&session_binding, actual)
+            .await?
+    );
+    until(|| {
+        Ok(barrier
+            .ack
+            .lock()
+            .map_err(|_| "ACK barrier poisoned")?
+            .as_ref()
+            .is_some_and(|ack| ack.format_epoch > confirmed.format_epoch))
+    })
+    .await?;
+    assert!(
+        host.native_confirmed_video_format(&session_binding)?
+            .is_none()
+    );
+    barrier.release.add_permits(1);
+    until(|| {
+        Ok(host
+            .native_confirmed_video_format(&session_binding)?
+            .is_some_and(|value| value.format_epoch > confirmed.format_epoch))
+    })
+    .await?;
+    let replacement = host
+        .native_confirmed_video_format(&session_binding)?
+        .ok_or("replacement ACK absent")?;
+    assert_eq!(replacement.format, actual);
+    let decoder_after =
+        controller.native_media_execution(&session_binding, MediaDirection::Decode)?;
+    assert!(decoder_before.retired_joined());
+    assert!(decoder_before.check_current().is_err());
+    assert!(decoder_after.identity()?.generation() > decoder_before.identity()?.generation());
+    assert!(
+        host.send_native_video_execution_frame(
+            &session_binding,
+            source,
+            fresh.pts_90khz,
+            fresh.keyframe,
+            false,
+            fresh.data.clone(),
+            first_execution
+        )
+        .await
+        .is_err()
+    );
+    host.send_native_video_execution_frame(
+        &session_binding,
+        source,
+        fresh.pts_90khz,
+        fresh.keyframe,
+        false,
+        fresh.data,
+        fresh_execution,
+    )
+    .await?;
+    let mut replacement_pixels = false;
+    for _ in 0..8 {
+        let (packet, receipt, execution) = encoder.next()?;
+        assert_eq!(receipt, actual);
+        host.send_native_video_execution_frame(
+            &session_binding,
+            source,
+            packet.pts_90khz,
+            packet.keyframe,
+            false,
+            packet.data,
+            execution,
+        )
+        .await?;
+        tokio::time::sleep(Duration::from_millis(35)).await;
+        if let Some(frame) =
+            controller.poll_native_video_for_selection(&session_binding, &selection)?
+        {
+            assert!(!frame.hardware_decode);
+            assert_eq!((frame.width, frame.height), (config.width, config.height));
+            assert!(frame.pixels.chunks_exact(4).all(|p| p[0].abs_diff(16) <= 40
+                && p[1].abs_diff(128) <= 40
+                && p[2].abs_diff(240) <= 40
+                && p[3] == 255));
+            replacement_pixels = true;
+            break;
+        }
+    }
+    assert!(
+        replacement_pixels,
+        "replacement actual owner produced no pixels; receiver={:?}; stats={:?}",
+        receiver.monitor().status(),
+        receiver.stats()
+    );
     let mut stale = session_binding.clone();
     stale.connection_generation = 8;
     assert!(host.native_displays(&stale).is_err());

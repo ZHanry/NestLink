@@ -1,7 +1,7 @@
 //! Shared bounded dispatch for independent QUIC channels and framed TLS/WSS.
 use crate::{AuthorizedConnection, LeaseControl, RemoteError, StopReport, lease_io, permission};
 use nestlink_session::StopReason;
-use nestlink_transport_stream::{Channel, Frame, read_frame, write_frame};
+use nestlink_transport_stream::{Channel, Frame, write_frame};
 use std::{
     collections::VecDeque,
     io,
@@ -469,6 +469,7 @@ impl Queue {
 /// Owns both transport halves in independent tasks. Callers never interrupt
 /// a partial wire frame by dropping a send/receive future.
 pub struct ChannelRuntime {
+    renewal: Option<crate::native_renewal::NativeRenewalPort>,
     lease: LeaseControl,
     incoming: Arc<Queue>,
     outgoing: Arc<Queue>,
@@ -769,7 +770,12 @@ impl<R: AsyncRead + Unpin + Send + 'static, W: AsyncWrite + Unpin + Send + 'stat
             mut read,
             mut write,
             lease,
+            renewal,
         } = self;
+        let (renewal, control_in, mut control_out) = match renewal {
+            Some((port, io)) => (Some(port), Some(io.incoming), Some(io.outgoing)),
+            None => (None, None, None),
+        };
         let incoming = Queue::new();
         let outgoing = Queue::new();
         let reader_queue = incoming.clone();
@@ -778,7 +784,30 @@ impl<R: AsyncRead + Unpin + Send + 'static, W: AsyncWrite + Unpin + Send + 'stat
             let _scope = StopOnDrop(reader_lease.clone());
             let result = async {
                 loop {
-                    let frame = lease_io(read_frame(&mut read), &reader_lease).await?;
+                    let frame = lease_io(
+                        nestlink_transport_stream::read_frame_control_bounded(
+                            &mut read,
+                            nestlink_protocol::native_renewal::MAX_BYTES,
+                        ),
+                        &reader_lease,
+                    )
+                    .await?;
+                    if frame.channel == Channel::Control {
+                        let tx = control_in.as_ref().ok_or_else(|| {
+                            io::Error::new(
+                                io::ErrorKind::InvalidData,
+                                "unnegotiated native control",
+                            )
+                        })?;
+                        reader_lease.remaining()?;
+                        tx.try_send(frame.payload).map_err(|_| {
+                            io::Error::new(
+                                io::ErrorKind::InvalidData,
+                                "native control queue overflow or closed",
+                            )
+                        })?;
+                        continue;
+                    }
                     reader_lease.authorize(frame.channel)?;
                     reader_queue
                         .put(&reader_lease, frame.channel, &frame.payload)
@@ -796,7 +825,15 @@ impl<R: AsyncRead + Unpin + Send + 'static, W: AsyncWrite + Unpin + Send + 'stat
             let _scope = StopOnDrop(writer_lease.clone());
             let result = async {
                 loop {
-                    let mut queued = writer_queue.take_queued(&writer_lease, None).await?;
+                    let mut queued = tokio::select! { biased;
+                        bytes=async {match &mut control_out {Some(rx)=>rx.recv().await,None=>std::future::pending().await}} => {
+                            let bytes=bytes.ok_or_else(||io::Error::new(io::ErrorKind::BrokenPipe,"native control owner closed"))?;
+                            writer_lease.remaining()?;
+                            lease_io(write_frame(&mut write,Channel::Control,&bytes),&writer_lease).await?;
+                            continue;
+                        }
+                        queued=writer_queue.take_queued(&writer_lease,None)=>queued?,
+                    };
                     writer_lease.authorize(queued.frame.channel)?;
                     queued.check_file_delivery();
                     if !queued.check_delivery() {
@@ -833,6 +870,7 @@ impl<R: AsyncRead + Unpin + Send + 'static, W: AsyncWrite + Unpin + Send + 'stat
             result
         });
         ChannelRuntime {
+            renewal,
             lease,
             incoming,
             outgoing,
@@ -862,6 +900,7 @@ impl ChannelRuntime {
         endpoint: Option<quinn::Endpoint>,
     ) -> Self {
         Self {
+            renewal: None,
             lease,
             incoming,
             outgoing,
@@ -873,6 +912,17 @@ impl ChannelRuntime {
             cleanup_deadline: None,
             cleanup_failure: None,
         }
+    }
+    pub(crate) fn with_native_renewal(
+        mut self,
+        port: Option<crate::native_renewal::NativeRenewalPort>,
+    ) -> Self {
+        self.renewal = port;
+        self
+    }
+    /// One native coordinator exclusively claims the authenticated control port.
+    pub fn take_native_renewal_port(&mut self) -> Option<crate::native_renewal::NativeRenewalPort> {
+        self.renewal.take()
     }
     pub fn mode(&self) -> TransportMode {
         self.mode

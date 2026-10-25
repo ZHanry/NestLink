@@ -321,9 +321,9 @@ mod password_only_migration {
         store
             .connection
             .execute("DROP TABLE browser_host_readiness", [])?;
-        // Reconstruct v20 without objects introduced by the current v23.
+        // Reconstruct v20 without objects introduced by later migrations.
         store.connection.execute_batch(
-            "DROP TABLE management_refresh_receipts; DROP INDEX remote_pending_inbox;",
+            "DROP TABLE remote_media_scopes; DROP TABLE device_media_announcements; DROP TABLE management_refresh_receipts; DROP INDEX remote_pending_inbox;",
         )?;
         store.connection.pragma_update(None, "user_version", 20)?;
         let Store { connection, .. } = store;

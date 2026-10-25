@@ -205,6 +205,19 @@ impl InstallationIdentity {
                 ContractError::new(ErrorCode::InternalError, "installation key encoding failed")
             })
     }
+    /// Separate domain; cannot be replayed as a management DeviceAction proof.
+    pub fn sign_native_renewal(
+        &self,
+        envelope: &nestlink_protocol::native_renewal::Envelope,
+    ) -> Result<[u8; 64], ContractError> {
+        Ok(self
+            .key
+            .sign(&domain_message(
+                b"NestLink/v15/native-renewal/v1\0",
+                &envelope.signing_bytes()?,
+            ))
+            .to_bytes())
+    }
     pub fn sign_action(
         &self,
         claims: &nestlink_protocol::DeviceActionClaims,
@@ -452,6 +465,27 @@ fn validate_proof(claims: &EndpointProofClaims) -> Result<(), ContractError> {
     Ok(())
 }
 
+pub fn verify_native_renewal(
+    envelope: &nestlink_protocol::native_renewal::Envelope,
+    key: &[u8; 32],
+) -> Result<(), ContractError> {
+    let key = VerifyingKey::from_bytes(key).map_err(|_| {
+        ContractError::new(ErrorCode::IdentityMismatch, "invalid renewal endpoint key")
+    })?;
+    key.verify_strict(
+        &domain_message(
+            b"NestLink/v15/native-renewal/v1\0",
+            &envelope.signing_bytes()?,
+        ),
+        &Signature::from_bytes(&envelope.signature),
+    )
+    .map_err(|_| {
+        ContractError::new(
+            ErrorCode::IdentityMismatch,
+            "invalid renewal endpoint signature",
+        )
+    })
+}
 fn domain_message(domain: &[u8], bytes: &[u8]) -> Vec<u8> {
     let mut message = Vec::with_capacity(domain.len() + bytes.len());
     message.extend_from_slice(domain);
@@ -475,4 +509,41 @@ fn verify_signature(
     let signature = Signature::from_slice(signature).map_err(|_| invalid())?;
     key.verify_strict(&domain_message(domain, message), &signature)
         .map_err(|_| invalid())
+}
+
+#[cfg(test)]
+mod native_renewal_signature_tests {
+    use super::*;
+    #[test]
+    fn renewal_signature_rejects_changed_round_identity_and_payload() -> Result<(), ContractError> {
+        use nestlink_protocol::native_renewal::{Envelope, Kind};
+        let identity = InstallationIdentity::from_seed([21; 32]);
+        let mut envelope = Envelope {
+            kind: Kind::Applied,
+            session: [1; 16],
+            deployment: [2; 32],
+            epoch: 1,
+            generation: 1,
+            old_sequence: 1,
+            round: [3; 32],
+            old_permit: [4; 32],
+            payload: vec![5; 32],
+            signature: [0; 64],
+        };
+        envelope.signature = identity.sign_native_renewal(&envelope)?;
+        verify_native_renewal(&envelope, &identity.public_key())?;
+        assert!(
+            verify_native_renewal(
+                &envelope,
+                &InstallationIdentity::from_seed([22; 32]).public_key()
+            )
+            .is_err()
+        );
+        envelope.round[0] ^= 1;
+        assert!(verify_native_renewal(&envelope, &identity.public_key()).is_err());
+        envelope.round[0] ^= 1;
+        envelope.payload[0] ^= 1;
+        assert!(verify_native_renewal(&envelope, &identity.public_key()).is_err());
+        Ok(())
+    }
 }

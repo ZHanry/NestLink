@@ -8,6 +8,7 @@ use crate::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::net::{IpAddr, SocketAddr};
+pub mod observation;
 pub mod publication;
 
 pub const SERVICE_LEASE_MS: u64 = 10_000;

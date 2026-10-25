@@ -131,6 +131,8 @@ pub mod native_recovery;
 #[cfg(not(target_arch = "wasm32"))]
 mod native_relay;
 #[cfg(not(target_arch = "wasm32"))]
+pub mod native_renewal;
+#[cfg(not(target_arch = "wasm32"))]
 mod node_relay;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod upload;
@@ -1150,6 +1152,34 @@ impl Sdk {
             .await?;
         self.verify_response(id, response)
     }
+    /// Read an already-issued live native lease, checking the bound local key.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn current_native_permit(
+        &self,
+        identity: &DeviceIdentity,
+        id: &str,
+    ) -> Result<VerifiedPermit, SdkError> {
+        let response: PermitResponse = self
+            .required(
+                Method::GET,
+                &format!("{}/permit", resource("remote", id)?),
+                None::<&()>,
+            )
+            .await?;
+        let permit = self.verify_response(id, response)?;
+        let c = permit.claims();
+        let expected = if identity.device_id == c.controller_device_id {
+            &c.controller_key_sha256
+        } else if identity.device_id == c.host_device_id {
+            &c.host_key_sha256
+        } else {
+            return Err(SdkError::Trust);
+        };
+        if expected != &identity.identity.fingerprint() {
+            return Err(SdkError::Trust);
+        }
+        Ok(permit)
+    }
     /// Confirm the current controller permit after a signed session
     /// reconnection. The initial issuance endpoint is intentionally restricted
     /// to lease sequence 1 and cannot validate a successor permit.
@@ -1271,6 +1301,28 @@ impl Sdk {
             )
             .await?;
         self.verify_response(&view.id, response)
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(crate) async fn submit_native_renewal(
+        &self,
+        id: &str,
+        sequence: u64,
+        controller_signature: String,
+        host_signature: String,
+    ) -> Result<VerifiedPermit, SdkError> {
+        let body = RenewalSubmission {
+            lease_sequence: sequence,
+            controller_signature,
+            host_signature,
+        };
+        let response: PermitResponse = self
+            .required(
+                Method::POST,
+                &format!("{}/renew", resource("remote", id)?),
+                Some(&body),
+            )
+            .await?;
+        self.verify_response(id, response)
     }
     fn verify_response(
         &self,

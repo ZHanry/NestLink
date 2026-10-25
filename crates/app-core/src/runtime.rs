@@ -19,8 +19,11 @@ mod native_inbox;
 mod native_network_control;
 #[path = "runtime/native_recovery.rs"]
 mod native_recovery;
+mod native_renewal;
 #[path = "runtime/service_host.rs"]
 mod service_host;
+#[path = "runtime/service_observation.rs"]
+mod service_observation;
 mod session_refresh;
 use service_host::{
     PREVIEW_LIFETIME, PREVIEW_LIFETIME_MS, PendingServiceHostPreview, SERVICE_HOST_CLEANUP_POLL,
@@ -559,6 +562,7 @@ impl DeliveryGuard for HostVideoDeliveryGuard {
     }
 }
 struct NativeVideoRoute {
+    execution: Mutex<Option<nestlink_media_codec::ExecutionReceipt>>,
     request_id: String,
     connection_generation: u64,
     sender: ChannelSender,
@@ -570,13 +574,18 @@ struct NativeVideoRoute {
     timing: SessionMediaTiming,
 }
 struct NativeVideoDeliveryGuard {
+    execution: Option<nestlink_media_codec::ExecutionReceipt>,
     display: HostVideoDeliveryGuard,
     format: HostVideoDeliveryGuard,
 }
 impl DeliveryGuard for NativeVideoDeliveryGuard {
     fn check(&self) -> io::Result<()> {
         self.display.check()?;
-        self.format.check()
+        self.format.check()?;
+        if let Some(receipt) = &self.execution {
+            receipt.check_current()?;
+        }
+        Ok(())
     }
 }
 struct GuardedNativeCapture<D: CaptureDevice> {
@@ -651,6 +660,11 @@ struct NativeVideoPresentationRoute {
 }
 impl NativeVideoRoute {
     fn retire(&self) {
+        if let Ok(execution) = self.execution.lock() {
+            if let Some(execution) = execution.as_ref() {
+                execution.fence();
+            }
+        }
         self.gate.retire();
         self.format_gate.retire();
         let _ = self.sender.discard_video();
@@ -1208,6 +1222,7 @@ impl CoreHandle {
             keyframe,
             false,
             Zeroizing::new(encoded_frame),
+            None,
         )
     }
     /// Re-encode the latest locally approved pixels for authenticated feedback.
@@ -1226,8 +1241,35 @@ impl CoreHandle {
             true,
             true,
             Zeroizing::new(encoded_frame),
+            None,
         )
     }
+    /// A v2 AU must originate from the current dedicated actual owner.
+    // Mirrors existing native frame entry points; the sealed receipt is an
+    // additional independent authorization argument, not optional metadata.
+    #[allow(clippy::too_many_arguments)]
+    pub fn send_native_video_execution_frame(
+        &self,
+        session_binding: &NativeSessionBinding,
+        source_binding: NativeVideoBinding,
+        pts_90khz: u64,
+        keyframe: bool,
+        repeated_source: bool,
+        encoded_frame: Vec<u8>,
+        execution: nestlink_media_codec::ExecutionReceipt,
+    ) -> impl Future<Output = Result<(), NativeVideoError>> + '_ {
+        self.send_native_video_frame_inner(
+            session_binding.clone(),
+            source_binding,
+            pts_90khz,
+            keyframe,
+            repeated_source,
+            Zeroizing::new(encoded_frame),
+            Some(execution),
+        )
+    }
+    // Shared by the existing frame APIs and the sealed execution entry point.
+    #[allow(clippy::too_many_arguments)]
     async fn send_native_video_frame_inner(
         &self,
         session_binding: NativeSessionBinding,
@@ -1236,6 +1278,7 @@ impl CoreHandle {
         keyframe: bool,
         repeated_source: bool,
         mut encoded_frame: Zeroizing<Vec<u8>>,
+        execution: Option<nestlink_media_codec::ExecutionReceipt>,
     ) -> Result<(), NativeVideoError> {
         // The public entry points create the guard synchronously, so dropping
         // an unpolled or cancelled producer future also clears the frame.
@@ -1251,6 +1294,28 @@ impl CoreHandle {
             .native_confirmed_video_format(&session_binding)
             .map_err(|_| NativeVideoError::Unauthorized)?;
         if let Some(formats) = &negotiated {
+            let receipt = execution.as_ref().ok_or(NativeVideoError::Unauthorized)?;
+            receipt
+                .check_encoded(pts_90khz, keyframe, &encoded_frame)
+                .map_err(|_| NativeVideoError::Unauthorized)?;
+            let registered = route
+                .execution
+                .lock()
+                .map_err(|_| NativeVideoError::Transport)?
+                .clone()
+                .ok_or(NativeVideoError::Unauthorized)?;
+            registered
+                .check_current()
+                .map_err(|_| NativeVideoError::Unauthorized)?;
+            if registered
+                .identity()
+                .map_err(|_| NativeVideoError::Unauthorized)?
+                != receipt
+                    .identity()
+                    .map_err(|_| NativeVideoError::Unauthorized)?
+            {
+                return Err(NativeVideoError::Unauthorized);
+            }
             let value = confirmed
                 .as_ref()
                 .filter(|v| {
@@ -1259,6 +1324,8 @@ impl CoreHandle {
                         && formats.contains(&v.format)
                 })
                 .ok_or(NativeVideoError::Unauthorized)?;
+            nestlink_media_session::execution_receipt_matches(receipt, value.format)
+                .map_err(|_| NativeVideoError::Unauthorized)?;
             if !route.format_gate.is_active() || value.format_epoch == 0 {
                 return Err(NativeVideoError::Unauthorized);
             }
@@ -1283,6 +1350,7 @@ impl CoreHandle {
             (binding, sequence, deadline)
         };
         let delivery_guard = Arc::new(NativeVideoDeliveryGuard {
+            execution,
             display: route.gate.guard(),
             format: route.format_gate.guard(),
         });
@@ -1870,6 +1938,13 @@ enum Control {
         reply: oneshot::Sender<Result<(), BrowserHostDisplayError>>,
         _permit: OwnedSemaphorePermit,
     },
+    LocalServiceLeaseObservation {
+        runtime_id: String,
+        expected_generation: u64,
+        request: crate::ServiceLeaseObservationRequest,
+        reply: oneshot::Sender<Result<crate::ServiceLeaseObservation, SubmitError>>,
+        _permit: OwnedSemaphorePermit,
+    },
     PreviewLocalServiceHost {
         request: Box<crate::LocalServiceHostRequest>,
         reply: oneshot::Sender<Result<crate::LocalServiceHostPreview, SubmitError>>,
@@ -1999,6 +2074,7 @@ enum BrowserHostEvent {
 #[derive(Clone, Copy)]
 enum NativePermitState {
     Current,
+    Renewed(u64),
     Revoked,
     Expired,
     Retry,
@@ -2850,6 +2926,21 @@ impl Actor {
                 };
                 let _ = reply.send(result);
             }
+            Control::LocalServiceLeaseObservation {
+                runtime_id,
+                expected_generation,
+                request,
+                reply,
+                ..
+            } => {
+                let result = self.local_service_lease_observation(
+                    &runtime_id,
+                    expected_generation,
+                    &request,
+                );
+                let _ = reply.send(result);
+                return; // Read-only evidence never changes or republishes the global snapshot.
+            }
             Control::PreviewLocalServiceHost { request, reply, .. } => {
                 let result = self.preview_local_service_host(*request);
                 let _ = reply.send(result);
@@ -3145,6 +3236,9 @@ impl Actor {
                 }
                 Control::BrowserHostDisplayApproval { reply, .. } => {
                     let _ = reply.send(Err(BrowserHostDisplayError::Stopped));
+                }
+                Control::LocalServiceLeaseObservation { reply, .. } => {
+                    let _ = reply.send(Err(SubmitError::Stopped));
                 }
                 Control::PreviewLocalServiceHost { reply, .. } => {
                     let _ = reply.send(Err(SubmitError::Stopped));
@@ -4199,6 +4293,9 @@ impl Actor {
             return;
         };
         self.native_poll_deadline = None;
+        let control = self.native_session_control.clone();
+        let config = self.native.clone();
+        let shared = self.shared.clone();
         let cancellation = Arc::new(AtomicBool::new(false));
         let fence = sdk_call::DispatchFence {
             generation: self.shared.generation.clone(),
@@ -4218,7 +4315,16 @@ impl Actor {
             native_connection_generation: None,
             service_host_runtime_id: None,
             future: Box::pin(async move {
-                let result = poll_native_permit(&client, &identity, &key, &fence).await;
+                let result = native_renewal::poll(
+                    &client,
+                    &identity,
+                    &key,
+                    &fence,
+                    control.as_ref(),
+                    config.as_ref(),
+                    &shared,
+                )
+                .await;
                 Job::NativePermitPolled {
                     client,
                     key,
@@ -4861,6 +4967,7 @@ impl Actor {
                     }));
                 let video_route = if accepted && key.host_view_authorized {
                     Some(Arc::new(NativeVideoRoute {
+                        execution: Mutex::new(None),
                         request_id: key.request_id.clone(),
                         connection_generation: key.connection_generation,
                         sender: established.session.channels.sender(),
@@ -4975,7 +5082,8 @@ impl Actor {
                 self.native_session_key = Some(key.clone());
                 self.native_session_control = Some(control);
                 self.native_recovery = None;
-                let stop_key = key.clone();
+                let mut stop_key = key.clone();
+                let stop_control = self.native_session_control.clone();
                 let audio_owner_store = self.shared.clone();
                 self.native_session_task = Some(tokio::spawn(async move {
                     let endpoint = established.endpoint;
@@ -4983,6 +5091,9 @@ impl Actor {
                     let mut session = established.session;
                     let (endpoint, stopped) =
                         retain_owner_until_stopped(endpoint, session.channels.wait_stopped()).await;
+                    if let Some(control) = stop_control {
+                        stop_key.lease_sequence = control.lease_sequence();
+                    }
                     // Keep the decoder owner alive until the transport's
                     // actual stop receipt; its presentation handle is inert
                     // after lease stop. Thread cleanup runs off the actor.
@@ -5265,6 +5376,22 @@ impl Actor {
             self.retire = true;
         } else if same_session && active.cancelled.is_none() {
             match result {
+                NativePermitState::Renewed(sequence) => {
+                    if let Some(current) = self
+                        .native_session_key
+                        .as_mut()
+                        .filter(|current| **current == key)
+                    {
+                        current.lease_sequence = sequence;
+                    }
+                    if let Some(view) = self.view.native_session.data.as_ref() {
+                        let mut view = view.as_ref().clone();
+                        view.lease_sequence = sequence;
+                        self.view.native_session.data = Some(Arc::new(view));
+                    }
+                    self.native_poll_deadline =
+                        Some(tokio::time::Instant::now() + NATIVE_PERMIT_POLL_INTERVAL);
+                }
                 NativePermitState::Current => {
                     self.native_poll_deadline =
                         Some(tokio::time::Instant::now() + NATIVE_PERMIT_POLL_INTERVAL);
@@ -5410,8 +5537,7 @@ async fn poll_native_permit(
     if fence.check().is_err() {
         return NativePermitState::Revoked;
     }
-    if remote.expires_at_unix_ms <= unix_millis().unwrap_or(u64::MAX) || remote.status == "expired"
-    {
+    if remote.status == "expired" {
         return NativePermitState::Expired;
     }
     if remote.status != "approved"
@@ -5420,13 +5546,10 @@ async fn poll_native_permit(
     {
         return NativePermitState::Revoked;
     }
-    let permit = if identity.device_id == remote.controller_device_id {
-        client.sdk.permit(&key.request_id).await
-    } else if identity.device_id == remote.host_device_id {
-        client.sdk.host_permit(identity, &key.request_id).await
-    } else {
-        return NativePermitState::Revoked;
-    };
+    let permit = client
+        .sdk
+        .current_native_permit(identity, &key.request_id)
+        .await;
     let permit = match permit {
         Ok(permit) => permit,
         Err(error) => return classify_permit_poll_error(Failure::from(error)),

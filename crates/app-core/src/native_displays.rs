@@ -38,6 +38,7 @@ pub struct NativeDisplayState {
     pub format_sha256: [u8; 32],
 }
 struct State {
+    execution_generation: u64,
     view: NativeDisplayState,
     candidates: Option<(DisplayCatalogKey, Vec<DisplayDescriptor>)>,
     system_approved: bool,
@@ -95,6 +96,7 @@ impl NativeDisplayRoute {
             sender: channels.sender(),
             order: AsyncMutex::new(()),
             state: Mutex::new(State {
+                execution_generation: 0,
                 view: NativeDisplayState {
                     is_host: key.host_view_authorized,
                     catalog: None,
@@ -320,6 +322,11 @@ impl NativeDisplayRoute {
                 presentation.retire_external_for_format().await?;
                 presentation.prepare_format(&value)?;
                 presentation.wait_display_ready(&value.display).await?;
+                let execution = presentation
+                    .current_execution()?
+                    .ok_or_else(|| denied("format readiness lacks live decoder"))?;
+                nestlink_media_session::execution_receipt_matches(&execution, value.format)?;
+                let execution_generation = execution.identity()?.generation();
                 self.send_format(FormatEnvelope::Ack(value.clone())).await?;
                 let mut state = self
                     .state
@@ -332,6 +339,8 @@ impl NativeDisplayRoute {
                     .formats
                     .acknowledge(&value)
                     .map_err(io::Error::other)?;
+                execution.check_current()?;
+                state.execution_generation = execution_generation;
                 state.view.format_epoch = value.format_epoch;
                 state.view.format_sha256 = value.format_sha256;
                 state.deadline = None;
@@ -340,6 +349,13 @@ impl NativeDisplayRoute {
                 let _order = self.order.lock().await;
                 self.check_catalog(&value.display.catalog)?;
                 let video = self.video()?;
+                let execution = video
+                    .execution
+                    .lock()
+                    .map_err(|_| io::Error::other("execution registry poisoned"))?
+                    .clone()
+                    .ok_or_else(|| denied("format ACK lacks current execution"))?;
+                nestlink_media_session::execution_receipt_matches(&execution, value.format)?;
                 let mut state = self
                     .state
                     .lock()
@@ -350,6 +366,9 @@ impl NativeDisplayRoute {
                 value
                     .authorized(&value.display, &formats)
                     .map_err(io::Error::other)?;
+                if state.execution_generation != execution.identity()?.generation() {
+                    return Err(denied("format ACK execution generation retired"));
+                }
                 state
                     .formats
                     .acknowledge(&value)
@@ -718,7 +737,75 @@ fn validate_request(state: &State, request: &NativeDisplayRequest) -> io::Result
     }
     Ok(())
 }
+struct NativeExecutionFence(nestlink_media_codec::ExecutionReceipt);
+impl nestlink_remote::native_renewal::NativeExecutionFence for NativeExecutionFence {
+    fn with_current(&self, operation: &mut dyn FnMut() -> io::Result<()>) -> io::Result<()> {
+        self.0.with_current(operation)
+    }
+}
+fn route_execution(
+    route: &NativeDisplayRoute,
+    direction: nestlink_protocol::media_authority::MediaDirection,
+) -> io::Result<nestlink_media_codec::ExecutionReceipt> {
+    let formats = route
+        .lease
+        .media_formats()
+        .map_err(io::Error::other)?
+        .ok_or_else(|| denied("legacy session has no execution registry"))?;
+    let is_host = route
+        .state
+        .lock()
+        .map_err(|_| io::Error::other("display state poisoned"))?
+        .view
+        .is_host;
+    let execution = match direction {
+        nestlink_protocol::media_authority::MediaDirection::Encode if is_host => route
+            .video()?
+            .execution
+            .lock()
+            .map_err(|_| io::Error::other("execution registry poisoned"))?
+            .clone(),
+        nestlink_protocol::media_authority::MediaDirection::Decode if !is_host => {
+            route.presentation()?.presentation.current_execution()?
+        }
+        _ => return Err(denied("execution direction differs from endpoint")),
+    }
+    .ok_or_else(|| denied("no live execution owner"))?;
+    execution.check_current()?;
+    let format = formats
+        .formats()
+        .iter()
+        .find(|format| format.digest().ok() == Some(execution.target().format_digest()))
+        .copied()
+        .ok_or_else(|| denied("execution target outside signed scope"))?;
+    nestlink_media_session::execution_receipt_matches(&execution, format)?;
+    Ok(execution)
+}
 impl Shared {
+    pub(crate) fn native_media_execution_fence(
+        &self,
+        binding: &NativeSessionBinding,
+        direction: nestlink_protocol::media_authority::MediaDirection,
+    ) -> io::Result<Arc<dyn nestlink_remote::native_renewal::NativeExecutionFence>> {
+        if self.closing.load(Ordering::Acquire) {
+            return Err(denied("native session closing"));
+        }
+        let route = self
+            .native_displays
+            .lock()
+            .map_err(|_| io::Error::other("display route poisoned"))?
+            .as_ref()
+            .filter(|route| {
+                &route.binding == binding
+                    && route.generation == self.generation.load(Ordering::Acquire)
+            })
+            .cloned()
+            .ok_or_else(|| denied("no current native display route"))?;
+        route.check()?;
+        Ok(Arc::new(NativeExecutionFence(route_execution(
+            &route, direction,
+        )?)))
+    }
     pub(super) fn set_native_display_route(&self, route: Option<Arc<NativeDisplayRoute>>) {
         let mut current = self
             .native_displays
@@ -730,6 +817,81 @@ impl Shared {
     }
 }
 impl CoreHandle {
+    /// Live owner data, never a historical announcement or an IPC-provided UUID.
+    pub fn native_media_execution(
+        &self,
+        binding: &NativeSessionBinding,
+        direction: nestlink_protocol::media_authority::MediaDirection,
+    ) -> io::Result<nestlink_media_codec::ExecutionReceipt> {
+        let route = self.display_route(binding)?;
+        route_execution(&route, direction)
+    }
+    pub fn native_media_execution_fence(
+        &self,
+        binding: &NativeSessionBinding,
+        direction: nestlink_protocol::media_authority::MediaDirection,
+    ) -> io::Result<Arc<dyn nestlink_remote::native_renewal::NativeExecutionFence>> {
+        Ok(Arc::new(NativeExecutionFence(
+            self.native_media_execution(binding, direction)?,
+        )))
+    }
+    pub async fn register_native_video_execution(
+        &self,
+        binding: &NativeSessionBinding,
+        execution: nestlink_media_codec::ExecutionReceipt,
+    ) -> io::Result<()> {
+        let route = self.display_route(binding)?;
+        let _order = route.order.lock().await;
+        if !execution.is_encoded_output()
+            || execution.identity()?.direction() != nestlink_media_codec::ExecutionDirection::Encode
+        {
+            return Err(denied("encoder registration requires actual sealed AU"));
+        }
+        let formats = route
+            .lease
+            .media_formats()
+            .map_err(io::Error::other)?
+            .ok_or_else(|| denied("legacy execution registration"))?;
+        let format = formats
+            .formats()
+            .iter()
+            .find(|format| format.digest().ok() == Some(execution.target().format_digest()))
+            .copied()
+            .ok_or_else(|| denied("execution target outside signed scope"))?;
+        nestlink_media_session::execution_receipt_matches(&execution, format)?;
+        let video = route.video()?;
+        let _send_order = video.ordered_send().await.map_err(io::Error::other)?;
+        let mut registered = video
+            .execution
+            .lock()
+            .map_err(|_| io::Error::other("execution registry poisoned"))?;
+        if let Some(previous) = registered.as_ref() {
+            if previous.identity()? == execution.identity()? {
+                previous.check_current()?;
+                return Ok(());
+            }
+            if !previous.retired_joined() {
+                return Err(denied(
+                    "previous execution has not checked stopped and joined",
+                ));
+            }
+        }
+        let mut state = route
+            .state
+            .lock()
+            .map_err(|_| io::Error::other("display state poisoned"))?;
+        if !state.view.is_host || state.formats.pending().is_some() {
+            return Err(denied("execution replacement during pending confirmation"));
+        }
+        state.formats.cancel();
+        state.execution_generation = 0;
+        state.view.format_epoch = 0;
+        state.view.format_sha256 = [0; 32];
+        video.format_gate.pause();
+        video.sender.discard_video().map_err(io::Error::other)?;
+        *registered = Some(execution);
+        Ok(())
+    }
     pub fn native_video_encoder_backend(
         &self,
         binding: &NativeSessionBinding,
@@ -760,11 +922,24 @@ impl CoreHandle {
         if state.view.pending.is_some() || state.prepared.is_some() {
             return Ok(None);
         }
-        Ok(state
+        let confirmed = state
             .formats
             .confirmed()
             .filter(|v| state.view.selected.as_ref() == Some(&v.display))
-            .cloned())
+            .cloned();
+        let generation = state.execution_generation;
+        let direction = if state.view.is_host {
+            nestlink_protocol::media_authority::MediaDirection::Encode
+        } else {
+            nestlink_protocol::media_authority::MediaDirection::Decode
+        };
+        drop(state);
+        if confirmed.is_some()
+            && route_execution(&route, direction)?.identity()?.generation() != generation
+        {
+            return Err(denied("confirmed format execution generation retired"));
+        }
+        Ok(confirmed)
     }
     /// The caller supplies the actual same-owner parsed AU receipt. This API
     /// cannot publish a format outside the verified permit or bypass its ACK.
@@ -780,6 +955,14 @@ impl CoreHandle {
         };
         let video = route.video()?;
         let _send_order = video.ordered_send().await.map_err(io::Error::other)?;
+        let execution = video
+            .execution
+            .lock()
+            .map_err(|_| io::Error::other("execution registry poisoned"))?
+            .clone()
+            .ok_or_else(|| denied("format proposal lacks actual execution"))?;
+        nestlink_media_session::execution_receipt_matches(&execution, format)?;
+        let execution_generation = execution.identity()?.generation();
         let value = {
             let mut state = route
                 .state
@@ -817,6 +1000,7 @@ impl CoreHandle {
                 .formats
                 .stage(value.clone(), &value.display, &formats)
                 .map_err(io::Error::other)?;
+            state.execution_generation = execution_generation;
             state.view.format_epoch = 0;
             state.view.format_sha256 = [0; 32];
             video.format_gate.pause();

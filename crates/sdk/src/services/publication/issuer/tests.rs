@@ -315,3 +315,132 @@ fn issuer_refresh_rejects_scope_rotation_tampering_and_deadline_rollback() -> Re
     assert!(owner.check_live(at + 3000).is_err());
     Ok(())
 }
+
+#[test]
+fn actual_signed_lease_observation_discovers_pins_renews_and_rejects_retired_or_expired() -> Result
+{
+    use crate::services::publication::observation::{paired, sample};
+    use nestlink_protocol::service_plane::observation::ServiceLeaseObservationRequest;
+    let at = wall()?;
+    let f = Fixture::new(at)?;
+    let (issuer, _) = f.initial(at)?;
+    let signed = f.service.sign(&f.claims)?;
+    let verified = issuer.verify_lease(&signed, at)?;
+    let context = PublicationContext {
+        deployment_id: id(1),
+        security_epoch: 1,
+        policy_revision: 2,
+        service_lease_issuer: f.service.public_key(),
+    };
+    let publication = ServicePublication::new(verified.clone(), &context, Instant::now())?;
+    let request = ServiceLeaseObservationRequest {
+        service_id: id(3),
+        approved_revision: 4,
+        expected_publication_id: None,
+    };
+    let first = sample(&publication.handle(), &request, || (false, false))?;
+    assert_eq!(first.publication_id, id(2));
+    assert_eq!(first.runtime_generation, None);
+    assert_eq!(first.lease_sequence, 1);
+    assert_eq!(first.lease_claims_sha256, digest(&signed.claims));
+    assert_eq!(first.verified_issuer_ed25519, f.service.public_key());
+    assert_eq!(
+        URL_SAFE_NO_PAD.decode(&first.issuer_signature_base64url)?,
+        signed.signature
+    );
+    let mut bytes = b"NestLink/v15/service-signed-lease-observation/v1\0".to_vec();
+    bytes.extend_from_slice(&(signed.claims.len() as u64).to_be_bytes());
+    bytes.extend_from_slice(&signed.claims);
+    bytes.extend_from_slice(&(signed.signature.len() as u64).to_be_bytes());
+    bytes.extend_from_slice(&signed.signature);
+    assert_eq!(first.signed_lease_envelope_sha256, digest(&bytes));
+    let encoded = serde_json::to_value(&first)?;
+    assert!(serde_json::to_vec(&first)?.len() <= 4096);
+    for forbidden in [
+        "claims",
+        "account_id",
+        "creator_login_id",
+        "approving_login_id",
+        "token",
+        "private_key",
+    ] {
+        assert!(encoded.get(forbidden).is_none());
+    }
+    let pinned = ServiceLeaseObservationRequest {
+        expected_publication_id: Some(first.publication_id),
+        ..request.clone()
+    };
+    let wrong = ServiceLeaseObservationRequest {
+        expected_publication_id: Some(id(99)),
+        ..request.clone()
+    };
+    assert!(sample(&publication.handle(), &wrong, || (false, false)).is_err());
+    let wrong_revision = ServiceLeaseObservationRequest {
+        approved_revision: 5,
+        ..pinned.clone()
+    };
+    assert!(sample(&publication.handle(), &wrong_revision, || (false, false)).is_err());
+    assert!(sample(&publication.handle(), &pinned, || (true, false)).is_err());
+    assert!(sample(&publication.handle(), &pinned, || (false, true)).is_err());
+    // Stop arriving after counters were collected must reject the entire sample.
+    let state_reads = std::sync::atomic::AtomicUsize::new(0);
+    assert!(
+        sample(&publication.handle(), &pinned, || {
+            (
+                state_reads.fetch_add(1, std::sync::atomic::Ordering::SeqCst) > 0,
+                false,
+            )
+        })
+        .is_err()
+    );
+    assert_eq!(state_reads.load(std::sync::atomic::Ordering::SeqCst), 2);
+    let mut renewed_claims = f.claims.clone();
+    renewed_claims.lease_sequence = 2;
+    renewed_claims.expires_at_unix_ms += 100;
+    let renewed = issuer.verify_lease(&f.service.sign(&renewed_claims)?, at)?;
+    // A renewal between lease reads must fail rather than mixing the two receipts.
+    assert!(
+        paired(
+            &verified,
+            &renewed,
+            &pinned,
+            at,
+            at,
+            Default::default(),
+            false,
+            false
+        )
+        .is_err()
+    );
+    assert!(
+        paired(
+            &verified,
+            &verified,
+            &pinned,
+            at,
+            f.claims.expires_at_unix_ms,
+            Default::default(),
+            false,
+            false
+        )
+        .is_err()
+    );
+    publication.renew(renewed, Instant::now())?;
+    let second = sample(&publication.handle(), &pinned, || (false, false))?;
+    assert_eq!(second.lease_sequence, 2);
+    assert_ne!(second.lease_claims_sha256, first.lease_claims_sha256);
+    assert_ne!(
+        second.signed_lease_envelope_sha256,
+        first.signed_lease_envelope_sha256
+    );
+    publication.revoke();
+    assert!(sample(&publication.handle(), &pinned, || (false, false)).is_err());
+    // An actual signed fixture cannot be forged into a VerifiedServiceLease.
+    let mut changed = signed;
+    changed.signature[0] ^= 1;
+    assert!(
+        nestlink_identity::service_plane::verify_service_lease(&changed, &f.service.public_key())
+            .is_err()
+    );
+    Ok(())
+}

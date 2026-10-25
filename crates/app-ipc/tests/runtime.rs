@@ -428,3 +428,67 @@ fn application_commands_deny_ambiguous_fields_and_do_not_serialize_secrets_in_sn
     let _: Command = serde_json::from_slice(&encoded)?;
     Ok(())
 }
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn real_tls_read_only_service_lease_observation_rejects_missing_owner_and_stale_generation()
+-> Result {
+    let temporary = tempfile::tempdir()?;
+    let root = temporary.path().join("state");
+    let server = LocalServer::bind(&root).await?;
+    let mut app = AppCore::start(Limits::default())?;
+    let core = app.handle();
+    let (exit, _requests) = mpsc::channel(1);
+    let mut tasks = JoinSet::new();
+    let mut ipc = client(&server, &root, core, exit, &mut tasks).await?;
+    let snapshot = ipc.request(0, Command::Snapshot).await?;
+    let generation = snapshot.snapshot.generation;
+    let request = nestlink_app_core::ServiceLeaseObservationRequest {
+        service_id: "00000000-0000-4000-8000-000000000001".into(),
+        approved_revision: 1,
+        expected_publication_id: None,
+    };
+    let command = Command::GetLocalServiceLeaseObservation {
+        request: request.clone(),
+    };
+    assert!(!command.mutates());
+    assert!(matches!(
+        ipc.request(generation, command).await?.result,
+        Reply::Rejected {
+            reason: Rejection::Stopped
+        }
+    ));
+    assert!(matches!(
+        ipc.request(
+            generation + 1,
+            Command::GetLocalServiceLeaseObservation { request }
+        )
+        .await?
+        .result,
+        Reply::Rejected {
+            reason: Rejection::StaleGeneration
+        }
+    ));
+    drop(ipc);
+    assert_eq!(
+        app.shutdown(Duration::from_secs(3)).await,
+        ShutdownState::Complete
+    );
+    while let Some(result) = tasks.join_next().await {
+        let _ = result?;
+    }
+    Ok(())
+}
+#[test]
+fn lease_observation_wire_request_rejects_unknown_fields_and_invalid_scope() -> Result {
+    let value = serde_json::json!({"command":"get_local_service_lease_observation", "request": {
+        "service_id":"00000000-0000-4000-8000-000000000001", "approved_revision":1,
+        "expected_publication_id":null, "account_token":"forbidden" }});
+    assert!(serde_json::from_value::<Command>(value).is_err());
+    let invalid = nestlink_app_core::ServiceLeaseObservationRequest {
+        service_id: "x".repeat(4096),
+        approved_revision: 1,
+        expected_publication_id: None,
+    };
+    assert!(!invalid.valid());
+    Ok(())
+}

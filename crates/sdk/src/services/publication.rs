@@ -18,6 +18,7 @@ mod datagram;
 pub use backend_tls::HttpsBackendTls;
 use carrier::datagram::DatagramRouter;
 mod issuer;
+mod observation;
 use cleanup::ServiceCleanupMonitor;
 use issuer::ServiceIssuerOwner;
 
@@ -52,6 +53,30 @@ impl LocalServiceRuntime {
         self.target.revoke();
         self.publication.revoke();
         self.connection.close(0u32.into(), b"local service stopped");
+    }
+    /// Sample the actual verified lease without network, renewal or target I/O.
+    pub fn lease_observation(
+        &self,
+        request: &nestlink_protocol::service_plane::observation::ServiceLeaseObservationRequest,
+    ) -> Result<nestlink_protocol::service_plane::observation::ServiceLeaseObservation, SdkError>
+    {
+        let handle = self.publication.handle();
+        let sample = observation::sample(&handle, request, || {
+            (
+                *self.stop.borrow() || self.connection.close_reason().is_some(),
+                self.cleanup_pending(),
+            )
+        })?;
+        let current = handle.lease()?;
+        if !self.target.accepts(&current)
+            || *self.stop.borrow()
+            || self.connection.close_reason().is_some()
+            || sample.signed_lease_envelope_sha256 != observation::envelope_digest(&current)
+            || sample.verified_issuer_ed25519 != current.issuer()
+        {
+            return Err(SdkError::Trust);
+        }
+        Ok(sample)
     }
     pub fn publication_id(&self) -> Result<String, SdkError> {
         Ok(self

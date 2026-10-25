@@ -533,9 +533,39 @@ pub struct NativeSession {
 }
 #[derive(Clone)]
 pub struct NativeSessionControl {
+    sequence: std::sync::Arc<std::sync::atomic::AtomicU64>,
+    renewal: Option<std::sync::Arc<tokio::sync::Mutex<crate::native_renewal::Coordinator>>>,
     lease: nestlink_remote::LeaseControl,
 }
 impl NativeSessionControl {
+    pub fn lease_remaining(&self) -> Result<std::time::Duration, nestlink_remote::RemoteError> {
+        self.lease.remaining()
+    }
+    pub fn lease_sequence(&self) -> u64 {
+        self.sequence.load(std::sync::atomic::Ordering::Acquire)
+    }
+    pub fn has_native_renewal(&self) -> bool {
+        self.renewal.is_some()
+    }
+    pub async fn native_renewal_step(
+        &self,
+        sdk: &Sdk,
+        identity: &DeviceIdentity,
+        source: &dyn crate::native_renewal::NativeRenewalSource,
+    ) -> Result<VerifiedPermit, SdkError> {
+        let coordinator = self.renewal.as_ref().ok_or(SdkError::Trust)?;
+        coordinator
+            .lock()
+            .await
+            .step(sdk, identity, &self.lease, source)
+            .await
+    }
+    pub async fn current_native_permit(&self) -> Result<VerifiedPermit, SdkError> {
+        if let Some(coordinator) = &self.renewal {
+            return Ok(coordinator.lock().await.current().clone());
+        }
+        Ok(self.lease.current_native_permit()?)
+    }
     /// Caller must obtain this evidence from its actual local direction provider.
     /// A closed historical probe UUID never replaces the live media owner UUID.
     pub fn renew_with_media(
@@ -544,10 +574,25 @@ impl NativeSessionControl {
         request_started_ms: u64,
         evidence: &NativeMediaEvidence,
         role: EndpointRole,
+        execution: &dyn nestlink_remote::native_renewal::NativeExecutionFence,
     ) -> Result<(), nestlink_remote::RemoteError> {
-        self.lease
-            .refresh_local_media_binding(&evidence.frozen, &evidence.local, role)?;
-        self.lease.renew(permit, request_started_ms)
+        if self.renewal.is_some() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::PermissionDenied,
+                "coordinated native renewal requires both endpoint drivers",
+            )
+            .into());
+        }
+        let expected = self.lease.current_native_permit()?.claims().lease_sequence;
+        self.lease.renew_with_local_media(
+            permit,
+            request_started_ms,
+            expected,
+            &evidence.frozen,
+            &evidence.local,
+            role,
+            execution,
+        )
     }
     /// Request terminal teardown. The first stop reason wins.
     pub fn stop(&self, reason: StopReason) -> Result<(), nestlink_remote::RemoteError> {
@@ -576,7 +621,7 @@ impl NativeConnection {
             .cap_deadline_ms(setup.clock.deadline_ms(self.authorization_deadline)?)?;
         setup.path = self.candidate.path();
         setup.lifecycle.network = Some(self.network);
-        let channels = match self.transport {
+        let mut channels = match self.transport {
             NativeTransport::Quic {
                 connection,
                 endpoint,
@@ -606,8 +651,32 @@ impl NativeConnection {
                 authorize_stream(io, setup, &local.identity, peer_key).await?
             }
         };
+        let lease = channels.lease_control();
+        let sequence = std::sync::Arc::new(std::sync::atomic::AtomicU64::new(
+            lease.current_native_permit()?.claims().lease_sequence,
+        ));
+        let renewal = match channels.take_native_renewal_port() {
+            Some(port) => Some(std::sync::Arc::new(tokio::sync::Mutex::new(
+                crate::native_renewal::Coordinator::new(
+                    port,
+                    lease.current_native_permit()?,
+                    *peer_key,
+                    if local.device_id
+                        == lease.current_native_permit()?.claims().controller_device_id
+                    {
+                        EndpointRole::Controller
+                    } else {
+                        EndpointRole::Host
+                    },
+                    sequence.clone(),
+                ),
+            ))),
+            None => None,
+        };
         let control = NativeSessionControl {
-            lease: channels.lease_control(),
+            lease,
+            renewal,
+            sequence,
         };
         Ok(NativeSession {
             channels,
@@ -661,6 +730,8 @@ async fn authorize_stream<
     Ok(nestlink_remote::AuthorizedConnection::with_lifecycle(
         read, write, session, path, clock, lifecycle,
     )?
+    .negotiate_native_renewal()
+    .await?
     .into_channels())
 }
 struct MonitorTask(tokio::task::JoinHandle<()>);
@@ -1756,4 +1827,60 @@ fn inbound_candidate(address: SocketAddr, generation: u64) -> Candidate {
         transport: Transport::Quic,
         generation,
     }
+}
+
+// Test-only bridge lets the real two-endpoint fixture exercise this public
+// entry point while keeping NativeSessionControl's fields private.
+#[cfg(all(test, feature = "media-runtime-test-support"))]
+#[allow(clippy::expect_used)]
+pub(crate) fn assert_coordinated_manual_renewal_rejected(
+    coordinator: crate::native_renewal::Coordinator,
+    lease: nestlink_remote::LeaseControl,
+    sequence: Arc<AtomicU64>,
+    evidence: &NativeMediaEvidence,
+) -> Result<crate::native_renewal::Coordinator, Box<dyn std::error::Error + Send + Sync>> {
+    struct NeverFence;
+    impl nestlink_remote::native_renewal::NativeExecutionFence for NeverFence {
+        fn with_current(&self, _: &mut dyn FnMut() -> std::io::Result<()>) -> std::io::Result<()> {
+            panic!("manual renewal entered execution fence despite coordinator");
+        }
+    }
+    let before = lease.current_native_permit()?;
+    let before_sequence = sequence.load(Ordering::Acquire);
+    let shared = Arc::new(tokio::sync::Mutex::new(coordinator));
+    let control = NativeSessionControl {
+        sequence: sequence.clone(),
+        renewal: Some(shared.clone()),
+        lease: lease.clone(),
+    };
+    let error = control
+        .renew_with_media(
+            before.clone(),
+            lease.renewal_clock()?.monotonic_ms,
+            evidence,
+            EndpointRole::Controller,
+            &NeverFence,
+        )
+        .expect_err("coordinated session must reject manual renewal");
+    assert!(
+        error
+            .to_string()
+            .contains("coordinated native renewal requires both endpoint drivers")
+    );
+    assert_eq!(lease.current_native_permit()?.claims(), before.claims());
+    assert_eq!(sequence.load(Ordering::Acquire), before_sequence);
+    assert!(lease.remaining()?.as_millis() > 0);
+    assert_eq!(
+        shared
+            .try_lock()
+            .expect("coordinator unlocked")
+            .current()
+            .claims(),
+        before.claims()
+    );
+    drop(control);
+    let coordinator = Arc::try_unwrap(shared)
+        .map_err(|_| std::io::Error::other("unexpected coordinator alias"))?
+        .into_inner();
+    Ok(coordinator)
 }

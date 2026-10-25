@@ -349,6 +349,53 @@ impl Session {
             }
         }
     }
+    /// Prepare a complete successor on a private copy; publish binding and lease
+    /// together only after every check passes. Failed preparation is terminal.
+    #[allow(clippy::too_many_arguments)]
+    pub fn renew_with_local_media(
+        &mut self,
+        permit: VerifiedPermit,
+        request_started_ms: u64,
+        expected_sequence: u64,
+        frozen: &nestlink_protocol::media_authority::FrozenMediaScope,
+        local: &nestlink_protocol::media_authority::MediaAnnouncement,
+        role: EndpointRole,
+        now: ClockSample,
+    ) -> Result<(), ContractError> {
+        self.check_clock(now)?;
+        if self.permit.claims().lease_sequence != expected_sequence
+            || expected_sequence.checked_add(1) != Some(permit.claims().lease_sequence)
+        {
+            return Err(error(ErrorCode::ReplayRejected, "renewal sequence changed"));
+        }
+        let mut candidate = Self {
+            #[cfg(feature = "media-runtime-test-support")]
+            media_regression: self.media_regression,
+            binding: self.binding.clone(),
+            permit: self.permit.clone(),
+            path: self.path,
+            state: self.state,
+            deadline_ms: self.deadline_ms,
+            last_monotonic_ms: self.last_monotonic_ms,
+            last_unix_ms: self.last_unix_ms,
+            last_request_ms: self.last_request_ms,
+            proved: self.proved,
+            challenge: self.challenge,
+        };
+        let prepared = candidate
+            .refresh_local_media_binding(frozen, local, role, now)
+            .and_then(|()| candidate.renew(permit, request_started_ms, now));
+        match prepared {
+            Ok(()) => {
+                *self = candidate;
+                Ok(())
+            }
+            Err(failure) => {
+                self.stop(StopReason::PlatformChanged);
+                Err(failure)
+            }
+        }
+    }
     pub fn media_formats(
         &self,
     ) -> Result<Option<nestlink_protocol::media_format::FormatSet>, ContractError> {
@@ -423,6 +470,9 @@ impl Session {
 
     /// Identity and policy facts from the verified activation, without granting
     /// permission or reviving a stopped session.
+    pub fn current_verified_permit(&self) -> &VerifiedPermit {
+        &self.permit
+    }
     pub fn binding(&self) -> &SessionBinding {
         &self.binding
     }
@@ -758,3 +808,6 @@ fn lease_deadline(
 fn error(code: ErrorCode, reason: &'static str) -> ContractError {
     ContractError::new(code, reason)
 }
+
+#[cfg(all(test, feature = "media-runtime-test-support"))]
+mod native_renewal_tests;

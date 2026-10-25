@@ -120,6 +120,7 @@ impl SessionLifecycle {
     }
 }
 struct Managed {
+    renewal_peer_deadline: Option<u64>,
     session: Session,
     handlers: Vec<Box<dyn StopHandler>>,
     report: Option<StopReport>,
@@ -134,6 +135,13 @@ pub(crate) enum AudioDirection {
     Playback = 1,
 }
 impl Managed {
+    fn effective_deadline_ms(&self) -> u64 {
+        self.renewal_peer_deadline
+            .map_or(self.session.deadline_ms(), |d| {
+                d.min(self.session.deadline_ms())
+            })
+    }
+
     fn finish(&mut self) -> Option<StopReport> {
         if self.report.is_some() {
             return None;
@@ -206,6 +214,42 @@ impl Inner {
             self.updates.send_modify(|v| *v = v.saturating_add(1));
         }
     }
+    // Pure state observation for the execution-fenced commit. In particular,
+    // this must never call StopHandler::check/stop or reconcile platform owners.
+    fn check_renewal_state(&self, managed: &mut Managed) -> Result<(), RemoteError> {
+        if let Some(reason) = (*self.stop.borrow())
+            .or_else(|| {
+                self.stop
+                    .has_changed()
+                    .is_err()
+                    .then_some(StopReason::Revoked)
+            })
+            .or_else(|| self.network.as_ref().and_then(NetworkBinding::reason))
+            .or_else(|| self.carrier.as_ref().and_then(carrier_stop_reason))
+        {
+            if !reconnection_is_allowed(reason) {
+                managed.recovery_forbidden = true;
+            }
+            managed.session.stop(reason);
+        }
+        match self.clock.sample() {
+            Ok(now) => {
+                if managed
+                    .renewal_peer_deadline
+                    .is_some_and(|d| now.monotonic_ms >= d)
+                {
+                    managed.recovery_forbidden = true;
+                    managed.session.stop(StopReason::Expired);
+                }
+                managed.session.check_clock(now).map_err(RemoteError::from)
+            }
+            Err(error) => {
+                managed.recovery_forbidden = true;
+                managed.session.stop(StopReason::ClockInvalid);
+                Err(error.into())
+            }
+        }
+    }
     fn check(&self, managed: &mut Managed) -> Result<(), RemoteError> {
         let external = *self.stop.borrow();
         if let Some(reason) = external
@@ -235,7 +279,16 @@ impl Inner {
             }
         }
         let result = match self.clock.sample() {
-            Ok(now) => managed.session.check_clock(now).map_err(RemoteError::from),
+            Ok(now) => {
+                if managed
+                    .renewal_peer_deadline
+                    .is_some_and(|d| now.monotonic_ms >= d)
+                {
+                    managed.recovery_forbidden = true;
+                    managed.session.stop(StopReason::Expired);
+                }
+                managed.session.check_clock(now).map_err(RemoteError::from)
+            }
             Err(error) => {
                 managed.recovery_forbidden = true;
                 managed.session.stop(StopReason::ClockInvalid);
@@ -354,6 +407,7 @@ impl LeaseControl {
         let control = Self {
             inner: Arc::new(Inner {
                 managed: Mutex::new(Managed {
+                    renewal_peer_deadline: None,
                     session,
                     handlers: lifecycle.resources.into_iter().collect(),
                     report: None,
@@ -442,6 +496,9 @@ impl LeaseControl {
         {
             return Err(RemoteError::Stopped);
         }
+        if managed.renewal_peer_deadline.is_some() {
+            return Err(RemoteError::Stopped);
+        }
         let permit = managed
             .session
             .reconnection_permit(self.inner.clock.sample()?)?;
@@ -451,25 +508,39 @@ impl LeaseControl {
                 .inner
                 .clock
                 .start
-                .checked_add(Duration::from_millis(managed.session.deadline_ms()))
+                .checked_add(Duration::from_millis(managed.effective_deadline_ms()))
                 .ok_or(RemoteError::Stopped)?,
         })
     }
     pub(crate) fn subscribe_updates(&self) -> watch::Receiver<u64> {
         self.inner.updates.subscribe()
     }
-    pub(crate) fn remaining(&self) -> Result<Duration, RemoteError> {
+    pub fn remaining(&self) -> Result<Duration, RemoteError> {
         let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
         Ok(Duration::from_millis(
             managed
-                .session
-                .deadline_ms()
+                .effective_deadline_ms()
                 .saturating_sub(self.inner.clock.monotonic_ms()),
         ))
     }
     pub(crate) fn authorize(&self, channel: Channel) -> Result<(), RemoteError> {
         self.operation(permission(channel)?, || Ok(()))
+    }
+    pub fn current_native_permit(&self) -> Result<VerifiedPermit, RemoteError> {
+        let mut managed = self.inner.lock()?;
+        self.inner.check(&mut managed)?;
+        Ok(managed.session.current_verified_permit().clone())
+    }
+    pub(crate) fn native_renewal_required(&self) -> Result<bool, RemoteError> {
+        let mut managed = self.inner.lock()?;
+        self.inner.check(&mut managed)?;
+        Ok(managed.session.binding().media.is_some())
+    }
+    pub fn renewal_clock(&self) -> Result<nestlink_session::ClockSample, RemoteError> {
+        let mut managed = self.inner.lock()?;
+        self.inner.check(&mut managed)?;
+        Ok(self.inner.clock.sample()?)
     }
     pub(crate) fn transport_binding(&self) -> Result<([u8; 32], u64, Vec<Channel>), RemoteError> {
         use prost::Message;
@@ -524,7 +595,7 @@ impl LeaseControl {
         self.inner
             .clock
             .start
-            .checked_add(Duration::from_millis(managed.session.deadline_ms()))
+            .checked_add(Duration::from_millis(managed.effective_deadline_ms()))
             .ok_or(RemoteError::Stopped)
     }
 
@@ -836,6 +907,138 @@ impl LeaseControl {
         result?;
         self.inner.check(&mut managed)
     }
+    /// Lock order is execution fence, then managed session. No I/O or await
+    /// may run inside either lock. Binding, permit and input observers commit
+    /// as one transition; stop/expiry are checked again under the session lock.
+    #[allow(clippy::too_many_arguments)]
+    pub fn renew_with_local_media(
+        &self,
+        permit: VerifiedPermit,
+        request_started_ms: u64,
+        expected_sequence: u64,
+        frozen: &nestlink_protocol::media_authority::FrozenMediaScope,
+        local: &nestlink_protocol::media_authority::MediaAnnouncement,
+        role: nestlink_session::EndpointRole,
+        execution: &dyn crate::native_renewal::NativeExecutionFence,
+    ) -> Result<(), RemoteError> {
+        self.renew_with_local_media_pending(
+            permit,
+            request_started_ms,
+            expected_sequence,
+            frozen,
+            local,
+            role,
+            false,
+            execution,
+        )
+    }
+    /// Controller commits remain capped by the previous peer lease until an
+    /// authenticated Applied acknowledgement completes this exact sequence.
+    #[allow(clippy::too_many_arguments)]
+    pub fn renew_with_local_media_pending(
+        &self,
+        permit: VerifiedPermit,
+        request_started_ms: u64,
+        expected_sequence: u64,
+        frozen: &nestlink_protocol::media_authority::FrozenMediaScope,
+        local: &nestlink_protocol::media_authority::MediaAnnouncement,
+        role: nestlink_session::EndpointRole,
+        await_peer: bool,
+        execution: &dyn crate::native_renewal::NativeExecutionFence,
+    ) -> Result<(), RemoteError> {
+        // Handler checks and their possible cleanup happen before acquiring
+        // execution currentness. Never hold a registry fence across callbacks.
+        {
+            let mut managed = self.inner.lock()?;
+            self.inner.check(&mut managed)?;
+        }
+        let mut permit = Some(permit);
+        let mut outcome = None;
+        let mut calls = 0usize;
+        let fenced = execution.with_current(&mut || {
+            calls = calls.saturating_add(1);
+            if calls != 1 || outcome.is_some() {
+                return Err(io::Error::other("execution fence repeated operation"));
+            }
+            let result = (|| {
+                // A competing cleanup may hold managed while entering the
+                // registry. Never wait for it while holding the registry fence.
+                let mut managed = self
+                    .inner
+                    .managed
+                    .try_lock()
+                    .map_err(|_| RemoteError::Stopped)?;
+                self.inner.check_renewal_state(&mut managed)?;
+                let permit = permit
+                    .take()
+                    .ok_or_else(|| io::Error::other("renewal already consumed"))?;
+                let observed = permit.clone();
+                let old_peer_deadline = managed.effective_deadline_ms();
+                if managed.renewal_peer_deadline.is_some() {
+                    return Err(RemoteError::Stopped);
+                }
+                managed.session.renew_with_local_media(
+                    permit,
+                    request_started_ms,
+                    expected_sequence,
+                    frozen,
+                    local,
+                    role,
+                    self.inner.clock.sample()?,
+                )?;
+                managed.renewal_peer_deadline = await_peer.then_some(old_peer_deadline);
+                self.inner.check_renewal_state(&mut managed)?;
+                self.inner.input_permits.send_replace(
+                    observed
+                        .claims()
+                        .permissions
+                        .contains(&(Permission::Input as i32))
+                        .then_some(observed),
+                );
+                self.inner.updates.send_modify(|v| *v = v.saturating_add(1));
+                Ok(())
+            })();
+            outcome = Some(result);
+            Ok(())
+        });
+        // The fence is released on all branches before native cleanup runs.
+        let result = match fenced {
+            _ if calls != 1 => {
+                Err(io::Error::other("execution fence must invoke exactly once").into())
+            }
+            Err(error) => Err(error.into()),
+            Ok(()) => outcome.unwrap_or_else(|| {
+                Err(io::Error::other("execution fence skipped operation").into())
+            }),
+        };
+        let mut managed = self.inner.lock()?;
+        if result.is_err() {
+            managed.recovery_forbidden = true;
+            managed.session.stop(StopReason::PlatformChanged);
+        }
+        // Outside-stop/expiry may have won immediately after the fenced commit.
+        let final_state = self.inner.check_renewal_state(&mut managed);
+        self.inner.reconcile(&mut managed);
+        result?;
+        final_state
+    }
+    pub fn acknowledge_native_renewal(&self, sequence: u64) -> Result<(), RemoteError> {
+        let mut managed = self.inner.lock()?;
+        self.inner.check(&mut managed)?;
+        if managed.renewal_peer_deadline.is_none()
+            || managed
+                .session
+                .current_verified_permit()
+                .claims()
+                .lease_sequence
+                != sequence
+        {
+            return Err(RemoteError::Stopped);
+        }
+        managed.renewal_peer_deadline = None;
+        self.inner.updates.send_modify(|v| *v = v.saturating_add(1));
+        Ok(())
+    }
     pub fn renew(
         &self,
         permit: VerifiedPermit,
@@ -843,6 +1046,9 @@ impl LeaseControl {
     ) -> Result<(), RemoteError> {
         let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
+        if managed.renewal_peer_deadline.is_some() {
+            return Err(RemoteError::Stopped);
+        }
         let observed = permit.clone();
         let result = managed
             .session
