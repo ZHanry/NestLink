@@ -67,6 +67,9 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         BrowserEndpointRegistration,
         BrowserEndpointLease,
         RemoteRequest,
+        MediaAnnouncementSubmission,
+        MediaRemoteRequest,
+        MediaApprovalSubmission,
         BrowserHostReadiness,
         BrowserHostReadinessSubmission,
         ApprovalChoice,
@@ -208,6 +211,14 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         AuditRetentionUpdate,
         AuditRetention
     );
+    schema::<Option<nestlink_protocol::media_authority::MediaAnnouncement>>(
+        &mut schemas,
+        "MediaAnnouncementResponse",
+    )?;
+    schema::<Option<nestlink_protocol::media_authority::FrozenMediaScope>>(
+        &mut schemas,
+        "MediaScopeResponse",
+    )?;
     let routes: Vec<Value> = serde_json::from_slice(&fs::read(
         root.join("protocol-spec/management-routes.json"),
     )?)?;

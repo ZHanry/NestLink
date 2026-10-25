@@ -333,6 +333,47 @@ jobs:
       - run: python -m unittest discover -s tests/refactor -p "test_*.py"
       - run: python scripts/refactor-ui-tokens.py --check
       - run: cargo xtask check
+  openapi-generation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Generate the contract with the exact source on GitHub
+        run: cargo run --locked -p xtask -- contract --write
+      - name: Bind generated contract bytes to source and run
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, subprocess
+          source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          assert source == os.environ['GITHUB_SHA']
+          changed = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
+          assert set(changed) <= {'protocol-spec/openapi.json'}, changed
+          tracked = subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
+          inputs = {name: hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()
+                    for name in tracked if name != 'protocol-spec/openapi.json'}
+          output = pathlib.Path('protocol-spec/openapi.json')
+          receipt = {'repository': os.environ['GITHUB_REPOSITORY'],
+                     'source_sha': source, 'run_id': os.environ['GITHUB_RUN_ID'],
+                     'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+                     'job_name': os.environ['GITHUB_JOB'],
+                     'generator': 'cargo run --locked -p xtask -- contract --write',
+                     'output_sha256': hashlib.sha256(output.read_bytes()).hexdigest(),
+                     'output_bytes': output.stat().st_size, 'source_file_sha256': inputs,
+                     'quality_acceptance': 'generation-only; checked-in drift validation remains independent'}
+          pathlib.Path('openapi-generation.json').write_text(json.dumps(receipt, indent=2) + '\n')
+      - name: Retain generated OpenAPI and exact-source receipt
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: openapi-generated-${{ github.sha }}
+          path: |
+            protocol-spec/openapi.json
+            openapi-generation.json
+          if-no-files-found: error
+          retention-days: 7
   wasm-contract:
     runs-on: ubuntu-latest
     timeout-minutes: 20
