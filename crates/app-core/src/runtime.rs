@@ -660,10 +660,10 @@ struct NativeVideoPresentationRoute {
 }
 impl NativeVideoRoute {
     fn retire(&self) {
-        if let Ok(execution) = self.execution.lock() {
-            if let Some(execution) = execution.as_ref() {
-                execution.fence();
-            }
+        if let Ok(execution) = self.execution.lock()
+            && let Some(execution) = execution.as_ref()
+        {
+            execution.fence();
         }
         self.gate.retire();
         self.format_gate.retire();

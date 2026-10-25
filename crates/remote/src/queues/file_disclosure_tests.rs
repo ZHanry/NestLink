@@ -5,6 +5,7 @@ use nestlink_identity::{InstallationIdentity, PermitSigner, verify_permit};
 use nestlink_policy::PathSet;
 use nestlink_protocol::{Path, Permission, PermitClaims, SCHEMA_VERSION};
 use nestlink_session::{EndpointRole, Session, SessionBinding};
+use nestlink_transport_stream::read_frame;
 use prost::Message;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
