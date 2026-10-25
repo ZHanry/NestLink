@@ -36,6 +36,9 @@ pub struct SessionBinding {
 /// retain and continuously check the actual probe owner and generation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MediaSessionBinding {
+    internal_candidate: Option<
+        nestlink_protocol::internal_software_media_candidate::InternalSoftwareMediaCandidate,
+    >,
     direction: nestlink_protocol::media_authority::MediaDirection,
     probe: nestlink_protocol::media_authority::ProbeIdentity,
     expires_at_unix_ms: u64,
@@ -45,6 +48,29 @@ pub struct MediaSessionBinding {
     revision: u64,
 }
 impl MediaSessionBinding {
+    /// Local opt-in only. Existing signed scope and local evidence stay authoritative.
+    pub fn with_internal_software_candidate(
+        mut self,
+        policy: nestlink_protocol::internal_software_media_candidate::InternalSoftwareMediaCandidate,
+        permit: &VerifiedPermit,
+        local: &nestlink_protocol::media_authority::MediaAnnouncement,
+        now_unix_ms: u64,
+    ) -> Result<Self, ContractError> {
+        policy.authorize_permit(permit.claims())?;
+        policy.authorize_announcement(local, now_unix_ms)?;
+        if self.probe != local.probe
+            || self.device_id != local.device_id
+            || self.direction != local.direction
+            || self.revision != local.revision
+        {
+            return Err(error(
+                ErrorCode::IdentityMismatch,
+                "candidate local evidence changed",
+            ));
+        }
+        self.internal_candidate = Some(policy);
+        Ok(self)
+    }
     pub fn from_local_announcement(
         permit: &VerifiedPermit,
         frozen: &nestlink_protocol::media_authority::FrozenMediaScope,
@@ -92,6 +118,7 @@ impl MediaSessionBinding {
             ));
         }
         Ok(Self {
+            internal_candidate: None,
             direction,
             probe: local.probe.clone(),
             expires_at_unix_ms: local.expires_at_unix_ms,
@@ -113,7 +140,12 @@ impl MediaSessionBinding {
         role: EndpointRole,
         now_unix_ms: u64,
     ) -> Result<Self, ContractError> {
-        let next = Self::from_local_announcement(permit, frozen, local, role, now_unix_ms)?;
+        let mut next = Self::from_local_announcement(permit, frozen, local, role, now_unix_ms)?;
+        if let Some(policy) = &self.internal_candidate {
+            policy.authorize_permit(permit.claims())?;
+            policy.authorize_announcement(local, now_unix_ms)?;
+            next.internal_candidate = Some(policy.clone());
+        }
         let replaced = next.probe != self.probe;
         if (replaced
             && (next.probe.generation <= self.probe.generation || next.revision <= self.revision))
@@ -728,7 +760,27 @@ fn validate_binding_with_rollout(
             false
         }
     };
-    if nestlink_protocol::media_authority::permit_formats(c)?.is_some() && !scoped_regression {
+    let scoped_candidate = if let Some(local) = &b.media
+        && let Some(policy) = &local.internal_candidate
+    {
+        policy.authorize_permit(c)?;
+        if local.probe.backend != "cpu-software"
+            || local.probe.adapter_luid.is_some()
+            || local.probe.driver_version.is_some()
+        {
+            return Err(error(
+                ErrorCode::PlatformUnsupported,
+                "candidate requires actual local software evidence",
+            ));
+        }
+        true
+    } else {
+        false
+    };
+    if nestlink_protocol::media_authority::permit_formats(c)?.is_some()
+        && !scoped_regression
+        && !scoped_candidate
+    {
         return Err(error(
             ErrorCode::PlatformUnsupported,
             "signed media requires local direction evidence and selection runtime",
@@ -811,3 +863,6 @@ fn error(code: ErrorCode, reason: &'static str) -> ContractError {
 
 #[cfg(all(test, feature = "media-runtime-test-support"))]
 mod native_renewal_tests;
+
+#[cfg(test)]
+mod internal_software_candidate_tests;

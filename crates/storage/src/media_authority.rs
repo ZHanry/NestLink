@@ -234,6 +234,20 @@ impl Store {
         let current = self
             .intersect_media(&endpoints.0, &endpoints.1, now)?
             .validate()?;
+        if self.internal_software_media_candidate.is_some() {
+            let account: String = self.connection.query_row(
+                "SELECT controller_account_id FROM remote_requests WHERE id=?1",
+                [id],
+                |r| r.get(0),
+            )?;
+            self.candidate_media_request(
+                &account,
+                &endpoints.0,
+                &endpoints.1,
+                &scope.formats,
+                now,
+            )?;
+        }
         if scope
             .validate()?
             .formats()
@@ -304,11 +318,12 @@ impl Store {
         {
             nestlink_protocol::media_authority::PRODUCTION_ISSUANCE_ENABLED
                 || self.media_regression_requests.contains(id)
+                || self.candidate_media_request_identity(id).is_ok()
         }
         #[cfg(not(test))]
         {
-            let _ = id;
             nestlink_protocol::media_authority::PRODUCTION_ISSUANCE_ENABLED
+                || self.candidate_media_request_identity(id).is_ok()
         }
     }
     /// Explicit test admission of one future request on this in-memory Store.
@@ -335,6 +350,69 @@ impl Store {
             return Err(StorageError::Conflict);
         }
         self.media_regression_requests.insert(id.to_owned());
+        Ok(())
+    }
+}
+
+impl Store {
+    /// Local startup configuration only; no management request can install or widen it.
+    pub fn with_internal_software_media_candidate(
+        mut self,
+        policy: nestlink_protocol::internal_software_media_candidate::InternalSoftwareMediaCandidate,
+    ) -> Result<Self, StorageError> {
+        policy.validate()?;
+        if policy.deployment_id != self.deployment_id()? {
+            return Err(StorageError::Forbidden);
+        }
+        self.internal_software_media_candidate = Some(policy);
+        Ok(self)
+    }
+    pub(crate) fn candidate_media_request(
+        &self,
+        account: &str,
+        controller: &str,
+        host: &str,
+        formats: &[Vec<u8>],
+        now: u64,
+    ) -> Result<(), StorageError> {
+        let policy = self
+            .internal_software_media_candidate
+            .as_ref()
+            .ok_or(StorageError::Forbidden)?;
+        policy.authorize_scope(&self.deployment_id()?, account, controller, host, formats)?;
+        for (id, direction) in [
+            (controller, MediaDirection::Decode),
+            (host, MediaDirection::Encode),
+        ] {
+            // This first internal candidate intentionally uses one explicit
+            // account on both devices; legacy cross-account approval is unchanged.
+            if self.device_record_at(id, now)?.account != policy.account_id {
+                return Err(StorageError::Forbidden);
+            }
+            let announcement = self
+                .current_media_announcement(id, direction, now)?
+                .ok_or(StorageError::Forbidden)?;
+            policy.authorize_announcement(&announcement, now.saturating_mul(1000))?;
+        }
+        Ok(())
+    }
+    pub(crate) fn candidate_media_request_identity(&self, id: &str) -> Result<(), StorageError> {
+        let (account, controller, host): (String, String, String) = self.connection.query_row(
+            "SELECT controller_account_id,controller_device_id,host_device_id FROM remote_requests WHERE id=?1",
+            [id], |r| Ok((r.get(0)?,r.get(1)?,r.get(2)?)))?;
+        let scope = self
+            .frozen_media_scope(id)?
+            .ok_or(StorageError::Forbidden)?;
+        self.internal_software_media_candidate
+            .as_ref()
+            .ok_or(StorageError::Forbidden)?
+            .authorize_scope(
+                &self.deployment_id()?,
+                &account,
+                &controller,
+                &host,
+                &scope.formats,
+            )?;
         Ok(())
     }
 }

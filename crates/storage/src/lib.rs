@@ -75,6 +75,9 @@ pub enum StorageError {
 
 pub struct Store {
     connection: Connection,
+    internal_software_media_candidate: Option<
+        nestlink_protocol::internal_software_media_candidate::InternalSoftwareMediaCandidate,
+    >,
     #[cfg(test)]
     media_regression_requests: std::collections::BTreeSet<String>,
 }
@@ -315,6 +318,7 @@ impl Store {
         }
         Ok(Self {
             connection,
+            internal_software_media_candidate: None,
             #[cfg(test)]
             media_regression_requests: std::collections::BTreeSet::new(),
         })

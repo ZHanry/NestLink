@@ -8,6 +8,7 @@ pub mod file_roots;
 pub mod files;
 pub mod ice;
 pub mod input;
+pub mod internal_software_media_candidate;
 pub use input::valid_scroll;
 pub mod media;
 pub mod media_authority;

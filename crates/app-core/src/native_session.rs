@@ -23,6 +23,9 @@ pub struct NativeSessionConfig {
     pub supported_capabilities: Vec<String>,
     pub browser_host: Option<BrowserHostConfig>,
     pub media_provider: Option<crate::NativeMediaProvider>,
+    pub internal_software_media_candidate: Option<
+        nestlink_protocol::internal_software_media_candidate::InternalSoftwareMediaCandidate,
+    >,
     pub management_login_store: Option<Arc<dyn ManagementLoginStore>>,
     network: Arc<NetworkMonitor>,
     pub(crate) network_settings_store: Option<Arc<dyn NativeNetworkSettingsStore>>,
@@ -70,6 +73,7 @@ impl NativeSessionConfig {
             },
             browser_host: None,
             media_provider: None,
+            internal_software_media_candidate: None,
             management_login_store: None,
             network,
             network_settings_store: None,
@@ -100,6 +104,56 @@ impl NativeSessionConfig {
                 .push(nestlink_protocol::media_authority::FORMAT_CAPABILITY.into());
         }
         Ok(self)
+    }
+    /// Explicit operator configuration; never exposed by the ordinary remote UI.
+    pub fn with_internal_software_media_candidate(
+        mut self,
+        policy: nestlink_protocol::internal_software_media_candidate::InternalSoftwareMediaCandidate,
+    ) -> std::io::Result<Self> {
+        let format = policy.validate().map_err(std::io::Error::other)?;
+        let target = self
+            .media_provider
+            .as_ref()
+            .ok_or_else(|| std::io::Error::other("candidate requires an explicit CPU target"))?
+            .target();
+        if (target.width, target.height, target.fps, target.bitrate_kbps)
+            != (
+                format.width,
+                format.height,
+                format.frame_rate.numerator,
+                format.max_kbps,
+            )
+        {
+            return Err(std::io::Error::other(
+                "candidate target differs from configured CPU target",
+            ));
+        }
+        self.internal_software_media_candidate = Some(policy);
+        Ok(self)
+    }
+    pub(crate) fn media_provider_for_request(
+        &self,
+        deployment: &str,
+        account: &str,
+        controller: &str,
+        host: &str,
+    ) -> Option<&crate::NativeMediaProvider> {
+        // No explicit candidate policy means an ordinary legacy request. The
+        // debug fixture feature never implicitly changes product request routing.
+        let policy = self.internal_software_media_candidate.as_ref()?;
+        if policy
+            .authorize_scope(
+                deployment,
+                account,
+                controller,
+                host,
+                std::slice::from_ref(&policy.format),
+            )
+            .is_err()
+        {
+            return None;
+        }
+        self.media_provider.as_ref()
     }
     pub fn with_browser_host(mut self, config: BrowserHostConfig) -> Self {
         self.browser_host = Some(config);

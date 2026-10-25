@@ -185,6 +185,9 @@ struct MediaLifecycle {
 }
 impl MediaLifecycle {
     fn new(expires_at_unix_ms: u64) -> TestResult<Self> {
+        Self::new_with_candidate(expires_at_unix_ms, false)
+    }
+    fn new_with_candidate(expires_at_unix_ms: u64, candidate: bool) -> TestResult<Self> {
         let mut store = Store::in_memory(&random_id())?;
         let vault = VaultKey::from_bytes([17; 32]);
         let password = "media-lifecycle-test-only-password";
@@ -255,11 +258,29 @@ impl MediaLifecycle {
                 .create_media_remote(&fixture.principal, request.clone(), 1000)
                 .is_err()
         );
-        fixture
-            .store
-            .admit_media_regression_request(&fixture.request_id)?;
+        if candidate {
+            let policy = nestlink_protocol::internal_software_media_candidate::InternalSoftwareMediaCandidate {
+                deployment_id: fixture.store.deployment_id()?,
+                account_id: fixture.principal.account_id.clone(),
+                controller_device_id: fixture.controller_id.clone(),
+                host_device_id: fixture.host_id.clone(),
+                format: fixture.format.encode()?,
+                format_sha256: fixture.format.digest()?,
+            };
+            fixture.store = fixture
+                .store
+                .with_internal_software_media_candidate(policy)?;
+            assert!(fixture.store.media_regression_requests.is_empty());
+        } else {
+            fixture
+                .store
+                .admit_media_regression_request(&fixture.request_id)?;
+        }
         let mut other = request.clone();
         other.request.id = random_id();
+        if candidate {
+            other.request.host_device_id = random_id();
+        }
         assert!(
             fixture
                 .store
@@ -665,5 +686,206 @@ fn management_expiry_only_absence_does_not_hide_tampering_and_fresh_signed_publi
             .ok_or("missing frozen scope")?,
         f.scope
     );
+    Ok(())
+}
+
+#[test]
+fn internal_software_candidate_uses_public_first_approval_issuance_renewal_and_recovery()
+-> TestResult {
+    // Synthetic signed records exercise authorization; this is not hardware evidence.
+    let mut f = MediaLifecycle::new_with_candidate(1_200_000, true)?;
+    assert!(f.store.media_regression_requests.is_empty());
+    assert!(
+        f.store
+            .initial_permit(&f.principal, &f.request_id, 1000)
+            .is_err()
+    );
+    let legacy = ApprovalChoice {
+        approved: true,
+        permissions: vec![1],
+        paths: vec![1],
+    };
+    assert!(
+        f.store
+            .approval_transcript(&f.principal, &f.request_id, &legacy, 1000)
+            .is_err()
+    );
+    f.approve(true, 1001)?;
+    let initial = f.store.initial_permit(&f.principal, &f.request_id, 1001)?;
+    f.assert_scope(&initial)?;
+    let renewal = f.renewal(2, 1002)?;
+    let renewed = f
+        .store
+        .renew_permit(&f.principal, &f.request_id, renewal, 1002)?;
+    f.assert_scope(&renewed)?;
+    let reconnect = f.reconnection(&renewed)?;
+    let receipt = f
+        .store
+        .reconnect_permit(&f.principal, &f.request_id, reconnect, 1003)?;
+    f.assert_scope(&receipt.next)?;
+    assert_eq!(receipt.next.connection_generation, 2);
+    assert!(f.store.media_regression_requests.is_empty());
+    let other = VideoFormat::legacy_h264(31, 640, 480, FrameRate::new(30, 1)?, 2000)?;
+    let expanded = nestlink_protocol::media_format::FormatSet::new(vec![f.format, other])?
+        .formats()
+        .iter()
+        .map(|f| f.encode())
+        .collect::<Result<Vec<_>, _>>()?;
+    f.announce(MediaDirection::Decode, 2, 1_200_000, expanded.clone())?;
+    f.announce(MediaDirection::Encode, 2, 1_200_000, expanded)?;
+    assert!(
+        f.store
+            .current_permit(&f.principal, &f.request_id, 1003)
+            .is_err()
+    );
+    assert_eq!(
+        f.store
+            .remote_media_scope(&f.principal, &f.request_id, 1003)?
+            .ok_or("scope missing")?,
+        f.scope
+    );
+    Ok(())
+}
+
+#[test]
+fn internal_software_candidate_rejects_account_peer_target_and_expiry() -> TestResult {
+    let mut f = MediaLifecycle::new_with_candidate(1_200_000, true)?;
+    let policy = f
+        .store
+        .internal_software_media_candidate
+        .clone()
+        .ok_or("policy missing")?;
+    for wrong in 0..4 {
+        let mut changed = policy.clone();
+        match wrong {
+            0 => changed.account_id = random_id(),
+            1 => changed.controller_device_id = random_id(),
+            2 => changed.host_device_id = random_id(),
+            _ => {
+                let other = VideoFormat::legacy_h264(31, 640, 480, FrameRate::new(30, 1)?, 2000)?;
+                changed.format = other.encode()?;
+                changed.format_sha256 = other.digest()?;
+            }
+        }
+        f.store.internal_software_media_candidate = Some(changed);
+        assert!(
+            f.store
+                .create_media_remote(
+                    &f.principal,
+                    nestlink_protocol::api::MediaRemoteRequest {
+                        media_format_version: 2,
+                        request: RemoteRequest {
+                            id: random_id(),
+                            controller_device_id: f.controller_id.clone(),
+                            host_device_id: f.host_id.clone(),
+                            permissions: vec![1],
+                            path_mode: "direct_only".into()
+                        },
+                    },
+                    1000
+                )
+                .is_err()
+        );
+    }
+    f.store.internal_software_media_candidate = Some(policy);
+    f.approve(true, 1001)?;
+    let initial = f.store.initial_permit(&f.principal, &f.request_id, 1001)?;
+    f.assert_scope(&initial)?;
+    assert!(
+        f.store
+            .current_permit(&f.principal, &f.request_id, 1200)
+            .is_err()
+    );
+    f.store.internal_software_media_candidate = None;
+    assert!(
+        f.store
+            .current_permit(&f.principal, &f.request_id, 1002)
+            .is_err()
+    );
+    // No candidate configuration changes ordinary legacy request creation.
+    assert!(
+        f.store
+            .create_remote(
+                &f.principal,
+                RemoteRequest {
+                    id: random_id(),
+                    controller_device_id: f.controller_id.clone(),
+                    host_device_id: f.host_id.clone(),
+                    permissions: vec![1],
+                    path_mode: "direct_only".into(),
+                },
+                1002
+            )
+            .is_ok()
+    );
+    Ok(())
+}
+
+#[test]
+fn internal_software_candidate_codec_marker_does_not_leak_to_legacy_or_other_targets() -> TestResult
+{
+    let mut f = MediaLifecycle::new_with_candidate(1_200_000, true)?;
+    // Fixture descriptor registration contains only VP8, never a hardware claim.
+    f.approve(true, 1001)?;
+    let candidate = f.store.initial_permit(&f.principal, &f.request_id, 1001)?;
+    assert!(
+        candidate
+            .required_capabilities
+            .iter()
+            .any(|value| value == nestlink_protocol::media::H264_CAPABILITY)
+    );
+    let id = random_id();
+    let view = f.store.create_remote(
+        &f.principal,
+        RemoteRequest {
+            id: id.clone(),
+            controller_device_id: f.controller_id.clone(),
+            host_device_id: f.host_id.clone(),
+            permissions: vec![1],
+            path_mode: "direct_only".into(),
+        },
+        1001,
+    )?;
+    let choice = ApprovalChoice {
+        approved: true,
+        permissions: vec![1],
+        paths: vec![1],
+    };
+    let proof = f
+        .store
+        .approval_transcript(&f.principal, &view.id, &choice, 1001)?;
+    f.store.approve_remote(
+        &f.principal,
+        &view.id,
+        choice,
+        &URL_SAFE_NO_PAD.encode(f.host.sign_action(&proof)?),
+        1001,
+    )?;
+    let legacy = f.store.initial_permit(&f.principal, &view.id, 1001)?;
+    assert_eq!(legacy.media_format_version, 0);
+    assert!(
+        !legacy
+            .required_capabilities
+            .iter()
+            .any(|value| value == nestlink_protocol::media::H264_CAPABILITY)
+    );
+    let policy = f
+        .store
+        .internal_software_media_candidate
+        .as_ref()
+        .ok_or("missing policy")?;
+    assert!(policy.authorize_permit(&legacy).is_err());
+    let mut wrong = candidate.clone();
+    let other = VideoFormat::legacy_h264(31, 640, 480, FrameRate::new(30, 1)?, 2000)?;
+    wrong.media_formats = vec![other.encode()?];
+    wrong.media_format_sha256 = nestlink_protocol::media_format::FormatSet::new(vec![other])?
+        .digest()
+        .to_vec();
+    assert!(policy.authorize_permit(&wrong).is_err());
+    let mut missing_marker = candidate;
+    missing_marker
+        .required_capabilities
+        .retain(|value| value != nestlink_protocol::media::H264_CAPABILITY);
+    assert!(policy.authorize_permit(&missing_marker).is_err());
     Ok(())
 }

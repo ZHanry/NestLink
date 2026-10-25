@@ -48,6 +48,9 @@ struct Args {
     /// Exact finite CPU media target, e.g. 1920x1080@30:4000. No implied presets.
     #[arg(long, value_parser=parse_native_media_target)]
     native_media_target: Option<nestlink_media_codec::VideoConfig>,
+    /// Private JSON policy for one internal software candidate; absent keeps rollout closed.
+    #[arg(long, requires = "native_media_target")]
+    internal_software_media_candidate: Option<PathBuf>,
 }
 
 #[derive(Subcommand)]
@@ -451,6 +454,11 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut native = nestlink_app_core::NativeSessionConfig::new(network);
     if let Some(target) = args.native_media_target {
         native = native.with_cpu_media_target(target)?;
+    }
+    if let Some(path) = args.internal_software_media_candidate {
+        let bytes = nestlink_platform_security::read_private(&path, 16 * 1024)?;
+        let policy = serde_json::from_slice(&bytes)?;
+        native = native.with_internal_software_media_candidate(policy)?;
     }
     native.listen_for_native_requests = true;
     native.bind_address = args.native_bind;

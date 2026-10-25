@@ -379,6 +379,9 @@ pub struct NativeSessionOptions {
 /// be used to construct this value by the application provider.
 #[derive(Clone, Debug)]
 pub struct NativeMediaEvidence {
+    pub internal_candidate: Option<
+        nestlink_protocol::internal_software_media_candidate::InternalSoftwareMediaCandidate,
+    >,
     pub frozen: nestlink_protocol::media_authority::FrozenMediaScope,
     pub local: nestlink_protocol::media_authority::MediaAnnouncement,
 }
@@ -389,15 +392,22 @@ impl NativeMediaEvidence {
         role: EndpointRole,
         now: u64,
     ) -> Result<nestlink_session::MediaSessionBinding, SdkError> {
-        Ok(
-            nestlink_session::MediaSessionBinding::from_local_announcement(
+        let binding = nestlink_session::MediaSessionBinding::from_local_announcement(
+            permit,
+            &self.frozen,
+            &self.local,
+            role,
+            now,
+        )?;
+        Ok(match &self.internal_candidate {
+            Some(policy) => binding.with_internal_software_candidate(
+                policy.clone(),
                 permit,
-                &self.frozen,
                 &self.local,
-                role,
                 now,
             )?,
-        )
+            None => binding,
+        })
     }
 }
 /// Separate entry point keeps legacy callers explicit and source compatible.

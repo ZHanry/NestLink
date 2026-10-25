@@ -317,7 +317,11 @@ pub(super) async fn prove_endpoint(
                 .map_err(Failure::from)?
                 .ok_or_else(|| Failure::local(FailureKind::Trust))?;
             fence.check()?;
-            Some(nestlink_sdk::native::NativeMediaEvidence { frozen, local })
+            Some(nestlink_sdk::native::NativeMediaEvidence {
+                frozen,
+                local,
+                internal_candidate: config.internal_software_media_candidate.clone(),
+            })
         } else {
             None
         };

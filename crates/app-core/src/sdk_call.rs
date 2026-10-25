@@ -395,7 +395,18 @@ async fn execute(
             };
             let value = match access {
                 RemoteAccess::LocalApproval => {
-                    if let Some(provider) = native.and_then(|n| n.media_provider.as_ref()) {
+                    let account = &sdk
+                        .principal()
+                        .ok_or_else(|| Failure::local(FailureKind::SignInRequired))?
+                        .account_id;
+                    if let Some(provider) = native.and_then(|n| {
+                        n.media_provider_for_request(
+                            &sdk.health().deployment_id,
+                            account,
+                            &request.controller_device_id,
+                            &request.host_device_id,
+                        )
+                    }) {
                         let _announcement = provider
                             .publish(
                                 sdk,
@@ -464,6 +475,25 @@ async fn execute(
                 return Err(Failure::local(FailureKind::Trust));
             }
             if choice.approved {
+                let policy = native
+                    .and_then(|n| n.internal_software_media_candidate.as_ref())
+                    .ok_or_else(|| Failure::local(FailureKind::NativeSessionUnavailable))?;
+                let account = &sdk
+                    .principal()
+                    .ok_or_else(|| Failure::local(FailureKind::SignInRequired))?
+                    .account_id;
+                // Check real local account/key, peer pair and reviewed singleton
+                // before any Encode publication, probe or approval signature.
+                policy
+                    .authorize_host_approval(
+                        &sdk.health().deployment_id,
+                        account,
+                        &local()?.device_id,
+                        &view.controller_device_id,
+                        &view.host_device_id,
+                        &reviewed_scope.formats,
+                    )
+                    .map_err(|_| Failure::local(FailureKind::Trust))?;
                 let provider = native
                     .and_then(|n| n.media_provider.as_ref())
                     .ok_or_else(|| Failure::local(FailureKind::NativeSessionUnavailable))?;

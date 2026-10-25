@@ -387,8 +387,22 @@ impl Store {
         body: nestlink_protocol::api::MediaRemoteRequest,
         now: u64,
     ) -> Result<RemoteView, StorageError> {
+        let candidate = || -> Result<(), StorageError> {
+            let scope = self.intersect_media(
+                &body.request.controller_device_id,
+                &body.request.host_device_id,
+                now,
+            )?;
+            self.candidate_media_request(
+                &actor.account_id,
+                &body.request.controller_device_id,
+                &body.request.host_device_id,
+                &scope.formats,
+                now,
+            )
+        };
         if body.media_format_version != 2
-            || !self.media_issuance_enabled_for_request(&body.request.id)
+            || (!self.media_issuance_enabled_for_request(&body.request.id) && candidate().is_err())
         {
             return Err(StorageError::Invalid(
                 "media authority runtime is not enabled",
@@ -699,6 +713,12 @@ impl Store {
         now: u64,
     ) -> Result<(), StorageError> {
         let transcript = self.media_approval_transcript(actor, id, &body.choice, now)?;
+        if body.choice.choice.approved && self.internal_software_media_candidate.is_some() {
+            let scope = self
+                .frozen_media_scope(id)?
+                .ok_or(StorageError::Forbidden)?;
+            self.require_media_still_available(id, &scope, now)?;
+        }
         self.apply_remote_approval(
             actor,
             id,
@@ -967,7 +987,15 @@ impl Store {
             required_capabilities
                 .push(nestlink_protocol::media_authority::FORMAT_CAPABILITY.into());
         }
-        if !self.is_browser_controller(&view.controller_device_id)?
+        // Candidate CPU direction evidence, not the legacy hardware cache,
+        // authorizes its exact H264 codec route. Availability was checked above.
+        if media_format_version != 0 && self.candidate_media_request_identity(id).is_ok() {
+            required_capabilities.push(nestlink_protocol::media::H264_CAPABILITY.into());
+        }
+        if !required_capabilities
+            .iter()
+            .any(|value| value == nestlink_protocol::media::H264_CAPABILITY)
+            && !self.is_browser_controller(&view.controller_device_id)?
             && c.capabilities
                 .iter()
                 .any(|value| value == nestlink_protocol::media::H264_CAPABILITY)

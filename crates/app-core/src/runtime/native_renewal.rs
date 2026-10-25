@@ -165,7 +165,11 @@ impl nestlink_sdk::native_renewal::NativeRenewalSource for Source<'_> {
                 .check()
                 .map_err(|_| nestlink_sdk::SdkError::Trust)?;
             Ok(nestlink_sdk::native_renewal::PreparedNativeRenewal {
-                evidence: nestlink_sdk::native::NativeMediaEvidence { frozen, local },
+                evidence: nestlink_sdk::native::NativeMediaEvidence {
+                    frozen,
+                    local,
+                    internal_candidate: self.config.internal_software_media_candidate.clone(),
+                },
                 execution: Arc::new(ExecutionFence {
                     dispatch: self.dispatch.clone(),
                     execution,

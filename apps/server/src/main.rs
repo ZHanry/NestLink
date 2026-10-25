@@ -39,6 +39,9 @@ enum Command {
     InstalledControl {
         #[arg(long, default_value = "/var/lib/nestlink-v15")]
         state_root: PathBuf,
+        /// Private JSON policy; grants no authority outside its exact internal scope.
+        #[arg(long)]
+        internal_software_media_candidate: Option<PathBuf>,
     },
     /// Create a dedicated node identity and a pinned control configuration.
     NodeInit {
@@ -211,6 +214,9 @@ enum Command {
     Control {
         #[arg(long)]
         config: PathBuf,
+        /// Private JSON policy; absent preserves default-closed signed media rollout.
+        #[arg(long)]
+        internal_software_media_candidate: Option<PathBuf>,
     },
     /// Run bounded STUN address discovery; this grants no forwarding allocation.
     Stun {
@@ -263,7 +269,10 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 allow_loopback_http,
             }
         }
-        Command::InstalledControl { state_root } => {
+        Command::InstalledControl {
+            state_root,
+            internal_software_media_candidate,
+        } => {
             let startup = nestlink_local_ipc::maintenance::InstallationStartup::acquire(
                 &std::env::current_exe()?,
             )?;
@@ -272,7 +281,10 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             }
             let config = startup.state_directory(&state_root)?.join("server.toml");
             installed_startup = Some(startup);
-            Command::Control { config }
+            Command::Control {
+                config,
+                internal_software_media_candidate,
+            }
         }
         command => command,
     };
@@ -736,7 +748,10 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             )?;
             println!("{}", serde_json::to_string_pretty(&receipt)?);
         }
-        Command::Control { config } => {
+        Command::Control {
+            config,
+            internal_software_media_candidate,
+        } => {
             // Admission also covers explicitly configured installed controls.
             // Hand it to the stable deployment runtime owner before releasing
             // it, so package stop cannot deadlock on the installation gate.
@@ -753,6 +768,12 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             let vault = VaultKey::from_bytes(*load_key(&config.vault_key_file)?);
             let signer = PermitSigner::from_seed(*load_key(&config.permit_key_file)?);
             let store = Store::open_existing(&config.database, &config.deployment_id)?;
+            let store = if let Some(path) = internal_software_media_candidate {
+                let bytes = read_private(&path, 16 * 1024)?;
+                store.with_internal_software_media_candidate(serde_json::from_slice(&bytes)?)?
+            } else {
+                store
+            };
             let secure = config.secure_cookies();
             let state = AppState::new(store, vault, signer, config.management_origin, secure)?
                 .with_stun_servers(config.stun_servers)?;
