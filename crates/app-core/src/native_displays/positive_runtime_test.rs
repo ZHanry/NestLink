@@ -164,6 +164,50 @@ fn actual_encoder_capture_timeline_retains_slow_request_gaps() -> io::Result<()>
     Ok(())
 }
 
+// Presentation consumes its scheduled mailbox independently of synthetic
+// capture/encoder request latency, as the real UI consumer does. The driver
+// still submits at most eight further AUs with its existing 35ms cadence.
+struct PresentationObserver {
+    task: Option<JoinHandle<TestResult<DecodedVideo>>>,
+}
+impl PresentationObserver {
+    fn start(
+        controller: &CoreHandle,
+        binding: &NativeSessionBinding,
+        selection: &DisplaySelection,
+    ) -> Self {
+        let controller = controller.clone();
+        let binding = binding.clone();
+        let selection = selection.clone();
+        Self {
+            task: Some(tokio::spawn(async move {
+                loop {
+                    if let Some(frame) =
+                        controller.poll_native_video_for_selection(&binding, &selection)?
+                    {
+                        return Ok(frame);
+                    }
+                    tokio::time::sleep(Duration::from_millis(5)).await;
+                }
+            })),
+        }
+    }
+    async fn take_if_ready(&mut self) -> TestResult<Option<DecodedVideo>> {
+        if !self.task.as_ref().is_some_and(JoinHandle::is_finished) {
+            return Ok(None);
+        }
+        let task = self.task.take().ok_or("presentation observer absent")?;
+        Ok(Some(task.await.map_err(io::Error::other)??))
+    }
+}
+impl Drop for PresentationObserver {
+    fn drop(&mut self) {
+        if let Some(task) = self.task.take() {
+            task.abort();
+        }
+    }
+}
+
 struct ActualEncoder {
     requests: Option<std::sync::mpsc::Sender<()>>,
     packets: std::sync::mpsc::Receiver<
@@ -690,6 +734,7 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
         .lock()
         .map_err(|_| "fixture clock poisoned")? =
         first_au_capture_origin(first.pts_90khz, Instant::now())?;
+    let mut observer = PresentationObserver::start(&controller, &session_binding, &selection);
     host.send_native_video_execution_frame(
         &session_binding,
         source,
@@ -716,9 +761,7 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
         )
         .await?;
         tokio::time::sleep(Duration::from_millis(35)).await;
-        if let Some(frame) =
-            controller.poll_native_video_for_selection(&session_binding, &selection)?
-        {
+        if let Some(frame) = observer.take_if_ready().await? {
             decoded = Some(frame);
             break;
         }
@@ -841,6 +884,8 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
         .await
         .is_err()
     );
+    let mut replacement_observer =
+        PresentationObserver::start(&controller, &session_binding, &selection);
     host.send_native_video_execution_frame(
         &session_binding,
         source,
@@ -866,9 +911,7 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
         )
         .await?;
         tokio::time::sleep(Duration::from_millis(35)).await;
-        if let Some(frame) =
-            controller.poll_native_video_for_selection(&session_binding, &selection)?
-        {
+        if let Some(frame) = replacement_observer.take_if_ready().await? {
             assert!(!frame.hardware_decode);
             assert_eq!((frame.width, frame.height), (config.width, config.height));
             assert!(frame.pixels.chunks_exact(4).all(|p| p[0].abs_diff(16) <= 40

@@ -147,11 +147,30 @@ impl State {
         while self.scheduled.front().is_some_and(|pending| {
             now.saturating_duration_since(pending.at) > crate::MAX_PLAYOUT_LATE
         }) {
+            #[cfg(debug_assertions)]
+            if self.stats.discarded_late_frames < 9
+                && let Some(pending) = self.scheduled.front()
+            {
+                eprintln!(
+                    "video playout late: stage=queue-prune pts={} late_us={}",
+                    pending.frame.pts_90khz,
+                    now.saturating_duration_since(pending.at).as_micros()
+                );
+            }
             self.scheduled.pop_front();
             self.stats.discarded_late_frames = self.stats.discarded_late_frames.saturating_add(1);
         }
         match clock.schedule(frame.pts_90khz, 90_000, now)? {
             crate::PlayoutDecision::At(at) => {
+                #[cfg(debug_assertions)]
+                if frame.sequence <= 9 {
+                    eprintln!(
+                        "video playout queued: pts={} ahead_us={} late_us={}",
+                        frame.pts_90khz,
+                        at.saturating_duration_since(now).as_micros(),
+                        now.saturating_duration_since(at).as_micros()
+                    );
+                }
                 let bytes = self
                     .scheduled
                     .iter()
@@ -169,6 +188,15 @@ impl State {
                 }
             }
             crate::PlayoutDecision::DropLate => {
+                #[cfg(debug_assertions)]
+                if self.stats.discarded_late_frames < 9 {
+                    let due = clock.presentation_time(frame.pts_90khz, 90_000, now)?;
+                    eprintln!(
+                        "video playout late: stage=queue-admission pts={} late_us={}",
+                        frame.pts_90khz,
+                        now.saturating_duration_since(due).as_micros()
+                    );
+                }
                 self.stats.discarded_late_frames =
                     self.stats.discarded_late_frames.saturating_add(1);
             }
@@ -191,6 +219,14 @@ impl State {
                 break;
             };
             if now.duration_since(pending.at) > crate::MAX_PLAYOUT_LATE {
+                #[cfg(debug_assertions)]
+                if self.stats.discarded_late_frames < 9 {
+                    eprintln!(
+                        "video playout late: stage=presentation-poll pts={} late_us={}",
+                        pending.frame.pts_90khz,
+                        now.duration_since(pending.at).as_micros()
+                    );
+                }
                 self.stats.discarded_late_frames =
                     self.stats.discarded_late_frames.saturating_add(1);
             } else {
@@ -2165,6 +2201,11 @@ fn receive(
             }
             if advertised && state.selected.is_none_or(|layout| layout.source!=source || layout.epoch!=codec_epoch) {continue;}
             if let Some((decoded, recovered)) = decoded {
+                #[cfg(debug_assertions)]
+                if decoded.sequence <= 9 {
+                    eprintln!("video decoded: pts={} ingress_to_output_us={}",
+                        decoded.pts_90khz, now.elapsed().as_micros());
+                }
                 if output.consumer_revision.load(std::sync::atomic::Ordering::Acquire)!=consumer_revision{continue;}
                 if let Some(receipt) = &decoded.execution {
                     receipt.check_decoded(decoded.pts_90khz, &decoded.pixels)?;
