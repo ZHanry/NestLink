@@ -1,0 +1,21 @@
+{
+  "source_sha": null,
+  "run": null,
+  "nonce_sha256": null,
+  "protocol": null,
+  "runtime_id": null,
+  "runtime_generation": null,
+  "service_id": null,
+  "approved_revision": null,
+  "choice_revision": null,
+  "publication_id": null,
+  "publication_generation": null,
+  "definition_sha256": null,
+  "target_sha256": null,
+  "service_issuer_ed25519": null,
+  "origin": null,
+  "deployment_id": null,
+  "approval_receipt_sha256": null,
+  "windows_binary_sha256": null,
+  "trusted_node_policy_issuer": null
+}

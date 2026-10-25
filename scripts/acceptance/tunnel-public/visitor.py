@@ -174,6 +174,7 @@ class Visitor:
             self.report["checks"].append({"name": "udp-legal-after-oversize", **echo_reply(self.config, legal, self.udp_exchange(primary, legal))})
 
     def steady(self, peer):
+        phase_started_unix_ms = int(time.time() * 1000)
         started = time.monotonic()
         frames = 0
         while time.monotonic() - started < self.config["steady_seconds"]:
@@ -181,7 +182,9 @@ class Visitor:
             echo_reply(self.config, raw, self.exchange(peer, raw))
             frames += 1
             time.sleep(min(0.75, self.remaining()))
-        self.report["checks"].append({"name": "continuous-owned-data", "seconds": round(time.monotonic() - started, 3),
+        self.report["checks"].append({"name": "continuous-owned-data",
+                                      "phase_started_unix_ms": phase_started_unix_ms,
+                                      "phase_finished_unix_ms": int(time.time() * 1000), "seconds": round(time.monotonic() - started, 3),
                                       "protocol": self.config["protocol"], "frames": frames,
                                       "product_lease_renewal_verified": False})
 

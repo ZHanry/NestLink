@@ -57,8 +57,9 @@ nonce、config、输出目录运行 UDP。每个 config 的 `protocol` 必须是
 ## 必须另保留的产品证据
 
 - 本轮实际服务器 peer 与精确 `/32` 服务定义回读；发布 ID、目标摘要及本地批准。
-- 持续数据期间同一发布的实际签名租约序号前进。工具不读取签名租约，
-  `product_lease_renewal_verified=false` 不能自动变成通过。
+- 持续数据期间同一发布的实际签名租约序号前进。visitor 和原始对比脚本仍不读取
+  产品租约；使用 [租约证据采集](RECEIPTS.md) 将实际认证 IPC 观测与服务器原始
+  租约字节配对。未配对的 `product_lease_renewal_verified=false` 保持不变。
 - Windows 产品停止结果、edge listener/flow 清理、用量确认或明确的 pending 状态。
 - 对比脚本把两端事件的序号、长度、hash、停止 marker 和结束时间对应；认证错误、
   格式损坏、helper提前退出、事件预算耗尽均不能算路径成功撤回。
@@ -72,3 +73,8 @@ nonce、config、输出目录运行 UDP。每个 config 的 `protocol` 必须是
 `python -B test_tools_offline.py` 的全部测试禁止创建socket及connect，涵盖HMAC篡改、
 TCP帧边界/FIN、UDP边界/peer隔离、gate顺序、停止阶段helper仍回包、source-only认证、
 已有listener拒绝、协议单选、源回执匹配/释放与产品证据未知边界。不是公网验收结果。
+
+`python -B test_receipts_offline.py` 另外验证签名、精确原始字节、部署公钥、序号、
+采样窗口、只读 SQLite 和 IPC publication 固定。它使用生成的测试密钥、模拟 IPC
+及临时数据库；不能证明实际产品或公网已通过。GitHub 使用
+`requirements-offline.txt` 安装这组测试的固定依赖，不在部署服务器安装包。

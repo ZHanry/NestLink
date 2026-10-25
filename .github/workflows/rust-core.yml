@@ -317,8 +317,18 @@ jobs:
         run: bash scripts/test-pipewire-audio-sanitizer.sh
       - name: Browser tool regressions (Node)
         run: node --test tests/refactor/test_browser_response_observer.cjs tests/refactor/test_browser_native_metrics.cjs tests/refactor/test_browser_network_damage.cjs tests/refactor/test_browser_workspace_ui.cjs
-      - name: Owned public tunnel tool regressions without network
-        run: python -B scripts/acceptance/tunnel-public/test_tools_offline.py
+      - name: Install pinned receipt test crypto on GitHub
+        shell: python
+        run: |
+          import subprocess, sys
+          subprocess.run([sys.executable, '-m', 'pip', 'install', '--only-binary=:all:',
+                          '--requirement', 'scripts/acceptance/tunnel-public/requirements-offline.txt'], check=True)
+      - name: Owned public tunnel tool and receipt regressions without network
+        shell: python
+        run: |
+          import subprocess, sys
+          for script in ('test_tools_offline.py', 'test_receipts_offline.py'):
+              subprocess.run([sys.executable, '-B', 'scripts/acceptance/tunnel-public/' + script], check=True)
       - run: python -m unittest discover -s tests/refactor -p "test_*.py"
       - run: python scripts/refactor-ui-tokens.py --check
       - run: cargo xtask check

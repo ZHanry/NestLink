@@ -355,13 +355,15 @@ async fn exercise(lost_response: bool) -> Result {
     let (c, h) = tokio::io::duplex(131072);
     let (mut cr, mut cw) = split(c);
     let (mut hr, mut hw) = split(h);
+    let controller_public_key = controller.identity.public_key();
+    let host_public_key = host.identity.public_key();
     tokio::try_join!(
         controller_proof(
             &mut cr,
             &mut cw,
             &mut session_c,
             &controller.identity,
-            &host.identity.public_key(),
+            &host_public_key,
             &clock_c
         ),
         host_proof(
@@ -369,7 +371,7 @@ async fn exercise(lost_response: bool) -> Result {
             &mut hw,
             &mut session_h,
             &host.identity,
-            &controller.identity.public_key(),
+            &controller_public_key,
             &clock_h
         )
     )?;

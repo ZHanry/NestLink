@@ -52,8 +52,18 @@ jobs:
         run: |
           import os, subprocess
           assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip() == os.environ['TOOL_SOURCE']
-      - name: Verify acceptance protocol without network
-        run: python3 -B scripts/acceptance/tunnel-public/test_tools_offline.py
+      - name: Install pinned receipt test crypto on GitHub
+        shell: python
+        run: |
+          import subprocess, sys
+          subprocess.run([sys.executable, '-m', 'pip', 'install', '--only-binary=:all:',
+                          '--requirement', 'scripts/acceptance/tunnel-public/requirements-offline.txt'], check=True)
+      - name: Owned public tunnel tool and receipt regressions without network
+        shell: python
+        run: |
+          import subprocess, sys
+          for script in ('test_tools_offline.py', 'test_receipts_offline.py'):
+              subprocess.run([sys.executable, '-B', 'scripts/acceptance/tunnel-public/' + script], check=True)
       - name: Validate fixed endpoints and start the bounded visitor
         shell: python
         run: |

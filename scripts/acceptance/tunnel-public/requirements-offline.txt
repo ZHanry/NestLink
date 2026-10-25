@@ -1,0 +1,2 @@
+# GitHub offline receipt-fixture tests only; no server/Windows runtime installation.
+cryptography==46.0.3
