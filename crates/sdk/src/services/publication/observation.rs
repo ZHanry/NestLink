@@ -94,6 +94,7 @@ pub(super) fn paired(
     let observation = ServiceLeaseObservation {
         schema_version: 1,
         runtime_generation: None,
+        issuer_delegation: None,
         publication_id: c.publication_id.clone(),
         publication_generation: c.publication_generation,
         service_id: c.service_id.clone(),

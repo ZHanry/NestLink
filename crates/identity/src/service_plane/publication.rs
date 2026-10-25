@@ -9,8 +9,13 @@ const HOST_ATTACH: &[u8] = b"NestLink/v15/service-host-attachment/v1\0";
 pub struct VerifiedServiceIssuerDelegation {
     claims: ServiceIssuerDelegation,
     policy_issuer: [u8; 32],
+    signed: SignedServiceIssuerDelegation,
 }
 impl VerifiedServiceIssuerDelegation {
+    /// Exact original policy-signed public proof, never reconstructed or resigned.
+    pub fn signed(&self) -> &SignedServiceIssuerDelegation {
+        &self.signed
+    }
     pub fn claims(&self) -> &ServiceIssuerDelegation {
         &self.claims
     }
@@ -63,6 +68,7 @@ pub fn verify_service_issuer_delegation(
     Ok(VerifiedServiceIssuerDelegation {
         claims,
         policy_issuer: *trusted_policy_issuer,
+        signed: signed.clone(),
     })
 }
 pub fn verify_attachment_challenge(

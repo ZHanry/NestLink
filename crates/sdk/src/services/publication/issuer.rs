@@ -42,6 +42,31 @@ impl ServiceIssuerOwner {
             .map_err(|_| SdkError::Trust)?
             .verify_lease(signed, now)?)
     }
+    /// Copies only the exact original public delegation after checking this lease.
+    pub(super) fn observation(
+        &self,
+        lease: &VerifiedServiceLease,
+        now: u64,
+    ) -> Result<
+        nestlink_protocol::service_plane::observation::ServiceIssuerDelegationEvidence,
+        SdkError,
+    > {
+        use nestlink_protocol::service_plane::observation::{
+            ISSUER_DELEGATION_OBSERVATION_BYTES, ServiceIssuerDelegationEvidence,
+        };
+        let current = self.current.read().map_err(|_| SdkError::Trust)?;
+        current.verify_lease(lease.signed(), now)?;
+        let signed = current.signed();
+        if signed.claims.len() > ISSUER_DELEGATION_OBSERVATION_BYTES || signed.signature.len() != 64
+        {
+            return Err(SdkError::Trust);
+        }
+        Ok(ServiceIssuerDelegationEvidence {
+            verified_policy_issuer_ed25519: current.policy_issuer(),
+            claims: signed.claims.clone(),
+            signature: signed.signature.clone(),
+        })
+    }
     pub(super) fn check_live(&self, now: u64) -> Result<(), SdkError> {
         let current = self.current.read().map_err(|_| SdkError::Trust)?;
         if now < current.claims().issued_at_unix_ms || now >= current.claims().expires_at_unix_ms {

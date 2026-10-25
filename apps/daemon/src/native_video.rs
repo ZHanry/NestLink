@@ -1121,12 +1121,11 @@ fn stream_capture<D: CaptureDevice>(
                 } else {
                     false
                 };
-                if let Some(retired) = encoder.take() {
-                    if matches!(&retired, VideoEncoder::Execution { .. })
-                        && retired.close().is_err()
-                    {
-                        return (controller, StreamExit::CaptureFailed);
-                    }
+                if let Some(retired) = encoder.take()
+                    && matches!(&retired, VideoEncoder::Execution { .. })
+                    && retired.close().is_err()
+                {
+                    return (controller, StreamExit::CaptureFailed);
                 }
                 encoder = if owner_encoding {
                     None
@@ -1405,10 +1404,11 @@ fn stream_capture<D: CaptureDevice>(
             }
         }
     })();
-    if let Some(retired) = encoder.take() {
-        if matches!(&retired, VideoEncoder::Execution { .. }) && retired.close().is_err() {
-            return (outcome.0, StreamExit::CaptureFailed);
-        }
+    if let Some(retired) = encoder.take()
+        && matches!(&retired, VideoEncoder::Execution { .. })
+        && retired.close().is_err()
+    {
+        return (outcome.0, StreamExit::CaptureFailed);
     }
     outcome
 }

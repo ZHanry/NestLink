@@ -444,3 +444,61 @@ fn actual_signed_lease_observation_discovers_pins_renews_and_rejects_retired_or_
     );
     Ok(())
 }
+
+#[test]
+fn original_public_delegation_evidence_is_exact_bound_live_and_changes_on_refresh() -> Result {
+    let at = wall()?;
+    let f = Fixture::new(at)?;
+    let (owner, original) = f.initial(at)?;
+    let signed_lease = f.service.sign(&f.claims)?;
+    let lease = owner.verify_lease(&signed_lease, at)?;
+    let first = owner.observation(&lease, at)?;
+    assert_eq!(first.claims, original.claims);
+    assert_eq!(first.signature, original.signature);
+    assert_eq!(first.verified_policy_issuer_ed25519, f.policy.public_key());
+    let retained = verify_service_issuer_delegation(
+        &SignedServiceIssuerDelegation {
+            claims: first.claims.clone(),
+            signature: first.signature.clone(),
+        },
+        &f.policy.public_key(),
+        &id(1),
+        at,
+    )?;
+    assert_eq!(retained.signed().claims, original.claims);
+    assert_eq!(retained.signed().signature, original.signature);
+    assert_eq!(
+        retained.verify_lease(&signed_lease, at)?.digest(),
+        lease.digest()
+    );
+    assert!(owner.observation(&lease, at + 3000).is_err());
+    let mut wrong_scope = f.issuer(at, at + 4000);
+    wrong_scope.policy_revision += 1;
+    let wrong_signed = f.policy.sign_service_issuer_delegation(&wrong_scope)?;
+    let wrong_owner = ServiceIssuerOwner::new(verify_service_issuer_delegation(
+        &wrong_signed,
+        &f.policy.public_key(),
+        &id(1),
+        at,
+    )?);
+    assert!(wrong_owner.observation(&lease, at).is_err());
+    let mut tampered = original.clone();
+    tampered.signature[0] ^= 1;
+    assert!(
+        verify_service_issuer_delegation(&tampered, &f.policy.public_key(), &id(1), at).is_err()
+    );
+    let fresh = f
+        .policy
+        .sign_service_issuer_delegation(&f.issuer(at, at + 4000))?;
+    owner.install(verify_service_issuer_delegation(
+        &fresh,
+        &f.policy.public_key(),
+        &id(1),
+        at,
+    )?)?;
+    let second = owner.observation(&lease, at)?;
+    assert_ne!(first, second); // A collection spanning refresh must reject the changed proof.
+    assert_eq!(second.claims, fresh.claims);
+    assert_eq!(second.signature, fresh.signature);
+    Ok(())
+}

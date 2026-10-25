@@ -20,6 +20,14 @@ impl ServiceLeaseObservationRequest {
                 .is_none_or(|id| crate::valid_id(id))
     }
 }
+/// Original verified public delegation only; contains no account/token authority.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ServiceIssuerDelegationEvidence {
+    pub verified_policy_issuer_ed25519: [u8; 32],
+    pub claims: Vec<u8>,
+    pub signature: Vec<u8>,
+}
 /// Only whitelisted public lease identity/signature material is exported. Pair
 /// with an independently retained issuer record containing the actual claims.
 /// The signature cannot be verified from this summary alone.
@@ -29,6 +37,8 @@ pub struct ServiceLeaseObservation {
     pub schema_version: u32,
     /// Set by the authenticated Actor IPC path; SDK-only samples have no Actor.
     pub runtime_generation: Option<u64>,
+    /// Some on the public LocalServiceRuntime path. Internal base samples omit it.
+    pub issuer_delegation: Option<ServiceIssuerDelegationEvidence>,
     pub publication_id: String,
     pub publication_generation: u64,
     pub service_id: String,
@@ -56,6 +66,8 @@ pub struct ServiceLeaseObservation {
     /// with each other, wall clock or the lease. This is historical observation.
     pub counters_non_atomic: bool,
 }
-pub const OBSERVATION_BYTES: usize = 4096;
+pub const OBSERVATION_BYTES: usize = 8192;
+/// Fixed public delegation claims fit this bound; do not export general signed messages.
+pub const ISSUER_DELEGATION_OBSERVATION_BYTES: usize = 1024;
 pub const SIGNED_LEASE_OBSERVATION_DOMAIN: &[u8] =
     b"NestLink/v15/service-signed-lease-observation/v1\0";

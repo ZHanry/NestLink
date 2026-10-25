@@ -41,6 +41,7 @@ fn wall() -> Result<u64, SdkError> {
         .map_err(|_| SdkError::Trust)
 }
 pub struct LocalServiceRuntime {
+    delegation: Arc<ServiceIssuerOwner>,
     publication: Arc<ServicePublication>,
     target: Arc<LocalTargetOwner>,
     connection: quinn::Connection,
@@ -61,20 +62,30 @@ impl LocalServiceRuntime {
     ) -> Result<nestlink_protocol::service_plane::observation::ServiceLeaseObservation, SdkError>
     {
         let handle = self.publication.handle();
-        let sample = observation::sample(&handle, request, || {
+        let first = handle.lease()?;
+        let issuer_proof = self.delegation.observation(&first, wall()?)?;
+        let mut sample = observation::sample(&handle, request, || {
             (
                 *self.stop.borrow() || self.connection.close_reason().is_some(),
                 self.cleanup_pending(),
             )
         })?;
         let current = handle.lease()?;
-        if !self.target.accepts(&current)
+        let current_proof = self.delegation.observation(&current, wall()?)?;
+        if issuer_proof != current_proof
+            || !self.target.accepts(&current)
             || *self.stop.borrow()
             || self.connection.close_reason().is_some()
             || sample.signed_lease_envelope_sha256 != observation::envelope_digest(&current)
             || sample.verified_issuer_ed25519 != current.issuer()
         {
             return Err(SdkError::Trust);
+        }
+        sample.issuer_delegation = Some(current_proof);
+        if serde_json::to_vec(&sample)?.len()
+            > nestlink_protocol::service_plane::observation::OBSERVATION_BYTES
+        {
+            return Err(SdkError::Invalid);
         }
         Ok(sample)
     }
@@ -335,7 +346,7 @@ impl Sdk {
             RunContext {
                 connected,
                 host,
-                delegation,
+                delegation: delegation.clone(),
                 publication: publication.clone(),
                 target: target.clone(),
                 edge_key: grant.edge_public_key,
@@ -348,6 +359,7 @@ impl Sdk {
         ));
         let cleanup = ServiceCleanupMonitor::new(task, endpoint);
         Ok(LocalServiceRuntime {
+            delegation,
             publication,
             target,
             connection,

@@ -33,11 +33,11 @@ impl AckBarrier {
                 result=async {
                     loop {
                         let frame=nestlink_transport_stream::read_frame(&mut cr).await?;
-                        if frame.channel==Channel::VideoFeedback && frame.payload.starts_with(b"NLMF") {
-                            if let FormatEnvelope::Ack(value)=FormatEnvelope::decode(&frame.payload).map_err(io::Error::other)? {
-                                *observed.lock().map_err(|_|io::Error::other("ACK barrier poisoned"))?=Some(value);
-                                wait.acquire().await.map_err(io::Error::other)?.forget();
-                            }
+                        if frame.channel==Channel::VideoFeedback && frame.payload.starts_with(b"NLMF")
+                            && let FormatEnvelope::Ack(value)=FormatEnvelope::decode(&frame.payload).map_err(io::Error::other)?
+                        {
+                            *observed.lock().map_err(|_|io::Error::other("ACK barrier poisoned"))?=Some(value);
+                            wait.acquire().await.map_err(io::Error::other)?.forget();
                         }
                         nestlink_transport_stream::write_frame(&mut hw,frame.channel,&frame.payload).await?;
                     }
