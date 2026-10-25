@@ -314,13 +314,28 @@ impl ActualEncoder {
             worker: Some(worker),
         }
     }
-    fn next(
+    async fn next(
         &self,
+        route: &NativeVideoRoute,
     ) -> TestResult<(
         EncodedVideo,
         nestlink_protocol::media_format::VideoFormat,
         nestlink_media_codec::ExecutionReceipt,
     )> {
+        // This fixture intentionally generates only independent IDRs. Core
+        // rate-limits IDRs; wait before capturing their timestamp, rather than
+        // presenting an already sealed AU after the pacing deadline expires.
+        let deadline = route
+            .cursor
+            .lock()
+            .map_err(|_| "fixture video cursor poisoned")?
+            .last_keyframe
+            .map(|last| {
+                last + Duration::from_millis(nestlink_protocol::VIDEO_KEYFRAME_INTERVAL_MS)
+            });
+        if let Some(deadline) = deadline {
+            tokio::time::sleep_until(deadline.into()).await;
+        }
         let request = self.requests_seen.fetch_add(1, Ordering::Relaxed) + 1;
         let started = Instant::now();
         self.requests.as_ref().ok_or("encoder closed")?.send(())?;
@@ -659,7 +674,7 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
         *set.formats().first().ok_or("empty signed target")?,
         capture_origin.clone(),
     );
-    let (first, actual, first_execution) = encoder.next()?;
+    let (first, actual, first_execution) = encoder.next(&video).await?;
     host.register_native_video_execution(&session_binding, first_execution.clone())
         .await?;
     assert!(first.keyframe);
@@ -791,7 +806,7 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     let mut decoded = None;
     // Some software decoders buffer; submit additional real independent IDRs.
     for request in 1..=8 {
-        let (packet, receipt, execution) = encoder.next()?;
+        let (packet, receipt, execution) = encoder.next(&video).await?;
         assert_eq!(receipt, actual);
         let send_started = Instant::now();
         host.send_native_video_execution_frame(
@@ -860,7 +875,7 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
             == Some(&request))
     })
     .await?;
-    let (packet, receipt, execution) = encoder.next()?;
+    let (packet, receipt, execution) = encoder.next(&video).await?;
     assert_eq!(receipt, actual);
     host.send_native_video_execution_frame(
         &session_binding,
@@ -880,7 +895,7 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     assert!(encoder_before.check_current().is_err());
     assert!(decoder_before.check_current().is_ok()); // Encode cannot retire Decode's slot.
     let encoder = ActualEncoder::start(config, actual, capture_origin);
-    let (fresh, receipt, fresh_execution) = encoder.next()?;
+    let (fresh, receipt, fresh_execution) = encoder.next(&video).await?;
     assert_eq!(receipt, actual);
     assert!(fresh_execution.identity()?.generation() > encoder_before.identity()?.generation());
     host.register_native_video_execution(&session_binding, fresh_execution.clone())
@@ -951,7 +966,7 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     );
     let mut replacement_pixels = false;
     for request in 1..=8 {
-        let (packet, receipt, execution) = encoder.next()?;
+        let (packet, receipt, execution) = encoder.next(&video).await?;
         assert_eq!(receipt, actual);
         let send_started = Instant::now();
         host.send_native_video_execution_frame(
