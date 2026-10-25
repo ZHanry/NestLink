@@ -1349,10 +1349,10 @@ struct Decoder {
 }
 impl Decoder {
     fn retire_codec(&mut self) -> io::Result<()> {
-        if let Some(codec) = self.codec.take() {
-            if matches!(&codec, VideoDecoder::Execution { .. }) {
-                codec.close()?;
-            }
+        if let Some(codec) = self.codec.take()
+            && matches!(&codec, VideoDecoder::Execution { .. })
+        {
+            codec.close()?;
         }
         Ok(())
     }

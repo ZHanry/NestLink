@@ -80,7 +80,7 @@ jobs:
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-platform-security --tests -p nestlink-privileged --lib --no-fail-fast
       - run: cargo fmt --all -- --check
       - run: cargo check --locked -p nestlink-platform-audio
-      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - run: cargo clippy --workspace --all-targets --locked --keep-going -- -D warnings
       - name: Check Linux recovery before the complete workspace suite
         if: runner.os == 'Linux'
         run: cargo test --locked -p nestlink-app-core --test native_recovery
