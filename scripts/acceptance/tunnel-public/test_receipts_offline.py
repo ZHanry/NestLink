@@ -11,7 +11,7 @@ import unittest
 from unittest.mock import patch
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
-from collect_lease import collect, observation_valid, plan_valid
+from collect_lease import collect, observation_valid, plan_valid, CollectionFailed
 from server_claims import LEASE_DOMAIN, ENVELOPE_DOMAIN, capture, pair, verify_one
 
 
@@ -47,7 +47,89 @@ def fixture():
     return p, captured, local, visitor, issuer_bytes
 
 
+def scripted_client(p, observations, events, changed_post_status=None):
+    class FakeClient:
+        runtime = p["runtime_id"]
+        attempts = 0
+        observed = 0
+        commands = []
+        def request(self, command, generation):
+            self.commands.append(copy.deepcopy(command))
+            host = dict(service_id=p["service_id"], approved_revision=4, approved_from_revision=3, protocol="tcp", status="running", cleanup_failed=False)
+            snapshot = dict(generation=2, authentication="signed_in", lifecycle="running", server={"origin": p["origin"], "deployment_id": p["deployment_id"]}, local_service_host=host)
+            if command["command"] == "snapshot":
+                return {"snapshot": snapshot}
+            event = events[self.attempts]
+            self.attempts += 1
+            if event == "valid":
+                result = dict(reply="local_service_lease_observation", observation=copy.deepcopy(observations[self.observed]))
+                self.observed += 1
+            else:
+                result = dict(reply="rejected", reason=event)
+                if changed_post_status is not None:
+                    host["status"] = changed_post_status
+            return dict(snapshot=snapshot, result=result)
+    return FakeClient()
+
+
 class ReceiptTests(unittest.TestCase):
+    def test_valid_ambiguous_stopped_valid_retains_evidence_and_pairs(self):
+        p, captured, local, visitor, _ = fixture()
+        client = scripted_client(p, local["observations"], ["valid", "stopped", "valid"])
+        with patch("collect_lease.time.sleep", return_value=None):
+            receipt = collect(client, p, 3, 0.5, "traffic")
+        self.assertTrue(receipt["complete"])
+        self.assertEqual(len(receipt["observations"]), 2)
+        self.assertEqual(receipt["rejections"][0]["interpretation"], "ambiguous-unavailable-not-an-observation")
+        paired = pair(p, captured, receipt, visitor)
+        self.assertTrue(paired["product_lease_renewal_verified"])
+        self.assertEqual(len(paired["rejected_observation_samples"]), 1)
+        self.assertEqual(paired["public_tunnel_acceptance"], "not_assessed")
+
+    def test_all_rejected_is_explicitly_insufficient_not_complete(self):
+        p, captured, local, visitor, _ = fixture()
+        client = scripted_client(p, local["observations"], ["stopped"] * 3)
+        with patch("collect_lease.time.sleep", return_value=None):
+            receipt = collect(client, p, 3, 0.5, "traffic")
+        self.assertFalse(receipt["complete"])
+        self.assertEqual(receipt["failure"], "insufficient-actual-lease-observations")
+        self.assertFalse(receipt["observations"])
+        self.assertEqual(len(receipt["rejections"]), 3)
+        with self.assertRaises(ValueError):
+            pair(p, captured, receipt, visitor)
+
+    def test_fatal_rejections_keep_safe_prior_evidence_without_retry(self):
+        p, _, local, _, _ = fixture()
+        for reason in ("invalid", "stale_generation", "capacity", "unknown"):
+            client = scripted_client(p, local["observations"], ["valid", reason, "valid"])
+            with self.subTest(reason=reason), patch("collect_lease.time.sleep", return_value=None):
+                with self.assertRaises(CollectionFailed) as caught:
+                    collect(client, p, 3, 0.5, "traffic")
+                receipt = caught.exception.receipt
+                self.assertFalse(receipt["complete"])
+                self.assertEqual(len(receipt["observations"]), 1)
+                self.assertEqual(len(receipt["rejections"]), 1)
+                self.assertEqual(client.attempts, 2)
+
+    def test_stopped_post_snapshot_is_fatal_even_for_ambiguous_reason(self):
+        p, _, local, _, _ = fixture()
+        client = scripted_client(p, local["observations"], ["valid", "stopped"], changed_post_status="stopped")
+        with patch("collect_lease.time.sleep", return_value=None):
+            with self.assertRaises(CollectionFailed) as caught:
+                collect(client, p, 2, 0.5, "traffic")
+        self.assertFalse(caught.exception.receipt["complete"])
+        self.assertEqual(len(caught.exception.receipt["observations"]), 1)
+        self.assertEqual(len(caught.exception.receipt["rejections"]), 1)
+
+    def test_total_budget_is_not_extended_by_continuation(self):
+        p, _, local, _, _ = fixture()
+        client = scripted_client(p, local["observations"], ["valid"])
+        client.overall_deadline = 0
+        with self.assertRaises(CollectionFailed) as caught:
+            collect(client, p, 2, 0.5, "traffic")
+        self.assertFalse(caught.exception.receipt["complete"])
+        self.assertFalse(client.commands)
+
     def test_real_signature_pair_progress_and_no_raw_export(self):
         p, c, local, visitor, issuer = fixture()
         receipt = pair(p, c, local, visitor)

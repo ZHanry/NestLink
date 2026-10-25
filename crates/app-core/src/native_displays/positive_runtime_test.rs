@@ -103,6 +103,67 @@ fn key(host: bool) -> NativeSessionKey {
     }
 }
 
+// Match production capture timing: encoder work and request gaps consume real
+// session time. A nominal accepted-frame counter hides those gaps from playout.
+fn capture_pts(origin: Instant, captured_at: Instant, last: Option<u64>) -> io::Result<u64> {
+    let elapsed = captured_at
+        .checked_duration_since(origin)
+        .ok_or_else(|| io::Error::other("fixture capture precedes origin"))?;
+    let pts =
+        u64::try_from(elapsed.as_nanos() * 90_000 / 1_000_000_000).map_err(io::Error::other)?;
+    let minimum = last.map_or(Ok(0), |value| {
+        value
+            .checked_add(1)
+            .ok_or_else(|| io::Error::other("fixture capture clock exhausted"))
+    })?;
+    Ok(pts.max(minimum))
+}
+
+fn first_au_capture_origin(first_pts: u64, released_at: Instant) -> io::Result<Instant> {
+    let offset = Duration::from_nanos(
+        u64::try_from(u128::from(first_pts) * 1_000_000_000 / 90_000).map_err(io::Error::other)?,
+    );
+    released_at
+        .checked_sub(offset)
+        .ok_or_else(|| io::Error::other("fixture clock rebase overflow"))
+}
+
+#[test]
+fn actual_encoder_capture_timeline_retains_slow_request_gaps() -> io::Result<()> {
+    use nestlink_media_session::{PlayoutDecision, SessionPlayoutClock};
+    let origin = Instant::now();
+    let clock = SessionPlayoutClock::default();
+    let first = capture_pts(origin, origin, None)?;
+    let due = clock.presentation_time(first, 90_000, origin)?;
+    // A real encoder/request delay must advance PTS by the same elapsed time.
+    // Count-based 30fps PTS would now be permanently behind the 40ms budget.
+    let later = origin + Duration::from_millis(220);
+    assert!(matches!(
+        clock.schedule(3000, 90_000, later)?,
+        PlayoutDecision::DropLate
+    ));
+    let next = capture_pts(origin, later, Some(first))?;
+    assert_eq!(next, 19_800);
+    assert!(
+        matches!(clock.schedule(next, 90_000, later)?, PlayoutDecision::At(at)
+        if at == due + Duration::from_millis(220))
+    );
+    assert_eq!(capture_pts(origin, later, Some(next))?, next + 1);
+    // A replacement owner shares the session origin rather than restarting PTS.
+    assert!(capture_pts(origin, later + Duration::from_millis(100), None)? > next);
+    assert!(capture_pts(later, origin, None).is_err());
+    // Initial ACK negotiation is outside the live media stream. Align to the
+    // first AU's unchanged sealed PTS, not its much earlier encoding time.
+    let released = origin + Duration::from_millis(1500);
+    let rebased = first_au_capture_origin(9000, released)?;
+    assert_eq!(capture_pts(rebased, released, None)?, 9000);
+    assert_eq!(
+        capture_pts(rebased, released + Duration::from_millis(220), Some(9000))?,
+        28_800
+    );
+    Ok(())
+}
+
 struct ActualEncoder {
     requests: Option<std::sync::mpsc::Sender<()>>,
     packets: std::sync::mpsc::Receiver<
@@ -118,7 +179,7 @@ impl ActualEncoder {
     fn start(
         config: VideoConfig,
         target: nestlink_protocol::media_format::VideoFormat,
-        pts_base: u64,
+        capture_origin: Arc<Mutex<Instant>>,
     ) -> Self {
         let (requests, receive) = std::sync::mpsc::channel();
         let (send, packets) = std::sync::mpsc::channel();
@@ -133,16 +194,29 @@ impl ActualEncoder {
             )?;
             let pixels =
                 Zeroizing::new([16, 128, 240, 255].repeat((config.width * config.height) as usize));
-            let mut accepted = 0u64;
+            let mut last_accepted_pts = None;
+            let mut pending_pts = None;
             while receive.recv().is_ok() {
                 let result = (|| {
                     for _ in 0..256 {
-                        let step = encoder.encode_step(
-                            &pixels,
-                            pts_base + accepted * 90_000 / u64::from(config.fps),
-                            true,
-                        )?;
-                        accepted += u64::from(step.accepted);
+                        let pts = match pending_pts {
+                            Some(pts) => pts,
+                            None => capture_pts(
+                                *capture_origin
+                                    .lock()
+                                    .map_err(|_| io::Error::other("fixture clock poisoned"))?,
+                                Instant::now(),
+                                last_accepted_pts,
+                            )?,
+                        };
+                        let step = encoder.encode_step(&pixels, pts, true)?;
+                        if step.accepted {
+                            last_accepted_pts = Some(pts);
+                            pending_pts = None;
+                        } else {
+                            // Backpressure retries the same captured input and timestamp.
+                            pending_pts = Some(pts);
+                        }
                         if let Some(packet) = step.output {
                             let sps = prepare.validate(&packet.data, packet.keyframe)?;
                             let format = prepare.configured(config, sps)?;
@@ -497,10 +571,11 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     until(|| Ok(host.native_displays(&session_binding)?.selected.as_ref() == Some(&selection)))
         .await?;
     assert!(video.gate.is_active()); // Actual encoder may progress before NLMF ACK.
+    let capture_origin = Arc::new(Mutex::new(Instant::now()));
     let encoder = ActualEncoder::start(
         config,
         *set.formats().first().ok_or("empty signed target")?,
-        1,
+        capture_origin.clone(),
     );
     let (first, actual, first_execution) = encoder.next()?;
     host.register_native_video_execution(&session_binding, first_execution.clone())
@@ -608,6 +683,13 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
         .await
         .is_err()
     );
+    // The first real AU was held for format negotiation. Receiver playout
+    // anchors its sealed PTS at ingress; start subsequent captures from that
+    // same point, excluding only this fixture's pre-stream ACK barrier pause.
+    *capture_origin
+        .lock()
+        .map_err(|_| "fixture clock poisoned")? =
+        first_au_capture_origin(first.pts_90khz, Instant::now())?;
     host.send_native_video_execution_frame(
         &session_binding,
         source,
@@ -689,7 +771,6 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     .await?;
     let (packet, receipt, execution) = encoder.next()?;
     assert_eq!(receipt, actual);
-    let next_start = packet.pts_90khz + 3000;
     host.send_native_video_execution_frame(
         &session_binding,
         source,
@@ -707,7 +788,7 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     assert!(encoder_before.retired_joined());
     assert!(encoder_before.check_current().is_err());
     assert!(decoder_before.check_current().is_ok()); // Encode cannot retire Decode's slot.
-    let encoder = ActualEncoder::start(config, actual, next_start);
+    let encoder = ActualEncoder::start(config, actual, capture_origin);
     let (fresh, receipt, fresh_execution) = encoder.next()?;
     assert_eq!(receipt, actual);
     assert!(fresh_execution.identity()?.generation() > encoder_before.identity()?.generation());

@@ -81,6 +81,13 @@ def pair(plan, capture_data, local, visitor):
     plan_valid(plan)
     require(plan["publication_id"] is not None and plan["publication_generation"] is not None and plan["service_issuer_ed25519"] is not None, "pair-pinned-publication-required")
     require(capture_data["complete"] is True and local["complete"] is True and local["phase"] == "traffic", "incomplete-input")
+    require(isinstance(local["observations"], list) and 2 <= len(local["observations"]) <= 180, "insufficient-or-unbounded-actual-observations")
+    rejections = local.get("rejections", [])
+    require(isinstance(rejections, list) and len(rejections) + len(local["observations"]) <= 180, "rejection-record-bound")
+    for rejected in rejections:
+        require(set(rejected) == {"attempt", "sample_unix_ms", "reason", "interpretation"}, "rejection-record-fields")
+        require(type(rejected["attempt"]) is int and 1 <= rejected["attempt"] <= 180 and type(rejected["sample_unix_ms"]) is int and 0 <= rejected["sample_unix_ms"] < 2**64, "rejection-record-time-attempt")
+        require(rejected["reason"] == "stopped" and rejected["interpretation"] == "ambiguous-unavailable-not-an-observation", "fatal-rejection-not-pairable")
     for item in (capture_data, local):
         require(item["source_sha"] == plan["source_sha"] and item["run"] == plan["run"] and item["nonce_sha256"] == plan["nonce_sha256"] and item["publication_id"] == plan["publication_id"], "receipt-run-publication")
     require(local["runtime_id"] == plan["runtime_id"] and local["runtime_generation"] == plan["runtime_generation"], "receipt-runtime")
@@ -116,7 +123,7 @@ def pair(plan, capture_data, local, visitor):
             verified.append(v)
     sequences = sorted(set(row["lease_sequence"] for row in verified))
     progressed = len(sequences) >= 2 and sequences[-1] > sequences[0]
-    return {"schema_version": 1, "source_sha": plan["source_sha"], "run": plan["run"], "nonce_sha256": plan["nonce_sha256"], "publication_id": plan["publication_id"], "runtime_id": plan["runtime_id"], "runtime_generation": plan["runtime_generation"], "trusted_node_policy_issuer": plan["trusted_node_policy_issuer"], "verified_samples_in_traffic_window": verified, "failed_unmatched_samples": missed, "product_lease_renewal_verified": progressed, "public_tunnel_acceptance": "not_assessed", "stop_cleanup_usage_verified": False, "limits": "Node policy root is independently operator-pinned; delegation and lease signatures verify exact original bytes. This verifies original issuer signatures and exact stored bytes, not the entire Rust lease semantic validator. Raw claims remain private. Counter readings are non-atomic."}
+    return {"schema_version": 1, "source_sha": plan["source_sha"], "run": plan["run"], "nonce_sha256": plan["nonce_sha256"], "publication_id": plan["publication_id"], "runtime_id": plan["runtime_id"], "runtime_generation": plan["runtime_generation"], "trusted_node_policy_issuer": plan["trusted_node_policy_issuer"], "verified_samples_in_traffic_window": verified, "failed_unmatched_samples": missed, "rejected_observation_samples": rejections, "product_lease_renewal_verified": progressed, "public_tunnel_acceptance": "not_assessed", "stop_cleanup_usage_verified": False, "limits": "Node policy root is independently operator-pinned; delegation and lease signatures verify exact original bytes. This verifies original issuer signatures and exact stored bytes, not the entire Rust lease semantic validator. Raw claims remain private. Counter readings are non-atomic."}
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)

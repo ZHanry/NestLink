@@ -81,7 +81,7 @@ jobs:
           scratch = pathlib.Path(os.environ['RUNNER_TEMP'])
           config = scratch / 'owned-tunnel-config.json'
           with os.fdopen(os.open(config, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'w') as stream:
-              json.dump({'run': run, 'nonce_hex': nonce, 'server': '158.180.81.141', 'tcp_port': 29101, 'udp_port': 29102, 'steady_seconds': 30, 'duration_seconds': 600, 'protocol': os.environ['ACCEPTANCE_PROTOCOL']}, stream)
+              json.dump({'run': run, 'nonce_hex': nonce, 'server': '158.180.81.141', 'tcp_port': 29101, 'udp_port': 29102, 'steady_seconds': 60, 'duration_seconds': 600, 'protocol': os.environ['ACCEPTANCE_PROTOCOL']}, stream)
           output = scratch / 'owned-tunnel-visitor'
           log = (scratch / 'owned-tunnel-visitor.log').open('xb')
           child = subprocess.Popen(['python3', '-B', 'scripts/acceptance/tunnel-public/visitor.py', '--config', str(config), '--output', str(output)], stdout=log, stderr=log, start_new_session=True)

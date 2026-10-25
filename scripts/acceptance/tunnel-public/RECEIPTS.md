@@ -31,13 +31,27 @@ python3 -B server_claims.py capture --db ACTUAL_DATABASE_PATH --plan PINNED_PLAN
 私有服务器目录，不放入公开 Web、GitHub artifact 或普通验收附件。读取 live WAL
 失败就记录缺失，不修改权限或忽略 WAL。
 
-将本轮 visitor 的 steady_seconds 设为 60。在解除现有 helper 流量门之前启动：
+工作流与 init_run 的默认 steady_seconds 均为 60，总 duration_seconds 仍为 600。
+服务器 capture 已运行、实际批准和 publication 固定完成后，在解除现有 helper 流量门之前启动：
 
 ```text
 python -B collect_lease.py --plan PINNED_PLAN --phase traffic --samples 100 --interval 0.5 --output PRIVATE_TRAFFIC_JSON
 ```
 
-采集受 90 秒绝对预算约束。若排队耗尽窗口，开始新的完整采集轮次。两条真实递增
+100 次、间隔 0.5 秒的采集有 49.5 秒等待时间，另加 IPC 和签名核验开销；50 秒不是完成保证。
+采集仍受原有 90 秒绝对预算约束。启动后应在 10 秒内解除 helper 流量门；若 ready-to-stop
+先到，须等本次有界采集结束，再在原有握手与总期限内进入 stop-arm 和人工停止。
+不得提前停止产品或延长旧窗口；若剩余期限不足，记录失败并开始新轮次。
+最终按实际 phase 时间配对，窗口外样本不能证明流量期间续租。
+
+IPC 的 stopped 拒绝可能来自续租采样竞争，也可能来自停止、过期或资源失效，工具不猜测原因。
+只有拒绝前后均为同一已批准 Running 宿主，且运行代次、登录和部署不变时，才记录为缺失样本
+并在原预算内继续；拒绝不计作租约。其他拒绝或状态变化终止采集，保留已核验样本和脱敏拒绝
+记录。少于两份真实观测时输出 complete=false；完整采集仍须另行核验原始签名和递增序号。
+
+产品 service resource poll 默认每 250ms 一次，成功快照递增签名租约序号，租约最长 10 秒；
+edge 检查并发送续租的 tick 为 25ms。这些源码时序说明当前 50 秒采集通常足够覆盖多个续租，
+不是运行保证。数据库可能覆盖未捕获的序号，IPC 也会拒绝跨续租的混合样本。两条真实递增
 签名序号必须都落在使用实际时钟偏移边界收紧后的连续流量窗口内；仅看到两个
 序号或计数增长不足以证明该条件。服务器覆盖旧序号前必须及时采到，缺失样本
 不能重构。

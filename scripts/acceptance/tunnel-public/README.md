@@ -7,15 +7,17 @@
 nonce、config、输出目录运行 UDP。每个 config 的 `protocol` 必须是 `tcp` 或 `udp`，不能同时运行。
 目的地固定为 `158.180.81.141`：TCP 29101，UDP 29102。单轮 visitor 与 HL helper 各有
 600 秒硬上限，持续流量 30…90 秒。服务器 observer 只占同一轮选择的端口最多 90 秒。
-所有工具均为 Python 标准库。
+数据与来源观察工具只用 Python 标准库；租约证据工具的既有依赖见 RECEIPTS.md。
 
 ## 单轮操作
 
 1. 离线生成配置：`python -B init_run.py --protocol tcp --output <new-private-config>`。
    UDP 后续另生成一份，禁止复用 TCP 的 run/nonce。配置含测试 HMAC nonce，不能上传到 artifact。
-2. 在 HL 运行 `python -B responder.py serve --config <config> --output <new-directory>`。
-   `ready.json` 只提供一个 `127.0.0.1` 随机 target 和私有本地 gate token。
-   不能把 gate token 作为产品授权；不要上传 ready/control 文件。
+2. 从已审核的 main 完整提交 dispatch `.github/workflows/public-tunnel-acceptance.yml`，
+   输入该提交、选择的 protocol、同一 run UUID 与测试 nonce。工作流仅 `contents:read`；
+   并发组阻止两个公网轮次重叠。等待本 run 的 `visitor-source-ready-<workflow run id>`
+   artifact 后，才启动下一步的 90 秒 observer。CI 排队、依赖安装和离线测试不占用 observer
+   的窗口；artifact 下载仍有延迟，超过 visitor 自身的 90 秒来源窗口则本轮失败，不能放宽窗口。
 3. 在服务器运行 `python3 -B source_observer.py --config <same-config> --output <new-source-receipt.json>`。
    启动前由 `ss` 检查选择的固定端口没有现有 listener；随后不带 reuse 选项独占绑定，
    若已有产品监听则失败，绝不替换。只对本次 run/nonce 的认证探测回应 `phase=source-only`。
@@ -24,12 +26,15 @@ nonce、config、输出目录运行 UDP。每个 config 的 `protocol` 必须是
    `observer_port_released=true` 回执。TCP visitor 读完整认证响应后主动 shutdown 写半部，
    observer 有界等待 EOF 再关闭，避免服务器主动关闭造成原端口 TIME_WAIT；超时/尾数据
    直接失败。关闭后还必须立即对同端口 exclusive bind→close 成功，回执标记
-   `release_check=exclusive_rebind`。整个收尾必须在observer期限内完成，无成功回执不得发布。
+   `release_check=exclusive_rebind`。整个收尾必须在 observer 期限内完成，无成功回执不得发布。
    没有设置 SO_REUSEADDR/SO_REUSEPORT。错误 HMAC 不获得回包，没有匹配探测则限时退出。
-4. 从已审核的 main 完整提交 dispatch `.github/workflows/public-tunnel-acceptance.yml`，
-   输入该提交、选择的 protocol、同一 run UUID 与测试 nonce。工作流仅 `contents:read`；
-   并发组阻止两个公网轮次重叠。访问器先发布 source-ready，再取得认证 source-only 回包，
-   发布 `visitor-source-observed-<workflow run id>` artifact。
+   同时取得 `visitor-source-observed-<workflow run id>` artifact，与服务器回执逐项配对。
+4. 来源确认且 observer 已释放端口后，在 HL 运行
+   `python -B responder.py serve --config <config> --output <new-directory>`。
+   此时才启动 helper 的 600 秒硬期限，避免 CI 排队提前消耗其寿命。`ready.json` 只提供一个
+   `127.0.0.1` 随机 target 和私有本地 gate token；不能把 gate token 作为产品授权，
+   不要上传 ready/control 文件。默认持续流量为 60 秒，helper 与 visitor 各自的总期限仍为
+   600 秒，不能把总期限解释为持续流量 600 秒。
 5. 对照服务器 source 回执与 source-observed artifact 的 run/protocol/nonce hash/IP/时间，
    确认 observer 已释放端口，随后才启动 edge 发布。通过产品管理端把**这一服务**的来源 ACL
    设为该实际 IPv4 的精确 `/32`，保留服务定义回读/ACL证据。用 Windows 产品选择 ready
