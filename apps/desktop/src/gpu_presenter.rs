@@ -643,8 +643,10 @@ mod tests {
         context.format = Some(WireVideoFormat::new(fractional)?);
         assert!(gpu_config(&context, 640, 480).is_err());
         for bitrate_kbps in [1, 100_001] {
-            let mut out_of_bounds = format;
-            out_of_bounds.max_kbps = bitrate_kbps;
+            // Level 5.1 admits this bitrate at the protocol boundary so the
+            // GPU owner's narrower executable bounds are actually exercised.
+            let out_of_bounds =
+                VideoFormat::legacy_h264(51, 640, 480, FrameRate::new(60, 1)?, bitrate_kbps)?;
             context.format_sha256 = out_of_bounds.digest()?;
             context.format = Some(WireVideoFormat::new(out_of_bounds)?);
             assert!(gpu_config(&context, 640, 480).is_err());
