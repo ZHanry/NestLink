@@ -9,7 +9,9 @@ mod socket;
 pub use adjacency::{Adjacency, AdjacencyEndpoint};
 pub use authorization::{RouteAuthorization, RouteRevocation};
 pub use forwarding::{FragmentReplayWindow, RelayForwarder};
-pub use listener::{NetworkNodeListener, authenticated_peer_fingerprint, node_listener, node_listener_with_legacy};
+pub use listener::{
+    NetworkNodeListener, authenticated_peer_fingerprint, node_listener, node_listener_with_legacy,
+};
 
 use crate::*;
 use nestlink_protocol::{network::PeerId, network_datagram as wire};

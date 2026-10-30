@@ -11,11 +11,9 @@ pub struct NetworkNodeListener {
     close_deadline: Option<Instant>,
 }
 pub fn authenticated_peer_fingerprint(connection: &Connection) -> io::Result<[u8; 32]> {
-    let certificates = connection.peer_identity().and_then(|identity|
-        identity.downcast::<Vec<rustls::pki_types::CertificateDer<'static>>>().ok())
+    let identity = connection.peer_identity()
         .ok_or_else(|| io::Error::from(io::ErrorKind::PermissionDenied))?;
-    if certificates.len() != 1 { return Err(io::ErrorKind::PermissionDenied.into()); }
-    tls::certificate_fingerprint(&certificates[0]).map_err(io::Error::other)
+    tls::peer_identity_fingerprint(identity.as_ref()).map_err(io::Error::other)
 }
 pub fn node_listener(address: SocketAddr, identity: &NodeIdentity, pins: Arc<dyn CurrentClientPins>)
     -> Result<NetworkNodeListener>
@@ -41,7 +39,7 @@ fn bind(address: SocketAddr, identity: &NodeIdentity, pins: Arc<dyn CurrentClien
     transport.mtu_discovery_config(None);
     server.transport_config(Arc::new(transport));
     server.migration(false);
-    let (mut endpoint, released) = crate::service::socket::client(address)?;
+    let (endpoint, released) = crate::service::socket::client(address)?;
     endpoint.set_server_config(Some(server));
     Ok(NetworkNodeListener { endpoint: Some(endpoint), released: Some(released), close_deadline: None })
 }

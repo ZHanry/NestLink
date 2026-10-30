@@ -8,7 +8,12 @@ use nestlink_protocol::network::PeerId;
 use nestlink_transport_quic::routed::{self, AdjacencyEndpoint, RelayForwarder};
 use nestlink_transport_stream::{Channel, read_frame, write_frame};
 use serde_json::json;
-use std::{fs, io, net::{SocketAddr, UdpSocket}, path::{Path, PathBuf}, time::Duration};
+use std::{
+    fs, io,
+    net::{SocketAddr, UdpSocket},
+    path::{Path, PathBuf},
+    time::Duration,
+};
 use tokio::time::Instant;
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 const FIRST: &str = "10.210.1.2:45001";
@@ -29,19 +34,29 @@ fn fixture(namespace: bool) -> Result<PathBuf> {
         assert!(runner.starts_with("net:[") && runner.ends_with(']'));
         assert_ne!(actual.to_string_lossy(), runner);
         let status = fs::read_to_string("/proc/self/status")?;
-        let uid = status.lines().find(|line| line.starts_with("Uid:")).ok_or("missing uid")?;
+        let uid = status
+            .lines()
+            .find(|line| line.starts_with("Uid:"))
+            .ok_or("missing uid")?;
         assert_ne!(uid.split_whitespace().nth(1), Some("0"));
         assert_ne!(uid.split_whitespace().nth(2), Some("0"));
-        println!("NESTLINK_ROUTED namespace={actual:?} pid={} {uid}", std::process::id());
+        println!(
+            "NESTLINK_ROUTED namespace={actual:?} pid={} {uid}",
+            std::process::id()
+        );
     }
     Ok(root)
 }
 fn identity(root: &Path, role: &str) -> Result<InstallationIdentity> {
-    let mut seed: [u8; 32] = fs::read(root.join(format!("{role}.seed")))?.try_into().map_err(|_| "invalid seed")?;
+    let mut seed: [u8; 32] = fs::read(root.join(format!("{role}.seed")))?
+        .try_into()
+        .map_err(|_| "invalid seed")?;
     Ok(InstallationIdentity::from_seed_zeroizing(&mut seed))
 }
 fn peer(root: &Path, role: &str) -> Result<PeerId> {
-    Ok(PeerId(digest(&fs::read(root.join(format!("{role}.public")))?)))
+    Ok(PeerId(digest(&fs::read(
+        root.join(format!("{role}.public")),
+    )?)))
 }
 fn mark(root: &Path, name: &str) -> Result {
     fs::write(root.join(format!("{name}.pending")), b"observed\n")?;
@@ -51,8 +66,11 @@ fn mark(root: &Path, name: &str) -> Result {
 }
 async fn wait_mark(root: &Path, name: &str, deadline: Instant) -> Result {
     tokio::time::timeout_at(deadline, async {
-        while !root.join(name).is_file() { tokio::time::sleep(Duration::from_millis(10)).await; }
-    }).await?;
+        while !root.join(name).is_file() {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+    })
+    .await?;
     assert_eq!(fs::read(root.join(name))?, b"observed\n");
     Ok(())
 }
@@ -60,30 +78,46 @@ async fn rebind(address: SocketAddr) -> Result {
     tokio::time::timeout(Duration::from_secs(2), async {
         loop {
             match UdpSocket::bind(address) {
-                Ok(socket) => { drop(socket); return Ok::<_, io::Error>(()); }
-                Err(error) if error.kind() == io::ErrorKind::AddrInUse => tokio::time::sleep(Duration::from_millis(10)).await,
+                Ok(socket) => {
+                    drop(socket);
+                    return Ok::<_, io::Error>(());
+                }
+                Err(error) if error.kind() == io::ErrorKind::AddrInUse => {
+                    tokio::time::sleep(Duration::from_millis(10)).await
+                }
                 Err(error) => return Err(error),
             }
         }
-    }).await??;
+    })
+    .await??;
     Ok(())
 }
 fn receipt(root: &Path, role: &str, facts: serde_json::Value) -> Result {
-    fs::write(root.join(format!("{role}-receipt.json")), serde_json::to_vec_pretty(&facts)?)?;
+    fs::write(
+        root.join(format!("{role}-receipt.json")),
+        serde_json::to_vec_pretty(&facts)?,
+    )?;
     Ok(())
 }
 fn ipv6(reverse: bool) -> Vec<u8> {
     let mut packet = vec![0; 1280];
-    packet[0] = 0x60; packet[4..6].copy_from_slice(&1240u16.to_be_bytes()); packet[6] = 59; packet[7] = 64;
-    packet[8] = 0xfd; packet[23] = if reverse { 2 } else { 1 };
-    packet[24] = 0xfd; packet[39] = if reverse { 1 } else { 2 };
+    packet[0] = 0x60;
+    packet[4..6].copy_from_slice(&1240u16.to_be_bytes());
+    packet[6] = 59;
+    packet[7] = 64;
+    packet[8] = 0xfd;
+    packet[23] = if reverse { 2 } else { 1 };
+    packet[24] = 0xfd;
+    packet[39] = if reverse { 1 } else { 2 };
     packet[40..40 + MARKER.len()].copy_from_slice(MARKER);
     packet[1279] = u8::from(reverse);
     packet
 }
 #[test]
 #[ignore = "GitHub-hosted network namespace orchestrator only"]
-fn prepare_fixture() -> Result { authority::prepare(&fixture(false)?) }
+fn prepare_fixture() -> Result {
+    authority::prepare(&fixture(false)?)
+}
 
 #[tokio::test]
 #[ignore = "GitHub-hosted network namespace orchestrator only"]
@@ -101,7 +135,8 @@ async fn relay_process() -> Result {
     let mut relay = RelayForwarder::new(authorization, first, second)?;
     mark(&root, "relay-forwarding")?;
     let stopped = {
-        let run = relay.run(); tokio::pin!(run);
+        let run = relay.run();
+        tokio::pin!(run);
         tokio::select! {
             result = &mut run => result.is_err(),
             result = wait_mark(&root, "stop-all", Instant::now() + Duration::from_secs(12)) => {
@@ -117,11 +152,19 @@ async fn relay_process() -> Result {
     } else {
         assert!(forwarded >= 6 && charged >= 131_072);
     }
-    relay.close_and_wait(Instant::now() + Duration::from_secs(5)).await?;
-    for address in RELAY { rebind(address.parse()?).await?; }
-    receipt(&root, "relay", json!({"role":"relay","passed":true,"forwarded_fragments":forwarded,
+    relay
+        .close_and_wait(Instant::now() + Duration::from_secs(5))
+        .await?;
+    for address in RELAY {
+        rebind(address.parse()?).await?;
+    }
+    receipt(
+        &root,
+        "relay",
+        json!({"role":"relay","passed":true,"forwarded_fragments":forwarded,
         "charged_bytes":charged,"inner_setup_rejected":case == "blackhole",
-        "explicit_close_completed":true,"released_udp_sockets":2,"rebound_udp_addresses":RELAY}))?;
+        "explicit_close_completed":true,"released_udp_sockets":2,"rebound_udp_addresses":RELAY}),
+    )?;
     mark(&root, "relay-finished")
 }
 
@@ -156,11 +199,17 @@ async fn endpoint(role: &str) -> Result {
         assert!(established.is_err());
         assert!(started.elapsed() >= Duration::from_secs(1));
         stop.revoke();
-        pending.close_and_wait(Instant::now() + Duration::from_secs(5)).await?;
+        pending
+            .close_and_wait(Instant::now() + Duration::from_secs(5))
+            .await?;
         rebind(address).await?;
-        receipt(&root, role, json!({"role":role,"passed":true,"physical_adjacency_established":true,
+        receipt(
+            &root,
+            role,
+            json!({"role":role,"passed":true,"physical_adjacency_established":true,
             "inner_setup_rejected":true,"explicit_close_completed":true,
-            "released_udp_sockets":1,"rebound_udp_addresses":[address.to_string()]}))?;
+            "released_udp_sockets":1,"rebound_udp_addresses":[address.to_string()]}),
+        )?;
         return mark(&root, &format!("{role}-rejected"));
     }
     established?;
@@ -173,25 +222,45 @@ async fn endpoint(role: &str) -> Result {
     // and must never be reported as a FileRead business operation.
     {
         let connection = routed.connection()?;
-        assert!(connection.max_datagram_size().is_some_and(|size| size >= 1280));
+        assert!(
+            connection
+                .max_datagram_size()
+                .is_some_and(|size| size >= 1280)
+        );
         if first {
             connection.send_datagram(ipv6(false).into())?;
-            assert_eq!(tokio::time::timeout_at(business, connection.read_datagram()).await??.as_ref(), ipv6(true));
+            assert_eq!(
+                tokio::time::timeout_at(business, connection.read_datagram())
+                    .await??
+                    .as_ref(),
+                ipv6(true)
+            );
         } else {
-            assert_eq!(tokio::time::timeout_at(business, connection.read_datagram()).await??.as_ref(), ipv6(false));
+            assert_eq!(
+                tokio::time::timeout_at(business, connection.read_datagram())
+                    .await??
+                    .as_ref(),
+                ipv6(false)
+            );
             connection.send_datagram(ipv6(true).into())?;
         }
-        let (mut send, mut receive) = if first { connection.open_bi().await? } else {
+        let (mut send, mut receive) = if first {
+            connection.open_bi().await?
+        } else {
             tokio::time::timeout_at(business, connection.accept_bi()).await??
         };
         if first {
-            for chunk in payload.chunks(8192) { write_frame(&mut send, Channel::Control, chunk).await?; }
+            for chunk in payload.chunks(8192) {
+                write_frame(&mut send, Channel::Control, chunk).await?;
+            }
             let ack = tokio::time::timeout_at(business, read_frame(&mut receive)).await??;
-            assert_eq!(ack.channel, Channel::Control); assert_eq!(ack.payload, digest(&payload));
+            assert_eq!(ack.channel, Channel::Control);
+            assert_eq!(ack.payload, digest(&payload));
             let mut reverse = Vec::new();
             for _ in 0..8 {
                 let frame = tokio::time::timeout_at(business, read_frame(&mut receive)).await??;
-                assert_eq!(frame.channel, Channel::Control); assert_eq!(frame.payload.len(), 8192);
+                assert_eq!(frame.channel, Channel::Control);
+                assert_eq!(frame.payload.len(), 8192);
                 reverse.extend_from_slice(&frame.payload);
             }
             assert_eq!(reverse, payload.iter().rev().copied().collect::<Vec<_>>());
@@ -200,27 +269,46 @@ async fn endpoint(role: &str) -> Result {
             let mut received = Vec::new();
             for _ in 0..8 {
                 let frame = tokio::time::timeout_at(business, read_frame(&mut receive)).await??;
-                assert_eq!(frame.channel, Channel::Control); assert_eq!(frame.payload.len(), 8192);
+                assert_eq!(frame.channel, Channel::Control);
+                assert_eq!(frame.payload.len(), 8192);
                 received.extend_from_slice(&frame.payload);
             }
             assert_eq!(received, payload);
             write_frame(&mut send, Channel::Control, &digest(&received)).await?;
             let reverse = payload.iter().rev().copied().collect::<Vec<_>>();
-            for chunk in reverse.chunks(8192) { write_frame(&mut send, Channel::Control, chunk).await?; }
+            for chunk in reverse.chunks(8192) {
+                write_frame(&mut send, Channel::Control, chunk).await?;
+            }
             let ack = tokio::time::timeout_at(business, read_frame(&mut receive)).await??;
-            assert_eq!(ack.channel, Channel::Control); assert_eq!(ack.payload, digest(&reverse));
+            assert_eq!(ack.channel, Channel::Control);
+            assert_eq!(ack.payload, digest(&reverse));
         }
         mark(&root, &format!("{role}-payload-verified"))?;
         if case == "cancel" {
             if first {
-                write_frame(&mut send, Channel::Control, b"next bounded transport response").await?;
+                write_frame(
+                    &mut send,
+                    Channel::Control,
+                    b"next bounded transport response",
+                )
+                .await?;
                 wait_mark(&root, "fault-installed", business).await?;
-                let read = read_frame(&mut receive); tokio::pin!(read);
-                assert!(tokio::time::timeout(Duration::from_millis(150), &mut read).await.is_err());
+                let read = read_frame(&mut receive);
+                tokio::pin!(read);
+                assert!(
+                    tokio::time::timeout(Duration::from_millis(150), &mut read)
+                        .await
+                        .is_err()
+                );
                 mark(&root, "first-read-blocked")?;
                 wait_mark(&root, "stop-all", business).await?;
-                stop.revoke(); routed.request_close();
-                assert!(tokio::time::timeout(Duration::from_millis(500), &mut read).await?.is_err());
+                stop.revoke();
+                routed.request_close();
+                assert!(
+                    tokio::time::timeout(Duration::from_millis(500), &mut read)
+                        .await?
+                        .is_err()
+                );
                 mark(&root, "first-read-cancelled")?;
             } else {
                 let request = tokio::time::timeout_at(business, read_frame(&mut receive)).await??;
@@ -231,19 +319,31 @@ async fn endpoint(role: &str) -> Result {
                 mark(&root, "second-response-sent")?;
                 wait_mark(&root, "stop-all", business).await?;
             }
-        } else { wait_mark(&root, "stop-all", business).await?; }
+        } else {
+            wait_mark(&root, "stop-all", business).await?;
+        }
     }
     stop.revoke();
-    routed.close_and_wait(Instant::now() + Duration::from_secs(5)).await?;
+    routed
+        .close_and_wait(Instant::now() + Duration::from_secs(5))
+        .await?;
     rebind(address).await?;
-    receipt(&root, role, json!({"role":role,"passed":true,"ipv6_packet_bytes":1280,"framed_transport_bytes_per_direction":payload.len(),
+    receipt(
+        &root,
+        role,
+        json!({"role":role,"passed":true,"ipv6_packet_bytes":1280,"framed_transport_bytes_per_direction":payload.len(),
         "business_proof_exercised":false,"explicit_close_completed":true,"released_udp_sockets":1,"rebound_udp_addresses":[address.to_string()],
-        "pending_read_cancelled":case == "cancel" && first}))?;
+        "pending_read_cancelled":case == "cancel" && first}),
+    )?;
     mark(&root, &format!("{role}-finished"))
 }
 #[tokio::test]
 #[ignore = "GitHub-hosted network namespace orchestrator only"]
-async fn first_process() -> Result { endpoint("first").await }
+async fn first_process() -> Result {
+    endpoint("first").await
+}
 #[tokio::test]
 #[ignore = "GitHub-hosted network namespace orchestrator only"]
-async fn second_process() -> Result { endpoint("second").await }
+async fn second_process() -> Result {
+    endpoint("second").await
+}

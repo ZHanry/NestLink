@@ -435,31 +435,45 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             }
             let identity_seed = load_key(&config.identity_key_file)?;
             let identity = nestlink_identity::nodes::NodeIdentity::from_seed(&identity_seed);
-            let listener_identity = nestlink_identity::nodes::NodeIdentity::from_seed(&identity_seed);
+            let listener_identity =
+                nestlink_identity::nodes::NodeIdentity::from_seed(&identity_seed);
             drop(identity_seed);
             let listener = tokio::net::TcpListener::bind(listen).await?;
             let control = std::sync::Arc::new(nestlink_node::control::NodeControl::start(
                 config, identity,
             )?);
             let mut quic_owner = nestlink_transport_quic::routed::node_listener_with_legacy(
-                quic_listen, &listener_identity, control.clone(),
-            ).map_err(std::io::Error::other)?;
+                quic_listen,
+                &listener_identity,
+                control.clone(),
+            )
+            .map_err(std::io::Error::other)?;
             let selector = nestlink_server::relay_selector::RelaySelector::new(control.clone());
             let (stop, stopped) = tokio::sync::watch::channel(false);
             let mut tasks = tokio::task::JoinSet::new();
             let wss_selector = selector.clone();
             let mut wss_stop = stopped.clone();
             tasks.spawn(async move {
-                nestlink_server::node_relay::serve_with_selector(listener, wss_selector, async move {
-                    if !*wss_stop.borrow() { let _ = wss_stop.changed().await; }
-                }).await
+                nestlink_server::node_relay::serve_with_selector(
+                    listener,
+                    wss_selector,
+                    async move {
+                        if !*wss_stop.borrow() {
+                            let _ = wss_stop.changed().await;
+                        }
+                    },
+                )
+                .await
             });
             let endpoint = quic_owner.endpoint()?.clone();
             let mut quic_stop = stopped;
             tasks.spawn(async move {
                 nestlink_server::node_quic::serve_with_selector(endpoint, selector, async move {
-                    if !*quic_stop.borrow() { let _ = quic_stop.changed().await; }
-                }).await
+                    if !*quic_stop.borrow() {
+                        let _ = quic_stop.changed().await;
+                    }
+                })
+                .await
             });
             let result = tokio::select! {
                 result = tasks.join_next() => match result {
@@ -469,14 +483,18 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 },
                 _ = shutdown() => Ok(()),
             };
-            let close_deadline = tokio::time::Instant::now() + std::time::Duration::from_millis(nestlink_protocol::NODE_RELAY_CLOSE_IO_DRAIN_MS);
+            let close_deadline = tokio::time::Instant::now()
+                + std::time::Duration::from_millis(nestlink_protocol::NODE_RELAY_CLOSE_IO_DRAIN_MS);
             stop.send_replace(true);
             control.stop();
             quic_owner.request_close();
             while !tasks.is_empty() {
-                let joined = tokio::time::timeout_at(close_deadline, tasks.join_next()).await
+                let joined = tokio::time::timeout_at(close_deadline, tasks.join_next())
+                    .await
                     .map_err(std::io::Error::other)?;
-                if let Some(joined) = joined { let _ = joined.map_err(std::io::Error::other)?; }
+                if let Some(joined) = joined {
+                    let _ = joined.map_err(std::io::Error::other)?;
+                }
             }
             quic_owner.close_and_wait(close_deadline).await?;
             result?;

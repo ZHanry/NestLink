@@ -22,7 +22,10 @@ fn node_admission_transcript(
         || *binding == [0; 32]
         || *nonce == [0; 32]
     {
-        return Err(ContractError::new(ErrorCode::InvalidMessage, "invalid network node admission"));
+        return Err(ContractError::new(
+            ErrorCode::InvalidMessage,
+            "invalid network node admission",
+        ));
     }
     let mut transcript = b"NestLink/network-datagram/v1/node-admission\0".to_vec();
     transcript.extend_from_slice(&1u32.to_be_bytes());
@@ -45,9 +48,16 @@ impl crate::InstallationIdentity {
         device_id: &str,
         nonce: &[u8; 32],
     ) -> Result<[u8; 64], ContractError> {
-        Ok(self.key.sign(&node_admission_transcript(
-            allocation_id, binding, device_id, &self.public_key(), nonce,
-        )?).to_bytes())
+        Ok(self
+            .key
+            .sign(&node_admission_transcript(
+                allocation_id,
+                binding,
+                device_id,
+                &self.public_key(),
+                nonce,
+            )?)
+            .to_bytes())
     }
 }
 
@@ -59,11 +69,19 @@ pub fn verify_network_node_admission(
     nonce: &[u8; 32],
     signature: &[u8],
 ) -> Result<(), ContractError> {
-    let invalid = || ContractError::new(ErrorCode::IdentityMismatch, "invalid network node possession proof");
+    let invalid = || {
+        ContractError::new(
+            ErrorCode::IdentityMismatch,
+            "invalid network node possession proof",
+        )
+    };
     let key = VerifyingKey::from_bytes(public_key).map_err(|_| invalid())?;
     let signature = Signature::from_slice(signature).map_err(|_| invalid())?;
-    key.verify_strict(&node_admission_transcript(allocation_id, binding, device_id, public_key, nonce)?, &signature)
-        .map_err(|_| invalid())
+    key.verify_strict(
+        &node_admission_transcript(allocation_id, binding, device_id, public_key, nonce)?,
+        &signature,
+    )
+    .map_err(|_| invalid())
 }
 
 pub struct NetworkAuthoritySigner {

@@ -51,7 +51,9 @@ pub(super) fn current_business(
     match store.current_resource_permit(request_id, now_ms) {
         // A previous connection generation can disappear during reconnection.
         // It is no longer authority, rather than a management server failure.
-        Err(StorageError::Sqlite(rusqlite::Error::QueryReturnedNoRows)) => Err(StorageError::Forbidden),
+        Err(StorageError::Sqlite(rusqlite::Error::QueryReturnedNoRows)) => {
+            Err(StorageError::Forbidden)
+        }
         result => result,
     }
 }
@@ -105,9 +107,18 @@ impl Store {
         now_ms: u64,
     ) -> Result<NetworkRemotePathBundle, StorageError> {
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
-        let bundle = self.issue_network_path_in_transaction(&tx, actor, signer, issuance, PathPolicy {
-            allow_direct: true, relays: Vec::new(), max_hops: 0,
-        }, now_ms)?;
+        let bundle = self.issue_network_path_in_transaction(
+            &tx,
+            actor,
+            signer,
+            issuance,
+            PathPolicy {
+                allow_direct: true,
+                relays: Vec::new(),
+                max_hops: 0,
+            },
+            now_ms,
+        )?;
         tx.commit()?;
         Ok(bundle)
     }
@@ -264,22 +275,33 @@ impl Store {
     }
 
     pub(super) fn network_path_current_in_transaction(
-        &self, tx: &Transaction<'_>, actor: Option<&Principal>, space: &str,
-        path_id: &str, relay: bool, now_ms: u64,
+        &self,
+        tx: &Transaction<'_>,
+        actor: Option<&Principal>,
+        space: &str,
+        path_id: &str,
+        relay: bool,
+        now_ms: u64,
     ) -> Result<NetworkRemotePathBundle, StorageError> {
         require_id(path_id)?;
-        if let Some(actor) = actor { self.validate_access(actor, checked_seconds(now_ms)?)?; }
+        if let Some(actor) = actor {
+            self.validate_access(actor, checked_seconds(now_ms)?)?;
+        }
         let snapshot = read_snapshot(tx, space, now_ms)?;
         let row: Option<StoredPath> = tx.query_row("SELECT request_id,controller_membership_id,host_membership_id,business_digest,connectivity_claims,connectivity_signature,path_claims,path_signature,revoked,connectivity_grant_id,policy_epoch,expires_at_ms FROM network_remote_paths WHERE space_id=?1 AND path_grant_id=?2",
             params![space,path_id], |r|Ok(StoredPath {request_id:r.get(0)?,controller_membership_id:r.get(1)?,host_membership_id:r.get(2)?,business_digest:r.get(3)?,
                 connectivity:SignedNetworkGrant {claims:r.get(4)?,signature:r.get(5)?},path:SignedNetworkGrant {claims:r.get(6)?,signature:r.get(7)?},revoked:r.get(8)?,
                 connectivity_grant_id:r.get(9)?,policy_epoch:r.get(10)?,expires_at_ms:r.get(11)?})).optional()?;
         let row = row.filter(|r| !r.revoked).ok_or(StorageError::Forbidden)?;
-        if let Some(actor) = actor { self.remote(actor, &row.request_id)?; }
+        if let Some(actor) = actor {
+            self.remote(actor, &row.request_id)?;
+        }
         let business = current_business(self, &row.request_id, now_ms)?;
         let business_digest = digest(&business.encode_to_vec());
         if row.business_digest != business_digest
-            || !business.paths.contains(&(if relay { Path::Relay } else { Path::Direct } as i32))
+            || !business
+                .paths
+                .contains(&(if relay { Path::Relay } else { Path::Direct } as i32))
         {
             return Err(StorageError::Forbidden);
         }
@@ -300,7 +322,11 @@ impl Store {
         if path.claims().scope().grant_id != path_id
             || connectivity.claims().scope().grant_id != row.connectivity_grant_id
             || [path.claims().scope(), connectivity.claims().scope()]
-                .iter().any(|scope|scope.policy_epoch != row.policy_epoch || scope.expires_at_ms != row.expires_at_ms)
+                .iter()
+                .any(|scope| {
+                    scope.policy_epoch != row.policy_epoch
+                        || scope.expires_at_ms != row.expires_at_ms
+                })
         {
             return Err(StorageError::Forbidden);
         }

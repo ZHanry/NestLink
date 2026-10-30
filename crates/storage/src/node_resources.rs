@@ -9,10 +9,19 @@ use nestlink_protocol::{
 use rusqlite::OptionalExtension;
 impl Store {
     pub fn node_resource_snapshot_with_network(
-        &mut self, lifecycle: &RelayLifecycle, signed: &SignedNodeResourceQuery,
-        signer: &nestlink_identity::PermitSigner, now_ms: u64,
+        &mut self,
+        lifecycle: &RelayLifecycle,
+        signed: &SignedNodeResourceQuery,
+        signer: &nestlink_identity::PermitSigner,
+        now_ms: u64,
     ) -> Result<NodeResourceSnapshotClaims, StorageError> {
-        self.node_resource_snapshot_inner(lifecycle, signed, &signer.public_key(), Some(signer), now_ms)
+        self.node_resource_snapshot_inner(
+            lifecycle,
+            signed,
+            &signer.public_key(),
+            Some(signer),
+            now_ms,
+        )
     }
     pub fn node_resource_snapshot(
         &mut self,
@@ -24,8 +33,12 @@ impl Store {
         self.node_resource_snapshot_inner(lifecycle, signed, allocation_issuer, None, now_ms)
     }
     fn node_resource_snapshot_inner(
-        &mut self, lifecycle: &RelayLifecycle, signed: &SignedNodeResourceQuery,
-        allocation_issuer: &[u8; 32], signer: Option<&nestlink_identity::PermitSigner>, now_ms: u64,
+        &mut self,
+        lifecycle: &RelayLifecycle,
+        signed: &SignedNodeResourceQuery,
+        allocation_issuer: &[u8; 32],
+        signer: Option<&nestlink_identity::PermitSigner>,
+        now_ms: u64,
     ) -> Result<NodeResourceSnapshotClaims, StorageError> {
         let unverified: NodeResourceQueryClaims =
             decode_bounded(&signed.claims, NODE_MESSAGE_BYTES)?;

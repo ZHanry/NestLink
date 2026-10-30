@@ -132,6 +132,20 @@ jobs:
           print(json.dumps(receipt, indent=2))
           if not receipt['passed']:
               raise SystemExit('SDK routed tests did not pass the complete current source inventory with zero failed/ignored cases')
+      - name: Check actual management and node relay integration on Linux before formatting
+        if: ${{ !cancelled() && runner.os == 'Linux' && steps.sdk_routed_linux.outcome != 'skipped' }}
+        shell: pwsh
+        run: |
+          $sdkLog = Join-Path $env:RUNNER_TEMP 'nestlink-sdk-network-relay-tests.log'
+          cargo test --locked -p nestlink-sdk --test network_relay -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $sdkLog
+          exit $LASTEXITCODE
+      - name: Check actual management and node relay integration with the ordinary Windows token before formatting
+        if: ${{ !cancelled() && runner.os == 'Windows' && steps.sdk_routed_windows.outcome != 'skipped' }}
+        shell: pwsh
+        run: |
+          $sdkLog = Join-Path $env:RUNNER_TEMP 'nestlink-sdk-network-relay-tests.log'
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-sdk --test network_relay -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $sdkLog
+          exit $LASTEXITCODE
       - if: ${{ !cancelled() }}
         run: cargo fmt --all -- --check
       - name: Retain complete SDK routed output and source test inventory
@@ -142,6 +156,7 @@ jobs:
           path: |
             ${{ runner.temp }}/nestlink-sdk-routed-tests.log
             ${{ runner.temp }}/nestlink-sdk-routed-tests.json
+            ${{ runner.temp }}/nestlink-sdk-network-relay-tests.log
           if-no-files-found: warn
           retention-days: 14
       - run: cargo check --locked -p nestlink-platform-audio

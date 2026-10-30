@@ -1,6 +1,8 @@
 use nestlink_identity::{
     VerifiedPermit,
-    network::{NetworkVerification, VerifiedNetworkGrant, VerifiedNetworkPath, remote_route_binding},
+    network::{
+        NetworkVerification, VerifiedNetworkGrant, VerifiedNetworkPath, remote_route_binding,
+    },
 };
 use nestlink_protocol::network::{PeerId, PeerPair};
 use std::{
@@ -61,7 +63,8 @@ impl RouteAuthorization {
         // Generation follows the business permit; path epoch is fixed at one.
         let route = remote_route_binding(&current, path, connectivity, transit, permit)
             .map_err(io::Error::other)?;
-        let remaining = route.expires_at_ms
+        let remaining = route
+            .expires_at_ms
             .checked_sub(current.now_ms)
             .filter(|remaining| *remaining > 0)
             .ok_or_else(denied)?;

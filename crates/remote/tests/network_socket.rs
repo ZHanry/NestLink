@@ -441,8 +441,8 @@ async fn client_process() -> Result {
         return Ok(());
     }
     let connection = connected?;
-    let peer_close = (std::env::var("NESTLINK_NETWORK_CASE")? == "peer-close")
-        .then(|| connection.clone());
+    let peer_close =
+        (std::env::var("NESTLINK_NETWORK_CASE")? == "peer-close").then(|| connection.clone());
     let (stop, stopped) = watch::channel(None);
     let mut channels = nestlink_remote::quic::authorize(
         connection,

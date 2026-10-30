@@ -34,6 +34,18 @@ release eligibility or completion of an acceptance group.
   business proof and returns existing bounded channels retaining the original
   routed transport owner. This is an explicit adapter API, not automatic
   enablement on the existing AppCore/desktop connect button.
+- NodeRelay now serves the independently versioned network ALPN on the same
+  operator-configured UDP listener as legacy node QUIC. Current signed resource
+  snapshots carry the original verified business permit and complete network
+  chain. Dynamic mTLS pins, a fresh device-signed challenge, fixed route binding,
+  direction/hop checks and the existing cumulative meter guard all forwarding.
+  Node shutdown joins accepted tasks before waiting for the original physical
+  socket receipt. New nodes reject unsupported network resource versions.
+- The SDK has fresh management readback and pinned-space admission, validates
+  the complete DNS answer against local destination consent, connects only the
+  signed node, proves the business permission and keeps a revocation observer.
+  Caller cancellation and sender loss cover node setup, inner QUIC and business
+  proof; handoff rechecks terminal facts and the original absolute deadline.
 
 ## Observed Actions and pending checks
 
@@ -59,6 +71,23 @@ unisolated peer-close experiment requires actual ApplicationClosed(code=0) and
 the host's precise Revoked result. The protocol mapping has not changed.
 Those changes require a new Actions run.
 
+At source `57fb9f030126a56e4994c91b1b08cd85631ef165`, network run
+[41049646558](https://github.com/ZHanry/NestLink/actions/runs/41049646558)
+failed at compilation/lint before either network experiment ran. The new listener
+referred to rustls without a direct dependency, retained an unnecessary mutable
+binding, and the storage readback had a needless transaction borrow. Independent
+vectors succeeded. The pending repair moves the peer-identity type extraction
+into the existing TLS crate and applies the reviewed Actions formatting patch.
+No failed experiment is counted as passing or as external target evidence.
+
+An additional SDK integration test now starts the actual management HTTP server,
+node control connection, signed resource poll and dual-ALPN node listener. It
+requests the route through production APIs, connects both SDK endpoints, proves
+the existing business permit, transfers FileRead data, rejects Input, revokes the
+route, joins cleanup and rebinds the original UDP addresses. It also cancels an
+unpaired endpoint. Linux and ordinary-token Windows CI run it independently
+before formatting. Its first Actions execution remains pending.
+
 New transport tests exercise real three-node sockets, inner Initials, complete
 1280-byte IPv6 datagrams, reverse boundaries, pin/grant/header/next-hop failures,
 replay, shared budgets, expiry, revoke and physical rebind. New SDK tests perform
@@ -74,8 +103,9 @@ validator requires all cases and the exact helper digest. Execution is pending.
 
 ## Remaining release work
 
-W07 still needs server/node admission and durable grant reservations, production
-activation, full carrier/PMTU/fault experiments and later route work. W18 still
+W07 has source for server/node admission and durable grant reservations; it still
+needs same-source verification, production activation, full carrier/PMTU/fault
+experiments and later route work. W18 still
 needs named space lifecycle, one-use invitations, delegated owner/admin actions
 and detailed rules. W08-W17 and the remaining network, gateway, proxy, TUN,
 WireGuard, HA, offline, media and qualification work are not completed by these

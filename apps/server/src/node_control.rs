@@ -23,7 +23,9 @@ pub(super) async fn resources(
     let signer = state.signer.clone();
     let c = tokio::time::timeout(
         Duration::from_millis(700),
-        state.db(move |s| s.node_resource_snapshot_with_network(&lifecycle, &signed, &signer, now_ms()?)),
+        state.db(move |s| {
+            s.node_resource_snapshot_with_network(&lifecycle, &signed, &signer, now_ms()?)
+        }),
     )
     .await
     .map_err(|_| ApiError(StatusCode::SERVICE_UNAVAILABLE, ErrorCode::InternalError))??;

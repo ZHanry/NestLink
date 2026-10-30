@@ -224,7 +224,9 @@ pub async fn serve_with_selector(
     // Aborting requests cancellation. Joining each original task proves its
     // streams, queues, connections and resource guards have actually dropped.
     while let Some(joined) = tasks.join_next().await {
-        if joined.is_err_and(|error| !error.is_cancelled()) { return Err(failed()); }
+        if joined.is_err_and(|error| !error.is_cancelled()) {
+            return Err(failed());
+        }
     }
     result
 }

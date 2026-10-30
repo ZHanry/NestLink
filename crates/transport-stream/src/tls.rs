@@ -75,6 +75,15 @@ pub fn certificate_fingerprint(certificate: &CertificateDer<'_>) -> Result<[u8; 
     Ok(digest(&spki.subject_public_key.data))
 }
 
+/// Extract a single authenticated leaf from the rustls peer-identity object.
+/// The caller supplies only identity returned after the transport handshake.
+pub fn peer_identity_fingerprint(identity: &dyn std::any::Any) -> Result<[u8; 32], Error> {
+    let certificates = identity.downcast_ref::<Vec<CertificateDer<'static>>>()
+        .filter(|certificates| certificates.len() == 1)
+        .ok_or(Error::InvalidCertificate(rustls::CertificateError::ApplicationVerificationFailure))?;
+    certificate_fingerprint(&certificates[0])
+}
+
 /// A TLS pin is accepted only from the node's current signed resource snapshot.
 /// This callback grants no allocation slot or application forwarding authority.
 pub trait CurrentClientPins: std::fmt::Debug + Send + Sync {

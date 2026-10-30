@@ -152,7 +152,8 @@ mod tests {
             ),
             ErrorCode::ProtocolMismatch
         );
-        let quic = quinn::ConnectionError::TransportError(quinn::TransportErrorCode::crypto(42).into());
+        let quic =
+            quinn::ConnectionError::TransportError(quinn::TransportErrorCode::crypto(42).into());
         assert_eq!(
             classify(&quic, ErrorCode::DirectUnavailable),
             ErrorCode::IdentityMismatch
