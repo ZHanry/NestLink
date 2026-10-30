@@ -148,7 +148,9 @@ impl RoutedSocket {
             let result: io::Result<()> = receive.await;
             record_failure(
                 &failed,
-                result.err().map_or(io::ErrorKind::PermissionDenied, |error| error.kind()),
+                result
+                    .err()
+                    .map_or(io::ErrorKind::PermissionDenied, |error| error.kind()),
             );
             copy.close(1u32.into(), b"routed UDP receive ended");
         }));

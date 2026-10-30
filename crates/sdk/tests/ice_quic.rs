@@ -53,10 +53,8 @@ async fn rebind_original(address: SocketAddr, deadline: Instant) -> io::Result<U
         match UdpSocket::bind(address) {
             Ok(socket) => return Ok(socket),
             Err(error) if error.kind() == io::ErrorKind::AddrInUse => {
-                tokio::time::sleep_until(
-                    deadline.min(Instant::now() + Duration::from_millis(10)),
-                )
-                .await;
+                tokio::time::sleep_until(deadline.min(Instant::now() + Duration::from_millis(10)))
+                    .await;
             }
             Err(error) => return Err(error),
         }
