@@ -646,7 +646,10 @@ fn network_key_is_distinct_from_legacy_permit_and_node_policy_keys()
     let network = NetworkAuthoritySigner::from_master_seed(&seed)?;
     let legacy = nestlink_identity::PermitSigner::from_seed(seed);
     assert_ne!(network.public_key(), legacy.public_key());
-    assert_eq!(network.public_key(), legacy.network_authority_signer()?.public_key());
+    assert_eq!(
+        network.public_key(),
+        legacy.network_authority_signer()?.public_key()
+    );
     assert_ne!(
         network.public_key(),
         legacy.node_policy_signer()?.public_key()

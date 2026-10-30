@@ -5,7 +5,10 @@ use serde_json::Value;
 use std::collections::BTreeSet;
 
 fn field<'a>(value: &'a Value, name: &str) -> Result<&'a str, Box<dyn std::error::Error>> {
-    Ok(value.get(name).and_then(Value::as_str).ok_or("missing reference field")?)
+    Ok(value
+        .get(name)
+        .and_then(Value::as_str)
+        .ok_or("missing reference field")?)
 }
 
 fn hex<const N: usize>(text: &str) -> Result<[u8; N], Box<dyn std::error::Error>> {
@@ -24,7 +27,10 @@ fn independent_vectors_fix_every_domain_and_complete_chain_references()
 -> Result<(), Box<dyn std::error::Error>> {
     let fixture: Value = serde_json::from_str(include_str!("fixtures/network-v1-all-grants.json"))?;
     let key = hex::<32>(field(&fixture, "authority_public_key_hex")?)?;
-    let signer = NetworkAuthoritySigner::from_master_seed(&hex::<32>(field(&fixture, "public_test_master_seed_hex")?)?)?;
+    let signer = NetworkAuthoritySigner::from_master_seed(&hex::<32>(field(
+        &fixture,
+        "public_test_master_seed_hex",
+    )?)?)?;
     assert_eq!(signer.public_key(), key);
     let revoked = BTreeSet::new();
     let context = NetworkVerification {
@@ -35,7 +41,10 @@ fn independent_vectors_fix_every_domain_and_complete_chain_references()
         now_ms: 1500,
         revoked_grant_ids: &revoked,
     };
-    let vectors = fixture.get("vectors").and_then(Value::as_array).ok_or("missing grant vectors")?;
+    let vectors = fixture
+        .get("vectors")
+        .and_then(Value::as_array)
+        .ok_or("missing grant vectors")?;
     assert_eq!(vectors.len(), 7);
     let mut kinds = BTreeSet::new();
     let mut verified = Vec::new();
@@ -48,8 +57,14 @@ fn independent_vectors_fix_every_domain_and_complete_chain_references()
         };
         let grant = verify_network_grant(&signed, &context)?;
         assert_eq!(grant.claims().canonical_bytes()?, signed.claims);
-        assert_eq!(digest(&grant.claims().signing_message()?), hex::<32>(field(vector, "signing_message_sha256")?)?);
-        assert_eq!(grant.digest(), hex::<32>(field(vector, "grant_digest_hex")?)?);
+        assert_eq!(
+            digest(&grant.claims().signing_message()?),
+            hex::<32>(field(vector, "signing_message_sha256")?)?
+        );
+        assert_eq!(
+            grant.digest(),
+            hex::<32>(field(vector, "grant_digest_hex")?)?
+        );
         assert_eq!(signer.sign(grant.claims())?.signature, signed.signature);
         let mut tampered = signed.clone();
         tampered.signature[0] ^= 1;
@@ -57,29 +72,59 @@ fn independent_vectors_fix_every_domain_and_complete_chain_references()
         signatures.push(signed);
         verified.push(grant);
     }
-    assert_eq!(kinds, BTreeSet::from(["membership", "connectivity", "path", "transit", "route_export", "network_access"]));
+    assert_eq!(
+        kinds,
+        BTreeSet::from([
+            "membership",
+            "connectivity",
+            "path",
+            "transit",
+            "route_export",
+            "network_access"
+        ])
+    );
     // A valid signature from any other kind/content cannot be substituted.
     for (i, signed) in signatures.iter().enumerate() {
         for (j, other) in signatures.iter().enumerate() {
             if i != j {
-                let swapped = SignedNetworkGrant { claims: signed.claims.clone(), signature: other.signature.clone() };
-                assert!(verify_network_grant(&swapped, &context).is_err(), "signature slots {i}/{j}");
+                let swapped = SignedNetworkGrant {
+                    claims: signed.claims.clone(),
+                    signature: other.signature.clone(),
+                };
+                assert!(
+                    verify_network_grant(&swapped, &context).is_err(),
+                    "signature slots {i}/{j}"
+                );
             }
         }
     }
-    let bind = |grant: &VerifiedNetworkGrant| -> Result<VerifiedMembership, Box<dyn std::error::Error>> {
-        let GrantClaims::Membership(member) = grant.claims() else {
-            return Err("reference member kind mismatch".into());
+    let bind =
+        |grant: &VerifiedNetworkGrant| -> Result<VerifiedMembership, Box<dyn std::error::Error>> {
+            let GrantClaims::Membership(member) = grant.claims() else {
+                return Err("reference member kind mismatch".into());
+            };
+            Ok(VerifiedMembership::from_grant(
+                grant.clone(),
+                &context,
+                &member.installation_id,
+                &member.public_key,
+                member.membership_epoch,
+            )?)
         };
-        Ok(VerifiedMembership::from_grant(grant.clone(), &context,
-            &member.installation_id, &member.public_key, member.membership_epoch)?)
-    };
     let GrantClaims::Connectivity(connection) = verified[2].claims() else {
         return Err("reference connectivity kind mismatch".into());
     };
-    let path = VerifiedNetworkPath::from_grants(&context, [bind(&verified[0])?, bind(&verified[1])?],
-        verified[2].clone(), verified[3].clone(), connection.business_grant_digest)?;
-    assert_eq!(path.transport_group_id(), hex::<32>(field(&fixture, "transport_group_hex")?)?);
+    let path = VerifiedNetworkPath::from_grants(
+        &context,
+        [bind(&verified[0])?, bind(&verified[1])?],
+        verified[2].clone(),
+        verified[3].clone(),
+        connection.business_grant_digest,
+    )?;
+    assert_eq!(
+        path.transport_group_id(),
+        hex::<32>(field(&fixture, "transport_group_hex")?)?
+    );
     path.check_route(&context, &[])?;
     path.check_route(&context, &path.claims().policy.relays)?;
     let GrantClaims::Transit(transit) = verified[4].claims() else {
@@ -88,6 +133,9 @@ fn independent_vectors_fix_every_domain_and_complete_chain_references()
     assert_eq!(transit.transport_group, path.transport_group_id());
     assert_eq!(transit.peers, path.peers());
     assert!(matches!(verified[5].claims(), GrantClaims::RouteExport(_)));
-    assert!(matches!(verified[6].claims(), GrantClaims::NetworkAccess(_)));
+    assert!(matches!(
+        verified[6].claims(),
+        GrantClaims::NetworkAccess(_)
+    ));
     Ok(())
 }
