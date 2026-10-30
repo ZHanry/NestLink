@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "generator": "Node node:crypto Ed25519/OpenSSL; independent from Rust implementation",
+  "public_test_master_seed_hex": "2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a",
+  "authority_public_key_hex": "083c7ca5a22f2986c0d38fc4b0c2f0ac0f03582f5c2ea433e13fd26a9f8980cf",
+  "member_public_key_hex": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+  "canonical_claims_utf8": "{\"kind\":\"membership\",\"claims\":{\"scope\":{\"schema_version\":1,\"deployment_id\":\"10000000-0000-4000-8000-000000000001\",\"space_id\":\"20000000-0000-4000-8000-000000000002\",\"grant_id\":\"30000000-0000-4000-8000-000000000003\",\"policy_epoch\":7,\"not_before_ms\":1000,\"expires_at_ms\":2000},\"installation_id\":\"40000000-0000-4000-8000-000000000004\",\"peer\":[33,254,49,223,161,84,162,97,98,107,248,84,4,111,210,39,27,123,237,75,106,190,69,170,88,135,126,244,127,151,33,185],\"public_key\":[215,90,152,1,130,177,10,183,213,75,254,211,201,100,7,58,14,225,114,243,218,166,35,37,175,2,26,104,247,7,81,26],\"membership_epoch\":3,\"role\":\"member\"}}",
+  "signing_message_sha256": "edd0de6b18b71b5d3f02d48fe59fad3c15d22fce79fd2330d37de6a698ee5a19",
+  "signature_hex": "9ed2f52032cfaf22d998f2ba16ed5716c48c4856a76ec4aae0dbf08048daf1817f8df0878482380fac1fe177cb9e544391fa60c7f90822c06e026ead1043b00b"
+}
