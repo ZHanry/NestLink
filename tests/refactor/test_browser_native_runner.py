@@ -53,8 +53,12 @@ def completed_receipts():
         "edge_namespace_ui_helper_sha256": RUNNER.sha256(
             (ROOT / "scripts/lib/refactor-browser-edge-namespace.cjs").read_bytes()),
         "network_membership_ui": {field: True for field in RUNNER.MEMBERSHIP_UI_FIELDS},
+        "network_authority_ui": {field: True for field in RUNNER.AUTHORITY_UI_FIELDS},
         "network_membership_ui_helper_sha256": RUNNER.sha256(
             (ROOT / "scripts/lib/refactor-browser-network-membership.cjs").read_bytes()),
+        "relay_attributes_ui": {field: True for field in RUNNER.RELAY_ATTRIBUTES_UI_FIELDS},
+        "relay_attributes_ui_helper_sha256": RUNNER.sha256(
+            (ROOT / "scripts/lib/refactor-browser-relay-attributes.cjs").read_bytes()),
         "spaces_ui": {field: True for field in RUNNER.SPACES_UI_FIELDS},
         "spaces_ui_helper_sha256": RUNNER.sha256(
             (ROOT / "scripts/lib/refactor-browser-spaces.cjs").read_bytes()),
@@ -91,6 +95,19 @@ def completed_receipts():
 
 
 class NativeRunnerTests(unittest.TestCase):
+    def test_relay_attributes_require_actual_cases_cleanup_and_exact_helper(self):
+        for replacement in (None, {}, {"passed": True}):
+            receipts = completed_receipts()
+            receipts[0]["relay_attributes_ui"] = replacement
+            self.assertTrue(any(item.startswith("relay-attributes-") for item in RUNNER.validate_receipts(*receipts)))
+        for field in RUNNER.RELAY_ATTRIBUTES_UI_FIELDS:
+            receipts = completed_receipts()
+            receipts[0]["relay_attributes_ui"][field] = False
+            self.assertIn("relay-attributes-" + field, RUNNER.validate_receipts(*receipts))
+        receipts = completed_receipts()
+        receipts[0]["relay_attributes_ui_helper_sha256"] = "0" * 64
+        self.assertIn("relay-attributes-helper-source", RUNNER.validate_receipts(*receipts))
+
     def test_spaces_require_all_actual_ui_cases_and_exact_helper_source(self):
         for replacement in (None, {}, {"passed": True}):
             receipts = completed_receipts()
@@ -116,6 +133,16 @@ class NativeRunnerTests(unittest.TestCase):
         receipts = completed_receipts()
         receipts[0]["network_membership_ui_helper_sha256"] = "0" * 64
         self.assertIn("network-membership-helper-source", RUNNER.validate_receipts(*receipts))
+
+    def test_authority_lifecycle_cannot_be_skipped_or_report_partial_success(self):
+        for replacement in (None, {}, {"passed": True}):
+            receipts = completed_receipts()
+            receipts[0]["network_authority_ui"] = replacement
+            self.assertTrue(any(item.startswith("network-authority-") for item in RUNNER.validate_receipts(*receipts)))
+        for field in RUNNER.AUTHORITY_UI_FIELDS:
+            receipts = completed_receipts()
+            receipts[0]["network_authority_ui"][field] = False
+            self.assertIn("network-authority-" + field, RUNNER.validate_receipts(*receipts))
 
     def test_namespace_evidence_and_source_cannot_be_skipped(self):
         for replacement in (None, {}, {"passed": True}):

@@ -28,6 +28,8 @@ mod network_paths;
 mod quotas;
 #[path = "control/reconnection.rs"]
 mod reconnection;
+#[path = "control/relay_candidates.rs"]
+mod relay_candidates;
 #[path = "control/remote_password.rs"]
 mod remote_password;
 #[path = "control/trusted.rs"]

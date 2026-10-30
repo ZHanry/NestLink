@@ -10,6 +10,7 @@ use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
 };
+mod authority;
 
 #[derive(Clone, Copy)]
 enum Command {
@@ -326,5 +327,8 @@ pub(super) fn NetworkMembershipPanel(
                 <button class="secondary" type="button" disabled=move || busy.get() || !member.get().is_some_and(|m| m.active) on:click=move |_| request.run(Command::Revoke)>{move || t("移除此设备", "Remove device")}</button>
             </Show>
         </section>
+        <authority::NetworkAuthorityControls api space session_revision auth_failure changed=Callback::new(move |()| {
+            policy.set(None); member.set(None); devices.set(Vec::new()); message.set(String::new());
+        }) />
     }
 }

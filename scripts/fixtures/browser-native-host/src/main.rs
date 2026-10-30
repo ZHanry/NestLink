@@ -759,12 +759,14 @@ async fn run() -> Result {
                         }
                         response
                     } else {
-                        let delay_network_read = request.method() == axum::http::Method::GET
-                            && request.uri().path().starts_with("/api/v3/network/spaces/");
+                        let delay_management_read = request.method() == axum::http::Method::GET
+                            && (request.uri().path().starts_with("/api/v3/network/spaces/")
+                                || (request.uri().path().starts_with("/api/v3/nodes/")
+                                    && request.uri().path().ends_with("/relay-attributes")));
                         let response = next.run(request).await;
-                        // Membership lifecycle checks leave/logout the actual
-                        // UI before this real server response reaches its SDK.
-                        if delay_network_read {
+                        // Lifecycle checks leave/logout the actual UI before
+                        // this real server response reaches its SDK.
+                        if delay_management_read {
                             tokio::time::sleep(Duration::from_millis(750)).await;
                         }
                         response
@@ -800,6 +802,18 @@ async fn run() -> Result {
             sdk.register_node(NodeRegistration { id: id.clone(), name: name.into(), public_key: URL_SAFE_NO_PAD.encode(random_bytes::<32>()), roles: vec![2], max_connections: 8, bytes_per_second: 1048576 }).await?;
             edge_nodes.push(json!({"id":id,"name":name}));
         }
+        // A separate actual relay registration owns the metadata UI exercise.
+        // It never starts a relay process or supplies forwarding authority.
+        let relay_id = random_id();
+        let relay_name = "Owned relay attributes node";
+        sdk.register_node(NodeRegistration {
+            id: relay_id.clone(),
+            name: relay_name.into(),
+            public_key: URL_SAFE_NO_PAD.encode(random_bytes::<32>()),
+            roles: vec![nestlink_protocol::NodeRole::NodeRelay as i32],
+            max_connections: 8,
+            bytes_per_second: 1048576,
+        }).await?;
         let installation = Arc::new(DeviceIdentity::generate());
         let mut capabilities = vec!["host".into(), "vp8".into()];
         if with_audio { capabilities.push("opus".into()); }
@@ -812,6 +826,7 @@ async fn run() -> Result {
         let ready = json!({"scope":"Ephemeral local development fixture; synthetic owned pixels, real Core/WebRTC/VP8", "origin":browser_origin, "native_management_origin":origin, "browser_backend_origin":browser_backend_origin, "deployment_id":deployment_id, "permit_issuer":URL_SAFE_NO_PAD.encode(permit_issuer), "username":"fixture-admin", "password":password, "host_device_id":installation.device_id,
             "capture_profile":{"name":profile_name,"width":profile.width,"height":profile.height,"fps":profile.fps,"duration_seconds":duration_seconds,"lifetime_seconds":lifetime.as_secs(),"management_rate_window_seconds":management_rate_window_seconds,"with_audio":with_audio},
             "edge_namespace":{"management_hostname":"manage.example.test","nodes":edge_nodes},
+            "relay_attributes":{"node":{"id":relay_id,"name":relay_name}},
             "owned_data":owned_data.as_ref().map(|data| data.descriptor()),
             "owned_multidisplay":owned_multidisplay.as_ref().map(|multi| multi.descriptor())});
         std::fs::write(evidence.join("ready.json"), serde_json::to_vec_pretty(&ready)?)?;

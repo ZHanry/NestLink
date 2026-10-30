@@ -1,6 +1,8 @@
 //! Actual management HTTP, signed node polls, mTLS relay and remote business proof.
 #[path = "../../node/tests/support/service_usage_directory.rs"]
 mod service_usage_directory;
+#[path = "network_relay/multi_node.rs"]
+mod multi_node;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_auth::{Secret, VaultKey, random_bytes, random_id};
 use nestlink_identity::{PermitSigner, VerifiedPermit, nodes::NodeIdentity};
@@ -358,6 +360,13 @@ impl Fixture {
         ChannelRuntime,
         watch::Sender<Option<StopReason>>,
     )> {
+        self.channels_for(&self.allocation, binds).await
+    }
+    async fn channels_for(
+        &self,
+        allocation: &str,
+        binds: [SocketAddr; 2],
+    ) -> Result<(ChannelRuntime, ChannelRuntime, watch::Sender<Option<StopReason>>)> {
         let c = self
             .sdk
             .verified_network_remote_relay(
@@ -365,7 +374,7 @@ impl Fixture {
                 &self.controller,
                 &self.permit,
                 &self.host.identity.public_key(),
-                &self.allocation,
+                allocation,
             )
             .await?;
         let h = self
@@ -375,7 +384,7 @@ impl Fixture {
                 &self.host,
                 &self.permit,
                 &self.controller.identity.public_key(),
-                &self.allocation,
+                allocation,
             )
             .await?;
         let (keep, stop) = watch::channel(None);

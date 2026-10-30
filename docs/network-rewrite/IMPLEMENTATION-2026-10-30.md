@@ -245,3 +245,49 @@ the mature ICE API/coercion, per-render Web handler capture and fixture table
 cleanup. Management response expectations now bind to the next requestId so a
 late earlier response cannot supply a later CAS assertion. Assertions, product
 limits and cleanup budgets are preserved. These repairs need new Actions.
+
+The b0ad444 follow-up passed both platforms' contract clippy/tests and the
+original routed, relay, ICE feasibility, inbox and spaces checks. Production
+native ICE shutdown still failed (Windows reports transport cleanup timeout;
+Linux's old log does not locate its elapsed timeout). Web compilation exposed
+another option ownership error and browser execution did not run. Exact failed
+and successful evidence stays in `evidence/development-run-b0ad444.json`.
+
+The next source preserves the ICE adapter during Quinn terminal-close draining,
+then joins its original tasks and physically rebinds original sockets; Drop
+still requests immediate task cleanup without a receipt. Native tests now name
+each unchanged timeout stage and require the peer's terminal Revoked report.
+The independent browser-contract job runs even if the site cannot build.
+
+W04 now exposes current revision/epoch/public-key readback, signing-key rotation,
+policy-epoch advance and explicitly confirmed permanent revoke in the production
+Web membership screen. Every mutation uses the readback CAS, and stale scope or
+login results are discarded. The real two-page browser helper requires rotation,
+conflict/re-read, epoch advance, irreversible revoke and disabled terminal UI.
+
+W11 adds schema32 independent advisory relay region and cost-weight metadata,
+admin CAS/API/SDK/Web editing and unchanged old registration/lease/grant bytes.
+Unknown cost remains unknown rather than zero. Separate candidate discovery
+keeps the original signed discovery and its node-ID order; additional attributes
+only describe its signed identities. Checked selection retains the original
+five-second budget and revalidates permit, login, origin, device and node expiry.
+Native automatic selection consumes the checked hints while retaining peer
+rendezvous and previous-node priority. Fees remain advisory, not a hard budget.
+An actual two-NodeControl test transfers business bytes on distinct routes and
+requires revoking one node to preserve traffic on the other, held quota and
+physical cleanup. Two independent deployed Linux hosts remain external evidence.
+
+The new W09 Actions job builds the existing locked SDK codecs, then runs actual
+SDK enrollment/approval/signed ICE, Quinn and bidirectional 256-KiB FileRead
+frames in ordinary-user endpoint processes behind two actual Linux SNATs.
+pcap/STUN/conntrack evidence must link the original physical candidate socket,
+kernel-observed mapping and Quinn Initial; legacy fallback cannot qualify.
+Blackhole and pending-read cancellation cases retain explicit physical cleanup.
+These are new implemented-unverified sources, not passing AC13/14 evidence.
+The W11 real-browser helper uses a separately registered relay-only node and
+requires default unknown values, explicit zero, persisted readback, stale-writer
+Conflict, revision-preserving clear, and delayed-response unmount/logout
+isolation. Its bounded response observers must also close successfully. These
+browser receipts remain pending the new exact-source Actions run.
+Remaining advanced NAT, topology, migration, private service consumers, gateways,
+media and final delivery scope stays active. No 0.8.0RC release has been created.

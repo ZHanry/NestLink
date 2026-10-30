@@ -106,7 +106,7 @@ pub use nestlink_platform_network::{
 pub use nestlink_policy::PathSet;
 #[cfg(not(target_arch = "wasm32"))]
 pub use nestlink_session::StopReason;
-pub use node_discovery::NodeDiscovery;
+pub use node_discovery::{NodeDiscovery, NodeRelayCandidate, NodeRelayCandidates};
 #[cfg(not(target_arch = "wasm32"))]
 pub use reconnection::NativeReconnectionConfig;
 pub use reconnection::{ReconnectedPermit, ReconnectionAttempt};

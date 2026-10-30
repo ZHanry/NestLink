@@ -102,9 +102,12 @@ impl IceOwner {
 impl TransportOwner for IceOwner {
     fn request_close(&self) {
         if let Some(endpoint) = &self.endpoint {
+            // Keep the original adapter alive while Quinn sends its terminal
+            // authenticated close. Business channels already stop through the
+            // session lifecycle; closing the writer here would discard that
+            // close and leave the peer waiting for its consent timeout.
             endpoint.close(0u32.into(), b"native ICE owner stopping");
-        }
-        if let Some(socket) = &self.socket {
+        } else if let Some(socket) = &self.socket {
             socket.request_close();
         }
     }
@@ -118,6 +121,11 @@ impl TransportOwner for IceOwner {
 impl Drop for IceOwner {
     fn drop(&mut self) {
         self.request_close();
+        // A dropped owner cannot await Quinn's drain. Request local task stop
+        // unconditionally; this path supplies no physical-cleanup receipt.
+        if let Some(socket) = &self.socket {
+            socket.request_close();
+        }
         if !self.closed
             && let Some(agent) = self.agent.take()
             && let Ok(runtime) = tokio::runtime::Handle::try_current()
@@ -389,26 +397,22 @@ impl Gathering {
             .map_err(|_| DialError::Setup)?;
         let (_keep, cancel) = mpsc::channel(1);
         let conn: Arc<dyn webrtc::util::Conn + Send + Sync> = match endpoint.role {
-            EndpointRole::Controller => {
-                agent
-                    .dial(
-                        cancel,
-                        peer.username_fragment.clone(),
-                        peer.password.clone(),
-                    )
-                    .await
-                    .map_err(|_| DialError::Setup)?
-            }
-            EndpointRole::Host => {
-                agent
-                    .accept(
-                        cancel,
-                        peer.username_fragment.clone(),
-                        peer.password.clone(),
-                    )
-                    .await
-                    .map_err(|_| DialError::Setup)?
-            }
+            EndpointRole::Controller => agent
+                .dial(
+                    cancel,
+                    peer.username_fragment.clone(),
+                    peer.password.clone(),
+                )
+                .await
+                .map_err(|_| DialError::Setup)?,
+            EndpointRole::Host => agent
+                .accept(
+                    cancel,
+                    peer.username_fragment.clone(),
+                    peer.password.clone(),
+                )
+                .await
+                .map_err(|_| DialError::Setup)?,
         };
         endpoint.check()?;
         let actual = conn.remote_addr().ok_or(DialError::Setup)?;

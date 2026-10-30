@@ -882,6 +882,48 @@ pub struct NodesResponse {
     pub nodes: Vec<NodeView>,
 }
 
+/// Operator-declared relay selection hints. These confer no forwarding rights
+/// and are not a price, metered charge or enforceable spending limit.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Default)]
+#[serde(deny_unknown_fields)]
+pub struct NodeRelayAttributes {
+    pub region: Option<String>,
+    /// A lower known weight is preferred. None means unknown, never zero cost.
+    pub cost_weight: Option<u32>,
+}
+impl NodeRelayAttributes {
+    pub fn validate(&self) -> Result<(), crate::ContractError> {
+        if self.region.as_ref().is_some_and(|region| {
+            region.is_empty()
+                || region.len() > 32
+                || !region.bytes().all(|byte| {
+                    byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-'
+                })
+        }) || self.cost_weight.is_some_and(|weight| weight > 1_000_000)
+        {
+            return Err(crate::ContractError::new(
+                crate::ErrorCode::InvalidMessage,
+                "invalid relay attributes",
+            ));
+        }
+        Ok(())
+    }
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NodeRelayAttributesUpdate {
+    pub expected_revision: u64,
+    pub attributes: NodeRelayAttributes,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NodeRelayAttributesView {
+    pub node_id: String,
+    /// Zero is the default for a registered relay with no stored attributes.
+    pub revision: u64,
+    pub attributes: NodeRelayAttributes,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Default)]
 #[serde(deny_unknown_fields)]
 pub struct NodeEndpoints {
@@ -914,6 +956,14 @@ pub struct NodeDiscoveryRequest {
 #[serde(deny_unknown_fields)]
 pub struct NodeDiscoveryResponse {
     pub discovery: String,
+}
+/// The unchanged signed discovery establishes eligible node identities. Only
+/// those nodes have advisory attributes; attributes establish no grant rights.
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NodeRelayCandidatesResponse {
+    pub discovery: String,
+    pub attributes: Vec<NodeRelayAttributesView>,
 }
 
 #[derive(Clone, Serialize, Deserialize, JsonSchema)]

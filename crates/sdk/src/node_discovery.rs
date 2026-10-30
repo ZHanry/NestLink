@@ -4,6 +4,8 @@ use nestlink_identity::node_discovery::{
 };
 use nestlink_protocol::{DiscoveredRelayNode, NODE_DISCOVERY_BYTES};
 use prost::Message;
+mod candidates;
+pub use candidates::{NodeRelayCandidate, NodeRelayCandidates};
 #[cfg(not(target_arch = "wasm32"))]
 type Started = std::time::Instant;
 #[cfg(target_arch = "wasm32")]
@@ -27,6 +29,7 @@ pub struct NodeDiscovery {
     issuer: [u8; 32],
     login_session: String,
     nonce: [u8; 32],
+    origin: Url,
 }
 impl NodeDiscovery {
     pub fn nodes(&self) -> &[DiscoveredRelayNode] {
@@ -55,6 +58,7 @@ impl NodeDiscovery {
         let login = sdk.login.as_ref().ok_or(SdkError::SignIn)?;
         let c = self.verified.claims();
         if self.issuer != sdk.trust.permit_issuer
+            || self.origin != sdk.origin
             || self.login_session != login.principal.session_id
             || c.security_epoch != sdk.health.security_epoch
             || c.deployment_id != sdk.trust.deployment_id
@@ -71,7 +75,21 @@ impl NodeDiscovery {
         Ok(())
     }
 }
+struct DiscoveryRequestContext {
+    request: NodeDiscoveryRequest,
+    started: Started,
+    nonce: [u8; 32],
+    login_session: String,
+}
+
 impl Sdk {
+    pub async fn node_relay_attributes(&self, id: &str) -> Result<NodeRelayAttributesView, SdkError> {
+        self.required(Method::GET, &format!("{}/relay-attributes", resource("nodes", id)?), None::<&()>).await
+    }
+    pub async fn set_node_relay_attributes(&self, id: &str, update: NodeRelayAttributesUpdate) -> Result<NodeRelayAttributesView, SdkError> {
+        update.attributes.validate()?;
+        self.required(Method::PUT, &format!("{}/relay-attributes", resource("nodes", id)?), Some(&update)).await
+    }
     pub async fn node_endpoints(&self, id: &str) -> Result<NodeEndpointsView, SdkError> {
         self.required(
             Method::GET,
@@ -97,6 +115,16 @@ impl Sdk {
         installation: &DeviceIdentity,
         permit: &VerifiedPermit,
     ) -> Result<NodeDiscovery, SdkError> {
+        let context = self.discovery_request(installation, permit)?;
+        let response: NodeDiscoveryResponse = self.required(
+            Method::POST,
+            &format!("{}/relay/discovery", resource("remote", &permit.claims().session_id)?),
+            Some(&context.request),
+        ).await?;
+        self.verified_discovery_response(context, &response.discovery, installation, permit)
+    }
+
+    fn discovery_request(&self, installation: &DeviceIdentity, permit: &VerifiedPermit) -> Result<DiscoveryRequestContext, SdkError> {
         let login = self.login.as_ref().ok_or(SdkError::SignIn)?;
         let c = permit.claims();
         if c.deployment_id != self.trust.deployment_id
@@ -117,27 +145,24 @@ impl Sdk {
             permit_sha256: URL_SAFE_NO_PAD.encode(digest(&c.encode_to_vec())),
             signature: URL_SAFE_NO_PAD.encode(installation.identity.sign_action(&proof)?),
         };
-        let started = start()?;
-        let response: NodeDiscoveryResponse = self
-            .required(
-                Method::POST,
-                &format!("{}/relay/discovery", resource("remote", &c.session_id)?),
-                Some(&request),
-            )
-            .await?;
-        if response.discovery.len() as u64 > (NODE_DISCOVERY_BYTES + 128).div_ceil(3) * 4 {
+        Ok(DiscoveryRequestContext { request, started: start()?, nonce, login_session: login.principal.session_id.clone() })
+    }
+
+    fn verified_discovery_response(&self, context: DiscoveryRequestContext, encoded: &str, installation: &DeviceIdentity, permit: &VerifiedPermit) -> Result<NodeDiscovery, SdkError> {
+        if encoded.len() as u64 > (NODE_DISCOVERY_BYTES + 128).div_ceil(3) * 4 {
             return Err(SdkError::Invalid);
         }
         let bytes = URL_SAFE_NO_PAD
-            .decode(response.discovery)
+            .decode(encoded)
             .map_err(|_| SdkError::Invalid)?;
         let verified = verify_node_discovery(&bytes, &self.trust.permit_issuer)?;
         let result = NodeDiscovery {
             verified,
-            started,
+            started: context.started,
             issuer: self.trust.permit_issuer,
-            login_session: login.principal.session_id.clone(),
-            nonce,
+            login_session: context.login_session,
+            nonce: context.nonce,
+            origin: self.origin.clone(),
         };
         result.check(self, permit, &installation.device_id)?;
         Ok(result)

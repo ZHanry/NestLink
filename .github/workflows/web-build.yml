@@ -49,6 +49,35 @@ permissions:
   contents: read
 
 jobs:
+  browser-contracts:
+    name: Browser runner and observer contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Check integration runner boundaries independently of the release build
+        shell: bash
+        run: |
+          python3 -B -m unittest discover -s tests/refactor -p "test_browser_native_runner.py" 2>&1 | tee "$RUNNER_TEMP/nestlink-browser-contracts-python.log"
+          node --check scripts/refactor-browser-native-check.cjs
+          node --check scripts/lib/refactor-browser-owned-data.cjs
+          node --check scripts/lib/refactor-browser-workspace-ui.cjs
+          node --check scripts/lib/refactor-browser-edge-namespace.cjs
+          node --check scripts/lib/refactor-browser-network-membership.cjs
+          node --check scripts/lib/refactor-browser-relay-attributes.cjs
+          node --check scripts/lib/refactor-browser-spaces.cjs
+          node --test tests/refactor/test_browser_response_observer.cjs tests/refactor/test_browser_workspace_ui.cjs 2>&1 | tee "$RUNNER_TEMP/nestlink-browser-contracts-node.log"
+      - name: Retain browser contract output
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: nestlink-browser-contracts-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/nestlink-browser-contracts-*.log
+          if-no-files-found: error
+          retention-days: 14
+
   release-site:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
@@ -130,7 +159,7 @@ jobs:
 
   browser-native:
     name: Production Web to native host
-    needs: release-site
+    needs: [release-site, browser-contracts]
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
@@ -150,15 +179,6 @@ jobs:
         run: |
           printf 'NESTLINK_CODEC_PREFIX=%s/nestlink-codecs/x86_64-unknown-linux-gnu\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
           printf 'CARGO_TARGET_DIR=%s/nestlink-browser-native-target\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
-      - name: Check integration runner boundaries
-        run: |
-          python3 -m unittest discover -s tests/refactor -p "test_browser_native_runner.py"
-          node --check scripts/refactor-browser-native-check.cjs
-          node --check scripts/lib/refactor-browser-owned-data.cjs
-          node --check scripts/lib/refactor-browser-workspace-ui.cjs
-          node --check scripts/lib/refactor-browser-edge-namespace.cjs
-          node --check scripts/lib/refactor-browser-network-membership.cjs
-          node --test tests/refactor/test_browser_response_observer.cjs tests/refactor/test_browser_workspace_ui.cjs
       - name: Install native codec build tools
         # Keep Chinese controls readable in the same browser screenshots we review.
         run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config libpipewire-0.3-dev fonts-noto-cjk

@@ -210,7 +210,7 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
     let mut controller_session = controller_session;
     let host_session = host_session;
     let bytes = vec![47; 32_768];
-    for _ in 0..8 {
+    for index in 0..8 {
         host_session
             .channels
             .send(nestlink_transport_stream::Channel::FileRead, &bytes)
@@ -219,7 +219,8 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
             Duration::from_secs(2),
             controller_session.channels.receive(),
         )
-        .await??;
+        .await
+        .map_err(|error| format!("native ICE FileRead chunk {index} deadline: {error}"))??;
         assert_eq!(frame.channel, nestlink_transport_stream::Channel::FileRead);
         assert_eq!(frame.payload, bytes);
     }
@@ -236,10 +237,14 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
         Duration::from_secs(2),
         controller_session.channels.wait_stopped(),
     )
-    .await??;
+    .await
+    .map_err(|error| format!("native ICE controller network-change shutdown: {error}"))??;
     assert_eq!(report.reason, StopReason::NetworkChanged);
     let mut host_session = host_session;
-    tokio::time::timeout(Duration::from_secs(2), host_session.channels.wait_stopped()).await??;
+    let host_report = tokio::time::timeout(Duration::from_secs(2), host_session.channels.wait_stopped())
+        .await
+        .map_err(|error| format!("native ICE peer close shutdown: {error}"))??;
+    assert_eq!(host_report.reason, StopReason::Revoked);
     let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
     let mut controller_owner = nestlink_sdk::network::LegacyEndpoint::new(controller_endpoint);
     let mut host_owner = nestlink_sdk::network::LegacyEndpoint::new(host_endpoint);

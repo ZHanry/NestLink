@@ -146,6 +146,20 @@ jobs:
           $sdkLog = Join-Path $env:RUNNER_TEMP 'nestlink-sdk-network-relay-tests.log'
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-sdk --test network_relay -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $sdkLog
           exit $LASTEXITCODE
+      - name: Check relay metadata migration and actual HTTP SDK on Linux before formatting
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        shell: pwsh
+        run: |
+          $metadataLog = Join-Path $env:RUNNER_TEMP 'nestlink-node-relay-metadata-tests.log'
+          cargo test --locked -p nestlink-storage -p nestlink-sdk --test node_relay_attributes --no-fail-fast -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $metadataLog
+          exit $LASTEXITCODE
+      - name: Check relay metadata migration and HTTP SDK with the ordinary Windows token
+        if: ${{ !cancelled() && runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          $metadataLog = Join-Path $env:RUNNER_TEMP 'nestlink-node-relay-metadata-tests.log'
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage -p nestlink-sdk --test node_relay_attributes --no-fail-fast -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $metadataLog
+          exit $LASTEXITCODE
       - name: Prove mature ICE and Quinn same-socket feasibility on Linux
         if: ${{ !cancelled() && runner.os == 'Linux' && steps.sdk_routed_linux.outcome != 'skipped' }}
         shell: pwsh
@@ -239,6 +253,7 @@ jobs:
             ${{ runner.temp }}/nestlink-sdk-routed-tests.log
             ${{ runner.temp }}/nestlink-sdk-routed-tests.json
             ${{ runner.temp }}/nestlink-sdk-network-relay-tests.log
+            ${{ runner.temp }}/nestlink-node-relay-metadata-tests.log
             ${{ runner.temp }}/nestlink-ice-quic-tests.log
             ${{ runner.temp }}/nestlink-native-session-tests.log
             ${{ runner.temp }}/nestlink-native-inbox-tests.log

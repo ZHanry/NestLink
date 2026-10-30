@@ -285,7 +285,7 @@ pub(super) fn SpaceServicesPanel(
                 <Show when=management>
                     <label>{move ||t("待授权绑定","Bound service to authorize")}<select data-space-service-field="binding" prop:value=move ||selected.get() disabled=move ||busy.get() on:change=move |event|selected.set(event_target_value(&event))>
                         <option value="">{move ||t("选择空间服务","Choose a bound service")}</option>
-                        {move ||policy.get().into_iter().flat_map(|policy|policy.bindings).filter(|bound|!bound.revoked).map(|bound|view!{<option value=bound.service_id.clone()>{protocol(bound.protocol)}" · "{bound.port}" · "{bound.service_id}</option>}).collect_view()}
+                        {move ||policy.get().into_iter().flat_map(|policy|policy.bindings).filter(|bound|!bound.revoked).map(|bound|view!{<option value=bound.service_id.clone()>{protocol(bound.protocol)}" · "{bound.port}" · "{bound.service_id.clone()}</option>}).collect_view()}
                     </select></label>
                     <label>{move ||t("授权对象","Publication subject")}<select data-space-service-field="subject" prop:value=move ||kind.get() disabled=move ||busy.get() on:change=move |event|kind.set(event_target_value(&event))><option value="account">{move ||t("该服务所有者账号","This service owner account")}</option><option value="device">{move ||t("该服务的精确宿主设备","This service's exact host device")}</option></select></label>
                     <label>{move ||t("发布授权有效分钟数（1–10080）","Publication lifetime in minutes (1–10080)")}<input data-space-service-field="lifetime" type="number" min="1" max="10080" prop:value=move ||minutes.get() disabled=move ||busy.get() on:input=move |event|minutes.set(event_target_value(&event)) /></label>

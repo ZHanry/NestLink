@@ -20,6 +20,7 @@ use nestlink_web::{browser_clipboard, browser_files, browser_rpc};
 mod account_security_panel;
 mod edge_namespace_panel;
 mod network_membership_panel;
+mod node_relay_attributes_panel;
 mod service_quota_panel;
 mod services_panel;
 mod spaces_panel;
@@ -143,6 +144,8 @@ struct Record {
     status: UiCopy,
     kind: &'static str,
     connectable: bool,
+    is_relay_node: bool,
+    is_edge_node: bool,
 }
 
 #[derive(Clone, PartialEq)]
@@ -1201,7 +1204,8 @@ fn App() -> impl IntoView {
                                                 <dt>{move || t("说明", "Description")}</dt><dd>{move || detail.current()}</dd>
                                                 <dt>{move || t("资源 ID", "Resource ID")}</dt><dd><code>{item.id.clone()}</code></dd>
                                             </dl>
-                                            {(is_admin && item.kind == "node").then(|| view! { <edge_namespace_panel::EdgeNamespacePanel api node_id=item.id.clone() session_revision auth_failure /> })}
+                                            {(is_admin && item.is_edge_node).then(|| view! { <edge_namespace_panel::EdgeNamespacePanel api node_id=item.id.clone() session_revision auth_failure /> })}
+                                            {(is_admin && item.is_relay_node).then(|| view! { <node_relay_attributes_panel::NodeRelayAttributesPanel api node_id=item.id.clone() session_revision auth_failure /> })}
                                             {item.connectable.then(|| {
                                                 let host = RemoteTarget { id: item.id.clone(), name: item.title.clone() };
                                                 view! {
@@ -1480,6 +1484,8 @@ async fn load_records(
                             UiCopy::new("已登记，在线状态未知", "Registered; availability unknown")
                         },
                         kind: "device",
+                        is_relay_node: false,
+                        is_edge_node: false,
                     })
                     .collect(),
                 empty: UiCopy::new(
@@ -1522,6 +1528,8 @@ async fn load_records(
                         ),
                         status: remote_status(&request.status),
                         kind: "request",
+                        is_relay_node: false,
+                        is_edge_node: false,
                         connectable: false,
                     })
                     .collect(),
@@ -1560,6 +1568,8 @@ async fn load_records(
                             UiCopy::new("等待节点", "Waiting for node")
                         },
                         kind: "node",
+                        is_relay_node: view.node.roles.contains(&(nestlink_protocol::NodeRole::NodeRelay as i32)),
+                        is_edge_node: view.node.roles.contains(&(nestlink_protocol::NodeRole::NodeEdge as i32)),
                         connectable: false,
                     })
                     .collect(),
@@ -1589,6 +1599,8 @@ async fn load_records(
                             UiCopy::new("可登录", "Sign-in enabled")
                         },
                         kind: "account",
+                        is_relay_node: false,
+                        is_edge_node: false,
                         connectable: false,
                     })
                     .collect(),
@@ -1633,6 +1645,8 @@ async fn load_records(
                         ),
                         status: format_time(entry.created_at_unix_ms),
                         kind: "audit",
+                        is_relay_node: false,
+                        is_edge_node: false,
                         connectable: false,
                     })
                     .collect(),

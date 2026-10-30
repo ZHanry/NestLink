@@ -21,6 +21,38 @@ fn routed_host_address() -> Result<IpAddr> {
     Ok(address)
 }
 
+#[tokio::test]
+async fn relay_candidate_selection_uses_original_allocation_and_real_business_without_metadata_revoking_it() -> Result {
+    use nestlink_protocol::api::{NodeRelayAttributes,NodeRelayAttributesUpdate};
+    let mut f=Fixture::new().await?;
+    f.approve_locations().await?;
+    f.sdk.set_node_relay_attributes(&f.node_id,NodeRelayAttributesUpdate{expected_revision:0,attributes:NodeRelayAttributes{region:Some("ap-east".into()),cost_weight:Some(0)}}).await?;
+    let candidates=f.sdk.discover_relay_candidates(&f.controller,&f.permit).await?;
+    let sorted=candidates.checked(&f.sdk,&f.permit,&f.controller)?;
+    assert_eq!(sorted.len(),1);
+    assert_eq!(sorted[0].node.node_id,f.node_id);
+    assert_eq!(sorted[0].attributes.attributes.cost_weight,Some(0));
+    assert_eq!(sorted[0].attributes.revision,1);
+    assert!(candidates.select(&f.sdk,&f.permit,&f.controller,&random_id()).is_err());
+    assert!(candidates.select(&f.sdk,&f.permit,&f.host,&f.node_id).is_err());
+    f.allocation=f.sdk.reserve_selected_relay_candidate(&candidates,&f.controller,&f.permit,&random_id(),&f.node_id).await?;
+    let (_,quic)=f.sdk.selected_node_routes(&candidates,&f.controller,&f.permit,&f.allocation).await?;
+    let quic=quic.ok_or("selected candidate lacks QUIC")?;
+    let (mut c,mut h,_keep,_clocks)=f.channels_on_route(NativeRelayRoute::Quic(&quic)).await?;
+    let (sent,received)=tokio::join!(c.send(Channel::Video,b"selected relay candidate business"),h.receive());
+    sent?;
+    assert_eq!(received?.payload,b"selected relay candidate business");
+    f.sdk.set_node_relay_attributes(&f.node_id,NodeRelayAttributesUpdate{expected_revision:1,attributes:NodeRelayAttributes{region:Some("eu-west".into()),cost_weight:Some(100)}}).await?;
+    let (sent,received)=tokio::join!(h.send(Channel::Video,b"advisory update preserves business"),c.receive());
+    sent?;
+    assert_eq!(received?.payload,b"advisory update preserves business");
+    assert_eq!(f.control.counters()?.opened_connections,2);
+    assert!(f.control.counters()?.admitted_bytes>0);
+    let response=reqwest::Client::new().post(format!("{}/api/v3/remote/{}/relay/candidates",f.control_origin,f.permit.claims().session_id)).json(&serde_json::json!({"device_id":f.controller.device_id,"nonce":"A".repeat(43),"permit_sha256":"A".repeat(43),"signature":"A".repeat(86)})).send().await?;
+    assert_eq!(response.status().as_u16(),401);
+    Ok(())
+}
+
 fn local_options() -> nestlink_sdk::native::NativeSessionOptions {
     nestlink_sdk::native::NativeSessionOptions {
         granted_permissions: vec![Permission::View],

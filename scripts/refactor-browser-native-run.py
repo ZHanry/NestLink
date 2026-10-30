@@ -61,6 +61,17 @@ MEMBERSHIP_UI_FIELDS = (
     "revision_epoch_bound", "revoke_and_reenroll", "unmounted_response_ignored",
     "logout_response_ignored", "new_session_clean",
 )
+AUTHORITY_UI_FIELDS = (
+    "passed", "revision_epoch_bound", "rotation_advances_and_changes_key",
+    "stale_conflict_requires_reread", "policy_epoch_advances_without_key_change",
+    "permanent_revocation_readback", "terminal_controls_disabled",
+)
+RELAY_ATTRIBUTES_UI_FIELDS = (
+    "passed", "default_unknown_revision_zero", "explicit_zero_saved",
+    "revision_bound", "stale_conflict_requires_reread", "unknown_clear_persisted",
+    "unmounted_response_ignored", "logout_response_ignored", "new_session_clean",
+    "response_observers_closed",
+)
 SPACES_UI_FIELDS = (
     "passed", "created_and_device_joined", "guest_isolated_context", "invitation_single_use", "invitation_link_opens_acceptance",
     "owner_admin_member_guest", "stale_revision_rejected", "revocation_and_audit",
@@ -279,9 +290,18 @@ def validate_receipts(browser, host, data, database, exit_codes):
     membership = browser.get("network_membership_ui", {})
     for field in MEMBERSHIP_UI_FIELDS:
         require(isinstance(membership, dict) and membership.get(field) is True, "network-membership-" + field)
+    authority = browser.get("network_authority_ui", {})
+    for field in AUTHORITY_UI_FIELDS:
+        require(isinstance(authority, dict) and authority.get(field) is True, "network-authority-" + field)
     require(browser.get("network_membership_ui_helper_sha256") ==
             sha256((ROOT / "scripts/lib/refactor-browser-network-membership.cjs").read_bytes()),
             "network-membership-helper-source")
+    relay_attributes = browser.get("relay_attributes_ui", {})
+    for field in RELAY_ATTRIBUTES_UI_FIELDS:
+        require(isinstance(relay_attributes, dict) and relay_attributes.get(field) is True, "relay-attributes-" + field)
+    require(browser.get("relay_attributes_ui_helper_sha256") ==
+            sha256((ROOT / "scripts/lib/refactor-browser-relay-attributes.cjs").read_bytes()),
+            "relay-attributes-helper-source")
     spaces = browser.get("spaces_ui", {})
     for field in SPACES_UI_FIELDS:
         require(isinstance(spaces, dict) and spaces.get(field) is True, "spaces-" + field)

@@ -129,15 +129,15 @@ async fn reserve_discovered_node(
     sdk: &Sdk,
     local: &DeviceIdentity,
     permit: &VerifiedPermit,
-    discovery: &crate::NodeDiscovery,
+    discovery: &crate::NodeRelayCandidates,
     node: &DiscoveredRelayNode,
 ) -> Result<AutoNodeRelay, SdkError> {
     let allocation_id = initial_relay_allocation_id(permit.claims(), node)?;
     let allocation = sdk
-        .reserve_relay_allocation(local, permit, &allocation_id, &node.node_id)
+        .reserve_selected_relay_candidate(discovery, local, permit, &allocation_id, &node.node_id)
         .await?;
     let (wss, quic) = sdk
-        .discovered_node_routes(discovery, local, permit, &allocation)
+        .selected_node_routes(discovery, local, permit, &allocation)
         .await?;
     if wss.is_none() && quic.is_none() {
         return Err(SdkError::Trust);
@@ -154,19 +154,10 @@ async fn discover_auto_node_relay(
     local: &DeviceIdentity,
     permit: &VerifiedPermit,
 ) -> Result<AutoNodeRelay, SdkError> {
-    let discovery = sdk.discover_relay_nodes(local, permit).await?;
-    let node_id = discovery
-        .nodes()
-        .iter()
-        .find(|node| !node.quic_uri.is_empty() || !node.wss_origin.is_empty())
-        .map(|node| node.node_id.clone())
-        .ok_or(SdkError::Trust)?;
-    let node = discovery
-        .nodes()
-        .iter()
-        .find(|node| node.node_id == node_id)
-        .ok_or(SdkError::Trust)?;
-    reserve_discovered_node(sdk, local, permit, &discovery, node).await
+    let discovery = sdk.discover_relay_candidates(local, permit).await?;
+    let nodes = discovery.checked(sdk, permit, local)?;
+    let selected = nodes.first().ok_or(SdkError::Trust)?;
+    reserve_discovered_node(sdk, local, permit, &discovery, &selected.node).await
 }
 
 pub(crate) async fn resolve_signed_node_host(
@@ -276,13 +267,15 @@ async fn refresh_auto_node_relay(
     previous: Option<&AutoNodeRelay>,
     peer_candidates: &[Candidate],
 ) -> Result<Option<AutoNodeRelay>, SdkError> {
-    let discovery = sdk.discover_relay_nodes(local, permit).await?;
+    let discovery = sdk.discover_relay_candidates(local, permit).await?;
+    let nodes = discovery.checked(sdk, permit, local)?;
     let mut matching_node_ids = Vec::new();
     if peer_candidates
         .iter()
         .any(|candidate| candidate.kind == CandidateKind::Relay)
     {
-        let matches = futures_util::future::join_all(discovery.nodes().iter().map(|node| async {
+        let matches = futures_util::future::join_all(nodes.iter().map(|candidate| async {
+            let node = &candidate.node;
             Ok::<_, SdkError>((
                 node.node_id.clone(),
                 node_matches_relay_markers(node, peer_candidates).await?,
@@ -300,10 +293,9 @@ async fn refresh_auto_node_relay(
     matching_node_ids.dedup();
     let previous_node_id = previous
         .filter(|previous| {
-            discovery
-                .nodes()
+            nodes
                 .iter()
-                .any(|node| node.node_id == previous.node_id)
+                .any(|candidate| candidate.node.node_id == previous.node_id)
         })
         .map(|previous| previous.node_id.as_str());
     let node_id = matching_node_ids
@@ -311,21 +303,16 @@ async fn refresh_auto_node_relay(
         .map(String::as_str)
         .or(previous_node_id)
         .or_else(|| {
-            discovery
-                .nodes()
-                .iter()
-                .find(|node| !node.quic_uri.is_empty() || !node.wss_origin.is_empty())
-                .map(|node| node.node_id.as_str())
+            nodes.first().map(|candidate| candidate.node.node_id.as_str())
         });
     let Some(node_id) = node_id else {
         return Ok(None);
     };
-    let node = discovery
-        .nodes()
+    let node = nodes
         .iter()
-        .find(|node| node.node_id == node_id)
+        .find(|candidate| candidate.node.node_id == node_id)
         .ok_or(SdkError::Trust)?;
-    reserve_discovered_node(sdk, local, permit, &discovery, node)
+    reserve_discovered_node(sdk, local, permit, &discovery, &node.node)
         .await
         .map(Some)
 }

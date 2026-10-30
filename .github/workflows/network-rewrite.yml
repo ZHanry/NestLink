@@ -44,6 +44,40 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  native-ice-kernel-nat-slice:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CARGO_INCREMENTAL: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      RUST_BACKTRACE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          components: clippy
+      - name: Set the existing SDK native codec location
+        shell: bash
+        run: echo "NESTLINK_CODEC_PREFIX=${{ runner.temp }}/nestlink-codecs/x86_64-unknown-linux-gnu" >> "$GITHUB_ENV"
+      - name: Prepare existing SDK native build inputs
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config dbus libpipewire-0.3-dev pipewire-bin
+      - name: Build and verify the locked existing native codecs on GitHub
+        run: |
+          python scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir "${{ runner.temp }}/nestlink-codec-sources" --work-dir "${{ runner.temp }}/nestlink-codecs"
+          python scripts/refactor-native-codecs.py verify --target x86_64-unknown-linux-gnu --prefix "${{ env.NESTLINK_CODEC_PREFIX }}"
+      - name: Exercise production signed native ICE, Quinn and FileRead across two kernel NATs
+        run: python -B scripts/network-rewrite-native-ice.py --output "${{ runner.temp }}/network-native-ice-evidence"
+      - name: Retain original tuples, STUN mapping, business bytes and physical cleanup evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: network-native-ice-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/network-native-ice-evidence/
+          if-no-files-found: error
+          retention-days: 30
   routed-kernel-nat-slice:
     runs-on: ubuntu-24.04
     timeout-minutes: 30

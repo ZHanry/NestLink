@@ -6,6 +6,7 @@ mod native_discovery;
 mod network_policy;
 mod node_control;
 mod node_discovery;
+mod node_relay_attributes;
 pub mod node_quic;
 pub mod node_relay;
 mod node_turn;
@@ -470,6 +471,10 @@ pub fn router(state: AppState) -> Router {
         )
         .route("/api/v3/nodes/{id}", delete(node_control::revoke))
         .route(
+            "/api/v3/nodes/{id}/relay-attributes",
+            get(node_relay_attributes::get).put(node_relay_attributes::update),
+        )
+        .route(
             "/api/v3/nodes/{id}/endpoints",
             get(node_discovery::endpoints).put(node_discovery::update),
         )
@@ -570,6 +575,10 @@ pub fn router(state: AppState) -> Router {
         .route(
             "/api/v3/remote/{id}/relay/discovery",
             post(node_discovery::discover),
+        )
+        .route(
+            "/api/v3/remote/{id}/relay/candidates",
+            post(node_discovery::candidates),
         )
         .route(
             "/api/v3/remote/{id}/turn-credentials",

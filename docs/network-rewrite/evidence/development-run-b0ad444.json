@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "b0ad4440a2aa2e0196b77c691c829fcfbeb33661",
+  "dependency_lock_sha256": "e40cbb24fd46cc214dffc2b76642adc09e37c8db9f9ab73943efc6e9bb10b637",
+  "review_method": "Exact-source GitHub-hosted Actions job logs, artifact API digests and downloaded receipts. Local work limited to source review/editing, Git and artifact SHA-256 verification; no local compiler, formatter, lint, automated checks or tests.",
+  "network_run": {
+    "run_id": "41092417062",
+    "attempt": 1,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41092417062",
+    "conclusion": "failure",
+    "successful_jobs": [
+      { "job_id": "124189435689", "name": "production-socket-slice" },
+      { "job_id": "124189435995", "name": "routed-kernel-nat-slice" },
+      { "job_id": "124189436071", "name": "independent-vectors" }
+    ],
+    "contracts": [
+      {
+        "job_id": "124189436542",
+        "platform": "ubuntu-24.04",
+        "conclusion": "failure",
+        "only_failed_command": "format-check",
+        "successful_commands": ["contract-clippy with -D warnings", "contract-tests", "14 ci-evidence-tests"],
+        "artifact_id": "12995060978",
+        "artifact_sha256": "6da6c6ccfc77d124ead0eafd945a7ecee71a5fe66be4dbf44a3af27f01345ed3",
+        "artifact_download_digest_verified": true,
+        "receipt_sha256": "f09d6aff3a350f478cb334f65131b677c0a919064bd237e1b30141617b60e750",
+        "receipt_file_digests_verified": true,
+        "exact_clean_source_before_and_after": true
+      },
+      {
+        "job_id": "124189436403",
+        "platform": "windows-2022",
+        "conclusion": "failure",
+        "only_failed_command": "format-check",
+        "successful_commands": ["ordinary-windows-token", "contract-clippy with -D warnings", "contract-tests", "14 ci-evidence-tests"],
+        "artifact_id": "12996060298",
+        "artifact_sha256": "ff3045d044745fe8cdbf8305e77a4754ac2b8b2ef650235aeda15e2d07ebab60",
+        "artifact_download_digest_verified": true,
+        "receipt_sha256": "594481b38da3c966ed53607e4183d09924388acff4718b05cc8142e6a9f50c48",
+        "receipt_file_digests_verified": true,
+        "exact_clean_source_before_and_after": true
+      }
+    ],
+    "format_import": {
+      "file": "rustfmt.patch",
+      "file_bytes": 1773,
+      "file_sha256": "4a62dc037e3c244de3c2fab091b7d539ed37232d2a98bf26c6d30d89b46e11d5",
+      "platform_outputs_identical": true,
+      "manual_review": "One-file formatting patch for crates/sdk/src/native/ice.rs; imported by the integrating agent before further source repair. No local formatter execution."
+    },
+    "production_socket_experiment": {
+      "artifact_id": "12994173423",
+      "artifact_sha256": "30b91085566a581a30be7a44f0a48a87a8d35bd7095876696d5d3504715899af",
+      "artifact_download_digest_verified": true,
+      "receipt": "network-socket-evidence.json",
+      "receipt_sha256": "252426350a0ed4548804ce03d11623cf65d026a3089f7c4e405e5c5ee0defb51",
+      "receipt_file_digests_verified": true,
+      "receipt_file_count": 167,
+      "exact_clean_source_before_and_after": true,
+      "executable_sha256_recorded_by_actions": "24f0106897782d2c0426a09ce2e754f8aa8d089a38110d69bc6b7c1c427b78e2",
+      "passed_cases": ["success", "blackhole", "cancel", "peer-close"],
+      "cleanup_failures": [],
+      "scope": "Two ordinary-user endpoint processes in isolated namespaces, zero relays, no NAT; production FileRead with one real fixture-approved file. Success and cancel isolate teardown to measure local ExplicitExit; peer-close separately observes unisolated code-0 close as host Revoked.",
+      "limitations": "No SDK signaling/discovery, bilateral ICE/STUN, TLS/WSS fallback, real LAN, target installation, screen/input, performance or full AC04 qualification."
+    },
+    "routed_nat_experiment": {
+      "artifact_id": "12993144904",
+      "artifact_sha256": "3167f4b90def1aa1f4048df1f7530bd32a8ba3b900c6b50f38e0719b1676fba4",
+      "artifact_download_digest_verified": true,
+      "receipt": "network-routed-evidence.json",
+      "receipt_sha256": "c31ca9dee79fe519d2e94bf3eb59082a86ab679f5196d222d1c93db655188edc",
+      "receipt_file_digests_verified": true,
+      "receipt_file_count": 464,
+      "exact_clean_source_before_and_after": true,
+      "executable_sha256_recorded_by_actions": "6caea528f0d03f054149cea6e1ed524e2670388d88054f82ef0ffc9504521d42",
+      "passed_cases": ["success", "blackhole", "cancel"],
+      "cleanup_failures": [],
+      "owned_namespaces_removed_in_every_case": true,
+      "business_endpoint_proof_exercised": false,
+      "scope": "Raw routed transport through two endpoint processes, one authenticated relay process and two real Linux fixed-source-port SNAT gateways; production inner QUIC and complete 1280-byte IPv6-shaped transport payloads.",
+      "limitations": "No bilateral ICE/STUN nomination, consent, same-socket hole punching, public NAT, dual relay, TUN injection, business SessionPermit proof, FileRead worker or SDK signaling qualification. AC04, AC10, AC11 and AC13 remain false in the original receipt."
+    },
+    "independent_vectors": {
+      "artifact_id": "12994257889",
+      "artifact_sha256": "bdbb46f003418a872759cfbf9013aab990515e58c3b67d584bd10cfd54c299bb",
+      "artifact_download_digest_verified": true,
+      "receipt_sha256": "58ece374e577fdbfc73a4778e24c4cfcfd6aed98a60fb7b62480e99fdd260f5a",
+      "receipt_file_digests_verified": true,
+      "reference_sha256": "a7b316184a15d45b76ea87dac31d85b670c180a27761d6055e448435441f6fe3",
+      "all_grants_sha256": "4e63b135970c363b2451fa923ded131250450b59e54abd98851e1ab69632abc7",
+      "scope": "Independent contract vector generation only; original acceptance_claims is empty."
+    },
+    "scope": "Successful experiment jobs retain their declared limited scope. No complete AC13/14, public NAT, bilateral production ICE NAT, target-device or release qualification is inferred."
+  },
+  "core_run": {
+    "run_id": "41092411535",
+    "attempt": 1,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41092411535",
+    "conclusion": "failure",
+    "linux_job_id": "124189417401",
+    "windows_job_id": "124189417791",
+    "wasm_job_id": "124189417537",
+    "native_session_failure": {
+      "test": "coordinator_exchanges_current_signed_candidates_proves_and_stops_on_network_change",
+      "linux": "Error: Elapsed(()), 5.17 seconds; b0 log does not identify which original 2-second timeout elapsed.",
+      "windows": "Error: Io(Custom { kind: TimedOut, error: transport cleanup failed }), 5.08 seconds.",
+      "diagnostic_limit": "Windows confirms a physical transport-cleanup timeout. The exact Linux timeout stage and a shared root cause are not proved by these logs."
+    },
+    "scoped_artifacts": [
+      {
+        "platform": "linux",
+        "artifact_id": "12995416089",
+        "artifact_sha256": "50ac143d66e04cb1cb3bc9cba7c4223d0e3af3ffe4d5c9a5ede0884f39219d2c",
+        "artifact_download_digest_verified": true
+      },
+      {
+        "platform": "windows",
+        "artifact_id": "12995266870",
+        "artifact_sha256": "5d7740c03c4118d0625e1a77acfa26224fb76684c92e9375dc6ed0d51eaa5543",
+        "artifact_download_digest_verified": true
+      }
+    ],
+    "scoped_passes_on_both_platforms": [
+      "SDK routed source inventory: 15 passed, zero failed or ignored",
+      "network_relay: 4 passed",
+      "ice_quic: 4 passed",
+      "native_inbox: 3 passed",
+      "SDK discovery: 3 passed; dual-stack discovery: 5 passed",
+      "spaces storage: 9 passed; SDK spaces: 1 passed"
+    ],
+    "platform_network": {
+      "linux": "10 passed, zero failed, 2 ignored; isolated namespace event/path tests require CAP_NET_ADMIN and are not counted here",
+      "windows": "9 passed, zero failed or ignored"
+    },
+    "workspace_and_wasm_failure": "E0382 at apps/web/src/spaces_panel/service_publication.rs:288:153: bound.service_id is moved into the option body while borrowed for the value attribute.",
+    "format_check": "Same ICE formatting drift as the contract jobs",
+    "successful_additional_jobs": ["linux-x11-input", "linux-network-events", "dependencies", "linux-system-audio", "linux-portal-capture"],
+    "openapi_generation": {
+      "job_id": "124189417243",
+      "conclusion": "success",
+      "artifact_id": "12994861997",
+      "artifact_sha256": "11e2bc0103669a9676561656da0d4d16c3460b7f33ae21f602f4c1882ee7e134",
+      "artifact_download_digest_verified": true,
+      "receipt_sha256": "76191d454d5d072b5c9f4e772c6f83d78ce355da174ba181e0f529960fb3401f",
+      "output": "protocol-spec/openapi.json",
+      "output_bytes": 510934,
+      "output_sha256": "ea5068d419a4879ad6c0ec245ea25f57ee033906a561ac248a994f8805fbaada",
+      "output_digest_verified": true,
+      "manual_review": "Generated output is byte-identical to the checked-in file; no import needed."
+    },
+    "scope": "Scoped successes do not establish native-session cleanup or workspace runtime success."
+  },
+  "web_run": {
+    "run_id": "41092411565",
+    "attempt": 1,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41092411565",
+    "conclusion": "failure",
+    "release_site_job_id": "124189416881",
+    "failure": "Same bound.service_id E0382 as WASM and workspace compilation",
+    "native_browser_job_id": "124193413229",
+    "native_browser_conclusion": "skipped",
+    "scope": "Browser/native runtime and the browser response-observer regression did not execute because the production site build dependency failed."
+  },
+  "other_runs": [
+    { "run_id": "41092411580", "name": "Secret scan", "conclusion": "success" },
+    { "run_id": "41092411571", "name": "CodeQL", "conclusion": "success" },
+    { "run_id": "41092411568", "name": "Build regression server", "conclusion": "success" }
+  ],
+  "follow_up_source_changes_pending_new_actions": [
+    "Import the exact-source one-file Actions rustfmt patch",
+    "Clone bound.service_id in the option body to retain the value attribute capture",
+    "Keep the ICE adapter writer alive while Quinn closes and reaches idle, then stop/join adapter tasks, close the mature agent, release duplicate handles and verify original UDP rebinding",
+    "Label the original unchanged 2-second native-session timeouts by phase and assert the peer observes Revoked",
+    "Move the existing browser runner/observer checks into an independent browser-contracts job with retained logs; browser-native depends on both production build and browser contracts",
+    "Add real two-page authority UI read, key rotation, stale CAS conflict, policy advance and irreversible revocation readback; require its actual runtime receipt without weakening existing membership assertions"
+  ],
+  "independent_source_reviews": {
+    "ice_cleanup": "ChannelRuntime joins business work and drops its QUIC clones before awaiting the physical owner. TaskOwner abort is followed by await; interrupted joins retain ownership. No additional definite defect found in the revised source ordering.",
+    "unproved_root_cause_hypothesis": "The former request_close stopped the adapter writer immediately after endpoint.close, which could discard the terminal authenticated QUIC close and leave the peer waiting for the longer ICE consent timeout. This is a hypothesis pending exact-source Actions, not a proved explanation of b0 failures.",
+    "limitations": "Source review and newly authored acceptance code are not executed acceptance evidence."
+  },
+  "acceptance_claim": "No complete acceptance group newly passed; remaining W10-W40 work is development scope and not merely an external-environment blocker.",
+  "release_state": "not_ready"
+}
