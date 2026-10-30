@@ -65,6 +65,7 @@ jobs:
                   result = subprocess.run(command, stdout=stream, stderr=subprocess.STDOUT, check=False)
               commands.append({'argv': command, 'return_code': result.returncode})
               assert result.returncode == 0, 'Lock command failed; review retained log'
+              shutil.copyfile(lock, output / 'cargo-generated.lock')
               # Cargo can reselect an already-locked compatible windows-sys
               # edge even with --workspace. Preserve every existing external
               # package block, then ask Cargo to validate the complete graph.
