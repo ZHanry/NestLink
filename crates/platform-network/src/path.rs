@@ -70,6 +70,11 @@ impl NetworkPathManager {
         Self::new(policy)
     }
     pub fn new(policy: RoutePolicy) -> io::Result<Self> {
+        #[cfg(target_os = "linux")]
+        if policy == RoutePolicy::PreferPhysical {
+            return Err(io::Error::new(io::ErrorKind::Unsupported,
+                "Linux physical-interface preference requires a trusted device classification; select an explicit interface index"));
+        }
         let selected = if policy == RoutePolicy::System {
             None
         } else {
@@ -100,11 +105,15 @@ impl NetworkPathManager {
         {
             super::windows::path_interfaces()
         }
-        #[cfg(not(windows))]
+        #[cfg(target_os = "linux")]
+        {
+            super::linux::path_interfaces()
+        }
+        #[cfg(not(any(windows, target_os = "linux")))]
         {
             Err(io::Error::new(
                 io::ErrorKind::Unsupported,
-                "explicit media interface routing is currently Windows-only",
+                "explicit media interface routing requires Windows or Linux",
             ))
         }
     }
@@ -135,6 +144,8 @@ impl NetworkPathManager {
                     "ICE address belongs to a different interface",
                 ));
             }
+            #[cfg(target_os = "linux")]
+            super::linux::validate_media_interface(interface, address.ip())?;
         }
         let socket = socket2::Socket::new(
             if address.is_ipv4() {
@@ -154,7 +165,18 @@ impl NetworkPathManager {
         if let Some(interface) = &self.selected {
             super::windows::bind_media_interface(&socket, interface.index, address.is_ipv6())?;
         }
+        #[cfg(target_os = "linux")]
+        if let Some(interface) = &self.selected {
+            super::linux::bind_media_interface(&socket, interface.index, address.is_ipv6())?;
+        }
         socket.bind(&address.into())?;
+        #[cfg(target_os = "linux")]
+        if let Some(interface) = &self.selected {
+            // Link/address changes during bind fail this attempt. The actual
+            // socket remains pinned by ifindex if a later change races us;
+            // NetworkMonitor invalidates its owning connection generation.
+            super::linux::validate_media_interface(interface, address.ip())?;
+        }
         socket.set_nonblocking(true)?;
         Ok(socket.into())
     }

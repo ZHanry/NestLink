@@ -72,7 +72,12 @@ impl NativeNetworkSettings {
     /// destinations need no exception; metadata, loopback, mapped IPv6 and
     /// link-local destinations remain forbidden by the SDK AddressPolicy.
     pub fn validate(&self) -> Result<(), NativeNetworkError> {
-        if !cfg!(windows) && self.media_route != MediaRouteMode::System {
+        let route_supported = match self.media_route {
+            MediaRouteMode::System => true,
+            MediaRouteMode::Physical => cfg!(windows),
+            MediaRouteMode::Interface => cfg!(any(windows, target_os = "linux")),
+        };
+        if !route_supported {
             return Err(NativeNetworkError::Unavailable);
         }
         if (self.media_route == MediaRouteMode::Interface) != self.media_interface_index.is_some()
@@ -121,20 +126,25 @@ impl NativeNetworkSettings {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn apply_route_policy(&self) -> Result<(), NativeNetworkError> {
-        use nestlink_platform_network::path::{RoutePolicy, set_default_policy};
-        let policy = match self.media_route {
+    fn route_policy(
+        &self,
+    ) -> Result<nestlink_platform_network::path::RoutePolicy, NativeNetworkError> {
+        use nestlink_platform_network::path::RoutePolicy;
+        self.validate()?;
+        Ok(match self.media_route {
             MediaRouteMode::System => RoutePolicy::System,
             MediaRouteMode::Physical => RoutePolicy::PreferPhysical,
             MediaRouteMode::Interface => RoutePolicy::Interface(
                 self.media_interface_index
                     .ok_or(NativeNetworkError::Invalid)?,
             ),
-        };
-        if !cfg!(windows) && policy != RoutePolicy::System {
-            return Err(NativeNetworkError::Unavailable);
-        }
-        set_default_policy(policy).map_err(|_| NativeNetworkError::Unavailable)
+        })
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(crate) fn apply_route_policy(&self) -> Result<(), NativeNetworkError> {
+        nestlink_platform_network::path::set_default_policy(self.route_policy()?)
+            .map_err(|_| NativeNetworkError::Unavailable)
     }
 }
 
@@ -154,6 +164,72 @@ pub trait NativeNetworkSettingsStore: Send + Sync {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn explicit_interface_support_matches_the_platform_backend() {
+        let interface = NativeNetworkSettings {
+            media_route: MediaRouteMode::Interface,
+            media_interface_index: Some(27),
+            ..Default::default()
+        };
+        let expected = if cfg!(any(windows, target_os = "linux")) {
+            Ok(())
+        } else {
+            Err(NativeNetworkError::Unavailable)
+        };
+        assert_eq!(interface.validate(), expected);
+        #[cfg(not(target_arch = "wasm32"))]
+        assert_eq!(
+            interface.route_policy(),
+            expected.map(|()| nestlink_platform_network::path::RoutePolicy::Interface(27))
+        );
+        let physical = NativeNetworkSettings {
+            media_route: MediaRouteMode::Physical,
+            media_interface_index: None,
+            ..Default::default()
+        };
+        let expected = if cfg!(windows) {
+            Ok(())
+        } else {
+            Err(NativeNetworkError::Unavailable)
+        };
+        assert_eq!(physical.validate(), expected);
+        #[cfg(not(target_arch = "wasm32"))]
+        assert_eq!(
+            physical.route_policy(),
+            expected.map(|()| nestlink_platform_network::path::RoutePolicy::PreferPhysical)
+        );
+    }
+
+    #[test]
+    fn route_settings_require_an_index_only_for_explicit_interfaces() {
+        for index in [None, Some(0)] {
+            let interface = NativeNetworkSettings {
+                media_route: MediaRouteMode::Interface,
+                media_interface_index: index,
+                ..Default::default()
+            };
+            let expected = if cfg!(any(windows, target_os = "linux")) {
+                Err(NativeNetworkError::Invalid)
+            } else {
+                Err(NativeNetworkError::Unavailable)
+            };
+            assert_eq!(interface.validate(), expected);
+            #[cfg(not(target_arch = "wasm32"))]
+            assert_eq!(
+                interface.route_policy(),
+                expected.map(|()| nestlink_platform_network::path::RoutePolicy::System)
+            );
+        }
+        let system = NativeNetworkSettings {
+            media_route: MediaRouteMode::System,
+            media_interface_index: Some(27),
+            ..Default::default()
+        };
+        assert_eq!(system.validate(), Err(NativeNetworkError::Invalid));
+        #[cfg(not(target_arch = "wasm32"))]
+        assert_eq!(system.route_policy(), Err(NativeNetworkError::Invalid));
+    }
 
     #[test]
     fn default_does_not_approve_any_private_destination() {

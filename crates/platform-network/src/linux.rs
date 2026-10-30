@@ -6,6 +6,65 @@ use std::{
     os::fd::{AsRawFd, FromRawFd, OwnedFd},
 };
 use tokio::io::unix::AsyncFd;
+mod paths;
+pub(super) use paths::{bind_media_interface, path_interfaces, validate_media_interface};
+#[cfg(test)]
+mod path_tests;
+
+fn interface_is_up(socket: &socket2::Socket, name: &str, index: u32) -> io::Result<bool> {
+    let name = name.as_bytes();
+    if name.is_empty() || name.len() >= libc::IFNAMSIZ || name.contains(&0) {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "invalid Linux interface name",
+        ));
+    }
+    // SAFETY: libc owns the exact Linux ifreq ABI. Zero initialization provides
+    // a terminated name and initialized union storage for each documented ioctl.
+    let mut request: libc::ifreq = unsafe { zeroed() };
+    for (target, source) in request.ifr_name.iter_mut().zip(name) {
+        *target = *source as libc::c_char;
+    }
+    // SAFETY: the socket stays live, request is a writable ABI-sized ifreq, and
+    // SIOCGIFINDEX only writes its documented integer field without retaining it.
+    if unsafe { libc::ioctl(socket.as_raw_fd(), libc::SIOCGIFINDEX, &mut request) } < 0 {
+        return Err(io::Error::last_os_error());
+    }
+    // SAFETY: the successful SIOCGIFINDEX initialized this union member.
+    if unsafe { request.ifr_ifru.ifru_ifindex } as u32 != index {
+        return Err(io::Error::new(
+            io::ErrorKind::AddrNotAvailable,
+            "Linux interface name no longer identifies the selected index",
+        ));
+    }
+    // SAFETY: same live socket and exact initialized ifreq; SIOCGIFFLAGS writes
+    // the documented short flags member without retaining any pointer.
+    if unsafe { libc::ioctl(socket.as_raw_fd(), libc::SIOCGIFFLAGS, &mut request) } < 0 {
+        return Err(io::Error::last_os_error());
+    }
+    // SAFETY: the successful SIOCGIFFLAGS initialized this union member.
+    let flags = i32::from(unsafe { request.ifr_ifru.ifru_flags });
+    let required = libc::IFF_UP | libc::IFF_RUNNING;
+    Ok(flags & required == required)
+}
+
+#[cfg(test)]
+fn assert_isolated_test_namespace() -> io::Result<()> {
+    let current = std::fs::read_link("/proc/self/ns/net")?;
+    let initial = std::fs::read_link("/proc/1/ns/net")?;
+    if current == initial {
+        return Err(io::Error::other(
+            "refusing to change the host network namespace",
+        ));
+    }
+    println!(
+        "isolated network namespace: self={}, init={}",
+        current.display(),
+        initial.display()
+    );
+    Ok(())
+}
+
 pub(super) fn subscribe() -> io::Result<AsyncFd<OwnedFd>> {
     // SAFETY: fixed documented socket constants; no pointer arguments. The
     // returned descriptor is uniquely owned and CLOEXEC/nonblocking at creation.
@@ -166,11 +225,7 @@ mod tests {
     #[tokio::test]
     #[ignore = "requires a fresh isolated network namespace with CAP_NET_ADMIN"]
     async fn actual_isolated_ipv4_ipv6_route_and_link_events() -> io::Result<()> {
-        if std::fs::read_link("/proc/self/ns/net")? == std::fs::read_link("/proc/1/ns/net")? {
-            return Err(io::Error::other(
-                "refusing to change the host network namespace",
-            ));
-        }
+        assert_isolated_test_namespace()?;
         let monitor = NetworkMonitor::start()?;
         let mut receiver = monitor.subscribe();
         let operations = [
