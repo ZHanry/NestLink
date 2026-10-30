@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "source_revision": "b7c3b19a0922d633939e103487cb5e07324764cc",
+  "repository": "ZHanry/NestLink",
+  "build_location": "github-hosted-actions",
+  "local_project_toolchain_executed": false,
+  "acceptance_claims": [],
+  "runs": [
+    {
+      "run_id": 41067420794,
+      "workflow": ".github/workflows/network-rewrite.yml",
+      "result": "success",
+      "observations": "Both Windows ordinary-token and Linux contract fmt/clippy/tests and evidence tools passed; actual routed kernel NAT, production socket and independent vectors passed."
+    },
+    {
+      "run_id": 41067420797,
+      "workflow": ".github/workflows/web-build.yml",
+      "result": "success",
+      "observations": {
+        "scope": "Production Web/native loopback with synthetic owned capture; real VP8, Opus, owned input/files and real HTTP/SQLite management",
+        "spaces_ui": "complete: named space, device join, isolated guest, one-use invitation, roles, stale revision, revoke/audit and archive",
+        "original_lifetime_seconds": 181,
+        "management_rate_window_seconds": 61,
+        "steady_seconds": 36,
+        "cleanup_reserve_seconds": 15,
+        "browser_exit_code": 0,
+        "native_exit_code": 0,
+        "forced_process_shutdown": false,
+        "private_directory_removed": true,
+        "owned_processes_stopped": true
+      },
+      "artifact": {
+        "id": 12984732654,
+        "sha256": "c14b2633b49a0a4679b1c5a5fa43292cca3a52ea6ee77757405847ca565e2c73",
+        "native_binary_sha256": "ae3df4944d80464e4edb30242708e9f6f8123b6413575813e857fb0aa11493ee"
+      }
+    },
+    {
+      "run_id": 41067420711,
+      "workflow": ".github/workflows/rust-core.yml",
+      "observations": "Linux formatting and full workspace clippy passed; workspace tests still failed. Windows workspace run pending at checkpoint. Following source fixes the known inbox rendezvous and post-cleanup carrier observation cases."
+    }
+  ],
+  "limitations": [
+    "Following rendezvous and lifecycle source requires matching Actions evidence.",
+    "No complete AC group, real GPU/phone/public NAT/TUN/HA or cross-day qualification is claimed.",
+    "The remaining implementation scope and 0.8.0RC release gates remain open."
+  ]
+}

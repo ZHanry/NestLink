@@ -37,7 +37,7 @@
     },
     {
       "run_id": 41063477012,
-      "workflow": ".github/workflows/web.yml",
+      "workflow": ".github/workflows/web-build.yml",
       "result": "failure",
       "observations": {
         "spaces_ui": "complete actual production browser lifecycle passed including isolated guest context, one-use invitation, all roles, stale revision rejection, revoke/audit and archive",

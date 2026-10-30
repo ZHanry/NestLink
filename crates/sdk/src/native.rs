@@ -1043,13 +1043,23 @@ impl NativeEndpoint {
             }
             signal_candidates = bounded_unique(signal_candidates, CANDIDATE_COUNT as usize);
         }
-        if signal_candidates.is_empty() {
+        let rendezvous = if signal_candidates.is_empty()
+            && signaling_routes
+                .iter()
+                .any(|route| matches!(route, NativeRelayRoute::Combined(_)))
+        {
+            Some(nestlink_protocol::api::NativeRendezvous::CombinedRelay)
+        } else {
+            None
+        };
+        if signal_candidates.is_empty() && rendezvous.is_none() {
             if relay_allowed && !self.permit.claims().paths.contains(&(Path::Direct as i32)) {
                 return Err(SessionEstablishError::RelayOnlyUnsupported);
             }
             return Err(SessionEstablishError::NoCandidates);
         }
         let signal = SignalPayload {
+            rendezvous,
             ice: None,
             connection_generation: self.permit.claims().connection_generation,
             lease_sequence: self.permit.claims().lease_sequence,
@@ -1305,7 +1315,7 @@ impl NativeEndpoint {
             self.check()?;
             for signal in signals {
                 signal.validate(self.permit.claims())?;
-                if !signal.candidates.is_empty() {
+                if !signal.candidates.is_empty() || signal.rendezvous.is_some() {
                     return Ok((signal.network_generation, signal.candidates));
                 }
             }

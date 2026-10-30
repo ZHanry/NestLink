@@ -73,9 +73,17 @@ impl SignalPayload {
             ));
         }
         if self.candidates.len() > CANDIDATE_COUNT as usize
-            || (self.candidates.is_empty() && self.description.is_none())
+            || (self.candidates.is_empty() && self.description.is_none() && self.rendezvous.is_none())
         {
             return Err(invalid("invalid signal candidate count"));
+        }
+        if self.rendezvous.is_some()
+            && (!permit.paths.contains(&(Path::Relay as i32))
+                || self.description.is_some()
+                || self.ice.is_some()
+                || !self.candidates.is_empty())
+        {
+            return Err(invalid("invalid native relay rendezvous"));
         }
         for (index, candidate) in self.candidates.iter().enumerate() {
             candidate.validate()?;
@@ -237,6 +245,49 @@ mod tests {
             in_reply_to_sequence: None,
         }
     }
+    #[test]
+    fn native_relay_rendezvous_has_no_peer_target_and_requires_relay_permission() -> Result<(), Box<dyn std::error::Error>> {
+        let mut permit = permit();
+        let mut signal = SignalPayload {
+            connection_generation: permit.connection_generation,
+            lease_sequence: permit.lease_sequence,
+            network_generation: 1,
+            sequence: 1,
+            candidates: Vec::new(),
+            description: None,
+            ice: None,
+            rendezvous: Some(NativeRendezvous::CombinedRelay),
+        };
+        assert!(signal.validate(&permit).is_err());
+        permit.paths.push(Path::Relay as i32);
+        signal.validate(&permit)?;
+        let mut encoded = serde_json::to_value(&signal)?;
+        encoded["rendezvous"] = serde_json::json!("http://169.254.169.254");
+        assert!(serde_json::from_value::<SignalPayload>(encoded).is_err());
+        signal.description = Some(description("192.168.1.10"));
+        assert!(signal.validate(&permit).is_err());
+        signal.description = None;
+        signal.candidates.push(Candidate {
+            address: "127.0.0.1:28743".parse()?,
+            kind: CandidateKind::Relay,
+            transport: Transport::Wss,
+            generation: 1,
+        });
+        assert!(signal.validate(&permit).is_err());
+        signal.candidates.clear();
+        signal.network_generation = 0;
+        assert!(signal.validate(&permit).is_err());
+        signal.network_generation = 1;
+        signal.rendezvous = None;
+        assert!(signal.validate(&permit).is_err());
+        signal.description = Some(description("192.168.1.10"));
+        signal.validate(&permit)?;
+        let legacy = serde_json::to_value(&signal)?;
+        assert!(legacy.get("rendezvous").is_none());
+        assert_eq!(serde_json::from_value::<SignalPayload>(legacy)?, signal);
+        Ok(())
+    }
+
     #[test]
     fn browser_description_binds_fingerprints_and_rejects_unsafe_or_forbidden_ice() {
         let permit = permit();

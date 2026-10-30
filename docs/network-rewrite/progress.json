@@ -6,7 +6,7 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "4492f59febb5c4548e55b1f3eedc674fd01ad025",
+    "source_revision":  "b7c3b19a0922d633939e103487cb5e07324764cc",
     "checkpoint_kind":  "work_in_progress_against_source_revision",
     "active_tasks":  [
                          "W00",
@@ -58,8 +58,8 @@
                                    }
                                ],
     "next_steps":  [
-                       "Verify SDK carrier size/classification repairs and explicit browser management setup budget in exact-source Actions.",
-                       "Repair complete-workspace native inbox and idle QUIC recovery failures; retain all original gates.",
+                       "Verify candidate-free signed combined relay rendezvous, actual native inbox and successful carrier-release recovery in exact-source Actions.",
+                       "Retain full workspace and browser gates, import reviewed Actions formatting and regenerated OpenAPI.",
                        "Connect production bilateral ICE signaling after same-socket feasibility evidence; continue remaining ready network and service implementation.",
                        "Prepare same-source candidates and target acceptance procedures; publish 0.8.0RC only after required functionality and evidence gates are satisfied."
                    ],
@@ -72,7 +72,8 @@
                            "docs/network-rewrite/evidence/development-run-e3a18a1.json",
                            "docs/network-rewrite/evidence/development-run-bdbc042.json",
                            "docs/network-rewrite/evidence/development-run-1249075.json",
-                           "docs/network-rewrite/evidence/development-run-4492f59.json"
+                           "docs/network-rewrite/evidence/development-run-4492f59.json",
+                           "docs/network-rewrite/evidence/development-run-b7c3b19.json"
                        ],
     "observed_actions":  [
                              {
@@ -122,6 +123,18 @@
                                  "source_revision":  "4492f59febb5c4548e55b1f3eedc674fd01ad025",
                                  "status":  "partial_failure",
                                  "scope":  "Both OS contract clippy/tests passed; format failed. Both OS scoped routed/HTTP relay/ICE/discovery/spaces passed. Full workspace and browser fixture lifetime still failed."
+                             },
+                             {
+                                 "run_id":  41067420794,
+                                 "source_revision":  "b7c3b19a0922d633939e103487cb5e07324764cc",
+                                 "status":  "success",
+                                 "scope":  "Both OS contract fmt/clippy/tests, real routed kernel NAT, production socket and independent vector jobs passed."
+                             },
+                             {
+                                 "run_id":  41067420797,
+                                 "source_revision":  "b7c3b19a0922d633939e103487cb5e07324764cc",
+                                 "status":  "success",
+                                 "scope":  "Complete production browser/native synthetic-owned VP8/Opus/input/files/space lifecycle and physical-process cleanup passed; not external target qualification."
                              }
                          ],
     "release_state":  "not_ready",

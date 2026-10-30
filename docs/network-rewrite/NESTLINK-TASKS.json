@@ -1032,7 +1032,7 @@
                                                       "未证实的可行性假设标明并映射后续原型"
                                                   ],
                       "evidence_refs":  [
-
+                                            "docs/network-rewrite/evidence/development-run-4492f59.json"
                                         ],
                       "blockers":  [
 
@@ -1211,7 +1211,7 @@
                                                       "无未标明的外部验证缺口"
                                                   ],
                       "evidence_refs":  [
-
+                                            "docs/network-rewrite/evidence/development-run-4492f59.json"
                                         ],
                       "blockers":  [
 
@@ -1274,7 +1274,7 @@
                                                       "无未标明的外部验证缺口"
                                                   ],
                       "evidence_refs":  [
-
+                                            "docs/network-rewrite/evidence/development-run-4492f59.json"
                                         ],
                       "blockers":  [
 
@@ -1463,7 +1463,8 @@
                                                   ],
                       "evidence_refs":  [
                                             "docs/adr/network/0004-mature-ice-quinn-same-socket-prototype.md",
-                                            "docs/network-rewrite/evidence/development-run-1249075.json"
+                                            "docs/network-rewrite/evidence/development-run-1249075.json",
+                                            "docs/network-rewrite/evidence/development-run-4492f59.json"
                                         ],
                       "blockers":  [
 
@@ -2032,7 +2033,8 @@
                       "evidence_refs":  [
                                             "docs/network-rewrite/IMPLEMENTATION-2026-10-30.md",
                                             "docs/network-rewrite/SPACE-PRODUCT-SLICE.md",
-                                            "docs/network-rewrite/evidence/development-run-1249075.json"
+                                            "docs/network-rewrite/evidence/development-run-1249075.json",
+                                            "docs/network-rewrite/evidence/development-run-4492f59.json"
                                         ],
                       "blockers":  [
 

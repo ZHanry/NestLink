@@ -392,6 +392,7 @@ mod tests {
     fn signal_summary_never_serializes_description_or_candidate_secrets()
     -> Result<(), Box<dyn std::error::Error>> {
         let payload = SignalPayload {
+            rendezvous: None,
             connection_generation: 9, lease_sequence: 2, network_generation: 3, sequence: 4,
             candidates: Vec::new(), ice: None,
             description: Some(crate::api::WebRtcDescription { kind: "answer".into(),

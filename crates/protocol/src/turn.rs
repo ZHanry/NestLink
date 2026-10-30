@@ -687,6 +687,7 @@ fn partial_snapshots_grant_no_relay_peers_and_completion_freezes_the_exact_publi
     );
     let partial = crate::ice::snapshot(sdp, 1, false)?;
     let mut signal = crate::api::SignalPayload {
+        rendezvous: None,
         ice: Some(partial.clone()),
         connection_generation: 1,
         lease_sequence: 1,

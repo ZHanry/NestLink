@@ -53,15 +53,21 @@ async fn wait_connected(handle: &CoreHandle) -> Result {
 
 #[tokio::test]
 async fn controller_alone_starts_approved_host_over_combined_wss_and_stop_is_respected() -> Result {
-    session_and_stop(false).await
+    session_and_stop(false, false).await
 }
 
 #[tokio::test]
 async fn manually_started_host_is_not_restarted_by_the_inbox_after_stop() -> Result {
-    session_and_stop(true).await
+    session_and_stop(true, false).await
 }
 
-async fn session_and_stop(manual_host: bool) -> Result {
+#[tokio::test]
+async fn relay_only_inbox_needs_no_direct_candidate_or_private_network_consent() -> Result {
+    session_and_stop(false, true).await
+}
+
+async fn session_and_stop(manual_host: bool, relay_only: bool) -> Result {
+    let path_mode = if relay_only { "relay_only" } else { "direct_preferred" };
     let server = Server::start(None).await?;
     let controller = DeviceIdentity::generate();
     let host = DeviceIdentity::generate();
@@ -75,7 +81,7 @@ async fn session_and_stop(manual_host: bool) -> Result {
             expected_revision: 1,
             policy: NetworkPolicy {
                 server_forwarding: "allow".into(),
-                peer_path_mode: "direct_preferred".into(),
+                peer_path_mode: path_mode.into(),
                 public_ingress: "disabled".into(),
             },
         },
@@ -86,14 +92,14 @@ async fn session_and_stop(manual_host: bool) -> Result {
             name: role.into(),
             platform: "windows".into(),
             capabilities: vec![role.into(), "vp8".into(), "opus".into()],
-            path_mode: "direct_preferred".into(),
+            path_mode: path_mode.into(),
         })?)
         .await?;
     }
     success(controller.submit(Action::RequestRemote {
         host_device_id: host_id,
         permissions: vec![Permission::View as i32],
-        path_mode: "direct_preferred".into(),
+        path_mode: path_mode.into(),
         access: RemoteAccess::LocalApproval,
     })?)
     .await?;
@@ -114,7 +120,7 @@ async fn session_and_stop(manual_host: bool) -> Result {
         choice: ApprovalChoice {
             approved: true,
             permissions: vec![Permission::View as i32],
-            paths: vec![Path::Direct as i32, Path::Relay as i32],
+            paths: if relay_only { vec![Path::Relay as i32] } else { vec![Path::Direct as i32, Path::Relay as i32] },
         },
     })?)
     .await?;

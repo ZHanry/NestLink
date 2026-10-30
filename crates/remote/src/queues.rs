@@ -1064,7 +1064,10 @@ impl ChannelRuntime {
         }
         if let Some(owner) = self.transport_owner.as_mut() {
             match tokio::time::timeout_at(deadline, owner.close_and_wait(deadline)).await {
-                Ok(Ok(())) => self.transport_owner = None,
+                Ok(Ok(())) => {
+                    self.lease.transport_owner_released()?;
+                    self.transport_owner = None;
+                }
                 Ok(Err(error)) => {
                     self.cleanup_failure.get_or_insert(error.kind());
                 }

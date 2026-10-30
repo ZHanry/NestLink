@@ -57,6 +57,7 @@ async fn trickle_answers_before_slow_stun_and_completes_a_signed_direct_connecti
             .await?;
         let original = browser.local_description().await.ok_or("missing offer")?;
         let mut offer = SignalPayload {
+            rendezvous: None,
             ice: Some(nestlink_protocol::ice::snapshot(&original.sdp, 1, false)?),
             connection_generation: fixture.permit.claims().connection_generation,
             lease_sequence: fixture.permit.claims().lease_sequence,
@@ -564,6 +565,7 @@ impl Fixture {
 
 fn offer(permit: &VerifiedPermit) -> SignalPayload {
     SignalPayload {
+        rendezvous: None,
         ice: None,
         connection_generation: permit.claims().connection_generation,
         lease_sequence: permit.claims().lease_sequence,
@@ -1039,6 +1041,7 @@ async fn complete_trickle_sets_require_the_existing_dual_signed_relay_binding() 
                 "v=0\r\na=fingerprint:sha-256 {fingerprint}\r\na=ice-ufrag:abc123\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=mid:0\r\na=candidate:1 1 UDP 100 {address} typ {candidate_type}\r\n"
             );
             let signal = SignalPayload {
+                rendezvous: None,
                 ice: Some(nestlink_protocol::ice::snapshot(&sdp, 1, complete)?),
                 connection_generation: fixture.permit.claims().connection_generation,
                 lease_sequence: fixture.permit.claims().lease_sequence,

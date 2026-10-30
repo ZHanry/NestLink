@@ -598,6 +598,7 @@ mod tests {
     -> Result<(), Box<dyn std::error::Error>> {
         let sdp = "v=0\r\na=ice-ufrag:abc123\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=mid:0\r\na=candidate:1 1 UDP 90 8.8.8.8 5001 typ srflx\r\n";
         let mut signal = nestlink_protocol::api::SignalPayload {
+            rendezvous: None,
             ice: Some(nestlink_protocol::ice::snapshot(sdp, 1, false)?),
             connection_generation: 1,
             lease_sequence: 1,
@@ -3377,6 +3378,7 @@ mod wasm {
                 None
             };
             let payload = SignalPayload {
+                rendezvous: None,
                 ice,
                 connection_generation: claims.connection_generation,
                 lease_sequence: claims.lease_sequence,

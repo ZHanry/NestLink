@@ -126,6 +126,7 @@ struct Managed {
     handlers: Vec<Box<dyn StopHandler>>,
     report: Option<StopReport>,
     recovery_forbidden: bool,
+    carrier_released: bool,
     input_attached: bool,
     capture_attached: bool,
     audio_attached: [bool; 2],
@@ -226,7 +227,7 @@ impl Inner {
                     .then_some(StopReason::Revoked)
             })
             .or_else(|| self.network.as_ref().and_then(NetworkBinding::reason))
-            .or_else(|| self.carrier.as_ref().and_then(carrier_stop_reason))
+            .or_else(|| self.carrier.as_ref().and_then(|carrier| carrier_stop_reason(carrier, managed.carrier_released)))
         {
             if !reconnection_is_allowed(reason) {
                 managed.recovery_forbidden = true;
@@ -261,7 +262,7 @@ impl Inner {
                     .then_some(StopReason::Revoked)
             })
             .or_else(|| self.network.as_ref().and_then(NetworkBinding::reason))
-            .or_else(|| self.carrier.as_ref().and_then(carrier_stop_reason))
+            .or_else(|| self.carrier.as_ref().and_then(|carrier| carrier_stop_reason(carrier, managed.carrier_released)))
         {
             if !reconnection_is_allowed(reason) {
                 managed.recovery_forbidden = true;
@@ -306,11 +307,12 @@ impl Inner {
     }
 }
 
-fn carrier_stop_reason(carrier: &watch::Receiver<Option<io::ErrorKind>>) -> Option<StopReason> {
-    if carrier.has_changed().is_err() {
+fn carrier_stop_reason(carrier: &watch::Receiver<Option<io::ErrorKind>>, released: bool) -> Option<StopReason> {
+    let failure = *carrier.borrow();
+    if failure.is_none() && !released && carrier.has_changed().is_err() {
         return Some(StopReason::Revoked);
     }
-    carrier.borrow().map(|kind| match kind {
+    failure.map(|kind| match kind {
         io::ErrorKind::UnexpectedEof
         | io::ErrorKind::BrokenPipe
         | io::ErrorKind::ConnectionReset
@@ -413,6 +415,7 @@ impl LeaseControl {
                     handlers: lifecycle.resources.into_iter().collect(),
                     report: None,
                     recovery_forbidden: false,
+                    carrier_released: false,
                     input_attached: false,
                     capture_attached: false,
                     audio_attached: [false; 2],
@@ -473,6 +476,18 @@ impl LeaseControl {
     pub fn subscribe_stopped(&self) -> watch::Receiver<Option<StopReport>> {
         self.inner.reports.subscribe()
     }
+    /// A successful transport-owner receipt precedes releasing its failure
+    /// sender. Its later sender Drop is cleanup, while any recorded failure
+    /// remains authoritative. A live or unsuccessfully closed owner has no
+    /// such exemption from fail-closed observer loss.
+    pub(crate) fn transport_owner_released(&self) -> Result<(), RemoteError> {
+        let mut managed = self.inner.lock()?;
+        if managed.report.is_none() {
+            return Err(RemoteError::Stopped);
+        }
+        managed.carrier_released = true;
+        Ok(())
+    }
     /// Original signed Input permits accepted by this actual proved lease.
     /// Poll this outside InputDevice/StopHandler callbacks: it is observation,
     /// never authority to prolong the current local deadline or revive None.
@@ -503,7 +518,7 @@ impl LeaseControl {
                 .inner
                 .carrier
                 .as_ref()
-                .and_then(carrier_stop_reason)
+                .and_then(|carrier| carrier_stop_reason(carrier, managed.carrier_released))
                 .is_some_and(|reason| reason != StopReason::TransportLost)
             || managed.recovery_forbidden
             || managed
@@ -900,7 +915,7 @@ impl LeaseControl {
                     .then_some(StopReason::Revoked)
             })
             .or_else(|| self.inner.network.as_ref().and_then(NetworkBinding::reason))
-            .or_else(|| self.inner.carrier.as_ref().and_then(carrier_stop_reason));
+            .or_else(|| self.inner.carrier.as_ref().and_then(|carrier| carrier_stop_reason(carrier, managed.carrier_released)));
         if let Some(observed) = observed_stop {
             if !reconnection_is_allowed(observed) {
                 managed.recovery_forbidden = true;

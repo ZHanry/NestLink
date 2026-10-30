@@ -197,3 +197,13 @@ setup in its one original deadline and records that budget. The 36-second steady
 media observation, 15-second cleanup reserve, application leases and production
 rate limit are preserved. This change still needs exact-source browser evidence.
 See `evidence/development-run-4492f59.json` for run identities and limitations.
+
+The following source addresses the remaining native inbox and idle QUIC recovery
+failures. ADR 0006 specifies candidate-free, device-signed combined-relay
+rendezvous through each endpoint's existing trusted management origin. Candidate
+address validation and business proof stay mandatory; an added real AppCore
+relay-only case requires no direct candidate or private destination consent.
+Completed carrier cleanup now records its successful receipt before releasing
+the failure sender. Only that empty post-receipt closure is cleanup; lost live
+observation and recorded revocation still deny recovery. Protocol and lifecycle
+regressions and complete real-session tests require matching Actions execution.

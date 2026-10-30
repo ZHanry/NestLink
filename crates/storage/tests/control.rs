@@ -761,6 +761,7 @@ fn signal_possession_generation_paths_and_live_authorization_are_enforced() -> R
     )?;
     let permit = s.initial_permit(&admin, &view.id, 1002)?;
     let payload = SignalPayload {
+        rendezvous: None,
         ice: None,
         connection_generation: 1,
         lease_sequence: 1,
@@ -815,6 +816,7 @@ fn signal_possession_generation_paths_and_live_authorization_are_enforced() -> R
     );
     let offer_sequence = 3;
     let offer = SignalPayload {
+        rendezvous: None,
         ice: None,
         connection_generation: 1,
         lease_sequence: 1,
@@ -833,6 +835,7 @@ fn signal_possession_generation_paths_and_live_authorization_are_enforced() -> R
     assert!(s.ready_native_remote(&member, &h, 1006)?.is_empty());
     let sign_answer = |sequence: u64, in_reply_to_sequence: u64| -> Result<SignalSubmission> {
         let payload = SignalPayload {
+            rendezvous: None,
             ice: None,
             connection_generation: 1,
             lease_sequence: 1,
@@ -860,6 +863,7 @@ fn signal_possession_generation_paths_and_live_authorization_are_enforced() -> R
     );
     s.submit_signal(&member, &view.id, sign_answer(1, offer_sequence)?, 1007)?;
     let newer_offer = SignalPayload {
+        rendezvous: None,
         ice: None,
         connection_generation: 1,
         lease_sequence: 1,

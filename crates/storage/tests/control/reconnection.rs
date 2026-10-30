@@ -332,6 +332,7 @@ fn reconnect_clears_old_signals_accepts_new_sequence_and_policy_update_kills_rec
                       sequence: u64|
      -> Result<nestlink_protocol::api::SignalSubmission> {
         let payload = nestlink_protocol::api::SignalPayload {
+            rendezvous: None,
             ice: None,
             connection_generation: permit.connection_generation,
             lease_sequence: permit.lease_sequence,

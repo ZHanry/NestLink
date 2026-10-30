@@ -716,6 +716,15 @@ pub struct SignalPayload {
     /// description so polling cannot deliver candidates without their parent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ice: Option<WebRtcIceSnapshot>,
+    /// Address-free native rendezvous through each endpoint's trusted
+    /// management origin. This declaration grants no target or business right.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rendezvous: Option<NativeRendezvous>,
+}
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum NativeRendezvous {
+    CombinedRelay,
 }
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]

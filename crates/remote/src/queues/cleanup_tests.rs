@@ -1,6 +1,56 @@
 use super::*;
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
+struct ObservedSocketOwner {
+    socket: Option<std::net::UdpSocket>,
+    _facts: watch::Sender<Option<io::ErrorKind>>,
+}
+impl TransportOwner for ObservedSocketOwner {
+    fn request_close(&self) {}
+    fn close_and_wait(&mut self, _deadline: tokio::time::Instant) -> Pin<Box<dyn Future<Output = io::Result<()>> + Send + '_>> {
+        Box::pin(async move {
+            drop(self.socket.take());
+            Ok(())
+        })
+    }
+}
+
+#[tokio::test]
+async fn completed_owner_release_preserves_recovery_but_lost_observer_and_recorded_revocation_do_not() -> Result {
+    for (attach_owner, failure, can_recover) in [
+        (true, None, true),
+        (true, Some(io::ErrorKind::PermissionDenied), false),
+        (false, None, false),
+    ] {
+        let (session, clock) = super::file_disclosure_tests::active()?;
+        let (_keep, stop) = watch::channel(None);
+        let (facts, carrier) = watch::channel(failure);
+        // Install failure only after the live runtime exists.
+        facts.send_replace(None);
+        let mut lifecycle = crate::SessionLifecycle::new(stop);
+        lifecycle.carrier = Some(carrier);
+        let (_peer, stream) = tokio::io::duplex(64);
+        let (read, write) = tokio::io::split(stream);
+        let mut runtime = AuthorizedConnection::with_lifecycle(read, write, session, nestlink_protocol::Path::Direct, clock, lifecycle)?.into_channels();
+        let socket = std::net::UdpSocket::bind("127.0.0.1:0")?;
+        let address = socket.local_addr()?;
+        facts.send_replace(failure);
+        if attach_owner {
+            runtime = runtime.with_transport_owner(ObservedSocketOwner { socket: Some(socket), _facts: facts });
+        } else {
+            drop(socket);
+            drop(facts);
+        }
+        let report = runtime.shutdown(StopReason::TransportLost).await?;
+        let _rebound = std::net::UdpSocket::bind(address)?;
+        if can_recover {
+            assert_eq!(report.reason, StopReason::TransportLost);
+        }
+        assert_eq!(runtime.lease_control().reconnection_budget().is_ok(), can_recover);
+    }
+    Ok(())
+}
+
 #[tokio::test]
 async fn original_carrier_facts_precede_synthetic_endpoint_shutdown_but_not_protocol_failure()
 -> Result {
