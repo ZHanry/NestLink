@@ -121,9 +121,11 @@ async fn member_access(
 ) -> Result<String, ApiError> {
     let token = access(headers)?;
     let check = token.clone();
-    let principal = state
-        .db(move |s| s.authenticate(&check, now_ms()? / 1000))
-        .await?;
+    let authenticate = move |s: &mut Store| s.authenticate(&check, now_ms()? / 1000);
+    let principal = match operation {
+        MemberOperation::Revoke => state.db_revocation(authenticate).await?,
+        _ => state.db(authenticate).await?,
+    };
     let (namespace, maximum) = operation.budget();
     state.limit_with_budget(&format!("{namespace}/{}", principal.session_id), maximum)?;
     Ok(token)

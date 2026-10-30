@@ -7,6 +7,8 @@ use nestlink_protocol::{
     nodes::{NODE_CHALLENGE_MS, NODE_MESSAGE_BYTES},
 };
 use std::time::Duration;
+#[cfg(test)]
+mod revocation_tests;
 
 pub(super) async fn resources(
     State(state): State<AppState>,
@@ -133,7 +135,7 @@ pub(super) async fn revoke(
     let token = access(&headers)?;
     let resource = id.clone();
     let actor = state
-        .db(move |s| {
+        .db_revocation(move |s| {
             let p = s.authenticate(&token, now()?)?;
             s.revoke_node(&p, &resource)?;
             Ok(p.account_id)

@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "source_revision": "68c21fe0e7d974ca504b2c05402971c09b98517b",
+  "repository": "ZHanry/NestLink",
+  "build_provenance": {
+    "workflow": ".github/workflows/network-rewrite.yml",
+    "run_id": 41129128850,
+    "attempt": 1,
+    "job_id": 124315239987,
+    "job": "topology-journal",
+    "runner": "GitHub-hosted ubuntu-24.04",
+    "rust": "1.96.0",
+    "command": "cargo test --locked -p nestlink-protocol -p nestlink-identity -p nestlink-storage --test network_topology -- --show-output --color never",
+    "artifact_id": 13011752526,
+    "artifact_zip_sha256": "1a8ac391e9aaae90a9b8546b2d600ab8ce5c635f8f57debc9d8ac1eae0c5d8e2",
+    "original_zip_digest_verified": true
+  },
+  "execution_provenance": {
+    "location": "Same GitHub-hosted Actions job as build",
+    "protocol_tests": {"passed": 3, "failed": 0, "ignored": 0},
+    "identity_tests": {"passed": 5, "failed": 0, "ignored": 0},
+    "sqlite_journal_tests": {"passed": 7, "failed": 0, "ignored": 0},
+    "scope": "Canonical and bounded signed topology contracts, separate signing domains, exact RouteExport proof requirements, registered node challenge/runtime facts, space publication ACL, durable sequence and withdrawal history, exact retry without TTL extension, rate bound, expiry, restart, cursor retention and policy epoch transitions."
+  },
+  "whole_workflow_passed": false,
+  "other_results": {
+    "production_socket": "success",
+    "routed_kernel_nat": "success",
+    "independent_vectors": "success",
+    "linux_contract": "failure",
+    "windows_contract": "failure",
+    "native_ice_kernel_nat": "failure",
+    "root_cause": "New topology HTTP handler omitted the ErrorCode import. Both contract compile paths and the native ICE clippy prerequisite rejected it with E0433. Dedicated topology protocol/identity/SQLite tests did run successfully; the HTTP handler was not exercised by that first dedicated job.",
+    "linux_contract_artifact": 13011449064,
+    "linux_contract_zip_sha256": "06a5bcad65891a735660034fdb914ec2383f9a6b5f9bb2049c95f09a483d20ac",
+    "linux_contract_original_zip_digest_verified": true,
+    "following_source": "Adds the missing import and real HTTP integration test, and reviews/imports the Actions-generated formatting for the Store/protocol/handler slice. New exact-source Actions are required."
+  },
+  "limitations": [
+    "This result does not complete W12, AC18 or AC19.",
+    "No endpoint graph consumer, continuous node adjacency reporter, atomic two-relay reservation or NRD2 four-node business carrier is qualified by this result.",
+    "No local project compiler, formatter, lint or tests were executed."
+  ]
+}

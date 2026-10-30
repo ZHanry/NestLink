@@ -61,12 +61,19 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-protocol -p nestlink-identity -p nestlink-storage --test network_topology -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-topology-tests.log"
+      - name: Exercise the real HTTP topology publication and withdrawal APIs
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-server --test network_policy topology:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-topology-http-tests.log"
       - name: Retain exact-source topology test log
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: network-topology-${{ github.sha }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/network-topology-tests.log
+          path: |
+            ${{ runner.temp }}/network-topology-tests.log
+            ${{ runner.temp }}/network-topology-http-tests.log
           if-no-files-found: error
           retention-days: 30
   native-ice-kernel-nat-slice:

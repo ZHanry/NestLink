@@ -30,6 +30,8 @@ const PASSWORD: &str = "network-api-integration-password";
 mod authority_lifecycle;
 #[path = "network_policy/relays.rs"]
 mod relays;
+#[path = "network_policy/topology.rs"]
+mod topology;
 
 struct Running(tokio::task::JoinHandle<()>);
 impl Drop for Running {

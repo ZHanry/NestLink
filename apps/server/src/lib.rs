@@ -233,9 +233,29 @@ impl AppState {
         R: Send + 'static,
         F: FnOnce(&mut Store) -> Result<R, StorageError> + Send + 'static,
     {
-        let permit = self.work.acquire().await.map_err(|_| {
+        self.db_admission(action, false).await
+    }
+    async fn db_revocation<R, F>(&self, action: F) -> Result<R, ApiError>
+    where
+        R: Send + 'static,
+        F: FnOnce(&mut Store) -> Result<R, StorageError> + Send + 'static,
+    {
+        self.db_admission(action, true).await
+    }
+    async fn db_admission<R, F>(&self, action: F, revocation: bool) -> Result<R, ApiError>
+    where
+        R: Send + 'static,
+        F: FnOnce(&mut Store) -> Result<R, StorageError> + Send + 'static,
+    {
+        let admission = if revocation {
+            self.work.acquire_revocation().await
+        } else {
+            self.work.acquire().await
+        };
+        let permit = admission.map_err(|_| {
             tracing::warn!(
                 event = "database_capacity_exhausted",
+                revocation,
                 "bounded database queue is full or its wait deadline expired"
             );
             ApiError(StatusCode::TOO_MANY_REQUESTS, ErrorCode::CapacityExceeded)

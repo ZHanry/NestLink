@@ -63,8 +63,14 @@ fn canonical_reports_and_envelopes_reject_unknown_duplicate_and_noncanonical_jso
     let mut whitespace = vec![b' '];
     whitespace.extend_from_slice(&bytes);
     assert!(TopologyReport::decode_canonical(&whitespace).is_err());
-    let signed = SignedTopologyReport { claims: bytes, signature: vec![7; 64] };
-    assert_eq!(SignedTopologyReport::decode_canonical(&signed.canonical_bytes()?)?, signed);
+    let signed = SignedTopologyReport {
+        claims: bytes,
+        signature: vec![7; 64],
+    };
+    assert_eq!(
+        SignedTopologyReport::decode_canonical(&signed.canonical_bytes()?)?,
+        signed
+    );
     let mut malformed = signed;
     malformed.signature.push(0);
     assert!(malformed.validate().is_err());
@@ -75,7 +81,10 @@ fn canonical_reports_and_envelopes_reject_unknown_duplicate_and_noncanonical_jso
 fn reports_reject_default_routes_bad_incarnations_sequences_hops_and_size() -> Result {
     for (network, prefix_len) in [("0.0.0.0", 0), ("::", 0), ("127.0.0.0", 8)] {
         let mut invalid = report();
-        invalid.prefixes = vec![IpPrefix { network: network.parse()?, prefix_len }];
+        invalid.prefixes = vec![IpPrefix {
+            network: network.parse()?,
+            prefix_len,
+        }];
         assert!(invalid.canonical_bytes().is_err());
     }
     let mut invalid = report();
@@ -107,15 +116,27 @@ fn reports_reject_default_routes_bad_incarnations_sequences_hops_and_size() -> R
 
 #[test]
 fn full_snapshot_and_delta_are_unambiguous_and_journal_cursors_are_bounded() -> Result {
-    let full = update(TopologySync::Full { cursor: 0, advertisements: vec![] });
-    assert_eq!(TopologyUpdate::decode_canonical(&full.canonical_bytes()?)?, full);
+    let full = update(TopologySync::Full {
+        cursor: 0,
+        advertisements: vec![],
+    });
+    assert_eq!(
+        TopologyUpdate::decode_canonical(&full.canonical_bytes()?)?,
+        full
+    );
     let delta = update(TopologySync::Delta {
         after_cursor: 3,
         cursor: 4,
         has_more: false,
-        changes: vec![TopologyDeltaEntry { cursor: 4, change: TopologyChange::Withdraw(withdrawal()) }],
+        changes: vec![TopologyDeltaEntry {
+            cursor: 4,
+            change: TopologyChange::Withdraw(withdrawal()),
+        }],
     });
-    assert_eq!(TopologyUpdate::decode_canonical(&delta.canonical_bytes()?)?, delta);
+    assert_eq!(
+        TopologyUpdate::decode_canonical(&delta.canonical_bytes()?)?,
+        delta
+    );
     let mut mixed = serde_json::to_value(&full)?;
     mixed["sync"]["changes"] = serde_json::json!([]);
     assert!(serde_json::from_value::<TopologyUpdate>(mixed).is_err());
@@ -126,22 +147,37 @@ fn full_snapshot_and_delta_are_unambiguous_and_journal_cursors_are_bounded() -> 
         (3, 4, vec![], false),
         (3, 3, vec![], true),
     ] {
-        assert!(update(TopologySync::Delta {
-            after_cursor,
-            cursor,
-            has_more,
-            changes: entries.into_iter().map(|cursor| TopologyDeltaEntry {
-                cursor, change: TopologyChange::Withdraw(withdrawal()),
-            }).collect(),
-        }).validate().is_err());
+        assert!(
+            update(TopologySync::Delta {
+                after_cursor,
+                cursor,
+                has_more,
+                changes: entries
+                    .into_iter()
+                    .map(|cursor| TopologyDeltaEntry {
+                        cursor,
+                        change: TopologyChange::Withdraw(withdrawal()),
+                    })
+                    .collect(),
+            })
+            .validate()
+            .is_err()
+        );
     }
-    assert!(update(TopologySync::Delta {
-        after_cursor: 0,
-        cursor: MAX_DELTA as u64 + 1,
-        has_more: false,
-        changes: (1..=MAX_DELTA as u64 + 1).map(|cursor| TopologyDeltaEntry {
-            cursor, change: TopologyChange::Withdraw(withdrawal()),
-        }).collect(),
-    }).validate().is_err());
+    assert!(
+        update(TopologySync::Delta {
+            after_cursor: 0,
+            cursor: MAX_DELTA as u64 + 1,
+            has_more: false,
+            changes: (1..=MAX_DELTA as u64 + 1)
+                .map(|cursor| TopologyDeltaEntry {
+                    cursor,
+                    change: TopologyChange::Withdraw(withdrawal()),
+                })
+                .collect(),
+        })
+        .validate()
+        .is_err()
+    );
     Ok(())
 }

@@ -1,8 +1,9 @@
 //! Independently versioned topology statements. Parsing is never publication,
 //! forwarding, prefix access or business authorization.
 use crate::{
-    ContractError, ErrorCode, valid_id,
+    ContractError, ErrorCode,
     network::{GrantScope, IpPrefix, PeerId},
+    valid_id,
 };
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::collections::BTreeSet;
@@ -133,7 +134,10 @@ impl TopologyReport {
             || self.sequence == 0
             || self.sequence > i64::MAX as u64
             || self.neighbors.len() > MAX_NEIGHBORS
-            || self.neighbors.windows(2).any(|p| p[0].remote >= p[1].remote)
+            || self
+                .neighbors
+                .windows(2)
+                .any(|p| p[0].remote >= p[1].remote)
         {
             return Err(invalid("invalid topology report"));
         }
@@ -206,9 +210,17 @@ macro_rules! signed {
     };
 }
 
-signed!(SignedTopologyPublisher, TopologyPublisherClaims, MAX_REPORT_BYTES);
+signed!(
+    SignedTopologyPublisher,
+    TopologyPublisherClaims,
+    MAX_REPORT_BYTES
+);
 signed!(SignedTopologyReport, TopologyReport, MAX_REPORT_BYTES);
-signed!(SignedTopologyAdvertisement, TopologyAdvertisement, MAX_ADVERTISEMENT_BYTES);
+signed!(
+    SignedTopologyAdvertisement,
+    TopologyAdvertisement,
+    MAX_ADVERTISEMENT_BYTES
+);
 
 /// A withdrawal is sufficient on its own. Its authority-signed update must not
 /// require the old publisher/report to remain valid before removing it.
@@ -237,7 +249,12 @@ impl TopologyWithdrawal {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "kind", content = "value", rename_all = "snake_case", deny_unknown_fields)]
+#[serde(
+    tag = "kind",
+    content = "value",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum TopologyChange {
     Upsert(SignedTopologyAdvertisement),
     Withdraw(TopologyWithdrawal),
@@ -289,7 +306,10 @@ impl TopologyUpdate {
             return Err(invalid("invalid topology update scope"));
         }
         match &self.sync {
-            TopologySync::Full { cursor, advertisements } => {
+            TopologySync::Full {
+                cursor,
+                advertisements,
+            } => {
                 if *cursor > i64::MAX as u64 || advertisements.len() > MAX_ADVERTISEMENTS {
                     return Err(invalid("topology snapshot exceeds its budget"));
                 }
@@ -304,7 +324,12 @@ impl TopologyUpdate {
                     }
                 }
             }
-            TopologySync::Delta { after_cursor, cursor, has_more, changes } => {
+            TopologySync::Delta {
+                after_cursor,
+                cursor,
+                has_more,
+                changes,
+            } => {
                 if *cursor > i64::MAX as u64
                     || after_cursor > cursor
                     || changes.len() > MAX_DELTA
@@ -371,21 +396,27 @@ codec!(TopologyUpdate, MAX_UPDATE_BYTES);
 fn canonical<T: Serialize>(value: &T, maximum: usize) -> Result<Vec<u8>, ContractError> {
     let bytes = serde_json::to_vec(value).map_err(|_| invalid("topology serialization failed"))?;
     if bytes.len() > maximum {
-        return Err(ContractError::new(ErrorCode::CapacityExceeded, "topology byte budget exceeded"));
+        return Err(ContractError::new(
+            ErrorCode::CapacityExceeded,
+            "topology byte budget exceeded",
+        ));
     }
     Ok(bytes)
 }
 fn decode<T: DeserializeOwned>(bytes: &[u8], maximum: usize) -> Result<T, ContractError> {
     if bytes.len() > maximum {
-        return Err(ContractError::new(ErrorCode::CapacityExceeded, "topology byte budget exceeded"));
+        return Err(ContractError::new(
+            ErrorCode::CapacityExceeded,
+            "topology byte budget exceeded",
+        ));
     }
     serde_json::from_slice(bytes).map_err(|_| invalid("malformed topology claims"))
 }
 fn validate_prefixes(prefixes: &[IpPrefix]) -> Result<(), ContractError> {
     if prefixes.len() > MAX_PREFIXES
-        || prefixes.windows(2).any(|p| {
-            (p[0].network, p[0].prefix_len) >= (p[1].network, p[1].prefix_len)
-        })
+        || prefixes
+            .windows(2)
+            .any(|p| (p[0].network, p[0].prefix_len) >= (p[1].network, p[1].prefix_len))
     {
         return Err(invalid("invalid topology prefix set"));
     }
@@ -396,14 +427,19 @@ fn validate_prefixes(prefixes: &[IpPrefix]) -> Result<(), ContractError> {
 }
 fn schema(version: u32) -> Result<(), ContractError> {
     if version != SCHEMA_VERSION {
-        return Err(ContractError::new(ErrorCode::ProtocolMismatch, "unsupported topology schema"));
+        return Err(ContractError::new(
+            ErrorCode::ProtocolMismatch,
+            "unsupported topology schema",
+        ));
     }
     Ok(())
 }
 fn lifetime(start: u64, end: u64) -> Result<(), ContractError> {
     if start == 0
         || end > i64::MAX as u64
-        || end.checked_sub(start).is_none_or(|ttl| ttl == 0 || ttl > MAX_TTL_MS)
+        || end
+            .checked_sub(start)
+            .is_none_or(|ttl| ttl == 0 || ttl > MAX_TTL_MS)
     {
         return Err(invalid("invalid topology lifetime"));
     }

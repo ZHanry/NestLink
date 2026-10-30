@@ -410,3 +410,20 @@ Seven new SQLite regressions and eight protocol/identity regressions are to be
 executed on GitHub Actions. Graph consumption, node reporting, the atomic
 two-relay reservation and NRD2 four-node carrier remain required implementation,
 so neither W12 nor AC18/AC19 is complete. ADR 0013 records this first slice.
+
+The 68c21fe focused Actions job ran all 15 new topology tests successfully
+(3 protocol, 5 identity, 7 SQLite; no failures or ignores). The wider jobs rejected
+a missing ErrorCode import in the new HTTP handler before compiling the server;
+the following source corrects it and adds a real HTTP report/query/revoke test.
+The reviewed Actions formatting was imported for the protocol/Store/handler
+slice, and the same source's generated OpenAPI artifact was checked by digest
+and imported. Its ZIP SHA256 is 61830cf3c956cdee2d49064e313a46a3981980e3609c98bb4a63cf89ad2b3326;
+OpenAPI bytes hash is cbc34201b08e777d15bfd7ebdae4c5b254ccb740912d8d6fd5338dbbcf0e0dff.
+
+The Windows c7d1ae1 two-node failure occurred at authenticated node revocation,
+not at TLS or business transmission. ADR 0014 reserves one of the existing eight
+blocking workers for revocation, retaining seven ordinary workers, eight shared
+waiters and the original 200 ms admission/700 ms node budgets. Both real HTTP
+saturation and permission/timeout/cancellation regressions accompany the fix.
+They and the unchanged Windows two-node scenario require new Actions. The new
+topology revoke also uses the reserved lane for authentication and mutation.
