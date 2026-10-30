@@ -104,6 +104,63 @@ async fn member_access(state: &AppState, headers: &HeaderMap) -> Result<String, 
     Ok(token)
 }
 
+fn relay_view(bundle: nestlink_storage::network_policy::NetworkRemoteRelayBundle)
+    -> Result<nestlink_protocol::api::NetworkRemoteRelayView, StorageError>
+{
+    Ok(nestlink_protocol::api::NetworkRemoteRelayView {
+        allocation_id: bundle.allocation_id,
+        path: path_view(bundle.path)?,
+        transit: grant_view(bundle.transit)?,
+        node: bundle.node,
+    })
+}
+
+pub(crate) async fn issue_relay(
+    State(state): State<AppState>, headers: HeaderMap,
+    Path((space, request)): Path<(String, String)>,
+    Json(body): Json<nestlink_protocol::api::NetworkRemoteRelayRequest>,
+) -> Result<(StatusCode, Json<nestlink_protocol::api::NetworkRemoteRelayView>), ApiError> {
+    let token = member_access(&state, &headers).await?;
+    let signer = state.network_signer.clone();
+    let lifecycle = state.relay_lifecycle.clone();
+    let view = state.db(move |s| {
+        let now = now_ms()?;
+        let actor = s.authenticate(&token, now / 1000)?;
+        relay_view(s.issue_network_remote_relay(&lifecycle, &actor, &signer,
+            nestlink_storage::network_policy::NetworkRemoteRelayIssuance {
+                space_id: space, request_id: request, request: body,
+            }, now)?)
+    }).await?;
+    Ok((StatusCode::CREATED, Json(view)))
+}
+
+pub(crate) async fn read_relay(
+    State(state): State<AppState>, headers: HeaderMap,
+    Path((space, allocation)): Path<(String, String)>,
+) -> Result<Json<nestlink_protocol::api::NetworkRemoteRelayView>, ApiError> {
+    let token = member_access(&state, &headers).await?;
+    let lifecycle = state.relay_lifecycle.clone();
+    let view = state.db(move |s| {
+        let now = now_ms()?;
+        let actor = s.authenticate(&token, now / 1000)?;
+        relay_view(s.network_remote_relay(&lifecycle, &actor, &space, &allocation, now)?)
+    }).await?;
+    Ok(Json(view))
+}
+
+pub(crate) async fn revoke_relay(
+    State(state): State<AppState>, headers: HeaderMap,
+    Path((space, allocation)): Path<(String, String)>,
+) -> Result<StatusCode, ApiError> {
+    let token = member_access(&state, &headers).await?;
+    state.db(move |s| {
+        let now = now_ms()?;
+        let actor = s.authenticate(&token, now / 1000)?;
+        s.revoke_network_remote_relay(&actor, &space, &allocation, now)
+    }).await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
 pub(crate) async fn issue_path(
     State(state): State<AppState>,
     headers: HeaderMap,

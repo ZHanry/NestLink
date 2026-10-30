@@ -16,6 +16,8 @@ use rusqlite::{Connection, OptionalExtension, Transaction, TransactionBehavior, 
 use std::collections::{BTreeMap, BTreeSet};
 mod remote_paths;
 pub use remote_paths::{NetworkRemotePathBundle, NetworkRemotePathIssuance};
+mod remote_relays;
+pub use remote_relays::{NetworkRemoteRelayBundle, NetworkRemoteRelayIssuance};
 
 pub const MAX_NETWORK_MEMBERS: usize = 4096;
 pub const MAX_CURRENT_NETWORK_GRANTS: usize = 65_536;
@@ -605,6 +607,11 @@ fn read_snapshot(
         let (connectivity, path) = row?;
         revoked_grant_ids.insert(connectivity);
         revoked_grant_ids.insert(path);
+    }
+    let mut transits = connection.prepare("SELECT r.transit_grant_id FROM network_remote_relays r JOIN network_remote_paths p ON p.space_id=r.space_id AND p.path_grant_id=r.path_grant_id WHERE r.space_id=?1 AND p.policy_epoch=?2 AND p.expires_at_ms>?3 AND (r.closed=1 OR p.revoked=1) LIMIT ?4")?;
+    for (count, id) in transits.query_map(params![space_id,policy_epoch,now_ms,MAX_CURRENT_NETWORK_GRANTS + 1], |r|r.get::<_, String>(0))?.enumerate() {
+        if count >= MAX_CURRENT_NETWORK_GRANTS { return Err(StorageError::RateLimited); }
+        revoked_grant_ids.insert(id?);
     }
     Ok(TrustedNetworkPolicySnapshot {
         authority_key,

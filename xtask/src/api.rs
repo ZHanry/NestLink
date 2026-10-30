@@ -137,6 +137,8 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         NetworkGrantView,
         NetworkRemotePathRequest,
         NetworkRemotePathView,
+        NetworkRemoteRelayRequest,
+        NetworkRemoteRelayView,
         NodeUsageQuery,
         NodeUsageView,
         NodeUsagePage,

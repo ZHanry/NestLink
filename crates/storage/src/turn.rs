@@ -215,11 +215,11 @@ impl Store {
     ) -> Result<(), StorageError> {
         let quota = self.relay_quota_current()?;
         let held: u64 = self.connection.query_row(
-            "SELECT (SELECT count(*) FROM relay_reservations WHERE promised_until>?1)+(SELECT count(*) FROM turn_grants WHERE promised_until>?1)", [now_ms], |r|r.get(0))?;
+            "SELECT (SELECT count(*) FROM all_relay_capacity WHERE promised_until>?1)+(SELECT count(*) FROM turn_grants WHERE promised_until>?1)", [now_ms], |r|r.get(0))?;
         let account: u64 = self.connection.query_row(
-            "SELECT (SELECT COALESCE(sum((controller_account_id=?1)+(host_account_id=?1)),0) FROM relay_reservations WHERE promised_until>?2)+(SELECT count(*) FROM turn_grants WHERE account_id=?1 AND promised_until>?2)",params![actor,now_ms], |r|r.get(0))?;
+            "SELECT (SELECT COALESCE(sum((controller_account_id=?1)+(host_account_id=?1)),0) FROM all_relay_capacity WHERE promised_until>?2)+(SELECT count(*) FROM turn_grants WHERE account_id=?1 AND promised_until>?2)",params![actor,now_ms], |r|r.get(0))?;
         let connections: u64 = self.connection.query_row(
-            "SELECT (SELECT count(*)*2 FROM relay_reservations WHERE node_id=?1 AND promised_until>?2)+(SELECT count(*) FROM turn_grants WHERE node_id=?1 AND promised_until>?2)",params![node,now_ms], |r|r.get(0))?;
+            "SELECT (SELECT count(*)*2 FROM all_relay_capacity WHERE node_id=?1 AND promised_until>?2)+(SELECT count(*) FROM turn_grants WHERE node_id=?1 AND promised_until>?2)",params![node,now_ms], |r|r.get(0))?;
         let history: u64 =
             self.connection
                 .query_row("SELECT count(*) FROM turn_grants", [], |r| r.get(0))?;
@@ -244,6 +244,9 @@ impl Store {
         self.validate_access(actor, now_ms / 1000)?;
         let tx = self.connection.unchecked_transaction()?;
         self.resume_relay_reservations(lifecycle, now_ms)?;
+        if tx.query_row("SELECT EXISTS(SELECT 1 FROM network_remote_relays WHERE allocation_id=?1)", [&request.allocation_id], |r|r.get::<_, bool>(0))? {
+            return Err(StorageError::Conflict);
+        }
         let permit = self.current_permit(actor, session, now_ms / 1000)?;
         if permit.issued_at_unix_ms > now_ms
             || permit.expires_at_unix_ms <= now_ms

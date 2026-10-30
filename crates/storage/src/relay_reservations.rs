@@ -75,7 +75,7 @@ impl Store {
             |r| r.get(0),
         )?;
         let prior: bool = self.connection.query_row(
-            "SELECT EXISTS(SELECT 1 FROM relay_reservations WHERE closed=0) OR EXISTS(SELECT 1 FROM turn_grants WHERE closed=0)",
+            "SELECT EXISTS(SELECT 1 FROM relay_reservations WHERE closed=0) OR EXISTS(SELECT 1 FROM turn_grants WHERE closed=0) OR EXISTS(SELECT 1 FROM network_remote_relays)",
             [],
             |r| r.get(0),
         )?;
@@ -114,6 +114,10 @@ impl Store {
                 params![now_ms, lifecycle.runtime_id],
             )?;
             self.connection.execute(
+                "UPDATE network_remote_relays SET closed=1,promised_until=?1 WHERE control_runtime_id<>?2",
+                params![now_ms, lifecycle.runtime_id],
+            )?;
+            self.connection.execute(
                 "UPDATE relay_reservation_settings SET restore_fenced=0 WHERE singleton=1",
                 [],
             )?;
@@ -126,7 +130,7 @@ impl Store {
             .filter(|n| *n <= i64::MAX as u64)
             .ok_or(StorageError::Conflict)
     }
-    fn reserve_capacity(
+    pub(crate) fn reserve_capacity(
         &self,
         quota: &RelayQuota,
         controller: &str,
@@ -135,7 +139,7 @@ impl Store {
         now_ms: u64,
     ) -> Result<(), StorageError> {
         let total: u32 = self.connection.query_row(
-            "SELECT (SELECT count(*) FROM relay_reservations WHERE promised_until>?1)+(SELECT count(*) FROM turn_grants WHERE promised_until>?1)",
+            "SELECT (SELECT count(*) FROM all_relay_capacity WHERE promised_until>?1)+(SELECT count(*) FROM turn_grants WHERE promised_until>?1)",
             [now_ms],
             |r| r.get(0),
         )?;
@@ -143,7 +147,7 @@ impl Store {
             return Err(StorageError::RateLimited);
         }
         for account in [controller, host] {
-            let held:u32=self.connection.query_row("SELECT (SELECT COALESCE(sum((controller_account_id=?1)+(host_account_id=?1)),0) FROM relay_reservations WHERE promised_until>?2)+(SELECT count(*) FROM turn_grants WHERE account_id=?1 AND promised_until>?2)",params![account,now_ms],|r|r.get(0))?;
+            let held:u32=self.connection.query_row("SELECT (SELECT COALESCE(sum((controller_account_id=?1)+(host_account_id=?1)),0) FROM all_relay_capacity WHERE promised_until>?2)+(SELECT count(*) FROM turn_grants WHERE account_id=?1 AND promised_until>?2)",params![account,now_ms],|r|r.get(0))?;
             let added = if controller == host { 2 } else { 1 };
             if held
                 .checked_add(added)
@@ -154,7 +158,7 @@ impl Store {
         }
         if let Some((id, maximum)) = node {
             let held: u32 = self.connection.query_row(
-                "SELECT (SELECT count(*)*2 FROM relay_reservations WHERE node_id=?1 AND promised_until>?2)+(SELECT count(*) FROM turn_grants WHERE node_id=?1 AND promised_until>?2)",
+                "SELECT (SELECT count(*)*2 FROM all_relay_capacity WHERE node_id=?1 AND promised_until>?2)+(SELECT count(*) FROM turn_grants WHERE node_id=?1 AND promised_until>?2)",
                 params![id, now_ms],
                 |r| r.get(0),
             )?;
@@ -164,7 +168,7 @@ impl Store {
         }
         if self
             .connection
-            .query_row("SELECT count(*) FROM relay_reservations", [], |r| {
+            .query_row("SELECT count(*) FROM all_relay_capacity", [], |r| {
                 r.get::<_, u64>(0)
             })?
             >= MAX_HISTORY
@@ -179,7 +183,7 @@ impl Store {
         now_ms: u64,
     ) -> Result<RelayReservationUsage, StorageError> {
         self.audit_admin(actor, now_ms / 1000)?;
-        let (total,node,combined):(u32,u32,u32)=self.connection.query_row("SELECT count(*),COALESCE(sum(kind='node'),0),COALESCE(sum(kind='combined'),0) FROM relay_reservations WHERE promised_until>?1",[now_ms],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?)))?;
+        let (total,node,combined):(u32,u32,u32)=self.connection.query_row("SELECT count(*),COALESCE(sum(kind='node'),0),COALESCE(sum(kind='combined'),0) FROM all_relay_capacity WHERE promised_until>?1",[now_ms],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?)))?;
         let turn: u32 = self.connection.query_row(
             "SELECT count(*) FROM turn_grants WHERE promised_until>?1",
             [now_ms],
@@ -366,6 +370,9 @@ impl Store {
         self.validate_access(actor, now_ms / 1000)?;
         let tx = self.connection.unchecked_transaction()?;
         self.resume_relay_reservations(lifecycle, now_ms)?;
+        if tx.query_row("SELECT EXISTS(SELECT 1 FROM network_remote_relays WHERE allocation_id=?1)", [&request.allocation_id], |r|r.get::<_, bool>(0))? {
+            return Err(StorageError::Conflict);
+        }
         let permit = self.current_permit(actor, session, now_ms / 1000)?;
         if permit.issued_at_unix_ms > now_ms || permit.expires_at_unix_ms <= now_ms {
             return Err(StorageError::Forbidden);

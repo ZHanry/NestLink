@@ -165,7 +165,7 @@ impl Store {
         };
         let quota = self.relay_quota_current()?;
         let held: u64 = tx.query_row(
-            "SELECT (SELECT count(*) FROM relay_reservations WHERE promised_until>?1)+(SELECT count(*) FROM turn_grants WHERE promised_until>?1)",
+            "SELECT (SELECT count(*) FROM all_relay_capacity WHERE promised_until>?1)+(SELECT count(*) FROM turn_grants WHERE promised_until>?1)",
             [now_ms],
             |r| r.get(0),
         )?;
@@ -173,7 +173,7 @@ impl Store {
         let host = self.device_record_at(&permit.host_device_id, now_ms / 1000)?;
         let mut account_capacity = true;
         for account in [&permit.account_id, &host.account] {
-            let held:u64=tx.query_row("SELECT (SELECT COALESCE(sum((controller_account_id=?1)+(host_account_id=?1)),0) FROM relay_reservations WHERE promised_until>?2)+(SELECT count(*) FROM turn_grants WHERE account_id=?1 AND promised_until>?2)",params![account,now_ms],|r|r.get(0))?;
+            let held:u64=tx.query_row("SELECT (SELECT COALESCE(sum((controller_account_id=?1)+(host_account_id=?1)),0) FROM all_relay_capacity WHERE promised_until>?2)+(SELECT count(*) FROM turn_grants WHERE account_id=?1 AND promised_until>?2)",params![account,now_ms],|r|r.get(0))?;
             let added = if permit.account_id == host.account {
                 2
             } else {
@@ -216,7 +216,7 @@ impl Store {
         }
         let global_capacity = held < u64::from(quota.limits.max_allocations) && account_capacity;
         if global_capacity || !owned.is_empty() {
-            let mut query=tx.prepare("SELECT n.id,n.public_key,n.roles_json,n.runtime_id,n.runtime_generation,n.last_issued_at,e.revision,e.endpoints_json,n.max_connections,(SELECT count(*)*2 FROM relay_reservations a WHERE a.node_id=n.id AND a.promised_until>?1)+(SELECT count(*) FROM turn_grants t WHERE t.node_id=n.id AND t.promised_until>?1) FROM data_nodes n JOIN node_endpoints e ON e.node_id=n.id JOIN node_runtimes r ON r.node_id=n.id AND r.runtime_id=n.runtime_id AND r.generation=n.runtime_generation WHERE n.revoked=0 AND n.lease_policy_revision=?2 AND r.security_epoch=?3 AND n.last_issued_at<=?1 AND n.last_issued_at>?4 ORDER BY n.id LIMIT 128")?;
+            let mut query=tx.prepare("SELECT n.id,n.public_key,n.roles_json,n.runtime_id,n.runtime_generation,n.last_issued_at,e.revision,e.endpoints_json,n.max_connections,(SELECT count(*)*2 FROM all_relay_capacity a WHERE a.node_id=n.id AND a.promised_until>?1)+(SELECT count(*) FROM turn_grants t WHERE t.node_id=n.id AND t.promised_until>?1) FROM data_nodes n JOIN node_endpoints e ON e.node_id=n.id JOIN node_runtimes r ON r.node_id=n.id AND r.runtime_id=n.runtime_id AND r.generation=n.runtime_generation WHERE n.revoked=0 AND n.lease_policy_revision=?2 AND r.security_epoch=?3 AND n.last_issued_at<=?1 AND n.last_issued_at>?4 ORDER BY n.id LIMIT 128")?;
             let mut rows = query.query(params![
                 now_ms,
                 permit.policy_revision,

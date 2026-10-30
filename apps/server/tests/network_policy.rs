@@ -26,6 +26,8 @@ use std::{
 
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 const PASSWORD: &str = "network-api-integration-password";
+#[path = "network_policy/relays.rs"]
+mod relays;
 
 struct Running(tokio::task::JoinHandle<()>);
 impl Drop for Running {
@@ -272,6 +274,7 @@ struct RemoteSetup {
     controller_membership: String,
     host_membership: String,
     expires_at_ms: u64,
+    controller_key: InstallationIdentity,
 }
 impl RemoteSetup {
     fn issue_path(&self, f: &Fixture) -> String {
@@ -315,11 +318,22 @@ fn enroll_remote_endpoint(
 }
 
 fn setup_remote(f: &Fixture, approve: bool) -> Result<RemoteSetup> {
+    setup_remote_with_path(f, approve, true)
+}
+
+fn setup_remote_with_path(f: &Fixture, approve: bool, direct: bool) -> Result<RemoteSetup> {
     let mut store = Store::open_existing(&f.database, &f.deployment)?;
     let now_ms = current_ms()?;
     let now = now_ms / 1000;
     let controller = store.authenticate(&f.admin_token, now)?;
     let host = store.authenticate(&f.member_token, now)?;
+    if !direct {
+        store.apply_policy(1, nestlink_policy::NetworkPolicy {
+            server_forwarding: nestlink_policy::ServerForwarding::Allow,
+            peer_path_mode: nestlink_policy::PeerPathMode::DirectPreferred,
+            ..nestlink_policy::NetworkPolicy::default()
+        })?;
+    }
     let controller_key = InstallationIdentity::generate();
     let host_key = InstallationIdentity::generate();
     let controller_device = enroll_remote_endpoint(&mut store, &controller, &controller_key, now)?;
@@ -374,7 +388,7 @@ fn setup_remote(f: &Fixture, approve: bool) -> Result<RemoteSetup> {
             controller_device_id: controller_device,
             host_device_id: host_device,
             permissions: vec![Permission::View as i32],
-            path_mode: "direct_only".into(),
+            path_mode: if direct { "direct_only" } else { "relay_only" }.into(),
         },
         now,
     )?;
@@ -383,7 +397,7 @@ fn setup_remote(f: &Fixture, approve: bool) -> Result<RemoteSetup> {
         let choice = ApprovalChoice {
             approved: true,
             permissions: vec![Permission::View as i32],
-            paths: vec![Path::Direct as i32],
+            paths: vec![if direct { Path::Direct } else { Path::Relay } as i32],
         };
         let proof = store.approval_transcript(&host, &remote.id, &choice, now)?;
         store.approve_remote(
@@ -401,6 +415,7 @@ fn setup_remote(f: &Fixture, approve: bool) -> Result<RemoteSetup> {
         controller_membership,
         host_membership,
         expires_at_ms,
+        controller_key,
     })
 }
 

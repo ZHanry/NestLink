@@ -96,6 +96,7 @@ pub struct NetworkRemoteRelayView {
     pub path: NetworkRemotePathView,
     pub transit: NetworkGrantView,
     pub allocation_id: String,
+    pub node: NodeEndpointsView,
 }
 
 /// Discovery inputs supplied by the authenticated, pinned deployment. Local
@@ -818,7 +819,7 @@ pub struct NodeEndpointsUpdate {
     pub expected_revision: u64,
     pub endpoints: NodeEndpoints,
 }
-#[derive(Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
 pub struct NodeEndpointsView {
     pub node_id: String,
     pub revision: u64,
