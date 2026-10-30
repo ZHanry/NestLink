@@ -32,6 +32,8 @@ mod authority_lifecycle;
 mod relays;
 #[path = "network_policy/topology.rs"]
 mod topology;
+#[path = "../../../crates/node/tests/support/service_usage_directory.rs"]
+mod service_usage_directory;
 
 struct Running(tokio::task::JoinHandle<()>);
 impl Drop for Running {

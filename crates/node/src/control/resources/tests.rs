@@ -565,6 +565,7 @@ fn live_guard_with_node_ttl(
                 resources,
                 service_resource_owner: None,
                 service_usage: Arc::new(crate::service_usage::ServiceUsageStore::for_test()?),
+                topology: Default::default(),
             })),
             started,
             allocation_id: c.allocation_id,

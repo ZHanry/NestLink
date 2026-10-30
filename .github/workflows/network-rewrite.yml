@@ -66,6 +66,17 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-server --test network_policy topology:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-topology-http-tests.log"
+      - name: Exercise the verified bounded graph and both datagram wire versions
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-connectivity --test topology -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-topology-graph-tests.log"
+          cargo test --locked -p nestlink-protocol --test network_datagram_v2 -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-datagram-v2-tests.log"
+      - name: Exercise node report authority, cancellation and original deadlines
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-node --lib control::topology:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-topology-reporter-tests.log"
       - name: Retain exact-source topology test log
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -74,6 +85,9 @@ jobs:
           path: |
             ${{ runner.temp }}/network-topology-tests.log
             ${{ runner.temp }}/network-topology-http-tests.log
+            ${{ runner.temp }}/network-topology-graph-tests.log
+            ${{ runner.temp }}/network-datagram-v2-tests.log
+            ${{ runner.temp }}/network-topology-reporter-tests.log
           if-no-files-found: error
           retention-days: 30
   native-ice-kernel-nat-slice:

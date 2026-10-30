@@ -98,7 +98,10 @@ mod tests {
         assert_eq!(admission.workers.available_permits(), 0);
         drop((admitted, active));
         assert_eq!(admission.workers.available_permits(), ORDINARY_WORKERS);
-        assert_eq!(admission.revocations.available_permits(), REVOCATION_WORKERS);
+        assert_eq!(
+            admission.revocations.available_permits(),
+            REVOCATION_WORKERS
+        );
         assert_eq!(admission.waiters.available_permits(), WAITERS);
         Ok(())
     }
@@ -208,7 +211,10 @@ mod tests {
         tokio::task::yield_now().await;
         assert!(!executed.load(Ordering::Acquire));
         assert_eq!(admission.workers.available_permits(), ORDINARY_WORKERS);
-        assert_eq!(admission.revocations.available_permits(), REVOCATION_WORKERS);
+        assert_eq!(
+            admission.revocations.available_permits(),
+            REVOCATION_WORKERS
+        );
         Ok(())
     }
 }

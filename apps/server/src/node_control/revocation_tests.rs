@@ -45,7 +45,13 @@ impl Fixture {
         )?;
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
         let origin = format!("http://{}", listener.local_addr()?);
-        let state = AppState::new(store, vault, PermitSigner::generate(), origin.clone(), false)?;
+        let state = AppState::new(
+            store,
+            vault,
+            PermitSigner::generate(),
+            origin.clone(),
+            false,
+        )?;
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(3))
             .build()?;
@@ -125,8 +131,8 @@ async fn full_ordinary_workers_and_queue_cannot_block_authenticated_admin_node_r
 }
 
 #[tokio::test]
-async fn saturated_revocation_lane_times_out_a_real_admin_without_a_detached_mutation()
--> TestResult {
+async fn saturated_revocation_lane_times_out_a_real_admin_without_a_detached_mutation() -> TestResult
+{
     let f = Fixture::new().await?;
     let blocked = f
         .state
@@ -134,7 +140,10 @@ async fn saturated_revocation_lane_times_out_a_real_admin_without_a_detached_mut
         .acquire_revocation()
         .await
         .map_err(|_| io::Error::other("admission closed"))?;
-    assert_eq!(f.revoke(Some(&f.admin)).await?, StatusCode::TOO_MANY_REQUESTS);
+    assert_eq!(
+        f.revoke(Some(&f.admin)).await?,
+        StatusCode::TOO_MANY_REQUESTS
+    );
     assert!(f.node_is_live()?);
     drop(blocked);
     tokio::task::yield_now().await;

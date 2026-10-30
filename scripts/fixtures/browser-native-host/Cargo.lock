@@ -1899,8 +1899,10 @@ dependencies = [
 name = "nestlink-connectivity"
 version = "0.7.0-rc.1"
 dependencies = [
+ "nestlink-identity",
  "nestlink-policy",
  "nestlink-protocol",
+ "petgraph",
  "serde",
 ]
 
@@ -2545,6 +2547,7 @@ dependencies = [
  "fixedbitset",
  "hashbrown 0.15.5",
  "indexmap",
+ "serde",
 ]
 
 [[package]]

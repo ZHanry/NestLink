@@ -230,3 +230,93 @@ fn authority_signed_withdrawal_survives_report_expiry_and_binds_query_and_cursor
     assert!(verify_topology_update(&forged, &f.context(12_000), &[5; 32]).is_err());
     Ok(())
 }
+
+#[test]
+fn verified_observation_metadata_binds_exact_envelopes_and_rechecks_current_authority() -> Result {
+    let f = Fixture::new(false)?;
+    let publisher = f.verified_publisher(3000)?;
+    let report = f.node.sign_topology_report(&f.report(&publisher))?;
+    let report = verify_topology_report(&report, &publisher, &f.context(3000), &f.incarnation, 0)?;
+    let signed = f.authority.sign_topology_advertisement(&report, 3000, 9000)?;
+    let advertisement = verify_topology_advertisement(
+        &signed, &publisher, &f.context(3000), &f.incarnation, 0,
+    )?;
+    assert_eq!(advertisement.envelope_digest(), nestlink_identity::digest(&signed.canonical_bytes()?));
+    let mut tampered = signed.clone();
+    tampered.signature[0] ^= 1;
+    assert_ne!(advertisement.envelope_digest(), nestlink_identity::digest(&tampered.canonical_bytes()?));
+    assert!(verify_topology_advertisement(
+        &tampered, &publisher, &f.context(3000), &f.incarnation, 0,
+    ).is_err());
+    let update = TopologyUpdate {
+        schema_version: SCHEMA_VERSION, deployment_id: DEPLOYMENT.into(), space_id: SPACE.into(),
+        policy_epoch: 1, query_nonce: [7; 32], issued_at_ms: 3000, expires_at_ms: 4000,
+        sync: TopologySync::Full { cursor: 1, advertisements: vec![signed] },
+    };
+    let signed = f.authority.sign_topology_update(&update)?;
+    let verified = verify_topology_update(&signed, &f.context(3000), &[7; 32])?;
+    assert_eq!(verified.envelope_digest(), nestlink_identity::digest(&signed.canonical_bytes()?));
+    let other_key = NetworkAuthoritySigner::from_master_seed(&[9; 32])?.public_key();
+    let mut context = f.context(3000);
+    context.authority_key = &other_key;
+    assert!(advertisement.check_current(&context).is_err());
+    assert!(verified.check_current(&context).is_err());
+    context = f.context(3000);
+    context.space_id = DEPLOYMENT;
+    assert!(advertisement.check_current(&context).is_err());
+    assert!(verified.check_current(&context).is_err());
+    context = f.context(3000);
+    context.policy_epoch += 1;
+    assert!(advertisement.check_current(&context).is_err());
+    assert!(verified.check_current(&context).is_err());
+    assert!(advertisement.check_current(&f.context(9000)).is_err());
+    assert!(verified.check_current(&f.context(4000)).is_err());
+    Ok(())
+}
+
+#[test]
+fn verified_advertisement_projection_retains_all_current_publication_revocations() -> Result {
+    let mut f = Fixture::new(true)?;
+    let publisher = f.verified_publisher(3000)?;
+    let report = f.node.sign_topology_report(&f.report(&publisher))?;
+    let report = verify_topology_report(&report, &publisher, &f.context(3000), &f.incarnation, 0)?;
+    let signed = f.authority.sign_topology_advertisement(&report, 3000, 9000)?;
+    let advertisement = verify_topology_advertisement(
+        &signed, &publisher, &f.context(3000), &f.incarnation, 0,
+    )?;
+    let ids = advertisement.publication_grant_ids();
+    assert_eq!(ids.len(), 2);
+    assert!(ids.contains(&f.claims.scope.grant_id));
+    assert!(ids.contains(&f.exports[0].claims().scope().grant_id));
+    for id in ids {
+        f.revoked.insert(id.clone());
+        assert!(advertisement.check_current(&f.context(3000)).is_err());
+        f.revoked.remove(&id);
+    }
+    advertisement.check_current(&f.context(3000))?;
+    Ok(())
+}
+
+#[test]
+fn publisher_proof_budget_and_projection_do_not_expand_duplicate_export_credentials() -> Result {
+    let f = Fixture::new(true)?;
+    let exports = vec![f.exports[0].clone(); nestlink_protocol::network_topology::MAX_PREFIXES];
+    let publisher = verify_topology_publisher(
+        &f.publisher, &f.context(3000), NODE, &f.node.public_key(), &f.incarnation, &exports,
+    )?;
+    let report = f.node.sign_topology_report(&f.report(&publisher))?;
+    let report = verify_topology_report(&report, &publisher, &f.context(3000), &f.incarnation, 0)?;
+    let signed = f.authority.sign_topology_advertisement(&report, 3000, 9000)?;
+    let advertisement = verify_topology_advertisement(
+        &signed, &publisher, &f.context(3000), &f.incarnation, 0,
+    )?;
+    let ids = advertisement.publication_grant_ids();
+    assert_eq!(ids.len(), 2);
+    assert!(ids.contains(&f.claims.scope.grant_id));
+    assert!(ids.contains(&f.exports[0].claims().scope().grant_id));
+    let oversized = vec![f.exports[0].clone(); nestlink_protocol::network_topology::MAX_PREFIXES + 1];
+    assert_eq!(verify_topology_publisher(
+        &f.publisher, &f.context(3000), NODE, &f.node.public_key(), &f.incarnation, &oversized,
+    ).err().map(|error| error.code), Some(nestlink_protocol::ErrorCode::CapacityExceeded));
+    Ok(())
+}

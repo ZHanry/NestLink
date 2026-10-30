@@ -28,6 +28,7 @@ type Socket = WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>;
 mod closes;
 mod resources;
 mod services;
+mod topology;
 mod turn;
 mod usage;
 pub use closes::CloseReportStatus;
@@ -35,6 +36,7 @@ pub use resources::{
     RelayEndpointCandidate, RelayEndpointProof, RelayIoCleanup, RelayResourceReservation,
 };
 pub use services::ServiceNodePermit;
+pub use topology::TopologyReporter;
 
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -157,6 +159,7 @@ struct Runtime {
     resources: resources::Resources,
     service_resource_owner: Option<[u8; 16]>,
     service_usage: Arc<crate::service_usage::ServiceUsageStore>,
+    topology: topology::ReporterState,
 }
 /// Reserves aggregate capacity only. The data service must separately verify its
 /// resource/session permit before every admission and observe `stopped()`.
@@ -263,6 +266,7 @@ impl NodeControl {
             resources,
             service_resource_owner,
             service_usage: service_usage.clone(),
+            topology: topology::ReporterState::default(),
         }));
         let turn_authorization = Arc::new(
             TurnAuthorization::new((nestlink_protocol::NODE_RESOURCE_ALLOCATIONS * 2) as usize)

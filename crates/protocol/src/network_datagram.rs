@@ -48,7 +48,15 @@ fn invalid() -> ContractError {
     )
 }
 pub fn decode(bytes: &[u8]) -> Result<Fragment<'_>, ContractError> {
-    if bytes.len() <= HEADER || &bytes[..4] != b"NRD1" || bytes[17..20] != [0; 3] {
+    decode_for(bytes, b"NRD1", 1)
+}
+
+pub(super) fn decode_for<'a>(
+    bytes: &'a [u8],
+    magic: &[u8; 4],
+    maximum_hops: u8,
+) -> Result<Fragment<'a>, ContractError> {
+    if bytes.len() <= HEADER || &bytes[..4] != magic || bytes[17..20] != [0; 3] {
         return Err(invalid());
     }
     let direction = match bytes[4] {
@@ -63,7 +71,7 @@ pub fn decode(bytes: &[u8]) -> Result<Fragment<'_>, ContractError> {
     let packet = u64::from_be_bytes(bytes[8..16].try_into().map_err(|_| invalid())?);
     let index = usize::from(bytes[16]);
     let binding = bytes[20..HEADER].try_into().map_err(|_| invalid())?;
-    if remaining_hops > 1
+    if remaining_hops > maximum_hops
         || binding == [0; 32]
         || packet == 0
         || length == 0
@@ -89,6 +97,17 @@ pub fn encode(
     packet: u64,
     bytes: &[u8],
 ) -> Result<Vec<Vec<u8>>, ContractError> {
+    encode_for(binding, direction, packet, bytes, b"NRD1", 1)
+}
+
+pub(super) fn encode_for(
+    binding: [u8; 32],
+    direction: Direction,
+    packet: u64,
+    bytes: &[u8],
+    magic: &[u8; 4],
+    remaining_hops: u8,
+) -> Result<Vec<Vec<u8>>, ContractError> {
     if binding == [0; 32] || packet == 0 || bytes.is_empty() || bytes.len() > PACKET_BYTES {
         return Err(invalid());
     }
@@ -100,8 +119,8 @@ pub fn encode(
         .enumerate()
         .map(|(index, payload)| {
             let mut fragment = Vec::with_capacity(HEADER + payload.len());
-            fragment.extend_from_slice(b"NRD1");
-            fragment.extend_from_slice(&[direction.byte(), 1]);
+            fragment.extend_from_slice(magic);
+            fragment.extend_from_slice(&[direction.byte(), remaining_hops]);
             fragment.extend_from_slice(&length);
             fragment.extend_from_slice(&packet.to_be_bytes());
             fragment.extend_from_slice(&[index as u8, 0, 0, 0]);

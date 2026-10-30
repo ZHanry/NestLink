@@ -101,6 +101,7 @@ fn control_with_runtime(
         resources: resources::Resources::default(),
         service_resource_owner: None,
         service_usage: Arc::new(crate::service_usage::ServiceUsageStore::for_test()?),
+        topology: Default::default(),
     }));
     let (stop_signal, stopped) = watch::channel(false);
     let control = NodeControl {

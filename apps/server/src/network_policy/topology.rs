@@ -1,10 +1,10 @@
 //! Signed node observations and account-scoped topology management.
 use super::*;
-use nestlink_protocol::ErrorCode;
 use nestlink_identity::network_topology::{
     SignedTopologyAdvertisement, SignedTopologyPublisher, SignedTopologyReport,
     SignedTopologyUpdate,
 };
+use nestlink_protocol::ErrorCode;
 use nestlink_storage::network_policy::topology::{TopologyPublisherRequest, TopologyQuery};
 use std::time::Duration;
 

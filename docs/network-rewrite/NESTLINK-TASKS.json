@@ -1653,14 +1653,17 @@
                                                       "无未标明的外部验证缺口"
                                                   ],
                       "evidence_refs":  [
-                                            "docs/adr/network/0013-durable-authorized-topology.md"
+                                            "docs/adr/network/0013-durable-authorized-topology.md",
+                                            "docs/adr/network/0015-bounded-topology-consumption.md",
+                                            "docs/network-rewrite/evidence/graph-lock-derivation-a19a112.json"
                                         ],
                       "blockers":  [
 
                                    ],
                       "implementation_notes":  [
-                                                   "First production slice adds signed space-scoped publisher/report/advertisement/query domains, real node runtime and endpoint validation, durable SQLite sequence and withdrawal journal, nonce-bound full/delta HTTP APIs, and focused Actions regressions; execution is pending.",
-                                                   "Graph consumer, NodeControl adjacency reporter, stored prefix grant issuance, atomic two-relay reservation, NRD2 and four-node business acceptance remain unimplemented."
+                                                   "Production management slice adds signed space-scoped publisher/report/advertisement/query domains, registered runtime and endpoint checks, durable SQLite replay and withdrawal journal and nonce-bound full/delta HTTP APIs. Exact-source 929bf79 focused journal and real HTTP job passed.",
+                                                   "Bounded petgraph consumer, original-envelope proofs, incomplete-page suppression, durable time/expiry fences, NodeControl-owned reporter sequences and separately negotiated NRD2 codec are implemented in source; new exact-source component tests are pending.",
+                                                   "Stored prefix grant issuance, atomic two-relay reservation, actual adjacency owner integration and four-node NRD2 business acceptance remain required implementation."
                                                ]
                   },
                   {

@@ -41,6 +41,9 @@ pub struct VerifiedTopologyReport {
 pub struct VerifiedTopologyAdvertisement {
     claims: TopologyAdvertisement,
     digest: [u8; 32],
+    issuer: [u8; 32],
+    envelope_digest: [u8; 32],
+    publisher: VerifiedTopologyPublisher,
 }
 /// The outer batch signature and request nonce are verified. Each upsert still
 /// needs its current publisher/report verification before entering a route graph.
@@ -48,6 +51,8 @@ pub struct VerifiedTopologyAdvertisement {
 pub struct VerifiedTopologyUpdate {
     claims: TopologyUpdate,
     digest: [u8; 32],
+    issuer: [u8; 32],
+    envelope_digest: [u8; 32],
 }
 
 impl NetworkAuthoritySigner {
@@ -179,6 +184,39 @@ impl VerifiedTopologyAdvertisement {
     pub fn digest(&self) -> [u8; 32] {
         self.digest
     }
+    /// Binds the exact canonical signed envelope, including its signature.
+    pub fn envelope_digest(&self) -> [u8; 32] {
+        self.envelope_digest
+    }
+    /// Non-secret revocation references allow a bounded graph projection to
+    /// retain these IDs without caching complete export grant credentials.
+    pub fn publication_grant_ids(&self) -> Vec<String> {
+        let mut ids = vec![self.publisher.claims.scope.grant_id.clone()];
+        for authorization in &self.publisher.claims.route_export_digests {
+            if let Some(grant) = self.publisher.route_exports.iter()
+                .find(|grant| grant.digest() == *authorization)
+            {
+                let id = &grant.claims().scope().grant_id;
+                if !ids.contains(id) {
+                    ids.push(id.clone());
+                }
+            }
+        }
+        ids
+    }
+    pub fn check_current(&self, context: &NetworkVerification<'_>) -> Result<(), ContractError> {
+        if self.issuer != *context.authority_key {
+            return Err(mismatch("topology advertisement authority differs"));
+        }
+        self.publisher.check_current(context, &self.claims.report.incarnation)?;
+        if self.claims.report.deployment_id != context.deployment_id
+            || self.claims.report.space_id != context.space_id
+            || self.claims.report.policy_epoch != context.policy_epoch
+        {
+            return Err(mismatch("topology advertisement scope differs"));
+        }
+        current_time(self.claims.not_before_ms, self.claims.expires_at_ms, context.now_ms)
+    }
 }
 impl VerifiedTopologyUpdate {
     pub fn claims(&self) -> &TopologyUpdate {
@@ -186,6 +224,19 @@ impl VerifiedTopologyUpdate {
     }
     pub fn digest(&self) -> [u8; 32] {
         self.digest
+    }
+    pub fn envelope_digest(&self) -> [u8; 32] {
+        self.envelope_digest
+    }
+    pub fn check_current(&self, context: &NetworkVerification<'_>) -> Result<(), ContractError> {
+        if self.issuer != *context.authority_key
+            || self.claims.deployment_id != context.deployment_id
+            || self.claims.space_id != context.space_id
+            || self.claims.policy_epoch != context.policy_epoch
+        {
+            return Err(mismatch("topology update authority or scope differs"));
+        }
+        current_time(self.claims.issued_at_ms, self.claims.expires_at_ms, context.now_ms)
     }
 }
 
@@ -197,17 +248,26 @@ pub fn verify_topology_publisher(
     incarnation: &BootIncarnation,
     route_exports: &[VerifiedNetworkGrant],
 ) -> Result<VerifiedTopologyPublisher, ContractError> {
+    if route_exports.len() > nestlink_protocol::network_topology::MAX_PREFIXES {
+        return Err(ContractError::new(
+            ErrorCode::CapacityExceeded,
+            "too many topology RouteExport proofs",
+        ));
+    }
     signed.validate()?;
     let claims = TopologyPublisherClaims::decode_canonical(&signed.claims)?;
     verify(context.authority_key, PUBLISHER, &signed.claims, &signed.signature)?;
     if claims.node_id != node_id || claims.public_key != *node_public_key {
         return Err(mismatch("topology publisher registered node differs"));
     }
+    let route_exports = claims.route_export_digests.iter().filter_map(|authorization| {
+        route_exports.iter().find(|grant| grant.digest() == *authorization).cloned()
+    }).collect();
     let publisher = VerifiedTopologyPublisher {
         claims,
         digest: reference(context.authority_key, PUBLISHER, &signed.claims)?,
         issuer: *context.authority_key,
-        route_exports: route_exports.to_vec(),
+        route_exports,
     };
     publisher.check_current(context, incarnation)?;
     Ok(publisher)
@@ -285,6 +345,9 @@ pub fn verify_topology_advertisement(
     Ok(VerifiedTopologyAdvertisement {
         claims,
         digest: reference(context.authority_key, ADVERTISEMENT, &signed.claims)?,
+        issuer: *context.authority_key,
+        envelope_digest: digest(&signed.canonical_bytes()?),
+        publisher: publisher.clone(),
     })
 }
 
@@ -310,6 +373,8 @@ pub fn verify_topology_update(
     Ok(VerifiedTopologyUpdate {
         claims,
         digest: reference(context.authority_key, UPDATE, &signed.claims)?,
+        issuer: *context.authority_key,
+        envelope_digest: digest(&signed.canonical_bytes()?),
     })
 }
 

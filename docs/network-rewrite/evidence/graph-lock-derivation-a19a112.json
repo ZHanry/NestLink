@@ -1,0 +1,172 @@
+[
+    {
+        "archive_sha256":  "c89c9c496a5b18c0a5ea3ade6661f3da4e40007cdfac90f14900940241c4013f",
+        "artifact_id":  13012864129,
+        "dir":  "graph-lock-a19a112-product",
+        "scope":  "product",
+        "target":  "Cargo.lock",
+        "receipt":  {
+                        "schema_version":  1,
+                        "purpose":  "reviewed-network-components-lock-derivation-only",
+                        "repository":  "ZHanry/NestLink",
+                        "source_revision":  "a19a112165b5a7234e1de8c1ed6c3f7de9d2d4c4",
+                        "run_id":  "41132562360",
+                        "run_attempt":  "1",
+                        "scope":  "product",
+                        "manifest_path":  "Cargo.toml",
+                        "before_lock_sha256":  "35ce9df88e76b2322803969282c33381181a536a8344528ec0d130caa69c750e",
+                        "commands":  [
+                                         {
+                                             "argv":  [
+                                                          "cargo",
+                                                          "update",
+                                                          "--workspace",
+                                                          "--manifest-path",
+                                                          "Cargo.toml"
+                                                      ],
+                                             "return_code":  0
+                                         },
+                                         {
+                                             "argv":  [
+                                                          "cargo",
+                                                          "metadata",
+                                                          "--manifest-path",
+                                                          "Cargo.toml",
+                                                          "--locked",
+                                                          "--format-version",
+                                                          "1"
+                                                      ],
+                                             "return_code":  0
+                                         }
+                                     ],
+                        "assertions":  {
+                                           "only_selected_lock_changed":  true,
+                                           "all_existing_package_identities_and_checksums_preserved":  true,
+                                           "all_existing_external_package_edges_preserved":  true,
+                                           "reviewed_crab_nat_exact_version_and_checksum":  true,
+                                           "reviewed_petgraph_exact_version_and_checksum":  true,
+                                           "locked_metadata_succeeded":  true
+                                       },
+                        "failure":  null,
+                        "product_compilation_performed":  false,
+                        "quality_or_acceptance_claimed":  false,
+                        "files":  [
+                                      {
+                                          "path":  "Cargo.lock",
+                                          "bytes":  201109,
+                                          "sha256":  "f4501e866b2bedbb88ed2f5f62c0c11691f17e64379c67ffbbda0298b3b570aa"
+                                      },
+                                      {
+                                          "path":  "before.lock",
+                                          "bytes":  201064,
+                                          "sha256":  "35ce9df88e76b2322803969282c33381181a536a8344528ec0d130caa69c750e"
+                                      },
+                                      {
+                                          "path":  "cargo-generated.lock",
+                                          "bytes":  201109,
+                                          "sha256":  "f4501e866b2bedbb88ed2f5f62c0c11691f17e64379c67ffbbda0298b3b570aa"
+                                      },
+                                      {
+                                          "path":  "command-0.log",
+                                          "bytes":  470,
+                                          "sha256":  "d483a156b7ed2f4332202d132b7e03176bf4c3325e7c3875f24fe37353d111c2"
+                                      },
+                                      {
+                                          "path":  "command-1.log",
+                                          "bytes":  4060283,
+                                          "sha256":  "62defc3b5e0c38f2320d7b60e5bcbb6d86eab8c1ae098326909d8a17e60b3714"
+                                      },
+                                      {
+                                          "path":  "derivation.diff",
+                                          "bytes":  433,
+                                          "sha256":  "1bbf29c518608223eb7f4a5625894c3d6428736fa7aa84931c8c59e5cca1cb68"
+                                      }
+                                  ]
+                    }
+    },
+    {
+        "archive_sha256":  "6eee2b3ac33decdd36bf056b94e7d01aef9e5c1920ac2d3504a9974ec62c4118",
+        "artifact_id":  13013572932,
+        "dir":  "graph-lock-a19a112-fixture",
+        "scope":  "browser-native-fixture",
+        "target":  "scripts/fixtures/browser-native-host/Cargo.lock",
+        "receipt":  {
+                        "schema_version":  1,
+                        "purpose":  "reviewed-network-components-lock-derivation-only",
+                        "repository":  "ZHanry/NestLink",
+                        "source_revision":  "a19a112165b5a7234e1de8c1ed6c3f7de9d2d4c4",
+                        "run_id":  "41132562360",
+                        "run_attempt":  "1",
+                        "scope":  "browser-native-fixture",
+                        "manifest_path":  "scripts/fixtures/browser-native-host/Cargo.toml",
+                        "before_lock_sha256":  "377a0c3aa9bdf5a97debba2f0f6d205686493dd0c8dcf6a999644c5a8e018ec4",
+                        "commands":  [
+                                         {
+                                             "argv":  [
+                                                          "cargo",
+                                                          "update",
+                                                          "--workspace",
+                                                          "--manifest-path",
+                                                          "scripts/fixtures/browser-native-host/Cargo.toml"
+                                                      ],
+                                             "return_code":  0
+                                         },
+                                         {
+                                             "argv":  [
+                                                          "cargo",
+                                                          "metadata",
+                                                          "--manifest-path",
+                                                          "scripts/fixtures/browser-native-host/Cargo.toml",
+                                                          "--locked",
+                                                          "--format-version",
+                                                          "1"
+                                                      ],
+                                             "return_code":  0
+                                         }
+                                     ],
+                        "assertions":  {
+                                           "only_selected_lock_changed":  true,
+                                           "all_existing_package_identities_and_checksums_preserved":  true,
+                                           "all_existing_external_package_edges_preserved":  true,
+                                           "reviewed_crab_nat_exact_version_and_checksum":  true,
+                                           "reviewed_petgraph_exact_version_and_checksum":  true,
+                                           "locked_metadata_succeeded":  true
+                                       },
+                        "failure":  null,
+                        "product_compilation_performed":  false,
+                        "quality_or_acceptance_claimed":  false,
+                        "files":  [
+                                      {
+                                          "path":  "Cargo.lock",
+                                          "bytes":  121559,
+                                          "sha256":  "aa5787756219ce3f4e2b59e91aeef31b18d008ddd538f07458e6e56e6380aeb1"
+                                      },
+                                      {
+                                          "path":  "before.lock",
+                                          "bytes":  121514,
+                                          "sha256":  "377a0c3aa9bdf5a97debba2f0f6d205686493dd0c8dcf6a999644c5a8e018ec4"
+                                      },
+                                      {
+                                          "path":  "cargo-generated.lock",
+                                          "bytes":  121559,
+                                          "sha256":  "aa5787756219ce3f4e2b59e91aeef31b18d008ddd538f07458e6e56e6380aeb1"
+                                      },
+                                      {
+                                          "path":  "command-0.log",
+                                          "bytes":  1111,
+                                          "sha256":  "b71eda92ad3e6ecbdc7b5978f80eae3174e7fc3ea0a439ea1294330e7ed0963c"
+                                      },
+                                      {
+                                          "path":  "command-1.log",
+                                          "bytes":  2417987,
+                                          "sha256":  "f5c0618df5368f664a17c00cf71566adda874f7f78c5d92fbf23c7dcd6ed0485"
+                                      },
+                                      {
+                                          "path":  "derivation.diff",
+                                          "bytes":  581,
+                                          "sha256":  "67906ac5a1ca799e59a475cf082813065bb1870f7a0e2151488baed53c2ae6df"
+                                      }
+                                  ]
+                    }
+    }
+]
