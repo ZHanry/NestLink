@@ -251,6 +251,9 @@ impl AdjacencyEndpoint {
         if ready.schema_version!=2 || ready.allocation_id!=allocation_id || decode_exact::<32>(&ready.binding_sha256)?!=binding
         { return Err(io::Error::from(io::ErrorKind::PermissionDenied).into()); }
         tokio::time::timeout_at(deadline,crate::node::write_message(&mut write,&ready)).await??;
+        if Instant::now()>=deadline {
+            return Err(io::Error::from(io::ErrorKind::TimedOut).into());
+        }
         let mut adjacency=self.finish(connection.clone())?;
         self.pending=None;
         adjacency.control=Some(TaskOwner::new(tokio::spawn(async move {

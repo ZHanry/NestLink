@@ -70,7 +70,10 @@ pub(super) async fn outgoing(
         { return Err(failed()); }
         match tokio::time::timeout_at(deadline,dial(&route,control.clone(),hub.clone(),selector.clone(),endpoint.clone(),identity.clone())).await {
             Ok(Ok(())) => return Ok(()),
-            _ if attempt<2 => tokio::time::sleep_until((Deadline::now()+Duration::from_millis(100)).min(deadline)).await,
+            // Resource polls are independent on both nodes. Space the bounded
+            // attempts across their existing poll/HTTP window, rather than
+            // exhausting all TLS pin attempts before the peer's next poll.
+            _ if attempt<2 => tokio::time::sleep_until((Deadline::now()+Duration::from_millis(500*(attempt+1))).min(deadline)).await,
             _ => return Err(failed()),
         }
     }
