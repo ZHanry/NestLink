@@ -32,12 +32,28 @@ impl NetworkRemotePathBundle {
 
 struct StoredPath {
     request_id: String,
+    connectivity_grant_id: String,
     controller_membership_id: String,
     host_membership_id: String,
     business_digest: Vec<u8>,
     connectivity: SignedNetworkGrant,
     path: SignedNetworkGrant,
+    policy_epoch: u64,
+    expires_at_ms: u64,
     revoked: bool,
+}
+
+fn current_business(
+    store: &Store,
+    request_id: &str,
+    now_ms: u64,
+) -> Result<nestlink_protocol::PermitClaims, StorageError> {
+    match store.current_resource_permit(request_id, now_ms) {
+        // A previous connection generation can disappear during reconnection.
+        // It is no longer authority, rather than a management server failure.
+        Err(StorageError::Sqlite(rusqlite::Error::QueryReturnedNoRows)) => Err(StorageError::Forbidden),
+        result => result,
+    }
 }
 
 fn member_credential(
@@ -96,7 +112,7 @@ impl Store {
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
         self.validate_access(actor, checked_seconds(now_ms)?)?;
         self.remote(actor, &request_id)?;
-        let business = self.current_resource_permit(&request_id, now_ms)?;
+        let business = current_business(self, &request_id, now_ms)?;
         if !business.paths.contains(&(Path::Direct as i32)) {
             return Err(StorageError::Forbidden);
         }
@@ -218,12 +234,13 @@ impl Store {
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
         self.validate_access(actor, checked_seconds(now_ms)?)?;
         let snapshot = read_snapshot(&tx, space, now_ms)?;
-        let row: Option<StoredPath> = tx.query_row("SELECT request_id,controller_membership_id,host_membership_id,business_digest,connectivity_claims,connectivity_signature,path_claims,path_signature,revoked FROM network_remote_paths WHERE space_id=?1 AND path_grant_id=?2",
+        let row: Option<StoredPath> = tx.query_row("SELECT request_id,controller_membership_id,host_membership_id,business_digest,connectivity_claims,connectivity_signature,path_claims,path_signature,revoked,connectivity_grant_id,policy_epoch,expires_at_ms FROM network_remote_paths WHERE space_id=?1 AND path_grant_id=?2",
             params![space,path_id], |r|Ok(StoredPath {request_id:r.get(0)?,controller_membership_id:r.get(1)?,host_membership_id:r.get(2)?,business_digest:r.get(3)?,
-                connectivity:SignedNetworkGrant {claims:r.get(4)?,signature:r.get(5)?},path:SignedNetworkGrant {claims:r.get(6)?,signature:r.get(7)?},revoked:r.get(8)?})).optional()?;
+                connectivity:SignedNetworkGrant {claims:r.get(4)?,signature:r.get(5)?},path:SignedNetworkGrant {claims:r.get(6)?,signature:r.get(7)?},revoked:r.get(8)?,
+                connectivity_grant_id:r.get(9)?,policy_epoch:r.get(10)?,expires_at_ms:r.get(11)?})).optional()?;
         let row = row.filter(|r| !r.revoked).ok_or(StorageError::Forbidden)?;
         self.remote(actor, &row.request_id)?;
-        let business = self.current_resource_permit(&row.request_id, now_ms)?;
+        let business = current_business(self, &row.request_id, now_ms)?;
         let business_digest = digest(&business.encode_to_vec());
         if row.business_digest != business_digest
             || !business.paths.contains(&(Path::Direct as i32))
@@ -243,17 +260,24 @@ impl Store {
             &business.host_device_id,
         )?;
         let path = verify_network_grant(&row.path, &snapshot.verification())?;
-        if path.claims().scope().grant_id != path_id {
+        let connectivity = verify_network_grant(&row.connectivity, &snapshot.verification())?;
+        if path.claims().scope().grant_id != path_id
+            || connectivity.claims().scope().grant_id != row.connectivity_grant_id
+            || [path.claims().scope(), connectivity.claims().scope()]
+                .iter().any(|scope|scope.policy_epoch != row.policy_epoch || scope.expires_at_ms != row.expires_at_ms)
+        {
             return Err(StorageError::Forbidden);
         }
         let verified = VerifiedNetworkPath::from_grants(
             &snapshot.verification(),
             [controller_bound, host_bound],
-            verify_network_grant(&row.connectivity, &snapshot.verification())?,
+            connectivity,
             path,
             business_digest,
         )?;
-        if verified.purpose() != Purpose::RemoteControl {
+        let policy = &verified.claims().policy;
+        if verified.purpose() != Purpose::RemoteControl || !policy.allow_direct
+            || !policy.relays.is_empty() || policy.max_hops != 0 {
             return Err(StorageError::Forbidden);
         }
         observe(&tx, space, now_ms)?;
