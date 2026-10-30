@@ -235,6 +235,7 @@ pub struct Session {
     path: Path,
     state: SessionState,
     deadline_ms: u64,
+    lifetime_deadline_ms: Option<u64>,
     last_monotonic_ms: u64,
     last_unix_ms: u64,
     last_request_ms: u64,
@@ -282,6 +283,7 @@ impl Session {
             path,
             state: SessionState::AwaitingProof,
             deadline_ms,
+            lifetime_deadline_ms: None,
             last_monotonic_ms: now.monotonic_ms,
             last_unix_ms: now.unix_ms,
             last_request_ms: request_started_ms,
@@ -408,6 +410,7 @@ impl Session {
             path: self.path,
             state: self.state,
             deadline_ms: self.deadline_ms,
+            lifetime_deadline_ms: self.lifetime_deadline_ms,
             last_monotonic_ms: self.last_monotonic_ms,
             last_unix_ms: self.last_unix_ms,
             last_request_ms: self.last_request_ms,
@@ -469,6 +472,14 @@ impl Session {
         self.check_live(self.last_monotonic_ms)?;
         self.deadline_ms = self.deadline_ms.min(deadline_ms);
         self.check_live(self.last_monotonic_ms)
+    }
+    /// Retain a non-renewable transport authority ceiling. A business permit
+    /// renewal cannot extend the separate route permission that carries it.
+    pub fn cap_lifetime_deadline_ms(&mut self, deadline_ms: u64) -> Result<(), ContractError> {
+        self.lifetime_deadline_ms = Some(
+            self.lifetime_deadline_ms.map_or(deadline_ms, |old| old.min(deadline_ms)),
+        );
+        self.cap_deadline_ms(deadline_ms)
     }
     /// A stopped connection can replace its transport only within its original
     /// local lease and with fresh control-plane consent from both endpoints.
@@ -652,7 +663,7 @@ impl Session {
         }
         let deadline = lease_deadline(&permit, request_started_ms, now)?;
         self.permit = permit;
-        self.deadline_ms = deadline;
+        self.deadline_ms = self.lifetime_deadline_ms.map_or(deadline, |cap| deadline.min(cap));
         self.last_monotonic_ms = now.monotonic_ms;
         self.last_unix_ms = now.unix_ms;
         self.last_request_ms = request_started_ms;

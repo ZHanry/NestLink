@@ -1,6 +1,7 @@
 //! One legacy connection owner on the product path. This facade reuses native
 //! discovery, scheduling, TLS, SessionPermit proof and bounded business queues.
 //! New space/path grants are not issued or negotiated by this adapter.
+pub mod routed;
 use crate::{
     DeviceIdentity, NativeRelayRoute, Sdk,
     native::{NativeEndpoint, NativeMediaSessionOptions, NativeSession, SessionEstablishError},

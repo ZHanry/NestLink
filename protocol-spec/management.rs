@@ -80,6 +80,24 @@ pub struct NetworkRemotePathView {
     pub path: NetworkGrantView,
 }
 
+/// A separate one-hop network reservation. The signed device allocation
+/// request proves participation in the already approved business session;
+/// current policy and registered node facts determine the relay and limits.
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkRemoteRelayRequest {
+    pub path: NetworkRemotePathRequest,
+    pub transit_grant_id: String,
+    pub allocation: RelayAllocationRequest,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkRemoteRelayView {
+    pub path: NetworkRemotePathView,
+    pub transit: NetworkGrantView,
+    pub allocation_id: String,
+}
+
 /// Discovery inputs supplied by the authenticated, pinned deployment. Local
 /// private-network consent is deliberately absent from this response.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
