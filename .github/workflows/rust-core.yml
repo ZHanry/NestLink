@@ -146,6 +146,60 @@ jobs:
           $sdkLog = Join-Path $env:RUNNER_TEMP 'nestlink-sdk-network-relay-tests.log'
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-sdk --test network_relay -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $sdkLog
           exit $LASTEXITCODE
+      - name: Prove mature ICE and Quinn same-socket feasibility on Linux
+        if: ${{ !cancelled() && runner.os == 'Linux' && steps.sdk_routed_linux.outcome != 'skipped' }}
+        shell: pwsh
+        run: |
+          $iceLog = Join-Path $env:RUNNER_TEMP 'nestlink-ice-quic-tests.log'
+          cargo test --locked -p nestlink-sdk --test ice_quic -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $iceLog
+          exit $LASTEXITCODE
+      - name: Prove mature ICE and Quinn same-socket feasibility with the ordinary Windows token
+        if: ${{ !cancelled() && runner.os == 'Windows' && steps.sdk_routed_windows.outcome != 'skipped' }}
+        shell: pwsh
+        run: |
+          $iceLog = Join-Path $env:RUNNER_TEMP 'nestlink-ice-quic-tests.log'
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-sdk --test ice_quic -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $iceLog
+          exit $LASTEXITCODE
+      - name: Check candidate discovery and network lifecycle on Linux before formatting
+        if: ${{ !cancelled() && runner.os == 'Linux' && steps.sdk_routed_linux.outcome != 'skipped' }}
+        shell: pwsh
+        run: |
+          $discoveryLog = Join-Path $env:RUNNER_TEMP 'nestlink-network-discovery-tests.log'
+          cargo test --locked -p nestlink-sdk --lib discovery:: -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $discoveryLog
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --locked -p nestlink-sdk --lib native::dual_stack::tests:: -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $discoveryLog -Append
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --locked -p nestlink-platform-network --lib -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $discoveryLog -Append
+          exit $LASTEXITCODE
+      - name: Check candidate discovery and network lifecycle with the ordinary Windows token before formatting
+        if: ${{ !cancelled() && runner.os == 'Windows' && steps.sdk_routed_windows.outcome != 'skipped' }}
+        shell: pwsh
+        run: |
+          $discoveryLog = Join-Path $env:RUNNER_TEMP 'nestlink-network-discovery-tests.log'
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-sdk --lib discovery:: -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $discoveryLog
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-sdk --lib native::dual_stack::tests:: -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $discoveryLog -Append
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-platform-network --lib -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $discoveryLog -Append
+          exit $LASTEXITCODE
+      - name: Check actual space storage and HTTP SDK delegation on Linux before formatting
+        if: ${{ !cancelled() && runner.os == 'Linux' && steps.sdk_routed_linux.outcome != 'skipped' }}
+        shell: pwsh
+        run: |
+          $spacesLog = Join-Path $env:RUNNER_TEMP 'nestlink-spaces-tests.log'
+          cargo test --locked -p nestlink-storage --test spaces -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $spacesLog
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --locked -p nestlink-sdk --test spaces -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $spacesLog -Append
+          exit $LASTEXITCODE
+      - name: Check actual space storage and HTTP SDK delegation with the ordinary Windows token before formatting
+        if: ${{ !cancelled() && runner.os == 'Windows' && steps.sdk_routed_windows.outcome != 'skipped' }}
+        shell: pwsh
+        run: |
+          $spacesLog = Join-Path $env:RUNNER_TEMP 'nestlink-spaces-tests.log'
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --test spaces -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $spacesLog
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-sdk --test spaces -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $spacesLog -Append
+          exit $LASTEXITCODE
       - if: ${{ !cancelled() }}
         run: cargo fmt --all -- --check
       - name: Retain complete SDK routed output and source test inventory
@@ -157,6 +211,9 @@ jobs:
             ${{ runner.temp }}/nestlink-sdk-routed-tests.log
             ${{ runner.temp }}/nestlink-sdk-routed-tests.json
             ${{ runner.temp }}/nestlink-sdk-network-relay-tests.log
+            ${{ runner.temp }}/nestlink-ice-quic-tests.log
+            ${{ runner.temp }}/nestlink-network-discovery-tests.log
+            ${{ runner.temp }}/nestlink-spaces-tests.log
           if-no-files-found: warn
           retention-days: 14
       - run: cargo check --locked -p nestlink-platform-audio

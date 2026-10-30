@@ -251,6 +251,47 @@ async fn explicit_bind_and_relay_only_keep_their_original_socket_scope() -> Resu
     Ok(())
 }
 
+#[tokio::test]
+async fn first_family_cache_expiring_during_other_family_gather_is_not_published() -> Result {
+    let v4_server = tokio::net::UdpSocket::bind("127.0.0.1:0").await?;
+    let v6_server = tokio::net::UdpSocket::bind("[::1]:0").await?;
+    let v4_address = v4_server.local_addr()?;
+    let v6_address = v6_server.local_addr()?;
+    let requests = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let received = requests.clone();
+    let (stop, mut stopped) = watch::channel(false);
+    let responder = tokio::spawn(async move {
+        let mut bytes = [0; 512];
+        loop {
+            tokio::select! {
+                _ = stopped.changed() => break,
+                packet = v4_server.recv_from(&mut bytes) => {
+                    let (length, source) = packet?;
+                    received.fetch_add(1, Ordering::SeqCst);
+                    v4_server.send_to(&nestlink_traversal::stun::response(&bytes[..length], "198.51.100.7:5555".parse()?)?, source).await?;
+                }
+            }
+        }
+        Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
+    });
+    let (controller, host, permit) = fixture(vec![Path::Direct])?;
+    let endpoint = NativeEndpoint::new_dual_stack(
+        &controller, &host.identity.public_key(), permit, vec![v4_address, v6_address], AddressPolicy::new(&[])?,
+    )?;
+    let v4 = endpoint.discovery_sockets().into_iter().find(|socket| socket.local_addr().is_ok_and(|address| address.is_ipv4())).ok_or("IPv4 socket missing")?;
+    let cached = v4.probe(v4_address, Duration::from_secs(2)).await?;
+    tokio::time::sleep_until((cached.expires_at - Duration::from_secs(1)).into()).await;
+    // IPv6 has an actual trusted socket, but intentionally gives no response.
+    // Its two-second probe consumes the first family's remaining cache budget.
+    let result = tokio::time::timeout(Duration::from_secs(3), endpoint.gather_direct_candidates(vec![v4_address, v6_address])).await;
+    stop.send(true)?;
+    responder.await??;
+    assert!(matches!(result?, Err(SessionEstablishError::Sdk(SdkError::Invalid))));
+    assert_eq!(requests.load(Ordering::SeqCst), 1);
+    drop(v6_server);
+    Ok(())
+}
+
 #[test]
 fn bounded_candidate_set_keeps_both_families_under_the_same_generation() -> Result {
     let candidates = |ipv4| -> Result<Vec<Candidate>> {

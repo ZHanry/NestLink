@@ -74,10 +74,12 @@ pub fn discovery_endpoint(
 ) -> Result<(Endpoint, Arc<discovery::DiscoverySocket>)> {
     use quinn::Runtime;
     let runtime = Arc::new(quinn::TokioRuntime);
-    let socket = runtime.wrap_udp_socket(bind_discovery_socket(address)?)?;
-    let socket = Arc::new(discovery::DiscoverySocket::new(
+    let path = nestlink_platform_network::path::NetworkPathManager::from_default()?;
+    let socket = runtime.wrap_udp_socket(path.bind_udp(address)?)?;
+    let socket = Arc::new(discovery::DiscoverySocket::on_path(
         socket,
         trusted_stun_servers,
+        path,
     )?);
     let crypto =
         QuicServerConfig::try_from(tls::server_config(identity, expected_peer_fingerprint)?)?;
@@ -97,6 +99,7 @@ pub fn discovery_endpoint(
     Ok((endpoint, socket))
 }
 
+#[cfg(test)]
 fn bind_discovery_socket(address: SocketAddr) -> std::io::Result<std::net::UdpSocket> {
     nestlink_platform_network::path::NetworkPathManager::from_default()?.bind_udp(address)
 }

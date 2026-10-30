@@ -1,4 +1,4 @@
-﻿{
+{
     "schema_version":  1,
     "repository":  "ZHanry/NestLink",
     "target_release":  "0.8.0RC",
@@ -6,7 +6,7 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "57fb9f030126a56e4994c91b1b08cd85631ef165",
+    "source_revision":  "e3a18a1e502767f1d7c267842a1817afcaac3fea",
     "checkpoint_kind":  "work_in_progress_against_source_revision",
     "active_tasks":  [
                          "W00",
@@ -58,17 +58,18 @@
                                    }
                                ],
     "next_steps":  [
-                       "Verify the complete SDK HTTP to signed node snapshot to mutual business proof chain and cancellation/revocation cleanup on GitHub-hosted Linux and ordinary Windows runners.",
-                       "Finish W18 named-space delegation/invitations/devices/audit and its actual browser and server regressions.",
-                       "Complete W08 bound-interface/generation/TTL discovery and W09 mature ICE to Quinn same-socket feasibility; do not infer external NAT qualification.",
-                       "Continue all remaining production features, same-source candidate builds and target acceptance; release remains not ready."
+                       "Run current W18 product, W08 discovery and W09 ICE/Quinn source through Linux and ordinary-token Windows Actions; retrieve generated OpenAPI and review formatter patch.",
+                       "Repair and rerun every failure from e3a18a1 without changing expected authority, lifecycle or acceptance gates.",
+                       "Connect production bilateral ICE signaling after same-socket feasibility evidence; continue remaining ready network and service implementation.",
+                       "Produce same-source candidates, obtain target acceptance evidence and publish 0.8.0RC only when required gates are met."
                    ],
     "evidence_index":  [
                            "docs/network-rewrite/evidence/research-review-2026-10-30.md",
                            "docs/network-rewrite/evidence/baseline-github-2026-10-30.json",
                            "docs/network-rewrite/evidence/independent-vector-build-195ff0f.json",
                            "docs/network-rewrite/evidence/independent-vector-build-bcc161d.json",
-                           "docs/network-rewrite/IMPLEMENTATION-2026-10-30.md"
+                           "docs/network-rewrite/IMPLEMENTATION-2026-10-30.md",
+                           "docs/network-rewrite/evidence/development-run-e3a18a1.json"
                        ],
     "observed_actions":  [
                              {
@@ -100,6 +101,12 @@
                                  "source_revision":  "57fb9f030126a56e4994c91b1b08cd85631ef165",
                                  "status":  "failure",
                                  "scope":  "Independent vectors passed; network and contract compilation/lint stopped at listener TLS type dependency, unused mut and storage needless borrow; experiments not executed; repairs pending new run."
+                             },
+                             {
+                                 "run_id":  41051310079,
+                                 "source_revision":  "e3a18a1e502767f1d7c267842a1817afcaac3fea",
+                                 "status":  "partial_failure",
+                                 "scope":  "Real routed NAT success/blackhole/cancel passed; production socket success/blackhole/cancel passed, peer-close failed; Linux contract clippy and 14 evidence tests passed; format and six contract targets failed. New source unverified."
                              }
                          ],
     "release_state":  "not_ready",

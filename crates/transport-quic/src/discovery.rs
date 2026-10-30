@@ -1,5 +1,6 @@
 //! Demultiplexes bounded STUN replies before QUIC decoding, preserving GRO batches.
 use nestlink_traversal::stun;
+use nestlink_platform_network::path::{NetworkInterface, NetworkPathManager, RoutePolicy};
 use quinn::{
     AsyncUdpSocket, UdpPoller,
     udp::{RecvMeta, Transmit},
@@ -25,11 +26,23 @@ pub struct Observation {
     pub local: SocketAddr,
     pub reflexive: SocketAddr,
     pub network_generation: u64,
+    pub observed_at: Instant,
+    pub expires_at: Instant,
+}
+pub const OBSERVATION_TTL: Duration = Duration::from_secs(5);
+impl Observation {
+    pub fn check_current(&self, socket: &DiscoverySocket) -> io::Result<()> {
+        socket.check_path()?;
+        if self.network_generation != socket.generation() || !socket.trusted.contains(&self.server)
+            || socket.inner.local_addr()? != self.local || Instant::now() >= self.expires_at
+        { return Err(failure()); }
+        Ok(())
+    }
 }
 struct Pending {
     server: SocketAddr,
     generation: u64,
-    sender: oneshot::Sender<io::Result<SocketAddr>>,
+    sender: oneshot::Sender<io::Result<(SocketAddr, Instant)>>,
 }
 pub struct DiscoverySocket {
     inner: Arc<dyn AsyncUdpSocket>,
@@ -37,6 +50,8 @@ pub struct DiscoverySocket {
     generation: AtomicU64,
     pending: Mutex<HashMap<[u8; 12], Pending>>,
     released: Mutex<Option<oneshot::Receiver<()>>>,
+    path: Option<NetworkPathManager>,
+    observations: Mutex<HashMap<SocketAddr, Observation>>,
 }
 impl fmt::Debug for DiscoverySocket {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -75,7 +90,25 @@ impl DiscoverySocket {
             generation: AtomicU64::new(1),
             pending: Mutex::new(HashMap::new()),
             released: Mutex::new(Some(released)),
+            path: None,
+            observations: Mutex::new(HashMap::new()),
         })
+    }
+    pub(crate) fn on_path(inner: Arc<dyn AsyncUdpSocket>, trusted: Vec<SocketAddr>, path: NetworkPathManager) -> io::Result<Self> {
+        let mut socket = Self::new(inner, trusted)?;
+        socket.path = Some(path);
+        socket.check_path()?;
+        Ok(socket)
+    }
+    pub fn check_path(&self) -> io::Result<()> {
+        if let Some(path) = &self.path { path.validate_bound(self.inner.local_addr()?)?; }
+        Ok(())
+    }
+    pub fn candidate_interfaces(&self) -> io::Result<Vec<NetworkInterface>> {
+        match &self.path {
+            Some(path) => path.candidate_interfaces(self.inner.local_addr()?),
+            None => NetworkPathManager::new(RoutePolicy::System)?.candidate_interfaces(self.inner.local_addr()?),
+        }
     }
     /// Only the endpoint's unique close owner takes the physical release
     /// receipt; socket and writable-poller clones must all drop before it fires.
@@ -92,10 +125,11 @@ impl DiscoverySocket {
     /// Network adapters call this before re-probing; old replies can never win a new race.
     pub fn invalidate_network(&self, next: u64) -> io::Result<()> {
         let mut pending = self.pending.lock().map_err(|_| failure())?;
-        if next <= self.generation() {
+        if next <= self.generation() || next > i64::MAX as u64 {
             return Err(failure());
         }
         self.generation.store(next, Ordering::Release);
+        self.observations.lock().map_err(|_| failure())?.clear();
         for (_, request) in pending.drain() {
             let _ = request.sender.send(Err(io::Error::new(
                 io::ErrorKind::Interrupted,
@@ -109,7 +143,11 @@ impl DiscoverySocket {
         server: SocketAddr,
         budget: Duration,
     ) -> io::Result<Observation> {
-        if !self.trusted.contains(&server) || budget.is_zero() || budget > Duration::from_secs(3) {
+        self.check_path()?;
+        let local = self.inner.local_addr()?;
+        if !self.trusted.contains(&server) || budget.is_zero() || budget > Duration::from_secs(3)
+            || server.is_ipv4() != local.is_ipv4()
+        {
             return Err(failure());
         }
         let transaction = stun::transaction();
@@ -117,6 +155,12 @@ impl DiscoverySocket {
         let (sender, mut receiver) = oneshot::channel();
         {
             let mut pending = self.pending.lock().map_err(|_| failure())?;
+            let mut observations = self.observations.lock().map_err(|_| failure())?;
+            observations.retain(|_, observation| observation.network_generation == generation
+                && observation.local == local && Instant::now() < observation.expires_at);
+            if self.generation() == generation && let Some(observation) = observations.get(&server) {
+                return Ok(observation.clone());
+            }
             if pending.len() >= 4 || self.generation() != generation {
                 return Err(failure());
             }
@@ -145,15 +189,30 @@ impl DiscoverySocket {
                 src_ip: None,
             };
             loop {
-                match self.inner.try_send(&transmit) {
+                // Serialize the generation check and nonblocking kernel send
+                // with invalidation. No retry can send an old transaction after
+                // invalidate_network has finished draining that generation.
+                let sent = {
+                    let _pending = self.pending.lock().map_err(|_| failure())?;
+                    if self.generation() != generation {
+                        return Err(io::Error::new(io::ErrorKind::Interrupted, "network generation changed"));
+                    }
+                    self.check_path()?;
+                    if Instant::now() >= deadline {
+                        return Err(io::Error::new(io::ErrorKind::TimedOut, "STUN binding budget exhausted"));
+                    }
+                    self.inner.try_send(&transmit)
+                };
+                match sent {
                     Ok(()) => break,
                     Err(e) if e.kind() == io::ErrorKind::WouldBlock => {
-                        tokio::time::timeout_at(
-                            deadline.into(),
-                            std::future::poll_fn(|cx| poller.as_mut().poll_writable(cx)),
-                        )
-                        .await
-                        .map_err(io::Error::other)??;
+                        tokio::select! { biased;
+                            result = &mut receiver => {
+                                let (reflexive,observed_at) = result.map_err(io::Error::other)??;
+                                return self.finish_observation(server,local,generation,reflexive,observed_at);
+                            },
+                            result = tokio::time::timeout_at(deadline.into(), std::future::poll_fn(|cx| poller.as_mut().poll_writable(cx))) => { result.map_err(io::Error::other)??; },
+                        }
                     }
                     Err(e) => return Err(e),
                 }
@@ -165,9 +224,8 @@ impl DiscoverySocket {
             };
             tokio::select! {
                 result=&mut receiver=>{
-                    let reflexive=result.map_err(io::Error::other)??;
-                    if self.generation()!=generation{return Err(failure());}
-                    return Ok(Observation {server,local:self.inner.local_addr()?,reflexive,network_generation:generation});
+                    let (reflexive, observed_at)=result.map_err(io::Error::other)??;
+                    return self.finish_observation(server,local,generation,reflexive,observed_at);
                 }
                 _=tokio::time::sleep_until(wait.into())=>{}
             }
@@ -179,6 +237,17 @@ impl DiscoverySocket {
             io::ErrorKind::TimedOut,
             "STUN binding budget exhausted",
         ))
+    }
+    fn finish_observation(&self, server: SocketAddr, local: SocketAddr, generation: u64,
+        reflexive: SocketAddr, observed_at: Instant) -> io::Result<Observation>
+    {
+        let observation = Observation {server,local,reflexive,network_generation:generation,observed_at,expires_at:observed_at+OBSERVATION_TTL};
+        if reflexive.is_ipv4() != local.is_ipv4() { return Err(failure()); }
+        observation.check_current(self)?;
+        let _pending = self.pending.lock().map_err(|_| failure())?;
+        if self.generation()!=generation{return Err(io::Error::new(io::ErrorKind::Interrupted,"network generation changed"));}
+        self.observations.lock().map_err(|_| failure())?.insert(server,observation.clone());
+        Ok(observation)
     }
     fn consume(&self, bytes: &[u8], source: SocketAddr) {
         if !stun::is_stun(bytes) {
@@ -200,7 +269,7 @@ impl DiscoverySocket {
             return;
         };
         if let Some(request) = pending.remove(&transaction) {
-            let _ = request.sender.send(Ok(address));
+            let _ = request.sender.send(Ok((address, Instant::now())));
         }
     }
 }
@@ -385,6 +454,51 @@ mod tests {
             Poll::Ready(Ok(1))
         ));
         assert_eq!(&bufs[0][..20], &[0x40; 20]);
+        Ok(())
+    }
+
+    #[derive(Debug, Default)]
+    struct Blocked {
+        attempts: std::sync::atomic::AtomicUsize,
+        started: tokio::sync::Notify,
+    }
+    #[derive(Debug)]
+    struct NeverWritable;
+    impl UdpPoller for NeverWritable {
+        fn poll_writable(self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<io::Result<()>> {
+            Poll::Pending
+        }
+    }
+    impl AsyncUdpSocket for Blocked {
+        fn create_io_poller(self: Arc<Self>) -> Pin<Box<dyn UdpPoller>> {
+            Box::pin(NeverWritable)
+        }
+        fn try_send(&self, _: &Transmit) -> io::Result<()> {
+            self.attempts.fetch_add(1, Ordering::SeqCst);
+            self.started.notify_one();
+            Err(io::ErrorKind::WouldBlock.into())
+        }
+        fn poll_recv(&self, _: &mut Context<'_>, _: &mut [IoSliceMut<'_>], _: &mut [RecvMeta]) -> Poll<io::Result<usize>> {
+            Poll::Pending
+        }
+        fn local_addr(&self) -> io::Result<SocketAddr> {
+            Ok(SocketAddr::from(([127, 0, 0, 1], 1)))
+        }
+    }
+
+    #[tokio::test]
+    async fn network_change_interrupts_a_blocked_send_without_waiting_for_writable_or_retry() -> io::Result<()> {
+        let inner = Arc::new(Blocked::default());
+        let server = SocketAddr::from(([127, 0, 0, 1], 2));
+        let socket = Arc::new(DiscoverySocket::new(inner.clone(), vec![server])?);
+        let pending_socket = socket.clone();
+        let probe = tokio::spawn(async move { pending_socket.probe(server, Duration::from_secs(3)).await });
+        tokio::time::timeout(Duration::from_secs(1), inner.started.notified()).await.map_err(io::Error::other)?;
+        socket.invalidate_network(2)?;
+        let result = tokio::time::timeout(Duration::from_secs(1), probe).await.map_err(io::Error::other)?.map_err(io::Error::other)?;
+        assert_eq!(result.err().map(|error| error.kind()), Some(io::ErrorKind::Interrupted));
+        assert_eq!(inner.attempts.load(Ordering::SeqCst), 1);
+        assert_eq!(socket.generation(), 2);
         Ok(())
     }
 }

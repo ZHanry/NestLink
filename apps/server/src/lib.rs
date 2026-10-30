@@ -4,6 +4,7 @@ mod connection_diagnostics;
 mod media_authority;
 mod native_discovery;
 mod network_policy;
+mod spaces;
 mod node_control;
 mod node_discovery;
 pub mod node_quic;
@@ -320,6 +321,16 @@ pub fn router(state: AppState) -> Router {
             "/api/v3/network/spaces/{space}/authority",
             put(network_policy::configure),
         )
+        .route("/api/v3/network/spaces", get(spaces::list).post(spaces::create))
+        .route("/api/v3/network/spaces/{space}", get(spaces::details))
+        .route("/api/v3/network/spaces/{space}/archive", post(spaces::archive))
+        .route("/api/v3/network/spaces/{space}/people/{account}", put(spaces::update_member).delete(spaces::remove_member))
+        .route("/api/v3/network/spaces/{space}/devices", post(spaces::join_device))
+        .route("/api/v3/network/spaces/{space}/devices/{installation}", delete(spaces::remove_device))
+        .route("/api/v3/network/spaces/{space}/invitations", post(spaces::invite))
+        .route("/api/v3/network/spaces/{space}/invitations/{invitation}", delete(spaces::revoke_invitation))
+        .route("/api/v3/network/spaces/{space}/invitations/{invitation}/accept", post(spaces::accept_invitation))
+        .route("/api/v3/network/spaces/{space}/audit", get(spaces::audit))
         .route(
             "/api/v3/network/spaces/{space}/policy",
             get(network_policy::policy),

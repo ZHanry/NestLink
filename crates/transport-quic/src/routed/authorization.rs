@@ -62,7 +62,7 @@ impl RouteAuthorization {
         // endpoints, purpose, route ID, group, adjacency, hop budget and quota.
         // Generation follows the business permit; path epoch is fixed at one.
         let route = remote_route_binding(&current, path, connectivity, transit, permit)
-            .map_err(io::Error::other)?;
+            .map_err(|error| io::Error::new(io::ErrorKind::PermissionDenied, error))?;
         let remaining = route
             .expires_at_ms
             .checked_sub(current.now_ms)

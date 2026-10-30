@@ -1,5 +1,5 @@
-//! Deployment-administrator membership management. Space delegation, invites,
-//! business admission and transport are separate capabilities, not granted here.
+//! Legacy deployment-admin controls and scoped product-space credential issuance.
+//! Space delegation lives in spaces; business admission remains separate.
 use crate::{ApiError, AppState, access, now_ms};
 use axum::{
     Json,
@@ -367,12 +367,12 @@ pub(crate) async fn issue(
     Path((space, installation)): Path<(String, String)>,
     Json(body): Json<IssueRequest>,
 ) -> Result<(StatusCode, Json<GrantView>), ApiError> {
-    let token = admin_access(&state, &headers).await?;
+    let token = member_access(&state, &headers).await?;
     let signer = state.network_signer.clone();
     let view = state
         .db(move |s| {
             let now = now_ms()?;
-            let actor = admin(s, &token, now)?;
+            let actor = s.authenticate(&token, now / 1000)?;
             let signed = s.issue_network_membership(
                 &actor,
                 &signer,
@@ -397,11 +397,11 @@ pub(crate) async fn read_grant(
     headers: HeaderMap,
     Path((space, grant)): Path<(String, String)>,
 ) -> Result<Json<GrantView>, ApiError> {
-    let token = admin_access(&state, &headers).await?;
+    let token = member_access(&state, &headers).await?;
     state
         .db(move |s| {
             let now = now_ms()?;
-            let actor = admin(s, &token, now)?;
+            let actor = s.authenticate(&token, now / 1000)?;
             Ok(Json(grant_view(
                 s.network_membership_grant(&actor, &space, &grant, now)?,
             )?))

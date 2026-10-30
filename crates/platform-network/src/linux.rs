@@ -7,7 +7,7 @@ use std::{
 };
 use tokio::io::unix::AsyncFd;
 mod paths;
-pub(super) use paths::{bind_media_interface, path_interfaces, validate_media_interface};
+pub(super) use paths::{bind_media_interface, path_interfaces};
 #[cfg(test)]
 mod path_tests;
 

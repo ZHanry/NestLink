@@ -47,6 +47,11 @@ async fn actual_isolated_dual_stack_interface_pinning_and_fail_closed_lifecycle(
         let socket = manager.bind_udp(wildcard.parse().map_err(io::Error::other)?)?;
         assert_pinned(&socket, loopback.index)?;
         assert_eq!(socket.local_addr()?.ip(), expected.parse::<IpAddr>().map_err(io::Error::other)?);
+        manager.validate_bound(socket.local_addr()?)?;
+        let facts = manager.candidate_interfaces(socket.local_addr()?)?;
+        assert_eq!(facts.len(), 1);
+        assert_eq!(facts[0].index, loopback.index);
+        assert_eq!(facts[0].addresses, vec![socket.local_addr()?.ip()]);
         assert_eq!(socket.recv_from(&mut [0; 1]).err().map(|error| error.kind()), Some(io::ErrorKind::WouldBlock));
         let socket = tokio::net::UdpSocket::from_std(socket)?;
         let local = socket.local_addr()?;
@@ -62,14 +67,24 @@ async fn actual_isolated_dual_stack_interface_pinning_and_fail_closed_lifecycle(
     ip(&["link", "set", "nl-path-b", "up"])?;
     ip(&["address", "add", "198.51.100.10/24", "dev", "nl-path-a"])?;
     ip(&["-6", "address", "add", "2001:db8:1::10/64", "dev", "nl-path-a", "nodad"])?;
+    ip(&["-6", "address", "add", "2001:db8:1::20/64", "dev", "nl-path-a", "preferred_lft", "0", "valid_lft", "60", "nodad"])?;
     ip(&["address", "add", "203.0.113.10/24", "dev", "nl-path-b"])?;
     let selected = interface("nl-path-a")?;
     assert!(selected.up && !selected.physical);
+    assert!(selected.addresses.contains(&"2001:db8:1::10".parse::<IpAddr>().map_err(io::Error::other)?));
+    assert!(!selected.addresses.contains(&"2001:db8:1::20".parse::<IpAddr>().map_err(io::Error::other)?));
     let old = NetworkPathManager::new(RoutePolicy::Interface(selected.index))?;
     for wildcard in ["0.0.0.0:0", "[::]:0"] {
         let socket = old.bind_udp(wildcard.parse().map_err(io::Error::other)?)?;
         assert_pinned(&socket, selected.index)?;
+        let facts = old.candidate_interfaces(socket.local_addr()?)?;
+        assert_eq!(facts.len(), 1);
+        assert_eq!(facts[0].index, selected.index);
+        assert_eq!(facts[0].name, selected.name);
+        assert_eq!(facts[0].addresses, vec![socket.local_addr()?.ip()]);
     }
+    let original = old.bind_udp("0.0.0.0:0".parse().map_err(io::Error::other)?)?;
+    let original_address = original.local_addr()?;
     // Both of these IPs remain usable on another interface. The explicit
     // manager must reject them instead of borrowing a system/default socket.
     assert_unavailable(&old, "203.0.113.10:0")?;
@@ -78,6 +93,9 @@ async fn actual_isolated_dual_stack_interface_pinning_and_fail_closed_lifecycle(
     ip(&["address", "delete", "198.51.100.10/24", "dev", "nl-path-a"])?;
     ip(&["address", "add", "198.51.100.11/24", "dev", "nl-path-a"])?;
     assert_unavailable(&old, "0.0.0.0:0")?;
+    assert!(old.validate_bound(original_address).is_err());
+    assert!(old.candidate_interfaces(original_address).is_err());
+    drop(original);
     let refreshed = NetworkPathManager::new(RoutePolicy::Interface(selected.index))?;
     let socket = refreshed.bind_udp("0.0.0.0:0".parse().map_err(io::Error::other)?)?;
     assert_eq!(socket.local_addr()?.ip(), "198.51.100.11".parse::<IpAddr>().map_err(io::Error::other)?);

@@ -20,7 +20,7 @@ use nestlink_protocol::{
     },
 };
 use nestlink_remote::{
-    RemoteError, RuntimeClock, SessionLifecycle, SessionSetup, StopHandler, TransportMode,
+    ChannelRuntime, RemoteError, RuntimeClock, SessionLifecycle, SessionSetup, StopHandler, TransportMode,
 };
 use nestlink_session::{EndpointRole, Session, SessionBinding, StopEffects, StopReason};
 use nestlink_transport_quic::routed::{
@@ -329,6 +329,37 @@ impl<T> Drop for Abort<T> {
     }
 }
 
+fn phase<T, E: std::fmt::Debug>(
+    name: &str,
+    result: std::result::Result<T, E>,
+    peers: &[(&str, &ChannelRuntime)],
+) -> std::result::Result<T, E> {
+    if let Err(error) = &result {
+        eprintln!("SDK routed first observed error at {name}: {error:?}");
+        for (peer, channels) in peers {
+            let report = channels.lease_control().subscribe_stopped();
+            eprintln!("SDK routed {peer} stop report at {name}: {:?}", *report.borrow());
+        }
+    }
+    result
+}
+
+fn report_pair(
+    controller: &std::result::Result<ChannelRuntime, RemoteError>,
+    host: &std::result::Result<ChannelRuntime, RemoteError>,
+) {
+    // Observe both establishment results before an early return can drop the
+    // successful runtime and add a secondary ExplicitExit cleanup observation.
+    eprintln!("SDK routed controller authorization: {:?}", controller.as_ref().map(|_| "authorized"));
+    eprintln!("SDK routed host authorization: {:?}", host.as_ref().map(|_| "authorized"));
+    for (peer, result) in [("controller", controller), ("host", host)] {
+        if let Ok(channels) = result {
+            let report = channels.lease_control().subscribe_stopped();
+            eprintln!("SDK routed {peer} stop report after paired authorization: {:?}", *report.borrow());
+        }
+    }
+}
+
 #[tokio::test]
 async fn sdk_three_node_business_proof_limits_channels_and_releases_every_physical_socket() -> Result
 {
@@ -356,7 +387,7 @@ async fn sdk_three_node_business_proof_limits_channels_and_releases_every_physic
     let (_host_keep, host_stop) = watch::channel(None);
     let host_key = f.host.identity.public_key();
     let controller_key = f.controller.identity.public_key();
-    let (mut controller, mut host) = tokio::try_join!(
+    let (controller, host) = tokio::join!(
         authorize_remote(
             f.authority(&context),
             controller,
@@ -373,7 +404,10 @@ async fn sdk_three_node_business_proof_limits_channels_and_releases_every_physic
             &controller_key,
             deadline
         ),
-    )?;
+    );
+    report_pair(&controller, &host);
+    let mut controller = controller?;
+    let mut host = host?;
     for channels in [&controller, &host] {
         assert_eq!(channels.mode(), TransportMode::QuicStreamsAndDatagrams);
         assert_eq!(
@@ -387,17 +421,15 @@ async fn sdk_three_node_business_proof_limits_channels_and_releases_every_physic
         );
     }
     let payload = vec![39; 32_768];
-    host.send(Channel::FileRead, &payload).await?;
-    let received = tokio::time::timeout_at(deadline, controller.receive()).await??;
+    phase("host FileRead enqueue", host.send(Channel::FileRead, &payload).await, &[("controller", &controller), ("host", &host)])?;
+    let received = phase("controller FileRead receive deadline", tokio::time::timeout_at(deadline, controller.receive()).await, &[("controller", &controller), ("host", &host)])?;
+    let received = phase("controller FileRead receive", received, &[("controller", &controller), ("host", &host)])?;
     assert_eq!(received.channel, Channel::FileRead);
     assert_eq!(received.payload, payload);
-    controller
-        .send(Channel::FileRead, b"authorized file request")
-        .await?;
+    phase("controller FileRead enqueue", controller.send(Channel::FileRead, b"authorized file request").await, &[("controller", &controller), ("host", &host)])?;
+    let received = phase("host FileRead receive deadline", tokio::time::timeout_at(deadline, host.receive()).await, &[("controller", &controller), ("host", &host)])?;
     assert_eq!(
-        tokio::time::timeout_at(deadline, host.receive())
-            .await??
-            .payload,
+        phase("host FileRead receive", received, &[("controller", &controller), ("host", &host)])?.payload,
         b"authorized file request"
     );
     assert!(
@@ -470,7 +502,8 @@ async fn sdk_route_admission_rejects_another_business_permit_peer_key_and_direct
         released?;
         assert!(
             matches!(rejected, Err(RemoteError::Io(ref error)) if error.kind() == io::ErrorKind::PermissionDenied),
-            "fault {fault} must reject business authority, with successful physical cleanup"
+            "fault {fault} must reject business authority, with successful physical cleanup: {:?}",
+            rejected.as_ref().map(|_| "unexpectedly authorized")
         );
         for address in addresses {
             drop(std::net::UdpSocket::bind(address)?);
@@ -834,7 +867,7 @@ async fn sdk_business_renewal_preserves_the_original_route_ceiling_and_synchrono
     }));
     let host_key = f.host.identity.public_key();
     let controller_key = f.controller.identity.public_key();
-    let (mut controller, mut host) = tokio::try_join!(
+    let (controller, host) = tokio::join!(
         authorize_remote(
             f.authority(&context),
             controller,
@@ -851,22 +884,26 @@ async fn sdk_business_renewal_preserves_the_original_route_ceiling_and_synchrono
             &controller_key,
             deadline
         ),
-    )?;
-    let controller_ceiling = controller.lease_control().reconnection_budget()?.deadline();
-    let host_ceiling = host.lease_control().reconnection_budget()?.deadline();
+    );
+    report_pair(&controller, &host);
+    let mut controller = controller?;
+    let mut host = host?;
+    let controller_ceiling = phase("controller original route ceiling", controller.lease_control().reconnection_budget(), &[("controller", &controller), ("host", &host)])?.deadline();
+    let host_ceiling = phase("host original route ceiling", host.lease_control().reconnection_budget(), &[("controller", &controller), ("host", &host)])?.deadline();
     // Make the renewal request later than activation on both runtime clocks.
     tokio::time::sleep(Duration::from_millis(2)).await;
     let mut claims = f.permit.claims().clone();
     claims.lease_sequence += 1;
-    claims.issued_at_unix_ms = controller.lease_control().renewal_clock()?.unix_ms;
+    claims.issued_at_unix_ms = phase("controller renewal clock", controller.lease_control().renewal_clock(), &[("controller", &controller), ("host", &host)])?.unix_ms;
     claims.expires_at_unix_ms = claims.issued_at_unix_ms + 15_000;
     let renewed = verify_permit(
         &f.permit_signer.sign(&claims)?.encode_to_vec(),
         &f.permit_signer.public_key(),
     )?;
-    for channels in [&controller, &host] {
+    for (name, channels) in [("controller", &controller), ("host", &host)] {
         let control = channels.lease_control();
-        control.renew(renewed.clone(), control.renewal_clock()?.monotonic_ms)?;
+        let clock = phase(&format!("{name} renewal request clock"), control.renewal_clock(), &[("controller", &controller), ("host", &host)])?;
+        phase(&format!("{name} business renewal"), control.renew(renewed.clone(), clock.monotonic_ms), &[("controller", &controller), ("host", &host)])?;
         assert_eq!(control.current_native_permit()?.digest(), renewed.digest());
     }
     assert_eq!(
@@ -877,15 +914,14 @@ async fn sdk_business_renewal_preserves_the_original_route_ceiling_and_synchrono
         host.lease_control().reconnection_budget()?.deadline(),
         host_ceiling
     );
-    host.send(
+    phase("renewed host FileRead enqueue", host.send(
         Channel::FileRead,
         b"still inside the original route ceiling",
     )
-    .await?;
+    .await, &[("controller", &controller), ("host", &host)])?;
+    let received = phase("renewed controller receive deadline", tokio::time::timeout_at(deadline, controller.receive()).await, &[("controller", &controller), ("host", &host)])?;
     assert_eq!(
-        tokio::time::timeout_at(deadline, controller.receive())
-            .await??
-            .payload,
+        phase("renewed controller FileRead receive", received, &[("controller", &controller), ("host", &host)])?.payload,
         b"still inside the original route ceiling"
     );
     assert!(checks.load(Ordering::SeqCst) > 0);

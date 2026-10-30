@@ -122,6 +122,34 @@ impl NetworkPathManager {
             .as_ref()
             .is_none_or(|interface| interface.addresses.contains(&address))
     }
+    /// Recheck the identity captured when selecting this route. A same-named
+    /// replacement adapter, removed source, DAD/tentative or expired address
+    /// cannot silently inherit an already constructed socket's candidate facts.
+    pub fn validate_bound(&self, address: SocketAddr) -> io::Result<()> {
+        let Some(selected) = &self.selected else { return Ok(()); };
+        let current = Self::interfaces()?.into_iter().find(|interface| interface.index == selected.index);
+        if current.is_none_or(|current| !current.up || current.name != selected.name
+            || current.luid != selected.luid || !current.addresses.contains(&address.ip()))
+        {
+            return Err(io::Error::new(io::ErrorKind::AddrNotAvailable, "selected interface or source is no longer current"));
+        }
+        Ok(())
+    }
+    /// Current local facts for this exact socket family/source and route owner.
+    /// The OS route table remains authoritative for a System-policy wildcard.
+    pub fn candidate_interfaces(&self, address: SocketAddr) -> io::Result<Vec<NetworkInterface>> {
+        self.validate_bound(address)?;
+        let mut interfaces = Self::interfaces()?;
+        interfaces.retain(|interface| interface.up && self.selected.as_ref().is_none_or(|selected|
+            interface.index == selected.index && interface.luid == selected.luid && interface.name == selected.name));
+        for interface in &mut interfaces {
+            interface.addresses.retain(|ip| ip.is_ipv4() == address.is_ipv4()
+                && (address.ip().is_unspecified() || *ip == address.ip()));
+        }
+        interfaces.retain(|interface| !interface.addresses.is_empty());
+        interfaces.sort_by_key(|interface| (interface.metric, interface.index));
+        Ok(interfaces)
+    }
     pub fn bind_udp(&self, address: SocketAddr) -> io::Result<UdpSocket> {
         let mut address = address;
         if let Some(interface) = &self.selected {
@@ -144,8 +172,7 @@ impl NetworkPathManager {
                     "ICE address belongs to a different interface",
                 ));
             }
-            #[cfg(target_os = "linux")]
-            super::linux::validate_media_interface(interface, address.ip())?;
+            self.validate_bound(address)?;
         }
         let socket = socket2::Socket::new(
             if address.is_ipv4() {
@@ -170,12 +197,11 @@ impl NetworkPathManager {
             super::linux::bind_media_interface(&socket, interface.index, address.is_ipv6())?;
         }
         socket.bind(&address.into())?;
-        #[cfg(target_os = "linux")]
-        if let Some(interface) = &self.selected {
+        if self.selected.is_some() {
             // Link/address changes during bind fail this attempt. The actual
             // socket remains pinned by ifindex if a later change races us;
             // NetworkMonitor invalidates its owning connection generation.
-            super::linux::validate_media_interface(interface, address.ip())?;
+            self.validate_bound(address)?;
         }
         socket.set_nonblocking(true)?;
         Ok(socket.into())

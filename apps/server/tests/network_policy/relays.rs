@@ -1,9 +1,10 @@
 use super::*;
-use nestlink_identity::{nodes::NodeIdentity, relay::allocation_transcript};
+use nestlink_identity::{digest, nodes::NodeIdentity, relay::allocation_transcript};
 use nestlink_protocol::{
-    NodeRole,
+    DeviceAction, DeviceActionClaims, NodeRole,
     api::{NodeEndpoints, NodeEndpointsUpdate, NodeRegistration},
 };
+use prost::Message;
 
 fn relay_body(f: &Fixture, remote: &RemoteSetup) -> Result<(Value, NodeIdentity, String)> {
     let mut store = Store::open_existing(&f.database, &f.deployment)?;
@@ -39,14 +40,34 @@ fn relay_body(f: &Fixture, remote: &RemoteSetup) -> Result<(Value, NodeIdentity,
     let challenge = store.node_challenge(&node_id, now_ms)?;
     store.issue_node_lease(&node.prove(&challenge, &random_id())?, now_ms)?;
     let allocation = random_id();
-    let signature =
-        URL_SAFE_NO_PAD.encode(remote.controller_key.sign_action(&allocation_transcript(
+    let transcript = if business.paths.contains(&(Path::Relay as i32)) {
+        allocation_transcript(
             &business,
             &actor.account_id,
             &business.controller_device_id,
             &allocation,
             &node_id,
-        )?)?);
+        )?
+    } else {
+        // An untrusted client can sign a well-formed allocation action even
+        // though the consent-aware SDK constructor refuses a direct-only permit.
+        // Send the exact device-action domain and canonical tuple to HTTP so
+        // production admission, rather than fixture preflight, rejects it.
+        assert_eq!(business.paths, vec![Path::Direct as i32]);
+        DeviceActionClaims {
+            schema_version: business.schema_version,
+            action: DeviceAction::RelayAllocate as i32,
+            deployment_id: business.deployment_id.clone(),
+            security_epoch: business.security_epoch,
+            account_id: actor.account_id.clone(),
+            device_id: business.controller_device_id.clone(),
+            resource_id: business.session_id.clone(),
+            challenge: digest(&business.encode_to_vec()).to_vec(),
+            payload_sha256: digest(format!("{allocation}\0{node_id}").as_bytes()).to_vec(),
+            expires_at_unix_ms: business.expires_at_unix_ms,
+        }
+    };
+    let signature = URL_SAFE_NO_PAD.encode(remote.controller_key.sign_action(&transcript)?);
     Ok((
         json!({
             "path":remote.body(), "transit_grant_id":random_id(),

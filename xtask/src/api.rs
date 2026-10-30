@@ -1,4 +1,5 @@
 use nestlink_protocol::api::*;
+use nestlink_protocol::spaces::*;
 use nestlink_protocol::service_plane::{
     ServiceLeaseClaims, ServiceQuotaLimitUpdate, ServiceQuotaUsageQuery, ServiceQuotaUsageView,
     ServiceResourceSnapshot, SignedServiceLease, SignedServiceResourceQuery,
@@ -139,6 +140,17 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         NetworkRemotePathView,
         NetworkRemoteRelayRequest,
         NetworkRemoteRelayView,
+        SpaceCreateRequest,
+        SpaceRevisionRequest,
+        SpaceMemberUpdate,
+        SpaceMemberRemoval,
+        SpaceDeviceJoin,
+        SpaceDeviceRemoval,
+        SpaceInvitationRequest,
+        SpaceInvitationAcceptance,
+        SpaceView,
+        SpaceDetails,
+        SpaceInvitationIssued,
         NodeUsageQuery,
         NodeUsageView,
         NodeUsagePage,
@@ -231,6 +243,8 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         &mut schemas,
         "MediaScopeResponse",
     )?;
+    schema::<Vec<SpaceView>>(&mut schemas, "SpacesResponse")?;
+    schema::<Vec<SpaceAuditEntry>>(&mut schemas, "SpaceAuditResponse")?;
     let routes: Vec<Value> = serde_json::from_slice(&fs::read(
         root.join("protocol-spec/management-routes.json"),
     )?)?;

@@ -8,6 +8,7 @@ use windows_sys::Win32::{
     Networking::WinSock::AF_UNSPEC,
     System::{SystemInformation::GetTickCount64, WindowsProgramming::QueryUnbiasedInterruptTime},
 };
+mod addresses;
 
 pub(super) fn path_interfaces() -> io::Result<Vec<super::path::NetworkInterface>> {
     use std::collections::BTreeMap;
@@ -38,6 +39,7 @@ pub(super) fn path_interfaces() -> io::Result<Vec<super::path::NetworkInterface>
         }
     }
     let mut interfaces = BTreeMap::new();
+    let usable = addresses::preferred()?;
     for address in if_addrs::get_if_addrs()? {
         let Some(index) = address.index else {
             continue;
@@ -46,6 +48,7 @@ pub(super) fn path_interfaces() -> io::Result<Vec<super::path::NetworkInterface>
         if ip.is_unspecified() || ip.is_loopback() || ip.is_multicast() || address.is_link_local() {
             continue;
         }
+        if !usable.contains(&(index, ip)) { continue; }
         let mut row = MIB_IF_ROW2 {
             InterfaceIndex: index,
             ..Default::default()

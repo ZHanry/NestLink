@@ -1,5 +1,5 @@
-//! Durable network membership authority. Only deployment administrators can
-//! mutate this first slice; space-role management and business grants are separate.
+//! Durable network membership authority. Legacy configuration requires deployment
+//! administration; product-space credential issuance intersects account roles.
 //! Signed credentials stay in SQLite and must never appear in audit/log payloads.
 use crate::{StorageError, Store, accounts::Principal, audit, auditing, require_id};
 use nestlink_identity::{
@@ -162,6 +162,34 @@ impl TrustedNetworkPolicySnapshot {
 }
 
 impl Store {
+    // Callers validate the management session before this scoped delegation
+    // check. Product credential issuance and exact readback share one policy.
+    fn authorize_network_membership_credential(
+        &self,
+        connection: &Connection,
+        actor: &Principal,
+        space_id: &str,
+        installation_id: &str,
+        now_ms: u64,
+    ) -> Result<bool, StorageError> {
+        let product_space: bool = connection.query_row(
+            "SELECT EXISTS(SELECT 1 FROM network_spaces WHERE space_id=?1)",
+            [space_id], |r| r.get(0),
+        )?;
+        if product_space {
+            let permitted: bool = connection.query_row(
+                "SELECT EXISTS(SELECT 1 FROM network_space_members u JOIN devices d ON d.id=?3
+                 WHERE u.space_id=?1 AND u.account_id=?2 AND u.revoked=0
+                 AND (d.account_id=u.account_id OR u.role IN ('owner','admin')))",
+                params![space_id, actor.account_id, installation_id], |r| r.get(0),
+            )?;
+            if !permitted { return Err(StorageError::Forbidden); }
+        } else {
+            self.audit_admin(actor, checked_seconds(now_ms)?)?;
+        }
+        Ok(product_space)
+    }
+
     /// Pin an independently provisioned network authority. Changes advance both
     /// revision and policy epoch. A restored space cannot be reenabled by this
     /// API: its lost revocation history requires a new space UUID instead.
@@ -304,7 +332,10 @@ impl Store {
     ) -> Result<SignedNetworkGrant, StorageError> {
         require_id(&request.grant_id)?;
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
-        self.audit_admin(actor, checked_seconds(now_ms)?)?;
+        self.validate_access(actor, checked_seconds(now_ms)?)?;
+        let product_space = self.authorize_network_membership_credential(
+            &tx, actor, &request.space_id, &request.installation_id, now_ms,
+        )?;
         let snapshot = read_snapshot(&tx, &request.space_id, now_ms)?;
         remote_paths::grant_id_available(&tx, &request.space_id, &request.grant_id)?;
         let member = snapshot
@@ -362,12 +393,16 @@ impl Store {
             params![request.space_id,request.grant_id,request.installation_id,member.membership_epoch,snapshot.policy_epoch,
                 bound.digest().as_slice(),signed.claims,signed.signature,now_ms,request.expires_at_ms])?;
         observe(&tx, &request.space_id, now_ms)?;
-        audit(
-            &tx,
-            "network_membership_issued",
-            &request.grant_id,
-            auditing::management(actor),
-        )?;
+        if product_space {
+            crate::spaces::event(&tx, actor, &request.space_id, "network_membership_issued", &request.grant_id, now_ms)?;
+        } else {
+            audit(
+                &tx,
+                "network_membership_issued",
+                &request.grant_id,
+                auditing::management(actor),
+            )?;
+        }
         tx.commit()?;
         Ok(signed)
     }
@@ -438,8 +473,7 @@ impl Store {
     ) -> Result<SignedNetworkGrant, StorageError> {
         require_id(grant_id)?;
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
-        self.audit_admin(actor, checked_seconds(now_ms)?)?;
-        let snapshot = read_snapshot(&tx, space_id, now_ms)?;
+        self.validate_access(actor, checked_seconds(now_ms)?)?;
         let stored: Option<StoredMembershipGrant> = tx.query_row(
             "SELECT installation_id,claims,signature,digest FROM network_grants WHERE space_id=?1 AND grant_id=?2",
             params![space_id,grant_id], |r|Ok(StoredMembershipGrant {
@@ -453,6 +487,10 @@ impl Store {
             signed,
             digest,
         } = stored.ok_or(StorageError::Forbidden)?;
+        self.authorize_network_membership_credential(
+            &tx, actor, space_id, &installation_id, now_ms,
+        )?;
+        let snapshot = read_snapshot(&tx, space_id, now_ms)?;
         let bound = snapshot.verify_member(&signed, &installation_id)?;
         if digest != bound.digest() {
             return Err(StorageError::Forbidden);
@@ -493,7 +531,7 @@ fn read_snapshot(
     require_id(space_id)?;
     check_clock(now_ms)?;
     let row: Option<AuthoritySnapshotRow> = connection.query_row(
-        "SELECT a.public_key,d.id,a.revision,a.policy_epoch,a.last_observed_ms,a.restore_fenced,a.security_epoch=d.security_epoch FROM network_authorities a JOIN deployment d ON d.singleton=1 WHERE a.space_id=?1",
+        "SELECT a.public_key,d.id,a.revision,a.policy_epoch,a.last_observed_ms,a.restore_fenced,a.security_epoch=d.security_epoch FROM network_authorities a JOIN deployment d ON d.singleton=1 WHERE a.space_id=?1 AND NOT EXISTS(SELECT 1 FROM network_spaces s WHERE s.space_id=a.space_id AND s.archived=1)",
         [space_id], |r|Ok(AuthoritySnapshotRow {
             public_key: r.get(0)?, deployment_id: r.get(1)?, revision: r.get(2)?, policy_epoch: r.get(3)?,
             last_observed_ms: r.get(4)?, restore_fenced: r.get(5)?, same_security_epoch: r.get(6)?,
@@ -518,7 +556,9 @@ fn read_snapshot(
         .try_into()
         .map_err(|_| StorageError::Invalid("invalid stored network authority key"))?;
     let mut statement = connection.prepare("SELECT m.installation_id,m.public_key,m.membership_epoch,m.role,
-        (m.revoked=0 AND d.revoked=0 AND a.disabled=0 AND (d.expires_at IS NULL OR d.expires_at>?2) AND x.public_key=m.public_key),d.key_sha256
+        (m.revoked=0 AND d.revoked=0 AND a.disabled=0 AND (d.expires_at IS NULL OR d.expires_at>?2) AND x.public_key=m.public_key
+         AND (NOT EXISTS(SELECT 1 FROM network_spaces s WHERE s.space_id=m.space_id)
+              OR EXISTS(SELECT 1 FROM network_space_members u WHERE u.space_id=m.space_id AND u.account_id=d.account_id AND u.revoked=0 AND u.role=m.role))),d.key_sha256
         FROM network_memberships m JOIN devices d ON d.id=m.installation_id JOIN accounts a ON a.id=d.account_id LEFT JOIN device_details x ON x.device_id=d.id
         WHERE m.space_id=?1 ORDER BY m.installation_id LIMIT ?3")?;
     let rows = statement.query_map(

@@ -581,6 +581,12 @@ impl Drop for StopOnDrop {
 // Advisory only: peers must still obtain fresh control-plane two-party proof.
 pub(crate) const RETRY_CLOSE_CODE: u32 = 0x4e01;
 pub(crate) fn close_quic(connection: &quinn::Connection, lease: &LeaseControl) {
+    // Quinn's explicit close overwrites an already observed peer/transport
+    // error with LocallyClosed. Cleanup of a terminated connection must keep
+    // that original diagnostic for the other I/O tasks and recovery owner.
+    if connection.close_reason().is_some() {
+        return;
+    }
     let reports = lease.subscribe_stopped();
     let retry = reports.borrow().is_some_and(|report| {
         matches!(

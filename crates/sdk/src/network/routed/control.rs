@@ -5,7 +5,6 @@ use crate::{
     Sdk, SdkError,
     native::{AddressPolicy, SessionEstablishError},
 };
-use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_auth::Secret;
 use nestlink_identity::{
     VerifiedPermit,

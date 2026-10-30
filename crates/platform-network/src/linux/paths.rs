@@ -75,6 +75,7 @@ fn default_routes() -> io::Result<BTreeMap<String, u32>> {
 
 pub(crate) fn path_interfaces() -> io::Result<Vec<NetworkInterface>> {
     let defaults = default_routes()?;
+    let usable_v6 = preferred_ipv6_addresses()?;
     let control = socket2::Socket::new(
         socket2::Domain::IPV4,
         socket2::Type::DGRAM,
@@ -91,6 +92,7 @@ pub(crate) fn path_interfaces() -> io::Result<Vec<NetworkInterface>> {
         if ip.is_unspecified() || ip.is_loopback() || ip.is_multicast() || address.is_link_local() {
             continue;
         }
+        if ip.is_ipv6() && !usable_v6.contains(&(index, ip)) { continue; }
         if let std::collections::btree_map::Entry::Vacant(entry) = interfaces.entry(index) {
             entry.insert(NetworkInterface {
                 // Linux has no Windows LUID. A sysfs mount can belong to a
@@ -123,22 +125,36 @@ pub(crate) fn path_interfaces() -> io::Result<Vec<NetworkInterface>> {
     Ok(interfaces.into_values().collect())
 }
 
+fn preferred_ipv6_addresses() -> io::Result<std::collections::BTreeSet<(u32, IpAddr)>> {
+    let text = match read_fact(Path::new("/proc/net/if_inet6")) {
+        Ok(text) => text,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Default::default()),
+        Err(error) => return Err(error),
+    };
+    preferred_ipv6_from_kernel(&text)
+}
+fn preferred_ipv6_from_kernel(text: &str) -> io::Result<std::collections::BTreeSet<(u32, IpAddr)>> {
+    let mut result = std::collections::BTreeSet::new();
+    for line in text.lines() {
+        let fields: Vec<_> = line.split_whitespace().collect();
+        if fields.len() != 6 || fields[0].len() != 32 { return Err(unavailable()); }
+        let value = u128::from_str_radix(fields[0],16).map_err(|_| unavailable())?;
+        let index = u32::from_str_radix(fields[1],16).map_err(|_| unavailable())?;
+        let flags = u32::from_str_radix(fields[4],16).map_err(|_| unavailable())?;
+        // Keep valid temporary addresses, but never optimistic/tentative,
+        // duplicate/DAD-failed or deprecated addresses from the current kernel.
+        if index != 0 && flags & (0x04 | 0x08 | 0x20 | 0x40) == 0 {
+            result.insert((index, std::net::Ipv6Addr::from(value).into()));
+        }
+    }
+    Ok(result)
+}
+
 fn unavailable() -> io::Error {
     io::Error::new(
         io::ErrorKind::AddrNotAvailable,
         "selected Linux interface or source address is no longer available",
     )
-}
-
-pub(crate) fn validate_media_interface(selected: &NetworkInterface, source: IpAddr) -> io::Result<()> {
-    let current = path_interfaces()?
-        .into_iter()
-        .find(|interface| interface.index == selected.index)
-        .ok_or_else(unavailable)?;
-    if !current.up || current.name != selected.name || !current.addresses.contains(&source) {
-        return Err(unavailable());
-    }
-    Ok(())
 }
 
 pub(crate) fn bind_media_interface(socket: &socket2::Socket, index: u32, ipv6: bool) -> io::Result<()> {
@@ -158,4 +174,30 @@ pub(crate) fn bind_media_interface(socket: &socket2::Socket, index: u32, ipv6: b
         ));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn kernel_ipv6_sources_keep_temporary_but_reject_incomplete_or_deprecated_addresses() -> io::Result<()> {
+        let rows = [
+            "20010db8000000000000000000000001 02 40 00 01 eth0",
+            "20010db8000000000000000000000002 02 40 00 80 eth0",
+            "20010db8000000000000000000000003 02 40 00 20 eth0",
+            "20010db8000000000000000000000004 02 40 00 40 eth0",
+            "20010db8000000000000000000000005 02 40 00 08 eth0",
+            "20010db8000000000000000000000006 02 40 00 04 eth0",
+        ].join("\n");
+        let actual = preferred_ipv6_from_kernel(&rows)?;
+        assert_eq!(actual.len(), 2);
+        for address in ["2001:db8::1", "2001:db8::2"] {
+            assert!(actual.contains(&(2, address.parse().map_err(io::Error::other)?)));
+        }
+        for malformed in ["invalid", "20010db8000000000000000000000001 xx 40 00 00 eth0", "20010db8000000000000000000000001 02 40 00 gg eth0"] {
+            assert!(preferred_ipv6_from_kernel(malformed).is_err());
+        }
+        Ok(())
+    }
 }

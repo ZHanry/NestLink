@@ -23,6 +23,7 @@ use url::Url;
 mod diagnostics;
 mod media_authority;
 pub mod network_management;
+mod spaces;
 
 #[derive(Debug, thiserror::Error)]
 pub enum SdkError {

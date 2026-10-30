@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "e3a18a1e502767f1d7c267842a1817afcaac3fea",
+  "dependency_lock_sha256": "e40cbb24fd46cc214dffc2b76642adc09e37c8db9f9ab73943efc6e9bb10b637",
+  "network_run": {
+    "run_id": "41051310079",
+    "attempt": 1,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41051310079",
+    "runner_environment": "github-hosted",
+    "routed_kernel_nat": {
+      "job_id": "124047772015",
+      "conclusion": "success",
+      "artifact_id": "12974179178",
+      "artifact_sha256": "eb86eb7ec14a45900a8833f95df9d0a2e1af5a937981f341f39f0f06cc6ac93c",
+      "receipt_sha256": "c5d478f7b4f56f60fc46e631372e62c4b84fc82e69b00a7c5f5fde4a923df991",
+      "cases": { "success": true, "blackhole": true, "cancel": true },
+      "scope": "Two endpoint processes, one authenticated relay and two actual Linux SNAT gateways; raw routed transport",
+      "limitations": [
+        "No SessionPermit endpoint proof or production FileRead worker in this transport experiment",
+        "No public NAT, bilateral ICE, second relay, multi-hop discovery, migration or TUN injection",
+        "Complete 1280-byte IPv6-shaped datagrams are payload evidence, not OS IPv6 forwarding acceptance"
+      ]
+    },
+    "production_socket": {
+      "job_id": "124047771271",
+      "conclusion": "failure",
+      "artifact_id": "12973933863",
+      "artifact_sha256": "6e995a2b8352ed9151891b3dc224a8dd118d98c375e051043b726adb02875d98",
+      "receipt_sha256": "a93cf62486f11c2010d1fe0ff96ac8620cde1af89d713f1c0bbb0503407c11d2",
+      "cases": { "success": true, "blackhole": true, "cancel": true, "peer-close": false },
+      "failure": "The host observed LocallyClosed instead of the required actual code-0 ApplicationClosed; later cleanup repairs remain unverified",
+      "scope": "Production mutual proof and actual 262144-byte FileRead in two isolated namespaces; zero relays and no NAT"
+    },
+    "linux_contract": {
+      "job_id": "124047771713",
+      "conclusion": "failure",
+      "artifact_id": "12975555036",
+      "artifact_sha256": "3c7627d6f92c0d0aeb8ae19b8bb4e9c9702742bf5697811eff46966ce2d7de8d",
+      "clippy": "passed",
+      "evidence_tool_tests": "14 passed",
+      "failures": [
+        "Actions rustfmt drift",
+        "Four historical-schema reconstruction fixtures retained migration 028 objects",
+        "Two direct-only fixtures failed in local request construction before reaching tested admission"
+      ]
+    }
+  },
+  "core_run": {
+    "run_id": "41051310100",
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41051310100",
+    "linux_routed_tests": "11 passed; 3 failed",
+    "linux_relay_integration": "Compilation failed: obsolete resource allocation_id field",
+    "observed_successful_jobs": [
+      "wasm-contract", "openapi-generation", "dependencies", "linux-network-events",
+      "linux-x11-input", "linux-portal-capture", "linux-system-audio"
+    ]
+  },
+  "acceptance_claims": [],
+  "target_device_acceptance": false,
+  "release_qualified": false,
+  "later_uncommitted_source_is_not_verified_by_this_run": true
+}

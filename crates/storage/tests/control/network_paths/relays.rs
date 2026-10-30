@@ -384,12 +384,22 @@ fn device_proof_crossed_membership_ids_and_direct_only_consent_fail_admission() 
             .held_allocations,
         0
     );
-    let mut direct = RelayFixture::new(true, 2)?;
+    // Construct a genuinely signed, initially legal relay request first. Then
+    // narrow the authoritative policy through its production API before
+    // admission. The current-business boundary must reject this stale consent,
+    // independently of the SDK's allocation-transcript preflight.
+    let mut direct = RelayFixture::new(false, 2)?;
     let issuance = direct.issuance()?;
+    let revision = direct.base.store.policy()?.0;
+    direct.base.store.apply_policy(revision, nestlink_policy::NetworkPolicy::default())?;
     assert!(matches!(
         direct.issue(issuance),
         Err(StorageError::Forbidden)
     ));
+    assert_eq!(
+        direct.base.store.relay_reservation_usage(&direct.base.controller, NOW)?.held_allocations,
+        0
+    );
     Ok(())
 }
 

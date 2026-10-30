@@ -190,34 +190,43 @@ impl NativeEndpoint {
                 .filter(|server| server.is_ipv4() == bound.is_ipv4())
                 .collect();
             let permit = &self.permit;
+            let policy = &self.address_policy;
             pending.push(async move {
+                let gathered = crate::discovery::gather_with_policy(permit, socket.clone(), servers, policy).await;
                 (
                     bound.is_ipv4(),
-                    crate::discovery::gather(permit, socket, servers).await,
+                    socket,
+                    gathered,
                 )
             });
         }
-        let mut v4 = Vec::new();
-        let mut v6 = Vec::new();
-        let mut any_gathered = false;
-        while let Some((ipv4, gathered)) = pending.next().await {
+        let mut gathered_families = Vec::new();
+        while let Some((ipv4, socket, gathered)) = pending.next().await {
             self.check()?;
             if let Ok(gathered) = gathered {
                 if gathered.network_generation != self.local_generation {
                     return Err(DialError::NetworkChanged.into());
                 }
-                any_gathered = true;
-                if ipv4 {
-                    v4.extend(gathered.candidates);
-                } else {
-                    v6.extend(gathered.candidates);
-                }
+                gathered_families.push((ipv4, socket, gathered));
             }
         }
-        if !any_gathered {
+        if gathered_families.is_empty() {
             return Err(SdkError::Invalid.into());
         }
         self.check()?;
+        let mut v4 = Vec::new();
+        let mut v6 = Vec::new();
+        for (ipv4, socket, gathered) in gathered_families {
+            // A cached first-family observation may expire while the second
+            // family is still gathering. Validate the original owner/lifetime
+            // immediately before publishing the combined candidates.
+            gathered.check_current(&self.permit, &socket)?;
+            if ipv4 {
+                v4.extend(gathered.candidates);
+            } else {
+                v6.extend(gathered.candidates);
+            }
+        }
         Ok(interleave_families(v4, v6))
     }
 

@@ -103,11 +103,34 @@ validator requires all cases and the exact helper digest. Execution is pending.
 
 ## Remaining release work
 
+At source `e3a18a1e502767f1d7c267842a1817afcaac3fea`, the real routed
+transport experiment passed success, blackhole and cancellation through one
+authenticated relay and two Linux kernel SNAT gateways. The separate production
+socket experiment passed mutual proof, actual 262144-byte FileRead, one-way
+blackhole and cancellation, but its peer-close case failed because local cleanup
+overwrote the observable connection cause. Linux contract clippy and the 14
+evidence-tool tests passed; format, historical-schema fixtures and two
+direct-only request fixtures failed. Core's 14 routed cases had three failures
+and its new relay integration target failed compilation. Exact run/artifact
+identities and limitations are recorded in
+`evidence/development-run-e3a18a1.json`. These partial successes do not mark an
+acceptance group or the later source as verified.
+
+The next source slice adds production named-space/account/device/invitation
+flows (`SPACE-PRODUCT-SLICE.md`), bounded current-interface discovery and STUN
+provenance (ADR 0005), and a mature ICE to Quinn same-socket feasibility target
+(ADR 0004). Each has Linux and ordinary-token Windows Actions checks before
+formatting. The space browser helper uses the compiled production controls and
+real HTTP/SQLite fixture. These checks and generated OpenAPI/format changes must
+be reviewed from the new SHA before claiming a result. Detailed service ACLs,
+production bilateral ICE signaling and external-network qualification remain
+unfinished.
+
 W07 has source for server/node admission and durable grant reservations; it still
 needs same-source verification, production activation, full carrier/PMTU/fault
-experiments and later route work. W18 still
-needs named space lifecycle, one-use invitations, delegated owner/admin actions
-and detailed rules. W08-W17 and the remaining network, gateway, proxy, TUN,
+experiments and later route work. W18 now has named space lifecycle, one-use
+invitations and delegated owner/admin source; detailed service rules and
+exact-source verification remain. W08-W17 and the remaining network, gateway, proxy, TUN,
 WireGuard, HA, offline, media and qualification work are not completed by these
 slices. Missing implementation is not classified as an external blocker.
 

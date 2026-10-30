@@ -14,6 +14,7 @@ const ownedData = require('./lib/refactor-browser-owned-data.cjs');
 const workspaceUi = require('./lib/refactor-browser-workspace-ui.cjs');
 const edgeNamespaceUi = require('./lib/refactor-browser-edge-namespace.cjs');
 const networkMembershipUi = require('./lib/refactor-browser-network-membership.cjs');
+const spacesUi = require('./lib/refactor-browser-spaces.cjs');
 
 const args = {};
 for (let i = 2; i < process.argv.length; i += 2) args[process.argv[i].replace(/^--/, '')] = process.argv[i + 1];
@@ -48,6 +49,7 @@ report.response_observer_helper_sha256 = digest(path.join(__dirname, 'lib/refact
 report.workspace_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-workspace-ui.cjs'));
 report.edge_namespace_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-edge-namespace.cjs'));
 report.network_membership_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-network-membership.cjs'));
+report.spaces_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-spaces.cjs'));
 const progressPath = args.report.replace(/\.json$/, '') + '-progress.jsonl';
 const progress = fs.openSync(progressPath, 'wx');
 const retainSample = value => {
@@ -140,7 +142,7 @@ async function main() {
       const observedMonotonic = performance.now();
       const observedUnix = Date.now();
       if (response.status() >= 400 && new URL(response.url()).pathname.startsWith('/api/')
-          && !edgeNamespaceUi.expectedFailure(response) && !networkMembershipUi.expectedFailure(response)) {
+          && !edgeNamespaceUi.expectedFailure(response) && !networkMembershipUi.expectedFailure(response) && !spacesUi.expectedFailure(response)) {
         report.api_failures.push({ path: new URL(response.url()).pathname, status: response.status() });
       }
       const operation = new URL(response.url()).pathname;
@@ -324,6 +326,7 @@ async function main() {
     }
     await edgeNamespaceUi.run(page, ready, report);
     await networkMembershipUi.run(page, ready, report);
+    await spacesUi.run(page, ready, report);
     await workspaceUi.workspaces(page, args, report);
     check(await page.$$eval('button.record', nodes => nodes.length) === 1, 'Fixture must initially expose only its own native host');
     await page.locator('button.record').click();

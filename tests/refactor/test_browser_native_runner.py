@@ -55,6 +55,9 @@ def completed_receipts():
         "network_membership_ui": {field: True for field in RUNNER.MEMBERSHIP_UI_FIELDS},
         "network_membership_ui_helper_sha256": RUNNER.sha256(
             (ROOT / "scripts/lib/refactor-browser-network-membership.cjs").read_bytes()),
+        "spaces_ui": {field: True for field in RUNNER.SPACES_UI_FIELDS},
+        "spaces_ui_helper_sha256": RUNNER.sha256(
+            (ROOT / "scripts/lib/refactor-browser-spaces.cjs").read_bytes()),
         "permit_response_observer": {"passed": True, "closed": True, "listeners_removed": True,
             "pending": 0, "errors": [], "session_owner": {
                 **{key: True for key in ("session_created", "prepared_before_navigation",
@@ -88,6 +91,19 @@ def completed_receipts():
 
 
 class NativeRunnerTests(unittest.TestCase):
+    def test_spaces_require_all_actual_ui_cases_and_exact_helper_source(self):
+        for replacement in (None, {}, {"passed": True}):
+            receipts = completed_receipts()
+            receipts[0]["spaces_ui"] = replacement
+            self.assertTrue(any(item.startswith("spaces-") for item in RUNNER.validate_receipts(*receipts)))
+        for field in RUNNER.SPACES_UI_FIELDS:
+            receipts = completed_receipts()
+            receipts[0]["spaces_ui"][field] = False
+            self.assertIn("spaces-" + field, RUNNER.validate_receipts(*receipts))
+        receipts = completed_receipts()
+        receipts[0]["spaces_ui_helper_sha256"] = "0" * 64
+        self.assertIn("spaces-helper-source", RUNNER.validate_receipts(*receipts))
+
     def test_membership_requires_every_real_browser_case_and_helper_source(self):
         for replacement in (None, {}, {"passed": True}):
             receipts = completed_receipts()

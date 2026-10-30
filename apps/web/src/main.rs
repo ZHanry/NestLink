@@ -20,6 +20,7 @@ use nestlink_web::{browser_clipboard, browser_files, browser_rpc};
 mod account_security_panel;
 mod edge_namespace_panel;
 mod network_membership_panel;
+mod spaces_panel;
 mod service_quota_panel;
 mod services_panel;
 
@@ -579,6 +580,7 @@ fn App() -> impl IntoView {
                                 })
                                 .map(|key| Section::from_key(&key))
                                 .unwrap_or(Section::Desktop);
+                            let page = if spaces_panel::invitation_pending() { Section::Security } else { page };
                             load.run(page.key().to_owned());
                             return;
                         }
@@ -621,7 +623,8 @@ fn App() -> impl IntoView {
                                 api.set_value(Some(Rc::new(futures_util::lock::Mutex::new(sdk))));
                                 screen.set(Screen::Workspace);
                                 busy.set(false);
-                                load.run(Section::Desktop.key().to_owned());
+                                let page = if spaces_panel::invitation_pending() { Section::Security } else { Section::Desktop };
+                                load.run(page.key().to_owned());
                                 return;
                             }
                             Err(problem)
@@ -728,7 +731,8 @@ fn App() -> impl IntoView {
                     principal.set(Some(user));
                     screen.set(Screen::Workspace);
                     busy.set(false);
-                    load.run(Section::Desktop.key().to_owned());
+                    let page = if spaces_panel::invitation_pending() { Section::Security } else { Section::Desktop };
+                    load.run(page.key().to_owned());
                 }
                 Err(problem) => {
                     error.set(nestlink_web::localized_detail!(
@@ -1091,6 +1095,7 @@ fn App() -> impl IntoView {
                                 <service_quota_panel::ServiceQuotaPanel api session_revision refresh=load_revision active=Signal::derive(move || section.get() == Section::Quotas) auth_failure error notice />
                             </div>
                             <Show when=move || section.get() == Section::Security>
+                                <spaces_panel::SpacesPanel api session_revision auth_failure />
                                 <account_security_panel::AccountSecurityPanel api session_revision refresh=load_revision auth_failure password_changed error notice />
                             </Show>
                             <Show when=move || !matches!(section.get(), Section::Desktop | Section::Services | Section::Quotas | Section::Security)>

@@ -61,6 +61,11 @@ MEMBERSHIP_UI_FIELDS = (
     "revision_epoch_bound", "revoke_and_reenroll", "unmounted_response_ignored",
     "logout_response_ignored", "new_session_clean",
 )
+SPACES_UI_FIELDS = (
+    "passed", "created_and_device_joined", "guest_isolated_context", "invitation_single_use", "invitation_link_opens_acceptance",
+    "owner_admin_member_guest", "stale_revision_rejected", "revocation_and_audit",
+    "archive_blocks_changes", "unmount_clears_secret_and_snapshot",
+)
 SENSITIVE_KEY = re.compile(
     r"(^|_)(password|secret|token|authorization|cookie|private_key|ice_pwd|ice_ufrag)($|_)", re.I
 )
@@ -277,6 +282,11 @@ def validate_receipts(browser, host, data, database, exit_codes):
     require(browser.get("network_membership_ui_helper_sha256") ==
             sha256((ROOT / "scripts/lib/refactor-browser-network-membership.cjs").read_bytes()),
             "network-membership-helper-source")
+    spaces = browser.get("spaces_ui", {})
+    for field in SPACES_UI_FIELDS:
+        require(isinstance(spaces, dict) and spaces.get(field) is True, "spaces-" + field)
+    require(browser.get("spaces_ui_helper_sha256") ==
+            sha256((ROOT / "scripts/lib/refactor-browser-spaces.cjs").read_bytes()), "spaces-helper-source")
     for field in ("passed", "browser_peers_closed", "browser_closed", "cleanup_requested",
                   "persistent_controller_preserved", "ui_cleanup_complete", "renewal_sequence_valid"):
         require(browser.get(field) is True, "browser-" + field)
