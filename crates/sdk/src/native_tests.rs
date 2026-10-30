@@ -18,7 +18,7 @@ type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + 
 fn id(n: u8) -> String {
     format!("{n:08x}-1111-4111-8111-111111111111")
 }
-fn permit(controller: &DeviceIdentity, host: &DeviceIdentity) -> Result<VerifiedPermit> {
+pub(crate) fn permit(controller: &DeviceIdentity, host: &DeviceIdentity) -> Result<VerifiedPermit> {
     permit_with_paths(controller, host, vec![Path::Direct])
 }
 fn permit_with_paths(
@@ -93,7 +93,7 @@ fn binding(p: &VerifiedPermit) -> Result<SessionBinding> {
         local_paths: PathSet::DIRECT,
     })
 }
-fn loopback_policy() -> Result<AddressPolicy> {
+pub(crate) fn loopback_policy() -> Result<AddressPolicy> {
     let mut policy = AddressPolicy::new(&[])?;
     policy.test_loopback = true;
     Ok(policy)
@@ -314,14 +314,14 @@ async fn sdk_authorization_owns_quic_channels_and_original_network_binding() -> 
         b"SDK-owned authorized channels"
     );
     c_endpoint.invalidate_network(2)?;
-    tokio::time::timeout(Duration::from_secs(2), c.channels.wait_stopped()).await??;
+    let controller_address = c_endpoint.local_addr()?;
+    let mut c = crate::network::LegacyEndpoint::new(c_endpoint).proved(c);
+    tokio::time::timeout(Duration::from_secs(7), c.wait_stopped()).await??;
     tokio::time::timeout(Duration::from_secs(2), h.wait_stopped()).await??;
-    assert!(
-        c.channels
-            .send(Channel::Video, b"stale generation")
-            .await
-            .is_err()
-    );
+    let rebound = std::net::UdpSocket::bind(controller_address)?;
+    drop(rebound);
+    assert!(c.channels.send(Channel::Video, b"stale generation").await.is_err());
+    assert!(c.into_stopped_parts().is_ok());
     Ok(())
 }
 

@@ -271,6 +271,37 @@ separate execution evidence even when Actions builds the measurement tools.
 
 ## Review disposition
 
+### W05 production owner follow-up
+
+The source now includes `sdk::network::LegacyEndpoint` and `LegacyConnection`.
+AppCore's initial native session and successor-generation establishment paths
+consume this endpoint facade and retain the proved session together with its
+original endpoint. The facade delegates discovery, scheduling, carrier choice,
+v15 proof, renewal and bounded channels to the existing code. It does not issue
+new network grants or claim that membership authorizes legacy business access.
+
+The established close path now awaits business I/O, the existing lease
+supervisor, the WSS pump or node QUIC watcher/virtual receiver, and the endpoint
+monitor. Runtime-held QUIC connection/endpoint references are released after
+business tasks finish. Discovery and node sockets reuse the service carrier's
+tracked socket/poller implementation, so the final receipt depends on real
+physical-socket reference release. An outside socket/poller holder keeps that
+receipt pending and makes the fixed-deadline wait fail. Cancelling a wait leaves
+join handles and physical receipts in their owners; retrying does not renew an
+endpoint's original cleanup budget. Recovery extraction requires a successful
+facade close receipt as well as the existing business/platform checks.
+
+Added source tests exercise real QUIC business bytes followed by closure and
+rebind, an outside discovery-socket holder that prevents rebind, the real idle
+WSS pump/TCP close, and task abort/timeout/cancel behavior while a real UDP socket
+is retained. Actions execution of these tests is still required. These source
+changes establish an implementation slice, not completed AC07 evidence. A
+dropped establishment future before proof still uses the existing Drop-based
+cancellation paths; full fault injection at every gather/race/proof boundary
+and target-device execution remain separate acceptance work. No declaration of
+new grant negotiation, generic route migration, or full W05 completion follows
+from this legacy owner slice.
+
 The reviewed baseline provides substantial reusable transport, authorization,
 discovery, business queue and recovery code. The shortest safe first slice is
 an additive authority/connection facade wired into `NativeEndpoint` and the

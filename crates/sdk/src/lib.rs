@@ -127,6 +127,8 @@ pub mod files;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod native;
 #[cfg(not(target_arch = "wasm32"))]
+pub mod network;
+#[cfg(not(target_arch = "wasm32"))]
 pub mod native_recovery;
 #[cfg(not(target_arch = "wasm32"))]
 mod native_relay;

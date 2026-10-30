@@ -5,6 +5,7 @@ use futures_util::{SinkExt, StreamExt};
 use nestlink_identity::{InstallationIdentity, VerifiedPermit, relay_transcript};
 use nestlink_protocol::api::{RelayChallenge, RelayHello, RelayReady};
 use nestlink_transport_stream::tls;
+use nestlink_transport_stream::owner::TaskOwner;
 use serde::de::DeserializeOwned;
 use std::{
     io,
@@ -17,7 +18,6 @@ use std::{
 use tokio::{
     io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, DuplexStream, ReadBuf},
     net::TcpStream,
-    task::JoinHandle,
 };
 pub use tokio_tungstenite::tungstenite::{
     Error as WebSocketError,
@@ -61,12 +61,19 @@ impl From<io::Error> for Error {
 /// Bounded carrier. Drop tears down the WebSocket pump and both relay endpoints.
 pub struct ByteStream {
     io: DuplexStream,
-    pump: JoinHandle<()>,
+    pump: TaskOwner,
     failure: Arc<Mutex<Option<io::ErrorKind>>>,
 }
 impl Drop for ByteStream {
     fn drop(&mut self) {
-        self.pump.abort();
+        self.pump.request_close();
+    }
+}
+impl ByteStream {
+    /// Close capability and join receipt for the existing WebSocket pump.
+    /// Cloning it starts no task and performs no additional socket reads.
+    pub fn close_owner(&self) -> TaskOwner {
+        self.pump.clone()
     }
 }
 impl AsyncRead for ByteStream {
@@ -151,7 +158,7 @@ fn bridge(socket: Socket) -> ByteStream {
             *failure = result.err().map(|error| error.kind());
         }
     });
-    ByteStream { io, pump, failure }
+    ByteStream { io, pump: TaskOwner::new(pump), failure }
 }
 fn carrier_error(error: tokio_tungstenite::tungstenite::Error) -> io::Error {
     use tokio_tungstenite::tungstenite::Error;
@@ -378,6 +385,7 @@ async fn secure(
     expected: [u8; 32],
 ) -> Result<tokio_rustls::TlsStream<ByteStream>, Error> {
     let stream = bridge(socket);
+    let pump = stream.close_owner();
     let secured = async {
         if controller {
             let connector = tokio_rustls::TlsConnector::from(Arc::new(
@@ -397,15 +405,44 @@ async fn secure(
             ))
         }
     };
-    tokio::time::timeout(Duration::from_secs(3), secured)
+    let result = tokio::time::timeout(Duration::from_secs(3), secured)
         .await
-        .map_err(|_| Error::Timeout)?
+        .unwrap_or(Err(Error::Timeout));
+    if result.is_err() {
+        pump.close_and_wait(tokio::time::Instant::now() + Duration::from_secs(2))
+            .await.map_err(Error::from)?;
+    }
+    result
 }
 
 #[cfg(test)]
 mod carrier_tests {
     use super::*;
     type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+
+    #[tokio::test]
+    async fn close_receipt_joins_the_real_idle_websocket_pump_and_closes_tcp() -> Result {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+        let url = format!("ws://{}", listener.local_addr()?);
+        let server = async {
+            let (tcp, _) = listener.accept().await?;
+            let mut socket = tokio_tungstenite::accept_async(tcp).await?;
+            // Closing the carrier must terminate this actual idle socket read.
+            let result = socket.next().await;
+            assert!(!matches!(result, Some(Ok(Message::Binary(_)))));
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+        };
+        let client = async {
+            let (socket, _) = tokio_tungstenite::connect_async(&url).await?;
+            let carrier = bridge(socket);
+            let pump = carrier.close_owner();
+            drop(carrier);
+            pump.close_and_wait(tokio::time::Instant::now() + Duration::from_secs(1)).await?;
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+        };
+        tokio::time::timeout(Duration::from_secs(3), async { tokio::try_join!(server, client) }).await??;
+        Ok(())
+    }
 
     fn has_certificate_error(error: &(dyn std::error::Error + 'static), depth: u8) -> bool {
         if depth >= 16 {

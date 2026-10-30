@@ -1,5 +1,6 @@
 //! Direct TLS and bounded framing. Application authorization is required separately.
 pub mod tls;
+pub mod owner;
 use nestlink_protocol::{
     ALPN, AUDIO_FRAME_BYTES, CONTROL_BYTES, FILE_CHUNK_BYTES, FRAME_BYTES, INPUT_BYTES,
     VIDEO_FEEDBACK_BYTES,

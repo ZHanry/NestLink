@@ -16,8 +16,7 @@ fn recoverable_stop(stopped: &NativeSessionStop, owner_pending: bool) -> bool {
 }
 
 pub(super) fn retain_source(
-    failed: NativeSession,
-    endpoint: Box<NativeEndpoint>,
+    failed: LegacyConnection,
     context: NativeRecoveryContext,
     stopped: &NativeSessionStop,
     owner_pending: bool,
@@ -25,6 +24,7 @@ pub(super) fn retain_source(
     if !recoverable_stop(stopped, owner_pending) {
         return None;
     }
+    let (failed, endpoint) = failed.into_stopped_parts().ok()?;
     // All input/media/business cleanup has completed before this extraction.
     // The retained endpoint keeps the original network observer live, and the
     // retained session keeps its outside-stop observer live while Core waits
@@ -40,7 +40,7 @@ pub(super) fn retain_source(
     Some(Box::new(NativeRecoverySource {
         key: stopped.key.clone(),
         failed,
-        endpoint,
+        endpoint: Box::new(endpoint),
         budget,
         context,
     }))
@@ -283,15 +283,15 @@ pub(super) async fn prove_endpoint(
     client: &Client,
     identity: &DeviceIdentity,
     config: &NativeSessionConfig,
-    endpoint: &NativeEndpoint,
+    endpoint: LegacyEndpoint,
     options: NativeSessionOptions,
     fence: sdk_call::DispatchFence,
     deadline: Option<Instant>,
-) -> Result<NativeSession, Failure> {
+) -> Result<LegacyConnection, Failure> {
     fence.check()?;
     let (cancel_sender, cancel_receiver) = watch::channel(false);
     let media =
-        if nestlink_protocol::media_authority::permit_formats(endpoint.verified_permit().claims())
+        if nestlink_protocol::media_authority::permit_formats(endpoint.native().verified_permit().claims())
             .map_err(|_| Failure::local(FailureKind::Trust))?
             .is_some()
         {
@@ -299,7 +299,7 @@ pub(super) async fn prove_endpoint(
                 .media_provider
                 .as_ref()
                 .ok_or_else(|| Failure::local(FailureKind::NativeSessionUnavailable))?;
-            let claims = endpoint.verified_permit().claims();
+            let claims = endpoint.native().verified_permit().claims();
             let direction = if identity.device_id == claims.controller_device_id {
                 nestlink_protocol::media_authority::MediaDirection::Decode
             } else {
@@ -350,12 +350,16 @@ pub(super) async fn prove_endpoint(
             cancel_sender.send_replace(true);
             // Await the SDK's cleanup rather than dropping an establishment
             // future that may already own proved transport resources.
-            let _ = establish.await;
+            if let Ok(mut connection) = establish.await {
+                let _ = connection.close_and_wait(StopReason::ExplicitExit, tokio::time::Instant::now() + Duration::from_secs(5)).await;
+            }
             Err(Failure::local(FailureKind::NativeSessionCancelled))
         }
         _ = deadline_wait => {
             cancel_sender.send_replace(true);
-            let _ = establish.await;
+            if let Ok(mut connection) = establish.await {
+                let _ = connection.close_and_wait(StopReason::Expired, tokio::time::Instant::now() + Duration::from_secs(5)).await;
+            }
             Err(Failure::local(FailureKind::PermitExpired))
         }
     }
@@ -458,7 +462,7 @@ async fn recover_native_session(
         client,
         identity,
         &context.config,
-        &endpoint,
+        LegacyEndpoint::new(endpoint),
         options,
         fence,
         Some(deadline),
@@ -469,7 +473,6 @@ async fn recover_native_session(
     Ok(EstablishedNativeSession {
         session,
         key,
-        endpoint: Box::new(endpoint),
         recovery: context,
     })
 }

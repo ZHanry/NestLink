@@ -14,7 +14,7 @@ use std::{
 };
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, ReadBuf};
 pub mod datagram;
-mod socket;
+pub(crate) mod socket;
 
 // Signed JSON byte envelopes expand when nested in an offer. The framing limit
 // applies to the entire envelope, independently of the 32 KiB signed payload.

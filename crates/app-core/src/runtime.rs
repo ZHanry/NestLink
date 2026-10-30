@@ -72,6 +72,7 @@ use nestlink_sdk::{
         NativeSessionOptions, SessionEstablishError, StopReport,
     },
 };
+use nestlink_sdk::network::{LegacyConnection, LegacyEndpoint};
 use nestlink_transport_stream::Channel;
 use std::{
     collections::VecDeque,
@@ -2010,9 +2011,8 @@ enum Job {
     },
 }
 struct EstablishedNativeSession {
-    session: NativeSession,
+    session: LegacyConnection,
     key: NativeSessionKey,
-    endpoint: Box<NativeEndpoint>,
     recovery: NativeRecoveryContext,
 }
 /// Trusted local inputs and the original product fence travel with the proved
@@ -2028,7 +2028,7 @@ struct NativeRecoverySource {
     key: NativeSessionKey,
     failed: NativeSession,
     // Its lifecycle sender must outlive SDK budget extraction from `failed`.
-    endpoint: Box<NativeEndpoint>,
+    endpoint: Box<LegacyEndpoint>,
     budget: nestlink_remote::ReconnectionBudget,
     context: NativeRecoveryContext,
 }
@@ -5086,11 +5086,9 @@ impl Actor {
                 let stop_control = self.native_session_control.clone();
                 let audio_owner_store = self.shared.clone();
                 self.native_session_task = Some(tokio::spawn(async move {
-                    let endpoint = established.endpoint;
                     let recovery_context = established.recovery;
                     let mut session = established.session;
-                    let (endpoint, stopped) =
-                        retain_owner_until_stopped(endpoint, session.channels.wait_stopped()).await;
+                    let stopped = session.wait_stopped().await;
                     if let Some(control) = stop_control {
                         stop_key.lease_sequence = control.lease_sequence();
                     }
@@ -5207,7 +5205,6 @@ impl Actor {
                             };
                             stopped.recovery = native_recovery::retain_source(
                                 session,
-                                endpoint,
                                 recovery_context,
                                 &stopped,
                                 audio_shutdown.owner_pending
@@ -5497,13 +5494,12 @@ async fn establish_native_session(
     .map_err(map_dial_failure)?;
     let core_generation = fence.expected;
     let result =
-        native_recovery::prove_endpoint(client, identity, &config, &endpoint, options, fence, None)
+        native_recovery::prove_endpoint(client, identity, &config, LegacyEndpoint::new(endpoint), options, fence, None)
             .await?;
     key.path = result.candidate.path() as i32;
     Ok(EstablishedNativeSession {
         session: result,
         key,
-        endpoint: Box::new(endpoint),
         recovery: NativeRecoveryContext {
             config,
             peer_key,
@@ -6037,6 +6033,7 @@ async fn next_native_session(
         None => std::future::pending().await,
     }
 }
+#[cfg(test)]
 async fn retain_owner_until_stopped<Owner, Stopped>(
     owner: Owner,
     stopped: Stopped,

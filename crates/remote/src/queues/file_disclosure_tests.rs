@@ -39,7 +39,7 @@ async fn expired_or_partially_written_video_ends_the_generation() -> Result {
     Ok(())
 }
 
-fn active() -> Result<(Session, RuntimeClock)> {
+pub(super) fn active() -> Result<(Session, RuntimeClock)> {
     let controller = InstallationIdentity::generate();
     let host = InstallationIdentity::generate();
     let clock = RuntimeClock::default();

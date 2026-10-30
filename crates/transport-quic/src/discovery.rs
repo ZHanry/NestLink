@@ -36,6 +36,7 @@ pub struct DiscoverySocket {
     trusted: Vec<SocketAddr>,
     generation: AtomicU64,
     pending: Mutex<HashMap<[u8; 12], Pending>>,
+    released: Mutex<Option<oneshot::Receiver<()>>>,
 }
 impl fmt::Debug for DiscoverySocket {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -67,12 +68,20 @@ impl DiscoverySocket {
         {
             return Err(failure());
         }
+        let (inner, released) = crate::service::socket::tracked(inner);
         Ok(Self {
             inner,
             trusted,
             generation: AtomicU64::new(1),
             pending: Mutex::new(HashMap::new()),
+            released: Mutex::new(Some(released)),
         })
+    }
+    /// Only the endpoint's unique close owner takes the physical release
+    /// receipt; socket and writable-poller clones must all drop before it fires.
+    pub fn take_release_receipt(&self) -> io::Result<oneshot::Receiver<()>> {
+        self.released.lock().map_err(|_| failure())?.take()
+            .ok_or_else(|| io::Error::other("UDP release receipt already owned"))
     }
     pub fn generation(&self) -> u64 {
         self.generation.load(Ordering::Acquire)

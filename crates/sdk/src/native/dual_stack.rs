@@ -1,8 +1,8 @@
 use super::*;
 
 pub(super) struct AdditionalFamily {
-    endpoint: quinn::Endpoint,
-    socket: Arc<DiscoverySocket>,
+    pub(super) endpoint: quinn::Endpoint,
+    pub(super) socket: Arc<DiscoverySocket>,
 }
 
 impl NativeEndpoint {
@@ -96,7 +96,7 @@ impl NativeEndpoint {
         }
         let lifecycle = endpoint.lifecycle.clone();
         let mut changes = receiver.clone();
-        endpoint.monitor_task = Some(MonitorTask(tokio::spawn(async move {
+        endpoint.monitor_task = Some(MonitorTask(nestlink_transport_stream::owner::TaskOwner::new(tokio::spawn(async move {
             loop {
                 let closed = changes.changed().await.is_err();
                 let mut state = *changes.borrow_and_update();
@@ -118,7 +118,7 @@ impl NativeEndpoint {
                     break;
                 }
             }
-        })));
+        }))));
         endpoint.monitor = Some((receiver, baseline.generation));
         endpoint.check()?;
         Ok(endpoint)

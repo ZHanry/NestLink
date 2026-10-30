@@ -4,7 +4,9 @@ use nestlink_session::StopReason;
 use nestlink_transport_stream::{Channel, Frame, write_frame};
 use std::{
     collections::VecDeque,
+    future::Future,
     io,
+    pin::Pin,
     sync::{
         Arc, Mutex,
         atomic::{AtomicU8, Ordering},
@@ -26,6 +28,13 @@ pub use external::{ExternalChannelRuntime, ExternalDataChannelPort, ExternalData
 /// queue lock. It is checked before insertion and immediately before writing.
 pub trait DeliveryGuard: Send + Sync {
     fn check(&self) -> io::Result<()>;
+}
+/// An actual carrier cleanup owner. Returning success certifies its tasks have
+/// joined; transport adapters must retain unfinished handles across cancellation.
+pub trait TransportOwner: Send + Sync {
+    fn request_close(&self);
+    fn close_and_wait(&mut self, deadline: tokio::time::Instant)
+        -> Pin<Box<dyn Future<Output = io::Result<()>> + Send + '_>>;
 }
 struct FileGuard(Arc<dyn crate::files::FileReadConsent>);
 impl DeliveryGuard for FileGuard {
@@ -76,6 +85,9 @@ pub(crate) async fn write_media_bounded<W: AsyncWrite + Unpin>(
 #[cfg(test)]
 #[path = "queues/file_disclosure_tests.rs"]
 mod file_disclosure_tests;
+#[cfg(test)]
+#[path = "queues/cleanup_tests.rs"]
+mod cleanup_tests;
 pub(crate) struct Queued {
     pub(crate) frame: Frame,
     pub(crate) arrived: Instant,
@@ -477,7 +489,7 @@ pub struct ChannelRuntime {
     mode: TransportMode,
     connection: Option<quinn::Connection>,
     _endpoint: Option<quinn::Endpoint>,
-    pub(crate) transport_owner: Option<Box<dyn Send + Sync>>,
+    pub(crate) transport_owner: Option<Box<dyn TransportOwner>>,
     cleanup_deadline: Option<tokio::time::Instant>,
     cleanup_failure: Option<io::ErrorKind>,
 }
@@ -887,7 +899,7 @@ impl<R: AsyncRead + Unpin + Send + 'static, W: AsyncWrite + Unpin + Send + 'stat
 impl ChannelRuntime {
     /// Retain a carrier's explicit close/cancellation owner. This grants no
     /// business authority; lease supervision still closes the inner transport.
-    pub fn with_transport_owner(mut self, owner: impl Send + Sync + 'static) -> Self {
+    pub fn with_transport_owner(mut self, owner: impl TransportOwner + 'static) -> Self {
         self.transport_owner = Some(Box::new(owner));
         self
     }
@@ -1002,10 +1014,31 @@ impl ChannelRuntime {
                 Err(_) => {
                     task.abort();
                     self.cleanup_failure.get_or_insert(io::ErrorKind::TimedOut);
-                    let _ = task.await;
+                    // Abort requests cancellation; it is not completion. Keep
+                    // every handle so a later wait can reap a finished task
+                    // against this same absolute deadline, without detaching
+                    // an uncooperative task or awaiting it without a budget.
+                    for pending in &self.tasks { pending.abort(); }
+                    if let Some(owner) = &self.transport_owner { owner.request_close(); }
+                    return Err(io::Error::new(io::ErrorKind::TimedOut, "transport task cleanup pending").into());
                 }
             }
             self.tasks.remove(0);
+        }
+        // No business task may retain a stream before carrier cleanup starts.
+        // Release runtime clones so the unique endpoint owner can confirm the
+        // final physical socket and writable poller have actually gone away.
+        drop(self.connection.take());
+        drop(self._endpoint.take());
+        if let Err(error) = self.lease.wait_supervisor_stopped(deadline).await {
+            self.cleanup_failure.get_or_insert(error.kind());
+        }
+        if let Some(owner) = self.transport_owner.as_mut() {
+            match tokio::time::timeout_at(deadline, owner.close_and_wait(deadline)).await {
+                Ok(Ok(())) => self.transport_owner = None,
+                Ok(Err(error)) => { self.cleanup_failure.get_or_insert(error.kind()); },
+                Err(_) => { self.cleanup_failure.get_or_insert(io::ErrorKind::TimedOut); },
+            }
         }
         if let Some(failure) = self.cleanup_failure {
             return Err(io::Error::new(failure, "transport cleanup failed").into());
@@ -1024,6 +1057,9 @@ impl Drop for ChannelRuntime {
         self.outgoing.close();
         if let Some(connection) = &self.connection {
             close_quic(connection, &self.lease);
+        }
+        if let Some(owner) = &self.transport_owner {
+            owner.request_close();
         }
         for task in self.tasks.drain(..) {
             task.abort();

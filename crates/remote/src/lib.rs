@@ -23,7 +23,7 @@ use nestlink_transport_stream::{Channel, Frame, read_frame, write_frame};
 use prost::Message;
 pub use queues::{
     ChannelReceiver, ChannelRuntime, ChannelSender, DeliveryGuard, ExternalChannelRuntime,
-    ExternalDataChannelPort, ExternalDataEnvelope, TransportMode,
+    ExternalDataChannelPort, ExternalDataEnvelope, TransportMode, TransportOwner,
 };
 use std::{
     io,

@@ -81,15 +81,21 @@ pub struct Connected {
 /// An explicit owner bounds the lifetime of the close watcher, including when
 /// an established candidate is discarded or its business runtime is canceled.
 pub struct Carrier {
-    inner: Connection,
-    outer: Connection,
-    watcher: tokio::task::JoinHandle<()>,
+    inner: Option<Connection>,
+    outer: Option<Connection>,
+    endpoint: Option<Endpoint>,
+    watcher: nestlink_transport_stream::owner::TaskOwner,
+    receiver: nestlink_transport_stream::owner::TaskOwner,
+    released: Option<tokio::sync::oneshot::Receiver<()>>,
     failure: tokio::sync::watch::Sender<Option<io::ErrorKind>>,
 }
 impl Carrier {
     fn new(
         inner: &Connection,
         outer: Connection,
+        endpoint: Endpoint,
+        receiver: nestlink_transport_stream::owner::TaskOwner,
+        released: tokio::sync::oneshot::Receiver<()>,
         mut socket_failure: tokio::sync::watch::Receiver<Option<io::ErrorKind>>,
     ) -> Self {
         let watch_inner = inner.clone();
@@ -113,21 +119,50 @@ impl Carrier {
             }
         });
         Self {
-            inner: inner.clone(),
-            outer,
-            watcher,
+            inner: Some(inner.clone()),
+            outer: Some(outer),
+            endpoint: Some(endpoint),
+            watcher: nestlink_transport_stream::owner::TaskOwner::new(watcher),
+            receiver,
+            released: Some(released),
             failure,
         }
     }
     pub fn subscribe_failure(&self) -> tokio::sync::watch::Receiver<Option<io::ErrorKind>> {
         self.failure.subscribe()
     }
+    pub fn request_close(&self) {
+        if let Some(inner) = &self.inner { inner.close(0u32.into(), b"QUIC carrier stopping"); }
+        if let Some(outer) = &self.outer { outer.close(0u32.into(), b"QUIC carrier stopping"); }
+        if let Some(endpoint) = &self.endpoint { endpoint.close(0u32.into(), b"QUIC carrier stopping"); }
+        self.watcher.request_close();
+        self.receiver.request_close();
+    }
+    /// Wait for the real watcher/receiver and physical outer UDP socket. The
+    /// caller must release its inner connection/endpoint clones first.
+    pub async fn close_and_wait(&mut self, deadline: tokio::time::Instant) -> io::Result<()> {
+        self.request_close();
+        self.watcher.close_and_wait(deadline).await?;
+        self.receiver.close_and_wait(deadline).await?;
+        if let Some(endpoint) = &self.endpoint {
+            tokio::time::timeout_at(deadline, endpoint.wait_idle()).await
+                .map_err(|_| io::Error::from(io::ErrorKind::TimedOut))?;
+        }
+        drop(self.inner.take());
+        drop(self.outer.take());
+        drop(self.endpoint.take());
+        if let Some(released) = self.released.as_mut() {
+            tokio::time::timeout_at(deadline, released).await
+                .map_err(|_| io::Error::from(io::ErrorKind::TimedOut))?
+                .map_err(|_| io::Error::other("relay UDP release was not confirmed"))?;
+            self.released = None;
+        }
+        Ok(())
+    }
 }
 impl Drop for Carrier {
     fn drop(&mut self) {
-        self.inner.close(0u32.into(), b"QUIC carrier owner dropped");
-        self.outer.close(0u32.into(), b"QUIC carrier owner dropped");
-        self.watcher.abort();
+        self.request_close();
     }
 }
 struct Cleanup {
@@ -193,7 +228,7 @@ pub async fn connect_at(
             "[::]:0"
         }
         .parse()?;
-        let mut outer = Endpoint::client(bound)?;
+        let (mut outer, released) = crate::service::socket::client(bound)?;
         let mut tls = tls::client_config(identity, node)?;
         tls.alpn_protocols = vec![relay_datagram::ALPN.to_vec()];
         let mut client = ClientConfig::new(Arc::new(QuicClientConfig::try_from(tls)?));
@@ -230,6 +265,7 @@ pub async fn connect_at(
             crate::virtual_udp::RelaySocket::new(connection, outer, controller, read, write)?;
         let destination = socket.peer_addr();
         let socket_failure = socket.subscribe_failure();
+        let receiver = socket.close_owner();
         let mut config = transport_value();
         config.initial_mtu(RELAY_UDP_PACKET_BYTES as u16);
         config.min_mtu(RELAY_UDP_PACKET_BYTES as u16);
@@ -267,7 +303,7 @@ pub async fn connect_at(
         };
         cleanup.inner = None;
         cleanup.outer = None;
-        let carrier = Carrier::new(&connection, carrier_connection, socket_failure);
+        let carrier = Carrier::new(&connection, carrier_connection, endpoint.clone(), receiver, released, socket_failure);
         Ok(Connected {
             connection,
             endpoint,

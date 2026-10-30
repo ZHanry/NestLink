@@ -9,14 +9,10 @@ use std::{
 };
 use tokio::sync::oneshot;
 
-pub(super) fn client(address: SocketAddr) -> io::Result<(Endpoint, oneshot::Receiver<()>)> {
+pub(crate) fn client(address: SocketAddr) -> io::Result<(Endpoint, oneshot::Receiver<()>)> {
     let runtime = Arc::new(quinn::TokioRuntime);
     let inner = runtime.wrap_udp_socket(std::net::UdpSocket::bind(address)?)?;
-    let (released, completion) = oneshot::channel();
-    let socket = Arc::new(TrackedSocket {
-        inner,
-        _release: Release(Some(released)),
-    });
+    let (socket, completion) = tracked(inner);
     let endpoint = Endpoint::new_with_abstract_socket(
         quinn::EndpointConfig::default(),
         None,
@@ -24,6 +20,13 @@ pub(super) fn client(address: SocketAddr) -> io::Result<(Endpoint, oneshot::Rece
         runtime,
     )?;
     Ok((endpoint, completion))
+}
+
+/// Reuse the service carrier's physical socket/poller receipt for discovery
+/// and node carriers. The caller transfers its original inner reference.
+pub(crate) fn tracked(inner: Arc<dyn AsyncUdpSocket>) -> (Arc<dyn AsyncUdpSocket>, oneshot::Receiver<()>) {
+    let (released, completion) = oneshot::channel();
+    (Arc::new(TrackedSocket { inner, _release: Release(Some(released)) }), completion)
 }
 
 pub(super) async fn wait_released(completion: oneshot::Receiver<()>) -> io::Result<()> {

@@ -649,9 +649,18 @@ impl NativeConnection {
                     &local.identity,
                     peer_key,
                 )
-                .await?;
+                .await;
+                let channels = match channels {
+                    Ok(channels) => channels,
+                    Err(error) => {
+                        if let Some(mut carrier) = carrier {
+                            carrier.close_and_wait(tokio::time::Instant::now() + Duration::from_secs(2)).await?;
+                        }
+                        return Err(error);
+                    }
+                };
                 if let Some(carrier) = carrier {
-                    channels.with_transport_owner(carrier)
+                    channels.with_transport_owner(crate::network::CarrierOwner::Quic(carrier))
                 } else {
                     channels
                 }
@@ -660,7 +669,14 @@ impl NativeConnection {
                 authorize_stream(io, setup, &local.identity, peer_key).await?
             }
             NativeTransport::Wss(io) => {
-                authorize_stream(io, setup, &local.identity, peer_key).await?
+                let pump = io.get_ref().0.close_owner();
+                match authorize_stream(io, setup, &local.identity, peer_key).await {
+                    Ok(channels) => channels.with_transport_owner(crate::network::CarrierOwner::Wss(pump)),
+                    Err(error) => {
+                        pump.close_and_wait(tokio::time::Instant::now() + Duration::from_secs(2)).await?;
+                        return Err(error);
+                    }
+                }
             }
         };
         let lease = channels.lease_control();
@@ -746,13 +762,32 @@ async fn authorize_stream<
     .await?
     .into_channels())
 }
-struct MonitorTask(tokio::task::JoinHandle<()>);
+struct MonitorTask(nestlink_transport_stream::owner::TaskOwner);
 impl Drop for MonitorTask {
     fn drop(&mut self) {
-        self.0.abort();
+        self.0.request_close();
     }
 }
 impl NativeEndpoint {
+    /// Transfer the original endpoint/observer resources into one close owner.
+    /// No new sockets, receiver tasks, or network authority are created here.
+    pub(crate) fn take_cleanup(&mut self) -> std::io::Result<crate::network::EndpointCleanup> {
+        let released = self.discovery_sockets().iter()
+            .map(|socket| socket.take_release_receipt()).collect::<std::io::Result<Vec<_>>>()?;
+        let mut endpoints = Vec::new();
+        endpoints.extend(self.endpoint.take());
+        if let Some(family) = self.additional_family.take() {
+            endpoints.push(family.endpoint);
+        }
+        drop(self.socket.take());
+        let monitor = self.monitor_task.take().map(|task| task.0.clone());
+        Ok(crate::network::EndpointCleanup { endpoints, released, monitor })
+    }
+    pub(crate) fn request_close(&self) {
+        if let Some(endpoint) = &self.endpoint { endpoint.close(0u32.into(), b"native owner stopping"); }
+        if let Some(family) = &self.additional_family { family.endpoint.close(0u32.into(), b"native owner stopping"); }
+        if let Some(task) = &self.monitor_task { task.0.request_close(); }
+    }
     pub(crate) fn cap_authorization_deadline(
         &mut self,
         deadline: Instant,

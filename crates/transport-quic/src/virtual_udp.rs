@@ -18,7 +18,8 @@ use std::{
     task::{Context, Poll},
     time::{Duration, Instant},
 };
-use tokio::{sync::mpsc, task::JoinHandle, time::Sleep};
+use tokio::{sync::mpsc, time::Sleep};
+use nestlink_transport_stream::owner::TaskOwner;
 
 const WINDOW: u64 = 64;
 #[derive(Debug, PartialEq, Eq)]
@@ -118,7 +119,7 @@ pub(crate) struct RelaySocket {
     peer: SocketAddr,
     sequence: Mutex<u64>,
     incoming: Mutex<mpsc::Receiver<Packet>>,
-    receiver: JoinHandle<()>,
+    receiver: TaskOwner,
     failure: tokio::sync::watch::Sender<Option<io::ErrorKind>>,
 }
 impl fmt::Debug for RelaySocket {
@@ -133,7 +134,7 @@ impl Drop for RelaySocket {
     fn drop(&mut self) {
         self.connection
             .close(0u32.into(), b"virtual UDP owner dropped");
-        self.receiver.abort();
+        self.receiver.request_close();
     }
 }
 impl RelaySocket {
@@ -203,12 +204,15 @@ impl RelaySocket {
             peer,
             sequence: Mutex::new(0),
             incoming: Mutex::new(rx),
-            receiver,
+            receiver: TaskOwner::new(receiver),
             failure,
         }))
     }
     pub(crate) fn peer_addr(&self) -> SocketAddr {
         self.peer
+    }
+    pub(crate) fn close_owner(&self) -> TaskOwner {
+        self.receiver.clone()
     }
     pub(crate) fn subscribe_failure(&self) -> tokio::sync::watch::Receiver<Option<io::ErrorKind>> {
         self.failure.subscribe()

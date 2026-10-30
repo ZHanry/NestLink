@@ -10,7 +10,8 @@ use std::{
     sync::{Arc, Mutex, MutexGuard, TryLockError},
     time::{Duration, Instant},
 };
-use tokio::{sync::watch, task::JoinHandle};
+use tokio::sync::watch;
+use nestlink_transport_stream::owner::TaskOwner;
 
 /// Platform cleanup and contended session locks are synchronous. Let a
 /// multithreaded Tokio executor replace this worker while it waits; otherwise
@@ -191,7 +192,7 @@ struct Inner {
     updates: watch::Sender<u64>,
     reports: watch::Sender<Option<StopReport>>,
     input_permits: watch::Sender<Option<VerifiedPermit>>,
-    task: Mutex<Option<JoinHandle<()>>>,
+    task: Mutex<Option<TaskOwner>>,
 }
 impl Inner {
     fn lock(&self) -> Result<MutexGuard<'_, Managed>, RemoteError> {
@@ -344,7 +345,7 @@ impl Drop for Inner {
             .unwrap_or_else(std::sync::PoisonError::into_inner)
             .take()
         {
-            task.abort();
+            task.request_close();
         }
     }
 }
@@ -451,8 +452,14 @@ impl LeaseControl {
             .inner
             .task
             .lock()
-            .map_err(|_| RemoteError::Stopped)? = Some(task);
+            .map_err(|_| RemoteError::Stopped)? = Some(TaskOwner::new(task));
         Ok(control)
+    }
+    pub(crate) async fn wait_supervisor_stopped(&self, deadline: tokio::time::Instant) -> io::Result<()> {
+        let task = self.inner.task.lock()
+            .map_err(|_| io::Error::other("lease supervisor owner poisoned"))?.clone();
+        if let Some(task) = task { task.close_and_wait(deadline).await?; }
+        Ok(())
     }
     pub fn subscribe_stopped(&self) -> watch::Receiver<Option<StopReport>> {
         self.inner.reports.subscribe()
