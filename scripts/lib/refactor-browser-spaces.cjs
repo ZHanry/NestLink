@@ -86,6 +86,7 @@ async function run(page, ready, report) {
     await security(page);
     await page.locator(field('name')).fill(name);
     const createdResponse = await action(page, 'Create space', 'POST', '/api/v3/network/spaces', 201);
+    const windowStarted = Date.now();
     const created = await createdResponse.json();
     active = { base: '/api/v3/network/spaces/' + created.space_id, failures: facts.failures };
     await page.select(field('device'), ready.host_device_id);
@@ -148,6 +149,11 @@ async function run(page, ready, report) {
     facts.owner_admin_member_guest = true; facts.stale_revision_rejected = true;
 
     facts.stage = 'revoke_and_audit';
+    // Production space actions share a 30-request/60-second session budget.
+    // Each UI action reads back the current listing and details, so this long
+    // sequence must wait for the original window instead of raising the limit
+    // or accepting 429 as a successful mutation.
+    await new Promise(resolve => setTimeout(resolve, Math.max(0, 61_000 - (Date.now() - windowStarted))));
     await page.bringToFront(); await read(page, name);
     await action(page, 'Revoke invitation', 'DELETE', active.base + '/invitations/' + (await delegated.json()).invitation.invitation_id);
     await page.select(field('account'), account);

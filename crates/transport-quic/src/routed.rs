@@ -26,9 +26,14 @@ pub struct RoutedTransport {
     endpoint: Option<Endpoint>,
     adjacency: Adjacency,
     receiver: TaskOwner,
+    failure: tokio::sync::watch::Receiver<Option<io::ErrorKind>>,
     close_deadline: Option<Instant>,
 }
 impl RoutedTransport {
+    /// Original carrier facts are published before inner Quinn I/O closes.
+    pub fn subscribe_failure(&self) -> tokio::sync::watch::Receiver<Option<io::ErrorKind>> {
+        self.failure.clone()
+    }
     pub fn connection(&self) -> io::Result<&Connection> {
         self.connection
             .as_ref()
@@ -91,6 +96,7 @@ pub struct RoutedEstablishment {
     endpoint: Option<Endpoint>,
     adjacency: Option<Adjacency>,
     receiver: Option<TaskOwner>,
+    failure: Option<tokio::sync::watch::Receiver<Option<io::ErrorKind>>>,
     attempted: bool,
     close_deadline: Option<Instant>,
 }
@@ -102,6 +108,7 @@ impl RoutedEstablishment {
             endpoint: None,
             adjacency: Some(adjacency),
             receiver: None,
+            failure: None,
             attempted: false,
             close_deadline: None,
         }
@@ -155,6 +162,7 @@ impl RoutedEstablishment {
         let (socket, receiver) =
             socket::RoutedSocket::new(authorization, adjacency.connection()?.clone(), first)?;
         self.receiver = Some(receiver);
+        self.failure = Some(socket.subscribe_failure());
         let destination = socket.peer_addr();
         let mut endpoint = Endpoint::new_with_abstract_socket(
             settings,
@@ -194,6 +202,7 @@ impl RoutedEstablishment {
             || self.endpoint.is_none()
             || self.adjacency.is_none()
             || self.receiver.is_none()
+            || self.failure.is_none()
         {
             return Err(not_connected());
         }
@@ -202,6 +211,7 @@ impl RoutedEstablishment {
             endpoint: self.endpoint.take(),
             adjacency: self.adjacency.take().ok_or_else(not_connected)?,
             receiver: self.receiver.take().ok_or_else(not_connected)?,
+            failure: self.failure.take().ok_or_else(not_connected)?,
             close_deadline: None,
         })
     }

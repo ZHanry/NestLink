@@ -14,7 +14,7 @@
         "production_socket_slice": "passed actual business proof, FileRead, blackhole, cancellation and peer-close",
         "independent_vectors": "passed",
         "linux_contract": "clippy, complete selected package tests and evidence-tool tests passed; formatting failed",
-        "windows_contract": "pending review at checkpoint"
+        "windows_contract": "clippy, complete selected package tests and evidence-tool tests passed; formatting failed"
       },
       "artifacts": [
         { "id": 12976291923, "sha256": "6095a49f0552ecf81ce2d97bef74d9f41903fece64fb2a5e760a9d618191a793" },

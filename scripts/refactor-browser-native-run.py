@@ -531,7 +531,9 @@ def run(args):
             "--tools", tools, "--executable", chrome, "--engine", "chrome", "--tls", private / "tls.json",
             "--owned-data", "true", "--upload-fixture", private / "selected-upload.bin",
             "--download-directory", private / "received"], env)
-        facts["exit_codes"]["browser"] = browser.wait(timeout=140)
+        # Includes the space lifecycle's deliberate production rate-window
+        # pacing; individual business, media and cleanup deadlines are unchanged.
+        facts["exit_codes"]["browser"] = browser.wait(timeout=240)
     except Exception as error:
         facts["error"] = sanitize(f"{type(error).__name__}: {error}", secrets)
     finally:

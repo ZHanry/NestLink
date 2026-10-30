@@ -606,6 +606,28 @@ impl Drop for CloseQuicOnDrop {
     }
 }
 pub(crate) fn stop_io_result<T>(lease: &LeaseControl, result: &Result<T, RemoteError>) {
+    fn quic_error(error: &io::Error) -> Option<&quinn::ConnectionError> {
+        let inner = error.get_ref()?;
+        if let Some(error) = inner.downcast_ref::<quinn::ConnectionError>() {
+            Some(error)
+        } else if let Some(quinn::ReadError::ConnectionLost(error)) =
+            inner.downcast_ref::<quinn::ReadError>()
+        {
+            Some(error)
+        } else if let Some(quinn::WriteError::ConnectionLost(error)) =
+            inner.downcast_ref::<quinn::WriteError>()
+        {
+            Some(error)
+        } else {
+            None
+        }
+    }
+    // Quinn synthesizes a local INTERNAL_ERROR when a fatal socket error drops
+    // its endpoint driver. Consult the original carrier facts for that cleanup
+    // observation; genuine QUIC protocol failures still stop unconditionally.
+    let endpoint_driver_failure = matches!(result, Err(RemoteError::Io(error))
+        if matches!(quic_error(error), Some(quinn::ConnectionError::TransportError(error))
+            if error.code == quinn::TransportErrorCode::INTERNAL_ERROR));
     fn quic_reason(error: &quinn::ConnectionError) -> StopReason {
         match error {
             quinn::ConnectionError::TimedOut | quinn::ConnectionError::Reset => {
@@ -623,16 +645,7 @@ pub(crate) fn stop_io_result<T>(lease: &LeaseControl, result: &Result<T, RemoteE
     }
     let reason = match result {
         Err(RemoteError::Io(error)) => {
-            let inner = error.get_ref();
-            if let Some(error) = inner.and_then(|v| v.downcast_ref::<quinn::ConnectionError>()) {
-                quic_reason(error)
-            } else if let Some(quinn::ReadError::ConnectionLost(error)) =
-                inner.and_then(|v| v.downcast_ref::<quinn::ReadError>())
-            {
-                quic_reason(error)
-            } else if let Some(quinn::WriteError::ConnectionLost(error)) =
-                inner.and_then(|v| v.downcast_ref::<quinn::WriteError>())
-            {
+            if let Some(error) = quic_error(error) {
                 quic_reason(error)
             } else {
                 match error.kind() {
@@ -654,7 +667,7 @@ pub(crate) fn stop_io_result<T>(lease: &LeaseControl, result: &Result<T, RemoteE
         Ok(_) => StopReason::Revoked,
     };
     // The lease retains an earlier revoke/network/expiry/exit reason.
-    if reason == StopReason::Revoked {
+    if reason == StopReason::Revoked || endpoint_driver_failure {
         // A stopped lease's authorization/queue/cleanup observation adds no
         // fresh revocation. Keep genuine direct revokes and protocol errors
         // sticky, while synthetic teardown preserves a retryable first stop.

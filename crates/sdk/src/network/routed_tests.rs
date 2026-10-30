@@ -971,10 +971,7 @@ async fn sdk_business_renewal_preserves_the_original_route_ceiling_and_synchrono
         controller.lease_control().current_deadline()?,
         controller_ceiling
     );
-    assert_eq!(
-        host.lease_control().current_deadline()?,
-        host_ceiling
-    );
+    assert_eq!(host.lease_control().current_deadline()?, host_ceiling);
     phase(
         "renewed host FileRead enqueue",
         host.send(

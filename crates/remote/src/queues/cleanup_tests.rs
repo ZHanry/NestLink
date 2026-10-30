@@ -2,6 +2,65 @@ use super::*;
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 #[tokio::test]
+async fn original_carrier_facts_precede_synthetic_endpoint_shutdown_but_not_protocol_failure()
+-> Result {
+    for (carrier_kind, code, expected) in [
+        (
+            io::ErrorKind::PermissionDenied,
+            quinn::TransportErrorCode::INTERNAL_ERROR,
+            StopReason::Revoked,
+        ),
+        (
+            io::ErrorKind::ConnectionReset,
+            quinn::TransportErrorCode::INTERNAL_ERROR,
+            StopReason::TransportLost,
+        ),
+        (
+            io::ErrorKind::InvalidData,
+            quinn::TransportErrorCode::INTERNAL_ERROR,
+            StopReason::ProtocolViolation,
+        ),
+        (
+            io::ErrorKind::PermissionDenied,
+            quinn::TransportErrorCode::PROTOCOL_VIOLATION,
+            StopReason::ProtocolViolation,
+        ),
+    ] {
+        let (session, clock) = super::file_disclosure_tests::active()?;
+        let (_keep, stop) = watch::channel(None);
+        let (facts, carrier) = watch::channel(None);
+        let mut lifecycle = crate::SessionLifecycle::new(stop);
+        lifecycle.carrier = Some(carrier);
+        let (_peer, stream) = tokio::io::duplex(64);
+        let (read, write) = tokio::io::split(stream);
+        let mut runtime = AuthorizedConnection::with_lifecycle(
+            read,
+            write,
+            session,
+            nestlink_protocol::Path::Direct,
+            clock,
+            lifecycle,
+        )?
+        .into_channels();
+        facts.send_replace(Some(carrier_kind));
+        let result: std::result::Result<(), RemoteError> = Err(io::Error::other(
+            quinn::ReadError::ConnectionLost(quinn::ConnectionError::TransportError(
+                quinn::TransportError {
+                    code,
+                    frame: None,
+                    reason: "owned endpoint terminated".into(),
+                },
+            )),
+        )
+        .into());
+        stop_io_result(&runtime.lease_control(), &result);
+        let report = tokio::time::timeout(Duration::from_secs(1), runtime.wait_stopped()).await??;
+        assert_eq!(report.reason, expected);
+    }
+    Ok(())
+}
+
+#[tokio::test]
 async fn cancelled_and_expired_cleanup_retains_unjoined_socket_task_without_renewing_budget()
 -> Result {
     let (session, clock) = super::file_disclosure_tests::active()?;

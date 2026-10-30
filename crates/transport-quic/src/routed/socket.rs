@@ -15,7 +15,31 @@ use std::{
     task::{Context, Poll},
     time::{Duration, Instant},
 };
-use tokio::{sync::mpsc, time::Sleep};
+use tokio::{
+    sync::{mpsc, watch},
+    time::Sleep,
+};
+
+fn connection_fault(error: quinn::ConnectionError) -> io::ErrorKind {
+    match error {
+        // Routed allocations have no implicit reconnect authority. An
+        // authenticated adjacency shutdown ends this exact allocation.
+        quinn::ConnectionError::ApplicationClosed(_) | quinn::ConnectionError::LocallyClosed => {
+            io::ErrorKind::PermissionDenied
+        }
+        error => crate::virtual_udp::connection_fault(error),
+    }
+}
+
+fn record_failure(failure: &watch::Sender<Option<io::ErrorKind>>, kind: io::ErrorKind) {
+    failure.send_if_modified(|current| {
+        if current.is_some() {
+            return false;
+        }
+        *current = Some(kind);
+        true
+    });
+}
 
 #[derive(Default)]
 struct Budget {
@@ -31,6 +55,7 @@ pub(super) struct RoutedSocket {
     budget: Arc<Mutex<Budget>>,
     incoming: Mutex<mpsc::Receiver<Packet>>,
     receiver: TaskOwner,
+    failure: watch::Sender<Option<io::ErrorKind>>,
 }
 impl fmt::Debug for RoutedSocket {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -65,6 +90,8 @@ impl RoutedSocket {
         let counted = budget.clone();
         let copy = connection.clone();
         let granted = authorization.retained();
+        let (failure, _) = watch::channel(None);
+        let failed = failure.clone();
         let receiver = TaskOwner::new(tokio::spawn(async move {
             let mut packets = Reassembly::new(
                 wire::FRAGMENT_BYTES,
@@ -77,18 +104,28 @@ impl RoutedSocket {
                 loop {
                     granted.live()?;
                     let bytes = tokio::select! { biased;
-                        _ = granted.wait_stopped() => return Err(stopped()),
-                        _ = copy.accept_bi() => return Err(stopped()),
-                        _ = copy.accept_uni() => return Err(stopped()),
-                        bytes = copy.read_datagram() => bytes.map_err(io::Error::other)?,
+                        _ = granted.wait_stopped() => {
+                            granted.live()?;
+                            return Err(io::ErrorKind::PermissionDenied.into());
+                        },
+                        result = copy.accept_bi() => return Err(match result {
+                            Ok(_) => io::ErrorKind::InvalidData,
+                            Err(error) => connection_fault(error),
+                        }.into()),
+                        result = copy.accept_uni() => return Err(match result {
+                            Ok(_) => io::ErrorKind::InvalidData,
+                            Err(error) => connection_fault(error),
+                        }.into()),
+                        bytes = copy.read_datagram() => bytes.map_err(|error| io::Error::from(connection_fault(error)))?,
                     };
                     granted.live()?;
-                    let fragment = wire::decode(&bytes).map_err(io::Error::other)?;
+                    let fragment = wire::decode(&bytes)
+                        .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
                     if fragment.binding != granted.binding_digest()
                         || fragment.direction != direction.reverse()
                         || fragment.remaining_hops != 0
                     {
-                        return Err(stopped());
+                        return Err(io::ErrorKind::InvalidData.into());
                     }
                     charge(&counted, bytes.len(), granted.byte_limit())?;
                     if let Some(packet) = packets.insert(
@@ -108,7 +145,11 @@ impl RoutedSocket {
                     }
                 }
             };
-            let _: io::Result<()> = receive.await;
+            let result: io::Result<()> = receive.await;
+            record_failure(
+                &failed,
+                result.err().map_or(io::ErrorKind::PermissionDenied, |error| error.kind()),
+            );
             copy.close(1u32.into(), b"routed UDP receive ended");
         }));
         Ok((
@@ -121,6 +162,7 @@ impl RoutedSocket {
                 budget,
                 incoming: Mutex::new(rx),
                 receiver: receiver.clone(),
+                failure,
             }),
             receiver,
         ))
@@ -128,11 +170,26 @@ impl RoutedSocket {
     pub(super) fn peer_addr(&self) -> SocketAddr {
         self.peer
     }
-    fn writable(&self) -> io::Result<bool> {
-        self.authorization.live()?;
-        if self.connection.close_reason().is_some() {
-            return Err(stopped());
+    pub(super) fn subscribe_failure(&self) -> watch::Receiver<Option<io::ErrorKind>> {
+        self.failure.subscribe()
+    }
+    fn live(&self) -> io::Result<()> {
+        if let Err(error) = self.authorization.live() {
+            record_failure(&self.failure, error.kind());
+            return Err(error);
         }
+        if let Some(error) = self.connection.close_reason() {
+            let kind = connection_fault(error);
+            record_failure(&self.failure, kind);
+            return Err(kind.into());
+        }
+        if let Some(kind) = *self.failure.borrow() {
+            return Err(kind.into());
+        }
+        Ok(())
+    }
+    fn writable(&self) -> io::Result<bool> {
+        self.live()?;
         Ok(self.connection.datagram_send_buffer_space() >= wire::PACKET_BYTES + 2 * wire::HEADER)
     }
 }
@@ -155,7 +212,7 @@ fn charge(budget: &Mutex<Budget>, bytes: usize, limit: u64) -> io::Result<()> {
         .bytes
         .checked_add(bytes as u64)
         .filter(|used| *used <= limit)
-        .ok_or_else(stopped)?;
+        .ok_or(io::ErrorKind::PermissionDenied)?;
     budget.bytes = used;
     Ok(())
 }
@@ -193,7 +250,7 @@ impl AsyncUdpSocket for RoutedSocket {
         })
     }
     fn try_send(&self, transmit: &Transmit<'_>) -> io::Result<()> {
-        self.authorization.live()?;
+        self.live()?;
         if transmit.destination != self.peer
             || transmit.src_ip.is_some_and(|ip| ip != self.local.ip())
             || transmit
@@ -238,11 +295,8 @@ impl AsyncUdpSocket for RoutedSocket {
         bufs: &mut [IoSliceMut<'_>],
         meta: &mut [RecvMeta],
     ) -> Poll<io::Result<usize>> {
-        if let Err(error) = self.authorization.live() {
+        if let Err(error) = self.live() {
             return Poll::Ready(Err(error));
-        }
-        if self.connection.close_reason().is_some() {
-            return Poll::Ready(Err(stopped()));
         }
         if bufs.is_empty() || meta.is_empty() {
             return Poll::Ready(Err(io::ErrorKind::InvalidInput.into()));

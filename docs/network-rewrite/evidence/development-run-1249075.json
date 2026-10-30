@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "source_revision": "124907540f3abca7bc0197772c5d27726f0142e5",
+  "repository": "ZHanry/NestLink",
+  "build_location": "github-hosted-actions",
+  "local_project_toolchain_executed": false,
+  "acceptance_claims": [],
+  "runs": [
+    {
+      "run_id": 41057091566,
+      "workflow": ".github/workflows/rust-core.yml",
+      "result": "failure",
+      "observations": {
+        "linux_sdk_routed": "13 passed, 1 failed; live lease reads repaired; peer sees synthetic Quinn INTERNAL_ERROR after routed socket closes",
+        "linux_network_relay": "2 failed with HTTP 400; fixture requested original 15-second business lifetime beyond node's 10-second lease",
+        "linux_ice_quic": "4 failed at immediate physical rebind; dependency-owned close background tasks are not joined by Agent.close",
+        "linux_spaces": "9 storage and 1 actual HTTP SDK tests passed",
+        "linux_discovery": "3 discovery and 5 dual-stack tests passed",
+        "windows_core": "completed failure in routed, relay, ICE and formatting steps; detailed output retained by workflow",
+        "platform_jobs": "network-events, wasm-contract, dependencies, x11-input, portal-capture and system-audio succeeded",
+        "full_workspace_checks": "skipped after earlier failure; following workflow runs clippy and tests independently while retaining every failing gate"
+      },
+      "scoped_linux_artifact": {
+        "id": 12977192566,
+        "sha256": "3319f6d6348e46c4697a5fb5add44ed9d18080ef72cb9a11082fcdb73b07d8c8"
+      }
+    },
+    {
+      "run_id": 41057091684,
+      "workflow": ".github/workflows/network-rewrite.yml",
+      "result": "failure",
+      "observations": {
+        "routed_kernel_nat_slice": "passed success, blackhole and cancellation",
+        "production_socket_slice": "passed business proof, FileRead, blackhole, cancellation and peer-close",
+        "independent_vectors": "passed",
+        "linux_contract": "selected package clippy/tests and evidence tests passed; formatting failed",
+        "windows_contract": "completed failure; detailed review pending"
+      },
+      "linux_artifact": {
+        "id": 12976674140,
+        "sha256": "5f10d699ea490228442c97d433814e1e1e78aaa9066bd88e51b127e5de9a8a68",
+        "reviewed_format_patch_sha256": "a9b462d132b883e927f1f3c971544799a88f730863e874c847074f88717ab905"
+      }
+    },
+    {
+      "run_id": 41057091794,
+      "workflow": ".github/workflows/web.yml",
+      "result": "failure",
+      "observations": {
+        "release_site": "passed",
+        "production_web_native": "failed; previous bdbc042 report identified production space-session rate limit in long UI lifecycle scenario; following source paces the scenario within the existing 30/60-second limit"
+      }
+    },
+    { "run_id": 41057091752, "workflow": ".github/workflows/regression-server.yml", "result": "success" },
+    { "run_id": 41057091660, "workflow": ".github/workflows/secret-scan.yml", "result": "success" },
+    { "run_id": 41057091547, "workflow": ".github/workflows/codeql.yml", "result": "success" }
+  ],
+  "following_source_repairs": [
+    "Publish original routed carrier terminal facts before inner I/O closes; reuse SessionLifecycle carrier observation and preserve actual protocol failures.",
+    "Bound real relay reservation to the currently observed node lease and send the full 256-KiB payload in existing protocol-sized chunks.",
+    "Wait for physical ICE port rebind within the unchanged original cleanup deadline.",
+    "Pace long browser lifecycle test within the production rate window without widening production limits."
+  ],
+  "limitations": [
+    "Following source requires its own Actions run.",
+    "No whole acceptance group, public NAT target, GPU, phone, HA or cross-day completion is claimed.",
+    "0.8.0RC release gates remain unsatisfied."
+  ]
+}

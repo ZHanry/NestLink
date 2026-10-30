@@ -81,7 +81,12 @@ idle, aborts and joins the original reader/writer via existing TaskOwner receipt
 then awaits Agent.close under one absolute cleanup deadline and releases every
 retained Agent/AgentConn/adapter reference. The first Actions execution exposed
 that the selected CandidatePair retains its original UDP owner after Agent.close;
-the fixture now consumes and drops the complete owner before rebind. Passing cases must
+the fixture now consumes and drops the complete owner before rebind. A second
+Actions run confirmed that close also signals dependency-owned background tasks
+without joining them. Rebind now waits for actual OS release under the same
+original five-second cleanup deadline, retrying only AddrInUse and reporting a
+timeout if the port remains held. It never opens a replacement ICE or Quinn
+socket or treats a successful close call as a release receipt. Passing cases must
 physically rebind both original UDP ports; endpoint idle and abort requests alone
 cannot pass. Failed setup/assertion Drop paths request cancellation and schedule
 bounded Agent cleanup, but are never counted as successful cleanup evidence.

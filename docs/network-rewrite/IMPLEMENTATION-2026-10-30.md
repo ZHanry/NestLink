@@ -156,3 +156,26 @@ The public product remains `0.7.0-rc.1`. No `0.8.0RC` tag or release has been
 created. User authorization to publish and retain only main remains in force;
 it does not change functionality/evidence gates. Local and remote heads were
 checked as main only at source 5ede5d0; recheck after final delivery.
+
+## Follow-up after exact-source 1249075 Actions
+
+Core run 41057091566 and network run 41057091684 exposed remaining failures;
+no complete acceptance group is marked passed. The new source publishes the
+original routed carrier terminal facts before Quinn's inner endpoint teardown,
+installs the existing lifecycle carrier observation and distinguishes synthetic
+local INTERNAL_ERROR cleanup from a genuine protocol failure. A regression
+covers revoke, transport loss and malformed protocol precedence.
+
+The actual HTTP relay fixture now limits the route to the observed node lease
+and sends all 256 KiB in existing 64-KiB-or-smaller FileRead chunks. ICE cleanup
+requires successful physical rebind within the same original five-second budget,
+allowing dependency-owned background tasks to release after Agent.close signals
+them. The full browser lifecycle is paced at its existing production 30/60-second
+space-session rate boundary; neither the service limit nor individual operation
+and cleanup deadlines are increased. Full workspace clippy/tests run even when
+an earlier scoped check or formatting gate fails; all failures still fail CI.
+
+These repairs require new exact-source Actions evidence. The detailed run
+observations and imported formatting digest are in
+`evidence/development-run-1249075.json`. Production bilateral ICE signaling and
+the unimplemented W10-W40 scope remain active work, not external validation gaps.

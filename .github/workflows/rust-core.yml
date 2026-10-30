@@ -217,7 +217,9 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
       - run: cargo check --locked -p nestlink-platform-audio
-      - run: cargo clippy --workspace --all-targets --locked --keep-going -- -D warnings
+      - name: Check the complete workspace independently of scoped failures
+        if: ${{ !cancelled() }}
+        run: cargo clippy --workspace --all-targets --locked --keep-going -- -D warnings
       - name: Check scoped media and renewal fixture code before runtime tests on Linux
         if: runner.os == 'Linux'
         run: cargo clippy --locked --keep-going -p nestlink-app-core -p nestlink-sdk -p nestlink-session --all-targets --features nestlink-app-core/media-runtime-test-support,nestlink-sdk/media-runtime-test-support,nestlink-session/media-runtime-test-support -- -D warnings
@@ -450,10 +452,10 @@ jobs:
           path: ${{ runner.temp }}/nestlink-media-preparation-tools/
           if-no-files-found: error
           retention-days: 14
-      - if: runner.os == 'Linux'
+      - if: ${{ !cancelled() && runner.os == 'Linux' }}
         run: cargo test --workspace --locked --no-fail-fast
       - name: Test Windows with the ordinary business-process token
-        if: runner.os == 'Windows'
+        if: ${{ !cancelled() && runner.os == 'Windows' }}
         run: python scripts/refactor-windows-normal-user.py cargo test --workspace --locked --no-fail-fast
       - name: Debug scoped native renewal regressions on Linux
         if: runner.os == 'Linux'

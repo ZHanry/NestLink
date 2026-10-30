@@ -237,8 +237,11 @@ impl Fixture {
             },
         )
         .await?;
-        tokio::time::timeout(Duration::from_secs(3), async {
-            while control.authorize(NodeRole::NodeRelay, false).is_err() {
+        let node_lease = tokio::time::timeout(Duration::from_secs(3), async {
+            loop {
+                if let Ok(lease) = control.authorize(NodeRole::NodeRelay, false) {
+                    break lease;
+                }
                 tokio::time::sleep(Duration::from_millis(10)).await;
             }
         })
@@ -255,7 +258,7 @@ impl Fixture {
                     controller_membership_grant_id: grants[0].clone(),
                     host_membership_grant_id: grants[1].clone(),
                     expected_policy_epoch: policy.policy_epoch,
-                    expires_at_unix_ms: expires,
+                    expires_at_unix_ms: expires.min(node_lease.expires_at_unix_ms),
                 },
                 transit_grant_id: random_id(),
                 allocation: RelayAllocationRequest {
@@ -266,7 +269,8 @@ impl Fixture {
                 },
             },
         )
-        .await?;
+        .await
+        .map_err(|error| format!("reserve actual network relay: {error}"))?;
         tokio::time::timeout(Duration::from_secs(3), async {
             while !control.resource_snapshot().is_ok_and(|s| {
                 s.network_routes.iter().any(|r| {
@@ -440,10 +444,17 @@ async fn current_http_node_snapshot_carries_business_and_revocation_closes_all_o
     drop(sockets);
     let (mut controller, mut host, _stop) = f.channels(addresses).await?;
     let payload = vec![71; 256 * 1024];
-    let (sent, received) =
-        tokio::join!(host.send(Channel::FileRead, &payload), controller.receive());
-    sent?;
-    assert_eq!(received?.payload, payload);
+    let transfer_deadline = Instant::now() + Duration::from_secs(5);
+    for chunk in payload.chunks(nestlink_protocol::FILE_CHUNK_BYTES as usize) {
+        let (sent, received) = tokio::time::timeout_at(transfer_deadline, async {
+            tokio::join!(host.send(Channel::FileRead, chunk), controller.receive())
+        })
+        .await?;
+        sent?;
+        let frame = received?;
+        assert_eq!(frame.channel, Channel::FileRead);
+        assert_eq!(frame.payload, chunk);
+    }
     assert!(
         controller
             .send(Channel::Input, b"membership cannot authorize input")

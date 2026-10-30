@@ -42,6 +42,27 @@ use webrtc::{
 
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
+async fn rebind_original(address: SocketAddr, deadline: Instant) -> io::Result<UdpSocket> {
+    // Agent::close signals its dependency-owned candidate/callback tasks but
+    // does not join them. Physical release, rather than the close return, is
+    // the receipt. Only AddrInUse can be retried within the original budget.
+    loop {
+        if Instant::now() >= deadline {
+            return Err(io::ErrorKind::TimedOut.into());
+        }
+        match UdpSocket::bind(address) {
+            Ok(socket) => return Ok(socket),
+            Err(error) if error.kind() == io::ErrorKind::AddrInUse => {
+                tokio::time::sleep_until(
+                    deadline.min(Instant::now() + Duration::from_millis(10)),
+                )
+                .await;
+            }
+            Err(error) => return Err(error),
+        }
+    }
+}
+
 struct AgentOwner {
     agent: Arc<Agent>,
     closed: bool,
@@ -245,8 +266,8 @@ impl Pair {
         // original Agent/Conn/adapter reference before proving physical rebind.
         drop(self);
         let _original_owners_released = [
-            UdpSocket::bind(original[0])?,
-            UdpSocket::bind(original[1])?,
+            rebind_original(original[0], deadline).await?,
+            rebind_original(original[1], deadline).await?,
         ];
         println!("ICE_QUIC same_socket=true physical_rebind=true opened_udp_sockets=2");
         Ok(())
@@ -519,9 +540,10 @@ async fn cancelling_mature_ice_checks_closes_the_original_candidate_socket() -> 
         );
     }
     assert!(owner.agent.get_selected_candidate_pair().is_none());
-    owner.close(Instant::now() + Duration::from_secs(5)).await?;
+    let deadline = Instant::now() + Duration::from_secs(5);
+    owner.close(deadline).await?;
     drop(owner);
-    let _original_owner_released = UdpSocket::bind(address)?;
+    let _original_owner_released = rebind_original(address, deadline).await?;
     assert_eq!(opened.load(Ordering::SeqCst), 1);
     Ok(())
 }

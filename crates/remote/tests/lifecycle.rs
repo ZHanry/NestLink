@@ -152,7 +152,10 @@ async fn input_permit_observer_publishes_only_accepted_signed_renewals() -> Resu
         .ok_or("missing accepted renewal")?;
     assert_eq!(renewed.signed_envelope(), envelope);
     assert_eq!(renewed.claims().lease_sequence, 2);
-    assert_eq!(lease.current_deadline()?, lease.input_permit_deadline(&renewed)?);
+    assert_eq!(
+        lease.current_deadline()?,
+        lease.input_permit_deadline(&renewed)?
+    );
     lease.stop(StopReason::ExplicitExit)?;
     assert!(lease.current_deadline().is_err());
     permits.changed().await?;

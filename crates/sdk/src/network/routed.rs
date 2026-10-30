@@ -159,6 +159,7 @@ async fn authorize_remote_observed(
         return Err(error);
     }
     let transport = pending.take_transport()?;
+    setup.lifecycle.carrier = Some(transport.subscribe_failure());
     // The owner is retained before business proof awaits. Cancellation closes
     // both inner and outer endpoints and fails the route closed.
     let mut owner = RemoteRouteOwner {
