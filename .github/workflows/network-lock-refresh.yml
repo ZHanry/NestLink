@@ -1,0 +1,105 @@
+name: Derive reviewed network dependency locks
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_revision:
+        description: Exact main source containing the reviewed PCP adapter manifest
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  derive-lock:
+    strategy:
+      fail-fast: false
+      matrix:
+        scope: [product, browser-native-fixture]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      EXPECTED_SOURCE: ${{ inputs.source_revision }}
+      LOCK_SCOPE: ${{ matrix.scope }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+      - name: Resolve only the reviewed manifest additions on GitHub and retain provenance
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, re, shutil, subprocess, tomllib
+
+          assert os.environ['GITHUB_REPOSITORY'] == 'ZHanry/NestLink'
+          assert os.environ['GITHUB_EVENT_NAME'] == 'workflow_dispatch'
+          assert os.environ['GITHUB_REF'] == 'refs/heads/main'
+          assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
+          expected = os.environ['EXPECTED_SOURCE']
+          assert re.fullmatch('[0-9a-f]{40}', expected)
+          assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip() == expected == os.environ['GITHUB_SHA']
+          assert subprocess.check_output(['git', 'status', '--porcelain=v1', '--untracked-files=all']) == b''
+          scope = os.environ['LOCK_SCOPE']
+          manifest = pathlib.Path({'product': 'Cargo.toml',
+                                   'browser-native-fixture': 'scripts/fixtures/browser-native-host/Cargo.toml'}[scope])
+          lock = manifest.with_name('Cargo.lock')
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / ('network-lock-' + scope)
+          output.mkdir()
+          traversal = tomllib.loads(pathlib.Path('crates/traversal/Cargo.toml').read_text())
+          assert traversal['dependencies']['crab_nat'] == '=0.8.1'
+          before_bytes = lock.read_bytes()
+          before = tomllib.loads(before_bytes.decode())['package']
+          shutil.copyfile(lock, output / 'before.lock')
+          identity = lambda item: (item['name'], item['version'], item.get('source', ''))
+          existing = {identity(item): item.get('checksum') for item in before}
+          commands, assertions, failure = [], {}, None
+          try:
+              for command in [
+                  ['cargo', 'update', '--workspace', '--manifest-path', str(manifest)],
+                  ['cargo', 'metadata', '--manifest-path', str(manifest), '--locked', '--format-version', '1', '--no-deps'],
+              ]:
+                  with (output / ('command-' + str(len(commands)) + '.log')).open('wb') as stream:
+                      result = subprocess.run(command, stdout=stream, stderr=subprocess.STDOUT, check=False)
+                  commands.append({'argv': command, 'return_code': result.returncode})
+                  assert result.returncode == 0, 'Lock command failed; review retained log'
+              after = tomllib.loads(lock.read_text())['package']
+              derived = {identity(item): item.get('checksum') for item in after}
+              crab = [item for item in after if item['name'] == 'crab_nat']
+              changed = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
+              assertions = {
+                  'only_selected_lock_changed': set(changed) <= {lock.as_posix()},
+                  'all_existing_package_identities_and_checksums_preserved': all(derived.get(key) == checksum and key in derived for key, checksum in existing.items()),
+                  'reviewed_crab_nat_exact_version_and_checksum': len(crab) == 1 and crab[0]['version'] == '0.8.1' and crab[0].get('checksum') == 'b6571f33e3d6520c5b08e54b1202836c6ebe68b950f450951804d037a875c25c',
+                  'locked_metadata_succeeded': all(item['return_code'] == 0 for item in commands),
+              }
+              assert all(assertions.values()), 'Unreviewed dependency drift or incomplete lock derivation'
+          except Exception as error:
+              failure = type(error).__name__ + ': ' + str(error)
+          finally:
+              shutil.copyfile(lock, output / 'Cargo.lock')
+              (output / 'derivation.diff').write_bytes(subprocess.check_output(['git', 'diff', '--binary', '--', str(lock)]))
+              receipt = {
+                  'schema_version': 1, 'purpose': 'reviewed-pcp-lock-derivation-only',
+                  'repository': os.environ['GITHUB_REPOSITORY'], 'source_revision': expected,
+                  'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+                  'scope': scope, 'manifest_path': manifest.as_posix(),
+                  'before_lock_sha256': hashlib.sha256(before_bytes).hexdigest(),
+                  'commands': commands, 'assertions': assertions, 'failure': failure,
+                  'product_compilation_performed': False, 'quality_or_acceptance_claimed': False,
+                  'files': [{'path': item.name, 'bytes': item.stat().st_size,
+                             'sha256': hashlib.sha256(item.read_bytes()).hexdigest()}
+                            for item in sorted(output.iterdir()) if item.is_file()],
+              }
+              (output / 'derivation-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          assert failure is None, failure
+      - name: Retain original and derived locks for local review without running a toolchain
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: network-lock-${{ matrix.scope }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/network-lock-${{ matrix.scope }}/
+          if-no-files-found: error
+          retention-days: 30

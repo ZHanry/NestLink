@@ -30,12 +30,12 @@ nestlink-media-codec.workspace = true
 nestlink-session.workspace = true
 nestlink-sdk.workspace = true
 nestlink-transport-stream.workspace = true
+reqwest.workspace = true
 prost.workspace = true
 tokio.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 if-addrs.workspace = true
-reqwest.workspace = true
 nestlink-media-codec.workspace = true
 nestlink-server = { path = "../../apps/server", version = "=0.7.0-rc.1" }
 nestlink-storage.workspace = true
