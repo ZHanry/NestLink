@@ -59,6 +59,7 @@ use nestlink_remote::{
     video::{CaptureDevice, Display, VideoController, VideoEpoch},
 };
 pub use nestlink_sdk::download_queue::{NativeDownloadQueueLimits, NativeDownloadQueueStatus};
+use nestlink_sdk::network::{LegacyConnection, LegacyEndpoint};
 use nestlink_sdk::services::{
     HttpsBackendTls, LocalServiceRuntime, LocalServiceTargetConsent, ServiceHostWait,
 };
@@ -72,7 +73,6 @@ use nestlink_sdk::{
         NativeSessionOptions, SessionEstablishError, StopReport,
     },
 };
-use nestlink_sdk::network::{LegacyConnection, LegacyEndpoint};
 use nestlink_transport_stream::Channel;
 use std::{
     collections::VecDeque,
@@ -5493,9 +5493,16 @@ async fn establish_native_session(
     }
     .map_err(map_dial_failure)?;
     let core_generation = fence.expected;
-    let result =
-        native_recovery::prove_endpoint(client, identity, &config, LegacyEndpoint::new(endpoint), options, fence, None)
-            .await?;
+    let result = native_recovery::prove_endpoint(
+        client,
+        identity,
+        &config,
+        LegacyEndpoint::new(endpoint),
+        options,
+        fence,
+        None,
+    )
+    .await?;
     key.path = result.candidate.path() as i32;
     Ok(EstablishedNativeSession {
         session: result,

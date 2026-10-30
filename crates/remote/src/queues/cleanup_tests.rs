@@ -2,12 +2,21 @@ use super::*;
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 #[tokio::test]
-async fn cancelled_and_expired_cleanup_retains_unjoined_socket_task_without_renewing_budget() -> Result {
+async fn cancelled_and_expired_cleanup_retains_unjoined_socket_task_without_renewing_budget()
+-> Result {
     let (session, clock) = super::file_disclosure_tests::active()?;
     let (_keep, stop) = watch::channel(None);
     let (_peer, stream) = tokio::io::duplex(64);
     let (read, write) = tokio::io::split(stream);
-    let mut runtime = AuthorizedConnection::new(read, write, session, nestlink_protocol::Path::Direct, clock, stop)?.into_channels();
+    let mut runtime = AuthorizedConnection::new(
+        read,
+        write,
+        session,
+        nestlink_protocol::Path::Direct,
+        clock,
+        stop,
+    )?
+    .into_channels();
     let socket = std::net::UdpSocket::bind("127.0.0.1:0")?;
     let address = socket.local_addr()?;
     let (release, blocked) = std::sync::mpsc::channel();
@@ -26,7 +35,10 @@ async fn cancelled_and_expired_cleanup_retains_unjoined_socket_task_without_rene
     runtime.cleanup_deadline = Some(original_deadline);
     let cancelled_while_pending = {
         let mut stopping = Box::pin(runtime.shutdown(StopReason::ExplicitExit));
-        std::future::poll_fn(|context| std::task::Poll::Ready(stopping.as_mut().poll(context).is_pending())).await
+        std::future::poll_fn(|context| {
+            std::task::Poll::Ready(stopping.as_mut().poll(context).is_pending())
+        })
+        .await
         // `stopping` drops here, cancelling the first wait without detaching
         // the task. Polling once avoids relying on a short scheduling timer.
     };
@@ -34,23 +46,35 @@ async fn cancelled_and_expired_cleanup_retains_unjoined_socket_task_without_rene
     assert_eq!(runtime.cleanup_deadline, Some(original_deadline));
     assert_eq!(runtime.tasks.len(), 3);
     let result = tokio::time::timeout(Duration::from_millis(250), runtime.wait_stopped()).await?;
-    assert!(matches!(result, Err(RemoteError::Io(error)) if error.kind() == io::ErrorKind::TimedOut));
+    assert!(
+        matches!(result, Err(RemoteError::Io(error)) if error.kind() == io::ErrorKind::TimedOut)
+    );
     assert_eq!(runtime.cleanup_deadline, Some(original_deadline));
     assert_eq!(runtime.tasks.len(), 3);
-    assert_eq!(std::net::UdpSocket::bind(address).err().map(|error| error.kind()), Some(io::ErrorKind::AddrInUse));
+    assert_eq!(
+        std::net::UdpSocket::bind(address)
+            .err()
+            .map(|error| error.kind()),
+        Some(io::ErrorKind::AddrInUse)
+    );
     let retry = tokio::time::timeout(Duration::from_millis(50), runtime.wait_stopped()).await?;
-    assert!(matches!(retry, Err(RemoteError::Io(error)) if error.kind() == io::ErrorKind::TimedOut));
+    assert!(
+        matches!(retry, Err(RemoteError::Io(error)) if error.kind() == io::ErrorKind::TimedOut)
+    );
     assert_eq!(runtime.cleanup_deadline, Some(original_deadline));
     release.send(())?;
     tokio::time::timeout(Duration::from_secs(1), async {
         while runtime.tasks.iter().any(|task| !task.is_finished()) {
             tokio::task::yield_now().await;
         }
-    }).await?;
+    })
+    .await?;
     // Reaping already finished handles is nonblocking, but missing the fixed
     // budget remains a failure rather than becoming a successful receipt.
     let reaped = runtime.wait_stopped().await;
-    assert!(matches!(reaped, Err(RemoteError::Io(error)) if error.kind() == io::ErrorKind::TimedOut));
+    assert!(
+        matches!(reaped, Err(RemoteError::Io(error)) if error.kind() == io::ErrorKind::TimedOut)
+    );
     assert!(runtime.tasks.is_empty());
     let rebound = std::net::UdpSocket::bind(address)?;
     drop(rebound);

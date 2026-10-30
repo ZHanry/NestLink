@@ -96,29 +96,32 @@ impl NativeEndpoint {
         }
         let lifecycle = endpoint.lifecycle.clone();
         let mut changes = receiver.clone();
-        endpoint.monitor_task = Some(MonitorTask(nestlink_transport_stream::owner::TaskOwner::new(tokio::spawn(async move {
-            loop {
-                let closed = changes.changed().await.is_err();
-                let mut state = *changes.borrow_and_update();
-                if closed {
-                    state.available = false;
-                    state.reason = Reason::Unavailable;
+        endpoint.monitor_task = Some(MonitorTask(
+            nestlink_transport_stream::owner::TaskOwner::new(tokio::spawn(async move {
+                loop {
+                    let closed = changes.changed().await.is_err();
+                    let mut state = *changes.borrow_and_update();
+                    if closed {
+                        state.available = false;
+                        state.reason = Reason::Unavailable;
+                    }
+                    // A later OS event cannot undo explicit endpoint invalidation.
+                    lifecycle.send_modify(|current| {
+                        state.generation = state.generation.max(current.generation);
+                        state.available &= current.available;
+                        *current = state;
+                    });
+                    for socket in &sockets {
+                        let generation =
+                            state.generation.max(socket.generation().saturating_add(1));
+                        let _ = socket.invalidate_network(generation);
+                    }
+                    if closed || !state.available {
+                        break;
+                    }
                 }
-                // A later OS event cannot undo explicit endpoint invalidation.
-                lifecycle.send_modify(|current| {
-                    state.generation = state.generation.max(current.generation);
-                    state.available &= current.available;
-                    *current = state;
-                });
-                for socket in &sockets {
-                    let generation = state.generation.max(socket.generation().saturating_add(1));
-                    let _ = socket.invalidate_network(generation);
-                }
-                if closed || !state.available {
-                    break;
-                }
-            }
-        }))));
+            })),
+        ));
         endpoint.monitor = Some((receiver, baseline.generation));
         endpoint.check()?;
         Ok(endpoint)

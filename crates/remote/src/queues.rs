@@ -33,8 +33,10 @@ pub trait DeliveryGuard: Send + Sync {
 /// joined; transport adapters must retain unfinished handles across cancellation.
 pub trait TransportOwner: Send + Sync {
     fn request_close(&self);
-    fn close_and_wait(&mut self, deadline: tokio::time::Instant)
-        -> Pin<Box<dyn Future<Output = io::Result<()>> + Send + '_>>;
+    fn close_and_wait(
+        &mut self,
+        deadline: tokio::time::Instant,
+    ) -> Pin<Box<dyn Future<Output = io::Result<()>> + Send + '_>>;
 }
 struct FileGuard(Arc<dyn crate::files::FileReadConsent>);
 impl DeliveryGuard for FileGuard {
@@ -83,11 +85,11 @@ pub(crate) async fn write_media_bounded<W: AsyncWrite + Unpin>(
         .map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "video send deadline exhausted"))?
 }
 #[cfg(test)]
-#[path = "queues/file_disclosure_tests.rs"]
-mod file_disclosure_tests;
-#[cfg(test)]
 #[path = "queues/cleanup_tests.rs"]
 mod cleanup_tests;
+#[cfg(test)]
+#[path = "queues/file_disclosure_tests.rs"]
+mod file_disclosure_tests;
 pub(crate) struct Queued {
     pub(crate) frame: Frame,
     pub(crate) arrived: Instant,
@@ -1018,9 +1020,17 @@ impl ChannelRuntime {
                     // every handle so a later wait can reap a finished task
                     // against this same absolute deadline, without detaching
                     // an uncooperative task or awaiting it without a budget.
-                    for pending in &self.tasks { pending.abort(); }
-                    if let Some(owner) = &self.transport_owner { owner.request_close(); }
-                    return Err(io::Error::new(io::ErrorKind::TimedOut, "transport task cleanup pending").into());
+                    for pending in &self.tasks {
+                        pending.abort();
+                    }
+                    if let Some(owner) = &self.transport_owner {
+                        owner.request_close();
+                    }
+                    return Err(io::Error::new(
+                        io::ErrorKind::TimedOut,
+                        "transport task cleanup pending",
+                    )
+                    .into());
                 }
             }
             self.tasks.remove(0);
@@ -1036,8 +1046,12 @@ impl ChannelRuntime {
         if let Some(owner) = self.transport_owner.as_mut() {
             match tokio::time::timeout_at(deadline, owner.close_and_wait(deadline)).await {
                 Ok(Ok(())) => self.transport_owner = None,
-                Ok(Err(error)) => { self.cleanup_failure.get_or_insert(error.kind()); },
-                Err(_) => { self.cleanup_failure.get_or_insert(io::ErrorKind::TimedOut); },
+                Ok(Err(error)) => {
+                    self.cleanup_failure.get_or_insert(error.kind());
+                }
+                Err(_) => {
+                    self.cleanup_failure.get_or_insert(io::ErrorKind::TimedOut);
+                }
             }
         }
         if let Some(failure) = self.cleanup_failure {

@@ -55,9 +55,59 @@ fn member_view(snapshot: &TrustedNetworkPolicySnapshot, installation: &str) -> R
 
 fn grant_view(signed: SignedNetworkGrant) -> Result<GrantView, StorageError> {
     let claims = GrantClaims::decode_canonical(&signed.claims)?;
-    if !matches!(&claims, GrantClaims::Membership(_)) { return Err(StorageError::Forbidden); }
     Ok(GrantView { schema_version: SCHEMA_VERSION, grant_id: claims.scope().grant_id.clone(),
         claims: URL_SAFE_NO_PAD.encode(signed.claims), signature: URL_SAFE_NO_PAD.encode(signed.signature) })
+}
+
+fn path_view(bundle: nestlink_storage::network_policy::NetworkRemotePathBundle) -> Result<nestlink_protocol::api::NetworkRemotePathView, StorageError> {
+    let [controller,host] = bundle.memberships;
+    Ok(nestlink_protocol::api::NetworkRemotePathView {request_id:bundle.request_id,
+        controller_membership:grant_view(controller)?,host_membership:grant_view(host)?,
+        connectivity:grant_view(bundle.connectivity)?,path:grant_view(bundle.path)?})
+}
+
+async fn member_access(state: &AppState, headers: &HeaderMap) -> Result<String, ApiError> {
+    let token = access(headers)?;
+    let check = token.clone();
+    let principal = state.db(move |s| s.authenticate(&check,now_ms()?/1000)).await?;
+    state.limit(&format!("network-path/{}",principal.session_id))?;
+    Ok(token)
+}
+
+pub(crate) async fn issue_path(State(state): State<AppState>, headers: HeaderMap,
+    Path((space,request)): Path<(String,String)>, Json(body): Json<nestlink_protocol::api::NetworkRemotePathRequest>)
+    -> Result<(StatusCode,Json<nestlink_protocol::api::NetworkRemotePathView>), ApiError> {
+    let token = member_access(&state,&headers).await?;
+    let signer = state.network_signer.clone();
+    let view = state.db(move |s| {
+        let now = now_ms()?;
+        let actor = s.authenticate(&token,now/1000)?;
+        path_view(s.issue_network_remote_path(&actor,&signer,nestlink_storage::network_policy::NetworkRemotePathIssuance {
+            space_id:space,request_id:request,request:body,
+        },now)?)
+    }).await?;
+    Ok((StatusCode::CREATED,Json(view)))
+}
+
+pub(crate) async fn read_path(State(state): State<AppState>, headers: HeaderMap,
+    Path((space,path)): Path<(String,String)>) -> Result<Json<nestlink_protocol::api::NetworkRemotePathView>, ApiError> {
+    let token = member_access(&state,&headers).await?;
+    state.db(move |s| {
+        let now = now_ms()?;
+        let actor = s.authenticate(&token,now/1000)?;
+        Ok(Json(path_view(s.network_remote_path(&actor,&space,&path,now)?)?))
+    }).await
+}
+
+pub(crate) async fn revoke_path(State(state): State<AppState>, headers: HeaderMap,
+    Path((space,path)): Path<(String,String)>) -> Result<StatusCode, ApiError> {
+    let token = member_access(&state,&headers).await?;
+    state.db(move |s| {
+        let now = now_ms()?;
+        let actor = s.authenticate(&token,now/1000)?;
+        s.revoke_network_remote_path(&actor,&space,&path,now)?;
+        Ok(StatusCode::NO_CONTENT)
+    }).await
 }
 
 pub(crate) async fn configure(State(state): State<AppState>, headers: HeaderMap,

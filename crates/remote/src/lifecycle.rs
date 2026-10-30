@@ -5,13 +5,13 @@ use nestlink_platform_network::{NetworkState, Reason};
 use nestlink_protocol::{Path, Permission};
 use nestlink_session::{Session, SessionState, StopEffects, StopReason};
 use nestlink_transport_stream::Channel;
+use nestlink_transport_stream::owner::TaskOwner;
 use std::{
     io,
     sync::{Arc, Mutex, MutexGuard, TryLockError},
     time::{Duration, Instant},
 };
 use tokio::sync::watch;
-use nestlink_transport_stream::owner::TaskOwner;
 
 /// Platform cleanup and contended session locks are synchronous. Let a
 /// multithreaded Tokio executor replace this worker while it waits; otherwise
@@ -455,10 +455,19 @@ impl LeaseControl {
             .map_err(|_| RemoteError::Stopped)? = Some(TaskOwner::new(task));
         Ok(control)
     }
-    pub(crate) async fn wait_supervisor_stopped(&self, deadline: tokio::time::Instant) -> io::Result<()> {
-        let task = self.inner.task.lock()
-            .map_err(|_| io::Error::other("lease supervisor owner poisoned"))?.clone();
-        if let Some(task) = task { task.close_and_wait(deadline).await?; }
+    pub(crate) async fn wait_supervisor_stopped(
+        &self,
+        deadline: tokio::time::Instant,
+    ) -> io::Result<()> {
+        let task = self
+            .inner
+            .task
+            .lock()
+            .map_err(|_| io::Error::other("lease supervisor owner poisoned"))?
+            .clone();
+        if let Some(task) = task {
+            task.close_and_wait(deadline).await?;
+        }
         Ok(())
     }
     pub fn subscribe_stopped(&self) -> watch::Receiver<Option<StopReport>> {

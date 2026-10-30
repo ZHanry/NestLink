@@ -18,6 +18,8 @@ mod auditing;
 mod browser_readiness;
 #[path = "control/media_authority.rs"]
 mod media_authority;
+#[path = "control/network_paths.rs"]
+mod network_paths;
 #[path = "control/quotas.rs"]
 mod quotas;
 #[path = "control/reconnection.rs"]

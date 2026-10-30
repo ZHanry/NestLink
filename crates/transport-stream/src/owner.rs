@@ -1,6 +1,10 @@
 //! Cancellation-safe receipts for existing Tokio carrier tasks.
 use std::{io, sync::Arc};
-use tokio::{sync::Mutex, task::{AbortHandle, JoinHandle}, time::Instant};
+use tokio::{
+    sync::Mutex,
+    task::{AbortHandle, JoinHandle},
+    time::Instant,
+};
 
 /// A close capability for one task, not another task or socket reader.
 /// The join handle remains owned when a caller cancels a wait.
@@ -17,7 +21,10 @@ impl TaskOwner {
     pub fn new(task: JoinHandle<()>) -> Self {
         Self {
             abort: task.abort_handle(),
-            state: Arc::new(Mutex::new(State { task: Some(task), failure: None })),
+            state: Arc::new(Mutex::new(State {
+                task: Some(task),
+                failure: None,
+            })),
         }
     }
     pub fn request_close(&self) {
@@ -26,10 +33,12 @@ impl TaskOwner {
     pub async fn close_and_wait(&self, deadline: Instant) -> io::Result<()> {
         self.request_close();
         let mut state = tokio::time::timeout_at(deadline, self.state.lock())
-            .await.map_err(|_| io::Error::from(io::ErrorKind::TimedOut))?;
+            .await
+            .map_err(|_| io::Error::from(io::ErrorKind::TimedOut))?;
         if let Some(task) = state.task.as_mut() {
             let result = tokio::time::timeout_at(deadline, task)
-                .await.map_err(|_| io::Error::from(io::ErrorKind::TimedOut))?;
+                .await
+                .map_err(|_| io::Error::from(io::ErrorKind::TimedOut))?;
             if result.is_err_and(|error| !error.is_cancelled()) {
                 state.failure = Some(io::ErrorKind::Other);
             }
@@ -47,7 +56,8 @@ mod tests {
     use super::*;
     use std::time::Duration;
     #[tokio::test]
-    async fn timeout_and_cancelled_wait_keep_the_unfinished_task_and_socket_owned() -> io::Result<()> {
+    async fn timeout_and_cancelled_wait_keep_the_unfinished_task_and_socket_owned() -> io::Result<()>
+    {
         let socket = std::net::UdpSocket::bind("127.0.0.1:0")?;
         let address = socket.local_addr()?;
         let (release, blocked) = std::sync::mpsc::channel();
@@ -62,12 +72,30 @@ mod tests {
         ready.await.map_err(io::Error::other)?;
         let owner = TaskOwner::new(task);
         let deadline = Instant::now() + Duration::from_millis(50);
-        assert_eq!(owner.close_and_wait(deadline).await.err().map(|error| error.kind()), Some(io::ErrorKind::TimedOut));
-        assert_eq!(std::net::UdpSocket::bind(address).err().map(|error| error.kind()), Some(io::ErrorKind::AddrInUse));
-        let cancelled = tokio::time::timeout(Duration::from_millis(10), owner.close_and_wait(Instant::now() + Duration::from_secs(2))).await;
+        assert_eq!(
+            owner
+                .close_and_wait(deadline)
+                .await
+                .err()
+                .map(|error| error.kind()),
+            Some(io::ErrorKind::TimedOut)
+        );
+        assert_eq!(
+            std::net::UdpSocket::bind(address)
+                .err()
+                .map(|error| error.kind()),
+            Some(io::ErrorKind::AddrInUse)
+        );
+        let cancelled = tokio::time::timeout(
+            Duration::from_millis(10),
+            owner.close_and_wait(Instant::now() + Duration::from_secs(2)),
+        )
+        .await;
         assert!(cancelled.is_err());
         release.send(()).map_err(io::Error::other)?;
-        owner.close_and_wait(Instant::now() + Duration::from_secs(2)).await?;
+        owner
+            .close_and_wait(Instant::now() + Duration::from_secs(2))
+            .await?;
         let rebound = std::net::UdpSocket::bind(address)?;
         drop(rebound);
         Ok(())
@@ -84,8 +112,15 @@ mod tests {
         });
         ready.await.map_err(io::Error::other)?;
         let owner = TaskOwner::new(task);
-        assert_eq!(std::net::UdpSocket::bind(address).err().map(|error| error.kind()), Some(io::ErrorKind::AddrInUse));
-        owner.close_and_wait(Instant::now() + Duration::from_secs(1)).await?;
+        assert_eq!(
+            std::net::UdpSocket::bind(address)
+                .err()
+                .map(|error| error.kind()),
+            Some(io::ErrorKind::AddrInUse)
+        );
+        owner
+            .close_and_wait(Instant::now() + Duration::from_secs(1))
+            .await?;
         let rebound = std::net::UdpSocket::bind(address)?;
         drop(rebound);
         Ok(())

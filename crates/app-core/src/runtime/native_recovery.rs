@@ -290,41 +290,42 @@ pub(super) async fn prove_endpoint(
 ) -> Result<LegacyConnection, Failure> {
     fence.check()?;
     let (cancel_sender, cancel_receiver) = watch::channel(false);
-    let media =
-        if nestlink_protocol::media_authority::permit_formats(endpoint.native().verified_permit().claims())
-            .map_err(|_| Failure::local(FailureKind::Trust))?
-            .is_some()
-        {
-            let provider = config
-                .media_provider
-                .as_ref()
-                .ok_or_else(|| Failure::local(FailureKind::NativeSessionUnavailable))?;
-            let claims = endpoint.native().verified_permit().claims();
-            let direction = if identity.device_id == claims.controller_device_id {
-                nestlink_protocol::media_authority::MediaDirection::Decode
-            } else {
-                nestlink_protocol::media_authority::MediaDirection::Encode
-            };
-            let local = provider
-                .publish(&client.sdk, identity, direction, &fence)
-                .await
-                .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?;
-            fence.check()?;
-            let frozen = client
-                .sdk
-                .remote_media_scope(&claims.session_id)
-                .await
-                .map_err(Failure::from)?
-                .ok_or_else(|| Failure::local(FailureKind::Trust))?;
-            fence.check()?;
-            Some(nestlink_sdk::native::NativeMediaEvidence {
-                frozen,
-                local,
-                internal_candidate: config.internal_software_media_candidate.clone(),
-            })
+    let media = if nestlink_protocol::media_authority::permit_formats(
+        endpoint.native().verified_permit().claims(),
+    )
+    .map_err(|_| Failure::local(FailureKind::Trust))?
+    .is_some()
+    {
+        let provider = config
+            .media_provider
+            .as_ref()
+            .ok_or_else(|| Failure::local(FailureKind::NativeSessionUnavailable))?;
+        let claims = endpoint.native().verified_permit().claims();
+        let direction = if identity.device_id == claims.controller_device_id {
+            nestlink_protocol::media_authority::MediaDirection::Decode
         } else {
-            None
+            nestlink_protocol::media_authority::MediaDirection::Encode
         };
+        let local = provider
+            .publish(&client.sdk, identity, direction, &fence)
+            .await
+            .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?;
+        fence.check()?;
+        let frozen = client
+            .sdk
+            .remote_media_scope(&claims.session_id)
+            .await
+            .map_err(Failure::from)?
+            .ok_or_else(|| Failure::local(FailureKind::Trust))?;
+        fence.check()?;
+        Some(nestlink_sdk::native::NativeMediaEvidence {
+            frozen,
+            local,
+            internal_candidate: config.internal_software_media_candidate.clone(),
+        })
+    } else {
+        None
+    };
     let establish = endpoint.establish_with_media(
         &client.sdk,
         identity,

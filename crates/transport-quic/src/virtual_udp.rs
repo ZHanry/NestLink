@@ -4,6 +4,7 @@ use nestlink_protocol::{
     RELAY_UDP_AGE_MS, RELAY_UDP_FRAGMENT_BYTES, RELAY_UDP_PACKET_BYTES, RELAY_UDP_PENDING_PACKETS,
     relay_datagram::{self, HEADER},
 };
+use nestlink_transport_stream::owner::TaskOwner;
 use quinn::{
     AsyncUdpSocket, UdpPoller,
     udp::{RecvMeta, Transmit},
@@ -19,7 +20,6 @@ use std::{
     time::{Duration, Instant},
 };
 use tokio::{sync::mpsc, time::Sleep};
-use nestlink_transport_stream::owner::TaskOwner;
 
 const WINDOW: u64 = 64;
 #[derive(Debug, PartialEq, Eq)]

@@ -320,7 +320,12 @@ async fn sdk_authorization_owns_quic_channels_and_original_network_binding() -> 
     tokio::time::timeout(Duration::from_secs(2), h.wait_stopped()).await??;
     let rebound = std::net::UdpSocket::bind(controller_address)?;
     drop(rebound);
-    assert!(c.channels.send(Channel::Video, b"stale generation").await.is_err());
+    assert!(
+        c.channels
+            .send(Channel::Video, b"stale generation")
+            .await
+            .is_err()
+    );
     assert!(c.into_stopped_parts().is_ok());
     Ok(())
 }

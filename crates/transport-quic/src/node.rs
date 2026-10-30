@@ -132,9 +132,15 @@ impl Carrier {
         self.failure.subscribe()
     }
     pub fn request_close(&self) {
-        if let Some(inner) = &self.inner { inner.close(0u32.into(), b"QUIC carrier stopping"); }
-        if let Some(outer) = &self.outer { outer.close(0u32.into(), b"QUIC carrier stopping"); }
-        if let Some(endpoint) = &self.endpoint { endpoint.close(0u32.into(), b"QUIC carrier stopping"); }
+        if let Some(inner) = &self.inner {
+            inner.close(0u32.into(), b"QUIC carrier stopping");
+        }
+        if let Some(outer) = &self.outer {
+            outer.close(0u32.into(), b"QUIC carrier stopping");
+        }
+        if let Some(endpoint) = &self.endpoint {
+            endpoint.close(0u32.into(), b"QUIC carrier stopping");
+        }
         self.watcher.request_close();
         self.receiver.request_close();
     }
@@ -145,14 +151,16 @@ impl Carrier {
         self.watcher.close_and_wait(deadline).await?;
         self.receiver.close_and_wait(deadline).await?;
         if let Some(endpoint) = &self.endpoint {
-            tokio::time::timeout_at(deadline, endpoint.wait_idle()).await
+            tokio::time::timeout_at(deadline, endpoint.wait_idle())
+                .await
                 .map_err(|_| io::Error::from(io::ErrorKind::TimedOut))?;
         }
         drop(self.inner.take());
         drop(self.outer.take());
         drop(self.endpoint.take());
         if let Some(released) = self.released.as_mut() {
-            tokio::time::timeout_at(deadline, released).await
+            tokio::time::timeout_at(deadline, released)
+                .await
                 .map_err(|_| io::Error::from(io::ErrorKind::TimedOut))?
                 .map_err(|_| io::Error::other("relay UDP release was not confirmed"))?;
             self.released = None;
@@ -303,7 +311,14 @@ pub async fn connect_at(
         };
         cleanup.inner = None;
         cleanup.outer = None;
-        let carrier = Carrier::new(&connection, carrier_connection, endpoint.clone(), receiver, released, socket_failure);
+        let carrier = Carrier::new(
+            &connection,
+            carrier_connection,
+            endpoint.clone(),
+            receiver,
+            released,
+            socket_failure,
+        );
         Ok(Connected {
             connection,
             endpoint,

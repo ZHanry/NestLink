@@ -326,7 +326,9 @@ pub fn router(state: AppState) -> Router {
         )
         .route(
             "/api/v3/network/spaces/{space}/members/{installation}",
-            get(network_policy::member).put(network_policy::set_member).delete(network_policy::revoke_member),
+            get(network_policy::member)
+                .put(network_policy::set_member)
+                .delete(network_policy::revoke_member),
         )
         .route(
             "/api/v3/network/spaces/{space}/members/{installation}/grants",
@@ -335,6 +337,14 @@ pub fn router(state: AppState) -> Router {
         .route(
             "/api/v3/network/spaces/{space}/grants/{grant}",
             get(network_policy::read_grant).delete(network_policy::revoke_grant),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/remote/{request}/paths",
+            post(network_policy::issue_path),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/paths/{path}",
+            get(network_policy::read_path).delete(network_policy::revoke_path),
         )
         .route("/api/v3/relay/quota", get(quotas::get).put(quotas::set))
         .route("/api/v3/relay/usage", get(quotas::usage))

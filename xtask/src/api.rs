@@ -135,6 +135,8 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         NetworkPolicyView,
         NetworkMemberView,
         NetworkGrantView,
+        NetworkRemotePathRequest,
+        NetworkRemotePathView,
         NodeUsageQuery,
         NodeUsageView,
         NodeUsagePage,

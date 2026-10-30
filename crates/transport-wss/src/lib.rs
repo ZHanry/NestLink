@@ -4,8 +4,8 @@ use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use futures_util::{SinkExt, StreamExt};
 use nestlink_identity::{InstallationIdentity, VerifiedPermit, relay_transcript};
 use nestlink_protocol::api::{RelayChallenge, RelayHello, RelayReady};
-use nestlink_transport_stream::tls;
 use nestlink_transport_stream::owner::TaskOwner;
+use nestlink_transport_stream::tls;
 use serde::de::DeserializeOwned;
 use std::{
     io,
@@ -158,7 +158,11 @@ fn bridge(socket: Socket) -> ByteStream {
             *failure = result.err().map(|error| error.kind());
         }
     });
-    ByteStream { io, pump: TaskOwner::new(pump), failure }
+    ByteStream {
+        io,
+        pump: TaskOwner::new(pump),
+        failure,
+    }
 }
 fn carrier_error(error: tokio_tungstenite::tungstenite::Error) -> io::Error {
     use tokio_tungstenite::tungstenite::Error;
@@ -410,7 +414,8 @@ async fn secure(
         .unwrap_or(Err(Error::Timeout));
     if result.is_err() {
         pump.close_and_wait(tokio::time::Instant::now() + Duration::from_secs(2))
-            .await.map_err(Error::from)?;
+            .await
+            .map_err(Error::from)?;
     }
     result
 }
@@ -437,10 +442,14 @@ mod carrier_tests {
             let carrier = bridge(socket);
             let pump = carrier.close_owner();
             drop(carrier);
-            pump.close_and_wait(tokio::time::Instant::now() + Duration::from_secs(1)).await?;
+            pump.close_and_wait(tokio::time::Instant::now() + Duration::from_secs(1))
+                .await?;
             Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
         };
-        tokio::time::timeout(Duration::from_secs(3), async { tokio::try_join!(server, client) }).await??;
+        tokio::time::timeout(Duration::from_secs(3), async {
+            tokio::try_join!(server, client)
+        })
+        .await??;
         Ok(())
     }
 

@@ -24,9 +24,17 @@ pub(crate) fn client(address: SocketAddr) -> io::Result<(Endpoint, oneshot::Rece
 
 /// Reuse the service carrier's physical socket/poller receipt for discovery
 /// and node carriers. The caller transfers its original inner reference.
-pub(crate) fn tracked(inner: Arc<dyn AsyncUdpSocket>) -> (Arc<dyn AsyncUdpSocket>, oneshot::Receiver<()>) {
+pub(crate) fn tracked(
+    inner: Arc<dyn AsyncUdpSocket>,
+) -> (Arc<dyn AsyncUdpSocket>, oneshot::Receiver<()>) {
     let (released, completion) = oneshot::channel();
-    (Arc::new(TrackedSocket { inner, _release: Release(Some(released)) }), completion)
+    (
+        Arc::new(TrackedSocket {
+            inner,
+            _release: Release(Some(released)),
+        }),
+        completion,
+    )
 }
 
 pub(super) async fn wait_released(completion: oneshot::Receiver<()>) -> io::Result<()> {

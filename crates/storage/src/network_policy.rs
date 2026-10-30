@@ -14,6 +14,8 @@ use nestlink_protocol::network::{
 };
 use rusqlite::{Connection, OptionalExtension, Transaction, TransactionBehavior, params};
 use std::collections::{BTreeMap, BTreeSet};
+mod remote_paths;
+pub use remote_paths::{NetworkRemotePathBundle, NetworkRemotePathIssuance};
 
 pub const MAX_NETWORK_MEMBERS: usize = 4096;
 pub const MAX_CURRENT_NETWORK_GRANTS: usize = 65_536;
@@ -302,6 +304,7 @@ impl Store {
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
         self.audit_admin(actor, checked_seconds(now_ms)?)?;
         let snapshot = read_snapshot(&tx, &request.space_id, now_ms)?;
+        remote_paths::grant_id_available(&tx, &request.space_id, &request.grant_id)?;
         let member = snapshot
             .members
             .get(&request.installation_id)
@@ -582,6 +585,14 @@ fn read_snapshot(
         {
             revoked_grant_ids.insert(id);
         }
+    }
+    let mut paths = connection.prepare("SELECT connectivity_grant_id,path_grant_id FROM network_remote_paths WHERE space_id=?1 AND policy_epoch=?2 AND expires_at_ms>?3 AND revoked=1 LIMIT ?4")?;
+    for (count, row) in paths.query_map(params![space_id,policy_epoch,now_ms,MAX_CURRENT_NETWORK_GRANTS+1],
+        |r| Ok((r.get::<_,String>(0)?,r.get::<_,String>(1)?)))?.enumerate() {
+        if count >= MAX_CURRENT_NETWORK_GRANTS { return Err(StorageError::RateLimited); }
+        let (connectivity, path) = row?;
+        revoked_grant_ids.insert(connectivity);
+        revoked_grant_ids.insert(path);
     }
     Ok(TrustedNetworkPolicySnapshot {
         authority_key,

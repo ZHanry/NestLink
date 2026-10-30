@@ -80,7 +80,10 @@ impl DiscoverySocket {
     /// Only the endpoint's unique close owner takes the physical release
     /// receipt; socket and writable-poller clones must all drop before it fires.
     pub fn take_release_receipt(&self) -> io::Result<oneshot::Receiver<()>> {
-        self.released.lock().map_err(|_| failure())?.take()
+        self.released
+            .lock()
+            .map_err(|_| failure())?
+            .take()
             .ok_or_else(|| io::Error::other("UDP release receipt already owned"))
     }
     pub fn generation(&self) -> u64 {

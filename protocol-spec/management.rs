@@ -60,6 +60,25 @@ pub struct NetworkGrantView {
     pub claims: String,
     pub signature: String,
 }
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkRemotePathRequest {
+    pub connectivity_grant_id: String,
+    pub path_grant_id: String,
+    pub controller_membership_grant_id: String,
+    pub host_membership_grant_id: String,
+    pub expected_policy_epoch: u64,
+    pub expires_at_unix_ms: u64,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkRemotePathView {
+    pub request_id: String,
+    pub controller_membership: NetworkGrantView,
+    pub host_membership: NetworkGrantView,
+    pub connectivity: NetworkGrantView,
+    pub path: NetworkGrantView,
+}
 
 /// Discovery inputs supplied by the authenticated, pinned deployment. Local
 /// private-network consent is deliberately absent from this response.

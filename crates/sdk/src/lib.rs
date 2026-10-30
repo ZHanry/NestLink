@@ -22,6 +22,7 @@ use http_wasm::request;
 use url::Url;
 mod diagnostics;
 mod media_authority;
+pub mod network_management;
 
 #[derive(Debug, thiserror::Error)]
 pub enum SdkError {
@@ -127,13 +128,13 @@ pub mod files;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod native;
 #[cfg(not(target_arch = "wasm32"))]
-pub mod network;
-#[cfg(not(target_arch = "wasm32"))]
 pub mod native_recovery;
 #[cfg(not(target_arch = "wasm32"))]
 mod native_relay;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod native_renewal;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod network;
 #[cfg(not(target_arch = "wasm32"))]
 mod node_relay;
 #[cfg(not(target_arch = "wasm32"))]
