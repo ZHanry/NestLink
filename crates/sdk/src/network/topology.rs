@@ -1,15 +1,14 @@
 //! Typed topology management. These envelopes remain observations or explicit
 //! publication credentials and confer no forwarding or business permission.
 use crate::{Sdk, SdkError};
-use reqwest::Method;
 pub use nestlink_protocol::api::{
     NetworkTopologyPublisherRequest as TopologyPublisherRequest,
     NetworkTopologyQuery as TopologyQuery,
 };
 pub use nestlink_protocol::network_topology::{
-    SignedTopologyPublisher as TopologyPublisherView,
-    SignedTopologyUpdate as TopologyUpdateView,
+    SignedTopologyPublisher as TopologyPublisherView, SignedTopologyUpdate as TopologyUpdateView,
 };
+use reqwest::Method;
 
 fn base(space: &str) -> Result<String, SdkError> {
     if !nestlink_protocol::valid_id(space) {
@@ -71,7 +70,11 @@ impl Sdk {
         space: &str,
         query: TopologyQuery,
     ) -> Result<TopologyUpdateView, SdkError> {
-        self.required(Method::POST, &format!("{}/query", base(space)?), Some(&query))
-            .await
+        self.required(
+            Method::POST,
+            &format!("{}/query", base(space)?),
+            Some(&query),
+        )
+        .await
     }
 }

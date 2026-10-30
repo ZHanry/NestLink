@@ -108,7 +108,12 @@ fn verified_publisher(
     let claims = TopologyPublisherClaims::decode_canonical(&signed.claims)?;
     let exports = super::route_exports::for_publisher(store, snapshot, &claims)?;
     Ok(verify_topology_publisher(
-        signed, &snapshot.verification(), node_id, &current.key, &current.incarnation, &exports,
+        signed,
+        &snapshot.verification(),
+        node_id,
+        &current.key,
+        &current.incarnation,
+        &exports,
     )?)
 }
 
@@ -195,7 +200,8 @@ pub(super) fn current_advertisement(
     ).optional()?;
     let (publisher_id, claims, signature) = row.ok_or(StorageError::Forbidden)?;
     let publisher = verified_publisher(
-        store, snapshot,
+        store,
+        snapshot,
         &publisher(&store.connection, &snapshot.space_id, &publisher_id)?,
         node_id,
         &current,
@@ -262,9 +268,19 @@ impl Store {
             return Err(StorageError::RateLimited);
         }
         let current = node(self, node_id, now)?;
-        let exports = super::route_exports::for_ids(self, &snapshot, node_id, &request.route_export_grant_ids)?;
-        if exports.iter().any(|grant| request.expires_at_ms > grant.claims().scope().expires_at_ms) {
-            return Err(StorageError::Invalid("publisher lifetime exceeds RouteExport"));
+        let exports = super::route_exports::for_ids(
+            self,
+            &snapshot,
+            node_id,
+            &request.route_export_grant_ids,
+        )?;
+        if exports
+            .iter()
+            .any(|grant| request.expires_at_ms > grant.claims().scope().expires_at_ms)
+        {
+            return Err(StorageError::Invalid(
+                "publisher lifetime exceeds RouteExport",
+            ));
         }
         let mut allowed_neighbors = Vec::new();
         for id in &request.allowed_node_ids {
@@ -373,12 +389,8 @@ impl Store {
         let id: String = tx.query_row("SELECT publisher_id FROM network_topology_publishers WHERE space_id=?1 AND node_id=?2 AND revoked=0",params![space,node_id],|r|r.get(0)).optional()?.ok_or(StorageError::Forbidden)?;
         let publisher_signed = publisher(&tx, space, &id)?;
         let context = snapshot.verification();
-        let verified_publisher = verified_publisher(
-            self, &snapshot,
-            &publisher_signed,
-            node_id,
-            &current,
-        )?;
+        let verified_publisher =
+            verified_publisher(self, &snapshot, &publisher_signed, node_id, &current)?;
         // Authenticate the report before reading other publishers or verifying
         // their signatures. An unauthenticated request cannot trigger a graph
         // scan. The durable head below adds the sequence fence to this proof.
@@ -500,12 +512,8 @@ impl Store {
                 }
                 let current = node(self, &node_id, now)?;
                 let signed_publisher = publisher(&tx, space, &publisher_id)?;
-                let verified = verified_publisher(
-                    self, &snapshot,
-                    &signed_publisher,
-                    &node_id,
-                    &current,
-                )?;
+                let verified =
+                    verified_publisher(self, &snapshot, &signed_publisher, &node_id, &current)?;
                 if verified.digest() != ad.report.publisher_digest
                     || current.incarnation != ad.report.incarnation
                     || ad.report.policy_epoch != snapshot.policy_epoch

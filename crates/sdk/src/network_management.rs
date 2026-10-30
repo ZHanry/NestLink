@@ -64,22 +64,51 @@ impl Sdk {
     /// Delegate only manager-approved publication prefixes to a registered node.
     /// The returned envelope still needs pinned authority verification.
     pub async fn issue_network_route_export(
-        &self, space: &str, node: &str, request: NetworkRouteExportRequest,
-    ) -> Result<NetworkGrantView,SdkError> {
-        if !valid_id(node) { return Err(SdkError::Invalid); }
-        self.required(Method::POST,&format!("{}/route-exports/{node}",base(space)?),Some(&request)).await
+        &self,
+        space: &str,
+        node: &str,
+        request: NetworkRouteExportRequest,
+    ) -> Result<NetworkGrantView, SdkError> {
+        if !valid_id(node) {
+            return Err(SdkError::Invalid);
+        }
+        self.required(
+            Method::POST,
+            &format!("{}/route-exports/{node}", base(space)?),
+            Some(&request),
+        )
+        .await
     }
     pub async fn network_route_export(
-        &self, space: &str, id: &str,
-    ) -> Result<NetworkGrantView,SdkError> {
-        if !valid_id(id) { return Err(SdkError::Invalid); }
-        self.required(Method::GET,&format!("{}/route-export-grants/{id}",base(space)?),None::<&()>).await
+        &self,
+        space: &str,
+        id: &str,
+    ) -> Result<NetworkGrantView, SdkError> {
+        if !valid_id(id) {
+            return Err(SdkError::Invalid);
+        }
+        self.required(
+            Method::GET,
+            &format!("{}/route-export-grants/{id}", base(space)?),
+            None::<&()>,
+        )
+        .await
     }
     pub async fn revoke_network_route_export(
-        &self, space: &str, id: &str, expected_revision: u64,
-    ) -> Result<NetworkPolicyView,SdkError> {
-        if !valid_id(id) { return Err(SdkError::Invalid); }
-        self.required(Method::DELETE,&format!("{}/route-export-grants/{id}",base(space)?),Some(&NetworkRevokeGrantRequest {expected_revision})).await
+        &self,
+        space: &str,
+        id: &str,
+        expected_revision: u64,
+    ) -> Result<NetworkPolicyView, SdkError> {
+        if !valid_id(id) {
+            return Err(SdkError::Invalid);
+        }
+        self.required(
+            Method::DELETE,
+            &format!("{}/route-export-grants/{id}", base(space)?),
+            Some(&NetworkRevokeGrantRequest { expected_revision }),
+        )
+        .await
     }
     pub async fn network_policy(&self, space: &str) -> Result<NetworkPolicyView, SdkError> {
         self.required(

@@ -63,12 +63,12 @@ pub(super) async fn outgoing(
     for attempt in 0..3 {
         if Deadline::now()>=deadline { return Err(failed()); }
         let current=control.network_chain_route(&route.allocation_id).map_err(|_|failed())?;
-        if current.binding!=route.binding || current.neighbor_allocation_id!=route.neighbor_allocation_id
-            || current.neighbor_node.node_id!=route.neighbor_node.node_id
-            || current.neighbor_node.revision!=route.neighbor_node.revision
-            || current.neighbor_node.endpoints!=route.neighbor_node.endpoints
-        { return Err(failed()); }
-        match tokio::time::timeout_at(deadline,dial(&route,control.clone(),hub.clone(),selector.clone(),endpoint.clone(),identity.clone())).await {
+        if !same_route(&current,&route) { return Err(failed()); }
+        let result=tokio::select! {biased;
+            _=route_stopped(&control,&route)=>return Err(failed()),
+            result=tokio::time::timeout_at(deadline,dial(&route,control.clone(),hub.clone(),selector.clone(),endpoint.clone(),identity.clone()))=>result,
+        };
+        match result {
             Ok(Ok(())) => return Ok(()),
             // Resource polls are independent on both nodes. Space the bounded
             // attempts across their existing poll/HTTP window, rather than
@@ -79,15 +79,44 @@ pub(super) async fn outgoing(
     }
     Err(failed())
 }
+fn same_route(current:&NetworkChainRoute,original:&NetworkChainRoute)->bool {
+    current.binding==original.binding && current.allocation_id==original.allocation_id
+        && current.neighbor_allocation_id==original.neighbor_allocation_id
+        && current.neighbor_node.node_id==original.neighbor_node.node_id
+        && current.neighbor_node.revision==original.neighbor_node.revision
+        && current.neighbor_node.endpoints==original.neighbor_node.endpoints
+}
+async fn route_stopped(control:&NodeControl,route:&NetworkChainRoute) {
+    loop {
+        if !control.network_chain_route(&route.allocation_id).is_ok_and(|current|same_route(&current,route)) {return;}
+        tokio::time::sleep(Duration::from_millis(25)).await;
+    }
+}
+async fn address(uri:&url::Url,allow_loopback:bool,ipv4:bool)->io::Result<std::net::SocketAddr> {
+    let port=uri.port().ok_or_else(failed)?;
+    let addresses=match uri.host().ok_or_else(failed)? {
+        url::Host::Ipv4(ip)=>vec![std::net::SocketAddr::new(ip.into(),port)],
+        url::Host::Ipv6(ip)=>vec![std::net::SocketAddr::new(ip.into(),port)],
+        url::Host::Domain(domain)=>tokio::time::timeout(Duration::from_millis(700),tokio::net::lookup_host((domain,port)))
+            .await.map_err(io::Error::other)??.take(33).collect(),
+    };
+    select_address(addresses,allow_loopback,ipv4)
+}
+fn select_address(mut addresses:Vec<std::net::SocketAddr>,allow_loopback:bool,ipv4:bool)->io::Result<std::net::SocketAddr> {
+    if addresses.len()>32 {return Err(failed());}
+    addresses.sort_unstable();addresses.dedup();
+    if addresses.is_empty() || addresses.len()>32 || addresses.iter().any(|address| {
+        let ip=address.ip().to_canonical();
+        ip.is_unspecified() || ip.is_multicast() || (!allow_loopback && ip.is_loopback())
+    }) {return Err(failed());}
+    addresses.into_iter().find(|address|address.is_ipv4()==ipv4).ok_or_else(failed)
+}
 async fn dial(
     route:&NetworkChainRoute,control:Arc<NodeControl>,hub:Arc<Hub>,selector:Arc<RelaySelector>,
     endpoint:quinn::Endpoint,identity:Arc<NodeIdentity>,
 ) -> io::Result<()> {
     let uri=url::Url::parse(route.neighbor_node.endpoints.quic_uri.as_deref().ok_or_else(failed)?).map_err(|_|failed())?;
-    let host=uri.host_str().ok_or_else(failed)?;
-    let port=uri.port().ok_or_else(failed)?;
-    let address=tokio::time::timeout(Duration::from_millis(700),tokio::net::lookup_host((host,port)))
-        .await.map_err(io::Error::other)??.next().ok_or_else(failed)?;
+    let address=address(&uri,route.neighbor_node.endpoints.allow_loopback,endpoint.local_addr()?.is_ipv4()).await?;
     let _slot=selector.socket(address.ip())?;
     let remote=route.binding.chain.relays[1];
     if route.binding.relay!=route.binding.chain.relays[0] || route.binding.relay!=PeerId::from_public_key(&identity.public_key()) { return Err(failed()); }
@@ -117,6 +146,33 @@ async fn dial(
         NetworkChainNeighborProof {public_key:&key,signature:&signature},&returning).map_err(|_|failed())?;
     if candidate.network_chain()!=Some(route.binding) { return Err(failed()); }
     activate(connection,(write,read),candidate,hub,selector,endpoint,route.binding,false).await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[tokio::test]
+    async fn typed_ipv6_literal_and_original_socket_family_select_the_fixed_neighbor()->io::Result<()> {
+        let uri=url::Url::parse("quic://[::1]:28744").map_err(io::Error::other)?;
+        assert_eq!(address(&uri,true,false).await?,"[::1]:28744".parse::<std::net::SocketAddr>().map_err(io::Error::other)?);
+        assert!(address(&uri,true,true).await.is_err());
+        let ipv4="127.0.0.1:28744".parse().map_err(io::Error::other)?;
+        let ipv6="[::1]:28744".parse().map_err(io::Error::other)?;
+        assert_eq!(select_address(vec![ipv6,ipv4],true,true)?,ipv4);
+        assert_eq!(select_address(vec![ipv4,ipv6],true,false)?,ipv6);
+        Ok(())
+    }
+    #[test]
+    fn every_dns_answer_obeys_the_original_endpoint_loopback_and_address_bounds()->io::Result<()> {
+        let ordinary="192.0.2.2:28744".parse().map_err(io::Error::other)?;
+        for rejected in ["127.0.0.1:28744","[::ffff:127.0.0.1]:28744","0.0.0.0:28744","224.0.0.1:28744"] {
+            assert!(select_address(vec![ordinary,rejected.parse().map_err(io::Error::other)?],false,true).is_err());
+        }
+        let excess=(1..=33).map(|last|std::net::SocketAddr::from(([192,0,2,last],28744))).collect();
+        assert!(select_address(excess,false,true).is_err());
+        assert_eq!(select_address(vec![ordinary],false,true)?,ordinary);
+        Ok(())
+    }
 }
 
 #[allow(clippy::too_many_arguments)]

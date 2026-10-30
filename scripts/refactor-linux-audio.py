@@ -43,6 +43,12 @@ def main():
         result = subprocess.run(["cargo", "test", "--locked", "-p", "nestlink-platform-audio", "--lib", "--no-run", "--message-format=json"],
                                 cwd=root, stdout=subprocess.PIPE, check=False)
         if result.returncode:
+            for line in result.stdout.splitlines():
+                entry = json.loads(line)
+                if entry.get("reason") == "compiler-message":
+                    diagnostic = entry.get("message", {}).get("rendered")
+                    if diagnostic:
+                        print(diagnostic, file=sys.stderr, end="")
             raise SystemExit(result.returncode)
         entries = [json.loads(line) for line in result.stdout.splitlines()]
         binaries = [entry["executable"] for entry in entries if entry.get("reason") == "compiler-artifact"

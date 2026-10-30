@@ -7,7 +7,7 @@ use nestlink_protocol::{
 };
 
 pub struct NetworkChainNeighborProof<'a> {
-    pub public_key: &'a [u8;32],
+    pub public_key: &'a [u8; 32],
     pub signature: &'a [u8],
 }
 
@@ -30,11 +30,16 @@ impl nestlink_transport_stream::tls::CurrentClientPins for NodeControl {
             state.resources.expire(now);
             Ok(state.resources.snapshot.as_ref().is_some_and(|snapshot| {
                 snapshot.entries.values().any(|entry| {
-                    now.monotonic_ms < entry.deadline && match entry.network {
-                        Some(NetworkBinding::Chain(route)) => route.neighbors().iter().any(|peer| &peer.0 == fingerprint),
-                        _ => entry.claims.controller_key_sha256.as_slice() == fingerprint
-                            || entry.claims.host_key_sha256.as_slice() == fingerprint,
-                    }
+                    now.monotonic_ms < entry.deadline
+                        && match entry.network {
+                            Some(NetworkBinding::Chain(route)) => {
+                                route.neighbors().iter().any(|peer| &peer.0 == fingerprint)
+                            }
+                            _ => {
+                                entry.claims.controller_key_sha256.as_slice() == fingerprint
+                                    || entry.claims.host_key_sha256.as_slice() == fingerprint
+                            }
+                        }
                 })
             }))
         })()
@@ -67,7 +72,10 @@ impl NodeControl {
                 continue;
             }
             let allocation = resource.allocation.as_ref().ok_or(Error::Control)?;
-            let entry = snapshot.entries.get(&allocation.allocation_id).ok_or(Error::Control)?;
+            let entry = snapshot
+                .entries
+                .get(&allocation.allocation_id)
+                .ok_or(Error::Control)?;
             let Some(NetworkBinding::Chain(binding)) = entry.network else {
                 return Err(Error::Control);
             };
@@ -100,10 +108,16 @@ impl NodeControl {
             let view: NetworkRemoteRelayChainView =
                 serde_json::from_slice(&resource.chain_bundle_json)
                     .map_err(|_| error(ErrorCode::InvalidMessage))?;
-            let local = binding.chain.relays.iter()
+            let local = binding
+                .chain
+                .relays
+                .iter()
                 .position(|relay| *relay == binding.relay)
                 .ok_or_else(|| error(ErrorCode::IdentityMismatch))?;
-            let transits = [chain_transit(&view.transits[0])?, chain_transit(&view.transits[1])?];
+            let transits = [
+                chain_transit(&view.transits[0])?,
+                chain_transit(&view.transits[1])?,
+            ];
             let remote = local ^ 1;
             if view.nodes[local].node_id != allocation.node_id
                 || view.nodes[local].revision != allocation.node_endpoint_revision
@@ -114,7 +128,10 @@ impl NodeControl {
                 || transits[remote].scope.grant_id == allocation.allocation_id
                 || transits[0].route_id != view.route_id
                 || transits[1].route_id != view.route_id
-                || transits[0].scope.expires_at_ms.min(transits[1].scope.expires_at_ms)
+                || transits[0]
+                    .scope
+                    .expires_at_ms
+                    .min(transits[1].scope.expires_at_ms)
                     != binding.chain.expires_at_ms
             {
                 return Err(error(ErrorCode::IdentityMismatch).into());
@@ -142,34 +159,68 @@ impl NodeControl {
     /// Both endpoints and relays prove the exact current neighbor key on this
     /// TLS socket. A business endpoint cannot occupy the other relay's slot.
     pub fn prepare_network_chain_neighbor(
-        &self, allocation_id: &str, binding: &[u8;32], tls_peer: &[u8;32],
-        proof: NetworkChainNeighborProof<'_>, challenge: &[u8;32],
-    ) -> Result<RelayEndpointCandidate,Error> {
+        &self,
+        allocation_id: &str,
+        binding: &[u8; 32],
+        tls_peer: &[u8; 32],
+        proof: NetworkChainNeighborProof<'_>,
+        challenge: &[u8; 32],
+    ) -> Result<RelayEndpointCandidate, Error> {
         let mut state = self.state.lock().map_err(|_| Error::Control)?;
-        if !state.ready || *self.stopped.borrow() { return Err(Error::Control); }
+        if !state.ready || *self.stopped.borrow() {
+            return Err(Error::Control);
+        }
         let now = sample(self.started)?;
-        let lease = state.gate.authorize_forwarding(NodeRole::NodeRelay,false,now)?.clone();
+        let lease = state
+            .gate
+            .authorize_forwarding(NodeRole::NodeRelay, false, now)?
+            .clone();
         state.resources.expire(now);
         let snapshot = state.resources.snapshot.as_ref().ok_or(Error::Control)?;
         let entry = snapshot.entries.get(allocation_id).ok_or(Error::Control)?;
-        let Some(NetworkBinding::Chain(route)) = entry.network else { return Err(Error::Control); };
+        let Some(NetworkBinding::Chain(route)) = entry.network else {
+            return Err(Error::Control);
+        };
         let claims = entry.claims.clone();
-        let issuer = snapshot.claims.allocation_issuer.as_slice().try_into().map_err(|_| Error::Control)?;
+        let issuer = snapshot
+            .claims
+            .allocation_issuer
+            .as_slice()
+            .try_into()
+            .map_err(|_| Error::Control)?;
         let original_deadline = entry.deadline.min(state.gate.deadline());
         let continuity = entry.continuity.clone();
-        let role = route.neighbors().iter().position(|peer| &peer.0 == tls_peer)
+        let role = route
+            .neighbors()
+            .iter()
+            .position(|peer| &peer.0 == tls_peer)
             .ok_or_else(|| error(ErrorCode::IdentityMismatch))?;
-        if route.chain.digest != *binding || digest(proof.public_key) != *tls_peer
+        if route.chain.digest != *binding
+            || digest(proof.public_key) != *tls_peer
             || claims.node_key_sha256 != lease.node_key_sha256
-        { return Err(error(ErrorCode::IdentityMismatch).into()); }
+        {
+            return Err(error(ErrorCode::IdentityMismatch).into());
+        }
         nestlink_identity::network::verify_network_chain_admission(
-            allocation_id,binding,route.relay,proof.public_key,challenge,proof.signature,
+            allocation_id,
+            binding,
+            route.relay,
+            proof.public_key,
+            challenge,
+            proof.signature,
         )?;
-        state.resources.inspect(&claims,role,now)?;
+        state.resources.inspect(&claims, role, now)?;
         Ok(RelayEndpointCandidate {
-            state:self.state.clone(),started:self.started,claims,controller:role==0,
-            transport:RelayTransport::QuicDatagram,issuer,deadline:original_deadline,
-            node_stop:self.stopped.clone(),network:Some(NetworkBinding::Chain(route)),continuity,
+            state: self.state.clone(),
+            started: self.started,
+            claims,
+            controller: role == 0,
+            transport: RelayTransport::QuicDatagram,
+            issuer,
+            deadline: original_deadline,
+            node_stop: self.stopped.clone(),
+            network: Some(NetworkBinding::Chain(route)),
+            continuity,
         })
     }
 
@@ -193,7 +244,9 @@ impl NodeControl {
         state.resources.expire(now);
         let snapshot = state.resources.snapshot.as_ref().ok_or(Error::Control)?;
         let entry = snapshot.entries.get(allocation_id).ok_or(Error::Control)?;
-        let Some(NetworkBinding::Single(route)) = entry.network else { return Err(Error::Control); };
+        let Some(NetworkBinding::Single(route)) = entry.network else {
+            return Err(Error::Control);
+        };
         let claims = entry.claims.clone();
         let issuer = snapshot
             .claims
@@ -248,7 +301,8 @@ impl NodeControl {
 }
 
 fn chain_transit(view: &NetworkGrantView) -> Result<TransitClaims, Error> {
-    let bytes = URL_SAFE_NO_PAD.decode(&view.claims)
+    let bytes = URL_SAFE_NO_PAD
+        .decode(&view.claims)
         .map_err(|_| error(ErrorCode::InvalidMessage))?;
     let GrantClaims::Transit(claims) = GrantClaims::decode_canonical(&bytes)? else {
         return Err(error(ErrorCode::IdentityMismatch).into());

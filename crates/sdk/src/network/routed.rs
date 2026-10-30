@@ -15,7 +15,7 @@ use nestlink_transport_quic::routed::{
 use std::{future::Future, io, pin::Pin, sync::Arc};
 use tokio::{sync::watch, time::Instant};
 mod control;
-pub use control::{PinnedNetworkSpace, VerifiedRemoteRelay, VerifiedRemoteChain};
+pub use control::{PinnedNetworkSpace, VerifiedRemoteChain, VerifiedRemoteRelay};
 use nestlink_transport_stream::owner::TaskOwner;
 
 /// Supply a current trusted policy snapshot, not claims read from a peer.
@@ -40,16 +40,35 @@ enum NetworkRouteAuthority<'a> {
     Chain(RemoteChainAuthority<'a>),
 }
 impl<'a> From<RemoteRouteAuthority<'a>> for NetworkRouteAuthority<'a> {
-    fn from(value:RemoteRouteAuthority<'a>) -> Self { Self::Single(value) }
+    fn from(value: RemoteRouteAuthority<'a>) -> Self {
+        Self::Single(value)
+    }
 }
 impl<'a> From<RemoteChainAuthority<'a>> for NetworkRouteAuthority<'a> {
-    fn from(value:RemoteChainAuthority<'a>) -> Self { Self::Chain(value) }
+    fn from(value: RemoteChainAuthority<'a>) -> Self {
+        Self::Chain(value)
+    }
 }
 impl NetworkRouteAuthority<'_> {
-    fn authorize(&self,permit:&nestlink_identity::VerifiedPermit) -> io::Result<(RouteAuthorization,RouteRevocation)> {
+    fn authorize(
+        &self,
+        permit: &nestlink_identity::VerifiedPermit,
+    ) -> io::Result<(RouteAuthorization, RouteRevocation)> {
         match self {
-            Self::Single(authority) => RouteAuthorization::remote(authority.context,authority.path,authority.connectivity,authority.transit,permit),
-            Self::Chain(authority) => RouteAuthorization::remote_chain(authority.context,authority.path,authority.connectivity,authority.transits,permit),
+            Self::Single(authority) => RouteAuthorization::remote(
+                authority.context,
+                authority.path,
+                authority.connectivity,
+                authority.transit,
+                permit,
+            ),
+            Self::Chain(authority) => RouteAuthorization::remote_chain(
+                authority.context,
+                authority.path,
+                authority.connectivity,
+                authority.transits,
+                permit,
+            ),
         }
     }
 }
@@ -58,10 +77,17 @@ impl NetworkRouteAuthority<'_> {
 /// cancellation and physical cleanup owner as the one-relay path. Callers must
 /// keep current policy and business revocations connected to SessionLifecycle.
 pub async fn authorize_remote_chain(
-    authority:RemoteChainAuthority<'_>,adjacency:Adjacency,setup:SessionSetup,
-    local:&DeviceIdentity,peer_key:&[u8;32],deadline:Instant,
-) -> Result<ChannelRuntime,RemoteError> {
-    authorize_remote_observed(authority,adjacency,setup,local,peer_key,deadline,None,None).await
+    authority: RemoteChainAuthority<'_>,
+    adjacency: Adjacency,
+    setup: SessionSetup,
+    local: &DeviceIdentity,
+    peer_key: &[u8; 32],
+    deadline: Instant,
+) -> Result<ChannelRuntime, RemoteError> {
+    authorize_remote_observed(
+        authority, adjacency, setup, local, peer_key, deadline, None, None,
+    )
+    .await
 }
 
 /// Prove the actual SessionSetup permit through a previously selected route.

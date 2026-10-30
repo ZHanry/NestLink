@@ -222,7 +222,10 @@ async fn transient_report_overload_retries_the_same_signature_before_activating(
         nestlink_protocol::nodes::NODE_MESSAGE_BYTES,
     )?;
     assert_eq!(claims.report_sequence, 1);
-    assert_eq!(claims.lease_sequence, control.current_lease()?.lease_sequence);
+    assert_eq!(
+        claims.lease_sequence,
+        control.current_lease()?.lease_sequence
+    );
     assert_eq!(fixture.connections(), 1);
     assert!(!*control.stopped().borrow());
     assert!(control.reserve_capacity(NodeRole::NodeRelay, false).is_ok());
@@ -286,7 +289,8 @@ async fn sustained_report_overload_expires_the_same_lease_and_stops_existing_cap
     assert_eq!(claims.report_sequence, 2);
     assert_eq!(claims.lease_sequence, lease.lease_sequence);
     assert_eq!(fixture.connections(), 2);
-    let completion = tokio::time::timeout(Duration::from_millis(100), control.wait_finished()).await;
+    let completion =
+        tokio::time::timeout(Duration::from_millis(100), control.wait_finished()).await;
     assert!(
         matches!(&completion, Ok(Err(error)) if deadline_expired(error)),
         "report retries must expire the original lease: completion={completion:?}"
@@ -308,7 +312,11 @@ async fn unavailable_report_never_activates_or_extends_the_initial_confirmation_
     .await??;
     assert!(started.elapsed() >= Duration::from_secs(5));
     assert!(control.current_lease().is_err());
-    assert!(control.reserve_capacity(NodeRole::NodeRelay, false).is_err());
+    assert!(
+        control
+            .reserve_capacity(NodeRole::NodeRelay, false)
+            .is_err()
+    );
     let signed = fixture.signed_reports()?;
     assert!(signed.len() >= 3 && signed.len() < 12);
     assert!(signed.windows(2).all(|pair| pair[0] == pair[1]));

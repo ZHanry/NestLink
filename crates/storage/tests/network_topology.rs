@@ -128,7 +128,8 @@ impl Fixture {
                 &signer,
                 &space,
                 &nodes[index].0,
-                TopologyPublisherRequest { route_export_grant_ids: Vec::new(),
+                TopologyPublisherRequest {
+                    route_export_grant_ids: Vec::new(),
                     publisher_id: random_id(),
                     expected_policy_epoch: 1,
                     allowed_node_ids: vec![nodes[1 - index].0.clone()],
@@ -383,7 +384,8 @@ fn publisher_reissue_preserves_same_runtime_sequence_and_report_flood_is_bounded
         &f.signer,
         &f.space,
         &id,
-        TopologyPublisherRequest { route_export_grant_ids: Vec::new(),
+        TopologyPublisherRequest {
+            route_export_grant_ids: Vec::new(),
             publisher_id: random_id(),
             expected_policy_epoch: 1,
             allowed_node_ids: vec![f.nodes[1].0.clone()],
@@ -402,7 +404,8 @@ fn publisher_reissue_preserves_same_runtime_sequence_and_report_flood_is_bounded
                 &f.signer,
                 &f.space,
                 &id,
-                TopologyPublisherRequest { route_export_grant_ids: Vec::new(),
+                TopologyPublisherRequest {
+                    route_export_grant_ids: Vec::new(),
                     publisher_id: old_claims.scope.grant_id,
                     expected_policy_epoch: 1,
                     allowed_node_ids: Vec::new(),

@@ -27,7 +27,8 @@ async fn chain_http_authenticates_atomic_reservation_exact_readback_and_held_rev
             &signer,
             &f.space,
             &nodes[index].0,
-            TopologyPublisherRequest { route_export_grant_ids: Vec::new(),
+            TopologyPublisherRequest {
+                route_export_grant_ids: Vec::new(),
                 publisher_id: random_id(),
                 expected_policy_epoch: 3,
                 allowed_node_ids: vec![nodes[1 - index].0.clone()],

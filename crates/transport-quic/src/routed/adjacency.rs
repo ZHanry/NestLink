@@ -223,7 +223,7 @@ impl AdjacencyEndpoint {
             || !nestlink_protocol::valid_id(allocation_id) || binding==[0;32] || Instant::now()>=deadline
         { return Err(io::Error::from(io::ErrorKind::PermissionDenied).into()); }
         self.attempted=true;
-        let endpoint=self.endpoint.as_ref().ok_or(io::ErrorKind::NotConnected)?;
+        let endpoint=self.endpoint.as_ref().ok_or_else(||io::Error::from(io::ErrorKind::NotConnected))?;
         let connection=tokio::time::timeout_at(deadline,endpoint.connect(address,"peer.nestlink.invalid")?).await??;
         self.pending=Some(connection.clone());
         let (mut write,mut read)=tokio::time::timeout_at(deadline,connection.accept_bi()).await??;

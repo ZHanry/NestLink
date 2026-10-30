@@ -1,0 +1,39 @@
+{
+  "source_revision": "43e8342ab13bbdd993cfb5791b41f0c1ca4494b4",
+  "qualification": "not_release_qualified",
+  "build_provenance": {
+    "repository": "ZHanry/NestLink",
+    "network_run": 41141116035,
+    "core_run": 41141116001,
+    "server_run": 41141115982,
+    "runner": "GitHub-hosted"
+  },
+  "execution_provenance": {
+    "environment": "GitHub Actions laboratory",
+    "target_device_acceptance": false,
+    "topology_journal_job": 124355748029,
+    "passed": [
+      "Identity topology: 8 tests",
+      "Protocol topology: 3 tests",
+      "Store topology and RouteExport: 16 tests",
+      "Store chain reservation: 9 tests"
+    ],
+    "failures": [
+      "Transport adjacency.rs:226 ErrorKind conversion E0277 blocked server, carrier, native ICE, SDK chain and registered-node business compilation.",
+      "Audio measurement regression fixtures attempted to clone AudioChunk, which has no Clone implementation; real PipeWire execution did not start."
+    ]
+  },
+  "imported_formatting": {
+    "artifact_id": 13018174280,
+    "archive_sha256": "bca6c0b38e726d128bbb20c962057d1175c5e92a56bff81ab3d4d45935b6dfd7",
+    "patch_sha256": "45e89ff6e0f8149421c3425d15989f45fc4ed7b84e9fcc800037336403b94ab0",
+    "scope": "Reviewed unchanged source files only; actively edited chain, adjacency and audio source excluded."
+  },
+  "repairs": [
+    "Construct io::Error before converting into the transport boxed error.",
+    "Copy explicit audio metadata and PCM data in regression fixtures.",
+    "Monitor current original route during pending NRD2 dial and enforce bounded DNS result and address-family policy.",
+    "Print captured compiler diagnostics before the Actions audio helper exits on compilation failure."
+  ],
+  "repair_verification": "pending_new_exact_source_actions"
+}

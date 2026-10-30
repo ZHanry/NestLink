@@ -1,8 +1,8 @@
 //! Actual management HTTP, signed node polls, mTLS relay and remote business proof.
-#[path = "network_relay/multi_node.rs"]
-mod multi_node;
 #[path = "network_relay/chain.rs"]
 mod chain;
+#[path = "network_relay/multi_node.rs"]
+mod multi_node;
 #[path = "../../node/tests/support/service_usage_directory.rs"]
 mod service_usage_directory;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
@@ -81,8 +81,8 @@ struct Fixture {
     pin: PinnedNetworkSpace,
     allocation: String,
     control: Arc<NodeControl>,
-    node_id:String,
-    node_identity:Arc<NodeIdentity>,
+    node_id: String,
+    node_identity: Arc<NodeIdentity>,
     node: NetworkNodeListener,
     shutdown: watch::Sender<bool>,
     node_task: Option<JoinHandle<io::Result<()>>>,
@@ -106,7 +106,7 @@ impl Fixture {
     async fn new() -> Result<Self> {
         Self::with_peer_order(None).await
     }
-    async fn with_peer_order(controller_first:Option<bool>) -> Result<Self> {
+    async fn with_peer_order(controller_first: Option<bool>) -> Result<Self> {
         let deployment = random_id();
         let signer = PermitSigner::generate();
         let permit_issuer = signer.public_key();
@@ -153,8 +153,10 @@ impl Fixture {
         .await?;
         let mut controller = DeviceIdentity::generate();
         let mut host = DeviceIdentity::generate();
-        if controller_first.is_some_and(|first| first != (controller.identity.fingerprint()<host.identity.fingerprint())) {
-            std::mem::swap(&mut controller,&mut host);
+        if controller_first.is_some_and(|first| {
+            first != (controller.identity.fingerprint() < host.identity.fingerprint())
+        }) {
+            std::mem::swap(&mut controller, &mut host);
         }
         for (device, name) in [(&controller, "controller"), (&host, "host")] {
             sdk.enroll(
@@ -316,15 +318,20 @@ impl Fixture {
         .await?;
         let endpoint = node.endpoint()?.clone();
         let shared = control.clone();
-        let node_identity=Arc::new(NodeIdentity::from_seed(&node_seed));
-        let serving_identity=node_identity.clone();
+        let node_identity = Arc::new(NodeIdentity::from_seed(&node_seed));
+        let serving_identity = node_identity.clone();
         let (shutdown, mut stopped) = watch::channel(false);
         let node_task = tokio::spawn(async move {
-            node_quic::serve_with_chain_identity(endpoint, nestlink_server::relay_selector::RelaySelector::new(shared),serving_identity, async move {
-                if !*stopped.borrow() {
-                    let _ = stopped.changed().await;
-                }
-            })
+            node_quic::serve_with_chain_identity(
+                endpoint,
+                nestlink_server::relay_selector::RelaySelector::new(shared),
+                serving_identity,
+                async move {
+                    if !*stopped.borrow() {
+                        let _ = stopped.changed().await;
+                    }
+                },
+            )
             .await
         });
         pending.control = None;
@@ -336,7 +343,7 @@ impl Fixture {
             pin,
             allocation,
             control,
-            node_id:node_lease.node_id,
+            node_id: node_lease.node_id,
             node_identity,
             node,
             shutdown,

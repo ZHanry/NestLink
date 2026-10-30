@@ -32,12 +32,12 @@ mod authority_lifecycle;
 mod chains;
 #[path = "network_policy/relays.rs"]
 mod relays;
+#[path = "network_policy/route_exports.rs"]
+mod route_exports;
 #[path = "../../../crates/node/tests/support/service_usage_directory.rs"]
 mod service_usage_directory;
 #[path = "network_policy/topology.rs"]
 mod topology;
-#[path = "network_policy/route_exports.rs"]
-mod route_exports;
 
 struct Running(tokio::task::JoinHandle<()>);
 impl Drop for Running {

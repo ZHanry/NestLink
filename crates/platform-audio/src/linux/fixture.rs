@@ -468,8 +468,10 @@ fn synthetic_tone_measurement_preserves_the_clock_across_discarded_packets() {
         .iter()
         .enumerate()
         .map(|(index, chunk)| AudioChunk {
+            source: chunk.source,
+            channels: chunk.channels,
             pts_48khz: index as u64 * CHUNK_FRAMES as u64,
-            ..chunk.clone()
+            samples: chunk.samples.clone(),
         })
         .collect();
     // The former contiguous-time measurement falsely rejected the right
@@ -489,10 +491,15 @@ fn synthetic_tone_measurement_rejects_silence_and_exchanged_channels() {
     let pcm: Vec<_> = (0..25)
         .map(|index| tone(binding, index * CHUNK_FRAMES as u64))
         .collect();
-    let mut silent = pcm.clone();
-    for chunk in &mut silent {
-        chunk.samples.fill(0);
-    }
+    let silent: Vec<_> = pcm
+        .iter()
+        .map(|chunk| AudioChunk {
+            source: chunk.source,
+            channels: chunk.channels,
+            pts_48khz: chunk.pts_48khz,
+            samples: vec![0; chunk.samples.len()],
+        })
+        .collect();
     let mut exchanged = pcm;
     for chunk in &mut exchanged {
         for frame in chunk.samples.chunks_exact_mut(2) {

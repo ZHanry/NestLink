@@ -468,11 +468,16 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             let endpoint = quic_owner.endpoint()?.clone();
             let mut quic_stop = stopped;
             tasks.spawn(async move {
-                nestlink_server::node_quic::serve_with_chain_identity(endpoint, selector, std::sync::Arc::new(listener_identity), async move {
-                    if !*quic_stop.borrow() {
-                        let _ = quic_stop.changed().await;
-                    }
-                })
+                nestlink_server::node_quic::serve_with_chain_identity(
+                    endpoint,
+                    selector,
+                    std::sync::Arc::new(listener_identity),
+                    async move {
+                        if !*quic_stop.borrow() {
+                            let _ = quic_stop.changed().await;
+                        }
+                    },
+                )
                 .await
             });
             let result = tokio::select! {

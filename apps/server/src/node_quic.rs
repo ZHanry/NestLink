@@ -20,8 +20,8 @@ use std::{
     time::{Duration, Instant},
 };
 use tokio::{sync::watch, task::JoinSet};
-mod network;
 mod chain;
+mod network;
 
 fn failed() -> io::Error {
     io::Error::new(
@@ -175,19 +175,23 @@ pub async fn serve_with_selector(
     selector: Arc<RelaySelector>,
     shutdown: impl Future<Output = ()> + Send,
 ) -> io::Result<()> {
-    serve_inner(endpoint,selector,None,shutdown).await
+    serve_inner(endpoint, selector, None, shutdown).await
 }
 /// The production registered node identity signs reciprocal NRD2 possession;
 /// all listeners of this node continue sharing the same RelaySelector.
 pub async fn serve_with_chain_identity(
-    endpoint:quinn::Endpoint,selector:Arc<RelaySelector>,identity:Arc<nestlink_identity::nodes::NodeIdentity>,
-    shutdown:impl Future<Output=()>+Send,
+    endpoint: quinn::Endpoint,
+    selector: Arc<RelaySelector>,
+    identity: Arc<nestlink_identity::nodes::NodeIdentity>,
+    shutdown: impl Future<Output = ()> + Send,
 ) -> io::Result<()> {
-    serve_inner(endpoint,selector,Some(identity),shutdown).await
+    serve_inner(endpoint, selector, Some(identity), shutdown).await
 }
 async fn serve_inner(
-    endpoint:quinn::Endpoint,selector:Arc<RelaySelector>,identity:Option<Arc<nestlink_identity::nodes::NodeIdentity>>,
-    shutdown:impl Future<Output=()>+Send,
+    endpoint: quinn::Endpoint,
+    selector: Arc<RelaySelector>,
+    identity: Option<Arc<nestlink_identity::nodes::NodeIdentity>>,
+    shutdown: impl Future<Output = ()> + Send,
 ) -> io::Result<()> {
     let control = selector.control();
     let _owner = Owner {
@@ -197,9 +201,9 @@ async fn serve_inner(
     let mut stopped = control.stopped();
     let hub = Arc::new(Hub::default());
     let mut tasks = JoinSet::new();
-    let mut scan=tokio::time::interval(Duration::from_millis(100));
+    let mut scan = tokio::time::interval(Duration::from_millis(100));
     scan.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
-    let mut attempted=HashMap::<String,tokio::time::Instant>::new();
+    let mut attempted = HashMap::<String, tokio::time::Instant>::new();
     tokio::pin!(shutdown);
     let result = loop {
         if *stopped.borrow() {

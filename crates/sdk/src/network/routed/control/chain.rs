@@ -65,9 +65,10 @@ impl VerifiedRemoteChain {
         sdk.trust.deployment_id == self.deployment
             && sdk.health.security_epoch == self.security_epoch
             && sdk.origin.as_str() == self.origin
-            && sdk.login.as_ref().is_some_and(|login| {
-                login.principal.session_id == self.login_session
-            })
+            && sdk
+                .login
+                .as_ref()
+                .is_some_and(|login| login.principal.session_id == self.login_session)
             && permit.digest() == self.permit_digest
             && local.device_id == self.local_device
             && local.identity.public_key() == self.local_key
@@ -184,8 +185,16 @@ impl Sdk {
         };
         let mut members = Vec::with_capacity(2);
         for (member, installation, key) in [
-            (&view.path.controller_membership, &business.controller_device_id, &controller_key),
-            (&view.path.host_membership, &business.host_device_id, &host_key),
+            (
+                &view.path.controller_membership,
+                &business.controller_device_id,
+                &controller_key,
+            ),
+            (
+                &view.path.host_membership,
+                &business.host_device_id,
+                &host_key,
+            ),
         ] {
             let grant = verify_network_grant(
                 &crate::network_management::decode_network_grant(member)?,
@@ -196,7 +205,11 @@ impl Sdk {
             };
             let epoch = claims.membership_epoch;
             members.push(VerifiedMembership::from_grant(
-                grant, &context, installation, key, epoch,
+                grant,
+                &context,
+                installation,
+                key,
+                epoch,
             )?);
         }
         let connectivity = verify_network_grant(
@@ -227,7 +240,9 @@ impl Sdk {
             let GrantClaims::Transit(transit) = grant.claims() else {
                 return Err(SdkError::Trust);
             };
-            if transit.route_id != route_id || transit.scope.grant_id != view.transits[index].grant_id {
+            if transit.route_id != route_id
+                || transit.scope.grant_id != view.transits[index].grant_id
+            {
                 return Err(SdkError::Trust);
             }
         }
@@ -241,7 +256,13 @@ impl Sdk {
             deployment: self.trust.deployment_id.clone(),
             security_epoch: self.health.security_epoch,
             origin: self.origin.as_str().into(),
-            login_session: self.login.as_ref().ok_or(SdkError::SignIn)?.principal.session_id.clone(),
+            login_session: self
+                .login
+                .as_ref()
+                .ok_or(SdkError::SignIn)?
+                .principal
+                .session_id
+                .clone(),
             local_device: local.device_id.clone(),
             local_key: local.identity.public_key(),
             peer_key: *peer_key,
@@ -282,8 +303,13 @@ impl Sdk {
         let deadline = deadline.min(route.deadline);
         let context = route.context()?;
         let (authorization, _keep) = RouteAuthorization::remote_chain(
-            &context, &route.path, &route.connectivity, &route.transits, &permit,
-        ).map_err(RemoteError::from)?;
+            &context,
+            &route.path,
+            &route.connectivity,
+            &route.transits,
+            &permit,
+        )
+        .map_err(RemoteError::from)?;
         if authorization.binding_digest() != route.binding.digest {
             return Err(SdkError::Trust.into());
         }
@@ -300,7 +326,10 @@ impl Sdk {
         let uri = url::Url::parse(node.endpoints.quic_uri.as_deref().ok_or(SdkError::Trust)?)
             .map_err(|_| SdkError::Invalid)?;
         let host = uri.host().ok_or(SdkError::Invalid)?;
-        let port = uri.port().filter(|port| *port != 0).ok_or(SdkError::Invalid)?;
+        let port = uri
+            .port()
+            .filter(|port| *port != 0)
+            .ok_or(SdkError::Invalid)?;
         let mut stop = setup.lifecycle.stop.clone();
         let addresses = tokio::select! { biased;
             _ = super::super::wait_setup_stop(&mut stop) => return Err(RemoteError::Stopped.into()),
@@ -317,12 +346,16 @@ impl Sdk {
         }) {
             return Err(SdkError::Trust.into());
         }
-        let address = addresses.into_iter()
+        let address = addresses
+            .into_iter()
             .find(|address| address.is_ipv4() == bind.is_ipv4())
             .ok_or(SdkError::Invalid)?;
         let mut pending = nestlink_transport_quic::routed::AdjacencyEndpoint::bind_chain_node(
-            bind, &local.identity, route.binding.relays[index],
-        ).map_err(SdkError::NodeQuic)?;
+            bind,
+            &local.identity,
+            route.binding.relays[index],
+        )
+        .map_err(SdkError::NodeQuic)?;
         let connected = tokio::select! { biased;
             _ = super::super::wait_setup_stop(&mut stop) => Err(SessionEstablishError::Remote(RemoteError::Stopped)),
             _ = cancelled(&mut cancel) => Err(SessionEstablishError::Cancelled),
@@ -331,16 +364,28 @@ impl Sdk {
         let adjacency = match connected {
             Ok(adjacency) => adjacency,
             Err(error) => {
-                pending.close_and_wait(Instant::now() + Duration::from_secs(5))
-                    .await.map_err(RemoteError::Cleanup)?;
+                pending
+                    .close_and_wait(Instant::now() + Duration::from_secs(5))
+                    .await
+                    .map_err(RemoteError::Cleanup)?;
                 return Err(error);
             }
         };
         let observer = RemoteRouteObserver {
             client: self.client.clone(),
             origin: self.origin.clone(),
-            token: Secret::from_text(self.login.as_ref().ok_or(SdkError::SignIn)?.access.expose().into()),
-            path: format!("/network/spaces/{}/relay-chains/{}", route.pin.space_id, route.view.route_id),
+            token: Secret::from_text(
+                self.login
+                    .as_ref()
+                    .ok_or(SdkError::SignIn)?
+                    .access
+                    .expose()
+                    .into(),
+            ),
+            path: format!(
+                "/network/spaces/{}/relay-chains/{}",
+                route.pin.space_id, route.view.route_id
+            ),
             fingerprint: route.fingerprint,
             deadline: route.deadline,
             kind: ReadbackKind::Chain,
@@ -360,7 +405,8 @@ impl Sdk {
             deadline,
             Some(observer),
             Some(cancel.clone()),
-        ).await;
+        )
+        .await;
         let mut channels = match proved {
             Ok(channels) => channels,
             Err(error) => {
@@ -378,12 +424,15 @@ impl Sdk {
             },
         };
         let handoff = current.and_then(|current| {
-            route.validate_handoff(self, &permit, local, peer_key, &current, &stop, &cancel, deadline)
+            route.validate_handoff(
+                self, &permit, local, peer_key, &current, &stop, &cancel, deadline,
+            )
         });
         if let Err(error) = handoff {
             let _ = channels.lease_control().stop(StopReason::Revoked);
             tokio::time::timeout(Duration::from_secs(5), channels.wait_stopped())
-                .await.map_err(|_| RemoteError::Cleanup(io::ErrorKind::TimedOut.into()))??;
+                .await
+                .map_err(|_| RemoteError::Cleanup(io::ErrorKind::TimedOut.into()))??;
             return Err(error);
         }
         Ok(channels)

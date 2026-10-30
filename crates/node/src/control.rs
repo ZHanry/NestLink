@@ -33,7 +33,8 @@ mod turn;
 mod usage;
 pub use closes::CloseReportStatus;
 pub use resources::{
-    RelayEndpointCandidate, RelayEndpointProof, RelayIoCleanup, RelayResourceReservation, NetworkChainNeighborProof,
+    NetworkChainNeighborProof, RelayEndpointCandidate, RelayEndpointProof, RelayIoCleanup,
+    RelayResourceReservation,
 };
 pub use services::ServiceNodePermit;
 pub use topology::TopologyReporter;
