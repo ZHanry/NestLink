@@ -137,3 +137,12 @@ expect_used = "deny"
 lto = "thin"
 codegen-units = 1
 strip = "symbols"
+
+# Control-plane functional tests retain the production lease/report deadlines.
+# Use the production arithmetic optimization in the locked signature provider;
+# application code and debug/overflow assertions keep the normal dev settings.
+[profile.dev.package.curve25519-dalek]
+opt-level = 3
+
+[profile.dev.package.ed25519-dalek]
+opt-level = 3

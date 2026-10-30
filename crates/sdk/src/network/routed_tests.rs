@@ -385,6 +385,25 @@ fn report_pair(
     }
 }
 
+fn original_path_observation(
+    channels: &ChannelRuntime,
+    permit: &VerifiedPermit,
+    path: &VerifiedNetworkPath,
+) -> Result<nestlink_remote::PathObservation> {
+    let observation = channels.path_observation().ok_or("missing original path observer")?;
+    let binding = observation.binding();
+    assert_eq!(binding.business_grant_digest, permit.digest());
+    assert_eq!(binding.business_generation, permit.claims().connection_generation);
+    assert_eq!(binding.path_grant_id.as_deref(), Some(path.claims().scope.grant_id.as_str()));
+    assert_eq!(binding.transport_group, Some(path.transport_group_id()));
+    assert!(binding.route_binding.is_some());
+    assert_eq!(binding.purpose, path.purpose());
+    assert_eq!(binding.path, Path::Relay);
+    assert_eq!(binding.candidate, None);
+    assert_eq!(binding.network_generation, None);
+    Ok(observation)
+}
+
 #[tokio::test]
 async fn existing_carrier_lifecycle_is_rejected_before_business_proof_and_releases_original_sockets()
 -> Result {
@@ -482,6 +501,10 @@ async fn remote_payload_for_order(controller_first: bool) -> Result {
     report_pair(&controller, &host);
     let mut controller = controller?;
     let mut host = host?;
+    let observations = [
+        original_path_observation(&controller, &f.permit, &f.path)?,
+        original_path_observation(&host, &f.permit, &f.path)?,
+    ];
     for channels in [&controller, &host] {
         assert_eq!(channels.mode(), TransportMode::QuicStreamsAndDatagrams);
         assert_eq!(
@@ -549,6 +572,12 @@ async fn remote_payload_for_order(controller_first: bool) -> Result {
     .await??;
     assert_eq!(controller_report.reason, StopReason::ExplicitExit);
     assert_eq!(host_report.reason, StopReason::ExplicitExit);
+    for observation in &observations {
+        let stopped = observation.snapshot();
+        assert!(stopped.stopped);
+        assert_eq!(stopped.rtt, None);
+        assert_eq!(stopped.binding, *observation.binding());
+    }
     relay_stop.revoke();
     let (stopped, forwarded, charged) =
         tokio::time::timeout_at(cleanup, &mut forwarding.0).await???;
@@ -556,6 +585,7 @@ async fn remote_payload_for_order(controller_first: bool) -> Result {
     for address in controller_addresses.into_iter().chain(host_addresses) {
         drop(std::net::UdpSocket::bind(address)?);
     }
+    drop(observations);
     eprintln!(
         "SDK routed business proof: file_read_bytes={}, input_denied=true, forwarded_fragments={forwarded}, charged_bytes={charged}, released_udp_sockets=4",
         payload.len()

@@ -200,9 +200,13 @@ async fn reserve(f: &Fixture, second: &ChainNode) -> Result<String> {
         device_id: f.controller.device_id.clone(),
         signature: String::new(),
     };
+    let reservation_started = Instant::now();
+    let mut attempt = 0u32;
     tokio::time::timeout(Duration::from_secs(3), async {
         loop {
-            match f
+            attempt += 1;
+            let post_started = Instant::now();
+            let result = f
                 .sdk
                 .reserve_network_remote_chain(
                     f.pin.space_id(),
@@ -210,8 +214,17 @@ async fn reserve(f: &Fixture, second: &ChainNode) -> Result<String> {
                     &f.permit,
                     request.clone(),
                 )
-                .await
-            {
+                .await;
+            let status = match &result {
+                Ok(_) => "created".to_owned(),
+                Err(SdkError::Api(status, _)) => status.as_u16().to_string(),
+                Err(_) => "sdk_error".to_owned(),
+            };
+            eprintln!(
+                "registered chain reservation: attempt={attempt}, post_us={}, total_us={}, status={status}, original_expires_at_ms={expires}",
+                post_started.elapsed().as_micros(), reservation_started.elapsed().as_micros()
+            );
+            match result {
                 Ok(_) => break Result::Ok(()),
                 Err(SdkError::Api(status, _)) if status == reqwest::StatusCode::CONFLICT => {
                     // Periodic real reports can replace the exact head between
@@ -252,23 +265,35 @@ async fn topology_digests(
     publishers: &[SignedTopologyPublisher],
     policy_epoch: u64,
 ) -> Result<Option<[[u8; 32]; 2]>> {
+    topology_digests_in_space(f, second, publishers, policy_epoch, f.pin.space_id()).await
+}
+async fn topology_digests_in_space(
+    f: &Fixture,
+    second: &ChainNode,
+    publishers: &[SignedTopologyPublisher],
+    policy_epoch: u64,
+    space_id: &str,
+) -> Result<Option<[[u8; 32]; 2]>> {
     let nonce = random_bytes::<32>();
+    let query_started = Instant::now();
     let signed = f
         .sdk
         .network_topology_update(
-            f.pin.space_id(),
+            space_id,
             NetworkTopologyQuery {
                 after_cursor: None,
                 nonce,
             },
         )
         .await?;
+    let query_elapsed = query_started.elapsed();
+    let verification_started = Instant::now();
     let now = RuntimeClock::default().sample()?.unix_ms;
     let revoked = BTreeSet::new();
     let context = NetworkVerification {
         authority_key: f.pin.authority_key(),
         deployment_id: &f.permit.claims().deployment_id,
-        space_id: f.pin.space_id(),
+        space_id,
         policy_epoch,
         now_ms: now,
         revoked_grant_ids: &revoked,
@@ -320,7 +345,17 @@ async fn topology_digests(
             "the real owner must advance its sequence after initial down observations"
         );
         digests[index] = advertisement.digest();
+        eprintln!(
+            "registered topology head: position={index}, sequence={}, remaining_ms={}",
+            advertisement.claims().report.sequence,
+            advertisement.claims().expires_at_ms.saturating_sub(RuntimeClock::default().sample()?.unix_ms)
+        );
     }
+    eprintln!(
+        "registered topology query: query_us={}, verification_us={}, total_us={}, complete={}",
+        query_elapsed.as_micros(), verification_started.elapsed().as_micros(),
+        query_started.elapsed().as_micros(), !digests.contains(&[0; 32])
+    );
     Ok((!digests.contains(&[0; 32])).then_some(digests))
 }
 struct Directory(std::path::PathBuf);
@@ -345,6 +380,94 @@ async fn registered_nrd2_nodes_read_an_approved_os_file_and_revoke_both_original
 async fn registered_nrd2_nodes_keep_host_initiated_quic_and_controller_business_permissions()
 -> Result {
     transfer(false).await
+}
+#[tokio::test]
+async fn registered_topology_owner_isolates_a_revoked_space_on_the_same_real_neighbor() -> Result {
+    let mut f = Fixture::with_peer_order(Some(true)).await?;
+    let mut second = ChainNode::new(&f).await?;
+    let other_space = random_id();
+    let other_policy = f.sdk.configure_network_authority(&other_space, 0).await?;
+    assert_eq!(
+        other_policy.authority_public_key,
+        URL_SAFE_NO_PAD.encode(f.pin.authority_key())
+    );
+    let nodes = [&f.node_id, &second.id];
+    let mut other_publishers = Vec::new();
+    for index in 0..2 {
+        other_publishers.push(
+            f.sdk
+                .issue_network_topology_publisher(
+                    &other_space,
+                    nodes[index],
+                    NetworkTopologyPublisherRequest {
+                        publisher_id: random_id(),
+                        expected_policy_epoch: other_policy.policy_epoch,
+                        allowed_node_ids: vec![nodes[1 - index].clone()],
+                        route_export_grant_ids: Vec::new(),
+                        expires_at_ms: RuntimeClock::default().sample()?.unix_ms + 60_000,
+                    },
+                )
+                .await?,
+        );
+    }
+    tokio::time::timeout(Duration::from_secs(4), async {
+        loop {
+            if topology_digests_in_space(
+                &f,
+                &second,
+                &other_publishers,
+                other_policy.policy_epoch,
+                &other_space,
+            )
+            .await?
+            .is_some()
+            {
+                break Result::Ok(());
+            }
+            tokio::time::sleep(Duration::from_millis(25)).await;
+        }
+    })
+    .await??;
+    let route = reserve(&f, &second).await?;
+    let before = f.sdk.network_remote_chain(f.pin.space_id(), &route).await?;
+    let path = GrantClaims::decode_canonical(&URL_SAFE_NO_PAD.decode(&before.path.path.claims)?)?;
+    let original_expiry = path.scope().expires_at_ms;
+    f.sdk
+        .revoke_network_topology_publisher(&other_space, &f.node_id)
+        .await?;
+    let mut readbacks = 0;
+    tokio::time::timeout(Duration::from_secs(3), async {
+        let mut withdrawn_at = None;
+        loop {
+            let current = f.sdk.network_remote_chain(f.pin.space_id(), &route).await?;
+            let path = GrantClaims::decode_canonical(&URL_SAFE_NO_PAD.decode(&current.path.path.claims)?)?;
+            assert_eq!(path.scope().expires_at_ms, original_expiry);
+            assert!(RuntimeClock::default().sample()?.unix_ms < original_expiry);
+            readbacks += 1;
+            if withdrawn_at.is_none()
+                && f.control.network_topology_authority(&other_space).is_err()
+                && second.control.network_topology_authority(&other_space).is_ok_and(|authority| {
+                    authority.neighbors.iter().all(|neighbor| neighbor.node.node_id != f.node_id)
+                })
+            {
+                withdrawn_at = Some(Instant::now());
+            }
+            if withdrawn_at.is_some_and(|at| at.elapsed() >= Duration::from_millis(1300)) {
+                break Result::Ok(());
+            }
+            tokio::time::sleep(Duration::from_millis(25)).await;
+        }
+    })
+    .await??;
+    assert!(readbacks >= 2);
+    let addresses = [f.node.local_addr()?, second.listener.local_addr()?];
+    second.finish().await?;
+    f.finish().await?;
+    let _nodes = rebind(&addresses)?;
+    eprintln!(
+        "registered topology owner: shared_real_neighbor_spaces=2, revoked_other_space=true, original_chain_survives_report_ttl=true, original_grant_expiry_unchanged=true, released_udp_sockets=2"
+    );
+    Ok(())
 }
 #[tokio::test]
 async fn registered_topology_owner_withdraws_a_stopped_real_neighbor_before_original_chain_expiry()

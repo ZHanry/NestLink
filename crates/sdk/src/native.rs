@@ -576,8 +576,12 @@ pub struct NativeSessionControl {
     sequence: std::sync::Arc<std::sync::atomic::AtomicU64>,
     renewal: Option<std::sync::Arc<tokio::sync::Mutex<crate::native_renewal::Coordinator>>>,
     lease: nestlink_remote::LeaseControl,
+    path_observation: Option<nestlink_remote::PathObservation>,
 }
 impl NativeSessionControl {
+    pub fn path_observation(&self) -> Option<nestlink_remote::PathObservation> {
+        self.path_observation.clone()
+    }
     pub fn lease_remaining(&self) -> Result<std::time::Duration, nestlink_remote::RemoteError> {
         self.lease.remaining()
     }
@@ -640,6 +644,11 @@ impl NativeSessionControl {
     }
 }
 impl NativeSession {
+    /// Measurements of this generation's original proved Quinn transport.
+    /// TLS/WSS paths have no Quinn observation source and return None.
+    pub fn path_observation(&self) -> Option<nestlink_remote::PathObservation> {
+        self.channels.path_observation()
+    }
     /// An observation of this endpoint's actual selected carrier.
     pub fn uses_bilateral_ice(&self) -> bool {
         self.native_ice
@@ -660,6 +669,18 @@ impl NativeConnection {
         local: &DeviceIdentity,
         peer_key: &[u8; 32],
     ) -> Result<NativeSession, nestlink_remote::RemoteError> {
+        let original = setup.session.current_verified_permit();
+        let observation_binding = nestlink_remote::PathObservationBinding {
+            business_grant_digest: original.digest(),
+            business_generation: original.claims().connection_generation,
+            path_grant_id: None,
+            transport_group: None,
+            route_binding: None,
+            purpose: nestlink_protocol::network::Purpose::RemoteControl,
+            path: self.candidate.path(),
+            candidate: Some(self.candidate.clone()),
+            network_generation: Some(self.candidate.generation),
+        };
         setup
             .session
             .cap_deadline_ms(setup.clock.deadline_ms(self.authorization_deadline)?)?;
@@ -756,6 +777,12 @@ impl NativeConnection {
                 }
             }
         };
+        if channels.mode() == nestlink_remote::TransportMode::QuicStreamsAndDatagrams
+            && let Err(error) = channels.observe_quic_path(observation_binding)
+        {
+            channels.shutdown(StopReason::ProtocolViolation).await?;
+            return Err(error);
+        }
         let lease = channels.lease_control();
         let sequence = std::sync::Arc::new(std::sync::atomic::AtomicU64::new(
             lease.current_native_permit()?.claims().lease_sequence,
@@ -782,6 +809,7 @@ impl NativeConnection {
             lease,
             renewal,
             sequence,
+            path_observation: channels.path_observation(),
         };
         Ok(NativeSession {
             channels,
@@ -2138,6 +2166,7 @@ pub(crate) fn assert_coordinated_manual_renewal_rejected(
         sequence: sequence.clone(),
         renewal: Some(shared.clone()),
         lease: lease.clone(),
+        path_observation: None,
     };
     let error = control
         .renew_with_media(

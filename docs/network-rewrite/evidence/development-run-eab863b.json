@@ -1,0 +1,59 @@
+{
+    "source_revision":  "eab863bddfe0746788176bd7055cbb2cddaddc4c",
+    "qualification":  "partial_laboratory_results_not_release_qualified",
+    "build_provenance":  {
+                             "repository":  "ZHanry/NestLink",
+                             "network_run":  41145405350,
+                             "core_run":  41145405342,
+                             "arm64_run":  41145405308,
+                             "run_attempt":  1,
+                             "runner":  "GitHub-hosted",
+                             "dependency_lock_note":  "New W13 source adds only an existing workspace dependency edge; source dependency identities remain locked.",
+                             "cargo_lock_sha256":  "f4501e866b2bedbb88ed2f5f62c0c11691f17e64379c67ffbbda0298b3b570aa"
+                         },
+    "execution_provenance":  {
+                                 "environment":  "GitHub Actions laboratory",
+                                 "target_device_acceptance":  false,
+                                 "passed_jobs":  [
+                                                     "Windows network contract (format, lint and selected contract suites)",
+                                                     "Linux network contract (format, lint and selected contract suites)",
+                                                     "Topology journal and actual HTTP topology/chains/route export lifecycle",
+                                                     "Four-node NRD2 and retained NRD1 carrier, graph, codec, reporter and node metadata/admission",
+                                                     "Routed real kernel NAT",
+                                                     "Production socket kernel faults",
+                                                     "Native signed ICE/Quinn/FileRead through two real kernel NATs (scoped step)",
+                                                     "Two SDK four-node chain approved OS FileRead scenarios (scoped step)",
+                                                     "Independent grant vectors",
+                                                     "Linux ARM64 server build and tests",
+                                                     "WASM contract, dependencies, Linux audio/X11 input/portal/network events"
+                                                 ],
+                                 "failures":  [
+                                                  "All three registered-node NRD2 scenarios repeatedly received exact-current-head reservation Conflict, then exhausted unchanged setup deadlines. POST rejections took approximately 350-569ms; separate resource/report requests also hit bounded database admission at approximately 201ms.",
+                                                  "Full core Linux/Windows jobs were still running at this checkpoint, with the registered-node integration failure recorded."
+                                              ],
+                                 "pending":  [
+                                                 "New scope-isolation protocol and multi-space regression",
+                                                 "New W13 live local quality observation and cleanup assertions",
+                                                 "Optimized locked dependency arithmetic configuration: cause/performance not yet established",
+                                                 "All remaining mandatory implementation and external qualification"
+                                             ]
+                             },
+    "retained_artifacts":  [
+                               {
+                                   "id":  13021645251,
+                                   "scope":  "topology carrier",
+                                   "sha256":  "0a56693be44015483fb7b81893067878aa5e9b324b375267eda7d5ffc5ba03d2"
+                               },
+                               {
+                                   "id":  13021245777,
+                                   "scope":  "SDK and registered-node chain business",
+                                   "sha256":  "215a7a82103380457f5dade3e672a90d082fd7685f924c44bd8a028fdceab576"
+                               },
+                               {
+                                   "id":  13020831130,
+                                   "scope":  "topology journal and HTTP",
+                                   "sha256":  "204568592bb53d12ac92eafdc3eb7810ef8a49c9754c97ee197f0906d5cbfde0"
+                               }
+                           ],
+    "authorization_constraints":  "Original exact topology digest, grant bytes/expiry, UUIDs, quotas, TTL, HTTP/probe budgets and test deadlines are unchanged."
+}

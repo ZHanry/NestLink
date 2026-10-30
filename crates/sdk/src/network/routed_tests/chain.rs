@@ -196,6 +196,10 @@ async fn transfer(controller_first: bool) -> Result {
     );
     report_pair(&controller, &host);
     let (mut controller, mut host) = (controller?, host?);
+    let observations = [
+        original_path_observation(&controller, &f.base.permit, &f.path)?,
+        original_path_observation(&host, &f.base.permit, &f.path)?,
+    ];
     assert_eq!(
         controller.lease_control().current_native_permit()?.digest(),
         f.base.permit.digest()
@@ -243,6 +247,12 @@ async fn transfer(controller_first: bool) -> Result {
     .await??;
     assert_eq!(a_report.reason, StopReason::ExplicitExit);
     assert_eq!(b_report.reason, StopReason::ExplicitExit);
+    for observation in &observations {
+        let stopped = observation.snapshot();
+        assert!(stopped.stopped);
+        assert_eq!(stopped.rtt, None);
+        assert_eq!(stopped.binding, *observation.binding());
+    }
     left_stop.revoke();
     right_stop.revoke();
     for task in [&mut left, &mut right] {
@@ -252,6 +262,7 @@ async fn transfer(controller_first: bool) -> Result {
     for address in a.into_iter().chain(b).chain(c) {
         drop(std::net::UdpSocket::bind(address)?);
     }
+    drop(observations);
     eprintln!(
         "SDK NRD2 business: verified_os_file_bytes={}, input_denied=true, released_udp_sockets=6",
         bytes.len()

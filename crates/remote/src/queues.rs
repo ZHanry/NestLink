@@ -9,7 +9,7 @@ use std::{
     pin::Pin,
     sync::{
         Arc, Mutex,
-        atomic::{AtomicU8, Ordering},
+        atomic::{AtomicU8, AtomicU64, Ordering},
     },
     time::{Duration, Instant},
 };
@@ -178,6 +178,7 @@ struct State {
 pub(crate) struct Queue {
     state: Mutex<State>,
     updates: watch::Sender<u64>,
+    business_transmitted: AtomicU64,
 }
 impl Queue {
     pub(crate) fn new() -> Arc<Self> {
@@ -191,7 +192,17 @@ impl Queue {
                 closed: false,
             }),
             updates,
+            business_transmitted: AtomicU64::new(0),
         })
+    }
+    /// Completed local business writes only. Queue insertion, control traffic
+    /// and QUIC retransmissions are not business payload throughput.
+    pub(crate) fn record_business_transmit(&self, bytes: usize) {
+        let bytes = u64::try_from(bytes).unwrap_or(u64::MAX);
+        let _ = self.business_transmitted.fetch_update(Ordering::Relaxed, Ordering::Relaxed, |old| Some(old.saturating_add(bytes)));
+    }
+    pub(crate) fn business_transmitted_bytes(&self) -> u64 {
+        self.business_transmitted.load(Ordering::Relaxed)
     }
     fn wake(&self) {
         self.updates.send_modify(|v| *v = v.saturating_add(1));
@@ -492,6 +503,7 @@ pub struct ChannelRuntime {
     connection: Option<quinn::Connection>,
     _endpoint: Option<quinn::Endpoint>,
     pub(crate) transport_owner: Option<Box<dyn TransportOwner>>,
+    path_observation: Option<crate::path_observation::PathObservationOwner>,
     cleanup_deadline: Option<tokio::time::Instant>,
     cleanup_failure: Option<io::ErrorKind>,
 }
@@ -912,12 +924,41 @@ impl<R: AsyncRead + Unpin + Send + 'static, W: AsyncWrite + Unpin + Send + 'stat
             connection: None,
             _endpoint: None,
             transport_owner: None,
+            path_observation: None,
             cleanup_deadline: None,
             cleanup_failure: None,
         }
     }
 }
 impl ChannelRuntime {
+    /// Observe this already proved original QUIC path. Caller-supplied network
+    /// metadata is descriptive; it is never consulted for business admission.
+    /// The SDK supplies it from its independently verified original grants.
+    pub fn observe_quic_path(
+        &mut self,
+        binding: crate::PathObservationBinding,
+    ) -> Result<crate::PathObservation, RemoteError> {
+        let permit = self.lease.current_native_permit()?;
+        if self.path_observation.is_some()
+            || binding.business_grant_digest != permit.digest()
+            || binding.business_generation != permit.claims().connection_generation
+            || binding.path != self.lease.selected_path()
+            || binding.purpose != nestlink_protocol::network::Purpose::RemoteControl
+            || binding.path_grant_id.is_some() != binding.transport_group.is_some()
+            || binding.candidate.as_ref().is_some_and(|candidate| candidate.path() != binding.path || Some(candidate.generation) != binding.network_generation)
+            || (binding.candidate.is_none() && binding.network_generation.is_some())
+        {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "path observation does not match original business admission").into());
+        }
+        let connection = self.connection.as_ref().ok_or_else(|| io::Error::new(io::ErrorKind::Unsupported, "this transport has no local Quinn observations"))?.clone();
+        let owner = crate::path_observation::PathObservationOwner::start(binding, connection, &self.lease, self.outgoing.clone());
+        let observation = owner.observation();
+        self.path_observation = Some(owner);
+        Ok(observation)
+    }
+    pub fn path_observation(&self) -> Option<crate::PathObservation> {
+        self.path_observation.as_ref().map(|owner| owner.observation())
+    }
     /// Retain a carrier's explicit close/cancellation owner. This grants no
     /// business authority; lease supervision still closes the inner transport.
     pub fn with_transport_owner(mut self, owner: impl TransportOwner + 'static) -> Self {
@@ -942,6 +983,7 @@ impl ChannelRuntime {
             connection: Some(connection),
             _endpoint: endpoint,
             transport_owner: None,
+            path_observation: None,
             cleanup_deadline: None,
             cleanup_failure: None,
         }
@@ -1017,6 +1059,9 @@ impl ChannelRuntime {
         };
         self.incoming.close();
         self.outgoing.close();
+        if let Some(observation) = &self.path_observation {
+            observation.request_close();
+        }
         if let Some(connection) = &self.connection {
             close_quic(connection, &self.lease);
         }
@@ -1055,6 +1100,11 @@ impl ChannelRuntime {
             self.tasks.remove(0);
         }
         // No business task may retain a stream before carrier cleanup starts.
+        // The sampler owns a clone of this same inner connection. Join it
+        // before any original endpoint/carrier release receipt can succeed.
+        if let Some(observation) = &self.path_observation {
+            observation.close_and_wait(deadline).await?;
+        }
         // Release runtime clones so the unique endpoint owner can confirm the
         // final physical socket and writable poller have actually gone away.
         drop(self.connection.take());
@@ -1091,6 +1141,9 @@ impl Drop for ChannelRuntime {
         let _ = self.lease.stop(StopReason::ExplicitExit);
         self.incoming.close();
         self.outgoing.close();
+        if let Some(observation) = &self.path_observation {
+            observation.request_close();
+        }
         if let Some(connection) = &self.connection {
             close_quic(connection, &self.lease);
         }

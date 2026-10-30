@@ -1365,7 +1365,27 @@ pub struct NetworkTopologyProbe {
     pub schema_version: u32,
     pub space_id: String,
     pub publisher_digest: [u8; 32],
+    pub remote_publisher_digest: [u8; 32],
     pub local_endpoint_revision: u64,
     pub remote_endpoint_revision: u64,
     pub nonce: [u8; 32],
+}
+
+/// A denied space cannot terminate observations for other spaces sharing the
+/// same authenticated physical neighbor. Rejection acknowledges only the
+/// bounded challenge; it provides no publisher or live-edge evidence.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "status", rename_all = "snake_case", deny_unknown_fields)]
+pub enum NetworkTopologyProbeReply {
+    Prepared {
+        probe: NetworkTopologyProbe,
+    },
+    Observed {
+        probe: NetworkTopologyProbe,
+    },
+    Rejected {
+        schema_version: u32,
+        space_id: String,
+        nonce: [u8; 32],
+    },
 }

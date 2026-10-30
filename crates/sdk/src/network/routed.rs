@@ -50,6 +50,27 @@ impl<'a> From<RemoteChainAuthority<'a>> for NetworkRouteAuthority<'a> {
     }
 }
 impl NetworkRouteAuthority<'_> {
+    fn observation_binding(
+        &self,
+        permit: &nestlink_identity::VerifiedPermit,
+        authorization: &RouteAuthorization,
+    ) -> nestlink_remote::PathObservationBinding {
+        let path = match self {
+            Self::Single(authority) => authority.path,
+            Self::Chain(authority) => authority.path,
+        };
+        nestlink_remote::PathObservationBinding {
+            business_grant_digest: permit.digest(),
+            business_generation: permit.claims().connection_generation,
+            path_grant_id: Some(path.claims().scope.grant_id.clone()),
+            transport_group: Some(path.transport_group_id()),
+            route_binding: Some(authorization.binding_digest()),
+            purpose: path.purpose(),
+            path: Path::Relay,
+            candidate: None,
+            network_generation: None,
+        }
+    }
     fn authorize(
         &self,
         permit: &nestlink_identity::VerifiedPermit,
@@ -176,6 +197,9 @@ async fn authorize_remote_observed<'a>(
         }
     };
     let route_deadline = authorization.deadline();
+    let observation_binding = authority.observation_binding(
+        setup.session.current_verified_permit(), &authorization,
+    );
     let revocation = Arc::new(revocation);
     let setup_deadline = deadline.min(route_deadline);
     let preparation = (|| -> Result<(), RemoteError> {
@@ -273,7 +297,12 @@ async fn authorize_remote_observed<'a>(
                 });
             }
             owner.observer = observer.map(|observer| observer.spawn(channels.lease_control()));
-            Ok(channels.with_transport_owner(owner))
+            let mut channels = channels.with_transport_owner(owner);
+            if let Err(error) = channels.observe_quic_path(observation_binding) {
+                channels.shutdown(StopReason::ProtocolViolation).await?;
+                return Err(error);
+            }
+            Ok(channels)
         }
         Err(error) => {
             owner

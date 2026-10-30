@@ -235,6 +235,19 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
     assert_eq!(host_session.candidate.path(), Path::Direct);
     assert!(controller_session.uses_bilateral_ice());
     assert!(host_session.uses_bilateral_ice());
+    let observations = [
+        controller_session.path_observation().ok_or("missing controller path observer")?,
+        host_session.control.path_observation().ok_or("missing host path observer")?,
+    ];
+    for (session, observation) in [(&controller_session, &observations[0]), (&host_session, &observations[1])] {
+        assert_eq!(observation.binding().business_grant_digest, permit.digest());
+        assert_eq!(observation.binding().business_generation, permit.claims().connection_generation);
+        assert_eq!(observation.binding().candidate.as_ref(), Some(&session.candidate));
+        assert_eq!(observation.binding().network_generation, Some(session.candidate.generation));
+        assert_eq!(observation.binding().path, Path::Direct);
+        assert_eq!(observation.binding().path_grant_id, None);
+        assert_eq!(observation.binding().transport_group, None);
+    }
     let ice_addresses = [
         controller_session.candidate.address,
         host_session.candidate.address,
@@ -280,6 +293,10 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
     // A network-change close is explicitly retryable. The peer learns that
     // its transport was lost; it has not received an authority revocation.
     assert_eq!(host_report.reason, StopReason::TransportLost);
+    for observation in &observations {
+        assert!(observation.snapshot().stopped);
+        assert_eq!(observation.snapshot().rtt, None);
+    }
     let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
     let mut controller_owner = nestlink_sdk::network::LegacyEndpoint::new(controller_endpoint);
     let mut host_owner = nestlink_sdk::network::LegacyEndpoint::new(host_endpoint);
@@ -290,5 +307,6 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
     for address in legacy_addresses.into_iter().chain(ice_addresses) {
         let _rebound = std::net::UdpSocket::bind(address)?;
     }
+    drop(observations);
     Ok(())
 }

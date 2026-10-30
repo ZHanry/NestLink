@@ -491,3 +491,97 @@ async fn bound_stream_header_is_rejected_before_reading_body() -> Result {
     }
     Ok(())
 }
+
+#[tokio::test]
+async fn local_path_observation_uses_actual_quic_writes_and_joins_without_replacing_carrier() -> Result {
+    use crate::{PathObservationBinding, TransportOwner};
+    use nestlink_protocol::network::Purpose;
+    use std::{future::Future, pin::Pin, sync::{Arc, atomic::{AtomicBool, Ordering}}};
+
+    struct OriginalOwner {
+        socket: Option<std::net::UdpSocket>,
+        released: Arc<AtomicBool>,
+    }
+    impl TransportOwner for OriginalOwner {
+        fn request_close(&self) {}
+        fn close_and_wait(&mut self, _deadline: tokio::time::Instant)
+            -> Pin<Box<dyn Future<Output = io::Result<()>> + Send + '_>> {
+            Box::pin(async move {
+                drop(self.socket.take());
+                self.released.store(true, Ordering::Release);
+                Ok(())
+            })
+        }
+    }
+    let fixture = Fixture::new(vec![Permission::View, Permission::Input])?;
+    let (_c_keep, c_stop) = watch::channel(None);
+    let (_h_keep, h_stop) = watch::channel(None);
+    let (c, mut h, connection) = fixture.runtimes(c_stop, h_stop).await?;
+    let released = Arc::new(AtomicBool::new(false));
+    let socket = std::net::UdpSocket::bind("127.0.0.1:0")?;
+    let address = socket.local_addr()?;
+    let mut c = c.with_transport_owner(OriginalOwner { socket: Some(socket), released: released.clone() });
+    assert!(c.path_observation().is_none());
+    let permit = c.lease_control().current_native_permit()?;
+    let binding = PathObservationBinding {
+        business_grant_digest: permit.digest(), business_generation: permit.claims().connection_generation,
+        path_grant_id: None, transport_group: None, route_binding: None,
+        purpose: Purpose::RemoteControl, path: Path::Direct, candidate: None, network_generation: None,
+    };
+    let mut wrong = binding.clone();
+    wrong.business_generation += 1;
+    assert!(c.observe_quic_path(wrong).is_err());
+    assert!(c.path_observation().is_none());
+    let mut observation = c.observe_quic_path(binding.clone())?;
+    assert!(c.observe_quic_path(binding.clone()).is_err());
+    // Wait for the sampler's baseline, so traffic cannot be mistaken for
+    // historic bytes from before this observer was attached.
+    tokio::time::timeout(Duration::from_secs(1), observation.changed()).await??;
+    assert_eq!(observation.snapshot().business_tx, None);
+    let payload = b"actual original path business bytes";
+    c.send(Channel::Input, payload).await?;
+    let frame = tokio::time::timeout(Duration::from_secs(1), h.receive()).await??;
+    assert_eq!(frame.payload, payload);
+    let measured = tokio::time::timeout(Duration::from_secs(3), async {
+        loop {
+            observation.changed().await?;
+            let snapshot = observation.snapshot();
+            if snapshot.rtt.is_some() && snapshot.business_tx.is_some() {
+                break Ok::<_, watch::error::RecvError>(snapshot);
+            }
+        }
+    }).await??;
+    assert_eq!(measured.binding, binding);
+    assert_eq!(measured.business_tx.map(|window| window.payload_bytes), Some(payload.len() as u64));
+    assert!(measured.packet_loss.is_some());
+    assert_eq!(measured.available_bytes_per_second, None);
+    assert_eq!(measured.cost, None);
+    assert!(!released.load(Ordering::Acquire));
+    c.lease_control().stop(StopReason::ExplicitExit)?;
+    // This test uses a current-thread runtime: do not await/yield between the
+    // synchronous lease stop and readback. The sampler cannot run to publish
+    // its own terminal flag before these assertions.
+    let synchronous_stop = observation.snapshot();
+    assert!(synchronous_stop.stopped);
+    assert_eq!(synchronous_stop.rtt, None);
+    assert_eq!(synchronous_stop.smoothed_rtt_change, None);
+    assert_eq!(synchronous_stop.packet_loss, None);
+    assert_eq!(synchronous_stop.business_tx, None);
+    assert_eq!(synchronous_stop.binding, binding);
+    assert!(!released.load(Ordering::Acquire));
+    drop(connection);
+    let (c_closed, h_closed) = tokio::join!(c.shutdown(StopReason::ExplicitExit), h.wait_stopped());
+    c_closed?;
+    h_closed?;
+    assert!(released.load(Ordering::Acquire));
+    let _rebound = std::net::UdpSocket::bind(address)?;
+    tokio::time::timeout(Duration::from_secs(1), async {
+        while observation.changed().await.is_ok() {}
+    }).await?;
+    let stopped = observation.snapshot();
+    assert!(stopped.stopped);
+    assert_eq!(stopped.rtt, None);
+    assert_eq!(stopped.business_tx, None);
+    assert_eq!(stopped.binding, binding);
+    Ok(())
+}

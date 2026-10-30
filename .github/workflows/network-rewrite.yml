@@ -112,6 +112,13 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-transport-quic --lib routed:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-chain-carrier-tests.log"
+      - name: Exercise live local quality observations and original carrier ownership
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-connectivity --lib observation:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-path-observation-policy-tests.log"
+          cargo test --locked -p nestlink-remote --lib local_path_observation -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-path-observation-quic-tests.log"
       - name: Exercise node report authority, cancellation and original deadlines
         if: ${{ !cancelled() }}
         shell: bash
@@ -135,6 +142,8 @@ jobs:
             ${{ runner.temp }}/network-datagram-v2-tests.log
             ${{ runner.temp }}/network-topology-reporter-tests.log
             ${{ runner.temp }}/network-chain-carrier-tests.log
+            ${{ runner.temp }}/network-path-observation-policy-tests.log
+            ${{ runner.temp }}/network-path-observation-quic-tests.log
             ${{ runner.temp }}/network-node-chain-admission-tests.log
             ${{ runner.temp }}/network-node-topology-authority-tests.log
           if-no-files-found: error

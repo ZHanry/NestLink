@@ -47,6 +47,39 @@ enum Reply {
     Observed(Option<TopologyAdvertisement>, u64),
 }
 
+/// Revocation addresses durable IDs and must remain possible after a node's
+/// registration or lease ends. These IDs never become issuance targets.
+fn target(
+    action: Action,
+    selected: &str,
+    revoke_node: &str,
+    choices: &[NodeChoice],
+    now: u64,
+) -> Result<(String, Option<NodeChoice>), SdkError> {
+    if matches!(action, Action::Load | Action::RevokeExport) {
+        return Ok((String::new(), None));
+    }
+    let id = if matches!(action, Action::RevokePublisher) {
+        revoke_node.trim()
+    } else {
+        selected.trim()
+    };
+    if !nestlink_protocol::valid_id(id) {
+        return Err(SdkError::Invalid);
+    }
+    if matches!(action, Action::RevokePublisher) {
+        return Ok((id.to_owned(), None));
+    }
+    let node = choices
+        .iter()
+        .find(|node| node.id == id)
+        .ok_or(SdkError::Invalid)?;
+    if matches!(action, Action::SavePublisher | Action::SaveExport) && node.lease_end <= now {
+        return Err(SdkError::Invalid);
+    }
+    Ok((id.to_owned(), Some(node.clone())))
+}
+
 fn now_ms() -> u64 {
     #[cfg(target_arch = "wasm32")]
     {
@@ -120,6 +153,7 @@ pub(super) fn NetworkTopologyPanel(
     let policy = RwSignal::new(None::<NetworkPolicyView>);
     let nodes = RwSignal::new(Vec::<NodeChoice>::new());
     let selected = RwSignal::new(String::new());
+    let revoke_node = RwSignal::new(String::new());
     let neighbors = RwSignal::new(Vec::<String>::new());
     let minutes = RwSignal::new("10".to_owned());
     let publisher_id = RwSignal::new(nestlink_auth::random_id());
@@ -156,11 +190,14 @@ pub(super) fn NetworkTopologyPanel(
             return;
         }
         let space_id = space.get_untracked().trim().to_owned();
-        let node_id = selected.get_untracked();
-        let node = nodes
-            .get_untracked()
-            .into_iter()
-            .find(|node| node.id == node_id);
+        let request_time = now_ms();
+        let target = target(
+            action,
+            &selected.get_untracked(),
+            &revoke_node.get_untracked(),
+            &nodes.get_untracked(),
+            request_time,
+        );
         let snapshot = policy
             .get_untracked()
             .filter(|view| view.space_id == space_id);
@@ -171,17 +208,21 @@ pub(super) fn NetworkTopologyPanel(
         let export_draft_id = export_id.get_untracked().trim().to_owned();
         let parse_result = prefixes(&cidrs.get_untracked());
         if !nestlink_protocol::valid_id(&space_id)
-            || (!matches!(action, Action::Load) && (node.is_none() || snapshot.is_none()))
+            || (!matches!(action, Action::Load) && snapshot.is_none())
+            || target.is_err()
         {
             problem.set(
                 t(
-                    "请填写有效空间编号，读取空间与中继后选择节点。",
-                    "Enter a valid space ID, load space and relays, then select a node.",
+                    "请读取有效空间。保存须选择有有效租约的中继；撤销可直接填写已有节点或授权编号。",
+                    "Load a valid space. Saving requires a relay with a current lease; revocation accepts an existing node or grant ID.",
                 )
                 .into(),
             );
             return;
         }
+        let Ok((node_id, node)) = target else {
+            return;
+        };
         let saving = matches!(action, Action::SavePublisher | Action::SaveExport);
         let mut end = minutes
             .get_untracked()
@@ -224,9 +265,12 @@ pub(super) fn NetworkTopologyPanel(
         if matches!(action, Action::SavePublisher) {
             let choices = nodes.get_untracked();
             if chosen_neighbors.len() > MAX_NEIGHBORS
-                || chosen_neighbors
-                    .iter()
-                    .any(|id| id == &node_id || !choices.iter().any(|node| &node.id == id))
+                || chosen_neighbors.iter().any(|id| {
+                    id == &node_id
+                        || !choices
+                            .iter()
+                            .any(|node| &node.id == id && node.lease_end > request_time)
+                })
                 || (use_export
                     && chosen_export.as_ref().is_none_or(|grant| {
                         grant.scope.grant_id != export_draft_id
@@ -292,6 +336,23 @@ pub(super) fn NetworkTopologyPanel(
                     return Ok(Reply::Loaded(view, choices));
                 }
                 let snapshot = snapshot.as_ref().ok_or(SdkError::Invalid)?;
+                if matches!(action, Action::RevokePublisher) {
+                    client
+                        .revoke_network_topology_publisher(&space_id, &node_id)
+                        .await?;
+                    return Ok(Reply::PublisherRevoked);
+                }
+                if matches!(action, Action::RevokeExport) {
+                    return Ok(Reply::ExportRevoked(
+                        client
+                            .revoke_network_route_export(
+                                &space_id,
+                                &export_draft_id,
+                                snapshot.revision,
+                            )
+                            .await?,
+                    ));
+                }
                 let node = node.as_ref().ok_or(SdkError::Invalid)?;
                 let authority: [u8; 32] = URL_SAFE_NO_PAD
                     .decode(&snapshot.authority_public_key)
@@ -338,12 +399,6 @@ pub(super) fn NetworkTopologyPanel(
                             return Err(SdkError::Invalid);
                         }
                         Ok(Reply::Publisher(claims))
-                    }
-                    Action::RevokePublisher => {
-                        client
-                            .revoke_network_topology_publisher(&space_id, &node_id)
-                            .await?;
-                        Ok(Reply::PublisherRevoked)
                     }
                     Action::SaveExport | Action::ReadExport => {
                         let view = if matches!(action, Action::SaveExport) {
@@ -398,15 +453,6 @@ pub(super) fn NetworkTopologyPanel(
                         }
                         Ok(Reply::Export(current, claims))
                     }
-                    Action::RevokeExport => Ok(Reply::ExportRevoked(
-                        client
-                            .revoke_network_route_export(
-                                &space_id,
-                                &export_draft_id,
-                                snapshot.revision,
-                            )
-                            .await?,
-                    )),
                     Action::Observe => {
                         let nonce = nestlink_auth::random_bytes::<32>();
                         let signed = client
@@ -449,7 +495,9 @@ pub(super) fn NetworkTopologyPanel(
                         }
                         Ok(Reply::Observed(found, verified.claims().issued_at_ms))
                     }
-                    Action::Load => Err(SdkError::Invalid),
+                    Action::Load | Action::RevokePublisher | Action::RevokeExport => {
+                        Err(SdkError::Invalid)
+                    }
                 }
             }
             .await;
@@ -460,26 +508,12 @@ pub(super) fn NetworkTopologyPanel(
             clock.set(now_ms());
             match result {
                 Ok(Reply::Loaded(view, choices)) if view.space_id == space_id => {
-                    let previous = nodes
-                        .get_untracked()
-                        .into_iter()
-                        .find(|node| node.id == node_id);
-                    let current = choices.iter().find(|node| node.id == node_id);
-                    if previous.as_ref().zip(current).is_none_or(|(old, new)| {
-                        old.key != new.key
-                            || old.runtime != new.runtime
-                            || old.generation != new.generation
-                    }) || publisher.get_untracked().is_some_and(|grant| {
-                        grant.scope.policy_epoch != view.policy_epoch
-                            || grant.scope.deployment_id != view.deployment_id
-                    }) || export.get_untracked().is_some_and(|grant| {
-                        grant.scope.policy_epoch != view.policy_epoch
-                            || grant.scope.deployment_id != view.deployment_id
-                    }) {
-                        publisher.set(None);
-                        export.set(None);
-                        include_export.set(false);
-                    }
+                    // Reading policy and nodes cannot reconfirm a publisher
+                    // replaced or revoked within the same policy epoch.
+                    // Retain draft IDs so an ambiguous save can be read back.
+                    publisher.set(None);
+                    export.set(None);
+                    include_export.set(false);
                     observation.set(None);
                     observed_at.set(None);
                     policy.set(Some(view));
@@ -494,16 +528,19 @@ pub(super) fn NetworkTopologyPanel(
                     message.set(t("服务器已保存发布授权。请单独读取节点观测以确认发布。", "Publisher authorization is saved on the server. Read node observations separately to confirm publication.").into());
                 }
                 Ok(Reply::PublisherRevoked) => {
-                    publisher.set(None);
-                    observation.set(None);
-                    observed_at.set(None);
-                    message.set(
+                    if selected.get_untracked() == node_id {
+                        publisher.set(None);
+                        observation.set(None);
+                        observed_at.set(None);
+                        publisher_id.set(nestlink_auth::random_id());
+                    }
+                    message.set(format!(
+                        "{} {node_id}",
                         t(
-                            "服务器已撤销该节点在此空间的发布授权。",
-                            "The server revoked this node's publisher authorization in this space.",
+                            "服务器已撤销此空间中该节点的发布授权：",
+                            "The server revoked publisher authorization in this space for node:",
                         )
-                        .into(),
-                    );
+                    ));
                 }
                 Ok(Reply::Export(view, claims)) if view.space_id == space_id => {
                     policy.set(Some(view));
@@ -562,6 +599,7 @@ pub(super) fn NetworkTopologyPanel(
         policy.set(None);
         nodes.set(Vec::new());
         selected.set(String::new());
+        revoke_node.set(String::new());
         neighbors.set(Vec::new());
         publisher.set(None);
         export.set(None);
@@ -585,13 +623,19 @@ pub(super) fn NetworkTopologyPanel(
             <p>{move || policy.get().map(|view| format!("revision {} · epoch {}", view.revision, view.policy_epoch)).unwrap_or_else(|| t("请先读取当前空间", "Read the current space first").into())}</p>
             <label>{move || t("发布节点", "Publishing node")}<select data-topology-field="node" prop:value=move || selected.get() disabled=move || busy.get() || policy.get().is_none() on:change=move |event| {
                 generation.update(|value| *value = value.wrapping_add(1));
-                selected.set(event_target_value(&event)); neighbors.set(Vec::new()); publisher.set(None); export.set(None);
+                let value = event_target_value(&event);
+                revoke_node.set(value.clone()); selected.set(value); neighbors.set(Vec::new()); publisher.set(None); export.set(None);
                 publisher_id.set(nestlink_auth::random_id()); export_id.set(nestlink_auth::random_id()); cidrs.set(String::new());
                 include_export.set(false); observation.set(None); observed_at.set(None); message.set(String::new());
             }>
                 <option value="">{move || t("选择已登记中继", "Choose a registered relay")}</option>
                 {move || nodes.get().into_iter().map(|node| view! { <option value=node.id>{node.name} {if node.lease_end <= clock.get() { t(" · 最近读取的租约已过期，请刷新", " · last-read lease expired; reload") } else { "" }}</option> }).collect_view()}
             </select></label>
+            <label>{move || t("导出授权编号（用于新建、读取或撤销）", "Export grant ID (for creation, readback or revocation)")}<input data-topology-field="export-id" maxlength="36" prop:value=move || export_id.get() disabled=move || busy.get() on:input=move |event| { export_id.set(event_target_value(&event)); export.set(None); include_export.set(false); } /></label>
+            <button type="button" class="secondary" disabled=move || busy.get() || policy.get().is_none() || !nestlink_protocol::valid_id(&export_id.get()) on:click=move |_| request.run(Action::RevokeExport)>{move || t("撤销此编号的导出及其发布授权", "Revoke this export grant ID and dependent publishers")}</button>
+            <label>{move || t("撤销发布授权的节点编号（可填写离线或已撤销节点）", "Node ID whose publisher authorization to revoke (offline or revoked nodes accepted)")}<input data-topology-field="revoke-node-id" maxlength="36" prop:value=move || revoke_node.get() disabled=move || busy.get() on:input=move |event| revoke_node.set(event_target_value(&event)) /></label>
+            <button type="button" class="secondary" disabled=move || busy.get() || policy.get().is_none() || !nestlink_protocol::valid_id(&revoke_node.get()) on:click=move |_| request.run(Action::RevokePublisher)>{move || t("撤销上述编号节点当前的发布授权", "Revoke the current publisher authorization for the node ID above")}</button>
+            <p class="muted">{move || t("撤销只按当前空间与明确编号执行，目标节点不需要在线。", "Revocation uses the current space and explicit ID; the target node need not be online.")}</p>
             <Show when=move || !selected.get().is_empty()>
                 <fieldset disabled=move || busy.get()>
                     <legend>{move || t("允许探测的相邻节点（最多16个）", "Neighbors allowed for probing (up to 16)")}</legend>
@@ -605,19 +649,16 @@ pub(super) fn NetworkTopologyPanel(
                 </fieldset>
                 <label>{move || t("有效分钟数（1–15，自最近读取空间的服务器时间起）", "Lifetime in minutes (1–15, from the last server space read)")}<input data-topology-field="minutes" type="number" min="1" max="15" step="1" prop:value=move || minutes.get() disabled=move || busy.get() on:input=move |event| minutes.set(event_target_value(&event)) /></label>
                 <h3>{move || t("精确网段导出授权", "Exact prefix export authorization")}</h3>
-                <label>{move || t("导出授权编号（可填写已有编号以读取或撤销）", "Export grant ID (enter an existing ID to read or revoke)")}<input data-topology-field="export-id" maxlength="36" prop:value=move || export_id.get() disabled=move || busy.get() on:input=move |event| { export_id.set(event_target_value(&event)); export.set(None); include_export.set(false); } /></label>
                 <label>{move || t("获准发布的 CIDR，每行一个", "CIDRs authorized for publication, one per line")}<textarea data-topology-field="prefixes" rows="4" maxlength="2048" placeholder="192.168.20.0/24" prop:value=move || cidrs.get() disabled=move || busy.get() on:input=move |event| cidrs.set(event_target_value(&event))></textarea></label>
                 <button type="button" class="secondary" disabled=move || busy.get() on:click=move |_| { export_id.set(nestlink_auth::random_id()); export.set(None); include_export.set(false); }>{move || t("新建导出授权编号", "New export grant ID")}</button>
                 <button type="button" class="secondary" disabled=move || busy.get() || policy.get().is_none() on:click=move |_| request.run(Action::ReadExport)>{move || t("读取此导出授权", "Read export authorization")}</button>
                 <button type="button" class="primary" disabled=move || busy.get() || policy.get().is_none() || export.get().is_some() on:click=move |_| request.run(Action::SaveExport)>{move || t("保存新的精确网段授权", "Save new exact prefix authorization")}</button>
-                <button type="button" class="secondary" disabled=move || busy.get() || policy.get().is_none() || !nestlink_protocol::valid_id(&export_id.get()) on:click=move |_| request.run(Action::RevokeExport)>{move || t("撤销此编号的导出及其发布授权", "Revoke this export grant ID and dependent publishers")}</button>
                 <p>{move || export.get().map(|grant| format!("{} · {} · {} {}{}", if policy.get().is_some() { t("服务器已保存", "Saved on server") } else { t("上次服务器确认；当前状态未确认", "Previously confirmed; current state unconfirmed") }, prefix_text(&grant.prefixes), t("到期", "expires"), expiry(grant.scope.expires_at_ms), if grant.scope.expires_at_ms <= clock.get() { t(" · 已过期", " · expired") } else { "" })).unwrap_or_else(|| t("尚未读取导出授权", "Export authorization not loaded").into())}</p>
                 <label><input data-topology-field="include-export" type="checkbox" prop:checked=move || include_export.get() disabled=move || busy.get() || export.get().is_none() on:change=move |event| include_export.set(event_target_checked(&event)) />{move || t("在此次发布授权中引用上面已读取的精确网段", "Reference the loaded exact prefixes in this publisher authorization")}</label>
                 <p class="muted">{move || t("引用导出授权时，发布授权在两者较早的到期时间结束。", "When an export is referenced, publisher authorization ends at the earlier expiry.")}</p>
                 <h3>{move || t("节点发布授权", "Node publisher authorization")}</h3>
                 <button type="button" class="secondary" disabled=move || busy.get() || policy.get().is_none() on:click=move |_| request.run(Action::ReadPublisher)>{move || t("读取已保存的发布授权", "Read saved publisher authorization")}</button>
                 <button type="button" class="primary" disabled=move || busy.get() || policy.get().is_none() on:click=move |_| request.run(Action::SavePublisher)>{move || t("按当前相邻节点及网段保存或替换发布授权", "Save or replace publisher authorization with the current neighbors and prefixes")}</button>
-                <button type="button" class="secondary" disabled=move || busy.get() || policy.get().is_none() on:click=move |_| request.run(Action::RevokePublisher)>{move || t("撤销此节点当前的发布授权", "Revoke this node's current publisher authorization")}</button>
                 <p>{move || publisher.get().map(|grant| format!("{} · {} · runtime {} · {} {}{}", if policy.get().is_some() { t("服务器已保存", "Saved on server") } else { t("上次服务器确认；当前状态未确认", "Previously confirmed; current state unconfirmed") }, grant.scope.grant_id, grant.incarnation.runtime_generation, t("到期", "expires"), expiry(grant.scope.expires_at_ms), if grant.scope.expires_at_ms <= clock.get() { t(" · 已过期", " · expired") } else { "" })).unwrap_or_else(|| t("尚未读取发布授权", "Publisher authorization not loaded").into())}</p>
                 <p>{move || publisher.get().map(|grant| {
                     let choices = nodes.get();
@@ -639,6 +680,33 @@ pub(super) fn NetworkTopologyPanel(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn durable_revocation_targets_cannot_be_used_to_issue_to_retired_or_expired_nodes()
+    -> Result<(), SdkError> {
+        let retired = "00000001-1111-4111-8111-111111111111";
+        let live = NodeChoice {
+            id: "00000002-1111-4111-8111-111111111111".into(),
+            name: "current relay".into(),
+            key: [1; 32],
+            runtime: "00000003-1111-4111-8111-111111111111".into(),
+            generation: 1,
+            lease_end: 2000,
+        };
+        let (id, node) = target(Action::RevokePublisher, "", retired, &[], 1000)?;
+        assert_eq!(id, retired);
+        assert!(node.is_none());
+        assert!(target(Action::RevokeExport, "", "", &[], 1000)?.1.is_none());
+        assert!(target(Action::RevokePublisher, &live.id, "invalid", &[], 1000).is_err());
+        for action in [Action::SavePublisher, Action::SaveExport] {
+            assert!(target(action, retired, retired, &[], 1000).is_err());
+            let (id, node) = target(action, &live.id, retired, std::slice::from_ref(&live), 1000)?;
+            assert_eq!(id, live.id);
+            assert!(node.is_some());
+            assert!(target(action, &live.id, retired, std::slice::from_ref(&live), 2000).is_err());
+        }
+        Ok(())
+    }
 
     #[test]
     fn prefix_drafts_preserve_exact_networks_and_reject_widening_or_duplicates() {

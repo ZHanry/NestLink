@@ -322,6 +322,7 @@ pub async fn authorize(
                 if !written {
                     continue;
                 }
+                queue.record_business_transmit(queued.frame.payload.len());
             }
         }));
     }
@@ -354,8 +355,10 @@ pub async fn authorize(
                 {
                     continue;
                 }
+                let mut complete = true;
                 for fragment in fragments {
                     if queued.arrived.elapsed() >= AGE {
+                        complete = false;
                         break;
                     }
                     writer_lease.operation(nestlink_protocol::Permission::Audio, || {
@@ -363,6 +366,9 @@ pub async fn authorize(
                             .send_datagram(fragment.into())
                             .map_err(io::Error::other)
                     })?;
+                }
+                if complete {
+                    queue.record_business_transmit(queued.frame.payload.len());
                 }
             }
         }));

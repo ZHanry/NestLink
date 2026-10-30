@@ -586,6 +586,9 @@ impl LeaseControl {
         self.inner.check(&mut managed)?;
         Ok(managed.session.current_verified_permit().clone())
     }
+    pub(crate) fn selected_path(&self) -> Path {
+        self.inner.path
+    }
     pub(crate) fn native_renewal_required(&self) -> Result<bool, RemoteError> {
         let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;

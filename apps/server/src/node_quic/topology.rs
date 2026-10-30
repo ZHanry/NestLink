@@ -6,7 +6,7 @@ use nestlink_node::control::TopologyReporter;
 use nestlink_protocol::{
     api::{
         NetworkNodeTopologyAuthority, NetworkNodeTopologyNeighbor, NetworkTopologyProbe,
-        NodeEndpointsView,
+        NetworkTopologyProbeReply, NodeEndpointsView,
     },
     network::PeerId,
     network_topology::{BootIncarnation, MAX_NEIGHBORS, TopologyNeighbor},
@@ -22,6 +22,7 @@ use tokio::{sync::OwnedSemaphorePermit, time::Instant as Deadline};
 
 const MAX_SPACES: usize = 64;
 const MAX_CONNECTIONS: usize = 16;
+const MAX_REPORTS: usize = MAX_SPACES * 2;
 const MAX_ADDRESSES: usize = 32;
 const PERIOD: Duration = Duration::from_millis(500);
 const PROBE_BUDGET: Duration = Duration::from_millis(700);
@@ -55,7 +56,6 @@ struct Group {
 }
 struct Session {
     key: PeerKey,
-    work: Vec<Work>,
     connection: quinn::Connection,
     write: quinn::SendStream,
     read: quinn::RecvStream,
@@ -83,8 +83,14 @@ struct Outcome {
     node: String,
     session: Option<Session>,
     observations: Vec<Observation>,
+    rejected: Vec<Work>,
     next_at: Deadline,
     failures: u8,
+}
+struct Measured {
+    session: Option<Session>,
+    observations: Vec<Observation>,
+    rejected: Vec<Work>,
 }
 
 fn same_neighbor(left: &NetworkNodeTopologyNeighbor, right: &NetworkNodeTopologyNeighbor) -> bool {
@@ -93,7 +99,7 @@ fn same_neighbor(left: &NetworkNodeTopologyNeighbor, right: &NetworkNodeTopology
         && left.incarnation == right.incarnation
         && left.node == right.node
 }
-fn same_authority(
+fn same_local_authority(
     left: &NetworkNodeTopologyAuthority,
     right: &NetworkNodeTopologyAuthority,
 ) -> bool {
@@ -105,33 +111,15 @@ fn same_authority(
         && left.publisher_digest == right.publisher_digest
         && left.route_exports == right.route_exports
         && left.local == right.local
-        && left.neighbors.len() == right.neighbors.len()
-        && left
-            .neighbors
-            .iter()
-            .zip(&right.neighbors)
-            .all(|(left, right)| same_neighbor(left, right))
 }
-fn same_work(left: &[Work], right: &[Work]) -> bool {
-    left.len() == right.len()
-        && left.iter().zip(right).all(|(left, right)| {
-            left.space == right.space
-                && same_authority(&left.authority, &right.authority)
-                && same_neighbor(&left.neighbor, &right.neighbor)
-        })
+fn authorized_work(authority: &NetworkNodeTopologyAuthority, work: &Work) -> bool {
+    same_local_authority(authority, &work.authority)
+        && authority.neighbors.iter().any(|neighbor| same_neighbor(neighbor, &work.neighbor))
 }
 fn current(control: &NodeControl, work: &Work) -> bool {
     control
         .network_topology_authority(&work.space)
-        .is_ok_and(|authority| same_authority(&authority, &work.authority))
-}
-async fn work_stopped(control: &NodeControl, work: &[Work]) {
-    loop {
-        if work.iter().any(|work| !current(control, work)) {
-            return;
-        }
-        tokio::time::sleep(Duration::from_millis(25)).await;
-    }
+        .is_ok_and(|authority| authorized_work(&authority, work))
 }
 async fn peer_stopped(control: &NodeControl, peer: &[u8; 32]) {
     loop {
@@ -148,6 +136,14 @@ async fn peer_stopped(control: &NodeControl, peer: &[u8; 32]) {
         {
             return;
         }
+        tokio::time::sleep(Duration::from_millis(25)).await;
+    }
+}
+async fn key_stopped(control: &NodeControl, key: &PeerKey) {
+    loop {
+        if !control.network_topology_authorities().is_ok_and(|authorities| authorities.iter().any(|authority| {
+            authority.neighbors.iter().any(|neighbor| PeerKey::from(neighbor) == *key)
+        })) { return; }
         tokio::time::sleep(Duration::from_millis(25)).await;
     }
 }
@@ -221,16 +217,22 @@ pub(super) async fn run(
             result = probes.join_next(), if !probes.is_empty() => {
                 let outcome: Outcome = result.ok_or_else(failed)?.map_err(io::Error::other)?;
                 in_flight.remove(&outcome.node);
-                observations.retain(|(_, node), _| node != &outcome.node);
+                for work in outcome.rejected {
+                    observations.remove(&(work.space, outcome.node.clone()));
+                }
+                // A changed or withdrawn scope cannot erase an independently
+                // measured scope on the same peer. Each original Work retains
+                // its own freshness and exact current-authority checks.
                 for observation in outcome.observations {
                     if current(&control, &observation.work) {
                         observations.insert((observation.work.space.clone(), outcome.node.clone()), observation);
                     }
                 }
                 if active.contains(&outcome.node)
-                    && let Some(group) = current_groups.get(&outcome.node).cloned()
-                    && group.work.iter().all(|work| current(&control, work))
+                    && let Some(mut group) = current_groups.get(&outcome.node).cloned()
                 {
+                    group.work.retain(|work| current(&control, work));
+                    if group.work.is_empty() { continue; }
                     // Re-arm from the original measurement schedule immediately.
                     // A healthy 600ms probe must not wait for a later 500ms tick
                     // and manufacture a down edge under the unchanged 700ms TTL.
@@ -265,6 +267,7 @@ pub(super) async fn run(
                     probes.spawn(async move { probe(node, group, None, endpoint, control, selector, identity, Deadline::now(), 0).await });
                 }
                 for authority in authorities {
+                    if reports.len() >= MAX_REPORTS { break; }
                     let space = space(&authority)?;
                     if reporting.get(&space).copied().unwrap_or_default() >= 2 { continue; }
                     let local = PeerId::from_public_key(&identity.public_key());
@@ -273,7 +276,7 @@ pub(super) async fn run(
                         local_endpoint_revision: authority.local.revision,
                         remote_endpoint_revision: neighbor.node.revision,
                         up: observations.get(&(space.clone(), neighbor.node.node_id.clone())).is_some_and(|observation| {
-                            same_authority(&observation.work.authority, &authority) && same_neighbor(&observation.work.neighbor, neighbor) && observation.completed.elapsed() < FRESH
+                            authorized_work(&authority, &observation.work) && same_neighbor(&observation.work.neighbor, neighbor) && observation.completed.elapsed() < FRESH
                         }),
                     }).collect();
                     // The bounded 700ms HTTP response may overlap the next
@@ -362,9 +365,9 @@ async fn probe(
     not_before: Deadline,
     failures: u8,
 ) -> Outcome {
-    let validity = group.work.clone();
+    let key = group.key.clone();
     let result = tokio::select! { biased;
-        _ = work_stopped(&control, &validity) => return Outcome { node, session: None, observations: Vec::new(), next_at: Deadline::now() + PERIOD, failures: 0 },
+        _ = key_stopped(&control, &key) => return Outcome { node, session: None, observations: Vec::new(), rejected: Vec::new(), next_at: Deadline::now() + PERIOD, failures: 0 },
         result = async {
             tokio::time::sleep_until(not_before).await;
             let started = Deadline::now();
@@ -373,17 +376,22 @@ async fn probe(
         } => result,
     };
     match result {
-        (started, Ok(Ok((session, observations)))) if started.elapsed() < PROBE_BUDGET => Outcome {
-            node,
-            session: Some(session),
-            observations,
-            next_at: started + PERIOD,
-            failures: 0,
+        (started, Ok(Ok(measured))) if started.elapsed() < PROBE_BUDGET => {
+            let healthy = measured.session.is_some();
+            Outcome {
+                node,
+                session: measured.session,
+                observations: measured.observations,
+                rejected: measured.rejected,
+                next_at: if healthy { started + PERIOD } else { Deadline::now() + Duration::from_secs(1u64 << failures.min(3)) },
+                failures: if healthy { 0 } else { failures.saturating_add(1) },
+            }
         },
         _ => Outcome {
             node,
             session: None,
             observations: Vec::new(),
+            rejected: Vec::new(),
             next_at: Deadline::now() + Duration::from_secs(1u64 << failures.min(3)),
             failures: failures.saturating_add(1),
         },
@@ -391,22 +399,21 @@ async fn probe(
 }
 
 async fn exchange(
-    group: Group,
+    mut group: Group,
     session: Option<Session>,
     endpoint: quinn::Endpoint,
     control: Arc<NodeControl>,
     selector: Arc<RelaySelector>,
     identity: Arc<NodeIdentity>,
-) -> io::Result<(Session, Vec<Observation>)> {
+) -> io::Result<Measured> {
+    group.work.retain(|work| current(&control, work));
     if group.work.is_empty()
         || group.work.len() > MAX_SPACES
-        || group.work.iter().any(|work| !current(&control, work))
     {
         return Err(failed());
     }
     let mut session = match session.filter(|session| {
         session.key == group.key
-            && same_work(&session.work, &group.work)
             && session.connection.close_reason().is_none()
     }) {
         Some(session) => session,
@@ -427,7 +434,6 @@ async fn exchange(
             let (write, read) = connection.open_bi().await.map_err(io::Error::other)?;
             let session = Session {
                 key: group.key.clone(),
-                work: group.work.clone(),
                 connection,
                 write,
                 read,
@@ -445,6 +451,7 @@ async fn exchange(
             schema_version: 1,
             space_id: work.space.clone(),
             publisher_digest: work.authority.publisher_digest,
+            remote_publisher_digest: work.neighbor.publisher_digest,
             local_endpoint_revision: work.authority.local.revision,
             remote_endpoint_revision: work.neighbor.node.revision,
             nonce: random_bytes::<32>(),
@@ -455,42 +462,70 @@ async fn exchange(
     for request in &requests {
         write_message(&mut session.write, request).await?;
     }
+    let mut observations = Vec::new();
+    let mut rejected = Vec::new();
     for (request, work) in requests.iter().zip(&group.work) {
-        let response: NetworkTopologyProbe = tokio::select! { biased;
-            _ = session.connection.read_datagram() => return Err(failed()),
-            _ = session.connection.accept_bi() => return Err(failed()),
-            _ = session.connection.accept_uni() => return Err(failed()),
-            response = read_message(&mut session.read) => response?,
-        };
-        if response.schema_version != 1
-            || response.space_id != request.space_id
-            || response.publisher_digest != work.neighbor.publisher_digest
-            || response.nonce != request.nonce
-            || response.local_endpoint_revision != request.remote_endpoint_revision
-            || response.remote_endpoint_revision != request.local_endpoint_revision
-        {
-            return Err(failed());
+        match observe_reply(&mut session, request).await {
+            Ok(true) => {},
+            Ok(false) => {
+                    rejected.push(work.clone());
+                    continue;
+            },
+            Err(_) => {
+                observations.retain(|observation: &Observation| current(&control, &observation.work));
+                return Ok(Measured { session: None, observations, rejected });
+            }
         }
+        // Consume and authenticate the already issued response to keep the
+        // stream aligned; a withdrawn original Work cannot create an up edge.
+        if !current(&control, work) { continue; }
+        observations.push(Observation { work: work.clone(), completed: Deadline::now() });
     }
-    if session.connection.close_reason().is_some()
-        || group.work.iter().any(|work| !current(&control, work))
+    observations.retain(|observation| current(&control, &observation.work));
+    if session.connection.close_reason().is_some() { return Ok(Measured { session: None, observations, rejected }); }
+    Ok(Measured { session: Some(session), observations, rejected })
+}
+
+async fn read_reply(session: &mut Session) -> io::Result<NetworkTopologyProbeReply> {
+    tokio::select! { biased;
+        _ = session.connection.read_datagram() => Err(failed()),
+        _ = session.connection.accept_bi() => Err(failed()),
+        _ = session.connection.accept_uni() => Err(failed()),
+        response = read_message(&mut session.read) => response,
+    }
+}
+
+fn rejected_reply(reply: &NetworkTopologyProbeReply, request: &NetworkTopologyProbe) -> bool {
+    matches!(reply, NetworkTopologyProbeReply::Rejected { schema_version, space_id, nonce }
+        if *schema_version == 1 && *space_id == request.space_id && *nonce == request.nonce)
+}
+
+async fn observe_reply(session: &mut Session, request: &NetworkTopologyProbe) -> io::Result<bool> {
+    let first = read_reply(session).await?;
+    if rejected_reply(&first, request) { return Ok(false); }
+    let NetworkTopologyProbeReply::Prepared { probe } = first else { return Err(failed()); };
+    if probe.schema_version != 1
+        || probe.space_id != request.space_id
+        || probe.publisher_digest != request.remote_publisher_digest
+        || probe.remote_publisher_digest != request.publisher_digest
+        || probe.nonce != request.nonce
+        || probe.local_endpoint_revision != request.remote_endpoint_revision
+        || probe.remote_endpoint_revision != request.local_endpoint_revision
     {
         return Err(failed());
     }
-    session.work = group.work.clone();
-    let completed = Deadline::now();
-    Ok((
-        session,
-        group
-            .work
-            .into_iter()
-            .map(|work| Observation { work, completed })
-            .collect(),
-    ))
+    // The sender rechecks the same original scope after its first write. Both
+    // frames share this round trip and the unchanged whole-probe deadline.
+    let committed = read_reply(session).await?;
+    if rejected_reply(&committed, request) { return Ok(false); }
+    match committed {
+        NetworkTopologyProbeReply::Observed { probe: confirmed } if confirmed == probe => Ok(true),
+        _ => Err(failed()),
+    }
 }
 
 /// A TLS-authenticated peer may exchange only this fixed bounded message on
-/// the independent ALPN. Current metadata is checked before and after each echo.
+/// the independent ALPN. Every scope binds both current publisher digests.
 pub(super) async fn incoming(
     connection: quinn::Connection,
     control: Arc<NodeControl>,
@@ -504,14 +539,18 @@ pub(super) async fn incoming(
     let mut stopped = control.stopped();
     let mut window = Deadline::now();
     let mut messages = 0u16;
-    let mut bindings = BTreeMap::<String, NetworkNodeTopologyAuthority>::new();
+    let mut spaces = BTreeSet::new();
+    let mut key = None;
     loop {
         if *stopped.borrow() {
             return Err(failed());
         }
         let request: NetworkTopologyProbe = tokio::select! { biased;
             _ = stopped.changed() => return Err(failed()),
-            _ = peer_stopped(&control, &peer) => return Err(failed()),
+            _ = async {
+                if let Some(key) = key.as_ref() { key_stopped(&control, key).await; }
+                else { peer_stopped(&control, &peer).await; }
+            } => return Err(failed()),
             _ = connection.read_datagram() => return Err(failed()),
             _ = connection.accept_bi() => return Err(failed()),
             _ = connection.accept_uni() => return Err(failed()),
@@ -529,61 +568,77 @@ pub(super) async fn incoming(
         {
             return Err(failed());
         }
-        let authority = control
-            .network_topology_authority(&request.space_id)
-            .map_err(|_| failed())?;
-        if bindings
-            .get(&request.space_id)
-            .is_some_and(|original| !same_authority(original, &authority))
-            || (!bindings.contains_key(&request.space_id) && bindings.len() >= MAX_SPACES)
-        {
+        if !spaces.contains(&request.space_id) && spaces.len() >= MAX_SPACES {
             return Err(failed());
         }
-        bindings.insert(request.space_id.clone(), authority.clone());
-        let neighbor = authority
-            .neighbors
-            .iter()
-            .find(|neighbor| digest(&neighbor.public_key) == peer)
-            .ok_or_else(failed)?;
-        let claims =
-            nestlink_protocol::network_topology::TopologyPublisherClaims::decode_canonical(
-                &authority.publisher.claims,
-            )
-            .map_err(io::Error::other)?;
-        if claims.public_key != identity.public_key()
-            || claims.peer != PeerId::from_public_key(&identity.public_key())
-            || request.publisher_digest != neighbor.publisher_digest
-            || request.local_endpoint_revision != neighbor.node.revision
-            || request.remote_endpoint_revision != authority.local.revision
-        {
-            return Err(failed());
-        }
-        let response = NetworkTopologyProbe {
-            schema_version: 1,
-            space_id: request.space_id.clone(),
-            publisher_digest: authority.publisher_digest,
-            local_endpoint_revision: authority.local.revision,
-            remote_endpoint_revision: neighbor.node.revision,
-            nonce: request.nonce,
+        let work = incoming_work(&control, &identity, &peer, &request)
+            .ok()
+            .filter(|work| key.as_ref().is_none_or(|key| *key == PeerKey::from(&work.neighbor)))
+            .filter(|work| current(&control, work));
+        let response = if let Some(work) = work {
+            key.get_or_insert_with(|| PeerKey::from(&work.neighbor));
+            spaces.insert(work.space.clone());
+            let probe = NetworkTopologyProbe {
+                schema_version: 1,
+                space_id: request.space_id.clone(),
+                publisher_digest: work.authority.publisher_digest,
+                remote_publisher_digest: work.neighbor.publisher_digest,
+                local_endpoint_revision: work.authority.local.revision,
+                remote_endpoint_revision: work.neighbor.node.revision,
+                nonce: request.nonce,
+            };
+            tokio::time::timeout(PROBE_BUDGET, write_message(&mut write,
+                &NetworkTopologyProbeReply::Prepared { probe: probe.clone() }))
+                .await.map_err(io::Error::other)??;
+            if current(&control, &work) {
+                NetworkTopologyProbeReply::Observed { probe }
+            } else {
+                spaces.remove(&work.space);
+                NetworkTopologyProbeReply::Rejected {
+                    schema_version: 1, space_id: request.space_id.clone(), nonce: request.nonce,
+                }
+            }
+        } else {
+            // Resource snapshots may advance at different instants. A denied
+            // scope supplies no live-edge proof and leaves other scopes intact.
+            NetworkTopologyProbeReply::Rejected {
+                schema_version: 1,
+                space_id: request.space_id.clone(),
+                nonce: request.nonce,
+            }
         };
-        if !same_authority(
-            &control
-                .network_topology_authority(&request.space_id)
-                .map_err(|_| failed())?,
-            &authority,
-        ) {
-            return Err(failed());
-        }
         tokio::time::timeout(PROBE_BUDGET, write_message(&mut write, &response))
             .await
             .map_err(io::Error::other)??;
-        if !same_authority(
-            &control
-                .network_topology_authority(&request.space_id)
-                .map_err(|_| failed())?,
-            &authority,
-        ) {
-            return Err(failed());
-        }
     }
+}
+
+fn incoming_work(
+    control: &NodeControl,
+    identity: &NodeIdentity,
+    peer: &[u8; 32],
+    request: &NetworkTopologyProbe,
+) -> io::Result<Work> {
+    let authority = control
+        .network_topology_authority(&request.space_id)
+        .map_err(|_| failed())?;
+    let neighbor = authority
+        .neighbors
+        .iter()
+        .find(|neighbor| digest(&neighbor.public_key) == *peer)
+        .ok_or_else(failed)?;
+    let claims = nestlink_protocol::network_topology::TopologyPublisherClaims::decode_canonical(
+        &authority.publisher.claims,
+    )
+    .map_err(io::Error::other)?;
+    if claims.public_key != identity.public_key()
+        || claims.peer != PeerId::from_public_key(&identity.public_key())
+        || request.publisher_digest != neighbor.publisher_digest
+        || request.remote_publisher_digest != authority.publisher_digest
+        || request.local_endpoint_revision != neighbor.node.revision
+        || request.remote_endpoint_revision != authority.local.revision
+    {
+        return Err(failed());
+    }
+    Ok(Work { neighbor: neighbor.clone(), authority, space: request.space_id.clone() })
 }
