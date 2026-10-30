@@ -585,13 +585,29 @@ fn business_renewal_preserves_a_separate_nonrenewable_route_deadline() {
     claims.lease_sequence = 2;
     claims.issued_at_unix_ms += 5000;
     claims.expires_at_unix_ms += 5000;
-    session.renew(verified(&signer, &claims), 6000, ClockSample {
-        monotonic_ms: 6100, unix_ms: 1_005_100,
-    }).unwrap();
+    session
+        .renew(
+            verified(&signer, &claims),
+            6000,
+            ClockSample {
+                monotonic_ms: 6100,
+                unix_ms: 1_005_100,
+            },
+        )
+        .unwrap();
     assert_eq!(session.deadline_ms(), 8000);
-    assert!(session.authorize(Permission::View, Path::Direct, 7999).is_ok());
-    assert_eq!(session.authorize(Permission::View, Path::Direct, 8000).unwrap_err().code,
-        ErrorCode::LeaseExpired);
+    assert!(
+        session
+            .authorize(Permission::View, Path::Direct, 7999)
+            .is_ok()
+    );
+    assert_eq!(
+        session
+            .authorize(Permission::View, Path::Direct, 8000)
+            .unwrap_err()
+            .code,
+        ErrorCode::LeaseExpired
+    );
     assert_eq!(session.state(), SessionState::Stopped(StopReason::Expired));
 }
 

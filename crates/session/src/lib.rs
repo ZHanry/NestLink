@@ -477,7 +477,8 @@ impl Session {
     /// renewal cannot extend the separate route permission that carries it.
     pub fn cap_lifetime_deadline_ms(&mut self, deadline_ms: u64) -> Result<(), ContractError> {
         self.lifetime_deadline_ms = Some(
-            self.lifetime_deadline_ms.map_or(deadline_ms, |old| old.min(deadline_ms)),
+            self.lifetime_deadline_ms
+                .map_or(deadline_ms, |old| old.min(deadline_ms)),
         );
         self.cap_deadline_ms(deadline_ms)
     }
@@ -663,7 +664,9 @@ impl Session {
         }
         let deadline = lease_deadline(&permit, request_started_ms, now)?;
         self.permit = permit;
-        self.deadline_ms = self.lifetime_deadline_ms.map_or(deadline, |cap| deadline.min(cap));
+        self.deadline_ms = self
+            .lifetime_deadline_ms
+            .map_or(deadline, |cap| deadline.min(cap));
         self.last_monotonic_ms = now.monotonic_ms;
         self.last_unix_ms = now.unix_ms;
         self.last_request_ms = request_started_ms;

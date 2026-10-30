@@ -77,13 +77,19 @@ pub(super) fn NetworkMembershipPanel(
         if !nestlink_protocol::valid_id(&space_id)
             || (!is_policy && !nestlink_protocol::valid_id(&installation_id))
         {
-            problem.set(t("请输入有效的空间编号，并选择已登记设备。", "Enter a valid space ID and choose a registered device.").into());
+            problem.set(
+                t(
+                    "请输入有效的空间编号，并选择已登记设备。",
+                    "Enter a valid space ID and choose a registered device.",
+                )
+                .into(),
+            );
             return;
         }
         let current_policy = policy.get_untracked().filter(|p| p.space_id == space_id);
-        let current_member = member.get_untracked().filter(|m| {
-            m.policy.space_id == space_id && m.installation_id == installation_id
-        });
+        let current_member = member
+            .get_untracked()
+            .filter(|m| m.policy.space_id == space_id && m.installation_id == installation_id);
         let Some(chosen_role) = role(&selected_role.get_untracked()) else {
             return;
         };
@@ -93,10 +99,21 @@ pub(super) fn NetworkMembershipPanel(
             return;
         }
         if matches!(command, Command::Update | Command::Revoke) && current_member.is_none() {
-            problem.set(t("请先读取所选设备的成员状态。", "Read the selected device's membership first.").into());
+            problem.set(
+                t(
+                    "请先读取所选设备的成员状态。",
+                    "Read the selected device's membership first.",
+                )
+                .into(),
+            );
             return;
         }
-        if mutation && !devices.get_untracked().iter().any(|(id, _)| id == &installation_id) {
+        if mutation
+            && !devices
+                .get_untracked()
+                .iter()
+                .any(|(id, _)| id == &installation_id)
+        {
             problem.set(t("请重新读取设备列表。", "Read the device list again.").into());
             return;
         }
@@ -118,7 +135,9 @@ pub(super) fn NetworkMembershipPanel(
                 }
                 if is_policy {
                     let view = match command {
-                        Command::Initialize => client.configure_network_authority(&space_id, 0).await?,
+                        Command::Initialize => {
+                            client.configure_network_authority(&space_id, 0).await?
+                        }
                         _ => client.network_policy(&space_id).await?,
                     };
                     // A logout while the policy call was pending must prevent
@@ -128,37 +147,64 @@ pub(super) fn NetworkMembershipPanel(
                     {
                         return Err(SdkError::Invalid);
                     }
-                    let choices = client.devices().await?.into_iter()
+                    let choices = client
+                        .devices()
+                        .await?
+                        .into_iter()
                         .filter(|d| !d.revoked)
                         .map(|d| (d.device.id, d.device.name))
                         .collect();
                     return Ok(Reply::Policy(view, choices));
                 }
                 let view = match command {
-                    Command::ReadMember => client.network_member(&space_id, &installation_id).await?,
+                    Command::ReadMember => {
+                        client.network_member(&space_id, &installation_id).await?
+                    }
                     Command::Add | Command::Update => {
                         let snapshot = current_policy.as_ref().ok_or(SdkError::Invalid)?;
                         let epoch = if matches!(command, Command::Add) {
                             0 // Explicit first enrollment; existing membership must conflict.
                         } else {
-                            current_member.as_ref().ok_or(SdkError::Invalid)?.membership_epoch
+                            current_member
+                                .as_ref()
+                                .ok_or(SdkError::Invalid)?
+                                .membership_epoch
                         };
-                        client.set_network_member(&space_id, &installation_id, NetworkMemberRequest {
-                            expected_policy_revision: snapshot.revision,
-                            expected_membership_epoch: epoch,
-                            role: chosen_role,
-                        }).await?
+                        client
+                            .set_network_member(
+                                &space_id,
+                                &installation_id,
+                                NetworkMemberRequest {
+                                    expected_policy_revision: snapshot.revision,
+                                    expected_membership_epoch: epoch,
+                                    role: chosen_role,
+                                },
+                            )
+                            .await?
                     }
                     Command::Revoke => {
-                        client.revoke_network_member(&space_id, &installation_id, NetworkRevokeMemberRequest {
-                            expected_policy_revision: current_policy.as_ref().ok_or(SdkError::Invalid)?.revision,
-                            expected_membership_epoch: current_member.as_ref().ok_or(SdkError::Invalid)?.membership_epoch,
-                        }).await?
+                        client
+                            .revoke_network_member(
+                                &space_id,
+                                &installation_id,
+                                NetworkRevokeMemberRequest {
+                                    expected_policy_revision: current_policy
+                                        .as_ref()
+                                        .ok_or(SdkError::Invalid)?
+                                        .revision,
+                                    expected_membership_epoch: current_member
+                                        .as_ref()
+                                        .ok_or(SdkError::Invalid)?
+                                        .membership_epoch,
+                                },
+                            )
+                            .await?
                     }
                     _ => return Err(SdkError::Invalid),
                 };
                 Ok(Reply::Member(view))
-            }.await;
+            }
+            .await;
             if !alive.load(Ordering::Acquire)
                 || session_revision.try_get_untracked() != Some(session)
             {
@@ -170,9 +216,18 @@ pub(super) fn NetworkMembershipPanel(
                     policy.set(Some(view));
                     member.set(None);
                     devices.set(choices);
-                    message.set(t("已读取空间及可选设备。", "Space and available devices loaded.").into());
+                    message.set(
+                        t(
+                            "已读取空间及可选设备。",
+                            "Space and available devices loaded.",
+                        )
+                        .into(),
+                    );
                 }
-                Ok(Reply::Member(view)) if view.policy.space_id == space_id && view.installation_id == installation_id => {
+                Ok(Reply::Member(view))
+                    if view.policy.space_id == space_id
+                        && view.installation_id == installation_id =>
+                {
                     policy.set(Some(view.policy.clone()));
                     // A read refreshes the CAS snapshot after a conflict. It
                     // must not replace the role the user is trying to save.
@@ -181,13 +236,25 @@ pub(super) fn NetworkMembershipPanel(
                         role_dirty.set(false);
                     }
                     member.set(Some(view));
-                    message.set(t("已读取服务器确认的成员状态。", "Server-confirmed membership loaded.").into());
+                    message.set(
+                        t(
+                            "已读取服务器确认的成员状态。",
+                            "Server-confirmed membership loaded.",
+                        )
+                        .into(),
+                    );
                 }
                 Ok(_) => {
                     policy.set(None);
                     member.set(None);
                     devices.set(Vec::new());
-                    problem.set(t("服务器返回的空间或设备不匹配，请重新读取。", "The returned space or device does not match. Read again.").into());
+                    problem.set(
+                        t(
+                            "服务器返回的空间或设备不匹配，请重新读取。",
+                            "The returned space or device does not match. Read again.",
+                        )
+                        .into(),
+                    );
                 }
                 Err(error) => {
                     if matches!(&error, SdkError::SignIn)
@@ -200,7 +267,14 @@ pub(super) fn NetworkMembershipPanel(
                     // supplies a revision for a second write. Retain the draft.
                     policy.set(None);
                     member.set(None);
-                    problem.set(format!("{} {}", sdk_error(&error), t("草稿已保留。请先重新读取空间与成员状态。", "Draft retained. Read the space and membership again first.")));
+                    problem.set(format!(
+                        "{} {}",
+                        sdk_error(&error),
+                        t(
+                            "草稿已保留。请先重新读取空间与成员状态。",
+                            "Draft retained. Read the space and membership again first."
+                        )
+                    ));
                 }
             }
         });

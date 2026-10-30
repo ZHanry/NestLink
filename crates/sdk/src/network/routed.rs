@@ -43,7 +43,10 @@ pub async fn authorize_remote(
 ) -> Result<ChannelRuntime, RemoteError> {
     let mut stop = setup.lifecycle.stop.clone();
     if setup_is_stopped(&stop) {
-        adjacency.close_and_wait(deadline).await.map_err(RemoteError::Cleanup)?;
+        adjacency
+            .close_and_wait(deadline)
+            .await
+            .map_err(RemoteError::Cleanup)?;
         return Err(RemoteError::Stopped);
     }
     let validation = (|| {
@@ -65,7 +68,10 @@ pub async fn authorize_remote(
             || local_key.as_slice() != local.identity.fingerprint()
             || remote_key.as_slice() != digest(peer_key)
         {
-            return Err(io::Error::new(io::ErrorKind::PermissionDenied, "routed remote device binding mismatch"));
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "routed remote device binding mismatch",
+            ));
         }
         RouteAuthorization::remote(
             authority.context,
@@ -78,7 +84,10 @@ pub async fn authorize_remote(
     let (authorization, revocation) = match validation {
         Ok(value) => value,
         Err(error) => {
-            adjacency.close_and_wait(deadline).await.map_err(RemoteError::Cleanup)?;
+            adjacency
+                .close_and_wait(deadline)
+                .await
+                .map_err(RemoteError::Cleanup)?;
             return Err(error.into());
         }
     };
@@ -88,13 +97,18 @@ pub async fn authorize_remote(
     let preparation = (|| -> Result<(), RemoteError> {
         let now = setup.clock.sample()?;
         setup.session.select_path_before_proof(Path::Relay, now)?;
-        setup.session.cap_lifetime_deadline_ms(setup.clock.deadline_ms(route_deadline.into_std())?)?;
+        setup
+            .session
+            .cap_lifetime_deadline_ms(setup.clock.deadline_ms(route_deadline.into_std())?)?;
         setup.path = Path::Relay;
         Ok(())
     })();
     if let Err(error) = preparation {
         revocation.revoke();
-        adjacency.close_and_wait(deadline).await.map_err(RemoteError::Cleanup)?;
+        adjacency
+            .close_and_wait(deadline)
+            .await
+            .map_err(RemoteError::Cleanup)?;
         return Err(error);
     }
     setup.lifecycle.resources = Some(Box::new(RemoteRouteStop {
@@ -113,7 +127,10 @@ pub async fn authorize_remote(
     };
     // The owner is retained before business proof awaits. Cancellation closes
     // both inner and outer endpoints and fails the route closed.
-    let mut owner = RemoteRouteOwner { transport, revocation };
+    let mut owner = RemoteRouteOwner {
+        transport,
+        revocation,
+    };
     let connection = owner.transport.connection()?.clone();
     let proved = tokio::select! { biased;
         _ = wait_setup_stop(&mut stop) => Err(RemoteError::Stopped),
@@ -125,7 +142,10 @@ pub async fn authorize_remote(
     match proved {
         Ok(channels) => Ok(channels.with_transport_owner(owner)),
         Err(error) => {
-            owner.close_and_wait(deadline).await.map_err(RemoteError::Cleanup)?;
+            owner
+                .close_and_wait(deadline)
+                .await
+                .map_err(RemoteError::Cleanup)?;
             Err(error)
         }
     }
@@ -137,8 +157,12 @@ fn setup_is_stopped(stop: &watch::Receiver<Option<StopReason>>) -> bool {
 
 async fn wait_setup_stop(stop: &mut watch::Receiver<Option<StopReason>>) {
     loop {
-        if setup_is_stopped(stop) { return; }
-        if stop.changed().await.is_err() { return; }
+        if setup_is_stopped(stop) {
+            return;
+        }
+        if stop.changed().await.is_err() {
+            return;
+        }
     }
 }
 
@@ -169,7 +193,9 @@ impl StopHandler for RemoteRouteStop {
     }
 }
 impl Drop for RemoteRouteStop {
-    fn drop(&mut self) { self.revocation.revoke(); }
+    fn drop(&mut self) {
+        self.revocation.revoke();
+    }
 }
 
 struct RemoteRouteOwner {
@@ -181,9 +207,10 @@ impl TransportOwner for RemoteRouteOwner {
         self.revocation.revoke();
         self.transport.request_close();
     }
-    fn close_and_wait(&mut self, deadline: Instant)
-        -> Pin<Box<dyn Future<Output = io::Result<()>> + Send + '_>>
-    {
+    fn close_and_wait(
+        &mut self,
+        deadline: Instant,
+    ) -> Pin<Box<dyn Future<Output = io::Result<()>> + Send + '_>> {
         self.request_close();
         Box::pin(self.transport.close_and_wait(deadline))
     }

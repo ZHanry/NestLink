@@ -3,8 +3,8 @@
 //! No migration, raw IP injection, automatic fallback or route discovery occurs.
 mod adjacency;
 mod authorization;
-mod socket;
 mod forwarding;
+mod socket;
 pub use adjacency::{Adjacency, AdjacencyEndpoint};
 pub use authorization::{RouteAuthorization, RouteRevocation};
 pub use forwarding::RelayForwarder;
@@ -25,10 +25,18 @@ pub struct RoutedTransport {
     close_deadline: Option<Instant>,
 }
 impl RoutedTransport {
-    pub fn connection(&self) -> io::Result<&Connection> { self.connection.as_ref().ok_or_else(|| io::ErrorKind::NotConnected.into()) }
+    pub fn connection(&self) -> io::Result<&Connection> {
+        self.connection
+            .as_ref()
+            .ok_or_else(|| io::ErrorKind::NotConnected.into())
+    }
     pub fn request_close(&self) {
-        if let Some(connection) = &self.connection { connection.close(0u32.into(), b"routed transport stopping"); }
-        if let Some(endpoint) = &self.endpoint { endpoint.close(0u32.into(), b"routed transport stopping"); }
+        if let Some(connection) = &self.connection {
+            connection.close(0u32.into(), b"routed transport stopping");
+        }
+        if let Some(endpoint) = &self.endpoint {
+            endpoint.close(0u32.into(), b"routed transport stopping");
+        }
         self.receiver.request_close();
         self.adjacency.request_close();
     }
@@ -39,7 +47,9 @@ impl RoutedTransport {
         self.request_close();
         self.receiver.close_and_wait(deadline).await?;
         if let Some(endpoint) = &self.endpoint {
-            tokio::time::timeout_at(deadline, endpoint.wait_idle()).await.map_err(|_| io::ErrorKind::TimedOut)?;
+            tokio::time::timeout_at(deadline, endpoint.wait_idle())
+                .await
+                .map_err(|_| io::ErrorKind::TimedOut)?;
         }
         self.connection = None;
         self.endpoint = None;
@@ -47,7 +57,9 @@ impl RoutedTransport {
     }
 }
 impl Drop for RoutedTransport {
-    fn drop(&mut self) { self.request_close(); }
+    fn drop(&mut self) {
+        self.request_close();
+    }
 }
 
 /// Consume the original physical owner. The local identity, the TLS relay
@@ -61,39 +73,84 @@ pub async fn establish(
     authorization.live()?;
     let local = PeerId(identity.fingerprint());
     let peers = authorization.peers();
-    if adjacency.local() != local || adjacency.remote() != authorization.relay() || !peers.contains(local) {
+    if adjacency.local() != local
+        || adjacency.remote() != authorization.relay()
+        || !peers.contains(local)
+    {
         return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
     }
-    let peer = if local == peers.first { peers.second } else { peers.first };
+    let peer = if local == peers.first {
+        peers.second
+    } else {
+        peers.first
+    };
     let first = local == peers.first;
-    let (socket, receiver) = socket::RoutedSocket::new(authorization, adjacency.connection()?.clone(), first)?;
+    let (socket, receiver) =
+        socket::RoutedSocket::new(authorization, adjacency.connection()?.clone(), first)?;
     let destination = socket.peer_addr();
     let mut config = transport_value();
     config.initial_mtu(wire::PACKET_BYTES as u16);
     config.min_mtu(wire::PACKET_BYTES as u16);
     config.mtu_discovery_config(None);
     let config = Arc::new(config);
-    let mut server = ServerConfig::with_crypto(Arc::new(QuicServerConfig::try_from(tls::server_config(identity, peer.0)?)?));
+    let mut server = ServerConfig::with_crypto(Arc::new(QuicServerConfig::try_from(
+        tls::server_config(identity, peer.0)?,
+    )?));
     server.transport_config(config.clone());
     server.migration(false);
     let mut settings = quinn::EndpointConfig::default();
     settings.max_udp_payload_size(wire::PACKET_BYTES as u16)?;
-    let mut endpoint = Endpoint::new_with_abstract_socket(settings, Some(server), socket, Arc::new(quinn::TokioRuntime))?;
-    let mut client = ClientConfig::new(Arc::new(QuicClientConfig::try_from(tls::client_config(identity, peer.0)?)?));
+    let mut endpoint = Endpoint::new_with_abstract_socket(
+        settings,
+        Some(server),
+        socket,
+        Arc::new(quinn::TokioRuntime),
+    )?;
+    let mut client = ClientConfig::new(Arc::new(QuicClientConfig::try_from(tls::client_config(
+        identity, peer.0,
+    )?)?));
     client.transport_config(config);
     endpoint.set_default_client_config(client);
     // Retain owners before the first await: cancelling establishment closes the
     // original outer socket and aborts the one virtual receive task.
-    let mut pending = Pending { endpoint: Some(endpoint), adjacency: Some(adjacency), receiver: Some(receiver) };
-    let endpoint = pending.endpoint.as_ref().ok_or(io::ErrorKind::NotConnected)?;
-    let connect = async {
-        if first { endpoint.connect(destination, "peer.nestlink.invalid").map_err(io::Error::other)?.await.map_err(io::Error::other) }
-        else { endpoint.accept().await.ok_or(io::ErrorKind::NotConnected)?.await.map_err(io::Error::other) }
+    let mut pending = Pending {
+        endpoint: Some(endpoint),
+        adjacency: Some(adjacency),
+        receiver: Some(receiver),
     };
-    let connection = tokio::time::timeout_at(deadline, connect).await.map_err(|_| io::ErrorKind::TimedOut)??;
-    Ok(RoutedTransport { connection: Some(connection), endpoint: pending.endpoint.take(),
-        adjacency: pending.adjacency.take().ok_or(io::ErrorKind::NotConnected)?,
-        receiver: pending.receiver.take().ok_or(io::ErrorKind::NotConnected)?, close_deadline: None })
+    let endpoint = pending
+        .endpoint
+        .as_ref()
+        .ok_or(io::ErrorKind::NotConnected)?;
+    let connect = async {
+        if first {
+            endpoint
+                .connect(destination, "peer.nestlink.invalid")
+                .map_err(io::Error::other)?
+                .await
+                .map_err(io::Error::other)
+        } else {
+            endpoint
+                .accept()
+                .await
+                .ok_or(io::ErrorKind::NotConnected)?
+                .await
+                .map_err(io::Error::other)
+        }
+    };
+    let connection = tokio::time::timeout_at(deadline, connect)
+        .await
+        .map_err(|_| io::ErrorKind::TimedOut)??;
+    Ok(RoutedTransport {
+        connection: Some(connection),
+        endpoint: pending.endpoint.take(),
+        adjacency: pending
+            .adjacency
+            .take()
+            .ok_or(io::ErrorKind::NotConnected)?,
+        receiver: pending.receiver.take().ok_or(io::ErrorKind::NotConnected)?,
+        close_deadline: None,
+    })
 }
 struct Pending {
     endpoint: Option<Endpoint>,
@@ -102,9 +159,15 @@ struct Pending {
 }
 impl Drop for Pending {
     fn drop(&mut self) {
-        if let Some(endpoint) = &self.endpoint { endpoint.close(0u32.into(), b"routed setup ended"); }
-        if let Some(adjacency) = &self.adjacency { adjacency.request_close(); }
-        if let Some(receiver) = &self.receiver { receiver.request_close(); }
+        if let Some(endpoint) = &self.endpoint {
+            endpoint.close(0u32.into(), b"routed setup ended");
+        }
+        if let Some(adjacency) = &self.adjacency {
+            adjacency.request_close();
+        }
+        if let Some(receiver) = &self.receiver {
+            receiver.request_close();
+        }
     }
 }
 

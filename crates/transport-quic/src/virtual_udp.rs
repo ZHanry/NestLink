@@ -1,11 +1,11 @@
 //! One synthetic UDP path over outer unreliable QUIC datagrams. No real peer UDP
 //! socket is opened and packets can never select another network destination.
+use crate::fragments::{Fragment, Packet, Reassembly as BoundedReassembly};
 use nestlink_protocol::{
     RELAY_UDP_AGE_MS, RELAY_UDP_FRAGMENT_BYTES, RELAY_UDP_PACKET_BYTES, RELAY_UDP_PENDING_PACKETS,
     relay_datagram::{self, HEADER},
 };
 use nestlink_transport_stream::owner::TaskOwner;
-use crate::fragments::{Fragment, Packet, Reassembly as BoundedReassembly};
 use quinn::{
     AsyncUdpSocket, UdpPoller,
     udp::{RecvMeta, Transmit},
@@ -27,14 +27,28 @@ struct Reassembly {
 }
 impl Default for Reassembly {
     fn default() -> Self {
-        Self { bounded: BoundedReassembly::new(RELAY_UDP_FRAGMENT_BYTES as usize,
-            RELAY_UDP_PENDING_PACKETS as usize, WINDOW, Duration::from_millis(RELAY_UDP_AGE_MS)) }
+        Self {
+            bounded: BoundedReassembly::new(
+                RELAY_UDP_FRAGMENT_BYTES as usize,
+                RELAY_UDP_PENDING_PACKETS as usize,
+                WINDOW,
+                Duration::from_millis(RELAY_UDP_AGE_MS),
+            ),
+        }
     }
 }
 impl Reassembly {
     fn insert(&mut self, bytes: &[u8], now: Instant) -> io::Result<Option<Packet>> {
         let f = relay_datagram::decode(bytes).map_err(io::Error::other)?;
-        self.bounded.insert(Fragment { packet: f.packet, length: f.length, index: f.index, payload: f.payload }, now)
+        self.bounded.insert(
+            Fragment {
+                packet: f.packet,
+                length: f.length,
+                index: f.index,
+                payload: f.payload,
+            },
+            now,
+        )
     }
 }
 fn failed() -> io::Error {

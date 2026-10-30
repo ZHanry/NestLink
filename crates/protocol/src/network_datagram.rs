@@ -25,7 +25,10 @@ impl Direction {
         }
     }
     fn byte(self) -> u8 {
-        match self { Self::FirstToSecond => 0, Self::SecondToFirst => 1 }
+        match self {
+            Self::FirstToSecond => 0,
+            Self::SecondToFirst => 1,
+        }
     }
 }
 
@@ -39,7 +42,10 @@ pub struct Fragment<'a> {
     pub payload: &'a [u8],
 }
 fn invalid() -> ContractError {
-    ContractError::new(ErrorCode::ProtocolMismatch, "invalid network datagram fragment")
+    ContractError::new(
+        ErrorCode::ProtocolMismatch,
+        "invalid network datagram fragment",
+    )
 }
 pub fn decode(bytes: &[u8]) -> Result<Fragment<'_>, ContractError> {
     if bytes.len() <= HEADER || &bytes[..4] != b"NRD1" || bytes[17..20] != [0; 3] {
@@ -51,43 +57,73 @@ pub fn decode(bytes: &[u8]) -> Result<Fragment<'_>, ContractError> {
         _ => return Err(invalid()),
     };
     let remaining_hops = bytes[5];
-    let length = usize::from(u16::from_be_bytes(bytes[6..8].try_into().map_err(|_| invalid())?));
+    let length = usize::from(u16::from_be_bytes(
+        bytes[6..8].try_into().map_err(|_| invalid())?,
+    ));
     let packet = u64::from_be_bytes(bytes[8..16].try_into().map_err(|_| invalid())?);
     let index = usize::from(bytes[16]);
     let binding = bytes[20..HEADER].try_into().map_err(|_| invalid())?;
-    if remaining_hops > 1 || binding == [0; 32] || packet == 0
-        || length == 0 || length > PACKET_BYTES || index >= length.div_ceil(FRAGMENT_BYTES)
+    if remaining_hops > 1
+        || binding == [0; 32]
+        || packet == 0
+        || length == 0
+        || length > PACKET_BYTES
+        || index >= length.div_ceil(FRAGMENT_BYTES)
         || bytes.len() - HEADER != (length - index * FRAGMENT_BYTES).min(FRAGMENT_BYTES)
     {
         return Err(invalid());
     }
-    Ok(Fragment { binding, direction, remaining_hops, packet, length, index, payload: &bytes[HEADER..] })
+    Ok(Fragment {
+        binding,
+        direction,
+        remaining_hops,
+        packet,
+        length,
+        index,
+        payload: &bytes[HEADER..],
+    })
 }
-pub fn encode(binding: [u8; 32], direction: Direction, packet: u64, bytes: &[u8])
-    -> Result<Vec<Vec<u8>>, ContractError>
-{
+pub fn encode(
+    binding: [u8; 32],
+    direction: Direction,
+    packet: u64,
+    bytes: &[u8],
+) -> Result<Vec<Vec<u8>>, ContractError> {
     if binding == [0; 32] || packet == 0 || bytes.is_empty() || bytes.len() > PACKET_BYTES {
         return Err(invalid());
     }
-    let length = u16::try_from(bytes.len()).map_err(|_| invalid())?.to_be_bytes();
-    Ok(bytes.chunks(FRAGMENT_BYTES).enumerate().map(|(index, payload)| {
-        let mut fragment = Vec::with_capacity(HEADER + payload.len());
-        fragment.extend_from_slice(b"NRD1");
-        fragment.extend_from_slice(&[direction.byte(), 1]);
-        fragment.extend_from_slice(&length);
-        fragment.extend_from_slice(&packet.to_be_bytes());
-        fragment.extend_from_slice(&[index as u8, 0, 0, 0]);
-        fragment.extend_from_slice(&binding);
-        fragment.extend_from_slice(payload);
-        fragment
-    }).collect())
+    let length = u16::try_from(bytes.len())
+        .map_err(|_| invalid())?
+        .to_be_bytes();
+    Ok(bytes
+        .chunks(FRAGMENT_BYTES)
+        .enumerate()
+        .map(|(index, payload)| {
+            let mut fragment = Vec::with_capacity(HEADER + payload.len());
+            fragment.extend_from_slice(b"NRD1");
+            fragment.extend_from_slice(&[direction.byte(), 1]);
+            fragment.extend_from_slice(&length);
+            fragment.extend_from_slice(&packet.to_be_bytes());
+            fragment.extend_from_slice(&[index as u8, 0, 0, 0]);
+            fragment.extend_from_slice(&binding);
+            fragment.extend_from_slice(payload);
+            fragment
+        })
+        .collect())
 }
 
 /// Validate the complete incoming envelope before consuming the sole hop. No
 /// network destination can be selected by a packet supplied to this function.
-pub fn forward(bytes: &mut [u8], binding: [u8; 32], direction: Direction) -> Result<(), ContractError> {
+pub fn forward(
+    bytes: &mut [u8],
+    binding: [u8; 32],
+    direction: Direction,
+) -> Result<(), ContractError> {
     let fragment = decode(bytes)?;
-    if fragment.binding != binding || fragment.direction != direction || fragment.remaining_hops != 1 {
+    if fragment.binding != binding
+        || fragment.direction != direction
+        || fragment.remaining_hops != 1
+    {
         return Err(invalid());
     }
     bytes[5] = 0;
