@@ -370,7 +370,11 @@ impl Store {
         self.validate_access(actor, now_ms / 1000)?;
         let tx = self.connection.unchecked_transaction()?;
         self.resume_relay_reservations(lifecycle, now_ms)?;
-        if tx.query_row("SELECT EXISTS(SELECT 1 FROM network_remote_relays WHERE allocation_id=?1)", [&request.allocation_id], |r|r.get::<_, bool>(0))? {
+        if tx.query_row(
+            "SELECT EXISTS(SELECT 1 FROM network_remote_relays WHERE allocation_id=?1)",
+            [&request.allocation_id],
+            |r| r.get::<_, bool>(0),
+        )? {
             return Err(StorageError::Conflict);
         }
         let permit = self.current_permit(actor, session, now_ms / 1000)?;

@@ -328,11 +328,14 @@ fn setup_remote_with_path(f: &Fixture, approve: bool, direct: bool) -> Result<Re
     let controller = store.authenticate(&f.admin_token, now)?;
     let host = store.authenticate(&f.member_token, now)?;
     if !direct {
-        store.apply_policy(1, nestlink_policy::NetworkPolicy {
-            server_forwarding: nestlink_policy::ServerForwarding::Allow,
-            peer_path_mode: nestlink_policy::PeerPathMode::DirectPreferred,
-            ..nestlink_policy::NetworkPolicy::default()
-        })?;
+        store.apply_policy(
+            1,
+            nestlink_policy::NetworkPolicy {
+                server_forwarding: nestlink_policy::ServerForwarding::Allow,
+                peer_path_mode: nestlink_policy::PeerPathMode::DirectPreferred,
+                ..nestlink_policy::NetworkPolicy::default()
+            },
+        )?;
     }
     let controller_key = InstallationIdentity::generate();
     let host_key = InstallationIdentity::generate();

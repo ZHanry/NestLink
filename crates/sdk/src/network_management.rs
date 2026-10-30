@@ -29,7 +29,9 @@ fn path(space: &str, path: &str) -> Result<String, SdkError> {
     Ok(format!("{}/paths/{path}", base(space)?))
 }
 fn relay(space: &str, allocation: &str) -> Result<String, SdkError> {
-    if !valid_id(allocation) { return Err(SdkError::Invalid); }
+    if !valid_id(allocation) {
+        return Err(SdkError::Invalid);
+    }
     Ok(format!("{}/relays/{allocation}", base(space)?))
 }
 
@@ -183,31 +185,54 @@ impl Sdk {
     ) -> Result<NetworkRemoteRelayView, SdkError> {
         let business = permit.claims();
         if business.deployment_id != self.trust.deployment_id
-            || business.security_epoch != self.health.security_epoch {
+            || business.security_epoch != self.health.security_epoch
+        {
             return Err(SdkError::Trust);
         }
-        if !valid_id(&request.allocation.allocation_id) || !valid_id(&request.allocation.node_id)
-            || !valid_id(&request.transit_grant_id) || request.allocation.device_id != installation.device_id {
+        if !valid_id(&request.allocation.allocation_id)
+            || !valid_id(&request.allocation.node_id)
+            || !valid_id(&request.transit_grant_id)
+            || request.allocation.device_id != installation.device_id
+        {
             return Err(SdkError::Invalid);
         }
         let actor = &self.login.as_ref().ok_or(SdkError::SignIn)?.principal;
         let transcript = nestlink_identity::relay::allocation_transcript(
-            business, &actor.account_id, &installation.device_id,
-            &request.allocation.allocation_id, &request.allocation.node_id,
+            business,
+            &actor.account_id,
+            &installation.device_id,
+            &request.allocation.allocation_id,
+            &request.allocation.node_id,
         )?;
-        request.allocation.signature = URL_SAFE_NO_PAD.encode(installation.identity.sign_action(&transcript)?);
-        self.required(Method::POST,
-            &format!("{}/remote/{}/relays", base(space)?, business.session_id), Some(&request)).await
+        request.allocation.signature =
+            URL_SAFE_NO_PAD.encode(installation.identity.sign_action(&transcript)?);
+        self.required(
+            Method::POST,
+            &format!("{}/remote/{}/relays", base(space)?, business.session_id),
+            Some(&request),
+        )
+        .await
     }
     pub async fn network_remote_relay(
-        &self, space: &str, allocation_id: &str,
+        &self,
+        space: &str,
+        allocation_id: &str,
     ) -> Result<NetworkRemoteRelayView, SdkError> {
-        self.required(Method::GET, &relay(space, allocation_id)?, None::<&()>).await
+        self.required(Method::GET, &relay(space, allocation_id)?, None::<&()>)
+            .await
     }
     pub async fn revoke_network_remote_relay(
-        &self, space: &str, allocation_id: &str,
+        &self,
+        space: &str,
+        allocation_id: &str,
     ) -> Result<(), SdkError> {
-        self.call::<_, serde_json::Value>(Method::DELETE, &relay(space, allocation_id)?, None::<&()>, true)
-            .await.map(|_| ())
+        self.call::<_, serde_json::Value>(
+            Method::DELETE,
+            &relay(space, allocation_id)?,
+            None::<&()>,
+            true,
+        )
+        .await
+        .map(|_| ())
     }
 }
