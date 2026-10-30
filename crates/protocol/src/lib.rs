@@ -17,6 +17,7 @@ pub mod native_displays;
 pub mod native_media_format;
 pub mod native_renewal;
 pub mod network;
+pub mod network_datagram;
 pub mod node_discovery;
 pub mod node_resources;
 pub mod nodes;

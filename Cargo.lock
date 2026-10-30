@@ -4068,6 +4068,7 @@ dependencies = [
  "nestlink-protocol",
  "nestlink-transport-stream",
  "nestlink-traversal",
+ "prost",
  "quinn",
  "serde",
  "serde_json",

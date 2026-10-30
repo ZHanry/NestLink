@@ -5,12 +5,12 @@ use nestlink_protocol::{
     relay_datagram::{self, HEADER},
 };
 use nestlink_transport_stream::owner::TaskOwner;
+use crate::fragments::{Fragment, Packet, Reassembly as BoundedReassembly};
 use quinn::{
     AsyncUdpSocket, UdpPoller,
     udp::{RecvMeta, Transmit},
 };
 use std::{
-    collections::{BTreeMap, BTreeSet},
     fmt,
     io::{self, IoSliceMut},
     net::SocketAddr,
@@ -22,83 +22,19 @@ use std::{
 use tokio::{sync::mpsc, time::Sleep};
 
 const WINDOW: u64 = 64;
-#[derive(Debug, PartialEq, Eq)]
-struct Packet {
-    born: Instant,
-    bytes: Vec<u8>,
-}
-struct Pending {
-    born: Instant,
-    length: usize,
-    parts: Vec<Option<Vec<u8>>>,
-}
-#[derive(Default)]
 struct Reassembly {
-    high: u64,
-    pending: BTreeMap<u64, Pending>,
-    finished: BTreeSet<u64>,
+    bounded: BoundedReassembly,
+}
+impl Default for Reassembly {
+    fn default() -> Self {
+        Self { bounded: BoundedReassembly::new(RELAY_UDP_FRAGMENT_BYTES as usize,
+            RELAY_UDP_PENDING_PACKETS as usize, WINDOW, Duration::from_millis(RELAY_UDP_AGE_MS)) }
+    }
 }
 impl Reassembly {
     fn insert(&mut self, bytes: &[u8], now: Instant) -> io::Result<Option<Packet>> {
         let f = relay_datagram::decode(bytes).map_err(io::Error::other)?;
-        self.high = self.high.max(f.packet);
-        let floor = self.high.saturating_sub(WINDOW);
-        self.finished.retain(|id| *id >= floor);
-        self.pending.retain(|id, p| {
-            if *id < floor
-                || now.saturating_duration_since(p.born) >= Duration::from_millis(RELAY_UDP_AGE_MS)
-            {
-                if *id >= floor {
-                    self.finished.insert(*id);
-                }
-                false
-            } else {
-                true
-            }
-        });
-        if f.packet < floor || self.finished.contains(&f.packet) {
-            return Ok(None);
-        }
-        if !self.pending.contains_key(&f.packet) {
-            if self.pending.len() >= RELAY_UDP_PENDING_PACKETS as usize {
-                self.finished.insert(f.packet);
-                return Ok(None);
-            }
-            self.pending.insert(
-                f.packet,
-                Pending {
-                    born: now,
-                    length: f.length,
-                    parts: vec![None; f.length.div_ceil(RELAY_UDP_FRAGMENT_BYTES as usize)],
-                },
-            );
-        }
-        let p = self.pending.get_mut(&f.packet).ok_or_else(failed)?;
-        if p.length != f.length {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "relay UDP packet binding changed",
-            ));
-        }
-        if let Some(part) = &p.parts[f.index] {
-            if part != f.payload {
-                return Err(io::Error::new(
-                    io::ErrorKind::InvalidData,
-                    "relay UDP fragment changed",
-                ));
-            }
-            return Ok(None);
-        }
-        p.parts[f.index] = Some(f.payload.to_vec());
-        if p.parts.iter().any(Option::is_none) {
-            return Ok(None);
-        }
-        let p = self.pending.remove(&f.packet).ok_or_else(failed)?;
-        self.finished.insert(f.packet);
-        Ok(Some(Packet {
-            born: p.born,
-            bytes: p.parts.into_iter().flatten().flatten().collect(),
-        }))
+        self.bounded.insert(Fragment { packet: f.packet, length: f.length, index: f.index, payload: f.payload }, now)
     }
 }
 fn failed() -> io::Error {
@@ -368,8 +304,8 @@ mod tests {
         let mut r = Reassembly::default();
         for id in 1..=5000 {
             r.insert(&relay_datagram::encode(id, &[6; 1200])?[0], now)?;
-            assert!(r.pending.len() <= RELAY_UDP_PENDING_PACKETS as usize);
-            assert!(r.finished.len() <= WINDOW as usize + 1);
+            assert!(r.bounded.pending_len() <= RELAY_UDP_PENDING_PACKETS as usize);
+            assert!(r.bounded.finished_len() <= WINDOW as usize + 1);
         }
         let mut r = Reassembly::default();
         r.insert(&relay_datagram::encode(1, &[6; 1200])?[0], now)?;
