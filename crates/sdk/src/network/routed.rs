@@ -128,7 +128,10 @@ pub async fn authorize_remote(
     };
     if let Err(error) = established {
         revocation.revoke();
-        pending.close_and_wait(deadline).await.map_err(RemoteError::Cleanup)?;
+        pending
+            .close_and_wait(deadline)
+            .await
+            .map_err(RemoteError::Cleanup)?;
         return Err(error);
     }
     let transport = pending.take_transport()?;

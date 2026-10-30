@@ -694,3 +694,117 @@ async fn wrong_relay_key_cannot_create_an_authenticated_adjacency() -> TestResul
     assert!(connected.is_err());
     Ok(())
 }
+
+#[tokio::test]
+async fn borrowed_routed_establishment_can_be_cancelled_without_losing_original_socket_receipts()
+-> TestResult {
+    let fixture = Fixture::new()?;
+    let setup = Instant::now() + Duration::from_secs(3);
+    let (mut relay, adjacency, addresses) = pair(&fixture.relay, &fixture.first, setup).await?;
+    let (authorization, _revocation) = fixture.authorization()?;
+    let mut owner = RoutedEstablishment::new(authorization, adjacency);
+    {
+        let establishment = owner.establish(&fixture.first, setup);
+        tokio::pin!(establishment);
+        assert!(std::future::poll_fn(|cx| std::task::Poll::Ready(
+            establishment.as_mut().poll(cx).is_pending()
+        )).await);
+        // Cancel only the borrowed operation. The externally held owner keeps
+        // the virtual receiver and the unique physical adjacency receipt.
+    }
+    assert!(owner.endpoint.is_some());
+    assert!(owner.receiver.is_some());
+    assert!(owner.adjacency.is_some());
+    assert!(owner.take_transport().is_err());
+    let cleanup = Instant::now() + Duration::from_secs(5);
+    let (released, relay_released) = tokio::join!(
+        owner.close_and_wait(cleanup), relay.close_and_wait(cleanup),
+    );
+    released?;
+    relay_released?;
+    for address in addresses { drop(std::net::UdpSocket::bind(address)?); }
+    assert!(owner.establish(&fixture.first, cleanup).await.is_err(), "one owner cannot start a replacement attempt after cancellation and cleanup");
+    Ok(())
+}
+
+#[tokio::test]
+async fn explicit_routed_establishment_failures_retain_the_original_adjacency_for_cleanup()
+-> TestResult {
+    for wrong_identity in [false, true] {
+        let fixture = Fixture::new()?;
+        let setup = Instant::now() + Duration::from_secs(3);
+        let (mut relay, adjacency, addresses) = pair(&fixture.relay, &fixture.first, setup).await?;
+        let (authorization, _revocation) = fixture.authorization()?;
+        let mut owner = RoutedEstablishment::new(authorization, adjacency);
+        let identity = InstallationIdentity::generate();
+        let deadline = if wrong_identity { setup } else { Instant::now() + Duration::from_millis(25) };
+        let result = owner.establish(if wrong_identity { &identity } else { &fixture.first }, deadline).await;
+        let error = result.err().ok_or("establishment unexpectedly succeeded without an inner peer")?;
+        assert_eq!(error.downcast_ref::<io::Error>().map(io::Error::kind),
+            Some(if wrong_identity { io::ErrorKind::PermissionDenied } else { io::ErrorKind::TimedOut }));
+        assert!(owner.adjacency.is_some());
+        assert_eq!(owner.endpoint.is_some(), !wrong_identity, "the deadline case must have actually entered inner establishment");
+        assert!(owner.take_transport().is_err());
+        let cleanup = Instant::now() + Duration::from_secs(5);
+        let (released, relay_released) = tokio::join!(
+            owner.close_and_wait(cleanup), relay.close_and_wait(cleanup),
+        );
+        released?;
+        relay_released?;
+        for address in addresses { drop(std::net::UdpSocket::bind(address)?); }
+    }
+    Ok(())
+}
+
+#[tokio::test]
+async fn cancelling_routed_close_preserves_its_first_deadline_while_a_physical_holder_remains()
+-> TestResult {
+    let fixture = Fixture::new()?;
+    let setup = Instant::now() + Duration::from_secs(3);
+    let (mut relay, adjacency, addresses) = pair(&fixture.relay, &fixture.first, setup).await?;
+    // An external Quinn holder keeps the original physical endpoint alive;
+    // closing the connection does not itself certify final socket release.
+    let retained = adjacency.connection()?.clone();
+    let (authorization, _revocation) = fixture.authorization()?;
+    let mut owner = RoutedEstablishment::new(authorization, adjacency);
+    {
+        let establishment = owner.establish(&fixture.first, setup);
+        tokio::pin!(establishment);
+        assert!(std::future::poll_fn(|cx| std::task::Poll::Ready(
+            establishment.as_mut().poll(cx).is_pending()
+        )).await);
+    }
+    let first_deadline = Instant::now() + Duration::from_millis(100);
+    {
+        let closing = owner.close_and_wait(first_deadline);
+        tokio::pin!(closing);
+        assert!(std::future::poll_fn(|cx| std::task::Poll::Ready(
+            closing.as_mut().poll(cx).is_pending()
+        )).await);
+    }
+    assert_eq!(owner.close_deadline, Some(first_deadline));
+    assert_eq!(std::net::UdpSocket::bind(addresses[1]).err().map(|error| error.kind()), Some(io::ErrorKind::AddrInUse));
+    relay.close_and_wait(Instant::now() + Duration::from_secs(5)).await?;
+    let replacement_budget = Instant::now() + Duration::from_secs(5);
+    let rejected = owner.close_and_wait(replacement_budget).await;
+    assert_eq!(rejected.err().map(|error| error.kind()), Some(io::ErrorKind::TimedOut));
+    assert_eq!(owner.close_deadline, Some(first_deadline));
+    assert!(Instant::now() < replacement_budget, "a retry must not consume a new five-second budget");
+    assert_eq!(std::net::UdpSocket::bind(addresses[1]).err().map(|error| error.kind()), Some(io::ErrorKind::AddrInUse));
+    drop(retained);
+    drop(owner);
+    // The earlier receipt failed. Confirm eventual Drop teardown separately
+    // through actual rebinding, without claiming that the close wait succeeded.
+    let released = Instant::now() + Duration::from_secs(2);
+    tokio::time::timeout_at(released, async {
+        loop {
+            match std::net::UdpSocket::bind(addresses[1]) {
+                Ok(socket) => { drop(socket); break Ok::<(), io::Error>(()); }
+                Err(error) if error.kind() == io::ErrorKind::AddrInUse => tokio::time::sleep(Duration::from_millis(5)).await,
+                Err(error) => break Err(error),
+            }
+        }
+    }).await??;
+    drop(std::net::UdpSocket::bind(addresses[0])?);
+    Ok(())
+}

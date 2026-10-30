@@ -50,7 +50,10 @@ impl AdjacencyEndpoint {
             .local_addr()
     }
     pub async fn connect(mut self, address: SocketAddr, deadline: Instant) -> Result<Adjacency> {
-        let endpoint = self.endpoint.as_ref().ok_or_else(|| io::Error::from(io::ErrorKind::NotConnected))?;
+        let endpoint = self
+            .endpoint
+            .as_ref()
+            .ok_or_else(|| io::Error::from(io::ErrorKind::NotConnected))?;
         let connection = tokio::time::timeout_at(
             deadline,
             endpoint.connect(address, "peer.nestlink.invalid")?,
@@ -59,7 +62,10 @@ impl AdjacencyEndpoint {
         self.finish(connection)
     }
     pub async fn accept(mut self, deadline: Instant) -> Result<Adjacency> {
-        let endpoint = self.endpoint.as_ref().ok_or_else(|| io::Error::from(io::ErrorKind::NotConnected))?;
+        let endpoint = self
+            .endpoint
+            .as_ref()
+            .ok_or_else(|| io::Error::from(io::ErrorKind::NotConnected))?;
         let incoming = tokio::time::timeout_at(deadline, endpoint.accept())
             .await?
             .ok_or_else(|| io::Error::from(io::ErrorKind::NotConnected))?;
@@ -67,10 +73,10 @@ impl AdjacencyEndpoint {
         self.finish(connection)
     }
     fn finish(&mut self, connection: Connection) -> Result<Adjacency> {
-        if !connection
+        if connection
             .handshake_data()
             .and_then(|data| data.downcast::<quinn::crypto::rustls::HandshakeData>().ok())
-            .is_some_and(|data| data.protocol.as_deref() == Some(wire::ALPN))
+            .is_none_or(|data| data.protocol.as_deref() != Some(wire::ALPN))
         {
             connection.close(1u32.into(), b"network datagram ALPN mismatch");
             return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
