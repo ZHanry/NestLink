@@ -1,6 +1,7 @@
 //! Legacy deployment-admin controls and scoped product-space credential issuance.
 //! Space delegation lives in spaces; business admission remains separate.
 pub(crate) mod topology;
+pub(crate) mod chains;
 use crate::{ApiError, AppState, access, now_ms};
 use axum::{
     Json,

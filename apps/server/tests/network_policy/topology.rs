@@ -8,7 +8,7 @@ use nestlink_protocol::{
     },
 };
 
-fn registered_node(f: &Fixture) -> Result<(String, NodeIdentity, BootIncarnation)> {
+pub(super) fn registered_node(f: &Fixture) -> Result<(String, NodeIdentity, BootIncarnation)> {
     let now = current_ms()?;
     let mut store = Store::open_existing(&f.database, &f.deployment)?;
     let actor = store.authenticate(&f.admin_token, now / 1000)?;

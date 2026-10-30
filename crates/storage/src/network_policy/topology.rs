@@ -168,6 +168,36 @@ fn check_neighbors(
     Ok(())
 }
 
+/// Revalidate the exact durable head and publisher in the caller's reservation
+/// transaction. A supplied digest cannot resurrect a withdrawn or replaced head.
+pub(super) fn current_advertisement(
+    store: &Store,
+    snapshot: &TrustedNetworkPolicySnapshot,
+    node_id: &str,
+    expected: &[u8; 32],
+    now: u64,
+) -> Result<nestlink_identity::network_topology::VerifiedTopologyAdvertisement, StorageError> {
+    let current = node(store, node_id, now)?;
+    let row: Option<(String, Vec<u8>, Vec<u8>)> = store.connection.query_row(
+        "SELECT publisher_id,advertisement,advertisement_signature FROM network_topology_heads WHERE space_id=?1 AND node_id=?2 AND withdrawn=0 AND expires_at_ms>?3",
+        params![snapshot.space_id,node_id,now], |r|Ok((r.get(0)?,r.get(1)?,r.get(2)?)),
+    ).optional()?;
+    let (publisher_id, claims, signature) = row.ok_or(StorageError::Forbidden)?;
+    let publisher = verify_topology_publisher(
+        &publisher(&store.connection, &snapshot.space_id, &publisher_id)?,
+        &snapshot.verification(), node_id, &current.key, &current.incarnation, &[],
+    )?;
+    let verified = nestlink_identity::network_topology::verify_topology_advertisement(
+        &SignedTopologyAdvertisement { claims, signature }, &publisher,
+        &snapshot.verification(), &current.incarnation, 0,
+    )?;
+    if verified.digest() != *expected {
+        return Err(StorageError::Conflict);
+    }
+    check_neighbors(store, snapshot, &verified.claims().report, now)?;
+    Ok(verified)
+}
+
 impl Store {
     /// Space managers grant only an explicit registered node and neighbor set.
     /// Prefix export is deliberately closed until its stored RouteExport chain

@@ -10,6 +10,8 @@ use nestlink_storage::network_policy::*;
 const NOW: u64 = 1_002_000;
 #[path = "network_paths/relays.rs"]
 mod relays;
+#[path = "network_paths/chains.rs"]
+mod chains;
 struct Setup {
     store: Store,
     controller: Principal,

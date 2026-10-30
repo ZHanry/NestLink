@@ -34,6 +34,8 @@ mod relays;
 mod service_usage_directory;
 #[path = "network_policy/topology.rs"]
 mod topology;
+#[path = "network_policy/chains.rs"]
+mod chains;
 
 struct Running(tokio::task::JoinHandle<()>);
 impl Drop for Running {

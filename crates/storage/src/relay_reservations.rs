@@ -75,7 +75,7 @@ impl Store {
             |r| r.get(0),
         )?;
         let prior: bool = self.connection.query_row(
-            "SELECT EXISTS(SELECT 1 FROM relay_reservations WHERE closed=0) OR EXISTS(SELECT 1 FROM turn_grants WHERE closed=0) OR EXISTS(SELECT 1 FROM network_remote_relays)",
+            "SELECT EXISTS(SELECT 1 FROM relay_reservations WHERE closed=0) OR EXISTS(SELECT 1 FROM turn_grants WHERE closed=0) OR EXISTS(SELECT 1 FROM network_remote_relays) OR EXISTS(SELECT 1 FROM network_remote_chain_hops)",
             [],
             |r| r.get(0),
         )?;
@@ -115,6 +115,10 @@ impl Store {
             )?;
             self.connection.execute(
                 "UPDATE network_remote_relays SET closed=1,promised_until=?1 WHERE control_runtime_id<>?2",
+                params![now_ms, lifecycle.runtime_id],
+            )?;
+            self.connection.execute(
+                "UPDATE network_remote_chain_hops SET closed=1,promised_until=?1 WHERE control_runtime_id<>?2",
                 params![now_ms, lifecycle.runtime_id],
             )?;
             self.connection.execute(
@@ -371,7 +375,7 @@ impl Store {
         let tx = self.connection.unchecked_transaction()?;
         self.resume_relay_reservations(lifecycle, now_ms)?;
         if tx.query_row(
-            "SELECT EXISTS(SELECT 1 FROM network_remote_relays WHERE allocation_id=?1)",
+            "SELECT EXISTS(SELECT 1 FROM network_remote_relays WHERE allocation_id=?1 UNION ALL SELECT 1 FROM network_remote_chains WHERE route_id=?1)",
             [&request.allocation_id],
             |r| r.get::<_, bool>(0),
         )? {

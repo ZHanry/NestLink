@@ -22,15 +22,15 @@ pub struct NetworkRemoteRelayBundle {
     pub node: NodeEndpointsView,
 }
 
-struct RelayNode {
-    key: [u8; 32],
-    runtime: String,
-    generation: u64,
-    endpoint_revision: u64,
-    maximum: u32,
-    lease_end: u64,
-    policy: u64,
-    endpoints: NodeEndpoints,
+pub(super) struct RelayNode {
+    pub(super) key: [u8; 32],
+    pub(super) runtime: String,
+    pub(super) generation: u64,
+    pub(super) endpoint_revision: u64,
+    pub(super) maximum: u32,
+    pub(super) lease_end: u64,
+    pub(super) policy: u64,
+    pub(super) endpoints: NodeEndpoints,
 }
 struct StoredRelay {
     path_id: String,
@@ -52,7 +52,7 @@ struct StoredRelay {
     signed: SignedNetworkGrant,
 }
 
-fn relay_node(store: &Store, node_id: &str, now_ms: u64) -> Result<RelayNode, StorageError> {
+pub(super) fn relay_node(store: &Store, node_id: &str, now_ms: u64) -> Result<RelayNode, StorageError> {
     require_id(node_id)?;
     type Row = (Vec<u8>, String, u64, u32, u64, u64, String, u64, String);
     let row: Option<Row> = store.connection.query_row(

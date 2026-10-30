@@ -1,0 +1,1287 @@
+{
+    "schema_version":  1,
+    "kind":  "observed-development-checkpoint",
+    "source_revision":  "0618e0881aa6360f77484aceea996d9ba493cc64",
+    "recorded_at":  "2026-10-30T22:06:56.2597721Z",
+    "build_provenance":  "GitHub-hosted Actions only; original run/job records referenced below",
+    "execution_provenance":  "GitHub lab jobs only; no target-device acceptance",
+    "runs":  [
+                 {
+                     "run_id":  41132816505,
+                     "source_revision":  "0618e0881aa6360f77484aceea996d9ba493cc64",
+                     "status":  "completed",
+                     "conclusion":  "cancelled",
+                     "url":  "https://github.com/ZHanry/NestLink/actions/runs/41132816505",
+                     "jobs":  [
+                                  {
+                                      "job_id":  124327821939,
+                                      "name":  "production-socket-slice",
+                                      "status":  "completed",
+                                      "conclusion":  "success",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Exercise production mutual proof and FileRead with actual kernel packet faults",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Retain packet captures, process logs, source identity and partial coverage receipts",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "job_id":  124327822134,
+                                      "name":  "contract (windows-2022)",
+                                      "status":  "completed",
+                                      "conclusion":  "failure",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Prepare existing build inputs for the ordinary Windows test token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check exact-source contracts and retain every command result",
+                                                        "status":  "completed",
+                                                        "conclusion":  "failure"
+                                                    },
+                                                    {
+                                                        "name":  "Retain validation logs, provenance and the Actions-generated formatting patch",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "job_id":  124327822158,
+                                      "name":  "independent-vectors",
+                                      "status":  "completed",
+                                      "conclusion":  "success",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Derive independent Ed25519 and canonical claims vectors on GitHub",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "job_id":  124327822207,
+                                      "name":  "topology-journal",
+                                      "status":  "completed",
+                                      "conclusion":  "cancelled",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Exercise topology signatures, publication ACL and durable SQLite history",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Exercise the real HTTP topology publication and withdrawal APIs",
+                                                        "status":  "completed",
+                                                        "conclusion":  "cancelled"
+                                                    },
+                                                    {
+                                                        "name":  "Exercise the verified bounded graph and both datagram wire versions",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Exercise node report authority, cancellation and original deadlines",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Retain exact-source topology test log",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "job_id":  124327822211,
+                                      "name":  "native-ice-kernel-nat-slice",
+                                      "status":  "completed",
+                                      "conclusion":  "failure",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Set the existing SDK native codec location",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Prepare existing SDK native build inputs",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Build and verify the locked existing native codecs on GitHub",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Exercise production signed native ICE, Quinn and FileRead across two kernel NATs",
+                                                        "status":  "completed",
+                                                        "conclusion":  "failure"
+                                                    },
+                                                    {
+                                                        "name":  "Retain original tuples, STUN mapping, business bytes and physical cleanup evidence",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "job_id":  124327822250,
+                                      "name":  "routed-kernel-nat-slice",
+                                      "status":  "completed",
+                                      "conclusion":  "success",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Exercise three isolated QUIC processes through two actual kernel NAT gateways",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Retain NAT tuples, packet captures, source identity and cleanup evidence",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "job_id":  124327822361,
+                                      "name":  "contract (ubuntu-24.04)",
+                                      "status":  "completed",
+                                      "conclusion":  "failure",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Prepare existing build inputs for the ordinary Windows test token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check exact-source contracts and retain every command result",
+                                                        "status":  "completed",
+                                                        "conclusion":  "failure"
+                                                    },
+                                                    {
+                                                        "name":  "Retain validation logs, provenance and the Actions-generated formatting patch",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "run_id":  41132816097,
+                     "source_revision":  "0618e0881aa6360f77484aceea996d9ba493cc64",
+                     "status":  "in_progress",
+                     "conclusion":  "",
+                     "url":  "https://github.com/ZHanry/NestLink/actions/runs/41132816097",
+                     "jobs":  [
+                                  {
+                                      "job_id":  124327820931,
+                                      "name":  "linux-x11-input",
+                                      "status":  "completed",
+                                      "conclusion":  "success",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Run sudo apt-get update \u0026\u0026 sudo apt-get install -y xvfb",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run python3 scripts/refactor-x11-input.py --namespace-launcher sudo",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "job_id":  124327821053,
+                                      "name":  "core (windows-2022, x86_64-pc-windows-msvc)",
+                                      "status":  "in_progress",
+                                      "conclusion":  "",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Verify normal Windows test identity",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Set native codec location",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run sudo apt-get update \u0026\u0026 sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config dbus libpipewire-0.3-dev pipewire-bin",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run python3 scripts/refactor-native-codecs.py build --target x86_64-pc-windows-msvc --cache-dir \"D:\\a\\_temp/nestlink-codec-sources\" --work-dir \"D:\\a\\_temp/nestlink-codecs\"",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Run python scripts/refactor-native-codecs.py build --target x86_64-pc-windows-msvc --cache-dir \"D:\\a\\_temp/nestlink-codec-sources\" --work-dir \"D:\\a\\_temp/nestlink-codecs\" --msys-bin \"D:\\a\\_temp\\msys64/usr/bin\" --nasm \"D:\\a\\_temp\\msys64/usr/bin/nasm.exe\"",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run python scripts/refactor-native-codecs.py verify --target x86_64-pc-windows-msvc --prefix \"D:\\a\\_temp\\nestlink-codecs\\x86_64-pc-windows-msvc\"",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run rustup show",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Allow the normal Windows token to use CI build inputs",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check Windows private files and process identity with the normal token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check SDK routed contracts on Linux before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check SDK routed contracts with the ordinary Windows token before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Require every SDK routed source test to pass without ignored cases",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check actual management and node relay integration on Linux before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check actual management and node relay integration with the ordinary Windows token before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check relay metadata migration and actual HTTP SDK on Linux before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check relay metadata migration and HTTP SDK with the ordinary Windows token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check explicit PCP policy, component ownership and historical local settings",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check explicit relay selection through the original native owner on Linux",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check explicit relay selection through the original owner with the ordinary Windows token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Prove mature ICE and Quinn same-socket feasibility on Linux",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Prove mature ICE and Quinn same-socket feasibility with the ordinary Windows token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check production signed native sessions on Linux before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check production signed native sessions with the ordinary Windows token before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check production native host inbox on Linux before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check production native host inbox with the ordinary Windows token before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check candidate discovery and network lifecycle on Linux before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check candidate discovery and network lifecycle with the ordinary Windows token before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check actual space storage and HTTP SDK delegation on Linux before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check actual space storage and HTTP SDK delegation with the ordinary Windows token before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run cargo fmt --all -- --check",
+                                                        "status":  "completed",
+                                                        "conclusion":  "failure"
+                                                    },
+                                                    {
+                                                        "name":  "Retain complete SDK routed output and source test inventory",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run cargo check --locked -p nestlink-platform-audio",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check the complete workspace independently of scoped failures",
+                                                        "status":  "completed",
+                                                        "conclusion":  "failure"
+                                                    },
+                                                    {
+                                                        "name":  "Check scoped media and renewal fixture code before runtime tests on Linux",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check scoped media and renewal fixture code with the ordinary Windows token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check Linux recovery before the complete workspace suite",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check Windows recovery before the complete workspace suite",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Debug scoped signed media Core ACK and actual software AU regression",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Verify actual Media Foundation output with the ordinary token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Retain target codec output and explicit hardware skips",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Build the owned synthetic target probe for HL on GitHub",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Bind the target probe to this exact source and run",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Retain the exact-source Windows target probe",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Build the synthetic GPU probes on GitHub",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Observe GPU output or explicit hardware skips with the ordinary token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Bind GPU probes to the exact source, run, and file hashes",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Retain exact-source GPU probes and observations",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Build the independent HEVC GPU diagnostic artifact with the normal token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Bind the HEVC diagnostic executable to its exact source and run",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Retain the separate exact-source HEVC target diagnostic",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Build the controller direction diagnostic with the normal token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Bind the controller direction diagnostic to its exact source and run",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Retain the separate exact-source controller direction diagnostic",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Build separate media preparation tools with the normal token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Bind separate media preparation tools to exact source and run",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Retain separate exact-source media preparation tools",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Run cargo test --workspace --locked --no-fail-fast",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Test Windows with the ordinary business-process token",
+                                                        "status":  "in_progress",
+                                                        "conclusion":  ""
+                                                    },
+                                                    {
+                                                        "name":  "Debug scoped native renewal regressions on Linux",
+                                                        "status":  "pending",
+                                                        "conclusion":  ""
+                                                    },
+                                                    {
+                                                        "name":  "Debug scoped native renewal regressions with the ordinary Windows token",
+                                                        "status":  "pending",
+                                                        "conclusion":  ""
+                                                    },
+                                                    {
+                                                        "name":  "Run bash scripts/test-vp8-boundary-sanitizer.sh",
+                                                        "status":  "pending",
+                                                        "conclusion":  ""
+                                                    },
+                                                    {
+                                                        "name":  "Run bash scripts/test-pipewire-audio-sanitizer.sh",
+                                                        "status":  "pending",
+                                                        "conclusion":  ""
+                                                    },
+                                                    {
+                                                        "name":  "Browser tool regressions (Node)",
+                                                        "status":  "pending",
+                                                        "conclusion":  ""
+                                                    },
+                                                    {
+                                                        "name":  "Install pinned receipt test crypto on GitHub",
+                                                        "status":  "pending",
+                                                        "conclusion":  ""
+                                                    },
+                                                    {
+                                                        "name":  "Owned public tunnel tool and receipt regressions without network",
+                                                        "status":  "pending",
+                                                        "conclusion":  ""
+                                                    },
+                                                    {
+                                                        "name":  "Run python -m unittest discover -s tests/refactor -p \"test_*.py\"",
+                                                        "status":  "pending",
+                                                        "conclusion":  ""
+                                                    },
+                                                    {
+                                                        "name":  "Run python scripts/refactor-ui-tokens.py --check",
+                                                        "status":  "pending",
+                                                        "conclusion":  ""
+                                                    },
+                                                    {
+                                                        "name":  "Run cargo xtask check",
+                                                        "status":  "pending",
+                                                        "conclusion":  ""
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "job_id":  124327821093,
+                                      "name":  "core (ubuntu-24.04, x86_64-unknown-linux-gnu)",
+                                      "status":  "completed",
+                                      "conclusion":  "failure",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Verify normal Windows test identity",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Set native codec location",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run sudo apt-get update \u0026\u0026 sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config dbus libpipewire-0.3-dev pipewire-bin",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Run python3 scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir \"/home/runner/work/_temp/nestlink-codec-sources\" --work-dir \"/home/runner/work/_temp/nestlink-codecs\"",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run python scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir \"/home/runner/work/_temp/nestlink-codec-sources\" --work-dir \"/home/runner/work/_temp/nestlink-codecs\" --msys-bin \"/usr/bin\" --nasm \"/usr/bin/nasm.exe\"",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Run python scripts/refactor-native-codecs.py verify --target x86_64-unknown-linux-gnu --prefix \"/home/runner/work/_temp/nestlink-codecs/x86_64-unknown-linux-gnu\"",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run rustup show",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Allow the normal Windows token to use CI build inputs",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check Windows private files and process identity with the normal token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check SDK routed contracts on Linux before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check SDK routed contracts with the ordinary Windows token before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Require every SDK routed source test to pass without ignored cases",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check actual management and node relay integration on Linux before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check actual management and node relay integration with the ordinary Windows token before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check relay metadata migration and actual HTTP SDK on Linux before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check relay metadata migration and HTTP SDK with the ordinary Windows token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check explicit PCP policy, component ownership and historical local settings",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check explicit relay selection through the original native owner on Linux",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check explicit relay selection through the original owner with the ordinary Windows token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Prove mature ICE and Quinn same-socket feasibility on Linux",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Prove mature ICE and Quinn same-socket feasibility with the ordinary Windows token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check production signed native sessions on Linux before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check production signed native sessions with the ordinary Windows token before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check production native host inbox on Linux before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check production native host inbox with the ordinary Windows token before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check candidate discovery and network lifecycle on Linux before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check candidate discovery and network lifecycle with the ordinary Windows token before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check actual space storage and HTTP SDK delegation on Linux before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check actual space storage and HTTP SDK delegation with the ordinary Windows token before formatting",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Run cargo fmt --all -- --check",
+                                                        "status":  "completed",
+                                                        "conclusion":  "failure"
+                                                    },
+                                                    {
+                                                        "name":  "Retain complete SDK routed output and source test inventory",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run cargo check --locked -p nestlink-platform-audio",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check the complete workspace independently of scoped failures",
+                                                        "status":  "completed",
+                                                        "conclusion":  "failure"
+                                                    },
+                                                    {
+                                                        "name":  "Check scoped media and renewal fixture code before runtime tests on Linux",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check scoped media and renewal fixture code with the ordinary Windows token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check Linux recovery before the complete workspace suite",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Check Windows recovery before the complete workspace suite",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Debug scoped signed media Core ACK and actual software AU regression",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Verify actual Media Foundation output with the ordinary token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Retain target codec output and explicit hardware skips",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Build the owned synthetic target probe for HL on GitHub",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Bind the target probe to this exact source and run",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Retain the exact-source Windows target probe",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Build the synthetic GPU probes on GitHub",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Observe GPU output or explicit hardware skips with the ordinary token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Bind GPU probes to the exact source, run, and file hashes",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Retain exact-source GPU probes and observations",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Build the independent HEVC GPU diagnostic artifact with the normal token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Bind the HEVC diagnostic executable to its exact source and run",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Retain the separate exact-source HEVC target diagnostic",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Build the controller direction diagnostic with the normal token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Bind the controller direction diagnostic to its exact source and run",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Retain the separate exact-source controller direction diagnostic",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Build separate media preparation tools with the normal token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Bind separate media preparation tools to exact source and run",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Retain separate exact-source media preparation tools",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Run cargo test --workspace --locked --no-fail-fast",
+                                                        "status":  "completed",
+                                                        "conclusion":  "failure"
+                                                    },
+                                                    {
+                                                        "name":  "Test Windows with the ordinary business-process token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Debug scoped native renewal regressions on Linux",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Debug scoped native renewal regressions with the ordinary Windows token",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Run bash scripts/test-vp8-boundary-sanitizer.sh",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Run bash scripts/test-pipewire-audio-sanitizer.sh",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Browser tool regressions (Node)",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Install pinned receipt test crypto on GitHub",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Owned public tunnel tool and receipt regressions without network",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Run python -m unittest discover -s tests/refactor -p \"test_*.py\"",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Run python scripts/refactor-ui-tokens.py --check",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Run cargo xtask check",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "job_id":  124327821100,
+                                      "name":  "linux-system-audio",
+                                      "status":  "completed",
+                                      "conclusion":  "success",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Run sudo apt-get update \u0026\u0026 sudo apt-get install -y build-essential pkg-config dbus libpipewire-0.3-dev pipewire-bin",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run python3 scripts/refactor-linux-audio.py --namespace-launcher sudo",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "job_id":  124327821147,
+                                      "name":  "wasm-contract",
+                                      "status":  "completed",
+                                      "conclusion":  "failure",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Run rustup target add wasm32-unknown-unknown",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Check protocol lint before platform codec builds finish",
+                                                        "status":  "completed",
+                                                        "conclusion":  "failure"
+                                                    },
+                                                    {
+                                                        "name":  "Run cargo check --locked --target wasm32-unknown-unknown -p nestlink-protocol -p nestlink-policy -p nestlink-connectivity -p nestlink-sdk -p nestlink-web",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "job_id":  124327821166,
+                                      "name":  "openapi-generation",
+                                      "status":  "completed",
+                                      "conclusion":  "success",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Generate the contract with the exact source on GitHub",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Bind generated contract bytes to source and run",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Retain generated OpenAPI and exact-source receipt",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "job_id":  124327821326,
+                                      "name":  "linux-portal-capture",
+                                      "status":  "completed",
+                                      "conclusion":  "success",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Run sudo apt-get update \u0026\u0026 sudo apt-get install -y build-essential pkg-config dbus libpipewire-0.3-dev pipewire-bin",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run python3 scripts/refactor-portal-capture.py --namespace-launcher sudo",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "job_id":  124327821361,
+                                      "name":  "dependencies",
+                                      "status":  "completed",
+                                      "conclusion":  "success",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Run rustup show",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run cargo install cargo-deny --version 0.20.2 --locked",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Audit the locked product dependency graph",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Audit the independent locked browser fixture graph",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "job_id":  124327821485,
+                                      "name":  "linux-network-events",
+                                      "status":  "completed",
+                                      "conclusion":  "success",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Run python3 scripts/refactor-network-events.py",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Preserve isolated Linux network evidence",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "run_id":  41132815865,
+                     "source_revision":  "0618e0881aa6360f77484aceea996d9ba493cc64",
+                     "status":  "completed",
+                     "conclusion":  "success",
+                     "url":  "https://github.com/ZHanry/NestLink/actions/runs/41132815865",
+                     "jobs":  [
+                                  {
+                                      "job_id":  124327819221,
+                                      "name":  "Browser runner and observer contracts",
+                                      "status":  "completed",
+                                      "conclusion":  "success",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Check integration runner boundaries independently of the release build",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Retain browser contract output",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "job_id":  124327819700,
+                                      "name":  "release-site",
+                                      "status":  "completed",
+                                      "conclusion":  "success",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Check generated cross-platform UI tokens",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Install pinned WebAssembly build tools",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Install verified Binaryen optimizer",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Build the release site",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Retain fixed Cargo.lock evidence",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Verify static output for Caddy",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "job_id":  124332330110,
+                                      "name":  "Production Web to native host (edge)",
+                                      "status":  "completed",
+                                      "conclusion":  "success",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Run actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Set ephemeral build locations",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Install native codec build tools",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Build and verify reviewed native codecs on GitHub",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Build the optimized native host fixture on GitHub",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Install pinned browser driver and TLS proxy",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Select the runner\u0027s stable Chrome",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Extract the reviewed stable Edge package without package install hooks",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Exercise real video, audio, input, files and cleanup",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Upload sanitized integration evidence",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "job_id":  124332330147,
+                                      "name":  "Production Web to native host (chrome)",
+                                      "status":  "completed",
+                                      "conclusion":  "success",
+                                      "steps":  [
+                                                    {
+                                                        "name":  "Run actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Run dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Set ephemeral build locations",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Install native codec build tools",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Build and verify reviewed native codecs on GitHub",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Build the optimized native host fixture on GitHub",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Install pinned browser driver and TLS proxy",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Select the runner\u0027s stable Chrome",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Extract the reviewed stable Edge package without package install hooks",
+                                                        "status":  "completed",
+                                                        "conclusion":  "skipped"
+                                                    },
+                                                    {
+                                                        "name":  "Exercise real video, audio, input, files and cleanup",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    },
+                                                    {
+                                                        "name":  "Upload sanitized integration evidence",
+                                                        "status":  "completed",
+                                                        "conclusion":  "success"
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 }
+             ],
+    "observations":  [
+                         "NRD2 numeric inference and node sort lint failed; subsequent source 41e70c8 repairs them.",
+                         "Scoped Windows SDK routed, management/node relay, PCP, selection, native session and inbox checks passed; full workspace failed.",
+                         "Both Chrome and Edge real browser/native-host matrix jobs passed at this source.",
+                         "Topology-journal was cancelled by the subsequent source run and cannot qualify its skipped graph/reporter cases."
+                     ],
+    "acceptance_claims":  [
+
+                          ],
+    "release_qualification":  false
+}

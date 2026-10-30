@@ -114,6 +114,29 @@ pub struct NetworkRemoteRelayView {
     pub node: NodeEndpointsView,
 }
 
+/// Ordered from the canonical first business peer. A single device signature
+/// binds the entire requested chain, including the exact current topology.
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkRemoteRelayChainRequest {
+    pub route_id: String,
+    pub path: NetworkRemotePathRequest,
+    pub node_ids: [String; 2],
+    pub transit_grant_ids: [String; 2],
+    pub topology_digests: [[u8; 32]; 2],
+    pub device_id: String,
+    pub signature: String,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkRemoteRelayChainView {
+    pub route_id: String,
+    pub path: NetworkRemotePathView,
+    pub transits: [NetworkGrantView; 2],
+    pub nodes: [NodeEndpointsView; 2],
+    pub topology_digests: [[u8; 32]; 2],
+}
+
 /// Discovery inputs supplied by the authenticated, pinned deployment. Local
 /// private-network consent is deliberately absent from this response.
 /// PCP policy has its own additive endpoint to preserve this strict JSON shape.

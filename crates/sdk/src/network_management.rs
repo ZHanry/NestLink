@@ -236,4 +236,30 @@ impl Sdk {
         .await
         .map(|_| ())
     }
+
+    /// Atomically reserve the two ordered nodes using the participating device's
+    /// signature over the complete business/path/topology request.
+    pub async fn reserve_network_remote_chain(
+        &self, space: &str, installation: &DeviceIdentity, permit: &VerifiedPermit,
+        mut request: NetworkRemoteRelayChainRequest,
+    ) -> Result<NetworkRemoteRelayChainView,SdkError> {
+        let business = permit.claims();
+        if business.deployment_id != self.trust.deployment_id
+            || business.security_epoch != self.health.security_epoch { return Err(SdkError::Trust); }
+        if request.device_id != installation.device_id { return Err(SdkError::Invalid); }
+        let actor = &self.login.as_ref().ok_or(SdkError::SignIn)?.principal;
+        let transcript = nestlink_identity::network::remote_chain_reservation_transcript(
+            business,&actor.account_id,space,&request,
+        )?;
+        request.signature = URL_SAFE_NO_PAD.encode(installation.identity.sign_action(&transcript)?);
+        self.required(Method::POST,&format!("{}/remote/{}/relay-chains",base(space)?,business.session_id),Some(&request)).await
+    }
+    pub async fn network_remote_chain(&self,space:&str,route:&str) -> Result<NetworkRemoteRelayChainView,SdkError> {
+        if !valid_id(route) { return Err(SdkError::Invalid); }
+        self.required(Method::GET,&format!("{}/relay-chains/{route}",base(space)?),None::<&()>).await
+    }
+    pub async fn revoke_network_remote_chain(&self,space:&str,route:&str) -> Result<(),SdkError> {
+        if !valid_id(route) { return Err(SdkError::Invalid); }
+        self.call::<_,serde_json::Value>(Method::DELETE,&format!("{}/relay-chains/{route}",base(space)?),None::<&()>,true).await.map(|_|())
+    }
 }

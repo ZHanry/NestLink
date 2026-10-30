@@ -245,7 +245,7 @@ impl Store {
         let tx = self.connection.unchecked_transaction()?;
         self.resume_relay_reservations(lifecycle, now_ms)?;
         if tx.query_row(
-            "SELECT EXISTS(SELECT 1 FROM network_remote_relays WHERE allocation_id=?1)",
+            "SELECT EXISTS(SELECT 1 FROM network_remote_relays WHERE allocation_id=?1 UNION ALL SELECT 1 FROM network_remote_chains WHERE route_id=?1)",
             [&request.allocation_id],
             |r| r.get::<_, bool>(0),
         )? {

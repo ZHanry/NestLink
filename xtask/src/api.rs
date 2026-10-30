@@ -147,6 +147,8 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         NetworkRemotePathRequest,
         NetworkRemotePathView,
         NetworkRemoteRelayRequest,
+        NetworkRemoteRelayChainRequest,
+        NetworkRemoteRelayChainView,
         NetworkTopologyPublisherRequest,
         NetworkTopologyQuery,
         NetworkTopologyEnvelope,

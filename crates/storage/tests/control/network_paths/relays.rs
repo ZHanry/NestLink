@@ -103,6 +103,25 @@ impl RelayFixture {
 }
 
 #[test]
+fn migration_34_preserves_original_single_relay_credentials_and_capacity() -> Result {
+    let mut f = RelayFixture::new(false,2)?;
+    let request = f.issuance()?;
+    let allocation = request.request.allocation.allocation_id.clone();
+    let original = f.issue(request)?;
+    edit_snapshot(&mut f.base,|db|db.execute_batch(
+        "DROP VIEW all_relay_capacity; DROP TABLE network_remote_chain_hops; DROP TABLE network_remote_chains;
+         CREATE VIEW all_relay_capacity AS SELECT id,kind,controller_account_id,host_account_id,node_id,promised_until FROM relay_reservations UNION ALL SELECT allocation_id,'node',controller_account_id,host_account_id,node_id,promised_until FROM network_remote_relays;
+         PRAGMA user_version=33;"
+    ))?;
+    let read = f.base.store.network_remote_relay(&f.lifecycle,&f.base.host,&f.base.space,&allocation,NOW)?;
+    assert_eq!(read.transit.claims,original.transit.claims);
+    assert_eq!(read.transit.signature,original.transit.signature);
+    assert_eq!(read.path.path.claims,original.path.path.claims);
+    assert_eq!(f.base.store.relay_reservation_usage(&f.base.controller,NOW)?.held_allocations,1);
+    Ok(())
+}
+
+#[test]
 fn node_snapshot_delegates_exact_network_chain_and_permit_and_removes_revoked_routes() -> Result {
     use nestlink_identity::{
         PermitSigner, network::verify_node_network_resource,

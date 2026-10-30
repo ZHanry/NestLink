@@ -468,3 +468,20 @@ and rebinding all six physical sockets, alongside the retained NRD1 tests. These
 new sources require exact-source Actions. Authority reservation, production node
 admission/report integration and four-node SessionPermit/FileRead still remain
 required W12 work; no release or AC18/AC19 completion is claimed.
+
+ADR 0017 adds an atomic two-relay authority reservation, current reciprocal
+topology validation, a device signature over the complete ordered request,
+schema34 durable hop promises, exact readback and reserved-lane HTTP revocation.
+Both hops share the mature global/account/node capacity view; the second check
+sees the first insert, and any failure rolls back all grants and promises.
+Restart fencing, legacy/TURN collisions and historical migration fixtures are
+updated. Typed SDK methods use the separate chain endpoint. Source regressions
+cover signatures, concurrent admission, second/global/account limits, audit
+rollback, original one-hop migration, topology invalidation and actual HTTP
+readback/revocation. These new sources are unverified until exact-source Actions.
+
+The graph/codec/four-node carrier and reporter checks have a separate hosted job
+so a large server build cannot prevent collecting independent transport results.
+All original assertions and timeouts are retained. Production node-resource
+delegation/admission, continuous real adjacency reporting and four-node business
+acceptance still remain required; all later mandatory packages remain active.

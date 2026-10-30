@@ -3,6 +3,54 @@ use super::*;
 use crate::VerifiedPermit;
 use nestlink_protocol::network_datagram_v2::{Direction, PATH_EPOCH};
 
+/// Domain-separated endpoint consent for a complete ordered reservation. The
+/// signature field is excluded; every other request field is bound, including
+/// both topology references and the exact member/path identifiers and expiry.
+pub fn remote_chain_reservation_transcript(
+    business: &nestlink_protocol::PermitClaims,
+    account: &str,
+    space: &str,
+    request: &nestlink_protocol::api::NetworkRemoteRelayChainRequest,
+) -> Result<nestlink_protocol::DeviceActionClaims, ContractError> {
+    business.validate()?;
+    let path = &request.path;
+    let ids = [
+        account, space, request.route_id.as_str(), request.device_id.as_str(),
+        path.connectivity_grant_id.as_str(), path.path_grant_id.as_str(),
+        path.controller_membership_grant_id.as_str(), path.host_membership_grant_id.as_str(),
+        request.node_ids[0].as_str(), request.node_ids[1].as_str(),
+        request.transit_grant_ids[0].as_str(), request.transit_grant_ids[1].as_str(),
+    ];
+    if ids.iter().any(|id| !nestlink_protocol::valid_id(id))
+        || request.node_ids[0] == request.node_ids[1]
+        || request.transit_grant_ids[0] == request.transit_grant_ids[1]
+        || request.topology_digests.contains(&[0; 32])
+        || path.expected_policy_epoch == 0
+        || path.expires_at_unix_ms <= business.issued_at_unix_ms
+        || path.expires_at_unix_ms > business.expires_at_unix_ms
+        || (request.device_id != business.controller_device_id
+            && request.device_id != business.host_device_id)
+    {
+        return Err(denied());
+    }
+    use prost::Message;
+    let mut transcript = b"NestLink/network-datagram/v2/chain-reservation\0".to_vec();
+    transcript.extend_from_slice(&digest(&business.encode_to_vec()));
+    for id in ids {
+        transcript.extend_from_slice(&(id.len() as u32).to_be_bytes());
+        transcript.extend_from_slice(id.as_bytes());
+    }
+    transcript.extend_from_slice(&path.expected_policy_epoch.to_be_bytes());
+    transcript.extend_from_slice(&path.expires_at_unix_ms.to_be_bytes());
+    for reference in request.topology_digests {
+        transcript.extend_from_slice(&reference);
+    }
+    let mut claims = crate::relay_transcript(business, account, &request.device_id, &digest(&business.encode_to_vec()))?;
+    claims.action = nestlink_protocol::DeviceAction::RelayAllocate as i32;
+    claims.payload_sha256 = digest(&transcript).to_vec();
+    Ok(claims)
+}
+
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct RemoteChainBinding {
     pub digest: [u8; 32],

@@ -18,6 +18,8 @@ mod remote_paths;
 pub use remote_paths::{NetworkRemotePathBundle, NetworkRemotePathIssuance};
 mod remote_relays;
 pub use remote_relays::{NetworkRemoteRelayBundle, NetworkRemoteRelayIssuance};
+mod remote_chains;
+pub use remote_chains::{NetworkRemoteRelayChainBundle, NetworkRemoteRelayChainIssuance};
 mod authority;
 pub use authority::{NetworkAuthorityChange, NetworkAuthorityState};
 pub mod topology;
@@ -691,7 +693,7 @@ fn read_snapshot(
         revoked_grant_ids.insert(connectivity);
         revoked_grant_ids.insert(path);
     }
-    let mut transits = connection.prepare("SELECT r.transit_grant_id FROM network_remote_relays r JOIN network_remote_paths p ON p.space_id=r.space_id AND p.path_grant_id=r.path_grant_id WHERE r.space_id=?1 AND p.policy_epoch=?2 AND p.expires_at_ms>?3 AND (r.closed=1 OR p.revoked=1) LIMIT ?4")?;
+    let mut transits = connection.prepare("SELECT r.transit_grant_id FROM network_remote_relays r JOIN network_remote_paths p ON p.space_id=r.space_id AND p.path_grant_id=r.path_grant_id WHERE r.space_id=?1 AND p.policy_epoch=?2 AND p.expires_at_ms>?3 AND (r.closed=1 OR p.revoked=1) UNION ALL SELECT h.transit_grant_id FROM network_remote_chain_hops h JOIN network_remote_chains c ON c.route_id=h.route_id JOIN network_remote_paths p ON p.space_id=c.space_id AND p.path_grant_id=c.path_grant_id WHERE h.space_id=?1 AND p.policy_epoch=?2 AND p.expires_at_ms>?3 AND (h.closed=1 OR p.revoked=1) LIMIT ?4")?;
     for (count, id) in transits
         .query_map(
             params![

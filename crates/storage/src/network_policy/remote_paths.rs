@@ -87,7 +87,7 @@ pub(super) fn grant_id_available(
     id: &str,
 ) -> Result<(), StorageError> {
     require_id(id)?;
-    let exists: bool = connection.query_row("SELECT EXISTS(SELECT 1 FROM network_grants WHERE space_id=?1 AND grant_id=?2 UNION ALL SELECT 1 FROM network_remote_paths WHERE space_id=?1 AND (path_grant_id=?2 OR connectivity_grant_id=?2) UNION ALL SELECT 1 FROM network_remote_relays WHERE space_id=?1 AND transit_grant_id=?2)",
+    let exists: bool = connection.query_row("SELECT EXISTS(SELECT 1 FROM network_grants WHERE space_id=?1 AND grant_id=?2 UNION ALL SELECT 1 FROM network_remote_paths WHERE space_id=?1 AND (path_grant_id=?2 OR connectivity_grant_id=?2) UNION ALL SELECT 1 FROM network_remote_relays WHERE space_id=?1 AND transit_grant_id=?2 UNION ALL SELECT 1 FROM network_remote_chain_hops WHERE space_id=?1 AND transit_grant_id=?2)",
         params![space,id], |r|r.get(0))?;
     if exists {
         return Err(StorageError::Conflict);
@@ -283,6 +283,18 @@ impl Store {
         relay: bool,
         now_ms: u64,
     ) -> Result<NetworkRemotePathBundle, StorageError> {
+        self.network_path_current_with_hops(tx, actor, space, path_id, u8::from(relay), now_ms)
+    }
+
+    pub(super) fn network_path_current_with_hops(
+        &self,
+        tx: &Transaction<'_>,
+        actor: Option<&Principal>,
+        space: &str,
+        path_id: &str,
+        relay_hops: u8,
+        now_ms: u64,
+    ) -> Result<NetworkRemotePathBundle, StorageError> {
         require_id(path_id)?;
         if let Some(actor) = actor {
             self.validate_access(actor, checked_seconds(now_ms)?)?;
@@ -305,7 +317,7 @@ impl Store {
         if row.business_digest != business_digest
             || !business
                 .paths
-                .contains(&(if relay { Path::Relay } else { Path::Direct } as i32))
+                .contains(&(if relay_hops > 0 { Path::Relay } else { Path::Direct } as i32))
         {
             return Err(StorageError::Forbidden);
         }
@@ -343,8 +355,10 @@ impl Store {
         )?;
         let policy = &verified.claims().policy;
         if verified.purpose() != Purpose::RemoteControl
-            || if relay {
-                policy.allow_direct || policy.relays.len() != 1 || policy.max_hops != 1
+            || if relay_hops > 0 {
+                relay_hops > 2 || policy.allow_direct
+                    || policy.relays.len() != usize::from(relay_hops)
+                    || policy.max_hops != relay_hops
             } else {
                 !policy.allow_direct || !policy.relays.is_empty() || policy.max_hops != 0
             }
