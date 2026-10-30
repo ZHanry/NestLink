@@ -55,6 +55,12 @@ UI_REQUIRED_CLICKS = frozenset((
     '[aria-controls="remote-permissions"]', '[aria-controls="remote-operation-center"]',
     ".remote-actions > button:last-child", ".back-to-devices",
 ))
+MEMBERSHIP_UI_FIELDS = (
+    "passed", "forbidden_is_error", "explicit_initialization", "explicit_epoch_zero",
+    "failed_read_preserves_draft", "cas_conflict_preserves_draft", "reread_preserves_draft",
+    "revision_epoch_bound", "revoke_and_reenroll", "unmounted_response_ignored",
+    "logout_response_ignored", "new_session_clean",
+)
 SENSITIVE_KEY = re.compile(
     r"(^|_)(password|secret|token|authorization|cookie|private_key|ice_pwd|ice_ufrag)($|_)", re.I
 )
@@ -265,6 +271,12 @@ def validate_receipts(browser, host, data, database, exit_codes):
     require(browser.get("edge_namespace_ui_helper_sha256") ==
             sha256((ROOT / "scripts/lib/refactor-browser-edge-namespace.cjs").read_bytes()),
             "edge-namespace-helper-source")
+    membership = browser.get("network_membership_ui", {})
+    for field in MEMBERSHIP_UI_FIELDS:
+        require(isinstance(membership, dict) and membership.get(field) is True, "network-membership-" + field)
+    require(browser.get("network_membership_ui_helper_sha256") ==
+            sha256((ROOT / "scripts/lib/refactor-browser-network-membership.cjs").read_bytes()),
+            "network-membership-helper-source")
     for field in ("passed", "browser_peers_closed", "browser_closed", "cleanup_requested",
                   "persistent_controller_preserved", "ui_cleanup_complete", "renewal_sequence_valid"):
         require(browser.get(field) is True, "browser-" + field)

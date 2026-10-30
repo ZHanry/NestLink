@@ -157,6 +157,7 @@ jobs:
           node --check scripts/lib/refactor-browser-owned-data.cjs
           node --check scripts/lib/refactor-browser-workspace-ui.cjs
           node --check scripts/lib/refactor-browser-edge-namespace.cjs
+          node --check scripts/lib/refactor-browser-network-membership.cjs
           node --test tests/refactor/test_browser_response_observer.cjs tests/refactor/test_browser_workspace_ui.cjs
       - name: Install native codec build tools
         # Keep Chinese controls readable in the same browser screenshots we review.

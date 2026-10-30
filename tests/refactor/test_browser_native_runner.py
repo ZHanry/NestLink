@@ -52,6 +52,9 @@ def completed_receipts():
             "slow_old_response_ignored", "node_switch_clears_draft")},
         "edge_namespace_ui_helper_sha256": RUNNER.sha256(
             (ROOT / "scripts/lib/refactor-browser-edge-namespace.cjs").read_bytes()),
+        "network_membership_ui": {field: True for field in RUNNER.MEMBERSHIP_UI_FIELDS},
+        "network_membership_ui_helper_sha256": RUNNER.sha256(
+            (ROOT / "scripts/lib/refactor-browser-network-membership.cjs").read_bytes()),
         "permit_response_observer": {"passed": True, "closed": True, "listeners_removed": True,
             "pending": 0, "errors": [], "session_owner": {
                 **{key: True for key in ("session_created", "prepared_before_navigation",
@@ -85,6 +88,19 @@ def completed_receipts():
 
 
 class NativeRunnerTests(unittest.TestCase):
+    def test_membership_requires_every_real_browser_case_and_helper_source(self):
+        for replacement in (None, {}, {"passed": True}):
+            receipts = completed_receipts()
+            receipts[0]["network_membership_ui"] = replacement
+            self.assertTrue(any(item.startswith("network-membership-") for item in RUNNER.validate_receipts(*receipts)))
+        for field in RUNNER.MEMBERSHIP_UI_FIELDS:
+            receipts = completed_receipts()
+            receipts[0]["network_membership_ui"][field] = False
+            self.assertIn("network-membership-" + field, RUNNER.validate_receipts(*receipts))
+        receipts = completed_receipts()
+        receipts[0]["network_membership_ui_helper_sha256"] = "0" * 64
+        self.assertIn("network-membership-helper-source", RUNNER.validate_receipts(*receipts))
+
     def test_namespace_evidence_and_source_cannot_be_skipped(self):
         for replacement in (None, {}, {"passed": True}):
             receipts = completed_receipts()

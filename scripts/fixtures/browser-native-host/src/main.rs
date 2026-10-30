@@ -755,7 +755,15 @@ async fn run() -> Result {
                         }
                         response
                     } else {
-                        next.run(request).await
+                        let delay_network_read = request.method() == axum::http::Method::GET
+                            && request.uri().path().starts_with("/api/v3/network/spaces/");
+                        let response = next.run(request).await;
+                        // Membership lifecycle checks leave/logout the actual
+                        // UI before this real server response reaches its SDK.
+                        if delay_network_read {
+                            tokio::time::sleep(Duration::from_millis(750)).await;
+                        }
+                        response
                     }
                 }
             },
