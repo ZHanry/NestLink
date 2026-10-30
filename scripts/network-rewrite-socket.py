@@ -31,7 +31,7 @@ if SPEC is None or SPEC.loader is None:
     raise RuntimeError("missing existing Actions evidence helpers")
 EVIDENCE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(EVIDENCE)
-CASES = ("success", "blackhole", "cancel")
+CASES = ("success", "blackhole", "cancel", "peer-close")
 
 
 def require(value: bool, reason: str) -> None:
@@ -208,6 +208,20 @@ def namespace_argv(namespace: str, executable: Path, role: str, fixture: Path, c
             str(executable), "--ignored", "--exact", role + "_process", "--nocapture", "--test-threads=1"]
 
 
+def drop_egress(experiment: Experiment, name: str, namespace: str, interface: str, direction: str) -> dict:
+    started = time.time_ns()
+    command = experiment.command(name + "-netem", ["sudo", "-n", "ip", "netns", "exec", namespace,
+        "tc", "qdisc", "add", "dev", interface, "root", "netem", "loss", "100%"])
+    installed = time.time_ns()
+    facts = experiment.command(name + "-netem-installed", ["sudo", "-n", "ip", "netns", "exec", namespace,
+        "tc", "-s", "qdisc", "show", "dev", interface])
+    observed = (experiment.output / facts["log"]).read_text()
+    require("netem" in observed and "loss 100%" in observed, "requested egress isolation is absent from the kernel")
+    return {"direction": direction, "loss_percent": 100, "started_at_unix_ns": started,
+            "installed_at_unix_ns": installed, "command_log": command["log"],
+            "kernel_verified_at_unix_ns": time.time_ns(), "kernel_state_log": facts["log"]}
+
+
 def case(experiment: Experiment, executable: Path, name: str, private: Path) -> dict:
     record = {"name": name, "started_at": EVIDENCE.utc_now(), "passed": False,
               "endpoint_processes": 2, "relay_processes": 0, "fault": None,
@@ -288,10 +302,9 @@ def case(experiment: Experiment, executable: Path, name: str, private: Path) -> 
                                                        "--nocapture", "--test-threads=1"], environment)
         experiment.finish(prepare, 3)
         if name == "blackhole":
-            experiment.command(name + "-netem", ["sudo", "-n", "ip", "netns", "exec", host_ns,
-                                                 "tc", "qdisc", "add", "dev", host_link, "root", "netem", "loss", "100%"])
+            host_loss = drop_egress(experiment, name, host_ns, host_link, "host_egress")
             record["fault"] = {"kind": "kernel_netem", "direction": "host_egress", "loss_percent": 100,
-                               "installed_before_connect": True}
+                               "installed_before_connect": True, "installation": host_loss}
         host = experiment.launch(name + "-host", namespace_argv(host_ns, executable, "host", fixture, name))
         marker(fixture, "host-ready", (host,))
         client = experiment.launch(name + "-client", namespace_argv(controller_ns, executable, "client", fixture, name))
@@ -299,21 +312,46 @@ def case(experiment: Experiment, executable: Path, name: str, private: Path) -> 
             for observed in ("host-authorized", "client-authorized", "ungranted-input-rejected", "client-first-chunk"):
                 marker(fixture, observed, (host, client))
             if name == "cancel":
-                experiment.command(name + "-netem", ["sudo", "-n", "ip", "netns", "exec", host_ns,
-                    "tc", "qdisc", "add", "dev", host_link, "root", "netem", "loss", "100%"])
+                host_loss = drop_egress(experiment, name, host_ns, host_link, "host_egress")
                 record["fault"] = {"kind": "kernel_netem", "direction": "host_egress", "loss_percent": 100,
-                                   "installed_after_verified_first_chunk": True}
+                                   "installed_after_verified_first_chunk": True, "installation": host_loss}
                 write_marker(fixture, "fault-installed")
                 marker(fixture, "client-next-blocked", (host,))
-                marker(fixture, "client-cancelled", (host,))
+                blocked_at = time.time_ns()
+                # The RPC first blocks with host-egress loss only. Isolate the
+                # reverse direction only after that fact, so a code-0 peer
+                # close cannot win over the host's independent local stop.
+                client_loss = drop_egress(experiment, name + "-teardown", controller_ns, controller_link, "client_egress")
+                record["teardown"] = {"mode": "isolated_local_exit", "next_pending_observed_at_unix_ns": blocked_at,
+                                      "isolation": [host_loss, client_loss], "expected_local_reason": "ExplicitExit"}
+                write_marker(fixture, "host-stop")
+                record["teardown"]["host_stop_released_at_unix_ns"] = time.time_ns()
+                write_marker(fixture, "teardown-isolated")
+                record["teardown"]["client_stop_released_at_unix_ns"] = time.time_ns()
+                marker(fixture, "client-cancelled", (client,))
                 record["cancellation"] = "production stop signal unblocks a verified pending FileRead next request"
             else:
                 marker(fixture, "client-complete", (host,))
                 received = fixture / "received.bin"
                 require(received.read_bytes() == payload, "remote FileRead bytes differ from actual source file")
-                shutil.copyfile(received, experiment.output / "success-received.bin")
+                shutil.copyfile(received, experiment.output / (name + "-received.bin"))
                 record["verified_file_bytes"] = len(payload)
-            write_marker(fixture, "host-stop")
+                if name == "peer-close":
+                    # No teardown netem here. Observe the production mapping
+                    # of the controller's actual code-0 application close.
+                    marker(fixture, "host-peer-close-observed", (host,))
+                    record["peer_close"] = {"controller_local_reason": "ExplicitExit", "quic_application_close_code": 0,
+                                            "host_observed_reason": "Revoked", "teardown_isolation": False}
+                    write_marker(fixture, "host-stop")
+                else:
+                    host_loss = drop_egress(experiment, name + "-teardown-host", host_ns, host_link, "host_egress")
+                    client_loss = drop_egress(experiment, name + "-teardown-client", controller_ns, controller_link, "client_egress")
+                    record["teardown"] = {"mode": "isolated_local_exit", "file_verified_before_isolation": True,
+                                          "isolation": [host_loss, client_loss], "expected_local_reason": "ExplicitExit"}
+                    write_marker(fixture, "host-stop")
+                    record["teardown"]["host_stop_released_at_unix_ns"] = time.time_ns()
+                    write_marker(fixture, "teardown-isolated")
+                    record["teardown"]["client_stop_released_at_unix_ns"] = time.time_ns()
         experiment.finish(client, 8)
         experiment.finish(host, 8)
         for observed in ("host-finished", "client-finished"):
@@ -455,6 +493,7 @@ def main() -> int:
             "limitations": ["No two-relay or NAT topology, real LAN or target device qualification",
                             "No SDK signaling/discovery, TLS/WSS fallback, new network routing or migration qualification",
                             "FileRead uses production client/server with a fixture adapter approving one real file",
+                            "Success/cancel isolate teardown packets to measure independent local ExplicitExit; peer-close separately verifies unisolated code-0 close maps to host Revoked",
                             "No screen capture, OS input injection, installation, performance, 24h or UU acceptance",
                             "Environment guards prevent accidental local execution; GitHub run/job/artifact records remain authoritative"],
         }

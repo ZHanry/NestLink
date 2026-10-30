@@ -334,6 +334,8 @@ async fn host_process() -> Result {
         .await?
         .ok_or("listener ended")?;
     let connection = tokio::time::timeout(Duration::from_secs(3), incoming).await??;
+    let peer_close_case = std::env::var("NESTLINK_NETWORK_CASE")? == "peer-close";
+    let close_observer = peer_close_case.then(|| connection.clone());
     let (stop, stopped) = watch::channel(None);
     let mut channels = nestlink_remote::quic::authorize(
         connection,
@@ -349,9 +351,12 @@ async fn host_process() -> Result {
     let mut worker =
         FileReadServer::start(&mut channels, 1, ApprovedFile(root.join("payload.bin")))?;
     let stop_root = root.clone();
+    // Keep the lifecycle sender alive through cleanup. The task's completion
+    // is an orchestration fact, not an independent revocation signal.
+    let stop_signal = stop.clone();
     let stop_task = tokio::spawn(async move {
         wait_mark(&stop_root, "host-stop", deadline).await?;
-        let _ = stop.send(Some(StopReason::ExplicitExit));
+        let _ = stop_signal.send(Some(StopReason::ExplicitExit));
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
     });
     assert!(
@@ -359,14 +364,26 @@ async fn host_process() -> Result {
             .await?
             .is_err()
     );
+    if let Some(observer) = close_observer {
+        let close = tokio::time::timeout_at(deadline, observer.closed()).await?;
+        assert!(
+            matches!(close, quinn::ConnectionError::ApplicationClosed(ref application)
+                if application.error_code == quinn::VarInt::from_u32(0)),
+            "expected the controller's actual code-0 application close: {close:?}"
+        );
+        println!("NESTLINK_NETWORK peer_application_close={close:?}");
+    }
     let report = tokio::time::timeout(Duration::from_secs(3), channels.wait_stopped()).await??;
-    assert!(
-        matches!(
-            report.reason,
-            StopReason::ExplicitExit | StopReason::TransportLost
-        ),
-        "unexpected terminal reason: {report:?}"
-    );
+    if peer_close_case {
+        // An unisolated peer ExplicitExit is intentionally fail-closed. This
+        // separate case checks the exact production code-0 -> Revoked mapping.
+        assert_eq!(report.reason, StopReason::Revoked);
+        mark(&root, "host-peer-close-observed")?;
+    } else {
+        // The driver isolates teardown only after actual file/RPC assertions.
+        // No peer close may race this independently requested local exit.
+        assert_eq!(report.reason, StopReason::ExplicitExit);
+    }
     assert_eq!(
         tokio::time::timeout(
             Duration::from_secs(1),
@@ -378,6 +395,7 @@ async fn host_process() -> Result {
     assert!(worker.monitor().status().finished);
     assert!(!worker.monitor().status().cleanup_timed_out);
     stop_task.await??;
+    drop(stop);
     println!(
         "NESTLINK_NETWORK stopped={report:?} file_worker={:?}",
         worker.monitor().status()
@@ -474,6 +492,21 @@ async fn client_process() -> Result {
                 "blackholed next chunk did not block"
             );
             mark(&root, "client-next-blocked")?;
+            // Preserve the proved one-way RPC blackhole before the driver
+            // isolates reverse teardown traffic. A peer code-0 close must not
+            // win over the host's separately requested local cancellation.
+            wait_mark(&root, "teardown-isolated", deadline).await?;
+            assert!(
+                deadline.saturating_duration_since(tokio::time::Instant::now())
+                    >= Duration::from_secs(1),
+                "insufficient local-stop budget after teardown isolation"
+            );
+            assert!(
+                tokio::time::timeout(Duration::from_millis(1), &mut next)
+                    .await
+                    .is_err(),
+                "the pending RPC completed before local cancellation"
+            );
             let cancelling = Instant::now();
             stop.send(Some(StopReason::ExplicitExit))?;
             assert!(
@@ -514,11 +547,16 @@ async fn client_process() -> Result {
         fs::write(root.join("received.bin"), &received)?;
         println!("NESTLINK_NETWORK verified_file_bytes={}", received.len());
         mark(&root, "client-complete")?;
-        tokio::time::timeout(
+        if std::env::var("NESTLINK_NETWORK_CASE")? != "peer-close" {
+            wait_mark(&root, "teardown-isolated", deadline).await?;
+        }
+        let report = tokio::time::timeout(
             Duration::from_secs(3),
             channels.shutdown(StopReason::ExplicitExit),
         )
         .await??;
+        assert_eq!(report.reason, StopReason::ExplicitExit);
+        println!("NESTLINK_NETWORK completed_local_exit={report:?}");
     }
     mark(&root, "client-finished")?;
     Ok(())
