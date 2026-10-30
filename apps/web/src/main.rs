@@ -19,6 +19,7 @@ use nestlink_web::{browser_clipboard, browser_files, browser_rpc};
 
 mod account_security_panel;
 mod edge_namespace_panel;
+mod network_membership_panel;
 mod service_quota_panel;
 mod services_panel;
 
@@ -1096,6 +1097,7 @@ fn App() -> impl IntoView {
                             <div class="content-grid">
                                 <section class="list-pane" aria-label=move || t("当前列表", "Current list")>
                                     {move || (section.get() == Section::Network).then(|| view! {
+                                        <network_membership_panel::NetworkMembershipPanel api session_revision auth_failure />
                                         <form class="policy-form" on:submit=save_policy>
                                             <div class="section-heading">
                                                 <div><h2>{move || t("转发策略", "Forwarding policy")}</h2><p>{move || t("版本 ", "Revision ")} {move || policy_revision.get()}</p></div>
