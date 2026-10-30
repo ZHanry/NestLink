@@ -120,8 +120,14 @@ pub async fn authorize(
     // Independent business streams/datagrams are forbidden before mutual proof.
     let (mut control_write, mut control_read) = tokio::time::timeout_at(deadline, async {
         tokio::select! { biased;
-            _ = connection.accept_uni() => Err(invalid("business stream before endpoint proof").into()),
-            _ = connection.read_datagram() => Err(invalid("datagram before endpoint proof").into()),
+            incoming = connection.accept_uni() => Err(match incoming {
+                Ok(_) => invalid("business stream before endpoint proof"),
+                Err(error) => io::Error::other(error),
+            }.into()),
+            incoming = connection.read_datagram() => Err(match incoming {
+                Ok(_) => invalid("datagram before endpoint proof"),
+                Err(error) => io::Error::other(error),
+            }.into()),
             result = proof => result,
         }
     }).await.map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "QUIC session setup budget exhausted"))??;

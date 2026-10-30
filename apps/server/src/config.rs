@@ -17,6 +17,9 @@ pub struct ServerConfig {
     pub allow_loopback_http: bool,
     #[serde(default)]
     pub stun_servers: Vec<SocketAddr>,
+    /// Deployment permission only; the endpoint must also approve a local gateway.
+    #[serde(default)]
+    pub allow_pcp_mapping: bool,
 }
 impl ServerConfig {
     pub fn load(path: &Path) -> Result<Self, Box<dyn std::error::Error>> {

@@ -138,11 +138,13 @@
     "run_id": "41103131247",
     "attempt": 1,
     "url": "https://github.com/ZHanry/NestLink/actions/runs/41103131247",
-    "status_at_last_observation": "in_progress",
+    "status_at_last_observation": "completed",
+    "conclusion": "failure",
     "linux_job_id": "124224907873",
     "linux_conclusion": "failure",
     "windows_job_id": "124224907991",
-    "windows_status_at_last_observation": "in_progress",
+    "windows_status_at_last_observation": "completed",
+    "windows_conclusion": "failure",
     "wasm_job_id": "124224907739",
     "wasm_conclusion": "success",
     "scoped_artifacts": [
@@ -166,6 +168,13 @@
       "Formatting drift",
       "clippy collapsible_if at apps/web/src/spaces_panel/service_publication.rs:209 under -D warnings",
       "network_native_ice Frame Debug compilation error in workspace check and test"
+    ],
+    "windows_workspace_failures": [
+      "Formatting drift and the same service_publication collapsible_if clippy error",
+      "app-ipc native_compressed::two_tls_connections_reuse_decoded_credit_and_release_only_after_owner_join: OperationId(5), generation 3, StartNativeSession failed with Trust instead of Succeeded at app-core/tests/support/mod.rs:175",
+      "native_session: actual TransportLost instead of Revoked",
+      "network_relay current_http_node_snapshot_carries_business_and_revocation_closes_all_original_udp_owners: PolicyRevoked/session is terminal on the workspace rerun despite passing the earlier scoped run",
+      "network_relay multi_node: invalid peer certificate ApplicationVerificationFailure"
     ],
     "scoped_passes_on_both_platforms": [
       "SDK routed source inventory: 15 passed, zero failed or ignored",

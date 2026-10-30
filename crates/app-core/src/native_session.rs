@@ -19,6 +19,7 @@ pub struct NativeSessionConfig {
     pub bind_address: SocketAddr,
     pub stun_servers: Vec<SocketAddr>,
     pub use_deployment_stun: bool,
+    pub pcp_gateway: Option<std::net::Ipv4Addr>,
     pub media_route: crate::MediaRouteMode,
     pub media_interface_index: Option<u32>,
     pub private_network_prefixes: Vec<String>,
@@ -40,6 +41,15 @@ impl NativeSessionConfig {
         mut self,
         sdk: &nestlink_sdk::Sdk,
     ) -> Result<Self, nestlink_sdk::SdkError> {
+        if self.pcp_gateway.is_some() {
+            let policy = sdk.native_pcp_policy().await?;
+            if !policy.allowed {
+                return Err(nestlink_sdk::SdkError::Api(
+                    reqwest::StatusCode::FORBIDDEN,
+                    nestlink_protocol::ErrorCode::PermissionRequired,
+                ));
+            }
+        }
         if !self.use_deployment_stun {
             return Ok(self);
         }
@@ -64,6 +74,7 @@ impl NativeSessionConfig {
             bind_address: SocketAddr::from(([0, 0, 0, 0], 0)),
             stun_servers: Vec::new(),
             use_deployment_stun: true,
+            pcp_gateway: None,
             media_route: crate::MediaRouteMode::default(),
             media_interface_index: None,
             private_network_prefixes: Vec::new(),
@@ -172,6 +183,7 @@ impl NativeSessionConfig {
             media_route: self.media_route,
             media_interface_index: self.media_interface_index,
             use_deployment_stun: self.use_deployment_stun,
+            pcp_gateway: self.pcp_gateway,
             private_network_prefixes: self.private_network_prefixes.clone(),
         }
     }
@@ -186,6 +198,7 @@ impl NativeSessionConfig {
         self.media_route = settings.media_route;
         self.media_interface_index = settings.media_interface_index;
         self.use_deployment_stun = settings.use_deployment_stun;
+        self.pcp_gateway = settings.pcp_gateway;
         self.private_network_prefixes = settings.private_network_prefixes;
         self.network_settings_store = Some(store);
         Ok(self)
@@ -205,6 +218,7 @@ impl NativeSessionConfig {
         self.media_route = settings.media_route;
         self.media_interface_index = settings.media_interface_index;
         self.use_deployment_stun = settings.use_deployment_stun;
+        self.pcp_gateway = settings.pcp_gateway;
         self.private_network_prefixes = settings.private_network_prefixes;
         Ok(commit)
     }
@@ -212,6 +226,7 @@ impl NativeSessionConfig {
     pub(crate) fn validate(&self) -> bool {
         self.relay_node_id.as_ref().is_none_or(|id| nestlink_protocol::valid_id(id))
             && self.stun_servers.len() <= 4
+            && self.pcp_gateway.is_none_or(|gateway| gateway.is_private())
             && self.private_network_prefixes.len() <= 32
             && self.supported_capabilities.len() <= 32
             && self
@@ -236,4 +251,59 @@ pub trait ManagementLoginStore: Send + Sync {
     fn enabled(&self) -> bool;
     fn save(&self, bytes: &[u8]) -> std::io::Result<()>;
     fn clear(&self) -> std::io::Result<()>;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+
+    struct Running(tokio::task::JoinHandle<()>);
+    impl Drop for Running {
+        fn drop(&mut self) {
+            self.0.abort();
+        }
+    }
+
+    #[tokio::test]
+    async fn explicit_pcp_requires_deployment_permission_even_without_deployment_stun() -> Result {
+        let deployment = nestlink_auth::random_id();
+        let signer = nestlink_identity::PermitSigner::generate();
+        let issuer = signer.public_key();
+        let mut store = nestlink_storage::Store::in_memory(&deployment)?;
+        let password = "pcp-policy-core-entry-password";
+        store.bootstrap_admin("admin", password)?;
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+        let origin = format!("http://{}", listener.local_addr()?);
+        let app = nestlink_server::router(nestlink_server::AppState::new(
+            store,
+            nestlink_auth::VaultKey::from_bytes([21; 32]),
+            signer,
+            origin.clone(),
+            false,
+        )?);
+        let _service = Running(tokio::spawn(async move {
+            let _ = axum::serve(listener, app).await;
+        }));
+        let mut sdk = nestlink_sdk::Sdk::connect(
+            &origin,
+            nestlink_sdk::DeploymentTrust { deployment_id: deployment, permit_issuer: issuer },
+            true,
+        ).await?;
+        sdk.login("admin".into(), nestlink_auth::Secret::from_text(password.into()), None).await?;
+        let mut config = NativeSessionConfig::new(Arc::new(NetworkMonitor::start()?));
+        config.use_deployment_stun = false;
+        config.pcp_gateway = Some("10.32.0.1".parse()?);
+        assert!(matches!(config.clone().resolve_deployment_stun(&sdk).await,
+            Err(nestlink_sdk::SdkError::Api(reqwest::StatusCode::FORBIDDEN,
+                nestlink_protocol::ErrorCode::PermissionRequired))));
+
+        sdk.logout().await?;
+        config.pcp_gateway = None;
+        // An authenticated discovery request would fail after logout. The
+        // default-off legacy path returns without making that request.
+        assert!(config.resolve_deployment_stun(&sdk).await.is_ok());
+        Ok(())
+    }
 }

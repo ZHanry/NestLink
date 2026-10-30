@@ -160,6 +160,30 @@ jobs:
           $metadataLog = Join-Path $env:RUNNER_TEMP 'nestlink-node-relay-metadata-tests.log'
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage -p nestlink-sdk --test node_relay_attributes --no-fail-fast -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $metadataLog
           exit $LASTEXITCODE
+      - name: Check explicit PCP policy, component ownership and historical local settings
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          $pcpLog = Join-Path $env:RUNNER_TEMP 'nestlink-pcp-tests.log'
+          $pcpTests = @(
+            @{ Args = @('-p', 'nestlink-traversal', '--lib', 'pcp_') },
+            @{ Args = @('-p', 'nestlink-sdk', '--lib', 'native::ice::tests') },
+            @{ Args = @('-p', 'nestlink-sdk', '--test', 'native_pcp_policy') },
+            @{ Args = @('-p', 'nestlink-app-core', '--lib', 'native_session::tests') },
+            @{ Args = @('-p', 'nestlink-app-core', '--test', 'native_network_settings') },
+            @{ Args = @('-p', 'nestlink-server', '--test', 'native_pcp_config') }
+          )
+          $pcpFailure = 0
+          foreach ($pcpTest in $pcpTests) {
+            $pcpArguments = @('test', '--locked') + $pcpTest.Args + @('--', '--show-output', '--test-threads=1', '--color', 'never')
+            if ($env:RUNNER_OS -eq 'Windows') {
+              python scripts/refactor-windows-normal-user.py cargo @pcpArguments 2>&1 | Tee-Object -FilePath $pcpLog -Append
+            } else {
+              cargo @pcpArguments 2>&1 | Tee-Object -FilePath $pcpLog -Append
+            }
+            if ($LASTEXITCODE -ne 0) { $pcpFailure = 1 }
+          }
+          exit $pcpFailure
       - name: Check explicit relay selection through the original native owner on Linux
         if: ${{ !cancelled() && runner.os == 'Linux' }}
         shell: pwsh
@@ -280,6 +304,7 @@ jobs:
             ${{ runner.temp }}/nestlink-sdk-routed-tests.json
             ${{ runner.temp }}/nestlink-sdk-network-relay-tests.log
             ${{ runner.temp }}/nestlink-node-relay-metadata-tests.log
+            ${{ runner.temp }}/nestlink-pcp-tests.log
             ${{ runner.temp }}/nestlink-selected-relay-tests.log
             ${{ runner.temp }}/nestlink-ice-quic-tests.log
             ${{ runner.temp }}/nestlink-native-session-tests.log

@@ -133,6 +133,7 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         NodeDiscoveryResponse,
         NodeRelayCandidatesResponse,
         NativeDiscoveryConfig,
+        NativePcpPolicy,
         NetworkAuthorityRequest,
         NetworkAuthorityChangeRequest,
         NetworkAuthorityView,

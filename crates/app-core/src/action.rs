@@ -411,9 +411,10 @@ impl Action {
             Self::RevokeDevice { device_id } => valid_id(device_id),
             Self::DisableAccount { account_id } => valid_id(account_id),
             Self::RevokeNode { node_id } => valid_id(node_id),
-            Self::StartNativeSession { request_id, relay_node_id } => {
-                valid_id(request_id) && relay_node_id.as_ref().is_none_or(|id| valid_id(id))
-            }
+            Self::StartNativeSession {
+                request_id,
+                relay_node_id,
+            } => valid_id(request_id) && relay_node_id.as_ref().is_none_or(|id| valid_id(id)),
             Self::InspectRemote { request_id }
             | Self::IssueRemotePermit { request_id }
             | Self::StartBrowserHost { request_id }
@@ -630,15 +631,28 @@ mod tests {
     fn native_relay_selection_keeps_legacy_json_default_and_rejects_invalid_local_ids()
     -> Result<(), Box<dyn std::error::Error>> {
         let request_id = nestlink_auth::random_id();
-        let legacy: Action = serde_json::from_value(serde_json::json!({"action":"start_native_session","request_id":request_id}))?;
+        let legacy: Action = serde_json::from_value(
+            serde_json::json!({"action":"start_native_session","request_id":request_id}),
+        )?;
         assert!(legacy.valid_input());
-        assert!(matches!(legacy,Action::StartNativeSession{relay_node_id:None,..}));
+        assert!(matches!(
+            legacy,
+            Action::StartNativeSession {
+                relay_node_id: None,
+                ..
+            }
+        ));
         let node_id = nestlink_auth::random_id();
-        let selected: Action = serde_json::from_value(serde_json::json!({"action":"start_native_session","request_id":request_id,"relay_node_id":node_id}))?;
+        let selected: Action = serde_json::from_value(
+            serde_json::json!({"action":"start_native_session","request_id":request_id,"relay_node_id":node_id}),
+        )?;
         assert!(selected.valid_input());
-        assert_eq!(serde_json::to_value(&selected)?["relay_node_id"],node_id);
+        assert_eq!(serde_json::to_value(&selected)?["relay_node_id"], node_id);
         for invalid in ["", "https://relay.example", "../node", "not-a-node"] {
-            let action = Action::StartNativeSession { request_id:request_id.clone(), relay_node_id:Some(invalid.into()) };
+            let action = Action::StartNativeSession {
+                request_id: request_id.clone(),
+                relay_node_id: Some(invalid.into()),
+            };
             assert!(!action.valid_input());
         }
         Ok(())

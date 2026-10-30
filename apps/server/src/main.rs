@@ -536,6 +536,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 management_origin,
                 allow_loopback_http,
                 stun_servers: Vec::new(),
+                allow_pcp_mapping: false,
             };
             config.validate()?;
             create_key(
@@ -826,7 +827,8 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             };
             let secure = config.secure_cookies();
             let state = AppState::new(store, vault, signer, config.management_origin, secure)?
-                .with_stun_servers(config.stun_servers)?;
+                .with_stun_servers(config.stun_servers)?
+                .with_pcp_mapping(config.allow_pcp_mapping);
             state.start_maintenance();
             let app = router(state.clone());
             let listener = tokio::net::TcpListener::bind(config.listen).await?;

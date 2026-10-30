@@ -4,7 +4,7 @@ use super::signed_discovery::{approve_quic_endpoint,local_options,routed_host_ad
 use nestlink_sdk::native::{NativeMediaSessionOptions,SessionEstablishError};
 
 fn selected(node: &str) -> NativeMediaSessionOptions {
-    NativeMediaSessionOptions { session:local_options(), media:None, relay_node_id:Some(node.into()) }
+    NativeMediaSessionOptions { session:local_options(), media:None, relay_node_id:Some(node.into()), pcp_gateway:None }
 }
 
 #[tokio::test]

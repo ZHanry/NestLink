@@ -172,7 +172,10 @@ async fn wait_for_allocation_count(f: &Fixture, expected: u32) -> Result {
     Ok(())
 }
 
-pub(super) async fn wait_for_peer_relay_marker(f: &Fixture, peer: &DeviceIdentity) -> Result<Candidate> {
+pub(super) async fn wait_for_peer_relay_marker(
+    f: &Fixture,
+    peer: &DeviceIdentity,
+) -> Result<Candidate> {
     let mut cursor = SignalCursor::new(&f.permit, peer)?;
     let marker = tokio::time::timeout(Duration::from_secs(8), async {
         loop {

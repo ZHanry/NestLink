@@ -299,10 +299,20 @@ async fn endpoint(role: &str) -> Result {
     }
     let remote = fs::read_to_string(root.join("remote.id"))?;
     let permit = if controller {
-        sdk.permit(&remote).await?
+        let permit = sdk.permit(&remote).await?;
+        fs::write(root.join("issued-permit-digest"), permit.digest())?;
+        mark(&root, "permit-issued")?;
+        permit
     } else {
+        // Approval alone does not issue a permit. The host's readback must
+        // follow the controller's actual initial issuance, as in production.
+        wait(&root, "permit-issued").await?;
         sdk.host_permit(&identity, &remote).await?
     };
+    assert_eq!(
+        permit.digest(),
+        fs::read_to_string(root.join("issued-permit-digest"))?
+    );
     assert!(
         permit
             .claims()

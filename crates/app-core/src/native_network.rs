@@ -18,6 +18,10 @@ pub struct NativeNetworkSettings {
     #[serde(default)]
     pub media_interface_index: Option<u32>,
     pub use_deployment_stun: bool,
+    /// Explicit local approval of one PCP gateway. Deployment permission is
+    /// checked independently when constructing a native connection.
+    #[serde(default)]
+    pub pcp_gateway: Option<std::net::Ipv4Addr>,
     pub private_network_prefixes: Vec<String>,
 }
 
@@ -45,6 +49,7 @@ impl Default for NativeNetworkSettings {
             media_route: MediaRouteMode::default(),
             media_interface_index: None,
             use_deployment_stun: true,
+            pcp_gateway: None,
             private_network_prefixes: Vec::new(),
         }
     }
@@ -72,6 +77,9 @@ impl NativeNetworkSettings {
     /// destinations need no exception; metadata, loopback, mapped IPv6 and
     /// link-local destinations remain forbidden by the SDK AddressPolicy.
     pub fn validate(&self) -> Result<(), NativeNetworkError> {
+        if self.pcp_gateway.is_some_and(|gateway| !gateway.is_private()) {
+            return Err(NativeNetworkError::Invalid);
+        }
         let route_supported = match self.media_route {
             MediaRouteMode::System => true,
             MediaRouteMode::Physical => cfg!(windows),
@@ -324,5 +332,36 @@ mod tests {
         assert!(serde_json::from_str::<NativeNetworkSettings>(
             r#"{"use_deployment_stun":true,"private_network_prefixes":[],"stun_servers":["127.0.0.1:80"]}"#
         ).is_err());
+    }
+
+    #[test]
+    fn pcp_requires_explicit_local_private_gateway_and_defaults_to_disabled() {
+        assert_eq!(NativeNetworkSettings::default().pcp_gateway, None);
+        let old = serde_json::from_str::<NativeNetworkSettings>(
+            r#"{"use_deployment_stun":true,"private_network_prefixes":[]}"#,
+        );
+        assert!(old.is_ok_and(|settings| settings.pcp_gateway.is_none()));
+        for address in ["0.0.0.0", "127.0.0.1", "169.254.1.1", "203.0.113.1", "224.0.0.1"] {
+            let gateway = address.parse();
+            assert!(gateway.is_ok());
+            let settings = NativeNetworkSettings {
+                pcp_gateway: gateway.ok(),
+                ..Default::default()
+            };
+            assert_eq!(settings.validate(), Err(NativeNetworkError::Invalid));
+        }
+        for address in ["10.0.0.1", "172.16.0.1", "192.168.1.1"] {
+            let gateway = address.parse();
+            assert!(gateway.is_ok());
+            let settings = NativeNetworkSettings {
+                pcp_gateway: gateway.ok(),
+                ..Default::default()
+            };
+            assert!(settings.validate().is_ok());
+            assert!(serde_json::to_string(&settings).is_ok_and(|serialized| {
+                serde_json::from_str::<NativeNetworkSettings>(&serialized)
+                    .is_ok_and(|restored| restored == settings)
+            }));
+        }
     }
 }

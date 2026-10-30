@@ -2,6 +2,7 @@
   {"path":"/health","method":"get","operation":"health","response":"HealthResponse","status":200,"auth":false},
   {"path":"/health/proof","method":"post","operation":"server_identity_proof","request":"ServerIdentityChallenge","response":"ServerIdentityProof","status":200,"auth":false},
   {"path":"/network/discovery","method":"get","operation":"native_discovery::configuration","response":"NativeDiscoveryConfig","status":200,"auth":true},
+  {"path":"/discovery/native/pcp","method":"get","operation":"native_discovery::pcp_policy","response":"NativePcpPolicy","status":200,"auth":true},
   {"path":"/network/spaces/{space}/authority","method":"put","operation":"network_policy::configure","request":"NetworkAuthorityRequest","response":"NetworkPolicyView","status":200,"auth":true,"administrator":true},
   {"path":"/network/spaces/{space}/authority","method":"get","operation":"network_policy::authority","response":"NetworkAuthorityView","status":200,"auth":true,"administrator":true},
   {"path":"/network/spaces/{space}/authority","method":"delete","operation":"network_policy::revoke_authority","request":"NetworkAuthorityChangeRequest","status":204,"auth":true,"administrator":true},

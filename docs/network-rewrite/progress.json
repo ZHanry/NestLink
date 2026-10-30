@@ -6,7 +6,7 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "b0ad4440a2aa2e0196b77c691c829fcfbeb33661",
+    "source_revision":  "f09ac2112bdd313c79d1330a99b1125f28be4025",
     "checkpoint_kind":  "work_in_progress_against_source_revision",
     "active_tasks":  [
                          "W00",
@@ -18,6 +18,7 @@
                          "W07",
                          "W08",
                          "W09",
+                         "W10",
                          "W11",
                          "W18"
                      ],
@@ -78,6 +79,10 @@
                            "docs/network-rewrite/evidence/development-run-8007458.json",
                            "docs/network-rewrite/evidence/development-run-5f01330.json",
                            "docs/network-rewrite/evidence/development-run-b0ad444.json",
+                           "docs/network-rewrite/evidence/development-run-76dbb0e-browser.json",
+                           "docs/network-rewrite/evidence/development-run-76dbb0e-network.json",
+                           "docs/network-rewrite/evidence/pcp-lock-derivation-f09ac21.json",
+                           "docs/adr/network/0009-explicit-pcp-ice-mapping.md",
                            "protocol-spec/node-relay-attributes.md",
                            "docs/adr/network/0007-network-authority-lifecycle.md",
                            "docs/adr/network/0008-signed-frozen-native-ice.md"

@@ -84,6 +84,7 @@ pub struct AppState {
     event_connections: Arc<Semaphore>,
     event_accounts: Arc<Mutex<HashMap<String, Arc<Semaphore>>>>,
     stun_servers: Arc<Vec<std::net::SocketAddr>>,
+    allow_pcp_mapping: bool,
     connection_diagnostics: Arc<connection_diagnostics::SignalDiagnostics>,
 }
 #[derive(Clone, Serialize)]
@@ -129,6 +130,12 @@ impl IntoResponse for ApiError {
     }
 }
 impl AppState {
+    /// Deployment-owned configuration, never sourced from request or peer data.
+    pub fn with_pcp_mapping(mut self, allowed: bool) -> Self {
+        self.allow_pcp_mapping = allowed;
+        self
+    }
+
     pub fn with_stun_servers(
         mut self,
         servers: Vec<std::net::SocketAddr>,
@@ -193,6 +200,7 @@ impl AppState {
             event_connections: Arc::new(Semaphore::new(256)),
             event_accounts: Arc::new(Mutex::new(HashMap::new())),
             stun_servers: Arc::new(Vec::new()),
+            allow_pcp_mapping: false,
             connection_diagnostics: Arc::new(connection_diagnostics::SignalDiagnostics::default()),
         })
     }
@@ -226,6 +234,7 @@ impl AppState {
     {
         let permit =
             self.work.clone().try_acquire_owned().map_err(|_| {
+                tracing::warn!(event = "database_capacity_exhausted", "bounded database worker admission is full");
                 ApiError(StatusCode::TOO_MANY_REQUESTS, ErrorCode::CapacityExceeded)
             })?;
         let store = self.store.clone();
@@ -317,6 +326,10 @@ pub fn router(state: AppState) -> Router {
         .route(
             "/api/v3/network/discovery",
             get(native_discovery::configuration),
+        )
+        .route(
+            "/api/v3/discovery/native/pcp",
+            get(native_discovery::pcp_policy),
         )
         .route(
             "/api/v3/network/spaces/{space}/authority",

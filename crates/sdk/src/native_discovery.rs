@@ -2,13 +2,27 @@
 use super::*;
 
 impl Sdk {
+    /// Both deployment policy and explicit local gateway consent are required.
+    /// Missing endpoints, authentication errors and invalid policy fail closed.
+    pub async fn native_pcp_policy(&self) -> Result<NativePcpPolicy, SdkError> {
+        #[cfg(target_arch = "wasm32")]
+        let policy: NativePcpPolicy = self.required(Method::GET,"/discovery/native/pcp",None::<&()>).await?;
+        #[cfg(not(target_arch = "wasm32"))]
+        let policy: NativePcpPolicy = self.native_discovery_response("/discovery/native/pcp").await?;
+        policy.validate()?;
+        if policy.deployment_id != self.trust.deployment_id {
+            return Err(SdkError::Trust);
+        }
+        Ok(policy)
+    }
+
     pub async fn native_discovery_config(&self) -> Result<NativeDiscoveryConfig, SdkError> {
         #[cfg(target_arch = "wasm32")]
         let config: NativeDiscoveryConfig = self
             .required(Method::GET, "/network/discovery", None::<&()>)
             .await?;
         #[cfg(not(target_arch = "wasm32"))]
-        let config = self.native_discovery_response().await?;
+        let config: NativeDiscoveryConfig = self.native_discovery_response("/network/discovery").await?;
         if config.deployment_id != self.trust.deployment_id {
             return Err(SdkError::Trust);
         }
@@ -20,12 +34,12 @@ impl Sdk {
     /// body. A known HTTP rejection is returned before reading its body, so a
     /// delayed error document cannot turn a hard rejection into a timeout.
     #[cfg(not(target_arch = "wasm32"))]
-    async fn native_discovery_response(&self) -> Result<NativeDiscoveryConfig, SdkError> {
+    async fn native_discovery_response<R: DeserializeOwned>(&self, path: &str) -> Result<R, SdkError> {
         const BUDGET: Duration = Duration::from_secs(3);
         let token = self.login.as_ref().ok_or(SdkError::SignIn)?.access.expose();
         let url = self
             .origin
-            .join(&format!("{API_BASE}/network/discovery"))
+            .join(&format!("{API_BASE}{path}"))
             .map_err(|_| SdkError::Invalid)?;
         let operation = async {
             let response = self

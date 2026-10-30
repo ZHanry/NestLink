@@ -431,6 +431,9 @@ pub struct NativeMediaSessionOptions {
     /// Local selection intent; a fresh signed discovery and allocation must
     /// authorize the exact UUID. It never supplies an endpoint or a grant.
     pub relay_node_id: Option<String>,
+    /// Explicit local consent for one RFC1918 PCP gateway. The deployment must
+    /// separately allow mapping before the physical ICE owner contacts it.
+    pub pcp_gateway: Option<std::net::Ipv4Addr>,
 }
 /// Explicit local dialing scope. Public unicast is permitted; private/ULA
 /// destinations require an administrator-configured prefix, and metadata,
@@ -995,6 +998,7 @@ impl NativeEndpoint {
                 session: options,
                 media: None,
                 relay_node_id: None,
+                pcp_gateway: None,
             },
             routes,
             stun_servers,
@@ -1015,6 +1019,7 @@ impl NativeEndpoint {
             session: options,
             media,
             relay_node_id,
+            pcp_gateway,
         } = options;
         if relay_node_id.as_ref().is_some_and(|id| !nestlink_protocol::valid_id(id)
             || !routes.is_empty()
@@ -1026,6 +1031,26 @@ impl NativeEndpoint {
         self.check()?;
         self.ensure_current_permit(sdk, local, cancel.clone())
             .await?;
+        if let Some(gateway) = pcp_gateway {
+            if !gateway.is_private() {
+                return Err(SessionEstablishError::Binding);
+            }
+            let deadline = tokio::time::Instant::from_std(self.authorization_deadline)
+                .min(tokio::time::Instant::now() + CONTROL_REQUEST_BUDGET);
+            let policy = tokio::select! { biased;
+                _ = cancellation(&mut cancel) => return Err(SessionEstablishError::Cancelled),
+                result = tokio::time::timeout_at(deadline, sdk.native_pcp_policy()) => {
+                    result.map_err(|_| SdkError::Timeout)??
+                },
+            };
+            if !policy.allowed {
+                return Err(SdkError::Api(
+                    reqwest::StatusCode::FORBIDDEN,
+                    ErrorCode::PermissionRequired,
+                ).into());
+            }
+            self.check()?;
+        }
 
         let direct_allowed = options.local_paths.contains(Path::Direct)
             && self.permit.claims().paths.contains(&(Path::Direct as i32));
@@ -1040,7 +1065,7 @@ impl NativeEndpoint {
                 .iter()
                 .any(|capability| capability == nestlink_protocol::native_ice::CAPABILITY)
         {
-            match ice::gather(self, &stun_servers, cancel.clone()).await {
+            match ice::gather(self, &stun_servers, pcp_gateway, cancel.clone()).await {
                 Ok(gathered) => Some(gathered),
                 Err(
                     error @ (DialError::Cancelled

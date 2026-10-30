@@ -25,7 +25,7 @@ REPOSITORY = "ZHanry/NestLink"
 WORKFLOW_PATH = ".github/workflows/network-rewrite.yml"
 PACKAGES = (
     "nestlink-protocol", "nestlink-identity", "nestlink-policy", "nestlink-connectivity",
-    "nestlink-storage", "nestlink-transport-stream", "nestlink-transport-quic",
+    "nestlink-storage", "nestlink-traversal", "nestlink-transport-stream", "nestlink-transport-quic",
     "nestlink-transport-wss", "nestlink-remote", "nestlink-server",
 )
 REQUIRED_COMMANDS = {

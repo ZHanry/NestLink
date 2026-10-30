@@ -213,6 +213,16 @@ pub(super) fn authorize_native_session(
         .principal()
         .ok_or_else(|| Failure::local(FailureKind::SignInRequired))?;
     let claims = permit.claims();
+    // Enrollment and the native SDK advertise this compiled-in transport
+    // independently of caller-selected media capabilities. Use the same local
+    // support set for authorization and the subsequent mutual business proof.
+    let mut supported_capabilities = config.supported_capabilities.clone();
+    if !supported_capabilities
+        .iter()
+        .any(|capability| capability == nestlink_protocol::native_ice::CAPABILITY)
+    {
+        supported_capabilities.push(nestlink_protocol::native_ice::CAPABILITY.into());
+    }
     let is_controller = remote.controller_device_id == identity.device_id;
     let is_host = remote.host_device_id == identity.device_id;
     let local_digest = if is_controller {
@@ -240,8 +250,7 @@ pub(super) fn authorize_native_session(
         || claims.deployment_id != client.server.deployment_id
         || local_digest.as_slice() != identity.identity.fingerprint().as_slice()
         || claims.required_capabilities.iter().any(|required| {
-            !config
-                .supported_capabilities
+            !supported_capabilities
                 .iter()
                 .any(|supported| supported == required)
         })
@@ -249,8 +258,15 @@ pub(super) fn authorize_native_session(
         return Err(Failure::local(FailureKind::Trust));
     }
     let permitted = |permission: Permission| claims.permissions.contains(&(permission as i32));
-    if config.relay_node_id.as_ref().is_some_and(|id| !nestlink_protocol::valid_id(id))
-        || (config.relay_node_id.is_some() && !claims.paths.contains(&(nestlink_protocol::Path::Relay as i32))) {
+    if config
+        .relay_node_id
+        .as_ref()
+        .is_some_and(|id| !nestlink_protocol::valid_id(id))
+        || (config.relay_node_id.is_some()
+            && !claims
+                .paths
+                .contains(&(nestlink_protocol::Path::Relay as i32)))
+    {
         return Err(Failure::local(FailureKind::Invalid));
     }
     let key = NativeSessionKey {
@@ -276,7 +292,7 @@ pub(super) fn authorize_native_session(
                 Permission::try_from(*permission).map_err(|_| Failure::local(FailureKind::Invalid))
             })
             .collect::<Result<Vec<_>, _>>()?,
-        supported_capabilities: config.supported_capabilities.clone(),
+        supported_capabilities,
         local_paths: PathSet::from_wire(&claims.paths)
             .map_err(|_| Failure::local(FailureKind::Invalid))?,
     };
@@ -337,6 +353,7 @@ pub(super) async fn prove_endpoint(
             session: options,
             media,
             relay_node_id: config.relay_node_id.clone(),
+            pcp_gateway: config.pcp_gateway,
         },
         &[],
         config.stun_servers.clone(),

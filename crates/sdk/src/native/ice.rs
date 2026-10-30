@@ -2,6 +2,8 @@
 //! socket. One frozen candidate per endpoint bounds this initial dialect;
 //! general candidate migration and advanced NAT strategies are separate work.
 mod socket;
+mod mapping;
+use mapping::MappingOwner;
 use super::*;
 use nestlink_identity::InstallationIdentity;
 use nestlink_platform_network::path::NetworkPathManager;
@@ -34,6 +36,8 @@ pub struct IceOwner {
     endpoint: Option<Endpoint>,
     original: Arc<Mutex<Vec<SocketAddr>>>,
     connected_socket: Arc<Mutex<Option<UdpSocket>>>,
+    pending_socket: Arc<Mutex<Option<UdpSocket>>>,
+    mapping: Option<MappingOwner>,
     close_deadline: Option<TokioInstant>,
     closed: bool,
 }
@@ -64,6 +68,16 @@ impl IceOwner {
                 .map_err(io::Error::other)?;
         }
         self.agent = None;
+        if let Some(mapping) = &self.mapping {
+            mapping.close_and_wait(deadline).await?;
+        }
+        self.mapping = None;
+        drop(
+            self.pending_socket
+                .lock()
+                .map_err(|_| io::Error::other("ICE owner poisoned"))?
+                .take(),
+        );
         drop(
             self.connected_socket
                 .lock()
@@ -101,6 +115,9 @@ impl IceOwner {
 }
 impl TransportOwner for IceOwner {
     fn request_close(&self) {
+        if let Some(mapping) = &self.mapping {
+            mapping.request_close();
+        }
         if let Some(endpoint) = &self.endpoint {
             // Keep the original adapter alive while Quinn sends its terminal
             // authenticated close. Business channels already stop through the
@@ -146,9 +163,15 @@ pub(super) struct Gathering {
 }
 struct Preparation {
     owner: IceOwner,
+    config: Option<AgentConfig>,
+    external: Option<SocketAddr>,
 }
 impl Preparation {
-    async fn new(endpoint: &NativeEndpoint, servers: &[SocketAddr]) -> Result<Self, DialError> {
+    fn new(
+        endpoint: &NativeEndpoint,
+        servers: &[SocketAddr],
+        pcp_gateway: Option<std::net::Ipv4Addr>,
+    ) -> Result<Self, DialError> {
         endpoint.check()?;
         if servers.len() > 4 {
             return Err(DialError::Binding);
@@ -160,17 +183,49 @@ impl Preparation {
             .map_err(|_| DialError::NetworkChanged)?
             .into_iter()
             .flat_map(|interface| interface.addresses)
-            .find(|ip| safe_peer_address(*ip))
+            .find(|ip| {
+                safe_peer_address(*ip)
+                    && (pcp_gateway.is_none() || matches!(ip, std::net::IpAddr::V4(ip) if ip.is_private()))
+            })
             .ok_or(DialError::Setup)?;
         let servers: Vec<_> = servers
             .iter()
             .filter(|server| server.is_ipv4() == ip.is_ipv4())
             .copied()
             .collect();
-        let use_stun = !servers.is_empty();
+        let use_stun = !servers.is_empty() && pcp_gateway.is_none();
         let original = Arc::new(Mutex::new(Vec::new()));
         let connected_socket = Arc::new(Mutex::new(None));
+        let pending_socket = Arc::new(Mutex::new(None));
+        let mut owner = IceOwner {
+            agent: None,
+            socket: None,
+            endpoint: None,
+            original: original.clone(),
+            connected_socket: connected_socket.clone(),
+            pending_socket: pending_socket.clone(),
+            mapping: None,
+            close_deadline: None,
+            closed: false,
+        };
+        if let Some(gateway) = pcp_gateway {
+            // Retain the real candidate socket and its mapping cleanup owner
+            // before the first cancelable request can create router state.
+            let socket = path
+                .bind_udp(SocketAddr::new(ip, 0))
+                .map_err(|_| DialError::Setup)?;
+            let local = socket.local_addr().map_err(|_| DialError::Setup)?;
+            *connected_socket.lock().map_err(|_| DialError::Setup)? =
+                Some(socket.try_clone().map_err(|_| DialError::Setup)?);
+            original.lock().map_err(|_| DialError::Setup)?.push(local);
+            *pending_socket.lock().map_err(|_| DialError::Setup)? = Some(socket);
+            owner.mapping = Some(
+                MappingOwner::new(gateway, local, endpoint.authorization_deadline)
+                    .map_err(|_| DialError::Binding)?,
+            );
+        }
         let retained = connected_socket.clone();
+        let supplied = pending_socket.clone();
         let observed = original.clone();
         let physical = path.clone();
         let mut network = EphemeralUDP::default();
@@ -184,6 +239,16 @@ impl Preparation {
             };
             if address.ip() != ip {
                 return Err(io::ErrorKind::PermissionDenied.into());
+            }
+            if pcp_gateway.is_some() {
+                let mut supplied = supplied
+                    .lock()
+                    .map_err(|_| io::Error::other("ICE owner poisoned"))?;
+                let socket = supplied.as_ref().ok_or(io::ErrorKind::AddrInUse)?;
+                if address.port() != 0 && address.port() != socket.local_addr()?.port() {
+                    return Err(io::ErrorKind::PermissionDenied.into());
+                }
+                return supplied.take().ok_or_else(|| io::ErrorKind::AddrInUse.into());
             }
             let mut addresses = observed
                 .lock()
@@ -200,19 +265,20 @@ impl Preparation {
         }));
         let urls = servers
             .first()
+            .filter(|_| use_stun)
             .map(|server| Url::parse_url(&format!("stun:{server}")))
             .transpose()
             .map_err(|_| DialError::Binding)?
             .into_iter()
             .collect();
-        let agent = Agent::new(AgentConfig {
+        let config = AgentConfig {
             udp_network: UDPNetwork::Ephemeral(network),
             network_types: vec![if ip.is_ipv4() {
                 NetworkType::Udp4
             } else {
                 NetworkType::Udp6
             }],
-            candidate_types: vec![if use_stun {
+            candidate_types: vec![if use_stun || pcp_gateway.is_some() {
                 CandidateType::ServerReflexive
             } else {
                 CandidateType::Host
@@ -225,19 +291,35 @@ impl Preparation {
             failed_timeout: Some(Duration::from_secs(5)),
             keepalive_interval: Some(Duration::from_secs(1)),
             ..Default::default()
-        })
-        .await
-        .map_err(|_| DialError::Setup)?;
-        let owner = IceOwner {
-            agent: Some(Arc::new(agent)),
-            socket: None,
-            endpoint: None,
-            original,
-            connected_socket,
-            close_deadline: None,
-            closed: false,
         };
-        Ok(Self { owner })
+        Ok(Self { owner, config: Some(config), external: None })
+    }
+    async fn establish_mapping(
+        &mut self,
+        endpoint: &NativeEndpoint,
+    ) -> Result<(), DialError> {
+        if let Some(mapping) = &self.owner.mapping {
+            let external = mapping.establish(&endpoint.address_policy).await
+                .map_err(|_| DialError::Setup)?;
+            let config = self.config.as_mut().ok_or(DialError::Setup)?;
+            config.nat_1to1_ips = vec![external.ip().to_string()];
+            config.nat_1to1_ip_candidate_type = CandidateType::ServerReflexive;
+            self.external = Some(external);
+        }
+        endpoint.check()?;
+        Ok(())
+    }
+    async fn prepare_agent(&mut self) -> Result<(), DialError> {
+        let config = self.config.take().ok_or(DialError::Setup)?;
+        // With mDNS disabled this constructor opens no candidate socket. As
+        // in the existing path, finish construction before selecting cancel,
+        // so every started internal agent task has its original close owner.
+        let agent = Arc::new(Agent::new(config).await.map_err(|_| DialError::Setup)?);
+        self.owner.agent = Some(agent.clone());
+        if let Some(mapping) = &mut self.owner.mapping {
+            mapping.start(agent).map_err(|_| DialError::Setup)?;
+        }
+        Ok(())
     }
     async fn gather(
         &mut self,
@@ -269,7 +351,9 @@ impl Preparation {
             candidate: candidates[0].marshal(),
         };
         let address = parameters.address()?;
-        if !endpoint.address_policy.allows(address.ip()) {
+        if !endpoint.address_policy.allows(address.ip())
+            || self.external.is_some_and(|external| external != address)
+        {
             return Err(DialError::Binding);
         }
         Ok(parameters)
@@ -279,20 +363,31 @@ impl Preparation {
 pub(super) async fn gather(
     endpoint: &NativeEndpoint,
     servers: &[SocketAddr],
+    pcp_gateway: Option<std::net::Ipv4Addr>,
     mut cancel: watch::Receiver<bool>,
 ) -> Result<Gathering, DialError> {
     if *cancel.borrow() || cancel.has_changed().is_err() {
         return Err(DialError::Cancelled);
     }
-    // Agent construction opens no candidate socket with mDNS disabled. Keep
-    // its owner outside the future that starts gathering, so timeout/cancel
-    // can always await cleanup of the actual original sockets before fallback.
-    let mut preparation = Preparation::new(endpoint, servers).await?;
+    // Keep the physical socket and exact mapping nonce outside the future
+    // that establishes the mapping and constructs the mature ICE agent.
+    let mut preparation = Preparation::new(endpoint, servers, pcp_gateway)?;
     let deadline = TokioInstant::from_std(endpoint.authorization_deadline)
         .min(TokioInstant::now() + CANDIDATE_GATHER_BUDGET);
-    let result = tokio::select! { biased;
+    let prepared = tokio::select! { biased;
         _ = cancellation(&mut cancel) => Err(DialError::Cancelled),
-        result = tokio::time::timeout_at(deadline, preparation.gather(endpoint)) => result.unwrap_or(Err(DialError::Setup)),
+        result = tokio::time::timeout_at(deadline, preparation.establish_mapping(endpoint)) => result.unwrap_or(Err(DialError::Setup)),
+    };
+    let prepared = match prepared {
+        Ok(()) => preparation.prepare_agent().await,
+        Err(error) => Err(error),
+    };
+    let result = match prepared {
+        Ok(()) => tokio::select! { biased;
+            _ = cancellation(&mut cancel) => Err(DialError::Cancelled),
+            result = tokio::time::timeout_at(deadline, preparation.gather(endpoint)) => result.unwrap_or(Err(DialError::Setup)),
+        },
+        Err(error) => Err(error),
     };
     match result {
         Ok(parameters) => Ok(Gathering {
@@ -490,4 +585,46 @@ fn quinn_endpoint(
     client.transport_config(transport);
     endpoint.set_default_client_config(client);
     Ok(endpoint)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn closing_before_agent_construction_releases_original_socket_and_unused_mapping()
+    -> io::Result<()> {
+        let socket = UdpSocket::bind("127.0.0.1:0")?;
+        let address = socket.local_addr()?;
+        let retained = socket.try_clone()?;
+        let pending = Arc::new(Mutex::new(Some(socket)));
+        // No create request has been sent. Closing this owner must not contact
+        // a gateway, and must release both handles to its real UDP socket.
+        let mapping = MappingOwner::new(
+            std::net::Ipv4Addr::new(10, 32, 0, 1),
+            SocketAddr::from(([10, 32, 0, 2], address.port())),
+            Instant::now() + Duration::from_secs(10),
+        )?;
+        let mut owner = IceOwner {
+            agent: None,
+            socket: None,
+            endpoint: None,
+            original: Arc::new(Mutex::new(vec![address])),
+            connected_socket: Arc::new(Mutex::new(Some(retained))),
+            pending_socket: pending.clone(),
+            mapping: Some(mapping),
+            close_deadline: None,
+            closed: false,
+        };
+        assert_eq!(UdpSocket::bind(address).err().map(|error| error.kind()),
+            Some(io::ErrorKind::AddrInUse));
+        let deadline = TokioInstant::now() + Duration::from_secs(1);
+        owner.close(deadline).await?;
+        assert!(pending.lock().map_err(|_| io::Error::other("test lock poisoned"))?.is_none());
+        let rebound = UdpSocket::bind(address)?;
+        drop(rebound);
+        owner.close(deadline).await?;
+        assert_eq!(owner.close_deadline, Some(deadline));
+        Ok(())
+    }
 }

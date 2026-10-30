@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "76dbb0e0fbd1763da4afa25aeed2ff7f7117b2a6",
+  "review_method": "GitHub-hosted Actions job logs and downloaded artifact receipts; no local project tooling",
+  "network_run": {
+    "run_id": "41108797451",
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41108797451",
+    "passed": ["production socket", "routed kernel NAT", "independent reference vectors", "Windows and Linux scoped contract clippy and tests"],
+    "format": {
+      "status": "failure",
+      "both_os_patch_sha256": "fc1f502e8e74562a3a28d1f896e4537bb2e8b1d04c4d6c60f10bb19a2454307f",
+      "patch_bytes": 28620,
+      "import": "Manually reviewed and applied non-overlapping hunks. PCP and overlapping owner edits require fresh formatting from Actions."
+    },
+    "native_ice_snat": {
+      "job_id": "124245481958",
+      "status": "failure",
+      "artifact_id": "13003331413",
+      "zip_sha256": "a0c4e69d4003e97cb46b4a57d0b85ef5fe01129aa70625b4a6d10b4e70fa946e",
+      "digest_verified": true,
+      "observation": "All three host roles received HTTP 403 reading the permit immediately after remote approval, before controller issuance completed. No native SNAT success is claimed.",
+      "source_follow_up": "Controller writes the actual issued permit digest and an issuance marker only after real issuance; host waits for that marker and both endpoints require that exact digest. Existing permissions, business assertions and time budgets remain."
+    }
+  },
+  "core_run": {
+    "run_id": "41108797081",
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41108797081",
+    "linux_job_id": "124245480277",
+    "linux_status": "failure",
+    "windows_job_id": "124245480153",
+    "windows_status_at_review": "in_progress",
+    "passed": ["WASM", "dependency policy", "OpenAPI generation", "Linux portal/audio/input/network jobs", "both OS scoped routed contracts, selected relay, metadata, discovery, ICE feasibility, native sessions, inbox and spaces"],
+    "scoped_artifacts": [
+      {"os": "Linux", "artifact_id": "13003177438", "zip_sha256": "e6c32c153a3bfb80f1f083f3c7a6408ff80c132ebd31aa64893fdbf3a90fb7d8"},
+      {"os": "Windows", "artifact_id": "13003362957", "zip_sha256": "e165f83f8031eaaf1be665cc966c413a0a7b78bd2b48b6aa38b239660e2046fc"}
+    ],
+    "multi_node_failure": "Linux scoped first route returned 429 CapacityExceeded; Windows scoped first route failed TLS ApplicationVerificationFailure. Full Linux parallel workspace relay cases additionally stopped at PolicyRevoked, business-before-proof diagnostic and endpoint-proof timeout.",
+    "source_follow_up": [
+      "Log non-success fixture HTTP method, path, status and elapsed time, without credentials or bodies.",
+      "Log the existing database admission capacity rejection; no capacity, queue or deadline was changed.",
+      "Report real Quinn connection-close errors when early stream/datagram receives return Err; only actual accepted business traffic is a pre-proof protocol violation.",
+      "Core authorization includes its compiled-in native ICE capability alongside caller-selected media capabilities, matching enrollment and SDK proof; unrelated required capabilities remain checked."
+    ]
+  },
+  "browser_evidence": "docs/network-rewrite/evidence/development-run-76dbb0e-browser.json",
+  "release_qualified": false,
+  "follow_up_source_requires_new_actions": true
+}

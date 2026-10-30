@@ -116,11 +116,30 @@ pub struct NetworkRemoteRelayView {
 
 /// Discovery inputs supplied by the authenticated, pinned deployment. Local
 /// private-network consent is deliberately absent from this response.
+/// PCP policy has its own additive endpoint to preserve this strict JSON shape.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct NativeDiscoveryConfig {
     pub deployment_id: String,
     pub stun_servers: Vec<std::net::SocketAddr>,
+}
+/// Deployment consent alone cannot authorize or select a local PCP gateway.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NativePcpPolicy {
+    pub deployment_id: String,
+    pub allowed: bool,
+}
+impl NativePcpPolicy {
+    pub fn validate(&self) -> Result<(), crate::ContractError> {
+        if !crate::valid_id(&self.deployment_id) {
+            return Err(crate::ContractError::new(
+                crate::ErrorCode::InvalidMessage,
+                "invalid native PCP policy",
+            ));
+        }
+        Ok(())
+    }
 }
 impl NativeDiscoveryConfig {
     /// WebRTC uses the same pinned deployment STUN endpoints as native QUIC.

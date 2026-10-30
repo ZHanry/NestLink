@@ -37,6 +37,23 @@ use std::{
 use tokio::{sync::watch, task::JoinHandle, time::Instant};
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
+async fn report_management_rejection(
+    request: axum::http::Request<axum::body::Body>,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    let method = request.method().clone();
+    let path = request.uri().path().to_owned();
+    let started = Instant::now();
+    let response = next.run(request).await;
+    if !response.status().is_success() {
+        eprintln!(
+            "network-relay management rejection: {method} {path} status={} elapsed_us={}",
+            response.status(), started.elapsed().as_micros()
+        );
+    }
+    response
+}
+
 #[derive(Default)]
 struct PendingFixture {
     http_task: Option<JoinHandle<()>>,
@@ -98,7 +115,7 @@ impl Fixture {
             signer,
             origin.clone(),
             false,
-        )?);
+        )?).layer(axum::middleware::from_fn(report_management_rejection));
         let mut pending = PendingFixture {
             http_task: Some(tokio::spawn(async move {
                 let _ = axum::serve(http, app).await;

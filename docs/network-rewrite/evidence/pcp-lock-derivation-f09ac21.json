@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "f09ac2112bdd313c79d1330a99b1125f28be4025",
+  "run_id": "41113590665",
+  "url": "https://github.com/ZHanry/NestLink/actions/runs/41113590665",
+  "build_source": "GitHub-hosted Actions, Ubuntu 24.04",
+  "review_method": "Downloaded original ZIP streams and verified API SHA-256; verified every receipt-listed file hash and manually reviewed lock diffs. Exact generated lock bytes imported without local dependency resolution.",
+  "scope": "Dependency lock derivation only; no product compilation or acceptance claim",
+  "artifacts": [
+    {
+      "scope": "product",
+      "job_id": "124261961450",
+      "artifact_id": "13005765426",
+      "zip_sha256": "45849b91d100400057e810da9a47dfbb0d0e32c44e45ae522519ec912a7ded71",
+      "lock_path": "Cargo.lock",
+      "lock_sha256": "35ce9df88e76b2322803969282c33381181a536a8344528ec0d130caa69c750e"
+    },
+    {
+      "scope": "browser-native-fixture",
+      "job_id": "124261960992",
+      "artifact_id": "13005605522",
+      "zip_sha256": "db59df269bcf99b1fb2c54a975dd15175e6adc04c0fa2e9d2a8e0e5e5eca2776",
+      "lock_path": "scripts/fixtures/browser-native-host/Cargo.lock",
+      "lock_sha256": "377a0c3aa9bdf5a97debba2f0f6d205686493dd0c8dcf6a999644c5a8e018ec4"
+    }
+  ],
+  "reviewed_dependency": {
+    "name": "crab_nat",
+    "version": "0.8.1",
+    "license": "MIT",
+    "checksum": "b6571f33e3d6520c5b08e54b1202836c6ebe68b950f450951804d037a875c25c",
+    "adr": "docs/adr/network/0009-explicit-pcp-ice-mapping.md"
+  },
+  "assertions": {
+    "both_jobs_succeeded": true,
+    "original_zip_digests_verified": true,
+    "all_receipt_file_hashes_verified": true,
+    "all_existing_package_identities_and_checksums_preserved": true,
+    "all_existing_external_package_edges_preserved": true,
+    "locked_complete_metadata_succeeded_on_actions": true
+  },
+  "previous_derivation": {
+    "run_id": "41112685385",
+    "imported": false,
+    "reason": "Review found unrelated pre-existing external windows-sys dependency edges changed despite preserved package versions. The derivation workflow was corrected before regenerating and importing the accepted outputs."
+  },
+  "local_project_toolchain_executed": false
+}

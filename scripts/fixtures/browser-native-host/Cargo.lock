@@ -632,6 +632,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "crab_nat"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6571f33e3d6520c5b08e54b1202836c6ebe68b950f450951804d037a875c25c"
+dependencies = [
+ "bytes",
+ "displaydoc",
+ "num_enum",
+ "rand 0.10.3",
+ "thiserror 2.0.21",
+ "tokio",
+]
+
+[[package]]
 name = "crc"
 version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1831,6 +1845,7 @@ dependencies = [
  "nestlink-session",
  "nestlink-transport-stream",
  "prost",
+ "reqwest",
  "serde",
  "serde_json",
  "thiserror 2.0.21",
@@ -2130,6 +2145,7 @@ dependencies = [
  "nestlink-transport-quic",
  "nestlink-transport-stream",
  "nestlink-transport-wss",
+ "nestlink-traversal",
  "prost",
  "quinn",
  "reqwest",
@@ -2269,6 +2285,7 @@ name = "nestlink-traversal"
 version = "0.7.0-rc.1"
 dependencies = [
  "base64 0.22.1",
+ "crab_nat",
  "hmac 0.12.1",
  "rand_core 0.6.4",
  "sha1",
@@ -2357,6 +2374,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
  "autocfg",
+]
+
+[[package]]
+name = "num_enum"
+version = "0.7.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5d0bca838442ec211fa11de3a8b0e0e8f3a4522575b5c4c06ed722e005036f26"
+dependencies = [
+ "num_enum_derive",
+ "rustversion",
+]
+
+[[package]]
+name = "num_enum_derive"
+version = "0.7.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "680998035259dcfcafe653688bf2aa6d3e2dc05e98be6ab46afb089dc84f1df8"
+dependencies = [
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
 ]
 
 [[package]]

@@ -72,7 +72,9 @@ impl RemoteForm {
     }
 
     pub(super) fn relay_selection_valid(&self, relay_allowed: bool) -> bool {
-        self.relay_node_id().as_ref().is_none_or(|id| relay_allowed && nestlink_protocol::valid_id(id))
+        self.relay_node_id()
+            .as_ref()
+            .is_none_or(|id| relay_allowed && nestlink_protocol::valid_id(id))
     }
 
     fn reconcile_one_time_password_context(&mut self, snapshot: &Snapshot) {
@@ -1824,7 +1826,12 @@ impl DesktopApp {
             })
             && ui
                 .add_enabled(
-                    !busy && self.remote.relay_selection_valid(request.paths.contains(&(nestlink_protocol::Path::Relay as i32))),
+                    !busy
+                        && self.remote.relay_selection_valid(
+                            request
+                                .paths
+                                .contains(&(nestlink_protocol::Path::Relay as i32)),
+                        ),
                     egui::Button::new(self.t("建立原生会话", "Establish native session")),
                 )
                 .clicked()

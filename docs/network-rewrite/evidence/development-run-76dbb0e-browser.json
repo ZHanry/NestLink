@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "76dbb0e0fbd1763da4afa25aeed2ff7f7117b2a6",
+  "review_method": "Exact-source GitHub Actions job status and logs, downloaded artifact API SHA-256 verification, and manual receipt inspection. No local compiler, formatter, lint, automated checks or tests executed.",
+  "run_id": "41108796965",
+  "attempt": 1,
+  "url": "https://github.com/ZHanry/NestLink/actions/runs/41108796965",
+  "conclusion": "success",
+  "jobs": [
+    { "job_id": "124245478532", "name": "release-site", "conclusion": "success" },
+    { "job_id": "124245479013", "name": "Browser runner and observer contracts", "conclusion": "success" },
+    { "job_id": "124250803057", "name": "Production Web to native host", "conclusion": "success" }
+  ],
+  "browser_contracts": {
+    "python_tests_passed": 18,
+    "node_tests_passed": 62,
+    "node_tests_failed": 0,
+    "artifact_id": "13002106736",
+    "artifact_sha256": "7e4c2ba72ea96f49ecdfd1c1d7fab681c7a6ea8c1fd7bd757b314b63e0ffb1ca",
+    "artifact_download_digest_verified": true,
+    "files": [
+      { "path": "nestlink-browser-contracts-python.log", "bytes": 117, "sha256": "f947494f2256dcd2e0e6cc7f669bf1d2b5b42471407f58fed3c9c3223d50aefb" },
+      { "path": "nestlink-browser-contracts-node.log", "bytes": 15314, "sha256": "d5620d2bb2046a08d3f5a4b6b8a6e0326dc4768a714765ef1af74664cf50e951" }
+    ],
+    "scope": "Independent runner/observer/workspace contracts and integration helper syntax; synthetic unit fixtures are not substituted for the actual browser receipts below."
+  },
+  "browser_native": {
+    "artifact_id": "13003463335",
+    "artifact_sha256": "5d207de991938af9f8c108586ec0470fd4f9751884c70f02557f0ba067ca2cd6",
+    "artifact_download_digest_verified": true,
+    "downloaded_file_count": 15,
+    "receipt_files": [
+      { "path": "runner-result.json", "bytes": 1117, "sha256": "9a8bda38432694e5062d8e613275f083867324d6238ccf5678cf7b146e552b1f" },
+      { "path": "browser-report.json", "bytes": 914924, "sha256": "10858fa2d11a106091c9034c1d1f123849869bf1f204ec1f0d8f0238dc9c91e4" },
+      { "path": "host-result.json", "bytes": 617, "sha256": "d754e02bd6c3212ab118d2049170a43105f4944d1af9d6f2fa5b778f925a4748" },
+      { "path": "data-result.json", "bytes": 2766, "sha256": "c8963bac85284ae6b2246e0b32d56cdac90c34a4682ca82686ffddbca9689bff" },
+      { "path": "database-cleanup.json", "bytes": 297, "sha256": "bc7665d7004a905fd6a0b7d73ff9b61fea7fe4c21a01df9df10974b61411ace5" }
+    ],
+    "runner": {
+      "passed": true,
+      "github_sha": "76dbb0e0fbd1763da4afa25aeed2ff7f7117b2a6",
+      "exit_codes": { "browser": 0, "native": 0 },
+      "validation_failures": [],
+      "error": null,
+      "global_trust_modified": false,
+      "tls_verified_exact_leaf_and_ip_san": true,
+      "native_executable_sha256": "95527922582092a996261acada356e252ad35492422f8678abfe5f1c5de5dd77",
+      "site_index_sha256": "fd708710441d14f9064e998c8fca9f998893d9d1d01ef9f36c77caa1d8cd9ae9",
+      "runner_sha256": "17dcfc9311e934d7f23eecfc9cb78ce6062df87ee2a6724a8ef46deb41252689"
+    },
+    "actual_management_ui": {
+      "edge_namespace_ui_passed": true,
+      "network_membership_ui_passed": true,
+      "network_authority_ui_passed": true,
+      "relay_attributes_ui_passed": true,
+      "spaces_ui_passed": true,
+      "workspace_ui_passed": true,
+      "scope": "Production Web controls through typed SDK, real management HTTP and SQLite; actual concurrent browser writers and real HTTP conflicts, without DOM or response mocks."
+    },
+    "authority": {
+      "same_active_authority_read_by_two_pages": true,
+      "rotation_advances_revision_epoch_generation_and_changes_key": true,
+      "stale_conflict_requires_reread": true,
+      "policy_epoch_advances_without_key_change": true,
+      "permanent_revocation_independent_readback": true,
+      "terminal_mutations_and_confirmation_disabled": true,
+      "actual_expected_post_409_count": 1
+    },
+    "relay_attributes": {
+      "default_unknown_revision_zero": true,
+      "explicit_zero_saved": true,
+      "revision_bound": true,
+      "stale_conflict_requires_reread": true,
+      "unknown_clear_persisted": true,
+      "unmounted_response_ignored": true,
+      "logout_response_ignored": true,
+      "new_session_clean": true,
+      "response_observers_closed": true,
+      "scope": "Separate owned NodeRelay registration, default unknown versus explicit zero, exact revision-bound writes, real two-page stale 409 and persisted clear-to-unknown. No relay process is started for this management case."
+    },
+    "response_observers": {
+      "membership_primary_and_concurrent_writer": "Both actual observation and dedicated session owner passed, with zero pending responses",
+      "relay_primary_and_stale_writer": "Both actual observation and dedicated session owner passed, with zero pending responses",
+      "space_owner_and_invited_recipient": "Both actual observation and dedicated session owner passed, with zero pending responses",
+      "scope": "Bounded owned CDP sessions are drained, Network-disabled and detached before their cleanup facts pass."
+    },
+    "media": {
+      "profile": "owned synthetic smoke capture, 320x180, target 10 fps",
+      "decoded_elapsed_seconds": 36.0025,
+      "three_interval_decoded_fps": [9.997917100604042, 9.99958335069372, 10.000416684028501],
+      "three_interval_audio_packets_per_second": [50.072901478858576, 49.9979167534686, 50.00208342014251],
+      "three_interval_audio_samples_per_second": [48029.993751301816, 47998.00008332986, 48002.00008333681],
+      "native_capture_starts": 1,
+      "native_capture_frames": 384,
+      "native_audio_chunks": 1921,
+      "scope": "Actual local WebRTC VP8/Opus using owned synthetic sources; no physical screen capture, hardware input injection or performance qualification."
+    },
+    "owned_input_and_files": {
+      "passed": true,
+      "input_exercised": true,
+      "input_device_dropped": true,
+      "held_buttons_after_cleanup": 0,
+      "input_resets": 2,
+      "files_exact": true,
+      "read_bytes": 192239,
+      "uploaded_bytes": 130799,
+      "read_and_write_workers_finished": true,
+      "transfers_physically_clean": true,
+      "file_owner_dropped": true,
+      "read_or_write_cleanup_timeout": false,
+      "owned_sandbox_removed": true,
+      "user_desktop_or_files_accessed": false
+    },
+    "cleanup": {
+      "browser_closed": true,
+      "owned_processes_stopped": true,
+      "browser_forced": false,
+      "native_forced": false,
+      "process_errors": [],
+      "download_directory_empty_after_probe": true,
+      "private_directory_removed": true,
+      "capture_reset": true,
+      "audio_reset": true,
+      "audio_cleanup_succeeded": true,
+      "servers_joined": true,
+      "verified_owned_tempdir": true,
+      "owned_database_removed": true,
+      "database_cleanup_error": null
+    },
+    "page_errors": [],
+    "api_failures": [],
+    "response_inspection_errors": [],
+    "publication_note": "The private receipt validator required every space lifecycle fact. Generic publication sanitization redacts the boolean field named unmount_clears_secret_and_snapshot because its key contains secret; the public runner's passed result and exact source gate attest to that required private fact. No secret value is published."
+  },
+  "limitations": [
+    "This is an exact-source browser/native loopback development integration, not installed Windows, phone, physical LAN, public NAT, TUN, game, 24-hour, HA or full product acceptance.",
+    "Authority controls report server state; they do not install or replace the client's local authority trust pin.",
+    "Relay region and relative cost are advisory metadata; these UI receipts do not establish actual relay forwarding, grants, multi-hop policy, billing or relay-selection acceptance.",
+    "This focused receipt does not assert the results of the separate core, network rewrite or release workflows."
+  ],
+  "acceptance_claim": "The production Web/native loopback job and its mandatory management, UI, synthetic media, owned input/files and physical cleanup gates passed at this exact source revision. Complete release qualification is not inferred."
+}

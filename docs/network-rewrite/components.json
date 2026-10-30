@@ -15,6 +15,43 @@
   "research_runtime_exclusion": "EasyTier is idea_reference only; no executable, library, FFI, forked core or adapted code is selected.",
   "components": [
     {
+      "id": "C22",
+      "purpose": "Explicit nonce-owned PCP UDP mapping of the original native ICE port",
+      "existing_implementation": ["crates/sdk/src/native/ice.rs", "crates/traversal"],
+      "candidates": ["crab_nat 0.8.1", "portmapper 0.20.0", "igd-next 0.18.0", "natpmp 0.5.0"],
+      "official_sources": [
+        "https://crates.io/api/v1/crates/crab_nat/0.8.1",
+        "https://github.com/ryco117/crab_nat/tree/296cc168bb0805fe64b9378d0cc76a833e903ce0"
+      ],
+      "maintenance_status": {
+        "reviewed_at": "2026-10-31",
+        "published_at": "2026-07-06",
+        "yanked": false,
+        "evidence": "Exact official version metadata and request/response/nonce/deletion source reviewed; no local dependency resolution, compilation or tests"
+      },
+      "platforms": ["Windows x64", "Linux x64", "Linux ARM64"],
+      "version": {
+        "crab_nat": "=0.8.1",
+        "source_commit": "296cc168bb0805fe64b9378d0cc76a833e903ce0",
+        "crates_io_sha256": "b6571f33e3d6520c5b08e54b1202836c6ebe68b950f450951804d037a875c25c",
+        "lock_status": "Actions dependency resolution and lock artifact pending"
+      },
+      "license": "MIT",
+      "selection_reason": "Explicit PCP nonce can be retained before a cancelable create and deleted with an awaited exact single-port response; no generic protocol codec added",
+      "adapter_boundary": "Component owns PCP codec and connected control UDP. NestLink owns two explicit permissions, one original business socket, fixed request budgets, original authorization deadline, renewal/expiry and awaited deletion receipts.",
+      "self_implementation_gap_if_any": "Existing runtime lacks explicitly owned router mapping; the thin adapter adds only consent and session lifecycle, preserving signed exact ICE candidate and same-socket constraints.",
+      "security_and_operations_cost": [
+        "PCP-only first slice; NAT-PMP, UPnP and TCP coordination remain unimplemented",
+        "A changed external port is rejected and deleted; it cannot become an unsigned candidate",
+        "Failed or canceled creation retains nonce-specific cleanup; failed deletion never counts as successful cleanup",
+        "Finite lease after crash is not a durable ownership journal or immediate router cleanup",
+        "Controlled real-UDP responder tests are L1; actual kernel NAT/router and target evidence remain pending"
+      ],
+      "work_packages": ["W10"],
+      "validation_status": "implemented_unverified slice; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0009-explicit-pcp-ice-mapping.md"
+    },
+    {
       "id": "C01",
       "purpose": "QUIC, TLS and end-to-end encrypted routed datagrams",
       "existing_implementation": [

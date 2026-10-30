@@ -1307,6 +1307,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "crab_nat"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6571f33e3d6520c5b08e54b1202836c6ebe68b950f450951804d037a875c25c"
+dependencies = [
+ "bytes",
+ "displaydoc",
+ "num_enum",
+ "rand 0.10.3",
+ "thiserror 2.0.21",
+ "tokio",
+]
+
+[[package]]
 name = "crc"
 version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4115,6 +4129,7 @@ name = "nestlink-traversal"
 version = "0.7.0-rc.1"
 dependencies = [
  "base64 0.22.1",
+ "crab_nat",
  "hmac 0.12.1",
  "rand_core 0.6.4",
  "sha1",

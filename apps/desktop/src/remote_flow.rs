@@ -67,22 +67,28 @@ impl DesktopApp {
             return;
         };
         let relay_node_id = self.remote.relay_node_id();
-        let selection_valid = self.remote.relay_selection_valid(self.remote.path != "direct_only");
-        let submission = if selection_valid { self.bridge.submit_tracked(
-            snapshot.generation,
-            Command::Submit {
-                action: Action::RequestRemote {
-                    host_device_id,
-                    permissions: super::remote::selected(&self.remote.permissions),
-                    path_mode: self.remote.path.clone(),
-                    access: if self.remote.trusted {
-                        RemoteAccess::TrustedDevice
-                    } else {
-                        RemoteAccess::LocalApproval
+        let selection_valid = self
+            .remote
+            .relay_selection_valid(self.remote.path != "direct_only");
+        let submission = if selection_valid {
+            self.bridge.submit_tracked(
+                snapshot.generation,
+                Command::Submit {
+                    action: Action::RequestRemote {
+                        host_device_id,
+                        permissions: super::remote::selected(&self.remote.permissions),
+                        path_mode: self.remote.path.clone(),
+                        access: if self.remote.trusted {
+                            RemoteAccess::TrustedDevice
+                        } else {
+                            RemoteAccess::LocalApproval
+                        },
                     },
                 },
-            },
-        ) } else { None };
+            )
+        } else {
+            None
+        };
         self.remote.flow = Some(ConnectionFlow {
             stage: if submission.is_some() {
                 Stage::Requesting
@@ -238,7 +244,10 @@ impl DesktopApp {
             }
             Some(request) if request.status == "approved" && request.lease_sequence > 0 => {
                 flow.stage = Stage::Connecting;
-                Some(Action::StartNativeSession { request_id: id, relay_node_id: flow.relay_node_id.clone() })
+                Some(Action::StartNativeSession {
+                    request_id: id,
+                    relay_node_id: flow.relay_node_id.clone(),
+                })
             }
             _ if now >= flow.next_poll && snapshot.selected_request.loading.is_none() => {
                 flow.next_poll = now + Duration::from_secs(1);

@@ -200,6 +200,9 @@ fn native_core_with_limits(
     let monitor = Arc::new(NetworkMonitor::start()?);
     let mut config = NativeSessionConfig::new(monitor);
     config.private_network_prefixes.push(prefix);
+    // Callers may replace the media list. The compiled transport capability
+    // must still agree with SDK enrollment and the signed session permit.
+    config.supported_capabilities = vec!["vp8".into(), "opus".into()];
     Ok(AppCore::with_identity_and_native_session(
         limits, identity, config,
     )?)
@@ -1363,14 +1366,28 @@ async fn app_core_owns_proved_session_and_revocation_waits_for_cleanup() -> Resu
     assert!(controller_handle.native_audio_binding().is_none());
     assert!(host_handle.native_audio_binding().is_none());
 
-    assert!(controller_handle.submit(Action::StartNativeSession {
-        request_id: request.id.clone(), relay_node_id:Some("not-a-node".into()),
-    }).is_err());
+    assert!(
+        controller_handle
+            .submit(Action::StartNativeSession {
+                request_id: request.id.clone(),
+                relay_node_id: Some("not-a-node".into()),
+            })
+            .is_err()
+    );
     let relay_conflict = done(controller_handle.submit(Action::StartNativeSession {
-        request_id: request.id.clone(), relay_node_id:Some(nestlink_auth::random_id()),
-    })?).await?;
-    assert_eq!(relay_conflict.result.status,OperationStatus::Failed);
-    assert_eq!(relay_conflict.result.failure.as_ref().map(|failure|failure.kind),Some(FailureKind::Invalid));
+        request_id: request.id.clone(),
+        relay_node_id: Some(nestlink_auth::random_id()),
+    })?)
+    .await?;
+    assert_eq!(relay_conflict.result.status, OperationStatus::Failed);
+    assert_eq!(
+        relay_conflict
+            .result
+            .failure
+            .as_ref()
+            .map(|failure| failure.kind),
+        Some(FailureKind::Invalid)
+    );
     assert!(controller_handle.native_audio_binding().is_none());
     assert!(controller_handle.poll_native_video().is_err());
 

@@ -315,3 +315,32 @@ signed discovery. An explicit choice cannot use combined or another node; bad,
 missing or revoked selections fail closed. New real business regressions and
 Core input/compatibility checks are wired to both ordinary-token platform jobs.
 These latest sources require new Actions; full W11 and release gates remain open.
+
+The 76dbb0e Web run passed all production browser/native synthetic-owned media,
+input, files, spaces, authority and relay-metadata checks, including null clear,
+stale writers, logout/unmount isolation and six response-owner cleanup receipts.
+The network run passed existing routed/socket/vector and scoped contract tests,
+but native SNAT failed before permit issuance; the fixture now waits for actual
+issuance and binds both peers to its digest. Both OS scoped native/session and
+selection checks passed. Multi-node routing and full workspace failures remain
+open, with HTTP and admission diagnostics added without changing limits. Exact
+observations are in the separate 76dbb0e browser and network evidence records.
+
+W10 starts an explicit PCP-only slice using crab_nat 0.8.1, with component
+selection and limitations in ADR 0009. Core, Desktop, SDK and the server now
+require independent default-off local and deployment consent. The mapping
+retains the real ICE socket and nonce before cancelable requests; the existing
+agent publishes only the acknowledged same-port tuple. Renewal cannot extend
+the original authorization or change its signed tuple. Cleanup joins renewal,
+requires exact deletion acknowledgment and physically releases original sockets.
+Controlled UDP component, actual HTTP policy/config and historical-settings
+regressions are wired to GitHub-hosted Windows/Linux jobs. These sources still
+require exact-source compilation and execution. TCP/symmetric NAT/NAT-PMP/UPnP
+and actual router qualification remain unimplemented or unverified as recorded.
+
+The product and browser-fixture locks were generated exclusively by Actions run
+41113590665, preserving all existing package identities, checksums and external
+dependency edges. Original ZIP and receipt file hashes were verified before
+import. The earlier derivation with unrelated edge drift was rejected. See
+evidence/pcp-lock-derivation-f09ac21.json. Generated OpenAPI and formatting must
+be refreshed from the integrated source; no release or acceptance is implied.

@@ -220,13 +220,19 @@ async fn two_registered_nodes_carry_distinct_authorized_routes_and_one_revoke_pr
     );
     let first_binds = [unused_udp()?, unused_udp()?];
     let second_binds = [unused_udp()?, unused_udp()?];
-    let (mut c1, mut h1, _stop1) = f.channels(first_binds).await
+    let (mut c1, mut h1, _stop1) = f
+        .channels(first_binds)
+        .await
         .map_err(|error| format!("two-node first route establishment: {error}"))?;
-    let (mut c2, mut h2, _stop2) = f.channels_for(&second.allocation, second_binds).await
+    let (mut c2, mut h2, _stop2) = f
+        .channels_for(&second.allocation, second_binds)
+        .await
         .map_err(|error| format!("two-node second route establishment: {error}"))?;
-    transfer(&mut c1, &h1, 31).await
+    transfer(&mut c1, &h1, 31)
+        .await
         .map_err(|error| format!("two-node first route before revocation: {error}"))?;
-    transfer(&mut c2, &h2, 93).await
+    transfer(&mut c2, &h2, 93)
+        .await
         .map_err(|error| format!("two-node second route before revocation: {error}"))?;
     assert_eq!(f.control.counters()?.opened_connections, 2);
     assert_eq!(second.control.counters()?.opened_connections, 2);
@@ -254,8 +260,9 @@ async fn two_registered_nodes_carry_distinct_authorized_routes_and_one_revoke_pr
             .node_id,
         second.id
     );
-    transfer(&mut c2, &h2, 147).await
-        .map_err(|error| format!("two-node surviving route after other node revocation: {error}"))?;
+    transfer(&mut c2, &h2, 147).await.map_err(|error| {
+        format!("two-node surviving route after other node revocation: {error}")
+    })?;
     assert_eq!(f.sdk.relay_reservations().await?.held_allocations, 2);
     drop((c1, h1));
     let _first = rebind(&first_binds)?;
