@@ -78,7 +78,72 @@ jobs:
           python scripts/refactor-windows-normal-user.py rustc -vV
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-platform-security --tests -p nestlink-privileged --lib --no-fail-fast
-      - run: cargo fmt --all -- --check
+      - name: Check SDK routed contracts on Linux before formatting
+        id: sdk_routed_linux
+        if: runner.os == 'Linux'
+        shell: pwsh
+        run: |
+          $sdkLog = Join-Path $env:RUNNER_TEMP 'nestlink-sdk-routed-tests.log'
+          cargo test --locked -p nestlink-sdk --lib network::routed::tests:: -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $sdkLog
+          exit $LASTEXITCODE
+      - name: Check SDK routed contracts with the ordinary Windows token before formatting
+        id: sdk_routed_windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $sdkLog = Join-Path $env:RUNNER_TEMP 'nestlink-sdk-routed-tests.log'
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-sdk --lib network::routed::tests:: -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $sdkLog
+          exit $LASTEXITCODE
+      - name: Require every SDK routed source test to pass without ignored cases
+        if: ${{ !cancelled() && (steps.sdk_routed_linux.outcome != 'skipped' || steps.sdk_routed_windows.outcome != 'skipped') }}
+        shell: python
+        run: |
+          import json, os, pathlib, re
+          source = pathlib.Path('crates/sdk/src/network/routed_tests.rs').read_text(encoding='utf-8')
+          attributes = re.findall(r'(?m)^\s*#\[(?:tokio::)?test(?:\([^\]]*\))?\]', source)
+          cases = re.findall(
+              r'(?m)^\s*#\[((?:tokio::)?test)(?:\([^\]]*\))?\]\s*'
+              r'(?:#\[[^\]]*\]\s*)*(?:async\s+)?fn\s+([A-Za-z_]\w*)\s*\(', source,
+          )
+          expected = {f'network::routed::tests::{name}' for _, name in cases}
+          if not any(kind == 'tokio::test' for kind, _ in cases) or len(cases) != len(attributes) or len(expected) != len(cases):
+              raise SystemExit('Could not enumerate every SDK routed test attribute and unique function name')
+          log_path = pathlib.Path(os.environ['RUNNER_TEMP']) / 'nestlink-sdk-routed-tests.log'
+          log = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', log_path.read_text(encoding='utf-8'))
+          results = re.findall(r'(?m)^test (network::routed::tests::[A-Za-z_]\w*) \.\.\. (ok|FAILED|ignored)\s*$', log)
+          actual = {name for name, _ in results}
+          summaries = re.findall(r'(?m)^test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored;', log)
+          receipt = {
+              'source_revision': os.environ['GITHUB_SHA'],
+              'run_id': os.environ['GITHUB_RUN_ID'],
+              'expected_tests': sorted(expected),
+              'tokio_tests': sorted(name for kind, name in cases if kind == 'tokio::test'),
+              'results': results,
+              'summaries': summaries,
+              'missing_tests': sorted(expected - actual),
+              'unexpected_tests': sorted(actual - expected),
+          }
+          receipt['passed'] = (
+              actual == expected and len(results) == len(expected)
+              and all(result == 'ok' for _, result in results)
+              and summaries == [(str(len(expected)), '0', '0')]
+          )
+          log_path.with_suffix('.json').write_text(json.dumps(receipt, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(receipt, indent=2))
+          if not receipt['passed']:
+              raise SystemExit('SDK routed tests did not pass the complete current source inventory with zero failed/ignored cases')
+      - if: ${{ !cancelled() }}
+        run: cargo fmt --all -- --check
+      - name: Retain complete SDK routed output and source test inventory
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: nestlink-sdk-routed-tests-${{ matrix.target }}
+          path: |
+            ${{ runner.temp }}/nestlink-sdk-routed-tests.log
+            ${{ runner.temp }}/nestlink-sdk-routed-tests.json
+          if-no-files-found: warn
+          retention-days: 14
       - run: cargo check --locked -p nestlink-platform-audio
       - run: cargo clippy --workspace --all-targets --locked --keep-going -- -D warnings
       - name: Check scoped media and renewal fixture code before runtime tests on Linux
