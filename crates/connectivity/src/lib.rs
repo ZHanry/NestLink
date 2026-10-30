@@ -288,7 +288,13 @@ mod tests {
             assert_eq!(attempts.len(), 2);
             scheduler.finish(attempts[0].id, false, "identity", code, 1);
             assert_eq!(*scheduler.outcome(), Outcome::Failed(code));
-            scheduler.finish(attempts[1].id, true, "late-tls", ErrorCode::InternalError, 2);
+            scheduler.finish(
+                attempts[1].id,
+                true,
+                "late-tls",
+                ErrorCode::InternalError,
+                2,
+            );
             scheduler.network_changed(2);
             assert!(scheduler.poll(RELAY_START_MS).is_empty());
             assert_eq!(*scheduler.outcome(), Outcome::Failed(code));
@@ -305,13 +311,27 @@ mod tests {
         let relay = candidate(CandidateKind::Relay, Transport::Wss, "203.0.113.2:443")?;
         let mut scheduler = Scheduler::new(1, 0, PathSet::BOTH, vec![direct, relay])?;
         let direct = scheduler.poll(0);
-        scheduler.finish(direct[0].id, false, "udp-timeout", ErrorCode::DirectUnavailable, 1000);
+        scheduler.finish(
+            direct[0].id,
+            false,
+            "udp-timeout",
+            ErrorCode::DirectUnavailable,
+            1000,
+        );
         assert_eq!(*scheduler.outcome(), Outcome::Checking);
         let relay = scheduler.poll(RELAY_START_MS);
         assert_eq!(relay.len(), 1);
         assert_eq!(relay[0].candidate.transport, Transport::Wss);
-        scheduler.finish(relay[0].id, true, "wss-inner-tls", ErrorCode::InternalError, RELAY_START_MS + 1);
-        assert!(matches!(scheduler.outcome(), Outcome::Connected(c) if c.transport == Transport::Wss));
+        scheduler.finish(
+            relay[0].id,
+            true,
+            "wss-inner-tls",
+            ErrorCode::InternalError,
+            RELAY_START_MS + 1,
+        );
+        assert!(
+            matches!(scheduler.outcome(), Outcome::Connected(c) if c.transport == Transport::Wss)
+        );
         Ok(())
     }
     #[test]

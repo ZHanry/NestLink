@@ -421,10 +421,7 @@ async fn actual_direct_tls_identity_failure_is_not_retried_as_network_unavailabi
     declaration.transport = Transport::Tls;
     let wrong = InstallationIdentity::generate();
     let acceptor = tokio_rustls::TlsAcceptor::from(std::sync::Arc::new(
-        nestlink_transport_stream::tls::server_config(
-            &wrong,
-            controller.identity.fingerprint(),
-        )?,
+        nestlink_transport_stream::tls::server_config(&wrong, controller.identity.fingerprint())?,
     ));
     let server = async {
         let (tcp, _) = listener.accept().await?;

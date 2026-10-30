@@ -11,11 +11,7 @@ pub(super) fn classify(error: &(dyn Error + 'static), unavailable: ErrorCode) ->
     classify_inner(error, unavailable, 0)
 }
 
-fn classify_inner(
-    error: &(dyn Error + 'static),
-    unavailable: ErrorCode,
-    depth: u8,
-) -> ErrorCode {
+fn classify_inner(error: &(dyn Error + 'static), unavailable: ErrorCode, depth: u8) -> ErrorCode {
     // The bound also prevents a faulty third-party source chain from looping.
     if depth >= 16 {
         return ErrorCode::ProtocolMismatch;
@@ -30,9 +26,7 @@ fn classify_inner(
     }
     if let Some(error) = error.downcast_ref::<quinn::ConnectionError>() {
         return match error {
-            quinn::ConnectionError::TransportError(error) => {
-                quic_code(error.code, unavailable)
-            }
+            quinn::ConnectionError::TransportError(error) => quic_code(error.code, unavailable),
             quinn::ConnectionError::ConnectionClosed(close) => {
                 quic_code(close.error_code, unavailable)
             }
@@ -61,7 +55,11 @@ fn classify_inner(
             nestlink_transport_wss::Error::Invalid => return ErrorCode::PermissionRequired,
             nestlink_transport_wss::Error::TlsSetup(source) => {
                 let code = classify_inner(source.as_ref(), unavailable, depth + 1);
-                return if code == unavailable { ErrorCode::ProtocolMismatch } else { code };
+                return if code == unavailable {
+                    ErrorCode::ProtocolMismatch
+                } else {
+                    code
+                };
             }
             _ => {}
         }
@@ -139,11 +137,19 @@ mod tests {
     fn wrapped_tls_and_protocol_failures_remain_terminal() {
         let tls = io::Error::new(
             io::ErrorKind::InvalidData,
-            rustls::Error::InvalidCertificate(rustls::CertificateError::ApplicationVerificationFailure),
+            rustls::Error::InvalidCertificate(
+                rustls::CertificateError::ApplicationVerificationFailure,
+            ),
         );
-        assert_eq!(classify(&tls, ErrorCode::DirectUnavailable), ErrorCode::IdentityMismatch);
         assert_eq!(
-            classify(&io::Error::new(io::ErrorKind::InvalidData, "ALPN"), ErrorCode::DirectUnavailable),
+            classify(&tls, ErrorCode::DirectUnavailable),
+            ErrorCode::IdentityMismatch
+        );
+        assert_eq!(
+            classify(
+                &io::Error::new(io::ErrorKind::InvalidData, "ALPN"),
+                ErrorCode::DirectUnavailable
+            ),
             ErrorCode::ProtocolMismatch
         );
         let quic = quinn::ConnectionError::TransportError(quinn::TransportError {
@@ -151,24 +157,40 @@ mod tests {
             frame: None,
             reason: String::new(),
         });
-        assert_eq!(classify(&quic, ErrorCode::DirectUnavailable), ErrorCode::IdentityMismatch);
+        assert_eq!(
+            classify(&quic, ErrorCode::DirectUnavailable),
+            ErrorCode::IdentityMismatch
+        );
         assert_eq!(
             classify(&SdkError::Trust, ErrorCode::RelayUnavailable),
             ErrorCode::IdentityMismatch
         );
         assert_eq!(
-            classify(&ContractError::new(ErrorCode::PolicyRevoked, "revoked"), ErrorCode::RelayUnavailable),
+            classify(
+                &ContractError::new(ErrorCode::PolicyRevoked, "revoked"),
+                ErrorCode::RelayUnavailable
+            ),
             ErrorCode::PolicyRevoked
         );
     }
 
     #[test]
     fn genuine_network_failure_remains_retryable() {
-        for kind in [io::ErrorKind::TimedOut, io::ErrorKind::ConnectionRefused, io::ErrorKind::ConnectionReset] {
-            assert_eq!(classify(&io::Error::from(kind), ErrorCode::DirectUnavailable), ErrorCode::DirectUnavailable);
+        for kind in [
+            io::ErrorKind::TimedOut,
+            io::ErrorKind::ConnectionRefused,
+            io::ErrorKind::ConnectionReset,
+        ] {
+            assert_eq!(
+                classify(&io::Error::from(kind), ErrorCode::DirectUnavailable),
+                ErrorCode::DirectUnavailable
+            );
         }
         assert_eq!(
-            classify(&quinn::ConnectionError::TimedOut, ErrorCode::RelayUnavailable),
+            classify(
+                &quinn::ConnectionError::TimedOut,
+                ErrorCode::RelayUnavailable
+            ),
             ErrorCode::RelayUnavailable
         );
         let closed = quinn::ConnectionError::ApplicationClosed(quinn::ApplicationClose {
@@ -180,7 +202,10 @@ mod tests {
             ErrorCode::RelayUnavailable
         );
         assert_eq!(
-            classify(&SdkError::Relay(WebSocketError::ConnectionClosed.into()), ErrorCode::RelayUnavailable),
+            classify(
+                &SdkError::Relay(WebSocketError::ConnectionClosed.into()),
+                ErrorCode::RelayUnavailable
+            ),
             ErrorCode::RelayUnavailable
         );
     }
@@ -195,9 +220,13 @@ mod tests {
             classify(&SdkError::Relay(tls.into()), ErrorCode::RelayUnavailable),
             ErrorCode::IdentityMismatch
         );
-        let protocol = WebSocketError::Protocol(WebSocketProtocolError::SecWebSocketAcceptKeyMismatch);
+        let protocol =
+            WebSocketError::Protocol(WebSocketProtocolError::SecWebSocketAcceptKeyMismatch);
         assert_eq!(
-            classify(&SdkError::Relay(protocol.into()), ErrorCode::RelayUnavailable),
+            classify(
+                &SdkError::Relay(protocol.into()),
+                ErrorCode::RelayUnavailable
+            ),
             ErrorCode::ProtocolMismatch
         );
         for (status, expected) in [
@@ -211,11 +240,21 @@ mod tests {
             let error = SdkError::Relay(WebSocketError::Http(Box::new(response)).into());
             assert_eq!(classify(&error, ErrorCode::RelayUnavailable), expected);
         }
-        for kind in [io::ErrorKind::ConnectionRefused, io::ErrorKind::ConnectionReset, io::ErrorKind::TimedOut] {
+        for kind in [
+            io::ErrorKind::ConnectionRefused,
+            io::ErrorKind::ConnectionReset,
+            io::ErrorKind::TimedOut,
+        ] {
             let outer = SdkError::Relay(WebSocketError::Io(io::Error::from(kind)).into());
             let inner = SdkError::Relay(nestlink_transport_wss::Error::Tls(io::Error::from(kind)));
-            assert_eq!(classify(&outer, ErrorCode::RelayUnavailable), ErrorCode::RelayUnavailable);
-            assert_eq!(classify(&inner, ErrorCode::RelayUnavailable), ErrorCode::RelayUnavailable);
+            assert_eq!(
+                classify(&outer, ErrorCode::RelayUnavailable),
+                ErrorCode::RelayUnavailable
+            );
+            assert_eq!(
+                classify(&inner, ErrorCode::RelayUnavailable),
+                ErrorCode::RelayUnavailable
+            );
         }
         Ok(())
     }

@@ -1631,7 +1631,9 @@ impl NativeEndpoint {
         let mut scheduler = Scheduler::new(peer_generation, 0, paths, allowed)?;
         type Pending<'a> = Pin<
             Box<
-                dyn Future<Output = (usize, &'static str, Result<NativeTransport, ErrorCode>)> + Send + 'a,
+                dyn Future<Output = (usize, &'static str, Result<NativeTransport, ErrorCode>)>
+                    + Send
+                    + 'a,
             >,
         >;
         let mut pending = FuturesUnordered::<Pending<'_>>::new();
@@ -1680,7 +1682,9 @@ impl NativeEndpoint {
                                 let connection =
                                     nestlink_transport_quic::connect(endpoint, address, budget)
                                         .await
-                                        .map_err(|error| failure::classify(error.as_ref(), unavailable))?;
+                                        .map_err(|error| {
+                                            failure::classify(error.as_ref(), unavailable)
+                                        })?;
                                 Ok(NativeTransport::Quic {
                                     connection,
                                     endpoint: endpoint.clone(),

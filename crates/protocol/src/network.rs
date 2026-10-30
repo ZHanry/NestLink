@@ -33,19 +33,40 @@ pub enum NegotiatedProtocol {
 impl CapabilityOffer {
     pub fn validate(&self) -> Result<(), ContractError> {
         if self.schema_version != SCHEMA_VERSION {
-            return Err(ContractError::new(ErrorCode::ProtocolMismatch, "unsupported network capability schema"));
+            return Err(ContractError::new(
+                ErrorCode::ProtocolMismatch,
+                "unsupported network capability schema",
+            ));
         }
         for list in [&self.supported, &self.required] {
-            if list.len() > 32 || list.windows(2).any(|names| names[0] >= names[1])
-                || list.iter().any(|name| name.is_empty() || name.len() > 64
-                    || !name.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')) {
-                return Err(invalid("capability names must be bounded, unique and sorted"));
+            if list.len() > 32
+                || list.windows(2).any(|names| names[0] >= names[1])
+                || list.iter().any(|name| {
+                    name.is_empty()
+                        || name.len() > 64
+                        || !name.bytes().all(|byte| {
+                            byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-'
+                        })
+                })
+            {
+                return Err(invalid(
+                    "capability names must be bounded, unique and sorted",
+                ));
             }
         }
-        if self.required.iter().any(|name| self.supported.binary_search(name).is_err())
-            || (self.supported.iter().any(|name| name == MIGRATION_CAPABILITY)
-                && !self.supported.iter().any(|name| name == CORE_CAPABILITY)) {
-            return Err(invalid("required capability is not supported or migration lacks a network contract"));
+        if self
+            .required
+            .iter()
+            .any(|name| self.supported.binary_search(name).is_err())
+            || (self
+                .supported
+                .iter()
+                .any(|name| name == MIGRATION_CAPABILITY)
+                && !self.supported.iter().any(|name| name == CORE_CAPABILITY))
+        {
+            return Err(invalid(
+                "required capability is not supported or migration lacks a network contract",
+            ));
         }
         Ok(())
     }
@@ -53,20 +74,31 @@ impl CapabilityOffer {
 
 /// Call on authenticated offers. An unavailable required capability is an error,
 /// never permission to fall back after a failed new-protocol handshake.
-pub fn negotiate(local: &CapabilityOffer, remote: &CapabilityOffer) -> Result<NegotiatedProtocol, ContractError> {
+pub fn negotiate(
+    local: &CapabilityOffer,
+    remote: &CapabilityOffer,
+) -> Result<NegotiatedProtocol, ContractError> {
     local.validate()?;
     remote.validate()?;
     for required in local.required.iter().chain(&remote.required) {
         if !matches!(required.as_str(), CORE_CAPABILITY | MIGRATION_CAPABILITY)
             || local.supported.binary_search(required).is_err()
-            || remote.supported.binary_search(required).is_err() {
-            return Err(ContractError::new(ErrorCode::ProtocolMismatch, "required network capability is unavailable"));
+            || remote.supported.binary_search(required).is_err()
+        {
+            return Err(ContractError::new(
+                ErrorCode::ProtocolMismatch,
+                "required network capability is unavailable",
+            ));
         }
     }
-    let both = |name| local.supported.iter().any(|value| value == name)
-        && remote.supported.iter().any(|value| value == name);
+    let both = |name| {
+        local.supported.iter().any(|value| value == name)
+            && remote.supported.iter().any(|value| value == name)
+    };
     if both(CORE_CAPABILITY) {
-        Ok(NegotiatedProtocol::NetworkV1 { path_migration: both(MIGRATION_CAPABILITY) })
+        Ok(NegotiatedProtocol::NetworkV1 {
+            path_migration: both(MIGRATION_CAPABILITY),
+        })
     } else {
         Ok(NegotiatedProtocol::LegacyV15)
     }
@@ -102,7 +134,10 @@ pub struct PeerPair {
 
 impl PeerPair {
     pub fn new(a: PeerId, b: PeerId) -> Result<Self, ContractError> {
-        let pair = Self { first: a.min(b), second: a.max(b) };
+        let pair = Self {
+            first: a.min(b),
+            second: a.max(b),
+        };
         pair.validate()?;
         Ok(pair)
     }
@@ -136,9 +171,14 @@ pub struct GrantScope {
 impl GrantScope {
     pub fn validate(&self) -> Result<(), ContractError> {
         if self.schema_version != SCHEMA_VERSION {
-            return Err(ContractError::new(ErrorCode::ProtocolMismatch, "unknown network grant schema"));
+            return Err(ContractError::new(
+                ErrorCode::ProtocolMismatch,
+                "unknown network grant schema",
+            ));
         }
-        if [&self.deployment_id, &self.space_id, &self.grant_id].iter().any(|id| !valid_id(id))
+        if [&self.deployment_id, &self.space_id, &self.grant_id]
+            .iter()
+            .any(|id| !valid_id(id))
             || self.policy_epoch == 0
             || self.not_before_ms == 0
             || self.expires_at_ms <= self.not_before_ms
@@ -155,11 +195,21 @@ impl GrantScope {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum SpaceRole { Owner, Admin, Member, Guest }
+pub enum SpaceRole {
+    Owner,
+    Admin,
+    Member,
+    Guest,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Purpose { RemoteControl, PrivateService, PublicService, NetworkPacket }
+pub enum Purpose {
+    RemoteControl,
+    PrivateService,
+    PublicService,
+    NetworkPacket,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -203,13 +253,18 @@ impl PathPolicy {
         {
             return Err(invalid("invalid or noncanonical path policy"));
         }
-        for relay in &self.relays { relay.validate()?; }
+        for relay in &self.relays {
+            relay.validate()?;
+        }
         Ok(())
     }
 
     pub fn allows(&self, peers: PeerPair, route: &[PeerId]) -> bool {
-        self.validate().is_ok() && peers.validate().is_ok()
-            && if route.is_empty() { self.allow_direct } else {
+        self.validate().is_ok()
+            && peers.validate().is_ok()
+            && if route.is_empty() {
+                self.allow_direct
+            } else {
                 route.len() <= usize::from(self.max_hops)
                     && route.iter().enumerate().all(|(i, relay)| {
                         !peers.contains(*relay)
@@ -256,10 +311,16 @@ impl IpPrefix {
         crate::api::ServiceSourceNetwork {
             address: self.network.to_string(),
             prefix: self.prefix_len,
-        }.validate()?;
-        if self.prefix_len == 0 || self.network.is_unspecified()
-            || self.network.is_loopback() || self.network.is_multicast() {
-            return Err(invalid("prefix must be canonical and cannot export a default route"));
+        }
+        .validate()?;
+        if self.prefix_len == 0
+            || self.network.is_unspecified()
+            || self.network.is_loopback()
+            || self.network.is_multicast()
+        {
+            return Err(invalid(
+                "prefix must be canonical and cannot export a default route",
+            ));
         }
         Ok(())
     }
@@ -275,11 +336,19 @@ pub struct RouteExportClaims {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum IpProtocol { Tcp, Udp, IcmpV4, IcmpV6 }
+pub enum IpProtocol {
+    Tcp,
+    Udp,
+    IcmpV4,
+    IcmpV6,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Direction { Inbound, Outbound }
+pub enum Direction {
+    Inbound,
+    Outbound,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -302,7 +371,12 @@ pub struct NetworkAccessClaims {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "kind", content = "claims", rename_all = "snake_case", deny_unknown_fields)]
+#[serde(
+    tag = "kind",
+    content = "claims",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
 pub enum GrantClaims {
     Membership(MembershipClaims),
     Connectivity(ConnectivityClaims),
@@ -313,15 +387,21 @@ pub enum GrantClaims {
 }
 
 fn require_digest(digest: &[u8; 32]) -> Result<(), ContractError> {
-    if *digest == [0; 32] { return Err(invalid("empty authorization digest")); }
+    if *digest == [0; 32] {
+        return Err(invalid("empty authorization digest"));
+    }
     Ok(())
 }
 
 fn prefixes(values: &[IpPrefix]) -> Result<(), ContractError> {
-    if values.is_empty() || values.len() > MAX_PREFIXES { return Err(invalid("invalid prefix count")); }
+    if values.is_empty() || values.len() > MAX_PREFIXES {
+        return Err(invalid("invalid prefix count"));
+    }
     for (i, value) in values.iter().enumerate() {
         value.validate()?;
-        if values[..i].contains(value) { return Err(invalid("duplicate prefix")); }
+        if values[..i].contains(value) {
+            return Err(invalid("duplicate prefix"));
+        }
     }
     Ok(())
 }
@@ -329,9 +409,12 @@ fn prefixes(values: &[IpPrefix]) -> Result<(), ContractError> {
 impl GrantClaims {
     pub fn scope(&self) -> &GrantScope {
         match self {
-            Self::Membership(c) => &c.scope, Self::Connectivity(c) => &c.scope,
-            Self::Path(c) => &c.scope, Self::Transit(c) => &c.scope,
-            Self::RouteExport(c) => &c.scope, Self::NetworkAccess(c) => &c.scope,
+            Self::Membership(c) => &c.scope,
+            Self::Connectivity(c) => &c.scope,
+            Self::Path(c) => &c.scope,
+            Self::Transit(c) => &c.scope,
+            Self::RouteExport(c) => &c.scope,
+            Self::NetworkAccess(c) => &c.scope,
         }
     }
 
@@ -350,15 +433,22 @@ impl GrantClaims {
         self.scope().validate()?;
         match self {
             Self::Membership(c) => {
-                if !valid_id(&c.installation_id) || c.membership_epoch == 0
-                    || c.public_key == [0; 32] || c.peer != PeerId::from_public_key(&c.public_key) {
-                    return Err(invalid("membership must bind the installation and device key"));
+                if !valid_id(&c.installation_id)
+                    || c.membership_epoch == 0
+                    || c.public_key == [0; 32]
+                    || c.peer != PeerId::from_public_key(&c.public_key)
+                {
+                    return Err(invalid(
+                        "membership must bind the installation and device key",
+                    ));
                 }
                 c.peer.validate()?;
             }
             Self::Connectivity(c) => {
                 c.peers.validate()?;
-                for digest in &c.membership_digests { require_digest(digest)?; }
+                for digest in &c.membership_digests {
+                    require_digest(digest)?;
+                }
                 require_digest(&c.business_grant_digest)?;
             }
             Self::Path(c) => {
@@ -372,28 +462,45 @@ impl GrantClaims {
             Self::Transit(c) => {
                 c.peers.validate()?;
                 require_digest(&c.transport_group)?;
-                for peer in [c.relay, c.previous, c.next] { peer.validate()?; }
-                if !valid_id(&c.route_id) || c.peers.contains(c.relay)
-                    || c.relay == c.previous || c.relay == c.next || c.previous == c.next
-                    || c.remaining_hops == 0 || c.remaining_hops > MAX_HOPS || c.byte_limit == 0 {
+                for peer in [c.relay, c.previous, c.next] {
+                    peer.validate()?;
+                }
+                if !valid_id(&c.route_id)
+                    || c.peers.contains(c.relay)
+                    || c.relay == c.previous
+                    || c.relay == c.next
+                    || c.previous == c.next
+                    || c.remaining_hops == 0
+                    || c.remaining_hops > MAX_HOPS
+                    || c.byte_limit == 0
+                {
                     return Err(invalid("invalid authenticated transit adjacency"));
                 }
             }
-            Self::RouteExport(c) => { c.gateway.validate()?; prefixes(&c.prefixes)?; }
+            Self::RouteExport(c) => {
+                c.gateway.validate()?;
+                prefixes(&c.prefixes)?;
+            }
             Self::NetworkAccess(c) => {
                 PeerPair::new(c.source, c.destination)?;
                 prefixes(&c.source_prefixes)?;
                 prefixes(&c.destination_prefixes)?;
                 if c.rules.is_empty() || c.rules.len() > MAX_RULES || c.byte_limit == 0 {
-                    return Err(invalid("network access needs bounded explicit rules and quota"));
+                    return Err(invalid(
+                        "network access needs bounded explicit rules and quota",
+                    ));
                 }
                 for (i, rule) in c.rules.iter().enumerate() {
                     let valid = match (rule.protocol, rule.ports) {
-                        (IpProtocol::Tcp | IpProtocol::Udp, Some([first, last])) => first != 0 && first <= last,
+                        (IpProtocol::Tcp | IpProtocol::Udp, Some([first, last])) => {
+                            first != 0 && first <= last
+                        }
                         (IpProtocol::IcmpV4 | IpProtocol::IcmpV6, None) => true,
                         _ => false,
                     };
-                    if !valid || c.rules[..i].contains(rule) { return Err(invalid("invalid network protocol/port rule")); }
+                    if !valid || c.rules[..i].contains(rule) {
+                        return Err(invalid("invalid network protocol/port rule"));
+                    }
                 }
             }
         }
@@ -402,21 +509,30 @@ impl GrantClaims {
 
     pub fn canonical_bytes(&self) -> Result<Vec<u8>, ContractError> {
         self.validate()?;
-        let bytes = serde_json::to_vec(self).map_err(|_| invalid("network grant serialization failed"))?;
-        if bytes.len() > CLAIM_BYTES { return Err(invalid("network grant exceeds its byte budget")); }
+        let bytes =
+            serde_json::to_vec(self).map_err(|_| invalid("network grant serialization failed"))?;
+        if bytes.len() > CLAIM_BYTES {
+            return Err(invalid("network grant exceeds its byte budget"));
+        }
         Ok(bytes)
     }
 
     pub fn decode_canonical(bytes: &[u8]) -> Result<Self, ContractError> {
-        if bytes.len() > CLAIM_BYTES { return Err(invalid("network grant exceeds its byte budget")); }
-        let claims: Self = serde_json::from_slice(bytes).map_err(|_| invalid("malformed network grant"))?;
-        if claims.canonical_bytes()? != bytes { return Err(invalid("noncanonical network grant")); }
+        if bytes.len() > CLAIM_BYTES {
+            return Err(invalid("network grant exceeds its byte budget"));
+        }
+        let claims: Self =
+            serde_json::from_slice(bytes).map_err(|_| invalid("malformed network grant"))?;
+        if claims.canonical_bytes()? != bytes {
+            return Err(invalid("noncanonical network grant"));
+        }
         Ok(claims)
     }
 
     pub fn signing_message(&self) -> Result<Vec<u8>, ContractError> {
         let bytes = self.canonical_bytes()?;
-        let length = u32::try_from(bytes.len()).map_err(|_| invalid("network grant exceeds its byte budget"))?;
+        let length = u32::try_from(bytes.len())
+            .map_err(|_| invalid("network grant exceeds its byte budget"))?;
         let mut message = self.domain().to_vec();
         message.extend_from_slice(&length.to_be_bytes());
         message.extend_from_slice(&bytes);
@@ -426,7 +542,9 @@ impl GrantClaims {
     /// Exact signed PathGrant identity, scope, purpose and peers isolate groups.
     /// This helper does not authenticate the grant. Only verified callers may use it.
     pub fn unverified_transport_group_digest(&self) -> Result<[u8; 32], ContractError> {
-        if !matches!(self, Self::Path(_)) { return Err(invalid("transport groups require a PathGrant")); }
+        if !matches!(self, Self::Path(_)) {
+            return Err(invalid("transport groups require a PathGrant"));
+        }
         let mut transcript = b"NestLink/network/v1/transport-group\0".to_vec();
         transcript.extend_from_slice(&self.signing_message()?);
         Ok(Sha256::digest(transcript).into())

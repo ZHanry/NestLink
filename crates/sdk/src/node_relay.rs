@@ -383,14 +383,13 @@ impl NativeRelayRoute<'_> {
                 .connect_at(local, permit, c.address)
                 .await
                 .map(|io| crate::native::NativeTransport::Wss(Box::new(io))),
-            Self::Quic(r) => r
-                .connect_at(local, permit, c.address)
-                .await
-                .map(|io| crate::native::NativeTransport::Quic {
+            Self::Quic(r) => r.connect_at(local, permit, c.address).await.map(|io| {
+                crate::native::NativeTransport::Quic {
                     connection: io.connection,
                     endpoint: io.endpoint,
                     carrier: Some(io.carrier),
-                }),
+                }
+            }),
         }
     }
 }
