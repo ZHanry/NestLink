@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "purpose": "independent-network-contract-vector-generation-only",
+  "source_revision": "bcc161d22f5fa0c026f690b5fc50a30cf43d7cae",
+  "workflow": "Network rewrite contract checks",
+  "workflow_sha": "bcc161d22f5fa0c026f690b5fc50a30cf43d7cae",
+  "job": "independent-vectors",
+  "run_id": "41028335910",
+  "run_attempt": "1",
+  "runner": {
+    "environment": "github-hosted",
+    "os": "Linux",
+    "arch": "X64"
+  },
+  "runtime": "v22.23.4",
+  "openssl": "3.5.9",
+  "file": {
+    "name": "network-v1-reference.json",
+    "bytes": 1346,
+    "sha256": "a7b316184a15d45b76ea87dac31d85b670c180a27761d6055e448435441f6fe3"
+  },
+  "additional_files": [
+    {
+      "name": "network-v1-all-grants.json",
+      "bytes": 9243,
+      "sha256": "4e63b135970c363b2451fa923ded131250450b59e54abd98851e1ab69632abc7"
+    }
+  ],
+  "acceptance_claims": []
+}
