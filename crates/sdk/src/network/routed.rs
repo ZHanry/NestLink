@@ -150,7 +150,21 @@ pub async fn authorize_remote(
             "routed business setup deadline exhausted").into())),
     };
     match proved {
-        Ok(channels) => Ok(channels.with_transport_owner(owner)),
+        Ok(mut channels) => {
+            // timeout_at polls the inner operation before its timer. Recheck
+            // terminal facts at the handoff even if proof became ready late.
+            let expired = Instant::now() >= setup_deadline;
+            if expired || setup_is_stopped(&stop) {
+                let _ = channels.lease_control().stop(if expired { StopReason::Expired } else { StopReason::Revoked });
+                let business_cleanup = tokio::time::timeout_at(deadline, channels.wait_stopped()).await;
+                owner.close_and_wait(deadline).await.map_err(RemoteError::Cleanup)?;
+                business_cleanup.map_err(|_| RemoteError::Cleanup(io::ErrorKind::TimedOut.into()))??;
+                return Err(if expired {
+                    io::Error::new(io::ErrorKind::TimedOut, "routed business handoff deadline exhausted").into()
+                } else { RemoteError::Stopped });
+            }
+            Ok(channels.with_transport_owner(owner))
+        },
         Err(error) => {
             owner
                 .close_and_wait(deadline)
