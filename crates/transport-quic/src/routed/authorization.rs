@@ -1,12 +1,8 @@
 use nestlink_identity::{
-    VerifiedPermit, digest,
-    network::{NetworkVerification, VerifiedNetworkGrant, VerifiedNetworkPath},
+    VerifiedPermit,
+    network::{NetworkVerification, VerifiedNetworkGrant, VerifiedNetworkPath, remote_route_binding},
 };
-use nestlink_protocol::{
-    Path,
-    network::{GrantClaims, PeerId, PeerPair, Purpose},
-    network_datagram as wire,
-};
+use nestlink_protocol::network::{PeerId, PeerPair};
 use std::{
     io,
     sync::Arc,
@@ -60,69 +56,12 @@ impl RouteAuthorization {
             revoked_grant_ids: context.revoked_grant_ids,
             now_ms: now.max(context.now_ms),
         };
-        path.check_current(&current).map_err(io::Error::other)?;
-        connectivity
-            .check_current(&current)
-            .map_err(io::Error::other)?;
-        transit.check_current(&current).map_err(io::Error::other)?;
-        let (GrantClaims::Connectivity(connection), GrantClaims::Transit(forward)) =
-            (connectivity.claims(), transit.claims())
-        else {
-            return Err(denied());
-        };
-        let business = permit.claims();
-        let first = PeerId(
-            business
-                .controller_key_sha256
-                .as_slice()
-                .try_into()
-                .map_err(|_| denied())?,
-        );
-        let second = PeerId(
-            business
-                .host_key_sha256
-                .as_slice()
-                .try_into()
-                .map_err(|_| denied())?,
-        );
-        let peers = PeerPair::new(first, second).map_err(io::Error::other)?;
-        path.check_route(&current, &[forward.relay])
-            .map_err(io::Error::other)?;
-        if path.purpose() != Purpose::RemoteControl
-            || connection.purpose != Purpose::RemoteControl
-            || connection.peers != peers
-            || path.peers() != peers
-            || forward.peers != peers
-            || connectivity.digest() != path.claims().connectivity_grant_digest
-            || connection.business_grant_digest != permit.digest()
-            || forward.transport_group != path.transport_group_id()
-            || forward.previous != peers.first
-            || forward.next != peers.second
-            || forward.remaining_hops != 1
-            || business.deployment_id != current.deployment_id
-            || !business.paths.contains(&(Path::Relay as i32))
-            || business.issued_at_unix_ms > current.now_ms
-            || business.expires_at_unix_ms <= current.now_ms
-            || path.claims().scope.not_before_ms < business.issued_at_unix_ms
-            || path.claims().scope.expires_at_ms > business.expires_at_unix_ms
-            || forward.scope.not_before_ms < path.claims().scope.not_before_ms
-            || forward.scope.expires_at_ms > path.claims().scope.expires_at_ms
-        {
-            return Err(denied());
-        }
         // The exact verified references contain the authority, space, both
         // endpoints, purpose, route ID, group, adjacency, hop budget and quota.
         // Generation follows the business permit; path epoch is fixed at one.
-        let mut transcript = b"NestLink/network-datagram/v1/route-binding\0".to_vec();
-        transcript.extend_from_slice(&path.transport_group_id());
-        transcript.extend_from_slice(&connectivity.digest());
-        transcript.extend_from_slice(&transit.digest());
-        transcript.extend_from_slice(&permit.digest());
-        transcript.extend_from_slice(&business.connection_generation.to_be_bytes());
-        transcript.extend_from_slice(&wire::PATH_EPOCH.to_be_bytes());
-        let remaining = forward
-            .scope
-            .expires_at_ms
+        let route = remote_route_binding(&current, path, connectivity, transit, permit)
+            .map_err(io::Error::other)?;
+        let remaining = route.expires_at_ms
             .checked_sub(current.now_ms)
             .filter(|remaining| *remaining > 0)
             .ok_or_else(denied)?;
@@ -130,10 +69,10 @@ impl RouteAuthorization {
         Ok((
             Self {
                 binding: Arc::new(Binding {
-                    digest: digest(&transcript),
-                    peers,
-                    relay: forward.relay,
-                    byte_limit: forward.byte_limit,
+                    digest: route.digest,
+                    peers: route.peers,
+                    relay: route.relay,
+                    byte_limit: route.byte_limit,
                     deadline: started + Duration::from_millis(remaining.min(MAX_LEASE_MS)),
                 }),
                 stopped,

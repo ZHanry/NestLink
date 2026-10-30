@@ -12,6 +12,8 @@ use nestlink_protocol::{
     RelayAllocationClaims, RelayCloseClaims, RelayTransport, SignedNodeResourceSnapshot,
 };
 use std::collections::{HashMap, HashSet, VecDeque};
+mod network;
+use nestlink_identity::network::RemoteRouteBinding;
 
 pub struct RelayEndpointProof<'a> {
     pub device_id: &'a str,
@@ -31,8 +33,17 @@ pub struct RelayEndpointCandidate {
     issuer: [u8; 32],
     deadline: u64,
     node_stop: watch::Receiver<bool>,
+    network: Option<RemoteRouteBinding>,
 }
 impl RelayEndpointCandidate {
+    pub fn network_binding(&self) -> Option<[u8; 32]> { self.network.map(|route| route.digest) }
+    pub fn network_direction(&self) -> Option<nestlink_protocol::network_datagram::Direction> {
+        self.network.map(|route| if self.claims.controller_key_sha256 == route.peers.first.0 {
+            if self.controller { nestlink_protocol::network_datagram::Direction::FirstToSecond }
+            else { nestlink_protocol::network_datagram::Direction::SecondToFirst }
+        } else if self.controller { nestlink_protocol::network_datagram::Direction::SecondToFirst }
+        else { nestlink_protocol::network_datagram::Direction::FirstToSecond })
+    }
     pub fn allocation_id(&self) -> &str {
         &self.claims.allocation_id
     }
@@ -70,6 +81,7 @@ impl RelayEndpointCandidate {
             .entries
             .get(self.allocation_id())
             .ok_or(Error::Control)?;
+        if entry.network != self.network { return Err(error(ErrorCode::IdentityMismatch).into()); }
         Ok(self
             .deadline
             .min(entry.deadline)
@@ -88,6 +100,7 @@ impl RelayEndpointCandidate {
             issuer: self.issuer,
             deadline: self.deadline,
             node_stop: self.node_stop.clone(),
+            network: self.network,
         };
         async move {
             loop {
@@ -344,6 +357,9 @@ impl NodeControl {
             .map_err(|_| Error::Control)?;
         let ticket = verify_relay_allocation(ticket, &issuer)?;
         let c = ticket.claims();
+        if snapshot.entries.get(&c.allocation_id).is_some_and(|entry| entry.network.is_some()) {
+            return Err(error(ErrorCode::PermissionRequired).into());
+        }
         if c.node_key_sha256 != lease.node_key_sha256
             || c.issued_at_unix_ms > now.unix_ms.saturating_add(1000)
             || c.expires_at_unix_ms <= now.unix_ms
@@ -395,6 +411,7 @@ impl NodeControl {
             issuer,
             deadline: original_deadline,
             node_stop: self.stopped.clone(),
+            network: None,
         })
     }
 }
@@ -402,6 +419,8 @@ struct Entry {
     claims: RelayAllocationClaims,
     deadline: u64,
     binding: [u8; 32],
+    network: Option<RemoteRouteBinding>,
+    network_credential: Option<[u8; 32]>,
 }
 struct Snapshot {
     claims: NodeResourceSnapshotClaims,
@@ -416,6 +435,7 @@ struct Pair {
     claims: RelayAllocationClaims,
     deadline: u64,
     binding: [u8; 32],
+    network: Option<RemoteRouteBinding>,
     slots: [Option<Slot>; 2],
     meter: Meter,
     closed: bool,
@@ -513,11 +533,21 @@ impl Resources {
             self.stop();
         }
         let mut entries = HashMap::new();
-        for grant in &c.allocations {
+        let issuer: [u8;32] = c.allocation_issuer.as_slice().try_into().map_err(|_| error(ErrorCode::IdentityMismatch))?;
+        let mut routes = HashMap::new();
+        for resource in &c.network_routes {
+            let route = nestlink_identity::network::verify_node_network_resource(resource, &issuer, now.unix_ms)?;
+            let grant = resource.allocation.as_ref().ok_or_else(|| error(ErrorCode::InvalidMessage))?;
+            routes.insert(grant.allocation_id.clone(), (route, digest(&resource.encode_to_vec())));
+        }
+        for grant in c.allocations.iter().chain(c.network_routes.iter().filter_map(|resource| resource.allocation.as_ref())) {
             if grant.node_key_sha256 != lease.node_key_sha256 {
                 return Err(error(ErrorCode::IdentityMismatch));
             }
             let binding = allocation_binding(grant)?;
+            let route = routes.get(&grant.allocation_id);
+            let network = route.map(|(route,_)| *route);
+            let network_credential = route.map(|(_,credential)| *credential);
             let mut expires = deadline(
                 start,
                 grant.expires_at_unix_ms,
@@ -532,6 +562,7 @@ impl Resources {
                 if grant.grant_sequence < old.claims.grant_sequence
                     || (grant.grant_sequence == old.claims.grant_sequence && grant != &old.claims)
                     || old.binding != binding
+                    || old.network != network || old.network_credential != network_credential
                 {
                     return Err(error(ErrorCode::ReplayRejected));
                 }
@@ -545,6 +576,8 @@ impl Resources {
                     claims: grant.clone(),
                     deadline: expires,
                     binding,
+                    network,
+                    network_credential,
                 },
             );
         }
@@ -553,6 +586,7 @@ impl Resources {
                 Some(entry)
                     if !pair.closed
                         && pair.binding == entry.binding
+                        && pair.network == entry.network
                         && entry.claims.grant_sequence >= pair.claims.grant_sequence
                         && now.monotonic_ms < pair.deadline =>
                 {
@@ -596,6 +630,7 @@ impl Resources {
                     claims: entry.claims.clone(),
                     deadline: entry.deadline,
                     binding: entry.binding,
+                    network: entry.network,
                     slots: [None, None],
                     meter: Meter::default(),
                     closed: false,
@@ -697,6 +732,7 @@ impl Resources {
             .get(id)
             .is_some_and(|pair| pair.slots.iter().all(Option::is_none) && pair.io_drains.is_empty())
             && let Some(pair) = self.pairs.remove(id)
+            && pair.network.is_none()
             && !pair.unconfirmed_io
             && let Some(closed_at_unix_ms) = stopped_at
         {

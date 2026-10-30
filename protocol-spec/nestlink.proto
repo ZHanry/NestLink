@@ -445,6 +445,17 @@ message NodeResourceSnapshotClaims {
   uint64 issued_at_unix_ms = 5;
   uint64 expires_at_unix_ms = 6;
   repeated RelayAllocationClaims allocations = 7;
+  repeated NodeNetworkRelayResource network_routes = 8;
+}
+// Versioned independent network resources are never legacy allocation tickets.
+// Both trust anchors and every original credential byte are covered by the
+// existing node-policy signature and exact query digest.
+message NodeNetworkRelayResource {
+  uint32 network_schema_version = 1;
+  RelayAllocationClaims allocation = 2;
+  bytes network_authority_key = 3;
+  bytes relay_bundle_json = 4;
+  bytes business_permit = 5;
 }
 message SignedNodeResourceSnapshot {
   bytes claims = 1;

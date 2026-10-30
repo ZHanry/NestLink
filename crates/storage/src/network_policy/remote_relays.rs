@@ -74,6 +74,76 @@ fn relay_node(store: &Store, node_id: &str, now_ms: u64) -> Result<RelayNode, St
 }
 
 impl Store {
+    /// Called only after authenticating the signed node query inside the same
+    /// snapshot transaction. It bypasses management account visibility, never
+    /// current business/member/runtime/policy validation.
+    pub(crate) fn node_network_resources(
+        &self, tx: &Transaction<'_>, lifecycle: &RelayLifecycle,
+        query: &nestlink_protocol::NodeResourceQueryClaims,
+        signer: &nestlink_identity::PermitSigner, now_ms: u64,
+    ) -> Result<Vec<nestlink_protocol::NodeNetworkRelayResource>, StorageError> {
+        use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
+        use nestlink_protocol::{NodeNetworkRelayResource, RelayAllocationClaims, RelayTransport, api::{NetworkGrantView, NetworkRemotePathView, NetworkRemoteRelayView}};
+        use nestlink_identity::{relay::session_binding, verify_permit};
+        use prost::Message;
+        let mut statement = tx.prepare("SELECT space_id,allocation_id FROM network_remote_relays WHERE node_id=?1 AND runtime_id=?2 AND runtime_generation=?3 AND closed=0 AND promised_until>?4 ORDER BY allocation_id")?;
+        let rows = statement.query_map(params![query.node_id,query.runtime_id,query.runtime_generation,now_ms], |r|Ok((r.get::<_,String>(0)?,r.get::<_,String>(1)?)))?
+            .collect::<Result<Vec<_>,_>>()?;
+        drop(statement);
+        let mut resources = Vec::new();
+        for (space, id) in rows {
+            let bundle = match self.network_relay_current_in_transaction(tx, lifecycle, None, &space, &id, now_ms) {
+                Ok(bundle) => bundle,
+                Err(StorageError::Forbidden | StorageError::Unauthorized) => continue,
+                Err(error) => return Err(error),
+            };
+            let business = remote_paths::current_business(self, &bundle.path.request_id, now_ms)?;
+            let controller = self.device_record_at(&business.controller_device_id, now_ms / 1000)?;
+            let host = self.device_record_at(&business.host_device_id, now_ms / 1000)?;
+            let quota = self.relay_quota_current()?;
+            let node = relay_node(self, &bundle.node.node_id, now_ms)?;
+            let rate: u64 = tx.query_row("SELECT bytes_per_second FROM data_nodes WHERE id=?1", [&bundle.node.node_id], |r|r.get(0))?;
+            let signed_business = signer.sign(&business)?.encode_to_vec();
+            // Re-verify the exact outgoing envelope before delegating it. Ed25519
+            // and protobuf encoding are deterministic for the stored permit.
+            let verified_business = verify_permit(&signed_business, &signer.public_key())?;
+            let snapshot = read_snapshot(tx, &space, now_ms)?;
+            let GrantClaims::Transit(transit) = GrantClaims::decode_canonical(&bundle.transit.claims)? else { return Err(StorageError::Forbidden); };
+            let allocation = RelayAllocationClaims {
+                schema_version: nestlink_protocol::SCHEMA_VERSION,
+                deployment_id: business.deployment_id.clone(), security_epoch: business.security_epoch,
+                allocation_id: id, session_id: business.session_id.clone(), node_id: bundle.node.node_id.clone(),
+                runtime_id: node.runtime, runtime_generation: node.generation, node_key_sha256: digest(&node.key).to_vec(),
+                controller_device_id: business.controller_device_id.clone(), host_device_id: business.host_device_id.clone(),
+                controller_key_sha256: business.controller_key_sha256.clone(), host_key_sha256: business.host_key_sha256.clone(),
+                controller_account_id: controller.account, host_account_id: host.account,
+                connection_generation: business.connection_generation, policy_revision: business.policy_revision,
+                quota_revision: quota.revision, session_binding_sha256: session_binding(&business)?.to_vec(),
+                transports: vec![RelayTransport::QuicDatagram as i32], node_endpoint_revision: node.endpoint_revision,
+                grant_sequence: 1, issued_at_unix_ms: transit.scope.not_before_ms, expires_at_unix_ms: transit.scope.expires_at_ms,
+                bytes_per_second: quota.limits.bytes_per_second.min(rate), bytes_per_allocation: transit.byte_limit,
+            };
+            let grant = |signed: SignedNetworkGrant| -> Result<NetworkGrantView, StorageError> {
+                let claims = GrantClaims::decode_canonical(&signed.claims)?;
+                Ok(NetworkGrantView { schema_version: SCHEMA_VERSION, grant_id: claims.scope().grant_id.clone(),
+                    claims: URL_SAFE_NO_PAD.encode(signed.claims), signature: URL_SAFE_NO_PAD.encode(signed.signature) })
+            };
+            let [controller, host] = bundle.path.memberships;
+            let view = NetworkRemoteRelayView { allocation_id: bundle.allocation_id,
+                path: NetworkRemotePathView { request_id: bundle.path.request_id,
+                    controller_membership: grant(controller)?, host_membership: grant(host)?,
+                    connectivity: grant(bundle.path.connectivity)?, path: grant(bundle.path.path)? },
+                transit: grant(bundle.transit)?, node: bundle.node };
+            let resource = NodeNetworkRelayResource { network_schema_version: 1, allocation: Some(allocation),
+                network_authority_key: snapshot.authority_key.to_vec(), relay_bundle_json: serde_json::to_vec(&view)?,
+                business_permit: verified_business.signed_envelope().to_vec() };
+            nestlink_identity::network::verify_node_network_resource(&resource, &signer.public_key(), now_ms)?;
+            resources.push(resource);
+            if resources.len() as u64 > nestlink_protocol::NODE_RESOURCE_ALLOCATIONS { return Err(StorageError::RateLimited); }
+        }
+        Ok(resources)
+    }
+
     pub fn issue_network_remote_relay(
         &mut self,
         lifecycle: &RelayLifecycle,
@@ -162,10 +232,19 @@ impl Store {
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
         self.validate_access(actor, checked_seconds(now_ms)?)?;
         self.resume_relay_reservations(lifecycle, now_ms)?;
+        let bundle = self.network_relay_current_in_transaction(&tx, lifecycle, Some(actor), space, allocation_id, now_ms)?;
+        tx.commit()?;
+        Ok(bundle)
+    }
+
+    pub(crate) fn network_relay_current_in_transaction(
+        &self, tx: &Transaction<'_>, lifecycle: &RelayLifecycle, actor: Option<&Principal>,
+        space: &str, allocation_id: &str, now_ms: u64,
+    ) -> Result<NetworkRemoteRelayBundle, StorageError> {
         let row: Option<StoredRelay> = tx.query_row("SELECT path_grant_id,transit_grant_id,node_id,node_key,runtime_id,runtime_generation,endpoint_revision,security_epoch,policy_revision,quota_revision,control_runtime_id,byte_limit,promised_until,closed,transit_claims,transit_signature,controller_account_id,host_account_id FROM network_remote_relays WHERE space_id=?1 AND allocation_id=?2",
             params![space,allocation_id], |r|Ok(StoredRelay {path_id:r.get(0)?,transit_id:r.get(1)?,node_id:r.get(2)?,key:r.get(3)?,runtime:r.get(4)?,generation:r.get(5)?,endpoint_revision:r.get(6)?,security_epoch:r.get(7)?,policy_revision:r.get(8)?,quota_revision:r.get(9)?,control_runtime:r.get(10)?,byte_limit:r.get(11)?,promised_until:r.get(12)?,closed:r.get(13)?,signed:SignedNetworkGrant {claims:r.get(14)?,signature:r.get(15)?},controller_account:r.get(16)?,host_account:r.get(17)?})).optional()?;
         let row = row.filter(|r| !r.closed).ok_or(StorageError::Forbidden)?;
-        let path = self.network_path_in_transaction(&tx, actor, space, &row.path_id, true, now_ms)?;
+        let path = self.network_path_current_in_transaction(tx, actor, space, &row.path_id, true, now_ms)?;
         let business = remote_paths::current_business(self, &path.request_id, now_ms)?;
         let controller = self.device_record_at(&business.controller_device_id, now_ms / 1000)?;
         let host = self.device_record_at(&business.host_device_id, now_ms / 1000)?;
@@ -189,7 +268,6 @@ impl Store {
             || policy.relays.as_slice() != [transit.relay] || transit.previous != transit.peers.first
             || transit.next != transit.peers.second || transit.remaining_hops != 1
         { return Err(StorageError::Forbidden); }
-        tx.commit()?;
         Ok(NetworkRemoteRelayBundle { allocation_id: allocation_id.into(), path, transit: row.signed,
             node: NodeEndpointsView { node_id: row.node_id, revision: node.endpoint_revision, endpoints: node.endpoints } })
     }

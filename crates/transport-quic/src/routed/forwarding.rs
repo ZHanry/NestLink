@@ -42,6 +42,16 @@ impl Replay {
     }
 }
 
+/// The node production adapter uses the same bounded fragment/replay checks as
+/// the standalone forwarding owner. One instance belongs to each direction.
+#[derive(Default)]
+pub struct FragmentReplayWindow(Replay);
+impl FragmentReplayWindow {
+    pub fn accept(&mut self, fragment: &wire::Fragment<'_>) -> io::Result<bool> {
+        self.0.accept(fragment, Instant::now())
+    }
+}
+
 /// Own both fixed, pinned neighbors. This forwarding loop never parses inner
 /// QUIC or business frames, opens sockets from packet fields, or adds a reliable
 /// replay queue. Its one cumulative quota covers both directions and all headers.

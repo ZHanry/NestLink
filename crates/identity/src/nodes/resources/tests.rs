@@ -57,6 +57,7 @@ fn allocation() -> RelayAllocationClaims {
 }
 fn snapshot(signed: &SignedNodeResourceQuery) -> Result<NodeResourceSnapshotClaims, ContractError> {
     Ok(NodeResourceSnapshotClaims {
+        network_routes: Vec::new(),
         query: Some(query()),
         query_sha256: digest(&signed.claims).to_vec(),
         allocation_issuer: PermitSigner::generate().public_key().to_vec(),

@@ -20,10 +20,10 @@ pub(super) async fn resources(
         return Err(ApiError(StatusCode::FORBIDDEN, ErrorCode::IdentityMismatch));
     }
     let lifecycle = state.relay_lifecycle.clone();
-    let issuer = state.signer.public_key();
+    let signer = state.signer.clone();
     let c = tokio::time::timeout(
         Duration::from_millis(700),
-        state.db(move |s| s.node_resource_snapshot(&lifecycle, &signed, &issuer, now_ms()?)),
+        state.db(move |s| s.node_resource_snapshot_with_network(&lifecycle, &signed, &signer, now_ms()?)),
     )
     .await
     .map_err(|_| ApiError(StatusCode::SERVICE_UNAVAILABLE, ErrorCode::InternalError))??;

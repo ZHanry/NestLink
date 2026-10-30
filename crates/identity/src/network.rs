@@ -7,6 +7,64 @@ use nestlink_protocol::{
 };
 use std::collections::BTreeSet;
 use zeroize::Zeroizing;
+mod remote;
+pub use remote::{RemoteRouteBinding, remote_route_binding, verify_node_network_resource};
+
+fn node_admission_transcript(
+    allocation_id: &str,
+    binding: &[u8; 32],
+    device_id: &str,
+    public_key: &[u8; 32],
+    nonce: &[u8; 32],
+) -> Result<Vec<u8>, ContractError> {
+    if !nestlink_protocol::valid_id(allocation_id)
+        || !nestlink_protocol::valid_id(device_id)
+        || *binding == [0; 32]
+        || *nonce == [0; 32]
+    {
+        return Err(ContractError::new(ErrorCode::InvalidMessage, "invalid network node admission"));
+    }
+    let mut transcript = b"NestLink/network-datagram/v1/node-admission\0".to_vec();
+    transcript.extend_from_slice(&1u32.to_be_bytes());
+    for value in [allocation_id, device_id] {
+        transcript.extend_from_slice(&(value.len() as u32).to_be_bytes());
+        transcript.extend_from_slice(value.as_bytes());
+    }
+    transcript.extend_from_slice(binding);
+    transcript.extend_from_slice(public_key);
+    transcript.extend_from_slice(nonce);
+    Ok(transcript)
+}
+
+impl crate::InstallationIdentity {
+    /// Signs only the bounded, independently domain-separated fresh socket proof.
+    pub fn sign_network_node_admission(
+        &self,
+        allocation_id: &str,
+        binding: &[u8; 32],
+        device_id: &str,
+        nonce: &[u8; 32],
+    ) -> Result<[u8; 64], ContractError> {
+        Ok(self.key.sign(&node_admission_transcript(
+            allocation_id, binding, device_id, &self.public_key(), nonce,
+        )?).to_bytes())
+    }
+}
+
+pub fn verify_network_node_admission(
+    allocation_id: &str,
+    binding: &[u8; 32],
+    device_id: &str,
+    public_key: &[u8; 32],
+    nonce: &[u8; 32],
+    signature: &[u8],
+) -> Result<(), ContractError> {
+    let invalid = || ContractError::new(ErrorCode::IdentityMismatch, "invalid network node possession proof");
+    let key = VerifyingKey::from_bytes(public_key).map_err(|_| invalid())?;
+    let signature = Signature::from_slice(signature).map_err(|_| invalid())?;
+    key.verify_strict(&node_admission_transcript(allocation_id, binding, device_id, public_key, nonce)?, &signature)
+        .map_err(|_| invalid())
+}
 
 pub struct NetworkAuthoritySigner {
     key: SigningKey,

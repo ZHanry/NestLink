@@ -20,6 +20,7 @@ use std::{
     time::{Duration, Instant},
 };
 use tokio::{sync::watch, task::JoinSet};
+mod network;
 
 fn failed() -> io::Error {
     io::Error::new(
@@ -182,16 +183,16 @@ pub async fn serve_with_selector(
     let hub = Arc::new(Hub::default());
     let mut tasks = JoinSet::new();
     tokio::pin!(shutdown);
-    loop {
+    let result = loop {
         if *stopped.borrow() {
-            return Err(failed());
+            break Err(failed());
         }
         tokio::select! { biased;
-            _ = &mut shutdown => return Ok(()),
-            _ = stopped.changed() => return Err(failed()),
-            result = tasks.join_next(), if !tasks.is_empty() => { if result.is_some_and(|r| r.is_err()) { return Err(failed()); } },
+            _ = &mut shutdown => break Ok(()),
+            _ = stopped.changed() => break Err(failed()),
+            result = tasks.join_next(), if !tasks.is_empty() => { if result.is_some_and(|r| r.is_err()) { break Err(failed()); } },
             incoming = endpoint.accept() => {
-                let Some(incoming) = incoming else { return Err(failed()); };
+                let Some(incoming) = incoming else { break Err(failed()); };
                 let ip = incoming.remote_address().ip();
                 if control.authorize(NodeRole::NodeRelay, false).is_err() {
                     incoming.refuse(); continue;
@@ -204,12 +205,28 @@ pub async fn serve_with_selector(
                     let _slot = slot;
                     if let Ok(Ok(connection)) = tokio::time::timeout(Duration::from_secs(3), incoming).await {
                         let _close = Close(connection.clone());
-                        let _ = run(connection, control, hub, selector, drain).await;
+                        let protocol = connection.handshake_data()
+                            .and_then(|data| data.downcast::<quinn::crypto::rustls::HandshakeData>().ok())
+                            .and_then(|data| data.protocol);
+                        if protocol.as_deref() == Some(nestlink_protocol::network_datagram::ALPN) {
+                            let _ = network::run(connection, control, hub, selector, drain).await;
+                        } else if protocol.as_deref() == Some(relay_datagram::ALPN) {
+                            let _ = run(connection, control, hub, selector, drain).await;
+                        }
                     }
                 });
             }
         }
+    };
+    control.stop();
+    endpoint.close(0u32.into(), b"node listener stopping");
+    tasks.abort_all();
+    // Aborting requests cancellation. Joining each original task proves its
+    // streams, queues, connections and resource guards have actually dropped.
+    while let Some(joined) = tasks.join_next().await {
+        if joined.is_err_and(|error| !error.is_cancelled()) { return Err(failed()); }
     }
+    result
 }
 async fn admission(
     control: &NodeControl,

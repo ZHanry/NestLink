@@ -14,6 +14,7 @@ struct RelayFixture {
     node: NodeIdentity,
     node_id: String,
     lifecycle: RelayLifecycle,
+    lease: nestlink_protocol::NodeLeaseClaims,
 }
 impl RelayFixture {
     fn new(direct: bool, maximum: u32) -> Result<Self> {
@@ -45,7 +46,7 @@ impl RelayFixture {
             NOW,
         )?;
         let challenge = base.store.node_challenge(&node_id, NOW)?;
-        base.store
+        let lease = base.store
             .issue_node_lease(&node.prove(&challenge, &random_id())?, NOW)?;
         let lifecycle = base.store.relay_lifecycle(NOW)?;
         Ok(Self {
@@ -53,6 +54,7 @@ impl RelayFixture {
             node,
             node_id,
             lifecycle,
+            lease,
         })
     }
     fn issuance(&self) -> Result<NetworkRemoteRelayIssuance> {
@@ -97,6 +99,57 @@ impl RelayFixture {
             NOW,
         )
     }
+}
+
+#[test]
+fn node_snapshot_delegates_exact_network_chain_and_permit_and_removes_revoked_routes() -> Result {
+    use nestlink_identity::{PermitSigner, node_resources::verify_resource_snapshot, network::verify_node_network_resource, verify_permit};
+    use nestlink_protocol::NodeResourceQueryClaims;
+    let mut f = RelayFixture::new(false, 2)?;
+    let issuance = f.issuance()?;
+    let allocation_id = issuance.request.allocation.allocation_id.clone();
+    let issued = f.issue(issuance)?;
+    let root = PermitSigner::from_seed([44; 32]);
+    let policy = root.node_policy_signer()?;
+    let mut query = NodeResourceQueryClaims {
+        schema_version: nestlink_protocol::SCHEMA_VERSION, deployment_id: f.lease.deployment_id.clone(),
+        security_epoch: f.lease.security_epoch, node_id: f.node_id.clone(), runtime_id: f.lease.runtime_id.clone(),
+        runtime_generation: f.lease.runtime_generation, policy_revision: f.lease.policy_revision,
+        lease_sequence: f.lease.lease_sequence, request_id: random_id(), request_sequence: 1,
+        issued_at_unix_ms: NOW, expires_at_unix_ms: NOW + 1000,
+    };
+    let signed_query = f.node.sign_resource_query(&query)?;
+    let snapshot = f.base.store.node_resource_snapshot_with_network(&f.lifecycle, &signed_query, &root, NOW)?;
+    assert!(snapshot.allocations.is_empty());
+    assert_eq!(snapshot.network_routes.len(), 1);
+    let signed_snapshot = policy.sign_resource_snapshot(&snapshot)?;
+    let verified = verify_resource_snapshot(&signed_snapshot, &policy.public_key(), &signed_query)?;
+    let route = &verified.network_routes[0];
+    let binding = verify_node_network_resource(route, &root.public_key(), NOW)?;
+    assert_eq!(binding.relay, nestlink_protocol::network::PeerId::from_public_key(&f.node.public_key()));
+    let view: nestlink_protocol::api::NetworkRemoteRelayView = serde_json::from_slice(&route.relay_bundle_json)?;
+    assert_eq!(URL_SAFE_NO_PAD.decode(view.transit.claims)?, issued.transit.claims);
+    assert_eq!(URL_SAFE_NO_PAD.decode(view.transit.signature)?, issued.transit.signature);
+    let permit = verify_permit(&route.business_permit, &root.public_key())?;
+    assert_eq!(permit.signed_envelope(), route.business_permit.as_slice());
+    let mut changed = route.clone();
+    changed.business_permit[0] ^= 1;
+    assert!(verify_node_network_resource(&changed, &root.public_key(), NOW).is_err());
+    let mut changed = route.clone();
+    changed.network_authority_key[0] ^= 1;
+    assert!(verify_node_network_resource(&changed, &root.public_key(), NOW).is_err());
+    let mut changed = snapshot.clone();
+    changed.network_routes[0].network_schema_version = 2;
+    assert!(policy.sign_resource_snapshot(&changed).is_err());
+    query.request_id = random_id();
+    query.request_sequence += 1;
+    let new_query = f.node.sign_resource_query(&query)?;
+    assert!(verify_resource_snapshot(&signed_snapshot, &policy.public_key(), &new_query).is_err());
+    f.base.store.revoke_network_remote_relay(&f.base.host, &f.base.space, &allocation_id, NOW)?;
+    let revoked = f.base.store.node_resource_snapshot_with_network(&f.lifecycle, &new_query, &root, NOW)?;
+    assert!(revoked.network_routes.is_empty());
+    assert_eq!(f.base.store.relay_reservation_usage(&f.base.controller, NOW)?.held_endpoint_slots, 2);
+    Ok(())
 }
 
 #[test]

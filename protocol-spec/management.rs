@@ -776,6 +776,30 @@ pub struct NodeRelayHello {
     pub allocation: String,
     pub signature: String,
 }
+/// Fresh socket admission for the independent network datagram ALPN.
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkNodeChallenge {
+    pub schema_version: u32,
+    pub nonce: String,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkNodeHello {
+    pub schema_version: u32,
+    pub allocation_id: String,
+    pub binding_sha256: String,
+    pub device_id: String,
+    pub public_key: String,
+    pub signature: String,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkNodeReady {
+    pub schema_version: u32,
+    pub allocation_id: String,
+    pub binding_sha256: String,
+}
 #[derive(Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct RelayReady {

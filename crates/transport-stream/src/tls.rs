@@ -50,22 +50,73 @@ struct ExpectedPeer {
 }
 impl ExpectedPeer {
     fn check(&self, certificate: &CertificateDer<'_>) -> Result<(), Error> {
-        let (rest, certificate) =
-            x509_parser::certificate::X509Certificate::from_der(certificate.as_ref())
-                .map_err(|_| Error::InvalidCertificate(rustls::CertificateError::BadEncoding))?;
-        let spki = certificate.public_key();
-        if !rest.is_empty()
-            || spki.algorithm.algorithm.to_id_string() != "1.3.101.112"
-            || spki.subject_public_key.unused_bits != 0
-            || spki.subject_public_key.data.len() != 32
-            || digest(&spki.subject_public_key.data) != self.fingerprint
-        {
+        if certificate_fingerprint(certificate)? != self.fingerprint {
             return Err(Error::InvalidCertificate(
                 rustls::CertificateError::ApplicationVerificationFailure,
             ));
         }
         Ok(())
     }
+}
+
+/// Strict Ed25519 leaf parsing shared by fixed pins and current node pins.
+pub fn certificate_fingerprint(certificate: &CertificateDer<'_>) -> Result<[u8; 32], Error> {
+    let (rest, certificate) =
+        x509_parser::certificate::X509Certificate::from_der(certificate.as_ref())
+            .map_err(|_| Error::InvalidCertificate(rustls::CertificateError::BadEncoding))?;
+    let spki = certificate.public_key();
+    if !rest.is_empty()
+        || spki.algorithm.algorithm.to_id_string() != "1.3.101.112"
+        || spki.subject_public_key.unused_bits != 0
+        || spki.subject_public_key.data.len() != 32
+    {
+        return Err(Error::InvalidCertificate(rustls::CertificateError::ApplicationVerificationFailure));
+    }
+    Ok(digest(&spki.subject_public_key.data))
+}
+
+/// A TLS pin is accepted only from the node's current signed resource snapshot.
+/// This callback grants no allocation slot or application forwarding authority.
+pub trait CurrentClientPins: std::fmt::Debug + Send + Sync {
+    fn contains(&self, fingerprint: &[u8; 32]) -> bool;
+}
+#[derive(Debug)]
+struct CurrentClients {
+    pins: Arc<dyn CurrentClientPins>,
+    hints: Vec<DistinguishedName>,
+}
+impl ClientCertVerifier for CurrentClients {
+    fn root_hint_subjects(&self) -> &[DistinguishedName] { &self.hints }
+    fn verify_client_cert(&self, leaf: &CertificateDer<'_>, intermediates: &[CertificateDer<'_>], _: UnixTime)
+        -> Result<ClientCertVerified, Error>
+    {
+        if !intermediates.is_empty() || !self.pins.contains(&certificate_fingerprint(leaf)?) {
+            return Err(Error::InvalidCertificate(rustls::CertificateError::ApplicationVerificationFailure));
+        }
+        Ok(ClientCertVerified::assertion())
+    }
+    fn verify_tls12_signature(&self, message: &[u8], cert: &CertificateDer<'_>, dss: &DigitallySignedStruct)
+        -> Result<HandshakeSignatureValid, Error>
+    { verify_tls12_signature(message, cert, dss, &ring::default_provider().signature_verification_algorithms) }
+    fn verify_tls13_signature(&self, message: &[u8], cert: &CertificateDer<'_>, dss: &DigitallySignedStruct)
+        -> Result<HandshakeSignatureValid, Error>
+    { verify_tls13_signature(message, cert, dss, &ring::default_provider().signature_verification_algorithms) }
+    fn supported_verify_schemes(&self) -> Vec<SignatureScheme> { vec![SignatureScheme::ED25519] }
+}
+
+pub fn network_node_server_config(
+    identity: &nestlink_identity::nodes::NodeIdentity,
+    pins: Arc<dyn CurrentClientPins>,
+) -> Result<ServerConfig, Box<dyn std::error::Error + Send + Sync>> {
+    let (cert, key) = encoded_certificate(&identity.tls_pkcs8()?)?;
+    let mut config = ServerConfig::builder_with_provider(Arc::new(ring::default_provider()))
+        .with_protocol_versions(&[&rustls::version::TLS13])?
+        .with_client_cert_verifier(Arc::new(CurrentClients { pins, hints: Vec::new() }))
+        .with_single_cert(vec![cert], key.into())?;
+    config.alpn_protocols = vec![nestlink_protocol::network_datagram::ALPN.to_vec()];
+    config.max_early_data_size = 0;
+    config.send_tls13_tickets = 0;
+    Ok(config)
 }
 impl ServerCertVerifier for ExpectedPeer {
     fn verify_server_cert(

@@ -1,5 +1,6 @@
 use super::*;
 use nestlink_traversal::turn::TurnAuthorization;
+mod network;
 fn id(n: u8) -> String {
     format!("{n:08x}-1111-4111-8111-111111111111")
 }
@@ -70,6 +71,7 @@ fn snapshot(
     grants: Vec<RelayAllocationClaims>,
 ) -> NodeResourceSnapshotClaims {
     NodeResourceSnapshotClaims {
+        network_routes: Vec::new(),
         query: Some(NodeResourceQueryClaims {
             schema_version: SCHEMA_VERSION,
             deployment_id: id(1),

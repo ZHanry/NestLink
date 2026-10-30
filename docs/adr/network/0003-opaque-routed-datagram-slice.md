@@ -108,9 +108,10 @@ The marker/ciphertext observation is limited to the retained bounded test captur
 it is not a security proof or a claim that real business authorization ran.
 
 The SDK adapter must run real business proof and attach this owner to the
-existing channel lifecycle. Server signing, grant reservations, node ownership,
-management/UI enablement and live revocation propagation still require explicit
-integration. This transport intentionally supports a single relay, remote-control
+existing channel lifecycle. Management/UI enablement and the complete target
+acceptance matrix still require explicit integration and evidence. The node
+integration described below is source implementation awaiting its own Actions
+checks. This transport intentionally supports a single relay, remote-control
 purpose and fixed epoch one. Transit/path switching, authorized old-epoch drain,
 multi-hop, TLS/WSS packet framing, full PMTU-blackhole experiments, raw IP ACL/TUN
 injection, physical NAT, target devices and complete AC10/AC11 remain open. No
@@ -119,3 +120,57 @@ path-migration capability is advertised and no legacy semantic is reinterpreted.
 The only added Cargo edge is the already locked `prost` crate for a test fixture
 using its mature protobuf encoder. Its transport-quic lock dependency entry was
 edited manually under R02; GitHub Actions `--locked` must verify or correct it.
+
+## Current node adapter and compatibility boundary
+
+The production NodeRelay command now negotiates the independent network ALPN
+and the existing native relay ALPN on its registered QUIC endpoint. The network
+ALPN requires TLS 1.3 mutual authentication, strict Ed25519 certificate parsing,
+the real TLS transcript signature, and a current device fingerprint from the
+existing node resource poll. Existing native QUIC clients already supply their
+installation certificate; no network credential becomes a legacy relay ticket.
+A newly issued allocation can require the next 250 ms resource poll before its
+TLS pin is available. Admission fails closed during that interval.
+
+The existing policy-key-signed NodeResourceSnapshotClaims adds field 8,
+network_routes. Each resource has network_schema_version 1, internal allocation
+facts, a network authority key, the exact signed network chain, and the complete
+SignedPermit envelope. The existing signature covers every credential byte and
+authority pin and remains bound to the exact fresh node-signed query. The server
+signs the current stored permit using the actual business signer, verifies the
+outgoing envelope, and includes those exact bytes. No signature is reconstructed
+from an unchecked claim. The server checks the current business generation,
+membership epochs, grant references/revocation, node runtime/generation/key,
+endpoint revision, policy, quota and original reservation in the same database
+transaction. The node independently verifies the full chain and business
+envelope. Credential contents are never included in logs or audit payloads.
+
+Old nodes ignore field 8 and therefore cannot install network routes. New nodes
+default an absent field 8 to an empty set for an older control plane, reject
+unknown per-resource versions, and refuse stale or replayed query sequences.
+The independent ALPN and versioned challenge/hello/ready messages prevent an old
+datagram endpoint from being mistaken for a new one. A fresh nonce signature
+binds allocation UUID, complete route digest, device UUID, public key and socket
+challenge under a dedicated domain. Its typed signing API cannot sign arbitrary
+payloads. The one control stream remains open until termination; EOF, reset,
+extra bytes or extra streams terminate forwarding.
+
+Network entries reserve through the mature RelayEndpointCandidate, selector,
+Pair, aggregate and allocation meters, slot guards, and terminal seen set. Both
+directions charge actual admitted outer fragment bytes including route headers;
+bounded congestion drops are charged too. Snapshots do not replenish the
+per-allocation budget or its original monotonic deadline. Completed IDs cannot
+be replaced/reused, and legacy admission explicitly rejects network entries.
+Network reservations retain the original capacity hold until expiry; this slice
+does not issue an incompatible legacy early-close/refund receipt.
+
+NetworkNodeListener retains the original tracked physical UDP socket/poller
+receipt. Main requests shutdown, joins the original service tasks, and closes
+the listener using one absolute deadline. The QUIC service aborts and joins its
+original accepted tasks before returning. Endpoint idle alone is not reported
+as physical socket release, and an expired/canceled close wait retains the
+original listener receipt. The source regressions cover signed snapshot byte
+integrity, authority/version/query substitution, revocation omission, shared
+bidirectional counters, duplicate roles, terminal reuse and unchanged capacity
+promises. These regressions and the real SDK/business proof path still need
+their matching GitHub-hosted run evidence.

@@ -8,12 +8,24 @@ use nestlink_protocol::{
 };
 use rusqlite::OptionalExtension;
 impl Store {
+    pub fn node_resource_snapshot_with_network(
+        &mut self, lifecycle: &RelayLifecycle, signed: &SignedNodeResourceQuery,
+        signer: &nestlink_identity::PermitSigner, now_ms: u64,
+    ) -> Result<NodeResourceSnapshotClaims, StorageError> {
+        self.node_resource_snapshot_inner(lifecycle, signed, &signer.public_key(), Some(signer), now_ms)
+    }
     pub fn node_resource_snapshot(
         &mut self,
         lifecycle: &RelayLifecycle,
         signed: &SignedNodeResourceQuery,
         allocation_issuer: &[u8; 32],
         now_ms: u64,
+    ) -> Result<NodeResourceSnapshotClaims, StorageError> {
+        self.node_resource_snapshot_inner(lifecycle, signed, allocation_issuer, None, now_ms)
+    }
+    fn node_resource_snapshot_inner(
+        &mut self, lifecycle: &RelayLifecycle, signed: &SignedNodeResourceQuery,
+        allocation_issuer: &[u8; 32], signer: Option<&nestlink_identity::PermitSigner>, now_ms: u64,
     ) -> Result<NodeResourceSnapshotClaims, StorageError> {
         let unverified: NodeResourceQueryClaims =
             decode_bounded(&signed.claims, NODE_MESSAGE_BYTES)?;
@@ -85,7 +97,12 @@ impl Store {
             }
         }
         drop(query);
+        let network_routes = match signer {
+            Some(signer) => self.node_network_resources(&tx, lifecycle, &q, signer, now_ms)?,
+            None => Vec::new(),
+        };
         let snapshot = NodeResourceSnapshotClaims {
+            network_routes,
             query: Some(q.clone()),
             query_sha256: digest(&signed.claims).to_vec(),
             allocation_issuer: allocation_issuer.to_vec(),

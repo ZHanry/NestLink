@@ -52,7 +52,7 @@ impl NodeResourceSnapshotClaims {
                 .expires_at_unix_ms
                 .checked_sub(self.issued_at_unix_ms)
                 .is_none_or(|n| n == 0 || n > NODE_RESOURCE_TTL_MS)
-            || self.allocations.len() as u64 > NODE_RESOURCE_ALLOCATIONS
+            || (self.allocations.len() + self.network_routes.len()) as u64 > NODE_RESOURCE_ALLOCATIONS
             || self
                 .allocations
                 .windows(2)
@@ -60,7 +60,19 @@ impl NodeResourceSnapshotClaims {
         {
             return Err(invalid());
         }
-        for c in &self.allocations {
+        let mut previous: Option<&str> = None;
+        for route in &self.network_routes {
+            let allocation = route.allocation.as_ref().ok_or_else(invalid)?;
+            if route.network_schema_version != 1
+                || route.network_authority_key.len() != 32
+                || route.relay_bundle_json.is_empty() || route.relay_bundle_json.len() > 32_768
+                || route.business_permit.is_empty() || route.business_permit.len() as u64 > crate::PERMIT_BYTES + 128
+                || previous.is_some_and(|id| id >= allocation.allocation_id.as_str())
+                || self.allocations.iter().any(|old| old.allocation_id == allocation.allocation_id)
+            { return Err(invalid()); }
+            previous = Some(&allocation.allocation_id);
+        }
+        for c in self.allocations.iter().chain(self.network_routes.iter().filter_map(|route| route.allocation.as_ref())) {
             c.validate()?;
             if c.deployment_id != q.deployment_id
                 || c.security_epoch != q.security_epoch

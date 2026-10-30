@@ -50,6 +50,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         config.type_attribute(message, "#[serde(deny_unknown_fields)]");
     }
     config.field_attribute(
+        "nestlink.v1.NodeResourceSnapshotClaims.network_routes",
+        "#[serde(default)]",
+    );
+    config.field_attribute(
         "nestlink.v1.RelayAllocationClaims.node_endpoint_revision",
         "#[serde(default)]",
     );

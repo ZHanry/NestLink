@@ -66,7 +66,7 @@ async fn relay_http_issues_exact_business_bound_transit_and_retains_capacity_aft
         assert_eq!(status, StatusCode::OK, "{read}");
         assert_eq!(read, issued);
     }
-    assert_eq!(f.call("POST", &issue, body, Some(&f.admin_token)).await?.0, StatusCode::CONFLICT);
+    assert_eq!(f.call("POST", &issue, body.clone(), Some(&f.admin_token)).await?.0, StatusCode::CONFLICT);
     let db = Connection::open(&f.database)?;
     let (persisted, promised): (Vec<u8>, u64) = db.query_row("SELECT transit_claims,promised_until FROM network_remote_relays WHERE allocation_id=?1", [allocation], |r|Ok((r.get(0)?,r.get(1)?)))?;
     assert_eq!(persisted, signed(&issued["transit"])?.claims);
