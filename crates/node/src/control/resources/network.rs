@@ -59,10 +59,8 @@ impl NodeControl {
             .as_slice()
             .try_into()
             .map_err(|_| Error::Control)?;
-        let original_deadline = entry
-            .deadline
-            .min(snapshot.deadline)
-            .min(state.gate.deadline());
+        let original_deadline = entry.deadline.min(state.gate.deadline());
+        let continuity = entry.continuity.clone();
         let role = if proof.device_id == claims.controller_device_id {
             0
         } else if proof.device_id == claims.host_device_id {
@@ -102,6 +100,7 @@ impl NodeControl {
             deadline: original_deadline,
             node_stop: self.stopped.clone(),
             network: Some(route),
+            continuity,
         })
     }
 }

@@ -28,6 +28,14 @@ reviewed 25.14.0 runtime. The private profile trusts only the exact owned TLS
 leaf SPKI. The runner records the requested product, checks the browser's
 actual product user agent, and refuses mismatches before qualification.
 
+Run 41123322035 at `bd1f298c2babe601087176d1834a1fec2ef52b19` exposed a
+runner setup failure before any Edge acceptance began: Debian archive extraction
+does not install the SUID sandbox helper as root. The following workflow restores
+root:root ownership and mode 4755 on that exact verified package's regular,
+non-symlink `msedge-sandbox` and checks the resulting numeric ownership/mode.
+Browser sandboxing remains enabled. The failed run remains failed; the repair
+requires a new exact-source run and does not replace media or cleanup checks.
+
 These new sources require Actions results. Firefox stable, managed TURN on
 independent networks, ICE restart under an actual network change and the
 remaining AC27/AC28 target cases are still required. The existing Firefox

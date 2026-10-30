@@ -105,6 +105,64 @@ fn active(c: &RelayAllocationClaims) -> Result<Resources, ContractError> {
     Ok(resources)
 }
 #[test]
+fn delayed_snapshot_preserves_signed_expiry_without_deducting_response_latency_twice()
+-> Result<(), ContractError> {
+    for delay in [300, 600] {
+        let mut c = grant();
+        c.expires_at_unix_ms = 10800;
+        let mut resources = Resources::default();
+        resources.accept(
+            snapshot(1, clock(0, 10000), vec![c.clone()]),
+            &lease(),
+            0,
+            clock(delay, 10000 + delay),
+        )?;
+        let current = resources
+            .snapshot
+            .as_ref()
+            .ok_or_else(|| error(ErrorCode::InternalError))?;
+        assert_eq!(current.deadline, 1000);
+        assert_eq!(current.entries[&c.allocation_id].deadline, 800);
+        resources.inspect(&c, 0, clock(799, 10799))?;
+        assert!(resources.inspect(&c, 0, clock(800, 10800)).is_err());
+    }
+    Ok(())
+}
+#[test]
+fn snapshot_and_allocation_keep_request_caps_when_wall_and_monotonic_elapsed_time_differ()
+-> Result<(), ContractError> {
+    for (unix, snapshot_deadline, grant_deadline) in [(10000, 1000, 800), (10700, 900, 700)] {
+        let mut c = grant();
+        c.expires_at_unix_ms = 10800;
+        let mut resources = Resources::default();
+        resources.accept(
+            snapshot(1, clock(0, 10000), vec![c.clone()]),
+            &lease(),
+            0,
+            clock(600, unix),
+        )?;
+        let current = resources
+            .snapshot
+            .as_ref()
+            .ok_or_else(|| error(ErrorCode::InternalError))?;
+        assert_eq!(current.deadline, snapshot_deadline);
+        assert_eq!(current.entries[&c.allocation_id].deadline, grant_deadline);
+        resources.expire(clock(snapshot_deadline, unix));
+        assert!(resources.snapshot.is_none());
+    }
+    assert!(deadline(0, 10000, 1000, clock(600, 10000)).is_err());
+    assert!(
+        deadline(
+            u64::MAX - 500,
+            11000,
+            1000,
+            clock(u64::MAX - 499, 10000)
+        )
+        .is_err()
+    );
+    Ok(())
+}
+#[test]
 fn close_receipt_waits_for_both_actual_io_ends_and_uses_latest_grant_counters()
 -> Result<(), ContractError> {
     let mut c = grant();
@@ -439,8 +497,21 @@ fn live_guard(
     ),
     Error,
 > {
+    live_guard_with_node_ttl(ttl, 10000)
+}
+fn live_guard_with_node_ttl(
+    ttl: u64,
+    node_ttl: u64,
+) -> Result<
+    (
+        RelayResourceReservation,
+        watch::Sender<bool>,
+        watch::Sender<bool>,
+    ),
+    Error,
+> {
     let key = NodeIdentity::generate();
-    let master = nestlink_identity::PermitSigner::generate();
+    let master = nestlink_identity::PermitSigner::from_seed([91; 32]);
     let signer = master.node_policy_signer()?;
     let mut gate = NodeGate::new(
         id(1),
@@ -454,7 +525,7 @@ fn live_guard(
     let now = sample(started)?;
     let mut l = lease();
     l.issued_at_unix_ms = now.unix_ms;
-    l.expires_at_unix_ms = now.unix_ms + 10000;
+    l.expires_at_unix_ms = now.unix_ms + node_ttl;
     l.node_key_sha256 = digest(&key.public_key()).to_vec();
     let challenge = NodeChallenge {
         schema_version: SCHEMA_VERSION,
@@ -564,7 +635,10 @@ struct CandidateFixture {
 }
 impl CandidateFixture {
     fn new(ticket_ttl: u64) -> Result<Self, Error> {
-        let (guard, _resource_signal, node_signal) = live_guard(1000)?;
+        Self::with_node_ttl(ticket_ttl, 10000)
+    }
+    fn with_node_ttl(ticket_ttl: u64, node_ttl: u64) -> Result<Self, Error> {
+        let (guard, _resource_signal, node_signal) = live_guard_with_node_ttl(1000, node_ttl)?;
         let started = guard.started;
         let state = guard.state.clone();
         let now = sample(started)?;
@@ -623,6 +697,118 @@ impl CandidateFixture {
             &nonce,
         )
     }
+    fn renew_node(&self, now: ClockSample) -> Result<NodeLeaseClaims, Error> {
+        let mut lease = self.lease.clone();
+        lease.lease_sequence += 1;
+        lease.request_id = id(12);
+        lease.nonce = vec![12; 32];
+        lease.issued_at_unix_ms = now.unix_ms;
+        lease.expires_at_unix_ms = now.unix_ms + 10000;
+        let challenge = NodeChallenge {
+            schema_version: SCHEMA_VERSION,
+            deployment_id: lease.deployment_id.clone(),
+            security_epoch: lease.security_epoch,
+            node_id: lease.node_id.clone(),
+            node_key_sha256: lease.node_key_sha256.clone(),
+            request_id: lease.request_id.clone(),
+            nonce: lease.nonce.clone(),
+            expires_at_unix_ms: now.unix_ms + 5000,
+        };
+        let signer = nestlink_identity::PermitSigner::from_seed([91; 32]).node_policy_signer()?;
+        let mut runtime = self.control.state.lock().map_err(|_| Error::Control)?;
+        runtime.gate.accept(
+            &signer.sign(&lease)?.encode_to_vec(),
+            &challenge,
+            now.monotonic_ms,
+            now,
+        )?;
+        Ok(lease)
+    }
+}
+#[tokio::test]
+async fn pending_legacy_candidates_cannot_revive_after_omission_expiry_or_resource_stop()
+-> Result<(), Error> {
+    for interruption in 0..3 {
+        let f = CandidateFixture::new(5000)?;
+        let candidate = f.prepare()?;
+        let prepared = sample(f.control.started)?;
+        let offset = if interruption == 1 { 1000 } else { 250 };
+        let now = clock(prepared.monotonic_ms + offset, prepared.unix_ms + offset);
+        {
+            let mut runtime = f.control.state.lock().map_err(|_| Error::Control)?;
+            let issuer = runtime
+                .resources
+                .snapshot
+                .as_ref()
+                .ok_or(Error::Control)?
+                .claims
+                .allocation_issuer
+                .clone();
+            match interruption {
+                0 => {
+                    let mut missing = snapshot(3, now, Vec::new());
+                    missing.allocation_issuer = issuer.clone();
+                    runtime
+                        .resources
+                        .accept(missing, &f.lease, now.monotonic_ms, now)?;
+                }
+                1 => runtime.resources.expire(now),
+                _ => runtime.resources.stop(),
+            }
+            let mut restored = snapshot(4, now, vec![f.claims.clone()]);
+            restored.allocation_issuer = issuer;
+            runtime
+                .resources
+                .accept(restored, &f.lease, now.monotonic_ms, now)?;
+            // New current authority is live, but the old preparation has lost
+            // continuity and must fail even if its waiter never ran in the gap.
+            runtime.resources.inspect(&f.claims, 0, now)?;
+            assert!(
+                candidate.check_at(&mut runtime, now).is_err(),
+                "interruption {interruption}"
+            );
+        }
+        assert!(candidate.reserve_at(Some(now)).is_err());
+        assert_eq!(f.control.counters()?, Counters::default());
+    }
+    Ok(())
+}
+#[tokio::test]
+async fn a_prepared_legacy_ticket_keeps_the_original_node_authorization_cutoff()
+-> Result<(), Error> {
+    let f = CandidateFixture::with_node_ttl(5000, 3000)?;
+    let candidate = f.prepare()?;
+    let prepared = sample(f.control.started)?;
+    let lease = f.renew_node(clock(prepared.monotonic_ms + 500, prepared.unix_ms + 500))?;
+    for sequence in 3..=9 {
+        let offset = (sequence - 2) * 500;
+        let now = clock(prepared.monotonic_ms + offset, prepared.unix_ms + offset);
+        let mut runtime = f.control.state.lock().map_err(|_| Error::Control)?;
+        let issuer = runtime
+            .resources
+            .snapshot
+            .as_ref()
+            .ok_or(Error::Control)?
+            .claims
+            .allocation_issuer
+            .clone();
+        let mut next = snapshot(sequence, now, vec![f.claims.clone()]);
+        next.allocation_issuer = issuer;
+        runtime
+            .resources
+            .accept(next, &lease, now.monotonic_ms, now)?;
+    }
+    let now = clock(prepared.monotonic_ms + 3500, prepared.unix_ms + 3500);
+    {
+        let mut runtime = f.control.state.lock().map_err(|_| Error::Control)?;
+        runtime
+            .gate
+            .authorize_forwarding(NodeRole::NodeRelay, false, now)?;
+        runtime.resources.inspect(&f.claims, 0, now)?;
+    }
+    assert!(candidate.reserve_at(Some(now)).is_err());
+    assert_eq!(f.control.counters()?, Counters::default());
+    Ok(())
 }
 #[tokio::test]
 async fn preparation_grants_no_capacity_and_commit_rechecks_revocation_issuer_and_global_stop()

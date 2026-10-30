@@ -1,0 +1,36 @@
+NestLink redistributor notice for crab_nat 0.8.1
+
+This notice was prepared by the NestLink redistributor. It is not an upstream
+crab_nat LICENSE, copyright notice, or additional license grant.
+
+Exact upstream package:
+  https://static.crates.io/crates/crab_nat/crab_nat-0.8.1.crate
+  SHA-256: b6571f33e3d6520c5b08e54b1202836c6ebe68b950f450951804d037a875c25c
+  Repository: https://github.com/ryco117/crab_nat
+  Embedded Git revision: 296cc168bb0805fe64b9378d0cc76a833e903ce0
+
+The checksum-verified published and original Cargo manifests declare:
+  License: MIT
+  Authors: Ryan Andersen <ryco117@gmail.com>
+
+The author field is reproduced as an upstream author declaration. It is not
+represented as an independently established copyright ownership statement.
+No complete upstream LICENSE file or copyright notice was found in this
+archive or in the official repository history reachable on 2026-10-31.
+
+The accompanying complete MIT standard text is reproduced without modification
+from the official SPDX License List data, independently of the package:
+  https://raw.githubusercontent.com/spdx/license-list-data/279b7e997a87c09be00dd6bdda189519ade502cf/text/MIT.txt
+  SHA-256: b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5
+  Git blob SHA-1: d817195dad53ec992418c28ffca5fbd1cd86502a
+  Distributed path: cargo-upstream/spdx/license-list-data/279b7e997a87c09be00dd6bdda189519ade502cf/text/MIT.txt
+
+The literal <year> and <copyright holders> placeholders belong to the SPDX
+standard template and remain unchanged. They make no package-specific
+copyright assertion; no holder, year, or missing upstream grant was invented.
+The original package declarations and attribution are retained separately.
+
+This individually reviewed standard-text supplement records the exact package
+declaration and the source of the standard terms transparently. It does not
+claim that the standard template was supplied by crab_nat, and it does not
+constitute a license compatibility, security, or product acceptance decision.

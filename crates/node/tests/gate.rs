@@ -75,7 +75,7 @@ fn policy_key_and_domains_are_distinct_and_challenges_require_the_enrolled_key()
     Ok(())
 }
 #[test]
-fn delayed_responses_do_not_extend_the_monotonic_budget_and_expiry_is_terminal() -> Result {
+fn delayed_responses_keep_the_original_monotonic_budget_and_expiry_is_terminal() -> Result {
     let issuer = PermitSigner::generate().node_policy_signer()?;
     let node = NodeIdentity::generate();
     let mut gate = NodeGate::new(
@@ -97,22 +97,61 @@ fn delayed_responses_do_not_extend_the_monotonic_budget_and_expiry_is_terminal()
         0,
         clock(2000, 3000),
     )?;
-    assert_eq!(gate.deadline_ms(), 8000);
+    assert_eq!(gate.deadline_ms(), 10000);
     assert!(
-        gate.authorize_forwarding(NodeRole::NodeRelay, false, clock(7000, 8000))
+        gate.authorize_forwarding(NodeRole::NodeRelay, false, clock(9999, 10999))
             .is_ok()
     );
     assert!(
-        gate.authorize_forwarding(NodeRole::NodeRelay, false, clock(8000, 9000))
+        gate.authorize_forwarding(NodeRole::NodeRelay, false, clock(10000, 11000))
             .is_err()
     );
     let next = challenge(&node.public_key(), 4, 14000);
     assert!(
         gate.accept(
-            &issuer.sign(&claims(&next, 2, 9000))?.encode_to_vec(),
+            &issuer.sign(&claims(&next, 2, 11000))?.encode_to_vec(),
             &next,
-            8001,
-            clock(8001, 9001)
+            10001,
+            clock(10001, 11001)
+        )
+        .is_err()
+    );
+    Ok(())
+}
+#[test]
+fn signed_wall_expiry_and_request_lifetime_independently_bound_a_delayed_lease() -> Result {
+    let issuer = PermitSigner::generate().node_policy_signer()?;
+    let node = NodeIdentity::generate();
+    let fresh = || {
+        NodeGate::new(
+            id(1),
+            id(2),
+            id(9),
+            node.public_key(),
+            issuer.public_key(),
+            vec![NodeRole::NodeRelay],
+        )
+    };
+    let c = challenge(&node.public_key(), 3, 6000);
+    let signed = issuer.sign(&claims(&c, 1, 1000))?.encode_to_vec();
+    for (now, expected) in [
+        (clock(600, 1000), 10000), // A lagging wall clock cannot extend request lifetime.
+        (clock(600, 1600), 10000),
+        (clock(600, 1700), 9900), // An earlier signed wall expiry still wins.
+    ] {
+        let mut gate = fresh()?;
+        gate.accept(&signed, &c, 0, now)?;
+        assert_eq!(gate.deadline_ms(), expected);
+    }
+    let mut gate = fresh()?;
+    assert!(gate.accept(&signed, &c, 601, clock(600, 1600)).is_err());
+    let mut gate = fresh()?;
+    assert!(
+        gate.accept(
+            &signed,
+            &c,
+            u64::MAX - 500,
+            clock(u64::MAX - 499, 1000)
         )
         .is_err()
     );

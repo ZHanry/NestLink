@@ -1053,7 +1053,7 @@
                                           ],
                       "status":  "in_progress",
                       "implementation_status":  "in_progress",
-                      "verification_status":  "not_run",
+                      "verification_status":  "running",
                       "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
                       "owned_paths_to_review":  [
                                                     "tests/network",
@@ -1087,7 +1087,8 @@
                                                       "本任务指定实验及失败用例通过"
                                                   ],
                       "evidence_refs":  [
-                                            "docs/network-rewrite/evidence/development-run-1249075.json"
+                                            "docs/network-rewrite/evidence/development-run-1249075.json",
+                                            "docs/network-rewrite/evidence/development-run-bd1f298.json"
                                         ],
                       "blockers":  [
 
@@ -1422,7 +1423,7 @@
                                           ],
                       "status":  "in_progress",
                       "implementation_status":  "in_progress",
-                      "verification_status":  "not_run",
+                      "verification_status":  "running",
                       "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
                       "owned_paths_to_review":  [
                                                     "crates/traversal",
@@ -1464,7 +1465,8 @@
                       "evidence_refs":  [
                                             "docs/adr/network/0004-mature-ice-quinn-same-socket-prototype.md",
                                             "docs/network-rewrite/evidence/development-run-1249075.json",
-                                            "docs/network-rewrite/evidence/development-run-4492f59.json"
+                                            "docs/network-rewrite/evidence/development-run-4492f59.json",
+                                            "docs/network-rewrite/evidence/development-run-bd1f298.json"
                                         ],
                       "blockers":  [
 
@@ -1484,7 +1486,7 @@
                                           ],
                       "status":  "in_progress",
                       "implementation_status":  "in_progress",
-                      "verification_status":  "not_run",
+                      "verification_status":  "running",
                       "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
                       "owned_paths_to_review":  [
                                                     "crates/traversal",
@@ -1526,7 +1528,8 @@
                                                       "无未标明的外部验证缺口"
                                                   ],
                       "evidence_refs":  [
-                                            "docs/network-rewrite/evidence/pcp-lock-derivation-f09ac21.json"
+                                            "docs/network-rewrite/evidence/pcp-lock-derivation-f09ac21.json",
+                                            "docs/network-rewrite/evidence/development-run-bd1f298.json"
                                         ],
                       "blockers":  [
 
@@ -1550,7 +1553,7 @@
                                           ],
                       "status":  "in_progress",
                       "implementation_status":  "in_progress",
-                      "verification_status":  "not_run",
+                      "verification_status":  "failed",
                       "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
                       "owned_paths_to_review":  [
                                                     "crates/node",
@@ -1589,7 +1592,7 @@
                                                       "无未标明的外部验证缺口"
                                                   ],
                       "evidence_refs":  [
-
+                                            "docs/network-rewrite/evidence/development-run-bd1f298.json"
                                         ],
                       "blockers":  [
 
@@ -3924,29 +3927,35 @@
                                                                   "L4"
                                                               ],
                                  "expected_result":  "双方协同检查后业务使用同socket/端口；记录真实NAT与失败样本。",
-                                 "status":  "not_run",
-                                 "source_revision":  null,
+                                 "status":  "running",
+                                 "source_revision":  "bd1f298c2babe601087176d1834a1fec2ef52b19",
                                  "artifact_sha256":  null,
                                  "evidence_refs":  [
-
+                                                       "docs/network-rewrite/evidence/development-run-bd1f298.json"
                                                    ],
                                  "environment":  {
-
+                                                     "kind":  "GitHub-hosted controlled Linux lab",
+                                                     "independent_target_execution":  "not_run"
                                                  },
                                  "limitations":  [
-
+                                                     "The native same-socket fixed-port NAT, blackhole, cancellation and forced-port-change job passed; full case coverage is not established by this job alone.",
+                                                     "Original native ICE artifact metadata and job log agree; ZIP download returned HTTP 503 at this checkpoint.",
+                                                     "Physical independent NAT/L4 target evidence and any remaining role/forgery subcases are not counted as passed."
                                                  ],
                                  "global_policy_ids":  [
                                                            "R01",
                                                            "R02"
                                                        ],
                                  "build_provenance":  {
-
+                                                          "source_revision":  "bd1f298c2babe601087176d1834a1fec2ef52b19",
+                                                          "run_id":  "41123322032",
+                                                          "runner":  "github-hosted",
+                                                          "artifact_digest_verification":  "API metadata and upload log only at this checkpoint"
                                                       },
                                  "execution_provenance":  {
-                                                              "kind":  null,
+                                                              "kind":  "github_actions",
                                                               "evidence_refs":  [
-
+                                                                                    "docs/network-rewrite/evidence/development-run-bd1f298.json"
                                                                                 ]
                                                           }
                              },
@@ -3961,29 +3970,35 @@
                                                                   "L2"
                                                               ],
                                  "expected_result":  "角色冲突、伪事务、迟到候选、黑洞和取消不会误成功。",
-                                 "status":  "not_run",
-                                 "source_revision":  null,
+                                 "status":  "running",
+                                 "source_revision":  "bd1f298c2babe601087176d1834a1fec2ef52b19",
                                  "artifact_sha256":  null,
                                  "evidence_refs":  [
-
+                                                       "docs/network-rewrite/evidence/development-run-bd1f298.json"
                                                    ],
                                  "environment":  {
-
+                                                     "kind":  "GitHub-hosted controlled Linux lab",
+                                                     "independent_target_execution":  "not_run"
                                                  },
                                  "limitations":  [
-
+                                                     "The native same-socket fixed-port NAT, blackhole, cancellation and forced-port-change job passed; full case coverage is not established by this job alone.",
+                                                     "Original native ICE artifact metadata and job log agree; ZIP download returned HTTP 503 at this checkpoint.",
+                                                     "Physical independent NAT/L4 target evidence and any remaining role/forgery subcases are not counted as passed."
                                                  ],
                                  "global_policy_ids":  [
                                                            "R01",
                                                            "R02"
                                                        ],
                                  "build_provenance":  {
-
+                                                          "source_revision":  "bd1f298c2babe601087176d1834a1fec2ef52b19",
+                                                          "run_id":  "41123322032",
+                                                          "runner":  "github-hosted",
+                                                          "artifact_digest_verification":  "API metadata and upload log only at this checkpoint"
                                                       },
                                  "execution_provenance":  {
-                                                              "kind":  null,
+                                                              "kind":  "github_actions",
                                                               "evidence_refs":  [
-
+                                                                                    "docs/network-rewrite/evidence/development-run-bd1f298.json"
                                                                                 ]
                                                           }
                              },
@@ -4073,29 +4088,35 @@
                                                                   "L3"
                                                               ],
                                  "expected_result":  "独立节点真实承载；伪节点、跨空间和超额度拒绝。",
-                                 "status":  "not_run",
-                                 "source_revision":  null,
+                                 "status":  "failed",
+                                 "source_revision":  "bd1f298c2babe601087176d1834a1fec2ef52b19",
                                  "artifact_sha256":  null,
                                  "evidence_refs":  [
-
+                                                       "docs/network-rewrite/evidence/development-run-bd1f298.json"
                                                    ],
                                  "environment":  {
-
+                                                     "kind":  "GitHub-hosted controlled Linux lab",
+                                                     "independent_target_execution":  "not_run"
                                                  },
                                  "limitations":  [
-
+                                                     "Two-node integration failed outer QUIC TLS client certificate verification; four single-node lifecycle cases passed.",
+                                                     "New receipt deadline and pending continuity repairs require a new source run.",
+                                                     "Independent Linux node target evidence remains absent."
                                                  ],
                                  "global_policy_ids":  [
                                                            "R01",
                                                            "R02"
                                                        ],
                                  "build_provenance":  {
-
+                                                          "source_revision":  "bd1f298c2babe601087176d1834a1fec2ef52b19",
+                                                          "run_id":  "41123321886",
+                                                          "runner":  "github-hosted",
+                                                          "artifact_digest_verification":  "Original scoped ZIP SHA-256 verified"
                                                       },
                                  "execution_provenance":  {
-                                                              "kind":  null,
+                                                              "kind":  "github_actions",
                                                               "evidence_refs":  [
-
+                                                                                    "docs/network-rewrite/evidence/development-run-bd1f298.json"
                                                                                 ]
                                                           }
                              },

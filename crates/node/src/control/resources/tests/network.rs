@@ -17,7 +17,11 @@ type TestResult<T = ()> = Result<T, Box<dyn std::error::Error>>;
 fn identical_live_network_chain_reuse_requires_fresh_snapshots_and_keeps_original_deadlines()
 -> TestResult {
     let (resource, _) = resource()?;
-    let claims = resource.allocation.as_ref().ok_or("allocation missing")?.clone();
+    let claims = resource
+        .allocation
+        .as_ref()
+        .ok_or("allocation missing")?
+        .clone();
     let root = PermitSigner::from_seed([1; 32]);
     let mut resources = Resources::default();
     let make_snapshot = |sequence, offset| {
@@ -27,24 +31,52 @@ fn identical_live_network_chain_reuse_requires_fresh_snapshots_and_keeps_origina
         value
     };
     resources.accept(make_snapshot(1, 0), &lease(), 0, clock(0, 10000))?;
-    let original_deadline = resources.snapshot.as_ref().ok_or("snapshot missing")?
-        .entries.get(&claims.allocation_id).ok_or("entry missing")?.deadline;
+    let original_deadline = resources
+        .snapshot
+        .as_ref()
+        .ok_or("snapshot missing")?
+        .entries
+        .get(&claims.allocation_id)
+        .ok_or("entry missing")?
+        .deadline;
     let (_, stopped) = resources.reserve(&claims, 0, clock(0, 10000))?;
     for sequence in 2..=18 {
         let offset = (sequence - 1) * 250;
-        resources.accept(make_snapshot(sequence, offset), &lease(), offset, clock(offset, 10000 + offset))?;
+        resources.accept(
+            make_snapshot(sequence, offset),
+            &lease(),
+            offset,
+            clock(offset, 10000 + offset),
+        )?;
         assert!(!*stopped.borrow());
         assert_eq!(resources.network_chain_verifications, 1);
-        assert_eq!(resources.snapshot.as_ref().ok_or("snapshot missing")?
-            .entries.get(&claims.allocation_id).ok_or("entry missing")?.deadline, original_deadline);
+        assert_eq!(
+            resources
+                .snapshot
+                .as_ref()
+                .ok_or("snapshot missing")?
+                .entries
+                .get(&claims.allocation_id)
+                .ok_or("entry missing")?
+                .deadline,
+            original_deadline
+        );
     }
     let mut changed = make_snapshot(19, 4500);
     changed.network_routes[0].business_permit[0] ^= 1;
-    assert!(resources.accept(changed, &lease(), 4500, clock(4500, 14500)).is_err());
+    assert!(
+        resources
+            .accept(changed, &lease(), 4500, clock(4500, 14500))
+            .is_err()
+    );
     assert_eq!(resources.network_chain_verifications, 2);
     let mut changed = make_snapshot(19, 4500);
     changed.allocation_issuer[0] ^= 1;
-    assert!(resources.accept(changed, &lease(), 4500, clock(4500, 14500)).is_err());
+    assert!(
+        resources
+            .accept(changed, &lease(), 4500, clock(4500, 14500))
+            .is_err()
+    );
     assert_eq!(resources.network_chain_verifications, 3);
     let mut omitted = make_snapshot(19, 4500);
     omitted.network_routes.clear();
@@ -62,11 +94,26 @@ fn identical_live_network_chain_reuse_requires_fresh_snapshots_and_keeps_origina
     assert!(expired.snapshot.is_none());
     expired.accept(make_snapshot(3, 1250), &lease(), 1250, clock(1250, 11250))?;
     assert_eq!(expired.network_chain_verifications, 3);
-    assert!(expired.accept(make_snapshot(4, 10000), &lease(), 10000, clock(10000, 20000)).is_err());
+    assert!(
+        expired
+            .accept(
+                make_snapshot(4, 10000),
+                &lease(),
+                10000,
+                clock(10000, 20000)
+            )
+            .is_err()
+    );
     Ok(())
 }
 
 fn resource() -> TestResult<(NodeNetworkRelayResource, InstallationIdentity)> {
+    resource_at(10000, vec![1; 32])
+}
+fn resource_at(
+    issued: u64,
+    node_key_sha256: Vec<u8>,
+) -> TestResult<(NodeNetworkRelayResource, InstallationIdentity)> {
     let root = PermitSigner::from_seed([1; 32]);
     let vector: serde_json::Value = serde_json::from_str(include_str!(
         "../../../../../../tests/vectors/session-permit-v1.json"
@@ -84,6 +131,9 @@ fn resource() -> TestResult<(NodeNetworkRelayResource, InstallationIdentity)> {
     let first = InstallationIdentity::generate();
     let second = InstallationIdentity::generate();
     let mut allocation = grant();
+    allocation.node_key_sha256 = node_key_sha256;
+    allocation.issued_at_unix_ms = issued;
+    allocation.expires_at_unix_ms = issued + 10000;
     allocation.bytes_per_second = 10_000;
     allocation.bytes_per_allocation = 10_000;
     business.deployment_id = allocation.deployment_id.clone();
@@ -113,7 +163,7 @@ fn resource() -> TestResult<(NodeNetworkRelayResource, InstallationIdentity)> {
         deployment_id: &business.deployment_id,
         space_id: &space,
         policy_epoch: 9,
-        now_ms: 10000,
+        now_ms: issued,
         revoked_grant_ids: &revoked,
     };
     let scope = |n| GrantScope {
@@ -230,6 +280,187 @@ fn resource() -> TestResult<(NodeNetworkRelayResource, InstallationIdentity)> {
         },
         first,
     ))
+}
+
+struct NetworkCandidateFixture {
+    base: CandidateFixture,
+    resource: NodeNetworkRelayResource,
+    binding: RemoteRouteBinding,
+}
+impl NetworkCandidateFixture {
+    fn new(node_ttl: u64) -> TestResult<Self> {
+        let mut base = CandidateFixture::with_node_ttl(10000, node_ttl)?;
+        let now = sample(base.control.started)?;
+        let (resource, endpoint) = resource_at(now.unix_ms, base.lease.node_key_sha256.clone())?;
+        let binding = verify_node_network_resource(
+            &resource,
+            &PermitSigner::from_seed([1; 32]).public_key(),
+            now.unix_ms,
+        )?;
+        base.claims = resource
+            .allocation
+            .as_ref()
+            .ok_or("allocation missing")?
+            .clone();
+        base.endpoint = endpoint;
+        let fixture = Self {
+            base,
+            resource,
+            binding,
+        };
+        {
+            let mut runtime = fixture
+                .base
+                .control
+                .state
+                .lock()
+                .map_err(|_| Error::Control)?;
+            runtime.resources.accept(
+                fixture.snapshot(3, now, true),
+                &fixture.base.lease,
+                now.monotonic_ms,
+                now,
+            )?;
+        }
+        Ok(fixture)
+    }
+    fn snapshot(&self, sequence: u64, now: ClockSample, included: bool) -> NodeResourceSnapshotClaims {
+        let mut value = snapshot(sequence, now, Vec::new());
+        value.allocation_issuer = PermitSigner::from_seed([1; 32]).public_key().to_vec();
+        if included {
+            value.network_routes.push(self.resource.clone());
+        }
+        value
+    }
+    fn prepare(&self) -> TestResult<RelayEndpointCandidate> {
+        let nonce = [19; 32];
+        let f = &self.base;
+        Ok(f.control.prepare_network_relay_endpoint(
+            &f.claims.allocation_id,
+            &self.binding.digest,
+            &f.endpoint.fingerprint(),
+            RelayEndpointProof {
+                device_id: &f.claims.controller_device_id,
+                public_key: &f.endpoint.public_key(),
+                transport: RelayTransport::QuicDatagram,
+                signature: &f.endpoint.sign_network_node_admission(
+                    &f.claims.allocation_id,
+                    &self.binding.digest,
+                    &f.claims.controller_device_id,
+                    &nonce,
+                )?,
+            },
+            &nonce,
+        )?)
+    }
+}
+
+#[tokio::test]
+async fn a_pending_network_candidate_survives_continuous_fresh_snapshots_until_commit()
+-> TestResult {
+    let f = NetworkCandidateFixture::new(10000)?;
+    let candidate = f.prepare()?;
+    let prepared = sample(f.base.control.started)?;
+    let original_snapshot_deadline = f
+        .base
+        .control
+        .state
+        .lock()
+        .map_err(|_| Error::Control)?
+        .resources
+        .snapshot
+        .as_ref()
+        .ok_or("snapshot missing")?
+        .deadline;
+    for sequence in 4..=9 {
+        let offset = (sequence - 3) * 250;
+        let now = clock(prepared.monotonic_ms + offset, prepared.unix_ms + offset);
+        let mut runtime = f.base.control.state.lock().map_err(|_| Error::Control)?;
+        runtime.resources.accept(
+            f.snapshot(sequence, now, true),
+            &f.base.lease,
+            now.monotonic_ms,
+            now,
+        )?;
+        assert!(candidate.check_at(&mut runtime, now)? > now.monotonic_ms);
+    }
+    let now = clock(prepared.monotonic_ms + 1500, prepared.unix_ms + 1500);
+    assert!(now.monotonic_ms > original_snapshot_deadline);
+    assert_eq!(f.base.control.counters()?, Counters::default());
+    let reservation = candidate.reserve_at(Some(now))?;
+    assert_eq!(f.base.control.counters()?.opened_connections, 1);
+    drop(reservation);
+    Ok(())
+}
+
+#[tokio::test]
+async fn a_pending_network_candidate_cannot_revive_after_omission_expiry_or_resource_stop()
+-> TestResult {
+    for interruption in 0..3 {
+        let f = NetworkCandidateFixture::new(10000)?;
+        let candidate = f.prepare()?;
+        let prepared = sample(f.base.control.started)?;
+        let offset = if interruption == 1 { 1000 } else { 250 };
+        let now = clock(prepared.monotonic_ms + offset, prepared.unix_ms + offset);
+        {
+            let mut runtime = f.base.control.state.lock().map_err(|_| Error::Control)?;
+            match interruption {
+                0 => runtime.resources.accept(
+                    f.snapshot(4, now, false),
+                    &f.base.lease,
+                    now.monotonic_ms,
+                    now,
+                )?,
+                1 => runtime.resources.expire(now),
+                _ => runtime.resources.stop(),
+            }
+            runtime.resources.accept(
+                f.snapshot(5, now, true),
+                &f.base.lease,
+                now.monotonic_ms,
+                now,
+            )?;
+            runtime.resources.inspect(&f.base.claims, 0, now)?;
+            assert!(
+                candidate.check_at(&mut runtime, now).is_err(),
+                "interruption {interruption}"
+            );
+        }
+        assert!(candidate.reserve_at(Some(now)).is_err());
+        assert_eq!(f.base.control.counters()?, Counters::default());
+    }
+    Ok(())
+}
+
+#[tokio::test]
+async fn a_prepared_network_candidate_keeps_the_original_node_authorization_cutoff()
+-> TestResult {
+    let f = NetworkCandidateFixture::new(3000)?;
+    let candidate = f.prepare()?;
+    let prepared = sample(f.base.control.started)?;
+    let lease = f.base.renew_node(clock(prepared.monotonic_ms + 500, prepared.unix_ms + 500))?;
+    for sequence in 4..=10 {
+        let offset = (sequence - 3) * 500;
+        let now = clock(prepared.monotonic_ms + offset, prepared.unix_ms + offset);
+        let mut runtime = f.base.control.state.lock().map_err(|_| Error::Control)?;
+        runtime.resources.accept(
+            f.snapshot(sequence, now, true),
+            &lease,
+            now.monotonic_ms,
+            now,
+        )?;
+    }
+    let now = clock(prepared.monotonic_ms + 3500, prepared.unix_ms + 3500);
+    {
+        let mut runtime = f.base.control.state.lock().map_err(|_| Error::Control)?;
+        runtime
+            .gate
+            .authorize_forwarding(NodeRole::NodeRelay, false, now)?;
+        runtime.resources.inspect(&f.base.claims, 0, now)?;
+    }
+    assert!(candidate.reserve_at(Some(now)).is_err());
+    assert_eq!(f.base.control.counters()?, Counters::default());
+    Ok(())
 }
 
 #[test]

@@ -221,7 +221,14 @@ jobs:
             "$edge_dir/edge.deb" | sha256sum --check --status
           dpkg-deb --extract "$edge_dir/edge.deb" "$edge_dir/extracted"
           edge_binary="$edge_dir/extracted/opt/microsoft/msedge/msedge"
+          edge_sandbox="$edge_dir/extracted/opt/microsoft/msedge/msedge-sandbox"
           test -x "$edge_binary"
+          test -f "$edge_sandbox" && test ! -L "$edge_sandbox"
+          # Extraction intentionally skips package hooks, so explicitly restore
+          # the reviewed Chromium helper's normal sandbox ownership and mode.
+          sudo -n chown root:root -- "$edge_sandbox"
+          sudo -n chmod 4755 -- "$edge_sandbox"
+          test "$(stat --format='%u:%g:%a' "$edge_sandbox")" = '0:0:4755'
           "$edge_binary" --version
           printf 'path=%s\n' "$edge_binary" >> "$GITHUB_OUTPUT"
       - name: Exercise real video, audio, input, files and cleanup

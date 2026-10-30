@@ -371,3 +371,24 @@ every second. ADR 0010 introduces bounded observation and separate revocation,
 retains issuance/admin budgets, and removes a redundant immediate periodic tick.
 Actual HTTP regressions cover signed readbacks, exhausted issuance, revocation,
 invalid credentials and the hard read budget. All repairs require new Actions.
+
+At bd1f298 the Linux contract clippy/tests and all four native ICE NAT cases
+passed, while formatting, the new reverse-initiator fixture and two-node TLS
+admission remained failed. Exact-chain reuse alone did not fix the node failure.
+Following source corrects request/receipt expiry conversion and pending-resource
+continuity without changing signed lifetimes, snapshot TTL, query or proof
+budgets. Eight added regressions cover delayed responses, request ceilings,
+continuous observation and non-revival after omission/expiry/stop; both original
+node authorization cutoffs remain frozen. ADR 0012 records the boundaries.
+The reverse-initiator fixture now signs membership digests and supplies relay
+neighbors in canonical peer order while retaining controller/host business
+roles. Actions-generated formatting was reviewed and imported.
+
+The new Edge lab failed before browser startup because archive extraction left
+its sandbox helper without root ownership. The workflow restores and verifies
+the verified helper's ordinary SUID permissions while retaining the sandbox.
+The crab_nat package's explicit MIT declaration and original author metadata
+are paired with separately identified official SPDX standard text; its missing
+upstream LICENSE is disclosed rather than invented. Existing NOTICE collector
+and missing-file checks remain unchanged. Node, browser and packaging repairs
+all require new exact-source Actions; no release qualification is implied.

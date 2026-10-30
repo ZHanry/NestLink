@@ -121,8 +121,16 @@ impl NodeGate {
             .filter(|n| *n > 0)
             .ok_or_else(|| error(ErrorCode::LeaseExpired))?;
         let lifetime = c.expires_at_unix_ms - c.issued_at_unix_ms;
-        let deadline = request_started_ms
-            .checked_add(remaining.min(lifetime))
+        // Response latency has already elapsed in the signed remaining time.
+        // Bound its receipt-relative deadline by the original request lifetime.
+        let signed_deadline = now
+            .monotonic_ms
+            .checked_add(remaining)
+            .ok_or_else(|| error(ErrorCode::LeaseExpired))?;
+        let request_deadline = request_started_ms
+            .checked_add(lifetime)
+            .ok_or_else(|| error(ErrorCode::LeaseExpired))?;
+        let deadline = Some(signed_deadline.min(request_deadline))
             .filter(|n| *n > now.monotonic_ms)
             .ok_or_else(|| error(ErrorCode::LeaseExpired))?;
         self.claims = Some(c);

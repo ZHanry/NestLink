@@ -69,7 +69,11 @@ impl Fixture {
     fn with_route_lifetime(allow_relay: bool, route_lifetime_ms: u64) -> Result<Self> {
         Self::with_peer_order(allow_relay, route_lifetime_ms, true)
     }
-    fn with_peer_order(allow_relay: bool, route_lifetime_ms: u64, controller_first: bool) -> Result<Self> {
+    fn with_peer_order(
+        allow_relay: bool,
+        route_lifetime_ms: u64,
+        controller_first: bool,
+    ) -> Result<Self> {
         let mut controller = DeviceIdentity::generate();
         let mut host = DeviceIdentity::generate();
         if (controller.identity.fingerprint() < host.identity.fingerprint()) != controller_first {
@@ -161,7 +165,10 @@ impl Fixture {
                 member.membership_epoch,
             )?);
         }
-        let memberships = [memberships.remove(0), memberships.remove(0)];
+        let mut memberships = [memberships.remove(0), memberships.remove(0)];
+        // Connectivity references follow canonical PeerPair order, independently
+        // of the controller/host roles retained by the management response.
+        memberships.sort_by_key(VerifiedMembership::peer);
         let peers = PeerPair::new(
             PeerId(controller.identity.fingerprint()),
             PeerId(host.identity.fingerprint()),
@@ -420,7 +427,10 @@ async fn sdk_host_initiated_inner_quic_still_proves_controller_business_and_rele
 
 async fn remote_payload_for_order(controller_first: bool) -> Result {
     let f = Fixture::with_peer_order(true, 12_000, controller_first)?;
-    assert_eq!(f.controller.identity.fingerprint() < f.host.identity.fingerprint(), controller_first);
+    assert_eq!(
+        f.controller.identity.fingerprint() < f.host.identity.fingerprint(),
+        controller_first
+    );
     let context = f.context();
     let deadline = Instant::now() + Duration::from_secs(5);
     let (relay_controller, controller, controller_addresses) =
@@ -430,7 +440,12 @@ async fn remote_payload_for_order(controller_first: bool) -> Result {
     let (relay_authority, relay_stop) =
         RouteAuthorization::remote(&context, &f.path, &f.connectivity, &f.transit, &f.permit)?;
     let signed_deadline = relay_authority.deadline().into_std();
-    let mut relay = RelayForwarder::new(relay_authority, relay_controller, relay_host)?;
+    let (relay_first, relay_second) = if controller_first {
+        (relay_controller, relay_host)
+    } else {
+        (relay_host, relay_controller)
+    };
+    let mut relay = RelayForwarder::new(relay_authority, relay_first, relay_second)?;
     let mut forwarding = Abort(tokio::spawn(async move {
         let stopped = relay.run().await.is_err();
         let forwarded = relay.forwarded_fragments();

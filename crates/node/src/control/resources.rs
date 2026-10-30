@@ -34,6 +34,7 @@ pub struct RelayEndpointCandidate {
     deadline: u64,
     node_stop: watch::Receiver<bool>,
     network: Option<RemoteRouteBinding>,
+    continuity: Arc<()>,
 }
 impl RelayEndpointCandidate {
     pub fn network_binding(&self) -> Option<[u8; 32]> {
@@ -91,7 +92,7 @@ impl RelayEndpointCandidate {
             .entries
             .get(self.allocation_id())
             .ok_or(Error::Control)?;
-        if entry.network != self.network {
+        if entry.network != self.network || !Arc::ptr_eq(&entry.continuity, &self.continuity) {
             return Err(error(ErrorCode::IdentityMismatch).into());
         }
         Ok(self
@@ -113,6 +114,7 @@ impl RelayEndpointCandidate {
             deadline: self.deadline,
             node_stop: self.node_stop.clone(),
             network: self.network,
+            continuity: self.continuity.clone(),
         };
         async move {
             loop {
@@ -409,15 +411,16 @@ impl NodeControl {
             c.expires_at_unix_ms - c.issued_at_unix_ms,
             now,
         )?;
-        let original_deadline = ticket_deadline.min(
-            state
-                .resources
-                .snapshot
-                .as_ref()
-                .and_then(|s| s.entries.get(&c.allocation_id))
-                .ok_or(Error::Control)?
-                .deadline,
-        );
+        let entry = state
+            .resources
+            .snapshot
+            .as_ref()
+            .and_then(|s| s.entries.get(&c.allocation_id))
+            .ok_or(Error::Control)?;
+        let original_deadline = ticket_deadline
+            .min(entry.deadline)
+            .min(state.gate.deadline());
+        let continuity = entry.continuity.clone();
         Ok(RelayEndpointCandidate {
             state: self.state.clone(),
             started: self.started,
@@ -428,6 +431,7 @@ impl NodeControl {
             deadline: original_deadline,
             node_stop: self.stopped.clone(),
             network: None,
+            continuity,
         })
     }
 }
@@ -437,6 +441,9 @@ struct Entry {
     binding: [u8; 32],
     network: Option<RemoteRouteBinding>,
     network_credential: Option<[u8; 32]>,
+    // A refreshed live observation retains this identity. Omission, expiry or
+    // stop drops it, so an old uncommitted candidate cannot reappear later.
+    continuity: Arc<()>,
 }
 struct Snapshot {
     claims: NodeResourceSnapshotClaims,
@@ -491,8 +498,17 @@ fn deadline(
         .checked_sub(now.unix_ms)
         .filter(|n| *n > 0)
         .ok_or_else(|| error(ErrorCode::LeaseExpired))?;
-    start
-        .checked_add(remaining.min(lifetime))
+    // Convert the remaining signed wall time from the receipt sample; adding
+    // it to request start would deduct the response latency a second time.
+    // The independent request cap still prevents a lagging wall clock renewal.
+    let signed_deadline = now
+        .monotonic_ms
+        .checked_add(remaining)
+        .ok_or_else(|| error(ErrorCode::LeaseExpired))?;
+    let request_deadline = start
+        .checked_add(lifetime)
+        .ok_or_else(|| error(ErrorCode::LeaseExpired))?;
+    Some(signed_deadline.min(request_deadline))
         .filter(|n| *n > now.monotonic_ms)
         .ok_or_else(|| error(ErrorCode::LeaseExpired))
 }
@@ -575,14 +591,17 @@ impl Resources {
                 {
                     return None;
                 }
-                snapshot.entries.get(&grant.allocation_id).and_then(|entry| {
-                    entry.network.filter(|route| {
-                        entry.network_credential == Some(credential)
-                            && entry.claims == *grant
-                            && now.monotonic_ms < entry.deadline
-                            && now.unix_ms < route.expires_at_ms
+                snapshot
+                    .entries
+                    .get(&grant.allocation_id)
+                    .and_then(|entry| {
+                        entry.network.filter(|route| {
+                            entry.network_credential == Some(credential)
+                                && entry.claims == *grant
+                                && now.monotonic_ms < entry.deadline
+                                && now.unix_ms < route.expires_at_ms
+                        })
                     })
-                })
             });
             let route = match cached {
                 Some(route) => route,
@@ -598,10 +617,7 @@ impl Resources {
                     )?
                 }
             };
-            routes.insert(
-                grant.allocation_id.clone(),
-                (route, credential),
-            );
+            routes.insert(grant.allocation_id.clone(), (route, credential));
         }
         for grant in c.allocations.iter().chain(
             c.network_routes
@@ -621,7 +637,7 @@ impl Resources {
                 grant.expires_at_unix_ms - grant.issued_at_unix_ms,
                 now,
             )?;
-            if let Some(old) = self
+            let continuity = if let Some(old) = self
                 .snapshot
                 .as_ref()
                 .and_then(|s| s.entries.get(&grant.allocation_id))
@@ -637,7 +653,14 @@ impl Resources {
                 if grant.grant_sequence == old.claims.grant_sequence {
                     expires = old.deadline;
                 }
-            }
+                if now.monotonic_ms < old.deadline {
+                    old.continuity.clone()
+                } else {
+                    Arc::new(())
+                }
+            } else {
+                Arc::new(())
+            };
             entries.insert(
                 grant.allocation_id.clone(),
                 Entry {
@@ -646,6 +669,7 @@ impl Resources {
                     binding,
                     network,
                     network_credential,
+                    continuity,
                 },
             );
         }

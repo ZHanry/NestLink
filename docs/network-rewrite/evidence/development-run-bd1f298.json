@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "bd1f298c2babe601087176d1834a1fec2ef52b19",
+  "review_method": "GitHub-hosted Actions job/log readback, downloaded original artifact SHA-256 and contained receipt hash verification; no local project tooling",
+  "network_run_id": "41123322032",
+  "core_run_id": "41123321886",
+  "web_run_id": "41123322035",
+  "linux_contract": {
+    "job_id": "124295839133",
+    "artifact_id": "13008979165",
+    "zip_sha256": "67efc503266d92cf1500944895596fa4475867277d8b5a2c6d1ed5a8156fc0f5",
+    "zip_and_every_receipt_file_digest_verified": true,
+    "status": "failed format check; selected package clippy, all selected contract tests and evidence tests passed",
+    "formatter_patch_sha256": "ea96fbad425401e5ec0078afe7ff43c8bd479940034206de4ec8211a16c86faa",
+    "patch_use": "Reviewed pure formatting from Actions imported into the following source; failing source remains failed"
+  },
+  "linux_scoped": {
+    "artifact_id": "13009179143",
+    "zip_sha256": "b90761c1859576ab26380f4acbe954b09fe1f13c07f61e3acb03760a680fd922",
+    "zip_digest_verified": true,
+    "routed": "15 passed, 1 failed: the new host-initiated fixture encoded membership digests and relay adjacency arguments in controller order rather than canonical PeerPair order. Subsequent source repairs the fixture; no production verifier weakened.",
+    "network_relay": "4 passed, 1 failed: two-node first route rejected at outer QUIC TLS client certificate verification (ApplicationVerificationFailure), elapsed 6201ms",
+    "two_node_observation": "Both endpoint pins were true before and after failure. First snapshot signed remaining 420ms before and 583ms after; second 518ms before and 351ms after. All sampled node leases exceeded six seconds. No scheduler gap >=250ms was reported. These samples do not show the state at the actual failed TLS callback.",
+    "chain_reuse_conclusion": "Bounded exact-chain reuse alone did not resolve the two-node failure",
+    "other_scoped_targets": "Existing signed native session, host inbox, discovery, explicit relay selection, PCP and space targets passed in the retained artifact"
+  },
+  "native_ice_nat": {
+    "job_id": "124295839008",
+    "job_conclusion": "success",
+    "job_log_final_receipt": {"passed": true, "failure": null},
+    "artifact_id": "13009796750",
+    "zip_sha256": "e51c25c906f3862deccea0b90cf1a0c713b98c1f270a6d6f9a7aac4cd790098f",
+    "digest_provenance": "GitHub artifact metadata and upload log agree; original ZIP download returned HTTP 503 and was not locally verified at this checkpoint",
+    "scope": "GitHub-hosted fixed-port 1:1 UDP NAT success, blackhole, cancellation and forced destination-dependent port-change refusal. Original socket, real Quinn and bidirectional FileRead requirements retained; independent physical NAT target acceptance remains unverified."
+  },
+  "other_network_jobs": {
+    "routed_kernel_nat": "success",
+    "production_socket": "success",
+    "independent_vectors": "success",
+    "observation_basis": "GitHub completed job conclusions; not a claim of downloaded artifact verification"
+  },
+  "packaging_follow_up": {
+    "prior_source_revision": "0a6e72753f527cf26c7ebf1a423d9ca0f57064b2",
+    "prior_run_id": "41122085261",
+    "prior_failure": "Missing full Cargo license files: crab_nat-0.8.1",
+    "repair": "Reviewed exact-archive MIT declaration and author metadata, with separately identified pinned official SPDX standard text and redistributor notice; collector and missing-license checks unchanged",
+    "review_path": "docs/refactor/crab-nat-license-review-2026-10-31.md",
+    "verification": "New exact-source Actions packaging is required"
+  },
+  "following_repairs": [
+    "Receipt-relative signed expiry conversion capped by original request lifetime/TTL",
+    "Pending candidate follows fresh snapshot only while its resource continuity token remains identical",
+    "Original allocation, ticket and node authorization ceilings retained",
+    "Canonical membership and relay-neighbor ordering in both inner-QUIC initiator fixtures"
+  ],
+  "following_repairs_verified": false,
+  "release_qualified": false,
+  "remaining_gates": "Complete same-source Windows/Linux workspace and real-node checks, Chrome/Edge integration, all remaining mandatory functionality and applicable external target evidence"
+}

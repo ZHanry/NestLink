@@ -437,6 +437,30 @@
       ]
     },
     {
+      "name": "crab_nat",
+      "version": "0.8.1",
+      "archive_sha256": "b6571f33e3d6520c5b08e54b1202836c6ebe68b950f450951804d037a875c25c",
+      "license_declared": "MIT",
+      "crate_vcs_revision": "296cc168bb0805fe64b9378d0cc76a833e903ce0",
+      "authors_declared": [
+        "Ryan Andersen <ryco117@gmail.com>"
+      ],
+      "selected_license_option": "MIT",
+      "review_path": "docs/refactor/crab-nat-license-review-2026-10-31.md",
+      "redistributor_notice_path": "packaging/notices/crab_nat-0.8.1-NOTICE.txt",
+      "review_basis": "The exact checksum-verified crate archive, its original manifest and its embedded upstream revision expressly declare MIT and the author Ryan Andersen <ryco117@gmail.com>. No complete upstream LICENSE or copyright notice was found in the archive or reachable official history. Retain those original declarations and attribution, and collect the complete unmodified official SPDX MIT standard template at pinned license-list-data revision 279b7e997a87c09be00dd6bdda189519ade502cf, verified against its Git blob. The template's literal <year> and <copyright holders> placeholders remain unchanged and make no package-specific copyright assertion. This is an individually reviewed redistributor standard-text binding, not a claim that the template existed in crab_nat or that its author metadata establishes copyright ownership. No year, holder or upstream grant is synthesized; license compatibility is a separate review.",
+      "files": [
+        {
+          "path": "packaging/notices/cargo-upstream/spdx/license-list-data/279b7e997a87c09be00dd6bdda189519ade502cf/text/MIT.txt",
+          "sha256": "b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5",
+          "upstream_url": "https://raw.githubusercontent.com/spdx/license-list-data/279b7e997a87c09be00dd6bdda189519ade502cf/text/MIT.txt",
+          "git_blob_sha1": "d817195dad53ec992418c28ffca5fbd1cd86502a",
+          "source_kind": "official_standard_license_template",
+          "full_license_text": true
+        }
+      ]
+    },
+    {
       "name": "crc-catalog",
       "version": "2.5.0",
       "archive_sha256": "217698eaf96b4a3f0bc4f3662aaa55bdf913cd54d7204591faa790070c6d0853",
