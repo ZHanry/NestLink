@@ -6,7 +6,7 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "41e70c84a4b79ff8d5666cbcb6e008e86228135d",
+    "source_revision":  "0c0a2d2d90a13cc50ed079dd9149476636405b64",
     "checkpoint_kind":  "work_in_progress_against_source_revision",
     "active_tasks":  [
                          "W00",
@@ -62,8 +62,8 @@
                                    }
                                ],
     "next_steps":  [
-                       "Read exact-source Actions for the full NRD2 carrier and new atomic reservation/HTTP/migration/concurrency tests; review generated formatting and OpenAPI artifacts.",
-                       "Delegate complete NRD2 chains through node snapshots and production admission, integrate real adjacency reporting, and exercise four-node SessionPermit/FileRead.",
+                       "Read new exact-source Actions for atomic storage/HTTP, full chain snapshot and neighbor admission; import reviewed formatting/OpenAPI artifacts and repair real failures.",
+                       "Connect the production NRD2 listener/dialer and real continuous adjacency reporting, then exercise four-node SessionPermit/FileRead and implement stored RouteExport authority.",
                        "Read exact-source Windows/Linux full workspace and Chrome/Edge matrix; retain scoped results separately from complete release qualification.",
                        "Continue all mandatory W13-W40 implementation, product surfaces, target acceptance and same-source packaging.",
                        "Publish 0.8.0RC only after all mandatory implementation and evidence gates; retain local and remote main as the only branch."
@@ -105,6 +105,7 @@
                            "docs/network-rewrite/evidence/graph-lock-derivation-a19a112.json",
                            "docs/adr/network/0016-two-relay-carrier-binding.md",
                            "docs/adr/network/0017-atomic-two-relay-reservation.md",
+                           "docs/adr/network/0018-chain-node-resource-admission.md",
                            "docs/network-rewrite/evidence/development-run-0618e08.json"
                        ],
     "observed_actions":  [

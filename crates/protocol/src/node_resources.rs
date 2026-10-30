@@ -64,10 +64,17 @@ impl NodeResourceSnapshotClaims {
         let mut previous: Option<&str> = None;
         for route in &self.network_routes {
             let allocation = route.allocation.as_ref().ok_or_else(invalid)?;
-            if route.network_schema_version != 1
+            let bundle_valid = match route.network_schema_version {
+                1 => !route.relay_bundle_json.is_empty()
+                    && route.relay_bundle_json.len() <= 32_768
+                    && route.chain_bundle_json.is_empty(),
+                2 => !route.chain_bundle_json.is_empty()
+                    && route.chain_bundle_json.len() <= 49_152
+                    && route.relay_bundle_json.is_empty(),
+                _ => false,
+            };
+            if !bundle_valid
                 || route.network_authority_key.len() != 32
-                || route.relay_bundle_json.is_empty()
-                || route.relay_bundle_json.len() > 32_768
                 || route.business_permit.is_empty()
                 || route.business_permit.len() as u64 > crate::PERMIT_BYTES + 128
                 || previous.is_some_and(|id| id >= allocation.allocation_id.as_str())

@@ -3,6 +3,47 @@ use super::*;
 use crate::VerifiedPermit;
 use nestlink_protocol::network_datagram_v2::{Direction, PATH_EPOCH};
 
+fn chain_admission_transcript(
+    allocation: &str, binding: &[u8;32], relay: PeerId,
+    public_key: &[u8;32], nonce: &[u8;32],
+) -> Result<Vec<u8>,ContractError> {
+    relay.validate()?;
+    if !nestlink_protocol::valid_id(allocation) || *binding == [0;32]
+        || *nonce == [0;32] || relay == PeerId::from_public_key(public_key)
+    { return Err(denied()); }
+    let mut bytes = b"NestLink/network-datagram/v2/neighbor-admission\0".to_vec();
+    bytes.extend_from_slice(&(allocation.len() as u32).to_be_bytes());
+    bytes.extend_from_slice(allocation.as_bytes());
+    bytes.extend_from_slice(binding);
+    bytes.extend_from_slice(&relay.0);
+    bytes.extend_from_slice(public_key);
+    bytes.extend_from_slice(nonce);
+    Ok(bytes)
+}
+impl crate::InstallationIdentity {
+    pub fn sign_network_chain_admission(
+        &self, allocation: &str, binding: &[u8;32], relay: PeerId, nonce: &[u8;32],
+    ) -> Result<[u8;64],ContractError> {
+        Ok(self.key.sign(&chain_admission_transcript(allocation,binding,relay,&self.public_key(),nonce)?).to_bytes())
+    }
+}
+impl crate::nodes::NodeIdentity {
+    pub fn sign_network_chain_admission(
+        &self, allocation: &str, binding: &[u8;32], relay: PeerId, nonce: &[u8;32],
+    ) -> Result<[u8;64],ContractError> {
+        Ok(self.key.sign(&chain_admission_transcript(allocation,binding,relay,&self.public_key(),nonce)?).to_bytes())
+    }
+}
+pub fn verify_network_chain_admission(
+    allocation: &str, binding: &[u8;32], relay: PeerId,
+    public_key: &[u8;32], nonce: &[u8;32], signature: &[u8],
+) -> Result<(),ContractError> {
+    VerifyingKey::from_bytes(public_key).map_err(|_| denied())?
+        .verify_strict(&chain_admission_transcript(allocation,binding,relay,public_key,nonce)?,
+            &Signature::from_slice(signature).map_err(|_| denied())?)
+        .map_err(|_|denied())
+}
+
 /// Domain-separated endpoint consent for a complete ordered reservation. The
 /// signature field is excluded; every other request field is bound, including
 /// both topology references and the exact member/path identifiers and expiry.
@@ -139,4 +180,90 @@ pub fn remote_chain_binding(
 }
 fn denied() -> ContractError {
     ContractError::new(ErrorCode::PermissionRequired, "network remote chain refused")
+}
+
+/// Verified only after the enclosing exact-query node-policy snapshot. Its
+/// original allocation stays bound to the business endpoints; adjacency slots
+/// belong to the two fixed neighboring peers, including the other relay.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct NodeRemoteChainBinding {
+    pub chain: RemoteChainBinding,
+    pub relay: PeerId,
+}
+impl NodeRemoteChainBinding {
+    pub fn neighbors(&self) -> [PeerId; 2] {
+        // Construction below admits only one of the two ordered relays.
+        if self.relay == self.chain.relays[0] {
+            [self.chain.peers.first, self.chain.relays[1]]
+        } else {
+            [self.chain.relays[0], self.chain.peers.second]
+        }
+    }
+}
+
+pub fn verify_node_network_chain_resource(
+    resource: &nestlink_protocol::NodeNetworkRelayResource,
+    allocation_issuer: &[u8; 32],
+    now_ms: u64,
+) -> Result<NodeRemoteChainBinding, ContractError> {
+    use nestlink_protocol::api::NetworkRemoteRelayChainView;
+    use crate::{relay::session_binding, verify_permit};
+    if resource.network_schema_version != 2
+        || !resource.relay_bundle_json.is_empty()
+        || resource.chain_bundle_json.is_empty()
+        || resource.chain_bundle_json.len() > 49_152
+    {
+        return Err(denied());
+    }
+    let allocation = resource.allocation.as_ref().ok_or_else(denied)?;
+    allocation.validate()?;
+    let authority: [u8; 32] = resource.network_authority_key.as_slice().try_into().map_err(|_| denied())?;
+    let view: NetworkRemoteRelayChainView = serde_json::from_slice(&resource.chain_bundle_json).map_err(|_| denied())?;
+    for node in &view.nodes { node.endpoints.validate()?; }
+    if view.nodes[0].node_id == view.nodes[1].node_id || view.topology_digests.contains(&[0; 32]) {
+        return Err(denied());
+    }
+    let permit = verify_permit(&resource.business_permit, allocation_issuer)?;
+    let business = permit.claims();
+    let path_signed = super::remote::signed(&view.path.path)?;
+    let path_claims = GrantClaims::decode_canonical(&path_signed.claims)?;
+    let scope = path_claims.scope();
+    let revoked = BTreeSet::new();
+    let context = NetworkVerification {
+        authority_key: &authority, deployment_id: &allocation.deployment_id,
+        space_id: &scope.space_id, policy_epoch: scope.policy_epoch,
+        now_ms, revoked_grant_ids: &revoked,
+    };
+    let (path, connectivity) = super::remote::resource_path(&view.path, &context, &permit)?;
+    let transits = [
+        verify_network_grant(&super::remote::signed(&view.transits[0])?, &context)?,
+        verify_network_grant(&super::remote::signed(&view.transits[1])?, &context)?,
+    ];
+    let chain = remote_chain_binding(&context, &path, &connectivity, &transits, &permit)?;
+    let index = view.nodes.iter().position(|node| node.node_id == allocation.node_id).ok_or_else(denied)?;
+    let GrantClaims::Transit(transit) = transits[index].claims() else { return Err(denied()); };
+    if allocation.allocation_id != transit.scope.grant_id
+        || view.route_id != transit.route_id
+        || view.path.request_id != business.session_id
+        || allocation.session_id != business.session_id
+        || view.nodes[index].revision != allocation.node_endpoint_revision
+        || chain.relays[index].0.as_slice() != allocation.node_key_sha256.as_slice()
+        || transit.byte_limit != allocation.bytes_per_allocation
+        || allocation.security_epoch != business.security_epoch
+        || allocation.policy_revision != business.policy_revision
+        || allocation.connection_generation != business.connection_generation
+        || allocation.controller_device_id != business.controller_device_id
+        || allocation.host_device_id != business.host_device_id
+        || allocation.controller_key_sha256 != business.controller_key_sha256
+        || allocation.host_key_sha256 != business.host_key_sha256
+        || allocation.controller_account_id != business.account_id
+        || allocation.session_binding_sha256 != session_binding(business)?
+        || allocation.issued_at_unix_ms != transit.scope.not_before_ms
+        || allocation.expires_at_unix_ms != chain.expires_at_ms
+        || allocation.transports != [nestlink_protocol::RelayTransport::QuicDatagram as i32]
+        || allocation.grant_sequence != 1
+    {
+        return Err(denied());
+    }
+    Ok(NodeRemoteChainBinding { chain, relay: chain.relays[index] })
 }

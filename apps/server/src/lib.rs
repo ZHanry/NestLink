@@ -467,6 +467,14 @@ pub fn router(state: AppState) -> Router {
             get(network_policy::read_relay).delete(network_policy::revoke_relay),
         )
         .route("/api/v3/relay/quota", get(quotas::get).put(quotas::set))
+        .route(
+            "/api/v3/network/spaces/{space}/remote/{request}/relay-chains",
+            post(network_policy::chains::issue),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/relay-chains/{route}",
+            get(network_policy::chains::read).delete(network_policy::chains::revoke),
+        )
         .route("/api/v3/relay/usage", get(quotas::usage))
         .route("/api/v3/relay/reservations", get(relay::reservations))
         .route(

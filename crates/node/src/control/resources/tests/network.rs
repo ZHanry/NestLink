@@ -1,4 +1,5 @@
 use super::*;
+mod chain;
 use nestlink_identity::{
     InstallationIdentity, PermitSigner, network::*, relay::session_binding, verify_permit,
 };
@@ -272,6 +273,7 @@ fn resource_at(
     };
     Ok((
         NodeNetworkRelayResource {
+            chain_bundle_json: Vec::new(),
             network_schema_version: 1,
             allocation: Some(allocation),
             network_authority_key: key.to_vec(),

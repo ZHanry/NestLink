@@ -109,7 +109,7 @@ pub(super) fn remote_path_peers(
     Ok(peers)
 }
 
-fn signed(view: &NetworkGrantView) -> Result<SignedNetworkGrant, ContractError> {
+pub(super) fn signed(view: &NetworkGrantView) -> Result<SignedNetworkGrant, ContractError> {
     let decode = |s: &str| -> Result<Vec<u8>, ContractError> {
         let bytes = URL_SAFE_NO_PAD.decode(s).map_err(|_| denied())?;
         if URL_SAFE_NO_PAD.encode(&bytes) != s {
@@ -136,7 +136,7 @@ pub fn verify_node_network_resource(
     allocation_issuer: &[u8; 32],
     now_ms: u64,
 ) -> Result<RemoteRouteBinding, ContractError> {
-    if resource.network_schema_version != 1 {
+    if resource.network_schema_version != 1 || !resource.chain_bundle_json.is_empty() {
         return Err(denied());
     }
     let allocation = resource.allocation.as_ref().ok_or_else(denied)?;
@@ -163,41 +163,7 @@ pub fn verify_node_network_resource(
         now_ms,
         revoked_grant_ids: &revoked,
     };
-    let member = |view: &NetworkGrantView,
-                  device: &str,
-                  key: &[u8]|
-     -> Result<VerifiedMembership, ContractError> {
-        let grant = verify_network_grant(&signed(view)?, &context)?;
-        let GrantClaims::Membership(claims) = grant.claims() else {
-            return Err(denied());
-        };
-        if digest(&claims.public_key).as_slice() != key {
-            return Err(denied());
-        }
-        let public_key = claims.public_key;
-        let epoch = claims.membership_epoch;
-        VerifiedMembership::from_grant(grant, &context, device, &public_key, epoch)
-    };
-    let members = [
-        member(
-            &view.path.controller_membership,
-            &c.controller_device_id,
-            &c.controller_key_sha256,
-        )?,
-        member(
-            &view.path.host_membership,
-            &c.host_device_id,
-            &c.host_key_sha256,
-        )?,
-    ];
-    let connectivity = verify_network_grant(&signed(&view.path.connectivity)?, &context)?;
-    let path = VerifiedNetworkPath::from_grants(
-        &context,
-        members,
-        connectivity.clone(),
-        verify_network_grant(&path_signed, &context)?,
-        permit.digest(),
-    )?;
+    let (path, connectivity) = resource_path(&view.path, &context, &permit)?;
     let transit = verify_network_grant(&signed(&view.transit)?, &context)?;
     let binding = remote_route_binding(&context, &path, &connectivity, &transit, &permit)?;
     let GrantClaims::Transit(forward) = transit.claims() else {
@@ -228,4 +194,50 @@ pub fn verify_node_network_resource(
         return Err(denied());
     }
     Ok(binding)
+}
+
+/// Reuse the identical full membership/connectivity/business verification for
+/// both wire versions. The fresh snapshot, not socket input, pins the context.
+pub(super) fn resource_path(
+    view: &nestlink_protocol::api::NetworkRemotePathView,
+    context: &NetworkVerification<'_>,
+    permit: &VerifiedPermit,
+) -> Result<(VerifiedNetworkPath, VerifiedNetworkGrant), ContractError> {
+    let c = permit.claims();
+    let member = |view: &NetworkGrantView,
+                  device: &str,
+                  key: &[u8]|
+     -> Result<VerifiedMembership, ContractError> {
+        let grant = verify_network_grant(&signed(view)?, context)?;
+        let GrantClaims::Membership(claims) = grant.claims() else {
+            return Err(denied());
+        };
+        if digest(&claims.public_key).as_slice() != key {
+            return Err(denied());
+        }
+        let public_key = claims.public_key;
+        let epoch = claims.membership_epoch;
+        VerifiedMembership::from_grant(grant, context, device, &public_key, epoch)
+    };
+    let members = [
+        member(
+            &view.controller_membership,
+            &c.controller_device_id,
+            &c.controller_key_sha256,
+        )?,
+        member(
+            &view.host_membership,
+            &c.host_device_id,
+            &c.host_key_sha256,
+        )?,
+    ];
+    let connectivity = verify_network_grant(&signed(&view.connectivity)?, context)?;
+    let path = VerifiedNetworkPath::from_grants(
+        context,
+        members,
+        connectivity.clone(),
+        verify_network_grant(&signed(&view.path)?, context)?,
+        permit.digest(),
+    )?;
+    Ok((path, connectivity))
 }

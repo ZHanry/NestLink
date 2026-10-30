@@ -8,6 +8,7 @@ use nestlink_protocol::{
     network::{PathPolicy, TransitClaims},
 };
 use remote_relays::{RelayNode, relay_node};
+mod node_resources;
 
 pub struct NetworkRemoteRelayChainIssuance {
     pub space_id: String,
@@ -158,6 +159,15 @@ impl Store {
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
         self.validate_access(actor, checked_seconds(now)?)?;
         self.resume_relay_reservations(lifecycle, now)?;
+        let bundle = self.network_chain_current_in_transaction(&tx, lifecycle, Some(actor), space, route, now)?;
+        tx.commit()?;
+        Ok(bundle)
+    }
+
+    pub(crate) fn network_chain_current_in_transaction(
+        &self, tx: &Transaction<'_>, lifecycle: &RelayLifecycle,
+        actor: Option<&Principal>, space: &str, route: &str, now: u64,
+    ) -> Result<NetworkRemoteRelayChainBundle, StorageError> {
         let row: Option<(String, Vec<u8>)> = tx.query_row(
             "SELECT path_grant_id,topology_digests FROM network_remote_chains WHERE route_id=?1 AND space_id=?2",
             params![route,space], |r|Ok((r.get(0)?,r.get(1)?)),
@@ -165,12 +175,12 @@ impl Store {
         let (path_id, references) = row.ok_or(StorageError::Forbidden)?;
         let references: [u8;64] = references.try_into().map_err(|_| StorageError::Forbidden)?;
         let digests: [[u8;32];2] = [references[..32].try_into().map_err(|_| StorageError::Forbidden)?, references[32..].try_into().map_err(|_| StorageError::Forbidden)?];
-        let path = self.network_path_current_with_hops(&tx, Some(actor), space, &path_id, 2, now)?;
+        let path = self.network_path_current_with_hops(tx, actor, space, &path_id, 2, now)?;
         let business = remote_paths::current_business(self, &path.request_id, now)?;
         let quota = self.relay_quota_current()?;
         let controller = self.device_record_at(&business.controller_device_id, now/1000)?;
         let host = self.device_record_at(&business.host_device_id, now/1000)?;
-        let snapshot = read_snapshot(&tx, space, now)?;
+        let snapshot = read_snapshot(tx, space, now)?;
         let mut node_ids = Vec::new();
         let mut nodes = Vec::new();
         let mut transits = Vec::new();
@@ -207,7 +217,6 @@ impl Store {
                 || transit.next != (if position == 0 { relays[1] } else { peers.second })
                 || transit.remaining_hops != (2-position) as u8 { return Err(StorageError::Forbidden); }
         }
-        tx.commit()?;
         Ok(NetworkRemoteRelayChainBundle {
             route_id: route.into(), path,
             transits: transits.try_into().map_err(|_| StorageError::Forbidden)?,

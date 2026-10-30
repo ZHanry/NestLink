@@ -1657,7 +1657,8 @@
                                             "docs/adr/network/0015-bounded-topology-consumption.md",
                                             "docs/network-rewrite/evidence/graph-lock-derivation-a19a112.json",
                                             "docs/adr/network/0016-two-relay-carrier-binding.md",
-                                            "docs/adr/network/0017-atomic-two-relay-reservation.md"
+                                            "docs/adr/network/0017-atomic-two-relay-reservation.md",
+                                            "docs/adr/network/0018-chain-node-resource-admission.md"
                                         ],
                       "blockers":  [
 
@@ -1665,9 +1666,10 @@
                       "implementation_notes":  [
                                                    "Production management slice adds signed space-scoped publisher/report/advertisement/query domains, registered runtime and endpoint checks, durable SQLite replay and withdrawal journal and nonce-bound full/delta HTTP APIs. Exact-source 929bf79 focused journal and real HTTP job passed.",
                                                    "Bounded petgraph consumer, original-envelope proofs, incomplete-page suppression, durable time/expiry fences, NodeControl-owned reporter sequences and separately negotiated NRD2 codec are implemented in source; new exact-source component tests are pending.",
-                                                   "Stored prefix grant issuance, atomic two-relay reservation, actual adjacency owner integration and four-node NRD2 business acceptance remain required implementation.",
+                                                   "Stored prefix grant issuance, production adjacency owner integration and four-node NRD2 business acceptance remain required implementation.",
                                                    "Full ordered two-relay authority binding and actual four-node NRD2 carrier component tests are implemented using existing adjacency, forwarding, virtual UDP and cleanup owners; exact-source Actions are pending. ADR 0016 retains NRD1 negotiation and explicitly leaves production reservation/admission/business integration open.",
-                                                   "ADR 0017 implements complete ordered device consent, atomic dual-hop capacity promises in the existing quota view, original-expiry readback/revocation and typed HTTP/SDK APIs. Source includes SQLite concurrency/rollback/migration and actual HTTP regressions; exact-source Actions are pending. Node-resource and production adjacency/business integration remain open."
+                                                   "ADR 0017 implements complete ordered device consent, atomic dual-hop capacity promises in the existing quota view, original-expiry readback/revocation and typed HTTP/SDK APIs. Source includes SQLite concurrency/rollback/migration and actual HTTP regressions; exact-source Actions are pending. Node-resource and production adjacency/business integration remain open.",
+                                                   "ADR 0018 adds complete schema2 node snapshots, exact fixed-neighbor TLS pins and fresh challenge possession, reusing the existing shared slots/meters/deadlines/continuity fences. 0c0a2d2 Actions found two storage fixture failures, graph pagination recovery and missing actual HTTP routes; repairs and new snapshot/admission regressions require new exact-source Actions. Production listener/dialer, reporting and business integration remain open."
                                                ]
                   },
                   {

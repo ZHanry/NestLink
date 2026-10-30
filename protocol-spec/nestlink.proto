@@ -456,6 +456,9 @@ message NodeNetworkRelayResource {
   bytes network_authority_key = 3;
   bytes relay_bundle_json = 4;
   bytes business_permit = 5;
+  // Schema 2 carries the full ordered NRD2 chain. Schema 1 MUST leave this
+  // empty; schema 2 MUST leave relay_bundle_json empty. No implicit upgrade.
+  bytes chain_bundle_json = 6;
 }
 message SignedNodeResourceSnapshot {
   bytes claims = 1;

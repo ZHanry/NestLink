@@ -485,3 +485,22 @@ so a large server build cannot prevent collecting independent transport results.
 All original assertions and timeouts are retained. Production node-resource
 delegation/admission, continuous real adjacency reporting and four-node business
 acceptance still remain required; all later mandatory packages remain active.
+
+The 0c0a2d2 Actions ran all eight atomic-chain storage tests: six passed;
+concurrency setup hit the strict lifecycle clock and logout correctly rejected
+the original admin's usage read. The next source repairs the fixtures while
+retaining the exact quota assertions. Graph completeness also failed when a
+fresh full snapshot superseded pagination at the same cursor, and server clippy
+found the chain handlers missing from the actual router. Both are repaired.
+The 41e70c8 real reporter HTTP test renewed leases indefinitely during cleanup;
+it now explicitly stops the owner and asserts bounded task termination.
+
+ADR 0018 delegates complete NRD2 chains through the existing policy-signed node
+resource snapshot, adds strict versioned bundle fields, pins exact adjacent
+endpoint/relay identities and admits fresh NRD2 neighbor possession through the
+existing resource slots, meters, deadlines and pending-candidate fences. New
+storage and node regressions require exact-source Actions. Reviewed 41e70c8
+Actions formatting was imported only for applicable unchanged transport/codec
+and graph-test files; current modified files await new formatting output.
+Production listener/dialer, real continuous adjacency reporting and four-node
+business acceptance remain required before W12 can be qualified.

@@ -3,11 +3,11 @@
 //! the next neighbor and expected hop position. Decoding confers no authority.
 use crate::{ContractError, ErrorCode};
 
-use super::network_datagram::{decode_for, encode_for};
 pub use super::network_datagram::{
     Direction, FRAGMENT_BYTES, Fragment, HEADER, PACKET_AGE_MS, PACKET_BYTES, PENDING_PACKETS,
     REPLAY_WINDOW,
 };
+use super::network_datagram::{decode_for, encode_for};
 
 pub const ALPN: &[u8] = b"nestlink/network-datagram/2";
 pub const PATH_EPOCH: u64 = 1;

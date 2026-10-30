@@ -62,11 +62,13 @@ jobs:
           set -o pipefail
           cargo test --locked -p nestlink-protocol -p nestlink-identity -p nestlink-storage --test network_topology -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-topology-tests.log"
       - name: Exercise atomic two-relay quota, device proof, topology and rollback
+        if: ${{ !cancelled() }}
         shell: bash
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-storage --test control network_paths::chains:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-chain-reservation-tests.log"
       - name: Exercise the real HTTP topology publication and withdrawal APIs
+        if: ${{ !cancelled() }}
         shell: bash
         run: |
           set -o pipefail
@@ -103,15 +105,23 @@ jobs:
           cargo test --locked -p nestlink-connectivity --test topology -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-topology-graph-tests.log"
           cargo test --locked -p nestlink-protocol --test network_datagram_v2 -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-datagram-v2-tests.log"
       - name: Exercise actual four-node NRD2 and retained NRD1 carrier behavior
+        if: ${{ !cancelled() }}
         shell: bash
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-transport-quic --lib routed:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-chain-carrier-tests.log"
       - name: Exercise node report authority, cancellation and original deadlines
+        if: ${{ !cancelled() }}
         shell: bash
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-node --lib control::topology:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-topology-reporter-tests.log"
+      - name: Exercise full-chain node admission, shared meters and live snapshot withdrawal
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-node --lib control::resources::tests::network:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-node-chain-admission-tests.log"
       - name: Retain exact-source topology test log
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -122,6 +132,7 @@ jobs:
             ${{ runner.temp }}/network-datagram-v2-tests.log
             ${{ runner.temp }}/network-topology-reporter-tests.log
             ${{ runner.temp }}/network-chain-carrier-tests.log
+            ${{ runner.temp }}/network-node-chain-admission-tests.log
           if-no-files-found: error
           retention-days: 30
   native-ice-kernel-nat-slice:

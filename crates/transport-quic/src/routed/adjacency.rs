@@ -28,10 +28,19 @@ impl AdjacencyEndpoint {
         Self::bind_version(address, identity, remote, super::DatagramVersion::One)
     }
     /// Explicit NRD2 negotiation; a legacy ALPN cannot carry this chain.
-    pub fn bind_chain(address: SocketAddr, identity: &InstallationIdentity, remote: PeerId) -> Result<Self> {
+    pub fn bind_chain(
+        address: SocketAddr,
+        identity: &InstallationIdentity,
+        remote: PeerId,
+    ) -> Result<Self> {
         Self::bind_version(address, identity, remote, super::DatagramVersion::Two)
     }
-    fn bind_version(address: SocketAddr, identity: &InstallationIdentity, remote: PeerId, version: super::DatagramVersion) -> Result<Self> {
+    fn bind_version(
+        address: SocketAddr,
+        identity: &InstallationIdentity,
+        remote: PeerId,
+        version: super::DatagramVersion,
+    ) -> Result<Self> {
         remote.validate()?;
         let local = PeerId(identity.fingerprint());
         if local == remote {

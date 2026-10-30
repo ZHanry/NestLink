@@ -154,9 +154,10 @@ impl TopologyGraph {
         };
         // This is a current authenticated statement that a newer view exists.
         // A missing live proof cannot make the old view current again. The
-        // protocol caps cursors at i64::MAX, leaving room for this lower bound.
-        self.required_cursor = self.required_cursor.max(advertised + u64::from(more));
-        if self.cursor.is_none_or(|cursor| cursor < self.required_cursor) {
+        // A later complete full snapshot can supersede pagination at this same
+        // cursor. `has_more` fences the partial view, not an invented cursor.
+        self.required_cursor = self.required_cursor.max(advertised);
+        if more || self.cursor.is_none_or(|cursor| cursor < self.required_cursor) {
             self.needs_more = true;
         }
         if advertisements.len() > MAX_ADVERTISEMENTS {

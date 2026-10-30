@@ -209,6 +209,7 @@ impl Store {
                 network_authority_key: snapshot.authority_key.to_vec(),
                 relay_bundle_json: serde_json::to_vec(&view)?,
                 business_permit: verified_business.signed_envelope().to_vec(),
+                chain_bundle_json: Vec::new(),
             };
             nestlink_identity::network::verify_node_network_resource(
                 &resource,
@@ -219,6 +220,12 @@ impl Store {
             if resources.len() as u64 > nestlink_protocol::NODE_RESOURCE_ALLOCATIONS {
                 return Err(StorageError::RateLimited);
             }
+        }
+        resources.extend(self.node_network_chain_resources(tx, lifecycle, query, signer, now_ms)?);
+        resources.sort_by(|a, b| a.allocation.as_ref().map(|c| &c.allocation_id)
+            .cmp(&b.allocation.as_ref().map(|c| &c.allocation_id)));
+        if resources.len() as u64 > nestlink_protocol::NODE_RESOURCE_ALLOCATIONS {
+            return Err(StorageError::RateLimited);
         }
         Ok(resources)
     }

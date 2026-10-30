@@ -132,6 +132,68 @@ fn atomic_chain_persists_exact_ordered_transits_and_revokes_without_refunding() 
 }
 
 #[test]
+fn both_node_snapshots_delegate_the_same_full_chain_and_withdraw_it_together() -> Result {
+    use nestlink_identity::{network::{verify_node_network_chain_resource,verify_node_network_resource},node_resources::verify_resource_snapshot};
+    use nestlink_protocol::NodeResourceQueryClaims;
+    let mut f = ChainFixture::new([2,2])?;
+    let request = f.request()?;
+    let route = request.route_id.clone();
+    let ids = request.transit_grant_ids.clone();
+    let issued = f.issue(request)?;
+    let root = PermitSigner::from_seed([44;32]);
+    let policy = root.node_policy_signer()?;
+    let deployment = f.base.store.deployment_id()?;
+    let query = |index:usize, sequence| {
+        let (id,_,incarnation) = &f.nodes[index];
+        NodeResourceQueryClaims {
+            schema_version:nestlink_protocol::SCHEMA_VERSION,deployment_id:deployment.clone(),
+            security_epoch:1,node_id:id.clone(),runtime_id:incarnation.runtime_id.clone(),runtime_generation:incarnation.runtime_generation,
+            policy_revision:2,lease_sequence:1,request_id:random_id(),request_sequence:sequence,
+            issued_at_unix_ms:NOW,expires_at_unix_ms:NOW+1000,
+        }
+    };
+    let queries = [f.nodes[0].1.sign_resource_query(&query(0,1))?, f.nodes[1].1.sign_resource_query(&query(1,1))?];
+    let mut bindings = Vec::new();
+    for index in 0..2 {
+        let snapshot = f.base.store.node_resource_snapshot_with_network(&f.lifecycle,&queries[index],&root,NOW)?;
+        assert!(snapshot.allocations.is_empty());
+        assert_eq!(snapshot.network_routes.len(),1);
+        let signed = policy.sign_resource_snapshot(&snapshot)?;
+        let verified = verify_resource_snapshot(&signed,&policy.public_key(),&queries[index])?;
+        let resource = &verified.network_routes[0];
+        let binding = verify_node_network_chain_resource(resource,&root.public_key(),NOW)?;
+        assert_eq!(binding.relay,PeerId::from_public_key(&f.nodes[index].1.public_key()));
+        assert_eq!(resource.allocation.as_ref().ok_or("allocation")?.allocation_id,ids[index]);
+        let view:nestlink_protocol::api::NetworkRemoteRelayChainView = serde_json::from_slice(&resource.chain_bundle_json)?;
+        assert_eq!(view.topology_digests,issued.topology_digests);
+        for hop in 0..2 {
+            assert_eq!(URL_SAFE_NO_PAD.decode(&view.transits[hop].claims)?,issued.transits[hop].claims);
+            assert_eq!(URL_SAFE_NO_PAD.decode(&view.transits[hop].signature)?,issued.transits[hop].signature);
+        }
+        assert!(verify_node_network_resource(resource,&root.public_key(),NOW).is_err());
+        let mut changed = resource.clone();
+        changed.network_schema_version=1;
+        assert!(verify_node_network_chain_resource(&changed,&root.public_key(),NOW).is_err());
+        let mut changed = resource.clone();
+        changed.business_permit[0]^=1;
+        assert!(verify_node_network_chain_resource(&changed,&root.public_key(),NOW).is_err());
+        let mut changed = resource.clone();
+        let mut crossed = view;
+        crossed.transits.swap(0,1);
+        changed.chain_bundle_json=serde_json::to_vec(&crossed)?;
+        assert!(verify_node_network_chain_resource(&changed,&root.public_key(),NOW).is_err());
+        bindings.push(binding);
+    }
+    assert_eq!(bindings[0].chain,bindings[1].chain);
+    f.base.store.revoke_network_remote_chain(&f.base.host,&f.base.space,&route,NOW)?;
+    for signed in &queries {
+        assert!(f.base.store.node_resource_snapshot_with_network(&f.lifecycle,signed,&root,NOW)?.network_routes.is_empty());
+    }
+    assert_eq!(f.held()?,2);
+    Ok(())
+}
+
+#[test]
 fn second_hop_capacity_failure_rolls_back_both_promises_and_all_credentials() -> Result {
     let mut f = ChainFixture::new([2,1])?;
     let request = f.request()?;
@@ -217,7 +279,7 @@ fn simultaneous_chain_transactions_cannot_split_or_overbook_two_remaining_slots(
     use std::sync::{Arc,Barrier};
     let f = ChainFixture::new([10,10])?;
     let requests = [f.request()?,f.request()?];
-    let ChainFixture {mut base,lifecycle,..} = f;
+    let ChainFixture {mut base,..} = f;
     let quota = base.store.relay_quota_current()?;
     let mut limits = quota.limits;
     limits.max_allocations = 2;
@@ -226,16 +288,20 @@ fn simultaneous_chain_transactions_cannot_split_or_overbook_two_remaining_slots(
     let database = directory.path().join("chain-concurrency.sqlite3");
     let deployment = base.store.deployment_id()?;
     std::fs::write(&database,base.store.snapshot()?)?;
-    let lifecycle = Arc::new(lifecycle);
     let barrier = Arc::new(Barrier::new(2));
-    let stores = [Store::open_existing(&database,&deployment)?,Store::open_existing(&database,&deployment)?];
+    let mut stores = [Store::open_existing(&database,&deployment)?,Store::open_existing(&database,&deployment)?];
+    // Disk snapshot/opening is setup, not simulated frozen runtime. Start the
+    // shared clock after it and sample real elapsed time in both workers.
+    let started = std::time::Instant::now();
+    let lifecycle = Arc::new(stores[0].relay_lifecycle(NOW)?);
     let workers = stores.into_iter().zip(requests).map(|(mut store,request)| {
         let (actor,lifecycle,barrier) = (base.controller.clone(),lifecycle.clone(),barrier.clone());
         let issuance = NetworkRemoteRelayChainIssuance {space_id:base.space.clone(),request_id:base.request.clone(),request};
         std::thread::spawn(move || -> std::result::Result<bool,StorageError> {
             barrier.wait();
             let signer = NetworkAuthoritySigner::from_master_seed(&[63;32])?;
-            match store.issue_network_remote_chain(&lifecycle,&actor,&signer,issuance,NOW) {
+            let now = NOW + u64::try_from(started.elapsed().as_millis()).map_err(|_| StorageError::Conflict)?;
+            match store.issue_network_remote_chain(&lifecycle,&actor,&signer,issuance,now) {
                 Ok(_)=>Ok(true),Err(StorageError::RateLimited)=>Ok(false),Err(error)=>Err(error),
             }
         })
@@ -259,10 +325,14 @@ fn business_revocation_or_originating_login_logout_ends_the_whole_chain() -> Res
         let request = f.request()?;
         let route = request.route_id.clone();
         f.issue(request)?;
+        // Keep an independent authenticated observer. Logging out the original
+        // admin must also revoke its management reads, including usage queries.
+        let observer = f.base.store.login("admin",PASSWORD,None,NOW/1000,
+            &VaultKey::from_bytes([7;32]),&hash_password("dummy-only-password")?)?.principal;
         if logout { f.base.store.logout(&f.base.controller)?; }
         else { f.base.store.revoke_remote(&f.base.host,&f.base.request)?; }
         assert!(f.read(&route).is_err());
-        assert_eq!(f.held()?,2);
+        assert_eq!(f.base.store.relay_reservation_usage(&observer,NOW)?.held_allocations,2);
     }
     Ok(())
 }

@@ -14,14 +14,20 @@ impl ChainFixture {
     fn new() -> TestResult<Self> {
         let base = Fixture::new()?;
         let other_relay = InstallationIdentity::generate();
-        let relays = [PeerId(base.relay.fingerprint()), PeerId(other_relay.fingerprint())];
+        let relays = [
+            PeerId(base.relay.fingerprint()),
+            PeerId(other_relay.fingerprint()),
+        ];
         let mut claims = base.path.claims().clone();
         claims.policy.relays = relays.to_vec();
         claims.policy.relays.sort();
         claims.policy.max_hops = 2;
         let path = VerifiedNetworkPath::from_grants(
-            &base.context(), base.memberships.clone(), base.connectivity.clone(),
-            base.signed(GrantClaims::Path(claims))?, base.permit.digest(),
+            &base.context(),
+            base.memberships.clone(),
+            base.connectivity.clone(),
+            base.signed(GrantClaims::Path(claims))?,
+            base.permit.digest(),
         )?;
         let mut first = base.transit.clone();
         first.transport_group = path.transport_group_id();
@@ -33,18 +39,28 @@ impl ChainFixture {
         second.previous = relays[0];
         second.next = path.peers().second;
         second.remaining_hops = 1;
-        Ok(Self { base, other_relay, path, transits: [first, second] })
+        Ok(Self {
+            base,
+            other_relay,
+            path,
+            transits: [first, second],
+        })
     }
     fn grants(&self) -> TestResult<[VerifiedNetworkGrant; 2]> {
         Ok([
-            self.base.signed(GrantClaims::Transit(self.transits[0].clone()))?,
-            self.base.signed(GrantClaims::Transit(self.transits[1].clone()))?,
+            self.base
+                .signed(GrantClaims::Transit(self.transits[0].clone()))?,
+            self.base
+                .signed(GrantClaims::Transit(self.transits[1].clone()))?,
         ])
     }
     fn authorization(&self) -> TestResult<(RouteAuthorization, RouteRevocation)> {
         Ok(RouteAuthorization::remote_chain(
-            &self.base.context(), &self.path, &self.base.connectivity,
-            &self.grants()?, &self.base.permit,
+            &self.base.context(),
+            &self.path,
+            &self.base.connectivity,
+            &self.grants()?,
+            &self.base.permit,
         )?)
     }
 }
@@ -53,21 +69,42 @@ impl ChainFixture {
 fn full_chain_binds_both_hops_order_original_business_and_fixed_neighbors() -> TestResult {
     let f = ChainFixture::new()?;
     let grants = f.grants()?;
-    let bind = |grants: &[VerifiedNetworkGrant]| remote_chain_binding(
-        &f.base.context(), &f.path, &f.base.connectivity, grants, &f.base.permit,
-    );
+    let bind = |grants: &[VerifiedNetworkGrant]| {
+        remote_chain_binding(
+            &f.base.context(),
+            &f.path,
+            &f.base.connectivity,
+            grants,
+            &f.base.permit,
+        )
+    };
     let verified = bind(&grants)?;
     assert_eq!(verified.relays, [f.transits[0].relay, f.transits[1].relay]);
     for direction in [v2::Direction::FirstToSecond, v2::Direction::SecondToFirst] {
-        let expected = if direction == v2::Direction::FirstToSecond { [2, 1] } else { [1, 2] };
+        let expected = if direction == v2::Direction::FirstToSecond {
+            [2, 1]
+        } else {
+            [1, 2]
+        };
         for (relay, hops) in verified.relays.iter().zip(expected) {
             assert_eq!(verified.remaining_hops(*relay, direction), Some(hops));
         }
     }
-    assert_eq!(verified.adjacency(verified.relays[0]), Some((verified.peers.first, verified.relays[1])));
-    assert_eq!(verified.adjacency(verified.relays[1]), Some((verified.relays[0], verified.peers.second)));
+    assert_eq!(
+        verified.adjacency(verified.relays[0]),
+        Some((verified.peers.first, verified.relays[1]))
+    );
+    assert_eq!(
+        verified.adjacency(verified.relays[1]),
+        Some((verified.relays[0], verified.peers.second))
+    );
     assert!(verified.adjacency(verified.peers.first).is_none());
-    for invalid in [vec![], vec![grants[0].clone()], vec![grants[1].clone(), grants[0].clone()], vec![grants[0].clone(); 3]] {
+    for invalid in [
+        vec![],
+        vec![grants[0].clone()],
+        vec![grants[1].clone(), grants[0].clone()],
+        vec![grants[0].clone(); 3],
+    ] {
         assert!(bind(&invalid).is_err());
     }
     for change in 0..10 {
@@ -84,62 +121,112 @@ fn full_chain_binds_both_hops_order_original_business_and_fixed_neighbors() -> T
             8 => claims[1].transport_group = f.base.path.transport_group_id(),
             _ => claims[1].scope.expires_at_ms += 1,
         }
-        let forged = [f.base.signed(GrantClaims::Transit(claims[0].clone()))?, f.base.signed(GrantClaims::Transit(claims[1].clone()))?];
+        let forged = [
+            f.base.signed(GrantClaims::Transit(claims[0].clone()))?,
+            f.base.signed(GrantClaims::Transit(claims[1].clone()))?,
+        ];
         assert!(bind(&forged).is_err(), "accepted crossed hop {change}");
     }
-    assert!(RouteAuthorization::remote(
-        &f.base.context(), &f.path, &f.base.connectivity, &grants[0], &f.base.permit,
-    ).is_err());
-    assert!(remote_chain_binding(
-        &f.base.context(), &f.base.path, &f.base.connectivity, &grants, &f.base.permit,
-    ).is_err());
+    assert!(
+        RouteAuthorization::remote(
+            &f.base.context(),
+            &f.path,
+            &f.base.connectivity,
+            &grants[0],
+            &f.base.permit,
+        )
+        .is_err()
+    );
+    assert!(
+        remote_chain_binding(
+            &f.base.context(),
+            &f.base.path,
+            &f.base.connectivity,
+            &grants,
+            &f.base.permit,
+        )
+        .is_err()
+    );
     let mut changed = f.transits[1].clone();
     changed.byte_limit -= 1;
-    let updated = [grants[0].clone(), f.base.signed(GrantClaims::Transit(changed.clone()))?];
+    let updated = [
+        grants[0].clone(),
+        f.base.signed(GrantClaims::Transit(changed.clone()))?,
+    ];
     let changed = bind(&updated)?;
     assert_ne!(changed.digest, verified.digest);
     assert_eq!(changed.byte_limit + 1, verified.byte_limit);
     let revoked = BTreeSet::from([f.transits[1].scope.grant_id.clone()]);
     let mut current = f.base.context();
     current.revoked_grant_ids = &revoked;
-    assert!(remote_chain_binding(&current, &f.path, &f.base.connectivity, &grants, &f.base.permit).is_err());
+    assert!(
+        remote_chain_binding(
+            &current,
+            &f.path,
+            &f.base.connectivity,
+            &grants,
+            &f.base.permit
+        )
+        .is_err()
+    );
     Ok(())
 }
 
 async fn chain_pair(
-    local: &InstallationIdentity, remote: &InstallationIdentity, deadline: Instant,
+    local: &InstallationIdentity,
+    remote: &InstallationIdentity,
+    deadline: Instant,
 ) -> TestResult<(Adjacency, Adjacency, [SocketAddr; 2])> {
-    let listener = AdjacencyEndpoint::bind_chain("127.0.0.1:0".parse()?, local, PeerId(remote.fingerprint()))?;
-    let connector = AdjacencyEndpoint::bind_chain("127.0.0.1:0".parse()?, remote, PeerId(local.fingerprint()))?;
+    let listener =
+        AdjacencyEndpoint::bind_chain("127.0.0.1:0".parse()?, local, PeerId(remote.fingerprint()))?;
+    let connector =
+        AdjacencyEndpoint::bind_chain("127.0.0.1:0".parse()?, remote, PeerId(local.fingerprint()))?;
     let addresses = [listener.local_addr()?, connector.local_addr()?];
-    let (accepted, connected) = tokio::join!(listener.accept(deadline), connector.connect(addresses[0], deadline));
+    let (accepted, connected) = tokio::join!(
+        listener.accept(deadline),
+        connector.connect(addresses[0], deadline)
+    );
     Ok((accepted?, connected?, addresses))
 }
 
-fn run_relay(mut relay: RelayForwarder, marker: &'static [u8]) -> Abort<io::Result<(u64, u64, bool)>> {
+fn run_relay(
+    mut relay: RelayForwarder,
+    marker: &'static [u8],
+) -> Abort<io::Result<(u64, u64, bool)>> {
     Abort(tokio::spawn(async move {
         let result = relay.run().await;
         let initials = relay.initial_packets;
         let forwarded = relay.forwarded_fragments();
-        let plaintext = relay.captured.iter().any(|bytes| bytes.windows(marker.len()).any(|part| part == marker));
-        relay.close_and_wait(Instant::now() + Duration::from_secs(5)).await?;
+        let plaintext = relay
+            .captured
+            .iter()
+            .any(|bytes| bytes.windows(marker.len()).any(|part| part == marker));
+        relay
+            .close_and_wait(Instant::now() + Duration::from_secs(5))
+            .await?;
         assert!(result.is_err());
         Ok((initials, forwarded, plaintext))
     }))
 }
 
 #[tokio::test]
-async fn actual_four_node_chain_preserves_inner_quic_ipv6_streams_and_physical_release() -> TestResult {
+async fn actual_four_node_chain_preserves_inner_quic_ipv6_streams_and_physical_release()
+-> TestResult {
     let f = ChainFixture::new()?;
     let deadline = Instant::now() + Duration::from_secs(5);
     let (left_in, left, addresses_a) = chain_pair(&f.base.relay, &f.base.first, deadline).await?;
-    let (left_out, right_in, addresses_b) = chain_pair(&f.base.relay, &f.other_relay, deadline).await?;
-    let (right_out, right, addresses_c) = chain_pair(&f.other_relay, &f.base.second, deadline).await?;
+    let (left_out, right_in, addresses_b) =
+        chain_pair(&f.base.relay, &f.other_relay, deadline).await?;
+    let (right_out, right, addresses_c) =
+        chain_pair(&f.other_relay, &f.base.second, deadline).await?;
     let (left_auth, left_stop) = f.authorization()?;
     let (right_auth, right_stop) = f.authorization()?;
     let marker = b"four node end to end private payload";
     let mut left_task = run_relay(RelayForwarder::new(left_auth, left_in, left_out)?, marker);
-    let mut right_task = run_relay(RelayForwarder::new(right_auth, right_in, right_out)?, marker);
+    let mut right_task = run_relay(
+        RelayForwarder::new(right_auth, right_in, right_out)?,
+        marker,
+    );
     let (first_auth, first_stop) = f.authorization()?;
     let (second_auth, second_stop) = f.authorization()?;
     let (first, second) = tokio::join!(
@@ -159,9 +246,21 @@ async fn actual_four_node_chain_preserves_inner_quic_ipv6_streams_and_physical_r
     packet[39] = 2;
     packet[40..40 + marker.len()].copy_from_slice(marker);
     first.connection()?.send_datagram(packet.clone().into())?;
-    assert_eq!(tokio::time::timeout_at(deadline, second.connection()?.read_datagram()).await??.as_ref(), packet);
-    second.connection()?.send_datagram(marker.as_slice().into())?;
-    assert_eq!(tokio::time::timeout_at(deadline, first.connection()?.read_datagram()).await??.as_ref(), marker);
+    assert_eq!(
+        tokio::time::timeout_at(deadline, second.connection()?.read_datagram())
+            .await??
+            .as_ref(),
+        packet
+    );
+    second
+        .connection()?
+        .send_datagram(marker.as_slice().into())?;
+    assert_eq!(
+        tokio::time::timeout_at(deadline, first.connection()?.read_datagram())
+            .await??
+            .as_ref(),
+        marker
+    );
     // These raw inner streams qualify transport only. Product callers must
     // still perform SessionPermit mutual proof before opening business data.
     let stream = async {
@@ -191,16 +290,24 @@ async fn actual_four_node_chain_preserves_inner_quic_ipv6_streams_and_physical_r
     second_stop.revoke();
     right_stop.revoke();
     let cleanup = Instant::now() + Duration::from_secs(5);
-    let (a, b) = tokio::join!(first.close_and_wait(cleanup), second.close_and_wait(cleanup));
+    let (a, b) = tokio::join!(
+        first.close_and_wait(cleanup),
+        second.close_and_wait(cleanup)
+    );
     a?;
     b?;
     for task in [&mut left_task, &mut right_task] {
-        let (initials, forwarded, plaintext) = tokio::time::timeout_at(cleanup, &mut task.0).await???;
+        let (initials, forwarded, plaintext) =
+            tokio::time::timeout_at(cleanup, &mut task.0).await???;
         assert!(initials > 0);
         assert!(forwarded >= 6);
         assert!(!plaintext);
     }
-    for address in addresses_a.into_iter().chain(addresses_b).chain(addresses_c) {
+    for address in addresses_a
+        .into_iter()
+        .chain(addresses_b)
+        .chain(addresses_c)
+    {
         drop(std::net::UdpSocket::bind(address)?);
     }
     Ok(())
@@ -215,33 +322,52 @@ async fn chain_authority_cannot_reinterpret_a_legacy_alpn_adjacency() -> TestRes
     let mut pending = RoutedEstablishment::new(authorization, endpoint);
     assert!(pending.establish(&f.base.first, deadline).await.is_err());
     let cleanup = Instant::now() + Duration::from_secs(5);
-    let (a, b) = tokio::join!(pending.close_and_wait(cleanup), relay.close_and_wait(cleanup));
+    let (a, b) = tokio::join!(
+        pending.close_and_wait(cleanup),
+        relay.close_and_wait(cleanup)
+    );
     a?;
     b?;
-    for address in addresses { drop(std::net::UdpSocket::bind(address)?); }
+    for address in addresses {
+        drop(std::net::UdpSocket::bind(address)?);
+    }
     Ok(())
 }
 
 #[tokio::test]
-async fn second_relay_refuses_cross_binding_reflection_and_wrong_authenticated_position() -> TestResult {
+async fn second_relay_refuses_cross_binding_reflection_and_wrong_authenticated_position()
+-> TestResult {
     for fault in 0..4 {
         let mut f = ChainFixture::new()?;
-        if fault == 3 { f.transits[1].byte_limit = 1; }
+        if fault == 3 {
+            f.transits[1].byte_limit = 1;
+        }
         let deadline = Instant::now() + Duration::from_secs(3);
         let (left, mut peer_a, _) = chain_pair(&f.other_relay, &f.base.relay, deadline).await?;
         let (right, mut peer_b, _) = chain_pair(&f.other_relay, &f.base.second, deadline).await?;
         let (auth, _stop) = f.authorization()?;
-        let mut bytes = v2::encode(auth.binding_digest(), v2::Direction::FirstToSecond, 2, 1, &[9])?[0].clone();
+        let mut bytes = v2::encode(
+            auth.binding_digest(),
+            v2::Direction::FirstToSecond,
+            2,
+            1,
+            &[9],
+        )?[0]
+            .clone();
         bytes[5] = 1;
         match fault {
             0 => bytes[20] ^= 1,
             1 => bytes[4] = 1,
             2 => bytes[5] = 2,
-            _ => {},
+            _ => {}
         }
         let mut relay = RelayForwarder::new(auth, left, right)?;
         peer_a.connection()?.send_datagram(bytes.into())?;
-        assert!(tokio::time::timeout_at(deadline, relay.run()).await?.is_err());
+        assert!(
+            tokio::time::timeout_at(deadline, relay.run())
+                .await?
+                .is_err()
+        );
         assert_eq!(relay.forwarded_fragments(), 0);
         let cleanup = Instant::now() + Duration::from_secs(5);
         relay.close_and_wait(cleanup).await?;

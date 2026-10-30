@@ -967,15 +967,43 @@ fn a_rejected_newer_authenticated_view_cannot_reopen_candidates_from_an_older_sn
     let destination = f.endpoint(1, vec![f.peers[0]])?;
     // Contents fail atomically because B's original live proof is missing,
     // but the authority has proved the existence of newer cursor 9.
-    assert!(graph.apply(&f.context(3100), &f.full(3100, 9, &[&a, &b])?, std::slice::from_ref(&a.verified)).is_err());
+    assert!(
+        graph
+            .apply(
+                &f.context(3100),
+                &f.full(3100, 9, &[&a, &b])?,
+                std::slice::from_ref(&a.verified)
+            )
+            .is_err()
+    );
     assert_eq!(graph.cursor(), Some(7));
     assert!(graph.needs_more());
-    assert!(graph.candidate(&f.context(3100), &path, &source, &destination)?.is_none());
-    graph.apply(&f.context(3200), &f.full(3200, 8, &[&a])?, std::slice::from_ref(&a.verified))?;
+    assert!(
+        graph
+            .candidate(&f.context(3100), &path, &source, &destination)?
+            .is_none()
+    );
+    graph.apply(
+        &f.context(3200),
+        &f.full(3200, 8, &[&a])?,
+        std::slice::from_ref(&a.verified),
+    )?;
     assert!(graph.needs_more());
-    assert!(graph.candidate(&f.context(3200), &path, &source, &destination)?.is_none());
-    graph.apply(&f.context(3300), &f.full(3300, 9, &[&a])?, std::slice::from_ref(&a.verified))?;
+    assert!(
+        graph
+            .candidate(&f.context(3200), &path, &source, &destination)?
+            .is_none()
+    );
+    graph.apply(
+        &f.context(3300),
+        &f.full(3300, 9, &[&a])?,
+        std::slice::from_ref(&a.verified),
+    )?;
     assert!(!graph.needs_more());
-    assert!(graph.candidate(&f.context(3300), &path, &source, &destination)?.is_some());
+    assert!(
+        graph
+            .candidate(&f.context(3300), &path, &source, &destination)?
+            .is_some()
+    );
     Ok(())
 }

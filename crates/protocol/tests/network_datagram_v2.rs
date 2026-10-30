@@ -76,7 +76,8 @@ fn legacy_encoder_and_forwarder_preserve_the_single_hop_contract() -> Result<(),
 }
 
 #[test]
-fn both_directions_consume_two_hops_once_without_changing_inner_bytes() -> Result<(), ContractError> {
+fn both_directions_consume_two_hops_once_without_changing_inner_bytes() -> Result<(), ContractError>
+{
     let packet = vec![23; v2::PACKET_BYTES];
     for direction in DIRECTIONS {
         let mut fragments = v2::encode(BINDING, direction, 2, u64::MAX, &packet)?;
@@ -208,7 +209,15 @@ fn decode_and_forward_reject_reserved_bytes_invalid_fields_and_over_hop_counts()
 -> Result<(), ContractError> {
     for direction in DIRECTIONS {
         let original = v2::encode(BINDING, direction, 2, 1, &[8])?[0].clone();
-        for (offset, value) in [(0, 0), (4, 2), (5, 3), (5, u8::MAX), (17, 1), (18, 1), (19, 1)] {
+        for (offset, value) in [
+            (0, 0),
+            (4, 2),
+            (5, 3),
+            (5, u8::MAX),
+            (17, 1),
+            (18, 1),
+            (19, 1),
+        ] {
             let mut malformed = original.clone();
             malformed[offset] = value;
             assert_decode_rejected(&malformed);

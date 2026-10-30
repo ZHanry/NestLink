@@ -1,8 +1,8 @@
 use nestlink_identity::{
     VerifiedPermit,
     network::{
-        NetworkVerification, VerifiedNetworkGrant, VerifiedNetworkPath, RemoteChainBinding,
-        remote_route_binding, remote_chain_binding,
+        NetworkVerification, RemoteChainBinding, VerifiedNetworkGrant, VerifiedNetworkPath,
+        remote_chain_binding, remote_route_binding,
     },
 };
 use nestlink_protocol::network::{PeerId, PeerPair};
@@ -99,34 +99,59 @@ impl RouteAuthorization {
         permit: &VerifiedPermit,
     ) -> io::Result<(Self, RouteRevocation)> {
         let started = Instant::now();
-        let now: u64 = SystemTime::now().duration_since(UNIX_EPOCH)
-            .map_err(io::Error::other)?.as_millis().try_into().map_err(io::Error::other)?;
+        let now: u64 = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_err(io::Error::other)?
+            .as_millis()
+            .try_into()
+            .map_err(io::Error::other)?;
         let current = NetworkVerification {
-            authority_key: context.authority_key, deployment_id: context.deployment_id,
-            space_id: context.space_id, policy_epoch: context.policy_epoch,
-            revoked_grant_ids: context.revoked_grant_ids, now_ms: now.max(context.now_ms),
+            authority_key: context.authority_key,
+            deployment_id: context.deployment_id,
+            space_id: context.space_id,
+            policy_epoch: context.policy_epoch,
+            revoked_grant_ids: context.revoked_grant_ids,
+            now_ms: now.max(context.now_ms),
         };
         let route = remote_chain_binding(&current, path, connectivity, transits, permit)
             .map_err(|error| io::Error::new(io::ErrorKind::PermissionDenied, error))?;
-        let remaining = route.expires_at_ms.checked_sub(current.now_ms)
-            .filter(|remaining| *remaining > 0).ok_or_else(denied)?;
+        let remaining = route
+            .expires_at_ms
+            .checked_sub(current.now_ms)
+            .filter(|remaining| *remaining > 0)
+            .ok_or_else(denied)?;
         let (stop, stopped) = watch::channel(false);
-        Ok((Self {
-            binding: Arc::new(Binding {
-                digest: route.digest, peers: route.peers, relay: route.relays[0],
-                chain: Some(route), byte_limit: route.byte_limit,
-                deadline: started + Duration::from_millis(remaining.min(MAX_LEASE_MS)),
-            }), stopped,
-        }, RouteRevocation(stop)))
+        Ok((
+            Self {
+                binding: Arc::new(Binding {
+                    digest: route.digest,
+                    peers: route.peers,
+                    relay: route.relays[0],
+                    chain: Some(route),
+                    byte_limit: route.byte_limit,
+                    deadline: started + Duration::from_millis(remaining.min(MAX_LEASE_MS)),
+                }),
+                stopped,
+            },
+            RouteRevocation(stop),
+        ))
     }
     pub(super) fn version(&self) -> super::DatagramVersion {
-        if self.binding.chain.is_some() { super::DatagramVersion::Two } else { super::DatagramVersion::One }
+        if self.binding.chain.is_some() {
+            super::DatagramVersion::Two
+        } else {
+            super::DatagramVersion::One
+        }
     }
     pub(super) fn endpoint_relay(&self, local: PeerId) -> Option<PeerId> {
         if local == self.peers().first {
             Some(self.relay())
         } else if local == self.peers().second {
-            Some(self.binding.chain.map_or(self.relay(), |chain| chain.relays[1]))
+            Some(
+                self.binding
+                    .chain
+                    .map_or(self.relay(), |chain| chain.relays[1]),
+            )
         } else {
             None
         }
@@ -140,31 +165,64 @@ impl RouteAuthorization {
             None
         }
     }
-    pub(super) fn remaining_hops(&self, local: PeerId, direction: super::wire::Direction) -> Option<u8> {
+    pub(super) fn remaining_hops(
+        &self,
+        local: PeerId,
+        direction: super::wire::Direction,
+    ) -> Option<u8> {
         if let Some(chain) = self.binding.chain {
             chain.remaining_hops(local, direction)
         } else {
             (local == self.relay()).then_some(1)
         }
     }
-    pub(super) fn decode<'a>(&self, bytes: &'a [u8]) -> Result<super::wire::Fragment<'a>, nestlink_protocol::ContractError> {
+    pub(super) fn decode<'a>(
+        &self,
+        bytes: &'a [u8],
+    ) -> Result<super::wire::Fragment<'a>, nestlink_protocol::ContractError> {
         match self.version() {
             super::DatagramVersion::One => super::wire::decode(bytes),
             super::DatagramVersion::Two => nestlink_protocol::network_datagram_v2::decode(bytes),
         }
     }
-    pub(super) fn encode(&self, direction: super::wire::Direction, packet: u64, bytes: &[u8]) -> Result<Vec<Vec<u8>>, nestlink_protocol::ContractError> {
+    pub(super) fn encode(
+        &self,
+        direction: super::wire::Direction,
+        packet: u64,
+        bytes: &[u8],
+    ) -> Result<Vec<Vec<u8>>, nestlink_protocol::ContractError> {
         match self.version() {
-            super::DatagramVersion::One => super::wire::encode(self.binding_digest(), direction, packet, bytes),
-            super::DatagramVersion::Two => nestlink_protocol::network_datagram_v2::encode(self.binding_digest(), direction, 2, packet, bytes),
+            super::DatagramVersion::One => {
+                super::wire::encode(self.binding_digest(), direction, packet, bytes)
+            }
+            super::DatagramVersion::Two => nestlink_protocol::network_datagram_v2::encode(
+                self.binding_digest(),
+                direction,
+                2,
+                packet,
+                bytes,
+            ),
         }
     }
-    pub(super) fn forward(&self, bytes: &mut [u8], local: PeerId, direction: super::wire::Direction) -> io::Result<()> {
+    pub(super) fn forward(
+        &self,
+        bytes: &mut [u8],
+        local: PeerId,
+        direction: super::wire::Direction,
+    ) -> io::Result<()> {
         let expected = self.remaining_hops(local, direction).ok_or_else(denied)?;
         match self.version() {
-            super::DatagramVersion::One => super::wire::forward(bytes, self.binding_digest(), direction),
-            super::DatagramVersion::Two => nestlink_protocol::network_datagram_v2::forward(bytes, self.binding_digest(), direction, expected),
-        }.map_err(io::Error::other)
+            super::DatagramVersion::One => {
+                super::wire::forward(bytes, self.binding_digest(), direction)
+            }
+            super::DatagramVersion::Two => nestlink_protocol::network_datagram_v2::forward(
+                bytes,
+                self.binding_digest(),
+                direction,
+                expected,
+            ),
+        }
+        .map_err(io::Error::other)
     }
     pub fn peers(&self) -> PeerPair {
         self.binding.peers

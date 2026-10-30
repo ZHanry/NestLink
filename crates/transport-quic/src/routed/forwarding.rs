@@ -139,10 +139,16 @@ impl RelayForwarder {
             };
             self.authorization.live()?;
             let mut bytes = packet.to_vec();
-            let fragment = self.authorization.decode(&bytes).map_err(io::Error::other)?;
+            let fragment = self
+                .authorization
+                .decode(&bytes)
+                .map_err(io::Error::other)?;
             if fragment.binding != self.authorization.binding_digest()
                 || fragment.direction != direction
-                || Some(fragment.remaining_hops) != self.authorization.remaining_hops(self.first.local(), direction)
+                || Some(fragment.remaining_hops)
+                    != self
+                        .authorization
+                        .remaining_hops(self.first.local(), direction)
             {
                 return Err(io::ErrorKind::PermissionDenied.into());
             }
@@ -170,7 +176,8 @@ impl RelayForwarder {
                 .filter(|used| *used <= self.authorization.byte_limit())
                 .ok_or(io::ErrorKind::PermissionDenied)?;
             self.used = next;
-            self.authorization.forward(&mut bytes, self.first.local(), direction)?;
+            self.authorization
+                .forward(&mut bytes, self.first.local(), direction)?;
             let peer = if index == 0 {
                 self.second.connection()?
             } else {

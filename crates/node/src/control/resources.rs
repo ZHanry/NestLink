@@ -13,7 +13,22 @@ use nestlink_protocol::{
 };
 use std::collections::{HashMap, HashSet, VecDeque};
 mod network;
-use nestlink_identity::network::RemoteRouteBinding;
+pub use network::NetworkChainNeighborProof;
+use nestlink_identity::network::{RemoteRouteBinding, NodeRemoteChainBinding};
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum NetworkBinding {
+    Single(RemoteRouteBinding),
+    Chain(NodeRemoteChainBinding),
+}
+impl NetworkBinding {
+    fn digest(self) -> [u8; 32] {
+        match self { Self::Single(route) => route.digest, Self::Chain(route) => route.chain.digest }
+    }
+    fn expires_at_ms(self) -> u64 {
+        match self { Self::Single(route) => route.expires_at_ms, Self::Chain(route) => route.chain.expires_at_ms }
+    }
+}
 
 pub struct RelayEndpointProof<'a> {
     pub device_id: &'a str,
@@ -33,15 +48,16 @@ pub struct RelayEndpointCandidate {
     issuer: [u8; 32],
     deadline: u64,
     node_stop: watch::Receiver<bool>,
-    network: Option<RemoteRouteBinding>,
+    network: Option<NetworkBinding>,
     continuity: Arc<()>,
 }
 impl RelayEndpointCandidate {
     pub fn network_binding(&self) -> Option<[u8; 32]> {
-        self.network.map(|route| route.digest)
+        self.network.map(NetworkBinding::digest)
     }
     pub fn network_direction(&self) -> Option<nestlink_protocol::network_datagram::Direction> {
-        self.network.map(|route| {
+        let Some(NetworkBinding::Single(route)) = self.network else { return None; };
+        Some({
             if self.claims.controller_key_sha256 == route.peers.first.0 {
                 if self.controller {
                     nestlink_protocol::network_datagram::Direction::FirstToSecond
@@ -54,6 +70,11 @@ impl RelayEndpointCandidate {
                 nestlink_protocol::network_datagram::Direction::FirstToSecond
             }
         })
+    }
+    /// Slot zero is the preceding neighbor; slot one is the following neighbor.
+    /// The original business allocation and all shared meters stay unchanged.
+    pub fn network_chain(&self) -> Option<NodeRemoteChainBinding> {
+        match self.network { Some(NetworkBinding::Chain(route)) => Some(route), _ => None }
     }
     pub fn allocation_id(&self) -> &str {
         &self.claims.allocation_id
@@ -439,7 +460,7 @@ struct Entry {
     claims: RelayAllocationClaims,
     deadline: u64,
     binding: [u8; 32],
-    network: Option<RemoteRouteBinding>,
+    network: Option<NetworkBinding>,
     network_credential: Option<[u8; 32]>,
     // A refreshed live observation retains this identity. Omission, expiry or
     // stop drops it, so an old uncommitted candidate cannot reappear later.
@@ -458,7 +479,7 @@ struct Pair {
     claims: RelayAllocationClaims,
     deadline: u64,
     binding: [u8; 32],
-    network: Option<RemoteRouteBinding>,
+    network: Option<NetworkBinding>,
     slots: [Option<Slot>; 2],
     meter: Meter,
     closed: bool,
@@ -599,7 +620,7 @@ impl Resources {
                             entry.network_credential == Some(credential)
                                 && entry.claims == *grant
                                 && now.monotonic_ms < entry.deadline
-                                && now.unix_ms < route.expires_at_ms
+                                && now.unix_ms < route.expires_at_ms()
                         })
                     })
             });
@@ -610,11 +631,17 @@ impl Resources {
                     {
                         self.network_chain_verifications += 1;
                     }
-                    nestlink_identity::network::verify_node_network_resource(
+                    match resource.network_schema_version {
+                    1 => NetworkBinding::Single(nestlink_identity::network::verify_node_network_resource(
                         resource,
                         &issuer,
                         now.unix_ms,
-                    )?
+                    )?),
+                    2 => NetworkBinding::Chain(nestlink_identity::network::verify_node_network_chain_resource(
+                        resource, &issuer, now.unix_ms,
+                    )?),
+                    _ => return Err(error(ErrorCode::InvalidMessage)),
+                    }
                 }
             };
             routes.insert(grant.allocation_id.clone(), (route, credential));

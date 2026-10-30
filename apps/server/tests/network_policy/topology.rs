@@ -283,8 +283,11 @@ async fn real_node_control_reports_to_management_without_reusing_sequences_after
         assert!(reporter.publish(&control,&publisher,&snapshot.verification(),Vec::new()).await.is_err());
         Ok::<(),Box<dyn std::error::Error>>(())
     }.await;
-    let finished = control.finish().await;
+    // A healthy lease pump intentionally runs until its owner stops it. Waiting
+    // for spontaneous completion here left the test renewing leases forever.
+    control.stop();
+    let finished = tokio::time::timeout(Duration::from_millis(100), control.wait_finished()).await?;
     result?;
-    finished?;
+    assert!(finished.is_err(), "a stopped control owner retained its lease pump");
     Ok(())
 }
