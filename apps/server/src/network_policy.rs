@@ -4,77 +4,17 @@ use crate::{ApiError, AppState, access, now_ms};
 use axum::{Json, extract::{Path, State}, http::{HeaderMap, StatusCode}};
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_identity::network::SignedNetworkGrant;
-use nestlink_protocol::network::{GrantClaims, SpaceRole, SCHEMA_VERSION};
+use nestlink_protocol::network::{GrantClaims, SCHEMA_VERSION};
 use nestlink_storage::{StorageError, Store, accounts::Principal, network_policy::{
     NetworkAuthorityUpdate, NetworkGrantRevocation, NetworkMembershipRequest,
     NetworkMembershipRevocation, NetworkMembershipUpdate, TrustedNetworkPolicySnapshot,
 }};
-use serde::{Deserialize, Serialize};
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct AuthorityRequest { expected_revision: u64 }
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct MemberRequest {
-    expected_policy_revision: u64,
-    expected_membership_epoch: u64,
-    role: SpaceRole,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct RevokeMemberRequest {
-    expected_policy_revision: u64,
-    expected_membership_epoch: u64,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct IssueRequest {
-    grant_id: String,
-    expected_policy_epoch: u64,
-    expected_membership_epoch: u64,
-    expires_at_unix_ms: u64,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(crate) struct RevokeGrantRequest { expected_revision: u64 }
-
-/// Public policy metadata only. Credentials are returned solely by issue/read.
-#[derive(Serialize)]
-pub(crate) struct PolicyView {
-    schema_version: u32,
-    deployment_id: String,
-    space_id: String,
-    authority_public_key: String,
-    revision: u64,
-    policy_epoch: u64,
-    observed_at_unix_ms: u64,
-}
-
-#[derive(Serialize)]
-pub(crate) struct MemberView {
-    installation_id: String,
-    public_key: String,
-    membership_epoch: u64,
-    role: SpaceRole,
-    active: bool,
-    policy: PolicyView,
-}
-
-/// Canonical bytes must survive JSON transport unchanged. These credentials
-/// are never included in events, route diagnostics or management logs.
-#[derive(Serialize)]
-pub(crate) struct GrantView {
-    schema_version: u32,
-    grant_id: String,
-    claims: String,
-    signature: String,
-}
-
+use nestlink_protocol::api::{
+    NetworkAuthorityRequest as AuthorityRequest, NetworkMemberRequest as MemberRequest,
+    NetworkRevokeMemberRequest as RevokeMemberRequest, NetworkIssueRequest as IssueRequest,
+    NetworkRevokeGrantRequest as RevokeGrantRequest, NetworkPolicyView as PolicyView,
+    NetworkMemberView as MemberView, NetworkGrantView as GrantView,
+};
 fn admin(store: &Store, token: &str, now_ms: u64) -> Result<Principal, StorageError> {
     let actor = store.authenticate(token, now_ms / 1000)?;
     if !actor.is_admin { return Err(StorageError::Forbidden); }

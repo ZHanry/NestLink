@@ -1,6 +1,66 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+/// Deployment-administrator controls. These never grant business or IP access.
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkAuthorityRequest { pub expected_revision: u64 }
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkMemberRequest {
+    pub expected_policy_revision: u64,
+    pub expected_membership_epoch: u64,
+    pub role: crate::network::SpaceRole,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkRevokeMemberRequest {
+    pub expected_policy_revision: u64,
+    pub expected_membership_epoch: u64,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkIssueRequest {
+    pub grant_id: String,
+    pub expected_policy_epoch: u64,
+    pub expected_membership_epoch: u64,
+    pub expires_at_unix_ms: u64,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkRevokeGrantRequest { pub expected_revision: u64 }
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkPolicyView {
+    pub schema_version: u32,
+    pub deployment_id: String,
+    pub space_id: String,
+    pub authority_public_key: String,
+    pub revision: u64,
+    pub policy_epoch: u64,
+    pub observed_at_unix_ms: u64,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkMemberView {
+    pub installation_id: String,
+    pub public_key: String,
+    pub membership_epoch: u64,
+    pub role: crate::network::SpaceRole,
+    pub active: bool,
+    pub policy: NetworkPolicyView,
+}
+/// Exact canonical claims and signature, base64url without padding. Keep these
+/// credentials out of logs, telemetry, events and diagnostic views.
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkGrantView {
+    pub schema_version: u32,
+    pub grant_id: String,
+    pub claims: String,
+    pub signature: String,
+}
+
 /// Discovery inputs supplied by the authenticated, pinned deployment. Local
 /// private-network consent is deliberately absent from this response.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]

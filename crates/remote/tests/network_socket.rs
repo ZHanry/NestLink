@@ -42,7 +42,12 @@ fn fixture(require_namespace: bool) -> Result<PathBuf> {
     assert!(root.starts_with(&temporary) && root != temporary);
     if require_namespace {
         let actual = fs::read_link("/proc/self/ns/net")?;
-        assert_ne!(actual, fs::read_link("/proc/1/ns/net")?);
+        // The ordinary runner token cannot inspect root-owned PID 1 namespace
+        // links on hardened hosted runners. The orchestrator records its own
+        // kernel namespace before setpriv and verifies both created namespaces.
+        let runner = std::env::var("NESTLINK_NETWORK_RUNNER_NAMESPACE")?;
+        assert!(runner.starts_with("net:[") && runner.ends_with(']'));
+        assert_ne!(actual.to_string_lossy(), runner);
         println!("NESTLINK_NETWORK namespace={actual:?} pid={}", std::process::id());
         let status = fs::read_to_string("/proc/self/status")?;
         let uid = status.lines().find(|line| line.starts_with("Uid:")).ok_or("missing uid")?;

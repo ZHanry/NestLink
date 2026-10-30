@@ -200,6 +200,7 @@ def namespace_argv(namespace: str, executable: Path, role: str, fixture: Path, c
     variables = {"GITHUB_ACTIONS": "true", "RUNNER_ENVIRONMENT": "github-hosted",
                  "GITHUB_REPOSITORY": EVIDENCE.REPOSITORY, "RUNNER_TEMP": os.environ["RUNNER_TEMP"],
                  "NESTLINK_NETWORK_FIXTURE": str(fixture), "NESTLINK_NETWORK_CASE": case,
+                 "NESTLINK_NETWORK_RUNNER_NAMESPACE": os.readlink("/proc/self/ns/net"),
                  "RUST_BACKTRACE": "1"}
     return ["sudo", "-n", "ip", "netns", "exec", namespace,
             "setpriv", "--reuid", str(os.getuid()), "--regid", str(os.getgid()), "--clear-groups",
