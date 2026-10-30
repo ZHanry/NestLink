@@ -6,7 +6,7 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "e158101e62bc3c96f8d5460008a87377565cad65",
+    "source_revision":  "f6b026c7c7bd20e56cc9bf5db2201a450b404b6c",
     "checkpoint_kind":  "work_in_progress_against_source_revision",
     "active_tasks":  [
                          "W00",
@@ -20,6 +20,7 @@
                          "W09",
                          "W10",
                          "W11",
+                         "W17",
                          "W18"
                      ],
     "satisfied_interface_dependencies":  [
@@ -60,7 +61,8 @@
                                    }
                                ],
     "next_steps":  [
-                       "Verify authority lifecycle UI, two-node isolation, candidate/metadata APIs and production signed ICE cleanup in exact-source Actions, including the new two-SNAT native ICE experiment.",
+                       "Resolve two-node endpoint-proof timeout on Linux and node certificate rejection on Windows without weakening authentication or time budgets.",
+                       "Verify fixed-mapping native ICE success, forced changed-port refusal, blackhole counters and Chrome/Edge production browser integration in exact-source Actions.",
                        "Review and import Actions formatting and regenerated OpenAPI; retain full workspace, browser and network gates.",
                        "Continue remaining ready network, service consumer, gateway and UI implementation after resolving current exact-source failures.",
                        "Publish 0.8.0RC and retain only main after required functionality and evidence gates are satisfied."
@@ -84,6 +86,8 @@
                            "docs/network-rewrite/evidence/pcp-lock-derivation-f09ac21.json",
                            "docs/network-rewrite/evidence/development-run-8186f75.json",
                            "docs/network-rewrite/evidence/development-run-e158101.json",
+                           "docs/network-rewrite/evidence/development-run-f6b026c.json",
+                           "docs/network-rewrite/BROWSER-LAB.md",
                            "docs/adr/network/0010-bounded-management-observation.md",
                            "docs/adr/network/0009-explicit-pcp-ice-mapping.md",
                            "protocol-spec/node-relay-attributes.md",

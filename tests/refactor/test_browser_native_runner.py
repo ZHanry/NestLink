@@ -44,6 +44,7 @@ def completed_receipts():
         "passed", "browser_peers_closed", "browser_closed", "cleanup_requested",
         "persistent_controller_preserved", "ui_cleanup_complete", "renewal_sequence_valid")}
     browser.update({"page_errors": [], "api_failures": [], "response_inspection_errors": [],
+        "browser_product": "chrome", "browser_product_verified": True,
         "workspace_ui": completed_workspace_ui(),
         "edge_namespace_ui": {field: True for field in (
             "passed", "forbidden_is_error", "explicit_revision_zero", "create_saved",
@@ -95,6 +96,16 @@ def completed_receipts():
 
 
 class NativeRunnerTests(unittest.TestCase):
+    def test_chrome_cannot_be_reported_as_edge_or_an_unobserved_product(self):
+        receipts = completed_receipts()
+        self.assertEqual(RUNNER.validate_receipts(*receipts), [])
+        self.assertIn("browser-product", RUNNER.validate_receipts(*receipts, expected_browser_product="edge"))
+        receipts[0]["browser_product"] = "edge"
+        self.assertEqual(RUNNER.validate_receipts(*receipts, expected_browser_product="edge"), [])
+        for replacement in (False, None, "true"):
+            receipts[0]["browser_product_verified"] = replacement
+            self.assertIn("browser-product", RUNNER.validate_receipts(*receipts, expected_browser_product="edge"))
+
     def test_relay_attributes_require_actual_cases_cleanup_and_exact_helper(self):
         for replacement in (None, {}, {"passed": True}):
             receipts = completed_receipts()

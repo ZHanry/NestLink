@@ -158,8 +158,12 @@ jobs:
           if-no-files-found: error
 
   browser-native:
-    name: Production Web to native host
+    name: Production Web to native host (${{ matrix.browser }})
     needs: [release-site, browser-contracts]
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, edge]
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
@@ -198,21 +202,43 @@ jobs:
             https://github.com/caddyserver/caddy/releases/download/v2.11.7/caddy_2.11.7_linux_amd64.tar.gz
           tar --extract --gzip --no-same-owner --file "$caddy_dir/caddy.tar.gz" --directory "$caddy_dir" caddy
           printf '%s  %s\n' 678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9 "$caddy_dir/caddy" | sha256sum --check --status
+      - name: Select the runner's stable Chrome
+        if: matrix.browser == 'chrome'
+        id: chrome
+        run: |
           test -x /opt/google/chrome/chrome
+          printf 'path=/opt/google/chrome/chrome\n' >> "$GITHUB_OUTPUT"
+      - name: Extract the reviewed stable Edge package without package install hooks
+        if: matrix.browser == 'edge'
+        id: edge
+        shell: bash
+        run: |
+          edge_dir="$RUNNER_TEMP/nestlink-edge-stable"
+          mkdir -p "$edge_dir"
+          curl --fail --location --retry 3 --output "$edge_dir/edge.deb" \
+            https://packages.microsoft.com/repos/edge/pool/main/m/microsoft-edge-stable/microsoft-edge-stable_156.0.4314.56-1_amd64.deb
+          printf '%s  %s\n' 808447677313fda7bb2b74a9428734d193a0b3d1d8308844ce29144fde6e2b82 \
+            "$edge_dir/edge.deb" | sha256sum --check --status
+          dpkg-deb --extract "$edge_dir/edge.deb" "$edge_dir/extracted"
+          edge_binary="$edge_dir/extracted/opt/microsoft/msedge/msedge"
+          test -x "$edge_binary"
+          "$edge_binary" --version
+          printf 'path=%s\n' "$edge_binary" >> "$GITHUB_OUTPUT"
       - name: Exercise real video, audio, input, files and cleanup
         run: |
           python3 scripts/refactor-browser-native-run.py \
             --site "$RUNNER_TEMP/nestlink-web-dist" \
             --fixture "$CARGO_TARGET_DIR/release/nestlink-browser-native-host-fixture" \
             --caddy "$RUNNER_TEMP/nestlink-browser-caddy/caddy" \
-            --chrome /opt/google/chrome/chrome \
+            --chrome "${{ steps.chrome.outputs.path || steps.edge.outputs.path }}" \
+            --browser-product "${{ matrix.browser }}" \
             --tools "$RUNNER_TEMP/nestlink-browser-tools/node_modules/puppeteer-core" \
             --output "$RUNNER_TEMP/nestlink-browser-native-evidence"
       - name: Upload sanitized integration evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: nestlink-browser-native-evidence
+          name: nestlink-browser-native-evidence-${{ matrix.browser }}
           path: ${{ runner.temp }}/nestlink-browser-native-evidence/
           if-no-files-found: warn
           retention-days: 14

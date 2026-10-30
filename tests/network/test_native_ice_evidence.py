@@ -108,6 +108,27 @@ class NativeIceEvidenceTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             ICE.validate_role_receipts("blackhole",facts,SHA256)
 
+    def test_port_change_requires_observed_kernel_rewrite_and_business_refusal(self):
+        local,wan,controller,host,observations = self.mapping_inputs()
+        local.pop()
+        wan.pop()
+        wan[-1]["source_port"] = 1025
+        result = ICE.prove_mapping("controller","port_change",local,wan,controller,host,observations)
+        self.assertTrue(result["changed_mapping_rejected"])
+        self.assertEqual(result["changed_peer_checks"],1)
+        for port in (46001,1026):
+            changed = copy.deepcopy(wan)
+            changed[-1]["source_port"] = port
+            with self.assertRaises(RuntimeError):
+                ICE.prove_mapping("controller","port_change",local,changed,controller,host,observations)
+        rejected = roles()
+        for role in rejected.values():
+            role.update(setup_rejected=True,uses_bilateral_ice=False,payload_verified=False,file_bytes=0)
+        ICE.validate_role_receipts("port_change",rejected,SHA256)
+        rejected["host"]["payload_verified"] = True
+        with self.assertRaises(RuntimeError):
+            ICE.validate_role_receipts("port_change",rejected,SHA256)
+
     def mapping_inputs(self):
         local = [packet("10.220.1.2",ICE.STUN[0],46001,3478,REQUEST),
                  packet(ICE.STUN[0],"10.220.1.2",3478,46001,response()),

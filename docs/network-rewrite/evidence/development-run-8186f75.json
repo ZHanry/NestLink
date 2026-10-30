@@ -67,7 +67,18 @@
     "source_and_output_digest_verified": true,
     "output_imported": true
   },
-  "other_results": ["WASM passed", "Linux portal, audio, input and network events passed", "routed kernel NAT passed", "production socket passed", "independent vectors passed", "browser observer contracts passed; actual Web/native run pending at review"],
+  "browser_native": {
+    "artifact_id": "13006426826",
+    "zip_sha256": "e7c8d1fb3b0e20bb9cf2bc5e01cf436ad7ecdf34a2df014654d48dffef1093ca",
+    "artifact_digest_verified": true,
+    "runner_passed": true,
+    "process_exit_codes": {"browser": 0, "native": 0},
+    "validation_failures": [],
+    "forced_process_termination": false,
+    "exact_tls_leaf_trust_and_owned_resource_cleanup": "passed",
+    "scope": "Owned Linux loopback production Web/native VP8/Opus/input/files/UI/authority integration; not installed Windows or external-network acceptance"
+  },
+  "other_results": ["WASM passed", "Linux portal, audio, input and network events passed", "routed kernel NAT passed", "production socket passed", "independent vectors passed", "browser observer contracts and actual Web/native integration passed"],
   "new_source_follow_up": [
     "File-store regression now persists an explicitly selected private PCP gateway and checks it after reopening.",
     "Database blocking workers remain capped at eight. Up to eight async waiters may wait at most 200ms before worker admission; no Store lock or blocking task exists while waiting. Queue overflow/expiry remains 429. New source tests check burst admission, worker bound, queue overflow, canceled slots and expired requests never executing. This is not a claim that the two-node failure is fixed.",

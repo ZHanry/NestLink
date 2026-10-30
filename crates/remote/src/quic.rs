@@ -19,7 +19,10 @@ use std::{
     collections::BTreeMap,
     future::Future,
     io,
-    sync::Arc,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
     time::{Duration, Instant},
 };
 use tokio::{io::AsyncReadExt, task::JoinHandle};
@@ -85,12 +88,14 @@ pub async fn authorize(
         lifecycle,
     } = setup;
     let deadline = tokio::time::Instant::now() + SETUP_BUDGET;
+    let proof_stream_opened = AtomicBool::new(false);
     let proof = async {
         let (mut write, mut read) = match role {
             EndpointRole::Controller => connection.open_bi().await,
             EndpointRole::Host => connection.accept_bi().await,
         }
         .map_err(io::Error::other)?;
+        proof_stream_opened.store(true, Ordering::Relaxed);
         match role {
             EndpointRole::Controller => {
                 controller_proof(
@@ -133,9 +138,14 @@ pub async fn authorize(
     })
     .await
     .map_err(|_| {
+        let stage = if proof_stream_opened.load(Ordering::Relaxed) {
+            "verifying endpoint possession"
+        } else {
+            "opening endpoint proof stream"
+        };
         io::Error::new(
             io::ErrorKind::TimedOut,
-            "QUIC session setup budget exhausted",
+            format!("QUIC {role:?} session setup budget exhausted while {stage}"),
         )
     })??;
     let lease = LeaseControl::new(session, path, clock, lifecycle)?;

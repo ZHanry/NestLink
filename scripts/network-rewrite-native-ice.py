@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Actions-only signed native ICE / pinned Quinn / FileRead behind two SNATs.
+"""Actions-only signed native ICE / pinned Quinn / FileRead behind two UDP NATs.
 
 Reuses the existing socket/routed experiment owners, ordinary-UID namespace
 entrypoint, cleanup and provenance. No external NAT or installed-device claim.
@@ -27,7 +27,7 @@ if SPEC is None or SPEC.loader is None:
 ROUTED = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(ROUTED)
 SOCKET, EVIDENCE, require = ROUTED.SOCKET, ROUTED.EVIDENCE, ROUTED.require
-CASES = ("success", "blackhole", "cancel")
+CASES = ("success", "blackhole", "cancel", "port_change")
 STUN = ("10.221.1.1", 3478)
 COOKIE = b"\x21\x12\xa4\x42"
 
@@ -115,10 +115,10 @@ def validate_role_receipts(name: str, roles: dict, source_sha256: str) -> None:
                 "both legacy and original ICE physical UDP sockets must be rebound")
         expected_ip = "10.220.1.2" if role == "controller" else "10.220.2.2"
         require(all(socket_address(value)[0] == expected_ip for value in addresses), "rebound address belongs to another endpoint")
-        if name == "blackhole":
+        if name in ("blackhole", "port_change"):
             require(facts.get("setup_rejected") is True and facts.get("uses_bilateral_ice") is False
                     and facts.get("payload_verified") is False and facts.get("file_bytes") == 0,
-                    "blackholed peer route must never establish a business session")
+                    "unusable signed peer route must never establish a business session")
         else:
             require(facts.get("uses_bilateral_ice") is True and facts.get("input_rejected") is True
                     and facts.get("input_rejection_code") == "permission_required"
@@ -164,12 +164,26 @@ def prove_mapping(role: str, name: str, local_packets: list[dict], wan_packets: 
             require(mapping is None or mapping == candidate, "ICE physical socket changed its SNAT tuple")
             mapping = candidate
     require(mapping is not None, "missing actual ICE NAT mapping")
-    destination = socket_address(facts["selected_peer"]) if name != "blackhole" else None
+    destination = socket_address(facts["selected_peer"]) if name not in ("blackhole", "port_change") else None
     peer_packets = [p for p in local_packets if p["source"] == local_ip and p["source_port"] == local_port
                     and p["destination"] == f"10.221.{3-index}.2"]
     require(peer_packets, "original ICE socket sent no actual peer connectivity checks")
     checks = sum(stun_transaction(p["payload"], 1) is not None for p in peer_packets)
     require(checks > 0, "missing actual same-socket ICE Binding checks")
+    if name == "port_change":
+        changed = [p for p in wan_packets if p["source"] == mapping[0]
+                   and p["source_port"] == 1024 + index and p["source_port"] != mapping[1]
+                   and p["destination"] == f"10.221.{3-index}.2"
+                   and any(p["payload"] == local["payload"] and p["destination_port"] == local["destination_port"]
+                           for local in peer_packets)]
+        require(changed, "kernel never rewrote an actual original-socket peer check to the forced different port")
+        require(not any(initial(p["payload"]) for p in peer_packets + changed),
+                "changed signed tuple must not open inner Quinn business")
+        return {"original_socket":[local_ip,local_port], "observed_snat_socket":list(mapping),
+                "forced_peer_source_port":1024+index, "changed_peer_checks":len(changed),
+                "same_socket_peer_checks":checks, "same_socket_quic_initials":0,
+                "translated_quic_initials":0, "translated_peer_datagrams":len(changed),
+                "stun_transactions":len(requests), "changed_mapping_rejected":True}
     translated_peer = [p for p in wan_packets if (p["source"], p["source_port"]) == mapping
                        and p["destination"] == f"10.221.{3-index}.2"]
     require(translated_peer, "same-socket peer checks did not cross actual SNAT")
@@ -189,7 +203,7 @@ def prove_mapping(role: str, name: str, local_packets: list[dict], wan_packets: 
             "translated_peer_datagrams":len(translated_peer)}
 
 
-def kernel_nat(experiment, name: str, namespace: str, mapping: dict) -> dict:
+def kernel_nat(experiment, name: str, namespace: str, mapping: dict, expected_rules: int = 1) -> dict:
     local_ip, port = mapping["original_socket"]
     public_ip, public_port = mapping["observed_snat_socket"]
     record = experiment.command(name + "-conntrack", ["sudo","-n","ip","netns","exec",namespace,
@@ -201,9 +215,9 @@ def kernel_nat(experiment, name: str, namespace: str, mapping: dict) -> dict:
     counters = experiment.command(name + "-snat-counters", ["sudo","-n","ip","netns","exec",namespace,
         "iptables","-t","nat","-L","POSTROUTING","-n","-v","-x"])
     rows = re.findall(r"^\s*(\d+)\s+(\d+)\s+SNAT\s", (experiment.output / counters["log"]).read_text(), re.MULTILINE)
-    require(len(rows) == 1 and int(rows[0][0]) > 0, "SNAT matched no real packets")
+    require(len(rows) == expected_rules and sum(int(row[0]) for row in rows) > 0, "SNAT matched no real packets")
     return {"conntrack_log":record["log"], "counter_log":counters["log"],
-            "nat_rule_packets":int(rows[0][0]), "nat_rule_bytes":int(rows[0][1])}
+            "nat_rule_packets":sum(int(row[0]) for row in rows), "nat_rule_bytes":sum(int(row[1]) for row in rows)}
 
 
 def case(experiment, executable: Path, name: str, private: Path) -> dict:
@@ -269,10 +283,26 @@ def case(experiment, executable: Path, name: str, private: Path) -> dict:
             prefix = ["sudo","-n","ip","netns","exec",namespace]
             experiment.command(name+"-nat-route", ["sudo","-n","ip","-n",namespace,"route","add","10.221.0.0/16","via",f"10.221.{index}.1"])
             experiment.command(name+"-nat-forward", [*prefix,"sysctl","-w","net.ipv4.ip_forward=1"])
+            # Explicit 1:1 UDP address mappings retain the original UDP port in
+            # both directions. Plain Linux SNAT can reassign the port when an
+            # unsolicited reverse flow arrives first; that is a different NAT
+            # behavior and cannot qualify the signed single-candidate dialect.
+            # All rules live in these owned namespaces, without an Internet
+            # route; inbound forwarding is restricted to the other owned peer.
+            other_index = 3 - index
             for rule in (["-P","FORWARD","DROP"], ["-A","FORWARD","-m","conntrack","--ctstate","ESTABLISHED,RELATED","-j","ACCEPT"],
                          ["-A","FORWARD","-i",lan,"-o",wan,"-s",f"10.220.{index}.2","-d","10.221.0.0/16","-p","udp","-j","ACCEPT"],
+                         ["-A","FORWARD","-i",wan,"-o",lan,"-s",f"10.221.{other_index}.2","-d",f"10.220.{index}.2","-p","udp","-j","ACCEPT"],
                          ["-A","FORWARD","-i",lan,"-o",wan,"-s",f"10.220.{index}.2","-d",STUN[0],"-p","tcp","--dport","28880","-j","ACCEPT"],
+                         ["-t","nat","-A","PREROUTING","-i",wan,"-s",f"10.221.{other_index}.2","-d",f"10.221.{index}.2","-p","udp","-j","DNAT","--to-destination",f"10.220.{index}.2"],
                          ["-t","nat","-A","POSTROUTING","-o",wan,"-s",f"10.220.{index}.2","-j","SNAT","--to-source",f"10.221.{index}.2"]):
+                if name == "port_change":
+                    if "PREROUTING" in rule:
+                        continue
+                    if "POSTROUTING" in rule:
+                        experiment.command(name+"-changed-peer-port", [*prefix,"iptables","-t","nat","-A","POSTROUTING",
+                            "-o",wan,"-s",f"10.220.{index}.2","-d",f"10.221.{other_index}.2","-p","udp",
+                            "-j","SNAT","--to-source",f"10.221.{index}.2:{1024+index}"])
                 experiment.command(name+"-owned-nat", [*prefix,"iptables",*rule])
         prefix = ["sudo","-n","ip","netns","exec",ns["central"]]
         experiment.command(name+"-central-route", [*prefix,"sysctl","-w","net.ipv4.ip_forward=1"])
@@ -282,11 +312,16 @@ def case(experiment, executable: Path, name: str, private: Path) -> dict:
                 "-p","udp","-j","DROP" if name == "blackhole" else "ACCEPT"])
         if name == "blackhole":
             facts["fault"] = {"kind":"bidirectional-peer-udp-drop","stun_and_management_preserved":True,"installed_before_establish":True}
+        elif name == "port_change":
+            facts["fault"] = {"kind":"destination-dependent-peer-source-port","stun_and_management_preserved":True,
+                              "installed_before_establish":True,"peer_source_ports":[1025,1026]}
         for role in ("nat1","nat2","central"):
             routes = ROUTED.output_json(experiment, experiment.command(name+"-routes", ["sudo","-n","ip","-j","-n",ns[role],"route","show"]))
             require(not any(route.get("dst") == "default" for route in routes), "infrastructure namespace has external default route")
         facts["topology"] = {"namespaces":ns,"kernel_namespace_ids":kernel_ids,"runner_namespace":os.readlink("/proc/self/ns/net"),
-            "kernel_nat":"two independent port-preserving SNAT gateways","link_mtu":1280,"external_route":False,
+            "kernel_nat":("two destination-dependent UDP SNAT gateways with forced peer port changes" if name == "port_change"
+                          else "two independent 1:1 UDP address NAT gateways with fixed ports and peer-restricted ingress"),
+            "link_mtu":1280,"external_route":False,
             "management_origin":"http://127.0.0.1:28880","central_stun":list(STUN),"endpoint_loopback_tcp_forwarders":True}
         for tag in ("c","h","w1","w2"):
             namespace, interface, _ = endpoints[tag]
@@ -303,7 +338,7 @@ def case(experiment, executable: Path, name: str, private: Path) -> dict:
         controller = experiment.launch(name+"-controller", SOCKET.namespace_argv(ns["controller"],executable,"controller",fixture,name))
         host = experiment.launch(name+"-host", SOCKET.namespace_argv(ns["host"],executable,"host",fixture,name))
         active = (central,controller,host)
-        if name != "blackhole":
+        if name not in ("blackhole", "port_change"):
             for marker in ("controller-established","host-established","controller-payload-verified","host-payload-verified"):
                 SOCKET.marker(fixture,marker,active,timeout=25)
             if name == "cancel":
@@ -333,7 +368,8 @@ def case(experiment, executable: Path, name: str, private: Path) -> dict:
         mappings = {}
         for role, local_tag, wan_tag, index in (("controller","c","w1",1),("host","h","w2",2)):
             mappings[role] = prove_mapping(role,name,parsed[local_tag],parsed[wan_tag],roles[role],roles["host" if role == "controller" else "controller"],central_facts["stun_observations"])
-            mappings[role]["kernel_nat"] = kernel_nat(experiment,name+"-nat"+str(index),ns["nat"+str(index)],mappings[role])
+            mappings[role]["kernel_nat"] = kernel_nat(experiment,name+"-nat"+str(index),ns["nat"+str(index)],mappings[role],
+                                                    expected_rules=2 if name == "port_change" else 1)
             (experiment.output / (name+"-"+role+"-receipt.json")).write_text(json.dumps(roles[role],indent=2)+"\n")
         (experiment.output / (name+"-central-receipt.json")).write_text(json.dumps(central_facts,indent=2)+"\n")
         facts["roles"], facts["same_socket_mappings"] = roles, mappings
@@ -342,7 +378,9 @@ def case(experiment, executable: Path, name: str, private: Path) -> dict:
             argv = ["iptables","-L","FORWARD","-n","-v","-x"] if name == "blackhole" else ["tc","-s","qdisc","show","dev",endpoints["w2"][1]]
             record = experiment.command(name+"-drop-counters",[*prefix,*argv])
             text = (experiment.output / record["log"]).read_text()
-            drops = re.findall(r"^\s*(\d+)\s+\d+\s+DROP\s+udp\s",text,re.MULTILINE) if name == "blackhole" else re.findall(r"\bdropped (\d+)\b",text)
+            # iptables -n prints the UDP protocol numerically on current
+            # runners. Both spellings identify the same kernel protocol 17.
+            drops = re.findall(r"^\s*(\d+)\s+\d+\s+DROP\s+(?:udp|17)\s",text,re.MULTILINE) if name == "blackhole" else re.findall(r"\bdropped (\d+)\b",text)
             require(drops and sum(map(int,drops)) > 0, "kernel did not drop any actual peer traffic")
             facts["fault"]["kernel_dropped_packets"] = sum(map(int,drops))
             facts["fault"]["kernel_counter_log"] = record["log"]
@@ -451,12 +489,12 @@ def main() -> int:
         except BaseException as error:
             failure = (failure or "")+"; source integrity: "+str(error)
         receipt = {"schema_version":1,"kind":"nestlink-native-ice-kernel-nat-experiment","passed":failure is None,"failure":failure,
-            "scope":"signed SDK native ICE, pinned Quinn and 256KiB FileRead business-channel bytes across two real Linux SNATs",
+            "scope":"signed SDK native ICE and FileRead across two real Linux 1:1 UDP NAT gateways, plus forced destination-dependent port-change rejection",
             "ac04_passed":False,"ac05_passed":False,"ac07_passed":False,
             "build_provenance":{**identity,"source_before":before,"source_after":after,"executable":executable_record},
             "execution_provenance":{**identity,"environment":"github-hosted-linux-network-namespaces","process_uid":os.getuid()},
             "cases":cases,"commands":commands,"processes":processes,"files":EVIDENCE.artifact_files(output),
-            "limitations":["Owned Linux port-preserving SNAT only; no external routers, symmetric NAT, CGNAT or IPv6 NAT qualification",
+            "limitations":["Successful business scope is owned Linux 1:1 UDP address mappings with peer-restricted ingress; the forced destination-dependent case proves refusal only, without external-router, general symmetric NAT, CGNAT or IPv6 NAT qualification",
                 "Actual signed remote SessionPermit, SDK signaling, bilateral ICE and pinned Quinn run; no screen, input injection, audio or installed Windows acceptance",
                 "FileRead frames carry a complete owned random 256KiB payload in both directions; no file browser, filesystem grant, download/resume or file worker claim",
                 "Both original legacy and ICE physical sockets must be rebound after explicit owner cleanup; success cannot fall back to legacy",

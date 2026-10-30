@@ -235,7 +235,7 @@ async fn rebind(address: SocketAddr) -> Result {
 async fn endpoint(role: &str) -> Result {
     let root = fixture()?;
     let case = std::env::var("NESTLINK_NETWORK_CASE")?;
-    assert!(["success", "blackhole", "cancel"].contains(&case.as_str()));
+    assert!(["success", "blackhole", "cancel", "port_change"].contains(&case.as_str()));
     let controller = role == "controller";
     let index = if controller { 1 } else { 2 };
     let other = if controller { "host" } else { "controller" };
@@ -366,10 +366,10 @@ async fn endpoint(role: &str) -> Result {
         "released_udp_sockets":physical.len(),"rebound_udp_addresses":physical.iter().map(ToString::to_string).collect::<Vec<_>>(),
         "establish_elapsed_ms":started.elapsed().as_millis(),"input_rejected":false,
         "pending_read_cancelled":false,"file_bytes":0,"payload_verified":false});
-    if case == "blackhole" {
+    if case == "blackhole" || case == "port_change" {
         assert!(
             established.is_err(),
-            "blackhole must reject every legacy or ICE session"
+            "an unusable signed tuple must reject every legacy or ICE session"
         );
         facts["setup_rejected"] = json!(true);
         mark(&root, &format!("{role}-rejected"))?;

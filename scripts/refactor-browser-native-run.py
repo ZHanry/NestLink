@@ -269,7 +269,7 @@ def validate_workspace_ui(ui):
     return failures
 
 
-def validate_receipts(browser, host, data, database, exit_codes):
+def validate_receipts(browser, host, data, database, exit_codes, expected_browser_product="chrome"):
     """A browser pass alone never qualifies a native integration as successful."""
     failures = []
 
@@ -278,6 +278,9 @@ def validate_receipts(browser, host, data, database, exit_codes):
             failures.append(label)
 
     require(exit_codes == {"browser": 0, "native": 0}, "process-exit")
+    require(expected_browser_product in ("chrome", "edge")
+            and browser.get("browser_product") == expected_browser_product
+            and browser.get("browser_product_verified") is True, "browser-product")
     failures.extend(validate_workspace_ui(browser.get("workspace_ui")))
     namespace = browser.get("edge_namespace_ui", {})
     for field in ("passed", "forbidden_is_error", "explicit_revision_zero", "create_saved",
@@ -491,6 +494,7 @@ def run(args):
     facts = {"schema_version": 1, "passed": False, "github_sha": os.environ.get("GITHUB_SHA"),
              "scope": "Production Web/native loopback integration with real VP8/Opus, owned input and files; not physical Windows or external-network acceptance",
              "started_unix_ms": int(time.time() * 1000), "global_trust_modified": False,
+             "browser_product": args.browser_product,
              "exit_codes": {}, "validation_failures": [], "cleanup": {}, "error": None}
 
     def interrupted(_number, _frame):
@@ -549,6 +553,7 @@ def run(args):
         browser = spawn("browser", ["node", ROOT / "scripts/refactor-browser-native-check.cjs",
             "--ready", private / "native/ready.json", "--report", private / "probe/browser-report.json",
             "--tools", tools, "--executable", chrome, "--engine", "chrome", "--tls", private / "tls.json",
+            "--browser-product", args.browser_product,
             "--owned-data", "true", "--upload-fixture", private / "selected-upload.bin",
             "--download-directory", private / "received"], env)
         # Includes the space lifecycle's deliberate production rate-window
@@ -593,7 +598,8 @@ def run(args):
             receipts = [read_json(private / folder / filename) for folder, filename in (
                 ("probe", "browser-report.json"), ("native", "host-result.json"),
                 ("native", "data-result.json"), ("native", "database-cleanup.json"))]
-            facts["validation_failures"].extend(validate_receipts(*receipts, facts["exit_codes"]))
+            facts["validation_failures"].extend(validate_receipts(
+                *receipts, facts["exit_codes"], expected_browser_product=args.browser_product))
         except Exception as error:
             facts["validation_failures"].append("missing-or-invalid-completion-receipt")
             facts["receipt_error"] = sanitize(f"{type(error).__name__}: {error}", secrets)
@@ -625,6 +631,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("site", "fixture", "caddy", "chrome", "tools", "output"):
         parser.add_argument("--" + name, required=True)
+    parser.add_argument("--browser-product", choices=("chrome", "edge"), default="chrome")
     return run(parser.parse_args())
 
 

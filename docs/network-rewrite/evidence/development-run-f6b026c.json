@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "f6b026c7c7bd20e56cc9bf5db2201a450b404b6c",
+  "review_method": "GitHub-hosted Actions status/logs and original artifact hash verification; no local project tooling",
+  "network_run_id": "41118142054",
+  "core_run_id": "41118142193",
+  "web_run_id": "41118142055",
+  "linux_contract": {
+    "job_id": "124277616247",
+    "artifact_id": "13006778567",
+    "zip_sha256": "a868e3bf94491ca4748e030f97e9aed8675d69407ef6dad32f62e96d6c5755b9",
+    "artifact_and_command_log_digests_verified": true,
+    "status": "format, clippy, selected package tests and evidence tests all passed",
+    "specific_regressions": "bounded database burst, wait queue, cancellation and expiry; actual authenticated route observation limit; replay/issuance budget and successful revocation after exhaustion all passed"
+  },
+  "windows_contract": {
+    "job_id": "124277616212",
+    "artifact_id": "13006589695",
+    "zip_sha256": "34e28916a906ebe686ad858bbca45e707925d678d2dce1c8ff5c453863be2c9f",
+    "digest_provenance": "GitHub artifact metadata; not downloaded at this checkpoint",
+    "status": "GitHub job succeeded"
+  },
+  "linux_scoped": {
+    "artifact_id": "13007067998",
+    "zip_sha256": "9ef3ff53b863ce21f716dd93a9e8d7ec059fa8d82c46895b9216680f3a9fad43",
+    "artifact_digest_verified": true,
+    "pcp_and_local_settings": "passed, including repaired Core historical persistent settings initializer",
+    "explicit_relay_selection": "passed",
+    "multi_node": "4 passed, second route failed at QUIC endpoint-proof setup timeout. No HTTP 429 remained in this run; the timeout is unresolved and not counted as passed."
+  },
+  "native_snat": {
+    "job_id": "124277616404",
+    "artifact_id": "13005519642",
+    "zip_sha256": "8ebd31fcfaee348aa106a2b41736d788e9b3a176437c484fb24edaff721a62f5",
+    "artifact_digest_verified": true,
+    "compilation": "clippy and exact role executable build passed; real namespace cases executed",
+    "success_and_cancel": "failed safely at NoCandidates; retained captures show plain Linux SNAT changed the peer-facing source port relative to STUN under the simultaneous reverse flow",
+    "manual_capture_example": "success controller original/STUN port 45551 (0xb1ef) became peer-facing port 48364 (0xbcec) in success-w1.pcap; host checks reached that WAN interface but not the original controller socket",
+    "blackhole": "both endpoints refused setup, original sockets rebound and namespaces removed. Captures/conntrack and kernel DROP counters show three actual peer checks dropped in each direction. Evidence parser rejected the numeric protocol 17 spelling, so the case remained failed.",
+    "follow_up": "Model the supported positive lab as explicit fixed-port 1:1 UDP address NAT, preserve all full-sized Quinn/FileRead/cleanup requirements, and add a distinct forced destination-dependent port-change refusal case. Accept UDP protocol spelling 17 or udp in actual kernel counters. No production filter, authorization, deadline or assertion is relaxed."
+  },
+  "windows_scoped": {
+    "artifact_id": "13008616959",
+    "zip_sha256": "22901e656919c0fa72a5b447733e27521829a871d76cc2feb49c4ae3ceffb8f2",
+    "artifact_digest_verified": true,
+    "pcp_and_local_settings": "passed, including actual UDP lifecycle and repaired persistent Core settings",
+    "explicit_relay_selection": "passed",
+    "multi_node": "4 passed; first route failed node QUIC certificate verification with ApplicationVerificationFailure. No HTTP 429 remained. This is an unresolved failed gate."
+  },
+  "other_observed_results": [
+    "Secret scan and CodeQL passed",
+    "Routed kernel NAT, production socket and independent vectors passed",
+    "Both full Core platform jobs and actual Web/native job still running at this checkpoint"
+  ],
+  "release_qualified": false,
+  "follow_up_requires_new_exact_source_actions": true
+}

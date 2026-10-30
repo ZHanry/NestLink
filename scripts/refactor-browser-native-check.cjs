@@ -40,6 +40,7 @@ if (require(path.join(path.resolve(args.tools), 'package.json')).version !== '25
 const digest = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 const report = { schema_version: 1, scope: 'Production Web UI to native Core, real local WebRTC/VP8 and management renewal; owned synthetic capture, not installed-platform acceptance',
   started_at_utc: new Date().toISOString(), passed: false, engine: args.engine, executable_sha256: digest(args.executable),
+  browser_product: args['browser-product'] || args.engine, browser_product_verified: false,
   probe_sha256: digest(__filename), initial_permits: [], renewals: [], successful_revocations: [], samples: [], page_errors: [], api_failures: [], response_inspection_errors: [], cleanup_requested: false, error: null };
 report.capture_profile = profile;
 report.intervals = [];
@@ -118,6 +119,14 @@ async function main() {
       userDataDir: tls.profile, acceptInsecureCerts: false,
       args: args.engine === 'chrome' ? ['--no-first-run', '--no-default-browser-check', '--ignore-certificate-errors-spki-list=' + tls.leaf_spki_sha256_base64] : [], timeout: 30000 });
     report.browser_version = await browser.version();
+    const userAgent = await browser.userAgent();
+    check(['chrome', 'edge', 'firefox'].includes(report.browser_product), 'Unknown requested browser product');
+    const isEdge = /\bEdg\/\d+\./.test(userAgent);
+    const productMatches = report.browser_product === 'firefox' ? /\bFirefox\/\d+\./.test(userAgent)
+      : report.browser_product === 'edge' ? isEdge : /\b(?:Headless)?Chrome\/\d+\./.test(userAgent) && !isEdge;
+    check(productMatches,
+      'Actual browser product differs from the requested qualification');
+    report.browser_product_verified = true;
     page = await ownedData.createPage(browser, ready, args, tls);
     const observationOptions = { disconnectedEvent: CDPSessionEvent.Disconnected,
       onClaims: (operation, claims) => {
