@@ -6,7 +6,7 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "34a4f9b3fbb8f44a3da36675d643ee31d20668b7",
+    "source_revision":  "5c3aede",
     "checkpoint_kind":  "work_in_progress_against_source_revision",
     "active_tasks":  [
                          "W00",
@@ -14,7 +14,9 @@
                          "W03",
                          "W04",
                          "W05",
-                         "W06"
+                         "W06",
+                         "W07",
+                         "W18"
                      ],
     "satisfied_interface_dependencies":  [
                                              "W01 nine-topic source and mature-component research independently reviewed",
@@ -54,16 +56,17 @@
                                    }
                                ],
     "next_steps":  [
-                       "Read Actions results for durable membership HTTP APIs, real namespace FileRead success/blackhole/cancellation, and single-owner native cleanup. Apply only reviewed Actions formatter patches.",
-                       "Finish business-authorized Connectivity/Path issuance and current-state readback without promoting space membership into business rights.",
-                       "Implement authenticated routed datagrams and W07/W09/W14 feasibility experiments before dependent features rely on them.",
-                       "Continue all remaining product workflows and acceptance; no release eligibility is claimed by first-slice contract success."
+                       "Read exact-source Actions format, contract, routed transport and SDK business proof results; apply only reviewed Actions patches.",
+                       "Run compiled real-browser membership controls through the actual server and retain full receipt fields.",
+                       "Complete server/node admission and durable route reservations before enabling the new transport on production AppCore paths.",
+                       "Continue bilateral same-socket ICE, multi-relay/migration, all remaining product functions and target acceptance; release remains not ready."
                    ],
     "evidence_index":  [
                            "docs/network-rewrite/evidence/research-review-2026-10-30.md",
                            "docs/network-rewrite/evidence/baseline-github-2026-10-30.json",
                            "docs/network-rewrite/evidence/independent-vector-build-195ff0f.json",
-                           "docs/network-rewrite/evidence/independent-vector-build-bcc161d.json"
+                           "docs/network-rewrite/evidence/independent-vector-build-bcc161d.json",
+                           "docs/network-rewrite/IMPLEMENTATION-2026-10-30.md"
                        ],
     "observed_actions":  [
                              {
@@ -83,6 +86,12 @@
                                  "source_revision":  "bcc161d22f5fa0c026f690b5fc50a30cf43d7cae",
                                  "status":  "independent_vectors_succeeded_contracts_superseded",
                                  "scope":  "All six grant kinds independently generated; exact bytes copied with SHA-256 verification; no target acceptance claim"
+                             },
+                             {
+                                 "run_id":  41034692058,
+                                 "source_revision":  "5ede5d00f72deff02c4221f5741517182bb1452a",
+                                 "status":  "failure",
+                                 "scope":  "Linux selected contract tests/clippy and independent vectors passed; format failed; one-way blackhole passed, success/cancel host-stop order failed. Later code unverified."
                              }
                          ],
     "release_state":  "not_ready",
