@@ -29,7 +29,7 @@ pub struct NodePolicySigner {
     key: SigningKey,
 }
 pub struct NodeIdentity {
-    key: SigningKey,
+    pub(crate) key: SigningKey,
 }
 impl NodePolicySigner {
     pub fn from_master_seed(seed: &[u8; 32]) -> Result<Self, ContractError> {

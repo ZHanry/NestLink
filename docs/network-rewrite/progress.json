@@ -6,7 +6,7 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "bd1f298c2babe601087176d1834a1fec2ef52b19",
+    "source_revision":  "c7d1ae10c1c84d431a5696fac3a889fd3e59bcda",
     "checkpoint_kind":  "work_in_progress_against_source_revision",
     "active_tasks":  [
                          "W00",
@@ -21,7 +21,8 @@
                          "W10",
                          "W11",
                          "W17",
-                         "W18"
+                         "W18",
+                         "W12"
                      ],
     "satisfied_interface_dependencies":  [
                                              "W01 nine-topic source and mature-component research independently reviewed",
@@ -61,12 +62,11 @@
                                    }
                                ],
     "next_steps":  [
-                       "Verify corrected node request/receipt deadline conversion and pending resource continuity in exact-source Windows/Linux Actions; retain all TLS, query, proof and cleanup gates.",
-                       "Verify both canonical inner-QUIC initiator roles after repairing the test fixture ordering.",
-                       "Finish and read back Chrome/Edge production browser integration, complete workspace and native ICE lab artifacts.",
-                       "Verify the exact crab_nat MIT declaration and separately disclosed SPDX standard-text supplement with unchanged NOTICE packaging gates.",
-                       "Continue W12 topology and bounded multihop, followed by all other ready mandatory features; independent target evidence remains explicit.",
-                       "Publish 0.8.0RC only after required implementation and evidence gates; local and remote currently contain only main."
+                       "Run exact-source topology signature and durable SQLite regressions on GitHub Actions; inspect and repair before relying on the new control API.",
+                       "Read c7d1ae1 full Windows/Linux workspace tests and investigate the remaining Windows scoped relay failure; Linux multi-node and both SDK initiators passed the exact-source scoped tests.",
+                       "Finish the exact-source Chrome and Edge production browser matrix; ARM64 image packaging and the actual crab_nat notice contents have been verified.",
+                       "Implement the bounded topology graph consumer and node reporter, atomic two-relay reservations and NRD2 carrier, followed by all remaining mandatory features.",
+                       "Publish 0.8.0RC only after required implementation and acceptance evidence; local and remote branch cleanup still requires only main."
                    ],
     "evidence_index":  [
                            "docs/network-rewrite/evidence/research-review-2026-10-30.md",
@@ -97,7 +97,9 @@
                            "docs/network-rewrite/evidence/development-run-bd1f298.json",
                            "docs/adr/network/0011-live-snapshot-network-chain-reuse.md",
                            "docs/adr/network/0012-node-observation-deadlines-and-pending-continuity.md",
-                           "docs/refactor/crab-nat-license-review-2026-10-31.md"
+                           "docs/refactor/crab-nat-license-review-2026-10-31.md",
+                           "docs/network-rewrite/evidence/development-run-bd1f298-browser.json",
+                           "docs/adr/network/0013-durable-authorized-topology.md"
                        ],
     "observed_actions":  [
                              {

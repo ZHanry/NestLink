@@ -1612,8 +1612,8 @@
                                               "F14",
                                               "F23"
                                           ],
-                      "status":  "not_started",
-                      "implementation_status":  "not_started",
+                      "status":  "in_progress",
+                      "implementation_status":  "in_progress",
                       "verification_status":  "not_run",
                       "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
                       "owned_paths_to_review":  [
@@ -1653,11 +1653,15 @@
                                                       "无未标明的外部验证缺口"
                                                   ],
                       "evidence_refs":  [
-
+                                            "docs/adr/network/0013-durable-authorized-topology.md"
                                         ],
                       "blockers":  [
 
-                                   ]
+                                   ],
+                      "implementation_notes":  [
+                                                   "First production slice adds signed space-scoped publisher/report/advertisement/query domains, real node runtime and endpoint validation, durable SQLite sequence and withdrawal journal, nonce-bound full/delta HTTP APIs, and focused Actions regressions; execution is pending.",
+                                                   "Graph consumer, NodeControl adjacency reporter, stored prefix grant issuance, atomic two-relay reservation, NRD2 and four-node business acceptance remain unimplemented."
+                                               ]
                   },
                   {
                       "id":  "W13",

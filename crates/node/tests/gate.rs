@@ -147,13 +147,8 @@ fn signed_wall_expiry_and_request_lifetime_independently_bound_a_delayed_lease()
     assert!(gate.accept(&signed, &c, 601, clock(600, 1600)).is_err());
     let mut gate = fresh()?;
     assert!(
-        gate.accept(
-            &signed,
-            &c,
-            u64::MAX - 500,
-            clock(u64::MAX - 499, 1000)
-        )
-        .is_err()
+        gate.accept(&signed, &c, u64::MAX - 500, clock(u64::MAX - 499, 1000))
+            .is_err()
     );
     Ok(())
 }

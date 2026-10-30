@@ -138,4 +138,9 @@
   {"path":"/services/{id}/publication","method":"get","operation":"service_publication::inspect","status":200,"auth":true,"response":"ServicePublicationGrant"},
   {"path":"/services/{id}/publication","method":"post","operation":"service_publication::publish","status":200,"auth":true,"request":"ServicePublicationRequest","response":"ServicePublicationGrant"},
   {"path":"/services/{id}/publication","method":"delete","operation":"service_publication::stop","status":204,"auth":true,"request":"ServicePublicationRequest"}
+  ,{"path":"/network/spaces/{space}/topology/publishers/{node}","method":"post","operation":"network_policy::topology::issue","request":"NetworkTopologyPublisherRequest","response":"NetworkTopologyEnvelope","status":201,"auth":true}
+  ,{"path":"/network/spaces/{space}/topology/publishers/{node}","method":"get","operation":"network_policy::topology::publisher","response":"NetworkTopologyEnvelope","status":200,"auth":true}
+  ,{"path":"/network/spaces/{space}/topology/publishers/{node}","method":"delete","operation":"network_policy::topology::revoke","status":204,"auth":true}
+  ,{"path":"/network/spaces/{space}/topology/reports/{node}","method":"post","operation":"network_policy::topology::report","request":"NetworkTopologyEnvelope","response":"NetworkTopologyEnvelope","status":200,"auth":false,"signed_node_topology_report":true}
+  ,{"path":"/network/spaces/{space}/topology/query","method":"post","operation":"network_policy::topology::query","request":"NetworkTopologyQuery","response":"NetworkTopologyEnvelope","status":200,"auth":true}
 ]

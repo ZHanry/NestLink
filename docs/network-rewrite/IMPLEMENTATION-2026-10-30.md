@@ -392,3 +392,21 @@ are paired with separately identified official SPDX standard text; its missing
 upstream LICENSE is disclosed rather than invented. Existing NOTICE collector
 and missing-file checks remain unchanged. Node, browser and packaging repairs
 all require new exact-source Actions; no release qualification is implied.
+
+At c7d1ae1 the exact-source Linux SDK scoped suite passed all 16 tests,
+including both inner-QUIC initiators with real FileRead, input denial and
+physical socket release. The real management/two-node relay suite passed all
+five tests on Linux, including independent node revocation while the other
+route continued. The Windows scoped relay step is failed and remains under
+investigation; complete workspace results and the new browser matrix are not
+substituted by the Linux result. The ARM64 actual image has complete Cargo
+notices and the exact crab_nat standard-text supplement and disclosure.
+
+W12 source now includes an independently signed topology contract, explicit
+space-scoped publisher delegation, current registered runtime/endpoint checks,
+a durable SQLite replay/withdrawal journal and nonce-bound full/delta HTTP
+routes. Prefix issuance stays closed pending the stored RouteExport chain.
+Seven new SQLite regressions and eight protocol/identity regressions are to be
+executed on GitHub Actions. Graph consumption, node reporting, the atomic
+two-relay reservation and NRD2 four-node carrier remain required implementation,
+so neither W12 nor AC18/AC19 is complete. ADR 0013 records this first slice.

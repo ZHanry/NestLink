@@ -44,6 +44,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  topology-journal:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CARGO_INCREMENTAL: "0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+      - name: Exercise topology signatures, publication ACL and durable SQLite history
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-protocol -p nestlink-identity -p nestlink-storage --test network_topology -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-topology-tests.log"
+      - name: Retain exact-source topology test log
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: network-topology-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/network-topology-tests.log
+          if-no-files-found: error
+          retention-days: 30
   native-ice-kernel-nat-slice:
     runs-on: ubuntu-24.04
     timeout-minutes: 45

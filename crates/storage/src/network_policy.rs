@@ -20,6 +20,7 @@ mod remote_relays;
 pub use remote_relays::{NetworkRemoteRelayBundle, NetworkRemoteRelayIssuance};
 mod authority;
 pub use authority::{NetworkAuthorityChange, NetworkAuthorityState};
+pub mod topology;
 
 pub const MAX_NETWORK_MEMBERS: usize = 4096;
 pub const MAX_CURRENT_NETWORK_GRANTS: usize = 65_536;

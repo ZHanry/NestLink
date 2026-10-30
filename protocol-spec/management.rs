@@ -1249,3 +1249,29 @@ pub struct MediaApprovalSubmission {
     pub choice: MediaApprovalChoice,
     pub signature: String,
 }
+
+/// Explicit space delegation to one registered node's current control runtime.
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkTopologyPublisherRequest {
+    pub publisher_id: String,
+    pub expected_policy_epoch: u64,
+    pub allowed_node_ids: Vec<String>,
+    pub expires_at_ms: u64,
+}
+
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkTopologyQuery {
+    pub after_cursor: Option<u64>,
+    pub nonce: [u8; 32],
+}
+
+/// Canonical bytes and Ed25519 signature. Each endpoint has its own signing
+/// domain; this common JSON shape never makes their credentials interchangeable.
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkTopologyEnvelope {
+    pub claims: Vec<u8>,
+    pub signature: Vec<u8>,
+}

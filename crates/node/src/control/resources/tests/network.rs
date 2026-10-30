@@ -324,7 +324,12 @@ impl NetworkCandidateFixture {
         }
         Ok(fixture)
     }
-    fn snapshot(&self, sequence: u64, now: ClockSample, included: bool) -> NodeResourceSnapshotClaims {
+    fn snapshot(
+        &self,
+        sequence: u64,
+        now: ClockSample,
+        included: bool,
+    ) -> NodeResourceSnapshotClaims {
         let mut value = snapshot(sequence, now, Vec::new());
         value.allocation_issuer = PermitSigner::from_seed([1; 32]).public_key().to_vec();
         if included {
@@ -356,8 +361,8 @@ impl NetworkCandidateFixture {
 }
 
 #[tokio::test]
-async fn a_pending_network_candidate_survives_continuous_fresh_snapshots_until_commit()
--> TestResult {
+async fn a_pending_network_candidate_survives_continuous_fresh_snapshots_until_commit() -> TestResult
+{
     let f = NetworkCandidateFixture::new(10000)?;
     let candidate = f.prepare()?;
     let prepared = sample(f.base.control.started)?;
@@ -433,12 +438,13 @@ async fn a_pending_network_candidate_cannot_revive_after_omission_expiry_or_reso
 }
 
 #[tokio::test]
-async fn a_prepared_network_candidate_keeps_the_original_node_authorization_cutoff()
--> TestResult {
+async fn a_prepared_network_candidate_keeps_the_original_node_authorization_cutoff() -> TestResult {
     let f = NetworkCandidateFixture::new(3000)?;
     let candidate = f.prepare()?;
     let prepared = sample(f.base.control.started)?;
-    let lease = f.base.renew_node(clock(prepared.monotonic_ms + 500, prepared.unix_ms + 500))?;
+    let lease = f
+        .base
+        .renew_node(clock(prepared.monotonic_ms + 500, prepared.unix_ms + 500))?;
     for sequence in 4..=10 {
         let offset = (sequence - 3) * 500;
         let now = clock(prepared.monotonic_ms + offset, prepared.unix_ms + offset);

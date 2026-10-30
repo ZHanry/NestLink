@@ -305,7 +305,7 @@ fn schema_twenty_nine_upgrade_keeps_the_existing_authority_key_and_grant() -> Re
     let probe = Connection::open(&f.path)?;
     // Reconstruct the populated pre-lifecycle schema, retaining the original
     // authority, memberships, credentials and restore/security fences.
-    probe.execute_batch("DROP TABLE node_relay_attributes; DROP TABLE space_service_rules; DROP TABLE space_service_bindings; DROP TABLE network_authority_key_history; ALTER TABLE network_authorities DROP COLUMN signing_generation; ALTER TABLE network_authorities DROP COLUMN authority_revoked; PRAGMA user_version=29;")?;
+    probe.execute_batch("DROP TABLE network_topology_changes; DROP TABLE network_topology_cursors; DROP TABLE network_topology_heads; DROP TABLE network_topology_publishers; DROP TABLE node_relay_attributes; DROP TABLE space_service_rules; DROP TABLE space_service_bindings; DROP TABLE network_authority_key_history; ALTER TABLE network_authorities DROP COLUMN signing_generation; ALTER TABLE network_authorities DROP COLUMN authority_revoked; PRAGMA user_version=29;")?;
     drop(probe);
     f.store = Store::open_existing(&f.path, &f.deployment)?;
     let migrated = f

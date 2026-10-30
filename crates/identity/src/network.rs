@@ -85,7 +85,7 @@ pub fn verify_network_node_admission(
 }
 
 pub struct NetworkAuthoritySigner {
-    key: SigningKey,
+    pub(crate) key: SigningKey,
 }
 
 /// Bytes remain bounded and canonical; callers must not log signed credentials.

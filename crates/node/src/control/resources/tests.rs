@@ -151,15 +151,7 @@ fn snapshot_and_allocation_keep_request_caps_when_wall_and_monotonic_elapsed_tim
         assert!(resources.snapshot.is_none());
     }
     assert!(deadline(0, 10000, 1000, clock(600, 10000)).is_err());
-    assert!(
-        deadline(
-            u64::MAX - 500,
-            11000,
-            1000,
-            clock(u64::MAX - 499, 10000)
-        )
-        .is_err()
-    );
+    assert!(deadline(u64::MAX - 500, 11000, 1000, clock(u64::MAX - 499, 10000)).is_err());
     Ok(())
 }
 #[test]
@@ -774,8 +766,8 @@ async fn pending_legacy_candidates_cannot_revive_after_omission_expiry_or_resour
     Ok(())
 }
 #[tokio::test]
-async fn a_prepared_legacy_ticket_keeps_the_original_node_authorization_cutoff()
--> Result<(), Error> {
+async fn a_prepared_legacy_ticket_keeps_the_original_node_authorization_cutoff() -> Result<(), Error>
+{
     let f = CandidateFixture::with_node_ttl(5000, 3000)?;
     let candidate = f.prepare()?;
     let prepared = sample(f.control.started)?;

@@ -421,6 +421,20 @@ pub fn router(state: AppState) -> Router {
             post(network_policy::issue_path),
         )
         .route(
+            "/api/v3/network/spaces/{space}/topology/publishers/{node}",
+            get(network_policy::topology::publisher)
+                .post(network_policy::topology::issue)
+                .delete(network_policy::topology::revoke),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/topology/reports/{node}",
+            post(network_policy::topology::report),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/topology/query",
+            post(network_policy::topology::query),
+        )
+        .route(
             "/api/v3/network/spaces/{space}/paths/{path}",
             get(network_policy::read_path).delete(network_policy::revoke_path),
         )

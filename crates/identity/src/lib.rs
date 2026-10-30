@@ -8,6 +8,7 @@ use prost::Message;
 use rand_core::OsRng;
 use sha2::{Digest, Sha256};
 pub mod network;
+pub mod network_topology;
 pub mod node_discovery;
 pub mod nodes;
 pub mod reconnection;
