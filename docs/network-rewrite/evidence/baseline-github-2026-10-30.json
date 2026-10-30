@@ -1,0 +1,479 @@
+﻿{
+    "schema_version":  1,
+    "kind":  "baseline-github-api-document-review",
+    "repository":  "ZHanry/NestLink",
+    "source_revision":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+    "observed_at_utc":  "2026-10-30T07:43:01Z",
+    "timezone":  "Asia/Shanghai",
+    "dependency_lock_sha256":  "38e567a70770df13298c470747e0ae6fa06e7b7b7220eaa22b5b39785a88923a",
+    "execution_provenance":  {
+                                 "AC01_replayed":  false,
+                                 "automated_project_checks_executed_locally":  false,
+                                 "kind":  "document_review"
+                             },
+    "build_provenance":  {
+                             "candidate_artifacts":  [
+                                                         {
+                                                             "id":  12633040340,
+                                                             "name":  "rc-development-part-windows-x64-1",
+                                                             "size_in_bytes":  46095074,
+                                                             "expired":  false,
+                                                             "created_at":  "2026-10-26T06:49:50Z",
+                                                             "expires_at":  "2027-01-24T06:36:29Z",
+                                                             "digest":  "sha256:68e180c81ff2454477b30719819737c607e00ccf28e1d2ddd3c8325013477311"
+                                                         },
+                                                         {
+                                                             "id":  12632790292,
+                                                             "name":  "candidate-web-source-lock-evidence-1",
+                                                             "size_in_bytes":  139577,
+                                                             "expired":  false,
+                                                             "created_at":  "2026-10-26T06:45:25Z",
+                                                             "expires_at":  "2026-11-09T06:45:24Z",
+                                                             "digest":  "sha256:b87863770ee16c1c84b5693a467de988edeec5127a9e833e935d79af930db02b"
+                                                         },
+                                                         {
+                                                             "id":  12632571443,
+                                                             "name":  "rc-development-part-oci-linux-arm64-1",
+                                                             "size_in_bytes":  40588177,
+                                                             "expired":  false,
+                                                             "created_at":  "2026-10-26T06:50:21Z",
+                                                             "expires_at":  "2027-01-24T06:36:29Z",
+                                                             "digest":  "sha256:925f3071ab1ace8819cb231eeb4a0d5a5323d545d11ddd174ba8c4c929b85fe9"
+                                                         },
+                                                         {
+                                                             "id":  12632546251,
+                                                             "name":  "rc-development-part-linux-x64-1",
+                                                             "size_in_bytes":  13964209,
+                                                             "expired":  false,
+                                                             "created_at":  "2026-10-26T06:49:07Z",
+                                                             "expires_at":  "2027-01-24T06:36:29Z",
+                                                             "digest":  "sha256:1ca21af17234a11e336223765f23054681a6ea02997d4c40469e01d73569ce9e"
+                                                         },
+                                                         {
+                                                             "id":  12632456032,
+                                                             "name":  "rc-development-part-metadata-1",
+                                                             "size_in_bytes":  5681108,
+                                                             "expired":  false,
+                                                             "created_at":  "2026-10-26T06:45:28Z",
+                                                             "expires_at":  "2027-01-24T06:36:29Z",
+                                                             "digest":  "sha256:7d8a65403d399382e064e757e8becb20e686bf8d603832ecda60fd5b7382d756"
+                                                         },
+                                                         {
+                                                             "id":  12632256722,
+                                                             "name":  "rc-development-part-web-1",
+                                                             "size_in_bytes":  1358229,
+                                                             "expired":  false,
+                                                             "created_at":  "2026-10-26T06:45:27Z",
+                                                             "expires_at":  "2027-01-24T06:36:29Z",
+                                                             "digest":  "sha256:7a414be26ebf8ffb13fa2e8135eb6f2575f1d96187c8d0bb025a70e80dddd83b"
+                                                         },
+                                                         {
+                                                             "id":  12632229166,
+                                                             "name":  "rc-development-candidate-1",
+                                                             "size_in_bytes":  164277045,
+                                                             "expired":  false,
+                                                             "created_at":  "2026-10-26T06:51:02Z",
+                                                             "expires_at":  "2027-01-24T06:36:29Z",
+                                                             "digest":  "sha256:2edd239022d9339f1cfc1c384c5813f3e6ebb7fcdfec342480725a8744041071"
+                                                         },
+                                                         {
+                                                             "id":  12631648568,
+                                                             "name":  "rc-development-part-linux-arm64-1",
+                                                             "size_in_bytes":  13323733,
+                                                             "expired":  false,
+                                                             "created_at":  "2026-10-26T06:41:23Z",
+                                                             "expires_at":  "2027-01-24T06:36:29Z",
+                                                             "digest":  "sha256:d19dbb8f9043f4c4e676b38185a573229c8a5bcfe96b7734f45da6a5bea7ae99"
+                                                         },
+                                                         {
+                                                             "id":  12631429898,
+                                                             "name":  "rc-development-part-oci-linux-x64-1",
+                                                             "size_in_bytes":  42005541,
+                                                             "expired":  false,
+                                                             "created_at":  "2026-10-26T06:50:33Z",
+                                                             "expires_at":  "2027-01-24T06:36:29Z",
+                                                             "digest":  "sha256:546495fa70216b160bc85db4ec7d7ec9bbe0519fe2ef0b1f75d36d4882b3b416"
+                                                         },
+                                                         {
+                                                             "id":  12631333505,
+                                                             "name":  "rc-development-cohort-1",
+                                                             "size_in_bytes":  2332,
+                                                             "expired":  false,
+                                                             "created_at":  "2026-10-26T06:36:52Z",
+                                                             "expires_at":  "2027-01-24T06:36:29Z",
+                                                             "digest":  "sha256:d0fd389e4cdfffe7666f26370114576b8faf6d28911f8e09abad7d79735fe70c"
+                                                         }
+                                                     ],
+                             "status":  "historical_baseline_only",
+                             "runs":  [
+                                          {
+                                              "id":  40286955833,
+                                              "name":  "Web production build",
+                                              "path":  ".github/workflows/web-build.yml",
+                                              "head_sha":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+                                              "head_branch":  "v0.7.0-rc.1",
+                                              "event":  "push",
+                                              "status":  "completed",
+                                              "conclusion":  "success",
+                                              "run_attempt":  1,
+                                              "created_at":  "2026-10-26T07:37:45Z",
+                                              "updated_at":  "2026-10-26T08:16:09Z",
+                                              "html_url":  "https://github.com/ZHanry/NestLink/actions/runs/40286955833"
+                                          },
+                                          {
+                                              "id":  40280815318,
+                                              "name":  "Build NestLink 0.7.0 RC development candidate",
+                                              "path":  ".github/workflows/v15-candidate-build.yml",
+                                              "head_sha":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+                                              "head_branch":  "main",
+                                              "event":  "workflow_dispatch",
+                                              "status":  "completed",
+                                              "conclusion":  "success",
+                                              "run_attempt":  1,
+                                              "created_at":  "2026-10-26T06:36:27Z",
+                                              "updated_at":  "2026-10-26T06:51:05Z",
+                                              "html_url":  "https://github.com/ZHanry/NestLink/actions/runs/40280815318"
+                                          },
+                                          {
+                                              "id":  40275899404,
+                                              "name":  "Build regression server",
+                                              "path":  ".github/workflows/regression-server.yml",
+                                              "head_sha":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+                                              "head_branch":  "main",
+                                              "event":  "workflow_dispatch",
+                                              "status":  "completed",
+                                              "conclusion":  "success",
+                                              "run_attempt":  1,
+                                              "created_at":  "2026-10-26T05:44:59Z",
+                                              "updated_at":  "2026-10-26T05:50:35Z",
+                                              "html_url":  "https://github.com/ZHanry/NestLink/actions/runs/40275899404"
+                                          },
+                                          {
+                                              "id":  40275892708,
+                                              "name":  "Web production build",
+                                              "path":  ".github/workflows/web-build.yml",
+                                              "head_sha":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+                                              "head_branch":  "main",
+                                              "event":  "workflow_dispatch",
+                                              "status":  "completed",
+                                              "conclusion":  "success",
+                                              "run_attempt":  1,
+                                              "created_at":  "2026-10-26T05:44:55Z",
+                                              "updated_at":  "2026-10-26T06:03:45Z",
+                                              "html_url":  "https://github.com/ZHanry/NestLink/actions/runs/40275892708"
+                                          },
+                                          {
+                                              "id":  40275811636,
+                                              "name":  "CodeQL",
+                                              "path":  ".github/workflows/codeql.yml",
+                                              "head_sha":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+                                              "head_branch":  "main",
+                                              "event":  "push",
+                                              "status":  "completed",
+                                              "conclusion":  "success",
+                                              "run_attempt":  1,
+                                              "created_at":  "2026-10-26T05:44:01Z",
+                                              "updated_at":  "2026-10-26T05:45:24Z",
+                                              "html_url":  "https://github.com/ZHanry/NestLink/actions/runs/40275811636"
+                                          },
+                                          {
+                                              "id":  40275811526,
+                                              "name":  "Secret scan",
+                                              "path":  ".github/workflows/secret-scan.yml",
+                                              "head_sha":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+                                              "head_branch":  "main",
+                                              "event":  "push",
+                                              "status":  "completed",
+                                              "conclusion":  "success",
+                                              "run_attempt":  1,
+                                              "created_at":  "2026-10-26T05:44:01Z",
+                                              "updated_at":  "2026-10-26T05:44:12Z",
+                                              "html_url":  "https://github.com/ZHanry/NestLink/actions/runs/40275811526"
+                                          },
+                                          {
+                                              "id":  40275811496,
+                                              "name":  "NestLink Rust core",
+                                              "path":  ".github/workflows/rust-core.yml",
+                                              "head_sha":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+                                              "head_branch":  "main",
+                                              "event":  "push",
+                                              "status":  "completed",
+                                              "conclusion":  "success",
+                                              "run_attempt":  1,
+                                              "created_at":  "2026-10-26T05:44:01Z",
+                                              "updated_at":  "2026-10-26T06:21:23Z",
+                                              "html_url":  "https://github.com/ZHanry/NestLink/actions/runs/40275811496"
+                                          }
+                                      ],
+                             "core_jobs":  [
+                                               {
+                                                   "id":  121418201112,
+                                                   "name":  "core (ubuntu-24.04, x86_64-unknown-linux-gnu)",
+                                                   "run_attempt":  1,
+                                                   "runner_name":  "GitHub Actions 1000008964",
+                                                   "runner_group_name":  "GitHub Actions",
+                                                   "labels":  [
+                                                                  "ubuntu-24.04"
+                                                              ],
+                                                   "status":  "completed",
+                                                   "conclusion":  "success",
+                                                   "started_at":  "2026-10-26T05:44:03Z",
+                                                   "completed_at":  "2026-10-26T06:08:53Z",
+                                                   "html_url":  "https://github.com/ZHanry/NestLink/actions/runs/40275811496/job/121418201112"
+                                               },
+                                               {
+                                                   "id":  121418201326,
+                                                   "name":  "wasm-contract",
+                                                   "run_attempt":  1,
+                                                   "runner_name":  "GitHub Actions 1000008966",
+                                                   "runner_group_name":  "GitHub Actions",
+                                                   "labels":  [
+                                                                  "ubuntu-latest"
+                                                              ],
+                                                   "status":  "completed",
+                                                   "conclusion":  "success",
+                                                   "started_at":  "2026-10-26T05:44:03Z",
+                                                   "completed_at":  "2026-10-26T05:46:09Z",
+                                                   "html_url":  "https://github.com/ZHanry/NestLink/actions/runs/40275811496/job/121418201326"
+                                               },
+                                               {
+                                                   "id":  121418201382,
+                                                   "name":  "linux-system-audio",
+                                                   "run_attempt":  1,
+                                                   "runner_name":  "GitHub Actions 1000008967",
+                                                   "runner_group_name":  "GitHub Actions",
+                                                   "labels":  [
+                                                                  "ubuntu-24.04"
+                                                              ],
+                                                   "status":  "completed",
+                                                   "conclusion":  "success",
+                                                   "started_at":  "2026-10-26T05:44:03Z",
+                                                   "completed_at":  "2026-10-26T05:46:10Z",
+                                                   "html_url":  "https://github.com/ZHanry/NestLink/actions/runs/40275811496/job/121418201382"
+                                               },
+                                               {
+                                                   "id":  121418201387,
+                                                   "name":  "linux-x11-input",
+                                                   "run_attempt":  1,
+                                                   "runner_name":  "GitHub Actions 1000008971",
+                                                   "runner_group_name":  "GitHub Actions",
+                                                   "labels":  [
+                                                                  "ubuntu-24.04"
+                                                              ],
+                                                   "status":  "completed",
+                                                   "conclusion":  "success",
+                                                   "started_at":  "2026-10-26T05:44:03Z",
+                                                   "completed_at":  "2026-10-26T05:45:50Z",
+                                                   "html_url":  "https://github.com/ZHanry/NestLink/actions/runs/40275811496/job/121418201387"
+                                               },
+                                               {
+                                                   "id":  121418201392,
+                                                   "name":  "linux-network-events",
+                                                   "run_attempt":  1,
+                                                   "runner_name":  "GitHub Actions 1000008968",
+                                                   "runner_group_name":  "GitHub Actions",
+                                                   "labels":  [
+                                                                  "ubuntu-latest"
+                                                              ],
+                                                   "status":  "completed",
+                                                   "conclusion":  "success",
+                                                   "started_at":  "2026-10-26T05:44:03Z",
+                                                   "completed_at":  "2026-10-26T05:44:25Z",
+                                                   "html_url":  "https://github.com/ZHanry/NestLink/actions/runs/40275811496/job/121418201392"
+                                               },
+                                               {
+                                                   "id":  121418201410,
+                                                   "name":  "openapi-generation",
+                                                   "run_attempt":  1,
+                                                   "runner_name":  "GitHub Actions 1000008972",
+                                                   "runner_group_name":  "GitHub Actions",
+                                                   "labels":  [
+                                                                  "ubuntu-24.04"
+                                                              ],
+                                                   "status":  "completed",
+                                                   "conclusion":  "success",
+                                                   "started_at":  "2026-10-26T05:44:03Z",
+                                                   "completed_at":  "2026-10-26T05:44:52Z",
+                                                   "html_url":  "https://github.com/ZHanry/NestLink/actions/runs/40275811496/job/121418201410"
+                                               },
+                                               {
+                                                   "id":  121418201422,
+                                                   "name":  "linux-portal-capture",
+                                                   "run_attempt":  1,
+                                                   "runner_name":  "GitHub Actions 1000008970",
+                                                   "runner_group_name":  "GitHub Actions",
+                                                   "labels":  [
+                                                                  "ubuntu-24.04"
+                                                              ],
+                                                   "status":  "completed",
+                                                   "conclusion":  "success",
+                                                   "started_at":  "2026-10-26T05:44:03Z",
+                                                   "completed_at":  "2026-10-26T05:45:41Z",
+                                                   "html_url":  "https://github.com/ZHanry/NestLink/actions/runs/40275811496/job/121418201422"
+                                               },
+                                               {
+                                                   "id":  121418201438,
+                                                   "name":  "core (windows-2022, x86_64-pc-windows-msvc)",
+                                                   "run_attempt":  1,
+                                                   "runner_name":  "GitHub Actions 1000008969",
+                                                   "runner_group_name":  "GitHub Actions",
+                                                   "labels":  [
+                                                                  "windows-2022"
+                                                              ],
+                                                   "status":  "completed",
+                                                   "conclusion":  "success",
+                                                   "started_at":  "2026-10-26T05:44:03Z",
+                                                   "completed_at":  "2026-10-26T06:21:22Z",
+                                                   "html_url":  "https://github.com/ZHanry/NestLink/actions/runs/40275811496/job/121418201438"
+                                               },
+                                               {
+                                                   "id":  121418201574,
+                                                   "name":  "dependencies",
+                                                   "run_attempt":  1,
+                                                   "runner_name":  "GitHub Actions 1000008973",
+                                                   "runner_group_name":  "GitHub Actions",
+                                                   "labels":  [
+                                                                  "ubuntu-latest"
+                                                              ],
+                                                   "status":  "completed",
+                                                   "conclusion":  "success",
+                                                   "started_at":  "2026-10-26T05:44:04Z",
+                                                   "completed_at":  "2026-10-26T05:46:32Z",
+                                                   "html_url":  "https://github.com/ZHanry/NestLink/actions/runs/40275811496/job/121418201574"
+                                               }
+                                           ]
+                         },
+    "branches":  [
+                     {
+                         "name":  "main",
+                         "protected":  false,
+                         "sha":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08"
+                     }
+                 ],
+    "published_release":  {
+                              "id":  423959877,
+                              "tag_name":  "v0.7.0-rc.1",
+                              "name":  "NestLink 0.7.0RC1",
+                              "target_commitish":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+                              "draft":  false,
+                              "prerelease":  true,
+                              "published_at":  "2026-10-26T07:37:44Z",
+                              "html_url":  "https://github.com/ZHanry/NestLink/releases/tag/v0.7.0-rc.1",
+                              "assets":  {
+                                             "value":  [
+                                                           {
+                                                               "id":  677385145,
+                                                               "name":  "candidate-build-manifest.json",
+                                                               "size":  7237,
+                                                               "digest":  "sha256:2d5a7768424f6cc2ea8875ba2b8cb8fb21ff360911b084ed4a95e2bc07fd793c",
+                                                               "browser_download_url":  "https://github.com/ZHanry/NestLink/releases/download/v0.7.0-rc.1/candidate-build-manifest.json"
+                                                           },
+                                                           {
+                                                               "id":  677382359,
+                                                               "name":  "NestLink-candidate-development-evidence.zip",
+                                                               "size":  311121,
+                                                               "digest":  "sha256:e52edd4954638ea2fd09909f9d222c9c8e43885a00ac70fcbd2a9a7c0f87f957",
+                                                               "browser_download_url":  "https://github.com/ZHanry/NestLink/releases/download/v0.7.0-rc.1/NestLink-candidate-development-evidence.zip"
+                                                           },
+                                                           {
+                                                               "id":  677382380,
+                                                               "name":  "NestLink-candidate-licenses.tar.gz",
+                                                               "size":  3446859,
+                                                               "digest":  "sha256:3859c39a0fa3f7a252a868bd9b4db5aa1e67ebc74489b2669f011a2656d57149",
+                                                               "browser_download_url":  "https://github.com/ZHanry/NestLink/releases/download/v0.7.0-rc.1/NestLink-candidate-licenses.tar.gz"
+                                                           },
+                                                           {
+                                                               "id":  677382376,
+                                                               "name":  "NestLink-candidate-linux-arm64-server.deb",
+                                                               "size":  5740604,
+                                                               "digest":  "sha256:91ef3c6ab8e3a00e98a21ecfe8bcdff500e0a785c75ac15cc6d81c0aaf39514a",
+                                                               "browser_download_url":  "https://github.com/ZHanry/NestLink/releases/download/v0.7.0-rc.1/NestLink-candidate-linux-arm64-server.deb"
+                                                           },
+                                                           {
+                                                               "id":  677382365,
+                                                               "name":  "NestLink-candidate-linux-x64-server.deb",
+                                                               "size":  6045106,
+                                                               "digest":  "sha256:517818a8ad3fbd737d9e4d01529229887465c050b5afe5317929cc776e789e5a",
+                                                               "browser_download_url":  "https://github.com/ZHanry/NestLink/releases/download/v0.7.0-rc.1/NestLink-candidate-linux-x64-server.deb"
+                                                           },
+                                                           {
+                                                               "id":  677382357,
+                                                               "name":  "NestLink-candidate-materials.zip",
+                                                               "size":  35429066,
+                                                               "digest":  "sha256:39e76f0f1e51bb7257e6922c8f6872c05bddd9d8a7afbc00c5ef3f5874575033",
+                                                               "browser_download_url":  "https://github.com/ZHanry/NestLink/releases/download/v0.7.0-rc.1/NestLink-candidate-materials.zip"
+                                                           },
+                                                           {
+                                                               "id":  677382642,
+                                                               "name":  "NestLink-candidate-native-packages.json",
+                                                               "size":  1683,
+                                                               "digest":  "sha256:10d80ecae826b83f6289867318aeb3d446ce72fe5988920cdb731d59b81e5992",
+                                                               "browser_download_url":  "https://github.com/ZHanry/NestLink/releases/download/v0.7.0-rc.1/NestLink-candidate-native-packages.json"
+                                                           },
+                                                           {
+                                                               "id":  677382844,
+                                                               "name":  "NestLink-candidate-native-payload.json",
+                                                               "size":  2079,
+                                                               "digest":  "sha256:db75179c778b7c0bf94c69fe60bc947a576eaeca41c5e992d30cc44eabe19a32",
+                                                               "browser_download_url":  "https://github.com/ZHanry/NestLink/releases/download/v0.7.0-rc.1/NestLink-candidate-native-payload.json"
+                                                           },
+                                                           {
+                                                               "id":  677382900,
+                                                               "name":  "NestLink-candidate-oci-arm64.tar",
+                                                               "size":  40058880,
+                                                               "digest":  "sha256:88b33d49b2389ba171d6da771c4b8bf435c376163e082f0938488eaa6220aa63",
+                                                               "browser_download_url":  "https://github.com/ZHanry/NestLink/releases/download/v0.7.0-rc.1/NestLink-candidate-oci-arm64.tar"
+                                                           },
+                                                           {
+                                                               "id":  677382973,
+                                                               "name":  "NestLink-candidate-oci-x64.tar",
+                                                               "size":  41402368,
+                                                               "digest":  "sha256:9728a76b43830857e48db8a8bea51653810b674f189ba367fe71bf2ca986aa5b",
+                                                               "browser_download_url":  "https://github.com/ZHanry/NestLink/releases/download/v0.7.0-rc.1/NestLink-candidate-oci-x64.tar"
+                                                           },
+                                                           {
+                                                               "id":  677382993,
+                                                               "name":  "NestLink-candidate-sbom.spdx.json",
+                                                               "size":  419427,
+                                                               "digest":  "sha256:0f2dc703eed4d8f3045e0e5b65973e9af70db8ae5a07faf7ba80d641c8996faf",
+                                                               "browser_download_url":  "https://github.com/ZHanry/NestLink/releases/download/v0.7.0-rc.1/NestLink-candidate-sbom.spdx.json"
+                                                           },
+                                                           {
+                                                               "id":  677383127,
+                                                               "name":  "NestLink-candidate-source.tar",
+                                                               "size":  19476480,
+                                                               "digest":  "sha256:a6963cdc044ff6796e66fe32e1c833195e7de1854c21fd7e8e95ae16592379ae",
+                                                               "browser_download_url":  "https://github.com/ZHanry/NestLink/releases/download/v0.7.0-rc.1/NestLink-candidate-source.tar"
+                                                           },
+                                                           {
+                                                               "id":  677383311,
+                                                               "name":  "NestLink-candidate-web.tar.gz",
+                                                               "size":  1357579,
+                                                               "digest":  "sha256:db7b866855934f89305b65ab8c1c32d3342523f6fd5dffabe2c4d0ceab2bc220",
+                                                               "browser_download_url":  "https://github.com/ZHanry/NestLink/releases/download/v0.7.0-rc.1/NestLink-candidate-web.tar.gz"
+                                                           },
+                                                           {
+                                                               "id":  677383745,
+                                                               "name":  "NestLink-candidate-windows-x64-privileged.exe",
+                                                               "size":  14430689,
+                                                               "digest":  "sha256:e2f52bfd3497c28b240362718a9d54313f887ebced211608ad68fa10fa998722",
+                                                               "browser_download_url":  "https://github.com/ZHanry/NestLink/releases/download/v0.7.0-rc.1/NestLink-candidate-windows-x64-privileged.exe"
+                                                           },
+                                                           {
+                                                               "id":  677384804,
+                                                               "name":  "NestLink-candidate-windows-x64.exe",
+                                                               "size":  13946682,
+                                                               "digest":  "sha256:ea26054985edd22531a872d37bbea0de7d3aeff983ef080735c48dcd6fc220cf",
+                                                               "browser_download_url":  "https://github.com/ZHanry/NestLink/releases/download/v0.7.0-rc.1/NestLink-candidate-windows-x64.exe"
+                                                           }
+                                                       ],
+                                             "Count":  15
+                                         },
+                              "body":  "NestLink 0.7.0RC1（`0.7.0-rc.1`），用于公开测试的预发行版。\r\n\r\n## 本次更新\r\n\r\n- 客户端收敛为 Windows 桌面端和 Web，移除 Android；Linux x64/ARM64 继续提供服务端。\r\n- 产品定位为“内网穿透 + 远程桌面”，保留 NestLink 名称和原 LOGO，重构 Windows / Web 工作台、设备、连接与授权界面。\r\n- 改进直连候选交换、物理网卡路径与 Clash TUN 共存处理、连接诊断、会话与媒体生命周期；保留首次远控授权和撤销机制。\r\n- 更新原生媒体能力协商、软件 H.264 执行与恢复检查，以及内网穿透服务的管理界面。\r\n\r\n## 下载与升级\r\n\r\n- [Windows x64 安装包](https://github.com/ZHanry/NestLink/releases/download/v0.7.0-rc.1/NestLink-candidate-windows-x64.exe)\r\n- [Windows x64 可选特权输入安装包](https://github.com/ZHanry/NestLink/releases/download/v0.7.0-rc.1/NestLink-candidate-windows-x64-privileged.exe)\r\n- Web 静态包、Linux x64/ARM64 服务端 DEB 和 OCI 镜像、源码、SBOM、许可证及构建证据均见下方附件；本版没有 Android 安装包。\r\n\r\n建议配套升级服务端、Web 和双方客户端。数据库 schema 为 25，升级前备份；已写入新授权状态的数据库应前向修复，避免恢复旧授权快照。安装包发布不会自动更新现有服务器，也不会放宽网络或会话授权策略。\r\n\r\n## 已验证与已知限制\r\n\r\n- 该源码的 Rust、Web、ARM 服务端、CodeQL 和 Secret scan 均通过；Windows workspace 为 1360 passed / 0 failed，Linux 为 1370 passed / 0 failed。\r\n- [GitHub 完整打包 40280815318](https://github.com/ZHanry/NestLink/actions/runs/40280815318) 全部成功；14 项冻结制品及清单均按源代码、大小和 SHA-256 核验。产品编译、安装包和归档生成均在 GitHub 完成。\r\n- 早前 `4407106` 在原外部家庭宽带 Edge ↔ HL、HL Clash TUN 开启时，用户确认“直连，画面和键鼠均正常”。该结果不代替本次源码的外部回归、批量直连率或性能验收。\r\n- 本次 HL 合成软件编码检查通过 2560×1440@30 的 16 个实际输出；独立 GPU 呈现诊断通过。GPU 硬件编码诊断仍遇到输出 SPS 与 SDR BT.709 limited 颜色契约冲突，原生 GPU 编码链路尚未整体验收。\r\n- 高级媒体 HEVC / 444 / 10bit / 144fps 产品能力、硬件组合与回退矩阵、实际弹窗按钮点击、批量直连与 UU 对比、帧率和输入延迟、弱网及跨日 24 小时长稳仍未全部完成。\r\n\r\n按维护者本次明确要求先公开 RC1；这调整了此前“全部报告验收后发布”的时间安排，不代表完整评估报告已验收通过。冻结清单中的 19 项平台、签名和真实环境验收继续保留 `pending`，不生成或声称不存在的完整验收证明。\r\n\r\nWindows Authenticode、Linux 更新签名和 OCI 签名尚未配置；生产自动更新资格保持关闭（`production_update_eligible=false`）。本版作为 GitHub **Pre-release** 发布。\r\n\r\nSource commit: `82f1c8dfb31bdf0872ea7430b5608e205c1cbb08`  \r\n`candidate-build-manifest.json` SHA-256: `2d5a7768424f6cc2ea8875ba2b8cb8fb21ff360911b084ed4a95e2bc07fd793c`\r\n"
+                          },
+    "limitations":  [
+                        "Run metadata and digests were read through the public GitHub API; artifact bytes were not downloaded or independently verified in this review.",
+                        "Existing success is historical build evidence for the baseline SHA, not new network-core acceptance or a replay of remote control and all four service protocols.",
+                        "Repository acceptance documentation remains pending and differs from the already-public v0.7.0-rc.1 release; retain both facts without rewriting history."
+                    ]
+}

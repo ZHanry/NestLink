@@ -1,0 +1,78 @@
+#!/usr/bin/env node
+// Independent Node/OpenSSL vectors. Run only in GitHub-hosted Actions.
+'use strict';
+const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
+const { execFileSync } = require('node:child_process');
+
+if (process.env.GITHUB_ACTIONS !== 'true' || process.env.RUNNER_ENVIRONMENT !== 'github-hosted'
+    || process.env.GITHUB_REPOSITORY !== 'ZHanry/NestLink') {
+  throw new Error('R02: derive network reference vectors in GitHub-hosted Actions only');
+}
+const source = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+if (source !== process.env.GITHUB_SHA || !/^[a-f0-9]{40}$/.test(source)) throw new Error('Source mismatch');
+const output = path.resolve(process.argv[2] || '');
+const temporary = path.resolve(process.env.RUNNER_TEMP);
+const relative = path.relative(temporary, output);
+if (!relative || relative.startsWith('..') || path.isAbsolute(relative) || fs.existsSync(output)) {
+  throw new Error('Output must be a new owned child of RUNNER_TEMP');
+}
+fs.mkdirSync(output);
+
+const sha256 = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
+const seed = Buffer.alloc(32, 42); // Fixed public test seed; never a deployed key.
+const derived = Buffer.from(crypto.hkdfSync('sha256', seed,
+  Buffer.from('NestLink/network/v1/authority-keys'), Buffer.from('network-authority-ed25519'), 32));
+const authority = crypto.createPrivateKey({ key: Buffer.concat([
+  Buffer.from('302e020100300506032b657004220420', 'hex'), derived,
+]), format: 'der', type: 'pkcs8' });
+const publicKey = crypto.createPublicKey(authority).export({ format: 'der', type: 'spki' }).subarray(-32);
+// RFC 8032 section 7.1, test 1 public key, independent of the authority key.
+const memberKey = Buffer.from('d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a', 'hex');
+const memberPeer = Buffer.from(sha256(memberKey), 'hex');
+const scope = {
+  schema_version: 1,
+  deployment_id: '10000000-0000-4000-8000-000000000001',
+  space_id: '20000000-0000-4000-8000-000000000002',
+  grant_id: '30000000-0000-4000-8000-000000000003',
+  policy_epoch: 7, not_before_ms: 1000, expires_at_ms: 2000,
+};
+const claims = {
+  kind: 'membership', claims: {
+    scope,
+    installation_id: '40000000-0000-4000-8000-000000000004',
+    peer: [...memberPeer], public_key: [...memberKey], membership_epoch: 3, role: 'member',
+  },
+};
+const text = JSON.stringify(claims);
+const bytes = Buffer.from(text, 'utf8');
+const length = Buffer.alloc(4);
+length.writeUInt32BE(bytes.length);
+const message = Buffer.concat([Buffer.from('NestLink/network/v1/membership\0'), length, bytes]);
+const signature = crypto.sign(null, message, authority);
+if (!crypto.verify(null, message, crypto.createPublicKey(authority), signature)) throw new Error('Reference signature failed');
+const vector = {
+  schema_version: 1,
+  generator: 'Node node:crypto Ed25519/OpenSSL; independent from Rust implementation',
+  public_test_master_seed_hex: seed.toString('hex'),
+  authority_public_key_hex: publicKey.toString('hex'),
+  member_public_key_hex: memberKey.toString('hex'),
+  canonical_claims_utf8: text,
+  signing_message_sha256: sha256(message),
+  signature_hex: signature.toString('hex'),
+};
+const vectorBytes = Buffer.from(JSON.stringify(vector, null, 2) + '\n');
+fs.writeFileSync(path.join(output, 'network-v1-reference.json'), vectorBytes);
+const receipt = {
+  schema_version: 1, purpose: 'independent-network-contract-vector-generation-only',
+  source_revision: source, workflow: process.env.GITHUB_WORKFLOW,
+  workflow_sha: process.env.GITHUB_WORKFLOW_SHA, job: process.env.GITHUB_JOB,
+  run_id: process.env.GITHUB_RUN_ID, run_attempt: process.env.GITHUB_RUN_ATTEMPT,
+  runner: { environment: process.env.RUNNER_ENVIRONMENT, os: process.env.RUNNER_OS, arch: process.env.RUNNER_ARCH },
+  runtime: process.version, openssl: process.versions.openssl,
+  file: { name: 'network-v1-reference.json', bytes: vectorBytes.length, sha256: sha256(vectorBytes) },
+  acceptance_claims: [],
+};
+fs.writeFileSync(path.join(output, 'vector-build-provenance.json'), JSON.stringify(receipt, null, 2) + '\n');
+console.log(JSON.stringify(receipt));

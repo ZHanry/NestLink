@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "target_release": "0.8.0RC",
+  "target_semver": "0.8.0-rc.1",
+  "timezone": "Asia/Shanghai",
+  "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+  "branch": "main",
+  "source_revision": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+  "checkpoint_kind": "work_in_progress_against_source_revision",
+  "active_tasks": ["W00", "W01", "W02"],
+  "satisfied_interface_dependencies": [],
+  "unverified_assumptions": [
+    "Quinn continuity across authenticated carrier replacement requires W07/W09/W14 Actions experiments.",
+    "Existing same-socket STUN does not establish bilateral ICE or real NAT success.",
+    "Existing v15 relay packet limit is not an IPv6 TUN MTU qualification."
+  ],
+  "external_prerequisites": [
+    {"id": "target-windows", "state": "not_provisioned", "purpose": "Two authorized Windows targets, GPU/display and VPN coexistence acceptance"},
+    {"id": "target-mobile", "state": "not_provisioned", "purpose": "Android and iOS standard WireGuard client acceptance"},
+    {"id": "target-network", "state": "not_provisioned", "purpose": "Independent NAT sites, overlapping subnets, two public edges, fixed ingress and DNS"},
+    {"id": "target-soak", "state": "not_started", "purpose": "Multiple cross-day 24-hour real-device runs"},
+    {"id": "signing", "state": "not_verified", "purpose": "Actual release signing identity and disclosure"}
+  ],
+  "next_steps": [
+    "Finish the baseline and nine-topic source/component review.",
+    "Freeze the first independently versioned network contract without changing v15 signatures.",
+    "Push reviewed source to main and verify the exact SHA through GitHub-hosted Actions.",
+    "Integrate the existing native legacy connection with the single connectivity owner.",
+    "Continue ready work packages and record implementation separately from acceptance."
+  ],
+  "evidence_index": [],
+  "release_state": "not_ready",
+  "branch_cleanup": {"local_heads": ["main"], "remote_heads": ["main"], "pending_deletion": []},
+  "policies": {"R01": "required", "R02": "required", "local_project_toolchain_executed": false}
+}

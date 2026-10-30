@@ -1,0 +1,1129 @@
+{
+  "schema_version": 1,
+  "kind": "nestlink-network-rewrite-component-registry",
+  "review_date": "2026-10-30",
+  "timezone": "Asia/Shanghai",
+  "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+  "selection_order": [
+    "existing_suitable_implementation",
+    "mature_component",
+    "thin_product_adapter",
+    "minimal_documented_gap_implementation"
+  ],
+  "first_slice_dependency_policy": "Use existing Cargo.lock; no dependency resolution or project toolchain execution occurred locally. W02 must freeze actual selected dependencies; new candidates require Actions prototypes before adoption.",
+  "new_candidate_policy": "A non-yanked published version and README review establish candidate provenance, not security, complete feature match or target qualification. Provisional versions are not runtime dependencies.",
+  "research_runtime_exclusion": "EasyTier is idea_reference only; no executable, library, FFI, forked core or adapted code is selected.",
+  "components": [
+    {
+      "id": "C01",
+      "purpose": "QUIC, TLS and end-to-end encrypted routed datagrams",
+      "existing_implementation": [
+        "crates/transport-quic/src/lib.rs",
+        "crates/transport-quic/src/virtual_udp.rs",
+        "crates/transport-stream/src/tls.rs"
+      ],
+      "candidates": [
+        "Existing Quinn/rustls adapters",
+        "New transport or handwritten reliability (not selected)"
+      ],
+      "official_sources": [
+        "https://github.com/quinn-rs/quinn",
+        "https://github.com/rustls/rustls",
+        "https://crates.io/api/v1/crates/quinn/0.11.12",
+        "https://crates.io/api/v1/crates/rustls/0.23.46"
+      ],
+      "maintenance_status": [
+        {
+          "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+          "name": "quinn",
+          "version": "0.11.12",
+          "published_at": "2026-09-14",
+          "reviewed_at": "2026-10-30",
+          "yanked": false
+        },
+        {
+          "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+          "name": "rustls",
+          "version": "0.23.46",
+          "published_at": "2026-10-14",
+          "reviewed_at": "2026-10-30",
+          "yanked": false
+        }
+      ],
+      "platforms": [
+        "windows-x64",
+        "linux-x64",
+        "linux-arm64"
+      ],
+      "version": {
+        "quinn": "0.11.12",
+        "rustls": "0.23.46",
+        "source": "Cargo.lock"
+      },
+      "license": {
+        "quinn": "MIT OR Apache-2.0",
+        "rustls": "Apache-2.0 OR ISC OR MIT"
+      },
+      "selection_reason": "retain_existing_locked_dependencies",
+      "adapter_boundary": "Quinn/rustls own cryptography, congestion, streams and DATAGRAM; NestLink adds authorized route/transport groups and bounded carrier adaptation.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "W07 must prove inner 1200-byte QUIC Initial and complete 1280-byte IPv6 payload over actual carriers",
+        "W14 must prove connection continuity with locked Quinn, including RTT/congestion/PMTU; otherwise safe application recovery",
+        "Outer route authorization is separate from inner encryption"
+      ],
+      "work_packages": [
+        "W02",
+        "W06",
+        "W07",
+        "W14"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C02",
+      "purpose": "Async I/O, cancellation, bounded channels and owner task joining",
+      "existing_implementation": [
+        "Workspace Tokio and existing JoinSet/watch/mpsc ownership"
+      ],
+      "candidates": [
+        "Existing Tokio",
+        "Alternative runtime (not selected)"
+      ],
+      "official_sources": [
+        "https://github.com/tokio-rs/tokio",
+        "https://crates.io/api/v1/crates/tokio/1.53.3"
+      ],
+      "maintenance_status": {
+        "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+        "name": "tokio",
+        "version": "1.53.3",
+        "published_at": "2026-10-13",
+        "reviewed_at": "2026-10-30",
+        "yanked": false
+      },
+      "platforms": [
+        "windows-x64",
+        "linux-x64",
+        "linux-arm64",
+        "web-policy-only"
+      ],
+      "version": {
+        "tokio": "1.53.3",
+        "source": "Cargo.lock"
+      },
+      "license": "MIT",
+      "selection_reason": "retain_existing_locked_dependency",
+      "adapter_boundary": "Tokio owns execution/I/O primitives; one NestLink owner propagates cancel/deadline and joins actual task completion.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "Abort alone is not evidence all system resources are cleaned",
+        "No unbounded queue for media, routing or relay data"
+      ],
+      "work_packages": [
+        "W05",
+        "W06",
+        "W07",
+        "W29"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C03",
+      "purpose": "Device identity and purpose-separated signed authorization",
+      "existing_implementation": [
+        "crates/identity/src/lib.rs",
+        "crates/identity/src/nodes.rs",
+        "crates/session"
+      ],
+      "candidates": [
+        "Existing Ed25519-dalek and SHA2",
+        "New cryptographic/signature implementation (rejected)"
+      ],
+      "official_sources": [
+        "https://github.com/dalek-cryptography/curve25519-dalek",
+        "https://crates.io/api/v1/crates/ed25519-dalek/2.2.0",
+        "https://github.com/RustCrypto/hashes"
+      ],
+      "maintenance_status": {
+        "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+        "name": "ed25519-dalek",
+        "version": "2.2.0",
+        "published_at": "2025-07-09",
+        "reviewed_at": "2026-10-30",
+        "yanked": false
+      },
+      "platforms": [
+        "windows-x64",
+        "linux-x64",
+        "linux-arm64",
+        "web"
+      ],
+      "version": {
+        "ed25519-dalek": "2.2.0",
+        "sha2": "0.10.9",
+        "source": "Cargo.lock"
+      },
+      "license": {
+        "ed25519-dalek": "BSD-3-Clause",
+        "sha2": "MIT OR Apache-2.0"
+      },
+      "selection_reason": "retain_existing_identity_and_crypto",
+      "adapter_boundary": "Keep installation identity and business permits; add independent network purpose domains, typed verified grants and revocation intersections.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "New network objects must not silently change v15 signed fields",
+        "Persist revocation/debt fences and never derive identity from display name"
+      ],
+      "work_packages": [
+        "W02",
+        "W04",
+        "W18",
+        "W27"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C04",
+      "purpose": "Browser WebRTC and native ICE/STUN/TURN protocol reuse",
+      "existing_implementation": [
+        "crates/sdk/src/webrtc_host",
+        "apps/web/src/browser_peer.rs",
+        "crates/traversal",
+        "Cargo.lock patched webrtc-ice"
+      ],
+      "candidates": [
+        "Existing WebRTC 0.14.0 and pinned ICE patch",
+        "Upgrade to current webrtc-ice 0.17.2 only after compatibility prototype",
+        "Handwritten complete ICE (rejected)"
+      ],
+      "official_sources": [
+        "https://github.com/webrtc-rs/webrtc",
+        "https://crates.io/api/v1/crates/webrtc/0.14.0",
+        "https://crates.io/api/v1/crates/webrtc-ice/0.14.0",
+        "https://github.com/ZHanry/NestLink-dependencies/tree/c4cf95eda3c244eff429c73b0d933ff2f18745b4"
+      ],
+      "maintenance_status": {
+        "upstream": {
+          "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+          "name": "webrtc",
+          "version": "0.14.0",
+          "published_at": "2025-09-20",
+          "reviewed_at": "2026-10-30",
+          "yanked": false
+        },
+        "candidate_latest": {
+          "version": "0.17.2",
+          "published_at": "2026-07-20",
+          "yanked": false
+        },
+        "fork_status": "Existing locked patch source retained; maintenance/security must follow config/dependency-forks.json, not replace with unreviewed latest."
+      },
+      "platforms": [
+        "windows-x64",
+        "linux-x64",
+        "linux-arm64",
+        "Chrome/Edge/Firefox WebRTC"
+      ],
+      "version": {
+        "webrtc": "0.14.0",
+        "webrtc-ice": "0.14.0",
+        "webrtc-ice-git": "c4cf95eda3c244eff429c73b0d933ff2f18745b4",
+        "source": "Cargo.lock"
+      },
+      "license": "MIT OR Apache-2.0; preserve dependency fork notices",
+      "selection_reason": "retain_existing_browser_path; prototype_existing_ICE_before_any_upgrade",
+      "adapter_boundary": "Library owns ICE/STUN/TURN protocol; NestLink filters authenticated candidates and binds signaling, purpose, budgets, same-socket Quinn handoff and lifecycle.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "W09 exact same socket/data interface with unique receive owner is unproven",
+        "STUN discovery alone is not bilateral ICE",
+        "Do not replace actual browser TURN with management WSS"
+      ],
+      "work_packages": [
+        "W08",
+        "W09",
+        "W10",
+        "W17"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C05",
+      "purpose": "OS interfaces, network-change facts and physical egress binding",
+      "existing_implementation": [
+        "crates/platform-network",
+        "crates/sdk/src/discovery.rs",
+        "crates/transport-quic/src/discovery.rs"
+      ],
+      "candidates": [
+        "Existing if-addrs and OS APIs",
+        "New generic interface discovery subsystem (not selected)"
+      ],
+      "official_sources": [
+        "https://github.com/messense/if-addrs",
+        "https://crates.io/api/v1/crates/if-addrs/0.14.0"
+      ],
+      "maintenance_status": {
+        "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+        "name": "if-addrs",
+        "version": "0.14.0",
+        "published_at": "2025-07-09",
+        "reviewed_at": "2026-10-30",
+        "yanked": false
+      },
+      "platforms": [
+        "windows-x64",
+        "linux-x64",
+        "linux-arm64"
+      ],
+      "version": {
+        "if-addrs": "0.14.0",
+        "source": "Cargo.lock"
+      },
+      "license": "MIT OR BSD-3-Clause",
+      "selection_reason": "reuse_existing_platform_adapters",
+      "adapter_boundary": "OS/library supplies interface and route facts; NestLink owns generation invalidation, permitted private ranges, resource provenance and TUN recursion avoidance.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "Physical endpoint route must not re-enter managed TUN",
+        "Sleep/roam/IPv6 temporary addresses and multiple VPNs require target evidence"
+      ],
+      "work_packages": [
+        "W08",
+        "W09",
+        "W22"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C06",
+      "purpose": "Graph algorithms for authorized bounded routes",
+      "existing_implementation": [
+        "crates/connectivity/src/lib.rs",
+        "petgraph already present transitively in Cargo.lock"
+      ],
+      "candidates": [
+        "petgraph Dijkstra",
+        "Handwritten graph shortest path (rejected)"
+      ],
+      "official_sources": [
+        "https://github.com/petgraph/petgraph",
+        "https://crates.io/api/v1/crates/petgraph/0.8.3"
+      ],
+      "maintenance_status": {
+        "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+        "name": "petgraph",
+        "version": "0.8.3",
+        "published_at": "2025-09-30",
+        "reviewed_at": "2026-10-30",
+        "yanked": false
+      },
+      "platforms": [
+        "windows-x64",
+        "linux-x64",
+        "linux-arm64",
+        "web-policy-if-needed"
+      ],
+      "version": {
+        "petgraph": "0.8.3",
+        "status": "existing_transitive; direct dependency and feature selection via Actions when W12 integrates"
+      },
+      "license": "MIT OR Apache-2.0",
+      "selection_reason": "prefer_existing_locked_mature_algorithm",
+      "adapter_boundary": "Library supplies graph and path algorithms; NestLink owns signed announcements, admission, limits, purpose scoring, freshness, hysteresis and revocation.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "Bound graph, announcements and active connection groups",
+        "Do not treat remote latency assertions as local measurements or compute routes before authorization"
+      ],
+      "work_packages": [
+        "W12",
+        "W13"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C07",
+      "purpose": "IP prefixes and address arithmetic",
+      "existing_implementation": [
+        "ipnet already present transitively in Cargo.lock",
+        "Existing address/candidate validation"
+      ],
+      "candidates": [
+        "ipnet",
+        "Handwritten generic CIDR parser/arithmetic (rejected)"
+      ],
+      "official_sources": [
+        "https://github.com/krisprice/ipnet",
+        "https://crates.io/api/v1/crates/ipnet/2.12.2"
+      ],
+      "maintenance_status": {
+        "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+        "name": "ipnet",
+        "version": "2.12.2",
+        "published_at": "2026-09-06",
+        "reviewed_at": "2026-10-30",
+        "yanked": false
+      },
+      "platforms": [
+        "windows-x64",
+        "linux-x64",
+        "linux-arm64"
+      ],
+      "version": {
+        "ipnet": "2.12.2",
+        "status": "existing_transitive; direct integration pending Actions"
+      },
+      "license": "MIT OR Apache-2.0",
+      "selection_reason": "prefer_existing_locked_IP_library",
+      "adapter_boundary": "Library parses and computes IPv4/IPv6 networks; NestLink defines per-space allocations, reservations, exact export policies and explicit overlap mappings.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "Canonicalize prefixes, reject default-route exports and ambiguous mappings",
+        "No silent identity inheritance on reinstall"
+      ],
+      "work_packages": [
+        "W19",
+        "W22",
+        "W23"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C08",
+      "purpose": "IP packet parsing and bounded fragment reassembly for ACLs",
+      "existing_implementation": [
+        "Existing protocol-specific UDP framing, no generic NetworkAccess packet ACL yet"
+      ],
+      "candidates": [
+        "etherparse 0.21.0",
+        "Existing packet parser if fit found during W22 integration",
+        "Handwritten full packet parser (rejected)"
+      ],
+      "official_sources": [
+        "https://github.com/JulianSchmid/etherparse",
+        "https://crates.io/api/v1/crates/etherparse/0.21.0",
+        "https://crates.io/api/v1/crates/etherparse/0.21.0/readme"
+      ],
+      "maintenance_status": {
+        "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+        "name": "etherparse",
+        "version": "0.21.0",
+        "published_at": "2026-07-21",
+        "reviewed_at": "2026-10-30",
+        "yanked": false
+      },
+      "platforms": [
+        "windows-x64",
+        "linux-x64",
+        "linux-arm64"
+      ],
+      "version": {
+        "etherparse": "0.21.0",
+        "status": "provisional_candidate_not_runtime_dependency"
+      },
+      "license": "MIT OR Apache-2.0",
+      "selection_reason": "candidate_preferred_after_actual_scope_review",
+      "adapter_boundary": "Mature library parses IP/TCP/UDP/extensions and fragments; NestLink enforces authenticated peer/source prefix mapping, destination/direction/ports and bounded reassembly policy.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "Official README explicitly supports common IPv6 extension headers, not all; unsupported/opaque/fragment-incomplete packets must fail closed or use bounded supported reassembly",
+        "Reassembly allocates: cap bytes/sets/TTL and check ACL before OS/LAN injection",
+        "Never use lax/truncated parsing as an authorization fallback"
+      ],
+      "work_packages": [
+        "W22",
+        "W23",
+        "W28"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C09",
+      "purpose": "Managed TUN device provider",
+      "existing_implementation": [
+        "crates/platform-network",
+        "apps/privileged",
+        "Existing packaging/permission boundary"
+      ],
+      "candidates": [
+        "tun-rs 2.8.16",
+        "OS-supported direct provider via mature binding",
+        "Handwritten driver (rejected)"
+      ],
+      "official_sources": [
+        "https://github.com/tun-rs/tun-rs",
+        "https://crates.io/api/v1/crates/tun-rs/2.8.16",
+        "https://crates.io/api/v1/crates/tun-rs/2.8.16/readme",
+        "https://www.wintun.net/"
+      ],
+      "maintenance_status": {
+        "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+        "name": "tun-rs",
+        "version": "2.8.16",
+        "published_at": "2026-10-29",
+        "reviewed_at": "2026-10-30",
+        "yanked": false
+      },
+      "platforms": [
+        "Windows 10/11 x64 (qualification pending)",
+        "Ubuntu 24.04 x64/ARM64 (qualification pending)"
+      ],
+      "version": {
+        "tun-rs": "2.8.16",
+        "windows-driver": "not_yet_frozen",
+        "status": "provisional_candidate_not_runtime_dependency"
+      },
+      "license": {
+        "tun-rs": "Apache-2.0",
+        "windows-driver": "Separate official Wintun binary redistribution terms/version/signature require review before adoption"
+      },
+      "selection_reason": "candidate_requires_platform_and_distribution_prototype",
+      "adapter_boundary": "Provider owns TUN I/O; minimal privileged NestLink broker owns exact device/routes/DNS/MTU ledger, physical endpoint bypass and recovery.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "README identifies Windows wintun.dll dependency and Linux/Windows support; provider license does not cover driver distribution",
+        "Do not permit generic privileged command execution",
+        "Crash/upgrade/uninstall must clean only NestLink resources within five-second exit target"
+      ],
+      "work_packages": [
+        "W22",
+        "W34"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C10",
+      "purpose": "User-space TCP/IP stack where required for no-TUN/subnet adaptation",
+      "existing_implementation": [
+        "crates/node/src/service_plane/stream.rs handles authorized AsyncRead/AsyncWrite"
+      ],
+      "candidates": [
+        "smoltcp 0.14.0",
+        "Existing OS TCP/UDP fixed-target forwarding when sufficient",
+        "Handwritten TCP/IP stack (rejected)"
+      ],
+      "official_sources": [
+        "https://github.com/smoltcp-rs/smoltcp",
+        "https://crates.io/api/v1/crates/smoltcp/0.14.0",
+        "https://crates.io/api/v1/crates/smoltcp/0.14.0/readme"
+      ],
+      "maintenance_status": {
+        "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+        "name": "smoltcp",
+        "version": "0.14.0",
+        "published_at": "2026-08-17",
+        "reviewed_at": "2026-10-30",
+        "yanked": false
+      },
+      "platforms": [
+        "windows-x64",
+        "linux-x64",
+        "linux-arm64"
+      ],
+      "version": {
+        "smoltcp": "0.14.0",
+        "status": "provisional_candidate_only_if_OS_forwarding_insufficient"
+      },
+      "license": "0BSD",
+      "selection_reason": "use_existing_OS_forwarding_first; candidate_for_actual_userspace_gap",
+      "adapter_boundary": "Stack owns protocol state; NestLink supplies authenticated bounded device I/O, exact service/prefix admission and budget/lifecycle.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "Official README lists missing features including TCP PLPMTU and limited IPv6 handling; do not assume universal protocol support",
+        "Current README includes old installation examples; registry version is authority and actual API must be checked",
+        "Bound socket/reassembly state; stack reachability cannot replace ACL"
+      ],
+      "work_packages": [
+        "W21",
+        "W22",
+        "W23"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C11",
+      "purpose": "SOCKS5 protocol handling for restricted local proxies",
+      "existing_implementation": [
+        "crates/node/src/service_plane/stream.rs",
+        "Existing service permits and forwarding quota"
+      ],
+      "candidates": [
+        "fast-socks5 1.0.0",
+        "Existing suitable proxy if discovered",
+        "Handwritten SOCKS protocol (rejected)"
+      ],
+      "official_sources": [
+        "https://github.com/dizda/fast-socks5",
+        "https://crates.io/api/v1/crates/fast-socks5/1.0.0",
+        "https://crates.io/api/v1/crates/fast-socks5/1.0.0/readme"
+      ],
+      "maintenance_status": {
+        "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+        "name": "fast-socks5",
+        "version": "1.0.0",
+        "published_at": "2026-01-20",
+        "reviewed_at": "2026-10-30",
+        "yanked": false
+      },
+      "platforms": [
+        "windows-x64",
+        "linux-x64",
+        "linux-arm64"
+      ],
+      "version": {
+        "fast-socks5": "1.0.0",
+        "status": "provisional_candidate_not_runtime_dependency"
+      },
+      "license": "MIT",
+      "selection_reason": "prefer_component_custom_request_handler_over_protocol_rewrite",
+      "adapter_boundary": "Library owns SOCKS authentication/handshake and TCP/UDP framing; NestLink only resolves approved space targets, uses local access-control boundary and existing authorized forwarding.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "Official README supports custom request handling, TCP/UDP, IPv4/IPv6/domain and auth; protocol-skipping options must remain disabled",
+        "Default loopback does not by itself prove safe against all local users",
+        "Zero-length UDP, maximum packets, half-close, revoke and port collision need actual verification"
+      ],
+      "work_packages": [
+        "W21"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C12",
+      "purpose": "Private names and authoritative split DNS",
+      "existing_implementation": [
+        "Existing platform adapters; no per-space managed DNS product yet"
+      ],
+      "candidates": [
+        "hickory-server 0.26.3",
+        "Existing DNS integration if sufficient",
+        "Handwritten DNS server/parser (rejected)"
+      ],
+      "official_sources": [
+        "https://github.com/hickory-dns/hickory-dns",
+        "https://crates.io/api/v1/crates/hickory-server/0.26.3",
+        "https://crates.io/api/v1/crates/hickory-server/0.26.3/readme"
+      ],
+      "maintenance_status": {
+        "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+        "name": "hickory-server",
+        "version": "0.26.3",
+        "published_at": "2026-09-10",
+        "reviewed_at": "2026-10-30",
+        "yanked": false
+      },
+      "platforms": [
+        "windows-x64",
+        "linux-x64",
+        "linux-arm64"
+      ],
+      "version": {
+        "hickory-server": "0.26.3",
+        "status": "provisional_candidate_not_runtime_dependency"
+      },
+      "license": "MIT OR Apache-2.0",
+      "selection_reason": "prefer_mature_authoritative_DNS_not_recursive_internet_resolver",
+      "adapter_boundary": "Library handles DNS transport and packets; NestLink supplies authorized managed suffix/records, collision policies, expiry and split-DNS installation ledger.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "Do not enable experimental recursive resolver or arbitrary forwarding",
+        "Suffix compatibility and Windows/Linux restoration require target evidence",
+        "Name is not identity or authorization; cross-space data must remain isolated"
+      ],
+      "work_packages": [
+        "W19",
+        "W22"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C13",
+      "purpose": "Controlled mDNS/DNS-SD service discovery",
+      "existing_implementation": [
+        "webrtc-mdns 0.10.0 transitive ICE dependency"
+      ],
+      "candidates": [
+        "Evaluate existing webrtc-mdns for required DNS-SD scope",
+        "Mature dedicated DNS-SD library if existing ICE component lacks required records",
+        "No rewrite of mDNS protocol"
+      ],
+      "official_sources": [
+        "https://github.com/webrtc-rs/webrtc",
+        "https://crates.io/api/v1/crates/webrtc-mdns/0.10.0"
+      ],
+      "maintenance_status": {
+        "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+        "name": "webrtc-mdns",
+        "version": "0.10.0",
+        "published_at": "2025-09-20",
+        "reviewed_at": "2026-10-30",
+        "yanked": false
+      },
+      "platforms": [
+        "windows-x64",
+        "linux-x64",
+        "linux-arm64"
+      ],
+      "version": {
+        "webrtc-mdns": "0.10.0",
+        "status": "existing_transitive_not_yet_selected_for_product_DNS_SD"
+      },
+      "license": "MIT OR Apache-2.0",
+      "selection_reason": "reuse_only_after_feature_match; do_not_confuse_ICE_mDNS_with_complete_DNS_SD",
+      "adapter_boundary": "Mature component owns multicast/DNS protocol; NestLink restricts explicit service types/ports, space membership, forwarding direction, dedup/TTL/rate and cleanup.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "Actual DNS-SD record support and two-network behavior are still open",
+        "No .local replacement for private split DNS",
+        "Two real games and separate mDNS service test cannot be replaced by ping or discovery mocks"
+      ],
+      "work_packages": [
+        "W28"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C14",
+      "purpose": "Standard WireGuard portal",
+      "existing_implementation": [
+        "No existing NestLink WireGuard portal; use current server/node policy/storage/privileged boundary"
+      ],
+      "candidates": [
+        "Ubuntu kernel WireGuard and official tools",
+        "BoringTun 0.7.1 portable library if userspace is required",
+        "EasyTier portal code reuse and self-written crypto (not selected)"
+      ],
+      "official_sources": [
+        "https://www.wireguard.com/install/",
+        "https://www.wireguard.com/protocol/",
+        "https://git.zx2c4.com/wireguard-tools/",
+        "https://github.com/cloudflare/boringtun",
+        "https://crates.io/api/v1/crates/boringtun/0.7.1",
+        "https://crates.io/api/v1/crates/boringtun/0.7.1/readme"
+      ],
+      "maintenance_status": {
+        "boringtun": {
+          "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+          "name": "boringtun",
+          "version": "0.7.1",
+          "published_at": "2026-05-01",
+          "reviewed_at": "2026-10-30",
+          "yanked": false
+        },
+        "kernel_tools": "Official references identified; exact package/driver/license review and integration pending W24."
+      },
+      "platforms": [
+        "Ubuntu 24.04 x64/ARM64 portal",
+        "Android/iOS standard WireGuard clients (not native remote-control clients)"
+      ],
+      "version": {
+        "linux-kernel/tools": "Resolve and pin exact Ubuntu package/runtime versions in Actions W24 before integration",
+        "boringtun": "0.7.1",
+        "status": "provisional; kernel_first; no_runtime_dependency_added"
+      },
+      "license": {
+        "linux-wireguard/tools": "Verify chosen distribution package notices before freeze",
+        "boringtun": "BSD-3-Clause"
+      },
+      "selection_reason": "prefer_standard_Linux_WireGuard_implementation_for_Ubuntu_portal; retain_userspace_alternative",
+      "adapter_boundary": "Protocol implementation owns WG handshake and peer identity; NestLink maps each verified public key to independent device/address/service/subnet/expiry/quota and exports sensitive configuration/QR.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "BoringTun README warns master is restructuring; do not use master; its library omits network/tunnel stacks",
+        "Never identify clients solely by first packet source IP or share a portal-wide client key",
+        "Android and iOS real standard-client qualification, rotation/revoke/restart and source-spoofing are pending"
+      ],
+      "work_packages": [
+        "W24",
+        "W34"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C15",
+      "purpose": "HTTP/WebSocket gateway, public ingress and fixed-entry HA",
+      "existing_implementation": [
+        "apps/server Axum",
+        "Existing node service plane and edge/Caddy integration",
+        "docs/refactor/SERVICE-WEB-DEPLOYMENT.md"
+      ],
+      "candidates": [
+        "Existing Axum/Caddy",
+        "Mature external LB/VIP for required fixed entry",
+        "New generic HTTP/LB implementation (rejected)"
+      ],
+      "official_sources": [
+        "https://github.com/tokio-rs/axum",
+        "https://crates.io/api/v1/crates/axum/0.8.9",
+        "https://github.com/caddyserver/caddy",
+        "https://caddyserver.com/docs/"
+      ],
+      "maintenance_status": {
+        "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+        "name": "axum",
+        "version": "0.8.9",
+        "published_at": "2026-04-14",
+        "reviewed_at": "2026-10-30",
+        "yanked": false
+      },
+      "platforms": [
+        "Ubuntu 24.04 x64/ARM64",
+        "Current Chrome/Edge/Firefox"
+      ],
+      "version": {
+        "axum": "0.8.9",
+        "caddy_and_lb": "Retain existing supported deployment and freeze exact binary/image digests in W26; not established by this research"
+      },
+      "license": {
+        "axum": "MIT",
+        "caddy": "Existing deployment notices must be preserved; exact image qualification pending",
+        "lb": "Depends on selected supported deployment"
+      },
+      "selection_reason": "reuse_existing_HTTP_gateway_and_mature_fixed_entry",
+      "adapter_boundary": "HTTP/TLS/WebSocket/LB components own protocols; NestLink owns exact target/origin, service grants, lease/namespace/entry groups, quotas, readiness and revoke.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "No arbitrary URL proxy; per-service origin prevents management-origin HTML injection",
+        "HTTP/HTTPS/TCP/UDP need actual double-edge fixed-entry fault tests",
+        "No zero-interruption promise for old connections without replicated state",
+        "Every edge and restored old edge must honor revoke and shared budget"
+      ],
+      "work_packages": [
+        "W16",
+        "W25",
+        "W26"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C16",
+      "purpose": "Transactional storage, configuration and migration fences",
+      "existing_implementation": [
+        "crates/storage",
+        "25-schema baseline migrations, backup/snapshot support",
+        "Existing serde/toml/prost formats"
+      ],
+      "candidates": [
+        "Existing rusqlite and serialization",
+        "New database/config engine (not selected)"
+      ],
+      "official_sources": [
+        "https://github.com/rusqlite/rusqlite",
+        "https://crates.io/api/v1/crates/rusqlite/0.37.0",
+        "https://www.sqlite.org/backup.html"
+      ],
+      "maintenance_status": {
+        "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+        "name": "rusqlite",
+        "version": "0.37.0",
+        "published_at": "2025-07-06",
+        "reviewed_at": "2026-10-30",
+        "yanked": false
+      },
+      "platforms": [
+        "windows-x64",
+        "linux-x64",
+        "linux-arm64"
+      ],
+      "version": {
+        "rusqlite": "0.37.0",
+        "serde": "1.0.229",
+        "serde_json": "1.0.154",
+        "prost": "0.14.4",
+        "source": "Cargo.lock"
+      },
+      "license": {
+        "rusqlite": "MIT",
+        "other": "Preserve existing Cargo notices and SBOM"
+      },
+      "selection_reason": "reuse_existing_storage_and_formats",
+      "adapter_boundary": "SQLite owns transactional persistence; NestLink adds space rows, one-shot invites, revision CAS and monotonic revocation/debt fences. Keep bounded canonical signed encodings.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "Backup restore cannot resurrect revoked members or clear quota debt",
+        "Older binary must reject unsupported schema",
+        "Parsing success does not imply signed-object critical-field compatibility"
+      ],
+      "work_packages": [
+        "W04",
+        "W18",
+        "W19",
+        "W27",
+        "W35"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C17",
+      "purpose": "Media capture, codecs, GPU decode/present and audio",
+      "existing_implementation": [
+        "crates/platform-capture",
+        "crates/media-codec",
+        "crates/media-session",
+        "Existing OS APIs and docs/refactor/native-codecs.lock.json"
+      ],
+      "candidates": [
+        "Existing native APIs, locked libvpx/Opus and qualified hardware SDK providers",
+        "New codec/capture stack (rejected)"
+      ],
+      "official_sources": [
+        "https://github.com/webmproject/libvpx/tree/1024874c5919305883187e2953de8fcb4c3d7fa6",
+        "https://github.com/xiph/opus/tree/22244de5a79bd1d6d623c32e72bf1954b56235be"
+      ],
+      "maintenance_status": {
+        "evidence": "Existing project native-codecs.lock.json retains exact archives, hashes and license file list; upstream security/target qualification is not re-proven here",
+        "reviewed_at": "2026-10-30"
+      },
+      "platforms": [
+        "Windows 10/11 x64 target GPU/driver",
+        "Browser WebRTC supported formats"
+      ],
+      "version": {
+        "libvpx": "1.16.0 @ 1024874c5919305883187e2953de8fcb4c3d7fa6",
+        "opus": "1.6.1 @ 22244de5a79bd1d6d623c32e72bf1954b56235be",
+        "other": "Existing Cargo.lock and native-codecs.lock.json"
+      },
+      "license": "Preserve native codec LICENSE/PATENTS/COPYING and OS/SDK terms; exact candidate SBOM remains required",
+      "selection_reason": "reuse_existing_media_owners_and_mature_implementations",
+      "adapter_boundary": "Providers own codec/hardware operations; NestLink handles exact format capability negotiation, ownership, ACK/lease, QoS deadlines, keyframes, resource recovery and product UX.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "GPU/H264/HEVC/HDR/chroma/bit-depth/high-FPS output requires actual target hardware and fallback evidence",
+        "Network success is not media qualification",
+        "Codec probes/enums/BGRA input do not prove complete output pipeline"
+      ],
+      "work_packages": [
+        "W15",
+        "W31",
+        "W32",
+        "W33"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C18",
+      "purpose": "Windows/Web UI and accessible product controls",
+      "existing_implementation": [
+        "apps/desktop egui/eframe",
+        "apps/web Leptos",
+        "Existing app-core and IPC"
+      ],
+      "candidates": [
+        "Existing eframe/Leptos",
+        "Framework rewrite for style uniformity (rejected)"
+      ],
+      "official_sources": [
+        "https://github.com/emilk/egui",
+        "https://crates.io/api/v1/crates/eframe/0.34.3",
+        "https://github.com/leptos-rs/leptos",
+        "https://crates.io/api/v1/crates/leptos/0.8.19"
+      ],
+      "maintenance_status": [
+        {
+          "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+          "name": "eframe",
+          "version": "0.34.3",
+          "published_at": "2026-05-27",
+          "reviewed_at": "2026-10-30",
+          "yanked": false
+        },
+        {
+          "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+          "name": "leptos",
+          "version": "0.8.19",
+          "published_at": "2026-04-16",
+          "reviewed_at": "2026-10-30",
+          "yanked": false
+        }
+      ],
+      "platforms": [
+        "windows-x64",
+        "Current Chrome/Edge/Firefox"
+      ],
+      "version": {
+        "eframe": "0.34.3",
+        "leptos": "0.8.19",
+        "source": "Cargo.lock"
+      },
+      "license": {
+        "eframe": "MIT OR Apache-2.0",
+        "leptos": "MIT"
+      },
+      "selection_reason": "extend_existing_workbench",
+      "adapter_boundary": "Framework owns UI/rendering; NestLink exposes concrete device/space/service/network/diagnostic flows, permission decisions and actual operation/error state.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "No functional-looking button before backend capability",
+        "Saving config is not service readiness; restoring UI must not enable default-denied features",
+        "Existing pinned macro/dependency patch notices remain"
+      ],
+      "work_packages": [
+        "W18",
+        "W20",
+        "W24",
+        "W28",
+        "W29",
+        "W30"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C19",
+      "purpose": "Logs, audit records and performance metrics",
+      "existing_implementation": [
+        "Existing audit storage, diagnostics and tracing dependency"
+      ],
+      "candidates": [
+        "Existing tracing and audit events",
+        "New general logging/metrics framework (not selected)"
+      ],
+      "official_sources": [
+        "https://github.com/tokio-rs/tracing",
+        "https://crates.io/api/v1/crates/tracing/0.1.44"
+      ],
+      "maintenance_status": {
+        "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+        "name": "tracing",
+        "version": "0.1.44",
+        "published_at": "2025-12-18",
+        "reviewed_at": "2026-10-30",
+        "yanked": false
+      },
+      "platforms": [
+        "windows-x64",
+        "linux-x64",
+        "linux-arm64",
+        "web"
+      ],
+      "version": {
+        "tracing": "0.1.44",
+        "source": "Cargo.lock"
+      },
+      "license": "MIT",
+      "selection_reason": "reuse_existing_logging_and_audit",
+      "adapter_boundary": "Component handles structured logging; NestLink adds bounded correlation, actual route/generation facts, redaction, unknown values and failure-surviving export.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "No token/key/credential/screen/file content logging",
+        "Bound diagnostic retention and measure actual queue/latency, not configuration intent"
+      ],
+      "work_packages": [
+        "W29",
+        "W30"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C20",
+      "purpose": "Network experiments and automated verification",
+      "existing_implementation": [
+        ".github/workflows/rust-core.yml",
+        "Existing acceptance scripts, vectors, fuzz/sanitizer workflows"
+      ],
+      "candidates": [
+        "Existing Rust/Python test tooling plus Linux namespaces/iproute2/tc netem in GitHub-hosted Actions",
+        "Custom network emulator or local project verification (not selected)"
+      ],
+      "official_sources": [
+        "https://github.com/iproute2/iproute2",
+        "https://www.kernel.org/doc/Documentation/networking/netem.txt",
+        "https://docs.github.com/en/actions/using-github-hosted-runners"
+      ],
+      "maintenance_status": {
+        "evidence": "Existing project workflow review and mature kernel networking tooling; actual runner/privilege/topology qualification remains W03 work",
+        "reviewed_at": "2026-10-30"
+      },
+      "platforms": [
+        "GitHub-hosted Ubuntu/Windows runners",
+        "Target devices run verified Actions artifacts only"
+      ],
+      "version": {
+        "runner": "github-hosted Ubuntu/Windows fixed workflow labels",
+        "tools": "Record resolved package/tool versions and workflow action commits in actual W03 run provenance"
+      },
+      "license": "Existing workflow/test dependencies and Ubuntu tooling licenses must appear in appropriate build materials",
+      "selection_reason": "reuse_mature_fault_injection_tools_and_existing_CI",
+      "adapter_boundary": "Tooling creates repeatable real process/socket topology, impairment and cleanup; NestLink supplies actual business scenarios and honest evidence metadata.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "Loopback/echo/mock cannot stand in for complete two-endpoint/two-relay business acceptance",
+        "All compile/format/lint/tests/prototypes/bench/fuzz/artifacts run only in GitHub-hosted Actions",
+        "Separate build provenance from actual device execution"
+      ],
+      "work_packages": [
+        "W03",
+        "W36",
+        "W37",
+        "W38",
+        "W39"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    },
+    {
+      "id": "C21",
+      "purpose": "Installation, updates, signing, artifact notices and release gates",
+      "existing_implementation": [
+        "Existing packaging/native/OCI and refactor release/candidate scripts",
+        "Existing source/SBOM/checksum/signature material workflow"
+      ],
+      "candidates": [
+        "Existing packaging/signing/verification tools",
+        "New bespoke installer/update framework (not selected)"
+      ],
+      "official_sources": [
+        "https://github.com/ZHanry/NestLink/tree/82f1c8dfb31bdf0872ea7430b5608e205c1cbb08/packaging",
+        "https://github.com/ZHanry/NestLink/tree/82f1c8dfb31bdf0872ea7430b5608e205c1cbb08/.github/workflows"
+      ],
+      "maintenance_status": {
+        "evidence": "Existing project implementation and locks retained; no new candidate build, signature, target installation or public release proven by this study",
+        "reviewed_at": "2026-10-30"
+      },
+      "platforms": [
+        "Windows x64 installer",
+        "Web assets",
+        "Ubuntu 24.04 x64/ARM64 DEB/OCI"
+      ],
+      "version": {
+        "source": "Existing workflow-pinned tools and project locks; add driver/WG assets only after independent provenance/license review"
+      },
+      "license": "Preserve existing first-party Apache-2.0 and all bundled component licenses; no signature claim without actual signing",
+      "selection_reason": "extend_existing_platform_distribution_and_gates",
+      "adapter_boundary": "Tools build and package all platforms from one clean SHA in Actions; NestLink records owned resources, upgrade/rollback policy and candidate qualification.",
+      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "security_and_operations_cost": [
+        "Do not create public RC/tag before inherited and new mandatory evidence gates pass",
+        "Missing signatures/target evidence remain explicit; candidate cannot enter production update channel",
+        "Install/upgrade/uninstall must recover NestLink-owned driver/routes/DNS/maps only"
+      ],
+      "work_packages": [
+        "W34",
+        "W35",
+        "W40"
+      ],
+      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+    }
+  ]
+}

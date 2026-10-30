@@ -1,0 +1,466 @@
+{
+  "schema_version": 1,
+  "kind": "nestlink-network-rewrite-source-manifest",
+  "review_date": "2026-10-30",
+  "timezone": "Asia/Shanghai",
+  "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+  "purpose": "W01 AC02 mechanism research and component selection",
+  "method": "Manual source and official registry metadata review; no local project toolchain execution",
+  "strict_clean_room_claim": false,
+  "upstream_code_copied": false,
+  "upstream_runtime_dependency": false,
+  "verified_refs": [
+    {
+      "repository": "EasyTier/EasyTier",
+      "ref": "refs/tags/v2.6.4",
+      "commit": "8428a89d2dabc94c97d370ec607c6ca142473626",
+      "verification_url": "https://api.github.com/repos/EasyTier/EasyTier/git/ref/tags/v2.6.4",
+      "object_type": "commit"
+    },
+    {
+      "repository": "EasyTier/EasyTier",
+      "ref": "development_snapshot",
+      "commit": "c66076b8f3ec16e3fff20b0df920ebda1652e04c",
+      "verification_url": "https://api.github.com/repos/EasyTier/EasyTier/git/commits/c66076b8f3ec16e3fff20b0df920ebda1652e04c",
+      "object_type": "commit"
+    }
+  ],
+  "sources": [
+    {
+      "id": "easytier-stable-LICENSE",
+      "classification": "idea_reference",
+      "repository": "EasyTier/EasyTier",
+      "ref_kind": "released_v2.6.4",
+      "commit": "8428a89d2dabc94c97d370ec607c6ca142473626",
+      "path": "LICENSE",
+      "git_blob_sha": "0a041280bd00a9d068f503b8ee7ce35214bd24a1",
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "official_url": "https://github.com/EasyTier/EasyTier/blob/8428a89d2dabc94c97d370ec607c6ca142473626/LICENSE",
+      "reviewed_scope": "License text, opening and grant",
+      "review_kind": "manual_source_review",
+      "license": "LGPL-3.0 (root license; nested third-party licenses require separate review if adopted)",
+      "copied_or_adapted": false,
+      "runtime_dependency": false
+    },
+    {
+      "id": "easytier-stable-easytier-Cargo-toml",
+      "classification": "idea_reference",
+      "repository": "EasyTier/EasyTier",
+      "ref_kind": "released_v2.6.4",
+      "commit": "8428a89d2dabc94c97d370ec607c6ca142473626",
+      "path": "easytier/Cargo.toml",
+      "git_blob_sha": "4b6455464d4faad46f17e068139e3d30114119bc",
+      "sha256": "beb23906597ecb85955555e94276b10519ccb051801e05665816d4eb675b1577",
+      "official_url": "https://github.com/EasyTier/EasyTier/blob/8428a89d2dabc94c97d370ec607c6ca142473626/easytier/Cargo.toml",
+      "reviewed_scope": "Package version and dependency declarations",
+      "review_kind": "manual_source_review",
+      "license": "LGPL-3.0 (root license; nested third-party licenses require separate review if adopted)",
+      "copied_or_adapted": false,
+      "runtime_dependency": false
+    },
+    {
+      "id": "easytier-stable-easytier-src-common-config-rs",
+      "classification": "idea_reference",
+      "repository": "EasyTier/EasyTier",
+      "ref_kind": "released_v2.6.4",
+      "commit": "8428a89d2dabc94c97d370ec607c6ca142473626",
+      "path": "easytier/src/common/config.rs",
+      "git_blob_sha": "f92a3100a6448dc1b4a0fcfeb0fad7bd21e546c8",
+      "sha256": "ca0ac8596a79e0dc8f5586deefb66d772779b515cbd26ef2861fd3d077b9e50f",
+      "official_url": "https://github.com/EasyTier/EasyTier/blob/8428a89d2dabc94c97d370ec607c6ca142473626/easytier/src/common/config.rs",
+      "reviewed_scope": "NetworkIdentity, SecureMode and credential declarations/symbol scan",
+      "review_kind": "manual_source_review",
+      "license": "LGPL-3.0 (root license; nested third-party licenses require separate review if adopted)",
+      "copied_or_adapted": false,
+      "runtime_dependency": false
+    },
+    {
+      "id": "easytier-stable-easytier-src-connector-mod-rs",
+      "classification": "idea_reference",
+      "repository": "EasyTier/EasyTier",
+      "ref_kind": "released_v2.6.4",
+      "commit": "8428a89d2dabc94c97d370ec607c6ca142473626",
+      "path": "easytier/src/connector/mod.rs",
+      "git_blob_sha": "bfc6c7f29212d4e6421b74e3107261d4f3d05999",
+      "sha256": "b86458ce7118571bbad5dddb1aca88c6deab6def8f3a32ba269c956380cf39c1",
+      "official_url": "https://github.com/EasyTier/EasyTier/blob/8428a89d2dabc94c97d370ec607c6ca142473626/easytier/src/connector/mod.rs",
+      "reviewed_scope": "P2P policy and bind/address family/managed-address filtering excerpts",
+      "review_kind": "manual_source_review",
+      "license": "LGPL-3.0 (root license; nested third-party licenses require separate review if adopted)",
+      "copied_or_adapted": false,
+      "runtime_dependency": false
+    },
+    {
+      "id": "easytier-stable-easytier-src-connector-udp-hole-punch-common-rs",
+      "classification": "idea_reference",
+      "repository": "EasyTier/EasyTier",
+      "ref_kind": "released_v2.6.4",
+      "commit": "8428a89d2dabc94c97d370ec607c6ca142473626",
+      "path": "easytier/src/connector/udp_hole_punch/common.rs",
+      "git_blob_sha": "e82b0663491ddac33b345361b253dba9364ff4fa",
+      "sha256": "5510ad6af2a35b291f80817641c1528ab708fc211da8937aded35523e714eba0",
+      "official_url": "https://github.com/EasyTier/EasyTier/blob/8428a89d2dabc94c97d370ec607c6ca142473626/easytier/src/connector/udp_hole_punch/common.rs",
+      "reviewed_scope": "Socket array/listener reuse, transaction and cleanup symbol scan",
+      "review_kind": "manual_source_review",
+      "license": "LGPL-3.0 (root license; nested third-party licenses require separate review if adopted)",
+      "copied_or_adapted": false,
+      "runtime_dependency": false
+    },
+    {
+      "id": "easytier-stable-easytier-src-connector-udp-hole-punch-mod-rs",
+      "classification": "idea_reference",
+      "repository": "EasyTier/EasyTier",
+      "ref_kind": "released_v2.6.4",
+      "commit": "8428a89d2dabc94c97d370ec607c6ca142473626",
+      "path": "easytier/src/connector/udp_hole_punch/mod.rs",
+      "git_blob_sha": "e1c2e14bd26898148218748fbd8649b3f10cbd17",
+      "sha256": "b36694cc874942dc3b07ea15db2458ffd39c2b1b156d034c8ab511327be2ae8e",
+      "official_url": "https://github.com/EasyTier/EasyTier/blob/8428a89d2dabc94c97d370ec607c6ca142473626/easytier/src/connector/udp_hole_punch/mod.rs",
+      "reviewed_scope": "Module/runtime/signaling ownership declarations",
+      "review_kind": "manual_source_review",
+      "license": "LGPL-3.0 (root license; nested third-party licenses require separate review if adopted)",
+      "copied_or_adapted": false,
+      "runtime_dependency": false
+    },
+    {
+      "id": "easytier-stable-easytier-src-gateway-mod-rs",
+      "classification": "idea_reference",
+      "repository": "EasyTier/EasyTier",
+      "ref_kind": "released_v2.6.4",
+      "commit": "8428a89d2dabc94c97d370ec607c6ca142473626",
+      "path": "easytier/src/gateway/mod.rs",
+      "git_blob_sha": "ab057635a678b05cc150efecc4d9abf8b902dce6",
+      "sha256": "dc22035ca8e8b10b03941650042663aa6e93b59bed6ae9898b0c918bfb2638f0",
+      "official_url": "https://github.com/EasyTier/EasyTier/blob/8428a89d2dabc94c97d370ec607c6ca142473626/easytier/src/gateway/mod.rs",
+      "reviewed_scope": "CIDR mapping owner and address translation",
+      "review_kind": "manual_source_review",
+      "license": "LGPL-3.0 (root license; nested third-party licenses require separate review if adopted)",
+      "copied_or_adapted": false,
+      "runtime_dependency": false
+    },
+    {
+      "id": "easytier-stable-easytier-src-gateway-socks5-rs",
+      "classification": "idea_reference",
+      "repository": "EasyTier/EasyTier",
+      "ref_kind": "released_v2.6.4",
+      "commit": "8428a89d2dabc94c97d370ec607c6ca142473626",
+      "path": "easytier/src/gateway/socks5.rs",
+      "git_blob_sha": "0cd5d07d98538e4fb3e5a8a18e723a7b7bc3e4c2",
+      "sha256": "170b20974af665a8482bdb3612483d1dce89d762f3cdaf9cfe9a83986b8ea8f9",
+      "official_url": "https://github.com/EasyTier/EasyTier/blob/8428a89d2dabc94c97d370ec607c6ca142473626/easytier/src/gateway/socks5.rs",
+      "reviewed_scope": "SOCKS, smoltcp, async stream and client entry declarations",
+      "review_kind": "manual_source_review",
+      "license": "LGPL-3.0 (root license; nested third-party licenses require separate review if adopted)",
+      "copied_or_adapted": false,
+      "runtime_dependency": false
+    },
+    {
+      "id": "easytier-stable-easytier-src-peers-foreign-network-manager-rs",
+      "classification": "idea_reference",
+      "repository": "EasyTier/EasyTier",
+      "ref_kind": "released_v2.6.4",
+      "commit": "8428a89d2dabc94c97d370ec607c6ca142473626",
+      "path": "easytier/src/peers/foreign_network_manager.rs",
+      "git_blob_sha": "517137a3e0d4ca333aff9183d338ab4d856db1a7",
+      "sha256": "028ad2a23c77a781ce282d91fb6207a4366e24cf5a4e1f20677ce12c3ad9482a",
+      "official_url": "https://github.com/EasyTier/EasyTier/blob/8428a89d2dabc94c97d370ec607c6ca142473626/easytier/src/peers/foreign_network_manager.rs",
+      "reviewed_scope": "ForeignNetworkEntry state, per-network relay and budget declarations",
+      "review_kind": "manual_source_review",
+      "license": "LGPL-3.0 (root license; nested third-party licenses require separate review if adopted)",
+      "copied_or_adapted": false,
+      "runtime_dependency": false
+    },
+    {
+      "id": "easytier-stable-easytier-src-peers-peer-manager-rs",
+      "classification": "idea_reference",
+      "repository": "EasyTier/EasyTier",
+      "ref_kind": "released_v2.6.4",
+      "commit": "8428a89d2dabc94c97d370ec607c6ca142473626",
+      "path": "easytier/src/peers/peer_manager.rs",
+      "git_blob_sha": "d5502ac4497868862de1eb06a409756c2a605f08",
+      "sha256": "f4c0c808fea40f40e154636b05fdb479a7de68d6ff3d96975bdabd56cb3e6d2d",
+      "official_url": "https://github.com/EasyTier/EasyTier/blob/8428a89d2dabc94c97d370ec607c6ca142473626/easytier/src/peers/peer_manager.rs",
+      "reviewed_scope": "Same-network identity admission and foreign packet forwarding excerpts",
+      "review_kind": "manual_source_review",
+      "license": "LGPL-3.0 (root license; nested third-party licenses require separate review if adopted)",
+      "copied_or_adapted": false,
+      "runtime_dependency": false
+    },
+    {
+      "id": "easytier-stable-easytier-src-peers-peer-ospf-route-rs",
+      "classification": "idea_reference",
+      "repository": "EasyTier/EasyTier",
+      "ref_kind": "released_v2.6.4",
+      "commit": "8428a89d2dabc94c97d370ec607c6ca142473626",
+      "path": "easytier/src/peers/peer_ospf_route.rs",
+      "git_blob_sha": "6081c0cdeae8cd388c589a25a455d1989d1f2e69",
+      "sha256": "e44870201042fd24c47e3b5f700e3fdcdbb6578f3af3d36a7128249a1f214e82",
+      "official_url": "https://github.com/EasyTier/EasyTier/blob/8428a89d2dabc94c97d370ec607c6ca142473626/easytier/src/peers/peer_ospf_route.rs",
+      "reviewed_scope": "Petgraph imports, version/TTL/latency/prefix policy and update symbol scan",
+      "review_kind": "manual_source_review",
+      "license": "LGPL-3.0 (root license; nested third-party licenses require separate review if adopted)",
+      "copied_or_adapted": false,
+      "runtime_dependency": false
+    },
+    {
+      "id": "easytier-stable-easytier-src-rpc-service-config-rs",
+      "classification": "idea_reference",
+      "repository": "EasyTier/EasyTier",
+      "ref_kind": "released_v2.6.4",
+      "commit": "8428a89d2dabc94c97d370ec607c6ca142473626",
+      "path": "easytier/src/rpc_service/config.rs",
+      "git_blob_sha": "1f1b92148bfcb5d7e7fd240616cf7d19bb3562cc",
+      "sha256": "ebc037281f37e8575b03fb09fb975e094fbe0b19b7da4a7227bb0cd6aea58e70",
+      "official_url": "https://github.com/EasyTier/EasyTier/blob/8428a89d2dabc94c97d370ec607c6ca142473626/easytier/src/rpc_service/config.rs",
+      "reviewed_scope": "Complete Get/Patch instance config RPC delegation",
+      "review_kind": "manual_source_review",
+      "license": "LGPL-3.0 (root license; nested third-party licenses require separate review if adopted)",
+      "copied_or_adapted": false,
+      "runtime_dependency": false
+    },
+    {
+      "id": "easytier-stable-easytier-src-tunnel-mod-rs",
+      "classification": "idea_reference",
+      "repository": "EasyTier/EasyTier",
+      "ref_kind": "released_v2.6.4",
+      "commit": "8428a89d2dabc94c97d370ec607c6ca142473626",
+      "path": "easytier/src/tunnel/mod.rs",
+      "git_blob_sha": "06629b6cb6ba564c85852b76cb1938cdb425a500",
+      "sha256": "dd6d946131eab80bfa32634a03613f444fbbad1217682666b384039680639797",
+      "official_url": "https://github.com/EasyTier/EasyTier/blob/8428a89d2dabc94c97d370ec607c6ca142473626/easytier/src/tunnel/mod.rs",
+      "reviewed_scope": "Tunnel stream/sink, listener/connector and error interfaces",
+      "review_kind": "manual_source_review",
+      "license": "LGPL-3.0 (root license; nested third-party licenses require separate review if adopted)",
+      "copied_or_adapted": false,
+      "runtime_dependency": false
+    },
+    {
+      "id": "easytier-stable-easytier-src-tunnel-packet-def-rs",
+      "classification": "idea_reference",
+      "repository": "EasyTier/EasyTier",
+      "ref_kind": "released_v2.6.4",
+      "commit": "8428a89d2dabc94c97d370ec607c6ca142473626",
+      "path": "easytier/src/tunnel/packet_def.rs",
+      "git_blob_sha": "10cf5f4d1b9d2ed2b06708e36f0d84ae0b7235e1",
+      "sha256": "16cd6a530e1a76a97a29c8368a8b17e81931685a4466226fafe22df4f62598ea",
+      "official_url": "https://github.com/EasyTier/EasyTier/blob/8428a89d2dabc94c97d370ec607c6ca142473626/easytier/src/tunnel/packet_def.rs",
+      "reviewed_scope": "Packet framing, packet types and PeerManagerHeader declarations",
+      "review_kind": "manual_source_review",
+      "license": "LGPL-3.0 (root license; nested third-party licenses require separate review if adopted)",
+      "copied_or_adapted": false,
+      "runtime_dependency": false
+    },
+    {
+      "id": "easytier-stable-easytier-src-vpn-portal-wireguard-rs",
+      "classification": "idea_reference",
+      "repository": "EasyTier/EasyTier",
+      "ref_kind": "released_v2.6.4",
+      "commit": "8428a89d2dabc94c97d370ec607c6ca142473626",
+      "path": "easytier/src/vpn_portal/wireguard.rs",
+      "git_blob_sha": "ab85ff93eadf985830f31553a6eb95d89f9f429b",
+      "sha256": "7339b5ee1b59a1d0012bb9e576cd71349961b764d143b5ae47edccdb9335a353",
+      "official_url": "https://github.com/EasyTier/EasyTier/blob/8428a89d2dabc94c97d370ec607c6ca142473626/easytier/src/vpn_portal/wireguard.rs",
+      "reviewed_scope": "Portal config derivation and first packet/IP registration excerpts",
+      "review_kind": "manual_source_review",
+      "license": "LGPL-3.0 (root license; nested third-party licenses require separate review if adopted)",
+      "copied_or_adapted": false,
+      "runtime_dependency": false
+    },
+    {
+      "id": "easytier-development-easytier-core-src-connectivity-hole-punch-policy-rs",
+      "classification": "idea_reference",
+      "repository": "EasyTier/EasyTier",
+      "ref_kind": "development_snapshot",
+      "commit": "c66076b8f3ec16e3fff20b0df920ebda1652e04c",
+      "path": "easytier-core/src/connectivity/hole_punch/policy.rs",
+      "git_blob_sha": "68ffd4a46e05438d4f3a875631c4e27f8e293399",
+      "sha256": "ca44c4e96d8fd2211f18db2bd908370a6080ba660cb89e438bbbdfbd403cb49e",
+      "official_url": "https://github.com/EasyTier/EasyTier/blob/c66076b8f3ec16e3fff20b0df920ebda1652e04c/easytier-core/src/connectivity/hole_punch/policy.rs",
+      "reviewed_scope": "P2P/lazy policy, backoff and policy tests excerpts",
+      "review_kind": "manual_source_review",
+      "license": "LGPL-3.0 (root license; nested third-party licenses require separate review if adopted)",
+      "copied_or_adapted": false,
+      "runtime_dependency": false
+    },
+    {
+      "id": "easytier-development-easytier-core-src-connectivity-hole-punch-udp-binding-rs",
+      "classification": "idea_reference",
+      "repository": "EasyTier/EasyTier",
+      "ref_kind": "development_snapshot",
+      "commit": "c66076b8f3ec16e3fff20b0df920ebda1652e04c",
+      "path": "easytier-core/src/connectivity/hole_punch/udp/binding.rs",
+      "git_blob_sha": "e14713fad17dbe3ebd912e975ca93d9e31b1060e",
+      "sha256": "2205e23907821d65eb9070e06d007615cbd35568b445e9aeae658e28397a8a22",
+      "official_url": "https://github.com/EasyTier/EasyTier/blob/c66076b8f3ec16e3fff20b0df920ebda1652e04c/easytier-core/src/connectivity/hole_punch/udp/binding.rs",
+      "reviewed_scope": "Host/socket/STUN/port-mapping/transport-sink composition excerpts",
+      "review_kind": "manual_source_review",
+      "license": "LGPL-3.0 (root license; nested third-party licenses require separate review if adopted)",
+      "copied_or_adapted": false,
+      "runtime_dependency": false
+    },
+    {
+      "id": "easytier-development-easytier-js-browser-README-md",
+      "classification": "idea_reference",
+      "repository": "EasyTier/EasyTier",
+      "ref_kind": "development_snapshot",
+      "commit": "c66076b8f3ec16e3fff20b0df920ebda1652e04c",
+      "path": "easytier-js/browser/README.md",
+      "git_blob_sha": "f1264e657fa9c9fa576de77bca39ce37632e510f",
+      "sha256": "9754a9c845fa8503a54a207809f113539e4601430475e4a6973750da42a9b499",
+      "official_url": "https://github.com/EasyTier/EasyTier/blob/c66076b8f3ec16e3fff20b0df920ebda1652e04c/easytier-js/browser/README.md",
+      "reviewed_scope": "Complete package README, supported transport/data plane and JSPI limits",
+      "review_kind": "manual_source_review",
+      "license": "LGPL-3.0 (root license; nested third-party licenses require separate review if adopted)",
+      "copied_or_adapted": false,
+      "runtime_dependency": false
+    }
+  ],
+  "existing_implementation_sources": [
+    {
+      "repository": "ZHanry/NestLink",
+      "commit": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+      "path": "crates/connectivity/src/lib.rs",
+      "reviewed_scope": "Relevant declarations/implementation excerpts; Cargo.lock package records, not full dependency audit",
+      "official_url": "https://github.com/ZHanry/NestLink/blob/82f1c8dfb31bdf0872ea7430b5608e205c1cbb08/crates/connectivity/src/lib.rs"
+    },
+    {
+      "repository": "ZHanry/NestLink",
+      "commit": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+      "path": "crates/identity/src/lib.rs",
+      "reviewed_scope": "Relevant declarations/implementation excerpts; Cargo.lock package records, not full dependency audit",
+      "official_url": "https://github.com/ZHanry/NestLink/blob/82f1c8dfb31bdf0872ea7430b5608e205c1cbb08/crates/identity/src/lib.rs"
+    },
+    {
+      "repository": "ZHanry/NestLink",
+      "commit": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+      "path": "crates/transport-quic/src/discovery.rs",
+      "reviewed_scope": "Relevant declarations/implementation excerpts; Cargo.lock package records, not full dependency audit",
+      "official_url": "https://github.com/ZHanry/NestLink/blob/82f1c8dfb31bdf0872ea7430b5608e205c1cbb08/crates/transport-quic/src/discovery.rs"
+    },
+    {
+      "repository": "ZHanry/NestLink",
+      "commit": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+      "path": "crates/transport-quic/src/virtual_udp.rs",
+      "reviewed_scope": "Relevant declarations/implementation excerpts; Cargo.lock package records, not full dependency audit",
+      "official_url": "https://github.com/ZHanry/NestLink/blob/82f1c8dfb31bdf0872ea7430b5608e205c1cbb08/crates/transport-quic/src/virtual_udp.rs"
+    },
+    {
+      "repository": "ZHanry/NestLink",
+      "commit": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+      "path": "crates/sdk/src/discovery.rs",
+      "reviewed_scope": "Relevant declarations/implementation excerpts; Cargo.lock package records, not full dependency audit",
+      "official_url": "https://github.com/ZHanry/NestLink/blob/82f1c8dfb31bdf0872ea7430b5608e205c1cbb08/crates/sdk/src/discovery.rs"
+    },
+    {
+      "repository": "ZHanry/NestLink",
+      "commit": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+      "path": "crates/sdk/src/native.rs",
+      "reviewed_scope": "Relevant declarations/implementation excerpts; Cargo.lock package records, not full dependency audit",
+      "official_url": "https://github.com/ZHanry/NestLink/blob/82f1c8dfb31bdf0872ea7430b5608e205c1cbb08/crates/sdk/src/native.rs"
+    },
+    {
+      "repository": "ZHanry/NestLink",
+      "commit": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+      "path": "crates/transport-stream/src/lib.rs",
+      "reviewed_scope": "Relevant declarations/implementation excerpts; Cargo.lock package records, not full dependency audit",
+      "official_url": "https://github.com/ZHanry/NestLink/blob/82f1c8dfb31bdf0872ea7430b5608e205c1cbb08/crates/transport-stream/src/lib.rs"
+    },
+    {
+      "repository": "ZHanry/NestLink",
+      "commit": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+      "path": "crates/node/src/service_plane/stream.rs",
+      "reviewed_scope": "Relevant declarations/implementation excerpts; Cargo.lock package records, not full dependency audit",
+      "official_url": "https://github.com/ZHanry/NestLink/blob/82f1c8dfb31bdf0872ea7430b5608e205c1cbb08/crates/node/src/service_plane/stream.rs"
+    },
+    {
+      "repository": "ZHanry/NestLink",
+      "commit": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+      "path": "apps/web/src/browser_peer.rs",
+      "reviewed_scope": "Relevant declarations/implementation excerpts; Cargo.lock package records, not full dependency audit",
+      "official_url": "https://github.com/ZHanry/NestLink/blob/82f1c8dfb31bdf0872ea7430b5608e205c1cbb08/apps/web/src/browser_peer.rs"
+    },
+    {
+      "repository": "ZHanry/NestLink",
+      "commit": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+      "path": "crates/platform-network/src/lib.rs",
+      "reviewed_scope": "Relevant declarations/implementation excerpts; Cargo.lock package records, not full dependency audit",
+      "official_url": "https://github.com/ZHanry/NestLink/blob/82f1c8dfb31bdf0872ea7430b5608e205c1cbb08/crates/platform-network/src/lib.rs"
+    },
+    {
+      "repository": "ZHanry/NestLink",
+      "commit": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+      "path": "crates/storage/src/lib.rs",
+      "reviewed_scope": "Relevant declarations/implementation excerpts; Cargo.lock package records, not full dependency audit",
+      "official_url": "https://github.com/ZHanry/NestLink/blob/82f1c8dfb31bdf0872ea7430b5608e205c1cbb08/crates/storage/src/lib.rs"
+    },
+    {
+      "repository": "ZHanry/NestLink",
+      "commit": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+      "path": "Cargo.toml",
+      "reviewed_scope": "Relevant declarations/implementation excerpts; Cargo.lock package records, not full dependency audit",
+      "official_url": "https://github.com/ZHanry/NestLink/blob/82f1c8dfb31bdf0872ea7430b5608e205c1cbb08/Cargo.toml"
+    },
+    {
+      "repository": "ZHanry/NestLink",
+      "commit": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+      "path": "Cargo.lock",
+      "reviewed_scope": "Relevant declarations/implementation excerpts; Cargo.lock package records, not full dependency audit",
+      "official_url": "https://github.com/ZHanry/NestLink/blob/82f1c8dfb31bdf0872ea7430b5608e205c1cbb08/Cargo.lock"
+    },
+    {
+      "repository": "ZHanry/NestLink",
+      "commit": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+      "path": "docs/refactor/native-codecs.lock.json",
+      "reviewed_scope": "Relevant declarations/implementation excerpts; Cargo.lock package records, not full dependency audit",
+      "official_url": "https://github.com/ZHanry/NestLink/blob/82f1c8dfb31bdf0872ea7430b5608e205c1cbb08/docs/refactor/native-codecs.lock.json"
+    }
+  ],
+  "runtime_dependency_authority": "Cargo.lock and config/dependency-forks.json; decisions in components.json",
+  "standard_references": [
+    {
+      "id": "RFC8445",
+      "url": "https://www.rfc-editor.org/rfc/rfc8445",
+      "classification": "standard_reference",
+      "review_status": "Reference introduced by supplied specification; not full protocol audit or implementation qualification"
+    },
+    {
+      "id": "RFC8489",
+      "url": "https://www.rfc-editor.org/rfc/rfc8489",
+      "classification": "standard_reference",
+      "review_status": "Reference introduced by supplied specification; not full protocol audit or implementation qualification"
+    },
+    {
+      "id": "RFC9000-14",
+      "url": "https://www.rfc-editor.org/rfc/rfc9000.html#section-14",
+      "classification": "standard_reference",
+      "review_status": "Reference introduced by supplied specification; not full protocol audit or implementation qualification"
+    },
+    {
+      "id": "RFC8200-5",
+      "url": "https://www.rfc-editor.org/rfc/rfc8200.html#section-5",
+      "classification": "standard_reference",
+      "review_status": "Reference introduced by supplied specification; not full protocol audit or implementation qualification"
+    },
+    {
+      "id": "WireGuard",
+      "url": "https://www.wireguard.com/protocol/",
+      "classification": "standard_reference",
+      "review_status": "Reference introduced by supplied specification; not full protocol audit or implementation qualification"
+    }
+  ],
+  "provenance": {
+    "build_provenance": null,
+    "execution_provenance": {
+      "environment": "document_review",
+      "date": "2026-10-30",
+      "timezone": "Asia/Shanghai",
+      "reviewer": "Codex mechanism_research",
+      "automated_project_validation_executed": false
+    },
+    "limitations": [
+      "Source excerpts, not complete EasyTier security audit",
+      "Candidate registry metadata and upstream README claims do not prove NestLink platform qualification",
+      "No L1/L2/L3/L4 network, hardware or device acceptance executed by this review"
+    ]
+  }
+}
