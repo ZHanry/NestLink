@@ -18,16 +18,16 @@ use nestlink_protocol::{
     },
 };
 use nestlink_remote::{
-    RemoteError, RuntimeClock, SessionLifecycle, SessionSetup, TransportMode,
+    RemoteError, RuntimeClock, SessionLifecycle, SessionSetup, StopHandler, TransportMode,
 };
-use nestlink_session::{EndpointRole, Session, SessionBinding, StopReason};
+use nestlink_session::{EndpointRole, Session, SessionBinding, StopEffects, StopReason};
 use nestlink_transport_quic::routed::{
-    Adjacency, AdjacencyEndpoint, RelayForwarder, RouteAuthorization,
+    self, Adjacency, AdjacencyEndpoint, RelayForwarder, RouteAuthorization, RouteRevocation,
 };
 use nestlink_transport_stream::Channel;
 use prost::Message;
-use std::{collections::BTreeSet, io, net::SocketAddr, time::Duration};
-use tokio::{sync::watch, time::Instant};
+use std::{collections::BTreeSet, io, net::SocketAddr, sync::{Arc, atomic::{AtomicUsize, Ordering}}, time::Duration};
+use tokio::{sync::{oneshot, watch}, time::Instant};
 
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 const DEPLOYMENT: &str = "10000000-0000-4000-8000-000000000001";
@@ -48,6 +48,9 @@ struct Fixture {
 }
 impl Fixture {
     fn new(allow_relay: bool) -> Result<Self> {
+        Self::with_route_lifetime(allow_relay, 12_000)
+    }
+    fn with_route_lifetime(allow_relay: bool, route_lifetime_ms: u64) -> Result<Self> {
         let mut controller = DeviceIdentity::generate();
         let mut host = DeviceIdentity::generate();
         if controller.identity.fingerprint() > host.identity.fingerprint() {
@@ -81,7 +84,7 @@ impl Fixture {
         let scope = |id: u8| GrantScope {
             schema_version: 1, deployment_id: DEPLOYMENT.into(), space_id: SPACE.into(),
             grant_id: format!("30000000-0000-4000-8000-{id:012x}"), policy_epoch: 9,
-            not_before_ms: now, expires_at_ms: now + 12_000,
+            not_before_ms: now, expires_at_ms: now + route_lifetime_ms,
         };
         let mut memberships = Vec::new();
         for (index, device) in [&controller, &host].into_iter().enumerate() {
@@ -255,5 +258,266 @@ async fn sdk_route_admission_rejects_another_business_permit_peer_key_and_direct
         assert!(matches!(rejected, Err(RemoteError::Io(ref error)) if error.kind() == io::ErrorKind::PermissionDenied), "fault {fault} must reject business authority, with successful physical cleanup");
         for address in addresses { drop(std::net::UdpSocket::bind(address)?); }
     }
+    Ok(())
+}
+
+type Forwarding = Abort<io::Result<u64>>;
+struct Mesh {
+    controller: Adjacency,
+    host: Adjacency,
+    relay_stop: RouteRevocation,
+    forwarding: Forwarding,
+    addresses: [SocketAddr; 4],
+}
+async fn mesh(f: &Fixture, deadline: Instant) -> Result<Mesh> {
+    let (relay_controller, controller, a) = neighbors(&f.relay, &f.controller.identity, deadline).await?;
+    let (relay_host, host, b) = neighbors(&f.relay, &f.host.identity, deadline).await?;
+    let (authorization, relay_stop) = RouteAuthorization::remote(&f.context(), &f.path, &f.connectivity, &f.transit, &f.permit)?;
+    let mut relay = RelayForwarder::new(authorization, relay_controller, relay_host)?;
+    let forwarding = Abort(tokio::spawn(async move {
+        let stopped = relay.run().await.is_err();
+        let forwarded = relay.forwarded_fragments();
+        relay.close_and_wait(Instant::now() + Duration::from_secs(5)).await?;
+        if !stopped { return Err(io::Error::other("relay unexpectedly ended without a terminal condition")); }
+        Ok(forwarded)
+    }));
+    Ok(Mesh { controller, host, relay_stop, forwarding, addresses: [a[0], a[1], b[0], b[1]] })
+}
+async fn finish_mesh(
+    relay_stop: RouteRevocation,
+    mut forwarding: Forwarding,
+    addresses: [SocketAddr; 4],
+    deadline: Instant,
+) -> Result<u64> {
+    relay_stop.revoke();
+    let forwarded = tokio::time::timeout_at(deadline, &mut forwarding.0).await???;
+    for address in addresses { drop(std::net::UdpSocket::bind(address)?); }
+    Ok(forwarded)
+}
+
+#[tokio::test]
+async fn sdk_preflight_rejects_an_existing_stop_and_a_dropped_stop_source_with_socket_receipts() -> Result {
+    for closed in [false, true] {
+        let f = Fixture::new(true)?;
+        let context = f.context();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let (mut relay, controller, addresses) = neighbors(&f.relay, &f.controller.identity, deadline).await?;
+        let (source, stop) = watch::channel(None);
+        if !closed { source.send_replace(Some(StopReason::Revoked)); }
+        let source = (!closed).then_some(source);
+        let setup = f.setup(&f.permit, EndpointRole::Controller, stop)?;
+        let peer_key = f.host.identity.public_key();
+        let (rejected, released) = tokio::join!(
+            authorize_remote(f.authority(&context), controller, setup, &f.controller, &peer_key, deadline),
+            relay.close_and_wait(deadline),
+        );
+        assert!(matches!(rejected, Err(RemoteError::Stopped)), "closed={closed}");
+        released?;
+        for address in addresses { drop(std::net::UdpSocket::bind(address)?); }
+        drop(source);
+    }
+    Ok(())
+}
+
+#[tokio::test]
+async fn sdk_absolute_deadline_covers_business_proof_after_real_routed_quic_establishment() -> Result {
+    let f = Fixture::new(true)?;
+    let context = f.context();
+    let Mesh { controller, host, relay_stop, forwarding, addresses } = mesh(&f, Instant::now() + Duration::from_secs(5)).await?;
+    let (host_authority, host_stop) = RouteAuthorization::remote(&context, &f.path, &f.connectivity, &f.transit, &f.permit)?;
+    let (_keep, stop) = watch::channel(None);
+    let setup = f.setup(&f.permit, EndpointRole::Controller, stop)?;
+    let peer_key = f.host.identity.public_key();
+    let deadline = Instant::now() + Duration::from_millis(1200);
+    // The real peer completes inner TLS and deliberately withholds business
+    // proof. The remote proof implementation's own budget is three seconds.
+    let (rejected, peer) = tokio::time::timeout_at(deadline + Duration::from_millis(500), async {
+        tokio::join!(
+            authorize_remote(f.authority(&context), controller, setup, &f.controller, &peer_key, deadline),
+            routed::establish(host_authority, host, &f.host.identity, deadline),
+        )
+    }).await?;
+    let mut peer = peer?;
+    assert!(matches!(rejected,
+        Err(RemoteError::Io(ref error) | RemoteError::Cleanup(ref error))
+            if error.kind() == io::ErrorKind::TimedOut));
+    tokio::time::timeout(Duration::from_secs(1), peer.connection()?.closed()).await?;
+    host_stop.revoke();
+    let cleanup = Instant::now() + Duration::from_secs(5);
+    peer.close_and_wait(cleanup).await?;
+    finish_mesh(relay_stop, forwarding, addresses, cleanup).await?;
+    Ok(())
+}
+
+#[tokio::test]
+async fn sdk_stop_interrupts_routed_establishment_before_the_inner_peer_starts() -> Result {
+    let f = Fixture::new(true)?;
+    let context = f.context();
+    let deadline = Instant::now() + Duration::from_secs(5);
+    let Mesh { controller, mut host, relay_stop, forwarding, addresses } = mesh(&f, deadline).await?;
+    let (source, stop) = watch::channel(None);
+    let setup = f.setup(&f.permit, EndpointRole::Controller, stop)?;
+    let peer_key = f.host.identity.public_key();
+    // The physical host adjacency is real and retained, while no inner peer
+    // exists to answer the controller's routed QUIC Initial packets.
+    let (completed, signalled) = tokio::time::timeout_at(deadline, async {
+        tokio::join!(
+            async {
+                let result = authorize_remote(f.authority(&context), controller, setup, &f.controller, &peer_key, deadline).await;
+                (Instant::now(), result)
+            },
+            async {
+                tokio::time::sleep(Duration::from_millis(100)).await;
+                let signalled = Instant::now();
+                source.send_replace(Some(StopReason::Revoked));
+                signalled
+            },
+        )
+    }).await?;
+    assert!(completed.0 >= signalled);
+    assert!(completed.0.duration_since(signalled) < Duration::from_secs(1));
+    assert!(matches!(completed.1, Err(RemoteError::Stopped)));
+    let cleanup = Instant::now() + Duration::from_secs(5);
+    host.close_and_wait(cleanup).await?;
+    assert!(finish_mesh(relay_stop, forwarding, addresses, cleanup).await? > 0, "the relay must have actually forwarded inner establishment traffic");
+    Ok(())
+}
+
+#[tokio::test]
+async fn sdk_waiting_business_proof_ignores_none_updates_and_stops_on_revocation_or_source_drop() -> Result {
+    for closed in [false, true] {
+        let f = Fixture::new(true)?;
+        let context = f.context();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let Mesh { controller, host, relay_stop, forwarding, addresses } = mesh(&f, deadline).await?;
+        let (host_authority, host_stop) = RouteAuthorization::remote(&context, &f.path, &f.connectivity, &f.transit, &f.permit)?;
+        let (source, stop) = watch::channel(None);
+        let setup = f.setup(&f.permit, EndpointRole::Controller, stop)?;
+        let peer_key = f.host.identity.public_key();
+        let (ready, established) = oneshot::channel();
+        let (completed, signalled, peer) = tokio::time::timeout_at(deadline, async {
+            tokio::join!(
+                async {
+                    let result = authorize_remote(f.authority(&context), controller, setup, &f.controller, &peer_key, deadline).await;
+                    (Instant::now(), result)
+                },
+                async move {
+                    established.await?;
+                    source.send_replace(None);
+                    tokio::time::sleep(Duration::from_millis(50)).await;
+                    let signalled = Instant::now();
+                    if closed { drop(source); }
+                    else { source.send_replace(Some(StopReason::Revoked)); }
+                    Ok::<_, Box<dyn std::error::Error + Send + Sync>>(signalled)
+                },
+                async {
+                    let peer = routed::establish(host_authority, host, &f.host.identity, deadline).await?;
+                    ready.send(()).map_err(|_| io::Error::other("proof wait was not observed"))?;
+                    Ok::<_, Box<dyn std::error::Error + Send + Sync>>(peer)
+                },
+            )
+        }).await?;
+        let signalled = signalled?;
+        let mut peer = peer?;
+        assert!(completed.0 >= signalled, "a None update must not cancel business proof");
+        assert!(completed.0.duration_since(signalled) < Duration::from_secs(1), "stop must interrupt proof before its independent three-second budget");
+        assert!(matches!(completed.1, Err(RemoteError::Stopped)), "closed={closed}");
+        tokio::time::timeout(Duration::from_secs(1), peer.connection()?.closed()).await?;
+        host_stop.revoke();
+        let cleanup = Instant::now() + Duration::from_secs(5);
+        peer.close_and_wait(cleanup).await?;
+        finish_mesh(relay_stop, forwarding, addresses, cleanup).await?;
+    }
+    Ok(())
+}
+
+struct StopSpy {
+    checks: Arc<AtomicUsize>,
+    stops: Arc<AtomicUsize>,
+}
+impl StopHandler for StopSpy {
+    fn check(&mut self) -> io::Result<()> {
+        self.checks.fetch_add(1, Ordering::SeqCst);
+        Ok(())
+    }
+    fn stop(&mut self, reason: StopReason, effects: StopEffects) -> io::Result<()> {
+        assert_eq!(reason, StopReason::Revoked);
+        assert!(effects.cancel_channels && effects.close_allocations);
+        self.stops.fetch_add(1, Ordering::SeqCst);
+        Ok(())
+    }
+}
+
+#[test]
+fn terminal_route_hook_revokes_the_same_authorization_before_returning_to_its_caller() -> Result {
+    let f = Fixture::new(true)?;
+    let (authorization, revocation) = RouteAuthorization::remote(&f.context(), &f.path, &f.connectivity, &f.transit, &f.permit)?;
+    let checks = Arc::new(AtomicUsize::new(0));
+    let stops = Arc::new(AtomicUsize::new(0));
+    let mut handler = super::RemoteRouteStop {
+        revocation: Arc::new(revocation), deadline: authorization.deadline(),
+        previous: Some(Box::new(StopSpy { checks: checks.clone(), stops: stops.clone() })),
+    };
+    handler.check()?;
+    assert_eq!(checks.load(Ordering::SeqCst), 1);
+    authorization.check_live()?;
+    handler.stop(StopReason::Revoked, StopEffects {
+        cancel_channels: true, release_inputs: true, discard_queues: true, close_allocations: true,
+    })?;
+    // There is no await or transport-owner cleanup between these operations.
+    assert_eq!(stops.load(Ordering::SeqCst), 1);
+    assert_eq!(authorization.check_live().err().map(|error| error.kind()), Some(io::ErrorKind::PermissionDenied));
+    Ok(())
+}
+
+#[tokio::test]
+async fn sdk_business_renewal_preserves_the_original_route_ceiling_and_synchronous_stop_handler() -> Result {
+    let f = Fixture::with_route_lifetime(true, 5000)?;
+    let context = f.context();
+    let deadline = Instant::now() + Duration::from_secs(4);
+    let Mesh { controller, host, relay_stop, forwarding, addresses } = mesh(&f, deadline).await?;
+    let (_controller_keep, controller_stop) = watch::channel(None);
+    let (_host_keep, host_stop) = watch::channel(None);
+    let checks = Arc::new(AtomicUsize::new(0));
+    let stops = Arc::new(AtomicUsize::new(0));
+    let mut controller_setup = f.setup(&f.permit, EndpointRole::Controller, controller_stop)?;
+    controller_setup.lifecycle.resources = Some(Box::new(StopSpy { checks: checks.clone(), stops: stops.clone() }));
+    let host_key = f.host.identity.public_key();
+    let controller_key = f.controller.identity.public_key();
+    let (mut controller, mut host) = tokio::try_join!(
+        authorize_remote(f.authority(&context), controller, controller_setup, &f.controller, &host_key, deadline),
+        authorize_remote(f.authority(&context), host, f.setup(&f.permit, EndpointRole::Host, host_stop)?, &f.host, &controller_key, deadline),
+    )?;
+    let controller_ceiling = controller.lease_control().reconnection_budget()?.deadline();
+    let host_ceiling = host.lease_control().reconnection_budget()?.deadline();
+    // Make the renewal request later than activation on both runtime clocks.
+    tokio::time::sleep(Duration::from_millis(2)).await;
+    let mut claims = f.permit.claims().clone();
+    claims.lease_sequence += 1;
+    claims.issued_at_unix_ms = controller.lease_control().renewal_clock()?.unix_ms;
+    claims.expires_at_unix_ms = claims.issued_at_unix_ms + 15_000;
+    let renewed = verify_permit(&f.permit_signer.sign(&claims)?.encode_to_vec(), &f.permit_signer.public_key())?;
+    for channels in [&controller, &host] {
+        let control = channels.lease_control();
+        control.renew(renewed.clone(), control.renewal_clock()?.monotonic_ms)?;
+        assert_eq!(control.current_native_permit()?.digest(), renewed.digest());
+    }
+    assert_eq!(controller.lease_control().reconnection_budget()?.deadline(), controller_ceiling);
+    assert_eq!(host.lease_control().reconnection_budget()?.deadline(), host_ceiling);
+    host.send(Channel::FileRead, b"still inside the original route ceiling").await?;
+    assert_eq!(tokio::time::timeout_at(deadline, controller.receive()).await??.payload, b"still inside the original route ceiling");
+    assert!(checks.load(Ordering::SeqCst) > 0);
+    controller.lease_control().stop(StopReason::Revoked)?;
+    assert_eq!(stops.load(Ordering::SeqCst), 1, "the caller's original cleanup must run before stop returns");
+    // The host has no local stop signal. The route hook closes its actual
+    // transport and the existing remote lifecycle observes peer revocation.
+    let cleanup = Instant::now() + Duration::from_secs(5);
+    let (controller_report, host_report) = tokio::time::timeout_at(cleanup, async {
+        tokio::try_join!(controller.wait_stopped(), host.wait_stopped())
+    }).await??;
+    assert_eq!(controller_report.reason, StopReason::Revoked);
+    assert_eq!(host_report.reason, StopReason::Revoked);
+    assert_eq!(stops.load(Ordering::SeqCst), 1);
+    finish_mesh(relay_stop, forwarding, addresses, cleanup).await?;
     Ok(())
 }

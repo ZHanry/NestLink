@@ -116,15 +116,22 @@ pub async fn authorize_remote(
         deadline: route_deadline,
         previous: setup.lifecycle.resources.take(),
     }));
-    let transport = tokio::select! { biased;
+    let mut pending = routed::RoutedEstablishment::new(authorization, adjacency);
+    let established = tokio::select! { biased;
         _ = wait_setup_stop(&mut stop) => {
             revocation.revoke();
-            return Err(RemoteError::Stopped);
+            Err(RemoteError::Stopped)
         },
-        result = routed::establish(authorization, adjacency, &local.identity, setup_deadline) => {
-            result.map_err(io::Error::other)?
+        result = pending.establish(&local.identity, setup_deadline) => {
+            result.map_err(io::Error::other).map_err(RemoteError::from)
         },
     };
+    if let Err(error) = established {
+        revocation.revoke();
+        pending.close_and_wait(deadline).await.map_err(RemoteError::Cleanup)?;
+        return Err(error);
+    }
+    let transport = pending.take_transport()?;
     // The owner is retained before business proof awaits. Cancellation closes
     // both inner and outer endpoints and fails the route closed.
     let mut owner = RemoteRouteOwner {

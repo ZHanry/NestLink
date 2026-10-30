@@ -50,7 +50,7 @@ impl AdjacencyEndpoint {
             .local_addr()
     }
     pub async fn connect(mut self, address: SocketAddr, deadline: Instant) -> Result<Adjacency> {
-        let endpoint = self.endpoint.as_ref().ok_or(io::ErrorKind::NotConnected)?;
+        let endpoint = self.endpoint.as_ref().ok_or_else(|| io::Error::from(io::ErrorKind::NotConnected))?;
         let connection = tokio::time::timeout_at(
             deadline,
             endpoint.connect(address, "peer.nestlink.invalid")?,
@@ -59,10 +59,10 @@ impl AdjacencyEndpoint {
         self.finish(connection)
     }
     pub async fn accept(mut self, deadline: Instant) -> Result<Adjacency> {
-        let endpoint = self.endpoint.as_ref().ok_or(io::ErrorKind::NotConnected)?;
+        let endpoint = self.endpoint.as_ref().ok_or_else(|| io::Error::from(io::ErrorKind::NotConnected))?;
         let incoming = tokio::time::timeout_at(deadline, endpoint.accept())
             .await?
-            .ok_or(io::ErrorKind::NotConnected)?;
+            .ok_or_else(|| io::Error::from(io::ErrorKind::NotConnected))?;
         let connection = tokio::time::timeout_at(deadline, incoming).await??;
         self.finish(connection)
     }

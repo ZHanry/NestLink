@@ -70,95 +70,89 @@ pub async fn establish(
     identity: &InstallationIdentity,
     deadline: Instant,
 ) -> Result<RoutedTransport> {
-    authorization.live()?;
-    let local = PeerId(identity.fingerprint());
-    let peers = authorization.peers();
-    if adjacency.local() != local
-        || adjacency.remote() != authorization.relay()
-        || !peers.contains(local)
-    {
-        return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
+    let mut pending = RoutedEstablishment::new(authorization, adjacency);
+    if let Err(error) = pending.establish(identity, deadline).await {
+        pending.close_and_wait(deadline).await?;
+        return Err(error);
     }
-    let peer = if local == peers.first {
-        peers.second
-    } else {
-        peers.first
-    };
-    let first = local == peers.first;
-    let (socket, receiver) =
-        socket::RoutedSocket::new(authorization, adjacency.connection()?.clone(), first)?;
-    let destination = socket.peer_addr();
-    let mut config = transport_value();
-    config.initial_mtu(wire::PACKET_BYTES as u16);
-    config.min_mtu(wire::PACKET_BYTES as u16);
-    config.mtu_discovery_config(None);
-    let config = Arc::new(config);
-    let mut server = ServerConfig::with_crypto(Arc::new(QuicServerConfig::try_from(
-        tls::server_config(identity, peer.0)?,
-    )?));
-    server.transport_config(config.clone());
-    server.migration(false);
-    let mut settings = quinn::EndpointConfig::default();
-    settings.max_udp_payload_size(wire::PACKET_BYTES as u16)?;
-    let mut endpoint = Endpoint::new_with_abstract_socket(
-        settings,
-        Some(server),
-        socket,
-        Arc::new(quinn::TokioRuntime),
-    )?;
-    let mut client = ClientConfig::new(Arc::new(QuicClientConfig::try_from(tls::client_config(
-        identity, peer.0,
-    )?)?));
-    client.transport_config(config);
-    endpoint.set_default_client_config(client);
-    // Retain owners before the first await: cancelling establishment closes the
-    // original outer socket and aborts the one virtual receive task.
-    let mut pending = Pending {
-        endpoint: Some(endpoint),
-        adjacency: Some(adjacency),
-        receiver: Some(receiver),
-    };
-    let endpoint = pending
-        .endpoint
-        .as_ref()
-        .ok_or(io::ErrorKind::NotConnected)?;
-    let connect = async {
-        if first {
-            endpoint
-                .connect(destination, "peer.nestlink.invalid")
-                .map_err(io::Error::other)?
-                .await
-                .map_err(io::Error::other)
-        } else {
-            endpoint
-                .accept()
-                .await
-                .ok_or(io::ErrorKind::NotConnected)?
-                .await
-                .map_err(io::Error::other)
-        }
-    };
-    let connection = tokio::time::timeout_at(deadline, connect)
-        .await
-        .map_err(|_| io::ErrorKind::TimedOut)??;
-    Ok(RoutedTransport {
-        connection: Some(connection),
-        endpoint: pending.endpoint.take(),
-        adjacency: pending
-            .adjacency
-            .take()
-            .ok_or(io::ErrorKind::NotConnected)?,
-        receiver: pending.receiver.take().ok_or(io::ErrorKind::NotConnected)?,
-        close_deadline: None,
-    })
+    Ok(pending.take_transport()?)
 }
-struct Pending {
+
+/// Keep this owner outside a cancellable establishment future. Dropping only
+/// the borrowed future preserves the original physical and task receipts for
+/// close_and_wait. One owner permits one establishment attempt.
+pub struct RoutedEstablishment {
+    authorization: Option<RouteAuthorization>,
+    connection: Option<Connection>,
     endpoint: Option<Endpoint>,
     adjacency: Option<Adjacency>,
     receiver: Option<TaskOwner>,
+    attempted: bool,
+    close_deadline: Option<Instant>,
 }
-impl Drop for Pending {
-    fn drop(&mut self) {
+impl RoutedEstablishment {
+    pub fn new(authorization: RouteAuthorization, adjacency: Adjacency) -> Self {
+        Self { authorization: Some(authorization), connection: None, endpoint: None,
+            adjacency: Some(adjacency), receiver: None, attempted: false, close_deadline: None }
+    }
+    pub async fn establish(&mut self, identity: &InstallationIdentity, deadline: Instant) -> Result<()> {
+        if self.attempted || self.close_deadline.is_some() {
+            return Err(io::Error::from(io::ErrorKind::AlreadyExists).into());
+        }
+        self.attempted = true;
+        let authorization = self.authorization.take().ok_or_else(not_connected)?;
+        authorization.live()?;
+        let deadline = deadline.min(authorization.deadline());
+        if Instant::now() >= deadline { return Err(io::Error::from(io::ErrorKind::TimedOut).into()); }
+        let local = PeerId(identity.fingerprint());
+        let peers = authorization.peers();
+        let adjacency = self.adjacency.as_ref().ok_or_else(not_connected)?;
+        if adjacency.local() != local || adjacency.remote() != authorization.relay() || !peers.contains(local) {
+            return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
+        }
+        let peer = if local == peers.first { peers.second } else { peers.first };
+        let first = local == peers.first;
+        let mut config = transport_value();
+        config.initial_mtu(wire::PACKET_BYTES as u16);
+        config.min_mtu(wire::PACKET_BYTES as u16);
+        config.mtu_discovery_config(None);
+        let config = Arc::new(config);
+        let mut server = ServerConfig::with_crypto(Arc::new(QuicServerConfig::try_from(tls::server_config(identity, peer.0)?)?));
+        server.transport_config(config.clone());
+        server.migration(false);
+        let mut client = ClientConfig::new(Arc::new(QuicClientConfig::try_from(tls::client_config(identity, peer.0)?)?));
+        client.transport_config(config);
+        let mut settings = quinn::EndpointConfig::default();
+        settings.max_udp_payload_size(wire::PACKET_BYTES as u16)?;
+        let (socket, receiver) = socket::RoutedSocket::new(authorization, adjacency.connection()?.clone(), first)?;
+        self.receiver = Some(receiver);
+        let destination = socket.peer_addr();
+        let mut endpoint = Endpoint::new_with_abstract_socket(settings, Some(server), socket, Arc::new(quinn::TokioRuntime))?;
+        endpoint.set_default_client_config(client);
+        self.endpoint = Some(endpoint);
+        let endpoint = self.endpoint.as_ref().ok_or_else(not_connected)?;
+        let connect = async {
+            if first {
+                endpoint.connect(destination, "peer.nestlink.invalid").map_err(io::Error::other)?.await.map_err(io::Error::other)
+            } else {
+                endpoint.accept().await.ok_or_else(not_connected)?.await.map_err(io::Error::other)
+            }
+        };
+        self.connection = Some(tokio::time::timeout_at(deadline, connect).await
+            .map_err(|_| io::Error::from(io::ErrorKind::TimedOut))??);
+        Ok(())
+    }
+    pub fn take_transport(&mut self) -> io::Result<RoutedTransport> {
+        if self.close_deadline.is_some() || self.connection.is_none() || self.endpoint.is_none()
+            || self.adjacency.is_none() || self.receiver.is_none() { return Err(not_connected()); }
+        Ok(RoutedTransport { connection: self.connection.take(), endpoint: self.endpoint.take(),
+            adjacency: self.adjacency.take().ok_or_else(not_connected)?,
+            receiver: self.receiver.take().ok_or_else(not_connected)?, close_deadline: None })
+    }
+    pub fn request_close(&self) {
+        if let Some(connection) = &self.connection {
+            connection.close(0u32.into(), b"routed setup ended");
+        }
         if let Some(endpoint) = &self.endpoint {
             endpoint.close(0u32.into(), b"routed setup ended");
         }
@@ -169,7 +163,23 @@ impl Drop for Pending {
             receiver.request_close();
         }
     }
+    pub async fn close_and_wait(&mut self, deadline: Instant) -> io::Result<()> {
+        let deadline = *self.close_deadline.get_or_insert(deadline);
+        self.request_close();
+        if let Some(receiver) = &mut self.receiver { receiver.close_and_wait(deadline).await?; }
+        if let Some(endpoint) = &self.endpoint {
+            tokio::time::timeout_at(deadline, endpoint.wait_idle()).await.map_err(|_| io::ErrorKind::TimedOut)?;
+        }
+        self.connection = None;
+        self.endpoint = None;
+        if let Some(adjacency) = &mut self.adjacency { adjacency.close_and_wait(deadline).await?; }
+        Ok(())
+    }
 }
+impl Drop for RoutedEstablishment {
+    fn drop(&mut self) { self.request_close(); }
+}
+fn not_connected() -> io::Error { io::ErrorKind::NotConnected.into() }
 
 #[cfg(test)]
 mod tests;
