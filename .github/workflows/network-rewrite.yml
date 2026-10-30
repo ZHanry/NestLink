@@ -44,6 +44,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  routed-kernel-nat-slice:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CARGO_INCREMENTAL: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      RUST_BACKTRACE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          components: clippy
+      - name: Exercise three isolated QUIC processes through two actual kernel NAT gateways
+        run: python -B scripts/network-rewrite-routed.py --output "${{ runner.temp }}/nestlink-network-routed"
+      - name: Retain NAT tuples, packet captures, source identity and cleanup evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: network-routed-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/nestlink-network-routed/
+          if-no-files-found: error
+          retention-days: 30
   production-socket-slice:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
