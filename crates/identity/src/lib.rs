@@ -56,6 +56,11 @@ impl PermitSigner {
         let seed = zeroize::Zeroizing::new(self.key.to_bytes());
         nodes::NodePolicySigner::from_master_seed(&seed)
     }
+    /// Independent network authority, derived without exposing the master seed.
+    pub fn network_authority_signer(&self) -> Result<network::NetworkAuthoritySigner, ContractError> {
+        let seed = zeroize::Zeroizing::new(self.key.to_bytes());
+        network::NetworkAuthoritySigner::from_master_seed(&seed)
+    }
     pub fn sign(&self, claims: &PermitClaims) -> Result<SignedPermit, ContractError> {
         claims.validate()?;
         let bytes = claims.encode_to_vec();

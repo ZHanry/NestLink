@@ -6,7 +6,7 @@ use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, params};
 use std::{path::Path, time::Duration};
 
 pub const APPLICATION_ID: i32 = 1_313_622_833;
-pub const SCHEMA_VERSION: i32 = 25;
+pub const SCHEMA_VERSION: i32 = 26;
 const MIGRATION: &str = include_str!("../migrations/001_initial.sql");
 const CONTROL_MIGRATION: &str = include_str!("../migrations/002_control.sql");
 const SCOPES_MIGRATION: &str = include_str!("../migrations/003_policy_scopes.sql");
@@ -35,6 +35,7 @@ pub mod auditing;
 pub mod browser_readiness;
 pub mod control;
 pub mod media_authority;
+pub mod network_policy;
 pub mod node_discovery;
 pub mod node_resources;
 pub mod node_usage;
@@ -316,6 +317,12 @@ impl Store {
             transaction.pragma_update(None, "user_version", 25)?;
             transaction.commit()?;
         }
+        if version < 26 {
+            let transaction = connection.transaction()?;
+            transaction.execute_batch(include_str!("../migrations/026_network_policy.sql"))?;
+            transaction.pragma_update(None, "user_version", 26)?;
+            transaction.commit()?;
+        }
         Ok(Self {
             connection,
             internal_software_media_candidate: None,
@@ -381,6 +388,7 @@ impl Store {
         if updated != 1 {
             return Err(StorageError::Invalid("policy changed concurrently"));
         }
+        network_policy::invalidate_all(&transaction)?;
         // Current leases cannot retain the previous policy revision.
         transaction.execute("UPDATE leases SET revoked=1", [])?;
         transaction.execute("UPDATE sessions SET revoked=1", [])?;
@@ -628,6 +636,9 @@ impl Store {
         transaction.execute("UPDATE enrollment_challenges SET consumed=1", [])?;
         transaction.execute("UPDATE sessions SET revoked=1", [])?;
         transaction.execute("UPDATE leases SET revoked=1", [])?;
+        // A restored snapshot may omit later network revocations and epochs.
+        // Keep every historical space closed; recovery needs a new space ID.
+        transaction.execute("UPDATE network_authorities SET restore_fenced=1", [])?;
         transaction.execute("DELETE FROM idempotency", [])?;
         // A snapshot predates some consumed codes. None may be revived by rollback.
         transaction.execute("DELETE FROM recovery_codes", [])?;

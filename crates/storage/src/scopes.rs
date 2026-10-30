@@ -68,6 +68,7 @@ impl Store {
             return Err(StorageError::Conflict);
         }
         tx.execute("INSERT INTO path_limits VALUES(?1,?2,?3) ON CONFLICT(scope,resource_id) DO UPDATE SET path_mode=excluded.path_mode",params![scope,id,mode])?;
+        crate::network_policy::invalidate_all(&tx)?;
         tx.execute("UPDATE sessions SET revoked=1", [])?;
         tx.execute("UPDATE leases SET revoked=1", [])?;
         tx.execute(

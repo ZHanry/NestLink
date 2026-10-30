@@ -73,7 +73,7 @@ fn pre_fence_schema_twenty_snapshot_migrates_the_quota_restore_fence() -> Result
 
     // Model a development v20 database created before restore_fenced existed.
     let legacy = Connection::open(&path)?;
-    legacy.execute_batch("DROP TABLE remote_media_scopes; DROP TABLE device_media_announcements; ALTER TABLE service_quota_settings DROP COLUMN restore_fenced; DROP TABLE browser_host_readiness; DROP TABLE management_refresh_receipts; DROP INDEX remote_pending_inbox;")?;
+    legacy.execute_batch("DROP TABLE network_grant_revocations; DROP TABLE network_grants; DROP TABLE network_memberships; DROP TABLE network_authorities; DROP TABLE remote_media_scopes; DROP TABLE device_media_announcements; ALTER TABLE service_quota_settings DROP COLUMN restore_fenced; DROP TABLE browser_host_readiness; DROP TABLE management_refresh_receipts; DROP INDEX remote_pending_inbox;")?;
     legacy.pragma_update(None, "user_version", 20)?;
     drop(legacy);
     let old_snapshot = Store::snapshot_existing(&path, &deployment, 20)?;
