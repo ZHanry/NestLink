@@ -57,9 +57,25 @@ jobs:
           existing = {identity(item): item.get('checksum') for item in before}
           commands, assertions, failure = [], {}, None
           try:
+              command = ['cargo', 'update', '--workspace', '--manifest-path', str(manifest)]
+              with (output / 'command-0.log').open('wb') as stream:
+                  result = subprocess.run(command, stdout=stream, stderr=subprocess.STDOUT, check=False)
+              commands.append({'argv': command, 'return_code': result.returncode})
+              assert result.returncode == 0, 'Lock command failed; review retained log'
+              # Cargo can reselect an already-locked compatible windows-sys
+              # edge even with --workspace. Preserve every existing external
+              # package block, then ask Cargo to validate the complete graph.
+              def blocks(raw):
+                  parts = raw.split('[[package]]')
+                  return parts[0], [(identity(tomllib.loads('[[package]]' + part)['package'][0]), part)
+                                    for part in parts[1:]]
+              _, original_blocks = blocks(before_bytes.decode())
+              retained = {key: part for key, part in original_blocks if key[2]}
+              header, generated_blocks = blocks(lock.read_text())
+              lock.write_text(header + ''.join('[[package]]' + retained.get(key, part)
+                                              for key, part in generated_blocks))
               for command in [
-                  ['cargo', 'update', '--workspace', '--manifest-path', str(manifest)],
-                  ['cargo', 'metadata', '--manifest-path', str(manifest), '--locked', '--format-version', '1', '--no-deps'],
+                  ['cargo', 'metadata', '--manifest-path', str(manifest), '--locked', '--format-version', '1'],
               ]:
                   with (output / ('command-' + str(len(commands)) + '.log')).open('wb') as stream:
                       result = subprocess.run(command, stdout=stream, stderr=subprocess.STDOUT, check=False)
@@ -72,6 +88,10 @@ jobs:
               assertions = {
                   'only_selected_lock_changed': set(changed) <= {lock.as_posix()},
                   'all_existing_package_identities_and_checksums_preserved': all(derived.get(key) == checksum and key in derived for key, checksum in existing.items()),
+                  'all_existing_external_package_edges_preserved': all(
+                      tomllib.loads('[[package]]' + part)['package'][0] ==
+                      tomllib.loads('[[package]]' + dict(blocks(lock.read_text())[1])[key])['package'][0]
+                      for key, part in retained.items()),
                   'reviewed_crab_nat_exact_version_and_checksum': len(crab) == 1 and crab[0]['version'] == '0.8.1' and crab[0].get('checksum') == 'b6571f33e3d6520c5b08e54b1202836c6ebe68b950f450951804d037a875c25c',
                   'locked_metadata_succeeded': all(item['return_code'] == 0 for item in commands),
               }
