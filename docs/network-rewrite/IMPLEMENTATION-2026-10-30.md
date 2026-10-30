@@ -344,3 +344,21 @@ dependency edges. Original ZIP and receipt file hashes were verified before
 import. The earlier derivation with unrelated edge drift was rejected. See
 evidence/pcp-lock-derivation-f09ac21.json. Generated OpenAPI and formatting must
 be refreshed from the integrated source; no release or acceptance is implied.
+
+At 8186f75 the Linux contract lint/tests passed, including actual UDP PCP
+component integration. Scoped SDK policy, pre-agent socket cleanup and private
+server configuration reload also passed. The new field was missing from one
+Core file-store test initializer; that fixture now also checks persistent local
+PCP consent. Native SNAT clippy caught a binary-digest/String comparison; readback
+now compares the exact original bytes. Verified Actions OpenAPI and formatter
+outputs were imported. Full current results remain in development-run-8186f75.
+
+Two-node establishment again returned HTTP 429. Short-lived database bursts
+previously had no admission wait: the ninth concurrent call failed even if a
+worker completed immediately afterwards. The source keeps eight blocking
+workers and adds at most eight async waiters with a 200ms admission deadline.
+Overflow/expiry still fails 429; cancellation cannot leave queued Store work.
+New tests cover the worker cap, queue bound, cancellation and expiration. The
+separate authenticated rate limits and every route/business deadline remain
+unchanged. This change requires Actions and does not yet prove the relay failure
+resolved; the rate-budget versus database rejection source remains under review.

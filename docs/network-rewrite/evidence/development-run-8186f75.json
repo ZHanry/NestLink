@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "8186f759f9620ee60608a5d2d1b643ea48bd7e90",
+  "review_method": "GitHub-hosted Actions status and logs; original artifact ZIP SHA-256 and receipt file hashes verified before source import. No local project tooling.",
+  "network_run_id": "41114710280",
+  "core_run_id": "41114709787",
+  "web_run_id": "41114709659",
+  "contract_linux": {
+    "job_id": "124265790027",
+    "artifact_id": "13005262463",
+    "zip_sha256": "79e525ece654b3e80f07580448e0bda3a665e19a1c32fb0c97997ff931eb7c17",
+    "artifact_and_all_receipt_file_digests_verified": true,
+    "clippy": "passed",
+    "tests": "passed, including 18 traversal tests and real UDP PCP create/renew/reject/delete/cancel cases",
+    "evidence_tests": "passed",
+    "format": "failed",
+    "format_patch_sha256": "d4b60dd63be0f8adc8ed7205db893397c8ea3c556e8dc43d0f749e3e48fb3bd6",
+    "format_patch_reviewed_and_imported": true,
+    "contract_windows": "clippy, selected contract tests and evidence tests passed; only format failed with the identical reviewed Linux patch"
+  },
+  "contract_windows": {
+    "job_id": "124265790308",
+    "artifact_id": "13005317973",
+    "zip_sha256": "73342ba35a36fa2e585abca361175e87e713221371ee93c6884be44ab22d14be",
+    "artifact_digest_verified": true,
+    "format_patch_sha256": "d4b60dd63be0f8adc8ed7205db893397c8ea3c556e8dc43d0f749e3e48fb3bd6",
+    "results": "ordinary Windows token verified; clippy, selected tests and evidence tests passed; identical formatting patch already imported"
+  },
+  "scoped_core_windows": {
+    "artifact_id": "13005493423",
+    "zip_sha256": "ec8057047e1c933884838552ec060fd4891e575b9cfaff764f7e033dea72757b",
+    "artifact_digest_verified": true,
+    "multi_node": "4 passed and two-node second establishment failed. HTTP 429 also affected a signed node TURN-resource poll, whose separate limit is 1024/minute. Database burst exhaustion is therefore a concrete possible common source; the low per-session network-path read budget remains a separate production concern.",
+    "pcp_and_selected_relay": "same omitted historical Core fixture field as Linux; source fix pending exact-source rerun"
+  },
+  "scoped_core_linux": {
+    "artifact_id": "13004683866",
+    "zip_sha256": "6955c28698e5860ea1d03978a27341ba760f686efa04c303293b9ca8004e5f61",
+    "artifact_digest_verified": true,
+    "pcp_results": {
+      "traversal_component_tests": "2 passed",
+      "sdk_pre_agent_socket_cleanup": "1 passed",
+      "sdk_actual_http_policy": "3 passed",
+      "core_settings_integration": "4 passed",
+      "server_private_config_reload": "1 passed",
+      "core_library_tests": "did not compile: historical file-store fixture omitted new pcp_gateway field"
+    },
+    "selected_relay_results": "2 SDK real business cases passed; following Core library check hit the same omitted fixture field",
+    "multi_node": "4 relay integration tests passed; two-node first route returned two HTTP 429 CapacityExceeded responses (83us and 56us). No proof of capacity rejection source yet; database and per-session rate admission are distinct possible sources.",
+    "other_scoped_checks": "routed contracts, metadata, ICE feasibility, signed native sessions, inbox, discovery and spaces passed",
+    "full_workspace": "failed to compile at the omitted historical Core fixture field and binary digest comparison; following source repairs require new Actions"
+  },
+  "native_ice_snat": {
+    "job_id": "124265790176",
+    "artifact_id": "13004483201",
+    "zip_sha256_from_api": "71e518e86500ac62d59e98f7aaa50b1c25810b23861f2d9ebfb0d911312f15b1",
+    "status": "did not execute: clippy caught comparison of binary 32-byte permit digest with String",
+    "source_follow_up": "Read the exact binary file and compare the original digest bytes. No assertions or budgets removed."
+  },
+  "openapi": {
+    "job_id": "124265787943",
+    "artifact_id": "13004348607",
+    "zip_sha256": "d169996a7863eb0e87310fb71d4f6908b1d6dec04a432fd2d87e6b7d8824145a",
+    "output_sha256": "215509615bf3232a2cb6e21a17637056c5bd8e5ebc786e5fa97afe862f0888d4",
+    "source_and_output_digest_verified": true,
+    "output_imported": true
+  },
+  "other_results": ["WASM passed", "Linux portal, audio, input and network events passed", "routed kernel NAT passed", "production socket passed", "independent vectors passed", "browser observer contracts passed; actual Web/native run pending at review"],
+  "new_source_follow_up": [
+    "File-store regression now persists an explicitly selected private PCP gateway and checks it after reopening.",
+    "Database blocking workers remain capped at eight. Up to eight async waiters may wait at most 200ms before worker admission; no Store lock or blocking task exists while waiting. Queue overflow/expiry remains 429. New source tests check burst admission, worker bound, queue overflow, canceled slots and expired requests never executing. This is not a claim that the two-node failure is fixed.",
+    "HTTP diagnostic treats 101 Switching Protocols as an expected upgrade rather than a management error."
+  ],
+  "release_qualified": false,
+  "follow_up_source_requires_new_actions": true
+}

@@ -37,8 +37,11 @@ impl NativeNetworkPanel {
             self.prefixes = snapshot.native_network.private_network_prefixes.join("\n");
             self.use_deployment_stun = snapshot.native_network.use_deployment_stun;
             self.enable_pcp = snapshot.native_network.pcp_gateway.is_some();
-            self.pcp_gateway = snapshot.native_network.pcp_gateway
-                .map(|gateway| gateway.to_string()).unwrap_or_default();
+            self.pcp_gateway = snapshot
+                .native_network
+                .pcp_gateway
+                .map(|gateway| gateway.to_string())
+                .unwrap_or_default();
             self.approved = false;
             self.pending = false;
         }

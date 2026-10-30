@@ -1,8 +1,8 @@
 //! A bounded mapping lease attached to the existing ICE owner, without another
 //! data socket or receiver. Failed creation retains cleanup authority by nonce.
 use super::*;
-use nestlink_traversal::pcp_mapping::PcpMapping;
 use nestlink_transport_stream::owner::TaskOwner;
+use nestlink_traversal::pcp_mapping::PcpMapping;
 use std::{net::Ipv4Addr, sync::atomic::AtomicBool};
 
 pub(crate) struct MappingOwner {
@@ -22,7 +22,9 @@ impl MappingOwner {
     ) -> io::Result<Self> {
         Ok(Self {
             state: Arc::new(tokio::sync::Mutex::new(PcpMapping::new(
-                gateway, local, authorization_deadline,
+                gateway,
+                local,
+                authorization_deadline,
             )?)),
             task: None,
             close_deadline: Mutex::new(None),
@@ -78,16 +80,20 @@ impl MappingOwner {
     /// Wait for the original renewal task, then the exact nonce deletion ACK.
     /// Timeout/cancellation preserves state so a caller can retry the receipt.
     pub(crate) async fn close_and_wait(&self, deadline: TokioInstant) -> io::Result<()> {
-        let deadline = *self.close_deadline.lock()
+        let deadline = *self
+            .close_deadline
+            .lock()
             .map_err(|_| io::Error::other("PCP cleanup owner poisoned"))?
             .get_or_insert(deadline);
         self.request_close();
         if let Some(task) = &self.task {
             task.close_and_wait(deadline).await?;
         }
-        let mut state = tokio::time::timeout_at(deadline, self.state.lock()).await
+        let mut state = tokio::time::timeout_at(deadline, self.state.lock())
+            .await
             .map_err(|_| io::Error::from(io::ErrorKind::TimedOut))?;
-        tokio::time::timeout_at(deadline, state.release()).await
+        tokio::time::timeout_at(deadline, state.release())
+            .await
             .map_err(|_| io::Error::from(io::ErrorKind::TimedOut))??;
         self.closed.store(true, Ordering::Release);
         Ok(())
@@ -105,7 +111,11 @@ impl Drop for MappingOwner {
         if let Ok(runtime) = tokio::runtime::Handle::try_current() {
             let state = self.state.clone();
             let task = self.task.clone();
-            let deadline = self.close_deadline.lock().ok().and_then(|value| *value)
+            let deadline = self
+                .close_deadline
+                .lock()
+                .ok()
+                .and_then(|value| *value)
                 .unwrap_or_else(|| TokioInstant::now() + Duration::from_secs(2));
             runtime.spawn(async move {
                 if let Some(task) = task {

@@ -224,7 +224,9 @@ impl NativeSessionConfig {
     }
 
     pub(crate) fn validate(&self) -> bool {
-        self.relay_node_id.as_ref().is_none_or(|id| nestlink_protocol::valid_id(id))
+        self.relay_node_id
+            .as_ref()
+            .is_none_or(|id| nestlink_protocol::valid_id(id))
             && self.stun_servers.len() <= 4
             && self.pcp_gateway.is_none_or(|gateway| gateway.is_private())
             && self.private_network_prefixes.len() <= 32
@@ -288,16 +290,29 @@ mod tests {
         }));
         let mut sdk = nestlink_sdk::Sdk::connect(
             &origin,
-            nestlink_sdk::DeploymentTrust { deployment_id: deployment, permit_issuer: issuer },
+            nestlink_sdk::DeploymentTrust {
+                deployment_id: deployment,
+                permit_issuer: issuer,
+            },
             true,
-        ).await?;
-        sdk.login("admin".into(), nestlink_auth::Secret::from_text(password.into()), None).await?;
+        )
+        .await?;
+        sdk.login(
+            "admin".into(),
+            nestlink_auth::Secret::from_text(password.into()),
+            None,
+        )
+        .await?;
         let mut config = NativeSessionConfig::new(Arc::new(NetworkMonitor::start()?));
         config.use_deployment_stun = false;
         config.pcp_gateway = Some("10.32.0.1".parse()?);
-        assert!(matches!(config.clone().resolve_deployment_stun(&sdk).await,
-            Err(nestlink_sdk::SdkError::Api(reqwest::StatusCode::FORBIDDEN,
-                nestlink_protocol::ErrorCode::PermissionRequired))));
+        assert!(matches!(
+            config.clone().resolve_deployment_stun(&sdk).await,
+            Err(nestlink_sdk::SdkError::Api(
+                reqwest::StatusCode::FORBIDDEN,
+                nestlink_protocol::ErrorCode::PermissionRequired
+            ))
+        ));
 
         sdk.logout().await?;
         config.pcp_gateway = None;

@@ -1,10 +1,10 @@
 //! Signed bilateral native ICE followed by pinned Quinn on its original UDP
 //! socket. One frozen candidate per endpoint bounds this initial dialect;
 //! general candidate migration and advanced NAT strategies are separate work.
-mod socket;
 mod mapping;
-use mapping::MappingOwner;
+mod socket;
 use super::*;
+use mapping::MappingOwner;
 use nestlink_identity::InstallationIdentity;
 use nestlink_platform_network::path::NetworkPathManager;
 use nestlink_protocol::api::NativeIceParameters;
@@ -185,7 +185,8 @@ impl Preparation {
             .flat_map(|interface| interface.addresses)
             .find(|ip| {
                 safe_peer_address(*ip)
-                    && (pcp_gateway.is_none() || matches!(ip, std::net::IpAddr::V4(ip) if ip.is_private()))
+                    && (pcp_gateway.is_none()
+                        || matches!(ip, std::net::IpAddr::V4(ip) if ip.is_private()))
             })
             .ok_or(DialError::Setup)?;
         let servers: Vec<_> = servers
@@ -248,7 +249,9 @@ impl Preparation {
                 if address.port() != 0 && address.port() != socket.local_addr()?.port() {
                     return Err(io::ErrorKind::PermissionDenied.into());
                 }
-                return supplied.take().ok_or_else(|| io::ErrorKind::AddrInUse.into());
+                return supplied
+                    .take()
+                    .ok_or_else(|| io::ErrorKind::AddrInUse.into());
             }
             let mut addresses = observed
                 .lock()
@@ -292,14 +295,17 @@ impl Preparation {
             keepalive_interval: Some(Duration::from_secs(1)),
             ..Default::default()
         };
-        Ok(Self { owner, config: Some(config), external: None })
+        Ok(Self {
+            owner,
+            config: Some(config),
+            external: None,
+        })
     }
-    async fn establish_mapping(
-        &mut self,
-        endpoint: &NativeEndpoint,
-    ) -> Result<(), DialError> {
+    async fn establish_mapping(&mut self, endpoint: &NativeEndpoint) -> Result<(), DialError> {
         if let Some(mapping) = &self.owner.mapping {
-            let external = mapping.establish(&endpoint.address_policy).await
+            let external = mapping
+                .establish(&endpoint.address_policy)
+                .await
                 .map_err(|_| DialError::Setup)?;
             let config = self.config.as_mut().ok_or(DialError::Setup)?;
             config.nat_1to1_ips = vec![external.ip().to_string()];
@@ -616,11 +622,18 @@ mod tests {
             close_deadline: None,
             closed: false,
         };
-        assert_eq!(UdpSocket::bind(address).err().map(|error| error.kind()),
-            Some(io::ErrorKind::AddrInUse));
+        assert_eq!(
+            UdpSocket::bind(address).err().map(|error| error.kind()),
+            Some(io::ErrorKind::AddrInUse)
+        );
         let deadline = TokioInstant::now() + Duration::from_secs(1);
         owner.close(deadline).await?;
-        assert!(pending.lock().map_err(|_| io::Error::other("test lock poisoned"))?.is_none());
+        assert!(
+            pending
+                .lock()
+                .map_err(|_| io::Error::other("test lock poisoned"))?
+                .is_none()
+        );
         let rebound = UdpSocket::bind(address)?;
         drop(rebound);
         owner.close(deadline).await?;

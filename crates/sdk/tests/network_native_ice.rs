@@ -310,8 +310,8 @@ async fn endpoint(role: &str) -> Result {
         sdk.host_permit(&identity, &remote).await?
     };
     assert_eq!(
-        permit.digest(),
-        fs::read_to_string(root.join("issued-permit-digest"))?
+        permit.digest().as_slice(),
+        fs::read(root.join("issued-permit-digest"))?
     );
     assert!(
         permit

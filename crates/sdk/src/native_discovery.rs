@@ -6,9 +6,13 @@ impl Sdk {
     /// Missing endpoints, authentication errors and invalid policy fail closed.
     pub async fn native_pcp_policy(&self) -> Result<NativePcpPolicy, SdkError> {
         #[cfg(target_arch = "wasm32")]
-        let policy: NativePcpPolicy = self.required(Method::GET,"/discovery/native/pcp",None::<&()>).await?;
+        let policy: NativePcpPolicy = self
+            .required(Method::GET, "/discovery/native/pcp", None::<&()>)
+            .await?;
         #[cfg(not(target_arch = "wasm32"))]
-        let policy: NativePcpPolicy = self.native_discovery_response("/discovery/native/pcp").await?;
+        let policy: NativePcpPolicy = self
+            .native_discovery_response("/discovery/native/pcp")
+            .await?;
         policy.validate()?;
         if policy.deployment_id != self.trust.deployment_id {
             return Err(SdkError::Trust);
@@ -22,7 +26,8 @@ impl Sdk {
             .required(Method::GET, "/network/discovery", None::<&()>)
             .await?;
         #[cfg(not(target_arch = "wasm32"))]
-        let config: NativeDiscoveryConfig = self.native_discovery_response("/network/discovery").await?;
+        let config: NativeDiscoveryConfig =
+            self.native_discovery_response("/network/discovery").await?;
         if config.deployment_id != self.trust.deployment_id {
             return Err(SdkError::Trust);
         }
@@ -34,7 +39,10 @@ impl Sdk {
     /// body. A known HTTP rejection is returned before reading its body, so a
     /// delayed error document cannot turn a hard rejection into a timeout.
     #[cfg(not(target_arch = "wasm32"))]
-    async fn native_discovery_response<R: DeserializeOwned>(&self, path: &str) -> Result<R, SdkError> {
+    async fn native_discovery_response<R: DeserializeOwned>(
+        &self,
+        path: &str,
+    ) -> Result<R, SdkError> {
         const BUDGET: Duration = Duration::from_secs(3);
         let token = self.login.as_ref().ok_or(SdkError::SignIn)?.access.expose();
         let url = self

@@ -6,7 +6,7 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "f09ac2112bdd313c79d1330a99b1125f28be4025",
+    "source_revision":  "8186f759f9620ee60608a5d2d1b643ea48bd7e90",
     "checkpoint_kind":  "work_in_progress_against_source_revision",
     "active_tasks":  [
                          "W00",
@@ -82,6 +82,7 @@
                            "docs/network-rewrite/evidence/development-run-76dbb0e-browser.json",
                            "docs/network-rewrite/evidence/development-run-76dbb0e-network.json",
                            "docs/network-rewrite/evidence/pcp-lock-derivation-f09ac21.json",
+                           "docs/network-rewrite/evidence/development-run-8186f75.json",
                            "docs/adr/network/0009-explicit-pcp-ice-mapping.md",
                            "protocol-spec/node-relay-attributes.md",
                            "docs/adr/network/0007-network-authority-lifecycle.md",

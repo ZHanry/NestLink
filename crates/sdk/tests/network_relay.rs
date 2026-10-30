@@ -45,10 +45,11 @@ async fn report_management_rejection(
     let path = request.uri().path().to_owned();
     let started = Instant::now();
     let response = next.run(request).await;
-    if !response.status().is_success() {
+    if response.status().is_client_error() || response.status().is_server_error() {
         eprintln!(
             "network-relay management rejection: {method} {path} status={} elapsed_us={}",
-            response.status(), started.elapsed().as_micros()
+            response.status(),
+            started.elapsed().as_micros()
         );
     }
     response
@@ -115,7 +116,8 @@ impl Fixture {
             signer,
             origin.clone(),
             false,
-        )?).layer(axum::middleware::from_fn(report_management_rejection));
+        )?)
+        .layer(axum::middleware::from_fn(report_management_rejection));
         let mut pending = PendingFixture {
             http_task: Some(tokio::spawn(async move {
                 let _ = axum::serve(http, app).await;

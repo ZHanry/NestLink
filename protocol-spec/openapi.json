@@ -1004,7 +1004,7 @@
       },
       "NativeDiscoveryConfig": {
         "additionalProperties": false,
-        "description": "Discovery inputs supplied by the authenticated, pinned deployment. Local\nprivate-network consent is deliberately absent from this response.",
+        "description": "Discovery inputs supplied by the authenticated, pinned deployment. Local\nprivate-network consent is deliberately absent from this response.\nPCP policy has its own additive endpoint to preserve this strict JSON shape.",
         "properties": {
           "deployment_id": {
             "type": "string"
@@ -1047,6 +1047,24 @@
           "password",
           "candidate"
         ],
+        "type": "object"
+      },
+      "NativePcpPolicy": {
+        "additionalProperties": false,
+        "description": "Deployment consent alone cannot authorize or select a local PCP gateway.",
+        "properties": {
+          "allowed": {
+            "type": "boolean"
+          },
+          "deployment_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "deployment_id",
+          "allowed"
+        ],
+        "title": "NativePcpPolicy",
         "type": "object"
       },
       "NativeRendezvous": {
@@ -8300,6 +8318,92 @@
         },
         "responses": {
           "204": {
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/discovery/native/pcp": {
+      "get": {
+        "operationId": "native_discovery::pcp_policy",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NativePcpPolicy"
+                }
+              }
+            },
             "description": "Success"
           },
           "400": {

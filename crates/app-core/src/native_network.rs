@@ -77,7 +77,10 @@ impl NativeNetworkSettings {
     /// destinations need no exception; metadata, loopback, mapped IPv6 and
     /// link-local destinations remain forbidden by the SDK AddressPolicy.
     pub fn validate(&self) -> Result<(), NativeNetworkError> {
-        if self.pcp_gateway.is_some_and(|gateway| !gateway.is_private()) {
+        if self
+            .pcp_gateway
+            .is_some_and(|gateway| !gateway.is_private())
+        {
             return Err(NativeNetworkError::Invalid);
         }
         let route_supported = match self.media_route {
@@ -341,7 +344,13 @@ mod tests {
             r#"{"use_deployment_stun":true,"private_network_prefixes":[]}"#,
         );
         assert!(old.is_ok_and(|settings| settings.pcp_gateway.is_none()));
-        for address in ["0.0.0.0", "127.0.0.1", "169.254.1.1", "203.0.113.1", "224.0.0.1"] {
+        for address in [
+            "0.0.0.0",
+            "127.0.0.1",
+            "169.254.1.1",
+            "203.0.113.1",
+            "224.0.0.1",
+        ] {
             let gateway = address.parse();
             assert!(gateway.is_ok());
             let settings = NativeNetworkSettings {

@@ -34,7 +34,7 @@
         "crab_nat": "=0.8.1",
         "source_commit": "296cc168bb0805fe64b9378d0cc76a833e903ce0",
         "crates_io_sha256": "b6571f33e3d6520c5b08e54b1202836c6ebe68b950f450951804d037a875c25c",
-        "lock_status": "Actions dependency resolution and lock artifact pending"
+        "lock_status": "Actions run 41113590665 product and fixture lock artifacts reviewed, SHA-256 verified and imported; all existing external package identities, checksums and edges preserved"
       },
       "license": "MIT",
       "selection_reason": "Explicit PCP nonce can be retained before a cancelable create and deleted with an awaited exact single-port response; no generic protocol codec added",
@@ -48,7 +48,7 @@
         "Controlled real-UDP responder tests are L1; actual kernel NAT/router and target evidence remain pending"
       ],
       "work_packages": ["W10"],
-      "validation_status": "implemented_unverified slice; Actions and target qualification pending",
+      "validation_status": "Linux Actions component UDP, SDK policy and pre-agent cleanup passed at 8186f75; integrated Core fixture repair and Windows/actual-router qualification remain pending",
       "decision_ref": "docs/adr/network/0009-explicit-pcp-ice-mapping.md"
     },
     {

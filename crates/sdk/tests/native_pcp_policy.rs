@@ -169,7 +169,11 @@ async fn default_denies_mapping_and_policy_requires_a_live_authenticated_session
         .await?;
     let token = login["access_token"].as_str().ok_or("token missing")?;
     assert_eq!(
-        http.get(&policy_url).bearer_auth(token).send().await?.status(),
+        http.get(&policy_url)
+            .bearer_auth(token)
+            .send()
+            .await?
+            .status(),
         StatusCode::OK,
     );
     http.post(format!("{}/api/v3/auth/logout", harness.origin))
@@ -179,7 +183,11 @@ async fn default_denies_mapping_and_policy_requires_a_live_authenticated_session
         .await?
         .error_for_status()?;
     assert_eq!(
-        http.get(&policy_url).bearer_auth(token).send().await?.status(),
+        http.get(&policy_url)
+            .bearer_auth(token)
+            .send()
+            .await?
+            .status(),
         StatusCode::UNAUTHORIZED,
     );
     Ok(())
@@ -209,7 +217,8 @@ async fn enabled_policy_is_additive_and_does_not_change_the_strict_stun_document
 }
 
 #[tokio::test]
-async fn wrong_deployment_invalid_shape_and_missing_endpoint_never_supply_permission() -> TestResult {
+async fn wrong_deployment_invalid_shape_and_missing_endpoint_never_supply_permission() -> TestResult
+{
     let mut harness = harness(Some(true)).await?;
     harness
         .sdk

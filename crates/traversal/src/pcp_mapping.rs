@@ -21,7 +21,10 @@ const TIMEOUT: TimeoutConfig = TimeoutConfig {
 };
 
 fn refused() -> io::Error {
-    io::Error::new(io::ErrorKind::PermissionDenied, "PCP mapping unavailable or changed")
+    io::Error::new(
+        io::ErrorKind::PermissionDenied,
+        "PCP mapping unavailable or changed",
+    )
 }
 
 /// One exact UDP port on one explicitly approved gateway. This is not a socket
@@ -62,8 +65,15 @@ impl PcpMapping {
             u32::from_ne_bytes(bytes[8..12].try_into().map_err(|_| refused())?),
         ];
         Ok(Self {
-            gateway, local, port, nonce, authorization_deadline,
-            attempted: false, stopped: false, expected: None, mapping: None,
+            gateway,
+            local,
+            port,
+            nonce,
+            authorization_deadline,
+            attempted: false,
+            stopped: false,
+            expected: None,
+            mapping: None,
             gateway_epoch: None,
         })
     }
@@ -78,26 +88,46 @@ impl PcpMapping {
         // Cancellation or any unsuccessful request makes this owner terminal.
         // Cleanup remains possible, but the same object cannot retry/revive it.
         self.stopped = true;
-        if self.mapping.as_ref().is_some_and(|mapping| Instant::now() >= mapping.expiration()) {
+        if self
+            .mapping
+            .as_ref()
+            .is_some_and(|mapping| Instant::now() >= mapping.expiration())
+        {
             return Err(io::ErrorKind::TimedOut.into());
         }
-        let lifetime = self.authorization_deadline.saturating_duration_since(Instant::now())
-            .as_secs().saturating_sub(1).min(MAX_LIFETIME_SECONDS);
+        let lifetime = self
+            .authorization_deadline
+            .saturating_duration_since(Instant::now())
+            .as_secs()
+            .saturating_sub(1)
+            .min(MAX_LIFETIME_SECONDS);
         if lifetime < 2 {
             return Err(io::ErrorKind::TimedOut.into());
         }
         let lifetime = u32::try_from(lifetime).map_err(|_| refused())?;
         let suggested_ip = self.expected.map(|address| address.ip());
         self.attempted = true;
-        let mapping = tokio::time::timeout(REQUEST_BUDGET, pcp::port_mapping(
-            BaseMapRequest::new(self.gateway.into(), self.local.ip(), InternetProtocol::Udp, self.port),
-            Some(self.nonce), suggested_ip,
-            PortMappingOptions {
-                external_port: Some(self.port), lifetime_seconds: Some(lifetime),
-                timeout_config: Some(TIMEOUT),
-            },
-        )).await.map_err(|_| io::Error::from(io::ErrorKind::TimedOut))?
-            .map_err(|_| refused())?;
+        let mapping = tokio::time::timeout(
+            REQUEST_BUDGET,
+            pcp::port_mapping(
+                BaseMapRequest::new(
+                    self.gateway.into(),
+                    self.local.ip(),
+                    InternetProtocol::Udp,
+                    self.port,
+                ),
+                Some(self.nonce),
+                suggested_ip,
+                PortMappingOptions {
+                    external_port: Some(self.port),
+                    lifetime_seconds: Some(lifetime),
+                    timeout_config: Some(TIMEOUT),
+                },
+            ),
+        )
+        .await
+        .map_err(|_| io::Error::from(io::ErrorKind::TimedOut))?
+        .map_err(|_| refused())?;
         let external_ip = match mapping.mapping_type() {
             PortMappingType::Pcp { external_ip, .. } => external_ip,
             PortMappingType::NatPmp => return Err(refused()),
@@ -113,7 +143,9 @@ impl PcpMapping {
             || mapping.lifetime() > lifetime
             || mapping.expiration() > self.authorization_deadline
             || self.expected.is_some_and(|expected| expected != external)
-            || self.gateway_epoch.is_some_and(|epoch| mapping.gateway_epoch() < epoch)
+            || self
+                .gateway_epoch
+                .is_some_and(|epoch| mapping.gateway_epoch() < epoch)
         {
             return Err(refused());
         }
@@ -126,12 +158,17 @@ impl PcpMapping {
     /// The existing session owner must stop or renew before this deadline.
     pub fn renewal_deadline(&self) -> io::Result<Instant> {
         let mapping = self.mapping.as_ref().ok_or_else(refused)?;
-        if self.stopped || !self.attempted || Instant::now() >= mapping.expiration()
-            || Instant::now() >= self.authorization_deadline {
+        if self.stopped
+            || !self.attempted
+            || Instant::now() >= mapping.expiration()
+            || Instant::now() >= self.authorization_deadline
+        {
             return Err(io::ErrorKind::TimedOut.into());
         }
-        Ok((mapping.expiration() - Duration::from_secs(u64::from(mapping.lifetime()) / 2))
-            .min(self.authorization_deadline))
+        Ok(
+            (mapping.expiration() - Duration::from_secs(u64::from(mapping.lifetime()) / 2))
+                .min(self.authorization_deadline),
+        )
     }
 
     /// Delete only this nonce, client address, protocol and nonzero local port.
@@ -142,12 +179,22 @@ impl PcpMapping {
         if !self.attempted {
             return Ok(());
         }
-        tokio::time::timeout(REQUEST_BUDGET, pcp::try_drop_mapping(
-            self.gateway.into(), self.local.ip(), self.nonce,
-            DropMappingRange::Single { protocol: InternetProtocol::Udp, internal_port: self.port },
-            Some(TIMEOUT),
-        )).await.map_err(|_| io::Error::from(io::ErrorKind::TimedOut))?
-            .map_err(|_| refused())?;
+        tokio::time::timeout(
+            REQUEST_BUDGET,
+            pcp::try_drop_mapping(
+                self.gateway.into(),
+                self.local.ip(),
+                self.nonce,
+                DropMappingRange::Single {
+                    protocol: InternetProtocol::Udp,
+                    internal_port: self.port,
+                },
+                Some(TIMEOUT),
+            ),
+        )
+        .await
+        .map_err(|_| io::Error::from(io::ErrorKind::TimedOut))?
+        .map_err(|_| refused())?;
         self.attempted = false;
         self.mapping = None;
         Ok(())

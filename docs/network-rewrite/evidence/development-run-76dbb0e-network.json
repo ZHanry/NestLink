@@ -29,7 +29,8 @@
     "linux_job_id": "124245480277",
     "linux_status": "failure",
     "windows_job_id": "124245480153",
-    "windows_status_at_review": "in_progress",
+    "windows_status_at_review": "completed_failure",
+    "windows_final_observation": "The completed full workspace run failed native_compressed at Core Trust validation and network_relay at two TLS handshakes. All other workspace test targets passed. The Core capability follow-up remains pending exact-source verification.",
     "passed": ["WASM", "dependency policy", "OpenAPI generation", "Linux portal/audio/input/network jobs", "both OS scoped routed contracts, selected relay, metadata, discovery, ICE feasibility, native sessions, inbox and spaces"],
     "scoped_artifacts": [
       {"os": "Linux", "artifact_id": "13003177438", "zip_sha256": "e6c32c153a3bfb80f1f083f3c7a6408ff80c132ebd31aa64893fdbf3a90fb7d8"},

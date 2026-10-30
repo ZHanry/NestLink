@@ -1,6 +1,7 @@
 mod audit;
 pub mod config;
 mod connection_diagnostics;
+mod database_admission;
 mod media_authority;
 mod native_discovery;
 mod network_policy;
@@ -68,7 +69,7 @@ pub struct AppState {
     vault: Arc<VaultKey>,
     signer: Arc<PermitSigner>,
     dummy_hash: Arc<String>,
-    work: Arc<Semaphore>,
+    work: database_admission::DatabaseAdmission,
     passwords: Arc<Semaphore>,
     events: broadcast::Sender<Event>,
     origin: Arc<String>,
@@ -184,7 +185,7 @@ impl AppState {
             vault: Arc::new(vault),
             signer: Arc::new(signer),
             dummy_hash: Arc::new(dummy_hash),
-            work: Arc::new(Semaphore::new(8)),
+            work: database_admission::DatabaseAdmission::new(),
             passwords: Arc::new(Semaphore::new(2)),
             events,
             origin: Arc::new(origin),
@@ -232,11 +233,13 @@ impl AppState {
         R: Send + 'static,
         F: FnOnce(&mut Store) -> Result<R, StorageError> + Send + 'static,
     {
-        let permit =
-            self.work.clone().try_acquire_owned().map_err(|_| {
-                tracing::warn!(event = "database_capacity_exhausted", "bounded database worker admission is full");
-                ApiError(StatusCode::TOO_MANY_REQUESTS, ErrorCode::CapacityExceeded)
-            })?;
+        let permit = self.work.acquire().await.map_err(|_| {
+            tracing::warn!(
+                event = "database_capacity_exhausted",
+                "bounded database queue is full or its wait deadline expired"
+            );
+            ApiError(StatusCode::TOO_MANY_REQUESTS, ErrorCode::CapacityExceeded)
+        })?;
         let store = self.store.clone();
         tokio::task::spawn_blocking(move || {
             let _permit = permit;

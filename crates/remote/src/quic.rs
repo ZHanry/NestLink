@@ -130,7 +130,14 @@ pub async fn authorize(
             }.into()),
             result = proof => result,
         }
-    }).await.map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "QUIC session setup budget exhausted"))??;
+    })
+    .await
+    .map_err(|_| {
+        io::Error::new(
+            io::ErrorKind::TimedOut,
+            "QUIC session setup budget exhausted",
+        )
+    })??;
     let lease = LeaseControl::new(session, path, clock, lifecycle)?;
     guard.lease = Some(lease.clone());
     let renewal = if lease.native_renewal_required()? {

@@ -7,7 +7,10 @@ use nestlink_protocol::{
 };
 use nestlink_sdk::{
     DeploymentTrust, DeviceIdentity, Sdk, SdkError,
-    native::{AddressPolicy, NativeEndpoint, NativeMediaSessionOptions, NativeSessionOptions, SessionEstablishError},
+    native::{
+        AddressPolicy, NativeEndpoint, NativeMediaSessionOptions, NativeSessionOptions,
+        SessionEstablishError,
+    },
 };
 use nestlink_server::{AppState, router};
 use nestlink_session::StopReason;
@@ -156,23 +159,25 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
     // policy, including callers that use the SDK without app-core.
     let (_pcp_cancel_owner, pcp_cancel) = watch::channel(false);
     assert!(matches!(
-        controller_endpoint.establish_with_media(
-            &controller_sdk,
-            &controller,
-            NativeMediaSessionOptions {
-                session: NativeSessionOptions {
-                    granted_permissions: vec![Permission::View, Permission::FileRead],
-                    supported_capabilities: vec!["vp8".into()],
-                    local_paths: PathSet::DIRECT,
+        controller_endpoint
+            .establish_with_media(
+                &controller_sdk,
+                &controller,
+                NativeMediaSessionOptions {
+                    session: NativeSessionOptions {
+                        granted_permissions: vec![Permission::View, Permission::FileRead],
+                        supported_capabilities: vec!["vp8".into()],
+                        local_paths: PathSet::DIRECT,
+                    },
+                    media: None,
+                    relay_node_id: None,
+                    pcp_gateway: Some("10.32.0.1".parse()?),
                 },
-                media: None,
-                relay_node_id: None,
-                pcp_gateway: Some("10.32.0.1".parse()?),
-            },
-            &[],
-            vec![],
-            pcp_cancel,
-        ).await,
+                &[],
+                vec![],
+                pcp_cancel,
+            )
+            .await,
         Err(SessionEstablishError::Sdk(SdkError::Api(
             reqwest::StatusCode::FORBIDDEN,
             nestlink_protocol::ErrorCode::PermissionRequired,

@@ -24,14 +24,20 @@ fn response(request: &[u8], port: u16, lifetime: u32, wrong_nonce: bool) -> Resu
         return Err("expected one PCP MAP request".into());
     }
     assert_eq!(request[36], 17, "only UDP may be requested");
-    assert_ne!(&request[40..42], &[0, 0], "wildcard port deletion is forbidden");
+    assert_ne!(
+        &request[40..42],
+        &[0, 0],
+        "wildcard port deletion is forbidden"
+    );
     let mut reply = vec![0; 60];
     reply[0] = 2;
     reply[1] = 0x81;
     reply[4..8].copy_from_slice(&lifetime.to_be_bytes());
     reply[8..12].copy_from_slice(&1_u32.to_be_bytes());
     reply[24..44].copy_from_slice(&request[24..44]);
-    if wrong_nonce { reply[24] ^= 1; }
+    if wrong_nonce {
+        reply[24] ^= 1;
+    }
     reply[42..44].copy_from_slice(&port.to_be_bytes());
     reply[54..56].copy_from_slice(&[0xff, 0xff]);
     reply[56..60].copy_from_slice(&[203, 0, 113, 7]);
@@ -41,13 +47,31 @@ fn response(request: &[u8], port: u16, lifetime: u32, wrong_nonce: bool) -> Resu
 #[test]
 fn only_explicit_private_gateway_and_bound_private_udp_ports_are_accepted() -> Result {
     let deadline = Instant::now() + Duration::from_secs(10);
-    for gateway in ["0.0.0.0", "127.0.0.1", "169.254.1.1", "203.0.113.1", "224.0.0.1"] {
+    for gateway in [
+        "0.0.0.0",
+        "127.0.0.1",
+        "169.254.1.1",
+        "203.0.113.1",
+        "224.0.0.1",
+    ] {
         assert!(PcpMapping::new(gateway.parse()?, "10.32.0.2:45001".parse()?, deadline).is_err());
     }
-    for local in ["10.32.0.2:0", "0.0.0.0:45001", "127.0.0.1:45001", "[fd00::2]:45001"] {
+    for local in [
+        "10.32.0.2:0",
+        "0.0.0.0:45001",
+        "127.0.0.1:45001",
+        "[fd00::2]:45001",
+    ] {
         assert!(PcpMapping::new("10.32.0.1".parse()?, local.parse()?, deadline).is_err());
     }
-    assert!(PcpMapping::new("10.32.0.1".parse()?, "10.32.0.2:45001".parse()?, Instant::now()).is_err());
+    assert!(
+        PcpMapping::new(
+            "10.32.0.1".parse()?,
+            "10.32.0.2:45001".parse()?,
+            Instant::now()
+        )
+        .is_err()
+    );
     Ok(())
 }
 
@@ -65,20 +89,30 @@ async fn pcp_nonce_renewal_failed_create_and_exact_release_use_the_mature_compon
             let request = &buffer[..n];
             assert_eq!(n, 60);
             let nonce = request[24..36].to_vec();
-            if let Some(first) = &first_nonce { assert_eq!(first, &nonce); }
-            else { first_nonce = Some(nonce); }
+            if let Some(first) = &first_nonce {
+                assert_eq!(first, &nonce);
+            } else {
+                first_nonce = Some(nonce);
+            }
             let requested = lifetime(request)?;
             assert_eq!(requested == 0, index == 2);
             assert!(requested <= 120);
             let granted = if requested == 0 { 0 } else { requested.min(8) };
-            socket.send_to(&response(request, 45001, granted, false)?, peer).await?;
+            socket
+                .send_to(&response(request, 45001, granted, false)?, peer)
+                .await?;
         }
         // A changed external port must be rejected, then exactly deleted.
         for index in 0..2 {
             let (n, peer) = socket.recv_from(&mut buffer).await?;
             let request = &buffer[..n];
             assert_eq!(lifetime(request)? == 0, index == 1);
-            socket.send_to(&response(request, 45002, if index == 0 { 8 } else { 0 }, false)?, peer).await?;
+            socket
+                .send_to(
+                    &response(request, 45002, if index == 0 { 8 } else { 0 }, false)?,
+                    peer,
+                )
+                .await?;
         }
         // Bad nonce is rejected by crab_nat itself; the original nonce is
         // retained so even this failed creation can be deleted precisely.
@@ -86,14 +120,24 @@ async fn pcp_nonce_renewal_failed_create_and_exact_release_use_the_mature_compon
             let (n, peer) = socket.recv_from(&mut buffer).await?;
             let request = &buffer[..n];
             assert_eq!(lifetime(request)? == 0, index == 1);
-            socket.send_to(&response(request, 45001, if index == 0 { 8 } else { 0 }, index == 0)?, peer).await?;
+            socket
+                .send_to(
+                    &response(request, 45001, if index == 0 { 8 } else { 0 }, index == 0)?,
+                    peer,
+                )
+                .await?;
         }
         // An excessive router lease may not extend the original permit.
         for index in 0..2 {
             let (n, peer) = socket.recv_from(&mut buffer).await?;
             let request = &buffer[..n];
             assert_eq!(lifetime(request)? == 0, index == 1);
-            socket.send_to(&response(request, 45001, if index == 0 { 600 } else { 0 }, false)?, peer).await?;
+            socket
+                .send_to(
+                    &response(request, 45001, if index == 0 { 600 } else { 0 }, false)?,
+                    peer,
+                )
+                .await?;
         }
         // A tuple already signed for this owner cannot change during renewal.
         for index in 0..3 {
@@ -101,7 +145,9 @@ async fn pcp_nonce_renewal_failed_create_and_exact_release_use_the_mature_compon
             let request = &buffer[..n];
             assert_eq!(lifetime(request)? == 0, index == 2);
             let mut reply = response(request, 45001, if index == 2 { 0 } else { 8 }, false)?;
-            if index == 1 { reply[59] = 8; }
+            if index == 1 {
+                reply[59] = 8;
+            }
             socket.send_to(&reply, peer).await?;
         }
         // A rebooted gateway cannot silently replace an existing mapping.
@@ -110,7 +156,9 @@ async fn pcp_nonce_renewal_failed_create_and_exact_release_use_the_mature_compon
             let request = &buffer[..n];
             assert_eq!(lifetime(request)? == 0, index == 2);
             let mut reply = response(request, 45001, if index == 2 { 0 } else { 8 }, false)?;
-            if index == 1 { reply[8..12].copy_from_slice(&0_u32.to_be_bytes()); }
+            if index == 1 {
+                reply[8..12].copy_from_slice(&0_u32.to_be_bytes());
+            }
             socket.send_to(&reply, peer).await?;
         }
         // A deletion response with a different nonce is no cleanup receipt.
@@ -118,14 +166,24 @@ async fn pcp_nonce_renewal_failed_create_and_exact_release_use_the_mature_compon
             let (n, peer) = socket.recv_from(&mut buffer).await?;
             let request = &buffer[..n];
             assert_eq!(lifetime(request)? == 0, index != 0);
-            socket.send_to(&response(request, 45001, if index == 0 { 8 } else { 0 }, index == 1)?, peer).await?;
+            socket
+                .send_to(
+                    &response(request, 45001, if index == 0 { 8 } else { 0 }, index == 1)?,
+                    peer,
+                )
+                .await?;
         }
         // After actual lease expiry this owner may only delete, never renew.
         for index in 0..2 {
             let (n, peer) = socket.recv_from(&mut buffer).await?;
             let request = &buffer[..n];
             assert_eq!(lifetime(request)? == 0, index == 1);
-            socket.send_to(&response(request, 45001, if index == 0 { 2 } else { 0 }, false)?, peer).await?;
+            socket
+                .send_to(
+                    &response(request, 45001, if index == 0 { 2 } else { 0 }, false)?,
+                    peer,
+                )
+                .await?;
         }
         // Drop the create response after observing a real request. Cleanup
         // after cancel must use the exact nonce from that original request.
@@ -137,7 +195,9 @@ async fn pcp_nonce_renewal_failed_create_and_exact_release_use_the_mature_compon
             let request = &buffer[..n];
             assert_eq!(&request[24..36], canceled_nonce.as_slice());
             if lifetime(request)? == 0 {
-                socket.send_to(&response(request, 45001, 0, false)?, peer).await?;
+                socket
+                    .send_to(&response(request, 45001, 0, false)?, peer)
+                    .await?;
                 break;
             }
         }
@@ -145,9 +205,15 @@ async fn pcp_nonce_renewal_failed_create_and_exact_release_use_the_mature_compon
     });
     let execution = async {
         let mut mapping = fixture()?;
-        assert_eq!(mapping.establish_or_renew().await?, "203.0.113.7:45001".parse::<SocketAddr>()?);
+        assert_eq!(
+            mapping.establish_or_renew().await?,
+            "203.0.113.7:45001".parse::<SocketAddr>()?
+        );
         assert!(mapping.renewal_deadline()? < mapping.authorization_deadline);
-        assert_eq!(mapping.establish_or_renew().await?, "203.0.113.7:45001".parse::<SocketAddr>()?);
+        assert_eq!(
+            mapping.establish_or_renew().await?,
+            "203.0.113.7:45001".parse::<SocketAddr>()?
+        );
         mapping.release().await?;
         assert!(!mapping.attempted);
         assert!(mapping.establish_or_renew().await.is_err());
@@ -179,14 +245,20 @@ async fn pcp_nonce_renewal_failed_create_and_exact_release_use_the_mature_compon
         assert!(expired.establish_or_renew().await.is_err());
         expired.release().await?;
         let mut canceled = fixture()?;
-        assert!(tokio::time::timeout(Duration::from_millis(50), canceled.establish_or_renew()).await.is_err());
+        assert!(
+            tokio::time::timeout(Duration::from_millis(50), canceled.establish_or_renew())
+                .await
+                .is_err()
+        );
         assert!(canceled.attempted);
         assert!(canceled.establish_or_renew().await.is_err());
         canceled.release().await?;
         Result::Ok(())
     };
     let result = tokio::time::timeout(Duration::from_secs(10), execution).await;
-    if !matches!(&result, Ok(Ok(()))) { server.abort(); }
+    if !matches!(&result, Ok(Ok(()))) {
+        server.abort();
+    }
     let server_result = tokio::time::timeout(Duration::from_secs(2), server).await;
     result??;
     server_result???;

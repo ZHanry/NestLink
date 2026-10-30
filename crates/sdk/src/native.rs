@@ -276,7 +276,9 @@ async fn refresh_auto_node_relay(
     let discovery = sdk.discover_relay_candidates(local, permit).await?;
     if let Some(node_id) = relay_node_id {
         let selected = discovery.select(sdk, permit, local, node_id)?;
-        return reserve_discovered_node(sdk, local, permit, &discovery, &selected.node).await.map(Some);
+        return reserve_discovered_node(sdk, local, permit, &discovery, &selected.node)
+            .await
+            .map(Some);
     }
     let nodes = discovery.checked(sdk, permit, local)?;
     let mut matching_node_ids = Vec::new();
@@ -369,7 +371,9 @@ pub enum SessionEstablishError {
     PermitChanged,
     #[error("the selected endpoint role, local policy or session binding is invalid")]
     Binding,
-    #[error("an explicit relay selection requires a valid node UUID, an authorized Relay path and no supplied routes")]
+    #[error(
+        "an explicit relay selection requires a valid node UUID, an authorized Relay path and no supplied routes"
+    )]
     RelaySelectionInvalid,
     #[error("the explicitly selected relay node is unavailable or unauthorized")]
     SelectedRelayUnavailable(#[source] SdkError),
@@ -1021,10 +1025,12 @@ impl NativeEndpoint {
             relay_node_id,
             pcp_gateway,
         } = options;
-        if relay_node_id.as_ref().is_some_and(|id| !nestlink_protocol::valid_id(id)
-            || !routes.is_empty()
-            || !options.local_paths.contains(Path::Relay)
-            || !self.permit.claims().paths.contains(&(Path::Relay as i32))) {
+        if relay_node_id.as_ref().is_some_and(|id| {
+            !nestlink_protocol::valid_id(id)
+                || !routes.is_empty()
+                || !options.local_paths.contains(Path::Relay)
+                || !self.permit.claims().paths.contains(&(Path::Relay as i32))
+        }) {
             return Err(SessionEstablishError::RelaySelectionInvalid);
         }
         self.validate_local(local, &options, routes)?;
@@ -1047,7 +1053,8 @@ impl NativeEndpoint {
                 return Err(SdkError::Api(
                     reqwest::StatusCode::FORBIDDEN,
                     ErrorCode::PermissionRequired,
-                ).into());
+                )
+                .into());
             }
             self.check()?;
         }
@@ -1130,8 +1137,13 @@ impl NativeEndpoint {
             match prepared {
                 Ok(Ok(relay)) => auto_relay = Some(relay),
                 error if relay_node_id.is_some() => {
-                    if let Some(gathered) = native_ice.take() { gathered.close().await?; }
-                    let error = match error { Ok(Err(error)) => error, _ => SdkError::Timeout };
+                    if let Some(gathered) = native_ice.take() {
+                        gathered.close().await?;
+                    }
+                    let error = match error {
+                        Ok(Err(error)) => error,
+                        _ => SdkError::Timeout,
+                    };
                     return Err(SessionEstablishError::SelectedRelayUnavailable(error));
                 }
                 _ => {}
@@ -1265,7 +1277,10 @@ impl NativeEndpoint {
             auto_relay = match refreshed {
                 Ok(Ok(relay)) => relay,
                 error if relay_node_id.is_some() => {
-                    let error = match error { Ok(Err(error)) => error, _ => SdkError::Timeout };
+                    let error = match error {
+                        Ok(Err(error)) => error,
+                        _ => SdkError::Timeout,
+                    };
                     return Err(SessionEstablishError::SelectedRelayUnavailable(error));
                 }
                 _ => None,

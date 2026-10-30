@@ -142,6 +142,7 @@ mod tests {
             media_route: Default::default(),
             media_interface_index: None,
             use_deployment_stun: false,
+            pcp_gateway: Some("192.168.20.1".parse()?),
             private_network_prefixes: vec!["192.168.20.0/24".into()],
         };
         store.save(&chosen)?;
