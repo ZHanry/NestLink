@@ -227,7 +227,11 @@ impl Inner {
                     .then_some(StopReason::Revoked)
             })
             .or_else(|| self.network.as_ref().and_then(NetworkBinding::reason))
-            .or_else(|| self.carrier.as_ref().and_then(|carrier| carrier_stop_reason(carrier, managed.carrier_released)))
+            .or_else(|| {
+                self.carrier
+                    .as_ref()
+                    .and_then(|carrier| carrier_stop_reason(carrier, managed.carrier_released))
+            })
         {
             if !reconnection_is_allowed(reason) {
                 managed.recovery_forbidden = true;
@@ -262,7 +266,11 @@ impl Inner {
                     .then_some(StopReason::Revoked)
             })
             .or_else(|| self.network.as_ref().and_then(NetworkBinding::reason))
-            .or_else(|| self.carrier.as_ref().and_then(|carrier| carrier_stop_reason(carrier, managed.carrier_released)))
+            .or_else(|| {
+                self.carrier
+                    .as_ref()
+                    .and_then(|carrier| carrier_stop_reason(carrier, managed.carrier_released))
+            })
         {
             if !reconnection_is_allowed(reason) {
                 managed.recovery_forbidden = true;
@@ -307,7 +315,10 @@ impl Inner {
     }
 }
 
-fn carrier_stop_reason(carrier: &watch::Receiver<Option<io::ErrorKind>>, released: bool) -> Option<StopReason> {
+fn carrier_stop_reason(
+    carrier: &watch::Receiver<Option<io::ErrorKind>>,
+    released: bool,
+) -> Option<StopReason> {
     let failure = *carrier.borrow();
     if failure.is_none() && !released && carrier.has_changed().is_err() {
         return Some(StopReason::Revoked);
@@ -915,7 +926,12 @@ impl LeaseControl {
                     .then_some(StopReason::Revoked)
             })
             .or_else(|| self.inner.network.as_ref().and_then(NetworkBinding::reason))
-            .or_else(|| self.inner.carrier.as_ref().and_then(|carrier| carrier_stop_reason(carrier, managed.carrier_released)));
+            .or_else(|| {
+                self.inner
+                    .carrier
+                    .as_ref()
+                    .and_then(|carrier| carrier_stop_reason(carrier, managed.carrier_released))
+            });
         if let Some(observed) = observed_stop {
             if !reconnection_is_allowed(observed) {
                 managed.recovery_forbidden = true;

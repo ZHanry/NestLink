@@ -67,7 +67,11 @@ async fn relay_only_inbox_needs_no_direct_candidate_or_private_network_consent()
 }
 
 async fn session_and_stop(manual_host: bool, relay_only: bool) -> Result {
-    let path_mode = if relay_only { "relay_only" } else { "direct_preferred" };
+    let path_mode = if relay_only {
+        "relay_only"
+    } else {
+        "direct_preferred"
+    };
     let server = Server::start(None).await?;
     let controller = DeviceIdentity::generate();
     let host = DeviceIdentity::generate();
@@ -120,7 +124,11 @@ async fn session_and_stop(manual_host: bool, relay_only: bool) -> Result {
         choice: ApprovalChoice {
             approved: true,
             permissions: vec![Permission::View as i32],
-            paths: if relay_only { vec![Path::Relay as i32] } else { vec![Path::Direct as i32, Path::Relay as i32] },
+            paths: if relay_only {
+                vec![Path::Relay as i32]
+            } else {
+                vec![Path::Direct as i32, Path::Relay as i32]
+            },
         },
     })?)
     .await?;

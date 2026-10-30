@@ -73,7 +73,9 @@ impl SignalPayload {
             ));
         }
         if self.candidates.len() > CANDIDATE_COUNT as usize
-            || (self.candidates.is_empty() && self.description.is_none() && self.rendezvous.is_none())
+            || (self.candidates.is_empty()
+                && self.description.is_none()
+                && self.rendezvous.is_none())
         {
             return Err(invalid("invalid signal candidate count"));
         }
@@ -246,7 +248,8 @@ mod tests {
         }
     }
     #[test]
-    fn native_relay_rendezvous_has_no_peer_target_and_requires_relay_permission() -> Result<(), Box<dyn std::error::Error>> {
+    fn native_relay_rendezvous_has_no_peer_target_and_requires_relay_permission()
+    -> Result<(), Box<dyn std::error::Error>> {
         let mut permit = permit();
         let mut signal = SignalPayload {
             connection_generation: permit.connection_generation,

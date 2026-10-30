@@ -7,7 +7,10 @@ struct ObservedSocketOwner {
 }
 impl TransportOwner for ObservedSocketOwner {
     fn request_close(&self) {}
-    fn close_and_wait(&mut self, _deadline: tokio::time::Instant) -> Pin<Box<dyn Future<Output = io::Result<()>> + Send + '_>> {
+    fn close_and_wait(
+        &mut self,
+        _deadline: tokio::time::Instant,
+    ) -> Pin<Box<dyn Future<Output = io::Result<()>> + Send + '_>> {
         Box::pin(async move {
             drop(self.socket.take());
             Ok(())
@@ -16,7 +19,8 @@ impl TransportOwner for ObservedSocketOwner {
 }
 
 #[tokio::test]
-async fn completed_owner_release_preserves_recovery_but_lost_observer_and_recorded_revocation_do_not() -> Result {
+async fn completed_owner_release_preserves_recovery_but_lost_observer_and_recorded_revocation_do_not()
+-> Result {
     for (attach_owner, failure, can_recover) in [
         (true, None, true),
         (true, Some(io::ErrorKind::PermissionDenied), false),
@@ -31,12 +35,23 @@ async fn completed_owner_release_preserves_recovery_but_lost_observer_and_record
         lifecycle.carrier = Some(carrier);
         let (_peer, stream) = tokio::io::duplex(64);
         let (read, write) = tokio::io::split(stream);
-        let mut runtime = AuthorizedConnection::with_lifecycle(read, write, session, nestlink_protocol::Path::Direct, clock, lifecycle)?.into_channels();
+        let mut runtime = AuthorizedConnection::with_lifecycle(
+            read,
+            write,
+            session,
+            nestlink_protocol::Path::Direct,
+            clock,
+            lifecycle,
+        )?
+        .into_channels();
         let socket = std::net::UdpSocket::bind("127.0.0.1:0")?;
         let address = socket.local_addr()?;
         facts.send_replace(failure);
         if attach_owner {
-            runtime = runtime.with_transport_owner(ObservedSocketOwner { socket: Some(socket), _facts: facts });
+            runtime = runtime.with_transport_owner(ObservedSocketOwner {
+                socket: Some(socket),
+                _facts: facts,
+            });
         } else {
             drop(socket);
             drop(facts);
@@ -46,7 +61,10 @@ async fn completed_owner_release_preserves_recovery_but_lost_observer_and_record
         if can_recover {
             assert_eq!(report.reason, StopReason::TransportLost);
         }
-        assert_eq!(runtime.lease_control().reconnection_budget().is_ok(), can_recover);
+        assert_eq!(
+            runtime.lease_control().reconnection_budget().is_ok(),
+            can_recover
+        );
     }
     Ok(())
 }

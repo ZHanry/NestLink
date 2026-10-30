@@ -70,6 +70,12 @@ async fn authorize_remote_observed(
         return Err(RemoteError::Stopped);
     }
     let validation = (|| {
+        if setup.lifecycle.carrier.is_some() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "routed carrier lifecycle is already owned",
+            ));
+        }
         let permit = setup.session.current_verified_permit();
         let business = permit.claims();
         let (device_id, local_key, remote_key) = match setup.role {

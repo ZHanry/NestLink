@@ -374,6 +374,36 @@ fn report_pair(
 }
 
 #[tokio::test]
+async fn existing_carrier_lifecycle_is_rejected_before_business_proof_and_releases_original_sockets()
+-> Result {
+    let f = Fixture::new(true)?;
+    let context = f.context();
+    let deadline = Instant::now() + Duration::from_secs(5);
+    let (mut relay, adjacency, addresses) =
+        neighbors(&f.relay, &f.controller.identity, deadline).await?;
+    let (_keep, stop) = watch::channel(None);
+    let (_facts, carrier) = watch::channel(None);
+    let mut setup = f.setup(&f.permit, EndpointRole::Controller, stop)?;
+    setup.lifecycle.carrier = Some(carrier);
+    let result = authorize_remote(
+        f.authority(&context),
+        adjacency,
+        setup,
+        &f.controller,
+        &f.host.identity.public_key(),
+        deadline,
+    )
+    .await;
+    assert!(
+        matches!(result, Err(RemoteError::Io(error)) if error.kind() == io::ErrorKind::InvalidInput)
+    );
+    relay.close_and_wait(deadline).await?;
+    let _relay_rebound = std::net::UdpSocket::bind(addresses[0])?;
+    let _controller_rebound = std::net::UdpSocket::bind(addresses[1])?;
+    Ok(())
+}
+
+#[tokio::test]
 async fn sdk_three_node_business_proof_limits_channels_and_releases_every_physical_socket() -> Result
 {
     let f = Fixture::new(true)?;
