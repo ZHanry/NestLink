@@ -119,7 +119,7 @@ impl RoutedSocket {
                         bytes = copy.read_datagram() => bytes.map_err(|error| io::Error::from(connection_fault(error)))?,
                     };
                     granted.live()?;
-                    let fragment = wire::decode(&bytes)
+                    let fragment = granted.decode(&bytes)
                         .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
                     if fragment.binding != granted.binding_digest()
                         || fragment.direction != direction.reverse()
@@ -268,8 +268,7 @@ impl AsyncUdpSocket for RoutedSocket {
         }
         let mut budget = self.budget.lock().map_err(|_| stopped())?;
         let sequence = budget.sequence.checked_add(1).ok_or_else(stopped)?;
-        let fragments = wire::encode(
-            self.authorization.binding_digest(),
+        let fragments = self.authorization.encode(
             self.direction,
             sequence,
             transmit.contents,

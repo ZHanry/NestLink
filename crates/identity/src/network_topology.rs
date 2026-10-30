@@ -6,6 +6,10 @@ use crate::{
     nodes::NodeIdentity,
 };
 use ed25519_dalek::{Signature, Signer, VerifyingKey};
+pub use nestlink_protocol::network_topology::{
+    SignedTopologyAdvertisement, SignedTopologyPublisher, SignedTopologyReport,
+    SignedTopologyUpdate,
+};
 use nestlink_protocol::{
     ContractError, ErrorCode,
     network::{GrantClaims, GrantScope},
@@ -13,9 +17,6 @@ use nestlink_protocol::{
         BootIncarnation, MAX_TTL_MS, SCHEMA_VERSION, TopologyAdvertisement,
         TopologyPublisherClaims, TopologyReport, TopologyUpdate,
     },
-};
-pub use nestlink_protocol::network_topology::{
-    SignedTopologyAdvertisement, SignedTopologyPublisher, SignedTopologyReport, SignedTopologyUpdate,
 };
 
 const PUBLISHER: &[u8] = b"NestLink/network-topology/v1/publisher\0";
@@ -63,7 +64,11 @@ impl NetworkAuthoritySigner {
         claims: &TopologyPublisherClaims,
     ) -> Result<SignedTopologyPublisher, ContractError> {
         let claims = claims.canonical_bytes()?;
-        let signature = self.key.sign(&message(PUBLISHER, &claims)?).to_bytes().to_vec();
+        let signature = self
+            .key
+            .sign(&message(PUBLISHER, &claims)?)
+            .to_bytes()
+            .to_vec();
         Ok(SignedTopologyPublisher { claims, signature })
     }
 
@@ -79,12 +84,18 @@ impl NetworkAuthoritySigner {
             || not_before_ms < report.claims.not_before_ms
             || not_before_ms < report.publisher.claims.scope.not_before_ms
         {
-            return Err(denied("topology advertisement signer or admission time differs"));
+            return Err(denied(
+                "topology advertisement signer or admission time differs",
+            ));
         }
         let expires_at_ms = expires_at_ms
             .min(report.claims.expires_at_ms)
             .min(report.publisher.claims.scope.expires_at_ms)
-            .min(not_before_ms.checked_add(MAX_TTL_MS).ok_or_else(|| denied("topology time overflow"))?);
+            .min(
+                not_before_ms
+                    .checked_add(MAX_TTL_MS)
+                    .ok_or_else(|| denied("topology time overflow"))?,
+            );
         let claims = TopologyAdvertisement {
             schema_version: SCHEMA_VERSION,
             report: report.claims.clone(),
@@ -94,7 +105,11 @@ impl NetworkAuthoritySigner {
             expires_at_ms,
         }
         .canonical_bytes()?;
-        let signature = self.key.sign(&message(ADVERTISEMENT, &claims)?).to_bytes().to_vec();
+        let signature = self
+            .key
+            .sign(&message(ADVERTISEMENT, &claims)?)
+            .to_bytes()
+            .to_vec();
         Ok(SignedTopologyAdvertisement { claims, signature })
     }
 
@@ -105,7 +120,11 @@ impl NetworkAuthoritySigner {
         update: &TopologyUpdate,
     ) -> Result<SignedTopologyUpdate, ContractError> {
         let claims = update.canonical_bytes()?;
-        let signature = self.key.sign(&message(UPDATE, &claims)?).to_bytes().to_vec();
+        let signature = self
+            .key
+            .sign(&message(UPDATE, &claims)?)
+            .to_bytes()
+            .to_vec();
         Ok(SignedTopologyUpdate { claims, signature })
     }
 }
@@ -119,7 +138,11 @@ impl NodeIdentity {
             return Err(denied("topology report node key differs"));
         }
         let claims = report.canonical_bytes()?;
-        let signature = self.key.sign(&message(REPORT, &claims)?).to_bytes().to_vec();
+        let signature = self
+            .key
+            .sign(&message(REPORT, &claims)?)
+            .to_bytes()
+            .to_vec();
         Ok(SignedTopologyReport { claims, signature })
     }
 }
@@ -143,7 +166,10 @@ impl VerifiedTopologyPublisher {
         }
         check_scope(&self.claims.scope, context)?;
         for authorization in &self.claims.route_export_digests {
-            let grant = self.route_exports.iter().find(|grant| grant.digest() == *authorization)
+            let grant = self
+                .route_exports
+                .iter()
+                .find(|grant| grant.digest() == *authorization)
                 .ok_or_else(|| denied("missing topology RouteExport proof"))?;
             grant.check_current(context)?;
             let GrantClaims::RouteExport(export) = grant.claims() else {
@@ -163,7 +189,9 @@ impl VerifiedTopologyPublisher {
                         if export.gateway == self.claims.peer && export.prefixes.contains(prefix))
             });
             if !permitted {
-                return Err(denied("topology prefix has no exact RouteExport permission"));
+                return Err(denied(
+                    "topology prefix has no exact RouteExport permission",
+                ));
             }
         }
         Ok(())
@@ -193,7 +221,10 @@ impl VerifiedTopologyAdvertisement {
     pub fn publication_grant_ids(&self) -> Vec<String> {
         let mut ids = vec![self.publisher.claims.scope.grant_id.clone()];
         for authorization in &self.publisher.claims.route_export_digests {
-            if let Some(grant) = self.publisher.route_exports.iter()
+            if let Some(grant) = self
+                .publisher
+                .route_exports
+                .iter()
                 .find(|grant| grant.digest() == *authorization)
             {
                 let id = &grant.claims().scope().grant_id;
@@ -208,14 +239,19 @@ impl VerifiedTopologyAdvertisement {
         if self.issuer != *context.authority_key {
             return Err(mismatch("topology advertisement authority differs"));
         }
-        self.publisher.check_current(context, &self.claims.report.incarnation)?;
+        self.publisher
+            .check_current(context, &self.claims.report.incarnation)?;
         if self.claims.report.deployment_id != context.deployment_id
             || self.claims.report.space_id != context.space_id
             || self.claims.report.policy_epoch != context.policy_epoch
         {
             return Err(mismatch("topology advertisement scope differs"));
         }
-        current_time(self.claims.not_before_ms, self.claims.expires_at_ms, context.now_ms)
+        current_time(
+            self.claims.not_before_ms,
+            self.claims.expires_at_ms,
+            context.now_ms,
+        )
     }
 }
 impl VerifiedTopologyUpdate {
@@ -236,7 +272,11 @@ impl VerifiedTopologyUpdate {
         {
             return Err(mismatch("topology update authority or scope differs"));
         }
-        current_time(self.claims.issued_at_ms, self.claims.expires_at_ms, context.now_ms)
+        current_time(
+            self.claims.issued_at_ms,
+            self.claims.expires_at_ms,
+            context.now_ms,
+        )
     }
 }
 
@@ -256,13 +296,25 @@ pub fn verify_topology_publisher(
     }
     signed.validate()?;
     let claims = TopologyPublisherClaims::decode_canonical(&signed.claims)?;
-    verify(context.authority_key, PUBLISHER, &signed.claims, &signed.signature)?;
+    verify(
+        context.authority_key,
+        PUBLISHER,
+        &signed.claims,
+        &signed.signature,
+    )?;
     if claims.node_id != node_id || claims.public_key != *node_public_key {
         return Err(mismatch("topology publisher registered node differs"));
     }
-    let route_exports = claims.route_export_digests.iter().filter_map(|authorization| {
-        route_exports.iter().find(|grant| grant.digest() == *authorization).cloned()
-    }).collect();
+    let route_exports = claims
+        .route_export_digests
+        .iter()
+        .filter_map(|authorization| {
+            route_exports
+                .iter()
+                .find(|grant| grant.digest() == *authorization)
+                .cloned()
+        })
+        .collect();
     let publisher = VerifiedTopologyPublisher {
         claims,
         digest: reference(context.authority_key, PUBLISHER, &signed.claims)?,
@@ -285,7 +337,12 @@ pub fn verify_topology_report(
     signed.validate()?;
     publisher.check_current(context, incarnation)?;
     let claims = TopologyReport::decode_canonical(&signed.claims)?;
-    verify(&publisher.claims.public_key, REPORT, &signed.claims, &signed.signature)?;
+    verify(
+        &publisher.claims.public_key,
+        REPORT,
+        &signed.claims,
+        &signed.signature,
+    )?;
     let permission = &publisher.claims;
     if claims.deployment_id != context.deployment_id
         || claims.space_id != context.space_id
@@ -298,12 +355,23 @@ pub fn verify_topology_report(
         return Err(mismatch("topology report scope or publisher differs"));
     }
     if claims.sequence <= last_sequence {
-        return Err(ContractError::new(ErrorCode::ReplayRejected, "topology report sequence did not advance"));
+        return Err(ContractError::new(
+            ErrorCode::ReplayRejected,
+            "topology report sequence did not advance",
+        ));
     }
     if claims.not_before_ms < permission.scope.not_before_ms
         || claims.expires_at_ms > permission.scope.expires_at_ms
-        || claims.neighbors.iter().any(|neighbor| permission.allowed_neighbors.binary_search(&neighbor.remote).is_err())
-        || claims.prefixes.iter().any(|prefix| !permission.allowed_prefixes.contains(prefix))
+        || claims.neighbors.iter().any(|neighbor| {
+            permission
+                .allowed_neighbors
+                .binary_search(&neighbor.remote)
+                .is_err()
+        })
+        || claims
+            .prefixes
+            .iter()
+            .any(|prefix| !permission.allowed_prefixes.contains(prefix))
     {
         return Err(denied("topology report expands publication permission"));
     }
@@ -324,7 +392,12 @@ pub fn verify_topology_advertisement(
     last_sequence: u64,
 ) -> Result<VerifiedTopologyAdvertisement, ContractError> {
     signed.validate()?;
-    verify(context.authority_key, ADVERTISEMENT, &signed.claims, &signed.signature)?;
+    verify(
+        context.authority_key,
+        ADVERTISEMENT,
+        &signed.claims,
+        &signed.signature,
+    )?;
     let claims = TopologyAdvertisement::decode_canonical(&signed.claims)?;
     let report = verify_topology_report(
         &SignedTopologyReport {
@@ -360,7 +433,12 @@ pub fn verify_topology_update(
     expected_nonce: &[u8; 32],
 ) -> Result<VerifiedTopologyUpdate, ContractError> {
     signed.validate()?;
-    verify(context.authority_key, UPDATE, &signed.claims, &signed.signature)?;
+    verify(
+        context.authority_key,
+        UPDATE,
+        &signed.claims,
+        &signed.signature,
+    )?;
     let claims = TopologyUpdate::decode_canonical(&signed.claims)?;
     if claims.deployment_id != context.deployment_id
         || claims.space_id != context.space_id
@@ -382,27 +460,44 @@ fn check_scope(scope: &GrantScope, context: &NetworkVerification<'_>) -> Result<
     if scope.deployment_id != context.deployment_id || scope.space_id != context.space_id {
         return Err(mismatch("topology publisher space or deployment differs"));
     }
-    if scope.policy_epoch != context.policy_epoch || context.revoked_grant_ids.contains(&scope.grant_id) {
-        return Err(ContractError::new(ErrorCode::PolicyRevoked, "topology publisher policy was revoked"));
+    if scope.policy_epoch != context.policy_epoch
+        || context.revoked_grant_ids.contains(&scope.grant_id)
+    {
+        return Err(ContractError::new(
+            ErrorCode::PolicyRevoked,
+            "topology publisher policy was revoked",
+        ));
     }
     current_time(scope.not_before_ms, scope.expires_at_ms, context.now_ms)
 }
 fn current_time(start: u64, end: u64, now: u64) -> Result<(), ContractError> {
     if now < start || now >= end {
-        return Err(ContractError::new(ErrorCode::LeaseExpired, "topology statement is outside its lifetime"));
+        return Err(ContractError::new(
+            ErrorCode::LeaseExpired,
+            "topology statement is outside its lifetime",
+        ));
     }
     Ok(())
 }
 fn message(domain: &[u8], claims: &[u8]) -> Result<Vec<u8>, ContractError> {
-    let length: u32 = claims.len().try_into().map_err(|_| denied("topology signing message too large"))?;
+    let length: u32 = claims
+        .len()
+        .try_into()
+        .map_err(|_| denied("topology signing message too large"))?;
     let mut bytes = domain.to_vec();
     bytes.extend_from_slice(&length.to_be_bytes());
     bytes.extend_from_slice(claims);
     Ok(bytes)
 }
-fn verify(key: &[u8; 32], domain: &[u8], claims: &[u8], signature: &[u8]) -> Result<(), ContractError> {
+fn verify(
+    key: &[u8; 32],
+    domain: &[u8],
+    claims: &[u8],
+    signature: &[u8],
+) -> Result<(), ContractError> {
     let key = VerifyingKey::from_bytes(key).map_err(|_| mismatch("invalid topology issuer key"))?;
-    let signature = Signature::from_slice(signature).map_err(|_| mismatch("invalid topology signature"))?;
+    let signature =
+        Signature::from_slice(signature).map_err(|_| mismatch("invalid topology signature"))?;
     key.verify_strict(&message(domain, claims)?, &signature)
         .map_err(|_| mismatch("invalid topology signature or purpose"))
 }

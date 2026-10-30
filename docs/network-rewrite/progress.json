@@ -6,7 +6,7 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "a19a112165b5a7234e1de8c1ed6c3f7de9d2d4c4",
+    "source_revision":  "0618e0881aa6360f77484aceea996d9ba493cc64",
     "checkpoint_kind":  "work_in_progress_against_source_revision",
     "active_tasks":  [
                          "W00",
@@ -62,11 +62,11 @@
                                    }
                                ],
     "next_steps":  [
-                       "Run the bounded graph, NRD2 and node reporter regressions on exact-source Actions; apply only reviewed Actions formatter output.",
-                       "Implement the atomic two-relay authority reservation and real four-node NRD2 carrier, including current topology and revocation.",
-                       "Read the complete exact-source Windows/Linux and browser matrix; preserve scoped results separately from full workspace qualification.",
-                       "Continue all remaining mandatory W13-W40 implementation, product surfaces, target acceptance and same-source packaging.",
-                       "Publish 0.8.0RC after implementation and mandatory evidence gates; keep local and remote main as the only branch."
+                       "Run the complete two-relay NRD2 component carrier and retained NRD1 regressions on exact-source Actions; review and import generated formatting output.",
+                       "Implement atomic two-relay authority reservation, production node admission/report integration and four-node SessionPermit/FileRead.",
+                       "Read exact-source topology, Windows/Linux full workspace and browser matrix results; retain failures and scoped results separately.",
+                       "Continue all mandatory W13-W40 implementation, product surfaces, target acceptance and same-source packaging.",
+                       "Publish 0.8.0RC only after implementation and mandatory evidence gates; retain local and remote main as the only branch."
                    ],
     "evidence_index":  [
                            "docs/network-rewrite/evidence/research-review-2026-10-30.md",
@@ -102,7 +102,8 @@
                            "docs/adr/network/0013-durable-authorized-topology.md",
                            "docs/adr/network/0014-bounded-revocation-admission.md",
                            "docs/adr/network/0015-bounded-topology-consumption.md",
-                           "docs/network-rewrite/evidence/graph-lock-derivation-a19a112.json"
+                           "docs/network-rewrite/evidence/graph-lock-derivation-a19a112.json",
+                           "docs/adr/network/0016-two-relay-carrier-binding.md"
                        ],
     "observed_actions":  [
                              {

@@ -121,7 +121,10 @@ impl TopologyReporter {
             .checked_sub(sample(control.started)?.monotonic_ms)
             .filter(|value| *value > 0)
             .ok_or_else(|| {
-                rejected(ErrorCode::LeaseExpired, "topology report expired before send")
+                rejected(
+                    ErrorCode::LeaseExpired,
+                    "topology report expired before send",
+                )
             })?;
         let mut stopped = control.stopped();
         if *stopped.borrow() {
@@ -180,7 +183,7 @@ impl TopologyReporter {
             &incarnation,
             route_exports,
         )?;
-        neighbors.sort_by(|left, right| left.remote.cmp(&right.remote));
+        neighbors.sort_by_key(|neighbor| neighbor.remote);
         for neighbor in &neighbors {
             neighbor.validate()?;
             if neighbor.local != publisher.claims().peer
@@ -242,7 +245,8 @@ impl TopologyReporter {
             prefixes: Vec::new(),
         };
         let signed = self.identity.sign_topology_report(&report)?;
-        let report = verify_topology_report(&signed, &publisher, &current, &incarnation, sequence - 1)?;
+        let report =
+            verify_topology_report(&signed, &publisher, &current, &incarnation, sequence - 1)?;
         Ok(PreparedReport {
             lease,
             publisher,

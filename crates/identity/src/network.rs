@@ -8,7 +8,9 @@ use nestlink_protocol::{
 use std::collections::BTreeSet;
 use zeroize::Zeroizing;
 mod remote;
+mod remote_chain;
 pub use remote::{RemoteRouteBinding, remote_route_binding, verify_node_network_resource};
+pub use remote_chain::{RemoteChainBinding, remote_chain_binding};
 
 fn node_admission_transcript(
     allocation_id: &str,

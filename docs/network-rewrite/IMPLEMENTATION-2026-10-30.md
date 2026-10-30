@@ -451,3 +451,20 @@ Original archives and output file hashes were verified before importing locks.
 This is lock provenance, not compilation or quality qualification. ADR 0015
 records this slice; atomic reservations, real adjacency integration and the
 four-node business carrier remain required before W12 is complete.
+
+The 0618e08 contract jobs found an ambiguous integer in the NRD2 fragmentation
+test and a node reporter sort lint. Both source repairs are included alongside
+the reviewed Actions formatting output. The observed socket and routed-kernel
+experiments passed, while the new topology and full workspace results remain
+separate and incomplete; those passing experiments do not qualify the new chain.
+
+ADR 0016 adds full ordered two-relay grant verification and a separately
+negotiated NRD2 mode to the existing physical adjacency, bounded forwarding and
+virtual UDP owners. The binding includes both transit digests and original
+business generation; forward and reverse hop positions come from verified fixed
+neighbors. New actual four-node component tests cover inner QUIC, IPv6-sized
+packets, reverse traffic, streams, opaque relay captures, revocation propagation
+and rebinding all six physical sockets, alongside the retained NRD1 tests. These
+new sources require exact-source Actions. Authority reservation, production node
+admission/report integration and four-node SessionPermit/FileRead still remain
+required W12 work; no release or AC18/AC19 completion is claimed.

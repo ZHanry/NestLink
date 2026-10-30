@@ -77,6 +77,11 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-node --lib control::topology:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-topology-reporter-tests.log"
+      - name: Exercise actual four-node NRD2 and retained NRD1 carrier behavior
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-transport-quic --lib routed:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-chain-carrier-tests.log"
       - name: Retain exact-source topology test log
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -88,6 +93,7 @@ jobs:
             ${{ runner.temp }}/network-topology-graph-tests.log
             ${{ runner.temp }}/network-datagram-v2-tests.log
             ${{ runner.temp }}/network-topology-reporter-tests.log
+            ${{ runner.temp }}/network-chain-carrier-tests.log
           if-no-files-found: error
           retention-days: 30
   native-ice-kernel-nat-slice:

@@ -14,6 +14,7 @@ pub struct AdjacencyEndpoint {
     local: PeerId,
     remote: PeerId,
     node: bool,
+    version: super::DatagramVersion,
     attempted: bool,
     pending: Option<Connection>,
     close_deadline: Option<Instant>,
@@ -24,13 +25,20 @@ impl AdjacencyEndpoint {
         identity: &InstallationIdentity,
         remote: PeerId,
     ) -> Result<Self> {
+        Self::bind_version(address, identity, remote, super::DatagramVersion::One)
+    }
+    /// Explicit NRD2 negotiation; a legacy ALPN cannot carry this chain.
+    pub fn bind_chain(address: SocketAddr, identity: &InstallationIdentity, remote: PeerId) -> Result<Self> {
+        Self::bind_version(address, identity, remote, super::DatagramVersion::Two)
+    }
+    fn bind_version(address: SocketAddr, identity: &InstallationIdentity, remote: PeerId, version: super::DatagramVersion) -> Result<Self> {
         remote.validate()?;
         let local = PeerId(identity.fingerprint());
         if local == remote {
             return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
         }
         let mut server_tls = tls::server_config(identity, remote.0)?;
-        server_tls.alpn_protocols = vec![wire::ALPN.to_vec()];
+        server_tls.alpn_protocols = vec![version.alpn().to_vec()];
         let mut server =
             ServerConfig::with_crypto(Arc::new(QuicServerConfig::try_from(server_tls)?));
         server.transport_config(config());
@@ -38,7 +46,7 @@ impl AdjacencyEndpoint {
         let (mut endpoint, released) = crate::service::socket::client(address)?;
         endpoint.set_server_config(Some(server));
         let mut client_tls = tls::client_config(identity, remote.0)?;
-        client_tls.alpn_protocols = vec![wire::ALPN.to_vec()];
+        client_tls.alpn_protocols = vec![version.alpn().to_vec()];
         let mut client = ClientConfig::new(Arc::new(QuicClientConfig::try_from(client_tls)?));
         client.transport_config(config());
         endpoint.set_default_client_config(client);
@@ -48,6 +56,7 @@ impl AdjacencyEndpoint {
             local,
             remote,
             node: false,
+            version,
             attempted: false,
             pending: None,
             close_deadline: None,
@@ -212,7 +221,7 @@ impl AdjacencyEndpoint {
         if connection
             .handshake_data()
             .and_then(|data| data.downcast::<quinn::crypto::rustls::HandshakeData>().ok())
-            .is_none_or(|data| data.protocol.as_deref() != Some(wire::ALPN))
+            .is_none_or(|data| data.protocol.as_deref() != Some(self.version.alpn()))
         {
             connection.close(1u32.into(), b"network datagram ALPN mismatch");
             return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
@@ -223,6 +232,7 @@ impl AdjacencyEndpoint {
             connection: Some(connection),
             local: self.local,
             remote: self.remote,
+            version: self.version,
             close_deadline: None,
             control: None,
         })
@@ -241,10 +251,14 @@ pub struct Adjacency {
     connection: Option<Connection>,
     local: PeerId,
     remote: PeerId,
+    version: super::DatagramVersion,
     close_deadline: Option<Instant>,
     control: Option<TaskOwner>,
 }
 impl Adjacency {
+    pub(super) fn version(&self) -> super::DatagramVersion {
+        self.version
+    }
     pub fn local(&self) -> PeerId {
         self.local
     }

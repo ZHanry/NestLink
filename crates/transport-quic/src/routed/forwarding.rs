@@ -75,10 +75,10 @@ impl RelayForwarder {
         second: Adjacency,
     ) -> io::Result<Self> {
         authorization.live()?;
-        if first.local() != authorization.relay()
-            || second.local() != authorization.relay()
-            || first.remote() != authorization.peers().first
-            || second.remote() != authorization.peers().second
+        if first.local() != second.local()
+            || authorization.adjacency(first.local()) != Some((first.remote(), second.remote()))
+            || first.version() != authorization.version()
+            || second.version() != authorization.version()
         {
             return Err(io::ErrorKind::PermissionDenied.into());
         }
@@ -139,10 +139,10 @@ impl RelayForwarder {
             };
             self.authorization.live()?;
             let mut bytes = packet.to_vec();
-            let fragment = wire::decode(&bytes).map_err(io::Error::other)?;
+            let fragment = self.authorization.decode(&bytes).map_err(io::Error::other)?;
             if fragment.binding != self.authorization.binding_digest()
                 || fragment.direction != direction
-                || fragment.remaining_hops != 1
+                || Some(fragment.remaining_hops) != self.authorization.remaining_hops(self.first.local(), direction)
             {
                 return Err(io::ErrorKind::PermissionDenied.into());
             }
@@ -170,8 +170,7 @@ impl RelayForwarder {
                 .filter(|used| *used <= self.authorization.byte_limit())
                 .ok_or(io::ErrorKind::PermissionDenied)?;
             self.used = next;
-            wire::forward(&mut bytes, self.authorization.binding_digest(), direction)
-                .map_err(io::Error::other)?;
+            self.authorization.forward(&mut bytes, self.first.local(), direction)?;
             let peer = if index == 0 {
                 self.second.connection()?
             } else {

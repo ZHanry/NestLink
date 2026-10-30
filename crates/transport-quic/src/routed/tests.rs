@@ -31,6 +31,7 @@ struct Fixture {
     permit_signer: PermitSigner,
     permit: VerifiedPermit,
     connectivity: VerifiedNetworkGrant,
+    memberships: [VerifiedMembership; 2],
     path: VerifiedNetworkPath,
     transit: TransitClaims,
     now: u64,
@@ -141,7 +142,7 @@ impl Fixture {
         )?;
         let path = VerifiedNetworkPath::from_grants(
             &context,
-            memberships,
+            memberships.clone(),
             connectivity.clone(),
             path_grant,
             permit.digest(),
@@ -166,6 +167,7 @@ impl Fixture {
             permit_signer,
             permit,
             connectivity,
+            memberships,
             path,
             transit,
             now,
@@ -198,6 +200,8 @@ impl Fixture {
         )?)
     }
 }
+
+mod chain;
 
 #[test]
 fn complete_binding_refuses_crossed_grants_actual_business_peers_adjacencies_and_stale_policy()

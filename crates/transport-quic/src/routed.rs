@@ -1,4 +1,4 @@
-//! One-hop opaque network transport. Route permission is distinct from business
+//! Opaque network transport. Route permission is distinct from business
 //! stream proof: callers must still run the existing SessionPermit handshake.
 //! No migration, raw IP injection, automatic fallback or route discovery occurs.
 mod adjacency;
@@ -19,7 +19,21 @@ use nestlink_transport_stream::owner::TaskOwner;
 use std::io;
 use tokio::time::Instant;
 
-/// An endpoint-pinned inner QUIC connection over a single authenticated relay.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum DatagramVersion {
+    One,
+    Two,
+}
+impl DatagramVersion {
+    fn alpn(self) -> &'static [u8] {
+        match self {
+            Self::One => wire::ALPN,
+            Self::Two => nestlink_protocol::network_datagram_v2::ALPN,
+        }
+    }
+}
+
+/// An endpoint-pinned inner QUIC connection over an authenticated relay chain.
 /// Exposing the mature connection does not grant business channel permission.
 pub struct RoutedTransport {
     connection: Option<Connection>,
@@ -132,7 +146,8 @@ impl RoutedEstablishment {
         let peers = authorization.peers();
         let adjacency = self.adjacency.as_ref().ok_or_else(not_connected)?;
         if adjacency.local() != local
-            || adjacency.remote() != authorization.relay()
+            || Some(adjacency.remote()) != authorization.endpoint_relay(local)
+            || adjacency.version() != authorization.version()
             || !peers.contains(local)
         {
             return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());

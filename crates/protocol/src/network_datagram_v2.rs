@@ -10,6 +10,7 @@ pub use super::network_datagram::{
 };
 
 pub const ALPN: &[u8] = b"nestlink/network-datagram/2";
+pub const PATH_EPOCH: u64 = 1;
 
 fn invalid() -> ContractError {
     ContractError::new(

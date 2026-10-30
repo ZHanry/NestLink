@@ -31,12 +31,47 @@ pub fn remote_route_binding(
     transit: &VerifiedNetworkGrant,
     permit: &VerifiedPermit,
 ) -> Result<RemoteRouteBinding, ContractError> {
+    let peers = remote_path_peers(context, path, connectivity, permit)?;
+    transit.check_current(context)?;
+    let GrantClaims::Transit(forward) = transit.claims() else {
+        return Err(denied());
+    };
+    path.check_route(context, &[forward.relay])?;
+    if forward.peers != peers
+        || forward.transport_group != path.transport_group_id()
+        || forward.previous != peers.first
+        || forward.next != peers.second
+        || forward.remaining_hops != 1
+        || forward.scope.not_before_ms < path.claims().scope.not_before_ms
+        || forward.scope.expires_at_ms > path.claims().scope.expires_at_ms
+    {
+        return Err(denied());
+    }
+    let mut transcript = b"NestLink/network-datagram/v1/route-binding\0".to_vec();
+    transcript.extend_from_slice(&path.transport_group_id());
+    transcript.extend_from_slice(&connectivity.digest());
+    transcript.extend_from_slice(&transit.digest());
+    transcript.extend_from_slice(&permit.digest());
+    transcript.extend_from_slice(&permit.claims().connection_generation.to_be_bytes());
+    transcript.extend_from_slice(&network_datagram::PATH_EPOCH.to_be_bytes());
+    Ok(RemoteRouteBinding {
+        digest: digest(&transcript),
+        peers,
+        relay: forward.relay,
+        byte_limit: forward.byte_limit,
+        expires_at_ms: forward.scope.expires_at_ms,
+    })
+}
+
+pub(super) fn remote_path_peers(
+    context: &NetworkVerification<'_>,
+    path: &VerifiedNetworkPath,
+    connectivity: &VerifiedNetworkGrant,
+    permit: &VerifiedPermit,
+) -> Result<PeerPair, ContractError> {
     path.check_current(context)?;
     connectivity.check_current(context)?;
-    transit.check_current(context)?;
-    let (GrantClaims::Connectivity(connection), GrantClaims::Transit(forward)) =
-        (connectivity.claims(), transit.claims())
-    else {
+    let GrantClaims::Connectivity(connection) = connectivity.claims() else {
         return Err(denied());
     };
     let business = permit.claims();
@@ -56,43 +91,22 @@ pub fn remote_route_binding(
                 .map_err(|_| denied())?,
         ),
     )?;
-    path.check_route(context, &[forward.relay])?;
     if path.purpose() != Purpose::RemoteControl
         || connection.purpose != Purpose::RemoteControl
         || connection.peers != peers
         || path.peers() != peers
-        || forward.peers != peers
         || connectivity.digest() != path.claims().connectivity_grant_digest
         || connection.business_grant_digest != permit.digest()
-        || forward.transport_group != path.transport_group_id()
-        || forward.previous != peers.first
-        || forward.next != peers.second
-        || forward.remaining_hops != 1
         || business.deployment_id != context.deployment_id
         || !business.paths.contains(&(Path::Relay as i32))
         || business.issued_at_unix_ms > context.now_ms
         || business.expires_at_unix_ms <= context.now_ms
         || path.claims().scope.not_before_ms < business.issued_at_unix_ms
         || path.claims().scope.expires_at_ms > business.expires_at_unix_ms
-        || forward.scope.not_before_ms < path.claims().scope.not_before_ms
-        || forward.scope.expires_at_ms > path.claims().scope.expires_at_ms
     {
         return Err(denied());
     }
-    let mut transcript = b"NestLink/network-datagram/v1/route-binding\0".to_vec();
-    transcript.extend_from_slice(&path.transport_group_id());
-    transcript.extend_from_slice(&connectivity.digest());
-    transcript.extend_from_slice(&transit.digest());
-    transcript.extend_from_slice(&permit.digest());
-    transcript.extend_from_slice(&business.connection_generation.to_be_bytes());
-    transcript.extend_from_slice(&network_datagram::PATH_EPOCH.to_be_bytes());
-    Ok(RemoteRouteBinding {
-        digest: digest(&transcript),
-        peers,
-        relay: forward.relay,
-        byte_limit: forward.byte_limit,
-        expires_at_ms: forward.scope.expires_at_ms,
-    })
+    Ok(peers)
 }
 
 fn signed(view: &NetworkGrantView) -> Result<SignedNetworkGrant, ContractError> {

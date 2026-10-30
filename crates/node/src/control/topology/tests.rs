@@ -274,21 +274,28 @@ async fn registered_node_and_current_space_policy_cannot_be_replaced_by_publicat
             _ => {}
         }
         let signed = if change == 7 {
-            NetworkAuthoritySigner::from_master_seed(&[106; 32])?.sign_topology_publisher(&claims)?
+            NetworkAuthoritySigner::from_master_seed(&[106; 32])?
+                .sign_topology_publisher(&claims)?
         } else {
             fixture.authority.sign_topology_publisher(&claims)?
         };
         assert!(
-            reporter.prepare(&fixture.control, &signed, &fixture.context(), &[], vec![]).is_err(),
+            reporter
+                .prepare(&fixture.control, &signed, &fixture.context(), &[], vec![])
+                .is_err(),
             "accepted changed publication binding {change}",
         );
     }
-    let wrong_identity = TopologyReporter::new(
-        fixture.config.clone(),
-        NodeIdentity::from_seed(&[107; 32]),
-    )?;
+    let wrong_identity =
+        TopologyReporter::new(fixture.config.clone(), NodeIdentity::from_seed(&[107; 32]))?;
     assert_eq!(
-        code(wrong_identity.prepare(&fixture.control, &fixture.publisher, &fixture.context(), &[], vec![])),
+        code(wrong_identity.prepare(
+            &fixture.control,
+            &fixture.publisher,
+            &fixture.context(),
+            &[],
+            vec![]
+        )),
         Some(ErrorCode::IdentityMismatch),
     );
     let revoked = BTreeSet::from([fixture.claims.scope.grant_id.clone()]);
@@ -315,7 +322,15 @@ async fn neighbor_claims_are_bounded_owned_unique_and_explicitly_allowed() -> Te
             _ => neighbors = vec![neighbors[0].clone(); MAX_NEIGHBORS + 1],
         }
         assert!(
-            reporter.prepare(&fixture.control, &fixture.publisher, &fixture.context(), &[], neighbors).is_err(),
+            reporter
+                .prepare(
+                    &fixture.control,
+                    &fixture.publisher,
+                    &fixture.context(),
+                    &[],
+                    neighbors
+                )
+                .is_err(),
             "accepted invalid neighbor observation {change}",
         );
     }
@@ -339,14 +354,21 @@ async fn publisher_reissue_and_reporter_recreation_keep_the_runtime_sequence_fen
     let second = reporter.prepare(&fixture.control, &reissued, &fixture.context(), &[], vec![])?;
     assert_eq!(first.report.claims().sequence, 1);
     assert_eq!(second.report.claims().sequence, 2);
-    assert_ne!(first.report.claims().publisher_digest, second.report.claims().publisher_digest);
+    assert_ne!(
+        first.report.claims().publisher_digest,
+        second.report.claims().publisher_digest
+    );
     assert_eq!(
         code(reporter.accept(&fixture.control, &fixture.context(), &first, &first_reply)),
         Some(ErrorCode::ReplayRejected),
     );
     let second_reply = fixture.advertisement(&second)?;
     assert_eq!(
-        reporter.accept(&fixture.control, &fixture.context(), &second, &second_reply)?.claims().report.sequence,
+        reporter
+            .accept(&fixture.control, &fixture.context(), &second, &second_reply)?
+            .claims()
+            .report
+            .sequence,
         2,
     );
     Ok(())
@@ -384,12 +406,23 @@ async fn no_more_than_64_spaces_can_consume_runtime_watermarks_and_exhaustion_ne
     let mut context = fixture.context();
     context.space_id = &space;
     assert_eq!(
-        reporter.prepare(&fixture.control, &signed, &context, &[], vec![])?.report.claims().sequence,
+        reporter
+            .prepare(&fixture.control, &signed, &context, &[], vec![])?
+            .report
+            .claims()
+            .sequence,
         2,
     );
     {
-        let mut state = fixture.control.state.lock().map_err(|_| "poisoned runtime")?;
-        state.topology.sequences.insert(space.clone(), i64::MAX as u64);
+        let mut state = fixture
+            .control
+            .state
+            .lock()
+            .map_err(|_| "poisoned runtime")?;
+        state
+            .topology
+            .sequences
+            .insert(space.clone(), i64::MAX as u64);
     }
     assert_eq!(
         code(reporter.prepare(&fixture.control, &signed, &context, &[], vec![])),
@@ -419,16 +452,21 @@ async fn a_later_trusted_time_is_never_replaced_with_an_earlier_local_clock() ->
 }
 
 #[tokio::test]
-async fn renewed_node_leases_cannot_extend_either_original_report_expiration_anchor() -> TestResult {
+async fn renewed_node_leases_cannot_extend_either_original_report_expiration_anchor() -> TestResult
+{
     for (lease_ms, initial_delay_ms) in [(400, 0), (2500, 2000)] {
-        let fixture = Fixture::with_initial_delay("http://127.0.0.1:9".into(), lease_ms, initial_delay_ms)?;
+        let fixture =
+            Fixture::with_initial_delay("http://127.0.0.1:9".into(), lease_ms, initial_delay_ms)?;
         let reporter = fixture.reporter()?;
         let prepared = fixture.prepare(&reporter)?;
         let reply = fixture.advertisement(&prepared)?;
         fixture.renew().await?;
         let until = fixture.control.started + Duration::from_millis(prepared.deadline_ms + 5);
         tokio::time::sleep_until(until.into()).await;
-        assert!(fixture.control.current_lease().is_ok(), "renewed node lease must remain live");
+        assert!(
+            fixture.control.current_lease().is_ok(),
+            "renewed node lease must remain live"
+        );
         if initial_delay_ms > 0 {
             assert!(
                 sample(fixture.control.started)?.unix_ms < prepared.report.claims().expires_at_ms,
@@ -469,13 +507,18 @@ impl HttpState {
     async fn wait_for_requests(&self, minimum: usize) -> TestResult {
         tokio::time::timeout(Duration::from_secs(2), async {
             loop {
-                let count = self.received.lock().map_err(|_| "poisoned HTTP requests")?.len();
+                let count = self
+                    .received
+                    .lock()
+                    .map_err(|_| "poisoned HTTP requests")?
+                    .len();
                 if count >= minimum {
                     return Ok::<(), Box<dyn std::error::Error + Send + Sync>>(());
                 }
                 self.changed.notified().await;
             }
-        }).await??;
+        })
+        .await??;
         Ok(())
     }
 }
@@ -502,7 +545,10 @@ async fn start_http(mode: u8) -> TestResult<(Fixture, Arc<HttpState>, HttpTask)>
         redirect_hits: AtomicUsize::new(0),
     });
     let router = Router::new()
-        .route("/api/v3/network/spaces/{space}/topology/reports/{node}", post(http_report))
+        .route(
+            "/api/v3/network/spaces/{space}/topology/reports/{node}",
+            post(http_report),
+        )
         .route("/redirect-target", post(redirect_target))
         .with_state(state.clone());
     let task = HttpTask(tokio::spawn(async move {
@@ -520,12 +566,22 @@ async fn http_report(
     State(state): State<Arc<HttpState>>,
     Json(mut signed): Json<SignedTopologyReport>,
 ) -> Result<Response, StatusCode> {
-    state.received.lock().map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?.push(signed.clone());
+    state
+        .received
+        .lock()
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+        .push(signed.clone());
     state.changed.notify_one();
     let mode = state.mode.load(Ordering::SeqCst);
     match mode {
         HANG => return std::future::pending().await,
-        REDIRECT => return Ok((StatusCode::TEMPORARY_REDIRECT, [(header::LOCATION, "/redirect-target")]).into_response()),
+        REDIRECT => {
+            return Ok((
+                StatusCode::TEMPORARY_REDIRECT,
+                [(header::LOCATION, "/redirect-target")],
+            )
+                .into_response());
+        }
         OVERSIZE_LENGTH => return Ok(vec![b'x'; MAX_RESPONSE_BYTES + 1].into_response()),
         OVERSIZE_STREAM => {
             let chunks = vec![
@@ -542,13 +598,16 @@ async fn http_report(
             } else {
                 report.expires_at_ms += 1;
             }
-            signed = NodeIdentity::from_seed(&NODE_SEED).sign_topology_report(&report)
+            signed = NodeIdentity::from_seed(&NODE_SEED)
+                .sign_topology_report(&report)
                 .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
         }
         SLOW => tokio::time::sleep(Duration::from_millis(750)).await,
         _ => {}
     }
-    let now = sample(Instant::now()).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?.unix_ms;
+    let now = sample(Instant::now())
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+        .unix_ms;
     let revoked = BTreeSet::new();
     let context = NetworkVerification {
         authority_key: &state.authority_key,
@@ -565,10 +624,14 @@ async fn http_report(
         &state.claims.public_key,
         &state.claims.incarnation,
         &[],
-    ).map_err(|_| StatusCode::UNAUTHORIZED)?;
-    let report = verify_topology_report(&signed, &publisher, &context, &state.claims.incarnation, 0)
-        .map_err(|_| StatusCode::UNAUTHORIZED)?;
-    let mut advertisement = state.authority.sign_topology_advertisement(&report, now, report.claims().expires_at_ms)
+    )
+    .map_err(|_| StatusCode::UNAUTHORIZED)?;
+    let report =
+        verify_topology_report(&signed, &publisher, &context, &state.claims.incarnation, 0)
+            .map_err(|_| StatusCode::UNAUTHORIZED)?;
+    let mut advertisement = state
+        .authority
+        .sign_topology_advertisement(&report, now, report.claims().expires_at_ms)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     if mode == BAD_SIGNATURE {
         advertisement.signature[0] ^= 1;
@@ -585,7 +648,15 @@ async fn real_http_rejects_different_reports_and_corrupted_authority_responses()
         (BAD_SIGNATURE, ErrorCode::IdentityMismatch),
     ] {
         let (fixture, state, _server) = start_http(mode).await?;
-        let result = fixture.reporter()?.publish(&fixture.control, &fixture.publisher, &fixture.context(), fixture.neighbors()).await;
+        let result = fixture
+            .reporter()?
+            .publish(
+                &fixture.control,
+                &fixture.publisher,
+                &fixture.context(),
+                fixture.neighbors(),
+            )
+            .await;
         assert_eq!(code(result), Some(expected));
         assert_eq!(state.completed.load(Ordering::SeqCst), 1);
     }
@@ -597,32 +668,62 @@ async fn real_http_rejects_declared_and_streamed_oversize_bodies_and_never_follo
 -> TestResult {
     for mode in [OVERSIZE_LENGTH, OVERSIZE_STREAM, REDIRECT] {
         let (fixture, state, _server) = start_http(mode).await?;
-        let result = fixture.reporter()?.publish(&fixture.control, &fixture.publisher, &fixture.context(), vec![]).await;
+        let result = fixture
+            .reporter()?
+            .publish(
+                &fixture.control,
+                &fixture.publisher,
+                &fixture.context(),
+                vec![],
+            )
+            .await;
         if mode == REDIRECT {
             assert!(matches!(result, Err(Error::Control)));
             assert_eq!(state.redirect_hits.load(Ordering::SeqCst), 0);
         } else {
             assert_eq!(code(result), Some(ErrorCode::CapacityExceeded));
         }
-        assert_eq!(state.received.lock().map_err(|_| "poisoned HTTP requests")?.len(), 1);
+        assert_eq!(
+            state
+                .received
+                .lock()
+                .map_err(|_| "poisoned HTTP requests")?
+                .len(),
+            1
+        );
     }
     Ok(())
 }
 
 #[tokio::test]
-async fn real_http_total_deadline_rejects_a_750ms_response_while_report_is_still_live() -> TestResult {
+async fn real_http_total_deadline_rejects_a_750ms_response_while_report_is_still_live() -> TestResult
+{
     let (fixture, state, _server) = start_http(SLOW).await?;
     let reporter = fixture.reporter()?;
     let started = Instant::now();
     // The server response would still fit the 1000ms report TTL. It must fail
     // specifically because the complete HTTP request budget is only 700ms.
-    let result = tokio::time::timeout(Duration::from_millis(900), reporter.publish(
-        &fixture.control, &fixture.publisher, &fixture.context(), vec![],
-    )).await?;
+    let result = tokio::time::timeout(
+        Duration::from_millis(900),
+        reporter.publish(
+            &fixture.control,
+            &fixture.publisher,
+            &fixture.context(),
+            vec![],
+        ),
+    )
+    .await?;
     assert!(matches!(result, Err(Error::Control)));
     assert!(started.elapsed() >= Duration::from_millis(600));
     assert_eq!(state.completed.load(Ordering::SeqCst), 0);
-    assert_eq!(state.received.lock().map_err(|_| "poisoned HTTP requests")?.len(), 1);
+    assert_eq!(
+        state
+            .received
+            .lock()
+            .map_err(|_| "poisoned HTTP requests")?
+            .len(),
+        1
+    );
     assert!(fixture.control.current_lease().is_ok());
     Ok(())
 }
@@ -634,7 +735,8 @@ async fn stop_cancels_in_flight_http_and_revokes_a_prepared_response() -> TestRe
     let prepared = fixture.prepare(&reporter)?;
     let reply = fixture.advertisement(&prepared)?;
     let context = fixture.context();
-    let mut publication = Box::pin(reporter.publish(&fixture.control, &fixture.publisher, &context, vec![]));
+    let mut publication =
+        Box::pin(reporter.publish(&fixture.control, &fixture.publisher, &context, vec![]));
     tokio::select! {
         result = &mut publication => return Err(format!("report completed before stop: {}", result.is_ok()).into()),
         seen = state.wait_for_requests(1) => seen?,
@@ -642,7 +744,10 @@ async fn stop_cancels_in_flight_http_and_revokes_a_prepared_response() -> TestRe
     fixture.control.stop();
     let result = tokio::time::timeout(Duration::from_millis(100), publication).await?;
     assert!(matches!(result, Err(Error::Control)));
-    assert!(matches!(reporter.accept(&fixture.control, &context, &prepared, &reply), Err(Error::Control)));
+    assert!(matches!(
+        reporter.accept(&fixture.control, &context, &prepared, &reply),
+        Err(Error::Control)
+    ));
     Ok(())
 }
 
@@ -652,7 +757,8 @@ async fn cancellation_after_server_receipt_never_reuses_a_sequence_even_with_a_n
     let (fixture, state, _server) = start_http(HANG).await?;
     let reporter = fixture.reporter()?;
     let context = fixture.context();
-    let mut publication = Box::pin(reporter.publish(&fixture.control, &fixture.publisher, &context, vec![]));
+    let mut publication =
+        Box::pin(reporter.publish(&fixture.control, &fixture.publisher, &context, vec![]));
     tokio::select! {
         result = &mut publication => return Err(format!("report completed before cancellation: {}", result.is_ok()).into()),
         seen = state.wait_for_requests(1) => seen?,
@@ -660,12 +766,21 @@ async fn cancellation_after_server_receipt_never_reuses_a_sequence_even_with_a_n
     drop(publication);
     drop(reporter);
     state.mode.store(CORRECT, Ordering::SeqCst);
-    let next = fixture.reporter()?.publish(&fixture.control, &fixture.publisher, &context, vec![]).await?;
+    let next = fixture
+        .reporter()?
+        .publish(&fixture.control, &fixture.publisher, &context, vec![])
+        .await?;
     assert_eq!(next.claims().report.sequence, 2);
-    let received = state.received.lock().map_err(|_| "poisoned HTTP requests")?;
-    let sequences = received.iter().map(|signed| {
-        TopologyReport::decode_canonical(&signed.claims).map(|report| report.sequence)
-    }).collect::<Result<Vec<_>, _>>()?;
+    let received = state
+        .received
+        .lock()
+        .map_err(|_| "poisoned HTTP requests")?;
+    let sequences = received
+        .iter()
+        .map(|signed| {
+            TopologyReport::decode_canonical(&signed.claims).map(|report| report.sequence)
+        })
+        .collect::<Result<Vec<_>, _>>()?;
     assert_eq!(sequences, vec![1, 2]);
     Ok(())
 }
@@ -683,10 +798,16 @@ async fn concurrent_publishers_allocate_unique_sequences_and_discard_superseded_
     );
     assert_eq!(code(older), Some(ErrorCode::ReplayRejected));
     assert_eq!(newer?.claims().report.sequence, 2);
-    let received = state.received.lock().map_err(|_| "poisoned HTTP requests")?;
-    let mut sequences = received.iter().map(|signed| {
-        TopologyReport::decode_canonical(&signed.claims).map(|report| report.sequence)
-    }).collect::<Result<Vec<_>, _>>()?;
+    let received = state
+        .received
+        .lock()
+        .map_err(|_| "poisoned HTTP requests")?;
+    let mut sequences = received
+        .iter()
+        .map(|signed| {
+            TopologyReport::decode_canonical(&signed.claims).map(|report| report.sequence)
+        })
+        .collect::<Result<Vec<_>, _>>()?;
     sequences.sort_unstable();
     assert_eq!(sequences, vec![1, 2]);
     Ok(())
@@ -707,7 +828,11 @@ async fn reporter_reuses_the_existing_explicit_loopback_http_and_https_only_orig
         let mut config = fixture.config.clone();
         config.control_origin = origin.into();
         config.allow_loopback_http = allow_loopback;
-        assert_eq!(TopologyReporter::new(config, NodeIdentity::from_seed(&NODE_SEED)).is_ok(), allowed, "origin {origin}");
+        assert_eq!(
+            TopologyReporter::new(config, NodeIdentity::from_seed(&NODE_SEED)).is_ok(),
+            allowed,
+            "origin {origin}"
+        );
     }
     Ok(())
 }

@@ -166,7 +166,7 @@ fn complete_packet_and_fragment_boundaries_round_trip_in_both_directions()
 -> Result<(), ContractError> {
     for direction in DIRECTIONS {
         for relay_count in 1..=2 {
-            for length in [1, 899, 900, 901, 1399, 1400] {
+            for length in [1_usize, 899, 900, 901, 1399, 1400] {
                 let packet: Vec<_> = (0..length).map(|index| (index % 251) as u8).collect();
                 let fragments = v2::encode(BINDING, direction, relay_count, 42, &packet)?;
                 assert_eq!(fragments.len(), length.div_ceil(v2::FRAGMENT_BYTES));

@@ -11,8 +11,8 @@ use nestlink_protocol::{
     network::{MAX_HOPS, MAX_RELAYS, PeerId, PeerPair},
     network_topology::{
         BootIncarnation, MAX_ADVERTISEMENTS, MAX_NEIGHBORS, MAX_UPDATE_BYTES,
-        SignedTopologyAdvertisement, TopologyAdvertisement, TopologyChange,
-        TopologyReport, TopologySync, TopologyWithdrawal,
+        SignedTopologyAdvertisement, TopologyAdvertisement, TopologyChange, TopologyReport,
+        TopologySync, TopologyWithdrawal,
     },
 };
 use petgraph::{algo::dijkstra, graph::DiGraph, visit::Reversed};
@@ -92,6 +92,7 @@ pub struct TopologyGraph {
     last_observed_ms: u64,
     cursor: Option<u64>,
     needs_more: bool,
+    required_cursor: u64,
     live: BTreeMap<String, Observation>,
     high_water: BTreeMap<String, HighWater>,
 }
@@ -113,6 +114,7 @@ impl TopologyGraph {
             last_observed_ms: context.now_ms,
             cursor: None,
             needs_more: true,
+            required_cursor: 0,
             live: BTreeMap::new(),
             high_water: BTreeMap::new(),
         })
@@ -146,19 +148,36 @@ impl TopologyGraph {
     ) -> Result<(), ContractError> {
         self.expire(context)?;
         update.check_current(context)?;
+        let (advertised, more) = match &update.claims().sync {
+            TopologySync::Full { cursor, .. } => (*cursor, false),
+            TopologySync::Delta { cursor, has_more, .. } => (*cursor, *has_more),
+        };
+        // This is a current authenticated statement that a newer view exists.
+        // A missing live proof cannot make the old view current again. The
+        // protocol caps cursors at i64::MAX, leaving room for this lower bound.
+        self.required_cursor = self.required_cursor.max(advertised + u64::from(more));
+        if self.cursor.is_none_or(|cursor| cursor < self.required_cursor) {
+            self.needs_more = true;
+        }
         if advertisements.len() > MAX_ADVERTISEMENTS {
             return Err(capacity("too many topology verification proofs"));
         }
         let mut proofs = BTreeMap::new();
         for advertisement in advertisements {
-            if proofs.insert(advertisement.envelope_digest(), advertisement).is_some() {
+            if proofs
+                .insert(advertisement.envelope_digest(), advertisement)
+                .is_some()
+            {
                 return Err(invalid("duplicate topology verification proof"));
             }
         }
         let mut used = BTreeSet::new();
         let mut next = self.clone();
         match &update.claims().sync {
-            TopologySync::Full { cursor, advertisements } => {
+            TopologySync::Full {
+                cursor,
+                advertisements,
+            } => {
                 if self.cursor.is_some_and(|saved| *cursor < saved) {
                     return Err(replay("topology full snapshot cursor went backward"));
                 }
@@ -178,9 +197,14 @@ impl TopologyGraph {
                     }
                 }
                 next.cursor = Some(*cursor);
-                next.needs_more = false;
+                next.needs_more = *cursor < next.required_cursor;
             }
-            TopologySync::Delta { after_cursor, cursor, changes, has_more } => {
+            TopologySync::Delta {
+                after_cursor,
+                cursor,
+                changes,
+                has_more,
+            } => {
                 if self.cursor != Some(*after_cursor) {
                     return Err(replay("topology delta does not match the saved cursor"));
                 }
@@ -193,7 +217,7 @@ impl TopologyGraph {
                     }
                 }
                 next.cursor = Some(*cursor);
-                next.needs_more = *has_more;
+                next.needs_more = *has_more || *cursor < next.required_cursor;
             }
         }
         if proofs.keys().any(|key| !used.contains(key)) {
@@ -224,9 +248,13 @@ impl TopologyGraph {
         self.expire(context)?;
         path.check_current(context)?;
         if PeerPair::new(source.peer, destination.peer)? != path.peers() {
-            return Err(invalid("topology endpoint attachments belong to another path"));
+            return Err(invalid(
+                "topology endpoint attachments belong to another path",
+            ));
         }
-        let cursor = self.cursor.ok_or_else(|| replay("topology requires a full snapshot first"))?;
+        let cursor = self
+            .cursor
+            .ok_or_else(|| replay("topology requires a full snapshot first"))?;
         if self.needs_more {
             return Ok(None);
         }
@@ -235,7 +263,12 @@ impl TopologyGraph {
             return Ok(None);
         }
         let by_peer: BTreeMap<_, _> = self.live.values().map(|ad| (ad.report.peer, ad)).collect();
-        let relays: Vec<_> = path.claims().policy.relays.iter().copied()
+        let relays: Vec<_> = path
+            .claims()
+            .policy
+            .relays
+            .iter()
+            .copied()
             .filter(|peer| by_peer.contains_key(peer) && !path.peers().contains(*peer))
             .collect();
         let mut graph = DiGraph::<Vertex, ()>::new();
@@ -249,18 +282,24 @@ impl TopologyGraph {
         }
         for peer in &relays {
             if source.relays.binary_search(peer).is_ok() {
-                let first = *vertices.get(&(*peer, 1)).ok_or_else(|| invalid("missing topology vertex"))?;
+                let first = *vertices
+                    .get(&(*peer, 1))
+                    .ok_or_else(|| invalid("missing topology vertex"))?;
                 graph.add_edge(start, first, ());
             }
             for used in 1..=maximum {
-                let local = *vertices.get(&(*peer, used)).ok_or_else(|| invalid("missing topology vertex"))?;
+                let local = *vertices
+                    .get(&(*peer, used))
+                    .ok_or_else(|| invalid("missing topology vertex"))?;
                 if destination.relays.binary_search(peer).is_ok() {
                     graph.add_edge(local, end, ());
                 }
                 if used < maximum {
                     for remote in &relays {
                         if peer != remote && mutually_observed(&by_peer, *peer, *remote) {
-                            let next = *vertices.get(&(*remote, used + 1)).ok_or_else(|| invalid("missing topology vertex"))?;
+                            let next = *vertices
+                                .get(&(*remote, used + 1))
+                                .ok_or_else(|| invalid("missing topology vertex"))?;
                             graph.add_edge(local, next, ());
                         }
                     }
@@ -278,12 +317,19 @@ impl TopologyGraph {
         let mut current = start;
         let mut selected = Vec::new();
         for _ in 0..=maximum {
-            let remaining = *distance.get(&current).ok_or_else(|| invalid("missing topology distance"))?;
+            let remaining = *distance
+                .get(&current)
+                .ok_or_else(|| invalid("missing topology distance"))?;
             let mut neighbors: Vec<_> = graph.neighbors(current).collect();
             neighbors.sort_by_key(|index| graph[*index]);
-            let next = neighbors.into_iter().find(|index| {
-                distance.get(index).is_some_and(|value| value.checked_add(1) == Some(remaining))
-            }).ok_or_else(|| invalid("broken topology shortest path"))?;
+            let next = neighbors
+                .into_iter()
+                .find(|index| {
+                    distance
+                        .get(index)
+                        .is_some_and(|value| value.checked_add(1) == Some(remaining))
+                })
+                .ok_or_else(|| invalid("broken topology shortest path"))?;
             current = next;
             match graph[current] {
                 Vertex::End => break,
@@ -297,10 +343,16 @@ impl TopologyGraph {
         path.check_route(context, &selected)?;
         let mut expires = path.claims().scope.expires_at_ms;
         for peer in &selected {
-            let observation = by_peer.get(peer).ok_or_else(|| invalid("topology route lost a relay"))?;
+            let observation = by_peer
+                .get(peer)
+                .ok_or_else(|| invalid("topology route lost a relay"))?;
             expires = expires.min(observation.expires_at_ms);
         }
-        Ok(Some(RouteCandidate { relays: selected, cursor, expires_at_ms: expires }))
+        Ok(Some(RouteCandidate {
+            relays: selected,
+            cursor,
+            expires_at_ms: expires,
+        }))
     }
 
     fn check_context(&self, context: &NetworkVerification<'_>) -> Result<(), ContractError> {
@@ -309,7 +361,10 @@ impl TopologyGraph {
             || self.space_id != context.space_id
             || self.policy_epoch != context.policy_epoch
         {
-            return Err(ContractError::new(ErrorCode::PolicyRevoked, "topology graph scope or authority changed"));
+            return Err(ContractError::new(
+                ErrorCode::PolicyRevoked,
+                "topology graph scope or authority changed",
+            ));
         }
         if context.now_ms < self.last_observed_ms {
             return Err(replay("topology graph clock went backward"));
@@ -317,10 +372,18 @@ impl TopologyGraph {
         Ok(())
     }
     fn expire_inner(&mut self, context: &NetworkVerification<'_>) {
-        let expired: Vec<_> = self.live.iter().filter(|(_, observation)| {
-            context.now_ms >= observation.expires_at_ms
-                || observation.publication_grant_ids.iter().any(|id| context.revoked_grant_ids.contains(id))
-        }).map(|(node, _)| node.clone()).collect();
+        let expired: Vec<_> = self
+            .live
+            .iter()
+            .filter(|(_, observation)| {
+                context.now_ms >= observation.expires_at_ms
+                    || observation
+                        .publication_grant_ids
+                        .iter()
+                        .any(|id| context.revoked_grant_ids.contains(id))
+            })
+            .map(|(node, _)| node.clone())
+            .collect();
         for node in expired {
             self.live.remove(&node);
             if let Some(water) = self.high_water.get_mut(&node) {
@@ -355,7 +418,9 @@ impl TopologyGraph {
             context.now_ms >= claims.expires_at_ms,
         )?;
         if advanced && !allow_advance {
-            return Err(replay("unchanged topology cursor introduced new observations"));
+            return Err(replay(
+                "unchanged topology cursor introduced new observations",
+            ));
         }
         if context.now_ms >= claims.expires_at_ms {
             // The current batch authenticates this historical record, but it
@@ -366,34 +431,54 @@ impl TopologyGraph {
             }
             return Ok(());
         }
-        let proof = proof.ok_or_else(|| invalid("live topology upsert lacks its exact verified envelope"))?;
+        let proof = proof
+            .ok_or_else(|| invalid("live topology upsert lacks its exact verified envelope"))?;
         proof.check_current(context)?;
         if proof.claims() != &claims {
             return Err(invalid("topology envelope proof claims differ"));
         }
-        self.live.insert(claims.report.node_id.clone(), Observation {
-            report: claims.report,
-            expires_at_ms: claims.expires_at_ms,
-            publication_grant_ids: proof.publication_grant_ids(),
-            statement_bytes: signed.claims.len().checked_add(signed.signature.len())
-                .ok_or_else(|| capacity("topology byte accounting overflow"))?,
-        });
+        self.live.insert(
+            claims.report.node_id.clone(),
+            Observation {
+                report: claims.report,
+                expires_at_ms: claims.expires_at_ms,
+                publication_grant_ids: proof.publication_grant_ids(),
+                statement_bytes: signed
+                    .claims
+                    .len()
+                    .checked_add(signed.signature.len())
+                    .ok_or_else(|| capacity("topology byte accounting overflow"))?,
+            },
+        );
         Ok(())
     }
     fn withdraw(&mut self, withdrawal: &TopologyWithdrawal) -> Result<(), ContractError> {
-        self.advance(&withdrawal.node_id, HighWater {
-            peer: withdrawal.peer,
-            incarnation: withdrawal.incarnation.clone(),
-            sequence: withdrawal.sequence,
-            publisher_digest: withdrawal.publisher_digest,
-            envelope_digest: None,
-            withdrawn: true,
-        }, false)?;
+        self.advance(
+            &withdrawal.node_id,
+            HighWater {
+                peer: withdrawal.peer,
+                incarnation: withdrawal.incarnation.clone(),
+                sequence: withdrawal.sequence,
+                publisher_digest: withdrawal.publisher_digest,
+                envelope_digest: None,
+                withdrawn: true,
+            },
+            false,
+        )?;
         self.live.remove(&withdrawal.node_id);
         Ok(())
     }
-    fn advance(&mut self, node: &str, next: HighWater, historical: bool) -> Result<bool, ContractError> {
-        if self.high_water.iter().any(|(id, water)| id != node && water.peer == next.peer) {
+    fn advance(
+        &mut self,
+        node: &str,
+        next: HighWater,
+        historical: bool,
+    ) -> Result<bool, ContractError> {
+        if self
+            .high_water
+            .iter()
+            .any(|(id, water)| id != node && water.peer == next.peer)
+        {
             return Err(invalid("topology peer aliases another registered node"));
         }
         if let Some(previous) = self.high_water.get(node) {
@@ -405,7 +490,9 @@ impl TopologyGraph {
             }
             if next.incarnation.runtime_generation == previous.incarnation.runtime_generation {
                 if next.incarnation.runtime_id != previous.incarnation.runtime_id {
-                    return Err(replay("topology boot UUID changed without a new generation"));
+                    return Err(replay(
+                        "topology boot UUID changed without a new generation",
+                    ));
                 }
                 if next.sequence < previous.sequence {
                     return Err(replay("old topology report sequence"));
@@ -443,15 +530,23 @@ impl TopologyGraph {
         let mut edges = 0usize;
         let mut bytes = 0usize;
         for observation in self.live.values() {
-            edges = edges.checked_add(observation.report.neighbors.len()).ok_or_else(|| capacity("topology edge accounting overflow"))?;
-            bytes = bytes.checked_add(observation.statement_bytes).ok_or_else(|| capacity("topology byte accounting overflow"))?;
+            edges = edges
+                .checked_add(observation.report.neighbors.len())
+                .ok_or_else(|| capacity("topology edge accounting overflow"))?;
+            bytes = bytes
+                .checked_add(observation.statement_bytes)
+                .ok_or_else(|| capacity("topology byte accounting overflow"))?;
             for id in &observation.publication_grant_ids {
-                bytes = bytes.checked_add(id.len()).ok_or_else(|| capacity("topology byte accounting overflow"))?;
+                bytes = bytes
+                    .checked_add(id.len())
+                    .ok_or_else(|| capacity("topology byte accounting overflow"))?;
             }
         }
         for (node, water) in &self.high_water {
             let metadata = node.len() + water.incarnation.runtime_id.len() + 32 * 3 + 8 * 2 + 1;
-            bytes = bytes.checked_add(metadata).ok_or_else(|| capacity("topology byte accounting overflow"))?;
+            bytes = bytes
+                .checked_add(metadata)
+                .ok_or_else(|| capacity("topology byte accounting overflow"))?;
         }
         if edges > MAX_GRAPH_EDGES || bytes > MAX_GRAPH_BYTES {
             return Err(capacity("topology graph edge or byte budget exceeded"));
@@ -466,13 +561,23 @@ enum Vertex {
     Relay(PeerId, u8),
     End,
 }
-fn mutually_observed(observations: &BTreeMap<PeerId, &Observation>, first: PeerId, second: PeerId) -> bool {
+fn mutually_observed(
+    observations: &BTreeMap<PeerId, &Observation>,
+    first: PeerId,
+    second: PeerId,
+) -> bool {
     let (Some(a), Some(b)) = (observations.get(&first), observations.get(&second)) else {
         return false;
     };
     let (Some(ab), Some(ba)) = (
-        a.report.neighbors.iter().find(|edge| edge.remote == second && edge.up),
-        b.report.neighbors.iter().find(|edge| edge.remote == first && edge.up),
+        a.report
+            .neighbors
+            .iter()
+            .find(|edge| edge.remote == second && edge.up),
+        b.report
+            .neighbors
+            .iter()
+            .find(|edge| edge.remote == first && edge.up),
     ) else {
         return false;
     };
