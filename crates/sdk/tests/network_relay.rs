@@ -1,8 +1,8 @@
 //! Actual management HTTP, signed node polls, mTLS relay and remote business proof.
-#[path = "../../node/tests/support/service_usage_directory.rs"]
-mod service_usage_directory;
 #[path = "network_relay/multi_node.rs"]
 mod multi_node;
+#[path = "../../node/tests/support/service_usage_directory.rs"]
+mod service_usage_directory;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_auth::{Secret, VaultKey, random_bytes, random_id};
 use nestlink_identity::{PermitSigner, VerifiedPermit, nodes::NodeIdentity};
@@ -366,7 +366,11 @@ impl Fixture {
         &self,
         allocation: &str,
         binds: [SocketAddr; 2],
-    ) -> Result<(ChannelRuntime, ChannelRuntime, watch::Sender<Option<StopReason>>)> {
+    ) -> Result<(
+        ChannelRuntime,
+        ChannelRuntime,
+        watch::Sender<Option<StopReason>>,
+    )> {
         let c = self
             .sdk
             .verified_network_remote_relay(

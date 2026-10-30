@@ -83,12 +83,29 @@ struct DiscoveryRequestContext {
 }
 
 impl Sdk {
-    pub async fn node_relay_attributes(&self, id: &str) -> Result<NodeRelayAttributesView, SdkError> {
-        self.required(Method::GET, &format!("{}/relay-attributes", resource("nodes", id)?), None::<&()>).await
+    pub async fn node_relay_attributes(
+        &self,
+        id: &str,
+    ) -> Result<NodeRelayAttributesView, SdkError> {
+        self.required(
+            Method::GET,
+            &format!("{}/relay-attributes", resource("nodes", id)?),
+            None::<&()>,
+        )
+        .await
     }
-    pub async fn set_node_relay_attributes(&self, id: &str, update: NodeRelayAttributesUpdate) -> Result<NodeRelayAttributesView, SdkError> {
+    pub async fn set_node_relay_attributes(
+        &self,
+        id: &str,
+        update: NodeRelayAttributesUpdate,
+    ) -> Result<NodeRelayAttributesView, SdkError> {
         update.attributes.validate()?;
-        self.required(Method::PUT, &format!("{}/relay-attributes", resource("nodes", id)?), Some(&update)).await
+        self.required(
+            Method::PUT,
+            &format!("{}/relay-attributes", resource("nodes", id)?),
+            Some(&update),
+        )
+        .await
     }
     pub async fn node_endpoints(&self, id: &str) -> Result<NodeEndpointsView, SdkError> {
         self.required(
@@ -116,15 +133,24 @@ impl Sdk {
         permit: &VerifiedPermit,
     ) -> Result<NodeDiscovery, SdkError> {
         let context = self.discovery_request(installation, permit)?;
-        let response: NodeDiscoveryResponse = self.required(
-            Method::POST,
-            &format!("{}/relay/discovery", resource("remote", &permit.claims().session_id)?),
-            Some(&context.request),
-        ).await?;
+        let response: NodeDiscoveryResponse = self
+            .required(
+                Method::POST,
+                &format!(
+                    "{}/relay/discovery",
+                    resource("remote", &permit.claims().session_id)?
+                ),
+                Some(&context.request),
+            )
+            .await?;
         self.verified_discovery_response(context, &response.discovery, installation, permit)
     }
 
-    fn discovery_request(&self, installation: &DeviceIdentity, permit: &VerifiedPermit) -> Result<DiscoveryRequestContext, SdkError> {
+    fn discovery_request(
+        &self,
+        installation: &DeviceIdentity,
+        permit: &VerifiedPermit,
+    ) -> Result<DiscoveryRequestContext, SdkError> {
         let login = self.login.as_ref().ok_or(SdkError::SignIn)?;
         let c = permit.claims();
         if c.deployment_id != self.trust.deployment_id
@@ -145,10 +171,21 @@ impl Sdk {
             permit_sha256: URL_SAFE_NO_PAD.encode(digest(&c.encode_to_vec())),
             signature: URL_SAFE_NO_PAD.encode(installation.identity.sign_action(&proof)?),
         };
-        Ok(DiscoveryRequestContext { request, started: start()?, nonce, login_session: login.principal.session_id.clone() })
+        Ok(DiscoveryRequestContext {
+            request,
+            started: start()?,
+            nonce,
+            login_session: login.principal.session_id.clone(),
+        })
     }
 
-    fn verified_discovery_response(&self, context: DiscoveryRequestContext, encoded: &str, installation: &DeviceIdentity, permit: &VerifiedPermit) -> Result<NodeDiscovery, SdkError> {
+    fn verified_discovery_response(
+        &self,
+        context: DiscoveryRequestContext,
+        encoded: &str,
+        installation: &DeviceIdentity,
+        permit: &VerifiedPermit,
+    ) -> Result<NodeDiscovery, SdkError> {
         if encoded.len() as u64 > (NODE_DISCOVERY_BYTES + 128).div_ceil(3) * 4 {
             return Err(SdkError::Invalid);
         }

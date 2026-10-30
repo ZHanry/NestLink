@@ -1568,8 +1568,14 @@ async fn load_records(
                             UiCopy::new("等待节点", "Waiting for node")
                         },
                         kind: "node",
-                        is_relay_node: view.node.roles.contains(&(nestlink_protocol::NodeRole::NodeRelay as i32)),
-                        is_edge_node: view.node.roles.contains(&(nestlink_protocol::NodeRole::NodeEdge as i32)),
+                        is_relay_node: view
+                            .node
+                            .roles
+                            .contains(&(nestlink_protocol::NodeRole::NodeRelay as i32)),
+                        is_edge_node: view
+                            .node
+                            .roles
+                            .contains(&(nestlink_protocol::NodeRole::NodeEdge as i32)),
                         connectable: false,
                     })
                     .collect(),

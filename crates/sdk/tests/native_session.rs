@@ -241,10 +241,13 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
     .map_err(|error| format!("native ICE controller network-change shutdown: {error}"))??;
     assert_eq!(report.reason, StopReason::NetworkChanged);
     let mut host_session = host_session;
-    let host_report = tokio::time::timeout(Duration::from_secs(2), host_session.channels.wait_stopped())
-        .await
-        .map_err(|error| format!("native ICE peer close shutdown: {error}"))??;
-    assert_eq!(host_report.reason, StopReason::Revoked);
+    let host_report =
+        tokio::time::timeout(Duration::from_secs(2), host_session.channels.wait_stopped())
+            .await
+            .map_err(|error| format!("native ICE peer close shutdown: {error}"))??;
+    // A network-change close is explicitly retryable. The peer learns that
+    // its transport was lost; it has not received an authority revocation.
+    assert_eq!(host_report.reason, StopReason::TransportLost);
     let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
     let mut controller_owner = nestlink_sdk::network::LegacyEndpoint::new(controller_endpoint);
     let mut host_owner = nestlink_sdk::network::LegacyEndpoint::new(host_endpoint);

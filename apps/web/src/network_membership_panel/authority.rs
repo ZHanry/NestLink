@@ -46,10 +46,18 @@ pub(super) fn NetworkAuthorityControls(
             problem.set(t("请先填写有效的空间编号。", "Enter a valid space ID first.").into());
             return;
         }
-        let snapshot = state.get_untracked().filter(|value| value.policy.space_id == space_id);
+        let snapshot = state
+            .get_untracked()
+            .filter(|value| value.policy.space_id == space_id);
         let mutation = !matches!(action, Action::Read);
         if mutation && snapshot.as_ref().is_none_or(|value| value.revoked) {
-            problem.set(t("请先读取有效的空间授权状态。", "Read the active space authority first.").into());
+            problem.set(
+                t(
+                    "请先读取有效的空间授权状态。",
+                    "Read the active space authority first.",
+                )
+                .into(),
+            );
             return;
         }
         if matches!(action, Action::Revoke) && !confirm_revoke.get_untracked() {
@@ -65,9 +73,11 @@ pub(super) fn NetworkAuthorityControls(
         problem.set(String::new());
         message.set(String::new());
         spawn_local(async move {
-            let current = || alive.load(Ordering::Acquire)
-                && session_revision.try_get_untracked() == Some(session)
-                && generation.try_get_untracked() == Some(captured);
+            let current = || {
+                alive.load(Ordering::Acquire)
+                    && session_revision.try_get_untracked() == Some(session)
+                    && generation.try_get_untracked() == Some(captured)
+            };
             let result: Result<NetworkAuthorityView, SdkError> = async {
                 let client = sdk.lock().await;
                 if !current() {
@@ -84,7 +94,9 @@ pub(super) fn NetworkAuthorityControls(
                             client.rotate_network_authority(&space_id, expected).await?;
                         }
                         Action::Advance => {
-                            client.advance_network_policy_epoch(&space_id, expected).await?;
+                            client
+                                .advance_network_policy_epoch(&space_id, expected)
+                                .await?;
                         }
                         Action::Revoke => {
                             client.revoke_network_authority(&space_id, expected).await?;
@@ -98,7 +110,8 @@ pub(super) fn NetworkAuthorityControls(
                     }
                 }
                 client.network_authority_state(&space_id).await
-            }.await;
+            }
+            .await;
             if !current() {
                 return;
             }
@@ -110,14 +123,26 @@ pub(super) fn NetworkAuthorityControls(
                     if mutation {
                         changed.run(());
                     }
-                    message.set(t("已读取服务器确认的授权状态。", "Server-confirmed authority loaded.").into());
+                    message.set(
+                        t(
+                            "已读取服务器确认的授权状态。",
+                            "Server-confirmed authority loaded.",
+                        )
+                        .into(),
+                    );
                 }
                 Ok(_) => {
                     state.set(None);
                     if mutation {
                         changed.run(());
                     }
-                    problem.set(t("返回的空间不匹配，请重新读取。", "Returned space does not match. Read again.").into());
+                    problem.set(
+                        t(
+                            "返回的空间不匹配，请重新读取。",
+                            "Returned space does not match. Read again.",
+                        )
+                        .into(),
+                    );
                 }
                 Err(error) => {
                     state.set(None);
@@ -125,13 +150,19 @@ pub(super) fn NetworkAuthorityControls(
                         changed.run(());
                     }
                     if matches!(&error, SdkError::SignIn)
-                        || matches!(&error, SdkError::Api(status, _) if status.as_u16() == 401) {
+                        || matches!(&error, SdkError::Api(status, _) if status.as_u16() == 401)
+                    {
                         auth_failure.run(sdk);
                         return;
                     }
-                    problem.set(format!("{} {}", sdk_error(&error), t(
-                        "请重新读取授权状态后再操作。", "Read authority state again before another change."
-                    )));
+                    problem.set(format!(
+                        "{} {}",
+                        sdk_error(&error),
+                        t(
+                            "请重新读取授权状态后再操作。",
+                            "Read authority state again before another change."
+                        )
+                    ));
                 }
             }
         });

@@ -11,6 +11,8 @@ use crate::{
 /// deployment. Private networks always require explicit local consent.
 #[derive(Clone)]
 pub struct NativeSessionConfig {
+    /// Frozen for one local session and its recovery; never a forwarding grant.
+    pub(crate) relay_node_id: Option<String>,
     /// Continue already approved native offers while the desktop is in the tray.
     /// The authenticated permit remains the sole authority for starting media.
     pub listen_for_native_requests: bool,
@@ -57,6 +59,7 @@ impl NativeSessionConfig {
 
     pub fn new(network: Arc<NetworkMonitor>) -> Self {
         Self {
+            relay_node_id: None,
             listen_for_native_requests: false,
             bind_address: SocketAddr::from(([0, 0, 0, 0], 0)),
             stun_servers: Vec::new(),
@@ -207,7 +210,8 @@ impl NativeSessionConfig {
     }
 
     pub(crate) fn validate(&self) -> bool {
-        self.stun_servers.len() <= 4
+        self.relay_node_id.as_ref().is_none_or(|id| nestlink_protocol::valid_id(id))
+            && self.stun_servers.len() <= 4
             && self.private_network_prefixes.len() <= 32
             && self.supported_capabilities.len() <= 32
             && self

@@ -251,9 +251,11 @@ async fn pair_with_gate(gate: Option<Arc<Gate>>) -> Result<Pair> {
     .await?;
     let controller_start = controller_handle.submit(Action::StartNativeSession {
         request_id: request.id.clone(),
+        relay_node_id: None,
     })?;
     let host_start = host_handle.submit(Action::StartNativeSession {
         request_id: request.id.clone(),
+        relay_node_id: None,
     })?;
     tokio::try_join!(
         stage(

@@ -160,6 +160,32 @@ jobs:
           $metadataLog = Join-Path $env:RUNNER_TEMP 'nestlink-node-relay-metadata-tests.log'
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage -p nestlink-sdk --test node_relay_attributes --no-fail-fast -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $metadataLog
           exit $LASTEXITCODE
+      - name: Check explicit relay selection through the original native owner on Linux
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        shell: pwsh
+        run: |
+          $selectionLog = Join-Path $env:RUNNER_TEMP 'nestlink-selected-relay-tests.log'
+          cargo test --locked -p nestlink-sdk --test node_relay selected_relay:: -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $selectionLog
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --locked -p nestlink-app-core --lib action::tests:: -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $selectionLog -Append
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --locked -p nestlink-app-core --test native_session app_core_owns_proved_session_and_revocation_waits_for_cleanup -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $selectionLog -Append
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --locked -p nestlink-storage --test control relay_candidates:: -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $selectionLog -Append
+          exit $LASTEXITCODE
+      - name: Check explicit relay selection through the original owner with the ordinary Windows token
+        if: ${{ !cancelled() && runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          $selectionLog = Join-Path $env:RUNNER_TEMP 'nestlink-selected-relay-tests.log'
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-sdk --test node_relay selected_relay:: -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $selectionLog
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib action::tests:: -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $selectionLog -Append
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --test native_session app_core_owns_proved_session_and_revocation_waits_for_cleanup -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $selectionLog -Append
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage --test control relay_candidates:: -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $selectionLog -Append
+          exit $LASTEXITCODE
       - name: Prove mature ICE and Quinn same-socket feasibility on Linux
         if: ${{ !cancelled() && runner.os == 'Linux' && steps.sdk_routed_linux.outcome != 'skipped' }}
         shell: pwsh
@@ -254,6 +280,7 @@ jobs:
             ${{ runner.temp }}/nestlink-sdk-routed-tests.json
             ${{ runner.temp }}/nestlink-sdk-network-relay-tests.log
             ${{ runner.temp }}/nestlink-node-relay-metadata-tests.log
+            ${{ runner.temp }}/nestlink-selected-relay-tests.log
             ${{ runner.temp }}/nestlink-ice-quic-tests.log
             ${{ runner.temp }}/nestlink-native-session-tests.log
             ${{ runner.temp }}/nestlink-native-inbox-tests.log

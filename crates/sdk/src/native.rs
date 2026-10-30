@@ -153,8 +153,13 @@ async fn discover_auto_node_relay(
     sdk: &Sdk,
     local: &DeviceIdentity,
     permit: &VerifiedPermit,
+    relay_node_id: Option<&str>,
 ) -> Result<AutoNodeRelay, SdkError> {
     let discovery = sdk.discover_relay_candidates(local, permit).await?;
+    if let Some(node_id) = relay_node_id {
+        let selected = discovery.select(sdk, permit, local, node_id)?;
+        return reserve_discovered_node(sdk, local, permit, &discovery, &selected.node).await;
+    }
     let nodes = discovery.checked(sdk, permit, local)?;
     let selected = nodes.first().ok_or(SdkError::Trust)?;
     reserve_discovered_node(sdk, local, permit, &discovery, &selected.node).await
@@ -266,8 +271,13 @@ async fn refresh_auto_node_relay(
     permit: &VerifiedPermit,
     previous: Option<&AutoNodeRelay>,
     peer_candidates: &[Candidate],
+    relay_node_id: Option<&str>,
 ) -> Result<Option<AutoNodeRelay>, SdkError> {
     let discovery = sdk.discover_relay_candidates(local, permit).await?;
+    if let Some(node_id) = relay_node_id {
+        let selected = discovery.select(sdk, permit, local, node_id)?;
+        return reserve_discovered_node(sdk, local, permit, &discovery, &selected.node).await.map(Some);
+    }
     let nodes = discovery.checked(sdk, permit, local)?;
     let mut matching_node_ids = Vec::new();
     if peer_candidates
@@ -303,7 +313,9 @@ async fn refresh_auto_node_relay(
         .map(String::as_str)
         .or(previous_node_id)
         .or_else(|| {
-            nodes.first().map(|candidate| candidate.node.node_id.as_str())
+            nodes
+                .first()
+                .map(|candidate| candidate.node.node_id.as_str())
         });
     let Some(node_id) = node_id else {
         return Ok(None);
@@ -357,6 +369,10 @@ pub enum SessionEstablishError {
     PermitChanged,
     #[error("the selected endpoint role, local policy or session binding is invalid")]
     Binding,
+    #[error("an explicit relay selection requires a valid node UUID, an authorized Relay path and no supplied routes")]
+    RelaySelectionInvalid,
+    #[error("the explicitly selected relay node is unavailable or unauthorized")]
+    SelectedRelayUnavailable(#[source] SdkError),
     #[error("no supported current candidates are available for signaling")]
     NoCandidates,
     #[error("no signed, authorized relay route is available for this session")]
@@ -412,6 +428,9 @@ impl NativeMediaEvidence {
 pub struct NativeMediaSessionOptions {
     pub session: NativeSessionOptions,
     pub media: Option<NativeMediaEvidence>,
+    /// Local selection intent; a fresh signed discovery and allocation must
+    /// authorize the exact UUID. It never supplies an endpoint or a grant.
+    pub relay_node_id: Option<String>,
 }
 /// Explicit local dialing scope. Public unicast is permitted; private/ULA
 /// destinations require an administrator-configured prefix, and metadata,
@@ -975,6 +994,7 @@ impl NativeEndpoint {
             NativeMediaSessionOptions {
                 session: options,
                 media: None,
+                relay_node_id: None,
             },
             routes,
             stun_servers,
@@ -994,7 +1014,14 @@ impl NativeEndpoint {
         let NativeMediaSessionOptions {
             session: options,
             media,
+            relay_node_id,
         } = options;
+        if relay_node_id.as_ref().is_some_and(|id| !nestlink_protocol::valid_id(id)
+            || !routes.is_empty()
+            || !options.local_paths.contains(Path::Relay)
+            || !self.permit.claims().paths.contains(&(Path::Relay as i32))) {
+            return Err(SessionEstablishError::RelaySelectionInvalid);
+        }
         self.validate_local(local, &options, routes)?;
         self.check()?;
         self.ensure_current_permit(sdk, local, cancel.clone())
@@ -1056,7 +1083,7 @@ impl NativeEndpoint {
         // A normal self-hosted deployment already has a mutually authenticated
         // WSS relay on its approved management origin. Do not require a separate
         // data node just to connect across restrictive NAT/firewalls.
-        let combined_relay = if routes.is_empty() && relay_allowed {
+        let combined_relay = if relay_node_id.is_none() && routes.is_empty() && relay_allowed {
             tokio::select! {
                 biased;
                 _ = cancellation(&mut cancel) => return Err(SessionEstablishError::Cancelled),
@@ -1072,11 +1099,17 @@ impl NativeEndpoint {
                 _ = cancellation(&mut cancel) => return Err(SessionEstablishError::Cancelled),
                 result = tokio::time::timeout(
                     RELAY_SETUP_BUDGET,
-                    discover_auto_node_relay(sdk, local, &self.permit),
+                    discover_auto_node_relay(sdk, local, &self.permit, relay_node_id.as_deref()),
                 ) => result,
             };
-            if let Ok(Ok(relay)) = prepared {
-                auto_relay = Some(relay);
+            match prepared {
+                Ok(Ok(relay)) => auto_relay = Some(relay),
+                error if relay_node_id.is_some() => {
+                    if let Some(gathered) = native_ice.take() { gathered.close().await?; }
+                    let error = match error { Ok(Err(error)) => error, _ => SdkError::Timeout };
+                    return Err(SessionEstablishError::SelectedRelayUnavailable(error));
+                }
+                _ => {}
             }
         }
         let network_generation = self.local_generation;
@@ -1200,11 +1233,16 @@ impl NativeEndpoint {
                         &self.permit,
                         auto_relay.as_ref(),
                         &peer_candidates,
+                        relay_node_id.as_deref(),
                     ),
                 ) => result,
             };
             auto_relay = match refreshed {
                 Ok(Ok(relay)) => relay,
+                error if relay_node_id.is_some() => {
+                    let error = match error { Ok(Err(error)) => error, _ => SdkError::Timeout };
+                    return Err(SessionEstablishError::SelectedRelayUnavailable(error));
+                }
                 _ => None,
             };
         }

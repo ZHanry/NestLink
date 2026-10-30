@@ -291,3 +291,27 @@ isolation. Its bounded response observers must also close successfully. These
 browser receipts remain pending the new exact-source Actions run.
 Remaining advanced NAT, topology, migration, private service consumers, gateways,
 media and final delivery scope stays active. No 0.8.0RC release has been created.
+
+The 24be9e7 Actions run passed site/WASM compilation, both platforms' metadata
+and candidate-unit regressions, and the original routed/socket experiments.
+The real browser completed authority rotation, conflict, epoch advance and
+permanent revoke; relay metadata reached default/zero/conflict but stopped at
+clearing fields because the pinned browser driver's fill("") emitted no input
+event. Its helper now uses real keyboard deletion and retains exact null/zero
+request assertions. New native NAT roles did not execute because their diagnostic
+tried to Debug-print a non-Debug Frame; that diagnostic is repaired.
+
+Native ICE owner draining now completes within the existing test budget. The
+new peer assertion must expect TransportLost, matching the existing authenticated
+retry close code for a NetworkChanged stop; this does not imply revocation.
+Locked webrtc-ice's srflx gatherer supplies a wildcard socket bind; the production
+factory now resolves that local request to its already-selected interface while
+retaining same-family, single-socket and approved-peer restrictions. The two-node
+test still has failures, with stage-specific diagnostics added for the next run.
+
+W11 adds a per-session Desktop relay UUID choice through backward-compatible
+local IPC, Core and SDK, retaining it during recovery and both initial/refreshed
+signed discovery. An explicit choice cannot use combined or another node; bad,
+missing or revoked selections fail closed. New real business regressions and
+Core input/compatibility checks are wired to both ordinary-token platform jobs.
+These latest sources require new Actions; full W11 and release gates remain open.

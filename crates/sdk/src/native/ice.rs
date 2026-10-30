@@ -175,6 +175,13 @@ impl Preparation {
         let physical = path.clone();
         let mut network = EphemeralUDP::default();
         network.set_socket_factory(Arc::new(move |address| {
+            // The mature srflx gatherer asks for a wildcard bind. Select the
+            // already-approved local interface before opening that socket.
+            let address = if address.ip().is_unspecified() && address.is_ipv4() == ip.is_ipv4() {
+                SocketAddr::new(ip, address.port())
+            } else {
+                address
+            };
             if address.ip() != ip {
                 return Err(io::ErrorKind::PermissionDenied.into());
             }

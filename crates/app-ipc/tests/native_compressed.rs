@@ -284,9 +284,11 @@ async fn native_pair(server: &Server) -> Result<NativePair> {
     })?)
     .await?;
     let controller_start = controller_handle.submit(Action::StartNativeSession {
+        relay_node_id: None,
         request_id: request.id.clone(),
     })?;
     let host_start = host_handle.submit(Action::StartNativeSession {
+        relay_node_id: None,
         request_id: request.id.clone(),
     })?;
     tokio::try_join!(success(controller_start), success(host_start))?;

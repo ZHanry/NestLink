@@ -64,8 +64,21 @@ the existing allocation, DNS, endpoint revision and deadline checks still govern
 route construction. Advisory updates do not create, renew, revoke or transfer
 forwarding rights and do not restart any request or allocation budget.
 
-Measured ranking, user-facing explicit native selection, multi-relay failover
-and hard cost constraints remain separate W11/W13 work. The browser WebRTC path
+The Desktop connection options also accept an optional canonical relay node
+UUID. Blank preserves automatic selection. The local start action defaults a
+missing `relay_node_id` to null for older IPC clients. The actor validates that
+input, freezes it for this session, and retains it in the existing recovery
+context. It rejects a selected relay when the verified permit is direct-only.
+Initial discovery and post-signaling refresh must both select this same UUID;
+unavailable, unlisted or revoked selected nodes fail clearly. Explicit mode does
+not create a combined management relay or substitute another relay. An authorized
+direct connection may still win when the selected node is available. The UUID
+is local intent only, never an endpoint, grant, new allocation owner or wider
+dialing consent. This initial UI takes an administrator-provided UUID; it does
+not yet offer a candidate picker or measured quality display.
+
+Measured ranking, a candidate picker, multi-relay failover and hard cost
+constraints remain separate W11/W13 work. The browser WebRTC path
 continues to use its existing TURN owner. This slice does not claim two
 independent Linux targets or complete AC17 acceptance. Source regressions cover
 real SQLite migration, restart, CAS, authorization, unchanged registration and

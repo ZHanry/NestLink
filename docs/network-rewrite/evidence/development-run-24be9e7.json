@@ -1,0 +1,193 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "24be9e7e07342563ab5876b17323af53f6679ff6",
+  "dependency_lock_sha256": "e40cbb24fd46cc214dffc2b76642adc09e37c8db9f9ab73943efc6e9bb10b637",
+  "review_method": "Exact-source GitHub-hosted Actions logs, job API results and downloaded artifact SHA-256 verification. Local work limited to source inspection/editing, Git and artifact checksums; no local compiler, formatter, lint, automated checks or tests.",
+  "web_run": {
+    "run_id": "41103131557",
+    "attempt": 1,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41103131557",
+    "conclusion": "failure",
+    "release_site": {
+      "job_id": "124224909775",
+      "conclusion": "success",
+      "scope": "Production optimized Web build succeeded; the previous bound.service_id ownership compilation failure is absent."
+    },
+    "browser_contracts": {
+      "job_id": "124224910292",
+      "conclusion": "success",
+      "python_tests_passed": 18,
+      "node_tests_passed": 62,
+      "node_tests_failed": 0,
+      "artifact_id": "13000091839",
+      "artifact_sha256": "4c1052feef33f11599af3b94c21cbcae922280684d1e96995a2e59b8fdb7b3b6",
+      "artifact_download_digest_verified": true,
+      "files": [
+        { "path": "nestlink-browser-contracts-python.log", "bytes": 117, "sha256": "e2459041a3cc417f29793a0fc88091cdc1e053486992f76f20f7a50f7223d1ca" },
+        { "path": "nestlink-browser-contracts-node.log", "bytes": 15315, "sha256": "63ef9ee05de5449285a2a01467fedf9a761627b9226f953c904a5a56c8a5fc82" }
+      ],
+      "scope": "Independent runner/response-observer/workspace contracts and helper syntax checks; synthetic unit receipt fixtures are not browser acceptance evidence."
+    },
+    "browser_native": {
+      "job_id": "124231211098",
+      "conclusion": "failure",
+      "artifact_id": "13000298551",
+      "artifact_sha256": "0c338d8798f7923f407a3645328f3271d4da81f27b8e6a0ddc45fb3255b36b46",
+      "artifact_download_digest_verified": true,
+      "browser_report_sha256": "d1e34524c39b91b9a41cb2910d2105e22574b9e40e2e9ffd5a9dbd355ca77f43",
+      "runner_result_sha256": "f2ac9da0f3773af64e0aaee8ba7ef3ab1a2601f176b90fe25f5a91e22c8e3b02",
+      "database_cleanup_sha256": "bc7665d7004a905fd6a0b7d73ff9b61fea7fe4c21a01df9df10974b61411ace5",
+      "runner_failure": "missing-or-invalid-completion-receipt; browser and native exited 1 before media setup",
+      "browser_failure": "Relay attributes UI: Real update lost the prior revision or explicit unknown/zero attributes",
+      "actual_completed_ui_sections": ["edge_namespace_ui", "network_membership_ui", "network_authority_ui"],
+      "membership": "All original forbidden, explicit initialization/epoch zero, draft/CAS, revoke/re-enroll, unmount/logout/new-session and observer cleanup facts are true; original exact 2 GET403 / 2 PUT409 assertions passed.",
+      "authority": "Actual two-page read, signing-key rotation, one stale POST409 requiring reread, policy advance, explicit permanent revocation, independent terminal readback and disabled terminal controls all passed.",
+      "relay_attributes": {
+        "passed": false,
+        "stage": "clear_to_unknown",
+        "default_unknown_revision_zero": true,
+        "explicit_zero_saved": true,
+        "stale_conflict_requires_reread": true,
+        "clear_to_unknown_confirmed": false,
+        "unmount_logout_new_session_executed": false,
+        "both_response_observers_and_session_owners_passed": true,
+        "pending_responses_after_owner_close": 0
+      },
+      "diagnosis": "Pinned Puppeteer 25.14.0 Locator.fill for short empty strings assigns input.value='' then skips typing. It dispatches no input event, so empty DOM fields did not update the production on:input draft. The helper's exact outbound null assertion correctly rejected the attempted clear. Source inspected at lib/puppeteer/api/locators/locators.js, typeable-input branch; SDK uses serde_json and emits explicit null for None, so no serialization exception or assertion relaxation is justified.",
+      "cleanup": {
+        "browser_closed": true,
+        "owned_processes_stopped": true,
+        "forced_browser_or_native_stop": false,
+        "private_directory_removed": true,
+        "servers_joined": true,
+        "owned_database_removed": true,
+        "database_cleanup_error": null
+      },
+      "page_errors": [],
+      "api_failures": [],
+      "response_inspection_errors": [],
+      "scope": "Spaces, workspace layout, real WebRTC media/input/files and steady renewal acceptance were not reached. Successful management subcases do not make this integration pass."
+    }
+  },
+  "network_run": {
+    "run_id": "41103131240",
+    "attempt": 1,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41103131240",
+    "conclusion": "failure",
+    "successful_jobs_observed_in_actions": [
+      { "job_id": "124224907881", "name": "routed-kernel-nat-slice" },
+      { "job_id": "124224908268", "name": "production-socket-slice" },
+      { "job_id": "124224908323", "name": "independent-vectors" }
+    ],
+    "successful_experiment_scope": "Existing raw routed transport through two Linux SNATs and no-NAT production FileRead development experiments retain their original limits. No new complete AC, public NAT, bilateral production ICE NAT or target-device qualification is inferred from their job results.",
+    "contracts": [
+      {
+        "platform": "ubuntu-24.04",
+        "job_id": "124224908456",
+        "conclusion": "failure",
+        "only_failed_command": "format-check",
+        "contract_clippy_passed": true,
+        "contract_tests_passed": true,
+        "ci_evidence_tests": { "total": 20, "skipped": 0, "failed": 0 },
+        "artifact_id": "12999793998",
+        "artifact_sha256": "23d3fca58d766e6138e7bf6a11809dcbb806b84f4af1dacb32e2e41a4cd2d199",
+        "artifact_download_digest_verified": true,
+        "receipt_sha256": "84e091be09411fbf984dc7352de67af0470fbf7747a04a286619bdd604093609",
+        "receipt_file_digests_verified": true,
+        "exact_clean_source_before_and_after": true
+      },
+      {
+        "platform": "windows-2022",
+        "job_id": "124224908419",
+        "conclusion": "failure",
+        "only_failed_command": "format-check",
+        "ordinary_user_token_verified": true,
+        "contract_clippy_passed": true,
+        "contract_tests_passed": true,
+        "ci_evidence_tests": { "total": 20, "skipped": 9, "failed": 0 },
+        "artifact_id": "12999519492",
+        "artifact_sha256": "3b8dbb76642a981fe0dffb39601c1df1bd05451c781985de1265d123ec874a86",
+        "artifact_download_digest_verified": true,
+        "receipt_sha256": "dbc694711abe4a3bd50e7162e046dbf35f54d83a94687bf05e4fafaf61817119",
+        "receipt_file_digests_verified": true
+      }
+    ],
+    "format_review": {
+      "file": "rustfmt.patch",
+      "bytes": 146627,
+      "sha256": "651bf72cbe524d2986bd178c2ee8bfc6f33696e28a61a613b37d5a816e42afc4",
+      "platform_outputs_identical": true,
+      "changed_files": 20,
+      "disposition": "Downloaded, receipt-verified and handed to the integrating agent for selective import alongside concurrent edits; no local formatter execution."
+    },
+    "native_ice_nat": {
+      "job_id": "124224908387",
+      "conclusion": "failure",
+      "artifact_id": "13000067197",
+      "artifact_sha256": "552f473a3cb1cb1ed157e2434ebcfebff6f98b491359665753fccb83e18a291e",
+      "artifact_download_digest_verified": true,
+      "receipt_sha256": "fd065df569c2f625b010cdd692da2af015927aa1696fe3fb2f20383448ba65c1",
+      "receipt_file_digests_verified": true,
+      "failure": "E0277 at crates/sdk/tests/network_native_ice.rs:307:110: the diagnostic formats Result<Frame, RemoteError> with Debug but Frame does not implement Debug.",
+      "actual_cases_executed": 0,
+      "scope": "Lint compilation failed before topology setup; no bilateral ICE NAT, file-transfer, cancellation or physical cleanup case is claimed."
+    }
+  },
+  "core_run": {
+    "run_id": "41103131247",
+    "attempt": 1,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41103131247",
+    "status_at_last_observation": "in_progress",
+    "linux_job_id": "124224907873",
+    "linux_conclusion": "failure",
+    "windows_job_id": "124224907991",
+    "windows_status_at_last_observation": "in_progress",
+    "wasm_job_id": "124224907739",
+    "wasm_conclusion": "success",
+    "scoped_artifacts": [
+      { "platform": "linux", "artifact_id": "12998024748", "artifact_sha256": "b049e81a6d4428e0538520d5559e4b5a438e8701b750cf5147d62466448c3bc6", "artifact_download_digest_verified": true },
+      { "platform": "windows", "artifact_id": "13001231350", "artifact_sha256": "b75bd4646d4c19201f1bd0642c662fa09c267038eccb915c9cbdd106b158c640", "artifact_download_digest_verified": true }
+    ],
+    "native_session": {
+      "test": "coordinator_exchanges_current_signed_candidates_proves_and_stops_on_network_change",
+      "linux": "Fails at line 247: actual TransportLost, expected Revoked, 1.67 seconds.",
+      "windows": "Fails at line 247: actual TransportLost, expected Revoked, 3.31 seconds.",
+      "scope": "Previous cleanup timeout is not reproduced here; the terminal-reason assertion still fails and has not been weakened."
+    },
+    "multi_node_relay": {
+      "test": "multi_node::two_registered_nodes_carry_distinct_authorized_routes_and_one_revoke_preserves_the_other",
+      "linux": "Error Authorization(PolicyRevoked: session is terminal)",
+      "windows": "Error NodeQuic crypto(31): invalid peer certificate: ApplicationVerificationFailure",
+      "legacy_four_tests_passed_on_both_platforms": true,
+      "scope": "Distinct errors are recorded separately; no common cause or successful multi-node acceptance is inferred."
+    },
+    "linux_workspace_failures": [
+      "Formatting drift",
+      "clippy collapsible_if at apps/web/src/spaces_panel/service_publication.rs:209 under -D warnings",
+      "network_native_ice Frame Debug compilation error in workspace check and test"
+    ],
+    "scoped_passes_on_both_platforms": [
+      "SDK routed source inventory: 15 passed, zero failed or ignored",
+      "ice_quic: 4 passed; native_inbox: 3 passed",
+      "node relay attributes SDK: 1 passed; storage: 2 passed",
+      "SDK discovery/candidate tests: 8 passed; dual-stack discovery: 5 passed",
+      "spaces storage: 9 passed; SDK spaces: 1 passed"
+    ],
+    "platform_network": { "linux": "10 passed, 2 ignored", "windows": "9 passed, zero ignored" },
+    "successful_additional_jobs": ["openapi-generation", "linux-network-events", "linux-system-audio", "linux-portal-capture", "dependencies", "linux-x11-input"],
+    "openapi": "Generation job 124224907686 passed; downloaded generated output and source inputs were verified and imported separately by the integrating agent."
+  },
+  "other_runs": [
+    { "run_id": "41103131048", "name": "CodeQL", "conclusion": "success" },
+    { "run_id": "41103130967", "name": "Build regression server", "conclusion": "success" },
+    { "run_id": "41103130969", "name": "Secret scan", "conclusion": "success" }
+  ],
+  "follow_up_source_changes_pending_new_actions": [
+    "Relay helper clears optional text/number fields with actual Control+A/Backspace keyboard deletion so production input handlers run; preserve exact outbound revision/null/zero assertions",
+    "Integrating agent coordinates exact-source formatting output, Frame diagnostic and production clippy repair",
+    "Native terminal reason and multi-node relay failures remain development work for their production owners"
+  ],
+  "acceptance_claim": "Several actual management UI sections completed, but overall browser/native and native ICE/multi-node acceptance remain failed or unexecuted; no complete release qualification is claimed.",
+  "release_state": "not_ready"
+}

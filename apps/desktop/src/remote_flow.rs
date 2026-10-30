@@ -31,6 +31,7 @@ pub(crate) struct ConnectionFlow {
     next_poll: Instant,
     error: Option<String>,
     opened: bool,
+    relay_node_id: Option<String>,
 }
 impl ConnectionFlow {
     fn active(&self) -> bool {
@@ -65,7 +66,9 @@ impl DesktopApp {
         let Some(host_device_id) = self.remote.host_device_id.clone() else {
             return;
         };
-        let submission = self.bridge.submit_tracked(
+        let relay_node_id = self.remote.relay_node_id();
+        let selection_valid = self.remote.relay_selection_valid(self.remote.path != "direct_only");
+        let submission = if selection_valid { self.bridge.submit_tracked(
             snapshot.generation,
             Command::Submit {
                 action: Action::RequestRemote {
@@ -79,7 +82,7 @@ impl DesktopApp {
                     },
                 },
             },
-        );
+        ) } else { None };
         self.remote.flow = Some(ConnectionFlow {
             stage: if submission.is_some() {
                 Stage::Requesting
@@ -91,6 +94,9 @@ impl DesktopApp {
             deadline: Instant::now() + Duration::from_secs(120),
             next_poll: Instant::now(),
             error: submission.is_none().then(|| {
+                if !selection_valid {
+                    return self.t("请输入规范的中继节点 UUID；仅直连不能指定中继。", "Enter a canonical relay node UUID. Direct-only connections cannot select a relay.").into();
+                }
                 self.t(
                     "请求未送出，请检查本机服务后重试。",
                     "Request was not sent. Check the local service and retry.",
@@ -98,6 +104,7 @@ impl DesktopApp {
                 .into()
             }),
             opened: false,
+            relay_node_id,
         });
     }
 
@@ -231,7 +238,7 @@ impl DesktopApp {
             }
             Some(request) if request.status == "approved" && request.lease_sequence > 0 => {
                 flow.stage = Stage::Connecting;
-                Some(Action::StartNativeSession { request_id: id })
+                Some(Action::StartNativeSession { request_id: id, relay_node_id: flow.relay_node_id.clone() })
             }
             _ if now >= flow.next_poll && snapshot.selected_request.loading.is_none() => {
                 flow.next_poll = now + Duration::from_secs(1);

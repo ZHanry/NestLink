@@ -232,9 +232,11 @@ async fn start_audio_session(
 ) -> Result {
     let controller_start = controller.submit(Action::StartNativeSession {
         request_id: request_id.to_owned(),
+        relay_node_id: None,
     })?;
     let host_start = host.submit(Action::StartNativeSession {
         request_id: request_id.to_owned(),
+        relay_node_id: None,
     })?;
     let (controller_started, host_started) = tokio::try_join!(
         session_success(controller_start),

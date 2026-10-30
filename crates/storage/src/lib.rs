@@ -37,8 +37,8 @@ pub mod control;
 pub mod media_authority;
 pub mod network_policy;
 pub mod node_discovery;
-pub mod node_resources;
 pub mod node_relay_attributes;
+pub mod node_resources;
 pub mod node_usage;
 pub mod nodes;
 pub mod quotas;
@@ -363,7 +363,8 @@ impl Store {
         }
         if version < 32 {
             let transaction = connection.transaction()?;
-            transaction.execute_batch(include_str!("../migrations/032_node_relay_attributes.sql"))?;
+            transaction
+                .execute_batch(include_str!("../migrations/032_node_relay_attributes.sql"))?;
             transaction.pragma_update(None, "user_version", 32)?;
             transaction.commit()?;
         }

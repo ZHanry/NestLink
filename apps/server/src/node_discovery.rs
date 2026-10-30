@@ -60,7 +60,10 @@ pub(super) async fn discover(
     }))
 }
 
-fn signed_discovery(state: &AppState, claims: &nestlink_protocol::NodeDiscoveryClaims) -> Result<String, ApiError> {
+fn signed_discovery(
+    state: &AppState,
+    claims: &nestlink_protocol::NodeDiscoveryClaims,
+) -> Result<String, ApiError> {
     let signed = state
         .signer
         .sign_node_discovery(claims)
@@ -69,15 +72,22 @@ fn signed_discovery(state: &AppState, claims: &nestlink_protocol::NodeDiscoveryC
 }
 
 pub(super) async fn candidates(
-    State(state): State<AppState>, headers: HeaderMap, Path(id): Path<String>,
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
     Json(request): Json<NodeDiscoveryRequest>,
 ) -> Result<Json<NodeRelayCandidatesResponse>, ApiError> {
     let token = access(&headers)?;
     let lifecycle = state.relay_lifecycle.clone();
-    let (claims, attributes) = state.db(move |store| {
-        let now = now_ms()?;
-        let actor = store.authenticate(&token, now / 1000)?;
-        store.discover_relay_candidates(&lifecycle, &actor, &id, request, now)
-    }).await?;
-    Ok(Json(NodeRelayCandidatesResponse { discovery: signed_discovery(&state, &claims)?, attributes }))
+    let (claims, attributes) = state
+        .db(move |store| {
+            let now = now_ms()?;
+            let actor = store.authenticate(&token, now / 1000)?;
+            store.discover_relay_candidates(&lifecycle, &actor, &id, request, now)
+        })
+        .await?;
+    Ok(Json(NodeRelayCandidatesResponse {
+        discovery: signed_discovery(&state, &claims)?,
+        attributes,
+    }))
 }

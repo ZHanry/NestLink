@@ -88,8 +88,20 @@ async function exchange(page, method, trigger, { previous = null, attributes = n
 async function read(page) { return exchange(page, 'GET', () => click(page, PANEL + ' button', READ)); }
 async function fill(page, region, cost) {
   await page.bringToFront();
-  await page.locator(REGION).fill(region);
-  await page.locator(COST).fill(cost);
+  for (const [selector, value] of [[REGION, region], [COST, cost]]) {
+    if (value === '') {
+      // Puppeteer 25.14.0 clears short empty fills by assigning input.value
+      // and types no characters, so the production on:input never runs.
+      // Use actual keyboard deletion to update both the DOM and its draft.
+      await page.locator(selector).click();
+      await page.keyboard.down('Control');
+      try { await page.keyboard.press('KeyA'); }
+      finally { await page.keyboard.up('Control'); }
+      await page.keyboard.press('Backspace');
+    } else {
+      await page.locator(selector).fill(value);
+    }
+  }
   check(await page.$eval(REGION, element => element.value) === region
     && await page.$eval(COST, element => element.value) === cost, 'Real field entry did not retain the complete draft');
 }

@@ -609,9 +609,11 @@ async fn proved_file_access_tracks_dynamic_roots_and_keeps_failed_tasks_session_
     .await?;
     let (controller_started, host_started) = tokio::try_join!(
         session_success(controller_handle.submit(Action::StartNativeSession {
+            relay_node_id: None,
             request_id: request.id.clone(),
         })?),
         session_success(host_handle.submit(Action::StartNativeSession {
+            relay_node_id: None,
             request_id: request.id.clone(),
         })?),
     )?;
@@ -1160,9 +1162,11 @@ async fn proved_file_access_tracks_dynamic_roots_and_keeps_failed_tasks_session_
     .await?;
     let (controller_restarted, host_restarted) = tokio::try_join!(
         session_success(controller_handle.submit(Action::StartNativeSession {
+            relay_node_id: None,
             request_id: request.id.clone(),
         })?),
         session_success(host_handle.submit(Action::StartNativeSession {
+            relay_node_id: None,
             request_id: request.id.clone(),
         })?),
     )?;
@@ -1359,10 +1363,23 @@ async fn app_core_owns_proved_session_and_revocation_waits_for_cleanup() -> Resu
     assert!(controller_handle.native_audio_binding().is_none());
     assert!(host_handle.native_audio_binding().is_none());
 
+    assert!(controller_handle.submit(Action::StartNativeSession {
+        request_id: request.id.clone(), relay_node_id:Some("not-a-node".into()),
+    }).is_err());
+    let relay_conflict = done(controller_handle.submit(Action::StartNativeSession {
+        request_id: request.id.clone(), relay_node_id:Some(nestlink_auth::random_id()),
+    })?).await?;
+    assert_eq!(relay_conflict.result.status,OperationStatus::Failed);
+    assert_eq!(relay_conflict.result.failure.as_ref().map(|failure|failure.kind),Some(FailureKind::Invalid));
+    assert!(controller_handle.native_audio_binding().is_none());
+    assert!(controller_handle.poll_native_video().is_err());
+
     let controller_start = controller_handle.submit(Action::StartNativeSession {
+        relay_node_id: None,
         request_id: request.id.clone(),
     })?;
     let host_start = host_handle.submit(Action::StartNativeSession {
+        relay_node_id: None,
         request_id: request.id.clone(),
     })?;
     let (controller_started, host_started) = tokio::try_join!(
@@ -2203,9 +2220,11 @@ async fn os_granted_view_catalogue_rotation_preserves_authority_and_exact_epochs
     })?)
     .await?;
     let controller_start = controller.submit(Action::StartNativeSession {
+        relay_node_id: None,
         request_id: request.id.clone(),
     })?;
     let host_start = host.submit(Action::StartNativeSession {
+        relay_node_id: None,
         request_id: request.id.clone(),
     })?;
     tokio::try_join!(

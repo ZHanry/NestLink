@@ -249,6 +249,10 @@ pub(super) fn authorize_native_session(
         return Err(Failure::local(FailureKind::Trust));
     }
     let permitted = |permission: Permission| claims.permissions.contains(&(permission as i32));
+    if config.relay_node_id.as_ref().is_some_and(|id| !nestlink_protocol::valid_id(id))
+        || (config.relay_node_id.is_some() && !claims.paths.contains(&(nestlink_protocol::Path::Relay as i32))) {
+        return Err(Failure::local(FailureKind::Invalid));
+    }
     let key = NativeSessionKey {
         request_id: remote.id.clone(),
         connection_generation: claims.connection_generation,
@@ -332,6 +336,7 @@ pub(super) async fn prove_endpoint(
         nestlink_sdk::native::NativeMediaSessionOptions {
             session: options,
             media,
+            relay_node_id: config.relay_node_id.clone(),
         },
         &[],
         config.stun_servers.clone(),

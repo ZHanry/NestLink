@@ -3434,8 +3434,8 @@ impl Actor {
             self.publish();
             return;
         }
-        if let Action::StartNativeSession { request_id } = &action {
-            self.start_native_establishment(envelope, request_id.clone());
+        if let Action::StartNativeSession { request_id, relay_node_id } = &action {
+            self.start_native_establishment(envelope, request_id.clone(), relay_node_id.clone());
             return;
         }
         if let Action::StartBrowserHost { request_id } = &action {
@@ -3545,8 +3545,8 @@ impl Actor {
         });
         self.publish();
     }
-    fn start_native_establishment(&mut self, envelope: Envelope, request_id: String) {
-        let Some(config) = self.native.clone() else {
+    fn start_native_establishment(&mut self, envelope: Envelope, request_id: String, relay_node_id: Option<String>) {
+        let Some(mut config) = self.native.clone() else {
             self.deliver(
                 envelope,
                 OperationStatus::Failed,
@@ -3558,6 +3558,7 @@ impl Actor {
             self.publish();
             return;
         };
+        config.relay_node_id = relay_node_id;
         if self
             .view
             .native_session
@@ -5616,6 +5617,8 @@ fn map_establish_failure(error: SessionEstablishError) -> Failure {
         SessionEstablishError::Binding | SessionEstablishError::NoCandidates => {
             Failure::local(FailureKind::NativeSessionUnavailable)
         }
+        SessionEstablishError::RelaySelectionInvalid => Failure::local(FailureKind::Invalid),
+        SessionEstablishError::SelectedRelayUnavailable(_) => Failure::local(FailureKind::NativeSessionUnavailable),
         SessionEstablishError::RelayOnlyUnsupported => {
             Failure::local(FailureKind::NativeSessionUnavailable)
         }

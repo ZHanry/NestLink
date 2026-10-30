@@ -27,88 +27,138 @@ impl SecondNode {
         let seed = random_bytes::<32>();
         let identity = NodeIdentity::from_seed(&seed);
         let id = random_id();
-        f.sdk.register_node(NodeRegistration {
-            id: id.clone(),
-            name: "second independent relay runtime".into(),
-            public_key: URL_SAFE_NO_PAD.encode(identity.public_key()),
-            roles: vec![NodeRole::NodeRelay as i32],
-            max_connections: 8,
-            bytes_per_second: 16 * 1024 * 1024,
-        }).await?;
+        f.sdk
+            .register_node(NodeRegistration {
+                id: id.clone(),
+                name: "second independent relay runtime".into(),
+                public_key: URL_SAFE_NO_PAD.encode(identity.public_key()),
+                roles: vec![NodeRole::NodeRelay as i32],
+                max_connections: 8,
+                bytes_per_second: 16 * 1024 * 1024,
+            })
+            .await?;
         let mut usage = ServiceUsageDirectory::new()?;
-        let control = Arc::new(NodeControl::start(NodeConfig {
-            deployment_id: f.permit.claims().deployment_id.clone(),
-            node_id: id.clone(),
-            control_origin: f.sdk.management_origin().into(),
-            trusted_policy_issuer: f.sdk.health().node_policy_issuer.clone(),
-            identity_key_file: "unused-second-test-identity".into(),
-            service_usage_directory: Some(usage.path().to_path_buf()),
-            roles: vec![NodeRole::NodeRelay as i32],
-            allow_loopback_http: true,
-        }, identity)?);
-        let mut pending = PendingFixture { http_task: None, control: Some(control.clone()) };
+        let control = Arc::new(NodeControl::start(
+            NodeConfig {
+                deployment_id: f.permit.claims().deployment_id.clone(),
+                node_id: id.clone(),
+                control_origin: f.sdk.management_origin().into(),
+                trusted_policy_issuer: f.sdk.health().node_policy_issuer.clone(),
+                identity_key_file: "unused-second-test-identity".into(),
+                service_usage_directory: Some(usage.path().to_path_buf()),
+                roles: vec![NodeRole::NodeRelay as i32],
+                allow_loopback_http: true,
+            },
+            identity,
+        )?);
+        let mut pending = PendingFixture {
+            http_task: None,
+            control: Some(control.clone()),
+        };
         usage.track(&control)?;
         let listener = routed::node_listener_with_legacy(
-            "127.0.0.1:0".parse()?, &NodeIdentity::from_seed(&seed), control.clone(),
+            "127.0.0.1:0".parse()?,
+            &NodeIdentity::from_seed(&seed),
+            control.clone(),
         )?;
-        f.sdk.set_node_endpoints(&id, NodeEndpointsUpdate {
-            expected_revision: 0,
-            endpoints: NodeEndpoints {
-                quic_uri: Some(format!("quic://{}", listener.local_addr()?)),
-                wss_origin: None,
-                allow_loopback: true,
-            },
-        }).await?;
+        f.sdk
+            .set_node_endpoints(
+                &id,
+                NodeEndpointsUpdate {
+                    expected_revision: 0,
+                    endpoints: NodeEndpoints {
+                        quic_uri: Some(format!("quic://{}", listener.local_addr()?)),
+                        wss_origin: None,
+                        allow_loopback: true,
+                    },
+                },
+            )
+            .await?;
         let lease = tokio::time::timeout(Duration::from_secs(3), async {
             loop {
-                if let Ok(lease) = control.authorize(NodeRole::NodeRelay, false) { break lease; }
+                if let Ok(lease) = control.authorize(NodeRole::NodeRelay, false) {
+                    break lease;
+                }
                 tokio::time::sleep(Duration::from_millis(10)).await;
             }
-        }).await?;
-        let first = f.sdk.network_remote_relay(f.pin.space_id(), &f.allocation).await?;
+        })
+        .await?;
+        let first = f
+            .sdk
+            .network_remote_relay(f.pin.space_id(), &f.allocation)
+            .await?;
         let decode_expiry = |value: &nestlink_protocol::api::NetworkGrantView| -> Result<u64> {
             Ok(nestlink_protocol::network::GrantClaims::decode_canonical(
                 &URL_SAFE_NO_PAD.decode(&value.claims)?,
-            )?.scope().expires_at_ms)
+            )?
+            .scope()
+            .expires_at_ms)
         };
-        let expires = lease.expires_at_unix_ms
+        let expires = lease
+            .expires_at_unix_ms
             .min(decode_expiry(&first.path.controller_membership)?)
             .min(decode_expiry(&first.path.host_membership)?)
             .min(f.permit.claims().expires_at_unix_ms);
         let policy = f.sdk.network_policy(f.pin.space_id()).await?;
         let allocation = random_id();
-        f.sdk.reserve_network_remote_relay(f.pin.space_id(), &f.controller, &f.permit,
-            NetworkRemoteRelayRequest {
-                path: NetworkRemotePathRequest {
-                    connectivity_grant_id: random_id(), path_grant_id: random_id(),
-                    controller_membership_grant_id: first.path.controller_membership.grant_id,
-                    host_membership_grant_id: first.path.host_membership.grant_id,
-                    expected_policy_epoch: policy.policy_epoch,
-                    expires_at_unix_ms: expires,
+        f.sdk
+            .reserve_network_remote_relay(
+                f.pin.space_id(),
+                &f.controller,
+                &f.permit,
+                NetworkRemoteRelayRequest {
+                    path: NetworkRemotePathRequest {
+                        connectivity_grant_id: random_id(),
+                        path_grant_id: random_id(),
+                        controller_membership_grant_id: first.path.controller_membership.grant_id,
+                        host_membership_grant_id: first.path.host_membership.grant_id,
+                        expected_policy_epoch: policy.policy_epoch,
+                        expires_at_unix_ms: expires,
+                    },
+                    transit_grant_id: random_id(),
+                    allocation: RelayAllocationRequest {
+                        allocation_id: allocation.clone(),
+                        node_id: id.clone(),
+                        device_id: f.controller.device_id.clone(),
+                        signature: String::new(),
+                    },
                 },
-                transit_grant_id: random_id(),
-                allocation: RelayAllocationRequest {
-                    allocation_id: allocation.clone(), node_id: id.clone(),
-                    device_id: f.controller.device_id.clone(), signature: String::new(),
-                },
-            },
-        ).await?;
+            )
+            .await?;
         tokio::time::timeout(Duration::from_secs(3), async {
-            while !control.resource_snapshot().is_ok_and(|snapshot| snapshot.network_routes.iter().any(|resource|
-                resource.allocation.as_ref().is_some_and(|grant| grant.allocation_id == allocation))) {
+            while !control.resource_snapshot().is_ok_and(|snapshot| {
+                snapshot.network_routes.iter().any(|resource| {
+                    resource
+                        .allocation
+                        .as_ref()
+                        .is_some_and(|grant| grant.allocation_id == allocation)
+                })
+            }) {
                 tokio::time::sleep(Duration::from_millis(10)).await;
             }
-        }).await?;
+        })
+        .await?;
         let endpoint = listener.endpoint()?.clone();
         let shared = control.clone();
         let (shutdown, mut stopped) = watch::channel(false);
         let task = tokio::spawn(async move {
             node_quic::serve(endpoint, shared, async move {
-                if !*stopped.borrow() { let _ = stopped.changed().await; }
-            }).await
+                if !*stopped.borrow() {
+                    let _ = stopped.changed().await;
+                }
+            })
+            .await
         });
         pending.control = None;
-        Ok(Self { id, allocation, control, listener, shutdown, task: Some(task), _usage: usage })
+        Ok(Self {
+            id,
+            allocation,
+            control,
+            listener,
+            shutdown,
+            task: Some(task),
+            _usage: usage,
+        })
     }
     async fn finish(&mut self) -> Result {
         self.shutdown.send_replace(true);
@@ -116,7 +166,9 @@ impl SecondNode {
             tokio::time::timeout(Duration::from_secs(5), task).await???;
         }
         self.task = None;
-        self.listener.close_and_wait(Instant::now() + Duration::from_secs(5)).await?;
+        self.listener
+            .close_and_wait(Instant::now() + Duration::from_secs(5))
+            .await?;
         Ok(())
     }
 }
@@ -127,7 +179,8 @@ async fn transfer(controller: &mut ChannelRuntime, host: &ChannelRuntime, byte: 
     for chunk in payload.chunks(nestlink_protocol::FILE_CHUNK_BYTES as usize) {
         let (sent, received) = tokio::time::timeout_at(deadline, async {
             tokio::join!(host.send(Channel::FileRead, chunk), controller.receive())
-        }).await?;
+        })
+        .await?;
         sent?;
         let frame = received?;
         assert_eq!(frame.channel, Channel::FileRead);
@@ -137,23 +190,44 @@ async fn transfer(controller: &mut ChannelRuntime, host: &ChannelRuntime, byte: 
 }
 
 #[tokio::test]
-async fn two_registered_nodes_carry_distinct_authorized_routes_and_one_revoke_preserves_the_other() -> Result {
+async fn two_registered_nodes_carry_distinct_authorized_routes_and_one_revoke_preserves_the_other()
+-> Result {
     let mut f = Fixture::new().await?;
     let mut second = SecondNode::new(&f).await?;
-    let first = f.sdk.network_remote_relay(f.pin.space_id(), &f.allocation).await?;
-    let other = f.sdk.network_remote_relay(f.pin.space_id(), &second.allocation).await?;
+    let first = f
+        .sdk
+        .network_remote_relay(f.pin.space_id(), &f.allocation)
+        .await?;
+    let other = f
+        .sdk
+        .network_remote_relay(f.pin.space_id(), &second.allocation)
+        .await?;
     assert_ne!(first.node.node_id, second.id);
     assert_eq!(other.node.node_id, second.id);
     assert_ne!(first.path.path.grant_id, other.path.path.grant_id);
     let discovery = f.sdk.discover_relay_nodes(&f.controller, &f.permit).await?;
-    assert!(discovery.nodes().iter().any(|node| node.node_id == first.node.node_id));
-    assert!(discovery.nodes().iter().any(|node| node.node_id == second.id));
+    assert!(
+        discovery
+            .nodes()
+            .iter()
+            .any(|node| node.node_id == first.node.node_id)
+    );
+    assert!(
+        discovery
+            .nodes()
+            .iter()
+            .any(|node| node.node_id == second.id)
+    );
     let first_binds = [unused_udp()?, unused_udp()?];
     let second_binds = [unused_udp()?, unused_udp()?];
-    let (mut c1, mut h1, _stop1) = f.channels(first_binds).await?;
-    let (mut c2, mut h2, _stop2) = f.channels_for(&second.allocation, second_binds).await?;
-    transfer(&mut c1, &h1, 31).await?;
-    transfer(&mut c2, &h2, 93).await?;
+    let (mut c1, mut h1, _stop1) = f.channels(first_binds).await
+        .map_err(|error| format!("two-node first route establishment: {error}"))?;
+    let (mut c2, mut h2, _stop2) = f.channels_for(&second.allocation, second_binds).await
+        .map_err(|error| format!("two-node second route establishment: {error}"))?;
+    transfer(&mut c1, &h1, 31).await
+        .map_err(|error| format!("two-node first route before revocation: {error}"))?;
+    transfer(&mut c2, &h2, 93).await
+        .map_err(|error| format!("two-node second route before revocation: {error}"))?;
     assert_eq!(f.control.counters()?.opened_connections, 2);
     assert_eq!(second.control.counters()?.opened_connections, 2);
     assert!(f.control.counters()?.admitted_bytes > 262_144);
@@ -162,12 +236,26 @@ async fn two_registered_nodes_carry_distinct_authorized_routes_and_one_revoke_pr
     let deadline = Instant::now() + Duration::from_secs(5);
     let (one, two) = tokio::time::timeout_at(deadline, async {
         tokio::try_join!(c1.wait_stopped(), h1.wait_stopped())
-    }).await??;
+    })
+    .await??;
     assert_eq!(one.reason, StopReason::Revoked);
     assert_eq!(two.reason, StopReason::Revoked);
-    assert!(f.sdk.network_remote_relay(f.pin.space_id(), &f.allocation).await.is_err());
-    assert_eq!(f.sdk.network_remote_relay(f.pin.space_id(), &second.allocation).await?.node.node_id, second.id);
-    transfer(&mut c2, &h2, 147).await?;
+    assert!(
+        f.sdk
+            .network_remote_relay(f.pin.space_id(), &f.allocation)
+            .await
+            .is_err()
+    );
+    assert_eq!(
+        f.sdk
+            .network_remote_relay(f.pin.space_id(), &second.allocation)
+            .await?
+            .node
+            .node_id,
+        second.id
+    );
+    transfer(&mut c2, &h2, 147).await
+        .map_err(|error| format!("two-node surviving route after other node revocation: {error}"))?;
     assert_eq!(f.sdk.relay_reservations().await?.held_allocations, 2);
     drop((c1, h1));
     let _first = rebind(&first_binds)?;

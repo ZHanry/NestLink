@@ -3,11 +3,16 @@ use leptos::{prelude::*, task::spawn_local};
 use nestlink_protocol::api::{NodeRelayAttributes, NodeRelayAttributesUpdate};
 use nestlink_sdk::SdkError;
 use nestlink_web::i18n::{sdk_error, text as t};
-use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
 
 #[component]
 pub(super) fn NodeRelayAttributesPanel(
-    api: Api, node_id: String, session_revision: RwSignal<u64>,
+    api: Api,
+    node_id: String,
+    session_revision: RwSignal<u64>,
     auth_failure: Callback<SdkHandle>,
 ) -> impl IntoView {
     let node = StoredValue::new(node_id);
@@ -21,12 +26,18 @@ pub(super) fn NodeRelayAttributesPanel(
     let cleanup = alive.clone();
     on_cleanup(move || cleanup.store(false, Ordering::Release));
     let request = Callback::new(move |save: bool| {
-        if busy.get_untracked() { return; }
+        if busy.get_untracked() {
+            return;
+        }
         let update = if save {
-            let Some(expected_revision) = revision.get_untracked() else { return; };
+            let Some(expected_revision) = revision.get_untracked() else {
+                return;
+            };
             let region = region.get_untracked().trim().to_owned();
             let cost = cost.get_untracked();
-            let cost_weight = if cost.trim().is_empty() { None } else {
+            let cost_weight = if cost.trim().is_empty() {
+                None
+            } else {
                 match cost.trim().parse::<u32>() {
                     Ok(value) => Some(value),
                     Err(_) => {
@@ -35,37 +46,68 @@ pub(super) fn NodeRelayAttributesPanel(
                     }
                 }
             };
-            let attributes = NodeRelayAttributes { region: (!region.is_empty()).then_some(region), cost_weight };
+            let attributes = NodeRelayAttributes {
+                region: (!region.is_empty()).then_some(region),
+                cost_weight,
+            };
             if attributes.validate().is_err() {
                 problem.set(t("地区须为 1–32 位小写字母、数字或连字符；费用权重须为 0–1000000，均可留空。", "Region must contain 1–32 lowercase letters, digits or hyphens; cost weight must be 0–1000000. Either may be blank.").into());
                 return;
             }
-            Some(NodeRelayAttributesUpdate { expected_revision, attributes })
-        } else { None };
-        let Some(sdk) = api.get_value() else { return; };
+            Some(NodeRelayAttributesUpdate {
+                expected_revision,
+                attributes,
+            })
+        } else {
+            None
+        };
+        let Some(sdk) = api.get_value() else {
+            return;
+        };
         let session = session_revision.get_untracked();
         let id = node.get_value();
         let alive = alive.clone();
-        busy.set(true); problem.set(String::new()); message.set(String::new());
+        busy.set(true);
+        problem.set(String::new());
+        message.set(String::new());
         spawn_local(async move {
-            let active = || alive.load(Ordering::Acquire) && session_revision.try_get_untracked() == Some(session);
+            let active = || {
+                alive.load(Ordering::Acquire)
+                    && session_revision.try_get_untracked() == Some(session)
+            };
             let result = {
                 let client = sdk.lock().await;
-                if !active() { return; }
+                if !active() {
+                    return;
+                }
                 if let Some(update) = update {
                     client.set_node_relay_attributes(&id, update).await
                 } else {
                     client.node_relay_attributes(&id).await
                 }
             };
-            if !active() { return; }
+            if !active() {
+                return;
+            }
             busy.set(false);
             match result {
                 Ok(view) if view.node_id == id && view.attributes.validate().is_ok() => {
                     region.set(view.attributes.region.unwrap_or_default());
-                    cost.set(view.attributes.cost_weight.map(|value| value.to_string()).unwrap_or_default());
+                    cost.set(
+                        view.attributes
+                            .cost_weight
+                            .map(|value| value.to_string())
+                            .unwrap_or_default(),
+                    );
                     revision.set(Some(view.revision));
-                    message.set(if save { t("节点属性已保存。", "Relay attributes saved.") } else { t("已读取当前节点属性。", "Current relay attributes loaded.") }.into());
+                    message.set(
+                        if save {
+                            t("节点属性已保存。", "Relay attributes saved.")
+                        } else {
+                            t("已读取当前节点属性。", "Current relay attributes loaded.")
+                        }
+                        .into(),
+                    );
                 }
                 Ok(_) => {
                     revision.set(None);
@@ -73,8 +115,11 @@ pub(super) fn NodeRelayAttributesPanel(
                 }
                 Err(error) => {
                     revision.set(None);
-                    if matches!(&error, SdkError::SignIn) || matches!(&error, SdkError::Api(status, _) if status.as_u16() == 401) {
-                        auth_failure.run(sdk); return;
+                    if matches!(&error, SdkError::SignIn)
+                        || matches!(&error, SdkError::Api(status, _) if status.as_u16() == 401)
+                    {
+                        auth_failure.run(sdk);
+                        return;
                     }
                     problem.set(format!("{} {}", sdk_error(&error), t("仅管理员可配置未撤销的中继节点。请重新读取后再保存。", "Only an administrator can configure an active relay node. Read the current values before saving again.")));
                 }
@@ -83,8 +128,12 @@ pub(super) fn NodeRelayAttributesPanel(
     });
     Effect::new(move |_| {
         let _ = session_revision.get();
-        revision.set(None); region.set(String::new()); cost.set(String::new());
-        busy.set(false); problem.set(String::new()); message.set(String::new());
+        revision.set(None);
+        region.set(String::new());
+        cost.set(String::new());
+        busy.set(false);
+        problem.set(String::new());
+        message.set(String::new());
         request.run(false);
     });
     view! {

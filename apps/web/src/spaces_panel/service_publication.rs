@@ -206,10 +206,10 @@ pub(super) fn SpaceServicesPanel(
                 Ok((current, services)) => {
                     let confirmed = current.space.clone();
                     details.update(|details| {
-                        if let Some(details) = details {
-                            if details.space.space_id == confirmed.space_id {
-                                details.space = confirmed;
-                            }
+                        if let Some(details) = details
+                            && details.space.space_id == confirmed.space_id
+                        {
+                            details.space = confirmed;
                         }
                     });
                     policy.set(Some(current));

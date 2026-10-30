@@ -28,6 +28,7 @@ pub(crate) struct RemoteForm {
     search: String,
     pub(super) permissions: [bool; 7],
     pub(super) path: String,
+    pub(super) relay_node: String,
     pub(super) trusted: bool,
     approval: Option<ApprovalDraft>,
     host_password: Zeroizing<String>,
@@ -50,6 +51,7 @@ impl Default for RemoteForm {
             search: String::new(),
             permissions: [true, false, false, false, false, false, false],
             path: "direct_preferred".into(),
+            relay_node: String::new(),
             trusted: false,
             approval: None,
             host_password: Zeroizing::default(),
@@ -64,6 +66,15 @@ impl Default for RemoteForm {
     }
 }
 impl RemoteForm {
+    pub(super) fn relay_node_id(&self) -> Option<String> {
+        let node = self.relay_node.trim();
+        (!node.is_empty()).then(|| node.to_owned())
+    }
+
+    pub(super) fn relay_selection_valid(&self, relay_allowed: bool) -> bool {
+        self.relay_node_id().as_ref().is_none_or(|id| relay_allowed && nestlink_protocol::valid_id(id))
+    }
+
     fn reconcile_one_time_password_context(&mut self, snapshot: &Snapshot) {
         let password_context = one_time_password_context(snapshot, self.selected.as_deref());
         if self.one_time_password_context != password_context {
@@ -507,6 +518,19 @@ impl DesktopApp {
                                             );
                                         }
                                     });
+                                ui.label(self.t("指定中继节点（可选）", "Selected relay node (optional)"));
+                                let relay_hint = self.t("留空自动选择；填写节点 UUID", "Blank selects automatically; enter a node UUID");
+                                ui.add(egui::TextEdit::singleline(&mut self.remote.relay_node).char_limit(36).hint_text(relay_hint));
+                                ui.small(self.t(
+                                    "指定节点只用于本次会话及其恢复。节点不可用或未获授权时连接失败；不会改用其他中继。允许直连时仍可直连。",
+                                    "The selected node applies to this session and its recovery. An unavailable or unauthorized node fails the connection; another relay is not substituted. Direct connections remain allowed when authorized.",
+                                ));
+                                if !self.remote.relay_selection_valid(self.remote.path != "direct_only") {
+                                    ui.colored_label(ui.visuals().error_fg_color, self.t(
+                                        "请输入规范的中继节点 UUID；仅直连不能指定中继。",
+                                        "Enter a canonical relay node UUID. Direct-only connections cannot select a relay.",
+                                    ));
+                                }
                             },
                         );
                         if let Some(session) = session.filter(|session| {
@@ -1800,7 +1824,7 @@ impl DesktopApp {
             })
             && ui
                 .add_enabled(
-                    !busy,
+                    !busy && self.remote.relay_selection_valid(request.paths.contains(&(nestlink_protocol::Path::Relay as i32))),
                     egui::Button::new(self.t("建立原生会话", "Establish native session")),
                 )
                 .clicked()
@@ -1809,6 +1833,7 @@ impl DesktopApp {
                 snapshot,
                 Action::StartNativeSession {
                     request_id: request.id.clone(),
+                    relay_node_id: self.remote.relay_node_id(),
                 },
             );
         }

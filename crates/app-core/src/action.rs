@@ -115,6 +115,9 @@ pub enum Action {
     /// and mutual endpoint proof. This is not satisfied by approval alone.
     StartNativeSession {
         request_id: String,
+        /// Local intent only. The SDK must rediscover and authorize this UUID.
+        #[serde(default)]
+        relay_node_id: Option<String>,
     },
     /// Stop only the currently displayed request/generation pair.
     StopNativeSession {
@@ -408,9 +411,11 @@ impl Action {
             Self::RevokeDevice { device_id } => valid_id(device_id),
             Self::DisableAccount { account_id } => valid_id(account_id),
             Self::RevokeNode { node_id } => valid_id(node_id),
+            Self::StartNativeSession { request_id, relay_node_id } => {
+                valid_id(request_id) && relay_node_id.as_ref().is_none_or(|id| valid_id(id))
+            }
             Self::InspectRemote { request_id }
             | Self::IssueRemotePermit { request_id }
-            | Self::StartNativeSession { request_id }
             | Self::StartBrowserHost { request_id }
             | Self::RevokeRemote { request_id }
             | Self::TrustRemote { request_id, .. } => valid_id(request_id),
@@ -615,6 +620,29 @@ fn empty_action<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<(),
     #[serde(deny_unknown_fields)]
     struct Empty {}
     Empty::deserialize(deserializer).map(|_| ())
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn native_relay_selection_keeps_legacy_json_default_and_rejects_invalid_local_ids()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let request_id = nestlink_auth::random_id();
+        let legacy: Action = serde_json::from_value(serde_json::json!({"action":"start_native_session","request_id":request_id}))?;
+        assert!(legacy.valid_input());
+        assert!(matches!(legacy,Action::StartNativeSession{relay_node_id:None,..}));
+        let node_id = nestlink_auth::random_id();
+        let selected: Action = serde_json::from_value(serde_json::json!({"action":"start_native_session","request_id":request_id,"relay_node_id":node_id}))?;
+        assert!(selected.valid_input());
+        assert_eq!(serde_json::to_value(&selected)?["relay_node_id"],node_id);
+        for invalid in ["", "https://relay.example", "../node", "not-a-node"] {
+            let action = Action::StartNativeSession { request_id:request_id.clone(), relay_node_id:Some(invalid.into()) };
+            assert!(!action.valid_input());
+        }
+        Ok(())
+    }
 }
 mod optional_secret {
     use nestlink_auth::Secret;

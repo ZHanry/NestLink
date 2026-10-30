@@ -37,6 +37,8 @@ mod reconnection;
 mod recovery;
 #[path = "node_relay/signed_discovery.rs"]
 mod signed_discovery;
+#[path = "node_relay/selected_relay.rs"]
+mod selected_relay;
 #[derive(Default)]
 struct CloseFaults {
     lose_next: std::sync::atomic::AtomicBool,

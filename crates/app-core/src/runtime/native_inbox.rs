@@ -176,6 +176,7 @@ impl Actor {
             } else {
                 Action::StartNativeSession {
                     request_id: offer.id,
+                    relay_node_id: None,
                 }
             };
             if self

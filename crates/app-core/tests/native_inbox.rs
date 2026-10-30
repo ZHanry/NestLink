@@ -140,6 +140,7 @@ async fn session_and_stop(manual_host: bool, relay_only: bool) -> Result {
     // inbox attempt marker. Its explicit stop must consume the wake-up hint.
     let host_start = if manual_host {
         Some(host.submit(Action::StartNativeSession {
+            relay_node_id: None,
             request_id: request.id.clone(),
         })?)
     } else {
@@ -149,6 +150,7 @@ async fn session_and_stop(manual_host: bool, relay_only: bool) -> Result {
         Duration::from_secs(25),
         controller
             .submit(Action::StartNativeSession {
+                relay_node_id: None,
                 request_id: request.id.clone(),
             })?
             .wait(),
