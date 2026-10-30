@@ -8,6 +8,8 @@ license.workspace = true
 [dependencies]
 nestlink-protocol.workspace = true
 nestlink-policy.workspace = true
+nestlink-identity.workspace = true
+petgraph = "=0.8.3"
 serde.workspace = true
 
 [lints]

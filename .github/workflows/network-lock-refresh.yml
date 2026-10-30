@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       source_revision:
-        description: Exact main source containing the reviewed PCP adapter manifest
+        description: Exact main source containing the reviewed network component manifests
         required: true
         type: string
 
@@ -50,6 +50,9 @@ jobs:
           output.mkdir()
           traversal = tomllib.loads(pathlib.Path('crates/traversal/Cargo.toml').read_text())
           assert traversal['dependencies']['crab_nat'] == '=0.8.1'
+          connectivity = tomllib.loads(pathlib.Path('crates/connectivity/Cargo.toml').read_text())
+          assert connectivity['dependencies']['petgraph'] == '=0.8.3'
+          assert connectivity['dependencies']['nestlink-identity'] == {'workspace': True}
           before_bytes = lock.read_bytes()
           before = tomllib.loads(before_bytes.decode())['package']
           shutil.copyfile(lock, output / 'before.lock')
@@ -84,6 +87,7 @@ jobs:
               after = tomllib.loads(lock.read_text())['package']
               derived = {identity(item): item.get('checksum') for item in after}
               crab = [item for item in after if item['name'] == 'crab_nat']
+              petgraph = [item for item in after if item['name'] == 'petgraph']
               changed = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
               assertions = {
                   'only_selected_lock_changed': set(changed) <= {lock.as_posix()},
@@ -93,6 +97,7 @@ jobs:
                       tomllib.loads('[[package]]' + dict(blocks(lock.read_text())[1])[key])['package'][0]
                       for key, part in retained.items()),
                   'reviewed_crab_nat_exact_version_and_checksum': len(crab) == 1 and crab[0]['version'] == '0.8.1' and crab[0].get('checksum') == 'b6571f33e3d6520c5b08e54b1202836c6ebe68b950f450951804d037a875c25c',
+                  'reviewed_petgraph_exact_version_and_checksum': len(petgraph) == 1 and petgraph[0]['version'] == '0.8.3' and petgraph[0].get('checksum') == '8701b58ea97060d5e5b155d383a69952a60943f0e6dfe30b04c287beb0b27455',
                   'locked_metadata_succeeded': all(item['return_code'] == 0 for item in commands),
               }
               assert all(assertions.values()), 'Unreviewed dependency drift or incomplete lock derivation'
@@ -102,7 +107,7 @@ jobs:
               shutil.copyfile(lock, output / 'Cargo.lock')
               (output / 'derivation.diff').write_bytes(subprocess.check_output(['git', 'diff', '--binary', '--', str(lock)]))
               receipt = {
-                  'schema_version': 1, 'purpose': 'reviewed-pcp-lock-derivation-only',
+                  'schema_version': 1, 'purpose': 'reviewed-network-components-lock-derivation-only',
                   'repository': os.environ['GITHUB_REPOSITORY'], 'source_revision': expected,
                   'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
                   'scope': scope, 'manifest_path': manifest.as_posix(),
