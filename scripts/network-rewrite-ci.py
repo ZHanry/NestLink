@@ -26,7 +26,7 @@ WORKFLOW_PATH = ".github/workflows/network-rewrite.yml"
 PACKAGES = (
     "nestlink-protocol", "nestlink-identity", "nestlink-policy", "nestlink-connectivity",
     "nestlink-storage", "nestlink-transport-stream", "nestlink-transport-quic",
-    "nestlink-transport-wss", "nestlink-remote",
+    "nestlink-transport-wss", "nestlink-remote", "nestlink-server",
 )
 REQUIRED_COMMANDS = {
     "rust-toolchain", "format-check", "contract-clippy", "contract-tests", "ci-evidence-tests",

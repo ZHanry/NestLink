@@ -3,6 +3,7 @@ pub mod config;
 mod connection_diagnostics;
 mod media_authority;
 mod native_discovery;
+mod network_policy;
 mod node_control;
 mod node_discovery;
 pub mod node_quic;
@@ -76,6 +77,7 @@ pub struct AppState {
     service_lifecycle: Arc<nestlink_storage::services::publication::ServiceLifecycle>,
     service_signer: Arc<nestlink_identity::service_plane::ServiceLeaseSigner>,
     node_signer: Arc<nestlink_identity::nodes::NodePolicySigner>,
+    network_signer: Arc<nestlink_identity::network::NetworkAuthoritySigner>,
     node_connections: Arc<Semaphore>,
     event_connections: Arc<Semaphore>,
     event_accounts: Arc<Mutex<HashMap<String, Arc<Semaphore>>>>,
@@ -161,6 +163,7 @@ impl AppState {
         let (events, _) = broadcast::channel(128);
         let dummy_hash = hash_password(token().expose())?;
         let node_signer = signer.node_policy_signer()?;
+        let network_signer = signer.network_authority_signer()?;
         let relay_quota = store.relay_quota_current()?;
         let relay_lifecycle =
             store.relay_lifecycle(now_ms().map_err(|_| StorageError::Conflict)?)?;
@@ -183,6 +186,7 @@ impl AppState {
             service_lifecycle: Arc::new(service_lifecycle),
             service_signer: Arc::new(service_signer),
             node_signer: Arc::new(node_signer),
+            network_signer: Arc::new(network_signer),
             node_connections: Arc::new(Semaphore::new(128)),
             event_connections: Arc::new(Semaphore::new(256)),
             event_accounts: Arc::new(Mutex::new(HashMap::new())),
@@ -311,6 +315,26 @@ pub fn router(state: AppState) -> Router {
         .route(
             "/api/v3/network/discovery",
             get(native_discovery::configuration),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/authority",
+            put(network_policy::configure),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/policy",
+            get(network_policy::policy),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/members/{installation}",
+            get(network_policy::member).put(network_policy::set_member).delete(network_policy::revoke_member),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/members/{installation}/grants",
+            post(network_policy::issue),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/grants/{grant}",
+            get(network_policy::read_grant).delete(network_policy::revoke_grant),
         )
         .route("/api/v3/relay/quota", get(quotas::get).put(quotas::set))
         .route("/api/v3/relay/usage", get(quotas::usage))

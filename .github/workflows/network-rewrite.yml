@@ -8,6 +8,7 @@ on:
       - "rust-toolchain.toml"
       - "compatibility.json"
       - "crates/**"
+      - "apps/server/**"
       - "docs/network-rewrite/**"
       - "config/network-*.json"
       - "config/product-scope.json"
@@ -21,6 +22,7 @@ on:
       - "rust-toolchain.toml"
       - "compatibility.json"
       - "crates/**"
+      - "apps/server/**"
       - "docs/network-rewrite/**"
       - "config/network-*.json"
       - "config/product-scope.json"
@@ -38,6 +40,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  production-socket-slice:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CARGO_INCREMENTAL: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      RUST_BACKTRACE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          components: clippy
+      - name: Exercise production mutual proof and FileRead with actual kernel packet faults
+        run: python -B scripts/network-rewrite-socket.py --output "${{ runner.temp }}/nestlink-network-socket"
+      - name: Retain packet captures, process logs, source identity and partial coverage receipts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: network-socket-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/nestlink-network-socket/
+          if-no-files-found: error
+          retention-days: 30
   independent-vectors:
     runs-on: ubuntu-24.04
     timeout-minutes: 5

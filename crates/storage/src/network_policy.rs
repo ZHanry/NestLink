@@ -19,6 +19,22 @@ pub const MAX_NETWORK_MEMBERS: usize = 4096;
 pub const MAX_CURRENT_NETWORK_GRANTS: usize = 65_536;
 pub const MAX_MEMBERSHIP_GRANT_MS: u64 = 15 * 60 * 1000;
 
+struct StoredMembershipGrant {
+    installation_id: String,
+    signed: SignedNetworkGrant,
+    digest: Vec<u8>,
+}
+
+struct AuthoritySnapshotRow {
+    public_key: Vec<u8>,
+    deployment_id: String,
+    revision: u64,
+    policy_epoch: u64,
+    last_observed_ms: u64,
+    restore_fenced: bool,
+    same_security_epoch: bool,
+}
+
 pub struct NetworkAuthorityUpdate {
     pub space_id: String,
     pub expected_revision: u64,
@@ -419,13 +435,20 @@ impl Store {
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
         self.audit_admin(actor, checked_seconds(now_ms)?)?;
         let snapshot = read_snapshot(&tx, space_id, now_ms)?;
-        let stored: Option<(String,Vec<u8>,Vec<u8>,Vec<u8>)> = tx.query_row(
+        let stored: Option<StoredMembershipGrant> = tx.query_row(
             "SELECT installation_id,claims,signature,digest FROM network_grants WHERE space_id=?1 AND grant_id=?2",
-            params![space_id,grant_id], |r|Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?)),
+            params![space_id,grant_id], |r|Ok(StoredMembershipGrant {
+                installation_id: r.get(0)?,
+                signed: SignedNetworkGrant { claims: r.get(1)?, signature: r.get(2)? },
+                digest: r.get(3)?,
+            }),
         ).optional()?;
-        let (installation, claims, signature, digest) = stored.ok_or(StorageError::Forbidden)?;
-        let signed = SignedNetworkGrant { claims, signature };
-        let bound = snapshot.verify_member(&signed, &installation)?;
+        let StoredMembershipGrant {
+            installation_id,
+            signed,
+            digest,
+        } = stored.ok_or(StorageError::Forbidden)?;
+        let bound = snapshot.verify_member(&signed, &installation_id)?;
         if digest != bound.digest() {
             return Err(StorageError::Forbidden);
         }
@@ -464,12 +487,22 @@ fn read_snapshot(
 ) -> Result<TrustedNetworkPolicySnapshot, StorageError> {
     require_id(space_id)?;
     check_clock(now_ms)?;
-    let row: Option<(Vec<u8>, String, u64, u64, u64, bool, bool)> = connection.query_row(
+    let row: Option<AuthoritySnapshotRow> = connection.query_row(
         "SELECT a.public_key,d.id,a.revision,a.policy_epoch,a.last_observed_ms,a.restore_fenced,a.security_epoch=d.security_epoch FROM network_authorities a JOIN deployment d ON d.singleton=1 WHERE a.space_id=?1",
-        [space_id], |r|Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?,r.get(4)?,r.get(5)?,r.get(6)?)),
+        [space_id], |r|Ok(AuthoritySnapshotRow {
+            public_key: r.get(0)?, deployment_id: r.get(1)?, revision: r.get(2)?, policy_epoch: r.get(3)?,
+            last_observed_ms: r.get(4)?, restore_fenced: r.get(5)?, same_security_epoch: r.get(6)?,
+        }),
     ).optional()?;
-    let (key, deployment_id, revision, policy_epoch, last, fenced, same_security_epoch) =
-        row.ok_or(StorageError::Forbidden)?;
+    let AuthoritySnapshotRow {
+        public_key: key,
+        deployment_id,
+        revision,
+        policy_epoch,
+        last_observed_ms: last,
+        restore_fenced: fenced,
+        same_security_epoch,
+    } = row.ok_or(StorageError::Forbidden)?;
     if fenced || !same_security_epoch {
         return Err(StorageError::Forbidden);
     }
