@@ -3,6 +3,57 @@
 //! two independently deployed Linux machines.
 use super::*;
 
+// Retain bounded, credential-free observations around the real failure. These
+// facts cannot make a route ready or replace any live admission check.
+fn report_node_state(label: &str, control: &NodeControl, f: &Fixture) {
+    use nestlink_transport_stream::tls::CurrentClientPins;
+    let Ok(sample) = RuntimeClock::default().sample() else {
+        eprintln!("two-node {label}: diagnostic clock unavailable");
+        return;
+    };
+    let now = sample.unix_ms;
+    let lease_remaining = control
+        .current_lease()
+        .map(|lease| lease.expires_at_unix_ms.saturating_sub(now));
+    let resources = control.resource_snapshot().map(|snapshot| {
+        (
+            snapshot.expires_at_unix_ms.saturating_sub(now),
+            snapshot.network_routes.len(),
+            snapshot.query.map(|query| query.request_sequence),
+        )
+    });
+    eprintln!(
+        "two-node {label}: lease_remaining_ms={lease_remaining:?} resources=(remaining_ms,routes,sequence){resources:?} controller_pin={} host_pin={} stopped={}",
+        control.contains(&f.controller.identity.fingerprint()),
+        control.contains(&f.host.identity.fingerprint()),
+        *control.stopped().borrow(),
+    );
+}
+
+struct SchedulerObservation(JoinHandle<()>);
+impl Drop for SchedulerObservation {
+    fn drop(&mut self) {
+        self.0.abort();
+    }
+}
+impl SchedulerObservation {
+    fn start() -> Self {
+        Self(tokio::spawn(async {
+            let mut tick = tokio::time::interval(Duration::from_millis(100));
+            tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+            let mut previous = Instant::now();
+            for _ in 0..300 {
+                tick.tick().await;
+                let elapsed = previous.elapsed();
+                if elapsed >= Duration::from_millis(250) {
+                    eprintln!("two-node scheduler observation gap_ms={}", elapsed.as_millis());
+                }
+                previous = Instant::now();
+            }
+        }))
+    }
+}
+
 struct SecondNode {
     id: String,
     allocation: String,
@@ -192,8 +243,12 @@ async fn transfer(controller: &mut ChannelRuntime, host: &ChannelRuntime, byte: 
 #[tokio::test]
 async fn two_registered_nodes_carry_distinct_authorized_routes_and_one_revoke_preserves_the_other()
 -> Result {
+    let _scheduler = SchedulerObservation::start();
+    let started = Instant::now();
     let mut f = Fixture::new().await?;
+    eprintln!("two-node first runtime ready elapsed_ms={}", started.elapsed().as_millis());
     let mut second = SecondNode::new(&f).await?;
+    eprintln!("two-node both runtimes ready elapsed_ms={}", started.elapsed().as_millis());
     let first = f
         .sdk
         .network_remote_relay(f.pin.space_id(), &f.allocation)
@@ -220,14 +275,26 @@ async fn two_registered_nodes_carry_distinct_authorized_routes_and_one_revoke_pr
     );
     let first_binds = [unused_udp()?, unused_udp()?];
     let second_binds = [unused_udp()?, unused_udp()?];
+    report_node_state("first before connection", &f.control, &f);
+    report_node_state("second before first connection", &second.control, &f);
     let (mut c1, mut h1, _stop1) = f
         .channels(first_binds)
         .await
-        .map_err(|error| format!("two-node first route establishment: {error}"))?;
+        .map_err(|error| {
+            report_node_state("first after failed connection", &f.control, &f);
+            report_node_state("second after failed first connection", &second.control, &f);
+            format!("two-node first route establishment after {}ms: {error}", started.elapsed().as_millis())
+        })?;
+    eprintln!("two-node first route proved elapsed_ms={}", started.elapsed().as_millis());
+    report_node_state("second before connection", &second.control, &f);
     let (mut c2, mut h2, _stop2) = f
         .channels_for(&second.allocation, second_binds)
         .await
-        .map_err(|error| format!("two-node second route establishment: {error}"))?;
+        .map_err(|error| {
+            report_node_state("first after failed second connection", &f.control, &f);
+            report_node_state("second after failed connection", &second.control, &f);
+            format!("two-node second route establishment after {}ms: {error}", started.elapsed().as_millis())
+        })?;
     transfer(&mut c1, &h1, 31)
         .await
         .map_err(|error| format!("two-node first route before revocation: {error}"))?;

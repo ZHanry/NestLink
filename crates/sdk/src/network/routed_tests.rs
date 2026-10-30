@@ -67,9 +67,12 @@ impl Fixture {
         Self::with_route_lifetime(allow_relay, 12_000)
     }
     fn with_route_lifetime(allow_relay: bool, route_lifetime_ms: u64) -> Result<Self> {
+        Self::with_peer_order(allow_relay, route_lifetime_ms, true)
+    }
+    fn with_peer_order(allow_relay: bool, route_lifetime_ms: u64, controller_first: bool) -> Result<Self> {
         let mut controller = DeviceIdentity::generate();
         let mut host = DeviceIdentity::generate();
-        if controller.identity.fingerprint() > host.identity.fingerprint() {
+        if (controller.identity.fingerprint() < host.identity.fingerprint()) != controller_first {
             std::mem::swap(&mut controller, &mut host);
         }
         let relay = InstallationIdentity::generate();
@@ -406,7 +409,18 @@ async fn existing_carrier_lifecycle_is_rejected_before_business_proof_and_releas
 #[tokio::test]
 async fn sdk_three_node_business_proof_limits_channels_and_releases_every_physical_socket() -> Result
 {
-    let f = Fixture::new(true)?;
+    remote_payload_for_order(true).await
+}
+
+#[tokio::test]
+async fn sdk_host_initiated_inner_quic_still_proves_controller_business_and_releases_original_sockets()
+-> Result {
+    remote_payload_for_order(false).await
+}
+
+async fn remote_payload_for_order(controller_first: bool) -> Result {
+    let f = Fixture::with_peer_order(true, 12_000, controller_first)?;
+    assert_eq!(f.controller.identity.fingerprint() < f.host.identity.fingerprint(), controller_first);
     let context = f.context();
     let deadline = Instant::now() + Duration::from_secs(5);
     let (relay_controller, controller, controller_addresses) =
