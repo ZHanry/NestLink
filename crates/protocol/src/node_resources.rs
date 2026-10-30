@@ -65,12 +65,16 @@ impl NodeResourceSnapshotClaims {
         for route in &self.network_routes {
             let allocation = route.allocation.as_ref().ok_or_else(invalid)?;
             let bundle_valid = match route.network_schema_version {
-                1 => !route.relay_bundle_json.is_empty()
-                    && route.relay_bundle_json.len() <= 32_768
-                    && route.chain_bundle_json.is_empty(),
-                2 => !route.chain_bundle_json.is_empty()
-                    && route.chain_bundle_json.len() <= 49_152
-                    && route.relay_bundle_json.is_empty(),
+                1 => {
+                    !route.relay_bundle_json.is_empty()
+                        && route.relay_bundle_json.len() <= 32_768
+                        && route.chain_bundle_json.is_empty()
+                }
+                2 => {
+                    !route.chain_bundle_json.is_empty()
+                        && route.chain_bundle_json.len() <= 49_152
+                        && route.relay_bundle_json.is_empty()
+                }
                 _ => false,
             };
             if !bundle_valid

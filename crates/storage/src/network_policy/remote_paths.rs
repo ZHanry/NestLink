@@ -87,7 +87,7 @@ pub(super) fn grant_id_available(
     id: &str,
 ) -> Result<(), StorageError> {
     require_id(id)?;
-    let exists: bool = connection.query_row("SELECT EXISTS(SELECT 1 FROM network_grants WHERE space_id=?1 AND grant_id=?2 UNION ALL SELECT 1 FROM network_remote_paths WHERE space_id=?1 AND (path_grant_id=?2 OR connectivity_grant_id=?2) UNION ALL SELECT 1 FROM network_remote_relays WHERE space_id=?1 AND transit_grant_id=?2 UNION ALL SELECT 1 FROM network_remote_chain_hops WHERE space_id=?1 AND transit_grant_id=?2)",
+    let exists: bool = connection.query_row("SELECT EXISTS(SELECT 1 FROM network_grants WHERE space_id=?1 AND grant_id=?2 UNION ALL SELECT 1 FROM network_remote_paths WHERE space_id=?1 AND (path_grant_id=?2 OR connectivity_grant_id=?2) UNION ALL SELECT 1 FROM network_remote_relays WHERE space_id=?1 AND transit_grant_id=?2 UNION ALL SELECT 1 FROM network_remote_chain_hops WHERE space_id=?1 AND transit_grant_id=?2 UNION ALL SELECT 1 FROM network_route_exports WHERE space_id=?1 AND grant_id=?2 UNION ALL SELECT 1 FROM network_topology_publishers WHERE space_id=?1 AND publisher_id=?2)",
         params![space,id], |r|r.get(0))?;
     if exists {
         return Err(StorageError::Conflict);
@@ -315,9 +315,13 @@ impl Store {
         let business = current_business(self, &row.request_id, now_ms)?;
         let business_digest = digest(&business.encode_to_vec());
         if row.business_digest != business_digest
-            || !business
-                .paths
-                .contains(&(if relay_hops > 0 { Path::Relay } else { Path::Direct } as i32))
+            || !business.paths.contains(
+                &(if relay_hops > 0 {
+                    Path::Relay
+                } else {
+                    Path::Direct
+                } as i32),
+            )
         {
             return Err(StorageError::Forbidden);
         }
@@ -356,7 +360,8 @@ impl Store {
         let policy = &verified.claims().policy;
         if verified.purpose() != Purpose::RemoteControl
             || if relay_hops > 0 {
-                relay_hops > 2 || policy.allow_direct
+                relay_hops > 2
+                    || policy.allow_direct
                     || policy.relays.len() != usize::from(relay_hops)
                     || policy.max_hops != relay_hops
             } else {

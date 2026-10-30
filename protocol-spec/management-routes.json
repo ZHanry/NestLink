@@ -146,4 +146,7 @@
   ,{"path":"/network/spaces/{space}/topology/publishers/{node}","method":"delete","operation":"network_policy::topology::revoke","status":204,"auth":true}
   ,{"path":"/network/spaces/{space}/topology/reports/{node}","method":"post","operation":"network_policy::topology::report","request":"NetworkTopologyEnvelope","response":"NetworkTopologyEnvelope","status":200,"auth":false,"signed_node_topology_report":true}
   ,{"path":"/network/spaces/{space}/topology/query","method":"post","operation":"network_policy::topology::query","request":"NetworkTopologyQuery","response":"NetworkTopologyEnvelope","status":200,"auth":true}
+  ,{"path":"/network/spaces/{space}/route-exports/{node}","method":"post","operation":"network_policy::route_exports::issue","request":"NetworkRouteExportRequest","response":"NetworkGrantView","status":201,"auth":true}
+  ,{"path":"/network/spaces/{space}/route-export-grants/{grant}","method":"get","operation":"network_policy::route_exports::read","response":"NetworkGrantView","status":200,"auth":true}
+  ,{"path":"/network/spaces/{space}/route-export-grants/{grant}","method":"delete","operation":"network_policy::route_exports::revoke","request":"NetworkRevokeGrantRequest","response":"NetworkPolicyView","status":200,"auth":true}
 ]

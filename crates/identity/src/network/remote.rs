@@ -225,11 +225,7 @@ pub(super) fn resource_path(
             &c.controller_device_id,
             &c.controller_key_sha256,
         )?,
-        member(
-            &view.host_membership,
-            &c.host_device_id,
-            &c.host_key_sha256,
-        )?,
+        member(&view.host_membership, &c.host_device_id, &c.host_key_sha256)?,
     ];
     let connectivity = verify_network_grant(&signed(&view.connectivity)?, context)?;
     let path = VerifiedNetworkPath::from_grants(

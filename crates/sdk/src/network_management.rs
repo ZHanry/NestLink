@@ -61,6 +61,26 @@ pub fn decode_network_grant(view: &NetworkGrantView) -> Result<SignedNetworkGran
 }
 
 impl Sdk {
+    /// Delegate only manager-approved publication prefixes to a registered node.
+    /// The returned envelope still needs pinned authority verification.
+    pub async fn issue_network_route_export(
+        &self, space: &str, node: &str, request: NetworkRouteExportRequest,
+    ) -> Result<NetworkGrantView,SdkError> {
+        if !valid_id(node) { return Err(SdkError::Invalid); }
+        self.required(Method::POST,&format!("{}/route-exports/{node}",base(space)?),Some(&request)).await
+    }
+    pub async fn network_route_export(
+        &self, space: &str, id: &str,
+    ) -> Result<NetworkGrantView,SdkError> {
+        if !valid_id(id) { return Err(SdkError::Invalid); }
+        self.required(Method::GET,&format!("{}/route-export-grants/{id}",base(space)?),None::<&()>).await
+    }
+    pub async fn revoke_network_route_export(
+        &self, space: &str, id: &str, expected_revision: u64,
+    ) -> Result<NetworkPolicyView,SdkError> {
+        if !valid_id(id) { return Err(SdkError::Invalid); }
+        self.required(Method::DELETE,&format!("{}/route-export-grants/{id}",base(space)?),Some(&NetworkRevokeGrantRequest {expected_revision})).await
+    }
     pub async fn network_policy(&self, space: &str) -> Result<NetworkPolicyView, SdkError> {
         self.required(
             Method::GET,
@@ -240,26 +260,70 @@ impl Sdk {
     /// Atomically reserve the two ordered nodes using the participating device's
     /// signature over the complete business/path/topology request.
     pub async fn reserve_network_remote_chain(
-        &self, space: &str, installation: &DeviceIdentity, permit: &VerifiedPermit,
+        &self,
+        space: &str,
+        installation: &DeviceIdentity,
+        permit: &VerifiedPermit,
         mut request: NetworkRemoteRelayChainRequest,
-    ) -> Result<NetworkRemoteRelayChainView,SdkError> {
+    ) -> Result<NetworkRemoteRelayChainView, SdkError> {
         let business = permit.claims();
         if business.deployment_id != self.trust.deployment_id
-            || business.security_epoch != self.health.security_epoch { return Err(SdkError::Trust); }
-        if request.device_id != installation.device_id { return Err(SdkError::Invalid); }
+            || business.security_epoch != self.health.security_epoch
+        {
+            return Err(SdkError::Trust);
+        }
+        if request.device_id != installation.device_id {
+            return Err(SdkError::Invalid);
+        }
         let actor = &self.login.as_ref().ok_or(SdkError::SignIn)?.principal;
         let transcript = nestlink_identity::network::remote_chain_reservation_transcript(
-            business,&actor.account_id,space,&request,
+            business,
+            &actor.account_id,
+            space,
+            &request,
         )?;
         request.signature = URL_SAFE_NO_PAD.encode(installation.identity.sign_action(&transcript)?);
-        self.required(Method::POST,&format!("{}/remote/{}/relay-chains",base(space)?,business.session_id),Some(&request)).await
+        self.required(
+            Method::POST,
+            &format!(
+                "{}/remote/{}/relay-chains",
+                base(space)?,
+                business.session_id
+            ),
+            Some(&request),
+        )
+        .await
     }
-    pub async fn network_remote_chain(&self,space:&str,route:&str) -> Result<NetworkRemoteRelayChainView,SdkError> {
-        if !valid_id(route) { return Err(SdkError::Invalid); }
-        self.required(Method::GET,&format!("{}/relay-chains/{route}",base(space)?),None::<&()>).await
+    pub async fn network_remote_chain(
+        &self,
+        space: &str,
+        route: &str,
+    ) -> Result<NetworkRemoteRelayChainView, SdkError> {
+        if !valid_id(route) {
+            return Err(SdkError::Invalid);
+        }
+        self.required(
+            Method::GET,
+            &format!("{}/relay-chains/{route}", base(space)?),
+            None::<&()>,
+        )
+        .await
     }
-    pub async fn revoke_network_remote_chain(&self,space:&str,route:&str) -> Result<(),SdkError> {
-        if !valid_id(route) { return Err(SdkError::Invalid); }
-        self.call::<_,serde_json::Value>(Method::DELETE,&format!("{}/relay-chains/{route}",base(space)?),None::<&()>,true).await.map(|_|())
+    pub async fn revoke_network_remote_chain(
+        &self,
+        space: &str,
+        route: &str,
+    ) -> Result<(), SdkError> {
+        if !valid_id(route) {
+            return Err(SdkError::Invalid);
+        }
+        self.call::<_, serde_json::Value>(
+            Method::DELETE,
+            &format!("{}/relay-chains/{route}", base(space)?),
+            None::<&()>,
+            true,
+        )
+        .await
+        .map(|_| ())
     }
 }

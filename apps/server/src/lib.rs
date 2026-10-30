@@ -455,6 +455,14 @@ pub fn router(state: AppState) -> Router {
             post(network_policy::topology::query),
         )
         .route(
+            "/api/v3/network/spaces/{space}/route-exports/{node}",
+            post(network_policy::route_exports::issue),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/route-export-grants/{grant}",
+            get(network_policy::route_exports::read).delete(network_policy::route_exports::revoke),
+        )
+        .route(
             "/api/v3/network/spaces/{space}/paths/{path}",
             get(network_policy::read_path).delete(network_policy::revoke_path),
         )

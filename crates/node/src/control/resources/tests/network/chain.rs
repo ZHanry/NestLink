@@ -6,6 +6,19 @@ use crate::control::NetworkChainNeighborProof;
 fn chain_resource(
     issued:u64, node_key:Vec<u8>,
 ) -> TestResult<(NodeNetworkRelayResource,InstallationIdentity,NodeIdentity,NodeRemoteChainBinding)> {
+    chain_resource_inner(issued, node_key, None)
+}
+
+pub(super) fn chain_resource_for_index(
+    issued: u64, node_key: Vec<u8>, index: usize,
+) -> TestResult<(NodeNetworkRelayResource, InstallationIdentity, NodeIdentity, NodeRemoteChainBinding)> {
+    if index > 1 { return Err("invalid fixture relay index".into()); }
+    chain_resource_inner(issued, node_key, Some(index))
+}
+
+fn chain_resource_inner(
+    issued:u64, node_key:Vec<u8>, relay_index: Option<usize>,
+) -> TestResult<(NodeNetworkRelayResource,InstallationIdentity,NodeIdentity,NodeRemoteChainBinding)> {
     let (mut resource,endpoint) = resource_at(issued,node_key)?;
     let one:NetworkRemoteRelayView = serde_json::from_slice(&resource.relay_bundle_json)?;
     let authority = NetworkAuthoritySigner::from_master_seed(&[64;32])?;
@@ -22,7 +35,7 @@ fn chain_resource(
     let other = NodeIdentity::generate();
     let local = transit.relay;
     let relay = PeerId::from_public_key(&other.public_key());
-    let index = usize::from(PeerId(endpoint.fingerprint()) != path.peers.first);
+    let index = relay_index.unwrap_or_else(|| usize::from(PeerId(endpoint.fingerprint()) != path.peers.first));
     let relays = if index==0 {[local,relay]} else {[relay,local]};
     path.policy.relays = relays.to_vec(); path.policy.relays.sort(); path.policy.max_hops=2;
     let mut path_view = one.path;

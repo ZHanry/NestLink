@@ -15,7 +15,7 @@ use nestlink_transport_quic::routed::{
 use std::{future::Future, io, pin::Pin, sync::Arc};
 use tokio::{sync::watch, time::Instant};
 mod control;
-pub use control::{PinnedNetworkSpace, VerifiedRemoteRelay};
+pub use control::{PinnedNetworkSpace, VerifiedRemoteRelay, VerifiedRemoteChain};
 use nestlink_transport_stream::owner::TaskOwner;
 
 /// Supply a current trusted policy snapshot, not claims read from a peer.

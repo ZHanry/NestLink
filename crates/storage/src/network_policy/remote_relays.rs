@@ -52,7 +52,11 @@ struct StoredRelay {
     signed: SignedNetworkGrant,
 }
 
-pub(super) fn relay_node(store: &Store, node_id: &str, now_ms: u64) -> Result<RelayNode, StorageError> {
+pub(super) fn relay_node(
+    store: &Store,
+    node_id: &str,
+    now_ms: u64,
+) -> Result<RelayNode, StorageError> {
     require_id(node_id)?;
     type Row = (Vec<u8>, String, u64, u32, u64, u64, String, u64, String);
     let row: Option<Row> = store.connection.query_row(
@@ -222,8 +226,12 @@ impl Store {
             }
         }
         resources.extend(self.node_network_chain_resources(tx, lifecycle, query, signer, now_ms)?);
-        resources.sort_by(|a, b| a.allocation.as_ref().map(|c| &c.allocation_id)
-            .cmp(&b.allocation.as_ref().map(|c| &c.allocation_id)));
+        resources.sort_by(|a, b| {
+            a.allocation
+                .as_ref()
+                .map(|c| &c.allocation_id)
+                .cmp(&b.allocation.as_ref().map(|c| &c.allocation_id))
+        });
         if resources.len() as u64 > nestlink_protocol::NODE_RESOURCE_ALLOCATIONS {
             return Err(StorageError::RateLimited);
         }

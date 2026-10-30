@@ -23,6 +23,7 @@ pub use remote_chains::{NetworkRemoteRelayChainBundle, NetworkRemoteRelayChainIs
 mod authority;
 pub use authority::{NetworkAuthorityChange, NetworkAuthorityState};
 pub mod topology;
+pub mod route_exports;
 
 pub const MAX_NETWORK_MEMBERS: usize = 4096;
 pub const MAX_CURRENT_NETWORK_GRANTS: usize = 65_536;
@@ -711,6 +712,7 @@ fn read_snapshot(
         }
         revoked_grant_ids.insert(id?);
     }
+    route_exports::collect_revocations(connection, space_id, policy_epoch, now_ms, &mut revoked_grant_ids)?;
     Ok(TrustedNetworkPolicySnapshot {
         authority_key,
         deployment_id,

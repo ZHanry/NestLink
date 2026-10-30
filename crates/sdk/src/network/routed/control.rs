@@ -10,12 +10,17 @@ use nestlink_identity::{
     VerifiedPermit,
     network::{VerifiedMembership, verify_network_grant},
 };
-use nestlink_protocol::{api::NetworkRemoteRelayView, network::GrantClaims};
+use nestlink_protocol::{
+    api::{NetworkRemoteRelayChainView, NetworkRemoteRelayView},
+    network::GrantClaims,
+};
 use std::{
     collections::BTreeSet,
     net::SocketAddr,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
+mod chain;
+pub use chain::VerifiedRemoteChain;
 
 /// Installed by the local operator for this deployment. A response or a peer
 /// cannot replace this key. Loopback nodes require a separate explicit opt-in.
@@ -134,7 +139,7 @@ fn unix_ms() -> Result<u64, SdkError> {
         .try_into()
         .map_err(|_| SdkError::Invalid)
 }
-fn response_digest(view: &NetworkRemoteRelayView) -> Result<[u8; 32], SdkError> {
+fn response_digest(view: &impl serde::Serialize) -> Result<[u8; 32], SdkError> {
     Ok(digest(&serde_json::to_vec(view)?))
 }
 
@@ -396,6 +401,8 @@ impl Sdk {
             ),
             fingerprint: route.fingerprint,
             deadline: route.deadline,
+            kind: ReadbackKind::Relay,
+            cancel: None,
         };
         let proved = super::authorize_remote_observed(
             RemoteRouteAuthority {
@@ -465,11 +472,18 @@ pub(super) struct RemoteRouteObserver {
     path: String,
     fingerprint: [u8; 32],
     deadline: Instant,
+    kind: ReadbackKind,
+    cancel: Option<watch::Receiver<bool>>,
+}
+enum ReadbackKind {
+    Relay,
+    Chain,
 }
 impl RemoteRouteObserver {
     pub(super) fn spawn(self, lease: nestlink_remote::LeaseControl) -> TaskOwner {
         TaskOwner::new(tokio::spawn(async move {
             let _stop_on_drop = ObserverStop(lease.clone());
+            let mut cancel = self.cancel.clone();
             // Setup already read the exact route; the final handoff reads it
             // again. Do not duplicate either check with an immediate tick.
             let period = Duration::from_secs(1);
@@ -477,23 +491,18 @@ impl RemoteRouteObserver {
             interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
             loop {
                 tokio::select! { biased;
+                    _ = super::wait_setup_cancel(&mut cancel) => return,
                     _ = tokio::time::sleep_until(self.deadline) => { let _ = lease.stop(StopReason::Expired); return; },
                     _ = interval.tick() => {},
                 }
-                let result = tokio::time::timeout_at(
-                    self.deadline.min(Instant::now() + Duration::from_secs(2)),
-                    crate::request::<NetworkRemoteRelayView>(
-                        &self.client,
-                        &self.origin,
-                        reqwest::Method::GET,
-                        &self.path,
-                        None,
-                        Some(self.token.expose()),
-                    ),
-                )
-                .await;
-                if !matches!(result, Ok(Ok(Some(view))) if response_digest(&view).ok() == Some(self.fingerprint))
-                {
+                let result = tokio::select! { biased;
+                    _ = super::wait_setup_cancel(&mut cancel) => return,
+                    result = tokio::time::timeout_at(
+                        self.deadline.min(Instant::now() + Duration::from_secs(2)),
+                        self.matches_current(),
+                    ) => result,
+                };
+                if !matches!(result, Ok(true)) {
                     return;
                 }
                 if lease.remaining().is_err() {
@@ -501,6 +510,27 @@ impl RemoteRouteObserver {
                 }
             }
         }))
+    }
+
+    async fn matches_current(&self) -> bool {
+        match self.kind {
+            ReadbackKind::Relay => self.matches_view::<NetworkRemoteRelayView>().await,
+            ReadbackKind::Chain => self.matches_view::<NetworkRemoteRelayChainView>().await,
+        }
+    }
+
+    async fn matches_view<T: serde::de::DeserializeOwned + serde::Serialize>(&self) -> bool {
+        matches!(
+            crate::request::<T>(
+                &self.client,
+                &self.origin,
+                reqwest::Method::GET,
+                &self.path,
+                None,
+                Some(self.token.expose()),
+            ).await,
+            Ok(Some(view)) if response_digest(&view).ok() == Some(self.fingerprint)
+        )
     }
 }
 struct ObserverStop(nestlink_remote::LeaseControl);

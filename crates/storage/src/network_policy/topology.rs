@@ -67,7 +67,7 @@ fn node(store: &Store, id: &str, now: u64) -> Result<Node, StorageError> {
     })
 }
 
-fn access(
+pub(super) fn access(
     store: &Store,
     actor: &Principal,
     space: &str,
@@ -92,6 +92,24 @@ fn access(
         store.audit_admin(actor, now / 1000)?;
     }
     Ok(())
+}
+
+pub(super) fn node_key(store: &Store, id: &str, now: u64) -> Result<[u8; 32], StorageError> {
+    Ok(node(store, id, now)?.key)
+}
+
+fn verified_publisher(
+    store: &Store,
+    snapshot: &TrustedNetworkPolicySnapshot,
+    signed: &SignedTopologyPublisher,
+    node_id: &str,
+    current: &Node,
+) -> Result<nestlink_identity::network_topology::VerifiedTopologyPublisher, StorageError> {
+    let claims = TopologyPublisherClaims::decode_canonical(&signed.claims)?;
+    let exports = super::route_exports::for_publisher(store, snapshot, &claims)?;
+    Ok(verify_topology_publisher(
+        signed, &snapshot.verification(), node_id, &current.key, &current.incarnation, &exports,
+    )?)
 }
 
 fn publisher(
@@ -153,14 +171,7 @@ fn check_neighbors(
             .get(&neighbor.remote)
             .ok_or(StorageError::Forbidden)?;
         let remote = node(store, id, now)?;
-        verify_topology_publisher(
-            signed,
-            &snapshot.verification(),
-            id,
-            &remote.key,
-            &remote.incarnation,
-            &[],
-        )?;
+        verified_publisher(store, snapshot, signed, id, &remote)?;
         if neighbor.remote_endpoint_revision != remote.endpoint_revision {
             return Err(StorageError::Forbidden);
         }
@@ -183,13 +194,18 @@ pub(super) fn current_advertisement(
         params![snapshot.space_id,node_id,now], |r|Ok((r.get(0)?,r.get(1)?,r.get(2)?)),
     ).optional()?;
     let (publisher_id, claims, signature) = row.ok_or(StorageError::Forbidden)?;
-    let publisher = verify_topology_publisher(
+    let publisher = verified_publisher(
+        store, snapshot,
         &publisher(&store.connection, &snapshot.space_id, &publisher_id)?,
-        &snapshot.verification(), node_id, &current.key, &current.incarnation, &[],
+        node_id,
+        &current,
     )?;
     let verified = nestlink_identity::network_topology::verify_topology_advertisement(
-        &SignedTopologyAdvertisement { claims, signature }, &publisher,
-        &snapshot.verification(), &current.incarnation, 0,
+        &SignedTopologyAdvertisement { claims, signature },
+        &publisher,
+        &snapshot.verification(),
+        &current.incarnation,
+        0,
     )?;
     if verified.digest() != *expected {
         return Err(StorageError::Conflict);
@@ -200,8 +216,8 @@ pub(super) fn current_advertisement(
 
 impl Store {
     /// Space managers grant only an explicit registered node and neighbor set.
-    /// Prefix export is deliberately closed until its stored RouteExport chain
-    /// is supplied; a report can never create that right by naming a prefix.
+    /// Prefix rights come only from the exact stored RouteExport chain; a
+    /// report can never create that right by naming a prefix.
     pub fn issue_topology_publisher(
         &mut self,
         actor: &Principal,
@@ -236,6 +252,7 @@ impl Store {
         {
             return Err(StorageError::Conflict);
         }
+        remote_paths::grant_id_available(&tx, space, &request.publisher_id)?;
         if tx.query_row(
             "SELECT count(*) FROM network_topology_publishers WHERE space_id=?1",
             [space],
@@ -245,6 +262,10 @@ impl Store {
             return Err(StorageError::RateLimited);
         }
         let current = node(self, node_id, now)?;
+        let exports = super::route_exports::for_ids(self, &snapshot, node_id, &request.route_export_grant_ids)?;
+        if exports.iter().any(|grant| request.expires_at_ms > grant.claims().scope().expires_at_ms) {
+            return Err(StorageError::Invalid("publisher lifetime exceeds RouteExport"));
+        }
         let mut allowed_neighbors = Vec::new();
         for id in &request.allowed_node_ids {
             allowed_neighbors.push(PeerId::from_public_key(&node(self, id, now)?.key));
@@ -265,14 +286,17 @@ impl Store {
             peer: PeerId::from_public_key(&current.key),
             incarnation: current.incarnation,
             allowed_neighbors,
-            route_export_digests: Vec::new(),
-            allowed_prefixes: Vec::new(),
+            route_export_digests: exports.iter().map(|grant| grant.digest()).collect(),
+            allowed_prefixes: super::route_exports::prefixes(&exports)?,
         };
         let signed = signer.sign_topology_publisher(&claims)?;
         tx.execute("UPDATE network_topology_publishers SET revoked=1 WHERE space_id=?1 AND node_id=?2 AND revoked=0",params![space,node_id])?;
         withdraw(&tx, space, node_id, now)?;
         tx.execute("INSERT INTO network_topology_publishers(space_id,publisher_id,node_id,runtime_id,runtime_generation,policy_epoch,claims,signature,expires_at_ms) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9)",
             params![space,request.publisher_id,node_id,claims.incarnation.runtime_id,claims.incarnation.runtime_generation,claims.scope.policy_epoch,signed.claims,signed.signature,claims.scope.expires_at_ms])?;
+        for grant_id in &request.route_export_grant_ids {
+            tx.execute("INSERT INTO network_topology_publisher_exports(space_id,publisher_id,grant_id) VALUES(?1,?2,?3)",params![space,request.publisher_id,grant_id])?;
+        }
         observe(&tx, space, now)?;
         audit(
             &tx,
@@ -291,15 +315,15 @@ impl Store {
         node_id: &str,
         now: u64,
     ) -> Result<SignedTopologyPublisher, StorageError> {
+        let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
         access(self, actor, space, false, now)?;
-        let snapshot = read_snapshot(&self.connection, space, now)?;
+        let snapshot = read_snapshot(&tx, space, now)?;
         let current = node(self, node_id, now)?;
         let id: String = self.connection.query_row("SELECT publisher_id FROM network_topology_publishers WHERE space_id=?1 AND node_id=?2 AND revoked=0 AND policy_epoch=?3 AND expires_at_ms>?4",params![space,node_id,snapshot.policy_epoch,now],|r|r.get(0)).optional()?.ok_or(StorageError::Forbidden)?;
         let signed = publisher(&self.connection, space, &id)?;
-        let claims = TopologyPublisherClaims::decode_canonical(&signed.claims)?;
-        if claims.incarnation != current.incarnation {
-            return Err(StorageError::Forbidden);
-        }
+        verified_publisher(self, &snapshot, &signed, node_id, &current)?;
+        observe(&tx, space, now)?;
+        tx.commit()?;
         Ok(signed)
     }
 
@@ -337,7 +361,7 @@ impl Store {
         now: u64,
     ) -> Result<SignedTopologyAdvertisement, StorageError> {
         let report = TopologyReport::decode_canonical(&signed.claims)?;
-        if report.node_id != node_id || report.space_id != space || !report.prefixes.is_empty() {
+        if report.node_id != node_id || report.space_id != space {
             return Err(StorageError::Forbidden);
         }
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
@@ -349,13 +373,11 @@ impl Store {
         let id: String = tx.query_row("SELECT publisher_id FROM network_topology_publishers WHERE space_id=?1 AND node_id=?2 AND revoked=0",params![space,node_id],|r|r.get(0)).optional()?.ok_or(StorageError::Forbidden)?;
         let publisher_signed = publisher(&tx, space, &id)?;
         let context = snapshot.verification();
-        let verified_publisher = verify_topology_publisher(
+        let verified_publisher = verified_publisher(
+            self, &snapshot,
             &publisher_signed,
-            &context,
             node_id,
-            &current.key,
-            &current.incarnation,
-            &[],
+            &current,
         )?;
         // Authenticate the report before reading other publishers or verifying
         // their signatures. An unauthenticated request cannot trigger a graph
@@ -478,13 +500,11 @@ impl Store {
                 }
                 let current = node(self, &node_id, now)?;
                 let signed_publisher = publisher(&tx, space, &publisher_id)?;
-                let verified = verify_topology_publisher(
+                let verified = verified_publisher(
+                    self, &snapshot,
                     &signed_publisher,
-                    &snapshot.verification(),
                     &node_id,
-                    &current.key,
-                    &current.incarnation,
-                    &[],
+                    &current,
                 )?;
                 if verified.digest() != ad.report.publisher_digest
                     || current.incarnation != ad.report.incarnation
@@ -633,7 +653,7 @@ fn record_upsert(
     record(tx, space, TopologyChange::Upsert(ad.clone()), now)
 }
 
-fn withdraw(
+pub(super) fn withdraw(
     tx: &Transaction<'_>,
     space: &str,
     node_id: &str,

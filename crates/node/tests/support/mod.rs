@@ -45,8 +45,14 @@ pub enum Mode {
     Valid,
     WrongIssuer,
     WrongAck,
+    WrongAckIssuer,
+    WrongAckSequence,
     LostFirstAck,
+    DelayedFirstAck,
+    RecoveringReport,
+    RejectedReport,
     UnavailableReport,
+    RenewalReportOverload,
     Reconnect,
     ReconnectUnavailable,
     ReconnectWrongIssuer,
@@ -57,6 +63,7 @@ struct Inner {
     mode: Mode,
     last_ack: Mutex<Option<(Vec<u8>, NodeUsageAckClaims)>>,
     reports: Mutex<Vec<Vec<u8>>>,
+    signed_reports: Mutex<Vec<Vec<u8>>>,
     shutdown: tokio::sync::watch::Receiver<bool>,
     connections: AtomicU64,
 }
@@ -84,6 +91,14 @@ impl Fixture {
             .map_err(|_| "poisoned reports")?
             .clone())
     }
+    pub fn signed_reports(&self) -> Result<Vec<Vec<u8>>> {
+        Ok(self
+            .state
+            .signed_reports
+            .lock()
+            .map_err(|_| "poisoned signed reports")?
+            .clone())
+    }
 }
 async fn upgrade(State(state): State<Arc<Inner>>, ws: WebSocketUpgrade) -> Response {
     let connection = state.connections.fetch_add(1, Ordering::SeqCst) + 1;
@@ -104,7 +119,7 @@ async fn upgrade(State(state): State<Arc<Inner>>, ws: WebSocketUpgrade) -> Respo
                 PermitSigner::generate().node_policy_signer()?.sign(&lease)?
             } else { state.issuer.sign(&lease)? };
             socket.send(Message::Binary(signed.encode_to_vec().into())).await?;
-            if connection == 1 && matches!(state.mode, Mode::Reconnect | Mode::ReconnectUnavailable | Mode::ReconnectWrongIssuer) {
+            if connection == 1 && matches!(state.mode, Mode::Reconnect | Mode::ReconnectUnavailable | Mode::ReconnectWrongIssuer | Mode::RenewalReportOverload) {
                 for _ in 0..100 {
                     if !state.reports.lock().map_err(|_| "poisoned reports")?.is_empty() { break; }
                     tokio::time::sleep(Duration::from_millis(10)).await;
@@ -130,6 +145,20 @@ async fn report(State(state): State<Arc<Inner>>, Json(signed): Json<SignedNodeUs
         let c = verify_usage(&signed, &state.key)?;
         let mut reports = state.reports.lock().map_err(|_| "poisoned reports")?;
         reports.push(signed.claims.clone());
+        state
+            .signed_reports
+            .lock()
+            .map_err(|_| "poisoned signed reports")?
+            .push(signed.encode_to_vec());
+        if state.mode == Mode::RejectedReport {
+            return Ok(StatusCode::FORBIDDEN.into_response());
+        }
+        if state.mode == Mode::RenewalReportOverload && c.report_sequence > 1 {
+            return Ok(StatusCode::TOO_MANY_REQUESTS.into_response());
+        }
+        if state.mode == Mode::RecoveringReport && reports.len() <= 2 {
+            return Ok(StatusCode::TOO_MANY_REQUESTS.into_response());
+        }
         if state.mode == Mode::UnavailableReport {
             return Ok(StatusCode::SERVICE_UNAVAILABLE.into_response());
         }
@@ -173,9 +202,26 @@ async fn report(State(state): State<Arc<Inner>>, Json(signed): Json<SignedNodeUs
         if state.mode == Mode::WrongAck {
             ack.runtime_id = id(99);
         }
+        if state.mode == Mode::WrongAckSequence {
+            ack.report_sequence += 1;
+        }
+        if state.mode == Mode::WrongAckIssuer {
+            return Ok(Json(
+                PermitSigner::generate()
+                    .node_policy_signer()?
+                    .sign_usage_ack(&ack)?,
+            )
+            .into_response());
+        }
         Ok(Json(state.issuer.sign_usage_ack(&ack)?).into_response())
     };
-    result().unwrap_or_else(|_| StatusCode::BAD_REQUEST.into_response())
+    let response = result().unwrap_or_else(|_| StatusCode::BAD_REQUEST.into_response());
+    if state.mode == Mode::DelayedFirstAck
+        && state.reports.lock().is_ok_and(|reports| reports.len() == 1)
+    {
+        tokio::time::sleep(Duration::from_millis(800)).await;
+    }
+    response
 }
 pub async fn peer(mode: Mode) -> Result<(NodeControl, Fixture)> {
     let node = NodeIdentity::generate();
@@ -194,6 +240,7 @@ pub async fn peer(mode: Mode) -> Result<(NodeControl, Fixture)> {
         mode,
         last_ack: Mutex::new(None),
         reports: Mutex::new(Vec::new()),
+        signed_reports: Mutex::new(Vec::new()),
         shutdown: receiver,
         connections: AtomicU64::new(0),
     });

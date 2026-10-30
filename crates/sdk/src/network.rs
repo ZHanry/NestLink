@@ -2,6 +2,7 @@
 //! discovery, scheduling, TLS, SessionPermit proof and bounded business queues.
 //! New space/path grants are not issued or negotiated by this adapter.
 pub mod routed;
+pub mod topology;
 use crate::{
     DeviceIdentity, NativeRelayRoute, Sdk,
     native::{NativeEndpoint, NativeMediaSessionOptions, NativeSession, SessionEstablishError},

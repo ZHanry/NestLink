@@ -1,4 +1,5 @@
 //! Exercise the SDK adapter through physical QUIC neighbors and business proof.
+#[path = "routed_tests/chain.rs"]
 mod chain;
 use super::{RemoteRouteAuthority, authorize_remote};
 use crate::DeviceIdentity;

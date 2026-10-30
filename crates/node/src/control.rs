@@ -38,6 +38,16 @@ pub use resources::{
 pub use services::ServiceNodePermit;
 pub use topology::TopologyReporter;
 
+/// Current verified NRD2 dialing metadata. Possession of this description does
+/// not reserve a forwarding slot; handshake candidates recheck live authority.
+#[derive(Clone)]
+pub struct NetworkChainRoute {
+    pub binding: nestlink_identity::network::NodeRemoteChainBinding,
+    pub allocation_id: String,
+    pub neighbor_allocation_id: String,
+    pub neighbor_node: nestlink_protocol::api::NodeEndpointsView,
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct NodeConfig {
@@ -653,21 +663,25 @@ async fn report(
 ) -> Result<(), Error> {
     let signed = identity.sign_usage(claims)?;
     let digest = nestlink_identity::digest(&signed.claims);
-    for attempt in 0..2 {
+    let mut retry_delay = Duration::from_millis(250);
+    // The enclosing supervise_lease retains its original exchange budget and
+    // checks the existing lease while requests and backoff are pending. A retry
+    // cannot mint time, advance the report sequence or resample the counters.
+    loop {
         let result = tokio::time::timeout(Duration::from_millis(700), async {
             let response = client
                 .post(url)
                 .json(&signed)
                 .send()
                 .await
-                .map_err(|_| Error::Control)?;
+                .map_err(|_| Error::Transport)?;
             if !response.status().is_success() {
                 return Err(Error::UsageStatus(response.status().as_u16()));
             }
             let mut response = response.bytes_stream();
             let mut bytes = Vec::new();
             while let Some(chunk) = response.next().await {
-                let chunk = chunk.map_err(|_| Error::Control)?;
+                let chunk = chunk.map_err(|_| Error::Transport)?;
                 if bytes.len() + chunk.len() > 32768 {
                     return Err(Error::Control);
                 }
@@ -696,13 +710,12 @@ async fn report(
         .await;
         match result {
             Ok(Ok(())) => return Ok(()),
-            Ok(Err(Error::Authorization(e))) => return Err(Error::Authorization(e)),
-            _ if attempt == 0 => continue,
+            Ok(Err(Error::Transport | Error::UsageStatus(429 | 500..=599))) | Err(_) => {}
             Ok(Err(error)) => return Err(error),
-            Err(_) => return Err(Error::Control),
         }
+        tokio::time::sleep(retry_delay).await;
+        retry_delay = (retry_delay * 2).min(Duration::from_secs(1));
     }
-    Err(Error::Control)
 }
 async fn receive(socket: &mut Socket) -> Result<Vec<u8>, Error> {
     loop {

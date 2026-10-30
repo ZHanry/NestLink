@@ -21,6 +21,7 @@ use std::{
 };
 use tokio::{sync::watch, task::JoinSet};
 mod network;
+mod chain;
 
 fn failed() -> io::Error {
     io::Error::new(
@@ -174,6 +175,20 @@ pub async fn serve_with_selector(
     selector: Arc<RelaySelector>,
     shutdown: impl Future<Output = ()> + Send,
 ) -> io::Result<()> {
+    serve_inner(endpoint,selector,None,shutdown).await
+}
+/// The production registered node identity signs reciprocal NRD2 possession;
+/// all listeners of this node continue sharing the same RelaySelector.
+pub async fn serve_with_chain_identity(
+    endpoint:quinn::Endpoint,selector:Arc<RelaySelector>,identity:Arc<nestlink_identity::nodes::NodeIdentity>,
+    shutdown:impl Future<Output=()>+Send,
+) -> io::Result<()> {
+    serve_inner(endpoint,selector,Some(identity),shutdown).await
+}
+async fn serve_inner(
+    endpoint:quinn::Endpoint,selector:Arc<RelaySelector>,identity:Option<Arc<nestlink_identity::nodes::NodeIdentity>>,
+    shutdown:impl Future<Output=()>+Send,
+) -> io::Result<()> {
     let control = selector.control();
     let _owner = Owner {
         endpoint: endpoint.clone(),
@@ -182,6 +197,9 @@ pub async fn serve_with_selector(
     let mut stopped = control.stopped();
     let hub = Arc::new(Hub::default());
     let mut tasks = JoinSet::new();
+    let mut scan=tokio::time::interval(Duration::from_millis(100));
+    scan.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    let mut attempted=HashMap::<String,tokio::time::Instant>::new();
     tokio::pin!(shutdown);
     let result = loop {
         if *stopped.borrow() {
@@ -191,6 +209,28 @@ pub async fn serve_with_selector(
             _ = &mut shutdown => break Ok(()),
             _ = stopped.changed() => break Err(failed()),
             result = tasks.join_next(), if !tasks.is_empty() => { if result.is_some_and(|r| r.is_err()) { break Err(failed()); } },
+            _ = scan.tick(), if identity.is_some() => {
+                let now=tokio::time::Instant::now();
+                attempted.retain(|_,until|*until>now);
+                if let Ok(routes)=control.network_chain_routes() {
+                    for route in routes {
+                        if route.binding.relay!=route.binding.chain.relays[0] || attempted.contains_key(&route.allocation_id) {continue;}
+                        // The signed allocation ID and original wall expiry are
+                        // never refreshed by retries or a new resource poll.
+                        let wall=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).ok()
+                            .and_then(|duration|u64::try_from(duration.as_millis()).ok());
+                        let Some(remaining)=wall.and_then(|wall|route.binding.chain.expires_at_ms.checked_sub(wall)).filter(|remaining|*remaining>0) else {continue;};
+                        if attempted.len()>=nestlink_protocol::NODE_RESOURCE_ALLOCATIONS as usize {break;}
+                        let until=now+Duration::from_millis(remaining.min(30_000));
+                        attempted.insert(route.allocation_id.clone(),until);
+                        let control=control.clone();let hub=hub.clone();let selector=selector.clone();let endpoint=endpoint.clone();
+                        let Some(identity)=identity.clone() else {break;};
+                        tasks.spawn(async move {
+                            let _=chain::outgoing(route,control,hub,selector,endpoint,identity,until).await;
+                        });
+                    }
+                }
+            },
             incoming = endpoint.accept() => {
                 let Some(incoming) = incoming else { break Err(failed()); };
                 let ip = incoming.remote_address().ip();
@@ -200,7 +240,7 @@ pub async fn serve_with_selector(
                 let Ok(slot) = selector.socket(ip) else { incoming.refuse(); continue; };
                 // Require QUIC address validation before allocating a handshake/task.
                 if !incoming.remote_address_validated() { let _ = incoming.retry(); continue; }
-                let hub = hub.clone(); let control = control.clone(); let selector = selector.clone(); let drain = endpoint.clone();
+                let hub = hub.clone(); let control = control.clone(); let selector = selector.clone(); let drain = endpoint.clone();let identity=identity.clone();
                 tasks.spawn(async move {
                     let _slot = slot;
                     if let Ok(Ok(connection)) = tokio::time::timeout(Duration::from_secs(3), incoming).await {
@@ -208,7 +248,9 @@ pub async fn serve_with_selector(
                         let protocol = connection.handshake_data()
                             .and_then(|data| data.downcast::<quinn::crypto::rustls::HandshakeData>().ok())
                             .and_then(|data| data.protocol);
-                        if protocol.as_deref() == Some(nestlink_protocol::network_datagram::ALPN) {
+                        if protocol.as_deref()==Some(nestlink_protocol::network_datagram_v2::ALPN) {
+                            if let Some(identity)=identity {let _=chain::incoming(connection,control,hub,selector,drain,identity).await;}
+                        } else if protocol.as_deref() == Some(nestlink_protocol::network_datagram::ALPN) {
                             let _ = network::run(connection, control, hub, selector, drain).await;
                         } else if protocol.as_deref() == Some(relay_datagram::ALPN) {
                             let _ = run(connection, control, hub, selector, drain).await;

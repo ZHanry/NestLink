@@ -6,7 +6,7 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "0c0a2d2d90a13cc50ed079dd9149476636405b64",
+    "source_revision":  "58a6a4754a1b7765ad609e79c5bd52045bfad225",
     "checkpoint_kind":  "work_in_progress_against_source_revision",
     "active_tasks":  [
                          "W00",
@@ -62,8 +62,8 @@
                                    }
                                ],
     "next_steps":  [
-                       "Read new exact-source Actions for atomic storage/HTTP, full chain snapshot and neighbor admission; import reviewed formatting/OpenAPI artifacts and repair real failures.",
-                       "Connect the production NRD2 listener/dialer and real continuous adjacency reporting, then exercise four-node SessionPermit/FileRead and implement stored RouteExport authority.",
+                       "Validate the registered NRD2 listener/dialer, complete SDK readback/watch, approved OS FileRead and stored RouteExport authority on exact-source hosted Actions; review generated formatting/OpenAPI and repair failures.",
+                       "Implement real continuous adjacency bootstrap/report refresh and a local prefix owner; the current signed-topology-fixture business tests do not qualify those paths.",
                        "Read exact-source Windows/Linux full workspace and Chrome/Edge matrix; retain scoped results separately from complete release qualification.",
                        "Continue all mandatory W13-W40 implementation, product surfaces, target acceptance and same-source packaging.",
                        "Publish 0.8.0RC only after all mandatory implementation and evidence gates; retain local and remote main as the only branch."

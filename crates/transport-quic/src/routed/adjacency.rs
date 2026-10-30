@@ -78,9 +78,15 @@ impl AdjacencyEndpoint {
         identity: &InstallationIdentity,
         remote: PeerId,
     ) -> Result<Self> {
-        let mut owner = Self::bind(address, identity, remote)?;
+        Self::bind_node_version(address,identity,remote,super::DatagramVersion::One)
+    }
+    pub fn bind_chain_node(address:SocketAddr,identity:&InstallationIdentity,remote:PeerId) -> Result<Self> {
+        Self::bind_node_version(address,identity,remote,super::DatagramVersion::Two)
+    }
+    fn bind_node_version(address:SocketAddr,identity:&InstallationIdentity,remote:PeerId,version:super::DatagramVersion) -> Result<Self> {
+        let mut owner = Self::bind_version(address, identity, remote,version)?;
         let mut client_tls = tls::client_config(identity, remote.0)?;
-        client_tls.alpn_protocols = vec![wire::ALPN.to_vec()];
+        client_tls.alpn_protocols = vec![version.alpn().to_vec()];
         let mut client = ClientConfig::new(Arc::new(QuicClientConfig::try_from(client_tls)?));
         let mut transport = transport_config();
         transport.max_concurrent_bidi_streams(1u8.into());
@@ -143,6 +149,7 @@ impl AdjacencyEndpoint {
     ) -> Result<Adjacency> {
         use nestlink_protocol::api::{NetworkNodeChallenge, NetworkNodeHello, NetworkNodeReady};
         if !self.node
+            || self.version != super::DatagramVersion::One
             || self.attempted
             || self.close_deadline.is_some()
             || self.local != PeerId(identity.fingerprint())
@@ -201,6 +208,56 @@ impl AdjacencyEndpoint {
             // The admission stream stays open. EOF, reset or additional data
             // terminate the route; it is never a business stream.
             let _ = read.read(&mut byte).await;
+        })));
+        Ok(adjacency)
+    }
+    /// Complete symmetric NRD2 possession before returning a business carrier.
+    /// The node and allocation pin must come from the original verified chain.
+    pub async fn connect_chain_node(
+        &mut self,address:SocketAddr,identity:&InstallationIdentity,allocation_id:&str,
+        binding:[u8;32],deadline:Instant,
+    ) -> Result<Adjacency> {
+        use nestlink_protocol::api::{NetworkNodeChallenge,NetworkChainNodeHello,NetworkChainNodeProof,NetworkNodeReady};
+        if !self.node || self.version != super::DatagramVersion::Two || self.attempted
+            || self.close_deadline.is_some() || self.local != PeerId(identity.fingerprint())
+            || !nestlink_protocol::valid_id(allocation_id) || binding==[0;32] || Instant::now()>=deadline
+        { return Err(io::Error::from(io::ErrorKind::PermissionDenied).into()); }
+        self.attempted=true;
+        let endpoint=self.endpoint.as_ref().ok_or(io::ErrorKind::NotConnected)?;
+        let connection=tokio::time::timeout_at(deadline,endpoint.connect(address,"peer.nestlink.invalid")?).await??;
+        self.pending=Some(connection.clone());
+        let (mut write,mut read)=tokio::time::timeout_at(deadline,connection.accept_bi()).await??;
+        let challenge:NetworkNodeChallenge=tokio::time::timeout_at(deadline,crate::node::read_message(&mut read)).await??;
+        if challenge.schema_version!=2 { return Err(io::Error::from(io::ErrorKind::PermissionDenied).into()); }
+        let nonce=decode_exact::<32>(&challenge.nonce)?;
+        let mut returning=[0;32];
+        connection.export_keying_material(&mut returning,b"NestLink/NRD2/client-nonce",&binding)
+            .map_err(|_|io::Error::from(io::ErrorKind::PermissionDenied))?;
+        let signature=identity.sign_network_chain_admission(allocation_id,&binding,self.remote,&nonce)?;
+        let hello=NetworkChainNodeHello {
+            schema_version:2,allocation_id:allocation_id.into(),binding_sha256:URL_SAFE_NO_PAD.encode(binding),
+            public_key:URL_SAFE_NO_PAD.encode(identity.public_key()),signature:URL_SAFE_NO_PAD.encode(signature),
+            return_allocation_id:allocation_id.into(),nonce:URL_SAFE_NO_PAD.encode(returning),
+        };
+        tokio::time::timeout_at(deadline,crate::node::write_message(&mut write,&hello)).await??;
+        let proof:NetworkChainNodeProof=tokio::time::timeout_at(deadline,crate::node::read_message(&mut read)).await??;
+        let key=decode_exact::<32>(&proof.public_key)?;
+        let signature=decode_exact::<64>(&proof.signature)?;
+        if proof.schema_version!=2 || proof.allocation_id!=allocation_id
+            || decode_exact::<32>(&proof.binding_sha256)?!=binding || PeerId::from_public_key(&key)!=self.remote
+        { return Err(io::Error::from(io::ErrorKind::PermissionDenied).into()); }
+        nestlink_identity::network::verify_network_chain_admission(allocation_id,&binding,self.local,&key,&returning,&signature)?;
+        let ready:NetworkNodeReady=tokio::time::timeout_at(deadline,crate::node::read_message(&mut read)).await??;
+        if ready.schema_version!=2 || ready.allocation_id!=allocation_id || decode_exact::<32>(&ready.binding_sha256)?!=binding
+        { return Err(io::Error::from(io::ErrorKind::PermissionDenied).into()); }
+        tokio::time::timeout_at(deadline,crate::node::write_message(&mut write,&ready)).await??;
+        let mut adjacency=self.finish(connection.clone())?;
+        self.pending=None;
+        adjacency.control=Some(TaskOwner::new(tokio::spawn(async move {
+            let _close=ControlClose(connection);
+            let _write=write;
+            let mut byte=[0;1];
+            let _=read.read(&mut byte).await;
         })));
         Ok(adjacency)
     }

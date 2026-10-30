@@ -523,3 +523,33 @@ equality with zero failed/ignored cases. The reviewed, hash-verified OpenAPI
 from 976ec97 Actions is imported. New SDK sources await hosted validation;
 production registered-node chain dialing/reporting and all later mandatory
 packages remain required.
+
+ADRs 0020/0021 add source implementations of the production registered NRD2
+listener/dialer, reciprocal neighbor possession, current NodeControl dial
+descriptors, complete SDK chain readback/handoff/watch and stored RouteExport
+authority with migration 035. The existing selectors, slots, cumulative meters,
+business proofs and cleanup owners remain shared. New registered-node OS file
+scenarios explicitly use signed topology fixtures; real continuous adjacency
+bootstrap/report refresh and the local prefix owner remain unimplemented.
+Nine Store and one HTTP export source scenarios accompany the new authority.
+
+The 58a6a47 network carrier and same-socket/native ICE/socket experiments passed,
+but the SDK nested test module required an explicit path attribute. Its chain
+snapshot fixture then reached the original lifecycle clock check after the full
+signature/tamper assertions; the fixture now samples elapsed time and signs fresh
+queries rather than freezing wall time during those operations. Original grant
+expiries and clock tolerances are unchanged. Schema 34/35 downgrade fixtures
+remove the later tables and restore their original views before migration.
+
+The same-source multi-node scenario observed a 201ms report 429 while the node
+lease was still valid. Ordinary database admission has an existing 200ms wait;
+the report owner previously converted a second transient failure into node stop.
+Reports now retry the identical original signed bytes after bounded backoff,
+under the original supervisor/lease deadline. Terminal rejection and malformed
+acknowledgements remain terminal. New real HTTP regressions cover recovery,
+frozen payloads, timeouts and original-deadline stop. No database worker or queue
+budget was changed. The Linux synthetic audio fixture now measures against each
+packet's actual PTS; deliberate wrong-link rejection remains a negative case.
+Its amplitude thresholds, observation window and sustained-frame minimum remain
+unchanged, with deterministic gap/silence/channel regressions. All new source
+changes await Actions and do not qualify W12 or the release.

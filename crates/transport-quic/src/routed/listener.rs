@@ -16,6 +16,20 @@ pub fn authenticated_peer_fingerprint(connection: &Connection) -> io::Result<[u8
         .ok_or_else(|| io::Error::from(io::ErrorKind::PermissionDenied))?;
     tls::peer_identity_fingerprint(identity.as_ref()).map_err(io::Error::other)
 }
+/// Dial from the existing node listener socket, with its registered identity
+/// and exactly the original chain neighbor pin. No additional UDP owner.
+pub fn chain_node_client_config(identity: &NodeIdentity, remote: [u8;32]) -> Result<ClientConfig> {
+    let crypto = tls::network_node_client_config(identity, remote)?;
+    let mut client = ClientConfig::new(Arc::new(QuicClientConfig::try_from(crypto)?));
+    let mut transport = transport_value();
+    transport.max_concurrent_bidi_streams(1u8.into());
+    transport.max_concurrent_uni_streams(0u8.into());
+    transport.initial_mtu(1200);
+    transport.min_mtu(1200);
+    transport.mtu_discovery_config(None);
+    client.transport_config(Arc::new(transport));
+    Ok(client)
+}
 pub fn node_listener(
     address: SocketAddr,
     identity: &NodeIdentity,

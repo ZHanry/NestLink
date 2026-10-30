@@ -28,14 +28,16 @@ type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 const PASSWORD: &str = "network-api-integration-password";
 #[path = "network_policy/authority.rs"]
 mod authority_lifecycle;
+#[path = "network_policy/chains.rs"]
+mod chains;
 #[path = "network_policy/relays.rs"]
 mod relays;
 #[path = "../../../crates/node/tests/support/service_usage_directory.rs"]
 mod service_usage_directory;
 #[path = "network_policy/topology.rs"]
 mod topology;
-#[path = "network_policy/chains.rs"]
-mod chains;
+#[path = "network_policy/route_exports.rs"]
+mod route_exports;
 
 struct Running(tokio::task::JoinHandle<()>);
 impl Drop for Running {

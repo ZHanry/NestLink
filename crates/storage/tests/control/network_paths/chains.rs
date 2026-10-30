@@ -17,6 +17,7 @@ struct ChainFixture {
     lifecycle: RelayLifecycle,
     nodes: [(String,NodeIdentity,BootIncarnation);2],
     leases: [nestlink_protocol::NodeLeaseClaims;2],
+    clock: std::time::Instant,
     digests: [[u8;32];2],
 }
 impl ChainFixture {
@@ -45,7 +46,7 @@ impl ChainFixture {
         let nodes:[_;2] = registered.try_into().map_err(|_|"nodes")?;
         let mut publishers = Vec::new();
         for index in 0..2 {
-            publishers.push(base.store.issue_topology_publisher(&base.controller,&base.signer,&base.space,&nodes[index].0,TopologyPublisherRequest {
+            publishers.push(base.store.issue_topology_publisher(&base.controller,&base.signer,&base.space,&nodes[index].0,TopologyPublisherRequest { route_export_grant_ids: Vec::new(),
                 publisher_id:random_id(),expected_policy_epoch:3,allowed_node_ids:vec![nodes[1-index].0.clone()],expires_at_ms:NOW+60_000,
             },NOW)?);
         }
@@ -68,7 +69,8 @@ impl ChainFixture {
             digests.push(verified.digest());
         }
         let lifecycle = base.store.relay_lifecycle(NOW)?;
-        Ok(Self { base,lifecycle,nodes,leases:leases.try_into().map_err(|_|"leases")?,digests:digests.try_into().map_err(|_|"digests")? })
+        let clock=std::time::Instant::now();
+        Ok(Self { base,lifecycle,nodes,leases:leases.try_into().map_err(|_|"leases")?,clock,digests:digests.try_into().map_err(|_|"digests")? })
     }
     fn request(&self) -> Result<NetworkRemoteRelayChainRequest> {
         let business = self.base.store.current_permit(&self.base.controller,&self.base.request,NOW/1000)?;
@@ -145,26 +147,27 @@ fn both_node_snapshots_delegate_the_same_full_chain_and_withdraw_it_together() -
     let issued = f.issue(request)?;
     let root = PermitSigner::from_seed([44;32]);
     let policy = root.node_policy_signer()?;
-    let query = |index:usize, sequence| {
-        let lease = &f.leases[index];
+    let now = || -> Result<u64> {Ok(NOW+u64::try_from(f.clock.elapsed().as_millis())?)};
+    let query = |lease:&nestlink_protocol::NodeLeaseClaims, sequence,now| {
         NodeResourceQueryClaims {
             schema_version:nestlink_protocol::SCHEMA_VERSION,deployment_id:lease.deployment_id.clone(),
             security_epoch:lease.security_epoch,node_id:lease.node_id.clone(),runtime_id:lease.runtime_id.clone(),runtime_generation:lease.runtime_generation,
             policy_revision:lease.policy_revision,lease_sequence:lease.lease_sequence,request_id:random_id(),request_sequence:sequence,
-            issued_at_unix_ms:NOW,expires_at_unix_ms:NOW+1000,
+            issued_at_unix_ms:now,expires_at_unix_ms:now+1000,
         }
     };
-    let queries = [f.nodes[0].1.sign_resource_query(&query(0,1))?, f.nodes[1].1.sign_resource_query(&query(1,1))?];
     let mut bindings = Vec::new();
     for index in 0..2 {
-        let snapshot = f.base.store.node_resource_snapshot_with_network(&f.lifecycle,&queries[index],&root,NOW)
+        let sampled=now()?;
+        let signed_query=f.nodes[index].1.sign_resource_query(&query(&f.leases[index],1,sampled))?;
+        let snapshot = f.base.store.node_resource_snapshot_with_network(&f.lifecycle,&signed_query,&root,sampled)
             .map_err(|error|format!("chain node {index} snapshot: {error:?}"))?;
         assert!(snapshot.allocations.is_empty());
         assert_eq!(snapshot.network_routes.len(),1);
         let signed = policy.sign_resource_snapshot(&snapshot)?;
-        let verified = verify_resource_snapshot(&signed,&policy.public_key(),&queries[index])?;
+        let verified = verify_resource_snapshot(&signed,&policy.public_key(),&signed_query)?;
         let resource = &verified.network_routes[0];
-        let binding = verify_node_network_chain_resource(resource,&root.public_key(),NOW)?;
+        let binding = verify_node_network_chain_resource(resource,&root.public_key(),sampled)?;
         assert_eq!(binding.relay,PeerId::from_public_key(&f.nodes[index].1.public_key()));
         assert_eq!(resource.allocation.as_ref().ok_or("allocation")?.allocation_id,ids[index]);
         let view:nestlink_protocol::api::NetworkRemoteRelayChainView = serde_json::from_slice(&resource.chain_bundle_json)?;
@@ -188,11 +191,14 @@ fn both_node_snapshots_delegate_the_same_full_chain_and_withdraw_it_together() -
         bindings.push(binding);
     }
     assert_eq!(bindings[0].chain,bindings[1].chain);
-    f.base.store.revoke_network_remote_chain(&f.base.host,&f.base.space,&route,NOW)?;
-    for signed in &queries {
-        assert!(f.base.store.node_resource_snapshot_with_network(&f.lifecycle,signed,&root,NOW)?.network_routes.is_empty());
+    f.base.store.revoke_network_remote_chain(&f.base.host,&f.base.space,&route,now()?)?;
+    for index in 0..2 {
+        let sampled=now()?;
+        let signed=f.nodes[index].1.sign_resource_query(&query(&f.leases[index],2,sampled))?;
+        assert!(f.base.store.node_resource_snapshot_with_network(&f.lifecycle,&signed,&root,sampled)
+            .map_err(|error|format!("revoked chain node {index} snapshot: {error:?}"))?.network_routes.is_empty());
     }
-    assert_eq!(f.held()?,2);
+    assert_eq!(f.base.store.relay_reservation_usage(&f.base.controller,now()?)?.held_allocations,2);
     Ok(())
 }
 

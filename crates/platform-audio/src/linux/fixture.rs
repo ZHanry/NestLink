@@ -357,7 +357,7 @@ impl Daemon {
             let link = self.link(true, binding.channels, wrong);
             let device = open.join().map_err(|_| "capture opener panicked")?;
             if let Err(error) = &device {
-                eprintln!("owned native capture open: {error}");
+                eprintln!("owned native capture open (wrong graph link {wrong}): {error}");
             }
             link?;
             device.map_err(Into::into)
@@ -430,16 +430,79 @@ fn tone(binding: AudioBinding, pts: u64) -> AudioChunk {
             .collect(),
     }
 }
-fn amplitude(pcm: &[i16], channels: u8, channel: usize, hz: f64) -> f64 {
-    let values = pcm.iter().skip(channel).step_by(usize::from(channels));
-    let length = values.clone().count() as f64;
+fn amplitude(pcm: &[AudioChunk], channels: u8, channel: usize, hz: f64) -> f64 {
+    let mut length = 0usize;
     let (mut sin, mut cos) = (0.0, 0.0);
-    for (i, sample) in values.enumerate() {
-        let angle = i as f64 * hz * std::f64::consts::TAU / 48000.0;
-        sin += f64::from(*sample) * angle.sin();
-        cos += f64::from(*sample) * angle.cos();
+    for chunk in pcm {
+        let values = chunk
+            .samples
+            .iter()
+            .skip(channel)
+            .step_by(usize::from(channels));
+        for (i, sample) in values.enumerate() {
+            // Capture may discard partial or expired PCM. Removing those gaps
+            // from the time axis makes otherwise matching tones cancel out.
+            let angle =
+                (chunk.pts_48khz + i as u64) as f64 * hz * std::f64::consts::TAU / 48000.0;
+            sin += f64::from(*sample) * angle.sin();
+            cos += f64::from(*sample) * angle.cos();
+            length += 1;
+        }
     }
-    2.0 * sin.hypot(cos) / length
+    2.0 * sin.hypot(cos) / length.max(1) as f64
+}
+
+#[test]
+fn synthetic_tone_measurement_preserves_the_clock_across_discarded_packets() {
+    let binding = AudioBinding {
+        source: 7,
+        channels: 2,
+        connection: 9,
+    };
+    let pcm: Vec<_> = (0..13)
+        .chain(14..22)
+        .chain(25..33)
+        .map(|index| tone(binding, index * CHUNK_FRAMES as u64))
+        .collect();
+    let compacted: Vec<_> = pcm
+        .iter()
+        .enumerate()
+        .map(|(index, chunk)| AudioChunk {
+            pts_48khz: index as u64 * CHUNK_FRAMES as u64,
+            ..chunk.clone()
+        })
+        .collect();
+    // The former contiguous-time measurement falsely rejected the right
+    // channel after these two discarded ranges, despite unchanged tone PCM.
+    assert!(amplitude(&compacted, 2, 1, 880.0) < 1000.0);
+    assert!(amplitude(&pcm, 2, 0, 440.0) > 11000.0);
+    assert!(amplitude(&pcm, 2, 1, 880.0) > 11000.0);
+}
+
+#[test]
+fn synthetic_tone_measurement_rejects_silence_and_exchanged_channels() {
+    let binding = AudioBinding {
+        source: 7,
+        channels: 2,
+        connection: 9,
+    };
+    let pcm: Vec<_> = (0..25)
+        .map(|index| tone(binding, index * CHUNK_FRAMES as u64))
+        .collect();
+    let mut silent = pcm.clone();
+    for chunk in &mut silent {
+        chunk.samples.fill(0);
+    }
+    let mut exchanged = pcm;
+    for chunk in &mut exchanged {
+        for frame in chunk.samples.chunks_exact_mut(2) {
+            frame.swap(0, 1);
+        }
+    }
+    for (channel, hz) in [(0, 440.0), (1, 880.0)] {
+        assert_eq!(amplitude(&silent, 2, channel, hz), 0.0);
+        assert!(amplitude(&exchanged, 2, channel, hz) < 1000.0);
+    }
 }
 async fn sample_flow(
     capture: &AudioCaptureController<LinuxAudioCapture>,
@@ -448,7 +511,8 @@ async fn sample_flow(
     label: &str,
 ) -> Result<u64> {
     let mut pcm = Vec::new();
-    let mut last_pts = None;
+    let mut last_pts: Option<u64> = None;
+    let mut gaps = 0;
     let started = Instant::now();
     let until = started + Duration::from_secs(2);
     let mut next_write = started;
@@ -462,23 +526,27 @@ async fn sample_flow(
         if let Some(chunk) = capture.poll()? {
             chunk.chunk.validate(binding)?;
             assert!(last_pts.is_none_or(|pts| chunk.chunk.pts_48khz > pts));
+            if last_pts.is_some_and(|pts| {
+                pts.checked_add(CHUNK_FRAMES as u64) != Some(chunk.chunk.pts_48khz)
+            }) {
+                gaps += 1;
+            }
             last_pts = Some(chunk.chunk.pts_48khz);
-            pcm.extend_from_slice(&chunk.chunk.samples);
+            pcm.push(chunk.chunk);
         }
         tokio::time::sleep(Duration::from_millis(2)).await;
     }
-    assert!(
-        pcm.len() >= 48000 * usize::from(binding.channels),
-        "no sustained owned audio flow: {} samples",
-        pcm.len()
-    );
+    let frames: usize = pcm
+        .iter()
+        .map(|chunk| chunk.samples.len() / usize::from(binding.channels))
+        .sum();
+    assert!(frames >= 48000, "no sustained owned audio flow: {frames} frames");
     for channel in 0..usize::from(binding.channels) {
         let expected = if channel == 0 { 440.0 } else { 880.0 };
         let level = amplitude(&pcm, binding.channels, channel, expected);
         println!(
-            "{label} {}ch synthetic output: channel {channel}, amplitude {level:.1}, {} PCM frames",
+            "{label} {}ch synthetic output: channel {channel}, amplitude {level:.1}, {frames} PCM frames, {gaps} timestamp gaps",
             binding.channels,
-            pcm.len() / usize::from(binding.channels)
         );
         assert!(
             level > 1000.0,

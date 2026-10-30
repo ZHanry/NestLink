@@ -150,14 +150,20 @@ impl TopologyGraph {
         update.check_current(context)?;
         let (advertised, more) = match &update.claims().sync {
             TopologySync::Full { cursor, .. } => (*cursor, false),
-            TopologySync::Delta { cursor, has_more, .. } => (*cursor, *has_more),
+            TopologySync::Delta {
+                cursor, has_more, ..
+            } => (*cursor, *has_more),
         };
         // This is a current authenticated statement that a newer view exists.
         // A missing live proof cannot make the old view current again. The
         // A later complete full snapshot can supersede pagination at this same
         // cursor. `has_more` fences the partial view, not an invented cursor.
         self.required_cursor = self.required_cursor.max(advertised);
-        if more || self.cursor.is_none_or(|cursor| cursor < self.required_cursor) {
+        if more
+            || self
+                .cursor
+                .is_none_or(|cursor| cursor < self.required_cursor)
+        {
             self.needs_more = true;
         }
         if advertisements.len() > MAX_ADVERTISEMENTS {

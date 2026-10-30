@@ -895,6 +895,28 @@ pub struct NetworkNodeReady {
     pub allocation_id: String,
     pub binding_sha256: String,
 }
+/// NRD2 admission proves both fixed neighbors on the same pinned TLS socket.
+/// The return allocation is derived from the original complete chain snapshot.
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkChainNodeHello {
+    pub schema_version: u32,
+    pub allocation_id: String,
+    pub binding_sha256: String,
+    pub public_key: String,
+    pub signature: String,
+    pub return_allocation_id: String,
+    pub nonce: String,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkChainNodeProof {
+    pub schema_version: u32,
+    pub allocation_id: String,
+    pub binding_sha256: String,
+    pub public_key: String,
+    pub signature: String,
+}
 #[derive(Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct RelayReady {
@@ -1273,13 +1295,27 @@ pub struct MediaApprovalSubmission {
     pub signature: String,
 }
 
-/// Explicit space delegation to one registered node's current control runtime.
+/// Manager delegation of exact prefix publication rights to a registered node.
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkRouteExportRequest {
+    pub grant_id: String,
+    pub expected_revision: u64,
+    pub expected_policy_epoch: u64,
+    pub prefixes: Vec<crate::network::IpPrefix>,
+    pub expires_at_ms: u64,
+}
+
+/// Explicit delegation to the current node runtime. Only stored export IDs
+/// may extend its prefix publication rights.
 #[derive(Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct NetworkTopologyPublisherRequest {
     pub publisher_id: String,
     pub expected_policy_epoch: u64,
     pub allowed_node_ids: Vec<String>,
+    #[serde(default)]
+    pub route_export_grant_ids: Vec<String>,
     pub expires_at_ms: u64,
 }
 

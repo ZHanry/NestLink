@@ -10,7 +10,11 @@ use zeroize::Zeroizing;
 mod remote;
 mod remote_chain;
 pub use remote::{RemoteRouteBinding, remote_route_binding, verify_node_network_resource};
-pub use remote_chain::{RemoteChainBinding, NodeRemoteChainBinding, remote_chain_binding, remote_chain_reservation_transcript, verify_node_network_chain_resource, verify_network_chain_admission};
+pub use remote_chain::{
+    NodeRemoteChainBinding, RemoteChainBinding, remote_chain_binding,
+    remote_chain_reservation_transcript, verify_network_chain_admission,
+    verify_node_network_chain_resource,
+};
 
 fn node_admission_transcript(
     allocation_id: &str,

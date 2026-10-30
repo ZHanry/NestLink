@@ -299,7 +299,7 @@ pub struct TransitClaims {
     pub byte_limit: u64,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct IpPrefix {
     pub network: IpAddr,

@@ -258,7 +258,21 @@ fn populated_schema_thirty_one_upgrade_preserves_registration_and_creates_no_met
     let id = f.node.id.clone();
     drop(f.store);
     let probe = Connection::open(&f.path)?;
-    probe.execute_batch("DROP TABLE network_topology_changes; DROP TABLE network_topology_cursors; DROP TABLE network_topology_heads; DROP TABLE network_topology_publishers; DROP TABLE node_relay_attributes; PRAGMA user_version=31;")?;
+    probe.execute_batch(
+        "DROP TABLE network_topology_publisher_exports; DROP TABLE network_route_exports; DROP VIEW all_relay_capacity;
+         DROP TABLE network_remote_chain_hops;
+         DROP TABLE network_remote_chains;
+         CREATE VIEW all_relay_capacity AS
+          SELECT id,kind,controller_account_id,host_account_id,node_id,promised_until FROM relay_reservations
+          UNION ALL
+          SELECT allocation_id,'node',controller_account_id,host_account_id,node_id,promised_until FROM network_remote_relays;
+         DROP TABLE network_topology_changes;
+         DROP TABLE network_topology_cursors;
+         DROP TABLE network_topology_heads;
+         DROP TABLE network_topology_publishers;
+         DROP TABLE node_relay_attributes;
+         PRAGMA user_version=31;",
+    )?;
     drop(probe);
     f.store = Store::open_existing(&f.path, &f.deployment)?;
     let view = f.store.node_relay_attributes(&f.admin, &id, NOW)?;

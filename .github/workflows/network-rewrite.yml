@@ -74,6 +74,7 @@ jobs:
           set -o pipefail
           cargo test --locked -p nestlink-server --test network_policy topology:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-topology-http-tests.log"
           cargo test --locked -p nestlink-server --test network_policy chains:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-chain-http-tests.log"
+          cargo test --locked -p nestlink-server --test network_policy route_exports:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-route-export-http-tests.log"
       - name: Retain exact-source topology journal and admission logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -84,6 +85,7 @@ jobs:
             ${{ runner.temp }}/network-chain-reservation-tests.log
             ${{ runner.temp }}/network-topology-http-tests.log
             ${{ runner.temp }}/network-chain-http-tests.log
+            ${{ runner.temp }}/network-route-export-http-tests.log
           if-no-files-found: error
           retention-days: 30
   topology-carrier:
@@ -161,6 +163,28 @@ jobs:
           python scripts/refactor-native-codecs.py verify --target x86_64-unknown-linux-gnu --prefix "${{ env.NESTLINK_CODEC_PREFIX }}"
       - name: Exercise production signed native ICE, Quinn and FileRead across two kernel NATs
         run: python -B scripts/network-rewrite-native-ice.py --output "${{ runner.temp }}/network-native-ice-evidence"
+      - name: Exercise NRD2 SDK business proof and approved OS file reads
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-sdk --lib network::routed::tests::chain:: -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-chain-sdk-tests.log"
+      - name: Exercise registered NRD2 nodes through management and the production listener
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-sdk --test network_relay chain:: -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-chain-registered-tests.log"
+      - name: Retain exact-source SDK and registered-chain business logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: network-chain-business-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/network-chain-sdk-tests.log
+            ${{ runner.temp }}/network-chain-registered-tests.log
+          if-no-files-found: error
+          retention-days: 30
       - name: Retain original tuples, STUN mapping, business bytes and physical cleanup evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a

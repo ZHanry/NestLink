@@ -159,9 +159,32 @@ pub fn network_node_server_config(
             hints: Vec::new(),
         }))
         .with_single_cert(vec![cert], key.into())?;
-    config.alpn_protocols = vec![nestlink_protocol::network_datagram::ALPN.to_vec()];
+    config.alpn_protocols = vec![
+        nestlink_protocol::network_datagram::ALPN.to_vec(),
+        nestlink_protocol::network_datagram_v2::ALPN.to_vec(),
+    ];
     config.max_early_data_size = 0;
     config.send_tls13_tickets = 0;
+    Ok(config)
+}
+/// The registered node key supplies TLS client possession for its fixed NRD2
+/// neighbor. The same leaf parser and TLS signature verifier enforce the pin.
+pub fn network_node_client_config(
+    identity: &nestlink_identity::nodes::NodeIdentity,
+    expected_peer_fingerprint: [u8; 32],
+) -> Result<ClientConfig, Box<dyn std::error::Error + Send + Sync>> {
+    let (cert, key) = encoded_certificate(&identity.tls_pkcs8()?)?;
+    let mut config = ClientConfig::builder_with_provider(Arc::new(ring::default_provider()))
+        .with_protocol_versions(&[&rustls::version::TLS13])?
+        .dangerous()
+        .with_custom_certificate_verifier(Arc::new(ExpectedPeer {
+            fingerprint: expected_peer_fingerprint,
+            hints: vec![],
+        }))
+        .with_client_auth_cert(vec![cert], key.into())?;
+    config.alpn_protocols = vec![nestlink_protocol::network_datagram_v2::ALPN.to_vec()];
+    config.enable_early_data = false;
+    config.resumption = rustls::client::Resumption::disabled();
     Ok(config)
 }
 impl ServerCertVerifier for ExpectedPeer {
