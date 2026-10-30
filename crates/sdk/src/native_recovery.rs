@@ -197,7 +197,10 @@ fn binding(
         granted_permissions: permissions.to_vec(),
         supported_capabilities: {
             let mut supported = capabilities.to_vec();
-            if !supported.iter().any(|value| value == nestlink_protocol::native_ice::CAPABILITY) {
+            if !supported
+                .iter()
+                .any(|value| value == nestlink_protocol::native_ice::CAPABILITY)
+            {
                 supported.push(nestlink_protocol::native_ice::CAPABILITY.into());
             }
             supported

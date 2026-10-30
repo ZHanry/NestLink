@@ -374,6 +374,10 @@ function createResponseObserver({ session, origin, disconnectedEvent, facts, onC
     facts.peak_pending = Math.max(facts.peak_pending, pending.size);
     entry.deadline = setTimeout(() => failure(entry, entry.status !== null ? 'loading-terminal' : 'response-received',
       'TimeoutError', 'Owned permit response did not complete before the fixed request deadline'), bounds.requestTimeoutMs);
+    if (contract?.requested) {
+      try { contract.requested(entry.operation, entry.requestId); }
+      catch { failure(entry, 'request-callback', 'CallbackError', 'Owned management request callback failed'); }
+    }
   };
   const onResponse = event => {
     const entry = pending.get(event.requestId);
@@ -619,15 +623,17 @@ function preparePermitResponseObservation(options) {
 // Management checks need the exact response JSON for CAS assertions. Reuse the
 // same bounded stream owner as permits instead of querying Puppeteer's session
 // after the application's Fetch object has already been consumed and dropped.
-function createManagementResponseObserver({ routes, onResponse, ...options }) {
+function createManagementResponseObserver({ routes, onResponse, onRequest = () => {}, ...options }) {
   const origin = options.origin;
   if (!Array.isArray(routes) || !routes.length || routes.length > 32 || typeof onResponse !== 'function' ||
+      typeof onRequest !== 'function' ||
       routes.some(route => !['GET', 'PUT', 'POST', 'DELETE'].includes(route.method) ||
         !(route.path instanceof RegExp) || route.path.global || route.path.sticky)) {
     throw new Error('Management observation requires bounded exact-route rules');
   }
   const contract = {
     source: 'Bounded owned-origin management JSON response stream; no interception or DOM/response mocks',
+    requested: onRequest,
     acceptStatus: status => status === 200 || status === 201,
     match(request) {
       try {
@@ -654,8 +660,14 @@ async function prepareManagementResponseObservation({ onResponse = () => {}, onE
   };
   const owner = await prepareResponseObservation({ ...options,
     createObserver: createManagementResponseObserver, freshPage: false,
+    onRequest(operation, requestId) {
+      // Only the next matching request observed after expect() owns this wait.
+      // An older in-flight response, or a canceled wait's late response, cannot
+      // provide the JSON for a newer operation at the same method and path.
+      if (waiting?.operation === operation && waiting.requestId === null) waiting.requestId = requestId;
+    },
     onResponse(operation, response, requestId) {
-      if (waiting?.operation === operation) {
+      if (waiting?.operation === operation && waiting.requestId === requestId) {
         if (response.status !== waiting.status) rejectWaiting('Owned management response returned unexpected status');
         else {
           const selected = waiting; waiting = null; clearTimeout(selected.timer); selected.resolve(response.body);
@@ -681,7 +693,7 @@ async function prepareManagementResponseObservation({ onResponse = () => {}, onE
     const promise = new Promise((accept, fail) => { resolve = accept; reject = fail; });
     // A separate click/status failure still owns and cancels this expectation.
     promise.catch(() => {});
-    const selected = { operation, status, resolve, reject, timer: setTimeout(() => {
+    const selected = { operation, status, requestId: null, resolve, reject, timer: setTimeout(() => {
       if (waiting === selected) rejectWaiting('Owned management response deadline exceeded');
     }, timeoutMs) };
     waiting = selected;

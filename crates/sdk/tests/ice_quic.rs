@@ -5,6 +5,7 @@ use nestlink_identity::{InstallationIdentity, PermitSigner, VerifiedPermit, veri
 use nestlink_policy::PathSet;
 use nestlink_protocol::{Path, Permission, PermitClaims, SCHEMA_VERSION};
 use nestlink_remote::{RuntimeClock, SessionLifecycle, SessionSetup};
+use nestlink_sdk::native::ice::IceUdp;
 use nestlink_session::{EndpointRole, Session, SessionBinding, StopReason};
 use nestlink_transport_stream::{Channel, tls};
 use prost::Message;
@@ -13,7 +14,6 @@ use quinn::{
     crypto::rustls::{QuicClientConfig, QuicServerConfig},
     udp::Transmit,
 };
-use nestlink_sdk::native::ice::IceUdp;
 use std::{
     io,
     net::{SocketAddr, UdpSocket},

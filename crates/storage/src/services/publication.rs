@@ -288,7 +288,11 @@ impl Store {
             return Err(StorageError::Invalid("source ACL is empty"));
         }
         self.space_service_publication_deadline(
-            &record.id, record.revision, &record.account, &record.definition, now_ms,
+            &record.id,
+            record.revision,
+            &record.account,
+            &record.definition,
+            now_ms,
         )?;
         let edge = self.service_edge_live(&record.definition.edge_node_id, now_ms)?;
         if !edge
@@ -356,9 +360,16 @@ impl Store {
             expires_at_unix_ms: bounded_add(now_ms, SERVICE_LEASE_MS)?
                 .min(approval.expires)
                 .min(edge.lease_end)
-                .min(self.space_service_publication_deadline(
-                    &record.id, record.revision, &record.account, &record.definition, now_ms,
-                )?.unwrap_or(u64::MAX)),
+                .min(
+                    self.space_service_publication_deadline(
+                        &record.id,
+                        record.revision,
+                        &record.account,
+                        &record.definition,
+                        now_ms,
+                    )?
+                    .unwrap_or(u64::MAX),
+                ),
         };
         claims.validate()?;
         Ok(claims)

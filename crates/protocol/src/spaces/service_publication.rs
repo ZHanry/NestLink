@@ -5,15 +5,25 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum SpaceServiceProtocol { Http, Https, Tcp, Udp }
+pub enum SpaceServiceProtocol {
+    Http,
+    Https,
+    Tcp,
+    Udp,
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum SpaceServiceOperation { Publish }
+pub enum SpaceServiceOperation {
+    Publish,
+}
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
-pub enum SpaceServiceSubject { Account { account_id: String }, Device { installation_id: String } }
+pub enum SpaceServiceSubject {
+    Account { account_id: String },
+    Device { installation_id: String },
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]

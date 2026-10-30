@@ -109,7 +109,10 @@ impl SignalPayload {
             if self.description.is_some()
                 || self.ice.is_some()
                 || !permit.paths.contains(&(Path::Direct as i32))
-                || !permit.required_capabilities.iter().any(|capability| capability == crate::native_ice::CAPABILITY)
+                || !permit
+                    .required_capabilities
+                    .iter()
+                    .any(|capability| capability == crate::native_ice::CAPABILITY)
             {
                 return Err(invalid("invalid native ICE dialect"));
             }

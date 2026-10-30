@@ -349,7 +349,7 @@ impl Store {
             [id],
         )?;
         advance(&tx, &space, now)?;
-        service_publication::stop_publications(&tx,id,None,None)?;
+        service_publication::stop_publications(&tx, id, None, None)?;
         event(&tx, actor, id, "network_space_archived", id, now)?;
         let view = read_space(&tx, actor, id, now)?;
         tx.commit()?;
@@ -379,11 +379,11 @@ impl Store {
         if request.role == SpaceRole::Owner {
             tx.execute("UPDATE network_space_members SET role='admin',member_epoch=member_epoch+1 WHERE space_id=?1 AND account_id=?2", params![id, actor.account_id])?;
             update_device_roles(&tx, id, &actor.account_id, SpaceRole::Admin, false)?;
-            service_publication::stop_publications(&tx,id,Some(&actor.account_id),None)?;
+            service_publication::stop_publications(&tx, id, Some(&actor.account_id), None)?;
         }
         tx.execute("UPDATE network_space_members SET role=?1,member_epoch=member_epoch+1 WHERE space_id=?2 AND account_id=?3", params![role_name(request.role), id, account])?;
         update_device_roles(&tx, id, account, request.role, false)?;
-        service_publication::stop_publications(&tx,id,Some(account),None)?;
+        service_publication::stop_publications(&tx, id, Some(account), None)?;
         advance(&tx, &space, now)?;
         event(&tx, actor, id, "network_space_member_changed", account, now)?;
         let view = read_space(&tx, actor, id, now)?;
@@ -414,7 +414,7 @@ impl Store {
         }
         tx.execute("UPDATE network_space_members SET revoked=1,member_epoch=member_epoch+1 WHERE space_id=?1 AND account_id=?2", params![id, account])?;
         update_device_roles(&tx, id, account, role, true)?;
-        service_publication::stop_publications(&tx,id,Some(account),None)?;
+        service_publication::stop_publications(&tx, id, Some(account), None)?;
         advance(&tx, &space, now)?;
         event(&tx, actor, id, "network_space_member_removed", account, now)?;
         let view = read_space(&tx, actor, id, now)?;
@@ -507,7 +507,7 @@ impl Store {
             return Err(StorageError::Conflict);
         }
         tx.execute("UPDATE network_memberships SET revoked=1,membership_epoch=membership_epoch+1 WHERE space_id=?1 AND installation_id=?2", params![id, installation])?;
-        service_publication::stop_publications(&tx,id,None,Some(installation))?;
+        service_publication::stop_publications(&tx, id, None, Some(installation))?;
         advance(&tx, &space, now)?;
         event(
             &tx,

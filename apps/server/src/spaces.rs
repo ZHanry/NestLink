@@ -5,32 +5,96 @@ use axum::{
     extract::{Path, State},
     http::{HeaderMap, StatusCode},
 };
-use nestlink_protocol::spaces::*;
 use nestlink_protocol::spaces::service_publication::*;
+use nestlink_protocol::spaces::*;
 
-pub(crate) async fn service_policy(State(state): State<AppState>, headers: HeaderMap, Path(space): Path<String>) -> Result<Json<SpaceServicePolicyView>, ApiError> {
-    let token=authenticated(&state,&headers).await?;
-    Ok(Json(state.db(move |s| {let now=now_ms()?; let actor=s.authenticate(&token,now/1000)?; s.space_service_policy(&actor,&space,now)}).await?))
+pub(crate) async fn service_policy(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(space): Path<String>,
+) -> Result<Json<SpaceServicePolicyView>, ApiError> {
+    let token = authenticated(&state, &headers).await?;
+    Ok(Json(
+        state
+            .db(move |s| {
+                let now = now_ms()?;
+                let actor = s.authenticate(&token, now / 1000)?;
+                s.space_service_policy(&actor, &space, now)
+            })
+            .await?,
+    ))
 }
 
-pub(crate) async fn bind_service(State(state): State<AppState>, headers: HeaderMap, Path((space,service)): Path<(String,String)>, Json(request): Json<SpaceServiceBindingRequest>) -> Result<Json<SpaceView>, ApiError> {
-    let token=authenticated(&state,&headers).await?;
-    Ok(Json(state.db(move |s| {let now=now_ms()?; let actor=s.authenticate(&token,now/1000)?; s.bind_space_service(&actor,&space,&service,request,now)}).await?))
+pub(crate) async fn bind_service(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path((space, service)): Path<(String, String)>,
+    Json(request): Json<SpaceServiceBindingRequest>,
+) -> Result<Json<SpaceView>, ApiError> {
+    let token = authenticated(&state, &headers).await?;
+    Ok(Json(
+        state
+            .db(move |s| {
+                let now = now_ms()?;
+                let actor = s.authenticate(&token, now / 1000)?;
+                s.bind_space_service(&actor, &space, &service, request, now)
+            })
+            .await?,
+    ))
 }
 
-pub(crate) async fn revoke_service(State(state): State<AppState>, headers: HeaderMap, Path((space,service)): Path<(String,String)>, Json(request): Json<SpaceRevisionRequest>) -> Result<Json<SpaceView>, ApiError> {
-    let token=authenticated(&state,&headers).await?;
-    Ok(Json(state.db(move |s| {let now=now_ms()?; let actor=s.authenticate(&token,now/1000)?; s.revoke_space_service(&actor,&space,&service,request,now)}).await?))
+pub(crate) async fn revoke_service(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path((space, service)): Path<(String, String)>,
+    Json(request): Json<SpaceRevisionRequest>,
+) -> Result<Json<SpaceView>, ApiError> {
+    let token = authenticated(&state, &headers).await?;
+    Ok(Json(
+        state
+            .db(move |s| {
+                let now = now_ms()?;
+                let actor = s.authenticate(&token, now / 1000)?;
+                s.revoke_space_service(&actor, &space, &service, request, now)
+            })
+            .await?,
+    ))
 }
 
-pub(crate) async fn grant_service_rule(State(state): State<AppState>, headers: HeaderMap, Path((space,service)): Path<(String,String)>, Json(request): Json<SpaceServiceRuleRequest>) -> Result<Json<SpaceView>, ApiError> {
-    let token=authenticated(&state,&headers).await?;
-    Ok(Json(state.db(move |s| {let now=now_ms()?; let actor=s.authenticate(&token,now/1000)?; s.grant_space_service_rule(&actor,&space,&service,request,now)}).await?))
+pub(crate) async fn grant_service_rule(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path((space, service)): Path<(String, String)>,
+    Json(request): Json<SpaceServiceRuleRequest>,
+) -> Result<Json<SpaceView>, ApiError> {
+    let token = authenticated(&state, &headers).await?;
+    Ok(Json(
+        state
+            .db(move |s| {
+                let now = now_ms()?;
+                let actor = s.authenticate(&token, now / 1000)?;
+                s.grant_space_service_rule(&actor, &space, &service, request, now)
+            })
+            .await?,
+    ))
 }
 
-pub(crate) async fn revoke_service_rule(State(state): State<AppState>, headers: HeaderMap, Path((space,service,rule)): Path<(String,String,String)>, Json(request): Json<SpaceRevisionRequest>) -> Result<Json<SpaceView>, ApiError> {
-    let token=authenticated(&state,&headers).await?;
-    Ok(Json(state.db(move |s| {let now=now_ms()?; let actor=s.authenticate(&token,now/1000)?; s.revoke_space_service_rule(&actor,&space,&service,&rule,request,now)}).await?))
+pub(crate) async fn revoke_service_rule(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path((space, service, rule)): Path<(String, String, String)>,
+    Json(request): Json<SpaceRevisionRequest>,
+) -> Result<Json<SpaceView>, ApiError> {
+    let token = authenticated(&state, &headers).await?;
+    Ok(Json(
+        state
+            .db(move |s| {
+                let now = now_ms()?;
+                let actor = s.authenticate(&token, now / 1000)?;
+                s.revoke_space_service_rule(&actor, &space, &service, &rule, request, now)
+            })
+            .await?,
+    ))
 }
 
 async fn authenticated(state: &AppState, headers: &HeaderMap) -> Result<String, ApiError> {

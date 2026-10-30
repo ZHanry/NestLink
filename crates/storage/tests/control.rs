@@ -18,12 +18,12 @@ mod auditing;
 mod browser_readiness;
 #[path = "control/media_authority.rs"]
 mod media_authority;
-#[path = "control/network_paths.rs"]
-mod network_paths;
-#[path = "control/native_readiness.rs"]
-mod native_readiness;
 #[path = "control/native_ice_capabilities.rs"]
 mod native_ice_capabilities;
+#[path = "control/native_readiness.rs"]
+mod native_readiness;
+#[path = "control/network_paths.rs"]
+mod network_paths;
 #[path = "control/quotas.rs"]
 mod quotas;
 #[path = "control/reconnection.rs"]

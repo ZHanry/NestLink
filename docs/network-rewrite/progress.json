@@ -6,7 +6,7 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "e629eabe20091b42ab454d7e0b6d29e1871c8217",
+    "source_revision":  "5f01330edc487fa7748d71b2c3a9576d92bad41c",
     "checkpoint_kind":  "work_in_progress_against_source_revision",
     "active_tasks":  [
                          "W00",
@@ -75,6 +75,7 @@
                            "docs/network-rewrite/evidence/development-run-4492f59.json",
                            "docs/network-rewrite/evidence/development-run-b7c3b19.json",
                            "docs/network-rewrite/evidence/development-run-8007458.json",
+                           "docs/network-rewrite/evidence/development-run-5f01330.json",
                            "docs/adr/network/0007-network-authority-lifecycle.md",
                            "docs/adr/network/0008-signed-frozen-native-ice.md"
                        ],

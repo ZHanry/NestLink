@@ -346,13 +346,17 @@ impl Store {
         }
         if version < 30 {
             let transaction = connection.transaction()?;
-            transaction.execute_batch(include_str!("../migrations/030_network_authority_lifecycle.sql"))?;
+            transaction.execute_batch(include_str!(
+                "../migrations/030_network_authority_lifecycle.sql"
+            ))?;
             transaction.pragma_update(None, "user_version", 30)?;
             transaction.commit()?;
         }
         if version < 31 {
             let transaction = connection.transaction()?;
-            transaction.execute_batch(include_str!("../migrations/031_space_service_publication_acl.sql"))?;
+            transaction.execute_batch(include_str!(
+                "../migrations/031_space_service_publication_acl.sql"
+            ))?;
             transaction.pragma_update(None, "user_version", 31)?;
             transaction.commit()?;
         }

@@ -65,7 +65,11 @@ impl NativeSessionConfig {
             media_interface_index: None,
             private_network_prefixes: Vec::new(),
             supported_capabilities: {
-                let mut capabilities = vec!["vp8".into(), "opus".into(), nestlink_protocol::native_ice::CAPABILITY.into()];
+                let mut capabilities = vec![
+                    "vp8".into(),
+                    "opus".into(),
+                    nestlink_protocol::native_ice::CAPABILITY.into(),
+                ];
                 if nestlink_media_codec::h264_hardware_available() {
                     capabilities.push(nestlink_protocol::media::H264_CAPABILITY.into());
                 }

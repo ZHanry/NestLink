@@ -20,8 +20,9 @@ use nestlink_storage::{
     StorageError, Store,
     accounts::Principal,
     network_policy::{
-        NetworkAuthorityChange, NetworkAuthorityState, NetworkAuthorityUpdate, NetworkGrantRevocation, NetworkMembershipRequest,
-        NetworkMembershipRevocation, NetworkMembershipUpdate, TrustedNetworkPolicySnapshot,
+        NetworkAuthorityChange, NetworkAuthorityState, NetworkAuthorityUpdate,
+        NetworkGrantRevocation, NetworkMembershipRequest, NetworkMembershipRevocation,
+        NetworkMembershipUpdate, TrustedNetworkPolicySnapshot,
     },
 };
 fn admin(store: &Store, token: &str, now_ms: u64) -> Result<Principal, StorageError> {
@@ -308,57 +309,91 @@ fn authority_view(value: NetworkAuthorityState) -> nestlink_protocol::api::Netwo
     }
 }
 
-fn authority_change(space: String, body: nestlink_protocol::api::NetworkAuthorityChangeRequest) -> NetworkAuthorityChange {
-    NetworkAuthorityChange {space_id:space,expected_revision:body.expected_revision,expected_policy_epoch:body.expected_policy_epoch}
+fn authority_change(
+    space: String,
+    body: nestlink_protocol::api::NetworkAuthorityChangeRequest,
+) -> NetworkAuthorityChange {
+    NetworkAuthorityChange {
+        space_id: space,
+        expected_revision: body.expected_revision,
+        expected_policy_epoch: body.expected_policy_epoch,
+    }
 }
 
 pub(crate) async fn authority(
-    State(state): State<AppState>, headers: HeaderMap, Path(space): Path<String>,
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(space): Path<String>,
 ) -> Result<Json<nestlink_protocol::api::NetworkAuthorityView>, ApiError> {
-    let token = admin_access(&state,&headers).await?;
-    state.db(move |s| {
-        let now = now_ms()?;
-        let actor = admin(s,&token,now)?;
-        Ok(Json(authority_view(s.network_authority_state(&actor,&space,now)?)))
-    }).await
+    let token = admin_access(&state, &headers).await?;
+    state
+        .db(move |s| {
+            let now = now_ms()?;
+            let actor = admin(s, &token, now)?;
+            Ok(Json(authority_view(
+                s.network_authority_state(&actor, &space, now)?,
+            )))
+        })
+        .await
 }
 
 pub(crate) async fn rotate_authority(
-    State(state): State<AppState>, headers: HeaderMap, Path(space): Path<String>,
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(space): Path<String>,
     Json(body): Json<nestlink_protocol::api::NetworkAuthorityChangeRequest>,
 ) -> Result<Json<nestlink_protocol::api::NetworkAuthorityView>, ApiError> {
-    let token = admin_access(&state,&headers).await?;
+    let token = admin_access(&state, &headers).await?;
     let root = state.network_signer.clone();
-    state.db(move |s| {
-        let now = now_ms()?;
-        let actor = admin(s,&token,now)?;
-        Ok(Json(authority_view(s.rotate_network_authority(&actor,&root,authority_change(space,body),now)?)))
-    }).await
+    state
+        .db(move |s| {
+            let now = now_ms()?;
+            let actor = admin(s, &token, now)?;
+            Ok(Json(authority_view(s.rotate_network_authority(
+                &actor,
+                &root,
+                authority_change(space, body),
+                now,
+            )?)))
+        })
+        .await
 }
 
 pub(crate) async fn revoke_authority(
-    State(state): State<AppState>, headers: HeaderMap, Path(space): Path<String>,
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(space): Path<String>,
     Json(body): Json<nestlink_protocol::api::NetworkAuthorityChangeRequest>,
 ) -> Result<StatusCode, ApiError> {
-    let token = admin_access(&state,&headers).await?;
-    state.db(move |s| {
-        let now = now_ms()?;
-        let actor = admin(s,&token,now)?;
-        s.revoke_network_authority(&actor,authority_change(space,body),now)?;
-        Ok(StatusCode::NO_CONTENT)
-    }).await
+    let token = admin_access(&state, &headers).await?;
+    state
+        .db(move |s| {
+            let now = now_ms()?;
+            let actor = admin(s, &token, now)?;
+            s.revoke_network_authority(&actor, authority_change(space, body), now)?;
+            Ok(StatusCode::NO_CONTENT)
+        })
+        .await
 }
 
 pub(crate) async fn advance_epoch(
-    State(state): State<AppState>, headers: HeaderMap, Path(space): Path<String>,
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(space): Path<String>,
     Json(body): Json<nestlink_protocol::api::NetworkAuthorityChangeRequest>,
 ) -> Result<Json<PolicyView>, ApiError> {
-    let token = admin_access(&state,&headers).await?;
-    state.db(move |s| {
-        let now = now_ms()?;
-        let actor = admin(s,&token,now)?;
-        Ok(Json(policy_view(&s.advance_network_policy_epoch(&actor,authority_change(space,body),now)?)))
-    }).await
+    let token = admin_access(&state, &headers).await?;
+    state
+        .db(move |s| {
+            let now = now_ms()?;
+            let actor = admin(s, &token, now)?;
+            Ok(Json(policy_view(&s.advance_network_policy_epoch(
+                &actor,
+                authority_change(space, body),
+                now,
+            )?)))
+        })
+        .await
 }
 
 pub(crate) async fn member(

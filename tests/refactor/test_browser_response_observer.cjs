@@ -79,6 +79,41 @@ test('management observer prepares the existing primary page before relevant req
   assert.equal(session.eventNames().length, 0);
 });
 
+test('late management responses cannot satisfy a newer expectation at the same method and path', async () => {
+  for (const canceledWait of [false, true]) {
+    const session = new EventEmitter(), facts = {};
+    session.send = async (method, params) => method === 'Network.streamResourceContent'
+      ? { bufferedData: Buffer.from(JSON.stringify({ revision: Number(params.requestId), secret_extra: privateToken })).toString('base64') }
+      : {};
+    session.detach = async () => {};
+    const pathname = '/api/v3/network/spaces/fixture/policy', operation = 'GET ' + pathname, url = origin + pathname;
+    const owner = await prepareManagementResponseObservation({ origin, facts, disconnectedEvent: disconnected,
+      page: { url: () => origin, createCDPSession: async () => session },
+      routes: [{ method: 'GET', path: /^\/api\/v3\/network\/spaces\/fixture\/policy$/ }] });
+    const oldWait = canceledWait ? owner.expect(operation) : null;
+    session.emit('Network.requestWillBeSent', { requestId: '1', request: { url, method: 'GET' } });
+    oldWait?.cancel();
+    if (oldWait) assert.equal(await oldWait.promise, null);
+    const expected = owner.expect(operation);
+    let settled = false;
+    expected.promise.then(() => { settled = true; });
+    session.emit('Network.responseReceived', { requestId: '1', response: { url, status: 200 } });
+    session.emit('Network.loadingFinished', { requestId: '1', encodedDataLength: 128 });
+    await turn(); await turn();
+    assert.equal(facts.json_responses_observed, 1, 'The real old response must finish being observed');
+    assert.equal(settled, false, 'An earlier request cannot supply a newer operation response');
+    session.emit('Network.requestWillBeSent', { requestId: '2', request: { url, method: 'GET' } });
+    session.emit('Network.responseReceived', { requestId: '2', response: { url, status: 200 } });
+    session.emit('Network.loadingFinished', { requestId: '2', encodedDataLength: 128 });
+    assert.deepEqual(await expected.promise, { revision: 2, secret_extra: privateToken });
+    await owner.close();
+    assert.equal(facts.json_responses_observed, 2);
+    assert.equal(facts.session_owner.passed, true);
+    assert.equal(session.eventNames().length, 0);
+    noPrivateOutput(facts);
+  }
+});
+
 test('missing management stream and completed body fail closed and remove every listener', async () => {
   const session = new EventEmitter(), facts = {}, received = [], errors = [];
   session.send = async () => { throw new Error('resource no longer available'); };

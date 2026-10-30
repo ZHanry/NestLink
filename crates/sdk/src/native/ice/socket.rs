@@ -17,9 +17,12 @@ use std::{
     task::{Context, Poll},
     time::Duration,
 };
-use tokio::{sync::{mpsc, watch}, time::Instant};
-use webrtc::{ice::agent::Agent, util::Conn};
+use tokio::{
+    sync::{mpsc, watch},
+    time::Instant,
+};
 use webrtc::ice::state::ConnectionState;
+use webrtc::{ice::agent::Agent, util::Conn};
 
 const PACKET: usize = 1200;
 const QUEUE: usize = 32;
@@ -117,7 +120,10 @@ impl IceUdp {
         }));
         let consent = state.clone();
         agent.on_connection_state_change(Box::new(move |state| {
-            if matches!(state, ConnectionState::Disconnected | ConnectionState::Failed | ConnectionState::Closed) {
+            if matches!(
+                state,
+                ConnectionState::Disconnected | ConnectionState::Failed | ConnectionState::Closed
+            ) {
                 consent.stop();
             }
             Box::pin(async {})
@@ -246,8 +252,7 @@ struct Writable {
 }
 impl fmt::Debug for Writable {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("IceWritable")
-            .finish_non_exhaustive()
+        f.debug_struct("IceWritable").finish_non_exhaustive()
     }
 }
 impl UdpPoller for Writable {

@@ -235,7 +235,9 @@ impl Store {
                 return Err(StorageError::Conflict);
             }
             if old.public_key.as_slice() != update.public_key.as_slice() {
-                if old.signing_generation != 0 { return Err(StorageError::Forbidden); }
+                if old.signing_generation != 0 {
+                    return Err(StorageError::Forbidden);
+                }
                 authority::require_unused_key(&tx, &update.space_id, &update.public_key)?;
                 authority::retire_key(&tx, &update.space_id, &old.public_key, now_ms)?;
             }

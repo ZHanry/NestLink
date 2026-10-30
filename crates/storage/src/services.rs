@@ -53,12 +53,25 @@ fn next(revision: u64) -> Result<u64, StorageError> {
         .ok_or(StorageError::Conflict)
 }
 impl Store {
-    pub(crate) fn approved_space_service_definition(&self,id: &str,revision: u64,now_ms: u64) -> Result<(String,ServiceDefinition),StorageError> {
-        let record=self.service_record(id)?;
-        if record.revision!=revision {return Err(StorageError::Conflict);}
-        let approval=self.service_approval_row(id)?.ok_or(StorageError::Forbidden)?;
-        if !self.service_approval_live(&record,&approval,now_ms/1000)? || now_ms>=approval.expires {return Err(StorageError::Forbidden);}
-        Ok((record.account,record.definition))
+    pub(crate) fn approved_space_service_definition(
+        &self,
+        id: &str,
+        revision: u64,
+        now_ms: u64,
+    ) -> Result<(String, ServiceDefinition), StorageError> {
+        let record = self.service_record(id)?;
+        if record.revision != revision {
+            return Err(StorageError::Conflict);
+        }
+        let approval = self
+            .service_approval_row(id)?
+            .ok_or(StorageError::Forbidden)?;
+        if !self.service_approval_live(&record, &approval, now_ms / 1000)?
+            || now_ms >= approval.expires
+        {
+            return Err(StorageError::Forbidden);
+        }
+        Ok((record.account, record.definition))
     }
 
     fn service_record(&self, id: &str) -> Result<Record, StorageError> {

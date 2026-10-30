@@ -940,8 +940,13 @@ impl Sdk {
         let capabilities = {
             let mut capabilities = capabilities;
             if self.health.native_ice_version == nestlink_protocol::native_ice::VERSION
-                && matches!(platform.as_str(), "windows" | "linux-x11" | "linux-wayland" | "android")
-                && !capabilities.iter().any(|value| value == nestlink_protocol::native_ice::CAPABILITY)
+                && matches!(
+                    platform.as_str(),
+                    "windows" | "linux-x11" | "linux-wayland" | "android"
+                )
+                && !capabilities
+                    .iter()
+                    .any(|value| value == nestlink_protocol::native_ice::CAPABILITY)
             {
                 capabilities.push(nestlink_protocol::native_ice::CAPABILITY.into());
             }

@@ -11,7 +11,8 @@ use nestlink_protocol::api::{
 };
 pub use nestlink_protocol::api::{DeviceView, EnrollmentChallenge, RemoteView};
 use nestlink_protocol::{
-    DeviceAction, DeviceActionClaims, Path, Permission, PermitClaims, SCHEMA_VERSION, SESSION_LEASE_MS,
+    DeviceAction, DeviceActionClaims, Path, Permission, PermitClaims, SCHEMA_VERSION,
+    SESSION_LEASE_MS,
 };
 use rusqlite::{OptionalExtension, params};
 
@@ -1010,8 +1011,12 @@ impl Store {
         if !self.is_browser_controller(&view.controller_device_id)?
             && !self.is_browser_controller(&view.host_device_id)?
             && view.paths.contains(&(Path::Direct as i32))
-            && c.capabilities.iter().any(|value| value == nestlink_protocol::native_ice::CAPABILITY)
-            && h.capabilities.iter().any(|value| value == nestlink_protocol::native_ice::CAPABILITY)
+            && c.capabilities
+                .iter()
+                .any(|value| value == nestlink_protocol::native_ice::CAPABILITY)
+            && h.capabilities
+                .iter()
+                .any(|value| value == nestlink_protocol::native_ice::CAPABILITY)
         {
             required_capabilities.push(nestlink_protocol::native_ice::CAPABILITY.into());
         }

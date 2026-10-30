@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "5f01330edc487fa7748d71b2c3a9576d92bad41c",
+  "dependency_lock_sha256": "e40cbb24fd46cc214dffc2b76642adc09e37c8db9f9ab73943efc6e9bb10b637",
+  "review_method": "Exact-source GitHub-hosted Actions job logs, artifact API digests and downloaded receipts. Local work limited to source review/editing, Git and artifact digest verification; no local toolchain or automated verification.",
+  "network_run": {
+    "run_id": "41088555659",
+    "attempt": 1,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41088555659",
+    "conclusion": "failure",
+    "successful_jobs": [
+      { "job_id": "124176054916", "name": "independent-vectors" },
+      { "job_id": "124176055273", "name": "production-socket-slice" },
+      { "job_id": "124176055502", "name": "routed-kernel-nat-slice" }
+    ],
+    "contract_failures": [
+      "Actions formatting drift",
+      "management_recovery::schema_twenty_two_upgrade_preserves_existing_management_login: old-schema fixture retains network_authority_key_history",
+      "snapshots::pre_fence_schema_twenty_snapshot_migrates_the_quota_restore_fence: old-schema fixture retains network_authority_key_history"
+    ],
+    "linux_contract_observed_success": ["Selected contract clippy with -D warnings", "14 CI evidence tests"],
+    "format_import": {
+      "artifact_id": "12993591645",
+      "artifact_sha256": "c01404cd4ebef80b7677927956968eca669158c3da088c6f6f6e42923c5814c0",
+      "artifact_download_digest_verified": true,
+      "file": "rustfmt.patch",
+      "file_bytes": 243859,
+      "file_sha256": "50b8bed68cf2efdb67e699528f80b2ddbdb08fd3c63d6109f4d348c2cbf0efb8",
+      "receipt_file_digests_verified": true,
+      "manual_review": "40-file formatting patch inspected and imported before the follow-up source repairs; no local formatter execution"
+    },
+    "scope": "Successful experiment jobs preserve their existing limited scope; no complete AC13/14, public NAT, target-device or release qualification inferred"
+  },
+  "core_run": {
+    "run_id": "41088555837",
+    "attempt": 1,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41088555837",
+    "conclusion": "failure",
+    "linux_job_id": "124176052252",
+    "windows_job_id": "124176052162",
+    "wasm_job_id": "124176052025",
+    "native_compile_failures": [
+      "webrtc ICE Url exposes parse_url rather than parse",
+      "dial and accept expose distinct opaque connection types and need per-arm coercion to the shared mature Conn trait"
+    ],
+    "wasm_failure": "Show children moves its captured service into on:click, becoming FnOnce instead of Fn",
+    "openapi_generation": {
+      "job_id": "124176051999",
+      "conclusion": "success",
+      "artifact_id": "12993135917",
+      "artifact_sha256": "3f8c3e9d7cd6bbaa4949d71cc6b33f4a390ffe775a49b01020c1da154811b348",
+      "artifact_download_digest_verified": true,
+      "output": "protocol-spec/openapi.json",
+      "output_bytes": 510934,
+      "output_sha256": "ea5068d419a4879ad6c0ec245ea25f57ee033906a561ac248a994f8805fbaada",
+      "output_digest_verified": true,
+      "manual_review": "Six added routes, eleven added schemas, optional HealthResponse/SignalPayload extensions and authority response schema changes; no removed schema",
+      "imported_generated_file_only": true
+    },
+    "scope": "Compilation failures prevent claiming new native production ICE and workspace runtime success"
+  },
+  "web_run": {
+    "run_id": "41088555940",
+    "attempt": 1,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41088555940",
+    "conclusion": "failure",
+    "release_site_job_id": "124176051925",
+    "failure": "Same service_publication Show children FnOnce compile failure as WASM",
+    "native_browser_job_id": "124181048995",
+    "native_browser_conclusion": "skipped",
+    "scope": "Browser/native runtime did not execute because the site build dependency failed"
+  },
+  "other_runs": [
+    { "run_id": "41088555563", "name": "CodeQL", "conclusion": "success" },
+    { "run_id": "41088555658", "name": "Build regression server", "conclusion": "success" },
+    { "run_id": "41088555621", "name": "Secret scan", "conclusion": "success" }
+  ],
+  "follow_up_source_changes_pending_new_actions": [
+    "Import exact-source Actions rustfmt output and regenerated OpenAPI",
+    "Use mature ICE parse_url API and coerce dial/accept connection types independently",
+    "Clone per-render Show captures before constructing the rule-revocation handler",
+    "Drop all migration 30/31 tables in the two old-schema downgrade fixtures; preserve upgrade assertions",
+    "Bind each management response expectation to its subsequent matching CDP requestId; regress delayed prior and canceled responses"
+  ],
+  "independent_source_reviews": {
+    "authority_lifecycle": "No confirmed additional defect found; reviewed CAS/rotation/revoke/history/snapshot trust/pin/currentness",
+    "space_publication_rules": "No confirmed additional defect found; reviewed ownership/subject/epochs/expiry/revocation/node and host cleanup/quota fences",
+    "limitations": "Source reviews do not replace Actions or target execution evidence; publication rules do not implement authenticated private consumer ACL"
+  },
+  "acceptance_claim": "No complete acceptance group newly passed; W10-W40 incomplete scope remains development work, not an external-only blocker",
+  "release_state": "not_ready"
+}

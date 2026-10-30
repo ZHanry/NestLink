@@ -8,7 +8,10 @@ use nestlink_auth::{Secret, VaultKey, hash_password, random_id};
 use nestlink_identity::{PermitSigner, nodes::NodeIdentity};
 use nestlink_node::control::{NodeConfig, NodeControl};
 use nestlink_protocol::{NodeRole, api::*, service_plane::publication::*};
-use nestlink_protocol::{network::SpaceRole,spaces::{*,service_publication::*}};
+use nestlink_protocol::{
+    network::SpaceRole,
+    spaces::{service_publication::*, *},
+};
 use nestlink_sdk::{
     DeploymentTrust, DeviceIdentity, Sdk,
     services::{LocalServiceTargetConsent, ServiceHostWait},
@@ -43,8 +46,9 @@ async fn actual_http_quic_tcp_publication_retains_half_close_renews_and_physical
 }
 
 #[tokio::test]
-async fn space_publication_rule_is_enforced_by_real_http_quic_and_physical_ingress_teardown() -> Result {
-    tokio::time::timeout(Duration::from_secs(25),run(true)).await??;
+async fn space_publication_rule_is_enforced_by_real_http_quic_and_physical_ingress_teardown()
+-> Result {
+    tokio::time::timeout(Duration::from_secs(25), run(true)).await??;
     Ok(())
 }
 async fn run(space_policy: bool) -> Result {
@@ -221,30 +225,118 @@ async fn run(space_policy: bool) -> Result {
         .await
         .map_err(|e| format!("approve target: {e:?}"))?;
     assert_eq!(approved.revision, definition.revision + 1);
-    let scoped_rule=if space_policy {
-        let space=sdk.create_space(SpaceCreateRequest {name:"Actual service publication rules".into()}).await?;
-        sdk.create_account("space-guest".into(),Secret::from_text(password.into())).await?;
-        let mut guest=Sdk::connect(&origin,DeploymentTrust {deployment_id:deployment.clone(),permit_issuer:issuer},true).await?;
-        guest.login("space-guest".into(),Secret::from_text(password.into()),None).await?;
-        let guest_account=guest.principal().ok_or("guest missing")?.account_id.clone();
-        let invitation=sdk.invite_to_space(&space.space_id,SpaceInvitationRequest {expected_revision:space.revision,role:SpaceRole::Guest,target_account_id:Some(guest_account),expires_at_unix_ms:space.observed_at_unix_ms+60_000}).await?;
-        let accepted=guest.accept_space_invitation(&space.space_id,&invitation.invitation.invitation_id,SpaceInvitationAcceptance {token:invitation.token}).await?;
-        let joined=sdk.join_space_device(&space.space_id,SpaceDeviceJoin {expected_revision:accepted.revision,expected_membership_epoch:0,installation_id:host.device_id.clone()}).await?;
-        let bound=sdk.bind_space_service(&space.space_id,&definition.id,SpaceServiceBindingRequest {expected_revision:joined.revision,expected_service_revision:approved.revision}).await?;
-        let policy=sdk.space_service_policy(&space.space_id).await?;
+    let scoped_rule = if space_policy {
+        let space = sdk
+            .create_space(SpaceCreateRequest {
+                name: "Actual service publication rules".into(),
+            })
+            .await?;
+        sdk.create_account("space-guest".into(), Secret::from_text(password.into()))
+            .await?;
+        let mut guest = Sdk::connect(
+            &origin,
+            DeploymentTrust {
+                deployment_id: deployment.clone(),
+                permit_issuer: issuer,
+            },
+            true,
+        )
+        .await?;
+        guest
+            .login(
+                "space-guest".into(),
+                Secret::from_text(password.into()),
+                None,
+            )
+            .await?;
+        let guest_account = guest.principal().ok_or("guest missing")?.account_id.clone();
+        let invitation = sdk
+            .invite_to_space(
+                &space.space_id,
+                SpaceInvitationRequest {
+                    expected_revision: space.revision,
+                    role: SpaceRole::Guest,
+                    target_account_id: Some(guest_account),
+                    expires_at_unix_ms: space.observed_at_unix_ms + 60_000,
+                },
+            )
+            .await?;
+        let accepted = guest
+            .accept_space_invitation(
+                &space.space_id,
+                &invitation.invitation.invitation_id,
+                SpaceInvitationAcceptance {
+                    token: invitation.token,
+                },
+            )
+            .await?;
+        let joined = sdk
+            .join_space_device(
+                &space.space_id,
+                SpaceDeviceJoin {
+                    expected_revision: accepted.revision,
+                    expected_membership_epoch: 0,
+                    installation_id: host.device_id.clone(),
+                },
+            )
+            .await?;
+        let bound = sdk
+            .bind_space_service(
+                &space.space_id,
+                &definition.id,
+                SpaceServiceBindingRequest {
+                    expected_revision: joined.revision,
+                    expected_service_revision: approved.revision,
+                },
+            )
+            .await?;
+        let policy = sdk.space_service_policy(&space.space_id).await?;
         assert!(policy.bindings[0].rules.is_empty());
-        assert!(guest.space_service_policy(&space.space_id).await?.bindings.is_empty());
-        let account=sdk.principal().ok_or("publisher missing")?.account_id.clone();
-        let request=||SpaceServiceRuleRequest {expected_revision:bound.revision,expected_binding_epoch:policy.bindings[0].binding_epoch,subject:SpaceServiceSubject::Account {account_id:account.clone()},protocol:SpaceServiceProtocol::Tcp,port:public_address.port(),operation:SpaceServiceOperation::Publish,expires_at_unix_ms:bound.observed_at_unix_ms+60_000};
-        assert!(matches!(guest.grant_space_service_rule(&space.space_id,&definition.id,request()).await,Err(nestlink_sdk::SdkError::Api(status,_)) if status.as_u16()==403));
-        let mut wrong=request(); wrong.protocol=SpaceServiceProtocol::Udp;
-        assert!(matches!(sdk.grant_space_service_rule(&space.space_id,&definition.id,wrong).await,Err(nestlink_sdk::SdkError::Api(status,_)) if status.as_u16()==403));
-        let mut wrong=request(); wrong.subject=SpaceServiceSubject::Device {installation_id:random_id()};
-        assert!(matches!(sdk.grant_space_service_rule(&space.space_id,&definition.id,wrong).await,Err(nestlink_sdk::SdkError::Api(status,_)) if status.as_u16()==403));
-        sdk.grant_space_service_rule(&space.space_id,&definition.id,request()).await?;
-        let rules=sdk.space_service_policy(&space.space_id).await?;
-        Some((space.space_id,rules.bindings[0].rules[0].rule_id.clone()))
-    } else {None};
+        assert!(
+            guest
+                .space_service_policy(&space.space_id)
+                .await?
+                .bindings
+                .is_empty()
+        );
+        let account = sdk
+            .principal()
+            .ok_or("publisher missing")?
+            .account_id
+            .clone();
+        let request = || SpaceServiceRuleRequest {
+            expected_revision: bound.revision,
+            expected_binding_epoch: policy.bindings[0].binding_epoch,
+            subject: SpaceServiceSubject::Account {
+                account_id: account.clone(),
+            },
+            protocol: SpaceServiceProtocol::Tcp,
+            port: public_address.port(),
+            operation: SpaceServiceOperation::Publish,
+            expires_at_unix_ms: bound.observed_at_unix_ms + 60_000,
+        };
+        assert!(
+            matches!(guest.grant_space_service_rule(&space.space_id,&definition.id,request()).await,Err(nestlink_sdk::SdkError::Api(status,_)) if status.as_u16()==403)
+        );
+        let mut wrong = request();
+        wrong.protocol = SpaceServiceProtocol::Udp;
+        assert!(
+            matches!(sdk.grant_space_service_rule(&space.space_id,&definition.id,wrong).await,Err(nestlink_sdk::SdkError::Api(status,_)) if status.as_u16()==403)
+        );
+        let mut wrong = request();
+        wrong.subject = SpaceServiceSubject::Device {
+            installation_id: random_id(),
+        };
+        assert!(
+            matches!(sdk.grant_space_service_rule(&space.space_id,&definition.id,wrong).await,Err(nestlink_sdk::SdkError::Api(status,_)) if status.as_u16()==403)
+        );
+        sdk.grant_space_service_rule(&space.space_id, &definition.id, request())
+            .await?;
+        let rules = sdk.space_service_policy(&space.space_id).await?;
+        Some((space.space_id, rules.bindings[0].rules[0].rule_id.clone()))
+    } else {
+        None
+    };
     drop(public_reservation);
     let mut runtime = sdk
         .start_service_host(host.clone(), consent)
@@ -291,12 +383,27 @@ async fn run(space_policy: bool) -> Result {
     })
     .await?;
     assert!(runtime.counters()?.admitted_bytes > 0);
-    if let Some((space,rule))=&scoped_rule {
-        let current=sdk.space_service_policy(space).await?;
-        sdk.revoke_space_service_rule(space,&definition.id,rule,SpaceRevisionRequest {expected_revision:current.space.revision}).await?;
-        assert!(sdk.space_audit(space).await?.iter().any(|entry|entry.action=="space_service_rule_revoked" && &entry.target_id==rule));
+    if let Some((space, rule)) = &scoped_rule {
+        let current = sdk.space_service_policy(space).await?;
+        sdk.revoke_space_service_rule(
+            space,
+            &definition.id,
+            rule,
+            SpaceRevisionRequest {
+                expected_revision: current.space.revision,
+            },
+        )
+        .await?;
+        assert!(
+            sdk.space_audit(space)
+                .await?
+                .iter()
+                .any(|entry| entry.action == "space_service_rule_revoked"
+                    && &entry.target_id == rule)
+        );
     } else {
-        sdk.stop_service_publication(&definition.id, approved.revision).await?;
+        sdk.stop_service_publication(&definition.id, approved.revision)
+            .await?;
     }
     assert_eq!(
         sdk.service(&definition.id).await?.publication,

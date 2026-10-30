@@ -235,3 +235,13 @@ same socket adapter. New production tests require actual FileRead and rebinds.
 All of this new source remains pending exact-source Actions, including formatting
 and generated OpenAPI. No acceptance group, external execution or release result
 is inferred from its implementation. Remaining W10-W40 scope stays active.
+
+The exact-source 5f01330 runs are retained in
+`evidence/development-run-5f01330.json`. The three network experiment jobs passed,
+but native compilation, WASM/site compilation and two downgraded-schema fixtures
+failed; browser/native execution was skipped by its failed site dependency.
+The follow-up source imports verified Actions format/OpenAPI outputs and repairs
+the mature ICE API/coercion, per-render Web handler capture and fixture table
+cleanup. Management response expectations now bind to the next requestId so a
+late earlier response cannot supply a later CAS assertion. Assertions, product
+limits and cleanup budgets are preserved. These repairs need new Actions.

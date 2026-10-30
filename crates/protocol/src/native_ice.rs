@@ -12,7 +12,9 @@ impl NativeIceParameters {
     pub fn address(&self) -> Result<SocketAddr, ContractError> {
         let credential = |value: &str, minimum: usize| {
             (minimum..=256).contains(&value.len())
-                && value.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'+' || b == b'/')
+                && value
+                    .bytes()
+                    .all(|b| b.is_ascii_alphanumeric() || b == b'+' || b == b'/')
         };
         if self.version != VERSION
             || !credential(&self.username_fragment, 4)
@@ -75,9 +77,13 @@ mod tests {
         }
     }
     #[test]
-    fn destination_and_credentials_are_bounded_and_debug_is_redacted() -> Result<(), ContractError> {
+    fn destination_and_credentials_are_bounded_and_debug_is_redacted() -> Result<(), ContractError>
+    {
         let valid = parameters();
-        assert_eq!(valid.address()?, "203.0.113.7:45678".parse().map_err(|_| invalid())?);
+        assert_eq!(
+            valid.address()?,
+            "203.0.113.7:45678".parse().map_err(|_| invalid())?
+        );
         let debug = format!("{valid:?}");
         assert!(!debug.contains(&valid.password));
         assert!(!debug.contains(&valid.username_fragment));

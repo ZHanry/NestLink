@@ -319,7 +319,9 @@ pub fn router(state: AppState) -> Router {
         )
         .route(
             "/api/v3/network/spaces/{space}/authority",
-            get(network_policy::authority).put(network_policy::configure).delete(network_policy::revoke_authority),
+            get(network_policy::authority)
+                .put(network_policy::configure)
+                .delete(network_policy::revoke_authority),
         )
         .route(
             "/api/v3/network/spaces/{space}/authority/rotate",
@@ -363,10 +365,22 @@ pub fn router(state: AppState) -> Router {
             post(spaces::accept_invitation),
         )
         .route("/api/v3/network/spaces/{space}/audit", get(spaces::audit))
-        .route("/api/v3/network/spaces/{space}/services", get(spaces::service_policy))
-        .route("/api/v3/network/spaces/{space}/services/{service}", put(spaces::bind_service).delete(spaces::revoke_service))
-        .route("/api/v3/network/spaces/{space}/services/{service}/rules", post(spaces::grant_service_rule))
-        .route("/api/v3/network/spaces/{space}/services/{service}/rules/{rule}", delete(spaces::revoke_service_rule))
+        .route(
+            "/api/v3/network/spaces/{space}/services",
+            get(spaces::service_policy),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/services/{service}",
+            put(spaces::bind_service).delete(spaces::revoke_service),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/services/{service}/rules",
+            post(spaces::grant_service_rule),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/services/{service}/rules/{rule}",
+            delete(spaces::revoke_service_rule),
+        )
         .route(
             "/api/v3/network/spaces/{space}/policy",
             get(network_policy::policy),

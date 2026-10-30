@@ -9,9 +9,9 @@ use nestlink_policy::PathSet;
 use nestlink_protocol::{
     NodeRole, Path, Permission,
     api::{
-        ApprovalChoice, NetworkAuthorityChangeRequest, NetworkIssueRequest, NetworkMemberRequest, NetworkPolicy,
-        NetworkRemotePathRequest, NetworkRemoteRelayRequest, NodeEndpoints, NodeEndpointsUpdate,
-        NodeRegistration, PolicyUpdate, RelayAllocationRequest, RemoteRequest,
+        ApprovalChoice, NetworkAuthorityChangeRequest, NetworkIssueRequest, NetworkMemberRequest,
+        NetworkPolicy, NetworkRemotePathRequest, NetworkRemoteRelayRequest, NodeEndpoints,
+        NodeEndpointsUpdate, NodeRegistration, PolicyUpdate, RelayAllocationRequest, RemoteRequest,
     },
     network::SpaceRole,
 };
@@ -543,75 +543,177 @@ async fn cancelling_unpaired_actual_node_connection_releases_its_socket_without_
 }
 
 #[tokio::test]
-async fn authority_rotation_epoch_advance_and_grant_revocation_remove_live_node_routes_and_original_socket_owners() -> Result {
+async fn authority_rotation_epoch_advance_and_grant_revocation_remove_live_node_routes_and_original_socket_owners()
+-> Result {
     for action in 0..4 {
-        let mut f=Fixture::new().await?;
-        let addresses=[unused_udp()?,unused_udp()?];
-        let old=f.sdk.network_remote_relay(f.pin.space_id(),&f.allocation).await?;
-        let (mut controller,mut host,_stop)=f.channels(addresses).await?;
-        host.send(Channel::FileRead,b"business before authority change").await?;
-        assert_eq!(tokio::time::timeout(Duration::from_secs(2),controller.receive()).await??.payload,b"business before authority change");
-        let current=f.sdk.network_authority_state(f.pin.space_id()).await?;
-        let change=NetworkAuthorityChangeRequest {expected_revision:current.policy.revision,expected_policy_epoch:current.policy.policy_epoch};
+        let mut f = Fixture::new().await?;
+        let addresses = [unused_udp()?, unused_udp()?];
+        let old = f
+            .sdk
+            .network_remote_relay(f.pin.space_id(), &f.allocation)
+            .await?;
+        let (mut controller, mut host, _stop) = f.channels(addresses).await?;
+        host.send(Channel::FileRead, b"business before authority change")
+            .await?;
+        assert_eq!(
+            tokio::time::timeout(Duration::from_secs(2), controller.receive())
+                .await??
+                .payload,
+            b"business before authority change"
+        );
+        let current = f.sdk.network_authority_state(f.pin.space_id()).await?;
+        let change = NetworkAuthorityChangeRequest {
+            expected_revision: current.policy.revision,
+            expected_policy_epoch: current.policy.policy_epoch,
+        };
         match action {
-            0=>{ let changed=f.sdk.rotate_network_authority(f.pin.space_id(),change).await?;
-                assert_ne!(changed.policy.authority_public_key,current.policy.authority_public_key);
+            0 => {
+                let changed = f
+                    .sdk
+                    .rotate_network_authority(f.pin.space_id(), change)
+                    .await?;
+                assert_ne!(
+                    changed.policy.authority_public_key,
+                    current.policy.authority_public_key
+                );
                 // Operator pins are not updated by a response to this action.
-                assert_eq!(URL_SAFE_NO_PAD.encode(f.pin.authority_key()),current.policy.authority_public_key);
-            },
-            1=>{ let changed=f.sdk.advance_network_policy_epoch(f.pin.space_id(),change).await?;
-                assert_eq!(changed.authority_public_key,current.policy.authority_public_key);
-                assert!(changed.policy_epoch>current.policy.policy_epoch);
-            },
-            2=>f.sdk.revoke_network_authority(f.pin.space_id(),change).await?,
-            _=>{ let changed=f.sdk.revoke_network_membership_grant(f.pin.space_id(),&old.path.controller_membership.grant_id,current.policy.revision).await?;
-                assert_eq!(changed.policy_epoch,current.policy.policy_epoch);
-                assert_eq!(changed.revision,current.policy.revision+1);
-            },
+                assert_eq!(
+                    URL_SAFE_NO_PAD.encode(f.pin.authority_key()),
+                    current.policy.authority_public_key
+                );
+            }
+            1 => {
+                let changed = f
+                    .sdk
+                    .advance_network_policy_epoch(f.pin.space_id(), change)
+                    .await?;
+                assert_eq!(
+                    changed.authority_public_key,
+                    current.policy.authority_public_key
+                );
+                assert!(changed.policy_epoch > current.policy.policy_epoch);
+            }
+            2 => {
+                f.sdk
+                    .revoke_network_authority(f.pin.space_id(), change)
+                    .await?
+            }
+            _ => {
+                let changed = f
+                    .sdk
+                    .revoke_network_membership_grant(
+                        f.pin.space_id(),
+                        &old.path.controller_membership.grant_id,
+                        current.policy.revision,
+                    )
+                    .await?;
+                assert_eq!(changed.policy_epoch, current.policy.policy_epoch);
+                assert_eq!(changed.revision, current.policy.revision + 1);
+            }
         }
-        let deadline=Instant::now()+Duration::from_secs(5);
-        tokio::time::timeout_at(deadline,async {
-            while !f.control.resource_snapshot().is_ok_and(|snapshot| snapshot.network_routes.iter().all(|resource| resource.allocation.as_ref().is_none_or(|allocation| allocation.allocation_id!=f.allocation))) {
+        let deadline = Instant::now() + Duration::from_secs(5);
+        tokio::time::timeout_at(deadline, async {
+            while !f.control.resource_snapshot().is_ok_and(|snapshot| {
+                snapshot.network_routes.iter().all(|resource| {
+                    resource
+                        .allocation
+                        .as_ref()
+                        .is_none_or(|allocation| allocation.allocation_id != f.allocation)
+                })
+            }) {
                 tokio::time::sleep(Duration::from_millis(10)).await;
             }
-        }).await?;
-        let (c,h)=tokio::time::timeout_at(deadline,async {tokio::try_join!(controller.wait_stopped(),host.wait_stopped())}).await??;
-        assert_eq!(c.reason,StopReason::Revoked);
-        assert_eq!(h.reason,StopReason::Revoked);
-        drop((controller,host));
-        let _sockets=rebind(&addresses)?;
-        assert!(f.sdk.network_remote_relay(f.pin.space_id(),&f.allocation).await.is_err());
-        assert!(f.sdk.network_remote_path(f.pin.space_id(),&old.path.path.grant_id).await.is_err());
-        assert!(f.sdk.network_membership_grant(f.pin.space_id(),&old.path.controller_membership.grant_id).await.is_err());
-        assert_eq!(f.sdk.relay_reservations().await?.held_allocations,1);
+        })
+        .await?;
+        let (c, h) = tokio::time::timeout_at(deadline, async {
+            tokio::try_join!(controller.wait_stopped(), host.wait_stopped())
+        })
+        .await??;
+        assert_eq!(c.reason, StopReason::Revoked);
+        assert_eq!(h.reason, StopReason::Revoked);
+        drop((controller, host));
+        let _sockets = rebind(&addresses)?;
+        assert!(
+            f.sdk
+                .network_remote_relay(f.pin.space_id(), &f.allocation)
+                .await
+                .is_err()
+        );
+        assert!(
+            f.sdk
+                .network_remote_path(f.pin.space_id(), &old.path.path.grant_id)
+                .await
+                .is_err()
+        );
+        assert!(
+            f.sdk
+                .network_membership_grant(
+                    f.pin.space_id(),
+                    &old.path.controller_membership.grant_id
+                )
+                .await
+                .is_err()
+        );
+        assert_eq!(f.sdk.relay_reservations().await?.held_allocations, 1);
         f.finish().await?;
     }
     Ok(())
 }
 
 #[tokio::test]
-async fn authority_rotation_interrupts_unpaired_node_setup_with_physical_release_receipt() -> Result {
-    let mut f=Fixture::new().await?;
-    let route=f.sdk.verified_network_remote_relay(&f.pin,&f.controller,&f.permit,&f.host.identity.public_key(),&f.allocation).await?;
-    let address=unused_udp()?;
-    let (_keep,stop)=watch::channel(None);
-    let (_cancel,cancel)=watch::channel(false);
-    let policy=AddressPolicy::new(&[])?;
-    let peer_key=f.host.identity.public_key();
-    let setup=f.setup(EndpointRole::Controller,stop)?;
+async fn authority_rotation_interrupts_unpaired_node_setup_with_physical_release_receipt() -> Result
+{
+    let mut f = Fixture::new().await?;
+    let route = f
+        .sdk
+        .verified_network_remote_relay(
+            &f.pin,
+            &f.controller,
+            &f.permit,
+            &f.host.identity.public_key(),
+            &f.allocation,
+        )
+        .await?;
+    let address = unused_udp()?;
+    let (_keep, stop) = watch::channel(None);
+    let (_cancel, cancel) = watch::channel(false);
+    let policy = AddressPolicy::new(&[])?;
+    let peer_key = f.host.identity.public_key();
+    let setup = f.setup(EndpointRole::Controller, stop)?;
     {
-        let connection=f.sdk.connect_network_remote_relay(route,address,&f.controller,&peer_key,setup,&policy,cancel,Instant::now()+Duration::from_secs(5));
+        let connection = f.sdk.connect_network_remote_relay(
+            route,
+            address,
+            &f.controller,
+            &peer_key,
+            setup,
+            &policy,
+            cancel,
+            Instant::now() + Duration::from_secs(5),
+        );
         tokio::pin!(connection);
         tokio::select! {
             result=&mut connection=>return Err(format!("unpaired node setup finished before authority change: {}",result.is_ok()).into()),
             _=tokio::time::sleep(Duration::from_millis(200))=>{},
         }
-        let current=f.sdk.network_authority_state(f.pin.space_id()).await?;
-        f.sdk.rotate_network_authority(f.pin.space_id(),NetworkAuthorityChangeRequest {expected_revision:current.policy.revision,expected_policy_epoch:current.policy.policy_epoch}).await?;
-        assert!(tokio::time::timeout(Duration::from_secs(5),connection).await?.is_err());
+        let current = f.sdk.network_authority_state(f.pin.space_id()).await?;
+        f.sdk
+            .rotate_network_authority(
+                f.pin.space_id(),
+                NetworkAuthorityChangeRequest {
+                    expected_revision: current.policy.revision,
+                    expected_policy_epoch: current.policy.policy_epoch,
+                },
+            )
+            .await?;
+        assert!(
+            tokio::time::timeout(Duration::from_secs(5), connection)
+                .await?
+                .is_err()
+        );
     }
-    assert_eq!(f.control.counters()?.opened_connections,0);
-    let _socket=UdpSocket::bind(address)?;
+    assert_eq!(f.control.counters()?.opened_connections, 0);
+    let _socket = UdpSocket::bind(address)?;
     f.finish().await?;
     Ok(())
 }

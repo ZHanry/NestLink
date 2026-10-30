@@ -292,7 +292,11 @@ impl Store {
             params![space,path_id], |r|Ok(StoredPath {request_id:r.get(0)?,controller_membership_id:r.get(1)?,host_membership_id:r.get(2)?,business_digest:r.get(3)?,
                 connectivity:SignedNetworkGrant {claims:r.get(4)?,signature:r.get(5)?},path:SignedNetworkGrant {claims:r.get(6)?,signature:r.get(7)?},revoked:r.get(8)?,
                 connectivity_grant_id:r.get(9)?,policy_epoch:r.get(10)?,expires_at_ms:r.get(11)?})).optional()?;
-        let row = row.filter(|r| !r.revoked && r.policy_epoch == snapshot.policy_epoch && r.expires_at_ms > now_ms).ok_or(StorageError::Forbidden)?;
+        let row = row
+            .filter(|r| {
+                !r.revoked && r.policy_epoch == snapshot.policy_epoch && r.expires_at_ms > now_ms
+            })
+            .ok_or(StorageError::Forbidden)?;
         if let Some(actor) = actor {
             self.remote(actor, &row.request_id)?;
         }

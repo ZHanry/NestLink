@@ -89,7 +89,11 @@ async fn real_http_sdk_registration_approval_native_quic_and_revoke() -> Result 
     assert_eq!(controller_devices.len(), 1);
     assert_eq!(
         controller_devices[0].device.capabilities,
-        vec!["controller".to_owned(), "vp8".to_owned(), nestlink_protocol::native_ice::CAPABILITY.into()],
+        vec![
+            "controller".to_owned(),
+            "vp8".to_owned(),
+            nestlink_protocol::native_ice::CAPABILITY.into()
+        ],
         "registration preserves explicit codecs and adds the SDK's native transport capability"
     );
     assert_eq!(host_sdk.devices().await?.len(), 1);
@@ -214,7 +218,10 @@ async fn real_http_sdk_registration_approval_native_quic_and_revoke() -> Result 
         connection_generation: claims.connection_generation,
         capability_sha256: claims.capability_sha256.as_slice().try_into()?,
         granted_permissions: vec![Permission::View],
-        supported_capabilities: vec!["vp8".into(), nestlink_protocol::native_ice::CAPABILITY.into()],
+        supported_capabilities: vec![
+            "vp8".into(),
+            nestlink_protocol::native_ice::CAPABILITY.into(),
+        ],
         local_paths: PathSet::DIRECT,
     };
     let server = listener(
@@ -754,7 +761,10 @@ async fn relay_roundtrip(revocation: RelayRevocation) -> Result {
         connection_generation: claims.connection_generation,
         capability_sha256: claims.capability_sha256.as_slice().try_into()?,
         granted_permissions: vec![Permission::View],
-        supported_capabilities: vec!["vp8".into(), nestlink_protocol::native_ice::CAPABILITY.into()],
+        supported_capabilities: vec![
+            "vp8".into(),
+            nestlink_protocol::native_ice::CAPABILITY.into(),
+        ],
         local_paths: PathSet::RELAY,
     };
     let c_clock = RuntimeClock::default();
