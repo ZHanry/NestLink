@@ -48,7 +48,9 @@ pub(super) fn path_interfaces() -> io::Result<Vec<super::path::NetworkInterface>
         if ip.is_unspecified() || ip.is_loopback() || ip.is_multicast() || address.is_link_local() {
             continue;
         }
-        if !usable.contains(&(index, ip)) { continue; }
+        if !usable.contains(&(index, ip)) {
+            continue;
+        }
         let mut row = MIB_IF_ROW2 {
             InterfaceIndex: index,
             ..Default::default()

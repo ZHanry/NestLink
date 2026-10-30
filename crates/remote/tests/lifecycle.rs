@@ -131,6 +131,8 @@ async fn input_permit_observer_publishes_only_accepted_signed_renewals() -> Resu
     let original = verify_permit(initial.signed_envelope(), &signer.public_key())?;
     assert_eq!(original.claims().lease_sequence, 1);
     let deadline = lease.input_permit_deadline(&initial)?;
+    assert_eq!(lease.current_deadline()?, deadline);
+    assert!(lease.reconnection_budget().is_err());
     assert!(lease.renew(initial.clone(), clock.monotonic_ms()).is_err());
     assert!(!permits.has_changed()?);
     assert_eq!(lease.input_permit_deadline(&initial)?, deadline);
@@ -150,7 +152,9 @@ async fn input_permit_observer_publishes_only_accepted_signed_renewals() -> Resu
         .ok_or("missing accepted renewal")?;
     assert_eq!(renewed.signed_envelope(), envelope);
     assert_eq!(renewed.claims().lease_sequence, 2);
+    assert_eq!(lease.current_deadline()?, lease.input_permit_deadline(&renewed)?);
     lease.stop(StopReason::ExplicitExit)?;
+    assert!(lease.current_deadline().is_err());
     permits.changed().await?;
     assert!(permits.borrow_and_update().is_none());
     assert!(lease.renew(renewed, clock.monotonic_ms()).is_err());

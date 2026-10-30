@@ -72,8 +72,10 @@ impl NetworkPathManager {
     pub fn new(policy: RoutePolicy) -> io::Result<Self> {
         #[cfg(target_os = "linux")]
         if policy == RoutePolicy::PreferPhysical {
-            return Err(io::Error::new(io::ErrorKind::Unsupported,
-                "Linux physical-interface preference requires a trusted device classification; select an explicit interface index"));
+            return Err(io::Error::new(
+                io::ErrorKind::Unsupported,
+                "Linux physical-interface preference requires a trusted device classification; select an explicit interface index",
+            ));
         }
         let selected = if policy == RoutePolicy::System {
             None
@@ -126,12 +128,22 @@ impl NetworkPathManager {
     /// replacement adapter, removed source, DAD/tentative or expired address
     /// cannot silently inherit an already constructed socket's candidate facts.
     pub fn validate_bound(&self, address: SocketAddr) -> io::Result<()> {
-        let Some(selected) = &self.selected else { return Ok(()); };
-        let current = Self::interfaces()?.into_iter().find(|interface| interface.index == selected.index);
-        if current.is_none_or(|current| !current.up || current.name != selected.name
-            || current.luid != selected.luid || !current.addresses.contains(&address.ip()))
-        {
-            return Err(io::Error::new(io::ErrorKind::AddrNotAvailable, "selected interface or source is no longer current"));
+        let Some(selected) = &self.selected else {
+            return Ok(());
+        };
+        let current = Self::interfaces()?
+            .into_iter()
+            .find(|interface| interface.index == selected.index);
+        if current.is_none_or(|current| {
+            !current.up
+                || current.name != selected.name
+                || current.luid != selected.luid
+                || !current.addresses.contains(&address.ip())
+        }) {
+            return Err(io::Error::new(
+                io::ErrorKind::AddrNotAvailable,
+                "selected interface or source is no longer current",
+            ));
         }
         Ok(())
     }
@@ -140,11 +152,19 @@ impl NetworkPathManager {
     pub fn candidate_interfaces(&self, address: SocketAddr) -> io::Result<Vec<NetworkInterface>> {
         self.validate_bound(address)?;
         let mut interfaces = Self::interfaces()?;
-        interfaces.retain(|interface| interface.up && self.selected.as_ref().is_none_or(|selected|
-            interface.index == selected.index && interface.luid == selected.luid && interface.name == selected.name));
+        interfaces.retain(|interface| {
+            interface.up
+                && self.selected.as_ref().is_none_or(|selected| {
+                    interface.index == selected.index
+                        && interface.luid == selected.luid
+                        && interface.name == selected.name
+                })
+        });
         for interface in &mut interfaces {
-            interface.addresses.retain(|ip| ip.is_ipv4() == address.is_ipv4()
-                && (address.ip().is_unspecified() || *ip == address.ip()));
+            interface.addresses.retain(|ip| {
+                ip.is_ipv4() == address.is_ipv4()
+                    && (address.ip().is_unspecified() || *ip == address.ip())
+            });
         }
         interfaces.retain(|interface| !interface.addresses.is_empty());
         interfaces.sort_by_key(|interface| (interface.metric, interface.index));

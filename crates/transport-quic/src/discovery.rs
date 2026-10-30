@@ -1,6 +1,6 @@
 //! Demultiplexes bounded STUN replies before QUIC decoding, preserving GRO batches.
-use nestlink_traversal::stun;
 use nestlink_platform_network::path::{NetworkInterface, NetworkPathManager, RoutePolicy};
+use nestlink_traversal::stun;
 use quinn::{
     AsyncUdpSocket, UdpPoller,
     udp::{RecvMeta, Transmit},
@@ -33,9 +33,13 @@ pub const OBSERVATION_TTL: Duration = Duration::from_secs(5);
 impl Observation {
     pub fn check_current(&self, socket: &DiscoverySocket) -> io::Result<()> {
         socket.check_path()?;
-        if self.network_generation != socket.generation() || !socket.trusted.contains(&self.server)
-            || socket.inner.local_addr()? != self.local || Instant::now() >= self.expires_at
-        { return Err(failure()); }
+        if self.network_generation != socket.generation()
+            || !socket.trusted.contains(&self.server)
+            || socket.inner.local_addr()? != self.local
+            || Instant::now() >= self.expires_at
+        {
+            return Err(failure());
+        }
         Ok(())
     }
 }
@@ -94,20 +98,27 @@ impl DiscoverySocket {
             observations: Mutex::new(HashMap::new()),
         })
     }
-    pub(crate) fn on_path(inner: Arc<dyn AsyncUdpSocket>, trusted: Vec<SocketAddr>, path: NetworkPathManager) -> io::Result<Self> {
+    pub(crate) fn on_path(
+        inner: Arc<dyn AsyncUdpSocket>,
+        trusted: Vec<SocketAddr>,
+        path: NetworkPathManager,
+    ) -> io::Result<Self> {
         let mut socket = Self::new(inner, trusted)?;
         socket.path = Some(path);
         socket.check_path()?;
         Ok(socket)
     }
     pub fn check_path(&self) -> io::Result<()> {
-        if let Some(path) = &self.path { path.validate_bound(self.inner.local_addr()?)?; }
+        if let Some(path) = &self.path {
+            path.validate_bound(self.inner.local_addr()?)?;
+        }
         Ok(())
     }
     pub fn candidate_interfaces(&self) -> io::Result<Vec<NetworkInterface>> {
         match &self.path {
             Some(path) => path.candidate_interfaces(self.inner.local_addr()?),
-            None => NetworkPathManager::new(RoutePolicy::System)?.candidate_interfaces(self.inner.local_addr()?),
+            None => NetworkPathManager::new(RoutePolicy::System)?
+                .candidate_interfaces(self.inner.local_addr()?),
         }
     }
     /// Only the endpoint's unique close owner takes the physical release
@@ -145,7 +156,9 @@ impl DiscoverySocket {
     ) -> io::Result<Observation> {
         self.check_path()?;
         let local = self.inner.local_addr()?;
-        if !self.trusted.contains(&server) || budget.is_zero() || budget > Duration::from_secs(3)
+        if !self.trusted.contains(&server)
+            || budget.is_zero()
+            || budget > Duration::from_secs(3)
             || server.is_ipv4() != local.is_ipv4()
         {
             return Err(failure());
@@ -156,9 +169,14 @@ impl DiscoverySocket {
         {
             let mut pending = self.pending.lock().map_err(|_| failure())?;
             let mut observations = self.observations.lock().map_err(|_| failure())?;
-            observations.retain(|_, observation| observation.network_generation == generation
-                && observation.local == local && Instant::now() < observation.expires_at);
-            if self.generation() == generation && let Some(observation) = observations.get(&server) {
+            observations.retain(|_, observation| {
+                observation.network_generation == generation
+                    && observation.local == local
+                    && Instant::now() < observation.expires_at
+            });
+            if self.generation() == generation
+                && let Some(observation) = observations.get(&server)
+            {
                 return Ok(observation.clone());
             }
             if pending.len() >= 4 || self.generation() != generation {
@@ -195,11 +213,17 @@ impl DiscoverySocket {
                 let sent = {
                     let _pending = self.pending.lock().map_err(|_| failure())?;
                     if self.generation() != generation {
-                        return Err(io::Error::new(io::ErrorKind::Interrupted, "network generation changed"));
+                        return Err(io::Error::new(
+                            io::ErrorKind::Interrupted,
+                            "network generation changed",
+                        ));
                     }
                     self.check_path()?;
                     if Instant::now() >= deadline {
-                        return Err(io::Error::new(io::ErrorKind::TimedOut, "STUN binding budget exhausted"));
+                        return Err(io::Error::new(
+                            io::ErrorKind::TimedOut,
+                            "STUN binding budget exhausted",
+                        ));
                     }
                     self.inner.try_send(&transmit)
                 };
@@ -238,15 +262,37 @@ impl DiscoverySocket {
             "STUN binding budget exhausted",
         ))
     }
-    fn finish_observation(&self, server: SocketAddr, local: SocketAddr, generation: u64,
-        reflexive: SocketAddr, observed_at: Instant) -> io::Result<Observation>
-    {
-        let observation = Observation {server,local,reflexive,network_generation:generation,observed_at,expires_at:observed_at+OBSERVATION_TTL};
-        if reflexive.is_ipv4() != local.is_ipv4() { return Err(failure()); }
+    fn finish_observation(
+        &self,
+        server: SocketAddr,
+        local: SocketAddr,
+        generation: u64,
+        reflexive: SocketAddr,
+        observed_at: Instant,
+    ) -> io::Result<Observation> {
+        let observation = Observation {
+            server,
+            local,
+            reflexive,
+            network_generation: generation,
+            observed_at,
+            expires_at: observed_at + OBSERVATION_TTL,
+        };
+        if reflexive.is_ipv4() != local.is_ipv4() {
+            return Err(failure());
+        }
         observation.check_current(self)?;
         let _pending = self.pending.lock().map_err(|_| failure())?;
-        if self.generation()!=generation{return Err(io::Error::new(io::ErrorKind::Interrupted,"network generation changed"));}
-        self.observations.lock().map_err(|_| failure())?.insert(server,observation.clone());
+        if self.generation() != generation {
+            return Err(io::Error::new(
+                io::ErrorKind::Interrupted,
+                "network generation changed",
+            ));
+        }
+        self.observations
+            .lock()
+            .map_err(|_| failure())?
+            .insert(server, observation.clone());
         Ok(observation)
     }
     fn consume(&self, bytes: &[u8], source: SocketAddr) {
@@ -478,7 +524,12 @@ mod tests {
             self.started.notify_one();
             Err(io::ErrorKind::WouldBlock.into())
         }
-        fn poll_recv(&self, _: &mut Context<'_>, _: &mut [IoSliceMut<'_>], _: &mut [RecvMeta]) -> Poll<io::Result<usize>> {
+        fn poll_recv(
+            &self,
+            _: &mut Context<'_>,
+            _: &mut [IoSliceMut<'_>],
+            _: &mut [RecvMeta],
+        ) -> Poll<io::Result<usize>> {
             Poll::Pending
         }
         fn local_addr(&self) -> io::Result<SocketAddr> {
@@ -487,16 +538,26 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn network_change_interrupts_a_blocked_send_without_waiting_for_writable_or_retry() -> io::Result<()> {
+    async fn network_change_interrupts_a_blocked_send_without_waiting_for_writable_or_retry()
+    -> io::Result<()> {
         let inner = Arc::new(Blocked::default());
         let server = SocketAddr::from(([127, 0, 0, 1], 2));
         let socket = Arc::new(DiscoverySocket::new(inner.clone(), vec![server])?);
         let pending_socket = socket.clone();
-        let probe = tokio::spawn(async move { pending_socket.probe(server, Duration::from_secs(3)).await });
-        tokio::time::timeout(Duration::from_secs(1), inner.started.notified()).await.map_err(io::Error::other)?;
+        let probe =
+            tokio::spawn(async move { pending_socket.probe(server, Duration::from_secs(3)).await });
+        tokio::time::timeout(Duration::from_secs(1), inner.started.notified())
+            .await
+            .map_err(io::Error::other)?;
         socket.invalidate_network(2)?;
-        let result = tokio::time::timeout(Duration::from_secs(1), probe).await.map_err(io::Error::other)?.map_err(io::Error::other)?;
-        assert_eq!(result.err().map(|error| error.kind()), Some(io::ErrorKind::Interrupted));
+        let result = tokio::time::timeout(Duration::from_secs(1), probe)
+            .await
+            .map_err(io::Error::other)?
+            .map_err(io::Error::other)?;
+        assert_eq!(
+            result.err().map(|error| error.kind()),
+            Some(io::ErrorKind::Interrupted)
+        );
         assert_eq!(inner.attempts.load(Ordering::SeqCst), 1);
         assert_eq!(socket.generation(), 2);
         Ok(())

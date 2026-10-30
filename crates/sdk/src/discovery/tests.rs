@@ -37,12 +37,20 @@ fn permit(issued_at: u64, expires_at: u64, paths: &[Path]) -> Result<VerifiedPer
         required_capabilities: vec!["vp8".into()],
     };
     let signer = PermitSigner::generate();
-    Ok(verify_permit(&signer.sign(&claims)?.encode_to_vec(), &signer.public_key())?)
+    Ok(verify_permit(
+        &signer.sign(&claims)?.encode_to_vec(),
+        &signer.public_key(),
+    )?)
 }
 
 fn endpoint(bind: &str, server: SocketAddr) -> Result<(quinn::Endpoint, Arc<DiscoverySocket>)> {
     let local = InstallationIdentity::generate();
-    Ok(discovery_endpoint(bind.parse()?, &local, InstallationIdentity::generate().fingerprint(), vec![server])?)
+    Ok(discovery_endpoint(
+        bind.parse()?,
+        &local,
+        InstallationIdentity::generate().fingerprint(),
+        vec![server],
+    )?)
 }
 
 #[tokio::test]
@@ -62,27 +70,46 @@ async fn real_same_socket_candidates_keep_provenance_and_require_local_private_c
         let responder = tokio::spawn(async move {
             let mut bytes = [0; 512];
             let (length, source) = server.recv_from(&mut bytes).await?;
-            server.send_to(&stun::response(&bytes[..length], mapped)?, source).await?;
+            server
+                .send_to(&stun::response(&bytes[..length], mapped)?, source)
+                .await?;
             Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
         });
         let denied = gather(&authorized, socket.clone(), vec![server_address]).await?;
-        assert_eq!(denied.candidates.iter().any(|candidate| candidate.address == mapped), public);
-        assert_eq!(denied.failed_stun, if public { vec![] } else { vec![server_address] });
+        assert_eq!(
+            denied
+                .candidates
+                .iter()
+                .any(|candidate| candidate.address == mapped),
+            public
+        );
+        assert_eq!(
+            denied.failed_stun,
+            if public { vec![] } else { vec![server_address] }
+        );
         responder.await??;
         // This uses the exact same short-lived observation. Local consent does
         // not turn a second discovery call into a new server observation lease.
         let observation = socket.probe(server_address, Duration::from_secs(1)).await?;
         let policy = AddressPolicy::new(&[consent.into()])?;
-        let mut allowed = gather_with_policy(&authorized, socket.clone(), vec![server_address], &policy).await?;
-        let fact = allowed.facts().iter().find(|fact| fact.candidate.address == mapped).ok_or("approved STUN candidate missing")?;
+        let mut allowed =
+            gather_with_policy(&authorized, socket.clone(), vec![server_address], &policy).await?;
+        let fact = allowed
+            .facts()
+            .iter()
+            .find(|fact| fact.candidate.address == mapped)
+            .ok_or("approved STUN candidate missing")?;
         match &fact.source {
-            CandidateSource::Stun {server, local} => {
+            CandidateSource::Stun { server, local } => {
                 assert_eq!(*server, server_address);
                 assert_eq!(*local, owner.local_addr()?);
             }
             _ => return Err("STUN provenance replaced by an interface guess".into()),
         }
-        assert_eq!(fact.expires_at, observation.expires_at.min(allowed.deadline));
+        assert_eq!(
+            fact.expires_at,
+            observation.expires_at.min(allowed.deadline)
+        );
         allowed.check_current(&authorized, &socket)?;
         let (_other_owner, other_socket) = endpoint(bind, server_address)?;
         assert!(allowed.check_current(&authorized, &other_socket).is_err());
@@ -104,13 +131,20 @@ async fn invalid_permit_and_relay_only_never_probe_the_actual_stun_socket() -> R
     let now = wall_ms()?;
     for (issued, expires) in [(now - 20_000, now - 5_000), (now + 5_000, now + 20_000)] {
         let invalid = permit(issued, expires, &[Path::Direct])?;
-        assert!(matches!(gather(&invalid, socket.clone(), vec![server_address]).await, Err(SdkError::Invalid)));
+        assert!(matches!(
+            gather(&invalid, socket.clone(), vec![server_address]).await,
+            Err(SdkError::Invalid)
+        ));
     }
     let relay = permit(now, now + 15_000, &[Path::Relay])?;
     let result = gather(&relay, socket, vec![server_address]).await?;
     assert!(result.candidates.is_empty());
     assert!(result.facts().is_empty());
-    assert!(tokio::time::timeout(Duration::from_millis(100), server.recv_from(&mut [0; 512])).await.is_err());
+    assert!(
+        tokio::time::timeout(Duration::from_millis(100), server.recv_from(&mut [0; 512]))
+            .await
+            .is_err()
+    );
     Ok(())
 }
 
@@ -128,15 +162,26 @@ async fn network_change_during_real_stun_reply_cannot_publish_old_candidates() -
         let (length, source) = server.recv_from(&mut bytes).await?;
         let _ = arrived.send(());
         released.await?;
-        server.send_to(&stun::response(&bytes[..length], "198.51.100.7:5555".parse()?)?, source).await?;
+        server
+            .send_to(
+                &stun::response(&bytes[..length], "198.51.100.7:5555".parse()?)?,
+                source,
+            )
+            .await?;
         Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
     });
     let gathering_socket = socket.clone();
-    let gathering = tokio::spawn(async move { gather(&authorized, gathering_socket, vec![server_address]).await });
+    let gathering =
+        tokio::spawn(
+            async move { gather(&authorized, gathering_socket, vec![server_address]).await },
+        );
     tokio::time::timeout(Duration::from_secs(1), arrival).await??;
     socket.invalidate_network(2)?;
     release.send(()).map_err(|_| "response gate closed")?;
-    assert!(matches!(tokio::time::timeout(Duration::from_secs(1), gathering).await??, Err(SdkError::Invalid)));
+    assert!(matches!(
+        tokio::time::timeout(Duration::from_secs(1), gathering).await??,
+        Err(SdkError::Invalid)
+    ));
     responder.await??;
     Ok(())
 }

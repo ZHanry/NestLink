@@ -192,12 +192,10 @@ impl NativeEndpoint {
             let permit = &self.permit;
             let policy = &self.address_policy;
             pending.push(async move {
-                let gathered = crate::discovery::gather_with_policy(permit, socket.clone(), servers, policy).await;
-                (
-                    bound.is_ipv4(),
-                    socket,
-                    gathered,
-                )
+                let gathered =
+                    crate::discovery::gather_with_policy(permit, socket.clone(), servers, policy)
+                        .await;
+                (bound.is_ipv4(), socket, gathered)
             });
         }
         let mut gathered_families = Vec::new();

@@ -174,16 +174,20 @@ impl Store {
     ) -> Result<bool, StorageError> {
         let product_space: bool = connection.query_row(
             "SELECT EXISTS(SELECT 1 FROM network_spaces WHERE space_id=?1)",
-            [space_id], |r| r.get(0),
+            [space_id],
+            |r| r.get(0),
         )?;
         if product_space {
             let permitted: bool = connection.query_row(
                 "SELECT EXISTS(SELECT 1 FROM network_space_members u JOIN devices d ON d.id=?3
                  WHERE u.space_id=?1 AND u.account_id=?2 AND u.revoked=0
                  AND (d.account_id=u.account_id OR u.role IN ('owner','admin')))",
-                params![space_id, actor.account_id, installation_id], |r| r.get(0),
+                params![space_id, actor.account_id, installation_id],
+                |r| r.get(0),
             )?;
-            if !permitted { return Err(StorageError::Forbidden); }
+            if !permitted {
+                return Err(StorageError::Forbidden);
+            }
         } else {
             self.audit_admin(actor, checked_seconds(now_ms)?)?;
         }
@@ -334,7 +338,11 @@ impl Store {
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
         self.validate_access(actor, checked_seconds(now_ms)?)?;
         let product_space = self.authorize_network_membership_credential(
-            &tx, actor, &request.space_id, &request.installation_id, now_ms,
+            &tx,
+            actor,
+            &request.space_id,
+            &request.installation_id,
+            now_ms,
         )?;
         let snapshot = read_snapshot(&tx, &request.space_id, now_ms)?;
         remote_paths::grant_id_available(&tx, &request.space_id, &request.grant_id)?;
@@ -394,7 +402,14 @@ impl Store {
                 bound.digest().as_slice(),signed.claims,signed.signature,now_ms,request.expires_at_ms])?;
         observe(&tx, &request.space_id, now_ms)?;
         if product_space {
-            crate::spaces::event(&tx, actor, &request.space_id, "network_membership_issued", &request.grant_id, now_ms)?;
+            crate::spaces::event(
+                &tx,
+                actor,
+                &request.space_id,
+                "network_membership_issued",
+                &request.grant_id,
+                now_ms,
+            )?;
         } else {
             audit(
                 &tx,
@@ -488,7 +503,11 @@ impl Store {
             digest,
         } = stored.ok_or(StorageError::Forbidden)?;
         self.authorize_network_membership_credential(
-            &tx, actor, space_id, &installation_id, now_ms,
+            &tx,
+            actor,
+            space_id,
+            &installation_id,
+            now_ms,
         )?;
         let snapshot = read_snapshot(&tx, space_id, now_ms)?;
         let bound = snapshot.verify_member(&signed, &installation_id)?;

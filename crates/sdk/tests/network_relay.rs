@@ -101,7 +101,7 @@ impl Fixture {
             http_task: Some(tokio::spawn(async move {
                 let _ = axum::serve(http, app).await;
             })),
-            ..PendingFixture::default()
+            control: None,
         };
         let mut sdk = Sdk::connect(
             &origin,
@@ -269,9 +269,11 @@ impl Fixture {
         .await?;
         tokio::time::timeout(Duration::from_secs(3), async {
             while !control.resource_snapshot().is_ok_and(|s| {
-                s.network_routes
-                    .iter()
-                    .any(|r| r.allocation.as_ref().is_some_and(|entry| entry.allocation_id == allocation))
+                s.network_routes.iter().any(|r| {
+                    r.allocation
+                        .as_ref()
+                        .is_some_and(|entry| entry.allocation_id == allocation)
+                })
             }) {
                 tokio::time::sleep(Duration::from_millis(10)).await;
             }

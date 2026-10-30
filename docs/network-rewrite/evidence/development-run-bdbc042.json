@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "source_revision": "bdbc0424acdced4fbdd1ad8c93ea15f812f44061",
+  "repository": "ZHanry/NestLink",
+  "build_location": "github-hosted-actions",
+  "local_project_toolchain_executed": false,
+  "acceptance_claims": [],
+  "runs": [
+    {
+      "run_id": 41054045979,
+      "workflow": ".github/workflows/network-rewrite.yml",
+      "observations": {
+        "routed_kernel_nat_slice": "passed success, blackhole and cancellation",
+        "production_socket_slice": "passed actual business proof, FileRead, blackhole, cancellation and peer-close",
+        "independent_vectors": "passed",
+        "linux_contract": "clippy, complete selected package tests and evidence-tool tests passed; formatting failed",
+        "windows_contract": "pending review at checkpoint"
+      },
+      "artifacts": [
+        { "id": 12976291923, "sha256": "6095a49f0552ecf81ce2d97bef74d9f41903fece64fb2a5e760a9d618191a793" },
+        { "id": 12975827831, "sha256": "2dba1adcfd625b6657248781edd3d1c7041d8fadb74962923ab09354457f4b18" }
+      ]
+    },
+    {
+      "run_id": 41054046302,
+      "workflow": ".github/workflows/rust-core.yml",
+      "result": "failure",
+      "observations": {
+        "both_os_space_storage": "9 passed, 0 failed, 0 ignored",
+        "both_os_space_http_sdk": "1 passed, 0 failed, 0 ignored",
+        "both_os_discovery": "3 discovery and 5 dual-stack tests passed",
+        "linux_network_events": "passed actual namespace and interface-change checks",
+        "sdk_routed": "12 passed and 2 failed on both OS; live leases incorrectly queried stopped-session reconnection_budget",
+        "network_relay_integration": "compilation failed because struct update moved fields out of a Drop owner",
+        "ice_quic": "4 failed on both OS with AddrInUse at physical rebind; close retained original candidate/socket references",
+        "formatting": "failed; Actions-generated patch reviewed and applied in following source",
+        "later_core_checks": "skipped after prior failures; no pass claimed"
+      }
+    },
+    { "run_id": 41054046030, "workflow": ".github/workflows/regression-server.yml", "result": "success", "scope": "ARM64 server build, tests and regression image only" },
+    { "run_id": 41054046008, "workflow": ".github/workflows/codeql.yml", "result": "success" },
+    { "run_id": 41054046103, "workflow": ".github/workflows/secret-scan.yml", "result": "success" }
+  ],
+  "generated_openapi": {
+    "run_id": 41054046302,
+    "job": "openapi-generation",
+    "artifact_id": 12976500879,
+    "artifact_sha256": "39355ae07bb154378c34961f80c6ce9dd60584cc55a4031cc96080872d3fb1a7",
+    "output_sha256": "630545d967b2ab9382ad840c8757ec51ab5b0e08a37e5fe0c528b96ce9ff0bce",
+    "output_bytes": 475483,
+    "disposition": "Downloaded exact Actions output, verified output digest and copied into the following source; no local generator run"
+  },
+  "limitations": [
+    "Partial development evidence does not complete AC groups or qualify 0.8.0RC.",
+    "Following source changes require their own verification.",
+    "Loopback ICE feasibility does not establish real public NAT traversal.",
+    "Real GPU, phones, public ingress and cross-day target acceptance remain separate."
+  ]
+}

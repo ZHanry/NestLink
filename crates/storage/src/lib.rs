@@ -48,8 +48,8 @@ pub mod remote_password;
 pub mod scopes;
 pub mod services;
 pub mod signaling;
-pub mod spaces;
 pub mod snapshot;
+pub mod spaces;
 pub mod trusted;
 pub mod turn;
 

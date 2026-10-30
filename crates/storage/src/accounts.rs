@@ -238,10 +238,8 @@ impl Store {
             return Err(StorageError::Forbidden);
         }
         require_id(account_id)?;
-        let tx = Transaction::new_unchecked(
-            &self.connection,
-            rusqlite::TransactionBehavior::Immediate,
-        )?;
+        let tx =
+            Transaction::new_unchecked(&self.connection, rusqlite::TransactionBehavior::Immediate)?;
         self.admin_identity(actor)?;
         let owns_active_space: bool = tx.query_row(
             "SELECT EXISTS(SELECT 1 FROM network_space_members m
@@ -250,12 +248,18 @@ impl Store {
              JOIN deployment d ON d.singleton=1
              WHERE m.account_id=?1 AND m.role='owner' AND m.revoked=0
              AND s.archived=0 AND a.restore_fenced=0 AND a.security_epoch=d.security_epoch)",
-            [account_id], |r| r.get(0),
+            [account_id],
+            |r| r.get(0),
         )?;
         if owns_active_space {
             // Persist the refusal without changing ownership or disabling the
             // account. The owner must first transfer or archive their spaces.
-            audit(&tx, "account_disable_blocked_space_owner", account_id, management(actor))?;
+            audit(
+                &tx,
+                "account_disable_blocked_space_owner",
+                account_id,
+                management(actor),
+            )?;
             tx.commit()?;
             return Err(StorageError::Conflict);
         }

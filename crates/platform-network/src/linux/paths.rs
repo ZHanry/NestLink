@@ -17,7 +17,9 @@ fn read_fact(path: &Path) -> io::Result<String> {
         .take(FACT_BYTES + 1)
         .read_to_string(&mut text)?;
     if text.len() as u64 > FACT_BYTES {
-        return Err(io::Error::other("kernel network fact exceeds its byte budget"));
+        return Err(io::Error::other(
+            "kernel network fact exceeds its byte budget",
+        ));
     }
     Ok(text)
 }
@@ -50,11 +52,7 @@ fn default_routes() -> io::Result<BTreeMap<String, u32>> {
                     .ok()
                     .zip(u32::from_str_radix(row[5], 16).ok())
                     .map(|(flags, metric)| (row[9], flags, metric))
-            } else if !ipv6
-                && row.len() == 11
-                && row[1] == "00000000"
-                && row[7] == "00000000"
-            {
+            } else if !ipv6 && row.len() == 11 && row[1] == "00000000" && row[7] == "00000000" {
                 u32::from_str_radix(row[3], 16)
                     .ok()
                     .zip(row[6].parse::<u32>().ok())
@@ -92,7 +90,9 @@ pub(crate) fn path_interfaces() -> io::Result<Vec<NetworkInterface>> {
         if ip.is_unspecified() || ip.is_loopback() || ip.is_multicast() || address.is_link_local() {
             continue;
         }
-        if ip.is_ipv6() && !usable_v6.contains(&(index, ip)) { continue; }
+        if ip.is_ipv6() && !usable_v6.contains(&(index, ip)) {
+            continue;
+        }
         if let std::collections::btree_map::Entry::Vacant(entry) = interfaces.entry(index) {
             entry.insert(NetworkInterface {
                 // Linux has no Windows LUID. A sysfs mount can belong to a
@@ -137,10 +137,12 @@ fn preferred_ipv6_from_kernel(text: &str) -> io::Result<std::collections::BTreeS
     let mut result = std::collections::BTreeSet::new();
     for line in text.lines() {
         let fields: Vec<_> = line.split_whitespace().collect();
-        if fields.len() != 6 || fields[0].len() != 32 { return Err(unavailable()); }
-        let value = u128::from_str_radix(fields[0],16).map_err(|_| unavailable())?;
-        let index = u32::from_str_radix(fields[1],16).map_err(|_| unavailable())?;
-        let flags = u32::from_str_radix(fields[4],16).map_err(|_| unavailable())?;
+        if fields.len() != 6 || fields[0].len() != 32 {
+            return Err(unavailable());
+        }
+        let value = u128::from_str_radix(fields[0], 16).map_err(|_| unavailable())?;
+        let index = u32::from_str_radix(fields[1], 16).map_err(|_| unavailable())?;
+        let flags = u32::from_str_radix(fields[4], 16).map_err(|_| unavailable())?;
         // Keep valid temporary addresses, but never optimistic/tentative,
         // duplicate/DAD-failed or deprecated addresses from the current kernel.
         if index != 0 && flags & (0x04 | 0x08 | 0x20 | 0x40) == 0 {
@@ -157,7 +159,11 @@ fn unavailable() -> io::Error {
     )
 }
 
-pub(crate) fn bind_media_interface(socket: &socket2::Socket, index: u32, ipv6: bool) -> io::Result<()> {
+pub(crate) fn bind_media_interface(
+    socket: &socket2::Socket,
+    index: u32,
+    ipv6: bool,
+) -> io::Result<()> {
     let index = NonZeroU32::new(index).ok_or_else(unavailable)?;
     // socket2 owns Linux SO_BINDTOIFINDEX, including ABI handling. Do not fall
     // back to an address-only bind or a mutable interface name on any failure.
@@ -169,9 +175,7 @@ pub(crate) fn bind_media_interface(socket: &socket2::Socket, index: u32, ipv6: b
         socket.device_index_v4()?
     };
     if actual != Some(index) {
-        return Err(io::Error::other(
-            "Linux interface binding did not persist",
-        ));
+        return Err(io::Error::other("Linux interface binding did not persist"));
     }
     Ok(())
 }
@@ -181,7 +185,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn kernel_ipv6_sources_keep_temporary_but_reject_incomplete_or_deprecated_addresses() -> io::Result<()> {
+    fn kernel_ipv6_sources_keep_temporary_but_reject_incomplete_or_deprecated_addresses()
+    -> io::Result<()> {
         let rows = [
             "20010db8000000000000000000000001 02 40 00 01 eth0",
             "20010db8000000000000000000000002 02 40 00 80 eth0",
@@ -189,13 +194,18 @@ mod tests {
             "20010db8000000000000000000000004 02 40 00 40 eth0",
             "20010db8000000000000000000000005 02 40 00 08 eth0",
             "20010db8000000000000000000000006 02 40 00 04 eth0",
-        ].join("\n");
+        ]
+        .join("\n");
         let actual = preferred_ipv6_from_kernel(&rows)?;
         assert_eq!(actual.len(), 2);
         for address in ["2001:db8::1", "2001:db8::2"] {
             assert!(actual.contains(&(2, address.parse().map_err(io::Error::other)?)));
         }
-        for malformed in ["invalid", "20010db8000000000000000000000001 xx 40 00 00 eth0", "20010db8000000000000000000000001 02 40 00 gg eth0"] {
+        for malformed in [
+            "invalid",
+            "20010db8000000000000000000000001 xx 40 00 00 eth0",
+            "20010db8000000000000000000000001 02 40 00 gg eth0",
+        ] {
             assert!(preferred_ipv6_from_kernel(malformed).is_err());
         }
         Ok(())

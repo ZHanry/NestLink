@@ -391,13 +391,20 @@ fn device_proof_crossed_membership_ids_and_direct_only_consent_fail_admission() 
     let mut direct = RelayFixture::new(false, 2)?;
     let issuance = direct.issuance()?;
     let revision = direct.base.store.policy()?.0;
-    direct.base.store.apply_policy(revision, nestlink_policy::NetworkPolicy::default())?;
+    direct
+        .base
+        .store
+        .apply_policy(revision, nestlink_policy::NetworkPolicy::default())?;
     assert!(matches!(
         direct.issue(issuance),
         Err(StorageError::Forbidden)
     ));
     assert_eq!(
-        direct.base.store.relay_reservation_usage(&direct.base.controller, NOW)?.held_allocations,
+        direct
+            .base
+            .store
+            .relay_reservation_usage(&direct.base.controller, NOW)?
+            .held_allocations,
         0
     );
     Ok(())

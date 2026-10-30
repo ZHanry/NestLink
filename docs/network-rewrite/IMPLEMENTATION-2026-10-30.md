@@ -103,6 +103,19 @@ validator requires all cases and the exact helper digest. Execution is pending.
 
 ## Remaining release work
 
+Source `bdbc0424acdced4fbdd1ad8c93ea15f812f44061` passed the routed NAT and
+production socket experiments, including the previously failing peer-close
+case. Both Linux and ordinary-token Windows passed nine space storage tests,
+the actual HTTP SDK space flow, and all scoped discovery/dual-stack cases.
+Linux contract clippy and selected-package tests passed. SDK routed tests
+incorrectly read a stopped-session recovery budget from live sessions; the
+following source uses a checked live-lease deadline observation while preserving
+the recovery fence. The relay fixture's Drop-owner struct update and ICE
+fixture's retained candidate/socket owners are also repaired in following
+source. Actions formatting and generated OpenAPI were reviewed and imported.
+Every repair remains pending verification. See
+`evidence/development-run-bdbc042.json` for exact run identities and limits.
+
 At source `e3a18a1e502767f1d7c267842a1817afcaac3fea`, the real routed
 transport experiment passed success, blackhole and cancellation through one
 authenticated relay and two Linux kernel SNAT gateways. The separate production

@@ -20,9 +20,9 @@ use nestlink_web::{browser_clipboard, browser_files, browser_rpc};
 mod account_security_panel;
 mod edge_namespace_panel;
 mod network_membership_panel;
-mod spaces_panel;
 mod service_quota_panel;
 mod services_panel;
+mod spaces_panel;
 
 #[derive(Clone, PartialEq, Eq)]
 struct RemoteTarget {
@@ -580,7 +580,11 @@ fn App() -> impl IntoView {
                                 })
                                 .map(|key| Section::from_key(&key))
                                 .unwrap_or(Section::Desktop);
-                            let page = if spaces_panel::invitation_pending() { Section::Security } else { page };
+                            let page = if spaces_panel::invitation_pending() {
+                                Section::Security
+                            } else {
+                                page
+                            };
                             load.run(page.key().to_owned());
                             return;
                         }
@@ -623,7 +627,11 @@ fn App() -> impl IntoView {
                                 api.set_value(Some(Rc::new(futures_util::lock::Mutex::new(sdk))));
                                 screen.set(Screen::Workspace);
                                 busy.set(false);
-                                let page = if spaces_panel::invitation_pending() { Section::Security } else { Section::Desktop };
+                                let page = if spaces_panel::invitation_pending() {
+                                    Section::Security
+                                } else {
+                                    Section::Desktop
+                                };
                                 load.run(page.key().to_owned());
                                 return;
                             }
@@ -731,7 +739,11 @@ fn App() -> impl IntoView {
                     principal.set(Some(user));
                     screen.set(Screen::Workspace);
                     busy.set(false);
-                    let page = if spaces_panel::invitation_pending() { Section::Security } else { Section::Desktop };
+                    let page = if spaces_panel::invitation_pending() {
+                        Section::Security
+                    } else {
+                        Section::Desktop
+                    };
                     load.run(page.key().to_owned());
                 }
                 Err(problem) => {

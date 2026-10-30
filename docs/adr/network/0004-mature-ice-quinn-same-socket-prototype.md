@@ -78,7 +78,10 @@ wrong destination, overlong payload and GSO refusal before enqueueing.
 AgentConn.close is a no-op in the reviewed dependency. It is insufficient for
 cleanup. The fixture retains the actual Agent, closes Quinn, waits for endpoint
 idle, aborts and joins the original reader/writer via existing TaskOwner receipts,
-then awaits Agent.close under one absolute cleanup deadline. Passing cases must
+then awaits Agent.close under one absolute cleanup deadline and releases every
+retained Agent/AgentConn/adapter reference. The first Actions execution exposed
+that the selected CandidatePair retains its original UDP owner after Agent.close;
+the fixture now consumes and drops the complete owner before rebind. Passing cases must
 physically rebind both original UDP ports; endpoint idle and abort requests alone
 cannot pass. Failed setup/assertion Drop paths request cancellation and schedule
 bounded Agent cleanup, but are never counted as successful cleanup evidence.

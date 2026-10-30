@@ -276,17 +276,32 @@ async fn first_family_cache_expiring_during_other_family_gather_is_not_published
     });
     let (controller, host, permit) = fixture(vec![Path::Direct])?;
     let endpoint = NativeEndpoint::new_dual_stack(
-        &controller, &host.identity.public_key(), permit, vec![v4_address, v6_address], AddressPolicy::new(&[])?,
+        &controller,
+        &host.identity.public_key(),
+        permit,
+        vec![v4_address, v6_address],
+        AddressPolicy::new(&[])?,
     )?;
-    let v4 = endpoint.discovery_sockets().into_iter().find(|socket| socket.local_addr().is_ok_and(|address| address.is_ipv4())).ok_or("IPv4 socket missing")?;
+    let v4 = endpoint
+        .discovery_sockets()
+        .into_iter()
+        .find(|socket| socket.local_addr().is_ok_and(|address| address.is_ipv4()))
+        .ok_or("IPv4 socket missing")?;
     let cached = v4.probe(v4_address, Duration::from_secs(2)).await?;
     tokio::time::sleep_until((cached.expires_at - Duration::from_secs(1)).into()).await;
     // IPv6 has an actual trusted socket, but intentionally gives no response.
     // Its two-second probe consumes the first family's remaining cache budget.
-    let result = tokio::time::timeout(Duration::from_secs(3), endpoint.gather_direct_candidates(vec![v4_address, v6_address])).await;
+    let result = tokio::time::timeout(
+        Duration::from_secs(3),
+        endpoint.gather_direct_candidates(vec![v4_address, v6_address]),
+    )
+    .await;
     stop.send(true)?;
     responder.await??;
-    assert!(matches!(result?, Err(SessionEstablishError::Sdk(SdkError::Invalid))));
+    assert!(matches!(
+        result?,
+        Err(SessionEstablishError::Sdk(SdkError::Invalid))
+    ));
     assert_eq!(requests.load(Ordering::SeqCst), 1);
     drop(v6_server);
     Ok(())

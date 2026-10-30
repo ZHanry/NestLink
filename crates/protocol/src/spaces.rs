@@ -1,7 +1,7 @@
 //! Account delegation and one-use enrollment; these types grant no business access.
 use crate::network::SpaceRole;
-use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]

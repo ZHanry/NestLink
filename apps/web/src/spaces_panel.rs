@@ -4,7 +4,10 @@ use leptos::{prelude::*, task::spawn_local};
 use nestlink_protocol::{network::SpaceRole, spaces::*};
 use nestlink_sdk::SdkError;
 use nestlink_web::i18n::{sdk_error, text as t};
-use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
 
 #[derive(Clone)]
 enum Command {
@@ -44,9 +47,14 @@ fn role_name(value: SpaceRole) -> &'static str {
 fn invitation_parts(link: &str) -> Option<(String, String, String)> {
     let (_, fragment) = link.trim().split_once("#space-invite=")?;
     let parts: Vec<_> = fragment.split('.').collect();
-    if parts.len() != 3 || !nestlink_protocol::valid_id(parts[0])
-        || !nestlink_protocol::valid_id(parts[1]) || parts[2].len() != 43
-        || !parts[2].bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_') {
+    if parts.len() != 3
+        || !nestlink_protocol::valid_id(parts[0])
+        || !nestlink_protocol::valid_id(parts[1])
+        || parts[2].len() != 43
+        || !parts[2]
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_')
+    {
         return None;
     }
     Some((parts[0].into(), parts[1].into(), parts[2].into()))
@@ -66,8 +74,14 @@ fn take_invitation_link() -> String {
         let location = window.location();
         let value = location.href().unwrap_or_default();
         if invitation_parts(&value).is_some() {
-            if let (Ok(history), Ok(path), Ok(search)) = (window.history(), location.pathname(), location.search()) {
-                let _ = history.replace_state_with_url(&wasm_bindgen::JsValue::NULL, "", Some(&format!("{path}{search}")));
+            if let (Ok(history), Ok(path), Ok(search)) =
+                (window.history(), location.pathname(), location.search())
+            {
+                let _ = history.replace_state_with_url(
+                    &wasm_bindgen::JsValue::NULL,
+                    "",
+                    Some(&format!("{path}{search}")),
+                );
             }
             return value;
         }
@@ -78,13 +92,21 @@ fn take_invitation_link() -> String {
 pub(super) fn invitation_pending() -> bool {
     #[cfg(target_arch = "wasm32")]
     if let Some(window) = web_sys::window() {
-        return window.location().href().ok().is_some_and(|link| invitation_parts(&link).is_some());
+        return window
+            .location()
+            .href()
+            .ok()
+            .is_some_and(|link| invitation_parts(&link).is_some());
     }
     false
 }
 
 #[component]
-pub(super) fn SpacesPanel(api: Api, session_revision: RwSignal<u64>, auth_failure: Callback<SdkHandle>) -> impl IntoView {
+pub(super) fn SpacesPanel(
+    api: Api,
+    session_revision: RwSignal<u64>,
+    auth_failure: Callback<SdkHandle>,
+) -> impl IntoView {
     let spaces = RwSignal::new(Vec::<SpaceView>::new());
     let details = RwSignal::new(None::<SpaceDetails>);
     let devices = RwSignal::new(Vec::<(String, String)>::new());
@@ -105,15 +127,23 @@ pub(super) fn SpacesPanel(api: Api, session_revision: RwSignal<u64>, auth_failur
     on_cleanup(move || cleanup.store(false, Ordering::Release));
 
     let request = Callback::new(move |command: Command| {
-        if busy.get_untracked() { return; }
-        let Some(sdk) = api.get_value() else { return; };
+        if busy.get_untracked() {
+            return;
+        }
+        let Some(sdk) = api.get_value() else {
+            return;
+        };
         let current = details.get_untracked();
         let draft_name = name.get_untracked();
         let chosen_account = account.get_untracked();
         let chosen_role = role(&selected_role.get_untracked());
         let chosen_device = installation.get_untracked();
         let target = invitation_target.get_untracked();
-        let minutes = invitation_minutes.get_untracked().parse::<u64>().ok().filter(|minutes| (1..=1440).contains(minutes));
+        let minutes = invitation_minutes
+            .get_untracked()
+            .parse::<u64>()
+            .ok()
+            .filter(|minutes| (1..=1440).contains(minutes));
         let incoming = invitation_parts(&incoming_link.get_untracked());
         let session = session_revision.get_untracked();
         let alive = alive.clone();
@@ -124,83 +154,231 @@ pub(super) fn SpacesPanel(api: Api, session_revision: RwSignal<u64>, auth_failur
         spawn_local(async move {
             let result = async {
                 let client = sdk.lock().await;
-                let active = || alive.load(Ordering::Acquire) && session_revision.try_get_untracked() == Some(session);
-                if !active() { return Err(SdkError::Invalid); }
+                let active = || {
+                    alive.load(Ordering::Acquire)
+                        && session_revision.try_get_untracked() == Some(session)
+                };
+                if !active() {
+                    return Err(SdkError::Invalid);
+                }
                 let mut issued = None;
                 let mut audit_rows = None;
                 let selected = match &command {
                     Command::List => None,
                     Command::Read(id) => Some(id.clone()),
-                    Command::Create => Some(client.create_space(SpaceCreateRequest { name: draft_name }).await?.space_id),
+                    Command::Create => Some(
+                        client
+                            .create_space(SpaceCreateRequest { name: draft_name })
+                            .await?
+                            .space_id,
+                    ),
                     Command::Accept => {
                         let (space, invitation, token) = incoming.ok_or(SdkError::Invalid)?;
-                        Some(client.accept_space_invitation(&space, &invitation, SpaceInvitationAcceptance { token }).await?.space_id)
+                        Some(
+                            client
+                                .accept_space_invitation(
+                                    &space,
+                                    &invitation,
+                                    SpaceInvitationAcceptance { token },
+                                )
+                                .await?
+                                .space_id,
+                        )
                     }
                     _ => {
                         let current = current.as_ref().ok_or(SdkError::Invalid)?;
                         let space = &current.space;
-                        let revision = SpaceRevisionRequest { expected_revision: space.revision };
+                        let revision = SpaceRevisionRequest {
+                            expected_revision: space.revision,
+                        };
                         match &command {
-                            Command::Archive => { client.archive_space(&space.space_id, revision).await?; }
+                            Command::Archive => {
+                                client.archive_space(&space.space_id, revision).await?;
+                            }
                             Command::UpdateMember | Command::RemoveMember => {
-                                let member = current.members.iter().find(|member| member.account_id == chosen_account).ok_or(SdkError::Invalid)?;
+                                let member = current
+                                    .members
+                                    .iter()
+                                    .find(|member| member.account_id == chosen_account)
+                                    .ok_or(SdkError::Invalid)?;
                                 if matches!(&command, Command::UpdateMember) {
-                                    client.update_space_member(&space.space_id, &chosen_account, SpaceMemberUpdate { expected_revision: space.revision, expected_member_epoch: member.member_epoch, role: chosen_role.ok_or(SdkError::Invalid)? }).await?;
+                                    client
+                                        .update_space_member(
+                                            &space.space_id,
+                                            &chosen_account,
+                                            SpaceMemberUpdate {
+                                                expected_revision: space.revision,
+                                                expected_member_epoch: member.member_epoch,
+                                                role: chosen_role.ok_or(SdkError::Invalid)?,
+                                            },
+                                        )
+                                        .await?;
                                 } else {
-                                    client.remove_space_member(&space.space_id, &chosen_account, SpaceMemberRemoval { expected_revision: space.revision, expected_member_epoch: member.member_epoch }).await?;
+                                    client
+                                        .remove_space_member(
+                                            &space.space_id,
+                                            &chosen_account,
+                                            SpaceMemberRemoval {
+                                                expected_revision: space.revision,
+                                                expected_member_epoch: member.member_epoch,
+                                            },
+                                        )
+                                        .await?;
                                 }
                             }
                             Command::JoinDevice => {
-                                let epoch = current.devices.iter().find(|device| device.installation_id == chosen_device).map_or(0, |device| device.membership_epoch);
-                                client.join_space_device(&space.space_id, SpaceDeviceJoin { expected_revision: space.revision, expected_membership_epoch: epoch, installation_id: chosen_device }).await?;
+                                let epoch = current
+                                    .devices
+                                    .iter()
+                                    .find(|device| device.installation_id == chosen_device)
+                                    .map_or(0, |device| device.membership_epoch);
+                                client
+                                    .join_space_device(
+                                        &space.space_id,
+                                        SpaceDeviceJoin {
+                                            expected_revision: space.revision,
+                                            expected_membership_epoch: epoch,
+                                            installation_id: chosen_device,
+                                        },
+                                    )
+                                    .await?;
                             }
-                            Command::RemoveDevice(id, epoch) => { client.remove_space_device(&space.space_id, id, SpaceDeviceRemoval { expected_revision: space.revision, expected_membership_epoch: *epoch }).await?; }
+                            Command::RemoveDevice(id, epoch) => {
+                                client
+                                    .remove_space_device(
+                                        &space.space_id,
+                                        id,
+                                        SpaceDeviceRemoval {
+                                            expected_revision: space.revision,
+                                            expected_membership_epoch: *epoch,
+                                        },
+                                    )
+                                    .await?;
+                            }
                             Command::Invite => {
                                 let fresh = client.space_details(&space.space_id).await?;
-                                if !active() { return Err(SdkError::Invalid); }
-                                if fresh.space.revision != space.revision { return Err(SdkError::Invalid); }
+                                if !active() {
+                                    return Err(SdkError::Invalid);
+                                }
+                                if fresh.space.revision != space.revision {
+                                    return Err(SdkError::Invalid);
+                                }
                                 let now = fresh.space.observed_at_unix_ms;
-                                let end = now.checked_add(minutes.ok_or(SdkError::Invalid)? * 60_000).ok_or(SdkError::Invalid)?;
-                                issued = Some(client.invite_to_space(&space.space_id, SpaceInvitationRequest { expected_revision: space.revision, role: chosen_role.ok_or(SdkError::Invalid)?, target_account_id: if target.trim().is_empty() { None } else { Some(target.trim().into()) }, expires_at_unix_ms: end }).await?);
+                                let end = now
+                                    .checked_add(minutes.ok_or(SdkError::Invalid)? * 60_000)
+                                    .ok_or(SdkError::Invalid)?;
+                                issued = Some(
+                                    client
+                                        .invite_to_space(
+                                            &space.space_id,
+                                            SpaceInvitationRequest {
+                                                expected_revision: space.revision,
+                                                role: chosen_role.ok_or(SdkError::Invalid)?,
+                                                target_account_id: if target.trim().is_empty() {
+                                                    None
+                                                } else {
+                                                    Some(target.trim().into())
+                                                },
+                                                expires_at_unix_ms: end,
+                                            },
+                                        )
+                                        .await?,
+                                );
                             }
-                            Command::RevokeInvitation(id) => { client.revoke_space_invitation(&space.space_id, id, revision).await?; }
-                            Command::Audit => { audit_rows = Some(client.space_audit(&space.space_id).await?); }
+                            Command::RevokeInvitation(id) => {
+                                client
+                                    .revoke_space_invitation(&space.space_id, id, revision)
+                                    .await?;
+                            }
+                            Command::Audit => {
+                                audit_rows = Some(client.space_audit(&space.space_id).await?);
+                            }
                             _ => return Err(SdkError::Invalid),
                         }
                         Some(space.space_id.clone())
                     }
                 };
-                if !active() { return Err(SdkError::Invalid); }
+                if !active() {
+                    return Err(SdkError::Invalid);
+                }
                 let listing = client.spaces().await?;
-                if !active() { return Err(SdkError::Invalid); }
-                let selected = if let Some(id) = selected { Some(client.space_details(&id).await?) } else { None };
-                if !active() { return Err(SdkError::Invalid); }
-                let choices = client.devices().await?.into_iter().filter(|device| !device.revoked).map(|device| (device.device.id, device.device.name)).collect::<Vec<_>>();
+                if !active() {
+                    return Err(SdkError::Invalid);
+                }
+                let selected = if let Some(id) = selected {
+                    Some(client.space_details(&id).await?)
+                } else {
+                    None
+                };
+                if !active() {
+                    return Err(SdkError::Invalid);
+                }
+                let choices = client
+                    .devices()
+                    .await?
+                    .into_iter()
+                    .filter(|device| !device.revoked)
+                    .map(|device| (device.device.id, device.device.name))
+                    .collect::<Vec<_>>();
                 Ok((listing, selected, choices, issued, audit_rows))
-            }.await;
-            if !alive.load(Ordering::Acquire) || session_revision.try_get_untracked() != Some(session) { return; }
+            }
+            .await;
+            if !alive.load(Ordering::Acquire)
+                || session_revision.try_get_untracked() != Some(session)
+            {
+                return;
+            }
             busy.set(false);
             match result {
                 Ok((listing, selected, choices, issued, audit_rows)) => {
                     spaces.set(listing);
                     details.set(selected);
                     devices.set(choices);
-                    if let Some(rows) = audit_rows { audit.set(rows); } else { audit.set(Vec::new()); }
-                    if let Some(issued) = issued {
-                        issued_link.set(format!("{}/#space-invite={}.{}.{}", origin(), issued.space.space_id, issued.invitation.invitation_id, issued.token));
+                    if let Some(rows) = audit_rows {
+                        audit.set(rows);
+                    } else {
+                        audit.set(Vec::new());
                     }
-                    if matches!(command, Command::Accept) { incoming_link.set(String::new()); }
-                    if matches!(command, Command::Create) { name.set(String::new()); }
-                    message.set(t("已读取服务器确认的空间状态。", "Server-confirmed space state loaded.").into());
+                    if let Some(issued) = issued {
+                        issued_link.set(format!(
+                            "{}/#space-invite={}.{}.{}",
+                            origin(),
+                            issued.space.space_id,
+                            issued.invitation.invitation_id,
+                            issued.token
+                        ));
+                    }
+                    if matches!(command, Command::Accept) {
+                        incoming_link.set(String::new());
+                    }
+                    if matches!(command, Command::Create) {
+                        name.set(String::new());
+                    }
+                    message.set(
+                        t(
+                            "已读取服务器确认的空间状态。",
+                            "Server-confirmed space state loaded.",
+                        )
+                        .into(),
+                    );
                 }
                 Err(error) => {
-                    if matches!(&error, SdkError::SignIn) || matches!(&error, SdkError::Api(status, _) if status.as_u16() == 401) {
+                    if matches!(&error, SdkError::SignIn)
+                        || matches!(&error, SdkError::Api(status, _) if status.as_u16() == 401)
+                    {
                         auth_failure.run(sdk);
                         return;
                     }
                     details.set(None);
                     audit.set(Vec::new());
-                    problem.set(format!("{} {}", sdk_error(&error), t("草稿已保留，请重新读取空间后再修改。", "Draft retained. Read the space again before changing it.")));
+                    problem.set(format!(
+                        "{} {}",
+                        sdk_error(&error),
+                        t(
+                            "草稿已保留，请重新读取空间后再修改。",
+                            "Draft retained. Read the space again before changing it."
+                        )
+                    ));
                 }
             }
         });
@@ -208,11 +386,21 @@ pub(super) fn SpacesPanel(api: Api, session_revision: RwSignal<u64>, auth_failur
 
     Effect::new(move |_| {
         let _ = session_revision.get();
-        spaces.set(Vec::new()); details.set(None); devices.set(Vec::new()); audit.set(Vec::new());
-        name.set(String::new()); account.set(String::new()); selected_role.set("member".into());
-        installation.set(String::new()); invitation_target.set(String::new()); invitation_minutes.set("60".into());
-        incoming_link.set(take_invitation_link()); issued_link.set(String::new()); busy.set(false);
-        problem.set(String::new()); message.set(String::new());
+        spaces.set(Vec::new());
+        details.set(None);
+        devices.set(Vec::new());
+        audit.set(Vec::new());
+        name.set(String::new());
+        account.set(String::new());
+        selected_role.set("member".into());
+        installation.set(String::new());
+        invitation_target.set(String::new());
+        invitation_minutes.set("60".into());
+        incoming_link.set(take_invitation_link());
+        issued_link.set(String::new());
+        busy.set(false);
+        problem.set(String::new());
+        message.set(String::new());
     });
 
     view! {

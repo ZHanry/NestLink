@@ -540,6 +540,18 @@ impl LeaseControl {
                 .saturating_sub(self.inner.clock.monotonic_ms()),
         ))
     }
+    /// Observe the effective deadline of this live proved lease, including its
+    /// original carrier ceiling and any pending peer renewal limit. Reading it
+    /// grants no permission and cannot extend the lease or authorize recovery.
+    pub fn current_deadline(&self) -> Result<Instant, RemoteError> {
+        let mut managed = self.inner.lock()?;
+        self.inner.check(&mut managed)?;
+        self.inner
+            .clock
+            .start
+            .checked_add(Duration::from_millis(managed.effective_deadline_ms()))
+            .ok_or(RemoteError::Stopped)
+    }
     pub(crate) fn authorize(&self, channel: Channel) -> Result<(), RemoteError> {
         self.operation(permission(channel)?, || Ok(()))
     }
