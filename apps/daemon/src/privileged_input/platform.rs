@@ -498,6 +498,7 @@ mod tests {
                     security_epoch: 1,
                     permit_issuer: "public".into(),
                     node_policy_issuer: "public".into(),
+                    native_ice_version: 0,
                 }),
             }),
             installation: Some(InstallationView {

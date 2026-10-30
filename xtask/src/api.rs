@@ -11,6 +11,7 @@ use nestlink_protocol::service_plane::{
     },
 };
 use nestlink_protocol::spaces::*;
+use nestlink_protocol::spaces::service_publication::*;
 use nestlink_protocol::{
     SignedNodeResourceQuery, SignedNodeResourceSnapshot, SignedNodeUsage, SignedNodeUsageAck,
     SignedRelayClose, SignedRelayCloseAck, SignedTurnCredentials, SignedTurnResourceQuery,
@@ -129,6 +130,8 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         NodeDiscoveryResponse,
         NativeDiscoveryConfig,
         NetworkAuthorityRequest,
+        NetworkAuthorityChangeRequest,
+        NetworkAuthorityView,
         NetworkMemberRequest,
         NetworkRevokeMemberRequest,
         NetworkIssueRequest,
@@ -151,6 +154,9 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         SpaceView,
         SpaceDetails,
         SpaceInvitationIssued,
+        SpaceServiceBindingRequest,
+        SpaceServiceRuleRequest,
+        SpaceServicePolicyView,
         NodeUsageQuery,
         NodeUsageView,
         NodeUsagePage,

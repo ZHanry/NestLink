@@ -40,7 +40,9 @@ impl Store {
                     && payload.connection_generation == permit.connection_generation
                     && payload.lease_sequence == permit.lease_sequence
                     && payload.description.is_none()
-                    && !payload.candidates.is_empty()
+                    && (!payload.candidates.is_empty()
+                        || payload.rendezvous.is_some()
+                        || payload.native_ice.is_some())
             }) {
                 ready.push(self.remote(actor, &id)?);
             }

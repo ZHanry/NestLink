@@ -8,6 +8,8 @@ use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
 };
+mod service_publication;
+use service_publication::SpaceServicesPanel;
 
 #[derive(Clone)]
 enum Command {
@@ -419,6 +421,7 @@ pub(super) fn SpacesPanel(
                 view! { <button type="button" class="secondary" disabled=move || busy.get() on:click=move |_| request.run(Command::Read(id.clone()))>{space.name} " · " {role_name(space.role)} {if space.archived { " · archived" } else { "" }}</button> }
             }).collect_view()}
             <Show when=move || details.get().is_some()>
+                <SpaceServicesPanel api session_revision auth_failure details />
                 <p>{move || details.get().map(|details| format!("{} · {} · revision {}", details.space.name, details.space.space_id, details.space.revision)).unwrap_or_default()}</p>
                 <label>{move || t("已登记设备", "Registered device")}<select data-space-field="device" prop:value=move || installation.get() disabled=move || busy.get() on:change=move |event| installation.set(event_target_value(&event))>
                     <option value="">{move || t("选择设备", "Choose a device")}</option>

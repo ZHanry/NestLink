@@ -125,6 +125,7 @@ impl Store {
             {
                 Ok(bundle) => bundle,
                 Err(StorageError::Forbidden | StorageError::Unauthorized) => continue,
+                Err(StorageError::Proof(error)) if error.code == nestlink_protocol::ErrorCode::PolicyRevoked => continue,
                 Err(error) => return Err(error),
             };
             let business = remote_paths::current_business(self, &bundle.path.request_id, now_ms)?;

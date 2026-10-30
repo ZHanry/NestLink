@@ -1,6 +1,7 @@
 // Compiled production controls, SDK and real server/SQLite. No response or DOM mocks.
 'use strict';
 const { randomUUID } = require('node:crypto');
+const { prepareManagementResponseObservation } = require('./refactor-browser-response-observer.cjs');
 const PANEL = '[aria-label="Space membership"]';
 const SPACE = PANEL + ' input';
 const DEVICE = PANEL + ' label:nth-of-type(2) select';
@@ -46,15 +47,19 @@ async function action(page, operation, expectedStatus = 200) {
   await page.bringToFront();
   const method = operation === 'read' || operation === 'member' ? 'GET' : operation === 'revoke' ? 'DELETE' : 'PUT';
   const pathname = operation === 'read' ? active.policy : operation === 'initialize' ? active.authority : active.member;
+  const captured = expectedStatus === 200 ? active.observers.get(page)?.expect(method + ' ' + pathname) : null;
   const pending = page.waitForResponse(response => matches(response, method, pathname), { timeout: 8000 });
-  await click(page, PANEL + ' button', ACTION[operation]);
-  const response = await pending;
-  check(response.status() === expectedStatus, operation + ' returned unexpected HTTP status ' + response.status());
-  await settled(page);
-  return response;
+  try {
+    await click(page, PANEL + ' button', ACTION[operation]);
+    const response = await pending;
+    check(response.status() === expectedStatus, operation + ' returned unexpected HTTP status ' + response.status());
+    const body = expectedStatus !== 200 ? null : captured ? await captured.promise : await response.json();
+    await settled(page);
+    return { response, body };
+  } finally { captured?.cancel(); }
 }
-async function readPolicy(page) { return (await action(page, 'read')).json(); }
-async function readMember(page) { return (await action(page, 'member')).json(); }
+async function readPolicy(page) { return (await action(page, 'read')).body; }
+async function readMember(page) { return (await action(page, 'member')).body; }
 async function chooseDevice(page, id) {
   await page.select(DEVICE, id);
   check(await page.$eval(DEVICE, el => el.value) === id, 'Registered fixture device is missing');
@@ -64,12 +69,12 @@ async function chooseRole(page, value) {
   check(await page.$eval(ROLE, el => el.value) === value, 'Role entry did not reach the real select');
 }
 async function mutation(page, operation, snapshot, role, expectedStatus = 200) {
-  const response = await action(page, operation, expectedStatus);
+  const { response, body: result } = await action(page, operation, expectedStatus);
   const body = JSON.parse(response.request().postData());
   check(body.expected_policy_revision === snapshot.revision
     && body.expected_membership_epoch === snapshot.epoch, 'Mutation did not bind the actual revision and membership epoch');
   if (operation !== 'revoke') check(body.role === role, 'Mutation lost the selected role');
-  return expectedStatus === 200 ? response.json() : null;
+  return result;
 }
 function snapshot(view) { return { revision: view.policy.revision, epoch: view.membership_epoch }; }
 async function signIn(page, ready) {
@@ -83,7 +88,7 @@ async function signIn(page, ready) {
   await page.locator('.entry-panel button.primary').click();
   await page.waitForSelector('.desktop-directory button.record', { visible: true });
 }
-async function run(page, ready, report) {
+async function run(page, ready, report, { engine, disconnectedEvent } = {}) {
   const space = randomUUID();
   const base = '/api/v3/network/spaces/' + space;
   const facts = report.network_membership_ui = { passed: false, failures: [],
@@ -91,21 +96,34 @@ async function run(page, ready, report) {
   active = { policy: base + '/policy', authority: base + '/authority',
     member: base + '/members/' + ready.host_device_id, failures: facts.failures };
   active.paths = new Set([active.policy, active.authority, active.member]);
+  active.observers = new Map();
+  const observe = async (target, name) => {
+    if (engine !== 'chrome') return;
+    const evidence = {};
+    (facts.response_observers ??= []).push({ page: name, evidence });
+    const owner = await prepareManagementResponseObservation({ page: target, origin: ready.origin,
+      disconnectedEvent, facts: evidence,
+      routes: [...active.paths].flatMap(path => ['GET', 'PUT', 'DELETE'].map(method =>
+        ({ method, path: new RegExp('^' + path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$') }))),
+    });
+    active.observers.set(target, owner);
+  };
   let sibling;
   try {
+    await observe(page, 'primary');
     facts.stage = 'explicit_initialization';
     await network(page);
     await page.locator(SPACE).fill(space);
     await action(page, 'read', 403);
     check(await page.$eval(PANEL + ' [role="alert"]', el => el.textContent.length > 0), 'GET403 must remain an error');
     check(await page.$(DEVICE) === null, 'GET403 inferred an initialized space');
-    const initialized = await (await action(page, 'initialize')).json();
+    const initialized = (await action(page, 'initialize')).body;
     check(initialized.space_id === space && initialized.revision > 0, 'Explicit initialization did not return server policy');
     // Changing the target discards its snapshot. A second explicit zero write
     // must be rejected by the server even without inferring existence from GET.
     await page.locator(SPACE).fill(randomUUID());
     await page.locator(SPACE).fill(space);
-    check(JSON.parse((await action(page, 'initialize', 409)).request().postData()).expected_revision === 0,
+    check(JSON.parse((await action(page, 'initialize', 409)).response.request().postData()).expected_revision === 0,
       'Repeated explicit initialization must keep revision zero and conflict');
     await readPolicy(page);
     await chooseDevice(page, ready.host_device_id);
@@ -122,6 +140,7 @@ async function run(page, ready, report) {
 
     facts.stage = 'real_concurrent_conflict';
     sibling = await page.browserContext().newPage();
+    await observe(sibling, 'concurrent-writer');
     sibling.setDefaultTimeout(8000);
     sibling.on('pageerror', error => report.page_errors.push(String(error.message).slice(0, 500)));
     await signIn(sibling, ready); await network(sibling);
@@ -206,11 +225,15 @@ async function run(page, ready, report) {
     }, PANEL).catch(() => ({ inspection_failed: true }));
     throw error;
   } finally {
+    const closed = await Promise.allSettled([...active.observers.values()].map(owner => owner.close()));
+    facts.response_observers_closed = closed.every(result => result.status === 'fulfilled');
+    facts.passed &&= facts.response_observers_closed;
     active = null;
     if (sibling) await sibling.close();
     await page.bringToFront();
     await click(page, '.sidebar nav button', 'Remote desktop');
     await page.waitForSelector('.desktop-directory button.record', { visible: true });
+    check(facts.response_observers_closed, 'Owned management response observer cleanup failed');
   }
 }
 module.exports = { run, expectedFailure };

@@ -58,6 +58,7 @@ async fn trickle_answers_before_slow_stun_and_completes_a_signed_direct_connecti
         let original = browser.local_description().await.ok_or("missing offer")?;
         let mut offer = SignalPayload {
             rendezvous: None,
+            native_ice: None,
             ice: Some(nestlink_protocol::ice::snapshot(&original.sdp, 1, false)?),
             connection_generation: fixture.permit.claims().connection_generation,
             lease_sequence: fixture.permit.claims().lease_sequence,
@@ -488,6 +489,7 @@ impl Fixture {
                 security_epoch: claims.security_epoch,
                 permit_issuer: URL_SAFE_NO_PAD.encode(signer.public_key()),
                 node_policy_issuer: URL_SAFE_NO_PAD.encode(signer.public_key()),
+                native_ice_version: 0,
             },
             login: Some(LoginState {
                 principal: Principal {
@@ -566,6 +568,7 @@ impl Fixture {
 fn offer(permit: &VerifiedPermit) -> SignalPayload {
     SignalPayload {
         rendezvous: None,
+        native_ice: None,
         ice: None,
         connection_generation: permit.claims().connection_generation,
         lease_sequence: permit.claims().lease_sequence,
@@ -1042,6 +1045,7 @@ async fn complete_trickle_sets_require_the_existing_dual_signed_relay_binding() 
             );
             let signal = SignalPayload {
                 rendezvous: None,
+                native_ice: None,
                 ice: Some(nestlink_protocol::ice::snapshot(&sdp, 1, complete)?),
                 connection_generation: fixture.permit.claims().connection_generation,
                 lease_sequence: fixture.permit.claims().lease_sequence,

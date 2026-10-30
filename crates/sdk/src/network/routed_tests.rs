@@ -1065,6 +1065,7 @@ fn readback_sdk(f: &Fixture) -> Result<crate::Sdk> {
             security_epoch: 1,
             permit_issuer: URL_SAFE_NO_PAD.encode(issuer),
             node_policy_issuer: URL_SAFE_NO_PAD.encode(issuer),
+            native_ice_version: 0,
         },
         login: None,
     };

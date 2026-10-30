@@ -89,6 +89,7 @@ async fn transient_refresh_retries_keep_the_same_login_and_auth_rejection_clears
             security_epoch: 1,
             permit_issuer: URL_SAFE_NO_PAD.encode(issuer),
             node_policy_issuer: URL_SAFE_NO_PAD.encode(issuer),
+            native_ice_version: 0,
         },
         login: None,
     };

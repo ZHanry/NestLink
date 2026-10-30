@@ -16,7 +16,7 @@ use nestlink_protocol::{
     signaling::safe_peer_address,
 };
 pub use nestlink_remote::{CleanupStatus, StopReport};
-use nestlink_remote::{NetworkBinding, RuntimeClock, SessionLifecycle, SessionSetup};
+use nestlink_remote::{NetworkBinding, RuntimeClock, SessionLifecycle, SessionSetup, TransportOwner};
 use nestlink_session::{EndpointRole, Session, SessionBinding, StopReason};
 use nestlink_transport_quic::discovery::DiscoverySocket;
 use quinn::AsyncUdpSocket;
@@ -35,6 +35,7 @@ use tokio::sync::watch;
 #[path = "native/dual_stack.rs"]
 mod dual_stack;
 use dual_stack::AdditionalFamily;
+pub mod ice;
 #[path = "native/failure.rs"]
 mod failure;
 
@@ -329,6 +330,12 @@ async fn refresh_auto_node_relay(
 
 #[derive(Debug, thiserror::Error)]
 pub enum DialError {
+    #[error("native ICE cleanup failed after {primary}")]
+    Cleanup {
+        primary: Box<DialError>,
+        #[source]
+        source: std::io::Error,
+    },
     #[error("native endpoint binding rejected")]
     Binding,
     #[error("native endpoint setup failed")]
@@ -511,6 +518,11 @@ pub struct ConnectedQuic {
     _endpoint: quinn::Endpoint,
 }
 pub enum NativeTransport {
+    Ice {
+        connection: quinn::Connection,
+        endpoint: quinn::Endpoint,
+        carrier: Box<ice::IceOwner>,
+    },
     Quic {
         connection: quinn::Connection,
         endpoint: quinn::Endpoint,
@@ -521,7 +533,7 @@ pub enum NativeTransport {
 }
 impl NativeTransport {
     fn close(&self) {
-        if let Self::Quic { connection, .. } = self {
+        if let Self::Quic { connection, .. } | Self::Ice { connection, .. } = self {
             connection.close(0u32.into(), b"candidate discarded");
         }
     }
@@ -542,6 +554,7 @@ pub struct NativeSession {
     pub failures: Vec<Failure>,
     pub control: NativeSessionControl,
     lifecycle_owner: Option<watch::Sender<Option<StopReason>>>,
+    native_ice: bool,
 }
 #[derive(Clone)]
 pub struct NativeSessionControl {
@@ -612,6 +625,10 @@ impl NativeSessionControl {
     }
 }
 impl NativeSession {
+    /// An observation of this endpoint's actual selected carrier.
+    pub fn uses_bilateral_ice(&self) -> bool {
+        self.native_ice
+    }
     pub async fn shutdown(
         &mut self,
         reason: StopReason,
@@ -633,7 +650,29 @@ impl NativeConnection {
             .cap_deadline_ms(setup.clock.deadline_ms(self.authorization_deadline)?)?;
         setup.path = self.candidate.path();
         setup.lifecycle.network = Some(self.network);
+        let native_ice = matches!(&self.transport, NativeTransport::Ice { .. });
         let mut channels = match self.transport {
+            NativeTransport::Ice {
+                connection,
+                endpoint,
+                mut carrier,
+            } => {
+                if setup.lifecycle.carrier.is_some() {
+                    connection.close(0u32.into(), b"native ICE lifecycle rejected");
+                    drop(connection);
+                    drop(endpoint);
+                    carrier.close_and_wait(tokio::time::Instant::now() + Duration::from_secs(5)).await?;
+                    return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "native ICE lifecycle is already owned").into());
+                }
+                setup.lifecycle.carrier = Some(carrier.failure()?);
+                match nestlink_remote::quic::authorize(connection, Some(endpoint), setup, &local.identity, peer_key).await {
+                    Ok(channels) => channels.with_transport_owner(*carrier),
+                    Err(error) => {
+                        carrier.close_and_wait(tokio::time::Instant::now() + Duration::from_secs(5)).await?;
+                        return Err(error);
+                    }
+                }
+            }
             NativeTransport::Quic {
                 connection,
                 endpoint,
@@ -719,6 +758,7 @@ impl NativeConnection {
             failures: self.failures,
             control,
             lifecycle_owner: None,
+            native_ice,
         })
     }
 }
@@ -959,6 +999,19 @@ impl NativeEndpoint {
             && self.permit.claims().paths.contains(&(Path::Direct as i32));
         let relay_allowed = options.local_paths.contains(Path::Relay)
             && self.permit.claims().paths.contains(&(Path::Relay as i32));
+        let mut native_ice = if direct_allowed
+            && sdk.health().native_ice_version == nestlink_protocol::native_ice::VERSION
+            && self.permit.claims().required_capabilities.iter().any(|capability| capability == nestlink_protocol::native_ice::CAPABILITY)
+        {
+            match ice::gather(self, &stun_servers, cancel.clone()).await {
+                Ok(gathered) => Some(gathered),
+                Err(error @ (DialError::Cancelled | DialError::Expired | DialError::NetworkChanged | DialError::Cleanup { .. })) => return Err(error.into()),
+                Err(_) => None,
+            }
+        } else {
+            None
+        };
+        self.check()?;
         let mut local_candidates = Vec::new();
         if direct_allowed {
             let gathered = tokio::select! {
@@ -1044,6 +1097,7 @@ impl NativeEndpoint {
             signal_candidates = bounded_unique(signal_candidates, CANDIDATE_COUNT as usize);
         }
         let rendezvous = if signal_candidates.is_empty()
+            && native_ice.is_none()
             && signaling_routes
                 .iter()
                 .any(|route| matches!(route, NativeRelayRoute::Combined(_)))
@@ -1052,7 +1106,7 @@ impl NativeEndpoint {
         } else {
             None
         };
-        if signal_candidates.is_empty() && rendezvous.is_none() {
+        if signal_candidates.is_empty() && rendezvous.is_none() && native_ice.is_none() {
             if relay_allowed && !self.permit.claims().paths.contains(&(Path::Direct as i32)) {
                 return Err(SessionEstablishError::RelayOnlyUnsupported);
             }
@@ -1060,6 +1114,7 @@ impl NativeEndpoint {
         }
         let signal = SignalPayload {
             rendezvous,
+            native_ice: native_ice.as_ref().map(|gathered| gathered.parameters.clone()),
             ice: None,
             connection_generation: self.permit.claims().connection_generation,
             lease_sequence: self.permit.claims().lease_sequence,
@@ -1080,15 +1135,28 @@ impl NativeEndpoint {
         }
         self.check()?;
 
-        let (peer_generation, peer_candidates) = self
+        let peer_signal = self
             .wait_for_peer_candidates(sdk, local, &mut cancel)
             .await?;
+        let peer_generation = peer_signal.network_generation;
+        let peer_candidates = peer_signal.candidates;
         self.ensure_current_permit(sdk, local, cancel.clone())
             .await?;
+        let ice_connection = match (native_ice.take(), peer_signal.native_ice.as_ref()) {
+            (Some(gathered), Some(peer)) => match gathered.connect(self, local, peer, peer_generation, cancel.clone()).await {
+                Ok(connection) => Some(connection),
+                Err(error @ (DialError::Cancelled | DialError::Expired | DialError::NetworkChanged | DialError::Cleanup { .. })) => return Err(error.into()),
+                Err(error @ DialError::Failed { code, .. }) if nestlink_connectivity::terminal_failure(code) => return Err(error.into()),
+                Err(_) => None,
+            },
+            (Some(gathered), None) => { gathered.close().await?; None }
+            (None, _) => None,
+        };
+        self.check()?;
 
         // Discovery routes carry a five-second request deadline. Refresh the
         // same allocation after signaling may have waited for the peer.
-        if routes.is_empty() && relay_allowed {
+        if ice_connection.is_none() && routes.is_empty() && relay_allowed {
             let refreshed = tokio::select! {
                 biased;
                 _ = cancellation(&mut cancel) => return Err(SessionEstablishError::Cancelled),
@@ -1115,19 +1183,19 @@ impl NativeEndpoint {
         if let Some(relay) = &combined_relay {
             active_routes.push(NativeRelayRoute::Combined(relay));
         }
-        if local_candidates.is_empty() && active_routes.is_empty() {
+        if local_candidates.is_empty() && active_routes.is_empty() && ice_connection.is_none() {
             if relay_allowed && !self.permit.claims().paths.contains(&(Path::Direct as i32)) {
                 return Err(SessionEstablishError::RelayOnlyUnsupported);
             }
             return Err(SessionEstablishError::NoCandidates);
         }
 
-        let candidates = self.race_candidates(
+        let candidates = if ice_connection.is_some() { Vec::new() } else { self.race_candidates(
             peer_generation,
             peer_candidates,
             &active_routes,
             options.local_paths,
-        )?;
+        )? };
         let direct_available = options.local_paths.contains(Path::Direct)
             && local_candidates
                 .iter()
@@ -1141,7 +1209,7 @@ impl NativeEndpoint {
             .cloned()
             .collect();
 
-        let connection = match self.role {
+        let connection = if let Some(connection) = ice_connection { connection } else { match self.role {
             EndpointRole::Controller => {
                 self.dial_native_with_local_paths(
                     local,
@@ -1167,7 +1235,7 @@ impl NativeEndpoint {
                 )
                 .await?
             }
-        };
+        } };
         self.check()?;
         self.ensure_current_permit(sdk, local, cancel.clone())
             .await?;
@@ -1294,7 +1362,7 @@ impl NativeEndpoint {
         sdk: &Sdk,
         local: &DeviceIdentity,
         cancel: &mut watch::Receiver<bool>,
-    ) -> Result<(u64, Vec<Candidate>), SessionEstablishError> {
+    ) -> Result<SignalPayload, SessionEstablishError> {
         let mut cursor = SignalCursor::new(&self.permit, local)?;
         let deadline = Instant::now() + SIGNAL_WAIT_BUDGET;
         loop {
@@ -1315,8 +1383,8 @@ impl NativeEndpoint {
             self.check()?;
             for signal in signals {
                 signal.validate(self.permit.claims())?;
-                if !signal.candidates.is_empty() || signal.rendezvous.is_some() {
-                    return Ok((signal.network_generation, signal.candidates));
+                if !signal.candidates.is_empty() || signal.rendezvous.is_some() || signal.native_ice.is_some() {
+                    return Ok(signal);
                 }
             }
             tokio::select! {
@@ -1869,11 +1937,14 @@ fn fixed_digest(value: &[u8]) -> Result<[u8; 32], SessionEstablishError> {
 
 fn session_binding(
     permit: &VerifiedPermit,
-    options: NativeSessionOptions,
+    mut options: NativeSessionOptions,
     evidence: Option<&NativeMediaEvidence>,
     role: EndpointRole,
     now_unix_ms: u64,
 ) -> Result<SessionBinding, SessionEstablishError> {
+    if !options.supported_capabilities.iter().any(|capability| capability == nestlink_protocol::native_ice::CAPABILITY) {
+        options.supported_capabilities.push(nestlink_protocol::native_ice::CAPABILITY.into());
+    }
     let claims = permit.claims();
     let media = match (
         nestlink_protocol::media_authority::permit_formats(claims)?,

@@ -75,7 +75,8 @@ impl SignalPayload {
         if self.candidates.len() > CANDIDATE_COUNT as usize
             || (self.candidates.is_empty()
                 && self.description.is_none()
-                && self.rendezvous.is_none())
+                && self.rendezvous.is_none()
+                && self.native_ice.is_none())
         {
             return Err(invalid("invalid signal candidate count"));
         }
@@ -83,6 +84,7 @@ impl SignalPayload {
             && (!permit.paths.contains(&(Path::Relay as i32))
                 || self.description.is_some()
                 || self.ice.is_some()
+                || self.native_ice.is_some()
                 || !self.candidates.is_empty())
         {
             return Err(invalid("invalid native relay rendezvous"));
@@ -103,6 +105,16 @@ impl SignalPayload {
             description.validate(permit)?;
         }
         self.validate_ice(permit)?;
+        if let Some(native) = &self.native_ice {
+            if self.description.is_some()
+                || self.ice.is_some()
+                || !permit.paths.contains(&(Path::Direct as i32))
+                || !permit.required_capabilities.iter().any(|capability| capability == crate::native_ice::CAPABILITY)
+            {
+                return Err(invalid("invalid native ICE dialect"));
+            }
+            native.address()?;
+        }
         Ok(())
     }
 }
@@ -260,6 +272,7 @@ mod tests {
             description: None,
             ice: None,
             rendezvous: Some(NativeRendezvous::CombinedRelay),
+            native_ice: None,
         };
         assert!(signal.validate(&permit).is_err());
         permit.paths.push(Path::Relay as i32);

@@ -40,6 +40,21 @@ pub struct NetworkPolicyView {
     pub policy_epoch: u64,
     pub observed_at_unix_ms: u64,
 }
+/// Deployment-admin compare-and-swap. Keys are derived on the server; a remote
+/// response never authorizes changing an operator's locally pinned key.
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkAuthorityChangeRequest {
+    pub expected_revision: u64,
+    pub expected_policy_epoch: u64,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkAuthorityView {
+    pub policy: NetworkPolicyView,
+    pub signing_generation: u64,
+    pub revoked: bool,
+}
 #[derive(Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct NetworkMemberView {
@@ -635,6 +650,9 @@ pub struct HealthResponse {
     pub security_epoch: u64,
     pub permit_issuer: String,
     pub node_policy_issuer: String,
+    /// Optional native ICE signaling dialect. Absent on older deployments.
+    #[serde(default)]
+    pub native_ice_version: u32,
 }
 #[derive(Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
@@ -720,6 +738,32 @@ pub struct SignalPayload {
     /// management origin. This declaration grants no target or business right.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rendezvous: Option<NativeRendezvous>,
+    /// Endpoint-signed credentials for the native Quinn/ICE dialect. It is
+    /// independent of browser SDP and never replaces a business permission.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub native_ice: Option<NativeIceParameters>,
+}
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NativeIceParameters {
+    pub version: u32,
+    pub username_fragment: String,
+    pub password: String,
+    pub candidate: String,
+}
+impl std::fmt::Debug for NativeIceParameters {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("NativeIceParameters")
+            .field("version", &self.version)
+            .finish_non_exhaustive()
+    }
+}
+impl Drop for NativeIceParameters {
+    fn drop(&mut self) {
+        use zeroize::Zeroize;
+        self.username_fragment.zeroize();
+        self.password.zeroize();
+    }
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]

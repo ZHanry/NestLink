@@ -1,4 +1,4 @@
-//! Prototype only: adapt the selected mature ICE connection, never bind UDP.
+//! Adapt the selected mature ICE connection without binding a replacement UDP socket.
 use futures_util::task::AtomicWaker;
 use nestlink_transport_stream::owner::TaskOwner;
 use quinn::{
@@ -17,8 +17,9 @@ use std::{
     task::{Context, Poll},
     time::Duration,
 };
-use tokio::{sync::mpsc, time::Instant};
+use tokio::{sync::{mpsc, watch}, time::Instant};
 use webrtc::{ice::agent::Agent, util::Conn};
+use webrtc::ice::state::ConnectionState;
 
 const PACKET: usize = 1200;
 const QUEUE: usize = 32;
@@ -28,6 +29,7 @@ struct Packet {
     born: Instant,
 }
 struct State {
+    failure: watch::Sender<Option<io::ErrorKind>>,
     stopped: AtomicBool,
     writable: Mutex<Vec<Weak<AtomicWaker>>>,
     readable: AtomicWaker,
@@ -50,11 +52,19 @@ impl State {
     }
     fn stop(&self) {
         self.stopped.store(true, Ordering::SeqCst);
+        self.failure.send_if_modified(|failure| {
+            if failure.is_none() {
+                *failure = Some(io::ErrorKind::ConnectionAborted);
+                true
+            } else {
+                false
+            }
+        });
         self.readable.wake();
         self.wake_writers();
     }
 }
-pub(super) struct IceUdp {
+pub struct IceUdp {
     connection: Arc<dyn Conn + Send + Sync>,
     agent: Arc<Agent>,
     local: SocketAddr,
@@ -67,7 +77,7 @@ pub(super) struct IceUdp {
 }
 impl fmt::Debug for IceUdp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("IceUdpPrototype")
+        f.debug_struct("IceUdp")
             .field("local", &self.local)
             .field("peer", &self.peer)
             .finish_non_exhaustive()
@@ -80,13 +90,15 @@ fn current(connection: &dyn Conn, local: SocketAddr, peer: SocketAddr) -> bool {
     connection.local_addr().ok() == Some(local) && connection.remote_addr() == Some(peer)
 }
 impl IceUdp {
-    pub(super) fn new(
+    pub fn new(
         agent: Arc<Agent>,
         connection: Arc<dyn Conn + Send + Sync>,
     ) -> io::Result<Arc<Self>> {
         let local = connection.local_addr().map_err(io::Error::other)?;
         let peer = connection.remote_addr().ok_or_else(stopped)?;
+        let (failure, _) = watch::channel(None);
         let state = Arc::new(State {
+            failure,
             stopped: AtomicBool::new(false),
             writable: Mutex::new(Vec::new()),
             readable: AtomicWaker::new(),
@@ -100,6 +112,13 @@ impl IceUdp {
         agent.on_selected_candidate_pair_change(Box::new(move |a, b| {
             if a.addr() != local || b.addr() != peer {
                 observed.stop();
+            }
+            Box::pin(async {})
+        }));
+        let consent = state.clone();
+        agent.on_connection_state_change(Box::new(move |state| {
+            if matches!(state, ConnectionState::Disconnected | ConnectionState::Failed | ConnectionState::Closed) {
+                consent.stop();
             }
             Box::pin(async {})
         }));
@@ -178,10 +197,18 @@ impl IceUdp {
             writer,
         }))
     }
-    pub(super) fn peer(&self) -> SocketAddr {
+    pub fn peer(&self) -> SocketAddr {
         self.peer
     }
-    pub(super) fn counters(&self) -> (u64, u64, usize) {
+    pub fn failure(&self) -> watch::Receiver<Option<io::ErrorKind>> {
+        self.state.failure.subscribe()
+    }
+    pub fn request_close(&self) {
+        self.state.stop();
+        self.reader.request_close();
+        self.writer.request_close();
+    }
+    pub fn counters(&self) -> (u64, u64, usize) {
         (
             self.state.sent.load(Ordering::Relaxed),
             self.state.received.load(Ordering::Relaxed),
@@ -198,7 +225,7 @@ impl IceUdp {
         }
         Ok(())
     }
-    pub(super) async fn close_tasks(&self, deadline: Instant) -> io::Result<()> {
+    pub async fn close_tasks(&self, deadline: Instant) -> io::Result<()> {
         self.state.stop();
         self.reader.request_close();
         self.writer.request_close();
@@ -219,7 +246,7 @@ struct Writable {
 }
 impl fmt::Debug for Writable {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("IceWritablePrototype")
+        f.debug_struct("IceWritable")
             .finish_non_exhaustive()
     }
 }

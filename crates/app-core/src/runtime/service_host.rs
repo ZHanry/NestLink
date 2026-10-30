@@ -287,6 +287,7 @@ mod tests {
                     security_epoch: 1,
                     permit_issuer: "issuer".into(),
                     node_policy_issuer: "issuer".into(),
+                    native_ice_version: 0,
                 }),
                 error: None,
             }),

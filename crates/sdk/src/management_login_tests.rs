@@ -22,6 +22,7 @@ async fn management_login_export_round_trip_preserves_an_accepted_origin()
             security_epoch: 1,
             permit_issuer: URL_SAFE_NO_PAD.encode(issuer),
             node_policy_issuer: URL_SAFE_NO_PAD.encode(issuer),
+            native_ice_version: 0,
         },
         login: None,
     };

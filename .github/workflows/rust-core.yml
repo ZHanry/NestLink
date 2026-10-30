@@ -160,6 +160,34 @@ jobs:
           $iceLog = Join-Path $env:RUNNER_TEMP 'nestlink-ice-quic-tests.log'
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-sdk --test ice_quic -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $iceLog
           exit $LASTEXITCODE
+      - name: Check production signed native sessions on Linux before formatting
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        shell: pwsh
+        run: |
+          $nativeLog = Join-Path $env:RUNNER_TEMP 'nestlink-native-session-tests.log'
+          cargo test --locked -p nestlink-sdk --test native_session -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $nativeLog
+          exit $LASTEXITCODE
+      - name: Check production signed native sessions with the ordinary Windows token before formatting
+        if: ${{ !cancelled() && runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          $nativeLog = Join-Path $env:RUNNER_TEMP 'nestlink-native-session-tests.log'
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-sdk --test native_session -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $nativeLog
+          exit $LASTEXITCODE
+      - name: Check production native host inbox on Linux before formatting
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        shell: pwsh
+        run: |
+          $inboxLog = Join-Path $env:RUNNER_TEMP 'nestlink-native-inbox-tests.log'
+          cargo test --locked -p nestlink-app-core --test native_inbox -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $inboxLog
+          exit $LASTEXITCODE
+      - name: Check production native host inbox with the ordinary Windows token before formatting
+        if: ${{ !cancelled() && runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          $inboxLog = Join-Path $env:RUNNER_TEMP 'nestlink-native-inbox-tests.log'
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --test native_inbox -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $inboxLog
+          exit $LASTEXITCODE
       - name: Check candidate discovery and network lifecycle on Linux before formatting
         if: ${{ !cancelled() && runner.os == 'Linux' && steps.sdk_routed_linux.outcome != 'skipped' }}
         shell: pwsh
@@ -212,6 +240,8 @@ jobs:
             ${{ runner.temp }}/nestlink-sdk-routed-tests.json
             ${{ runner.temp }}/nestlink-sdk-network-relay-tests.log
             ${{ runner.temp }}/nestlink-ice-quic-tests.log
+            ${{ runner.temp }}/nestlink-native-session-tests.log
+            ${{ runner.temp }}/nestlink-native-inbox-tests.log
             ${{ runner.temp }}/nestlink-network-discovery-tests.log
             ${{ runner.temp }}/nestlink-spaces-tests.log
           if-no-files-found: warn

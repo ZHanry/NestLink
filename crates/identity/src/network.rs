@@ -156,6 +156,27 @@ impl NetworkAuthoritySigner {
         self.key.verifying_key().to_bytes()
     }
 
+    /// Generation zero preserves the already provisioned authority. Later
+    /// generations are independent per-space keys, never business permit keys.
+    pub fn for_space_generation(&self, space: &str, generation: u64) -> Result<Self, ContractError> {
+        if !nestlink_protocol::valid_id(space) || generation > i64::MAX as u64 {
+            return Err(ContractError::new(ErrorCode::InvalidMessage, "invalid space authority generation"));
+        }
+        if generation == 0 {
+            return Ok(Self { key: self.key.clone() });
+        }
+        let seed = Zeroizing::new(self.key.to_bytes());
+        let mut derived = Zeroizing::new([0u8; 32]);
+        let mut info = b"NestLink/network/v1/space-authority-ed25519\0".to_vec();
+        info.extend_from_slice(&(space.len() as u32).to_be_bytes());
+        info.extend_from_slice(space.as_bytes());
+        info.extend_from_slice(&generation.to_be_bytes());
+        hkdf::Hkdf::<sha2::Sha256>::new(Some(b"NestLink/network/v1/space-authority-keys"), &*seed)
+            .expand(&info, &mut *derived)
+            .map_err(|_| ContractError::new(ErrorCode::InternalError, "space authority derivation failed"))?;
+        Ok(Self { key: SigningKey::from_bytes(&derived) })
+    }
+
     pub fn sign(&self, claims: &GrantClaims) -> Result<SignedNetworkGrant, ContractError> {
         let message = claims.signing_message()?;
         Ok(SignedNetworkGrant {

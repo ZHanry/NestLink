@@ -78,6 +78,7 @@ async fn self_reported_health_cannot_replace_issuer_private_key_proof()
         security_epoch: 1,
         permit_issuer: URL_SAFE_NO_PAD.encode(trusted_signer.public_key()),
         node_policy_issuer: URL_SAFE_NO_PAD.encode([9; 32]),
+        native_ice_version: 0,
     };
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
     let origin = format!("http://{}", listener.local_addr()?);

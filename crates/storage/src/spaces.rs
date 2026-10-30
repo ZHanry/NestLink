@@ -4,6 +4,7 @@ use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_auth::{random_id, token, token_hash};
 use nestlink_protocol::{network::SpaceRole, spaces::*};
 use rusqlite::{Connection, OptionalExtension, Transaction, TransactionBehavior, params};
+pub mod service_publication;
 
 const MAX_SPACES: u64 = 256;
 const MAX_MEMBERS: u64 = 4096;
@@ -61,7 +62,7 @@ fn read_space(
          FROM network_spaces s JOIN network_authorities a ON a.space_id=s.space_id
          JOIN network_space_members m ON m.space_id=s.space_id JOIN deployment d ON d.singleton=1
          WHERE s.space_id=?1 AND m.account_id=?2 AND m.revoked=0
-         AND a.restore_fenced=0 AND a.security_epoch=d.security_epoch",
+         AND a.restore_fenced=0 AND a.authority_revoked=0 AND a.security_epoch=d.security_epoch",
         params![id, actor.account_id],
         |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?, r.get(5)?, r.get(6)?, r.get(7)?, r.get(8)?)),
     ).optional()?;
@@ -191,6 +192,7 @@ impl Store {
         let id = random_id();
         tx.execute("INSERT INTO network_authorities(space_id,public_key,revision,policy_epoch,security_epoch,last_observed_ms) VALUES(?1,?2,1,1,?3,?4)",
             params![id, authority_key.as_slice(), self.security_epoch()?, now])?;
+        tx.execute("INSERT INTO network_authority_key_history(space_id,public_key,signing_generation,activated_policy_epoch,activated_at_ms) VALUES(?1,?2,0,1,?3)",params![id,authority_key.as_slice(),now])?;
         tx.execute(
             "INSERT INTO network_spaces(space_id,name) VALUES(?1,?2)",
             params![id, name],
@@ -205,7 +207,7 @@ impl Store {
     pub fn spaces(&self, actor: &Principal, now: u64) -> Result<Vec<SpaceView>, StorageError> {
         let tx = self.connection.unchecked_transaction()?;
         self.validate_access(actor, now / 1000)?;
-        let mut query = tx.prepare("SELECT m.space_id FROM network_space_members m JOIN network_authorities a ON a.space_id=m.space_id JOIN deployment d ON d.singleton=1 WHERE m.account_id=?1 AND m.revoked=0 AND a.restore_fenced=0 AND a.security_epoch=d.security_epoch ORDER BY m.space_id LIMIT ?2")?;
+        let mut query = tx.prepare("SELECT m.space_id FROM network_space_members m JOIN network_authorities a ON a.space_id=m.space_id JOIN deployment d ON d.singleton=1 WHERE m.account_id=?1 AND m.revoked=0 AND a.restore_fenced=0 AND a.authority_revoked=0 AND a.security_epoch=d.security_epoch ORDER BY m.space_id LIMIT ?2")?;
         let ids = query
             .query_map(params![actor.account_id, MAX_SPACES + 1], |r| {
                 r.get::<_, String>(0)
@@ -347,6 +349,7 @@ impl Store {
             [id],
         )?;
         advance(&tx, &space, now)?;
+        service_publication::stop_publications(&tx,id,None,None)?;
         event(&tx, actor, id, "network_space_archived", id, now)?;
         let view = read_space(&tx, actor, id, now)?;
         tx.commit()?;
@@ -376,9 +379,11 @@ impl Store {
         if request.role == SpaceRole::Owner {
             tx.execute("UPDATE network_space_members SET role='admin',member_epoch=member_epoch+1 WHERE space_id=?1 AND account_id=?2", params![id, actor.account_id])?;
             update_device_roles(&tx, id, &actor.account_id, SpaceRole::Admin, false)?;
+            service_publication::stop_publications(&tx,id,Some(&actor.account_id),None)?;
         }
         tx.execute("UPDATE network_space_members SET role=?1,member_epoch=member_epoch+1 WHERE space_id=?2 AND account_id=?3", params![role_name(request.role), id, account])?;
         update_device_roles(&tx, id, account, request.role, false)?;
+        service_publication::stop_publications(&tx,id,Some(account),None)?;
         advance(&tx, &space, now)?;
         event(&tx, actor, id, "network_space_member_changed", account, now)?;
         let view = read_space(&tx, actor, id, now)?;
@@ -409,6 +414,7 @@ impl Store {
         }
         tx.execute("UPDATE network_space_members SET revoked=1,member_epoch=member_epoch+1 WHERE space_id=?1 AND account_id=?2", params![id, account])?;
         update_device_roles(&tx, id, account, role, true)?;
+        service_publication::stop_publications(&tx,id,Some(account),None)?;
         advance(&tx, &space, now)?;
         event(&tx, actor, id, "network_space_member_removed", account, now)?;
         let view = read_space(&tx, actor, id, now)?;
@@ -501,6 +507,7 @@ impl Store {
             return Err(StorageError::Conflict);
         }
         tx.execute("UPDATE network_memberships SET revoked=1,membership_epoch=membership_epoch+1 WHERE space_id=?1 AND installation_id=?2", params![id, installation])?;
+        service_publication::stop_publications(&tx,id,None,Some(installation))?;
         advance(&tx, &space, now)?;
         event(
             &tx,
@@ -650,7 +657,7 @@ impl Store {
             FROM network_space_invitations i JOIN network_spaces s ON s.space_id=i.space_id
             JOIN network_authorities a ON a.space_id=s.space_id JOIN deployment d ON d.singleton=1
             WHERE i.space_id=?1 AND i.invitation_id=?2 AND i.token_hash=?3 AND i.revoked=0 AND i.consumed_by IS NULL AND i.expires_at_ms>?4
-            AND s.archived=0 AND a.restore_fenced=0 AND a.security_epoch=d.security_epoch",
+            AND s.archived=0 AND a.restore_fenced=0 AND a.authority_revoked=0 AND a.security_epoch=d.security_epoch",
             params![id, invitation, token_hash("space-invitation", &request.token).as_slice(), now],
             |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?)),
         ).optional()?;

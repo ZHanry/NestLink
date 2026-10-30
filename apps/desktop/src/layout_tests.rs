@@ -410,6 +410,7 @@ fn enrolled_snapshot() -> Snapshot {
                 security_epoch: 1,
                 permit_issuer: String::new(),
                 node_policy_issuer: String::new(),
+                native_ice_version: 0,
             }),
         }),
         installation: Some(InstallationView {

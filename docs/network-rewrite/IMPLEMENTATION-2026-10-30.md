@@ -207,3 +207,31 @@ Completed carrier cleanup now records its successful receipt before releasing
 the failure sender. Only that empty post-receipt closure is cleanup; lost live
 observation and recorded revocation still deny recovery. Protocol and lifecycle
 regressions and complete real-session tests require matching Actions execution.
+
+## Production follow-up on 2026-10-31
+
+The next source fixes native inbox wake-up for authenticated address-free relay
+signals; the previous filter required a literal candidate and left an approved
+host asleep until its controller permit expired. Real Store regressions retain
+signature, account/device, expiry and revocation checks. Browser membership and
+space fixtures now consume actual HTTP responses through the existing bounded
+CDP observer. Exact 8007458 observations, including the original failures and
+CodeQL attempt-2 success, are in evidence/development-run-8007458.json.
+
+W04 adds deployment-admin authority CAS, deterministic per-space key rotation,
+retired-key history, permanent revocation and policy-epoch advance. Currentness
+removes revoked paths from node snapshots instead of failing the entire poll.
+W18 adds explicit space rules for already-approved service publication, enforcing
+the same rule and deadline on issue, readback, renewal and node resources. Rule
+revocation and membership changes drain existing publications. This is publication
+permission, not the still-unimplemented authenticated private-service consumer ACL.
+
+W09 now has production signed native ICE on the original mature candidate socket,
+with a kernel filter for one approved remote tuple and existing Quinn/business
+proof. Both signed device capabilities and the signed permit gate the dialect;
+old registrations retain legacy. ADR 0008 records ownership, fallback, cleanup,
+compatibility and single-candidate limits. The original prototype imports this
+same socket adapter. New production tests require actual FileRead and rebinds.
+All of this new source remains pending exact-source Actions, including formatting
+and generated OpenAPI. No acceptance group, external execution or release result
+is inferred from its implementation. Remaining W10-W40 scope stays active.

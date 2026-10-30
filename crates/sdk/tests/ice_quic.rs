@@ -1,7 +1,5 @@
 //! Actions-only feasibility evidence, not the complete W09 product contract.
 //! Mature ICE checks and Quinn use the same original OS UDP candidate socket.
-#[path = "ice_quic/socket.rs"]
-mod socket;
 use nestlink_auth::random_id;
 use nestlink_identity::{InstallationIdentity, PermitSigner, VerifiedPermit, verify_permit};
 use nestlink_policy::PathSet;
@@ -15,7 +13,7 @@ use quinn::{
     crypto::rustls::{QuicClientConfig, QuicServerConfig},
     udp::Transmit,
 };
-use socket::IceUdp;
+use nestlink_sdk::native::ice::IceUdp;
 use std::{
     io,
     net::{SocketAddr, UdpSocket},

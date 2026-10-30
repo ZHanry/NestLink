@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "8007458051a34ff488630b3f95f8db92aabfa287",
+  "dependency_lock_sha256": "e40cbb24fd46cc214dffc2b76642adc09e37c8db9f9ab73943efc6e9bb10b637",
+  "review_method": "Read GitHub Actions job logs and exact-source receipts; downloaded archive digests checked against the GitHub artifact API. No local builds, generation, formatters or automated tests.",
+  "network_run": {
+    "run_id": "41071353578",
+    "attempt": 1,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41071353578",
+    "runner_environment": "github-hosted",
+    "conclusion": "failure",
+    "routed_kernel_nat": {
+      "job_id": "124116014652",
+      "conclusion": "success",
+      "artifact_id": "12985485575",
+      "artifact_sha256": "81bed34dce8d31d5df872e1d36499d1d36698c81689bf52ae227331e9f06fb1d",
+      "download_digest_verified": true,
+      "receipt_sha256": "27434b85781285e47c73ed5cac099de9cdbc7ab79376abe5c8b569795e9e3ad1",
+      "receipt": "network-routed-evidence.json",
+      "executable_sha256": "ed3a56856b3d456911a9c1c746cb3405976d8c2d0b1e3c187afaa6295a4e90a4",
+      "build_and_execution_source_match": true,
+      "source_before_and_after_clean": true,
+      "cases": { "success": true, "blackhole": true, "cancel": true },
+      "scope": "Two endpoint processes, one authenticated relay, two actual Linux SNAT gateways and production routed adapter; raw framed transport only",
+      "cleanup": "All three cases report no cleanup failures and owned namespaces removed",
+      "limitations": [
+        "No business SessionPermit endpoint proof or production FileRead worker in this experiment",
+        "No bilateral ICE/STUN nomination, consent or same-socket hole-punching qualification",
+        "No public NAT, dual relay, multi-hop discovery, migration or TUN injection",
+        "Complete 1280-byte IPv6-shaped payloads do not qualify OS IPv6 forwarding"
+      ]
+    },
+    "production_socket": {
+      "job_id": "124116168102",
+      "conclusion": "success",
+      "artifact_id": "12984434536",
+      "artifact_sha256": "d1dd044e03843ea53c328c1757c54712e6998f2f8f2f9d68aebd8cf67c04f3a8",
+      "download_digest_verified": true,
+      "receipt_sha256": "88af7d794fbe5075e45f68dbb2b5ef1524f8b0c8b7a83aba9115817b7ec2e4c2",
+      "receipt": "network-socket-evidence.json",
+      "executable_sha256": "b6461d07afe7ed806a00586ae97277e3c4c50e956b028a7849c0681b166be23e",
+      "build_and_execution_source_match": true,
+      "source_before_and_after_clean": true,
+      "cases": { "success": true, "blackhole": true, "cancel": true, "peer-close": true },
+      "scope": "Production mutual endpoint proof and actual 262144-byte FileRead in isolated Linux network namespaces; zero relays and no NAT",
+      "peer_close": "Unisolated code-0 QUIC application close maps to host Revoked; no cleanup failures",
+      "limitations": [
+        "No SDK signaling/discovery, TLS/WSS fallback, new network routing or migration qualification",
+        "No target device, public NAT, installation, media performance or long-duration acceptance"
+      ]
+    },
+    "independent_vectors": {
+      "job_id": "124116014777",
+      "conclusion": "success",
+      "artifact_id": "12985740237",
+      "artifact_sha256": "25fc44200dbb724e8d591e5df5197037b4a394fd6d0a68bcda2acd0c25af8894",
+      "download_digest_verified": true,
+      "reference_sha256": "a7b316184a15d45b76ea87dac31d85b670c180a27761d6055e448435441f6fe3"
+    },
+    "linux_contract": {
+      "job_id": "124116018702",
+      "conclusion": "failure",
+      "artifact_id": "12985636491",
+      "github_artifact_digest_sha256": "37e7babbe4146ef4447dee218315213ba12976b244f3f9d6b3076e6d5f9cb44b",
+      "contract_clippy_exit_code": 0,
+      "contract_tests_exit_code": 0,
+      "ci_evidence_tests_exit_code": 0,
+      "failure": "Actions rustfmt drift; formatting imported separately from the Actions patch"
+    },
+    "windows_contract": {
+      "job_id": "124116050341",
+      "conclusion": "failure",
+      "artifact_id": "12985766881",
+      "github_artifact_digest_sha256": "91ba488b4a3c755525f83637519670b09ebc737a41384bcb3d953f76d659c095",
+      "contract_clippy_exit_code": 0,
+      "contract_tests_exit_code": 0,
+      "ci_evidence_tests_exit_code": 0,
+      "failure": "Actions rustfmt drift; formatting imported separately from the Actions patch"
+    }
+  },
+  "core_run": {
+    "run_id": "41071353624",
+    "attempt": 1,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41071353624",
+    "runner_environment": "github-hosted",
+    "conclusion": "failure",
+    "linux_job_id": "124116015512",
+    "windows_job_id": "124116020060",
+    "observed_failed_workspace_target": "nestlink-app-core --test native_inbox",
+    "both_platforms_failed_tests": [
+      "controller_alone_starts_approved_host_over_combined_wss_and_stop_is_respected",
+      "relay_only_inbox_needs_no_direct_candidate_or_private_network_consent"
+    ],
+    "failure": "Controller StartNativeSession returned PermitExpired; manually_started_host_is_not_restarted_by_the_inbox_after_stop passed",
+    "source_review_root_cause": "Store::ready_native_remote still required a nonempty legacy candidate list. A valid signed CombinedRelay rendezvous has no candidates, so the host never received its wake hint and the controller expired while waiting for host signaling.",
+    "additional_failure": "Actions rustfmt drift",
+    "observed_successful_jobs": [
+      { "job_id": "124116013649", "name": "linux-x11-input" },
+      { "job_id": "124116013988", "name": "wasm-contract" },
+      { "job_id": "124116053440", "name": "linux-network-events" },
+      { "job_id": "124116060048", "name": "linux-portal-capture" },
+      { "job_id": "124116064721", "name": "linux-system-audio" },
+      { "job_id": "124116164597", "name": "dependencies" },
+      { "job_id": "124116208818", "name": "openapi-generation" }
+    ],
+    "openapi_generation": {
+      "artifact_id": "12984489004",
+      "artifact_sha256": "7e462a5e556fe7a4e05c72ecf3446a6808ace2d8c316c9fe0ff37ddf4fc28b8d",
+      "download_digest_verified": true,
+      "receipt_sha256": "0cb0139e69e484c8e58385016a28b240568108c3b833ad14cc4fa8ca00b8c4d2",
+      "generator": "cargo run --locked -p xtask -- contract --write",
+      "output": "protocol-spec/openapi.json",
+      "output_bytes": 476003,
+      "output_sha256": "2996dd23239045f6592524148c3d74663dcc04ec3f7ec933bbef0531cc6e3df8",
+      "output_digest_verified": true,
+      "manual_diff_review": "Only 17 added lines: NativeRendezvous combined_relay enum and optional SignalPayload.rendezvous schema",
+      "imported_generated_file_only": true,
+      "scope": "Generation at this exact source, not checked-in drift validation or validation of subsequent schema edits"
+    }
+  },
+  "web_run": {
+    "run_id": "41071353493",
+    "attempt": 1,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41071353493",
+    "native_browser_job_id": "124121600730",
+    "native_browser_conclusion": "failure",
+    "release_site_job_id": "124116164897",
+    "release_site_conclusion": "success",
+    "artifact_id": "12985643024",
+    "artifact_sha256": "54cbfa8d88f6f3ffc02360b4312adc582b6004bd7495c645633042bf698ce6bc",
+    "download_digest_verified": true,
+    "browser_report_sha256": "65c5932a01f0c23458097fb35f29f91662e7729072d769d14b8953484058e90e",
+    "edge_namespace_ui_passed": true,
+    "network_membership_ui_passed": false,
+    "network_membership_stage": "real_concurrent_conflict",
+    "failure": "Protocol error (Network.getResponseBody): No data found for resource with given identifier",
+    "scope": "Failed during management setup before remote media/permit samples; no video, audio, input, files or steady-session acceptance claim",
+    "runner_cleanup": "Owned processes stopped without forced kills; private fixture directory removed and download directory empty"
+  },
+  "codeql_run": {
+    "run_id": "41071353466",
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41071353466",
+    "original_attempt": 1,
+    "original_python_job_id": "124116064741",
+    "original_python_conclusion": "failure",
+    "original_failure": "CodeQL completed Python/Actions analysis and SARIF export, then the improved incremental analysis failed around result upload. GitHub annotation recorded the failed cache state and documented automatic fallback on the next analysis; possible disk-space cause was not independently confirmed.",
+    "retry_method": "GitHub Actions rerun requested after the original failure; no disabled analysis or relaxed queries",
+    "verified_attempt": 2,
+    "verified_conclusion": "success",
+    "python_job_id": "124135186356",
+    "python_conclusion": "success",
+    "javascript_typescript_job_id": "124135188872",
+    "javascript_typescript_conclusion": "success"
+  },
+  "post_run_changes_awaiting_new_source_actions": [
+    "Import reviewed Actions rustfmt patch",
+    "Accept validated signed address-free rendezvous and native ICE in the production host wake-hint query, with real Store authorization/expiry/revocation regression",
+    "Reuse the bounded owned CDP response stream observer for membership CAS and spaces JSON before the browser drops its Fetch body, with route/status/lifecycle/failure regressions; retain actual invitation JSON in memory instead of reading its Fetch response again after the existing rate-limit window",
+    "Import only the reviewed exact-source Actions-generated OpenAPI file; subsequent schema changes require a new generation job"
+  ],
+  "acceptance_claims": [],
+  "target_device_acceptance": false,
+  "release_qualified": false,
+  "later_uncommitted_source_is_not_verified_by_this_run": true
+}

@@ -5593,6 +5593,7 @@ fn unix_millis() -> Option<u64> {
 }
 fn map_dial_failure(error: DialError) -> Failure {
     match error {
+        DialError::Cleanup { primary, .. } => map_dial_failure(*primary),
         DialError::NetworkChanged => Failure::local(FailureKind::NetworkChanged),
         DialError::Expired => Failure::local(FailureKind::PermitExpired),
         DialError::Cancelled => Failure::local(FailureKind::NativeSessionCancelled),

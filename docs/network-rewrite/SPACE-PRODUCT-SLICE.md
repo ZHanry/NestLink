@@ -3,8 +3,9 @@
 This slice connects account-visible space management to the production Web,
 typed SDK, HTTP authentication middleware and SQLite transactions. It is source
 for Actions execution. No local compilation, formatter, lint, automated test or
-dependency resolution was run while authoring it. It does not complete W18's
-service/protocol/port/operation ACL requirements or installed-product acceptance.
+dependency resolution was run while authoring it. It includes explicit space
+service publication constraints. Consumer private-service access ACLs and
+installed-product acceptance remain separate unfinished requirements.
 
 Every signed MembershipGrant remains a membership credential. Creating a space,
 becoming its owner, accepting an invitation and attaching a device never create
@@ -86,6 +87,10 @@ existing `/api/v3` base:
 | `/network/spaces/{space}/invitations/{invitation}` | DELETE revoke |
 | `/network/spaces/{space}/invitations/{invitation}/accept` | POST one-use acceptance |
 | `/network/spaces/{space}/audit` | GET latest retained space events |
+| `/network/spaces/{space}/services` | GET authorized publication policy |
+| `/network/spaces/{space}/services/{service}` | PUT owner binding, DELETE revoke and stop |
+| `/network/spaces/{space}/services/{service}/rules` | POST explicit publication rule |
+| `/network/spaces/{space}/services/{service}/rules/{rule}` | DELETE revoke rule and stop |
 
 The existing `/network/spaces/{space}/members/{installation}/grants` issuance
 endpoint and `/network/spaces/{space}/grants/{grant}` exact-credential readback
@@ -94,6 +99,40 @@ Readback recovers the committed bytes after a lost response, never signs a new
 credential, and rejects current removal, archive, expiry or epoch changes.
 For older independently provisioned authorities it still requires a deployment
 administrator. Its output is still exactly a signed MembershipGrant.
+
+## Explicit service publication policy
+
+Migration 031 binds a preexisting service to exactly one space. Its service
+owner, including an ordinary member or guest, must select an independently
+approved target whose exact host device is currently joined to that space.
+Binding supplies no publication permission. An owner/admin of the space must
+explicitly grant an account or exact-host-device rule, limited to that service's
+revision, protocol, ingress port, `publish` operation and a deadline within seven
+days. HTTP and HTTPS use their standard ingress ports 80 and 443; TCP and UDP use
+the service definition's selected ingress port. No rule chooses a local target
+or changes its independent approval or source CIDR list.
+
+The production service publication facts check applies the space constraint to
+initial publication, GET, renewal and independently signed Node resource
+snapshots. The signed ServiceLease expires no later than the authorizing rule.
+Rules bind account/device epochs and the exact host membership epoch; removing
+and rejoining an account or device does not revive them. Service definition
+changes require a new owner binding and a fresh explicit rule. Rebinding advances
+a binding epoch and invalidates previous rules. Revoked bindings remain stored
+as a fence, so revocation cannot silently restore the older legacy path.
+
+Rule/binding revocation, affected role changes, account/device removal and space
+archive move current publications to the mature draining state. Node snapshots
+and SDK observers drive actual ingress/host teardown. The existing capacity
+promise and cumulative usage budget remain reserved until the original physical
+drain/expiry rules release them. Existing services with no space binding retain
+their independent service owner, target approval and source CIDR policy.
+
+The Web space panel provides binding, exact subject/protocol/port/expiry choices,
+current active-rule facts and revocation. Every mutation uses server revisions,
+an immediate transaction and a scoped audit event. Ordinary accounts see their
+own service bindings; space administrators see the space's bindings. Responses
+from an old selection/session cannot refill a later panel.
 
 ## Actions verification
 
@@ -124,7 +163,23 @@ and the real browser/native runner. OpenAPI and formatting are generated only in
 Actions (`cargo xtask contract --write` and the repository formatting workflow).
 Authored tests and receipts are not a claim that these runs already passed.
 
-Detailed per-member/device service ACLs still need an executing intersection
-with the signed service access path, including protocol, port, operation and
-expiry. The existing service owner/local approval boundaries continue to apply;
-this slice does not store unused allow rules or label them effective.
+Three additional real SQLite publication tests live in
+`crates/storage/src/services/publication/tests/space_policy.rs`. They check
+default denial, independent target approval, exact host/protocol/port matching,
+signed lease deadline caps, removal/rejoin/expiry, persistent binding revocation,
+archive and real Node resource removal while retaining usage commitments.
+`crates/sdk/tests/service_publication.rs` adds a real management HTTP, pinned
+QUIC, host and public TCP/UDP run. A space-rule revocation replaces the ordinary
+stop operation for the TCP phase and must physically stop the host and release
+the ingress port; guest rule escalation and wrong-host/protocol requests fail.
+Actions must run the service publication storage library tests, SDK
+`service_publication` target and Web WASM check as well as the earlier space
+targets. The new Web controls have authored source but no claimed new browser
+acceptance result before those artifacts are built and exercised.
+
+Consumer private-service access still needs an authenticated client transport
+entrypoint and a separate access permission intersected with local approval.
+This publication policy controls who may publish an existing approved service;
+public ingress visitors continue to be governed by the existing source CIDRs.
+It does not grant consumer private access, remote control, file operations,
+arbitrary local ports or raw IP forwarding, and it does not complete W18/AC30.

@@ -16,6 +16,8 @@ use std::path::PathBuf;
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 const PASSWORD: &str = "integration-only-password";
 const NOW_MS: u64 = 1_000_000;
+#[path = "network_policy/authority.rs"]
+mod authority_lifecycle;
 
 struct Fixture {
     _directory: tempfile::TempDir,
@@ -648,7 +650,7 @@ fn migration_from_schema_twenty_five_creates_no_network_authority() -> Result {
     let path = f.path.clone();
     drop(f.store);
     let connection = Connection::open(&path)?;
-    connection.execute_batch("DROP VIEW all_relay_capacity; DROP TABLE network_space_audit; DROP TABLE network_space_invitations; DROP TABLE network_space_members; DROP TABLE network_spaces; DROP TABLE network_remote_relays; DROP TABLE network_remote_paths; DROP TABLE network_grant_revocations; DROP TABLE network_grants; DROP TABLE network_memberships; DROP TABLE network_authorities; PRAGMA user_version=25;")?;
+    connection.execute_batch("DROP VIEW all_relay_capacity; DROP TABLE space_service_rules; DROP TABLE space_service_bindings; DROP TABLE network_space_audit; DROP TABLE network_space_invitations; DROP TABLE network_space_members; DROP TABLE network_spaces; DROP TABLE network_remote_relays; DROP TABLE network_remote_paths; DROP TABLE network_grant_revocations; DROP TABLE network_grants; DROP TABLE network_memberships; DROP TABLE network_authority_key_history; DROP TABLE network_authorities; PRAGMA user_version=25;")?;
     drop(connection);
     let mut migrated = Store::open_existing(&path, &deployment)?;
     assert!(migrated.network_policy_snapshot(&f.space, NOW_MS).is_err());

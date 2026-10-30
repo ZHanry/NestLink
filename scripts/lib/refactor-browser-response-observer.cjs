@@ -72,7 +72,7 @@ function failedMetadata(event) {
     observed_monotonic_ms: performance.now(), observed_unix_ms: Date.now() };
 }
 
-function createPermitResponseObserver({ session, origin, disconnectedEvent, facts, onClaims, onError, limits = {} }) {
+function createResponseObserver({ session, origin, disconnectedEvent, facts, onClaims, onError, limits = {}, contract = null }) {
   const destination = new URL(origin);
   if (destination.origin !== origin || destination.protocol !== 'https:' || destination.hostname !== '127.0.0.1' ||
       !destination.port || !session?.on || !session?.off || !session?.send ||
@@ -85,8 +85,8 @@ function createPermitResponseObserver({ session, origin, disconnectedEvent, fact
       throw new Error('Response observation bounds may only tighten the fixed defaults');
     }
   }
-  Object.assign(facts, { schema_version: 3, source: 'Bounded Network.streamResourceContent with same-session completed-response fallback on exact owned-origin POST permit/renew requestId',
-    requests_tracked: 0, successful_responses: 0, claims_observed: 0, peak_pending: 0,
+  Object.assign(facts, { schema_version: 3, source: contract?.source ?? 'Bounded Network.streamResourceContent with same-session completed-response fallback on exact owned-origin POST permit/renew requestId',
+    requests_tracked: 0, successful_responses: 0, claims_observed: 0, json_responses_observed: 0, peak_pending: 0,
     pending: 0, observations: [], normal_loads: 0, canceled_loads: 0, failed_loads: 0,
     network_all_completed_normally: false, errors: [], session_lost: false,
     closed: false, listeners_removed: false, passed: false });
@@ -178,7 +178,7 @@ function createPermitResponseObserver({ session, origin, disconnectedEvent, fact
       'Owned response stream did not contain canonical bounded base64 data');
   const fallbackFailure = (entry, stage, type, message) => failure(entry, stage, type, message);
   const startFallback = entry => {
-    if (entry.finished || closed || entry.fallbackStarted || entry.status !== 200 || entry.terminal !== 'finished' ||
+    if (entry.finished || closed || entry.fallbackStarted || entry.status === null || entry.terminal !== 'finished' ||
         !entry.loadingFinished || entry.loadingFailed) return;
     entry.fallbackStarted = true;
     entry.observation.stream.fallback_used = true;
@@ -261,15 +261,16 @@ function createPermitResponseObserver({ session, origin, disconnectedEvent, fact
       value = JSON.parse(text); // Exactly one complete document; no trailing data.
       entry.observation.stream.complete_json = true;
       stage = 'permit-claims';
-      claims = observedClaims(value, entry);
+      claims = contract ? contract.project(value, entry) : observedClaims(value, entry);
       // Release raw data before any callback or persisted diagnostic. JS strings
       // cannot be overwritten; their references are dropped, never retained.
       bytes.fill(0); bytes = null; text = null; value = null;
       clearRaw(entry);
       stage = 'claims-callback';
-      onClaims(entry.operation, claims);
-      facts.claims_observed += 1;
-      entry.observation.claims_observed = true;
+      onClaims(entry.operation, claims, entry.requestId);
+      facts.json_responses_observed += 1;
+      entry.observation.json_observed = true;
+      if (!contract) { facts.claims_observed += 1; entry.observation.claims_observed = true; }
       finish(entry);
     } catch {
       if (entry.finished || closed) return;
@@ -344,7 +345,8 @@ function createPermitResponseObserver({ session, origin, disconnectedEvent, fact
       failure(existing, 'request', 'RedirectError', 'Owned permit request identifier was redirected or reused before completion');
       return;
     }
-    const owned = event.request?.method === 'POST' ? match(event.request.url) : null;
+    const owned = contract ? contract.match(event.request) :
+      event.request?.method === 'POST' ? match(event.request.url) : null;
     if (!owned || typeof event.requestId !== 'string' || !event.requestId || event.requestId.length > 256) return;
     if (facts.requests_tracked >= bounds.maxRequests) {
       accepting = false;
@@ -370,13 +372,13 @@ function createPermitResponseObserver({ session, origin, disconnectedEvent, fact
     facts.requests_tracked += 1;
     facts.pending = pending.size;
     facts.peak_pending = Math.max(facts.peak_pending, pending.size);
-    entry.deadline = setTimeout(() => failure(entry, entry.status === 200 ? 'loading-terminal' : 'response-received',
+    entry.deadline = setTimeout(() => failure(entry, entry.status !== null ? 'loading-terminal' : 'response-received',
       'TimeoutError', 'Owned permit response did not complete before the fixed request deadline'), bounds.requestTimeoutMs);
   };
   const onResponse = event => {
     const entry = pending.get(event.requestId);
     if (!entry || closed) return;
-    if (event.response?.status !== 200) {
+    if (!(contract ? contract.acceptStatus(event.response?.status) : event.response?.status === 200)) {
       entry.observation.status = numeric(event.response?.status) ? event.response.status : null;
       entry.observation.network_completion = 'http-failure';
       finish(entry);
@@ -386,11 +388,11 @@ function createPermitResponseObserver({ session, origin, disconnectedEvent, fact
       failure(entry, 'response-received', 'ResponseIdentityError', 'Owned permit response did not match its exact original request');
       return;
     }
-    entry.status = 200;
+    entry.status = event.response.status;
     entry.responseMetadata = responseMetadata(event);
     entry.observedMonotonic = performance.now();
     entry.observedUnix = Date.now();
-    entry.observation.status = 200;
+    entry.observation.status = entry.status;
     entry.observation.network.response = entry.responseMetadata;
     entry.observation.stream.requested = true;
     facts.successful_responses += 1;
@@ -399,7 +401,7 @@ function createPermitResponseObserver({ session, origin, disconnectedEvent, fact
   const onData = event => {
     const entry = pending.get(event.requestId);
     if (!entry || closed) return;
-    if (entry.status !== 200) {
+    if (entry.status === null) {
       failure(entry, 'response-stream', 'ResponseIdentityError', 'Owned response data arrived without matching successful response headers');
       return;
     }
@@ -450,7 +452,7 @@ function createPermitResponseObserver({ session, origin, disconnectedEvent, fact
       failure(entry, 'loading-terminal', 'TerminalIdentityError', 'Owned response reported more than one terminal network event');
       return;
     }
-    if (entry.status !== 200) {
+    if (entry.status === null) {
       failure(entry, 'loading-finished', 'ResponseIdentityError', 'Owned request finished without an observed matching successful response');
       return;
     }
@@ -483,7 +485,7 @@ function createPermitResponseObserver({ session, origin, disconnectedEvent, fact
     // A complete streamed body can be observed despite Chromium cancellation.
     // This exception is deliberately narrow and never creates loadingFinished.
     // Other failures, blocked requests or CORS errors still fail closed.
-    if (entry.status !== 200 || entry.loadingFailed.error_text !== 'net::ERR_ABORTED' ||
+    if (entry.status === null || entry.loadingFailed.error_text !== 'net::ERR_ABORTED' ||
         entry.loadingFailed.canceled !== true || entry.loadingFailed.blocked_reason !== null ||
         entry.loadingFailed.blocked_reason_redacted || entry.loadingFailed.cors_error !== null ||
         entry.loadingFailed.cors_error_redacted) {
@@ -533,7 +535,7 @@ function createPermitResponseObserver({ session, origin, disconnectedEvent, fact
         facts.pending = pending.size;
         facts.network_all_completed_normally = facts.successful_responses > 0 &&
           facts.normal_loads === facts.successful_responses && facts.failed_loads === 0;
-        facts.passed = facts.errors.length === 0 && facts.claims_observed > 0 && pending.size === 0;
+        facts.passed = facts.errors.length === 0 && facts.json_responses_observed > 0 && pending.size === 0;
       }
       if (facts.errors.length) throw new Error('Owned permit/renewal response observation failed');
     })();
@@ -541,15 +543,19 @@ function createPermitResponseObserver({ session, origin, disconnectedEvent, fact
   } });
 }
 
+function createPermitResponseObserver(options) {
+  return createResponseObserver({ ...options, contract: null });
+}
+
 // Steady Chromium runs need the same early, owned CDP observation as impairment
 // runs. Puppeteer's default-session response.json() can lose a Fetch body after
 // the application consumes/drops it; a later getResponseBody is not evidence.
 // This owner observes header-time streams and completed-response fallback on one
 // session, with bounded durable buffers, without changing network conditions.
-async function preparePermitResponseObservation({ page, origin, facts, ...options }) {
+async function prepareResponseObservation({ page, origin, facts, createObserver, freshPage, ...options }) {
   const destination = new URL(origin);
   if (destination.origin !== origin || destination.protocol !== 'https:' || destination.hostname !== '127.0.0.1' ||
-      !destination.port || !page?.createCDPSession || page.url() !== 'about:blank' || !facts || typeof facts !== 'object') {
+      !destination.port || !page?.createCDPSession || (freshPage && page.url() !== 'about:blank') || !facts || typeof facts !== 'object') {
     throw new Error('Permit response observation requires a fresh owned HTTPS loopback page');
   }
   const parameters = Object.freeze({ maxTotalBufferSize: defaults.maxBodyBytes * defaults.maxPending,
@@ -557,6 +563,7 @@ async function preparePermitResponseObservation({ page, origin, facts, ...option
   const lifecycle = facts.session_owner = {
     source: 'Dedicated steady-run CDP session; no network emulation or request interception',
     network_enable_parameters: parameters, session_created: false, prepared_before_navigation: false,
+    prepared_before_relevant_requests: false,
     network_disabled: false, session_detached: false, cleanup_errors: [], closed: false, passed: false,
   };
   let session = null, observer = null, closePromise;
@@ -582,7 +589,8 @@ async function preparePermitResponseObservation({ page, origin, facts, ...option
         });
       }
       lifecycle.closed = true;
-      lifecycle.passed = errors.length === 0 && facts.passed === true && lifecycle.prepared_before_navigation &&
+      lifecycle.passed = errors.length === 0 && facts.passed === true && lifecycle.prepared_before_relevant_requests &&
+        (!freshPage || lifecycle.prepared_before_navigation) &&
         lifecycle.network_disabled && lifecycle.session_detached;
       if (errors.length) throw new Error('Owned permit response observation cleanup failed');
     })();
@@ -591,11 +599,12 @@ async function preparePermitResponseObservation({ page, origin, facts, ...option
   try {
     session = await page.createCDPSession();
     lifecycle.session_created = true;
-    observer = createPermitResponseObserver({ ...options, session, origin, facts });
+    observer = createObserver({ ...options, session, origin, facts });
     // The observer must own listeners before Network.enable/navigation can
     // deliver the first request. Body reads use only this same session.
     await session.send('Network.enable', parameters);
-    lifecycle.prepared_before_navigation = true;
+    lifecycle.prepared_before_navigation = page.url() === 'about:blank';
+    lifecycle.prepared_before_relevant_requests = true;
     return owner;
   } catch {
     try { await owner.close(); } catch { /* Fixed cleanup categories remain in facts. */ }
@@ -603,4 +612,84 @@ async function preparePermitResponseObservation({ page, origin, facts, ...option
   }
 }
 
-module.exports = { createPermitResponseObserver, preparePermitResponseObservation };
+function preparePermitResponseObservation(options) {
+  return prepareResponseObservation({ ...options, createObserver: createPermitResponseObserver, freshPage: true });
+}
+
+// Management checks need the exact response JSON for CAS assertions. Reuse the
+// same bounded stream owner as permits instead of querying Puppeteer's session
+// after the application's Fetch object has already been consumed and dropped.
+function createManagementResponseObserver({ routes, onResponse, ...options }) {
+  const origin = options.origin;
+  if (!Array.isArray(routes) || !routes.length || routes.length > 32 || typeof onResponse !== 'function' ||
+      routes.some(route => !['GET', 'PUT', 'POST', 'DELETE'].includes(route.method) ||
+        !(route.path instanceof RegExp) || route.path.global || route.path.sticky)) {
+    throw new Error('Management observation requires bounded exact-route rules');
+  }
+  const contract = {
+    source: 'Bounded owned-origin management JSON response stream; no interception or DOM/response mocks',
+    acceptStatus: status => status === 200 || status === 201,
+    match(request) {
+      try {
+        const url = new URL(request.url);
+        if (url.origin !== origin || url.username || url.password || url.search || url.hash ||
+            !routes.some(route => route.method === request.method && route.path.test(url.pathname))) return null;
+        return { path: url.pathname, operation: request.method + ' ' + url.pathname, url: url.href };
+      } catch { return null; }
+    },
+    project(value, entry) {
+      if (!value || typeof value !== 'object') throw new Error('invalid-management-json');
+      return { status: entry.status, body: value };
+    },
+  };
+  return createResponseObserver({ ...options, contract, onClaims: onResponse });
+}
+
+async function prepareManagementResponseObservation({ onResponse = () => {}, onError = () => {}, ...options }) {
+  let waiting = null, closing = false;
+  const rejectWaiting = message => {
+    if (!waiting) return;
+    const selected = waiting; waiting = null; clearTimeout(selected.timer);
+    selected.reject(new Error(message));
+  };
+  const owner = await prepareResponseObservation({ ...options,
+    createObserver: createManagementResponseObserver, freshPage: false,
+    onResponse(operation, response, requestId) {
+      if (waiting?.operation === operation) {
+        if (response.status !== waiting.status) rejectWaiting('Owned management response returned unexpected status');
+        else {
+          const selected = waiting; waiting = null; clearTimeout(selected.timer); selected.resolve(response.body);
+        }
+      }
+      onResponse(operation, response, requestId);
+    },
+    onError(diagnostic) {
+      rejectWaiting('Owned management response observation failed');
+      onError(diagnostic);
+    },
+  });
+  return Object.freeze({ close() {
+    closing = true;
+    rejectWaiting('Owned management response expectation remained active at shutdown');
+    return owner.close();
+  }, expect(operation, status = 200, timeoutMs = 8000) {
+    if (closing || waiting || typeof operation !== 'string' || ![200, 201].includes(status) ||
+        !Number.isSafeInteger(timeoutMs) || timeoutMs <= 0 || timeoutMs > defaults.requestTimeoutMs) {
+      throw new Error('Invalid or overlapping owned management response expectation');
+    }
+    let resolve, reject;
+    const promise = new Promise((accept, fail) => { resolve = accept; reject = fail; });
+    // A separate click/status failure still owns and cancels this expectation.
+    promise.catch(() => {});
+    const selected = { operation, status, resolve, reject, timer: setTimeout(() => {
+      if (waiting === selected) rejectWaiting('Owned management response deadline exceeded');
+    }, timeoutMs) };
+    waiting = selected;
+    return Object.freeze({ promise, cancel() {
+      if (waiting === selected) { waiting = null; clearTimeout(selected.timer); resolve(null); }
+    } });
+  } });
+}
+
+module.exports = { createPermitResponseObserver, preparePermitResponseObservation,
+  createManagementResponseObserver, prepareManagementResponseObservation };

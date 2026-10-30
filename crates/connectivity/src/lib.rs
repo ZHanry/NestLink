@@ -233,7 +233,7 @@ impl Scheduler {
         });
     }
 }
-fn terminal_failure(code: ErrorCode) -> bool {
+pub fn terminal_failure(code: ErrorCode) -> bool {
     matches!(
         code,
         ErrorCode::IdentityMismatch

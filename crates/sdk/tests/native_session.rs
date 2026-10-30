@@ -107,7 +107,7 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
             id: random_id(),
             controller_device_id: controller.device_id.clone(),
             host_device_id: host.device_id.clone(),
-            permissions: vec![Permission::View as i32],
+            permissions: vec![Permission::View as i32, Permission::FileRead as i32],
             path_mode: "direct_only".into(),
         })
         .await?;
@@ -117,7 +117,7 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
             &request,
             ApprovalChoice {
                 approved: true,
-                permissions: vec![Permission::View as i32],
+                permissions: vec![Permission::View as i32, Permission::FileRead as i32],
                 paths: vec![Path::Direct as i32],
             },
         )
@@ -147,6 +147,7 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
         vec![],
         policy,
     )?;
+    let legacy_addresses = [controller_endpoint.local_addr()?, host_endpoint.local_addr()?];
 
     let (cancel_owner, cancelled) = watch::channel(false);
     cancel_owner.send_replace(true);
@@ -156,7 +157,7 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
                 &controller_sdk,
                 &controller,
                 NativeSessionOptions {
-                    granted_permissions: vec![Permission::View],
+                    granted_permissions: vec![Permission::View, Permission::FileRead],
                     supported_capabilities: vec!["vp8".into()],
                     local_paths: PathSet::DIRECT,
                 },
@@ -174,7 +175,7 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
             &controller_sdk,
             &controller,
             NativeSessionOptions {
-                granted_permissions: vec![Permission::View],
+                granted_permissions: vec![Permission::View, Permission::FileRead],
                 supported_capabilities: vec!["vp8".into()],
                 local_paths: PathSet::DIRECT,
             },
@@ -186,7 +187,7 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
             &host_sdk,
             &host,
             NativeSessionOptions {
-                granted_permissions: vec![Permission::View],
+                granted_permissions: vec![Permission::View, Permission::FileRead],
                 supported_capabilities: vec!["vp8".into()],
                 local_paths: PathSet::DIRECT,
             },
@@ -197,9 +198,21 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
     )?;
     assert_eq!(controller_session.candidate.path(), Path::Direct);
     assert_eq!(host_session.candidate.path(), Path::Direct);
+    assert!(controller_session.uses_bilateral_ice());
+    assert!(host_session.uses_bilateral_ice());
+    let ice_addresses = [controller_session.candidate.address, host_session.candidate.address];
+    let mut controller_session = controller_session;
+    let host_session = host_session;
+    let bytes = vec![47; 32_768];
+    for _ in 0..8 {
+        host_session.channels.send(nestlink_transport_stream::Channel::FileRead, &bytes).await?;
+        let frame = tokio::time::timeout(Duration::from_secs(2), controller_session.channels.receive()).await??;
+        assert_eq!(frame.channel, nestlink_transport_stream::Channel::FileRead);
+        assert_eq!(frame.payload, bytes);
+    }
+    assert!(controller_session.channels.send(nestlink_transport_stream::Channel::Input, &[1]).await.is_err());
 
     controller_endpoint.invalidate_network(2)?;
-    let mut controller_session = controller_session;
     let report = tokio::time::timeout(
         Duration::from_secs(2),
         controller_session.channels.wait_stopped(),
@@ -208,5 +221,12 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
     assert_eq!(report.reason, StopReason::NetworkChanged);
     let mut host_session = host_session;
     tokio::time::timeout(Duration::from_secs(2), host_session.channels.wait_stopped()).await??;
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+    let mut controller_owner = nestlink_sdk::network::LegacyEndpoint::new(controller_endpoint);
+    let mut host_owner = nestlink_sdk::network::LegacyEndpoint::new(host_endpoint);
+    tokio::try_join!(controller_owner.close_and_wait(deadline), host_owner.close_and_wait(deadline))?;
+    for address in legacy_addresses.into_iter().chain(ice_addresses) {
+        let _rebound = std::net::UdpSocket::bind(address)?;
+    }
     Ok(())
 }

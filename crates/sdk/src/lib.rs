@@ -936,6 +936,17 @@ impl Sdk {
         capabilities: Vec<String>,
         path_mode: String,
     ) -> Result<(), SdkError> {
+        #[cfg(not(target_arch = "wasm32"))]
+        let capabilities = {
+            let mut capabilities = capabilities;
+            if self.health.native_ice_version == nestlink_protocol::native_ice::VERSION
+                && matches!(platform.as_str(), "windows" | "linux-x11" | "linux-wayland" | "android")
+                && !capabilities.iter().any(|value| value == nestlink_protocol::native_ice::CAPABILITY)
+            {
+                capabilities.push(nestlink_protocol::native_ice::CAPABILITY.into());
+            }
+            capabilities
+        };
         let descriptor = DeviceDescriptor {
             id: installation.device_id.clone(),
             name,

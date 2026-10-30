@@ -20,6 +20,10 @@ mod browser_readiness;
 mod media_authority;
 #[path = "control/network_paths.rs"]
 mod network_paths;
+#[path = "control/native_readiness.rs"]
+mod native_readiness;
+#[path = "control/native_ice_capabilities.rs"]
+mod native_ice_capabilities;
 #[path = "control/quotas.rs"]
 mod quotas;
 #[path = "control/reconnection.rs"]
@@ -762,6 +766,7 @@ fn signal_possession_generation_paths_and_live_authorization_are_enforced() -> R
     let permit = s.initial_permit(&admin, &view.id, 1002)?;
     let payload = SignalPayload {
         rendezvous: None,
+        native_ice: None,
         ice: None,
         connection_generation: 1,
         lease_sequence: 1,
@@ -817,6 +822,7 @@ fn signal_possession_generation_paths_and_live_authorization_are_enforced() -> R
     let offer_sequence = 3;
     let offer = SignalPayload {
         rendezvous: None,
+        native_ice: None,
         ice: None,
         connection_generation: 1,
         lease_sequence: 1,
@@ -836,6 +842,7 @@ fn signal_possession_generation_paths_and_live_authorization_are_enforced() -> R
     let sign_answer = |sequence: u64, in_reply_to_sequence: u64| -> Result<SignalSubmission> {
         let payload = SignalPayload {
             rendezvous: None,
+            native_ice: None,
             ice: None,
             connection_generation: 1,
             lease_sequence: 1,
@@ -864,6 +871,7 @@ fn signal_possession_generation_paths_and_live_authorization_are_enforced() -> R
     s.submit_signal(&member, &view.id, sign_answer(1, offer_sequence)?, 1007)?;
     let newer_offer = SignalPayload {
         rendezvous: None,
+        native_ice: None,
         ice: None,
         connection_generation: 1,
         lease_sequence: 1,

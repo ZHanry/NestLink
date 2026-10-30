@@ -2,6 +2,7 @@
 use crate::network::SpaceRole;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+pub mod service_publication;
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]

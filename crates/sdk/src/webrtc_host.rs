@@ -1940,6 +1940,7 @@ impl WebRtcHostPeer {
             .ok_or(WebRtcHostError::InvalidOffer)?;
         let answer_payload = SignalPayload {
             rendezvous: None,
+            native_ice: None,
             ice: if offer.ice.is_some() {
                 Some(nestlink_protocol::ice::snapshot(
                     &local.sdp,
@@ -5620,6 +5621,7 @@ mod tests {
     fn host_rejects_trickle_candidate_payloads() {
         let mut offer = SignalPayload {
             rendezvous: None,
+            native_ice: None,
             ice: None,
             connection_generation: 1,
             lease_sequence: 1,

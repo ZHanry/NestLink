@@ -20,7 +20,7 @@ use nestlink_storage::{
     StorageError, Store,
     accounts::Principal,
     network_policy::{
-        NetworkAuthorityUpdate, NetworkGrantRevocation, NetworkMembershipRequest,
+        NetworkAuthorityChange, NetworkAuthorityState, NetworkAuthorityUpdate, NetworkGrantRevocation, NetworkMembershipRequest,
         NetworkMembershipRevocation, NetworkMembershipUpdate, TrustedNetworkPolicySnapshot,
     },
 };
@@ -134,6 +134,7 @@ pub(crate) async fn issue_relay(
         .db(move |s| {
             let now = now_ms()?;
             let actor = s.authenticate(&token, now / 1000)?;
+            let signer = s.network_authority_signer(&signer, &space, now)?;
             relay_view(s.issue_network_remote_relay(
                 &lifecycle,
                 &actor,
@@ -201,6 +202,7 @@ pub(crate) async fn issue_path(
         .db(move |s| {
             let now = now_ms()?;
             let actor = s.authenticate(&token, now / 1000)?;
+            let signer = s.network_authority_signer(&signer, &space, now)?;
             path_view(s.issue_network_remote_path(
                 &actor,
                 &signer,
@@ -290,6 +292,75 @@ pub(crate) async fn policy(
         .await
 }
 
+fn authority_view(value: NetworkAuthorityState) -> nestlink_protocol::api::NetworkAuthorityView {
+    nestlink_protocol::api::NetworkAuthorityView {
+        policy: PolicyView {
+            schema_version: SCHEMA_VERSION,
+            deployment_id: value.deployment_id,
+            space_id: value.space_id,
+            authority_public_key: URL_SAFE_NO_PAD.encode(value.public_key),
+            revision: value.revision,
+            policy_epoch: value.policy_epoch,
+            observed_at_unix_ms: value.observed_at_ms,
+        },
+        signing_generation: value.signing_generation,
+        revoked: value.revoked,
+    }
+}
+
+fn authority_change(space: String, body: nestlink_protocol::api::NetworkAuthorityChangeRequest) -> NetworkAuthorityChange {
+    NetworkAuthorityChange {space_id:space,expected_revision:body.expected_revision,expected_policy_epoch:body.expected_policy_epoch}
+}
+
+pub(crate) async fn authority(
+    State(state): State<AppState>, headers: HeaderMap, Path(space): Path<String>,
+) -> Result<Json<nestlink_protocol::api::NetworkAuthorityView>, ApiError> {
+    let token = admin_access(&state,&headers).await?;
+    state.db(move |s| {
+        let now = now_ms()?;
+        let actor = admin(s,&token,now)?;
+        Ok(Json(authority_view(s.network_authority_state(&actor,&space,now)?)))
+    }).await
+}
+
+pub(crate) async fn rotate_authority(
+    State(state): State<AppState>, headers: HeaderMap, Path(space): Path<String>,
+    Json(body): Json<nestlink_protocol::api::NetworkAuthorityChangeRequest>,
+) -> Result<Json<nestlink_protocol::api::NetworkAuthorityView>, ApiError> {
+    let token = admin_access(&state,&headers).await?;
+    let root = state.network_signer.clone();
+    state.db(move |s| {
+        let now = now_ms()?;
+        let actor = admin(s,&token,now)?;
+        Ok(Json(authority_view(s.rotate_network_authority(&actor,&root,authority_change(space,body),now)?)))
+    }).await
+}
+
+pub(crate) async fn revoke_authority(
+    State(state): State<AppState>, headers: HeaderMap, Path(space): Path<String>,
+    Json(body): Json<nestlink_protocol::api::NetworkAuthorityChangeRequest>,
+) -> Result<StatusCode, ApiError> {
+    let token = admin_access(&state,&headers).await?;
+    state.db(move |s| {
+        let now = now_ms()?;
+        let actor = admin(s,&token,now)?;
+        s.revoke_network_authority(&actor,authority_change(space,body),now)?;
+        Ok(StatusCode::NO_CONTENT)
+    }).await
+}
+
+pub(crate) async fn advance_epoch(
+    State(state): State<AppState>, headers: HeaderMap, Path(space): Path<String>,
+    Json(body): Json<nestlink_protocol::api::NetworkAuthorityChangeRequest>,
+) -> Result<Json<PolicyView>, ApiError> {
+    let token = admin_access(&state,&headers).await?;
+    state.db(move |s| {
+        let now = now_ms()?;
+        let actor = admin(s,&token,now)?;
+        Ok(Json(policy_view(&s.advance_network_policy_epoch(&actor,authority_change(space,body),now)?)))
+    }).await
+}
+
 pub(crate) async fn member(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -373,6 +444,7 @@ pub(crate) async fn issue(
         .db(move |s| {
             let now = now_ms()?;
             let actor = s.authenticate(&token, now / 1000)?;
+            let signer = s.network_authority_signer(&signer, &space, now)?;
             let signed = s.issue_network_membership(
                 &actor,
                 &signer,

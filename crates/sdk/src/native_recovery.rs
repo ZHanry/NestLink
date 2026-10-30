@@ -195,7 +195,13 @@ fn binding(
             .try_into()
             .map_err(|_| SdkError::Trust)?,
         granted_permissions: permissions.to_vec(),
-        supported_capabilities: capabilities.to_vec(),
+        supported_capabilities: {
+            let mut supported = capabilities.to_vec();
+            if !supported.iter().any(|value| value == nestlink_protocol::native_ice::CAPABILITY) {
+                supported.push(nestlink_protocol::native_ice::CAPABILITY.into());
+            }
+            supported
+        },
         local_paths,
     })
 }

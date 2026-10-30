@@ -1,7 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { EventEmitter } = require('node:events');
-const { createPermitResponseObserver, preparePermitResponseObservation } = require('../../scripts/lib/refactor-browser-response-observer.cjs');
+const { createPermitResponseObserver, preparePermitResponseObservation,
+  createManagementResponseObserver, prepareManagementResponseObservation } = require('../../scripts/lib/refactor-browser-response-observer.cjs');
 const { prepareNetworkDamage } = require('../../scripts/lib/refactor-browser-network-damage.cjs');
 
 const origin = 'https://127.0.0.1:43817';
@@ -16,6 +17,85 @@ const body = (changes = {}) => ({ permit: privateToken,
     controller_device_id: controllerId, issued_at_unix_ms: 1800000000000,
     expires_at_unix_ms: 1800000010000, secret_extra: privateToken, ...changes }, secret_extra: privateToken });
 const turn = () => new Promise(resolve => setImmediate(resolve));
+
+test('management CAS evidence uses an early bounded stream on its own session, including actual HTTP 201', async () => {
+  const session = new EventEmitter(), facts = {}, received = [], errors = [], calls = [];
+  const value = { revision: 7, membership_epoch: 4, secret_extra: privateToken };
+  session.send = async (method, params) => {
+    calls.push({ method, params });
+    assert.equal(method, 'Network.streamResourceContent');
+    return { bufferedData: Buffer.from(JSON.stringify(value)).toString('base64') };
+  };
+  const observer = createManagementResponseObserver({ session, origin, disconnectedEvent: disconnected, facts,
+    routes: [{ method: 'PUT', path: /^\/api\/v3\/network\/spaces\/fixture\/authority$/ }],
+    onResponse: (operation, response, requestId) => received.push({ operation, response, requestId }),
+    onError: error => errors.push(error) });
+  const url = origin + '/api/v3/network/spaces/fixture/authority';
+  for (const [requestId, requestUrl, method] of [['unowned-origin', url.replace('127.0.0.1', 'localhost'), 'PUT'],
+    ['unowned-method', url, 'GET'], ['unowned-query', url + '?token=private', 'PUT'], ['1', url, 'PUT']]) {
+    session.emit('Network.requestWillBeSent', { requestId, request: { url: requestUrl, method } });
+    session.emit('Network.responseReceived', { requestId, response: { url: requestUrl, status: 201 } });
+    session.emit('Network.loadingFinished', { requestId, encodedDataLength: 128 });
+  }
+  await observer.close();
+  assert.equal(calls.length, 1);
+  assert.deepEqual(received, [{ operation: 'PUT /api/v3/network/spaces/fixture/authority',
+    response: { status: 201, body: value }, requestId: '1' }]);
+  assert.equal(errors.length, 0);
+  assert.equal(facts.claims_observed, 0);
+  assert.equal(facts.json_responses_observed, 1);
+  assert.equal(facts.observations[0].status, 201);
+  assert.equal(facts.observations[0].stream.raw_buffers_cleared, true);
+  assert.equal(facts.passed, true);
+  assert.equal(session.eventNames().length, 0);
+  noPrivateOutput(facts);
+});
+
+test('management observer prepares the existing primary page before relevant requests and cleans its exact session', async () => {
+  const session = new EventEmitter(), calls = [], facts = {};
+  session.send = async method => {
+    calls.push(method);
+    return method === 'Network.streamResourceContent' ? { bufferedData: Buffer.from('[{"revision":1}]').toString('base64') } : {};
+  };
+  session.detach = async () => { calls.push('detach'); };
+  const owner = await prepareManagementResponseObservation({ origin, facts, disconnectedEvent: disconnected,
+    page: { url: () => origin, createCDPSession: async () => session },
+    routes: [{ method: 'GET', path: /^\/api\/v3\/network\/spaces\/fixture\/policy$/ }],
+    onResponse() {}, onError() {} });
+  const url = origin + '/api/v3/network/spaces/fixture/policy';
+  const expected = owner.expect('GET /api/v3/network/spaces/fixture/policy');
+  assert.throws(() => owner.expect('GET /api/v3/network/spaces/fixture/policy'), /overlapping/);
+  session.emit('Network.requestWillBeSent', { requestId: '1', request: { url, method: 'GET' } });
+  session.emit('Network.responseReceived', { requestId: '1', response: { url, status: 200 } });
+  session.emit('Network.loadingFinished', { requestId: '1', encodedDataLength: 16 });
+  assert.deepEqual(await expected.promise, [{ revision: 1 }]);
+  expected.cancel();
+  await owner.close();
+  assert.throws(() => owner.expect('GET /api/v3/network/spaces/fixture/policy'), /Invalid/);
+  assert.deepEqual(calls, ['Network.enable', 'Network.streamResourceContent', 'Network.disable', 'detach']);
+  assert.equal(facts.session_owner.prepared_before_navigation, false);
+  assert.equal(facts.session_owner.prepared_before_relevant_requests, true);
+  assert.equal(facts.session_owner.passed, true);
+  assert.equal(session.eventNames().length, 0);
+});
+
+test('missing management stream and completed body fail closed and remove every listener', async () => {
+  const session = new EventEmitter(), facts = {}, received = [], errors = [];
+  session.send = async () => { throw new Error('resource no longer available'); };
+  const observer = createManagementResponseObserver({ session, origin, disconnectedEvent: disconnected, facts,
+    routes: [{ method: 'GET', path: /^\/api\/v3\/network\/spaces\/fixture\/policy$/ }],
+    onResponse: value => received.push(value), onError: value => errors.push(value) });
+  const url = origin + '/api/v3/network/spaces/fixture/policy';
+  session.emit('Network.requestWillBeSent', { requestId: '1', request: { url, method: 'GET' } });
+  session.emit('Network.responseReceived', { requestId: '1', response: { url, status: 200 } });
+  session.emit('Network.loadingFinished', { requestId: '1', encodedDataLength: 16 });
+  await assert.rejects(observer.close(), /observation failed/);
+  assert.equal(received.length, 0);
+  assert.equal(errors.length, 1);
+  assert.equal(facts.passed, false);
+  assert.equal(facts.pending, 0);
+  assert.equal(session.eventNames().length, 0);
+});
 
 function owned({ send, limits = {} } = {}) {
   const session = new EventEmitter();

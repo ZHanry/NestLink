@@ -247,7 +247,7 @@ impl Store {
              JOIN network_authorities a ON a.space_id=s.space_id
              JOIN deployment d ON d.singleton=1
              WHERE m.account_id=?1 AND m.role='owner' AND m.revoked=0
-             AND s.archived=0 AND a.restore_fenced=0 AND a.security_epoch=d.security_epoch)",
+             AND s.archived=0 AND a.restore_fenced=0 AND a.authority_revoked=0 AND a.security_epoch=d.security_epoch)",
             [account_id],
             |r| r.get(0),
         )?;
@@ -346,7 +346,7 @@ mod password_only_migration {
             .execute("DROP TABLE browser_host_readiness", [])?;
         // Reconstruct v20 without objects introduced by later migrations.
         store.connection.execute_batch(
-            "DROP VIEW all_relay_capacity; DROP TABLE network_space_audit; DROP TABLE network_space_invitations; DROP TABLE network_space_members; DROP TABLE network_spaces; DROP TABLE network_remote_relays; DROP TABLE network_remote_paths; DROP TABLE network_grant_revocations; DROP TABLE network_grants; DROP TABLE network_memberships; DROP TABLE network_authorities; DROP TABLE remote_media_scopes; DROP TABLE device_media_announcements; DROP TABLE management_refresh_receipts; DROP INDEX remote_pending_inbox;",
+            "DROP VIEW all_relay_capacity; DROP TABLE space_service_rules; DROP TABLE space_service_bindings; DROP TABLE network_space_audit; DROP TABLE network_space_invitations; DROP TABLE network_space_members; DROP TABLE network_spaces; DROP TABLE network_remote_relays; DROP TABLE network_remote_paths; DROP TABLE network_grant_revocations; DROP TABLE network_grants; DROP TABLE network_memberships; DROP TABLE network_authority_key_history; DROP TABLE network_authorities; DROP TABLE remote_media_scopes; DROP TABLE device_media_announcements; DROP TABLE management_refresh_receipts; DROP INDEX remote_pending_inbox;",
         )?;
         store.connection.pragma_update(None, "user_version", 20)?;
         let Store { connection, .. } = store;

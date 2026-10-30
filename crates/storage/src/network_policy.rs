@@ -18,6 +18,8 @@ mod remote_paths;
 pub use remote_paths::{NetworkRemotePathBundle, NetworkRemotePathIssuance};
 mod remote_relays;
 pub use remote_relays::{NetworkRemoteRelayBundle, NetworkRemoteRelayIssuance};
+mod authority;
+pub use authority::{NetworkAuthorityChange, NetworkAuthorityState};
 
 pub const MAX_NETWORK_MEMBERS: usize = 4096;
 pub const MAX_CURRENT_NETWORK_GRANTS: usize = 65_536;
@@ -37,6 +39,17 @@ struct AuthoritySnapshotRow {
     last_observed_ms: u64,
     restore_fenced: bool,
     same_security_epoch: bool,
+}
+
+struct AuthorityUpdateRow {
+    revision: u64,
+    policy_epoch: u64,
+    last_observed_ms: u64,
+    restore_fenced: bool,
+    revoked: bool,
+    public_key: Vec<u8>,
+    signing_generation: u64,
+    security_epoch: u64,
 }
 
 pub struct NetworkAuthorityUpdate {
@@ -210,18 +223,23 @@ impl Store {
         }
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
         self.audit_admin(actor, now_ms / 1000)?;
-        let old: Option<(u64, u64, u64, bool)> = tx.query_row(
-            "SELECT revision,policy_epoch,last_observed_ms,restore_fenced FROM network_authorities WHERE space_id=?1",
-            [&update.space_id], |r| Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?)),
+        let old: Option<AuthorityUpdateRow> = tx.query_row(
+            "SELECT revision,policy_epoch,last_observed_ms,restore_fenced,authority_revoked,public_key,signing_generation,security_epoch FROM network_authorities WHERE space_id=?1",
+            [&update.space_id], |r| Ok(AuthorityUpdateRow {revision:r.get(0)?,policy_epoch:r.get(1)?,last_observed_ms:r.get(2)?,restore_fenced:r.get(3)?,revoked:r.get(4)?,public_key:r.get(5)?,signing_generation:r.get(6)?,security_epoch:r.get(7)?}),
         ).optional()?;
-        let (revision, epoch) = if let Some((revision, epoch, last, fenced)) = old {
-            if fenced {
+        let (revision, epoch) = if let Some(old) = old {
+            if old.restore_fenced || old.revoked || old.security_epoch != self.security_epoch()? {
                 return Err(StorageError::Forbidden);
             }
-            if revision != update.expected_revision || now_ms < last {
+            if old.revision != update.expected_revision || now_ms < old.last_observed_ms {
                 return Err(StorageError::Conflict);
             }
-            (next(revision)?, next(epoch)?)
+            if old.public_key.as_slice() != update.public_key.as_slice() {
+                if old.signing_generation != 0 { return Err(StorageError::Forbidden); }
+                authority::require_unused_key(&tx, &update.space_id, &update.public_key)?;
+                authority::retire_key(&tx, &update.space_id, &old.public_key, now_ms)?;
+            }
+            (next(old.revision)?, next(old.policy_epoch)?)
         } else {
             if update.expected_revision != 0 {
                 return Err(StorageError::Conflict);
@@ -231,6 +249,9 @@ impl Store {
         tx.execute("INSERT INTO network_authorities(space_id,public_key,revision,policy_epoch,security_epoch,last_observed_ms)
             VALUES(?1,?2,?3,?4,?5,?6) ON CONFLICT(space_id) DO UPDATE SET public_key=excluded.public_key,revision=excluded.revision,policy_epoch=excluded.policy_epoch,security_epoch=excluded.security_epoch,last_observed_ms=excluded.last_observed_ms",
             params![update.space_id,update.public_key.as_slice(),revision,epoch,self.security_epoch()?,now_ms])?;
+        tx.execute("INSERT INTO network_authority_key_history(space_id,public_key,signing_generation,activated_policy_epoch,activated_at_ms)
+            VALUES(?1,?2,0,?3,?4) ON CONFLICT(space_id,public_key) DO NOTHING",
+            params![update.space_id,update.public_key.as_slice(),epoch,now_ms])?;
         audit(
             &tx,
             "network_authority_changed",
@@ -550,7 +571,7 @@ fn read_snapshot(
     require_id(space_id)?;
     check_clock(now_ms)?;
     let row: Option<AuthoritySnapshotRow> = connection.query_row(
-        "SELECT a.public_key,d.id,a.revision,a.policy_epoch,a.last_observed_ms,a.restore_fenced,a.security_epoch=d.security_epoch FROM network_authorities a JOIN deployment d ON d.singleton=1 WHERE a.space_id=?1 AND NOT EXISTS(SELECT 1 FROM network_spaces s WHERE s.space_id=a.space_id AND s.archived=1)",
+        "SELECT a.public_key,d.id,a.revision,a.policy_epoch,a.last_observed_ms,a.restore_fenced,a.security_epoch=d.security_epoch FROM network_authorities a JOIN deployment d ON d.singleton=1 WHERE a.space_id=?1 AND a.authority_revoked=0 AND NOT EXISTS(SELECT 1 FROM network_spaces s WHERE s.space_id=a.space_id AND s.archived=1)",
         [space_id], |r|Ok(AuthoritySnapshotRow {
             public_key: r.get(0)?, deployment_id: r.get(1)?, revision: r.get(2)?, policy_epoch: r.get(3)?,
             last_observed_ms: r.get(4)?, restore_fenced: r.get(5)?, same_security_epoch: r.get(6)?,

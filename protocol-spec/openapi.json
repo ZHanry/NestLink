@@ -1016,6 +1016,12 @@
         "title": "NativeDiscoveryConfig",
         "type": "object"
       },
+      "NativeRendezvous": {
+        "enum": [
+          "combined_relay"
+        ],
+        "type": "string"
+      },
       "NetworkAuthorityRequest": {
         "additionalProperties": false,
         "description": "Deployment-administrator controls. These never grant business or IP access.",
@@ -4138,6 +4144,17 @@
             "format": "uint64",
             "minimum": 0,
             "type": "integer"
+          },
+          "rendezvous": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NativeRendezvous"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Address-free native rendezvous through each endpoint's trusted\nmanagement origin. This declaration grants no target or business right."
           },
           "sequence": {
             "format": "uint64",
