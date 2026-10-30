@@ -67,15 +67,23 @@ jobs:
               assert result.returncode == 0, 'Lock command failed; review retained log'
               shutil.copyfile(lock, output / 'cargo-generated.lock')
               # Cargo can reselect an already-locked compatible windows-sys
-              # edge even with --workspace. Preserve every existing external
-              # package block, then ask Cargo to validate the complete graph.
+              # edge even with --workspace. Preserve existing external blocks.
+              # The reviewed direct petgraph default features activate its
+              # already-locked serde edge; permit that exact addition only.
               def blocks(raw):
                   parts = raw.split('[[package]]')
                   return parts[0], [(identity(tomllib.loads('[[package]]' + part)['package'][0]), part)
                                     for part in parts[1:]]
               _, original_blocks = blocks(before_bytes.decode())
-              retained = {key: part for key, part in original_blocks if key[2]}
               header, generated_blocks = blocks(lock.read_text())
+              original_by_key = dict(original_blocks)
+              for key, part in generated_blocks:
+                  if key[0] == 'petgraph':
+                      previous = tomllib.loads('[[package]]' + original_by_key[key])['package'][0]
+                      expected_graph = dict(previous)
+                      expected_graph['dependencies'] = sorted(set(previous['dependencies']) | {'serde'})
+                      assert tomllib.loads('[[package]]' + part)['package'][0] == expected_graph, 'Unreviewed petgraph dependency drift'
+              retained = {key: part for key, part in original_blocks if key[2] and key[0] != 'petgraph'}
               lock.write_text(header + ''.join('[[package]]' + retained.get(key, part)
                                               for key, part in generated_blocks))
               for command in [
