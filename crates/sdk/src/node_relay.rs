@@ -370,21 +370,19 @@ impl NativeRelayRoute<'_> {
         local: &DeviceIdentity,
         permit: &VerifiedPermit,
         c: &Candidate,
-    ) -> Result<crate::native::NativeTransport, ()> {
+    ) -> Result<crate::native::NativeTransport, SdkError> {
         if !self.allows(permit, c) {
-            return Err(());
+            return Err(SdkError::Trust);
         }
         match self {
             Self::Combined(r) => r
                 .connect(local, permit, c.address)
                 .await
-                .map(|io| crate::native::NativeTransport::Wss(Box::new(io)))
-                .map_err(|_| ()),
+                .map(|io| crate::native::NativeTransport::Wss(Box::new(io))),
             Self::Wss(r) => r
                 .connect_at(local, permit, c.address)
                 .await
-                .map(|io| crate::native::NativeTransport::Wss(Box::new(io)))
-                .map_err(|_| ()),
+                .map(|io| crate::native::NativeTransport::Wss(Box::new(io))),
             Self::Quic(r) => r
                 .connect_at(local, permit, c.address)
                 .await
@@ -392,8 +390,7 @@ impl NativeRelayRoute<'_> {
                     connection: io.connection,
                     endpoint: io.endpoint,
                     carrier: Some(io.carrier),
-                })
-                .map_err(|_| ()),
+                }),
         }
     }
 }

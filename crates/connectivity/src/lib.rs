@@ -203,9 +203,17 @@ impl Scheduler {
             stage: stage.chars().take(128).collect(),
             code,
         });
+        // An admitted handshake that proves an identity, protocol or authority
+        // failure cannot be retried as a mere reachability problem. Rejected
+        // candidate hints never reach finish and cannot terminate another race.
+        if !success && terminal_failure(code) {
+            self.pending.clear();
+            self.active.clear();
+            self.outcome = Outcome::Failed(code);
+        }
     }
     pub fn network_changed(&mut self, new_generation: u64) {
-        if new_generation != self.generation {
+        if self.outcome == Outcome::Checking && new_generation != self.generation {
             self.active.clear();
             self.outcome = Outcome::NetworkChanged;
         }
@@ -225,6 +233,22 @@ impl Scheduler {
         });
     }
 }
+fn terminal_failure(code: ErrorCode) -> bool {
+    matches!(
+        code,
+        ErrorCode::IdentityMismatch
+            | ErrorCode::ProtocolMismatch
+            | ErrorCode::AuthRequired
+            | ErrorCode::PermissionRequired
+            | ErrorCode::PolicyRevoked
+            | ErrorCode::LeaseExpired
+            | ErrorCode::ReplayRejected
+            | ErrorCode::InvalidMessage
+            | ErrorCode::RelayDisabled
+            | ErrorCode::PublicIngressDisabled
+            | ErrorCode::OsPermissionDenied
+    )
+}
 fn error(code: ErrorCode, detail: &'static str) -> ContractError {
     ContractError::new(code, detail)
 }
@@ -243,6 +267,52 @@ mod tests {
             address: address.parse()?,
             generation: 1,
         })
+    }
+    #[test]
+    fn security_failure_is_terminal_and_late_success_cannot_revive_the_race()
+    -> Result<(), Box<dyn std::error::Error>> {
+        for code in [
+            ErrorCode::IdentityMismatch,
+            ErrorCode::ProtocolMismatch,
+            ErrorCode::PermissionRequired,
+            ErrorCode::AuthRequired,
+            ErrorCode::PolicyRevoked,
+            ErrorCode::LeaseExpired,
+            ErrorCode::ReplayRejected,
+        ] {
+            let first = candidate(CandidateKind::Lan, Transport::Quic, "192.168.1.2:28743")?;
+            let second = candidate(CandidateKind::Lan, Transport::Tls, "192.168.1.2:28744")?;
+            let relay = candidate(CandidateKind::Relay, Transport::Wss, "203.0.113.2:443")?;
+            let mut scheduler = Scheduler::new(1, 0, PathSet::BOTH, vec![first, second, relay])?;
+            let attempts = scheduler.poll(0);
+            assert_eq!(attempts.len(), 2);
+            scheduler.finish(attempts[0].id, false, "identity", code, 1);
+            assert_eq!(*scheduler.outcome(), Outcome::Failed(code));
+            scheduler.finish(attempts[1].id, true, "late-tls", ErrorCode::InternalError, 2);
+            scheduler.network_changed(2);
+            assert!(scheduler.poll(RELAY_START_MS).is_empty());
+            assert_eq!(*scheduler.outcome(), Outcome::Failed(code));
+            assert_eq!(scheduler.failures().len(), 1);
+            assert_eq!(scheduler.failures()[0].code, code);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn reachability_failure_still_allows_authorized_wss_to_win()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let direct = candidate(CandidateKind::Lan, Transport::Quic, "192.168.1.2:28743")?;
+        let relay = candidate(CandidateKind::Relay, Transport::Wss, "203.0.113.2:443")?;
+        let mut scheduler = Scheduler::new(1, 0, PathSet::BOTH, vec![direct, relay])?;
+        let direct = scheduler.poll(0);
+        scheduler.finish(direct[0].id, false, "udp-timeout", ErrorCode::DirectUnavailable, 1000);
+        assert_eq!(*scheduler.outcome(), Outcome::Checking);
+        let relay = scheduler.poll(RELAY_START_MS);
+        assert_eq!(relay.len(), 1);
+        assert_eq!(relay[0].candidate.transport, Transport::Wss);
+        scheduler.finish(relay[0].id, true, "wss-inner-tls", ErrorCode::InternalError, RELAY_START_MS + 1);
+        assert!(matches!(scheduler.outcome(), Outcome::Connected(c) if c.transport == Transport::Wss));
+        Ok(())
     }
     #[test]
     fn udp_blackholes_leave_a_slot_for_wss_at_the_relay_deadline()

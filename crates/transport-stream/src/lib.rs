@@ -24,7 +24,10 @@ pub async fn connect(
             .connect(name, tcp)
             .await?;
         if stream.get_ref().1.alpn_protocol() != Some(ALPN.as_bytes()) {
-            return Err(io::Error::other("NestLink ALPN mismatch"));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "NestLink ALPN mismatch",
+            ));
         }
         Ok(stream)
     })

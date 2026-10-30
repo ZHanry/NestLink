@@ -357,7 +357,7 @@ fn private_prefixes_never_allow_metadata_loopback_or_the_wrong_network() -> Resu
     Ok(())
 }
 #[tokio::test]
-async fn actual_candidate_race_rejects_wrong_tls_identity_then_completes_native_proof() -> Result {
+async fn actual_quic_identity_failure_terminates_the_candidate_race() -> Result {
     let controller = DeviceIdentity::generate();
     let host = DeviceIdentity::generate();
     let permit = permit(&controller, &host)?;
@@ -394,68 +394,55 @@ async fn actual_candidate_race_rejects_wrong_tls_identity_then_completes_native_
         candidate(wrong_address, CandidateKind::Lan, 4),
         candidate(address, CandidateKind::Reflexive, 4),
     ];
-    let (connected, accepted) = tokio::join!(
-        controller_endpoint.dial(4, candidates, cancel.clone()),
-        host_endpoint.accept(cancel)
-    );
-    let connected = connected?;
-    let accepted = accepted?;
-    assert_eq!(connected.candidate.address, address);
-    assert!(
-        connected
-            .failures
-            .iter()
-            .any(|failure| failure.candidate.address == wrong_address)
-    );
-    let clock = RuntimeClock::default();
-    let now = clock.sample()?;
-    let mut controller_session = Session::activate(
-        permit.clone(),
-        binding(&permit)?,
-        Path::Direct,
-        now.monotonic_ms,
-        now,
+    let result = controller_endpoint.dial(4, candidates, cancel).await;
+    assert!(matches!(
+        result,
+        Err(DialError::Failed { code: nestlink_protocol::ErrorCode::IdentityMismatch, failures })
+            if failures.iter().any(|failure| failure.candidate.address == wrong_address
+                && failure.code == nestlink_protocol::ErrorCode::IdentityMismatch)
+    ));
+    Ok(())
+}
+
+#[tokio::test]
+async fn actual_direct_tls_identity_failure_is_not_retried_as_network_unavailability() -> Result {
+    let controller = DeviceIdentity::generate();
+    let host = DeviceIdentity::generate();
+    let endpoint = NativeEndpoint::new(
+        "127.0.0.1:0".parse()?,
+        &controller,
+        &host.identity.public_key(),
+        permit(&controller, &host)?,
+        vec![],
+        loopback_policy()?,
     )?;
-    let mut host_session = Session::activate(
-        permit.clone(),
-        binding(&permit)?,
-        Path::Direct,
-        now.monotonic_ms,
-        now,
-    )?;
-    let (mut controller_write, mut controller_read) = connected.connection.open_bi().await?;
-    let host_exchange = async {
-        let (mut write, mut read) = accepted.accept_bi().await?;
-        host_proof(
-            &mut read,
-            &mut write,
-            &mut host_session,
-            &host.identity,
-            &controller.identity.public_key(),
-            &clock,
-        )
-        .await?;
-        Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+    let mut declaration = candidate(listener.local_addr()?, CandidateKind::Lan, 4);
+    declaration.transport = Transport::Tls;
+    let wrong = InstallationIdentity::generate();
+    let acceptor = tokio_rustls::TlsAcceptor::from(std::sync::Arc::new(
+        nestlink_transport_stream::tls::server_config(
+            &wrong,
+            controller.identity.fingerprint(),
+        )?,
+    ));
+    let server = async {
+        let (tcp, _) = listener.accept().await?;
+        assert!(acceptor.accept(tcp).await.is_err());
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
     };
-    let host_key = host.identity.public_key();
-    let (c, h) = tokio::join!(
-        controller_proof(
-            &mut controller_read,
-            &mut controller_write,
-            &mut controller_session,
-            &controller.identity,
-            &host_key,
-            &clock
-        ),
-        host_exchange
+    let (_keep, cancel) = watch::channel(false);
+    let (result, served) = tokio::join!(
+        endpoint.dial_native(&controller, None, 4, vec![declaration], cancel),
+        server
     );
-    c?;
-    h?;
-    assert_eq!(
-        controller_session.state(),
-        nestlink_session::SessionState::Active
-    );
-    assert_eq!(host_session.state(), nestlink_session::SessionState::Active);
+    served?;
+    assert!(matches!(
+        result,
+        Err(DialError::Failed { code: nestlink_protocol::ErrorCode::IdentityMismatch, failures })
+            if failures.iter().any(|failure| failure.stage == "direct-tcp-tls"
+                && failure.code == nestlink_protocol::ErrorCode::IdentityMismatch)
+    ));
     Ok(())
 }
 #[tokio::test]

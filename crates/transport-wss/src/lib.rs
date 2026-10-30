@@ -1,5 +1,12 @@
 //! WSS carriage with an inner mutually pinned TLS 1.3 channel. No plaintext media API.
 pub mod node;
+pub use tokio_tungstenite::tungstenite::{
+    Error as WebSocketError,
+    error::{
+        ProtocolError as WebSocketProtocolError, TlsError as WebSocketTlsError,
+        UrlError as WebSocketUrlError,
+    },
+};
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use futures_util::{SinkExt, StreamExt};
 use nestlink_identity::{InstallationIdentity, VerifiedPermit, relay_transcript};
@@ -33,11 +40,23 @@ pub enum Error {
     #[error("invalid relay identity, URL or challenge")]
     Invalid,
     #[error("outer relay WebSocket failed")]
-    WebSocket,
+    WebSocket(#[source] Box<WebSocketError>),
     #[error("relay operation timed out")]
     Timeout,
     #[error("inner relay TLS failed")]
-    Tls,
+    Tls(#[source] io::Error),
+    #[error("relay TLS configuration failed")]
+    TlsSetup(#[source] Box<dyn std::error::Error + Send + Sync>),
+}
+impl From<WebSocketError> for Error {
+    fn from(error: WebSocketError) -> Self {
+        Self::WebSocket(Box::new(error))
+    }
+}
+impl From<io::Error> for Error {
+    fn from(error: io::Error) -> Self {
+        WebSocketError::Io(error).into()
+    }
 }
 /// Bounded carrier. Drop tears down the WebSocket pump and both relay endpoints.
 pub struct ByteStream {
@@ -160,8 +179,8 @@ async fn text<T: DeserializeOwned>(socket: &mut Socket, budget: Duration) -> Res
     let message = tokio::time::timeout(budget, socket.next())
         .await
         .map_err(|_| Error::Timeout)?
-        .ok_or(Error::WebSocket)?
-        .map_err(|_| Error::WebSocket)?;
+        .ok_or_else(|| Error::from(WebSocketError::ConnectionClosed))?
+        .map_err(Error::from)?;
     let Message::Text(text) = message else {
         return Err(Error::Invalid);
     };
@@ -234,7 +253,7 @@ async fn connect_inner(
                 .into(),
         ))
         .await
-        .map_err(|_| Error::WebSocket)?;
+        .map_err(Error::from)?;
     let ready: RelayReady = text(&mut socket, Duration::from_secs(6)).await?;
     if !ready.ready {
         return Err(Error::Invalid);
@@ -310,7 +329,7 @@ async fn open_socket(
         .max_write_buffer_size(CHUNK * 2);
     let outer = async {
         let connector = Some(tokio_tungstenite::Connector::Rustls(Arc::new(
-            tls::public_client_config().map_err(|_| Error::Tls)?,
+            tls::public_client_config().map_err(|error| Error::TlsSetup(Box::new(error)))?,
         )));
         // Plaintext development traffic must stay on loopback even if a
         // localhost resolver has been misconfigured. Pin it before the request.
@@ -321,7 +340,7 @@ async fn open_socket(
                 url::Host::Ipv6(ip) => vec![SocketAddr::new(ip.into(), port)],
                 url::Host::Domain(host) => tokio::net::lookup_host((host, port))
                     .await
-                    .map_err(|_| Error::WebSocket)?
+                    .map_err(Error::from)?
                     .take(33)
                     .collect(),
             };
@@ -338,15 +357,15 @@ async fn open_socket(
         if let Some(address) = address {
             let tcp = TcpStream::connect(address)
                 .await
-                .map_err(|_| Error::WebSocket)?;
-            tcp.set_nodelay(true).map_err(|_| Error::WebSocket)?;
+                .map_err(Error::from)?;
+            tcp.set_nodelay(true).map_err(Error::from)?;
             tokio_tungstenite::client_async_tls_with_config(request, tcp, Some(config), connector)
                 .await
-                .map_err(|_| Error::WebSocket)
+                .map_err(Error::from)
         } else {
             tokio_tungstenite::connect_async_tls_with_config(request, Some(config), true, connector)
                 .await
-                .map_err(|_| Error::WebSocket)
+                .map_err(Error::from)
         }
     };
     let (socket, _) = tokio::time::timeout(Duration::from_secs(3), outer)
@@ -364,22 +383,22 @@ async fn secure(
     let secured = async {
         if controller {
             let connector = tokio_rustls::TlsConnector::from(Arc::new(
-                tls::client_config(identity, expected).map_err(|_| Error::Tls)?,
+                tls::client_config(identity, expected).map_err(Error::TlsSetup)?,
             ));
             let name = rustls::pki_types::ServerName::try_from("peer.nestlink.invalid")
-                .map_err(|_| Error::Tls)?;
+                .map_err(|_| Error::Invalid)?;
             Ok(tokio_rustls::TlsStream::Client(
                 connector
                     .connect(name, stream)
                     .await
-                    .map_err(|_| Error::Tls)?,
+                    .map_err(Error::Tls)?,
             ))
         } else {
             let acceptor = tokio_rustls::TlsAcceptor::from(Arc::new(
-                tls::server_config(identity, expected).map_err(|_| Error::Tls)?,
+                tls::server_config(identity, expected).map_err(Error::TlsSetup)?,
             ));
             Ok(tokio_rustls::TlsStream::Server(
-                acceptor.accept(stream).await.map_err(|_| Error::Tls)?,
+                acceptor.accept(stream).await.map_err(Error::Tls)?,
             ))
         }
     };
@@ -392,6 +411,101 @@ async fn secure(
 mod carrier_tests {
     use super::*;
     type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+
+    fn has_certificate_error(error: &(dyn std::error::Error + 'static), depth: u8) -> bool {
+        if depth >= 16 {
+            return false;
+        }
+        if matches!(error.downcast_ref::<rustls::Error>(), Some(rustls::Error::InvalidCertificate(_))) {
+            return true;
+        }
+        if let Some(error) = error.downcast_ref::<io::Error>()
+            && let Some(source) = error.get_ref()
+        {
+            return has_certificate_error(source, depth + 1);
+        }
+        if let Some(WebSocketTlsError::Rustls(source)) = error.downcast_ref::<WebSocketTlsError>() {
+            return has_certificate_error(source.as_ref(), depth + 1);
+        }
+        error.source().is_some_and(|source| has_certificate_error(source, depth + 1))
+    }
+
+    #[tokio::test]
+    async fn outer_wss_untrusted_certificate_retains_actual_rustls_failure() -> Result {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+        let address = listener.local_addr()?;
+        let identity = InstallationIdentity::generate();
+        let mut config = tls::server_config(&identity, [0; 32])?;
+        config.alpn_protocols.clear();
+        let acceptor = tokio_rustls::TlsAcceptor::from(Arc::new(config));
+        let server = async {
+            let (tcp, _) = listener.accept().await?;
+            assert!(acceptor.accept(tcp).await.is_err());
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+        };
+        let client = async {
+            let error = open_socket(&format!("wss://localhost:{}", address.port()), None, Some(address))
+                .await
+                .err()
+                .ok_or("untrusted outer certificate was accepted")?;
+            assert!(has_certificate_error(&error, 0));
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+        };
+        tokio::time::timeout(Duration::from_secs(5), async {
+            tokio::try_join!(server, client)
+        }).await??;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn actual_outer_websocket_rejection_and_connection_refusal_keep_their_sources() -> Result {
+        for status in [401, 403, 503] {
+            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+            let address = listener.local_addr()?;
+            let server = async {
+                let (mut tcp, _) = listener.accept().await?;
+                let mut request = [0; 4096];
+                let _ = tcp.read(&mut request).await?;
+                let response = format!("HTTP/1.1 {status} Rejected\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+                tcp.write_all(response.as_bytes()).await?;
+                tcp.shutdown().await?;
+                Ok::<_, io::Error>(())
+            };
+            let client = async {
+                let error = open_socket(&format!("ws://{address}"), None, Some(address))
+                    .await
+                    .err()
+                    .ok_or("rejected WebSocket upgrade was accepted")?;
+                assert!(matches!(
+                    error,
+                    Error::WebSocket(source)
+                        if matches!(source.as_ref(), WebSocketError::Http(response)
+                            if response.status().as_u16() == status)
+                ));
+                Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+            };
+            let (served, received) = tokio::time::timeout(Duration::from_secs(5), async {
+                tokio::join!(server, client)
+            }).await?;
+            served?;
+            received?;
+        }
+        let unused = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+        let address = unused.local_addr()?;
+        drop(unused);
+        let error = open_socket(&format!("ws://{address}"), None, Some(address))
+            .await
+            .err()
+            .ok_or("unused port unexpectedly accepted a connection")?;
+        assert!(matches!(
+            error,
+            Error::WebSocket(source)
+                if matches!(source.as_ref(), WebSocketError::Io(error)
+                    if error.kind() == io::ErrorKind::ConnectionRefused)
+        ));
+        Ok(())
+    }
+
     #[tokio::test]
     async fn real_websocket_protocol_failure_is_preserved_in_byte_stream_instead_of_eof() -> Result
     {

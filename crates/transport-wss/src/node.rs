@@ -70,7 +70,7 @@ pub async fn connect_at(
         )
         .await
         .map_err(|_| Error::Timeout)?
-        .map_err(|_| Error::WebSocket)?;
+        .map_err(Error::from)?;
         let ready: RelayReady = text(&mut socket, Duration::from_secs(6)).await?;
         if !ready.ready {
             return Err(Error::Invalid);

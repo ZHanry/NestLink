@@ -35,6 +35,8 @@ use tokio::sync::watch;
 #[path = "native/dual_stack.rs"]
 mod dual_stack;
 use dual_stack::AdditionalFamily;
+#[path = "native/failure.rs"]
+mod failure;
 
 const CONTROL_REQUEST_BUDGET: Duration = Duration::from_secs(5);
 const CANDIDATE_GATHER_BUDGET: Duration = Duration::from_secs(3);
@@ -1629,7 +1631,7 @@ impl NativeEndpoint {
         let mut scheduler = Scheduler::new(peer_generation, 0, paths, allowed)?;
         type Pending<'a> = Pin<
             Box<
-                dyn Future<Output = (usize, &'static str, Result<NativeTransport, ()>)> + Send + 'a,
+                dyn Future<Output = (usize, &'static str, Result<NativeTransport, ErrorCode>)> + Send + 'a,
             >,
         >;
         let mut pending = FuturesUnordered::<Pending<'_>>::new();
@@ -1646,6 +1648,11 @@ impl NativeEndpoint {
                 pending.push(Box::pin(async move {
                     let budget = Duration::from_millis(attempt.deadline_ms.saturating_sub(elapsed));
                     let address = attempt.candidate.address;
+                    let unavailable = if attempt.candidate.path() == Path::Relay {
+                        ErrorCode::RelayUnavailable
+                    } else {
+                        ErrorCode::DirectUnavailable
+                    };
                     let stage = match attempt.candidate.transport {
                         Transport::Quic if attempt.candidate.path() == Path::Relay => {
                             "node-quic-inner-tls"
@@ -1657,20 +1664,23 @@ impl NativeEndpoint {
                     };
                     let attempt_io = async {
                         if attempt.candidate.path() == Path::Relay {
-                            let local = local.ok_or(())?;
+                            let local = local.ok_or(ErrorCode::AuthRequired)?;
                             let route = routes
                                 .iter()
                                 .find(|r| r.allows(permit, &attempt.candidate))
-                                .ok_or(())?;
-                            return route.connect(local, permit, &attempt.candidate).await;
+                                .ok_or(ErrorCode::PermissionRequired)?;
+                            return route
+                                .connect(local, permit, &attempt.candidate)
+                                .await
+                                .map_err(|error| failure::classify(&error, unavailable));
                         }
                         match attempt.candidate.transport {
                             Transport::Quic => {
-                                let endpoint = endpoint.ok_or(())?;
+                                let endpoint = endpoint.ok_or(ErrorCode::ProtocolMismatch)?;
                                 let connection =
                                     nestlink_transport_quic::connect(endpoint, address, budget)
                                         .await
-                                        .map_err(|_| ())?;
+                                        .map_err(|error| failure::classify(error.as_ref(), unavailable))?;
                                 Ok(NativeTransport::Quic {
                                     connection,
                                     endpoint: endpoint.clone(),
@@ -1681,15 +1691,14 @@ impl NativeEndpoint {
                                 nestlink_transport_stream::connect(address, config, budget)
                                     .await
                                     .map(|stream| NativeTransport::DirectTls(Box::new(stream)))
-                                    .map_err(|_| ())
+                                    .map_err(|error| failure::classify(&error, unavailable))
                             }
-                            Transport::Wss => Err(()),
-                            Transport::WebRtc => Err(()),
+                            Transport::Wss | Transport::WebRtc => Err(ErrorCode::ProtocolMismatch),
                         }
                     };
                     let result = tokio::time::timeout(budget, attempt_io)
                         .await
-                        .unwrap_or(Err(()));
+                        .unwrap_or(Err(unavailable));
                     (attempt.id, stage, result)
                 }));
             }
@@ -1706,7 +1715,7 @@ impl NativeEndpoint {
                 Some((id,stage,result))=pending.next(),if !pending.is_empty()=>{
                     self.check()?;
                     let elapsed=u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
-                    let code=if matches!(stage,"wss-inner-tls"|"node-quic-inner-tls") {ErrorCode::RelayUnavailable} else {ErrorCode::DirectUnavailable};
+                    let code=result.as_ref().err().copied().unwrap_or(ErrorCode::InternalError);
                     let success=result.is_ok();scheduler.finish(id,success,stage,code,elapsed);
                     if let Ok(transport)=result {
                         if let Outcome::Connected(candidate)=scheduler.outcome() {

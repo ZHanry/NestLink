@@ -240,12 +240,16 @@ business permission checks are unchanged.
 New source tests cover real QUIC and direct TLS handshakes with the wrong peer
 key, typed wrapped errors, terminal-state retention, and reachability fallback.
 The existing node-relay integration tests cover approved WSS winning after QUIC
-failure and a one-endpoint UDP blackhole. These changes remain unverified until
-GitHub-hosted Actions runs against the changed source SHA. No local automated
-verification was run. Outer WSS establishment still has pre-existing error
-erasure into `transport_wss::Error::WebSocket`; the new classifier cannot infer
-certificate failure from that erased variant. Full WSS error preservation and
-real negative WSS handshake evidence therefore remain explicit follow-up work.
+failure and a one-endpoint UDP blackhole. A follow-up source change also retains
+the mature tungstenite error as the outer WSS error source, and retains the
+original inner TLS I/O error instead of labeling every TLS operation failure as
+an identity failure. The classifier distinguishes certificate/protocol errors
+and HTTP 401/403 rejection from ordinary refusal/reset/timeout, graceful close,
+incomplete network handshake and HTTP 503. Source tests exercise an actual
+untrusted outer WSS certificate, actual rejected HTTP upgrades, and a refused
+TCP connection; typed classification tests assert the resulting categories.
+These changes remain unverified until GitHub-hosted Actions runs against the
+changed source SHA. No local automated verification was run.
 
 | Cases | Minimum evidence from the changed SHA |
 | --- | --- |
