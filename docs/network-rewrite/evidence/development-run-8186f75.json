@@ -54,7 +54,8 @@
   "native_ice_snat": {
     "job_id": "124265790176",
     "artifact_id": "13004483201",
-    "zip_sha256_from_api": "71e518e86500ac62d59e98f7aaa50b1c25810b23861f2d9ebfb0d911312f15b1",
+    "zip_sha256": "71e518e86500ac62d59e98f7aaa50b1c25810b23861f2d9ebfb0d911312f15b1",
+    "digest_provenance": "GitHub artifact metadata; this ZIP was not downloaded for verification",
     "status": "did not execute: clippy caught comparison of binary 32-byte permit digest with String",
     "source_follow_up": "Read the exact binary file and compare the original digest bytes. No assertions or budgets removed."
   },

@@ -95,13 +95,36 @@ fn path_view(
     })
 }
 
-async fn member_access(state: &AppState, headers: &HeaderMap) -> Result<String, ApiError> {
+enum MemberOperation {
+    Issue,
+    Observe,
+    Revoke,
+}
+
+impl MemberOperation {
+    fn budget(&self) -> (&'static str, u32) {
+        match self {
+            Self::Issue => ("network-path", 30),
+            // Eight one-second observers plus 32 setup/handoff reads per
+            // authenticated login and minute. Reads cannot starve revocation.
+            Self::Observe => ("network-path-observe", 512),
+            Self::Revoke => ("network-path-revoke", 30),
+        }
+    }
+}
+
+async fn member_access(
+    state: &AppState,
+    headers: &HeaderMap,
+    operation: MemberOperation,
+) -> Result<String, ApiError> {
     let token = access(headers)?;
     let check = token.clone();
     let principal = state
         .db(move |s| s.authenticate(&check, now_ms()? / 1000))
         .await?;
-    state.limit(&format!("network-path/{}", principal.session_id))?;
+    let (namespace, maximum) = operation.budget();
+    state.limit_with_budget(&format!("{namespace}/{}", principal.session_id), maximum)?;
     Ok(token)
 }
 
@@ -128,7 +151,7 @@ pub(crate) async fn issue_relay(
     ),
     ApiError,
 > {
-    let token = member_access(&state, &headers).await?;
+    let token = member_access(&state, &headers, MemberOperation::Issue).await?;
     let signer = state.network_signer.clone();
     let lifecycle = state.relay_lifecycle.clone();
     let view = state
@@ -157,7 +180,7 @@ pub(crate) async fn read_relay(
     headers: HeaderMap,
     Path((space, allocation)): Path<(String, String)>,
 ) -> Result<Json<nestlink_protocol::api::NetworkRemoteRelayView>, ApiError> {
-    let token = member_access(&state, &headers).await?;
+    let token = member_access(&state, &headers, MemberOperation::Observe).await?;
     let lifecycle = state.relay_lifecycle.clone();
     let view = state
         .db(move |s| {
@@ -174,7 +197,7 @@ pub(crate) async fn revoke_relay(
     headers: HeaderMap,
     Path((space, allocation)): Path<(String, String)>,
 ) -> Result<StatusCode, ApiError> {
-    let token = member_access(&state, &headers).await?;
+    let token = member_access(&state, &headers, MemberOperation::Revoke).await?;
     state
         .db(move |s| {
             let now = now_ms()?;
@@ -197,7 +220,7 @@ pub(crate) async fn issue_path(
     ),
     ApiError,
 > {
-    let token = member_access(&state, &headers).await?;
+    let token = member_access(&state, &headers, MemberOperation::Issue).await?;
     let signer = state.network_signer.clone();
     let view = state
         .db(move |s| {
@@ -224,7 +247,7 @@ pub(crate) async fn read_path(
     headers: HeaderMap,
     Path((space, path)): Path<(String, String)>,
 ) -> Result<Json<nestlink_protocol::api::NetworkRemotePathView>, ApiError> {
-    let token = member_access(&state, &headers).await?;
+    let token = member_access(&state, &headers, MemberOperation::Observe).await?;
     state
         .db(move |s| {
             let now = now_ms()?;
@@ -241,7 +264,7 @@ pub(crate) async fn revoke_path(
     headers: HeaderMap,
     Path((space, path)): Path<(String, String)>,
 ) -> Result<StatusCode, ApiError> {
-    let token = member_access(&state, &headers).await?;
+    let token = member_access(&state, &headers, MemberOperation::Revoke).await?;
     state
         .db(move |s| {
             let now = now_ms()?;
@@ -473,7 +496,7 @@ pub(crate) async fn issue(
     Path((space, installation)): Path<(String, String)>,
     Json(body): Json<IssueRequest>,
 ) -> Result<(StatusCode, Json<GrantView>), ApiError> {
-    let token = member_access(&state, &headers).await?;
+    let token = member_access(&state, &headers, MemberOperation::Issue).await?;
     let signer = state.network_signer.clone();
     let view = state
         .db(move |s| {
@@ -504,7 +527,7 @@ pub(crate) async fn read_grant(
     headers: HeaderMap,
     Path((space, grant)): Path<(String, String)>,
 ) -> Result<Json<GrantView>, ApiError> {
-    let token = member_access(&state, &headers).await?;
+    let token = member_access(&state, &headers, MemberOperation::Observe).await?;
     state
         .db(move |s| {
             let now = now_ms()?;

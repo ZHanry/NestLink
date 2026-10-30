@@ -53,7 +53,7 @@ impl AppState {
         interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
         loop {
             interval.tick().await;
-            let permit = match self.work.clone().try_acquire_owned() {
+            let permit = match self.work.try_acquire() {
                 Ok(permit) => permit,
                 Err(tokio::sync::TryAcquireError::NoPermits) => continue,
                 Err(tokio::sync::TryAcquireError::Closed) => {

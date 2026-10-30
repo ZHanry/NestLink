@@ -362,3 +362,12 @@ New tests cover the worker cap, queue bound, cancellation and expiration. The
 separate authenticated rate limits and every route/business deadline remain
 unchanged. This change requires Actions and does not yet prove the relay failure
 resolved; the rate-budget versus database rejection source remains under review.
+
+e158101 exposed an omitted audit-maintenance caller of the former semaphore;
+the new admission now preserves its nonwaiting tick and permanent-close error.
+The verified Actions formatting patch was reviewed and imported. Independently,
+the periodic route observer cannot share a 30/minute issuance bucket: it polls
+every second. ADR 0010 introduces bounded observation and separate revocation,
+retains issuance/admin budgets, and removes a redundant immediate periodic tick.
+Actual HTTP regressions cover signed readbacks, exhausted issuance, revocation,
+invalid credentials and the hard read budget. All repairs require new Actions.

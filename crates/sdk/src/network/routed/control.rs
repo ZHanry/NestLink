@@ -470,7 +470,10 @@ impl RemoteRouteObserver {
     pub(super) fn spawn(self, lease: nestlink_remote::LeaseControl) -> TaskOwner {
         TaskOwner::new(tokio::spawn(async move {
             let _stop_on_drop = ObserverStop(lease.clone());
-            let mut interval = tokio::time::interval(Duration::from_secs(1));
+            // Setup already read the exact route; the final handoff reads it
+            // again. Do not duplicate either check with an immediate tick.
+            let period = Duration::from_secs(1);
+            let mut interval = tokio::time::interval_at(Instant::now() + period, period);
             interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
             loop {
                 tokio::select! { biased;

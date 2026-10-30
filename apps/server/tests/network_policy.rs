@@ -1046,6 +1046,43 @@ async fn rate_capacity_is_reserved_only_for_authenticated_admin_sessions() -> Re
 }
 
 #[tokio::test]
+async fn route_observation_is_bounded_and_unauthenticated_reads_do_not_reserve_slots() -> Result {
+    let f = Fixture::new(false).await?;
+    let path = format!("{}/relays/{}", f.base(), random_id());
+    for index in 0..64 {
+        assert_eq!(
+            f.call("GET", &path, Value::Null, Some(&format!("{index:043}")))
+                .await?
+                .0,
+            StatusCode::UNAUTHORIZED
+        );
+    }
+    // Even a well-authenticated caller cannot poll unknown resources without
+    // a limit. No absent route becomes authorized by consuming a rate slot.
+    for _ in 0..512 {
+        assert_eq!(
+            f.call("GET", &path, Value::Null, Some(&f.admin_token))
+                .await?
+                .0,
+            StatusCode::FORBIDDEN
+        );
+    }
+    assert_eq!(
+        f.call("GET", &path, Value::Null, Some(&f.admin_token))
+            .await?
+            .0,
+        StatusCode::TOO_MANY_REQUESTS
+    );
+    assert_eq!(
+        f.call("GET", &path, Value::Null, Some(&f.member_token))
+            .await?
+            .0,
+        StatusCode::FORBIDDEN
+    );
+    Ok(())
+}
+
+#[tokio::test]
 async fn fresh_server_state_uses_the_same_derived_authority_after_reopening_the_database() -> Result
 {
     let f = Fixture::new(false).await?;

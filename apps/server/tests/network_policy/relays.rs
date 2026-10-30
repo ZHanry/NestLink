@@ -79,6 +79,58 @@ fn relay_body(f: &Fixture, remote: &RemoteSetup) -> Result<(Value, NodeIdentity,
 }
 
 #[tokio::test]
+async fn live_observation_and_exhausted_issuance_do_not_consume_revocation_capacity() -> Result {
+    let f = Fixture::new(false).await?;
+    let remote = setup_remote_with_path(&f, true, false)?;
+    let (body, _, _) = relay_body(&f, &remote)?;
+    let issue = format!("{}/remote/{}/relays", f.base(), remote.request);
+    let allocation = body["allocation"]["allocation_id"]
+        .as_str()
+        .ok_or("allocation missing")?;
+    let endpoint = format!("{}/relays/{allocation}", f.base());
+    let (status, issued) = f
+        .call("POST", &issue, body.clone(), Some(&f.admin_token))
+        .await?;
+    assert_eq!(status, StatusCode::CREATED, "{issued}");
+    // More than the issuance budget, using the actual authenticated readback
+    // and complete signed route. Observation must not terminate a healthy path.
+    for _ in 0..40 {
+        let (status, observed) = f
+            .call("GET", &endpoint, Value::Null, Some(&f.admin_token))
+            .await?;
+        assert_eq!(status, StatusCode::OK, "{observed}");
+        assert_eq!(observed, issued);
+    }
+    // The original creation consumed one issuance slot. Replays are still
+    // denied and still consume the same bounded issuance budget.
+    for _ in 0..29 {
+        assert_eq!(
+            f.call("POST", &issue, body.clone(), Some(&f.admin_token))
+                .await?
+                .0,
+            StatusCode::CONFLICT
+        );
+    }
+    assert_eq!(
+        f.call("POST", &issue, body, Some(&f.admin_token)).await?.0,
+        StatusCode::TOO_MANY_REQUESTS
+    );
+    assert_eq!(
+        f.call("DELETE", &endpoint, Value::Null, Some(&f.admin_token))
+            .await?
+            .0,
+        StatusCode::NO_CONTENT
+    );
+    assert_eq!(
+        f.call("GET", &endpoint, Value::Null, Some(&f.admin_token))
+            .await?
+            .0,
+        StatusCode::FORBIDDEN
+    );
+    Ok(())
+}
+
+#[tokio::test]
 async fn relay_http_issues_exact_business_bound_transit_and_retains_capacity_after_revoke() -> Result
 {
     let f = Fixture::new(false).await?;

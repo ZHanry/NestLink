@@ -22,7 +22,7 @@ impl DatabaseAdmission {
     }
 
     pub(super) async fn acquire(&self) -> Result<OwnedSemaphorePermit, ()> {
-        match self.workers.clone().try_acquire_owned() {
+        match self.try_acquire() {
             Ok(permit) => return Ok(permit),
             Err(TryAcquireError::Closed) => return Err(()),
             Err(TryAcquireError::NoPermits) => {}
@@ -34,6 +34,18 @@ impl DatabaseAdmission {
             .await
             .map_err(|_| ())?
             .map_err(|_| ())
+    }
+
+    /// Background maintenance skips a busy tick instead of consuming an
+    /// authenticated request's bounded waiting slot.
+    pub(super) fn try_acquire(&self) -> Result<OwnedSemaphorePermit, TryAcquireError> {
+        self.workers.clone().try_acquire_owned()
+    }
+
+    #[cfg(test)]
+    pub(super) fn close(&self) {
+        self.workers.close();
+        self.waiters.close();
     }
 }
 
@@ -50,7 +62,12 @@ mod tests {
         let admission = DatabaseAdmission::new();
         let mut active = Vec::new();
         for _ in 0..WORKERS {
-            active.push(admission.acquire().await.map_err(|_| io::ErrorKind::Other)?);
+            active.push(
+                admission
+                    .acquire()
+                    .await
+                    .map_err(|_| io::ErrorKind::Other)?,
+            );
         }
         let mut next = Box::pin(admission.acquire());
         assert!(
@@ -69,12 +86,17 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn full_wait_queue_rejects_and_cancelled_or_expired_requests_never_execute() -> io::Result<()>
-    {
+    async fn full_wait_queue_rejects_and_cancelled_or_expired_requests_never_execute()
+    -> io::Result<()> {
         let admission = DatabaseAdmission::new();
         let mut active = Vec::new();
         for _ in 0..WORKERS {
-            active.push(admission.acquire().await.map_err(|_| io::ErrorKind::Other)?);
+            active.push(
+                admission
+                    .acquire()
+                    .await
+                    .map_err(|_| io::ErrorKind::Other)?,
+            );
         }
         let mut queued = Vec::new();
         for _ in 0..WAITERS {

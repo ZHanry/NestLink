@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "e158101e62bc3c96f8d5460008a87377565cad65",
+  "review_method": "GitHub-hosted Actions logs and verified artifact download; no local project tooling",
+  "network_run_id": "41117316111",
+  "core_run_id": "41117316213",
+  "web_run_id": "41117316110",
+  "linux_contract": {
+    "job_id": "124274800833",
+    "artifact_id": "13006911791",
+    "zip_sha256": "d87fdb01ecae16bf8abb3b41f9a08f3aeddd6d54fb3b39e28b32d8843157105a",
+    "artifact_and_command_log_digests_verified": true,
+    "format_patch_sha256": "5feb01e6880828cece4d2b7549b856916131a10114eb76c96203c5dde289cf81",
+    "format_patch_reviewed_and_imported": true,
+    "lint_and_tests": "did not compile: audit maintenance and its close-budget regression still expected the old semaphore type",
+    "evidence_tests": "passed"
+  },
+  "native_snat": {
+    "job_id": "124274800923",
+    "artifact_id": "13006667163",
+    "zip_sha256": "21b81a65ba155b62804efe3776d3d068e7ed22b86114795a5c03bf7c91021a2e",
+    "digest_provenance": "GitHub artifact metadata; ZIP not downloaded",
+    "status": "did not execute; same server audit compile error"
+  },
+  "other_observed_results": [
+    "Production socket, routed kernel NAT and independent vector jobs passed",
+    "WASM, Linux network events, portal, input and audio jobs passed",
+    "Full Core and Web runs were still running when superseded by the source repair",
+    "Secret scan flagged the publicly recorded artifact checksum under a field name containing api; renamed the field to zip_sha256 and separately recorded provenance, without weakening the scanner"
+  ],
+  "new_source_follow_up": [
+    "Background audit uses nonwaiting worker admission and retains busy-tick skipping; closed-budget regression remains in place",
+    "ADR 0010 separates authenticated route issuance, observation and revocation budgets, retains hard observation bounds and administrator limits, and avoids the duplicate immediate observer tick",
+    "New actual HTTP tests require current signed route readback beyond the issuance limit and revocation after issuance exhaustion; invalid credentials cannot reserve observation capacity"
+  ],
+  "release_qualified": false,
+  "follow_up_requires_new_exact_source_actions": true
+}
