@@ -290,8 +290,10 @@ def case(experiment: Experiment, executable: Path, name: str, private: Path) -> 
                               "host_network_namespace": os.readlink("/proc/self/ns/net"),
                               "external_network_route": False, "nat": False}
         pcap = experiment.output / (name + ".pcap")
+        # -U flushes userspace output; immediate mode also drains libpcap's
+        # kernel buffer during sub-second cases before the final SIGINT.
         capture = experiment.launch(name + "-capture", ["sudo", "-n", "ip", "netns", "exec", host_ns,
-            "tcpdump", "-i", host_link, "-nn", "-s", "0", "-U", "-Z", pwd.getpwuid(os.getuid()).pw_name,
+            "tcpdump", "--immediate-mode", "-i", host_link, "-nn", "-s", "0", "-U", "-Z", pwd.getpwuid(os.getuid()).pw_name,
             "-w", str(pcap), "udp", "port", "4433"])
         deadline = time.monotonic() + 3
         while "listening on" not in (experiment.output / (name + "-capture.log")).read_text(errors="replace"):

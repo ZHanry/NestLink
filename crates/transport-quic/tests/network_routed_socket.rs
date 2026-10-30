@@ -95,19 +95,10 @@ async fn relay_process() -> Result {
     let first = AdjacencyEndpoint::bind(RELAY[0].parse()?, &local, peer(&root, "first")?)?;
     let second = AdjacencyEndpoint::bind(RELAY[1].parse()?, &local, peer(&root, "second")?)?;
     mark(&root, "relay-ready")?;
-    let (first, second) = tokio::join!(first.accept(deadline), second.accept(deadline));
-    if case == "blackhole" {
-        assert!(first.is_err());
-        if let Ok(mut second) = second { second.close_and_wait(Instant::now() + Duration::from_secs(5)).await?; }
-        for address in RELAY { rebind(address.parse()?).await?; }
-        mark(&root, "relay-rejected")?;
-        receipt(&root, "relay", json!({"role":"relay","passed":true,"preauthorization_rejected":true,
-            "released_udp_sockets":2,"rebound_udp_addresses":RELAY}))?;
-        return Ok(());
-    }
+    let (first, second) = tokio::try_join!(first.accept(deadline), second.accept(deadline))?;
     let grants = authority::Authority::load(&root)?;
     let (authorization, stop) = grants.authorize()?;
-    let mut relay = RelayForwarder::new(authorization, first?, second?)?;
+    let mut relay = RelayForwarder::new(authorization, first, second)?;
     mark(&root, "relay-forwarding")?;
     let stopped = {
         let run = relay.run(); tokio::pin!(run);
@@ -121,11 +112,16 @@ async fn relay_process() -> Result {
     assert!(stopped);
     let forwarded = relay.forwarded_fragments();
     let charged = relay.charged_bytes();
-    assert!(forwarded >= 6 && charged >= 131_072);
+    if case == "blackhole" {
+        assert!(forwarded > 0 && charged > 0);
+    } else {
+        assert!(forwarded >= 6 && charged >= 131_072);
+    }
     relay.close_and_wait(Instant::now() + Duration::from_secs(5)).await?;
     for address in RELAY { rebind(address.parse()?).await?; }
     receipt(&root, "relay", json!({"role":"relay","passed":true,"forwarded_fragments":forwarded,
-        "charged_bytes":charged,"explicit_close_completed":true,"released_udp_sockets":2,"rebound_udp_addresses":RELAY}))?;
+        "charged_bytes":charged,"inner_setup_rejected":case == "blackhole",
+        "explicit_close_completed":true,"released_udp_sockets":2,"rebound_udp_addresses":RELAY}))?;
     mark(&root, "relay-finished")
 }
 
@@ -139,25 +135,36 @@ async fn endpoint(role: &str) -> Result {
     let deadline = Instant::now() + Duration::from_secs(5);
     let physical = AdjacencyEndpoint::bind(address, &local, peer(&root, "relay")?)?;
     assert_eq!(physical.local_addr()?, address);
-    let adjacency = physical.connect(relay, deadline).await;
-    if case == "blackhole" && first {
-        assert!(adjacency.is_err());
-        rebind(address).await?;
-        receipt(&root, role, json!({"role":role,"passed":true,"preauthorization_rejected":true,
-            "released_udp_sockets":1,"rebound_udp_addresses":[address.to_string()]}))?;
-        return mark(&root, "first-rejected");
+    let adjacency = physical.connect(relay, deadline).await?;
+    if case == "blackhole" {
+        mark(&root, &format!("{role}-adjacency-ready"))?;
+        wait_mark(&root, "inner-start", deadline).await?;
     }
     let grants = authority::Authority::load(&root)?;
     let (authorization, stop) = grants.authorize()?;
-    let routed = routed::establish(authorization, adjacency?, &local, deadline).await;
+    // Retain the unique physical/task owner after a timed-out inner handshake.
+    // Cleanup gets its own budget; the spent setup deadline is never reused.
+    let mut pending = routed::RoutedEstablishment::new(authorization, adjacency);
+    let started = Instant::now();
+    let setup_deadline = if case == "blackhole" {
+        started + Duration::from_millis(1200)
+    } else {
+        deadline
+    };
+    let established = pending.establish(&local, setup_deadline).await;
     if case == "blackhole" {
-        assert!(routed.is_err());
+        assert!(established.is_err());
+        assert!(started.elapsed() >= Duration::from_secs(1));
+        stop.revoke();
+        pending.close_and_wait(Instant::now() + Duration::from_secs(5)).await?;
         rebind(address).await?;
-        receipt(&root, role, json!({"role":role,"passed":true,"inner_setup_rejected":true,
+        receipt(&root, role, json!({"role":role,"passed":true,"physical_adjacency_established":true,
+            "inner_setup_rejected":true,"explicit_close_completed":true,
             "released_udp_sockets":1,"rebound_udp_addresses":[address.to_string()]}))?;
-        return mark(&root, "second-rejected");
+        return mark(&root, &format!("{role}-rejected"));
     }
-    let mut routed = routed?;
+    established?;
+    let mut routed = pending.take_transport()?;
     mark(&root, &format!("{role}-established"))?;
     let business = Instant::now() + Duration::from_secs(7);
     let payload = fs::read(root.join("payload.bin"))?;

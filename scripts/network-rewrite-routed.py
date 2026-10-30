@@ -196,7 +196,7 @@ def case(experiment: SOCKET.Experiment, executable: Path, name: str, private: Pa
             namespace, interface, _ = endpoints[tag]
             path = experiment.output / (name + "-" + tag + ".pcap")
             entry = experiment.launch(name + "-capture-" + tag, ["sudo", "-n", "ip", "netns", "exec", namespace,
-                "tcpdump", "-i", interface, "-nn", "-s", "0", "-U", "-Z", pwd.getpwuid(os.getuid()).pw_name, "-w", str(path), "udp"])
+                "tcpdump", "--immediate-mode", "-i", interface, "-nn", "-s", "0", "-U", "-Z", pwd.getpwuid(os.getuid()).pw_name, "-w", str(path), "udp"])
             captures.append((tag, path, entry))
             deadline = time.monotonic() + 3
             while "listening on" not in (experiment.output / entry[2]["log"]).read_text(errors="replace"):
@@ -205,13 +205,17 @@ def case(experiment: SOCKET.Experiment, executable: Path, name: str, private: Pa
         environment = dict(os.environ, NESTLINK_NETWORK_FIXTURE=str(fixture), NESTLINK_NETWORK_CASE=name)
         prepare = experiment.launch(name + "-prepare", [str(executable), "--ignored", "--exact", "prepare_fixture", "--nocapture", "--test-threads=1"], environment)
         finish_role(experiment, prepare, 3)
-        if name == "blackhole":
-            facts["fault"] = SOCKET.drop_egress(experiment, name, ns["relay"], endpoints["r1"][1], "relay_to_first_nat")
         relay = experiment.launch(name + "-relay", SOCKET.namespace_argv(ns["relay"], executable, "relay", fixture, name))
         SOCKET.marker(fixture, "relay-ready", (relay,))
         first = experiment.launch(name + "-first", SOCKET.namespace_argv(ns["first"], executable, "first", fixture, name))
         second = experiment.launch(name + "-second", SOCKET.namespace_argv(ns["second"], executable, "second", fixture, name))
-        if name != "blackhole":
+        if name == "blackhole":
+            for marker in ("relay-forwarding", "first-adjacency-ready", "second-adjacency-ready"):
+                SOCKET.marker(fixture, marker, (relay, first, second))
+            facts["fault"] = SOCKET.drop_egress(experiment, name, ns["relay"], endpoints["r1"][1], "relay_to_first_nat")
+            facts["fault"]["installed_after_physical_adjacency_before_inner_quic"] = True
+            SOCKET.write_marker(fixture, "inner-start")
+        else:
             for marker in ("relay-forwarding", "first-established", "second-established", "first-payload-verified", "second-payload-verified"):
                 SOCKET.marker(fixture, marker, (relay, first, second))
             if name == "cancel":

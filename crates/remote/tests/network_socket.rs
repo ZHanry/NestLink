@@ -440,9 +440,12 @@ async fn client_process() -> Result {
         mark(&root, "client-finished")?;
         return Ok(());
     }
+    let connection = connected?;
+    let peer_close = (std::env::var("NESTLINK_NETWORK_CASE")? == "peer-close")
+        .then(|| connection.clone());
     let (stop, stopped) = watch::channel(None);
     let mut channels = nestlink_remote::quic::authorize(
-        connected?,
+        connection,
         Some(endpoint),
         setup(permit(&root)?, EndpointRole::Controller, stopped)?,
         &controller,
@@ -549,6 +552,14 @@ async fn client_process() -> Result {
         mark(&root, "client-complete")?;
         if std::env::var("NESTLINK_NETWORK_CASE")? != "peer-close" {
             wait_mark(&root, "teardown-isolated", deadline).await?;
+        }
+        if let Some(connection) = peer_close {
+            // Put the actual peer CONNECTION_CLOSE on the transport before
+            // retiring local I/O tasks can finish proof/business streams.
+            // Otherwise the host can see their EOF and close itself first.
+            // No await separates this from the local ExplicitExit request.
+            connection.close(0_u32.into(), b"owned peer-close experiment");
+            println!("NESTLINK_NETWORK requested_peer_application_close_code=0");
         }
         let report = tokio::time::timeout(
             Duration::from_secs(3),
