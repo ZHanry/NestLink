@@ -48,10 +48,27 @@
     "explicit_relay_selection": "passed",
     "multi_node": "4 passed; first route failed node QUIC certificate verification with ApplicationVerificationFailure. No HTTP 429 remained. This is an unresolved failed gate."
   },
+  "browser_native": {
+    "artifact_id": "13007708944",
+    "zip_sha256": "6c5722925321296b53ca2c99cebc40fc0867ea508b203fb50cb2ad6d5834a9db",
+    "artifact_digest_verified": true,
+    "runner_passed": true,
+    "exit_codes": {"browser": 0, "native": 0},
+    "validation_failures": [],
+    "exact_leaf_trust_and_all_owned_resource_cleanup": true,
+    "scope": "Owned Linux production Web/native VP8/Opus/input/files/UI/authority integration"
+  },
+  "linux_full_workspace": {
+    "job_id": "124277616020",
+    "conclusion": "failed",
+    "only_failed_target": "nestlink-sdk --test network_relay",
+    "failure_details": "Three concurrent real-node cases failed: two endpoint-driver future drops and one node TLS client certificate rejection. The serial scoped run separately retained the two-node proof timeout."
+  },
   "other_observed_results": [
     "Secret scan and CodeQL passed",
     "Routed kernel NAT, production socket and independent vectors passed",
-    "Both full Core platform jobs and actual Web/native job still running at this checkpoint"
+    "Linux full workspace failed only the real-node integration target; Windows full Core job still running at this checkpoint",
+    "Actual Web/native integration passed and original ZIP digest was verified"
   ],
   "release_qualified": false,
   "follow_up_requires_new_exact_source_actions": true

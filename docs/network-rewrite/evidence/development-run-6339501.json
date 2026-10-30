@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "63395015a9ff98570de108e42acc7839ef81c9d5",
+  "review_method": "GitHub-hosted Actions; original artifact ZIP SHA-256 verified before manual receipt review. No local project tooling.",
+  "network_run_id": "41121138552",
+  "native_ice": {
+    "artifact_id": "13008113513",
+    "zip_sha256": "78564f2d62f9f8d7b40f4b64fea8d73d58d33d5bcab280c05b6919b90489ee76",
+    "artifact_digest_verified": true,
+    "receipt": "network-native-ice-evidence.json",
+    "passed": true,
+    "cases": {"success": "passed", "blackhole": "passed", "cancel": "passed", "port_change": "passed"},
+    "success_scope": "Two owned Linux 1:1 UDP address NATs with fixed ports and peer-restricted ingress; original STUN socket/mapping, full-size Quinn Initial and bidirectional 256KiB FileRead bytes",
+    "forced_port_change": "Each original-socket check was captured before and after actual rewrite to ports 1025/1026; both endpoints refused setup without opening inner business",
+    "cleanup": "Both original legacy/ICE sockets rebound and all owned namespaces removed in each case",
+    "external_router_or_general_symmetric_nat_qualification": false,
+    "complete_ac04_ac05_ac07_qualification": false
+  },
+  "linux_contract": {
+    "artifact_id": "13007644264",
+    "zip_sha256": "0a0b926d0b95e3be13d79c0ead5be0b69cd7a1660cc76c12ce850545a5496f70",
+    "artifact_digest_verified": true,
+    "format_patch_bytes": 0,
+    "status": "artifact retained; selected tests and formatting passed; full run conclusions require final review"
+  },
+  "remaining_gates": ["Both complete Core jobs", "Both Chrome and Edge production integration jobs", "Two-node authority and endpoint-proof failure investigation"],
+  "release_qualified": false
+}

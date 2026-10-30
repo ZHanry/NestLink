@@ -12,6 +12,60 @@ use nestlink_protocol::{
 };
 
 type TestResult<T = ()> = Result<T, Box<dyn std::error::Error>>;
+
+#[test]
+fn identical_live_network_chain_reuse_requires_fresh_snapshots_and_keeps_original_deadlines()
+-> TestResult {
+    let (resource, _) = resource()?;
+    let claims = resource.allocation.as_ref().ok_or("allocation missing")?.clone();
+    let root = PermitSigner::from_seed([1; 32]);
+    let mut resources = Resources::default();
+    let make_snapshot = |sequence, offset| {
+        let mut value = snapshot(sequence, clock(offset, 10000 + offset), Vec::new());
+        value.allocation_issuer = root.public_key().to_vec();
+        value.network_routes = vec![resource.clone()];
+        value
+    };
+    resources.accept(make_snapshot(1, 0), &lease(), 0, clock(0, 10000))?;
+    let original_deadline = resources.snapshot.as_ref().ok_or("snapshot missing")?
+        .entries.get(&claims.allocation_id).ok_or("entry missing")?.deadline;
+    let (_, stopped) = resources.reserve(&claims, 0, clock(0, 10000))?;
+    for sequence in 2..=18 {
+        let offset = (sequence - 1) * 250;
+        resources.accept(make_snapshot(sequence, offset), &lease(), offset, clock(offset, 10000 + offset))?;
+        assert!(!*stopped.borrow());
+        assert_eq!(resources.network_chain_verifications, 1);
+        assert_eq!(resources.snapshot.as_ref().ok_or("snapshot missing")?
+            .entries.get(&claims.allocation_id).ok_or("entry missing")?.deadline, original_deadline);
+    }
+    let mut changed = make_snapshot(19, 4500);
+    changed.network_routes[0].business_permit[0] ^= 1;
+    assert!(resources.accept(changed, &lease(), 4500, clock(4500, 14500)).is_err());
+    assert_eq!(resources.network_chain_verifications, 2);
+    let mut changed = make_snapshot(19, 4500);
+    changed.allocation_issuer[0] ^= 1;
+    assert!(resources.accept(changed, &lease(), 4500, clock(4500, 14500)).is_err());
+    assert_eq!(resources.network_chain_verifications, 3);
+    let mut omitted = make_snapshot(19, 4500);
+    omitted.network_routes.clear();
+    resources.accept(omitted, &lease(), 4500, clock(4500, 14500))?;
+    assert!(*stopped.borrow());
+    assert!(resources.reserve(&claims, 1, clock(4500, 14500)).is_err());
+
+    let mut expired = Resources::default();
+    expired.accept(make_snapshot(1, 0), &lease(), 0, clock(0, 10000))?;
+    expired.expire(clock(1000, 11000));
+    assert!(expired.snapshot.is_none());
+    expired.accept(make_snapshot(2, 1000), &lease(), 1000, clock(1000, 11000))?;
+    assert_eq!(expired.network_chain_verifications, 2);
+    expired.stop();
+    assert!(expired.snapshot.is_none());
+    expired.accept(make_snapshot(3, 1250), &lease(), 1250, clock(1250, 11250))?;
+    assert_eq!(expired.network_chain_verifications, 3);
+    assert!(expired.accept(make_snapshot(4, 10000), &lease(), 10000, clock(10000, 20000)).is_err());
+    Ok(())
+}
+
 fn resource() -> TestResult<(NodeNetworkRelayResource, InstallationIdentity)> {
     let root = PermitSigner::from_seed([1; 32]);
     let vector: serde_json::Value = serde_json::from_str(include_str!(

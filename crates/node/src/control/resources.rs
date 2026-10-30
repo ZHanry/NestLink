@@ -475,6 +475,8 @@ pub(super) struct Resources {
     seen: HashSet<String>,
     pub(super) pending_closes: VecDeque<super::closes::PendingClose>,
     pub(super) acknowledged_closes: u64,
+    #[cfg(test)]
+    network_chain_verifications: u64,
 }
 fn error(code: ErrorCode) -> ContractError {
     ContractError::new(code, "node resource authority unavailable")
@@ -556,18 +558,49 @@ impl Resources {
             .map_err(|_| error(ErrorCode::IdentityMismatch))?;
         let mut routes = HashMap::new();
         for resource in &c.network_routes {
-            let route = nestlink_identity::network::verify_node_network_resource(
-                resource,
-                &issuer,
-                now.unix_ms,
-            )?;
             let grant = resource
                 .allocation
                 .as_ref()
                 .ok_or_else(|| error(ErrorCode::InvalidMessage))?;
+            let credential = digest(&resource.encode_to_vec());
+            // The fresh, exact-query signed snapshot still authorizes this
+            // complete resource. Reuse only an identical chain from the live
+            // previous snapshot under the same issuer and quota revision.
+            // No detached cache can outlive snapshot expiry, omission, stop or
+            // a changed credential; the original allocation deadline below is
+            // retained independently of fresh observation time.
+            let cached = self.snapshot.as_ref().and_then(|snapshot| {
+                if snapshot.claims.allocation_issuer != c.allocation_issuer
+                    || snapshot.claims.quota_revision != c.quota_revision
+                {
+                    return None;
+                }
+                snapshot.entries.get(&grant.allocation_id).and_then(|entry| {
+                    entry.network.filter(|route| {
+                        entry.network_credential == Some(credential)
+                            && entry.claims == *grant
+                            && now.monotonic_ms < entry.deadline
+                            && now.unix_ms < route.expires_at_ms
+                    })
+                })
+            });
+            let route = match cached {
+                Some(route) => route,
+                None => {
+                    #[cfg(test)]
+                    {
+                        self.network_chain_verifications += 1;
+                    }
+                    nestlink_identity::network::verify_node_network_resource(
+                        resource,
+                        &issuer,
+                        now.unix_ms,
+                    )?
+                }
+            };
             routes.insert(
                 grant.allocation_id.clone(),
-                (route, digest(&resource.encode_to_vec())),
+                (route, credential),
             );
         }
         for grant in c.allocations.iter().chain(
