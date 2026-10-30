@@ -639,7 +639,11 @@ async fn run() -> Result {
         permissions.push(Permission::Input as i32);
     }
     permissions.sort_unstable();
-    let lifetime = Duration::from_secs(duration_seconds + 84);
+    // The space lifecycle crosses the production 30 requests / 60 seconds
+    // window before media starts. Reserve that management setup time in the
+    // original fixture envelope; steady media and cleanup budgets stay intact.
+    let management_rate_window_seconds = 61;
+    let lifetime = Duration::from_secs(duration_seconds + 84 + management_rate_window_seconds);
     let site = PathBuf::from(&arguments[0]).canonicalize()?;
     let evidence = PathBuf::from(&arguments[1]);
     std::fs::create_dir(&evidence)?;
@@ -806,7 +810,7 @@ async fn run() -> Result {
         };
         sdk.enroll(&installation, "Owned synthetic media fixture".into(), platform.into(), capabilities, "direct_only".into()).await?;
         let ready = json!({"scope":"Ephemeral local development fixture; synthetic owned pixels, real Core/WebRTC/VP8", "origin":browser_origin, "native_management_origin":origin, "browser_backend_origin":browser_backend_origin, "deployment_id":deployment_id, "permit_issuer":URL_SAFE_NO_PAD.encode(permit_issuer), "username":"fixture-admin", "password":password, "host_device_id":installation.device_id,
-            "capture_profile":{"name":profile_name,"width":profile.width,"height":profile.height,"fps":profile.fps,"duration_seconds":duration_seconds,"lifetime_seconds":lifetime.as_secs(),"with_audio":with_audio},
+            "capture_profile":{"name":profile_name,"width":profile.width,"height":profile.height,"fps":profile.fps,"duration_seconds":duration_seconds,"lifetime_seconds":lifetime.as_secs(),"management_rate_window_seconds":management_rate_window_seconds,"with_audio":with_audio},
             "edge_namespace":{"management_hostname":"manage.example.test","nodes":edge_nodes},
             "owned_data":owned_data.as_ref().map(|data| data.descriptor()),
             "owned_multidisplay":owned_multidisplay.as_ref().map(|multi| multi.descriptor())});

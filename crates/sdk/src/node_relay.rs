@@ -387,7 +387,7 @@ impl NativeRelayRoute<'_> {
                 crate::native::NativeTransport::Quic {
                     connection: io.connection,
                     endpoint: io.endpoint,
-                    carrier: Some(io.carrier),
+                    carrier: Some(Box::new(io.carrier)),
                 }
             }),
         }

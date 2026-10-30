@@ -179,3 +179,21 @@ These repairs require new exact-source Actions evidence. The detailed run
 observations and imported formatting digest are in
 `evidence/development-run-1249075.json`. Production bilateral ICE signaling and
 the unimplemented W10-W40 scope remain active work, not external validation gaps.
+
+At source `4492f59febb5c4548e55b1f3eedc674fd01ad025`, both GitHub-hosted Linux
+and ordinary-token Windows passed all scoped routed, actual HTTP/node relay,
+ICE/Quinn original-socket cleanup, discovery, dual-stack and space checks. Both
+platforms' selected contract clippy and tests also passed, including original
+carrier failure precedence. Formatting still failed and its digest-verified
+Actions patch was imported. Full Linux workspace checks independently exposed
+two SDK lints, boxed outer WebSocket classification, native inbox and idle QUIC
+recovery failures; these remain real gates. The next source repairs the first
+three and continues investigation of the latter two.
+
+The full production space browser lifecycle now passes. Its required rate-window
+pacing consumes the historical fixture's original 120-second envelope before
+media starts. The fixture reserves an explicit additional 61 seconds of management
+setup in its one original deadline and records that budget. The 36-second steady
+media observation, 15-second cleanup reserve, application leases and production
+rate limit are preserved. This change still needs exact-source browser evidence.
+See `evidence/development-run-4492f59.json` for run identities and limitations.

@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "source_revision": "4492f59febb5c4548e55b1f3eedc674fd01ad025",
+  "repository": "ZHanry/NestLink",
+  "build_location": "github-hosted-actions",
+  "local_project_toolchain_executed": false,
+  "acceptance_claims": [],
+  "runs": [
+    {
+      "run_id": 41063477088,
+      "workflow": ".github/workflows/rust-core.yml",
+      "observations": {
+        "both_platforms_scoped": "14 routed, 2 actual HTTP relay, 4 ICE/Quinn same-socket cleanup, 3 discovery, 5 dual-stack, 9 space storage and 1 space HTTP SDK tests passed",
+        "linux_workspace": "failed two SDK lints, formatting, native inbox, one WSS classification regression and one idle QUIC recovery case",
+        "windows_workspace": "still running at checkpoint; scoped checks passed, format and workspace clippy failed",
+        "platform_jobs": "dependencies, WASM, OpenAPI, Linux input, portal capture, audio and network event checks passed"
+      },
+      "scoped_artifacts": [
+        { "id": 12982281738, "sha256": "e5e2a63889774ce5a2f377f61421c9a3fb360f68162d3f758052a01fba03ed7a", "platform": "Linux" },
+        { "id": 12982795660, "sha256": "64bce533beebf63daebfd45024843a222f0cf4e0fcf6ad8eb9440af5230ce369", "platform": "Windows ordinary token" }
+      ]
+    },
+    {
+      "run_id": 41063477123,
+      "workflow": ".github/workflows/network-rewrite.yml",
+      "result": "failure",
+      "observations": {
+        "both_platforms_contracts": "all selected-package clippy/tests and evidence tool tests passed; only formatting failed",
+        "carrier_regression": "original carrier facts precede synthetic local INTERNAL_ERROR; actual protocol violation remains terminal; passed",
+        "network_experiments": "routed kernel NAT, production socket and independent vectors passed"
+      },
+      "artifacts": [
+        { "id": 12982352514, "sha256": "8b2b9475a63bdbea618b86c6b9a7c83b99817842c61ddd64c5ede3b436035c9d", "platform": "Linux" },
+        { "id": 12982327735, "sha256": "adc7b9f60ca23125cb4bb7fcef6b70a4627bfb762568d4206e24b0f73d0f741f", "platform": "Windows ordinary token" }
+      ],
+      "reviewed_format_patch_sha256": "49812c91da81e7e254f9c02b131ee83fc54f38fd7076c791e320694de56fa62b"
+    },
+    {
+      "run_id": 41063477012,
+      "workflow": ".github/workflows/web.yml",
+      "result": "failure",
+      "observations": {
+        "spaces_ui": "complete actual production browser lifecycle passed including isolated guest context, one-use invitation, all roles, stale revision rejection, revoke/audit and archive",
+        "browser_native": "original 120-second fixture envelope exhausted by newly added production rate-window pacing before complete 36-second steady media and 15-second cleanup reserve"
+      },
+      "artifact": { "id": 12982233766, "sha256": "98f03b7126cf75e6eaee349bffe071571178f29f380f05917900cd5929bc9a44" }
+    },
+    { "run_id": 41063477026, "workflow": ".github/workflows/regression-server.yml", "result": "success" }
+  ],
+  "following_source_repairs": [
+    "Box the native QUIC carrier without changing its unique ownership or close receipt, and remove the discovery test needless wrapper.",
+    "Explicitly classify boxed outer WebSocket errors before source traversal can skip their protocol enum.",
+    "Reserve an explicit 61-second management rate-window setup budget in the original fixture envelope. Keep the full media observation and cleanup requirements and production limits unchanged.",
+    "Apply only the reviewed, receipt-digest-verified Actions formatting patch."
+  ],
+  "limitations": [
+    "Native inbox and idle QUIC recovery workspace failures remain active investigation.",
+    "Following source needs matching Actions verification; no complete AC group or external target evidence is claimed.",
+    "The remaining implementation scope and 0.8.0RC release gates remain open."
+  ]
+}

@@ -53,6 +53,12 @@ fn classify_inner(error: &(dyn Error + 'static), unavailable: ErrorCode, depth: 
     if let Some(error) = error.downcast_ref::<nestlink_transport_wss::Error>() {
         match error {
             nestlink_transport_wss::Error::Invalid => return ErrorCode::PermissionRequired,
+            nestlink_transport_wss::Error::WebSocket(source) => {
+                return classify_inner(source.as_ref(), unavailable, depth + 1);
+            }
+            nestlink_transport_wss::Error::Tls(source) => {
+                return classify_inner(source, unavailable, depth + 1);
+            }
             nestlink_transport_wss::Error::TlsSetup(source) => {
                 let code = classify_inner(source.as_ref(), unavailable, depth + 1);
                 return if code == unavailable {

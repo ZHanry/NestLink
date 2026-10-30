@@ -392,6 +392,7 @@ async function main() {
     // lower bound without comparing clocks in different processes.
     const remaining = profile.lifetime_seconds * 1000 - gate.elapsed_ms - (performance.now() - requestStarted);
     report.native_lifetime_budget = { lifetime_seconds: profile.lifetime_seconds,
+      management_rate_window_seconds: profile.management_rate_window_seconds,
       gate_elapsed_ms: gate.elapsed_ms, conservative_remaining_ms: remaining,
       requested_steady_ms: profile.duration_seconds * 1000, cleanup_reserve_ms: 15000 };
     check(remaining >= profile.duration_seconds * 1000 + 15000,

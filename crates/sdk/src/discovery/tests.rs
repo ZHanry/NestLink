@@ -45,12 +45,12 @@ fn permit(issued_at: u64, expires_at: u64, paths: &[Path]) -> Result<VerifiedPer
 
 fn endpoint(bind: &str, server: SocketAddr) -> Result<(quinn::Endpoint, Arc<DiscoverySocket>)> {
     let local = InstallationIdentity::generate();
-    Ok(discovery_endpoint(
+    discovery_endpoint(
         bind.parse()?,
         &local,
         InstallationIdentity::generate().fingerprint(),
         vec![server],
-    )?)
+    )
 }
 
 #[tokio::test]

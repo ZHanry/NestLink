@@ -514,7 +514,7 @@ pub enum NativeTransport {
     Quic {
         connection: quinn::Connection,
         endpoint: quinn::Endpoint,
-        carrier: Option<nestlink_transport_quic::node::Carrier>,
+        carrier: Option<Box<nestlink_transport_quic::node::Carrier>>,
     },
     DirectTls(Box<tokio_rustls::client::TlsStream<tokio::net::TcpStream>>),
     Wss(Box<tokio_rustls::TlsStream<nestlink_transport_wss::ByteStream>>),
@@ -664,7 +664,7 @@ impl NativeConnection {
                     }
                 };
                 if let Some(carrier) = carrier {
-                    channels.with_transport_owner(crate::network::CarrierOwner::Quic(carrier))
+                    channels.with_transport_owner(crate::network::CarrierOwner::Quic(*carrier))
                 } else {
                     channels
                 }

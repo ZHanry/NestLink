@@ -43,11 +43,10 @@ async fn original_carrier_facts_precede_synthetic_endpoint_shutdown_but_not_prot
         )?
         .into_channels();
         facts.send_replace(Some(carrier_kind));
-        let result: std::result::Result<(), RemoteError> =
-            Err(io::Error::other(quinn::ReadError::ConnectionLost(
-                quinn::ConnectionError::TransportError(code.into()),
-            ))
-            .into());
+        let result: std::result::Result<(), RemoteError> = Err(io::Error::other(
+            quinn::ReadError::ConnectionLost(quinn::ConnectionError::TransportError(code.into())),
+        )
+        .into());
         stop_io_result(&runtime.lease_control(), &result);
         let report = tokio::time::timeout(Duration::from_secs(1), runtime.wait_stopped()).await??;
         assert_eq!(report.reason, expected);
