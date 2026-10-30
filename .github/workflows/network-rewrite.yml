@@ -124,6 +124,7 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-node --lib control::resources::tests::network:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-node-chain-admission-tests.log"
+          cargo test --locked -p nestlink-node --lib control::resources::tests::topology:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-node-topology-authority-tests.log"
       - name: Retain exact-source topology test log
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -135,6 +136,7 @@ jobs:
             ${{ runner.temp }}/network-topology-reporter-tests.log
             ${{ runner.temp }}/network-chain-carrier-tests.log
             ${{ runner.temp }}/network-node-chain-admission-tests.log
+            ${{ runner.temp }}/network-node-topology-authority-tests.log
           if-no-files-found: error
           retention-days: 30
   native-ice-kernel-nat-slice:

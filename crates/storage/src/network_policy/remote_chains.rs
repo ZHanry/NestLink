@@ -9,6 +9,7 @@ use nestlink_protocol::{
 };
 use remote_relays::{RelayNode, relay_node};
 mod node_resources;
+pub(super) mod topology_continuity;
 
 pub struct NetworkRemoteRelayChainIssuance {
     pub space_id: String,
@@ -21,42 +22,6 @@ pub struct NetworkRemoteRelayChainBundle {
     pub transits: [SignedNetworkGrant; 2],
     pub nodes: [NodeEndpointsView; 2],
     pub topology_digests: [[u8; 32]; 2],
-}
-
-fn current_topology(
-    store: &Store,
-    snapshot: &TrustedNetworkPolicySnapshot,
-    node_ids: &[String; 2],
-    nodes: &[RelayNode; 2],
-    digests: &[[u8; 32]; 2],
-    expires: u64,
-    now: u64,
-) -> Result<(), StorageError> {
-    if node_ids[0] == node_ids[1] || nodes[0].key == nodes[1].key {
-        return Err(StorageError::Forbidden);
-    }
-    for index in 0..2 {
-        let other = 1 - index;
-        let ad = topology::current_advertisement(
-            store,
-            snapshot,
-            &node_ids[index],
-            &digests[index],
-            now,
-        )?;
-        if expires > ad.claims().expires_at_ms
-            || !ad.claims().report.neighbors.iter().any(|neighbor| {
-                neighbor.up
-                    && neighbor.local == PeerId::from_public_key(&nodes[index].key)
-                    && neighbor.remote == PeerId::from_public_key(&nodes[other].key)
-                    && neighbor.local_endpoint_revision == nodes[index].endpoint_revision
-                    && neighbor.remote_endpoint_revision == nodes[other].endpoint_revision
-            })
-        {
-            return Err(StorageError::Forbidden);
-        }
-    }
-    Ok(())
 }
 
 impl Store {
@@ -107,13 +72,12 @@ impl Store {
             return Err(StorageError::Forbidden);
         }
         let snapshot = read_snapshot(&tx, &space_id, now)?;
-        current_topology(
+        let topology_bindings = topology_continuity::capture(
             self,
             &snapshot,
             &request.node_ids,
             &nodes,
             &request.topology_digests,
-            expires,
             now,
         )?;
         let ids = [
@@ -205,6 +169,7 @@ impl Store {
                 params![request.route_id,index as u8,space_id,request.transit_grant_ids[index],request.node_ids[index],
                     node.key.as_slice(),node.runtime,node.generation,node.endpoint_revision,business.security_epoch,business.policy_revision,
                     quota.revision,lifecycle.runtime_id,controller.account,host.account,quota.limits.bytes_per_allocation,expires+1000,signed.claims,signed.signature])?;
+            topology_continuity::insert(&tx, &request.route_id, index, &topology_bindings[index])?;
             transits.push(signed);
         }
         audit(
@@ -253,9 +218,13 @@ impl Store {
             space,
             route,
             now,
-        )?;
-        tx.commit()?;
-        Ok(bundle)
+        );
+        // A rejected topology read can retire the route. Commit that fence so
+        // a later report or a restart cannot revive this original promise.
+        if bundle.is_ok() || matches!(&bundle, Err(StorageError::Forbidden)) {
+            tx.commit()?;
+        }
+        bundle
     }
 
     pub(crate) fn network_chain_current_in_transaction(
@@ -371,15 +340,23 @@ impl Store {
         }
         let node_ids: [String; 2] = node_ids.try_into().map_err(|_| StorageError::Forbidden)?;
         let nodes: [RelayNode; 2] = nodes.try_into().map_err(|_| StorageError::Forbidden)?;
-        current_topology(
+        let topology = topology_continuity::current(
             self,
+            tx,
             &snapshot,
+            route,
             &node_ids,
             &nodes,
-            &digests,
-            path.verified().claims().scope.expires_at_ms,
             now,
-        )?;
+        );
+        match topology {
+            Ok(()) => {}
+            Err(StorageError::Forbidden | StorageError::Unauthorized | StorageError::Proof(_)) => {
+                topology_continuity::retire(tx, space, route)?;
+                return Err(StorageError::Forbidden);
+            }
+            Err(error) => return Err(error),
+        }
         let peers = path.verified().peers();
         let relays = nodes
             .each_ref()

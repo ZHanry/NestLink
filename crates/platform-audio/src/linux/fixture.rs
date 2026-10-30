@@ -442,8 +442,7 @@ fn amplitude(pcm: &[AudioChunk], channels: u8, channel: usize, hz: f64) -> f64 {
         for (i, sample) in values.enumerate() {
             // Capture may discard partial or expired PCM. Removing those gaps
             // from the time axis makes otherwise matching tones cancel out.
-            let angle =
-                (chunk.pts_48khz + i as u64) as f64 * hz * std::f64::consts::TAU / 48000.0;
+            let angle = (chunk.pts_48khz + i as u64) as f64 * hz * std::f64::consts::TAU / 48000.0;
             sin += f64::from(*sample) * angle.sin();
             cos += f64::from(*sample) * angle.cos();
             length += 1;
@@ -547,7 +546,10 @@ async fn sample_flow(
         .iter()
         .map(|chunk| chunk.samples.len() / usize::from(binding.channels))
         .sum();
-    assert!(frames >= 48000, "no sustained owned audio flow: {frames} frames");
+    assert!(
+        frames >= 48000,
+        "no sustained owned audio flow: {frames} frames"
+    );
     for channel in 0..usize::from(binding.channels) {
         let expected = if channel == 0 { 440.0 } else { 880.0 };
         let level = amplitude(&pcm, binding.channels, channel, expected);

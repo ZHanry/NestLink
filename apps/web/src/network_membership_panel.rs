@@ -11,6 +11,7 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 mod authority;
+mod topology;
 
 #[derive(Clone, Copy)]
 enum Command {
@@ -330,5 +331,6 @@ pub(super) fn NetworkMembershipPanel(
         <authority::NetworkAuthorityControls api space session_revision auth_failure changed=Callback::new(move |()| {
             policy.set(None); member.set(None); devices.set(Vec::new()); message.set(String::new());
         }) />
+        <topology::NetworkTopologyPanel api space session_revision auth_failure />
     }
 }

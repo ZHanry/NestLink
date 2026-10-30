@@ -27,6 +27,8 @@ use nestlink_storage::{
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 #[path = "network_topology/route_exports.rs"]
 mod route_exports;
+#[path = "network_topology/node_resources.rs"]
+mod node_resources;
 const NOW: u64 = 1_000_000;
 struct Fixture {
     directory: tempfile::TempDir,
@@ -37,6 +39,7 @@ struct Fixture {
     signer: NetworkAuthoritySigner,
     space: String,
     nodes: [(String, NodeIdentity, BootIncarnation); 2],
+    leases: [nestlink_protocol::NodeLeaseClaims; 2],
     publishers: [SignedTopologyPublisher; 2],
 }
 impl Fixture {
@@ -80,6 +83,7 @@ impl Fixture {
             )?
             .space_id;
         let mut registered = Vec::new();
+        let mut leases = Vec::new();
         for index in 0..2 {
             let identity = NodeIdentity::generate();
             let id = random_id();
@@ -119,6 +123,7 @@ impl Fixture {
                     runtime_generation: lease.runtime_generation,
                 },
             ));
+            leases.push(lease);
         }
         let nodes: [_; 2] = registered.try_into().map_err(|_| "node fixture count")?;
         let mut publications = Vec::new();
@@ -150,6 +155,7 @@ impl Fixture {
             signer,
             space,
             nodes,
+            leases: leases.try_into().map_err(|_| "lease fixture count")?,
             publishers,
         })
     }

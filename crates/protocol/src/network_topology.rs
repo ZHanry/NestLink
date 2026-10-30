@@ -9,6 +9,9 @@ use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::collections::BTreeSet;
 
 pub const SCHEMA_VERSION: u32 = 1;
+pub const PROBE_ALPN: &[u8] = b"nestlink/topology-probe/1";
+pub const MAX_NODE_PUBLICATIONS: usize = 64;
+pub const MAX_NODE_PUBLICATION_BYTES: usize = 512 * 1024;
 pub const MAX_REPORT_BYTES: usize = 16_384;
 pub const MAX_NEIGHBORS: usize = 16;
 pub const MAX_PREFIXES: usize = crate::network::MAX_PREFIXES;
@@ -18,7 +21,7 @@ pub const MAX_DELTA: usize = 256;
 pub const MAX_ADVERTISEMENT_BYTES: usize = MAX_REPORT_BYTES + 1024;
 pub const MAX_UPDATE_BYTES: usize = 16 * 1024 * 1024;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct BootIncarnation {
     pub runtime_generation: u64,

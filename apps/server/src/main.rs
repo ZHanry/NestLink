@@ -437,6 +437,9 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             let identity = nestlink_identity::nodes::NodeIdentity::from_seed(&identity_seed);
             let listener_identity =
                 nestlink_identity::nodes::NodeIdentity::from_seed(&identity_seed);
+            let topology_reporter = std::sync::Arc::new(nestlink_node::control::TopologyReporter::new(
+                config.clone(), nestlink_identity::nodes::NodeIdentity::from_seed(&identity_seed),
+            )?);
             drop(identity_seed);
             let listener = tokio::net::TcpListener::bind(listen).await?;
             let control = std::sync::Arc::new(nestlink_node::control::NodeControl::start(
@@ -468,10 +471,11 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             let endpoint = quic_owner.endpoint()?.clone();
             let mut quic_stop = stopped;
             tasks.spawn(async move {
-                nestlink_server::node_quic::serve_with_chain_identity(
+                nestlink_server::node_quic::serve_with_topology_identity(
                     endpoint,
                     selector,
                     std::sync::Arc::new(listener_identity),
+                    topology_reporter,
                     async move {
                         if !*quic_stop.borrow() {
                             let _ = quic_stop.changed().await;

@@ -54,6 +54,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "#[serde(default)]",
     );
     config.field_attribute(
+        "nestlink.v1.NodeResourceSnapshotClaims.topology_publications_json",
+        "#[serde(default)]",
+    );
+    config.field_attribute(
         "nestlink.v1.RelayAllocationClaims.node_endpoint_revision",
         "#[serde(default)]",
     );

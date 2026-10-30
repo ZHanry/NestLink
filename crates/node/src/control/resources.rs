@@ -13,6 +13,7 @@ use nestlink_protocol::{
 };
 use std::collections::{HashMap, HashSet, VecDeque};
 mod network;
+mod topology;
 use nestlink_identity::network::{NodeRemoteChainBinding, RemoteRouteBinding};
 pub use network::NetworkChainNeighborProof;
 
@@ -481,6 +482,7 @@ struct Snapshot {
     claims: NodeResourceSnapshotClaims,
     deadline: u64,
     entries: HashMap<String, Entry>,
+    topology: Vec<nestlink_protocol::api::NetworkNodeTopologyAuthority>,
 }
 struct Slot {
     token: String,
@@ -512,6 +514,7 @@ pub(super) struct Resources {
     last_sequence: u64,
     pairs: HashMap<String, Pair>,
     seen: HashSet<String>,
+    topology_deadlines: HashMap<[u8; 32], u64>,
     pub(super) pending_closes: VecDeque<super::closes::PendingClose>,
     pub(super) acknowledged_closes: u64,
     #[cfg(test)]
@@ -599,6 +602,22 @@ impl Resources {
             self.stop();
         }
         let mut entries = HashMap::new();
+        let topology = match self.snapshot.as_ref().filter(|snapshot| {
+            now.monotonic_ms < snapshot.deadline
+                && snapshot.claims.topology_publications_json == c.topology_publications_json
+        }) {
+            Some(snapshot) => snapshot.topology.clone(),
+            None => topology::verify_publications(&c, lease, now.unix_ms)?,
+        };
+        for publication in &topology {
+            if !self.topology_deadlines.contains_key(&publication.publisher_digest) {
+                if self.topology_deadlines.len()>=65_536 {return Err(error(ErrorCode::CapacityExceeded));}
+                let claims=nestlink_protocol::network_topology::TopologyPublisherClaims::decode_canonical(&publication.publisher.claims)?;
+                let original=deadline(now.monotonic_ms,claims.scope.expires_at_ms,
+                    claims.scope.expires_at_ms-claims.scope.not_before_ms,now)?;
+                self.topology_deadlines.insert(publication.publisher_digest,original);
+            }
+        }
         let issuer: [u8; 32] = c
             .allocation_issuer
             .as_slice()
@@ -744,6 +763,7 @@ impl Resources {
             claims: c,
             deadline: snapshot_deadline,
             entries,
+            topology,
         });
         Ok(())
     }

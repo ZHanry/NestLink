@@ -11,7 +11,7 @@ pub use authorization::{RouteAuthorization, RouteRevocation};
 pub use forwarding::{FragmentReplayWindow, RelayForwarder};
 pub use listener::{
     NetworkNodeListener, authenticated_peer_fingerprint, chain_node_client_config, node_listener,
-    node_listener_with_legacy,
+    node_listener_with_legacy, topology_node_client_config,
 };
 
 use crate::*;

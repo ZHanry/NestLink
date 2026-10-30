@@ -21,6 +21,7 @@ use std::{
 };
 use tokio::{sync::watch, task::JoinSet};
 mod chain;
+mod topology;
 mod network;
 
 fn failed() -> io::Error {
@@ -175,7 +176,7 @@ pub async fn serve_with_selector(
     selector: Arc<RelaySelector>,
     shutdown: impl Future<Output = ()> + Send,
 ) -> io::Result<()> {
-    serve_inner(endpoint, selector, None, shutdown).await
+    serve_inner(endpoint, selector, None, None, shutdown).await
 }
 /// The production registered node identity signs reciprocal NRD2 possession;
 /// all listeners of this node continue sharing the same RelaySelector.
@@ -185,12 +186,24 @@ pub async fn serve_with_chain_identity(
     identity: Arc<nestlink_identity::nodes::NodeIdentity>,
     shutdown: impl Future<Output = ()> + Send,
 ) -> io::Result<()> {
-    serve_inner(endpoint, selector, Some(identity), shutdown).await
+    serve_inner(endpoint, selector, Some(identity), None, shutdown).await
+}
+/// The registered relay owns real adjacency observations and their periodic
+/// signed reports alongside the original chain and legacy forwarding tasks.
+pub async fn serve_with_topology_identity(
+    endpoint: quinn::Endpoint,
+    selector: Arc<RelaySelector>,
+    identity: Arc<nestlink_identity::nodes::NodeIdentity>,
+    reporter: Arc<nestlink_node::control::TopologyReporter>,
+    shutdown: impl Future<Output = ()> + Send,
+) -> io::Result<()> {
+    serve_inner(endpoint, selector, Some(identity), Some(reporter), shutdown).await
 }
 async fn serve_inner(
     endpoint: quinn::Endpoint,
     selector: Arc<RelaySelector>,
     identity: Option<Arc<nestlink_identity::nodes::NodeIdentity>>,
+    reporter: Option<Arc<nestlink_node::control::TopologyReporter>>,
     shutdown: impl Future<Output = ()> + Send,
 ) -> io::Result<()> {
     let control = selector.control();
@@ -204,6 +217,15 @@ async fn serve_inner(
     let mut scan = tokio::time::interval(Duration::from_millis(100));
     scan.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
     let mut attempted = HashMap::<String, tokio::time::Instant>::new();
+    let has_topology = identity.is_some() && reporter.is_some();
+    let mut observing_finished = false;
+    let observing = async {
+        match (identity.clone(), reporter) {
+            (Some(identity), Some(reporter)) => topology::run(endpoint.clone(), control.clone(), selector.clone(), identity, reporter).await,
+            _ => std::future::pending().await,
+        }
+    };
+    tokio::pin!(observing);
     tokio::pin!(shutdown);
     let result = loop {
         if *stopped.borrow() {
@@ -212,6 +234,7 @@ async fn serve_inner(
         tokio::select! { biased;
             _ = &mut shutdown => break Ok(()),
             _ = stopped.changed() => break Err(failed()),
+            _ = &mut observing => { observing_finished = true; break Err(failed()); },
             result = tasks.join_next(), if !tasks.is_empty() => { if result.is_some_and(|r| r.is_err()) { break Err(failed()); } },
             _ = scan.tick(), if identity.is_some() => {
                 let now=tokio::time::Instant::now();
@@ -252,7 +275,9 @@ async fn serve_inner(
                         let protocol = connection.handshake_data()
                             .and_then(|data| data.downcast::<quinn::crypto::rustls::HandshakeData>().ok())
                             .and_then(|data| data.protocol);
-                        if protocol.as_deref()==Some(nestlink_protocol::network_datagram_v2::ALPN) {
+                        if protocol.as_deref()==Some(nestlink_protocol::network_topology::PROBE_ALPN) {
+                            if let Some(identity)=identity {let _=topology::incoming(connection,control,identity).await;}
+                        } else if protocol.as_deref()==Some(nestlink_protocol::network_datagram_v2::ALPN) {
                             if let Some(identity)=identity {let _=chain::incoming(connection,control,hub,selector,drain,identity).await;}
                         } else if protocol.as_deref() == Some(nestlink_protocol::network_datagram::ALPN) {
                             let _ = network::run(connection, control, hub, selector, drain).await;
@@ -264,17 +289,27 @@ async fn serve_inner(
             }
         }
     };
+    let cleanup_deadline = tokio::time::Instant::now() + Duration::from_secs(5);
     control.stop();
     endpoint.close(0u32.into(), b"node listener stopping");
     tasks.abort_all();
-    // Aborting requests cancellation. Joining each original task proves its
-    // streams, queues, connections and resource guards have actually dropped.
-    while let Some(joined) = tasks.join_next().await {
-        if joined.is_err_and(|error| !error.is_cancelled()) {
-            return Err(failed());
+    let mut cleanup_error = None;
+    if has_topology && !observing_finished {
+        match tokio::time::timeout_at(cleanup_deadline, &mut observing).await {
+            Ok(Ok(())) => {},
+            Ok(Err(error)) => cleanup_error = Some(error),
+            Err(error) => cleanup_error = Some(io::Error::other(error)),
         }
     }
-    result
+    // Aborting requests cancellation. Joining each original task proves its
+    // streams, queues, connections and resource guards have actually dropped.
+    while let Some(joined) = tokio::time::timeout_at(cleanup_deadline, tasks.join_next())
+        .await.map_err(io::Error::other)? {
+        if joined.is_err_and(|error| !error.is_cancelled()) {
+            cleanup_error = Some(failed());
+        }
+    }
+    if let Some(error) = cleanup_error { Err(error) } else { result }
 }
 async fn admission(
     control: &NodeControl,

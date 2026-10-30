@@ -238,8 +238,7 @@ impl Fixture {
         })
         .await?;
         let mut usage = ServiceUsageDirectory::new()?;
-        let control = Arc::new(NodeControl::start(
-            NodeConfig {
+        let node_config = NodeConfig {
                 deployment_id: deployment,
                 node_id: node_id.clone(),
                 control_origin: origin,
@@ -248,9 +247,11 @@ impl Fixture {
                 service_usage_directory: Some(usage.path().to_path_buf()),
                 roles: vec![NodeRole::NodeRelay as i32],
                 allow_loopback_http: true,
-            },
-            node_identity,
+            };
+        let topology_reporter = Arc::new(nestlink_node::control::TopologyReporter::new(
+            node_config.clone(), NodeIdentity::from_seed(&node_seed),
         )?);
+        let control = Arc::new(NodeControl::start(node_config, node_identity)?);
         pending.control = Some(control.clone());
         usage.track(&control)?;
         let node = routed::node_listener_with_legacy(
@@ -322,10 +323,11 @@ impl Fixture {
         let serving_identity = node_identity.clone();
         let (shutdown, mut stopped) = watch::channel(false);
         let node_task = tokio::spawn(async move {
-            node_quic::serve_with_chain_identity(
+            node_quic::serve_with_topology_identity(
                 endpoint,
                 nestlink_server::relay_selector::RelaySelector::new(shared),
                 serving_identity,
+                topology_reporter,
                 async move {
                     if !*stopped.borrow() {
                         let _ = stopped.changed().await;

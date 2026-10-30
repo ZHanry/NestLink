@@ -1002,7 +1002,7 @@ pub struct NodeEndpointsUpdate {
     pub expected_revision: u64,
     pub endpoints: NodeEndpoints,
 }
-#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 pub struct NodeEndpointsView {
     pub node_id: String,
     pub revision: u64,
@@ -1328,9 +1328,44 @@ pub struct NetworkTopologyQuery {
 
 /// Canonical bytes and Ed25519 signature. Each endpoint has its own signing
 /// domain; this common JSON shape never makes their credentials interchangeable.
-#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct NetworkTopologyEnvelope {
     pub claims: Vec<u8>,
     pub signature: Vec<u8>,
+}
+
+/// Observation-only metadata from the current exact-query node policy snapshot.
+/// A node can probe only these fixed, mutually delegated neighbors.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkNodeTopologyNeighbor {
+    pub public_key: [u8; 32],
+    pub publisher_digest: [u8; 32],
+    pub incarnation: crate::network_topology::BootIncarnation,
+    pub expires_at_ms: u64,
+    pub node: NodeEndpointsView,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkNodeTopologyAuthority {
+    pub authority_key: [u8; 32],
+    pub publisher: crate::network_topology::SignedTopologyPublisher,
+    pub publisher_digest: [u8; 32],
+    pub route_exports: Vec<NetworkTopologyEnvelope>,
+    pub local: NodeEndpointsView,
+    pub neighbors: Vec<NetworkNodeTopologyNeighbor>,
+}
+
+/// One fresh, purpose-bound authenticated probe; never a data forwarding frame.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkTopologyProbe {
+    pub schema_version: u32,
+    pub space_id: String,
+    pub publisher_digest: [u8; 32],
+    pub local_endpoint_revision: u64,
+    pub remote_endpoint_revision: u64,
+    pub nonce: [u8; 32],
 }

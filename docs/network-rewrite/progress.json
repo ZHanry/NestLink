@@ -6,7 +6,7 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "43e8342ab13bbdd993cfb5791b41f0c1ca4494b4",
+    "source_revision":  "d1c27730b189802f919f125509023432918afa97",
     "checkpoint_kind":  "work_in_progress_against_source_revision",
     "active_tasks":  [
                          "W00",
@@ -62,11 +62,11 @@
                                    }
                                ],
     "next_steps":  [
-                       "Validate the registered NRD2 listener/dialer, complete SDK readback/watch, approved OS FileRead and stored RouteExport authority on exact-source hosted Actions; review generated formatting/OpenAPI and repair failures.",
-                       "Implement real continuous adjacency bootstrap/report refresh and a local prefix owner; the current signed-topology-fixture business tests do not qualify those paths.",
-                       "Read exact-source Windows/Linux full workspace and Chrome/Edge matrix; retain scoped results separately from complete release qualification.",
-                       "Continue all mandatory W13-W40 implementation, product surfaces, target acceptance and same-source packaging.",
-                       "Publish 0.8.0RC only after all mandatory implementation and evidence gates; retain local and remote main as the only branch."
+                       "Validate current production probe/report bootstrap, schema36 continuity, node metadata boundaries and Web publisher/export UI on exact-source GitHub Actions; inspect new formatting/OpenAPI and fix all failures.",
+                       "Complete registered-chain OS FileRead and neighbor-loss scenarios using real production observations; preserve original grants, capacities and all cleanup witnesses.",
+                       "Implement the remaining local prefix reachability/forwarding owner and remaining W12 acceptance, then continue every mandatory W13-W40 implementation and product surface.",
+                       "Run the full same-source Windows/Linux/WASM/browser matrix and mandatory target acceptance; preserve scoped results and failures separately.",
+                       "Publish 0.8.0RC only after all mandatory implementation and evidence gates; retain only local and remote main."
                    ],
     "evidence_index":  [
                            "docs/network-rewrite/evidence/research-review-2026-10-30.md",
@@ -107,7 +107,10 @@
                            "docs/adr/network/0017-atomic-two-relay-reservation.md",
                            "docs/adr/network/0018-chain-node-resource-admission.md",
                            "docs/network-rewrite/evidence/development-run-0618e08.json",
-                           "docs/network-rewrite/evidence/development-run-43e8342.json"
+                           "docs/network-rewrite/evidence/development-run-43e8342.json",
+                           "docs/adr/network/0022-chain-topology-observation-continuity.md",
+                           "docs/adr/network/0023-live-node-topology-observation.md",
+                           "docs/network-rewrite/evidence/development-run-d1c2773.json"
                        ],
     "observed_actions":  [
                              {

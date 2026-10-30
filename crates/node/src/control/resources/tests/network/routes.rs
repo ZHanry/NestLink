@@ -10,16 +10,9 @@ struct RoutesFixture {
 
 impl RoutesFixture {
     fn new() -> TestResult<Self> {
-        Self::with_age(0)
-    }
-
-    fn with_age(age_ms: u64) -> TestResult<Self> {
         let base = CandidateFixture::with_node_ttl(10_000, 10_000)?;
         let now = sample(base.control.started)?;
-        let issued = now
-            .unix_ms
-            .checked_sub(age_ms)
-            .ok_or("fixture time underflow")?;
+        let issued = now.unix_ms;
         let (single, _) = resource_at(issued, base.lease.node_key_sha256.clone())?;
         let (first, _, _, first_binding) =
             chain_resource_for_index(issued, base.lease.node_key_sha256.clone(), 0)?;
@@ -154,12 +147,38 @@ async fn omitted_revoked_snapshot_stopped_resources_and_stopped_nodes_cannot_ret
 }
 
 #[tokio::test]
-async fn refreshing_snapshots_does_not_extend_the_original_chain_or_entry_expiration() -> TestResult
+async fn continuous_snapshots_cannot_extend_original_chain_or_entry_expiration() -> TestResult
 {
-    // All original grants last 10 seconds. Their late receipt leaves only
-    // 800ms, shorter than the fresh snapshot's independent 1000ms lifetime.
-    let fixture = RoutesFixture::with_age(9200)?;
+    // Sign and verify the original 10-second grants before approaching their
+    // expiry. Backdating them before fixture cryptography consumed the 800ms
+    // observation window on slower runners and could fail the first lookup.
+    let mut fixture = RoutesFixture::new()?;
     let allocation = fixture.local_allocation(0)?.allocation_id.clone();
+    let late_observation = fixture.bindings[0]
+        .chain
+        .expires_at_ms
+        .checked_sub(800)
+        .ok_or("fixture time underflow")?;
+    let mut sequence = 4;
+    loop {
+        let now = sample(fixture.base.control.started)?;
+        if now.unix_ms >= late_observation {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(
+            (late_observation - now.unix_ms).min(250),
+        ))
+        .await;
+        fixture.install(sequence, &fixture.resources)?;
+        sequence += 1;
+    }
+    // Keep the same node/runtime authorized beyond the independently signed
+    // route deadline. This renews no business or route credential.
+    fixture.base.lease = fixture
+        .base
+        .renew_node(sample(fixture.base.control.started)?)?;
+    // Only 800ms of the original grant remains, shorter than each fresh
+    // snapshot's independent 1000ms lifetime.
     let original = fixture.base.control.network_chain_route(&allocation)?;
     let original_deadline = fixture
         .base
@@ -176,7 +195,7 @@ async fn refreshing_snapshots_does_not_extend_the_original_chain_or_entry_expira
         .ok_or("entry")?
         .deadline;
     tokio::time::sleep(Duration::from_millis(100)).await;
-    fixture.install(4, &fixture.resources)?;
+    fixture.install(sequence, &fixture.resources)?;
     let refreshed = fixture.base.control.network_chain_route(&allocation)?;
     assert_eq!(
         refreshed.binding.chain.expires_at_ms,

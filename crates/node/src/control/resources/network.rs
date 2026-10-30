@@ -24,11 +24,14 @@ impl nestlink_transport_stream::tls::CurrentClientPins for NodeControl {
                 return Ok(false);
             }
             let now = sample(self.started)?;
+            let topology_pin=super::topology::current(&mut state,now)?.iter().any(|publication| {
+                publication.neighbors.iter().any(|neighbor| &nestlink_identity::digest(&neighbor.public_key)==fingerprint)
+            });
             state
                 .gate
                 .authorize_forwarding(NodeRole::NodeRelay, false, now)?;
             state.resources.expire(now);
-            Ok(state.resources.snapshot.as_ref().is_some_and(|snapshot| {
+            Ok(topology_pin || state.resources.snapshot.as_ref().is_some_and(|snapshot| {
                 snapshot.entries.values().any(|entry| {
                     now.monotonic_ms < entry.deadline
                         && match entry.network {

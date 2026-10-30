@@ -1,0 +1,48 @@
+{
+  "source_revision": "d1c27730b189802f919f125509023432918afa97",
+  "qualification": "partial_laboratory_results_not_release_qualified",
+  "build_provenance": {
+    "repository": "ZHanry/NestLink",
+    "network_run": 41142197371,
+    "core_run": 41142197401,
+    "runner": "GitHub-hosted"
+  },
+  "execution_provenance": {
+    "environment": "GitHub Actions laboratory",
+    "target_device_acceptance": false,
+    "passed_jobs": [
+      "Native ICE, Quinn and FileRead through two real kernel NATs (scoped step)",
+      "Production socket proof/FileRead with kernel faults",
+      "Routed QUIC kernel NAT",
+      "Topology and RouteExport storage and actual HTTP lifecycle",
+      "Linux private PipeWire production audio fixture",
+      "Linux X11 input, portal capture and network events",
+      "WASM contracts and dependency checks"
+    ],
+    "scoped_counts": {
+      "topology_graph": 16,
+      "nrd2_codec": 10,
+      "routed_transport": 15,
+      "node_reporter": 13,
+      "node_chain_resources": "11 passed, 1 failed"
+    },
+    "failures": [
+      "Two SDK chain FileRead scenarios used generation 9 instead of the original permit generation; business proof itself succeeded.",
+      "Registered-node chain setup used static signed observations which expired before reservation; production observer integration replaces these fixtures in new source.",
+      "The node original-expiry fixture spent its remaining 800ms generating/verifying credentials; source repair retains original deadlines.",
+      "Clippy rejected a storage range loop and the chain test module preceding production items; source repairs and exact-source revalidation are pending.",
+      "Formatting remained pending for three actively edited files."
+    ]
+  },
+  "imported_formatting": {
+    "artifact_id": 13019552094,
+    "archive_sha256": "2e9dc50f3a48525022615063a705b13993aefe19eab97a6f61083abd9d97b68f",
+    "patch_sha256": "e2e351ee36a66b25e6f89b0e3b8da4bab0d239ce6b95f7d698034de5ea651423"
+  },
+  "imported_openapi": {
+    "artifact_id": 13019690685,
+    "archive_sha256": "9b54bbbfa103e8e146015696ccb3ed8c354f5175bb57d9031521b6ac2f2b839c",
+    "output_sha256": "df894117a8f79bf990a1f0560332aef33091a1c33660a669cab9917831dc3af5",
+    "scope": "Includes stored RouteExport APIs; later source changes still require newly generated exact-source output."
+  }
+}

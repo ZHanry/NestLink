@@ -22,6 +22,7 @@ const MAX_PUBLISHER_HISTORY: u64 = 65_536;
 const MAX_PUBLISHER_MS: u64 = 15 * 60 * 1000;
 const MIN_REPORT_INTERVAL_MS: u64 = 100;
 const RETAINED_CHANGES: u64 = 4096;
+mod node_resources;
 
 struct Node {
     key: [u8; 32],
@@ -193,6 +194,21 @@ pub(super) fn current_advertisement(
     expected: &[u8; 32],
     now: u64,
 ) -> Result<nestlink_identity::network_topology::VerifiedTopologyAdvertisement, StorageError> {
+    let verified = current_head(store, snapshot, node_id, now)?;
+    if verified.digest() != *expected {
+        return Err(StorageError::Conflict);
+    }
+    Ok(verified)
+}
+
+/// Authenticate the current fresh head without freezing one observation's
+/// digest. The chain owner separately checks its original continuity fences.
+pub(super) fn current_head(
+    store: &Store,
+    snapshot: &TrustedNetworkPolicySnapshot,
+    node_id: &str,
+    now: u64,
+) -> Result<nestlink_identity::network_topology::VerifiedTopologyAdvertisement, StorageError> {
     let current = node(store, node_id, now)?;
     let row: Option<(String, Vec<u8>, Vec<u8>)> = store.connection.query_row(
         "SELECT publisher_id,advertisement,advertisement_signature FROM network_topology_heads WHERE space_id=?1 AND node_id=?2 AND withdrawn=0 AND expires_at_ms>?3",
@@ -213,9 +229,6 @@ pub(super) fn current_advertisement(
         &current.incarnation,
         0,
     )?;
-    if verified.digest() != *expected {
-        return Err(StorageError::Conflict);
-    }
     check_neighbors(store, snapshot, &verified.claims().report, now)?;
     Ok(verified)
 }
@@ -462,6 +475,7 @@ impl Store {
         let ad = nestlink_protocol::network_topology::TopologyAdvertisement::decode_canonical(
             &advertisement.claims,
         )?;
+        super::remote_chains::topology_continuity::report_accepted(&tx, space, &ad, now)?;
         tx.execute("INSERT INTO network_topology_heads(space_id,node_id,runtime_id,runtime_generation,sequence,publisher_id,report_digest,report_claims,report_signature,advertisement,advertisement_signature,expires_at_ms,accepted_at_ms,withdrawn) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,0)
             ON CONFLICT(space_id,node_id) DO UPDATE SET runtime_id=excluded.runtime_id,runtime_generation=excluded.runtime_generation,sequence=excluded.sequence,publisher_id=excluded.publisher_id,report_digest=excluded.report_digest,report_claims=excluded.report_claims,report_signature=excluded.report_signature,advertisement=excluded.advertisement,advertisement_signature=excluded.advertisement_signature,expires_at_ms=excluded.expires_at_ms,accepted_at_ms=excluded.accepted_at_ms,withdrawn=0",
             params![space,node_id,report.incarnation.runtime_id,report.incarnation.runtime_generation,report.sequence,id,verified.digest().as_slice(),signed.claims,signed.signature,advertisement.claims,advertisement.signature,ad.expires_at_ms,now])?;
@@ -667,6 +681,7 @@ pub(super) fn withdraw(
     node_id: &str,
     now: u64,
 ) -> Result<(), StorageError> {
+    super::remote_chains::topology_continuity::withdrawn(tx, space, node_id)?;
     let report: Option<Vec<u8>> = tx.query_row("SELECT report_claims FROM network_topology_heads WHERE space_id=?1 AND node_id=?2 AND withdrawn=0",params![space,node_id],|r|r.get(0)).optional()?;
     let Some(report) = report else {
         return Ok(());

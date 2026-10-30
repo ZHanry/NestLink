@@ -553,3 +553,25 @@ packet's actual PTS; deliberate wrong-link rejection remains a negative case.
 Its amplitude thresholds, observation window and sustained-frame minimum remain
 unchanged, with deterministic gap/silence/channel regressions. All new source
 changes await Actions and do not qualify W12 or the release.
+
+ADRs 0022/0023 add durable uninterrupted observation fences, exact-query signed
+node bootstrap metadata, an independent observation-only mutual-TLS QUIC ALPN,
+the production same-socket probe/report owner and real Web publisher/export
+controls. Reports retain their original TTL and HTTP budget. Reused connections,
+bounded active neighbors and shared selector limits avoid permanent per-space
+mesh tasks. Shutdown joins all owned work before reporting cleanup. The
+registered-chain source scenarios now wait for actual production observations
+and include neighbor loss before the original grant expires; artificial report
+seeding is removed. New Store bootstrap, continuity and node metadata regressions
+await exact-source hosted Actions. The local prefix reachability owner, later
+mandatory work packages and target-device acceptance remain incomplete.
+
+The d1c2773 Actions passed real native ICE/NAT/FileRead, routed NAT, production
+socket faults, stored topology/export HTTP and private Linux audio scenarios.
+Graph, codec, routed carrier and reporter scoped tests passed. The new chain
+business cases reached proof, then rejected a fixture's hardcoded FileRead
+generation; it now uses the current signed permit generation. Registered tests
+expired their artificial topology before setup; the production observation
+owner replaces this fixture. Clippy/module ordering and an original-expiry clock
+fixture also require same-source revalidation. Evidence retains these failures
+separately from the passed scopes; no release qualification is claimed.

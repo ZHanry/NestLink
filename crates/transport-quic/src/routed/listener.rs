@@ -20,6 +20,14 @@ pub fn authenticated_peer_fingerprint(connection: &Connection) -> io::Result<[u8
 /// and exactly the original chain neighbor pin. No additional UDP owner.
 pub fn chain_node_client_config(identity: &NodeIdentity, remote: [u8; 32]) -> Result<ClientConfig> {
     let crypto = tls::network_node_client_config(identity, remote)?;
+    node_client_config(crypto)
+}
+/// Reuse the registered node socket and TLS pin for a bounded topology probe.
+pub fn topology_node_client_config(identity: &NodeIdentity, remote: [u8; 32]) -> Result<ClientConfig> {
+    let crypto = tls::topology_node_client_config(identity, remote)?;
+    node_client_config(crypto)
+}
+fn node_client_config(crypto: rustls::ClientConfig) -> Result<ClientConfig> {
     let mut client = ClientConfig::new(Arc::new(QuicClientConfig::try_from(crypto)?));
     let mut transport = transport_value();
     transport.max_concurrent_bidi_streams(1u8.into());

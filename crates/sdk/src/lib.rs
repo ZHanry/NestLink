@@ -23,6 +23,8 @@ use url::Url;
 mod diagnostics;
 mod media_authority;
 pub mod network_management;
+#[path = "network/topology.rs"]
+pub mod network_topology;
 mod spaces;
 
 #[derive(Debug, thiserror::Error)]

@@ -1658,7 +1658,10 @@
                                             "docs/network-rewrite/evidence/graph-lock-derivation-a19a112.json",
                                             "docs/adr/network/0016-two-relay-carrier-binding.md",
                                             "docs/adr/network/0017-atomic-two-relay-reservation.md",
-                                            "docs/adr/network/0018-chain-node-resource-admission.md"
+                                            "docs/adr/network/0018-chain-node-resource-admission.md",
+                                            "docs/adr/network/0022-chain-topology-observation-continuity.md",
+                                            "docs/adr/network/0023-live-node-topology-observation.md",
+                                            "docs/network-rewrite/evidence/development-run-d1c2773.json"
                                         ],
                       "blockers":  [
 
@@ -1669,7 +1672,8 @@
                                                    "Stored RouteExport issuance/readback/revocation, registered NRD2 listener/dialer, complete SDK readback/watch and four-node registered-node FileRead scenarios are now implemented in source and await exact-source Actions. Continuous real adjacency bootstrap/report refresh and a local prefix owner remain required implementation; W12 is incomplete.",
                                                    "Full ordered two-relay authority binding and actual four-node NRD2 carrier component tests are implemented using existing adjacency, forwarding, virtual UDP and cleanup owners; exact-source Actions are pending. ADR 0016 retains NRD1 negotiation and explicitly leaves production reservation/admission/business integration open.",
                                                    "ADR 0017 implements complete ordered device consent, atomic dual-hop capacity promises in the existing quota view, original-expiry readback/revocation and typed HTTP/SDK APIs. Source includes SQLite concurrency/rollback/migration and actual HTTP regressions; exact-source Actions are pending. Node-resource and production adjacency/business integration remain open.",
-                                                   "ADR 0018 adds complete schema2 node snapshots, exact fixed-neighbor TLS pins and fresh challenge possession, reusing the existing shared slots/meters/deadlines/continuity fences. 0c0a2d2 Actions found two storage fixture failures, graph pagination recovery and missing actual HTTP routes; repairs and new snapshot/admission regressions require new exact-source Actions. Production listener/dialer, reporting and business integration remain open."
+                                                   "ADR 0018 adds complete schema2 node snapshots, exact fixed-neighbor TLS pins and fresh challenge possession, reusing the existing shared slots/meters/deadlines/continuity fences. 0c0a2d2 Actions found two storage fixture failures, graph pagination recovery and missing actual HTTP routes; repairs and new snapshot/admission regressions require new exact-source Actions. Production listener/dialer, reporting and business integration remain open.",
+                                                   "ADR 0022/0023 source now adds durable uninterrupted topology fences, policy-signed current publisher bootstrap, real same-socket mutual-TLS probes and periodic reports, and registered-node FileRead/neighbor-loss scenarios using actual reports. This new source is unverified; local prefix reachability/forwarding ownership and remaining W12 acceptance remain required."
                                                ]
                   },
                   {
@@ -2054,7 +2058,10 @@
                                         ],
                       "blockers":  [
 
-                                   ]
+                                   ],
+                      "implementation_notes":  [
+                                                   "Web space network panel now includes typed publisher/RouteExport create/read/revoke flows and separately nonce/signature-verified current topology observations. Exact-source WASM/browser validation remains pending."
+                                               ]
                   },
                   {
                       "id":  "W19",

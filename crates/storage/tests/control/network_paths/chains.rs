@@ -16,6 +16,8 @@ use nestlink_protocol::{
 use nestlink_storage::{
     network_policy::topology::TopologyPublisherRequest, relay_reservations::RelayLifecycle,
 };
+#[path = "chains/continuity.rs"]
+mod continuity;
 
 struct ChainFixture {
     base: Setup,
@@ -319,7 +321,7 @@ fn both_node_snapshots_delegate_the_same_full_chain_and_withdraw_it_together() -
             expires_at_unix_ms: now + 1000,
         };
     let mut bindings = Vec::new();
-    for index in 0..2 {
+    for (index, id) in ids.iter().enumerate() {
         let sampled = now()?;
         let signed_query =
             f.nodes[index]
@@ -346,7 +348,7 @@ fn both_node_snapshots_delegate_the_same_full_chain_and_withdraw_it_together() -
                 .as_ref()
                 .ok_or("allocation")?
                 .allocation_id,
-            ids[index]
+            *id
         );
         let view: nestlink_protocol::api::NetworkRemoteRelayChainView =
             serde_json::from_slice(&resource.chain_bundle_json)?;
