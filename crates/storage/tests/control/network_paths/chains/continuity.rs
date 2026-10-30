@@ -8,7 +8,10 @@ impl ChainFixture {
             &self.nodes[index].0,
             now,
         )?;
-        let snapshot = self.base.store.network_policy_snapshot(&self.base.space, now)?;
+        let snapshot = self
+            .base
+            .store
+            .network_policy_snapshot(&self.base.space, now)?;
         let (id, identity, incarnation) = &self.nodes[index];
         let publisher = verify_topology_publisher(
             &signed,
@@ -52,13 +55,16 @@ impl ChainFixture {
             &snapshot.verification(),
             incarnation,
             0,
-        )?.digest();
+        )?
+        .digest();
         Ok(())
     }
 
-    fn issue_at(&mut self, request: NetworkRemoteRelayChainRequest, now: u64) ->
-        std::result::Result<NetworkRemoteRelayChainBundle, StorageError>
-    {
+    fn issue_at(
+        &mut self,
+        request: NetworkRemoteRelayChainRequest,
+        now: u64,
+    ) -> std::result::Result<NetworkRemoteRelayChainBundle, StorageError> {
         self.base.store.issue_network_remote_chain(
             &self.lifecycle,
             &self.base.controller,
@@ -72,9 +78,11 @@ impl ChainFixture {
         )
     }
 
-    fn read_at(&mut self, route: &str, now: u64) ->
-        std::result::Result<NetworkRemoteRelayChainBundle, StorageError>
-    {
+    fn read_at(
+        &mut self,
+        route: &str,
+        now: u64,
+    ) -> std::result::Result<NetworkRemoteRelayChainBundle, StorageError> {
         self.base.store.network_remote_chain(
             &self.lifecycle,
             &self.base.host,
@@ -94,23 +102,30 @@ impl ChainFixture {
                 "SELECT p.revoked FROM network_remote_paths p JOIN network_remote_chains c ON c.space_id=p.space_id AND c.path_grant_id=p.path_grant_id WHERE c.route_id=?1",
                 [route], |r|r.get::<_,bool>(0),
             )?);
-            assert_eq!(db.query_row(
-                "SELECT count(*) FROM all_relay_capacity WHERE id=?1 AND promised_until=?2",
-                rusqlite::params![route,deadline+1000], |r|r.get::<_,u64>(0),
-            )?, 2);
+            assert_eq!(
+                db.query_row(
+                    "SELECT count(*) FROM all_relay_capacity WHERE id=?1 AND promised_until=?2",
+                    rusqlite::params![route, deadline + 1000],
+                    |r| r.get::<_, u64>(0),
+                )?,
+                2
+            );
             Ok(())
         })
     }
 
     fn wait_until(&self, offset: u64) -> Result<u64> {
         let elapsed = u64::try_from(self.clock.elapsed().as_millis())?;
-        std::thread::sleep(std::time::Duration::from_millis(offset.saturating_sub(elapsed)));
+        std::thread::sleep(std::time::Duration::from_millis(
+            offset.saturating_sub(elapsed),
+        ));
         Ok(NOW + u64::try_from(self.clock.elapsed().as_millis())?)
     }
 }
 
 #[test]
-fn one_second_observations_continue_original_node_bounded_grants_across_refresh_and_restart() -> Result {
+fn one_second_observations_continue_original_node_bounded_grants_across_refresh_and_restart()
+-> Result {
     let mut f = ChainFixture::new([2, 2])?;
     for index in 0..2 {
         f.refresh(index, 2, NOW + 100, 1000, true)?;
@@ -142,8 +157,12 @@ fn one_second_observations_continue_original_node_bounded_grants_across_refresh_
     for (original, current) in issued.transits.iter().zip(&current.transits) {
         assert_eq!(current.claims, original.claims);
         assert_eq!(current.signature, original.signature);
-        assert_eq!(GrantClaims::decode_canonical(&current.claims)?.scope().expires_at_ms,
-            NOW + 8000);
+        assert_eq!(
+            GrantClaims::decode_canonical(&current.claims)?
+                .scope()
+                .expires_at_ms,
+            NOW + 8000
+        );
     }
     Ok(())
 }
@@ -153,7 +172,10 @@ fn stale_initial_digest_is_rejected_even_when_a_new_head_continues_the_same_edge
     let mut f = ChainFixture::new([2, 2])?;
     let request = f.request()?;
     f.refresh(0, 2, NOW + 100, 1000, true)?;
-    assert!(matches!(f.issue_at(request, NOW + 100), Err(StorageError::Conflict)));
+    assert!(matches!(
+        f.issue_at(request, NOW + 100),
+        Err(StorageError::Conflict)
+    ));
     let request = f.request()?;
     assert!(f.issue_at(request, NOW + 100).is_ok());
     Ok(())
@@ -193,20 +215,29 @@ fn failed_report_journal_rolls_back_the_new_head_and_both_hop_retirements() -> R
     let space = f.base.space.clone();
     let node = f.nodes[0].0.clone();
     edit_snapshot(&mut f.base, |db| {
-        assert_eq!(db.query_row(
-            "SELECT count(*) FROM network_remote_chain_hops WHERE route_id=?1 AND closed=0",
-            [&route], |r|r.get::<_,u64>(0),
-        )?, 2);
-        assert_eq!(db.query_row(
-            "SELECT sequence FROM network_topology_heads WHERE space_id=?1 AND node_id=?2",
-            rusqlite::params![space,node], |r|r.get::<_,u64>(0),
-        )?, 1);
+        assert_eq!(
+            db.query_row(
+                "SELECT count(*) FROM network_remote_chain_hops WHERE route_id=?1 AND closed=0",
+                [&route],
+                |r| r.get::<_, u64>(0),
+            )?,
+            2
+        );
+        assert_eq!(
+            db.query_row(
+                "SELECT sequence FROM network_topology_heads WHERE space_id=?1 AND node_id=?2",
+                rusqlite::params![space, node],
+                |r| r.get::<_, u64>(0),
+            )?,
+            1
+        );
         Ok(())
     })
 }
 
 #[test]
-fn expired_observation_cannot_be_repaired_into_the_original_chain_with_or_without_readback() -> Result {
+fn expired_observation_cannot_be_repaired_into_the_original_chain_with_or_without_readback()
+-> Result {
     for read_expired in [false, true] {
         let mut f = ChainFixture::new([2, 2])?;
         f.refresh(0, 2, NOW + 100, 200, true)?;
@@ -215,7 +246,10 @@ fn expired_observation_cannot_be_repaired_into_the_original_chain_with_or_withou
         let deadline = request.path.expires_at_unix_ms;
         f.issue_at(request, NOW + 100)?;
         if read_expired {
-            assert!(matches!(f.read_at(&route, NOW + 300), Err(StorageError::Forbidden)));
+            assert!(matches!(
+                f.read_at(&route, NOW + 300),
+                Err(StorageError::Forbidden)
+            ));
             // This snapshot checks the HTTP read's error path actually committed
             // the retirement, before any new report could do it on our behalf.
             f.assert_retired_with_original_holds(&route, deadline)?;
@@ -261,7 +295,9 @@ fn schema_36_retires_unprovable_old_chains_without_refunding_or_resigning_them()
     let deadline = request.path.expires_at_unix_ms;
     let issued = f.issue(request)?;
     edit_snapshot(&mut f.base, |db| {
-        db.execute_batch("DROP TABLE network_remote_chain_topology_bindings; PRAGMA user_version=35;")?;
+        db.execute_batch(
+            "DROP TABLE network_remote_chain_topology_bindings; PRAGMA user_version=35;",
+        )?;
         Ok(())
     })?;
     assert!(f.read(&route).is_err());
@@ -275,7 +311,14 @@ fn schema_36_retires_unprovable_old_chains_without_refunding_or_resigning_them()
             assert_eq!(stored.0, signed.claims);
             assert_eq!(stored.1, signed.signature);
         }
-        assert_eq!(db.query_row("SELECT count(*) FROM network_remote_chain_topology_bindings", [], |r|r.get::<_,u64>(0))?, 0);
+        assert_eq!(
+            db.query_row(
+                "SELECT count(*) FROM network_remote_chain_topology_bindings",
+                [],
+                |r| r.get::<_, u64>(0)
+            )?,
+            0
+        );
         Ok(())
     })
 }

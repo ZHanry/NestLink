@@ -62,10 +62,12 @@ fn now_ms() -> u64 {
 }
 
 fn prefixes(text: &str) -> Result<Vec<IpPrefix>, &'static str> {
-    let invalid = || t(
-        "每行填写一个规范 CIDR，最多32项；不允许默认路由、主机位、回环、多播或重复网段。",
-        "Enter one canonical CIDR per line, up to 32. Default routes, host bits, loopback, multicast and duplicates are rejected.",
-    );
+    let invalid = || {
+        t(
+            "每行填写一个规范 CIDR，最多32项；不允许默认路由、主机位、回环、多播或重复网段。",
+            "Enter one canonical CIDR per line, up to 32. Default routes, host bits, loopback, multicast and duplicates are rejected.",
+        )
+    };
     let mut result = Vec::new();
     for line in text.lines().map(str::trim).filter(|line| !line.is_empty()) {
         let (address, length) = line.split_once('/').ok_or_else(invalid)?;
@@ -87,15 +89,20 @@ fn prefixes(text: &str) -> Result<Vec<IpPrefix>, &'static str> {
 }
 
 fn prefix_text(values: &[IpPrefix]) -> String {
-    values.iter().map(|value| format!("{}/{}", value.network, value.prefix_len))
-        .collect::<Vec<_>>().join(", ")
+    values
+        .iter()
+        .map(|value| format!("{}/{}", value.network, value.prefix_len))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 fn expiry(value: u64) -> String {
     #[cfg(target_arch = "wasm32")]
     {
         js_sys::Date::new(&wasm_bindgen::JsValue::from_f64(value as f64))
-            .to_iso_string().as_string().unwrap_or_else(|| value.to_string())
+            .to_iso_string()
+            .as_string()
+            .unwrap_or_else(|| value.to_string())
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
@@ -145,11 +152,18 @@ pub(super) fn NetworkTopologyPanel(
     }
 
     let request = Callback::new(move |action: Action| {
-        if busy.get_untracked() { return; }
+        if busy.get_untracked() {
+            return;
+        }
         let space_id = space.get_untracked().trim().to_owned();
         let node_id = selected.get_untracked();
-        let node = nodes.get_untracked().into_iter().find(|node| node.id == node_id);
-        let snapshot = policy.get_untracked().filter(|view| view.space_id == space_id);
+        let node = nodes
+            .get_untracked()
+            .into_iter()
+            .find(|node| node.id == node_id);
+        let snapshot = policy
+            .get_untracked()
+            .filter(|view| view.space_id == space_id);
         let chosen_neighbors = neighbors.get_untracked();
         let chosen_export = export.get_untracked();
         let use_export = include_export.get_untracked();
@@ -157,16 +171,33 @@ pub(super) fn NetworkTopologyPanel(
         let export_draft_id = export_id.get_untracked().trim().to_owned();
         let parse_result = prefixes(&cidrs.get_untracked());
         if !nestlink_protocol::valid_id(&space_id)
-            || (!matches!(action, Action::Load) && (node.is_none() || snapshot.is_none())) {
-            problem.set(t("请填写有效空间编号，读取空间与中继后选择节点。", "Enter a valid space ID, load space and relays, then select a node.").into());
+            || (!matches!(action, Action::Load) && (node.is_none() || snapshot.is_none()))
+        {
+            problem.set(
+                t(
+                    "请填写有效空间编号，读取空间与中继后选择节点。",
+                    "Enter a valid space ID, load space and relays, then select a node.",
+                )
+                .into(),
+            );
             return;
         }
         let saving = matches!(action, Action::SavePublisher | Action::SaveExport);
-        let mut end = minutes.get_untracked().parse::<u64>().ok()
+        let mut end = minutes
+            .get_untracked()
+            .parse::<u64>()
+            .ok()
             .filter(|value| (1..=15).contains(value))
-            .and_then(|value| snapshot.as_ref()?.observed_at_unix_ms.checked_add(value * 60_000));
+            .and_then(|value| {
+                snapshot
+                    .as_ref()?
+                    .observed_at_unix_ms
+                    .checked_add(value * 60_000)
+            });
         if matches!(action, Action::SavePublisher) && use_export {
-            end = end.zip(chosen_export.as_ref()).map(|(end, grant)| end.min(grant.scope.expires_at_ms));
+            end = end
+                .zip(chosen_export.as_ref())
+                .map(|(end, grant)| end.min(grant.scope.expires_at_ms));
         }
         if saving && end.is_none_or(|end| end <= now_ms()) {
             problem.set(t("有效期须为1–15分钟；起点为最近读取空间的服务器时间。请重新读取过期快照。", "Lifetime must be 1–15 minutes from the last server space read. Reload an expired snapshot.").into());
@@ -176,23 +207,39 @@ pub(super) fn NetworkTopologyPanel(
             problem.set(parse_result.err().unwrap_or_default().into());
             return;
         }
-        if matches!(action, Action::SaveExport | Action::ReadExport | Action::RevokeExport)
-            && !nestlink_protocol::valid_id(&export_draft_id) {
-            problem.set(t("请输入有效的导出授权编号。", "Enter a valid export grant ID.").into());
+        if matches!(
+            action,
+            Action::SaveExport | Action::ReadExport | Action::RevokeExport
+        ) && !nestlink_protocol::valid_id(&export_draft_id)
+        {
+            problem.set(
+                t(
+                    "请输入有效的导出授权编号。",
+                    "Enter a valid export grant ID.",
+                )
+                .into(),
+            );
             return;
         }
         if matches!(action, Action::SavePublisher) {
             let choices = nodes.get_untracked();
-            if chosen_neighbors.len() > MAX_NEIGHBORS || chosen_neighbors.iter().any(|id| {
-                id == &node_id || !choices.iter().any(|node| &node.id == id)
-            }) || (use_export && chosen_export.as_ref().is_none_or(|grant| {
-                grant.scope.grant_id != export_draft_id || grant.scope.expires_at_ms <= now_ms()
-            })) {
+            if chosen_neighbors.len() > MAX_NEIGHBORS
+                || chosen_neighbors
+                    .iter()
+                    .any(|id| id == &node_id || !choices.iter().any(|node| &node.id == id))
+                || (use_export
+                    && chosen_export.as_ref().is_none_or(|grant| {
+                        grant.scope.grant_id != export_draft_id
+                            || grant.scope.expires_at_ms <= now_ms()
+                    }))
+            {
                 problem.set(t("请检查相邻节点，并先读取所引用的导出授权；发布授权不得晚于导出授权到期。", "Check neighbors and read the referenced export first. Publisher expiry must not exceed export expiry.").into());
                 return;
             }
         }
-        let Some(sdk) = api.get_value() else { return; };
+        let Some(sdk) = api.get_value() else {
+            return;
+        };
         let session = session_revision.get_untracked();
         let operation = generation.get_untracked();
         let alive = alive.clone();
@@ -200,104 +247,203 @@ pub(super) fn NetworkTopologyPanel(
         problem.set(String::new());
         message.set(String::new());
         spawn_local(async move {
-            let active = || alive.load(Ordering::Acquire)
-                && session_revision.try_get_untracked() == Some(session)
-                && generation.try_get_untracked() == Some(operation);
+            let active = || {
+                alive.load(Ordering::Acquire)
+                    && session_revision.try_get_untracked() == Some(session)
+                    && generation.try_get_untracked() == Some(operation)
+            };
             let result: Result<Reply, SdkError> = async {
                 let client = sdk.lock().await;
-                if !active() { return Err(SdkError::Invalid); }
+                if !active() {
+                    return Err(SdkError::Invalid);
+                }
                 if matches!(action, Action::Load) {
                     let view = client.network_policy(&space_id).await?;
-                    if view.deployment_id != client.health().deployment_id { return Err(SdkError::Invalid); }
-                    if !active() { return Err(SdkError::Invalid); }
-                    let choices = client.nodes().await?.into_iter()
-                        .filter(|node| !node.revoked && node.node.roles.contains(&(NodeRole::NodeRelay as i32)))
-                        .filter_map(|node| Some(NodeChoice {
-                            id: node.node.id, name: node.node.name,
-                            key: URL_SAFE_NO_PAD.decode(node.node.public_key).ok()?.try_into().ok()?,
-                            runtime: node.runtime_id?, generation: node.runtime_generation,
-                            lease_end: node.last_issued_at_unix_ms.checked_add(nestlink_protocol::NODE_LEASE_MS)?,
-                        })).collect();
+                    if view.deployment_id != client.health().deployment_id {
+                        return Err(SdkError::Invalid);
+                    }
+                    if !active() {
+                        return Err(SdkError::Invalid);
+                    }
+                    let choices = client
+                        .nodes()
+                        .await?
+                        .into_iter()
+                        .filter(|node| {
+                            !node.revoked && node.node.roles.contains(&(NodeRole::NodeRelay as i32))
+                        })
+                        .filter_map(|node| {
+                            Some(NodeChoice {
+                                id: node.node.id,
+                                name: node.node.name,
+                                key: URL_SAFE_NO_PAD
+                                    .decode(node.node.public_key)
+                                    .ok()?
+                                    .try_into()
+                                    .ok()?,
+                                runtime: node.runtime_id?,
+                                generation: node.runtime_generation,
+                                lease_end: node
+                                    .last_issued_at_unix_ms
+                                    .checked_add(nestlink_protocol::NODE_LEASE_MS)?,
+                            })
+                        })
+                        .collect();
                     return Ok(Reply::Loaded(view, choices));
                 }
                 let snapshot = snapshot.as_ref().ok_or(SdkError::Invalid)?;
                 let node = node.as_ref().ok_or(SdkError::Invalid)?;
-                let authority: [u8; 32] = URL_SAFE_NO_PAD.decode(&snapshot.authority_public_key)
-                    .map_err(|_| SdkError::Invalid)?.try_into().map_err(|_| SdkError::Invalid)?;
+                let authority: [u8; 32] = URL_SAFE_NO_PAD
+                    .decode(&snapshot.authority_public_key)
+                    .map_err(|_| SdkError::Invalid)?
+                    .try_into()
+                    .map_err(|_| SdkError::Invalid)?;
                 match action {
                     Action::SavePublisher | Action::ReadPublisher => {
                         let signed = if matches!(action, Action::SavePublisher) {
-                            client.issue_network_topology_publisher(&space_id, &node_id, NetworkTopologyPublisherRequest {
-                                publisher_id: publisher_draft_id.clone(),
-                                expected_policy_epoch: snapshot.policy_epoch,
-                                allowed_node_ids: chosen_neighbors,
-                                route_export_grant_ids: if use_export { vec![export_draft_id] } else { Vec::new() },
-                                expires_at_ms: end.ok_or(SdkError::Invalid)?,
-                            }).await?
-                        } else { client.network_topology_publisher(&space_id, &node_id).await? };
+                            client
+                                .issue_network_topology_publisher(
+                                    &space_id,
+                                    &node_id,
+                                    NetworkTopologyPublisherRequest {
+                                        publisher_id: publisher_draft_id.clone(),
+                                        expected_policy_epoch: snapshot.policy_epoch,
+                                        allowed_node_ids: chosen_neighbors,
+                                        route_export_grant_ids: if use_export {
+                                            vec![export_draft_id]
+                                        } else {
+                                            Vec::new()
+                                        },
+                                        expires_at_ms: end.ok_or(SdkError::Invalid)?,
+                                    },
+                                )
+                                .await?
+                        } else {
+                            client
+                                .network_topology_publisher(&space_id, &node_id)
+                                .await?
+                        };
                         signed.validate()?;
                         let claims = TopologyPublisherClaims::decode_canonical(&signed.claims)?;
-                        if claims.node_id != node_id || claims.public_key != node.key
-                            || claims.scope.space_id != space_id || claims.scope.deployment_id != snapshot.deployment_id
+                        if claims.node_id != node_id
+                            || claims.public_key != node.key
+                            || claims.scope.space_id != space_id
+                            || claims.scope.deployment_id != snapshot.deployment_id
                             || claims.scope.policy_epoch != snapshot.policy_epoch
-                            || claims.incarnation.runtime_id != node.runtime || claims.incarnation.runtime_generation != node.generation
-                            || (matches!(action, Action::SavePublisher) && claims.scope.grant_id != publisher_draft_id) {
+                            || claims.incarnation.runtime_id != node.runtime
+                            || claims.incarnation.runtime_generation != node.generation
+                            || (matches!(action, Action::SavePublisher)
+                                && claims.scope.grant_id != publisher_draft_id)
+                        {
                             return Err(SdkError::Invalid);
                         }
                         Ok(Reply::Publisher(claims))
                     }
                     Action::RevokePublisher => {
-                        client.revoke_network_topology_publisher(&space_id, &node_id).await?;
+                        client
+                            .revoke_network_topology_publisher(&space_id, &node_id)
+                            .await?;
                         Ok(Reply::PublisherRevoked)
                     }
                     Action::SaveExport | Action::ReadExport => {
                         let view = if matches!(action, Action::SaveExport) {
-                            client.issue_network_route_export(&space_id, &node_id, NetworkRouteExportRequest {
-                                grant_id: export_draft_id.clone(),
-                                expected_revision: snapshot.revision,
-                                expected_policy_epoch: snapshot.policy_epoch,
-                                prefixes: parse_result.map_err(|_| SdkError::Invalid)?,
-                                expires_at_ms: end.ok_or(SdkError::Invalid)?,
-                            }).await?
-                        } else { client.network_route_export(&space_id, &export_draft_id).await? };
+                            client
+                                .issue_network_route_export(
+                                    &space_id,
+                                    &node_id,
+                                    NetworkRouteExportRequest {
+                                        grant_id: export_draft_id.clone(),
+                                        expected_revision: snapshot.revision,
+                                        expected_policy_epoch: snapshot.policy_epoch,
+                                        prefixes: parse_result.map_err(|_| SdkError::Invalid)?,
+                                        expires_at_ms: end.ok_or(SdkError::Invalid)?,
+                                    },
+                                )
+                                .await?
+                        } else {
+                            client
+                                .network_route_export(&space_id, &export_draft_id)
+                                .await?
+                        };
                         let signed = nestlink_sdk::network_management::decode_network_grant(&view)?;
                         let revoked = BTreeSet::new();
-                        let verified = verify_network_grant(&signed, &NetworkVerification {
-                            authority_key: &authority, deployment_id: &snapshot.deployment_id,
-                            space_id: &space_id, policy_epoch: snapshot.policy_epoch,
-                            now_ms: now_ms(), revoked_grant_ids: &revoked,
-                        })?;
-                        let GrantClaims::RouteExport(claims) = verified.claims() else { return Err(SdkError::Invalid); };
+                        let verified = verify_network_grant(
+                            &signed,
+                            &NetworkVerification {
+                                authority_key: &authority,
+                                deployment_id: &snapshot.deployment_id,
+                                space_id: &space_id,
+                                policy_epoch: snapshot.policy_epoch,
+                                now_ms: now_ms(),
+                                revoked_grant_ids: &revoked,
+                            },
+                        )?;
+                        let GrantClaims::RouteExport(claims) = verified.claims() else {
+                            return Err(SdkError::Invalid);
+                        };
                         if claims.gateway != PeerId::from_public_key(&node.key)
-                            || claims.scope.grant_id != export_draft_id { return Err(SdkError::Invalid); }
+                            || claims.scope.grant_id != export_draft_id
+                        {
+                            return Err(SdkError::Invalid);
+                        }
                         let claims = claims.clone();
-                        if !active() { return Err(SdkError::Invalid); }
+                        if !active() {
+                            return Err(SdkError::Invalid);
+                        }
                         let current = client.network_policy(&space_id).await?;
                         if current.policy_epoch != claims.scope.policy_epoch
-                            || current.authority_public_key != snapshot.authority_public_key {
+                            || current.authority_public_key != snapshot.authority_public_key
+                        {
                             return Err(SdkError::Invalid);
                         }
                         Ok(Reply::Export(current, claims))
                     }
-                    Action::RevokeExport => {
-                        Ok(Reply::ExportRevoked(client.revoke_network_route_export(&space_id, &export_draft_id, snapshot.revision).await?))
-                    }
+                    Action::RevokeExport => Ok(Reply::ExportRevoked(
+                        client
+                            .revoke_network_route_export(
+                                &space_id,
+                                &export_draft_id,
+                                snapshot.revision,
+                            )
+                            .await?,
+                    )),
                     Action::Observe => {
                         let nonce = nestlink_auth::random_bytes::<32>();
-                        let signed = client.network_topology_update(&space_id, NetworkTopologyQuery { after_cursor: None, nonce }).await?;
+                        let signed = client
+                            .network_topology_update(
+                                &space_id,
+                                NetworkTopologyQuery {
+                                    after_cursor: None,
+                                    nonce,
+                                },
+                            )
+                            .await?;
                         let revoked = BTreeSet::new();
-                        let verified = verify_topology_update(&signed, &NetworkVerification {
-                            authority_key: &authority, deployment_id: &snapshot.deployment_id,
-                            space_id: &space_id, policy_epoch: snapshot.policy_epoch,
-                            now_ms: now_ms(), revoked_grant_ids: &revoked,
-                        }, &nonce)?;
-                        let TopologySync::Full { advertisements, .. } = &verified.claims().sync else { return Err(SdkError::Invalid); };
+                        let verified = verify_topology_update(
+                            &signed,
+                            &NetworkVerification {
+                                authority_key: &authority,
+                                deployment_id: &snapshot.deployment_id,
+                                space_id: &space_id,
+                                policy_epoch: snapshot.policy_epoch,
+                                now_ms: now_ms(),
+                                revoked_grant_ids: &revoked,
+                            },
+                            &nonce,
+                        )?;
+                        let TopologySync::Full { advertisements, .. } = &verified.claims().sync
+                        else {
+                            return Err(SdkError::Invalid);
+                        };
                         let mut found = None;
                         for advertisement in advertisements {
-                            let value = TopologyAdvertisement::decode_canonical(&advertisement.claims)?;
-                            if value.report.node_id == node_id && value.report.peer == PeerId::from_public_key(&node.key)
+                            let value =
+                                TopologyAdvertisement::decode_canonical(&advertisement.claims)?;
+                            if value.report.node_id == node_id
+                                && value.report.peer == PeerId::from_public_key(&node.key)
                                 && value.report.incarnation.runtime_id == node.runtime
-                                && value.report.incarnation.runtime_generation == node.generation {
+                                && value.report.incarnation.runtime_generation == node.generation
+                            {
                                 found = Some(value);
                             }
                         }
@@ -305,51 +451,105 @@ pub(super) fn NetworkTopologyPanel(
                     }
                     Action::Load => Err(SdkError::Invalid),
                 }
-            }.await;
-            if !active() { return; }
+            }
+            .await;
+            if !active() {
+                return;
+            }
             busy.set(false);
             clock.set(now_ms());
             match result {
                 Ok(Reply::Loaded(view, choices)) if view.space_id == space_id => {
-                    let previous = nodes.get_untracked().into_iter().find(|node| node.id == node_id);
+                    let previous = nodes
+                        .get_untracked()
+                        .into_iter()
+                        .find(|node| node.id == node_id);
                     let current = choices.iter().find(|node| node.id == node_id);
-                    if previous.as_ref().zip(current).is_none_or(|(old, new)| old.key != new.key || old.runtime != new.runtime || old.generation != new.generation)
-                        || publisher.get_untracked().is_some_and(|grant| grant.scope.policy_epoch != view.policy_epoch || grant.scope.deployment_id != view.deployment_id)
-                        || export.get_untracked().is_some_and(|grant| grant.scope.policy_epoch != view.policy_epoch || grant.scope.deployment_id != view.deployment_id) {
-                        publisher.set(None); export.set(None); include_export.set(false);
+                    if previous.as_ref().zip(current).is_none_or(|(old, new)| {
+                        old.key != new.key
+                            || old.runtime != new.runtime
+                            || old.generation != new.generation
+                    }) || publisher.get_untracked().is_some_and(|grant| {
+                        grant.scope.policy_epoch != view.policy_epoch
+                            || grant.scope.deployment_id != view.deployment_id
+                    }) || export.get_untracked().is_some_and(|grant| {
+                        grant.scope.policy_epoch != view.policy_epoch
+                            || grant.scope.deployment_id != view.deployment_id
+                    }) {
+                        publisher.set(None);
+                        export.set(None);
+                        include_export.set(false);
                     }
-                    observation.set(None); observed_at.set(None);
-                    policy.set(Some(view)); nodes.set(choices);
+                    observation.set(None);
+                    observed_at.set(None);
+                    policy.set(Some(view));
+                    nodes.set(choices);
                     message.set(t("已读取空间与中继。仅有当前控制租约的节点可以保存授权。", "Space and relays loaded. Saving requires a current node control lease.").into());
                 }
                 Ok(Reply::Publisher(claims)) => {
-                    publisher.set(Some(claims)); observation.set(None); observed_at.set(None);
+                    publisher.set(Some(claims));
+                    observation.set(None);
+                    observed_at.set(None);
                     publisher_id.set(nestlink_auth::random_id());
                     message.set(t("服务器已保存发布授权。请单独读取节点观测以确认发布。", "Publisher authorization is saved on the server. Read node observations separately to confirm publication.").into());
                 }
                 Ok(Reply::PublisherRevoked) => {
-                    publisher.set(None); observation.set(None); observed_at.set(None);
-                    message.set(t("服务器已撤销该节点在此空间的发布授权。", "The server revoked this node's publisher authorization in this space.").into());
+                    publisher.set(None);
+                    observation.set(None);
+                    observed_at.set(None);
+                    message.set(
+                        t(
+                            "服务器已撤销该节点在此空间的发布授权。",
+                            "The server revoked this node's publisher authorization in this space.",
+                        )
+                        .into(),
+                    );
                 }
                 Ok(Reply::Export(view, claims)) if view.space_id == space_id => {
-                    policy.set(Some(view)); export.set(Some(claims));
+                    policy.set(Some(view));
+                    export.set(Some(claims));
                     message.set(t("导出授权已由服务器确认；只有明确引用它的发布授权才能发布这些网段。", "Export authorization is confirmed by the server. A publisher must explicitly reference it to publish these prefixes.").into());
                 }
                 Ok(Reply::ExportRevoked(view)) if view.space_id == space_id => {
-                    policy.set(Some(view)); export.set(None); include_export.set(false);
-                    publisher.set(None); observation.set(None); observed_at.set(None);
+                    policy.set(Some(view));
+                    export.set(None);
+                    include_export.set(false);
+                    publisher.set(None);
+                    observation.set(None);
+                    observed_at.set(None);
                     message.set(t("已撤销导出授权及引用它的发布授权，请重新读取节点状态。", "Export authorization and its dependent publishers are revoked. Read node state again.").into());
                 }
                 Ok(Reply::Observed(value, at)) => {
-                    observation.set(value); observed_at.set(Some(at));
-                    message.set(t("已读取服务器当前拓扑观测。", "Current server topology observations loaded.").into());
+                    observation.set(value);
+                    observed_at.set(Some(at));
+                    message.set(
+                        t(
+                            "已读取服务器当前拓扑观测。",
+                            "Current server topology observations loaded.",
+                        )
+                        .into(),
+                    );
                 }
-                Ok(_) => { policy.set(None); problem.set(t("服务器返回的空间不匹配，请重新读取。", "The returned space does not match. Reload it.").into()); }
+                Ok(_) => {
+                    policy.set(None);
+                    problem.set(
+                        t(
+                            "服务器返回的空间不匹配，请重新读取。",
+                            "The returned space does not match. Reload it.",
+                        )
+                        .into(),
+                    );
+                }
                 Err(error) => {
-                    if matches!(&error, SdkError::SignIn) || matches!(&error, SdkError::Api(status, _) if status.as_u16() == 401) {
-                        auth_failure.run(sdk); return;
+                    if matches!(&error, SdkError::SignIn)
+                        || matches!(&error, SdkError::Api(status, _) if status.as_u16() == 401)
+                    {
+                        auth_failure.run(sdk);
+                        return;
                     }
-                    policy.set(None); observation.set(None); observed_at.set(None);
+                    policy.set(None);
+                    observation.set(None);
+                    observed_at.set(None);
                     problem.set(format!("{} {}", sdk_error(&error), t("草稿及授权编号已保留。保存结果未确认时，先重新读取空间和相同授权，勿直接新建。", "Drafts and grant IDs are retained. If a save is unconfirmed, reload the space and the same authorization before creating another.")));
                 }
             }
@@ -359,11 +559,22 @@ pub(super) fn NetworkTopologyPanel(
     Effect::new(move |_| {
         let _ = (space.get(), session_revision.get());
         generation.update(|value| *value = value.wrapping_add(1));
-        policy.set(None); nodes.set(Vec::new()); selected.set(String::new()); neighbors.set(Vec::new());
-        publisher.set(None); export.set(None); observation.set(None); observed_at.set(None);
-        publisher_id.set(nestlink_auth::random_id()); export_id.set(nestlink_auth::random_id());
-        cidrs.set(String::new()); include_export.set(false); minutes.set("10".into());
-        busy.set(false); problem.set(String::new()); message.set(String::new());
+        policy.set(None);
+        nodes.set(Vec::new());
+        selected.set(String::new());
+        neighbors.set(Vec::new());
+        publisher.set(None);
+        export.set(None);
+        observation.set(None);
+        observed_at.set(None);
+        publisher_id.set(nestlink_auth::random_id());
+        export_id.set(nestlink_auth::random_id());
+        cidrs.set(String::new());
+        include_export.set(false);
+        minutes.set("10".into());
+        busy.set(false);
+        problem.set(String::new());
+        message.set(String::new());
     });
 
     view! {
@@ -431,18 +642,34 @@ mod tests {
 
     #[test]
     fn prefix_drafts_preserve_exact_networks_and_reject_widening_or_duplicates() {
-        let Ok(values) = prefixes("192.168.20.0/24\nfd12:3456::/64") else { panic!("canonical prefixes were rejected"); };
+        let Ok(values) = prefixes("192.168.20.0/24\nfd12:3456::/64") else {
+            panic!("canonical prefixes were rejected");
+        };
         assert_eq!(values.len(), 2);
         assert_eq!(prefix_text(&values), "192.168.20.0/24, fd12:3456::/64");
-        for value in ["", "0.0.0.0/0", "::/0", "192.168.20.1/24", "fd12:3456::1/64", "127.0.0.0/8", "224.0.0.0/4", "192.168.20.0/24\n192.168.20.0/24"] {
-            assert!(prefixes(value).is_err(), "accepted invalid prefix draft: {value}");
+        for value in [
+            "",
+            "0.0.0.0/0",
+            "::/0",
+            "192.168.20.1/24",
+            "fd12:3456::1/64",
+            "127.0.0.0/8",
+            "224.0.0.0/4",
+            "192.168.20.0/24\n192.168.20.0/24",
+        ] {
+            assert!(
+                prefixes(value).is_err(),
+                "accepted invalid prefix draft: {value}"
+            );
         }
     }
 
     #[test]
     fn prefix_drafts_bound_the_complete_export_set() {
-        let allowed = (0..MAX_PREFIXES).map(|index| format!("10.0.{index}.0/24"))
-            .collect::<Vec<_>>().join("\n");
+        let allowed = (0..MAX_PREFIXES)
+            .map(|index| format!("10.0.{index}.0/24"))
+            .collect::<Vec<_>>()
+            .join("\n");
         assert!(prefixes(&allowed).is_ok());
         assert!(prefixes(&format!("{allowed}\n10.1.0.0/24")).is_err());
     }

@@ -73,19 +73,30 @@ impl TopologyReporter {
     /// Only an authority still present in the original current resource snapshot
     /// may supply observations. A detached copy cannot renew or revive it.
     pub async fn publish_authority(
-        &self, control: &NodeControl,
+        &self,
+        control: &NodeControl,
         authority: &nestlink_protocol::api::NetworkNodeTopologyAuthority,
         neighbors: Vec<TopologyNeighbor>,
     ) -> Result<VerifiedTopologyAdvertisement, Error> {
-        let claims = nestlink_protocol::network_topology::TopologyPublisherClaims::decode_canonical(&authority.publisher.claims)?;
+        let claims =
+            nestlink_protocol::network_topology::TopologyPublisherClaims::decode_canonical(
+                &authority.publisher.claims,
+            )?;
         control.check_network_topology_authority(authority)?;
         if neighbors.iter().any(|observation| {
-            observation.local!=claims.peer || observation.local_endpoint_revision!=authority.local.revision
+            observation.local != claims.peer
+                || observation.local_endpoint_revision != authority.local.revision
                 || !authority.neighbors.iter().any(|neighbor| {
-                    observation.remote==nestlink_protocol::network::PeerId::from_public_key(&neighbor.public_key)
-                        && observation.remote_endpoint_revision==neighbor.node.revision
+                    observation.remote
+                        == nestlink_protocol::network::PeerId::from_public_key(&neighbor.public_key)
+                        && observation.remote_endpoint_revision == neighbor.node.revision
                 })
-        }) {return Err(rejected(ErrorCode::PermissionRequired,"observation differs from current delegated neighbor"));}
+        }) {
+            return Err(rejected(
+                ErrorCode::PermissionRequired,
+                "observation differs from current delegated neighbor",
+            ));
+        }
         let revoked = std::collections::BTreeSet::new();
         let context = NetworkVerification {
             authority_key: &authority.authority_key,
@@ -95,12 +106,28 @@ impl TopologyReporter {
             now_ms: sample(control.started)?.unix_ms,
             revoked_grant_ids: &revoked,
         };
-        let exports = authority.route_exports.iter().map(|signed| {
-            nestlink_identity::network::verify_network_grant(&nestlink_identity::network::SignedNetworkGrant {
-                claims:signed.claims.clone(),signature:signed.signature.clone(),
-            }, &context)
-        }).collect::<Result<Vec<_>,_>>()?;
-        let result = self.publish_with_route_exports(control,&authority.publisher,&context,&exports,neighbors).await?;
+        let exports = authority
+            .route_exports
+            .iter()
+            .map(|signed| {
+                nestlink_identity::network::verify_network_grant(
+                    &nestlink_identity::network::SignedNetworkGrant {
+                        claims: signed.claims.clone(),
+                        signature: signed.signature.clone(),
+                    },
+                    &context,
+                )
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let result = self
+            .publish_with_route_exports(
+                control,
+                &authority.publisher,
+                &context,
+                &exports,
+                neighbors,
+            )
+            .await?;
         control.check_network_topology_authority(authority)?;
         Ok(result)
     }

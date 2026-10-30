@@ -174,7 +174,11 @@ pub fn network_node_client_config(
     identity: &nestlink_identity::nodes::NodeIdentity,
     expected_peer_fingerprint: [u8; 32],
 ) -> Result<ClientConfig, Box<dyn std::error::Error + Send + Sync>> {
-    node_client_config(identity, expected_peer_fingerprint, nestlink_protocol::network_datagram_v2::ALPN)
+    node_client_config(
+        identity,
+        expected_peer_fingerprint,
+        nestlink_protocol::network_datagram_v2::ALPN,
+    )
 }
 
 /// A fixed topology neighbor proves its registered key on a separate protocol.
@@ -183,7 +187,11 @@ pub fn topology_node_client_config(
     identity: &nestlink_identity::nodes::NodeIdentity,
     expected_peer_fingerprint: [u8; 32],
 ) -> Result<ClientConfig, Box<dyn std::error::Error + Send + Sync>> {
-    node_client_config(identity, expected_peer_fingerprint, nestlink_protocol::network_topology::PROBE_ALPN)
+    node_client_config(
+        identity,
+        expected_peer_fingerprint,
+        nestlink_protocol::network_topology::PROBE_ALPN,
+    )
 }
 
 fn node_client_config(

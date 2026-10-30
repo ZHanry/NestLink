@@ -610,12 +610,25 @@ impl Resources {
             None => topology::verify_publications(&c, lease, now.unix_ms)?,
         };
         for publication in &topology {
-            if !self.topology_deadlines.contains_key(&publication.publisher_digest) {
-                if self.topology_deadlines.len()>=65_536 {return Err(error(ErrorCode::CapacityExceeded));}
-                let claims=nestlink_protocol::network_topology::TopologyPublisherClaims::decode_canonical(&publication.publisher.claims)?;
-                let original=deadline(now.monotonic_ms,claims.scope.expires_at_ms,
-                    claims.scope.expires_at_ms-claims.scope.not_before_ms,now)?;
-                self.topology_deadlines.insert(publication.publisher_digest,original);
+            if !self
+                .topology_deadlines
+                .contains_key(&publication.publisher_digest)
+            {
+                if self.topology_deadlines.len() >= 65_536 {
+                    return Err(error(ErrorCode::CapacityExceeded));
+                }
+                let claims =
+                    nestlink_protocol::network_topology::TopologyPublisherClaims::decode_canonical(
+                        &publication.publisher.claims,
+                    )?;
+                let original = deadline(
+                    now.monotonic_ms,
+                    claims.scope.expires_at_ms,
+                    claims.scope.expires_at_ms - claims.scope.not_before_ms,
+                    now,
+                )?;
+                self.topology_deadlines
+                    .insert(publication.publisher_digest, original);
             }
         }
         let issuer: [u8; 32] = c

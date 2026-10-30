@@ -129,7 +129,20 @@ pub(in crate::network_policy) fn report_accepted(
     now: u64,
 ) -> Result<(), StorageError> {
     let report = &ad.report;
-    type BoundHop = (String, u8, Vec<u8>, u64, u64, u64, Vec<u8>, String, u64, u64, Vec<u8>, u64);
+    type BoundHop = (
+        String,
+        u8,
+        Vec<u8>,
+        u64,
+        u64,
+        u64,
+        Vec<u8>,
+        String,
+        u64,
+        u64,
+        Vec<u8>,
+        u64,
+    );
     let mut statement = tx.prepare(
         "SELECT h.route_id,h.position,b.original_publisher_digest,b.original_sequence,b.latest_sequence,b.observed_until,h.node_key,h.runtime_id,h.runtime_generation,h.endpoint_revision,o.node_key,o.endpoint_revision
          FROM network_remote_chain_hops h
@@ -137,14 +150,42 @@ pub(in crate::network_policy) fn report_accepted(
          JOIN network_remote_chain_hops o ON o.route_id=h.route_id AND o.position=1-h.position
          WHERE h.space_id=?1 AND h.node_id=?2 AND h.closed=0",
     )?;
-    let rows = statement.query_map(params![space,report.node_id], |r|Ok((
-        r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?,r.get(4)?,r.get(5)?,
-        r.get(6)?,r.get(7)?,r.get(8)?,r.get(9)?,r.get(10)?,r.get(11)?,
-    )))?.collect::<Result<Vec<BoundHop>,_>>()?;
+    let rows = statement
+        .query_map(params![space, report.node_id], |r| {
+            Ok((
+                r.get(0)?,
+                r.get(1)?,
+                r.get(2)?,
+                r.get(3)?,
+                r.get(4)?,
+                r.get(5)?,
+                r.get(6)?,
+                r.get(7)?,
+                r.get(8)?,
+                r.get(9)?,
+                r.get(10)?,
+                r.get(11)?,
+            ))
+        })?
+        .collect::<Result<Vec<BoundHop>, _>>()?;
     drop(statement);
-    for (route,position,publisher,original,latest,observed_until,key,runtime,generation,revision,remote_key,remote_revision) in rows {
-        let local_key: [u8;32] = key.try_into().map_err(|_| StorageError::Forbidden)?;
-        let remote_key: [u8;32] = remote_key.try_into().map_err(|_| StorageError::Forbidden)?;
+    for (
+        route,
+        position,
+        publisher,
+        original,
+        latest,
+        observed_until,
+        key,
+        runtime,
+        generation,
+        revision,
+        remote_key,
+        remote_revision,
+    ) in rows
+    {
+        let local_key: [u8; 32] = key.try_into().map_err(|_| StorageError::Forbidden)?;
+        let remote_key: [u8; 32] = remote_key.try_into().map_err(|_| StorageError::Forbidden)?;
         let uninterrupted = publisher == report.publisher_digest
             && report.sequence >= original
             && report.sequence > latest
@@ -179,8 +220,9 @@ pub(in crate::network_policy) fn withdrawn(
     let mut statement = tx.prepare(
         "SELECT route_id FROM network_remote_chain_hops WHERE space_id=?1 AND node_id=?2 AND closed=0",
     )?;
-    let routes = statement.query_map(params![space,node], |r|r.get::<_,String>(0))?
-        .collect::<Result<Vec<_>,_>>()?;
+    let routes = statement
+        .query_map(params![space, node], |r| r.get::<_, String>(0))?
+        .collect::<Result<Vec<_>, _>>()?;
     drop(statement);
     for route in routes {
         retire(tx, space, &route)?;

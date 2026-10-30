@@ -6,7 +6,7 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "d1c27730b189802f919f125509023432918afa97",
+    "source_revision":  "fd1c027f04785a32f7524c1615a1dea731d9ec22",
     "checkpoint_kind":  "work_in_progress_against_source_revision",
     "active_tasks":  [
                          "W00",
@@ -62,7 +62,7 @@
                                    }
                                ],
     "next_steps":  [
-                       "Validate current production probe/report bootstrap, schema36 continuity, node metadata boundaries and Web publisher/export UI on exact-source GitHub Actions; inspect new formatting/OpenAPI and fix all failures.",
+                       "Validate repaired QUIC client-config boundary and reviewed fd1 formatting on GitHub Actions; retain passed Store37/Node28/WASM/audio scopes and the shared compile failure separately.",
                        "Complete registered-chain OS FileRead and neighbor-loss scenarios using real production observations; preserve original grants, capacities and all cleanup witnesses.",
                        "Implement the remaining local prefix reachability/forwarding owner and remaining W12 acceptance, then continue every mandatory W13-W40 implementation and product surface.",
                        "Run the full same-source Windows/Linux/WASM/browser matrix and mandatory target acceptance; preserve scoped results and failures separately.",
@@ -110,7 +110,8 @@
                            "docs/network-rewrite/evidence/development-run-43e8342.json",
                            "docs/adr/network/0022-chain-topology-observation-continuity.md",
                            "docs/adr/network/0023-live-node-topology-observation.md",
-                           "docs/network-rewrite/evidence/development-run-d1c2773.json"
+                           "docs/network-rewrite/evidence/development-run-d1c2773.json",
+                           "docs/network-rewrite/evidence/development-run-fd1c027.json"
                        ],
     "observed_actions":  [
                              {

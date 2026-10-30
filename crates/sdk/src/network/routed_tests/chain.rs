@@ -214,7 +214,7 @@ async fn transfer(controller_first: bool) -> Result {
     let root_id = random_id();
     let (root, _consent) =
         ApprovedReadRoot::open(&root_id, &directory.0, nestlink_protocol::FILE_SIZE_BYTES)?;
-    let generation=f.base.permit.claims().connection_generation;
+    let generation = f.base.permit.claims().connection_generation;
     let mut server = FileReadServer::start(&mut host, generation, FileRoots::new(vec![root])?)?;
     let mut client = FileReadClient::attach(&mut controller, generation)?;
     let mut download = tokio::time::timeout_at(

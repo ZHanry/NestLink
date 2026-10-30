@@ -1,0 +1,54 @@
+{
+    "source_revision":  "fd1c027f04785a32f7524c1615a1dea731d9ec22",
+    "qualification":  "partial_laboratory_results_not_release_qualified",
+    "build_provenance":  {
+                             "repository":  "ZHanry/NestLink",
+                             "network_run":  41144390348,
+                             "core_run":  41144390303,
+                             "web_run":  41144390330,
+                             "run_attempt":  1,
+                             "runner":  "GitHub-hosted",
+                             "cargo_lock_sha256":  "f4501e866b2bedbb88ed2f5f62c0c11691f17e64379c67ffbbda0298b3b570aa"
+                         },
+    "execution_provenance":  {
+                                 "environment":  "GitHub Actions laboratory",
+                                 "target_device_acceptance":  false,
+                                 "passed_scopes":  [
+                                                       "Identity topology: 8 passed",
+                                                       "Protocol topology: 3 passed",
+                                                       "Store topology including five signed node-bootstrap scenarios: 21 passed",
+                                                       "Store atomic chains including seven immutable continuity scenarios: 16 passed",
+                                                       "Node reporter: 13 passed",
+                                                       "Node chain resources including continuous original-expiry scenario: 12 passed",
+                                                       "Node topology metadata: 3 passed",
+                                                       "WASM contract including the current Web UI typecheck",
+                                                       "Linux private PipeWire audio, X11 input, portal capture and network events",
+                                                       "Dependency checks and browser runner/observer contracts"
+                                                   ],
+                                 "scope_limit":  "Storage results are selected topology and chain suites, not the complete workspace or full storage suite.",
+                                 "shared_compile_failure":  {
+                                                                "file":  "crates/transport-quic/src/routed/listener.rs",
+                                                                "error":  "E0433 unresolved rustls::ClientConfig",
+                                                                "impact":  "Blocked transport/server/SDK compilation, actual HTTP lifecycle, NAT/socket experiments and registered-chain OS file reads. No corresponding runtime assertion result exists.",
+                                                                "repair":  "Convert TLS config at the existing QuicClientConfig import boundary; avoid undeclared rustls dependency."
+                                                            },
+                                 "pending":  [
+                                                 "Full exact-source Linux/Windows core suites",
+                                                 "Production Web release-site build",
+                                                 "Actual SDK and registered-node chain FileRead and neighbor-loss scenarios",
+                                                 "All remaining required implementation and external target acceptance"
+                                             ]
+                             },
+    "imported_formatting":  {
+                                "artifact_id":  13019468752,
+                                "archive_sha256":  "e37d8c4e0da1952faf57ac47feecb5d0e2824f7f94e7d6397fa8767fcb36c22a",
+                                "patch_sha256":  "3e0cd45b7d1c0c44461aba491db7ff60fb7146fb1b8f6a930d05cac4287cfe77",
+                                "application":  "Exact source patch imported; two local compilation/clippy repairs retained on formatted source."
+                            },
+    "verified_openapi":  {
+                             "artifact_id":  13019364913,
+                             "archive_sha256":  "41870e4c6197d7deeb485831a5c768c641f5ff794f0a6b999fb4243001d3c1aa",
+                             "output_sha256":  "df894117a8f79bf990a1f0560332aef33091a1c33660a669cab9917831dc3af5",
+                             "application":  "Hash equals the already committed OpenAPI, no source copy required."
+                         }
+}

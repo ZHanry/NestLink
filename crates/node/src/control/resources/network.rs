@@ -24,27 +24,33 @@ impl nestlink_transport_stream::tls::CurrentClientPins for NodeControl {
                 return Ok(false);
             }
             let now = sample(self.started)?;
-            let topology_pin=super::topology::current(&mut state,now)?.iter().any(|publication| {
-                publication.neighbors.iter().any(|neighbor| &nestlink_identity::digest(&neighbor.public_key)==fingerprint)
-            });
+            let topology_pin =
+                super::topology::current(&mut state, now)?
+                    .iter()
+                    .any(|publication| {
+                        publication.neighbors.iter().any(|neighbor| {
+                            &nestlink_identity::digest(&neighbor.public_key) == fingerprint
+                        })
+                    });
             state
                 .gate
                 .authorize_forwarding(NodeRole::NodeRelay, false, now)?;
             state.resources.expire(now);
-            Ok(topology_pin || state.resources.snapshot.as_ref().is_some_and(|snapshot| {
-                snapshot.entries.values().any(|entry| {
-                    now.monotonic_ms < entry.deadline
-                        && match entry.network {
-                            Some(NetworkBinding::Chain(route)) => {
-                                route.neighbors().iter().any(|peer| &peer.0 == fingerprint)
+            Ok(topology_pin
+                || state.resources.snapshot.as_ref().is_some_and(|snapshot| {
+                    snapshot.entries.values().any(|entry| {
+                        now.monotonic_ms < entry.deadline
+                            && match entry.network {
+                                Some(NetworkBinding::Chain(route)) => {
+                                    route.neighbors().iter().any(|peer| &peer.0 == fingerprint)
+                                }
+                                _ => {
+                                    entry.claims.controller_key_sha256.as_slice() == fingerprint
+                                        || entry.claims.host_key_sha256.as_slice() == fingerprint
+                                }
                             }
-                            _ => {
-                                entry.claims.controller_key_sha256.as_slice() == fingerprint
-                                    || entry.claims.host_key_sha256.as_slice() == fingerprint
-                            }
-                        }
-                })
-            }))
+                    })
+                }))
         })()
         .unwrap_or(false)
     }

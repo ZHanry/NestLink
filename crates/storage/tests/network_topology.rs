@@ -25,10 +25,10 @@ use nestlink_storage::{
     network_policy::topology::{TopologyPublisherRequest, TopologyQuery},
 };
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
-#[path = "network_topology/route_exports.rs"]
-mod route_exports;
 #[path = "network_topology/node_resources.rs"]
 mod node_resources;
+#[path = "network_topology/route_exports.rs"]
+mod route_exports;
 const NOW: u64 = 1_000_000;
 struct Fixture {
     directory: tempfile::TempDir,

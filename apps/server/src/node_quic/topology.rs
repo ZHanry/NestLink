@@ -4,12 +4,20 @@ use super::*;
 use nestlink_identity::{digest, nodes::NodeIdentity};
 use nestlink_node::control::TopologyReporter;
 use nestlink_protocol::{
-    api::{NetworkNodeTopologyAuthority, NetworkNodeTopologyNeighbor, NetworkTopologyProbe, NodeEndpointsView},
+    api::{
+        NetworkNodeTopologyAuthority, NetworkNodeTopologyNeighbor, NetworkTopologyProbe,
+        NodeEndpointsView,
+    },
     network::PeerId,
     network_topology::{BootIncarnation, MAX_NEIGHBORS, TopologyNeighbor},
 };
-use nestlink_transport_quic::routed::{authenticated_peer_fingerprint, topology_node_client_config};
-use std::{collections::{BTreeMap, BTreeSet}, net::{IpAddr, SocketAddr}};
+use nestlink_transport_quic::routed::{
+    authenticated_peer_fingerprint, topology_node_client_config,
+};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    net::{IpAddr, SocketAddr},
+};
 use tokio::{sync::OwnedSemaphorePermit, time::Instant as Deadline};
 
 const MAX_SPACES: usize = 64;
@@ -27,7 +35,11 @@ struct PeerKey {
 }
 impl From<&NetworkNodeTopologyNeighbor> for PeerKey {
     fn from(neighbor: &NetworkNodeTopologyNeighbor) -> Self {
-        Self { public_key: neighbor.public_key, incarnation: neighbor.incarnation.clone(), node: neighbor.node.clone() }
+        Self {
+            public_key: neighbor.public_key,
+            incarnation: neighbor.incarnation.clone(),
+            node: neighbor.node.clone(),
+        }
     }
 }
 #[derive(Clone)]
@@ -52,12 +64,15 @@ struct Session {
 struct Opening(Option<quinn::Connection>);
 impl Drop for Opening {
     fn drop(&mut self) {
-        if let Some(connection) = &self.0 { connection.close(0u32.into(), b"topology setup stopped"); }
+        if let Some(connection) = &self.0 {
+            connection.close(0u32.into(), b"topology setup stopped");
+        }
     }
 }
 impl Drop for Session {
     fn drop(&mut self) {
-        self.connection.close(0u32.into(), b"topology observation stopped");
+        self.connection
+            .close(0u32.into(), b"topology observation stopped");
     }
 }
 struct Observation {
@@ -73,58 +88,107 @@ struct Outcome {
 }
 
 fn same_neighbor(left: &NetworkNodeTopologyNeighbor, right: &NetworkNodeTopologyNeighbor) -> bool {
-    left.public_key == right.public_key && left.publisher_digest == right.publisher_digest
-        && left.incarnation == right.incarnation && left.node == right.node
+    left.public_key == right.public_key
+        && left.publisher_digest == right.publisher_digest
+        && left.incarnation == right.incarnation
+        && left.node == right.node
 }
-fn same_authority(left: &NetworkNodeTopologyAuthority, right: &NetworkNodeTopologyAuthority) -> bool {
+fn same_authority(
+    left: &NetworkNodeTopologyAuthority,
+    right: &NetworkNodeTopologyAuthority,
+) -> bool {
     // A new accepted node lease can advance its observation expiry. All scope,
     // key, boot, publisher and endpoint bindings must remain exactly the same;
     // the getter independently enforces the current original monotonic bounds.
-    left.authority_key == right.authority_key && left.publisher == right.publisher
-        && left.publisher_digest == right.publisher_digest && left.route_exports == right.route_exports
-        && left.local == right.local && left.neighbors.len() == right.neighbors.len()
-        && left.neighbors.iter().zip(&right.neighbors).all(|(left, right)| same_neighbor(left, right))
+    left.authority_key == right.authority_key
+        && left.publisher == right.publisher
+        && left.publisher_digest == right.publisher_digest
+        && left.route_exports == right.route_exports
+        && left.local == right.local
+        && left.neighbors.len() == right.neighbors.len()
+        && left
+            .neighbors
+            .iter()
+            .zip(&right.neighbors)
+            .all(|(left, right)| same_neighbor(left, right))
 }
 fn same_work(left: &[Work], right: &[Work]) -> bool {
-    left.len() == right.len() && left.iter().zip(right).all(|(left, right)| {
-        left.space == right.space && same_authority(&left.authority, &right.authority) && same_neighbor(&left.neighbor, &right.neighbor)
-    })
+    left.len() == right.len()
+        && left.iter().zip(right).all(|(left, right)| {
+            left.space == right.space
+                && same_authority(&left.authority, &right.authority)
+                && same_neighbor(&left.neighbor, &right.neighbor)
+        })
 }
 fn current(control: &NodeControl, work: &Work) -> bool {
-    control.network_topology_authority(&work.space).is_ok_and(|authority| same_authority(&authority, &work.authority))
+    control
+        .network_topology_authority(&work.space)
+        .is_ok_and(|authority| same_authority(&authority, &work.authority))
 }
 async fn work_stopped(control: &NodeControl, work: &[Work]) {
     loop {
-        if work.iter().any(|work| !current(control, work)) { return; }
+        if work.iter().any(|work| !current(control, work)) {
+            return;
+        }
         tokio::time::sleep(Duration::from_millis(25)).await;
     }
 }
 async fn peer_stopped(control: &NodeControl, peer: &[u8; 32]) {
     loop {
-        if !control.network_topology_authorities().is_ok_and(|authorities| authorities.iter().any(|authority| {
-            authority.neighbors.iter().any(|neighbor| digest(&neighbor.public_key) == *peer)
-        })) { return; }
+        if !control
+            .network_topology_authorities()
+            .is_ok_and(|authorities| {
+                authorities.iter().any(|authority| {
+                    authority
+                        .neighbors
+                        .iter()
+                        .any(|neighbor| digest(&neighbor.public_key) == *peer)
+                })
+            })
+        {
+            return;
+        }
         tokio::time::sleep(Duration::from_millis(25)).await;
     }
 }
 fn space(authority: &NetworkNodeTopologyAuthority) -> io::Result<String> {
     // The getter has already authenticated these canonical bytes against the
     // signed resource and retained the original monotonic validity boundary.
-    Ok(nestlink_protocol::network_topology::TopologyPublisherClaims::decode_canonical(
-        &authority.publisher.claims,
-    ).map_err(io::Error::other)?.scope.space_id)
+    Ok(
+        nestlink_protocol::network_topology::TopologyPublisherClaims::decode_canonical(
+            &authority.publisher.claims,
+        )
+        .map_err(io::Error::other)?
+        .scope
+        .space_id,
+    )
 }
 fn groups(authorities: &[NetworkNodeTopologyAuthority]) -> io::Result<BTreeMap<String, Group>> {
-    if authorities.len() > MAX_SPACES { return Err(failed()); }
+    if authorities.len() > MAX_SPACES {
+        return Err(failed());
+    }
     let mut groups = BTreeMap::<String, Group>::new();
     for authority in authorities {
-        if authority.neighbors.len() > MAX_NEIGHBORS { return Err(failed()); }
+        if authority.neighbors.len() > MAX_NEIGHBORS {
+            return Err(failed());
+        }
         let space = space(authority)?;
         for neighbor in &authority.neighbors {
             let key = PeerKey::from(neighbor);
-            let group = groups.entry(neighbor.node.node_id.clone()).or_insert_with(|| Group { key: key.clone(), work: Vec::new() });
-            if group.key != key || group.work.len() >= MAX_SPACES { return Err(failed()); }
-            group.work.push(Work { authority: authority.clone(), neighbor: neighbor.clone(), space: space.clone() });
+            let group = groups
+                .entry(neighbor.node.node_id.clone())
+                .or_insert_with(|| Group {
+                    key: key.clone(),
+                    work: Vec::new(),
+                });
+            if group.key != key || group.work.len() >= MAX_SPACES {
+                return Err(failed());
+            }
+            group.work.push(Work {
+                authority: authority.clone(),
+                neighbor: neighbor.clone(),
+                space: space.clone(),
+            });
         }
     }
     Ok(groups)
@@ -134,8 +198,11 @@ fn groups(authorities: &[NetworkNodeTopologyAuthority]) -> io::Result<BTreeMap<S
 /// two report requests per space. Spaces sharing a neighbor share its probe stream;
 /// they do not create one permanent task or socket for every space/edge pair.
 pub(super) async fn run(
-    endpoint: quinn::Endpoint, control: Arc<NodeControl>, selector: Arc<RelaySelector>,
-    identity: Arc<NodeIdentity>, reporter: Arc<TopologyReporter>,
+    endpoint: quinn::Endpoint,
+    control: Arc<NodeControl>,
+    selector: Arc<RelaySelector>,
+    identity: Arc<NodeIdentity>,
+    reporter: Arc<TopologyReporter>,
 ) -> io::Result<()> {
     let mut tick = tokio::time::interval(PERIOD);
     tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
@@ -229,38 +296,71 @@ pub(super) async fn run(
     reports.abort_all();
     let deadline = Deadline::now() + Duration::from_secs(5);
     let mut cleanup_failed = false;
-    while let Some(joined) = tokio::time::timeout_at(deadline, probes.join_next()).await.map_err(io::Error::other)? {
-        if joined.is_err_and(|error| !error.is_cancelled()) { cleanup_failed = true; }
+    while let Some(joined) = tokio::time::timeout_at(deadline, probes.join_next())
+        .await
+        .map_err(io::Error::other)?
+    {
+        if joined.is_err_and(|error| !error.is_cancelled()) {
+            cleanup_failed = true;
+        }
     }
-    while let Some(joined) = tokio::time::timeout_at(deadline, reports.join_next()).await.map_err(io::Error::other)? {
-        if joined.is_err_and(|error| !error.is_cancelled()) { cleanup_failed = true; }
+    while let Some(joined) = tokio::time::timeout_at(deadline, reports.join_next())
+        .await
+        .map_err(io::Error::other)?
+    {
+        if joined.is_err_and(|error| !error.is_cancelled()) {
+            cleanup_failed = true;
+        }
     }
-    if cleanup_failed { Err(failed()) } else { result }
+    if cleanup_failed {
+        Err(failed())
+    } else {
+        result
+    }
 }
 
 async fn address(endpoint: &quinn::Endpoint, node: &NodeEndpointsView) -> io::Result<SocketAddr> {
     node.endpoints.validate().map_err(io::Error::other)?;
-    let uri = url::Url::parse(node.endpoints.quic_uri.as_deref().ok_or_else(failed)?).map_err(io::Error::other)?;
+    let uri = url::Url::parse(node.endpoints.quic_uri.as_deref().ok_or_else(failed)?)
+        .map_err(io::Error::other)?;
     let port = uri.port().ok_or_else(failed)?;
     let addresses = match uri.host().ok_or_else(failed)? {
         url::Host::Ipv4(ip) => vec![SocketAddr::new(IpAddr::V4(ip), port)],
         url::Host::Ipv6(ip) => vec![SocketAddr::new(IpAddr::V6(ip), port)],
-        url::Host::Domain(host) => tokio::net::lookup_host((host, port)).await?.take(MAX_ADDRESSES + 1).collect(),
+        url::Host::Domain(host) => tokio::net::lookup_host((host, port))
+            .await?
+            .take(MAX_ADDRESSES + 1)
+            .collect(),
     };
-    if addresses.len() > MAX_ADDRESSES || addresses.iter().any(|address| {
-        let ip = address.ip().to_canonical();
-        ip.is_unspecified() || ip.is_multicast() || ip == std::net::Ipv4Addr::BROADCAST
-            || (ip.is_loopback() && !node.endpoints.allow_loopback)
-    }) { return Err(failed()); }
+    if addresses.len() > MAX_ADDRESSES
+        || addresses.iter().any(|address| {
+            let ip = address.ip().to_canonical();
+            ip.is_unspecified()
+                || ip.is_multicast()
+                || ip == std::net::Ipv4Addr::BROADCAST
+                || (ip.is_loopback() && !node.endpoints.allow_loopback)
+        })
+    {
+        return Err(failed());
+    }
     let ipv4 = endpoint.local_addr()?.is_ipv4();
-    addresses.into_iter().find(|address| address.is_ipv4() == ipv4).ok_or_else(failed)
+    addresses
+        .into_iter()
+        .find(|address| address.is_ipv4() == ipv4)
+        .ok_or_else(failed)
 }
 
 #[allow(clippy::too_many_arguments)]
 async fn probe(
-    node: String, group: Group, session: Option<Session>, endpoint: quinn::Endpoint,
-    control: Arc<NodeControl>, selector: Arc<RelaySelector>, identity: Arc<NodeIdentity>,
-    not_before: Deadline, failures: u8,
+    node: String,
+    group: Group,
+    session: Option<Session>,
+    endpoint: quinn::Endpoint,
+    control: Arc<NodeControl>,
+    selector: Arc<RelaySelector>,
+    identity: Arc<NodeIdentity>,
+    not_before: Deadline,
+    failures: u8,
 ) -> Outcome {
     let validity = group.work.clone();
     let result = tokio::select! { biased;
@@ -274,42 +374,87 @@ async fn probe(
     };
     match result {
         (started, Ok(Ok((session, observations)))) if started.elapsed() < PROBE_BUDGET => Outcome {
-            node, session: Some(session), observations, next_at: started + PERIOD, failures: 0,
+            node,
+            session: Some(session),
+            observations,
+            next_at: started + PERIOD,
+            failures: 0,
         },
-        _ => Outcome { node, session: None, observations: Vec::new(),
-            next_at: Deadline::now() + Duration::from_secs(1u64 << failures.min(3)), failures: failures.saturating_add(1) },
+        _ => Outcome {
+            node,
+            session: None,
+            observations: Vec::new(),
+            next_at: Deadline::now() + Duration::from_secs(1u64 << failures.min(3)),
+            failures: failures.saturating_add(1),
+        },
     }
 }
 
 async fn exchange(
-    group: Group, session: Option<Session>, endpoint: quinn::Endpoint, control: Arc<NodeControl>,
-    selector: Arc<RelaySelector>, identity: Arc<NodeIdentity>,
+    group: Group,
+    session: Option<Session>,
+    endpoint: quinn::Endpoint,
+    control: Arc<NodeControl>,
+    selector: Arc<RelaySelector>,
+    identity: Arc<NodeIdentity>,
 ) -> io::Result<(Session, Vec<Observation>)> {
-    if group.work.is_empty() || group.work.len() > MAX_SPACES || group.work.iter().any(|work| !current(&control, work)) { return Err(failed()); }
-    let mut session = match session.filter(|session| session.key == group.key && same_work(&session.work, &group.work) && session.connection.close_reason().is_none()) {
+    if group.work.is_empty()
+        || group.work.len() > MAX_SPACES
+        || group.work.iter().any(|work| !current(&control, work))
+    {
+        return Err(failed());
+    }
+    let mut session = match session.filter(|session| {
+        session.key == group.key
+            && same_work(&session.work, &group.work)
+            && session.connection.close_reason().is_none()
+    }) {
         Some(session) => session,
         None => {
             let address = address(&endpoint, &group.key.node).await?;
             let slot = selector.socket(address.ip())?;
-            let config = topology_node_client_config(&identity, digest(&group.key.public_key)).map_err(io::Error::other)?;
-            let connection = endpoint.connect_with(config, address, "peer.nestlink.invalid").map_err(io::Error::other)?.await.map_err(io::Error::other)?;
+            let config = topology_node_client_config(&identity, digest(&group.key.public_key))
+                .map_err(io::Error::other)?;
+            let connection = endpoint
+                .connect_with(config, address, "peer.nestlink.invalid")
+                .map_err(io::Error::other)?
+                .await
+                .map_err(io::Error::other)?;
             let mut opening = Opening(Some(connection.clone()));
-            if authenticated_peer_fingerprint(&connection)? != digest(&group.key.public_key) { return Err(failed()); }
+            if authenticated_peer_fingerprint(&connection)? != digest(&group.key.public_key) {
+                return Err(failed());
+            }
             let (write, read) = connection.open_bi().await.map_err(io::Error::other)?;
-            let session = Session { key: group.key.clone(), work: group.work.clone(), connection, write, read, _slot: slot };
+            let session = Session {
+                key: group.key.clone(),
+                work: group.work.clone(),
+                connection,
+                write,
+                read,
+                _slot: slot,
+            };
             // The Session takes the same authenticated connection and close duty.
             opening.0 = None;
             session
-        },
+        }
     };
-    let requests: Vec<_> = group.work.iter().map(|work| NetworkTopologyProbe {
-        schema_version: 1, space_id: work.space.clone(), publisher_digest: work.authority.publisher_digest,
-        local_endpoint_revision: work.authority.local.revision, remote_endpoint_revision: work.neighbor.node.revision,
-        nonce: random_bytes::<32>(),
-    }).collect();
+    let requests: Vec<_> = group
+        .work
+        .iter()
+        .map(|work| NetworkTopologyProbe {
+            schema_version: 1,
+            space_id: work.space.clone(),
+            publisher_digest: work.authority.publisher_digest,
+            local_endpoint_revision: work.authority.local.revision,
+            remote_endpoint_revision: work.neighbor.node.revision,
+            nonce: random_bytes::<32>(),
+        })
+        .collect();
     // A bounded pipeline shares one stream across all permitted spaces on this
     // same peer. It avoids one RTT (or connection) per space in the 700ms budget.
-    for request in &requests { write_message(&mut session.write, request).await?; }
+    for request in &requests {
+        write_message(&mut session.write, request).await?;
+    }
     for (request, work) in requests.iter().zip(&group.work) {
         let response: NetworkTopologyProbe = tokio::select! { biased;
             _ = session.connection.read_datagram() => return Err(failed()),
@@ -317,29 +462,53 @@ async fn exchange(
             _ = session.connection.accept_uni() => return Err(failed()),
             response = read_message(&mut session.read) => response?,
         };
-        if response.schema_version != 1 || response.space_id != request.space_id
-            || response.publisher_digest != work.neighbor.publisher_digest || response.nonce != request.nonce
+        if response.schema_version != 1
+            || response.space_id != request.space_id
+            || response.publisher_digest != work.neighbor.publisher_digest
+            || response.nonce != request.nonce
             || response.local_endpoint_revision != request.remote_endpoint_revision
             || response.remote_endpoint_revision != request.local_endpoint_revision
-        { return Err(failed()); }
+        {
+            return Err(failed());
+        }
     }
-    if session.connection.close_reason().is_some() || group.work.iter().any(|work| !current(&control, work)) { return Err(failed()); }
+    if session.connection.close_reason().is_some()
+        || group.work.iter().any(|work| !current(&control, work))
+    {
+        return Err(failed());
+    }
     session.work = group.work.clone();
     let completed = Deadline::now();
-    Ok((session, group.work.into_iter().map(|work| Observation { work, completed }).collect()))
+    Ok((
+        session,
+        group
+            .work
+            .into_iter()
+            .map(|work| Observation { work, completed })
+            .collect(),
+    ))
 }
 
 /// A TLS-authenticated peer may exchange only this fixed bounded message on
 /// the independent ALPN. Current metadata is checked before and after each echo.
-pub(super) async fn incoming(connection: quinn::Connection, control: Arc<NodeControl>, identity: Arc<NodeIdentity>) -> io::Result<()> {
+pub(super) async fn incoming(
+    connection: quinn::Connection,
+    control: Arc<NodeControl>,
+    identity: Arc<NodeIdentity>,
+) -> io::Result<()> {
     let peer = authenticated_peer_fingerprint(&connection)?;
-    let (mut write, mut read) = tokio::time::timeout(PROBE_BUDGET, connection.accept_bi()).await.map_err(io::Error::other)?.map_err(io::Error::other)?;
+    let (mut write, mut read) = tokio::time::timeout(PROBE_BUDGET, connection.accept_bi())
+        .await
+        .map_err(io::Error::other)?
+        .map_err(io::Error::other)?;
     let mut stopped = control.stopped();
     let mut window = Deadline::now();
     let mut messages = 0u16;
     let mut bindings = BTreeMap::<String, NetworkNodeTopologyAuthority>::new();
     loop {
-        if *stopped.borrow() { return Err(failed()); }
+        if *stopped.borrow() {
+            return Err(failed());
+        }
         let request: NetworkTopologyProbe = tokio::select! { biased;
             _ = stopped.changed() => return Err(failed()),
             _ = peer_stopped(&control, &peer) => return Err(failed()),
@@ -348,24 +517,73 @@ pub(super) async fn incoming(connection: quinn::Connection, control: Arc<NodeCon
             _ = connection.accept_uni() => return Err(failed()),
             request = tokio::time::timeout(Duration::from_millis(1500), read_message(&mut read)) => request.map_err(io::Error::other)??,
         };
-        if window.elapsed() >= Duration::from_secs(1) { window = Deadline::now(); messages = 0; }
+        if window.elapsed() >= Duration::from_secs(1) {
+            window = Deadline::now();
+            messages = 0;
+        }
         messages += 1;
-        if messages > 256 || request.schema_version != 1 || request.nonce == [0; 32] || !nestlink_protocol::valid_id(&request.space_id) { return Err(failed()); }
-        let authority = control.network_topology_authority(&request.space_id).map_err(|_| failed())?;
-        if bindings.get(&request.space_id).is_some_and(|original| !same_authority(original, &authority))
+        if messages > 256
+            || request.schema_version != 1
+            || request.nonce == [0; 32]
+            || !nestlink_protocol::valid_id(&request.space_id)
+        {
+            return Err(failed());
+        }
+        let authority = control
+            .network_topology_authority(&request.space_id)
+            .map_err(|_| failed())?;
+        if bindings
+            .get(&request.space_id)
+            .is_some_and(|original| !same_authority(original, &authority))
             || (!bindings.contains_key(&request.space_id) && bindings.len() >= MAX_SPACES)
-        { return Err(failed()); }
+        {
+            return Err(failed());
+        }
         bindings.insert(request.space_id.clone(), authority.clone());
-        let neighbor = authority.neighbors.iter().find(|neighbor| digest(&neighbor.public_key) == peer).ok_or_else(failed)?;
-        let claims = nestlink_protocol::network_topology::TopologyPublisherClaims::decode_canonical(&authority.publisher.claims).map_err(io::Error::other)?;
-        if claims.public_key != identity.public_key() || claims.peer != PeerId::from_public_key(&identity.public_key())
+        let neighbor = authority
+            .neighbors
+            .iter()
+            .find(|neighbor| digest(&neighbor.public_key) == peer)
+            .ok_or_else(failed)?;
+        let claims =
+            nestlink_protocol::network_topology::TopologyPublisherClaims::decode_canonical(
+                &authority.publisher.claims,
+            )
+            .map_err(io::Error::other)?;
+        if claims.public_key != identity.public_key()
+            || claims.peer != PeerId::from_public_key(&identity.public_key())
             || request.publisher_digest != neighbor.publisher_digest
-            || request.local_endpoint_revision != neighbor.node.revision || request.remote_endpoint_revision != authority.local.revision
-        { return Err(failed()); }
-        let response = NetworkTopologyProbe { schema_version: 1, space_id: request.space_id.clone(), publisher_digest: authority.publisher_digest,
-            local_endpoint_revision: authority.local.revision, remote_endpoint_revision: neighbor.node.revision, nonce: request.nonce };
-        if !same_authority(&control.network_topology_authority(&request.space_id).map_err(|_| failed())?, &authority) { return Err(failed()); }
-        tokio::time::timeout(PROBE_BUDGET, write_message(&mut write, &response)).await.map_err(io::Error::other)??;
-        if !same_authority(&control.network_topology_authority(&request.space_id).map_err(|_| failed())?, &authority) { return Err(failed()); }
+            || request.local_endpoint_revision != neighbor.node.revision
+            || request.remote_endpoint_revision != authority.local.revision
+        {
+            return Err(failed());
+        }
+        let response = NetworkTopologyProbe {
+            schema_version: 1,
+            space_id: request.space_id.clone(),
+            publisher_digest: authority.publisher_digest,
+            local_endpoint_revision: authority.local.revision,
+            remote_endpoint_revision: neighbor.node.revision,
+            nonce: request.nonce,
+        };
+        if !same_authority(
+            &control
+                .network_topology_authority(&request.space_id)
+                .map_err(|_| failed())?,
+            &authority,
+        ) {
+            return Err(failed());
+        }
+        tokio::time::timeout(PROBE_BUDGET, write_message(&mut write, &response))
+            .await
+            .map_err(io::Error::other)??;
+        if !same_authority(
+            &control
+                .network_topology_authority(&request.space_id)
+                .map_err(|_| failed())?,
+            &authority,
+        ) {
+            return Err(failed());
+        }
     }
 }

@@ -21,8 +21,8 @@ use std::{
 };
 use tokio::{sync::watch, task::JoinSet};
 mod chain;
-mod topology;
 mod network;
+mod topology;
 
 fn failed() -> io::Error {
     io::Error::new(
@@ -221,7 +221,16 @@ async fn serve_inner(
     let mut observing_finished = false;
     let observing = async {
         match (identity.clone(), reporter) {
-            (Some(identity), Some(reporter)) => topology::run(endpoint.clone(), control.clone(), selector.clone(), identity, reporter).await,
+            (Some(identity), Some(reporter)) => {
+                topology::run(
+                    endpoint.clone(),
+                    control.clone(),
+                    selector.clone(),
+                    identity,
+                    reporter,
+                )
+                .await
+            }
             _ => std::future::pending().await,
         }
     };
@@ -296,7 +305,7 @@ async fn serve_inner(
     let mut cleanup_error = None;
     if has_topology && !observing_finished {
         match tokio::time::timeout_at(cleanup_deadline, &mut observing).await {
-            Ok(Ok(())) => {},
+            Ok(Ok(())) => {}
             Ok(Err(error)) => cleanup_error = Some(error),
             Err(error) => cleanup_error = Some(io::Error::other(error)),
         }
@@ -304,12 +313,18 @@ async fn serve_inner(
     // Aborting requests cancellation. Joining each original task proves its
     // streams, queues, connections and resource guards have actually dropped.
     while let Some(joined) = tokio::time::timeout_at(cleanup_deadline, tasks.join_next())
-        .await.map_err(io::Error::other)? {
+        .await
+        .map_err(io::Error::other)?
+    {
         if joined.is_err_and(|error| !error.is_cancelled()) {
             cleanup_error = Some(failed());
         }
     }
-    if let Some(error) = cleanup_error { Err(error) } else { result }
+    if let Some(error) = cleanup_error {
+        Err(error)
+    } else {
+        result
+    }
 }
 async fn admission(
     control: &NodeControl,

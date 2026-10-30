@@ -340,15 +340,8 @@ impl Store {
         }
         let node_ids: [String; 2] = node_ids.try_into().map_err(|_| StorageError::Forbidden)?;
         let nodes: [RelayNode; 2] = nodes.try_into().map_err(|_| StorageError::Forbidden)?;
-        let topology = topology_continuity::current(
-            self,
-            tx,
-            &snapshot,
-            route,
-            &node_ids,
-            &nodes,
-            now,
-        );
+        let topology =
+            topology_continuity::current(self, tx, &snapshot, route, &node_ids, &nodes, now);
         match topology {
             Ok(()) => {}
             Err(StorageError::Forbidden | StorageError::Unauthorized | StorageError::Proof(_)) => {

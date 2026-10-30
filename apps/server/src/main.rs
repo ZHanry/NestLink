@@ -437,9 +437,11 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             let identity = nestlink_identity::nodes::NodeIdentity::from_seed(&identity_seed);
             let listener_identity =
                 nestlink_identity::nodes::NodeIdentity::from_seed(&identity_seed);
-            let topology_reporter = std::sync::Arc::new(nestlink_node::control::TopologyReporter::new(
-                config.clone(), nestlink_identity::nodes::NodeIdentity::from_seed(&identity_seed),
-            )?);
+            let topology_reporter =
+                std::sync::Arc::new(nestlink_node::control::TopologyReporter::new(
+                    config.clone(),
+                    nestlink_identity::nodes::NodeIdentity::from_seed(&identity_seed),
+                )?);
             drop(identity_seed);
             let listener = tokio::net::TcpListener::bind(listen).await?;
             let control = std::sync::Arc::new(nestlink_node::control::NodeControl::start(

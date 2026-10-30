@@ -116,9 +116,15 @@ impl Store {
         };
         let snapshot = NodeResourceSnapshotClaims {
             topology_publications_json: if signer.is_some() {
-                let publications=self.node_topology_publications(&q,now_ms)?;
-                if publications.is_empty() {Vec::new()} else {serde_json::to_vec(&publications)?}
-            } else {Vec::new()},
+                let publications = self.node_topology_publications(&q, now_ms)?;
+                if publications.is_empty() {
+                    Vec::new()
+                } else {
+                    serde_json::to_vec(&publications)?
+                }
+            } else {
+                Vec::new()
+            },
             network_routes,
             query: Some(q.clone()),
             query_sha256: digest(&signed.claims).to_vec(),

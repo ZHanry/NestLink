@@ -239,17 +239,18 @@ impl Fixture {
         .await?;
         let mut usage = ServiceUsageDirectory::new()?;
         let node_config = NodeConfig {
-                deployment_id: deployment,
-                node_id: node_id.clone(),
-                control_origin: origin,
-                trusted_policy_issuer: URL_SAFE_NO_PAD.encode(node_issuer),
-                identity_key_file: "unused-network-test-identity".into(),
-                service_usage_directory: Some(usage.path().to_path_buf()),
-                roles: vec![NodeRole::NodeRelay as i32],
-                allow_loopback_http: true,
-            };
+            deployment_id: deployment,
+            node_id: node_id.clone(),
+            control_origin: origin,
+            trusted_policy_issuer: URL_SAFE_NO_PAD.encode(node_issuer),
+            identity_key_file: "unused-network-test-identity".into(),
+            service_usage_directory: Some(usage.path().to_path_buf()),
+            roles: vec![NodeRole::NodeRelay as i32],
+            allow_loopback_http: true,
+        };
         let topology_reporter = Arc::new(nestlink_node::control::TopologyReporter::new(
-            node_config.clone(), NodeIdentity::from_seed(&node_seed),
+            node_config.clone(),
+            NodeIdentity::from_seed(&node_seed),
         )?);
         let control = Arc::new(NodeControl::start(node_config, node_identity)?);
         pending.control = Some(control.clone());

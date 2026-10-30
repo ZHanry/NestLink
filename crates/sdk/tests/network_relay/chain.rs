@@ -1,7 +1,14 @@
 //! Registered NRD2 nodes and the production management/SDK/business owners.
 //! Real current-authority probes and periodic reports seed the registered route.
 use super::*;
-use nestlink_identity::{digest, network::NetworkVerification, network_topology::{SignedTopologyPublisher, verify_topology_advertisement, verify_topology_publisher, verify_topology_update}};
+use nestlink_identity::{
+    digest,
+    network::NetworkVerification,
+    network_topology::{
+        SignedTopologyPublisher, verify_topology_advertisement, verify_topology_publisher,
+        verify_topology_update,
+    },
+};
 use nestlink_platform_files::{ApprovedReadRoot, FileRoots};
 use nestlink_protocol::{
     api::{NetworkRemoteRelayChainRequest, NetworkTopologyPublisherRequest, NetworkTopologyQuery},
@@ -48,16 +55,19 @@ impl ChainNode {
             .await?;
         let mut usage = ServiceUsageDirectory::new()?;
         let config = NodeConfig {
-                deployment_id: f.permit.claims().deployment_id.clone(),
-                node_id: id.clone(),
-                control_origin: f.sdk.management_origin().into(),
-                trusted_policy_issuer: f.sdk.health().node_policy_issuer.clone(),
-                identity_key_file: "unused-nrd2-fixture-key".into(),
-                service_usage_directory: Some(usage.path().to_path_buf()),
-                roles: vec![NodeRole::NodeRelay as i32],
-                allow_loopback_http: true,
-            };
-        let reporter = Arc::new(nestlink_node::control::TopologyReporter::new(config.clone(), NodeIdentity::from_seed(&seed))?);
+            deployment_id: f.permit.claims().deployment_id.clone(),
+            node_id: id.clone(),
+            control_origin: f.sdk.management_origin().into(),
+            trusted_policy_issuer: f.sdk.health().node_policy_issuer.clone(),
+            identity_key_file: "unused-nrd2-fixture-key".into(),
+            service_usage_directory: Some(usage.path().to_path_buf()),
+            roles: vec![NodeRole::NodeRelay as i32],
+            allow_loopback_http: true,
+        };
+        let reporter = Arc::new(nestlink_node::control::TopologyReporter::new(
+            config.clone(),
+            NodeIdentity::from_seed(&seed),
+        )?);
         let control = Arc::new(NodeControl::start(config, NodeIdentity::from_seed(&seed))?);
         let mut pending = PendingFixture {
             http_task: None,
@@ -90,11 +100,17 @@ impl ChainNode {
         let selector = nestlink_server::relay_selector::RelaySelector::new(control.clone());
         let signer = identity.clone();
         let task = tokio::spawn(async move {
-            node_quic::serve_with_topology_identity(endpoint, selector, signer, reporter, async move {
-                if !*stopped.borrow() {
-                    let _ = stopped.changed().await;
-                }
-            })
+            node_quic::serve_with_topology_identity(
+                endpoint,
+                selector,
+                signer,
+                reporter,
+                async move {
+                    if !*stopped.borrow() {
+                        let _ = stopped.changed().await;
+                    }
+                },
+            )
             .await
         });
         pending.control = None;
@@ -146,10 +162,15 @@ async fn reserve(f: &Fixture, second: &ChainNode) -> Result<String> {
     }
     let first_digests = tokio::time::timeout(Duration::from_secs(4), async {
         loop {
-            if let Some(digests) = topology_digests(f, second, &publishers, policy.policy_epoch).await? { break Result::Ok(digests); }
+            if let Some(digests) =
+                topology_digests(f, second, &publishers, policy.policy_epoch).await?
+            {
+                break Result::Ok(digests);
+            }
             tokio::time::sleep(Duration::from_millis(25)).await;
         }
-    }).await??;
+    })
+    .await??;
     let now = RuntimeClock::default().sample()?.unix_ms;
     let leases = [
         nodes[0].2.authorize(NodeRole::NodeRelay, false)?,
@@ -164,40 +185,52 @@ async fn reserve(f: &Fixture, second: &ChainNode) -> Result<String> {
         .await?;
     let route = random_id();
     let mut request = NetworkRemoteRelayChainRequest {
-                route_id: route.clone(),
-                path: NetworkRemotePathRequest {
-                    connectivity_grant_id: random_id(),
-                    path_grant_id: random_id(),
-                    controller_membership_grant_id: old.path.controller_membership.grant_id,
-                    host_membership_grant_id: old.path.host_membership.grant_id,
-                    expected_policy_epoch: policy.policy_epoch,
-                    expires_at_unix_ms: expires,
-                },
-                node_ids: [f.node_id.clone(), second.id.clone()],
-                transit_grant_ids: [random_id(), random_id()],
-                topology_digests: first_digests,
-                device_id: f.controller.device_id.clone(),
-                signature: String::new(),
-            };
+        route_id: route.clone(),
+        path: NetworkRemotePathRequest {
+            connectivity_grant_id: random_id(),
+            path_grant_id: random_id(),
+            controller_membership_grant_id: old.path.controller_membership.grant_id,
+            host_membership_grant_id: old.path.host_membership.grant_id,
+            expected_policy_epoch: policy.policy_epoch,
+            expires_at_unix_ms: expires,
+        },
+        node_ids: [f.node_id.clone(), second.id.clone()],
+        transit_grant_ids: [random_id(), random_id()],
+        topology_digests: first_digests,
+        device_id: f.controller.device_id.clone(),
+        signature: String::new(),
+    };
     tokio::time::timeout(Duration::from_secs(3), async {
         loop {
-            match f.sdk.reserve_network_remote_chain(f.pin.space_id(), &f.controller, &f.permit, request.clone()).await {
+            match f
+                .sdk
+                .reserve_network_remote_chain(
+                    f.pin.space_id(),
+                    &f.controller,
+                    &f.permit,
+                    request.clone(),
+                )
+                .await
+            {
                 Ok(_) => break Result::Ok(()),
                 Err(SdkError::Api(status, _)) if status == reqwest::StatusCode::CONFLICT => {
                     // Periodic real reports can replace the exact head between
                     // query and reservation. Keep every UUID and original expiry.
                     loop {
-                        if let Some(digests) = topology_digests(f, second, &publishers, policy.policy_epoch).await? {
+                        if let Some(digests) =
+                            topology_digests(f, second, &publishers, policy.policy_epoch).await?
+                        {
                             request.topology_digests = digests;
                             break;
                         }
                         tokio::time::sleep(Duration::from_millis(25)).await;
                     }
-                },
+                }
                 Err(error) => return Err(error.into()),
             }
         }
-    }).await??;
+    })
+    .await??;
     tokio::time::timeout(Duration::from_secs(3), async {
         loop {
             if [&f.control, &second.control].into_iter().all(|control| {
@@ -213,30 +246,79 @@ async fn reserve(f: &Fixture, second: &ChainNode) -> Result<String> {
     .await?;
     Ok(route)
 }
-async fn topology_digests(f: &Fixture, second: &ChainNode, publishers: &[SignedTopologyPublisher], policy_epoch: u64) -> Result<Option<[[u8; 32]; 2]>> {
+async fn topology_digests(
+    f: &Fixture,
+    second: &ChainNode,
+    publishers: &[SignedTopologyPublisher],
+    policy_epoch: u64,
+) -> Result<Option<[[u8; 32]; 2]>> {
     let nonce = random_bytes::<32>();
-    let signed = f.sdk.network_topology_update(f.pin.space_id(), NetworkTopologyQuery { after_cursor: None, nonce }).await?;
+    let signed = f
+        .sdk
+        .network_topology_update(
+            f.pin.space_id(),
+            NetworkTopologyQuery {
+                after_cursor: None,
+                nonce,
+            },
+        )
+        .await?;
     let now = RuntimeClock::default().sample()?.unix_ms;
     let revoked = BTreeSet::new();
-    let context = NetworkVerification { authority_key: f.pin.authority_key(), deployment_id: &f.permit.claims().deployment_id,
-        space_id: f.pin.space_id(), policy_epoch, now_ms: now, revoked_grant_ids: &revoked };
+    let context = NetworkVerification {
+        authority_key: f.pin.authority_key(),
+        deployment_id: &f.permit.claims().deployment_id,
+        space_id: f.pin.space_id(),
+        policy_epoch,
+        now_ms: now,
+        revoked_grant_ids: &revoked,
+    };
     let update = verify_topology_update(&signed, &context, &nonce)?;
-    let TopologySync::Full { advertisements, .. } = &update.claims().sync else { return Err("expected full topology".into()); };
-    let nodes = [(&f.node_id, &f.node_identity, &f.control), (&second.id, &second.identity, &second.control)];
+    let TopologySync::Full { advertisements, .. } = &update.claims().sync else {
+        return Err("expected full topology".into());
+    };
+    let nodes = [
+        (&f.node_id, &f.node_identity, &f.control),
+        (&second.id, &second.identity, &second.control),
+    ];
     let mut digests = [[0; 32]; 2];
     for signed in advertisements {
         let claims = TopologyAdvertisement::decode_canonical(&signed.claims)?;
-        let Some(index) = nodes.iter().position(|(id, _, _)| **id == claims.report.node_id) else { continue; };
-        if claims.expires_at_ms <= now.saturating_add(200) || !claims.report.neighbors.iter().any(|neighbor| {
-            neighbor.up && neighbor.remote == PeerId::from_public_key(&nodes[1 - index].1.public_key())
-                && neighbor.local_endpoint_revision == 1 && neighbor.remote_endpoint_revision == 1
-        }) { continue; }
+        let Some(index) = nodes
+            .iter()
+            .position(|(id, _, _)| **id == claims.report.node_id)
+        else {
+            continue;
+        };
+        if claims.expires_at_ms <= now.saturating_add(200)
+            || !claims.report.neighbors.iter().any(|neighbor| {
+                neighbor.up
+                    && neighbor.remote == PeerId::from_public_key(&nodes[1 - index].1.public_key())
+                    && neighbor.local_endpoint_revision == 1
+                    && neighbor.remote_endpoint_revision == 1
+            })
+        {
+            continue;
+        }
         let lease = nodes[index].2.authorize(NodeRole::NodeRelay, false)?;
-        let incarnation = BootIncarnation { runtime_id: lease.runtime_id, runtime_generation: lease.runtime_generation };
-        let publisher = verify_topology_publisher(&publishers[index], &context, nodes[index].0,
-            &nodes[index].1.public_key(), &incarnation, &[])?;
-        let advertisement = verify_topology_advertisement(signed, &publisher, &context, &incarnation, 0)?;
-        assert!(advertisement.claims().report.sequence > 1, "the real owner must advance its sequence after initial down observations");
+        let incarnation = BootIncarnation {
+            runtime_id: lease.runtime_id,
+            runtime_generation: lease.runtime_generation,
+        };
+        let publisher = verify_topology_publisher(
+            &publishers[index],
+            &context,
+            nodes[index].0,
+            &nodes[index].1.public_key(),
+            &incarnation,
+            &[],
+        )?;
+        let advertisement =
+            verify_topology_advertisement(signed, &publisher, &context, &incarnation, 0)?;
+        assert!(
+            advertisement.claims().report.sequence > 1,
+            "the real owner must advance its sequence after initial down observations"
+        );
         digests[index] = advertisement.digest();
     }
     Ok((!digests.contains(&[0; 32])).then_some(digests))
@@ -265,7 +347,8 @@ async fn registered_nrd2_nodes_keep_host_initiated_quic_and_controller_business_
     transfer(false).await
 }
 #[tokio::test]
-async fn registered_topology_owner_withdraws_a_stopped_real_neighbor_before_original_chain_expiry() -> Result {
+async fn registered_topology_owner_withdraws_a_stopped_real_neighbor_before_original_chain_expiry()
+-> Result {
     let mut f = Fixture::with_peer_order(Some(true)).await?;
     let mut second = ChainNode::new(&f).await?;
     let route = reserve(&f, &second).await?;
@@ -277,16 +360,24 @@ async fn registered_topology_owner_withdraws_a_stopped_real_neighbor_before_orig
     tokio::time::timeout(Duration::from_secs(3), async {
         loop {
             match f.sdk.network_remote_chain(f.pin.space_id(), &route).await {
-                Err(SdkError::Api(status, _)) if status == reqwest::StatusCode::FORBIDDEN => break Result::Ok(()),
+                Err(SdkError::Api(status, _)) if status == reqwest::StatusCode::FORBIDDEN => {
+                    break Result::Ok(());
+                }
                 Err(error) => return Err(error.into()),
                 Ok(_) => tokio::time::sleep(Duration::from_millis(25)).await,
             }
         }
-    }).await??;
-    assert!(RuntimeClock::default().sample()?.unix_ms < original_expiry, "actual probe withdrawal must retire the route before its original grant expiry");
+    })
+    .await??;
+    assert!(
+        RuntimeClock::default().sample()?.unix_ms < original_expiry,
+        "actual probe withdrawal must retire the route before its original grant expiry"
+    );
     f.finish().await?;
     let _nodes = rebind(&nodes)?;
-    eprintln!("registered topology owner: real_neighbor_stopped=true, original_unexpired_chain_retired=true, released_udp_sockets=2");
+    eprintln!(
+        "registered topology owner: real_neighbor_stopped=true, original_unexpired_chain_retired=true, released_udp_sockets=2"
+    );
     Ok(())
 }
 async fn transfer(controller_first: bool) -> Result {
@@ -348,7 +439,7 @@ async fn transfer(controller_first: bool) -> Result {
     let root_id = random_id();
     let (root, _consent) =
         ApprovedReadRoot::open(&root_id, &directory.0, nestlink_protocol::FILE_SIZE_BYTES)?;
-    let generation=f.permit.claims().connection_generation;
+    let generation = f.permit.claims().connection_generation;
     let mut server = FileReadServer::start(&mut host, generation, FileRoots::new(vec![root])?)?;
     let mut client = FileReadClient::attach(&mut controller, generation)?;
     let mut download = tokio::time::timeout_at(

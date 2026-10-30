@@ -42,7 +42,8 @@ impl NodeResourceSnapshotClaims {
         let q = self.query.as_ref().ok_or_else(invalid)?;
         q.validate()?;
         if self.query_sha256.len() != 32
-            || self.topology_publications_json.len() > crate::network_topology::MAX_NODE_PUBLICATION_BYTES
+            || self.topology_publications_json.len()
+                > crate::network_topology::MAX_NODE_PUBLICATION_BYTES
             || self.allocation_issuer.len() != 32
             || self.quota_revision == 0
             || self.quota_revision > i64::MAX as u64

@@ -147,8 +147,7 @@ async fn omitted_revoked_snapshot_stopped_resources_and_stopped_nodes_cannot_ret
 }
 
 #[tokio::test]
-async fn continuous_snapshots_cannot_extend_original_chain_or_entry_expiration() -> TestResult
-{
+async fn continuous_snapshots_cannot_extend_original_chain_or_entry_expiration() -> TestResult {
     // Sign and verify the original 10-second grants before approaching their
     // expiry. Backdating them before fixture cryptography consumed the 800ms
     // observation window on slower runners and could fail the first lookup.
