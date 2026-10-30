@@ -27,11 +27,14 @@ impl Setup {
     fn with_path(approve: bool, direct: bool) -> Result<Self> {
         let (mut store, _, _, controller, host) = fixture()?;
         if !direct {
-            store.apply_policy(1, nestlink_policy::NetworkPolicy {
-                server_forwarding: nestlink_policy::ServerForwarding::Allow,
-                peer_path_mode: nestlink_policy::PeerPathMode::DirectPreferred,
-                ..nestlink_policy::NetworkPolicy::default()
-            })?;
+            store.apply_policy(
+                1,
+                nestlink_policy::NetworkPolicy {
+                    server_forwarding: nestlink_policy::ServerForwarding::Allow,
+                    peer_path_mode: nestlink_policy::PeerPathMode::DirectPreferred,
+                    ..nestlink_policy::NetworkPolicy::default()
+                },
+            )?;
         }
         let c = InstallationIdentity::generate();
         let h = InstallationIdentity::generate();
@@ -197,15 +200,33 @@ fn path_admission_rejects_cross_space_copied_membership_stale_epoch_expiry_and_r
 {
     let mut f = Setup::new(true)?;
     let foreign_space = random_id();
-    f.store.configure_network_authority(&f.controller, NetworkAuthorityUpdate {
-        space_id: foreign_space.clone(), expected_revision: 0, public_key: f.signer.public_key(),
-    }, NOW)?;
-    let business = f.store.current_permit(&f.controller, &f.request, NOW / 1000)?;
-    for (revision, installation) in [(1, &business.controller_device_id), (2, &business.host_device_id)] {
-        f.store.set_network_membership(&f.controller, NetworkMembershipUpdate {
-            space_id: foreign_space.clone(), installation_id: installation.clone(),
-            expected_policy_revision: revision, expected_membership_epoch: 0, role: SpaceRole::Member,
-        }, NOW)?;
+    f.store.configure_network_authority(
+        &f.controller,
+        NetworkAuthorityUpdate {
+            space_id: foreign_space.clone(),
+            expected_revision: 0,
+            public_key: f.signer.public_key(),
+        },
+        NOW,
+    )?;
+    let business = f
+        .store
+        .current_permit(&f.controller, &f.request, NOW / 1000)?;
+    for (revision, installation) in [
+        (1, &business.controller_device_id),
+        (2, &business.host_device_id),
+    ] {
+        f.store.set_network_membership(
+            &f.controller,
+            NetworkMembershipUpdate {
+                space_id: foreign_space.clone(),
+                installation_id: installation.clone(),
+                expected_policy_revision: revision,
+                expected_membership_epoch: 0,
+                role: SpaceRole::Member,
+            },
+            NOW,
+        )?;
     }
     for fault in 0..6 {
         let mut issuance = f.issuance();
@@ -274,17 +295,40 @@ fn revoking_either_member_grant_stops_new_and_existing_paths() -> Result {
         let mut f = Setup::new(true)?;
         let issuance = f.issuance();
         let id = issuance.request.path_grant_id.clone();
-        let bundle = f.store.issue_network_remote_path(&f.controller, &f.signer, issuance, NOW)?;
-        f.store.revoke_network_grant(&f.controller, NetworkGrantRevocation {
-            space_id: f.space.clone(),
-            grant_id: if controller { f.controller_member.clone() } else { f.host_member.clone() },
-            expected_revision: 3,
-        }, NOW)?;
-        assert!(f.store.network_remote_path(&f.host, &f.space, &id, NOW).is_err());
+        let bundle = f
+            .store
+            .issue_network_remote_path(&f.controller, &f.signer, issuance, NOW)?;
+        f.store.revoke_network_grant(
+            &f.controller,
+            NetworkGrantRevocation {
+                space_id: f.space.clone(),
+                grant_id: if controller {
+                    f.controller_member.clone()
+                } else {
+                    f.host_member.clone()
+                },
+                expected_revision: 3,
+            },
+            NOW,
+        )?;
+        assert!(
+            f.store
+                .network_remote_path(&f.host, &f.space, &id, NOW)
+                .is_err()
+        );
         let snapshot = f.store.network_policy_snapshot(&f.space, NOW)?;
-        assert!(bundle.verified().check_current(&snapshot.verification()).is_err());
+        assert!(
+            bundle
+                .verified()
+                .check_current(&snapshot.verification())
+                .is_err()
+        );
         let issuance = f.issuance();
-        assert!(f.store.issue_network_remote_path(&f.controller, &f.signer, issuance, NOW).is_err());
+        assert!(
+            f.store
+                .issue_network_remote_path(&f.controller, &f.signer, issuance, NOW)
+                .is_err()
+        );
     }
     Ok(())
 }
@@ -297,8 +341,11 @@ fn renewal_and_reconnection_require_a_new_chain_for_the_exact_business_generatio
         let mut f = Setup::new(true)?;
         let issuance = f.issuance();
         let id = issuance.request.path_grant_id.clone();
-        f.store.issue_network_remote_path(&f.controller, &f.signer, issuance, NOW)?;
-        let previous = f.store.current_permit(&f.controller, &f.request, NOW / 1000)?;
+        f.store
+            .issue_network_remote_path(&f.controller, &f.signer, issuance, NOW)?;
+        let previous = f
+            .store
+            .current_permit(&f.controller, &f.request, NOW / 1000)?;
         let next_now = NOW / 1000 + 1;
         if reconnect {
             let choice = ReconnectionChoice {
@@ -308,24 +355,56 @@ fn renewal_and_reconnection_require_a_new_chain_for_the_exact_business_generatio
                 nonce: URL_SAFE_NO_PAD.encode([55; 32]),
             };
             let transcript = nestlink_identity::reconnection::transcript;
-            f.store.reconnect_permit(&f.controller, &f.request, ReconnectionSubmission {
-                controller_signature: URL_SAFE_NO_PAD.encode(f.controller_identity.sign_action(&transcript(&previous, &previous.controller_device_id, &choice)?)?),
-                host_signature: URL_SAFE_NO_PAD.encode(f.host_identity.sign_action(&transcript(&previous, &previous.host_device_id, &choice)?)?),
-                choice,
-            }, next_now)?;
+            f.store.reconnect_permit(
+                &f.controller,
+                &f.request,
+                ReconnectionSubmission {
+                    controller_signature: URL_SAFE_NO_PAD.encode(
+                        f.controller_identity.sign_action(&transcript(
+                            &previous,
+                            &previous.controller_device_id,
+                            &choice,
+                        )?)?,
+                    ),
+                    host_signature: URL_SAFE_NO_PAD.encode(
+                        f.host_identity.sign_action(&transcript(
+                            &previous,
+                            &previous.host_device_id,
+                            &choice,
+                        )?)?,
+                    ),
+                    choice,
+                },
+                next_now,
+            )?;
         } else {
             let sequence = previous.lease_sequence + 1;
-            let c = f.store.renewal_transcript(&f.controller, &f.request, sequence, false, next_now)?;
-            let h = f.store.renewal_transcript(&f.controller, &f.request, sequence, true, next_now)?;
-            f.store.renew_permit(&f.controller, &f.request, RenewalSubmission {
-                lease_sequence: sequence,
-                controller_signature: URL_SAFE_NO_PAD.encode(f.controller_identity.sign_action(&c)?),
-                host_signature: URL_SAFE_NO_PAD.encode(f.host_identity.sign_action(&h)?),
-            }, next_now)?;
+            let c =
+                f.store
+                    .renewal_transcript(&f.controller, &f.request, sequence, false, next_now)?;
+            let h =
+                f.store
+                    .renewal_transcript(&f.controller, &f.request, sequence, true, next_now)?;
+            f.store.renew_permit(
+                &f.controller,
+                &f.request,
+                RenewalSubmission {
+                    lease_sequence: sequence,
+                    controller_signature: URL_SAFE_NO_PAD
+                        .encode(f.controller_identity.sign_action(&c)?),
+                    host_signature: URL_SAFE_NO_PAD.encode(f.host_identity.sign_action(&h)?),
+                },
+                next_now,
+            )?;
         }
-        assert!(matches!(f.store.network_remote_path(&f.host, &f.space, &id, next_now * 1000), Err(StorageError::Forbidden)));
+        assert!(matches!(
+            f.store
+                .network_remote_path(&f.host, &f.space, &id, next_now * 1000),
+            Err(StorageError::Forbidden)
+        ));
         let issuance = f.issuance();
-        f.store.issue_network_remote_path(&f.controller, &f.signer, issuance, next_now * 1000)?;
+        f.store
+            .issue_network_remote_path(&f.controller, &f.signer, issuance, next_now * 1000)?;
     }
     Ok(())
 }
@@ -334,25 +413,51 @@ fn renewal_and_reconnection_require_a_new_chain_for_the_exact_business_generatio
 fn relay_only_consent_and_parent_lifetimes_cannot_be_widened_to_direct_paths() -> Result {
     let mut relay = Setup::with_path(true, false)?;
     let issuance = relay.issuance();
-    assert!(matches!(relay.store.issue_network_remote_path(&relay.controller, &relay.signer, issuance, NOW), Err(StorageError::Forbidden)));
+    assert!(matches!(
+        relay
+            .store
+            .issue_network_remote_path(&relay.controller, &relay.signer, issuance, NOW),
+        Err(StorageError::Forbidden)
+    ));
     let mut f = Setup::new(true)?;
-    let business = f.store.current_permit(&f.controller, &f.request, NOW / 1000)?;
+    let business = f
+        .store
+        .current_permit(&f.controller, &f.request, NOW / 1000)?;
     let mut issuance = f.issuance();
     issuance.request.expires_at_unix_ms = business.expires_at_unix_ms + 1;
-    assert!(f.store.issue_network_remote_path(&f.controller, &f.signer, issuance, NOW).is_err());
+    assert!(
+        f.store
+            .issue_network_remote_path(&f.controller, &f.signer, issuance, NOW)
+            .is_err()
+    );
     let short_host = random_id();
-    f.store.issue_network_membership(&f.controller, &f.signer, NetworkMembershipRequest {
-        space_id: f.space.clone(), installation_id: business.host_device_id,
-        grant_id: short_host.clone(), expected_policy_epoch: 3, expected_membership_epoch: 1,
-        expires_at_ms: NOW + 1_000,
-    }, NOW)?;
+    f.store.issue_network_membership(
+        &f.controller,
+        &f.signer,
+        NetworkMembershipRequest {
+            space_id: f.space.clone(),
+            installation_id: business.host_device_id,
+            grant_id: short_host.clone(),
+            expected_policy_epoch: 3,
+            expected_membership_epoch: 1,
+            expires_at_ms: NOW + 1_000,
+        },
+        NOW,
+    )?;
     let mut issuance = f.issuance();
     issuance.request.host_membership_grant_id = short_host;
-    assert!(f.store.issue_network_remote_path(&f.controller, &f.signer, issuance, NOW).is_err());
+    assert!(
+        f.store
+            .issue_network_remote_path(&f.controller, &f.signer, issuance, NOW)
+            .is_err()
+    );
     Ok(())
 }
 
-fn edit_snapshot(f: &mut Setup, edit: impl FnOnce(&rusqlite::Connection) -> rusqlite::Result<()>) -> Result {
+fn edit_snapshot(
+    f: &mut Setup,
+    edit: impl FnOnce(&rusqlite::Connection) -> rusqlite::Result<()>,
+) -> Result {
     let deployment = f.store.deployment_id()?;
     let snapshot = f.store.snapshot()?;
     let mut connection = rusqlite::Connection::open_in_memory()?;
@@ -368,7 +473,9 @@ fn signed_path_readback_cannot_widen_direct_only_consent_to_a_relay_policy() -> 
     let mut f = Setup::new(true)?;
     let issuance = f.issuance();
     let id = issuance.request.path_grant_id.clone();
-    let bundle = f.store.issue_network_remote_path(&f.controller, &f.signer, issuance, NOW)?;
+    let bundle = f
+        .store
+        .issue_network_remote_path(&f.controller, &f.signer, issuance, NOW)?;
     let GrantClaims::Path(mut claims) = GrantClaims::decode_canonical(&bundle.path.claims)? else {
         return Err("not path".into());
     };
@@ -376,11 +483,17 @@ fn signed_path_readback_cannot_widen_direct_only_consent_to_a_relay_policy() -> 
     claims.policy.max_hops = 1;
     let substituted = f.signer.sign(&GrantClaims::Path(claims))?;
     edit_snapshot(&mut f, |connection| {
-        connection.execute("UPDATE network_remote_paths SET path_claims=?1,path_signature=?2",
-            rusqlite::params![substituted.claims,substituted.signature])?;
+        connection.execute(
+            "UPDATE network_remote_paths SET path_claims=?1,path_signature=?2",
+            rusqlite::params![substituted.claims, substituted.signature],
+        )?;
         Ok(())
     })?;
-    assert!(matches!(f.store.network_remote_path(&f.controller, &f.space, &id, NOW), Err(StorageError::Forbidden)));
+    assert!(matches!(
+        f.store
+            .network_remote_path(&f.controller, &f.space, &id, NOW),
+        Err(StorageError::Forbidden)
+    ));
     Ok(())
 }
 
@@ -390,25 +503,41 @@ fn stale_generations_member_bindings_and_durable_metadata_fail_as_admission_erro
         let mut f = Setup::new(true)?;
         let issuance = f.issuance();
         let id = issuance.request.path_grant_id.clone();
-        f.store.issue_network_remote_path(&f.controller, &f.signer, issuance, NOW)?;
+        f.store
+            .issue_network_remote_path(&f.controller, &f.signer, issuance, NOW)?;
         edit_snapshot(&mut f, |connection| {
             let sql = match fault {
                 0 => "UPDATE remote_requests SET connection_generation=connection_generation+1",
                 1 => "UPDATE sessions SET connection_generation=connection_generation+1",
-                2 => "UPDATE network_remote_paths SET connectivity_grant_id='50000000-0000-4000-8000-000000000001'",
+                2 => {
+                    "UPDATE network_remote_paths SET connectivity_grant_id='50000000-0000-4000-8000-000000000001'"
+                }
                 3 => "UPDATE network_remote_paths SET policy_epoch=policy_epoch+1",
                 4 => "UPDATE network_remote_paths SET expires_at_ms=expires_at_ms+1",
-                5 => "UPDATE network_memberships SET membership_epoch=membership_epoch+1 WHERE installation_id=(SELECT controller_device_id FROM remote_requests LIMIT 1)",
-                6 => "UPDATE network_memberships SET membership_epoch=membership_epoch+1 WHERE installation_id=(SELECT host_device_id FROM remote_requests LIMIT 1)",
-                7 => "UPDATE device_details SET public_key=zeroblob(32) WHERE device_id=(SELECT controller_device_id FROM remote_requests LIMIT 1)",
-                _ => "UPDATE device_details SET public_key=zeroblob(32) WHERE device_id=(SELECT host_device_id FROM remote_requests LIMIT 1)",
+                5 => {
+                    "UPDATE network_memberships SET membership_epoch=membership_epoch+1 WHERE installation_id=(SELECT controller_device_id FROM remote_requests LIMIT 1)"
+                }
+                6 => {
+                    "UPDATE network_memberships SET membership_epoch=membership_epoch+1 WHERE installation_id=(SELECT host_device_id FROM remote_requests LIMIT 1)"
+                }
+                7 => {
+                    "UPDATE device_details SET public_key=zeroblob(32) WHERE device_id=(SELECT controller_device_id FROM remote_requests LIMIT 1)"
+                }
+                _ => {
+                    "UPDATE device_details SET public_key=zeroblob(32) WHERE device_id=(SELECT host_device_id FROM remote_requests LIMIT 1)"
+                }
             };
             connection.execute(sql, [])?;
             Ok(())
         })?;
-        let read = f.store.network_remote_path(&f.controller, &f.space, &id, NOW);
+        let read = f
+            .store
+            .network_remote_path(&f.controller, &f.space, &id, NOW);
         if fault <= 4 {
-            assert!(matches!(read, Err(StorageError::Forbidden)), "fault {fault}");
+            assert!(
+                matches!(read, Err(StorageError::Forbidden)),
+                "fault {fault}"
+            );
         } else {
             assert!(read.is_err(), "fault {fault}");
         }

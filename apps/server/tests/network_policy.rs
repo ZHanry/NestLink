@@ -297,16 +297,18 @@ fn enroll_remote_endpoint(
     let mut registration = DeviceRegistration {
         challenge_id: challenge.id,
         device: DeviceDescriptor {
-            id: random_id(), name: "remote path endpoint".into(), platform: "windows".into(),
+            id: random_id(),
+            name: "remote path endpoint".into(),
+            platform: "windows".into(),
             public_key: URL_SAFE_NO_PAD.encode(identity.public_key()),
             capabilities: vec!["controller".into(), "host".into(), "vp8".into()],
             path_mode: "direct_preferred".into(),
         },
         signature: String::new(),
     };
-    registration.signature = URL_SAFE_NO_PAD.encode(identity.sign_action(
-        &store.registration_transcript(actor, &registration, now)?,
-    )?);
+    registration.signature = URL_SAFE_NO_PAD.encode(
+        identity.sign_action(&store.registration_transcript(actor, &registration, now)?)?,
+    );
     let id = registration.device.id.clone();
     store.register_device(actor, registration, now)?;
     Ok(id)
@@ -323,37 +325,83 @@ fn setup_remote(f: &Fixture, approve: bool) -> Result<RemoteSetup> {
     let controller_device = enroll_remote_endpoint(&mut store, &controller, &controller_key, now)?;
     let host_device = enroll_remote_endpoint(&mut store, &host, &host_key, now)?;
     let signer = PermitSigner::from_seed([44; 32]).network_authority_signer()?;
-    store.configure_network_authority(&controller, NetworkAuthorityUpdate {
-        space_id: f.space.clone(), expected_revision: 0, public_key: signer.public_key(),
-    }, now_ms)?;
+    store.configure_network_authority(
+        &controller,
+        NetworkAuthorityUpdate {
+            space_id: f.space.clone(),
+            expected_revision: 0,
+            public_key: signer.public_key(),
+        },
+        now_ms,
+    )?;
     for (revision, installation) in [(1, &controller_device), (2, &host_device)] {
-        store.set_network_membership(&controller, NetworkMembershipUpdate {
-            space_id: f.space.clone(), installation_id: installation.clone(),
-            expected_policy_revision: revision, expected_membership_epoch: 0,
-            role: SpaceRole::Member,
-        }, now_ms)?;
+        store.set_network_membership(
+            &controller,
+            NetworkMembershipUpdate {
+                space_id: f.space.clone(),
+                installation_id: installation.clone(),
+                expected_policy_revision: revision,
+                expected_membership_epoch: 0,
+                role: SpaceRole::Member,
+            },
+            now_ms,
+        )?;
     }
     let controller_membership = random_id();
     let host_membership = random_id();
-    for (grant, installation) in [(&controller_membership, &controller_device), (&host_membership, &host_device)] {
-        store.issue_network_membership(&controller, &signer, NetworkMembershipRequest {
-            space_id: f.space.clone(), installation_id: installation.clone(), grant_id: grant.clone(),
-            expected_policy_epoch: 3, expected_membership_epoch: 1, expires_at_ms: now_ms + 60_000,
-        }, now_ms)?;
+    for (grant, installation) in [
+        (&controller_membership, &controller_device),
+        (&host_membership, &host_device),
+    ] {
+        store.issue_network_membership(
+            &controller,
+            &signer,
+            NetworkMembershipRequest {
+                space_id: f.space.clone(),
+                installation_id: installation.clone(),
+                grant_id: grant.clone(),
+                expected_policy_epoch: 3,
+                expected_membership_epoch: 1,
+                expires_at_ms: now_ms + 60_000,
+            },
+            now_ms,
+        )?;
     }
-    let remote = store.create_remote(&controller, RemoteRequest {
-        id: random_id(), controller_device_id: controller_device, host_device_id: host_device,
-        permissions: vec![Permission::View as i32], path_mode: "direct_only".into(),
-    }, now)?;
+    let remote = store.create_remote(
+        &controller,
+        RemoteRequest {
+            id: random_id(),
+            controller_device_id: controller_device,
+            host_device_id: host_device,
+            permissions: vec![Permission::View as i32],
+            path_mode: "direct_only".into(),
+        },
+        now,
+    )?;
     let mut expires_at_ms = now_ms + 10_000;
     if approve {
-        let choice = ApprovalChoice { approved: true, permissions: vec![Permission::View as i32], paths: vec![Path::Direct as i32] };
+        let choice = ApprovalChoice {
+            approved: true,
+            permissions: vec![Permission::View as i32],
+            paths: vec![Path::Direct as i32],
+        };
         let proof = store.approval_transcript(&host, &remote.id, &choice, now)?;
-        store.approve_remote(&host, &remote.id, choice, &URL_SAFE_NO_PAD.encode(host_key.sign_action(&proof)?), now)?;
+        store.approve_remote(
+            &host,
+            &remote.id,
+            choice,
+            &URL_SAFE_NO_PAD.encode(host_key.sign_action(&proof)?),
+            now,
+        )?;
         let business = store.initial_permit(&controller, &remote.id, now)?;
         expires_at_ms = expires_at_ms.min(business.expires_at_unix_ms);
     }
-    Ok(RemoteSetup { request: remote.id, controller_membership, host_membership, expires_at_ms })
+    Ok(RemoteSetup {
+        request: remote.id,
+        controller_membership,
+        host_membership,
+        expires_at_ms,
+    })
 }
 
 #[tokio::test]
@@ -361,9 +409,19 @@ async fn membership_and_admin_sessions_cannot_issue_unapproved_paths_over_http()
     let f = Fixture::new(false).await?;
     let remote = setup_remote(&f, false)?;
     for token in [&f.admin_token, &f.member_token] {
-        assert_eq!(f.call("POST", &remote.issue_path(&f), remote.body(), Some(token)).await?.0, StatusCode::FORBIDDEN);
+        assert_eq!(
+            f.call("POST", &remote.issue_path(&f), remote.body(), Some(token))
+                .await?
+                .0,
+            StatusCode::FORBIDDEN
+        );
     }
-    assert_eq!(f.call("POST", &remote.issue_path(&f), remote.body(), None).await?.0, StatusCode::UNAUTHORIZED);
+    assert_eq!(
+        f.call("POST", &remote.issue_path(&f), remote.body(), None)
+            .await?
+            .0,
+        StatusCode::UNAUTHORIZED
+    );
     Ok(())
 }
 
@@ -375,22 +433,45 @@ async fn business_participants_issue_read_and_revoke_exact_remote_paths_over_htt
     let now = current_ms()? / 1000;
     let admin = store.authenticate(&f.admin_token, now)?;
     store.create_member(&admin, "unrelated", PASSWORD)?;
-    let unrelated = store.login("unrelated", PASSWORD, None, now, &VaultKey::from_bytes([7; 32]), &hash_password("dummy-only-password")?)?;
+    let unrelated = store.login(
+        "unrelated",
+        PASSWORD,
+        None,
+        now,
+        &VaultKey::from_bytes([7; 32]),
+        &hash_password("dummy-only-password")?,
+    )?;
     let remote = setup_remote(&f, true)?;
     let body = remote.body();
     let id = body["path_grant_id"].as_str().ok_or("path id missing")?;
     let path = format!("{}/paths/{id}", f.base());
     // A non-admin host is a business participant and can request the chain.
-    let (status, issued) = f.call("POST", &remote.issue_path(&f), body.clone(), Some(&f.member_token)).await?;
+    let (status, issued) = f
+        .call(
+            "POST",
+            &remote.issue_path(&f),
+            body.clone(),
+            Some(&f.member_token),
+        )
+        .await?;
     assert_eq!(status, StatusCode::CREATED, "{issued}");
     assert_eq!(issued["request_id"], remote.request);
     let credential = signed(&issued["path"])?;
     let revoked = BTreeSet::new();
-    let verified = verify_network_grant(&credential, &NetworkVerification {
-        authority_key: &f.issuer, deployment_id: &f.deployment, space_id: &f.space,
-        policy_epoch: 3, now_ms: current_ms()?, revoked_grant_ids: &revoked,
-    })?;
-    let GrantClaims::Path(claims) = verified.claims() else { return Err("not path".into()); };
+    let verified = verify_network_grant(
+        &credential,
+        &NetworkVerification {
+            authority_key: &f.issuer,
+            deployment_id: &f.deployment,
+            space_id: &f.space,
+            policy_epoch: 3,
+            now_ms: current_ms()?,
+            revoked_grant_ids: &revoked,
+        },
+    )?;
+    let GrantClaims::Path(claims) = verified.claims() else {
+        return Err("not path".into());
+    };
     assert!(claims.policy.allow_direct && claims.policy.relays.is_empty());
     assert_eq!(claims.policy.max_hops, 0);
     for token in [&f.admin_token, &f.member_token] {
@@ -399,23 +480,94 @@ async fn business_participants_issue_read_and_revoke_exact_remote_paths_over_htt
         assert_eq!(read, issued);
     }
     for method in ["GET", "DELETE"] {
-        assert_eq!(f.call(method, &path, Value::Null, None).await?.0, StatusCode::UNAUTHORIZED);
+        assert_eq!(
+            f.call(method, &path, Value::Null, None).await?.0,
+            StatusCode::UNAUTHORIZED
+        );
     }
     for method in ["GET", "DELETE"] {
-        assert_eq!(f.call(method, &path, Value::Null, Some(unrelated.access_token.expose())).await?.0, StatusCode::FORBIDDEN);
+        assert_eq!(
+            f.call(
+                method,
+                &path,
+                Value::Null,
+                Some(unrelated.access_token.expose())
+            )
+            .await?
+            .0,
+            StatusCode::FORBIDDEN
+        );
     }
-    assert_eq!(f.call("POST", &remote.issue_path(&f), remote.body(), Some(unrelated.access_token.expose())).await?.0, StatusCode::FORBIDDEN);
-    assert_eq!(f.call("GET", &format!("/api/v3/network/spaces/{}/paths/{id}", random_id()), Value::Null, Some(&f.admin_token)).await?.0, StatusCode::FORBIDDEN);
+    assert_eq!(
+        f.call(
+            "POST",
+            &remote.issue_path(&f),
+            remote.body(),
+            Some(unrelated.access_token.expose())
+        )
+        .await?
+        .0,
+        StatusCode::FORBIDDEN
+    );
+    assert_eq!(
+        f.call(
+            "GET",
+            &format!("/api/v3/network/spaces/{}/paths/{id}", random_id()),
+            Value::Null,
+            Some(&f.admin_token)
+        )
+        .await?
+        .0,
+        StatusCode::FORBIDDEN
+    );
     for _ in 0..2 {
-        assert_eq!(f.call("DELETE", &path, Value::Null, Some(&f.member_token)).await?.0, StatusCode::NO_CONTENT);
+        assert_eq!(
+            f.call("DELETE", &path, Value::Null, Some(&f.member_token))
+                .await?
+                .0,
+            StatusCode::NO_CONTENT
+        );
     }
-    assert_eq!(f.call("GET", &path, Value::Null, Some(&f.admin_token)).await?.0, StatusCode::FORBIDDEN);
-    let (status, issued) = f.call("POST", &remote.issue_path(&f), remote.body(), Some(&f.admin_token)).await?;
+    assert_eq!(
+        f.call("GET", &path, Value::Null, Some(&f.admin_token))
+            .await?
+            .0,
+        StatusCode::FORBIDDEN
+    );
+    let (status, issued) = f
+        .call(
+            "POST",
+            &remote.issue_path(&f),
+            remote.body(),
+            Some(&f.admin_token),
+        )
+        .await?;
     assert_eq!(status, StatusCode::CREATED, "{issued}");
-    let path = format!("{}/paths/{}", f.base(), issued["path"]["grant_id"].as_str().ok_or("path id missing")?);
+    let path = format!(
+        "{}/paths/{}",
+        f.base(),
+        issued["path"]["grant_id"]
+            .as_str()
+            .ok_or("path id missing")?
+    );
     store.revoke_remote(&admin, &remote.request)?;
-    assert_eq!(f.call("GET", &path, Value::Null, Some(&f.member_token)).await?.0, StatusCode::FORBIDDEN);
-    assert_eq!(f.call("POST", &remote.issue_path(&f), remote.body(), Some(&f.admin_token)).await?.0, StatusCode::FORBIDDEN);
+    assert_eq!(
+        f.call("GET", &path, Value::Null, Some(&f.member_token))
+            .await?
+            .0,
+        StatusCode::FORBIDDEN
+    );
+    assert_eq!(
+        f.call(
+            "POST",
+            &remote.issue_path(&f),
+            remote.body(),
+            Some(&f.admin_token)
+        )
+        .await?
+        .0,
+        StatusCode::FORBIDDEN
+    );
     Ok(())
 }
 
@@ -425,22 +577,59 @@ async fn path_http_bodies_origin_and_stale_business_generations_fail_closed() ->
     let remote = setup_remote(&f, true)?;
     let issue = remote.issue_path(&f);
     let cookie = format!("nl15_access={}", f.member_token);
-    for headers in [vec![("Cookie", cookie.as_str())], vec![("Cookie", cookie.as_str()), ("Origin", "https://attacker.invalid")]] {
-        assert_eq!(f.call_headers("POST", &issue, remote.body(), None, &headers).await?.0, StatusCode::FORBIDDEN);
+    for headers in [
+        vec![("Cookie", cookie.as_str())],
+        vec![
+            ("Cookie", cookie.as_str()),
+            ("Origin", "https://attacker.invalid"),
+        ],
+    ] {
+        assert_eq!(
+            f.call_headers("POST", &issue, remote.body(), None, &headers)
+                .await?
+                .0,
+            StatusCode::FORBIDDEN
+        );
     }
-    for (field, value) in [("public_key", json!("attacker")), ("purpose", json!("raw_ip")), ("relays", json!([random_id()])), ("claims", json!({}))] {
+    for (field, value) in [
+        ("public_key", json!("attacker")),
+        ("purpose", json!("raw_ip")),
+        ("relays", json!([random_id()])),
+        ("claims", json!({})),
+    ] {
         let mut body = remote.body();
         body[field] = value;
-        assert_eq!(f.call("POST", &issue, body, Some(&f.admin_token)).await?.0, StatusCode::UNPROCESSABLE_ENTITY);
+        assert_eq!(
+            f.call("POST", &issue, body, Some(&f.admin_token)).await?.0,
+            StatusCode::UNPROCESSABLE_ENTITY
+        );
     }
-    let (status, issued) = f.call_headers("POST", &issue, remote.body(), None, &[("Cookie", &cookie), ("Origin", &f.origin)]).await?;
+    let (status, issued) = f
+        .call_headers(
+            "POST",
+            &issue,
+            remote.body(),
+            None,
+            &[("Cookie", &cookie), ("Origin", &f.origin)],
+        )
+        .await?;
     assert_eq!(status, StatusCode::CREATED, "{issued}");
-    let id = issued["path"]["grant_id"].as_str().ok_or("path id missing")?;
+    let id = issued["path"]["grant_id"]
+        .as_str()
+        .ok_or("path id missing")?;
     let path = format!("{}/paths/{id}", f.base());
     let db = Connection::open(&f.database)?;
-    db.execute("UPDATE sessions SET connection_generation=connection_generation+1 WHERE id=?1", [&remote.request])?;
+    db.execute(
+        "UPDATE sessions SET connection_generation=connection_generation+1 WHERE id=?1",
+        [&remote.request],
+    )?;
     for (method, endpoint, body) in [("GET", path, Value::Null), ("POST", issue, remote.body())] {
-        assert_eq!(f.call(method, &endpoint, body, Some(&f.admin_token)).await?.0, StatusCode::FORBIDDEN);
+        assert_eq!(
+            f.call(method, &endpoint, body, Some(&f.admin_token))
+                .await?
+                .0,
+            StatusCode::FORBIDDEN
+        );
     }
     Ok(())
 }
