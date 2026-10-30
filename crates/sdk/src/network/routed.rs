@@ -27,6 +27,43 @@ pub struct RemoteRouteAuthority<'a> {
     pub transit: &'a VerifiedNetworkGrant,
 }
 
+/// A complete ordered NRD2 path. Both TransitGrants are mandatory and remain
+/// separate from the original SessionPermit and its per-business permissions.
+pub struct RemoteChainAuthority<'a> {
+    pub context: &'a NetworkVerification<'a>,
+    pub path: &'a VerifiedNetworkPath,
+    pub connectivity: &'a VerifiedNetworkGrant,
+    pub transits: &'a [VerifiedNetworkGrant],
+}
+enum NetworkRouteAuthority<'a> {
+    Single(RemoteRouteAuthority<'a>),
+    Chain(RemoteChainAuthority<'a>),
+}
+impl<'a> From<RemoteRouteAuthority<'a>> for NetworkRouteAuthority<'a> {
+    fn from(value:RemoteRouteAuthority<'a>) -> Self { Self::Single(value) }
+}
+impl<'a> From<RemoteChainAuthority<'a>> for NetworkRouteAuthority<'a> {
+    fn from(value:RemoteChainAuthority<'a>) -> Self { Self::Chain(value) }
+}
+impl NetworkRouteAuthority<'_> {
+    fn authorize(&self,permit:&nestlink_identity::VerifiedPermit) -> io::Result<(RouteAuthorization,RouteRevocation)> {
+        match self {
+            Self::Single(authority) => RouteAuthorization::remote(authority.context,authority.path,authority.connectivity,authority.transit,permit),
+            Self::Chain(authority) => RouteAuthorization::remote_chain(authority.context,authority.path,authority.connectivity,authority.transits,permit),
+        }
+    }
+}
+
+/// Use the same bounded business runtime, mutual endpoint proof, lifecycle,
+/// cancellation and physical cleanup owner as the one-relay path. Callers must
+/// keep current policy and business revocations connected to SessionLifecycle.
+pub async fn authorize_remote_chain(
+    authority:RemoteChainAuthority<'_>,adjacency:Adjacency,setup:SessionSetup,
+    local:&DeviceIdentity,peer_key:&[u8;32],deadline:Instant,
+) -> Result<ChannelRuntime,RemoteError> {
+    authorize_remote_observed(authority,adjacency,setup,local,peer_key,deadline,None,None).await
+}
+
 /// Prove the actual SessionSetup permit through a previously selected route.
 /// The returned bounded channels are the existing remote runtime; no business
 /// stream becomes available before both endpoint proofs. The route's original
@@ -51,8 +88,8 @@ pub async fn authorize_remote(
 }
 
 #[allow(clippy::too_many_arguments)]
-async fn authorize_remote_observed(
-    authority: RemoteRouteAuthority<'_>,
+async fn authorize_remote_observed<'a>(
+    authority: impl Into<NetworkRouteAuthority<'a>>,
     mut adjacency: Adjacency,
     mut setup: SessionSetup,
     local: &DeviceIdentity,
@@ -61,6 +98,7 @@ async fn authorize_remote_observed(
     observer: Option<control::RemoteRouteObserver>,
     mut cancel: Option<watch::Receiver<bool>>,
 ) -> Result<ChannelRuntime, RemoteError> {
+    let authority = authority.into();
     let mut stop = setup.lifecycle.stop.clone();
     if setup_is_stopped(&stop) || cancel.as_ref().is_some_and(control::cancel_is_stopped) {
         adjacency
@@ -99,13 +137,7 @@ async fn authorize_remote_observed(
                 "routed remote device binding mismatch",
             ));
         }
-        RouteAuthorization::remote(
-            authority.context,
-            authority.path,
-            authority.connectivity,
-            authority.transit,
-            permit,
-        )
+        authority.authorize(permit)
     })();
     let (authorization, revocation) = match validation {
         Ok(value) => value,

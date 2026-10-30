@@ -504,3 +504,22 @@ Actions formatting was imported only for applicable unchanged transport/codec
 and graph-test files; current modified files await new formatting output.
 Production listener/dialer, real continuous adjacency reporting and four-node
 business acceptance remain required before W12 can be qualified.
+
+The 976ec97 hosted carrier job passed 16 graph, 10 NRD2 codec, 15 routed
+transport, 13 reporter and 7 node resource/admission tests, all without failures
+or ignored cases. Its topology job passed the real HTTP reporter and chain
+reservation/readback/revocation scenarios, but the new two-node snapshot test
+returned Forbidden. The fixture now retains original NodeLeaseClaims rather
+than guessing security/policy/sequence fields, and adds diagnostic context;
+exact-source revalidation is still required. The same-source real socket,
+routed kernel NAT and native ICE kernel NAT jobs passed. Full matrix and release
+qualification remain separate.
+
+ADR 0019 adds complete NRD2 authority to the existing SDK business runtime,
+with two real four-node approved OS FileRead source scenarios covering both
+canonical endpoint orders and complete six-socket release. Strict Actions
+inventory includes the nested test module and preserves exact source/result
+equality with zero failed/ignored cases. The reviewed, hash-verified OpenAPI
+from 976ec97 Actions is imported. New SDK sources await hosted validation;
+production registered-node chain dialing/reporting and all later mandatory
+packages remain required.

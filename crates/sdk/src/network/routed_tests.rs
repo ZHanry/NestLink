@@ -1,4 +1,5 @@
 //! Exercise the SDK adapter through physical QUIC neighbors and business proof.
+mod chain;
 use super::{RemoteRouteAuthority, authorize_remote};
 use crate::DeviceIdentity;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};

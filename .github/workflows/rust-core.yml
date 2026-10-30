@@ -99,23 +99,30 @@ jobs:
         shell: python
         run: |
           import json, os, pathlib, re
-          source = pathlib.Path('crates/sdk/src/network/routed_tests.rs').read_text(encoding='utf-8')
-          attributes = re.findall(r'(?m)^\s*#\[(?:tokio::)?test(?:\([^\]]*\))?\]', source)
-          cases = re.findall(
-              r'(?m)^\s*#\[((?:tokio::)?test)(?:\([^\]]*\))?\]\s*'
-              r'(?:#\[[^\]]*\]\s*)*(?:async\s+)?fn\s+([A-Za-z_]\w*)\s*\(', source,
-          )
-          expected = {f'network::routed::tests::{name}' for _, name in cases}
+          sources = {
+              'crates/sdk/src/network/routed_tests.rs': 'network::routed::tests',
+              'crates/sdk/src/network/routed_tests/chain.rs': 'network::routed::tests::chain',
+          }
+          attributes, cases = [], []
+          for path, prefix in sources.items():
+              source = pathlib.Path(path).read_text(encoding='utf-8')
+              attributes.extend(re.findall(r'(?m)^\s*#\[(?:tokio::)?test(?:\([^\]]*\))?\]', source))
+              cases.extend((kind, f'{prefix}::{name}') for kind, name in re.findall(
+                  r'(?m)^\s*#\[((?:tokio::)?test)(?:\([^\]]*\))?\]\s*'
+                  r'(?:#\[[^\]]*\]\s*)*(?:async\s+)?fn\s+([A-Za-z_]\w*)\s*\(', source,
+              ))
+          expected = {name for _, name in cases}
           if not any(kind == 'tokio::test' for kind, _ in cases) or len(cases) != len(attributes) or len(expected) != len(cases):
               raise SystemExit('Could not enumerate every SDK routed test attribute and unique function name')
           log_path = pathlib.Path(os.environ['RUNNER_TEMP']) / 'nestlink-sdk-routed-tests.log'
           log = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', log_path.read_text(encoding='utf-8'))
-          results = re.findall(r'(?m)^test (network::routed::tests::[A-Za-z_]\w*) \.\.\. (ok|FAILED|ignored)\s*$', log)
+          results = re.findall(r'(?m)^test (network::routed::tests::[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*) \.\.\. (ok|FAILED|ignored)\s*$', log)
           actual = {name for name, _ in results}
           summaries = re.findall(r'(?m)^test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored;', log)
           receipt = {
               'source_revision': os.environ['GITHUB_SHA'],
               'run_id': os.environ['GITHUB_RUN_ID'],
+              'source_modules': sources,
               'expected_tests': sorted(expected),
               'tokio_tests': sorted(name for kind, name in cases if kind == 'tokio::test'),
               'results': results,

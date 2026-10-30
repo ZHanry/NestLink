@@ -16,12 +16,14 @@ struct ChainFixture {
     base: Setup,
     lifecycle: RelayLifecycle,
     nodes: [(String,NodeIdentity,BootIncarnation);2],
+    leases: [nestlink_protocol::NodeLeaseClaims;2],
     digests: [[u8;32];2],
 }
 impl ChainFixture {
     fn new(maximums:[u32;2]) -> Result<Self> {
         let mut base = Setup::with_path(true,false)?;
         let mut registered = Vec::new();
+        let mut leases = Vec::new();
         for (index,maximum) in maximums.into_iter().enumerate() {
             let identity = NodeIdentity::generate();
             let id = random_id();
@@ -38,6 +40,7 @@ impl ChainFixture {
             let challenge = base.store.node_challenge(&id,NOW)?;
             let lease = base.store.issue_node_lease(&identity.prove(&challenge,&runtime)?,NOW)?;
             registered.push((id,identity,BootIncarnation {runtime_id:runtime,runtime_generation:lease.runtime_generation}));
+            leases.push(lease);
         }
         let nodes:[_;2] = registered.try_into().map_err(|_|"nodes")?;
         let mut publishers = Vec::new();
@@ -65,7 +68,7 @@ impl ChainFixture {
             digests.push(verified.digest());
         }
         let lifecycle = base.store.relay_lifecycle(NOW)?;
-        Ok(Self { base,lifecycle,nodes,digests:digests.try_into().map_err(|_|"digests")? })
+        Ok(Self { base,lifecycle,nodes,leases:leases.try_into().map_err(|_|"leases")?,digests:digests.try_into().map_err(|_|"digests")? })
     }
     fn request(&self) -> Result<NetworkRemoteRelayChainRequest> {
         let business = self.base.store.current_permit(&self.base.controller,&self.base.request,NOW/1000)?;
@@ -142,20 +145,20 @@ fn both_node_snapshots_delegate_the_same_full_chain_and_withdraw_it_together() -
     let issued = f.issue(request)?;
     let root = PermitSigner::from_seed([44;32]);
     let policy = root.node_policy_signer()?;
-    let deployment = f.base.store.deployment_id()?;
     let query = |index:usize, sequence| {
-        let (id,_,incarnation) = &f.nodes[index];
+        let lease = &f.leases[index];
         NodeResourceQueryClaims {
-            schema_version:nestlink_protocol::SCHEMA_VERSION,deployment_id:deployment.clone(),
-            security_epoch:1,node_id:id.clone(),runtime_id:incarnation.runtime_id.clone(),runtime_generation:incarnation.runtime_generation,
-            policy_revision:2,lease_sequence:1,request_id:random_id(),request_sequence:sequence,
+            schema_version:nestlink_protocol::SCHEMA_VERSION,deployment_id:lease.deployment_id.clone(),
+            security_epoch:lease.security_epoch,node_id:lease.node_id.clone(),runtime_id:lease.runtime_id.clone(),runtime_generation:lease.runtime_generation,
+            policy_revision:lease.policy_revision,lease_sequence:lease.lease_sequence,request_id:random_id(),request_sequence:sequence,
             issued_at_unix_ms:NOW,expires_at_unix_ms:NOW+1000,
         }
     };
     let queries = [f.nodes[0].1.sign_resource_query(&query(0,1))?, f.nodes[1].1.sign_resource_query(&query(1,1))?];
     let mut bindings = Vec::new();
     for index in 0..2 {
-        let snapshot = f.base.store.node_resource_snapshot_with_network(&f.lifecycle,&queries[index],&root,NOW)?;
+        let snapshot = f.base.store.node_resource_snapshot_with_network(&f.lifecycle,&queries[index],&root,NOW)
+            .map_err(|error|format!("chain node {index} snapshot: {error:?}"))?;
         assert!(snapshot.allocations.is_empty());
         assert_eq!(snapshot.network_routes.len(),1);
         let signed = policy.sign_resource_snapshot(&snapshot)?;

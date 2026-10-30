@@ -1380,6 +1380,119 @@
         ],
         "type": "object"
       },
+      "NetworkRemoteRelayChainRequest": {
+        "additionalProperties": false,
+        "description": "Ordered from the canonical first business peer. A single device signature\nbinds the entire requested chain, including the exact current topology.",
+        "properties": {
+          "device_id": {
+            "type": "string"
+          },
+          "node_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "path": {
+            "$ref": "#/components/schemas/NetworkRemotePathRequest"
+          },
+          "route_id": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string"
+          },
+          "topology_digests": {
+            "items": {
+              "items": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "maxItems": 32,
+              "minItems": 32,
+              "type": "array"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "transit_grant_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          }
+        },
+        "required": [
+          "route_id",
+          "path",
+          "node_ids",
+          "transit_grant_ids",
+          "topology_digests",
+          "device_id",
+          "signature"
+        ],
+        "title": "NetworkRemoteRelayChainRequest",
+        "type": "object"
+      },
+      "NetworkRemoteRelayChainView": {
+        "additionalProperties": false,
+        "properties": {
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/NodeEndpointsView"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "path": {
+            "$ref": "#/components/schemas/NetworkRemotePathView"
+          },
+          "route_id": {
+            "type": "string"
+          },
+          "topology_digests": {
+            "items": {
+              "items": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "maxItems": 32,
+              "minItems": 32,
+              "type": "array"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "transits": {
+            "items": {
+              "$ref": "#/components/schemas/NetworkGrantView"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          }
+        },
+        "required": [
+          "route_id",
+          "path",
+          "transits",
+          "nodes",
+          "topology_digests"
+        ],
+        "title": "NetworkRemoteRelayChainView",
+        "type": "object"
+      },
       "NetworkRemoteRelayRequest": {
         "additionalProperties": false,
         "description": "A separate one-hop network reservation. The signed device allocation\nrequest proves participation in the already approved business session;\ncurrent policy and registered node facts determine the relay and limits.",
@@ -11671,6 +11784,209 @@
         "x-server-role": "control"
       }
     },
+    "/network/spaces/{space}/relay-chains/{route}": {
+      "delete": {
+        "operationId": "network_policy::chains::revoke",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "route",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      },
+      "get": {
+        "operationId": "network_policy::chains::read",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "route",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkRemoteRelayChainView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
     "/network/spaces/{space}/relays/{allocation}": {
       "delete": {
         "operationId": "network_policy::revoke_relay",
@@ -11913,6 +12229,122 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NetworkRemotePathView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/network/spaces/{space}/remote/{request}/relay-chains": {
+      "post": {
+        "operationId": "network_policy::chains::issue",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NetworkRemoteRelayChainRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkRemoteRelayChainView"
                 }
               }
             },
