@@ -1,5 +1,7 @@
 use crate::*;
 use nestlink_protocol::{network::PeerId, network_datagram as wire};
+use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
+use nestlink_transport_stream::owner::TaskOwner;
 use std::io;
 use tokio::{sync::oneshot, time::Instant};
 
@@ -11,6 +13,10 @@ pub struct AdjacencyEndpoint {
     released: Option<oneshot::Receiver<()>>,
     local: PeerId,
     remote: PeerId,
+    node: bool,
+    attempted: bool,
+    pending: Option<Connection>,
+    close_deadline: Option<Instant>,
 }
 impl AdjacencyEndpoint {
     pub fn bind(
@@ -41,7 +47,27 @@ impl AdjacencyEndpoint {
             released: Some(released),
             local,
             remote,
+            node: false,
+            attempted: false,
+            pending: None,
+            close_deadline: None,
         })
+    }
+    /// A node uses one authenticated admission stream before forwarding. The
+    /// node fingerprint must come from a verified TransitGrant, not its URI.
+    pub fn bind_node(address: SocketAddr, identity: &InstallationIdentity, remote: PeerId) -> Result<Self> {
+        let mut owner = Self::bind(address, identity, remote)?;
+        let mut client_tls = tls::client_config(identity, remote.0)?;
+        client_tls.alpn_protocols = vec![wire::ALPN.to_vec()];
+        let mut client = ClientConfig::new(Arc::new(QuicClientConfig::try_from(client_tls)?));
+        let mut transport = transport_config();
+        transport.max_concurrent_bidi_streams(1u8.into());
+        client.transport_config(Arc::new(transport));
+        let endpoint = owner.endpoint.as_mut().ok_or_else(|| io::Error::from(io::ErrorKind::NotConnected))?;
+        endpoint.set_server_config(None);
+        endpoint.set_default_client_config(client);
+        owner.node = true;
+        Ok(owner)
     }
     pub fn local_addr(&self) -> io::Result<SocketAddr> {
         self.endpoint
@@ -50,6 +76,7 @@ impl AdjacencyEndpoint {
             .local_addr()
     }
     pub async fn connect(mut self, address: SocketAddr, deadline: Instant) -> Result<Adjacency> {
+        if self.node { return Err(io::Error::from(io::ErrorKind::PermissionDenied).into()); }
         let endpoint = self
             .endpoint
             .as_ref()
@@ -62,6 +89,7 @@ impl AdjacencyEndpoint {
         self.finish(connection)
     }
     pub async fn accept(mut self, deadline: Instant) -> Result<Adjacency> {
+        if self.node { return Err(io::Error::from(io::ErrorKind::PermissionDenied).into()); }
         let endpoint = self
             .endpoint
             .as_ref()
@@ -71,6 +99,69 @@ impl AdjacencyEndpoint {
             .ok_or_else(|| io::Error::from(io::ErrorKind::NotConnected))?;
         let connection = tokio::time::timeout_at(deadline, incoming).await??;
         self.finish(connection)
+    }
+    /// Keep this owner outside a cancellable future. Failure and cancellation
+    /// retain its original physical receipt for close_and_wait; no retry can
+    /// create another connection from the same owner.
+    pub async fn connect_node(
+        &mut self, address: SocketAddr, identity: &InstallationIdentity,
+        device_id: &str, allocation_id: &str, binding: [u8;32], deadline: Instant,
+    ) -> Result<Adjacency> {
+        use nestlink_protocol::api::{NetworkNodeChallenge, NetworkNodeHello, NetworkNodeReady};
+        if !self.node || self.attempted || self.close_deadline.is_some()
+            || self.local != PeerId(identity.fingerprint())
+            || !nestlink_protocol::valid_id(device_id) || !nestlink_protocol::valid_id(allocation_id)
+            || binding == [0;32] || Instant::now() >= deadline
+        { return Err(io::Error::from(io::ErrorKind::PermissionDenied).into()); }
+        self.attempted = true;
+        let endpoint = self.endpoint.as_ref().ok_or_else(|| io::Error::from(io::ErrorKind::NotConnected))?;
+        let connection = tokio::time::timeout_at(deadline,
+            endpoint.connect(address, "peer.nestlink.invalid")?).await??;
+        self.pending = Some(connection.clone());
+        let (mut write, mut read) = tokio::time::timeout_at(deadline, connection.accept_bi()).await??;
+        let challenge: NetworkNodeChallenge = tokio::time::timeout_at(deadline,
+            crate::node::read_message(&mut read)).await??;
+        let nonce: [u8;32] = decode_exact(&challenge.nonce)?;
+        if challenge.schema_version != 1 {
+            return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
+        }
+        let signature = identity.sign_network_node_admission(allocation_id, &binding, device_id, &nonce)?;
+        let hello = NetworkNodeHello { schema_version: 1, allocation_id: allocation_id.into(),
+            binding_sha256: URL_SAFE_NO_PAD.encode(binding), device_id: device_id.into(),
+            public_key: URL_SAFE_NO_PAD.encode(identity.public_key()), signature: URL_SAFE_NO_PAD.encode(signature) };
+        tokio::time::timeout_at(deadline, crate::node::write_message(&mut write, &hello)).await??;
+        let ready: NetworkNodeReady = tokio::time::timeout_at(deadline,
+            crate::node::read_message(&mut read)).await??;
+        if ready.schema_version != 1 || ready.allocation_id != allocation_id
+            || decode_exact::<32>(&ready.binding_sha256)? != binding || Instant::now() >= deadline
+        { return Err(io::Error::from(io::ErrorKind::PermissionDenied).into()); }
+        let mut adjacency = self.finish(connection.clone())?;
+        self.pending = None;
+        adjacency.control = Some(TaskOwner::new(tokio::spawn(async move {
+            let _close = ControlClose(connection.clone());
+            let _write = write;
+            let mut byte = [0u8;1];
+            // The admission stream stays open. EOF, reset or additional data
+            // terminate the route; it is never a business stream.
+            let _ = read.read(&mut byte).await;
+        })));
+        Ok(adjacency)
+    }
+    pub async fn close_and_wait(&mut self, deadline: Instant) -> io::Result<()> {
+        let deadline = *self.close_deadline.get_or_insert(deadline);
+        if let Some(connection) = &self.pending { connection.close(0u32.into(), b"node setup stopping"); }
+        if let Some(endpoint) = &self.endpoint {
+            endpoint.close(0u32.into(), b"node setup stopping");
+            tokio::time::timeout_at(deadline, endpoint.wait_idle()).await.map_err(|_| io::ErrorKind::TimedOut)?;
+        }
+        self.pending = None;
+        self.endpoint = None;
+        if let Some(released) = self.released.as_mut() {
+            tokio::time::timeout_at(deadline, released).await.map_err(|_| io::ErrorKind::TimedOut)?
+                .map_err(|_| io::Error::other("network node setup UDP release unconfirmed"))?;
+            self.released = None;
+        }
+        Ok(())
     }
     fn finish(&mut self, connection: Connection) -> Result<Adjacency> {
         if connection
@@ -88,6 +179,7 @@ impl AdjacencyEndpoint {
             local: self.local,
             remote: self.remote,
             close_deadline: None,
+            control: None,
         })
     }
 }
@@ -105,6 +197,7 @@ pub struct Adjacency {
     local: PeerId,
     remote: PeerId,
     close_deadline: Option<Instant>,
+    control: Option<TaskOwner>,
 }
 impl Adjacency {
     pub fn local(&self) -> PeerId {
@@ -125,10 +218,13 @@ impl Adjacency {
         if let Some(endpoint) = &self.endpoint {
             endpoint.close(0u32.into(), b"network adjacency stopping");
         }
+        if let Some(control) = &self.control { control.request_close(); }
     }
     pub async fn close_and_wait(&mut self, deadline: Instant) -> io::Result<()> {
         let deadline = *self.close_deadline.get_or_insert(deadline);
         self.request_close();
+        if let Some(control) = &self.control { control.close_and_wait(deadline).await?; }
+        self.control = None;
         if let Some(endpoint) = &self.endpoint {
             tokio::time::timeout_at(deadline, endpoint.wait_idle())
                 .await
@@ -151,7 +247,8 @@ impl Drop for Adjacency {
         self.request_close();
     }
 }
-fn config() -> Arc<TransportConfig> {
+fn config() -> Arc<TransportConfig> { Arc::new(transport_config()) }
+fn transport_config() -> TransportConfig {
     let mut config = TransportConfig::default();
     config.max_concurrent_bidi_streams(0u8.into());
     config.max_concurrent_uni_streams(0u8.into());
@@ -164,5 +261,14 @@ fn config() -> Arc<TransportConfig> {
     config.datagram_send_buffer_size(wire::PENDING_PACKETS * (wire::HEADER + wire::FRAGMENT_BYTES));
     config.max_idle_timeout(Some(quinn::VarInt::from_u32(10_000).into()));
     config.keep_alive_interval(Some(Duration::from_secs(2)));
-    Arc::new(config)
+    config
+}
+fn decode_exact<const N: usize>(value: &str) -> io::Result<[u8;N]> {
+    let bytes = URL_SAFE_NO_PAD.decode(value).map_err(|_| io::ErrorKind::InvalidData)?;
+    if URL_SAFE_NO_PAD.encode(&bytes) != value { return Err(io::ErrorKind::InvalidData.into()); }
+    bytes.try_into().map_err(|_| io::ErrorKind::InvalidData.into())
+}
+struct ControlClose(Connection);
+impl Drop for ControlClose {
+    fn drop(&mut self) { self.0.close(0u32.into(), b"network node control ended"); }
 }

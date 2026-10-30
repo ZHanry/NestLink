@@ -1,6 +1,7 @@
 //! Exercise the SDK adapter through physical QUIC neighbors and business proof.
 use super::{RemoteRouteAuthority, authorize_remote};
 use crate::DeviceIdentity;
+use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_auth::random_id;
 use nestlink_identity::{
     InstallationIdentity, PermitSigner, VerifiedPermit, digest,
@@ -58,6 +59,7 @@ struct Fixture {
     transit: VerifiedNetworkGrant,
     now: u64,
     revoked: BTreeSet<String>,
+    response: nestlink_protocol::api::NetworkRemoteRelayView,
 }
 impl Fixture {
     fn new(allow_relay: bool) -> Result<Self> {
@@ -125,6 +127,13 @@ impl Fixture {
             expires_at_ms: now + route_lifetime_ms,
         };
         let mut memberships = Vec::new();
+        let mut member_views = Vec::new();
+        let grant_view = |claims: &GrantClaims| -> Result<nestlink_protocol::api::NetworkGrantView> {
+            let signed = signer.sign(claims)?;
+            Ok(nestlink_protocol::api::NetworkGrantView { schema_version: 1,
+                grant_id: claims.scope().grant_id.clone(), claims: URL_SAFE_NO_PAD.encode(signed.claims),
+                signature: URL_SAFE_NO_PAD.encode(signed.signature) })
+        };
         for (index, device) in [&controller, &host].into_iter().enumerate() {
             let member = MembershipClaims {
                 scope: scope(index as u8 + 1),
@@ -135,6 +144,7 @@ impl Fixture {
                 role: SpaceRole::Member,
             };
             let signed = signer.sign(&GrantClaims::Membership(member.clone()))?;
+            member_views.push(grant_view(&GrantClaims::Membership(member.clone()))?);
             memberships.push(VerifiedMembership::from_grant(
                 verify_network_grant(&signed, &context)?,
                 &context,
@@ -193,6 +203,18 @@ impl Fixture {
             }))?,
             &context,
         )?;
+        let response = nestlink_protocol::api::NetworkRemoteRelayView {
+            allocation_id: "60000000-0000-4000-8000-000000000006".into(),
+            path: nestlink_protocol::api::NetworkRemotePathView {
+                request_id: permit.claims().session_id.clone(),
+                controller_membership: member_views.remove(0), host_membership: member_views.remove(0),
+                connectivity: grant_view(connectivity.claims())?,
+                path: grant_view(&GrantClaims::Path(path.claims().clone()))?,
+            }, transit: grant_view(transit.claims())?,
+            node: nestlink_protocol::api::NodeEndpointsView { node_id: random_id(), revision: 1,
+                endpoints: nestlink_protocol::api::NodeEndpoints { quic_uri: Some("quic://127.0.0.1:28744".into()),
+                    wss_origin: None, allow_loopback: true } },
+        };
         Ok(Self {
             controller,
             host,
@@ -205,6 +227,7 @@ impl Fixture {
             transit,
             now,
             revoked,
+            response,
         })
     }
     fn context(&self) -> NetworkVerification<'_> {
@@ -871,5 +894,227 @@ async fn sdk_business_renewal_preserves_the_original_route_ceiling_and_synchrono
     assert_eq!(host_report.reason, StopReason::Revoked);
     assert_eq!(stops.load(Ordering::SeqCst), 1);
     finish_mesh(relay_stop, forwarding, addresses, cleanup).await?;
+    Ok(())
+}
+
+fn readback_sdk(f: &Fixture) -> Result<crate::Sdk> {
+    use nestlink_protocol::api::{HealthResponse, LoginResponse, Principal};
+    let issuer = f.permit_signer.public_key();
+    let mut sdk = crate::Sdk {
+        client: reqwest::Client::builder().no_proxy().build()?,
+        origin: url::Url::parse("https://control.example.test")?,
+        trust: crate::DeploymentTrust { deployment_id: DEPLOYMENT.into(), permit_issuer: issuer },
+        health: HealthResponse { product: "NestLink".into(), version: env!("CARGO_PKG_VERSION").into(),
+            api_base: nestlink_protocol::API_BASE.into(), alpn: nestlink_protocol::ALPN.into(),
+            deployment_id: DEPLOYMENT.into(), security_epoch: 1,
+            permit_issuer: URL_SAFE_NO_PAD.encode(issuer), node_policy_issuer: URL_SAFE_NO_PAD.encode(issuer) },
+        login: None,
+    };
+    sdk.install_login(LoginResponse { principal: Principal { account_id: f.permit.claims().account_id.clone(),
+            session_id: random_id(), name: "network-readback".into(), is_admin: false, access_expires: 9999999999 },
+        access_token: "A".repeat(43), refresh_token: "B".repeat(43), generation: 1, refresh_expires: 9999999999 })?;
+    Ok(sdk)
+}
+
+#[test]
+fn management_readback_binds_both_device_roles_and_the_original_network_pin() -> Result {
+    let f = Fixture::new(true)?;
+    let sdk = readback_sdk(&f)?;
+    let pin = super::PinnedNetworkSpace::new(SPACE.into(), f.issuer)?;
+    for (local, peer) in [(&f.controller, &f.host), (&f.host, &f.controller)] {
+        let route = sdk.verify_relay_readback(&pin, local, &f.permit, &peer.identity.public_key(),
+            &f.response.allocation_id, f.response.clone(), Instant::now())?;
+        assert_eq!(route.allocation_id(), f.response.allocation_id);
+        assert!(route.bound_to(&sdk, &f.permit));
+        assert!(route.deadline() > Instant::now());
+        assert!(route.deadline() <= Instant::now() + Duration::from_secs(12));
+    }
+    for pin in [super::PinnedNetworkSpace::new(SPACE.into(), [11;32])?,
+        super::PinnedNetworkSpace::new(random_id(), f.issuer)?] {
+        assert!(sdk.verify_relay_readback(&pin, &f.controller, &f.permit, &f.host.identity.public_key(),
+            &f.response.allocation_id, f.response.clone(), Instant::now()).is_err());
+    }
+    Ok(())
+}
+
+#[test]
+fn management_readback_rejects_retargeted_corrupted_and_obsolete_credentials() -> Result {
+    let f = Fixture::new(true)?;
+    let sdk = readback_sdk(&f)?;
+    let pin = super::PinnedNetworkSpace::new(SPACE.into(), f.issuer)?;
+    let mut wrong_request = f.response.clone();
+    wrong_request.path.request_id = random_id();
+    let mut wrong_allocation = f.response.clone();
+    wrong_allocation.allocation_id = random_id();
+    let mut swapped_members = f.response.clone();
+    std::mem::swap(&mut swapped_members.path.controller_membership, &mut swapped_members.path.host_membership);
+    let mut forged_transit = f.response.clone();
+    forged_transit.transit.signature = URL_SAFE_NO_PAD.encode([0u8;64]);
+    let mut missing_node = f.response.clone();
+    missing_node.node.endpoints.quic_uri = None;
+    for view in [wrong_request, wrong_allocation, swapped_members, forged_transit, missing_node] {
+        assert!(sdk.verify_relay_readback(&pin, &f.controller, &f.permit, &f.host.identity.public_key(),
+            &f.response.allocation_id, view, Instant::now()).is_err());
+    }
+    let mut claims = f.permit.claims().clone();
+    claims.connection_generation += 1;
+    let successor = verify_permit(&f.permit_signer.sign(&claims)?.encode_to_vec(), &f.permit_signer.public_key())?;
+    assert!(sdk.verify_relay_readback(&pin, &f.controller, &successor, &f.host.identity.public_key(),
+        &f.response.allocation_id, f.response.clone(), Instant::now()).is_err());
+    assert!(sdk.verify_relay_readback(&pin, &f.controller, &f.permit, &InstallationIdentity::generate().public_key(),
+        &f.response.allocation_id, f.response.clone(), Instant::now()).is_err());
+    assert!(sdk.verify_relay_readback(&pin, &f.controller, &f.permit, &f.host.identity.public_key(),
+        &f.response.allocation_id, f.response.clone(), Instant::now() - Duration::from_secs(6)).is_err());
+    Ok(())
+}
+
+#[test]
+fn a_verified_readback_cannot_cross_logout_login_server_or_business_generation() -> Result {
+    let f = Fixture::new(true)?;
+    let mut sdk = readback_sdk(&f)?;
+    let pin = super::PinnedNetworkSpace::new(SPACE.into(), f.issuer)?;
+    let route = sdk.verify_relay_readback(&pin, &f.controller, &f.permit, &f.host.identity.public_key(),
+        &f.response.allocation_id, f.response.clone(), Instant::now())?;
+    assert!(route.bound_to(&sdk, &f.permit));
+    let mut different_login = readback_sdk(&f)?;
+    assert!(!route.bound_to(&different_login, &f.permit));
+    different_login.origin = url::Url::parse("https://other.example.test")?;
+    assert!(!route.bound_to(&different_login, &f.permit));
+    sdk.forget_login();
+    assert!(!route.bound_to(&sdk, &f.permit));
+    Ok(())
+}
+
+#[tokio::test]
+async fn external_cancel_and_source_drop_interrupt_inner_setup_with_physical_cleanup() -> Result {
+    for dropped in [false, true] {
+        let f = Fixture::new(true)?;
+        let context = f.context();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let Mesh { controller, mut host, relay_stop, forwarding, addresses } = mesh(&f, deadline).await?;
+        let (_keep, stop) = watch::channel(None);
+        let (source, cancel) = watch::channel(false);
+        let setup = f.setup(&f.permit, EndpointRole::Controller, stop)?;
+        let peer_key = f.host.identity.public_key();
+        // The physical peer exists, but does not start inner TLS. Cancellation
+        // must end this wait before the five-second establishment deadline.
+        let (completed, (signalled, _cancel_keep)) = tokio::time::timeout_at(deadline, async {
+            tokio::join!(
+                async {
+                    let result = super::authorize_remote_observed(
+                        f.authority(&context), controller, setup, &f.controller,
+                        &peer_key, deadline, None, Some(cancel),
+                    ).await;
+                    (Instant::now(), result)
+                },
+                async move {
+                    tokio::time::sleep(Duration::from_millis(100)).await;
+                    let signalled = Instant::now();
+                    let keep = if dropped { drop(source); None } else {
+                        source.send_replace(true);
+                        Some(source)
+                    };
+                    (signalled, keep)
+                },
+            )
+        }).await?;
+        assert!(matches!(completed.1, Err(RemoteError::Stopped)), "dropped={dropped}");
+        assert!(completed.0 >= signalled);
+        assert!(completed.0.duration_since(signalled) < Duration::from_secs(3));
+        let cleanup = Instant::now() + Duration::from_secs(5);
+        host.close_and_wait(cleanup).await?;
+        assert!(finish_mesh(relay_stop, forwarding, addresses, cleanup).await? > 0);
+    }
+    Ok(())
+}
+
+#[tokio::test]
+async fn external_cancel_and_source_drop_interrupt_business_proof_with_physical_cleanup() -> Result {
+    for dropped in [false, true] {
+        let f = Fixture::new(true)?;
+        let context = f.context();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let Mesh { controller, host, relay_stop, forwarding, addresses } = mesh(&f, deadline).await?;
+        let (host_authority, host_stop) = RouteAuthorization::remote(
+            &context, &f.path, &f.connectivity, &f.transit, &f.permit,
+        )?;
+        let (_keep, stop) = watch::channel(None);
+        let (source, cancel) = watch::channel(false);
+        let setup = f.setup(&f.permit, EndpointRole::Controller, stop)?;
+        let peer_key = f.host.identity.public_key();
+        let (ready, established) = oneshot::channel();
+        let (completed, signal, peer) = tokio::time::timeout_at(deadline, async {
+            tokio::join!(
+                async {
+                    let result = super::authorize_remote_observed(
+                        f.authority(&context), controller, setup, &f.controller,
+                        &peer_key, deadline, None, Some(cancel),
+                    ).await;
+                    (Instant::now(), result)
+                },
+                async move {
+                    established.await?;
+                    tokio::time::sleep(Duration::from_millis(50)).await;
+                    let signalled = Instant::now();
+                    let keep = if dropped { drop(source); None } else {
+                        source.send_replace(true);
+                        Some(source)
+                    };
+                    Ok::<_, Box<dyn std::error::Error + Send + Sync>>((signalled, keep))
+                },
+                async {
+                    // Complete actual inner QUIC and withhold business proof.
+                    let peer = routed::establish(host_authority, host, &f.host.identity, deadline).await?;
+                    ready.send(()).map_err(|_| io::Error::other("proof wait was not observed"))?;
+                    Ok::<_, Box<dyn std::error::Error + Send + Sync>>(peer)
+                },
+            )
+        }).await?;
+        let (signalled, _cancel_keep) = signal?;
+        let mut peer = peer?;
+        assert!(matches!(completed.1, Err(RemoteError::Stopped)), "dropped={dropped}");
+        assert!(completed.0 >= signalled);
+        assert!(completed.0.duration_since(signalled) < Duration::from_secs(3));
+        host_stop.revoke();
+        let cleanup = Instant::now() + Duration::from_secs(5);
+        peer.close_and_wait(cleanup).await?;
+        finish_mesh(relay_stop, forwarding, addresses, cleanup).await?;
+    }
+    Ok(())
+}
+
+#[tokio::test]
+async fn ready_current_readback_cannot_bypass_the_final_deadline_or_terminal_sources() -> Result {
+    use crate::native::SessionEstablishError;
+    let f = Fixture::new(true)?;
+    let sdk = readback_sdk(&f)?;
+    let pin = super::PinnedNetworkSpace::new(SPACE.into(), f.issuer)?;
+    let route = sdk.verify_relay_readback(&pin, &f.controller, &f.permit, &f.host.identity.public_key(),
+        &f.response.allocation_id, f.response.clone(), Instant::now())?;
+    let (stop_source, stop) = watch::channel(None);
+    let (cancel_source, cancel) = watch::channel(false);
+    // A ready inner future wins timeout_at even after its absolute deadline.
+    // The same still-current response must fail the subsequent handoff check.
+    let deadline = Instant::now() - Duration::from_millis(1);
+    let current = tokio::time::timeout_at(deadline, std::future::ready(f.response.clone())).await?;
+    assert!(route.bound_to(&sdk, &f.permit));
+    assert!(route.validate_handoff(&sdk, &f.permit, &current, &stop, &cancel, deadline).is_err());
+    let deadline = Instant::now() + Duration::from_secs(1);
+    assert!(route.validate_handoff(&sdk, &f.permit, &current, &stop, &cancel, deadline).is_ok());
+    cancel_source.send_replace(true);
+    assert!(matches!(route.validate_handoff(&sdk, &f.permit, &current, &stop, &cancel, deadline),
+        Err(SessionEstablishError::Cancelled)));
+    let (cancel_source, cancel) = watch::channel(false);
+    drop(cancel_source);
+    assert!(matches!(route.validate_handoff(&sdk, &f.permit, &current, &stop, &cancel, deadline),
+        Err(SessionEstablishError::Cancelled)));
+    let (_cancel_keep, cancel) = watch::channel(false);
+    stop_source.send_replace(Some(StopReason::Revoked));
+    assert!(matches!(route.validate_handoff(&sdk, &f.permit, &current, &stop, &cancel, deadline),
+        Err(SessionEstablishError::Remote(RemoteError::Stopped))));
+    let (stop_source, stop) = watch::channel(None);
+    drop(stop_source);
+    assert!(matches!(route.validate_handoff(&sdk, &f.permit, &current, &stop, &cancel, deadline),
+        Err(SessionEstablishError::Remote(RemoteError::Stopped))));
     Ok(())
 }

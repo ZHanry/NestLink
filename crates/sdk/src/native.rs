@@ -166,7 +166,7 @@ async fn discover_auto_node_relay(
     reserve_discovered_node(sdk, local, permit, &discovery, node).await
 }
 
-async fn resolve_signed_node_host(
+pub(crate) async fn resolve_signed_node_host(
     host: url::Host<&str>,
     port: u16,
 ) -> Result<Vec<SocketAddr>, SdkError> {

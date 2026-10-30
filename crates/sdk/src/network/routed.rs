@@ -14,6 +14,9 @@ use nestlink_transport_quic::routed::{
 };
 use std::{future::Future, io, pin::Pin, sync::Arc};
 use tokio::{sync::watch, time::Instant};
+mod control;
+pub use control::{PinnedNetworkSpace, VerifiedRemoteRelay};
+use nestlink_transport_stream::owner::TaskOwner;
 
 /// Supply a current trusted policy snapshot, not claims read from a peer.
 /// These network permissions do not replace the SessionSetup business permit.
@@ -35,14 +38,28 @@ pub struct RemoteRouteAuthority<'a> {
 /// receipt; cancelling establishment requests Drop cleanup without a receipt.
 pub async fn authorize_remote(
     authority: RemoteRouteAuthority<'_>,
+    adjacency: Adjacency,
+    setup: SessionSetup,
+    local: &DeviceIdentity,
+    peer_key: &[u8; 32],
+    deadline: Instant,
+) -> Result<ChannelRuntime, RemoteError> {
+    authorize_remote_observed(authority, adjacency, setup, local, peer_key, deadline, None, None).await
+}
+
+#[allow(clippy::too_many_arguments)]
+async fn authorize_remote_observed(
+    authority: RemoteRouteAuthority<'_>,
     mut adjacency: Adjacency,
     mut setup: SessionSetup,
     local: &DeviceIdentity,
     peer_key: &[u8; 32],
     deadline: Instant,
+    observer: Option<control::RemoteRouteObserver>,
+    mut cancel: Option<watch::Receiver<bool>>,
 ) -> Result<ChannelRuntime, RemoteError> {
     let mut stop = setup.lifecycle.stop.clone();
-    if setup_is_stopped(&stop) {
+    if setup_is_stopped(&stop) || cancel.as_ref().is_some_and(control::cancel_is_stopped) {
         adjacency
             .close_and_wait(deadline)
             .await
@@ -122,6 +139,10 @@ pub async fn authorize_remote(
             revocation.revoke();
             Err(RemoteError::Stopped)
         },
+        _ = wait_setup_cancel(&mut cancel) => {
+            revocation.revoke();
+            Err(RemoteError::Stopped)
+        },
         result = pending.establish(&local.identity, setup_deadline) => {
             result.map_err(io::Error::other).map_err(RemoteError::from)
         },
@@ -140,10 +161,12 @@ pub async fn authorize_remote(
     let mut owner = RemoteRouteOwner {
         transport,
         revocation,
+        observer: None,
     };
     let connection = owner.transport.connection()?.clone();
     let proved = tokio::select! { biased;
         _ = wait_setup_stop(&mut stop) => Err(RemoteError::Stopped),
+        _ = wait_setup_cancel(&mut cancel) => Err(RemoteError::Stopped),
         result = tokio::time::timeout_at(setup_deadline, nestlink_remote::quic::authorize(
             connection, None, setup, &local.identity, peer_key,
         )) => result.unwrap_or_else(|_| Err(io::Error::new(io::ErrorKind::TimedOut,
@@ -154,7 +177,7 @@ pub async fn authorize_remote(
             // timeout_at polls the inner operation before its timer. Recheck
             // terminal facts at the handoff even if proof became ready late.
             let expired = Instant::now() >= setup_deadline;
-            if expired || setup_is_stopped(&stop) {
+            if expired || setup_is_stopped(&stop) || cancel.as_ref().is_some_and(control::cancel_is_stopped) {
                 let _ = channels.lease_control().stop(if expired { StopReason::Expired } else { StopReason::Revoked });
                 let business_cleanup = tokio::time::timeout_at(deadline, channels.wait_stopped()).await;
                 owner.close_and_wait(deadline).await.map_err(RemoteError::Cleanup)?;
@@ -163,6 +186,7 @@ pub async fn authorize_remote(
                     io::Error::new(io::ErrorKind::TimedOut, "routed business handoff deadline exhausted").into()
                 } else { RemoteError::Stopped });
             }
+            owner.observer = observer.map(|observer| observer.spawn(channels.lease_control()));
             Ok(channels.with_transport_owner(owner))
         },
         Err(error) => {
@@ -187,6 +211,13 @@ async fn wait_setup_stop(stop: &mut watch::Receiver<Option<StopReason>>) {
         if stop.changed().await.is_err() {
             return;
         }
+    }
+}
+
+async fn wait_setup_cancel(cancel: &mut Option<watch::Receiver<bool>>) {
+    match cancel {
+        Some(cancel) => control::cancelled(cancel).await,
+        None => std::future::pending().await,
     }
 }
 
@@ -225,18 +256,24 @@ impl Drop for RemoteRouteStop {
 struct RemoteRouteOwner {
     transport: RoutedTransport,
     revocation: Arc<RouteRevocation>,
+    observer: Option<TaskOwner>,
 }
 impl TransportOwner for RemoteRouteOwner {
     fn request_close(&self) {
         self.revocation.revoke();
         self.transport.request_close();
+        if let Some(observer) = &self.observer { observer.request_close(); }
     }
     fn close_and_wait(
         &mut self,
         deadline: Instant,
     ) -> Pin<Box<dyn Future<Output = io::Result<()>> + Send + '_>> {
         self.request_close();
-        Box::pin(self.transport.close_and_wait(deadline))
+        Box::pin(async move {
+            if let Some(observer) = &self.observer { observer.close_and_wait(deadline).await?; }
+            self.observer = None;
+            self.transport.close_and_wait(deadline).await
+        })
     }
 }
 impl Drop for RemoteRouteOwner {
