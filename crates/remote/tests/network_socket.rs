@@ -5,7 +5,9 @@
 #![cfg(target_os = "linux")]
 
 use nestlink_auth::random_id;
-use nestlink_identity::{InstallationIdentity, PermitSigner, VerifiedPermit, digest, verify_permit};
+use nestlink_identity::{
+    InstallationIdentity, PermitSigner, VerifiedPermit, digest, verify_permit,
+};
 use nestlink_policy::PathSet;
 use nestlink_protocol::{FileReadManifest, Path, Permission, PermitClaims, SCHEMA_VERSION};
 use nestlink_remote::{
@@ -35,8 +37,14 @@ const TRANSFER: &str = "a2000000-1111-4111-8111-111111111111";
 
 fn fixture(require_namespace: bool) -> Result<PathBuf> {
     assert_eq!(std::env::var("GITHUB_ACTIONS")?.as_str(), "true");
-    assert_eq!(std::env::var("RUNNER_ENVIRONMENT")?.as_str(), "github-hosted");
-    assert_eq!(std::env::var("GITHUB_REPOSITORY")?.as_str(), "ZHanry/NestLink");
+    assert_eq!(
+        std::env::var("RUNNER_ENVIRONMENT")?.as_str(),
+        "github-hosted"
+    );
+    assert_eq!(
+        std::env::var("GITHUB_REPOSITORY")?.as_str(),
+        "ZHanry/NestLink"
+    );
     let root = PathBuf::from(std::env::var("NESTLINK_NETWORK_FIXTURE")?).canonicalize()?;
     let temporary = PathBuf::from(std::env::var("RUNNER_TEMP")?).canonicalize()?;
     assert!(root.starts_with(&temporary) && root != temporary);
@@ -48,9 +56,15 @@ fn fixture(require_namespace: bool) -> Result<PathBuf> {
         let runner = std::env::var("NESTLINK_NETWORK_RUNNER_NAMESPACE")?;
         assert!(runner.starts_with("net:[") && runner.ends_with(']'));
         assert_ne!(actual.to_string_lossy(), runner);
-        println!("NESTLINK_NETWORK namespace={actual:?} pid={}", std::process::id());
+        println!(
+            "NESTLINK_NETWORK namespace={actual:?} pid={}",
+            std::process::id()
+        );
         let status = fs::read_to_string("/proc/self/status")?;
-        let uid = status.lines().find(|line| line.starts_with("Uid:")).ok_or("missing uid")?;
+        let uid = status
+            .lines()
+            .find(|line| line.starts_with("Uid:"))
+            .ok_or("missing uid")?;
         assert_ne!(uid.split_whitespace().nth(1), Some("0"));
         assert_ne!(uid.split_whitespace().nth(2), Some("0"));
         println!("NESTLINK_NETWORK {uid}");
@@ -60,12 +74,15 @@ fn fixture(require_namespace: bool) -> Result<PathBuf> {
 
 fn identity(root: &std::path::Path, role: &str) -> Result<InstallationIdentity> {
     let mut seed: [u8; 32] = fs::read(root.join(format!("{role}.seed")))?
-        .try_into().map_err(|_| "invalid fixture seed")?;
+        .try_into()
+        .map_err(|_| "invalid fixture seed")?;
     Ok(InstallationIdentity::from_seed_zeroizing(&mut seed))
 }
 
 fn key(root: &std::path::Path, role: &str) -> Result<[u8; 32]> {
-    fs::read(root.join(format!("{role}.public")))?.try_into().map_err(|_| "invalid public key".into())
+    fs::read(root.join(format!("{role}.public")))?
+        .try_into()
+        .map_err(|_| "invalid public key".into())
 }
 
 fn mark(root: &std::path::Path, name: &str) -> Result {
@@ -80,7 +97,8 @@ async fn wait_mark(root: &std::path::Path, name: &str, deadline: tokio::time::In
         while !root.join(name).is_file() {
             tokio::time::sleep(Duration::from_millis(10)).await;
         }
-    }).await?;
+    })
+    .await?;
     Ok(())
 }
 
@@ -88,37 +106,72 @@ fn business_deadline(channels: &nestlink_remote::ChannelRuntime) -> Result<tokio
     // Keep the original 15-second permit. Do not let orchestration waits eat
     // the four seconds reserved for actual transport and file-worker cleanup.
     let remaining = channels.lease_control().remaining()?;
-    let budget = remaining.checked_sub(Duration::from_secs(4)).ok_or("insufficient permit time for cleanup")?
+    let budget = remaining
+        .checked_sub(Duration::from_secs(4))
+        .ok_or("insufficient permit time for cleanup")?
         .min(Duration::from_secs(6));
-    if budget < Duration::from_secs(2) { return Err("insufficient business experiment budget".into()); }
-    println!("NESTLINK_NETWORK lease_remaining_ms={} business_budget_ms={} cleanup_reserve_ms=4000", remaining.as_millis(), budget.as_millis());
+    if budget < Duration::from_secs(2) {
+        return Err("insufficient business experiment budget".into());
+    }
+    println!(
+        "NESTLINK_NETWORK lease_remaining_ms={} business_budget_ms={} cleanup_reserve_ms=4000",
+        remaining.as_millis(),
+        budget.as_millis()
+    );
     Ok(tokio::time::Instant::now() + budget)
 }
 
 fn permit(root: &std::path::Path) -> Result<VerifiedPermit> {
-    Ok(verify_permit(&fs::read(root.join("permit.bin"))?, &key(root, "issuer")?)?)
+    Ok(verify_permit(
+        &fs::read(root.join("permit.bin"))?,
+        &key(root, "issuer")?,
+    )?)
 }
 
-fn setup(permit: VerifiedPermit, role: EndpointRole, stop: watch::Receiver<Option<StopReason>>) -> Result<SessionSetup> {
+fn setup(
+    permit: VerifiedPermit,
+    role: EndpointRole,
+    stop: watch::Receiver<Option<StopReason>>,
+) -> Result<SessionSetup> {
     let c = permit.claims();
     let binding = SessionBinding {
         media: None,
-        deployment_id: c.deployment_id.clone(), security_epoch: c.security_epoch,
-        session_id: c.session_id.clone(), account_id: c.account_id.clone(),
-        controller_device_id: c.controller_device_id.clone(), host_device_id: c.host_device_id.clone(),
-        controller_key_sha256: c.controller_key_sha256.clone().try_into().map_err(|_| "controller digest")?,
-        host_key_sha256: c.host_key_sha256.clone().try_into().map_err(|_| "host digest")?,
-        resource_id: c.resource_id.clone(), policy_revision: c.policy_revision,
+        deployment_id: c.deployment_id.clone(),
+        security_epoch: c.security_epoch,
+        session_id: c.session_id.clone(),
+        account_id: c.account_id.clone(),
+        controller_device_id: c.controller_device_id.clone(),
+        host_device_id: c.host_device_id.clone(),
+        controller_key_sha256: c
+            .controller_key_sha256
+            .clone()
+            .try_into()
+            .map_err(|_| "controller digest")?,
+        host_key_sha256: c
+            .host_key_sha256
+            .clone()
+            .try_into()
+            .map_err(|_| "host digest")?,
+        resource_id: c.resource_id.clone(),
+        policy_revision: c.policy_revision,
         connection_generation: c.connection_generation,
-        capability_sha256: c.capability_sha256.clone().try_into().map_err(|_| "capability digest")?,
+        capability_sha256: c
+            .capability_sha256
+            .clone()
+            .try_into()
+            .map_err(|_| "capability digest")?,
         granted_permissions: vec![Permission::View, Permission::FileRead],
-        supported_capabilities: vec!["vp8".into()], local_paths: PathSet::DIRECT,
+        supported_capabilities: vec!["vp8".into()],
+        local_paths: PathSet::DIRECT,
     };
     let clock = RuntimeClock::default();
     let now = clock.sample()?;
     Ok(SessionSetup {
         session: Session::activate(permit, binding, Path::Direct, now.monotonic_ms, now)?,
-        path: Path::Direct, role, clock, lifecycle: SessionLifecycle::new(stop),
+        path: Path::Direct,
+        role,
+        clock,
+        lifecycle: SessionLifecycle::new(stop),
     })
 }
 
@@ -132,19 +185,35 @@ fn prepare_fixture() -> Result {
     fs::write(root.join("host.public"), host.public_key())?;
     let now = RuntimeClock::default().sample()?.unix_ms;
     let claims = PermitClaims {
-        schema_version: SCHEMA_VERSION, deployment_id: random_id(), security_epoch: 1,
-        session_id: random_id(), account_id: random_id(),
-        controller_device_id: random_id(), host_device_id: random_id(),
-        controller_key_sha256: controller.fingerprint().to_vec(), host_key_sha256: host.fingerprint().to_vec(),
-        resource_id: random_id(), permissions: vec![Permission::View as i32, Permission::FileRead as i32],
-        paths: vec![Path::Direct as i32], policy_revision: 1, connection_generation: 1, lease_sequence: 1,
-        issued_at_unix_ms: now, expires_at_unix_ms: now + 15_000,
-        capability_sha256: digest(b"network-socket-fixture-vp8").to_vec(), required_capabilities: vec!["vp8".into()],
-        media_format_version: 0, media_formats: Vec::new(), media_format_sha256: Vec::new(),
+        schema_version: SCHEMA_VERSION,
+        deployment_id: random_id(),
+        security_epoch: 1,
+        session_id: random_id(),
+        account_id: random_id(),
+        controller_device_id: random_id(),
+        host_device_id: random_id(),
+        controller_key_sha256: controller.fingerprint().to_vec(),
+        host_key_sha256: host.fingerprint().to_vec(),
+        resource_id: random_id(),
+        permissions: vec![Permission::View as i32, Permission::FileRead as i32],
+        paths: vec![Path::Direct as i32],
+        policy_revision: 1,
+        connection_generation: 1,
+        lease_sequence: 1,
+        issued_at_unix_ms: now,
+        expires_at_unix_ms: now + 15_000,
+        capability_sha256: digest(b"network-socket-fixture-vp8").to_vec(),
+        required_capabilities: vec!["vp8".into()],
+        media_format_version: 0,
+        media_formats: Vec::new(),
+        media_format_sha256: Vec::new(),
     };
     let signer = PermitSigner::generate();
     fs::write(root.join("issuer.public"), signer.public_key())?;
-    fs::write(root.join("permit.bin"), signer.sign(&claims)?.encode_to_vec())?;
+    fs::write(
+        root.join("permit.bin"),
+        signer.sign(&claims)?.encode_to_vec(),
+    )?;
     println!("NESTLINK_NETWORK fixture=prepared lease_ms=15000");
     Ok(())
 }
@@ -152,32 +221,61 @@ fn prepare_fixture() -> Result {
 // This thin fixture adapter grants one immutable, runner-generated file. The
 // production FileRead worker owns requests, replay/offset checks and disclosure.
 struct ApprovedFile(PathBuf);
-struct Source { file: File, consent: Arc<AtomicBool> }
+struct Source {
+    file: File,
+    consent: Arc<AtomicBool>,
+}
 impl FileReadDevice for ApprovedFile {
     fn open(&mut self, root: &str, relative_path: &str) -> io::Result<Box<dyn FileReadSource>> {
         if root != ROOT || relative_path != "payload.bin" {
-            return Err(io::Error::new(io::ErrorKind::PermissionDenied, "unapproved fixture file"));
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "unapproved fixture file",
+            ));
         }
-        Ok(Box::new(Source { file: File::open(&self.0)?, consent: Arc::new(AtomicBool::new(true)) }))
+        Ok(Box::new(Source {
+            file: File::open(&self.0)?,
+            consent: Arc::new(AtomicBool::new(true)),
+        }))
     }
 }
 impl FileReadSource for Source {
-    fn consent(&self) -> Arc<dyn FileReadConsent> { self.consent.clone() }
-    fn describe(&mut self, authorized: &mut dyn FnMut() -> io::Result<()>) -> io::Result<FileReadManifest> {
+    fn consent(&self) -> Arc<dyn FileReadConsent> {
+        self.consent.clone()
+    }
+    fn describe(
+        &mut self,
+        authorized: &mut dyn FnMut() -> io::Result<()>,
+    ) -> io::Result<FileReadManifest> {
         authorized()?;
         let size = self.file.metadata()?.len();
-        if size > 1_048_576 { return Err(io::Error::other("fixture file budget exceeded")); }
+        if size > 1_048_576 {
+            return Err(io::Error::other("fixture file budget exceeded"));
+        }
         self.file.seek(SeekFrom::Start(0))?;
         let mut bytes = Vec::new();
         self.file.by_ref().take(size + 1).read_to_end(&mut bytes)?;
         authorized()?;
-        if bytes.len() as u64 != size { return Err(io::Error::other("fixture changed")); }
-        Ok(FileReadManifest { size, sha256: digest(&bytes).to_vec(), offset: 0 })
+        if bytes.len() as u64 != size {
+            return Err(io::Error::other("fixture changed"));
+        }
+        Ok(FileReadManifest {
+            size,
+            sha256: digest(&bytes).to_vec(),
+            offset: 0,
+        })
     }
-    fn read_chunk(&mut self, offset: u64, maximum: usize, authorized: &mut dyn FnMut() -> io::Result<()>) -> io::Result<Vec<u8>> {
+    fn read_chunk(
+        &mut self,
+        offset: u64,
+        maximum: usize,
+        authorized: &mut dyn FnMut() -> io::Result<()>,
+    ) -> io::Result<Vec<u8>> {
         authorized()?;
         let size = self.file.metadata()?.len();
-        let remaining = size.checked_sub(offset).ok_or_else(|| io::Error::other("offset exceeds file"))?;
+        let remaining = size
+            .checked_sub(offset)
+            .ok_or_else(|| io::Error::other("offset exceeds file"))?;
         let length = remaining.min(maximum.min(65_536) as u64) as usize;
         let mut bytes = vec![0; length];
         self.file.seek(SeekFrom::Start(offset))?;
@@ -185,8 +283,14 @@ impl FileReadSource for Source {
         authorized()?;
         Ok(bytes)
     }
-    fn verify(&mut self, original: &FileReadManifest, authorized: &mut dyn FnMut() -> io::Result<()>) -> io::Result<()> {
-        if self.describe(authorized)? != *original { return Err(io::Error::other("fixture changed during read")); }
+    fn verify(
+        &mut self,
+        original: &FileReadManifest,
+        authorized: &mut dyn FnMut() -> io::Result<()>,
+    ) -> io::Result<()> {
+        if self.describe(authorized)? != *original {
+            return Err(io::Error::other("fixture changed during read"));
+        }
         Ok(())
     }
 }
@@ -197,7 +301,11 @@ async fn host_process() -> Result {
     let root = fixture(true)?;
     let host = identity(&root, "host")?;
     let controller_key = key(&root, "controller")?;
-    let endpoint = listener(([10, 201, 0, 2], PORT).into(), &host, digest(&controller_key))?;
+    let endpoint = listener(
+        ([10, 201, 0, 2], PORT).into(),
+        &host,
+        digest(&controller_key),
+    )?;
     mark(&root, "host-ready")?;
     if std::env::var("NESTLINK_NETWORK_CASE")? == "blackhole" {
         match tokio::time::timeout(Duration::from_secs(3), endpoint.accept()).await {
@@ -209,7 +317,10 @@ async fn host_process() -> Result {
             Ok(None) => return Err("blackhole listener unexpectedly ended".into()),
             Ok(Some(incoming)) => {
                 let result = tokio::time::timeout(Duration::from_secs(3), incoming).await;
-                assert!(!matches!(result, Ok(Ok(_))), "blackholed QUIC unexpectedly completed");
+                assert!(
+                    !matches!(result, Ok(Ok(_))),
+                    "blackholed QUIC unexpectedly completed"
+                );
                 println!("NESTLINK_NETWORK expected_handshake_failure={result:?}");
                 mark(&root, "host-handshake-rejected")?;
             }
@@ -219,31 +330,64 @@ async fn host_process() -> Result {
         mark(&root, "host-finished")?;
         return Ok(());
     }
-    let incoming = tokio::time::timeout(Duration::from_secs(4), endpoint.accept()).await?.ok_or("listener ended")?;
+    let incoming = tokio::time::timeout(Duration::from_secs(4), endpoint.accept())
+        .await?
+        .ok_or("listener ended")?;
     let connection = tokio::time::timeout(Duration::from_secs(3), incoming).await??;
     let (stop, stopped) = watch::channel(None);
     let mut channels = nestlink_remote::quic::authorize(
-        connection, Some(endpoint), setup(permit(&root)?, EndpointRole::Host, stopped)?, &host, &controller_key,
-    ).await?;
+        connection,
+        Some(endpoint),
+        setup(permit(&root)?, EndpointRole::Host, stopped)?,
+        &host,
+        &controller_key,
+    )
+    .await?;
     assert_eq!(channels.mode(), TransportMode::QuicStreamsAndDatagrams);
     let deadline = business_deadline(&channels)?;
     mark(&root, "host-authorized")?;
-    let mut worker = FileReadServer::start(&mut channels, 1, ApprovedFile(root.join("payload.bin")))?;
+    let mut worker =
+        FileReadServer::start(&mut channels, 1, ApprovedFile(root.join("payload.bin")))?;
     let stop_root = root.clone();
     let stop_task = tokio::spawn(async move {
         wait_mark(&stop_root, "host-stop", deadline).await?;
         let _ = stop.send(Some(StopReason::ExplicitExit));
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
     });
-    assert!(tokio::time::timeout_at(deadline, channels.receive()).await?.is_err());
+    assert!(
+        tokio::time::timeout_at(deadline, channels.receive())
+            .await?
+            .is_err()
+    );
     let report = tokio::time::timeout(Duration::from_secs(3), channels.wait_stopped()).await??;
-    assert!(matches!(report.reason, StopReason::ExplicitExit | StopReason::TransportLost), "unexpected terminal reason: {report:?}");
-    assert_eq!(tokio::time::timeout(Duration::from_secs(1), worker.shutdown(StopReason::ExplicitExit)).await??, FileShutdown::Finished);
+    assert!(
+        matches!(
+            report.reason,
+            StopReason::ExplicitExit | StopReason::TransportLost
+        ),
+        "unexpected terminal reason: {report:?}"
+    );
+    assert_eq!(
+        tokio::time::timeout(
+            Duration::from_secs(1),
+            worker.shutdown(StopReason::ExplicitExit)
+        )
+        .await??,
+        FileShutdown::Finished
+    );
     assert!(worker.monitor().status().finished);
     assert!(!worker.monitor().status().cleanup_timed_out);
     stop_task.await??;
-    println!("NESTLINK_NETWORK stopped={report:?} file_worker={:?}", worker.monitor().status());
-    assert!(channels.send(Channel::Video, b"forbidden after stop").await.is_err());
+    println!(
+        "NESTLINK_NETWORK stopped={report:?} file_worker={:?}",
+        worker.monitor().status()
+    );
+    assert!(
+        channels
+            .send(Channel::Video, b"forbidden after stop")
+            .await
+            .is_err()
+    );
     mark(&root, "host-finished")?;
     Ok(())
 }
@@ -256,11 +400,22 @@ async fn client_process() -> Result {
     let host_key = key(&root, "host")?;
     let endpoint = connector(([10, 201, 0, 1], 0).into(), &controller, digest(&host_key))?;
     let started = Instant::now();
-    let connected = connect(&endpoint, ([10, 201, 0, 2], PORT).into(), Duration::from_millis(1800)).await;
+    let connected = connect(
+        &endpoint,
+        ([10, 201, 0, 2], PORT).into(),
+        Duration::from_millis(1800),
+    )
+    .await;
     if std::env::var("NESTLINK_NETWORK_CASE")? == "blackhole" {
         assert!(connected.is_err(), "blackholed client connected");
-        assert!(started.elapsed() >= Duration::from_secs(1), "failure preceded the injected packet loss");
-        println!("NESTLINK_NETWORK expected_connect_failure={connected:?} elapsed_ms={}", started.elapsed().as_millis());
+        assert!(
+            started.elapsed() >= Duration::from_secs(1),
+            "failure preceded the injected packet loss"
+        );
+        println!(
+            "NESTLINK_NETWORK expected_connect_failure={connected:?} elapsed_ms={}",
+            started.elapsed().as_millis()
+        );
         endpoint.close(0_u32.into(), b"expected blackhole complete");
         tokio::time::timeout(Duration::from_secs(4), endpoint.wait_idle()).await?;
         mark(&root, "client-blackhole-rejected")?;
@@ -269,41 +424,86 @@ async fn client_process() -> Result {
     }
     let (stop, stopped) = watch::channel(None);
     let mut channels = nestlink_remote::quic::authorize(
-        connected?, Some(endpoint), setup(permit(&root)?, EndpointRole::Controller, stopped)?, &controller, &host_key,
-    ).await?;
+        connected?,
+        Some(endpoint),
+        setup(permit(&root)?, EndpointRole::Controller, stopped)?,
+        &controller,
+        &host_key,
+    )
+    .await?;
     assert_eq!(channels.mode(), TransportMode::QuicStreamsAndDatagrams);
     let deadline = business_deadline(&channels)?;
     mark(&root, "client-authorized")?;
-    assert!(channels.send(Channel::Input, b"permission must reject before enqueue").await.is_err());
+    assert!(
+        channels
+            .send(Channel::Input, b"permission must reject before enqueue")
+            .await
+            .is_err()
+    );
     mark(&root, "ungranted-input-rejected")?;
     let mut client = FileReadClient::attach(&mut channels, 1)?;
-    let expected: [u8; 32] = fs::read(root.join("payload.sha256"))?.try_into().map_err(|_| "payload digest")?;
-    let mut download = tokio::time::timeout_at(deadline, client.open(TRANSFER, ROOT, "payload.bin", 0, Some(expected))).await??;
+    let expected: [u8; 32] = fs::read(root.join("payload.sha256"))?
+        .try_into()
+        .map_err(|_| "payload digest")?;
+    let mut download = tokio::time::timeout_at(
+        deadline,
+        client.open(TRANSFER, ROOT, "payload.bin", 0, Some(expected)),
+    )
+    .await??;
     let mut verifier = FileReadVerifier::new(download.manifest().clone())?;
-    let first = tokio::time::timeout_at(deadline, client.next(&mut download)).await??.ok_or("file unexpectedly empty")?;
+    let first = tokio::time::timeout_at(deadline, client.next(&mut download))
+        .await??
+        .ok_or("file unexpectedly empty")?;
     verifier.accept(&first)?;
     let mut received = first.data;
     mark(&root, "client-first-chunk")?;
     if std::env::var("NESTLINK_NETWORK_CASE")? == "cancel" {
         wait_mark(&root, "fault-installed", deadline).await?;
-        assert!(deadline.saturating_duration_since(tokio::time::Instant::now()) >= Duration::from_secs(2), "insufficient cancellation budget");
+        assert!(
+            deadline.saturating_duration_since(tokio::time::Instant::now())
+                >= Duration::from_secs(2),
+            "insufficient cancellation budget"
+        );
         {
             let next = client.next(&mut download);
             tokio::pin!(next);
-            assert!(tokio::time::timeout(Duration::from_millis(120), &mut next).await.is_err(), "blackholed next chunk did not block");
+            assert!(
+                tokio::time::timeout(Duration::from_millis(120), &mut next)
+                    .await
+                    .is_err(),
+                "blackholed next chunk did not block"
+            );
             mark(&root, "client-next-blocked")?;
             let cancelling = Instant::now();
             stop.send(Some(StopReason::ExplicitExit))?;
-            assert!(tokio::time::timeout(Duration::from_secs(1), &mut next).await?.is_err());
-            println!("NESTLINK_NETWORK cancel_elapsed_ms={}", cancelling.elapsed().as_millis());
+            assert!(
+                tokio::time::timeout(Duration::from_secs(1), &mut next)
+                    .await?
+                    .is_err()
+            );
+            println!(
+                "NESTLINK_NETWORK cancel_elapsed_ms={}",
+                cancelling.elapsed().as_millis()
+            );
         }
-        let report = tokio::time::timeout(Duration::from_secs(3), channels.wait_stopped()).await??;
+        let report =
+            tokio::time::timeout(Duration::from_secs(3), channels.wait_stopped()).await??;
         assert_eq!(report.reason, StopReason::ExplicitExit);
-        assert!(channels.send(Channel::Video, b"stale after cancellation").await.is_err());
-        println!("NESTLINK_NETWORK cancelled={report:?} partial_file_bytes={}", received.len());
+        assert!(
+            channels
+                .send(Channel::Video, b"stale after cancellation")
+                .await
+                .is_err()
+        );
+        println!(
+            "NESTLINK_NETWORK cancelled={report:?} partial_file_bytes={}",
+            received.len()
+        );
         mark(&root, "client-cancelled")?;
     } else {
-        while let Some(chunk) = tokio::time::timeout_at(deadline, client.next(&mut download)).await?? {
+        while let Some(chunk) =
+            tokio::time::timeout_at(deadline, client.next(&mut download)).await??
+        {
             verifier.accept(&chunk)?;
             received.extend_from_slice(&chunk.data);
         }
@@ -314,7 +514,11 @@ async fn client_process() -> Result {
         fs::write(root.join("received.bin"), &received)?;
         println!("NESTLINK_NETWORK verified_file_bytes={}", received.len());
         mark(&root, "client-complete")?;
-        tokio::time::timeout(Duration::from_secs(3), channels.shutdown(StopReason::ExplicitExit)).await??;
+        tokio::time::timeout(
+            Duration::from_secs(3),
+            channels.shutdown(StopReason::ExplicitExit),
+        )
+        .await??;
     }
     mark(&root, "client-finished")?;
     Ok(())

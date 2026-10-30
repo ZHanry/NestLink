@@ -5,67 +5,166 @@ use nestlink_identity::network::SignedNetworkGrant;
 use nestlink_protocol::network::{CLAIM_BYTES, GrantClaims, SCHEMA_VERSION as NETWORK_SCHEMA};
 
 fn base(space: &str) -> Result<String, SdkError> {
-    if !valid_id(space) { return Err(SdkError::Invalid); }
+    if !valid_id(space) {
+        return Err(SdkError::Invalid);
+    }
     Ok(format!("/network/spaces/{space}"))
 }
 fn member(space: &str, installation: &str) -> Result<String, SdkError> {
-    if !valid_id(installation) { return Err(SdkError::Invalid); }
-    Ok(format!("{}/members/{installation}",base(space)?))
+    if !valid_id(installation) {
+        return Err(SdkError::Invalid);
+    }
+    Ok(format!("{}/members/{installation}", base(space)?))
 }
 fn grant(space: &str, grant: &str) -> Result<String, SdkError> {
-    if !valid_id(grant) { return Err(SdkError::Invalid); }
-    Ok(format!("{}/grants/{grant}",base(space)?))
+    if !valid_id(grant) {
+        return Err(SdkError::Invalid);
+    }
+    Ok(format!("{}/grants/{grant}", base(space)?))
 }
 fn path(space: &str, path: &str) -> Result<String, SdkError> {
-    if !valid_id(path) { return Err(SdkError::Invalid); }
-    Ok(format!("{}/paths/{path}",base(space)?))
+    if !valid_id(path) {
+        return Err(SdkError::Invalid);
+    }
+    Ok(format!("{}/paths/{path}", base(space)?))
 }
 
 /// Decode exact bounded bytes for independent verification. This function does
 /// not check a signature, current policy, member binding or business authority.
 pub fn decode_network_grant(view: &NetworkGrantView) -> Result<SignedNetworkGrant, SdkError> {
-    if view.schema_version != NETWORK_SCHEMA || view.claims.len() > CLAIM_BYTES.div_ceil(3)*4
-        || view.signature.len() != 86 { return Err(SdkError::Invalid); }
-    let signed = SignedNetworkGrant {claims:URL_SAFE_NO_PAD.decode(&view.claims).map_err(|_|SdkError::Invalid)?,
-        signature:URL_SAFE_NO_PAD.decode(&view.signature).map_err(|_|SdkError::Invalid)?};
+    if view.schema_version != NETWORK_SCHEMA
+        || view.claims.len() > CLAIM_BYTES.div_ceil(3) * 4
+        || view.signature.len() != 86
+    {
+        return Err(SdkError::Invalid);
+    }
+    let signed = SignedNetworkGrant {
+        claims: URL_SAFE_NO_PAD
+            .decode(&view.claims)
+            .map_err(|_| SdkError::Invalid)?,
+        signature: URL_SAFE_NO_PAD
+            .decode(&view.signature)
+            .map_err(|_| SdkError::Invalid)?,
+    };
     let claims = GrantClaims::decode_canonical(&signed.claims)?;
-    if claims.scope().grant_id != view.grant_id || signed.signature.len() != 64 { return Err(SdkError::Invalid); }
+    if claims.scope().grant_id != view.grant_id || signed.signature.len() != 64 {
+        return Err(SdkError::Invalid);
+    }
     Ok(signed)
 }
 
 impl Sdk {
     pub async fn network_policy(&self, space: &str) -> Result<NetworkPolicyView, SdkError> {
-        self.required(Method::GET,&format!("{}/policy",base(space)?),None::<&()>).await
+        self.required(
+            Method::GET,
+            &format!("{}/policy", base(space)?),
+            None::<&()>,
+        )
+        .await
     }
-    pub async fn configure_network_authority(&self, space: &str, expected_revision: u64) -> Result<NetworkPolicyView, SdkError> {
-        self.required(Method::PUT,&format!("{}/authority",base(space)?),Some(&NetworkAuthorityRequest {expected_revision})).await
+    pub async fn configure_network_authority(
+        &self,
+        space: &str,
+        expected_revision: u64,
+    ) -> Result<NetworkPolicyView, SdkError> {
+        self.required(
+            Method::PUT,
+            &format!("{}/authority", base(space)?),
+            Some(&NetworkAuthorityRequest { expected_revision }),
+        )
+        .await
     }
-    pub async fn network_member(&self, space: &str, installation: &str) -> Result<NetworkMemberView, SdkError> {
-        self.required(Method::GET,&member(space,installation)?,None::<&()>).await
+    pub async fn network_member(
+        &self,
+        space: &str,
+        installation: &str,
+    ) -> Result<NetworkMemberView, SdkError> {
+        self.required(Method::GET, &member(space, installation)?, None::<&()>)
+            .await
     }
-    pub async fn set_network_member(&self, space: &str, installation: &str, request: NetworkMemberRequest) -> Result<NetworkMemberView, SdkError> {
-        self.required(Method::PUT,&member(space,installation)?,Some(&request)).await
+    pub async fn set_network_member(
+        &self,
+        space: &str,
+        installation: &str,
+        request: NetworkMemberRequest,
+    ) -> Result<NetworkMemberView, SdkError> {
+        self.required(Method::PUT, &member(space, installation)?, Some(&request))
+            .await
     }
-    pub async fn revoke_network_member(&self, space: &str, installation: &str, request: NetworkRevokeMemberRequest) -> Result<NetworkMemberView, SdkError> {
-        self.required(Method::DELETE,&member(space,installation)?,Some(&request)).await
+    pub async fn revoke_network_member(
+        &self,
+        space: &str,
+        installation: &str,
+        request: NetworkRevokeMemberRequest,
+    ) -> Result<NetworkMemberView, SdkError> {
+        self.required(
+            Method::DELETE,
+            &member(space, installation)?,
+            Some(&request),
+        )
+        .await
     }
-    pub async fn issue_network_membership(&self, space: &str, installation: &str, request: NetworkIssueRequest) -> Result<NetworkGrantView, SdkError> {
-        self.required(Method::POST,&format!("{}/grants",member(space,installation)?),Some(&request)).await
+    pub async fn issue_network_membership(
+        &self,
+        space: &str,
+        installation: &str,
+        request: NetworkIssueRequest,
+    ) -> Result<NetworkGrantView, SdkError> {
+        self.required(
+            Method::POST,
+            &format!("{}/grants", member(space, installation)?),
+            Some(&request),
+        )
+        .await
     }
-    pub async fn network_membership_grant(&self, space: &str, id: &str) -> Result<NetworkGrantView, SdkError> {
-        self.required(Method::GET,&grant(space,id)?,None::<&()>).await
+    pub async fn network_membership_grant(
+        &self,
+        space: &str,
+        id: &str,
+    ) -> Result<NetworkGrantView, SdkError> {
+        self.required(Method::GET, &grant(space, id)?, None::<&()>)
+            .await
     }
-    pub async fn revoke_network_membership_grant(&self, space: &str, id: &str, expected_revision: u64) -> Result<NetworkPolicyView, SdkError> {
-        self.required(Method::DELETE,&grant(space,id)?,Some(&NetworkRevokeGrantRequest {expected_revision})).await
+    pub async fn revoke_network_membership_grant(
+        &self,
+        space: &str,
+        id: &str,
+        expected_revision: u64,
+    ) -> Result<NetworkPolicyView, SdkError> {
+        self.required(
+            Method::DELETE,
+            &grant(space, id)?,
+            Some(&NetworkRevokeGrantRequest { expected_revision }),
+        )
+        .await
     }
-    pub async fn issue_network_remote_path(&self, space: &str, request_id: &str, request: NetworkRemotePathRequest) -> Result<NetworkRemotePathView, SdkError> {
-        if !valid_id(request_id) { return Err(SdkError::Invalid); }
-        self.required(Method::POST,&format!("{}/remote/{request_id}/paths",base(space)?),Some(&request)).await
+    pub async fn issue_network_remote_path(
+        &self,
+        space: &str,
+        request_id: &str,
+        request: NetworkRemotePathRequest,
+    ) -> Result<NetworkRemotePathView, SdkError> {
+        if !valid_id(request_id) {
+            return Err(SdkError::Invalid);
+        }
+        self.required(
+            Method::POST,
+            &format!("{}/remote/{request_id}/paths", base(space)?),
+            Some(&request),
+        )
+        .await
     }
-    pub async fn network_remote_path(&self, space: &str, id: &str) -> Result<NetworkRemotePathView, SdkError> {
-        self.required(Method::GET,&path(space,id)?,None::<&()>).await
+    pub async fn network_remote_path(
+        &self,
+        space: &str,
+        id: &str,
+    ) -> Result<NetworkRemotePathView, SdkError> {
+        self.required(Method::GET, &path(space, id)?, None::<&()>)
+            .await
     }
     pub async fn revoke_network_remote_path(&self, space: &str, id: &str) -> Result<(), SdkError> {
-        self.call::<_,serde_json::Value>(Method::DELETE,&path(space,id)?,None::<&()>,true).await.map(|_|())
+        self.call::<_, serde_json::Value>(Method::DELETE, &path(space, id)?, None::<&()>, true)
+            .await
+            .map(|_| ())
     }
 }

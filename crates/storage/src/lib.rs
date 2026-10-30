@@ -325,7 +325,8 @@ impl Store {
         }
         if version < 27 {
             let transaction = connection.transaction()?;
-            transaction.execute_batch(include_str!("../migrations/027_network_remote_paths.sql"))?;
+            transaction
+                .execute_batch(include_str!("../migrations/027_network_remote_paths.sql"))?;
             transaction.pragma_update(None, "user_version", 27)?;
             transaction.commit()?;
         }
