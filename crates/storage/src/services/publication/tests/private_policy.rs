@@ -3,6 +3,7 @@ use super::*;
 use nestlink_identity::network::NetworkAuthoritySigner;
 use nestlink_identity::services::private::verify_private_service_lease;
 use nestlink_protocol::{services::private::*, spaces::*};
+mod relays;
 
 struct PrivateAccess {
     network: NetworkAuthoritySigner,
@@ -341,6 +342,8 @@ fn private_relay_preserves_original_budget_pinned_metadata_snapshot_and_close_re
     tampered.network.relay.as_mut().ok_or("relay missing")?.nodes[0].revision+=1;
     assert!(verify_private_service_grant(&tampered,&node_signer.public_key(),&deployment,now()?).is_err());
     let mut changed=body;changed.maximum_bytes+=1;
+    let signature=URL_SAFE_NO_PAD.encode(access.consumer_identity.sign_private_service_route(&f.view.id,&changed)?);
+    if let PrivateServiceRouteRequest::Relay{signature:value,..}=&mut changed.route{*value=signature;}
     assert!(f.store.issue_private_service_grant(&lifecycle,&f.creator,&f.view.id,changed,&f.service_signer,&access.network,&node_signer,now()?).is_err());
     ledgers(&mut f,0,4096)?;
     let at=now()?;
@@ -355,6 +358,16 @@ fn private_relay_preserves_original_budget_pinned_metadata_snapshot_and_close_re
     assert_eq!(allocation.bytes_per_allocation,private_service_wire_allowance(4096)?.min(f.store.relay_quota_current()?.limits.bytes_per_allocation));
     let page=f.store.private_service_host_access(&f.creator,&f.view.id,&access.runtime,ServiceQuery{security_epoch:f.store.security_epoch()?,after_id:None,limit:10},&f.service_signer,&node_signer,now()?)?;
     assert_eq!(page.grants.len(),1);assert_eq!(page.grants[0].network.grant_id,usage.grant_id);
+    for id in [&grant.network.consumer_membership.grant_id,&grant.network.host_membership.grant_id,&grant.network.connectivity.grant_id,&grant.network.path.grant_id,&grant.network.relay.as_ref().ok_or("relay missing")?.transits[0].grant_id] {
+        let collision=f.store.issue_network_membership(&f.creator,&access.network,crate::network_policy::NetworkMembershipRequest{space_id:access.exposure.space_id.clone(),installation_id:access.consumer.clone(),grant_id:id.clone(),expected_policy_epoch:business.claims().space_policy_epoch,expected_membership_epoch:business.claims().consumer_membership_epoch,expires_at_ms:now()?+5000},now()?);
+        assert!(matches!(collision,Err(StorageError::Conflict)));
+    }
+    f.store.issue_network_membership(&f.creator,&access.network,crate::network_policy::NetworkMembershipRequest{space_id:access.exposure.space_id.clone(),installation_id:access.consumer.clone(),grant_id:random_id(),expected_policy_epoch:business.claims().space_policy_epoch,expected_membership_epoch:business.claims().consumer_membership_epoch,expires_at_ms:now()?+5000},now()?)?;
+    f.store.private_service_network_path(&f.creator,&f.view.id,&usage.grant_id,&f.service_signer,now()?)?;
+    f.store.connection.execute_batch("ALTER TABLE node_endpoints RENAME TO unavailable_private_node_endpoints;")?;
+    let failed=f.store.private_service_host_access(&f.creator,&f.view.id,&access.runtime,ServiceQuery{security_epoch:f.store.security_epoch()?,after_id:None,limit:10},&f.service_signer,&node_signer,now()?);
+    f.store.connection.execute_batch("ALTER TABLE unavailable_private_node_endpoints RENAME TO node_endpoints;")?;
+    assert!(matches!(failed,Err(StorageError::Sqlite(_))));
     f.store.revoke_private_service(&f.creator,&f.view.id,&business.claims().acl_rule_id,access.exposure.revision,now()?)?;
     assert!(f.store.private_service_network_path(&f.creator,&f.view.id,&usage.grant_id,&f.service_signer,now()?).is_err());
     ledgers(&mut f,0,4096)?;

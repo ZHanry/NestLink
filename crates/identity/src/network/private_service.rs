@@ -40,6 +40,31 @@ impl crate::service_plane::ServiceLeaseSigner {
     }
 }
 
+fn verify_private_service_transcript(
+    transcript: &[u8],
+    public_key: &[u8; 32],
+    signature: &[u8],
+) -> Result<(), ContractError> {
+    VerifyingKey::from_bytes(public_key)
+        .map_err(|_| denied())?
+        .verify_strict(
+            transcript,
+            &Signature::from_slice(signature).map_err(|_| denied())?,
+        )
+        .map_err(|_| denied())
+}
+
+/// Verifies the exact independently domain-separated request signed by the
+/// consumer installation, without the framing of a device action claim.
+pub fn verify_private_service_route_request(
+    service: &str,
+    request: &nestlink_protocol::services::private::PrivateServiceAccessRequest,
+    public_key: &[u8; 32],
+    signature: &[u8],
+) -> Result<(), ContractError> {
+    verify_private_service_transcript(&request.route_transcript(service)?, public_key, signature)
+}
+
 /// A complete private grant is rooted in the pinned deployment node policy
 /// signer, independently of the remote-control allocation issuer.
 pub type VerifiedPrivateServiceGrant = (VerifiedPrivateServiceLease, VerifiedNetworkPath, VerifiedNetworkGrant, Vec<VerifiedNetworkGrant>);
@@ -69,7 +94,7 @@ pub fn verify_private_service_grant(
     let transits=match &view.relay {
         None=>{path.check_route(&context,&[])?;Vec::new()},
         Some(route)=>{
-            crate::verify_device_action(&route.transcript(&business.digest())?,&delegation.claims().service_issuer,&route.signature)?;
+            verify_private_service_transcript(&route.transcript(&business.digest())?,&delegation.claims().service_issuer,&route.signature)?;
             if !nestlink_protocol::valid_id(&route.route_id) || route.nodes.len()!=route.transits.len() || route.nodes.len()!=route.node_public_keys.len() || !(1..=2).contains(&route.nodes.len()) || route.topology_digests.len()!=if route.nodes.len()==2 {2}else{0} || route.nodes.len()==2 && (route.nodes[0].node_id==route.nodes[1].node_id || route.node_public_keys[0]==route.node_public_keys[1]) {return Err(denied());}
             let transits=route.transits.iter().map(decode).collect::<Result<Vec<_>,_>>()?;
             for (index,grant) in transits.iter().enumerate() {

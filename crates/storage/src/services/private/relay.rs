@@ -1,8 +1,13 @@
 //! Private-purpose routes borrow the original relay capacity and service budget.
 use super::*;
 use crate::{network_policy::{remote_relays::relay_node,remote_chains::topology_continuity},relay_reservations::RelayLifecycle};
-use nestlink_identity::{network::{NetworkAuthoritySigner,private_service_allocation_binding},nodes::NodePolicySigner,verify_device_action};
+use nestlink_identity::{network::{NetworkAuthoritySigner,private_service_allocation_binding,verify_private_service_route_request},nodes::NodePolicySigner};
 use nestlink_protocol::{NodeNetworkRelayResource,NodeResourceQueryClaims,RelayAllocationClaims,RelayTransport,api::NodeEndpointsView,network::{GrantClaims,GrantScope,PathPolicy,PeerId,PeerPair,TransitClaims},service_plane::publication::{ServiceIssuerDelegation,SERVICE_DELEGATION_MS}};
+
+fn unavailable_authority(error:&StorageError)->bool {
+    matches!(error,StorageError::Forbidden|StorageError::Unauthorized|StorageError::Conflict)
+        || matches!(error,StorageError::Proof(proof) if matches!(proof.code,nestlink_protocol::ErrorCode::PermissionRequired|nestlink_protocol::ErrorCode::LeaseExpired|nestlink_protocol::ErrorCode::PolicyRevoked))
+}
 
 impl Store {
     pub fn private_service_access_space(&self,actor:&Principal,service:&str,consumer:&str,now:u64)->Result<String,StorageError>{
@@ -25,7 +30,7 @@ impl Store {
                 if !(1..=2).contains(&node_ids.len()) || topology_digests.len()!=if node_ids.len()==2{2}else{0} || node_ids.len()==2 && node_ids[0]==node_ids[1] {return Err(StorageError::Forbidden);}
                 let device=self.device_record_at(&request.consumer_device_id,now/1000)?;
                 if device.account!=actor.account_id{return Err(StorageError::Forbidden);}
-                verify_device_action(&request.route_transcript(service)?,&device.public_key,&crate::control::decode_signature(signature)?)?;
+                verify_private_service_route_request(service,&request,&device.public_key,&crate::control::decode_signature(signature)?)?;
                 self.resume_relay_reservations(lifecycle,now)?;
                 node_ids.iter().map(|id|relay_node(self,id,now)).collect::<Result<Vec<_>,_>>()?
             }
@@ -137,9 +142,13 @@ impl Store {
         if ids.len()>4096{return Err(StorageError::RateLimited);}
         let mut grants=Vec::new();
         for id in ids {
-            let lease=match self.private_service_lease_current(service,&id,signer,now){Ok(lease)=>lease,Err(StorageError::Forbidden|StorageError::Unauthorized|StorageError::Conflict)=>continue,Err(e)=>return Err(e)};
+            let lease=match self.private_service_lease_current(service,&id,signer,now){Ok(lease)=>lease,Err(error) if unavailable_authority(&error)=>continue,Err(error)=>return Err(error)};
             let business=verify_private_service_lease(&lease,&signer.public_key())?;
-            if self.private_service_relay_current(&tx,&id,&business,now).is_err(){continue;}
+            match self.private_service_relay_current(&tx,&id,&business,now) {
+                Ok(())=>{},
+                Err(error) if unavailable_authority(&error)=>continue,
+                Err(error)=>return Err(error),
+            }
             let json:String=tx.query_row("SELECT network_json FROM private_service_leases WHERE grant_id=?1",[id],|r|r.get(0))?;
             let network=serde_json::from_str(&json)?;
             grants.push(Self::private_service_grant_envelope(lease,network,signer,node_signer)?);
@@ -156,9 +165,9 @@ impl Store {
         if rows.len()>4096{return Err(StorageError::RateLimited);}
         let mut resources=Vec::new();
         for (id,service,allocation) in rows {
-            let lease=match self.private_service_lease_current(&service,&id,signer,now){Ok(lease)=>lease,Err(StorageError::Forbidden|StorageError::Unauthorized|StorageError::Conflict)=>continue,Err(e)=>return Err(e)};
+            let lease=match self.private_service_lease_current(&service,&id,signer,now){Ok(lease)=>lease,Err(error) if unavailable_authority(&error)=>continue,Err(error)=>return Err(error)};
             let business=verify_private_service_lease(&lease,&signer.public_key())?;
-            match self.private_service_relay_current(tx,&id,&business,now){Ok(())=>{},Err(StorageError::Forbidden|StorageError::Unauthorized|StorageError::Conflict)=>continue,Err(e)=>return Err(e)};
+            match self.private_service_relay_current(tx,&id,&business,now){Ok(())=>{},Err(error) if unavailable_authority(&error)=>continue,Err(error)=>return Err(error)};
             let json:String=tx.query_row("SELECT network_json FROM private_service_leases WHERE grant_id=?1",[&id],|r|r.get(0))?;
             let network:PrivateServiceNetworkPath=serde_json::from_str(&json)?;
             let snapshot=crate::network_policy::read_snapshot(tx,&business.claims().space_id,now)?;
