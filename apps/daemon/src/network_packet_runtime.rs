@@ -25,6 +25,7 @@ pub(crate) trait PacketAuthority {
     fn wire_direction(&self) -> nestlink_protocol::network_datagram::Direction;
     fn remaining_lifetime(&self) -> Duration;
     fn spent_bytes(&self) -> u64;
+    fn stop(&mut self);
     fn admit_local(&mut self, packet: &[u8]) -> io::Result<PacketAdmission>;
     fn admit_remote(&mut self, packet: &[u8]) -> io::Result<PacketAdmission>;
     fn refresh<'a>(&'a mut self, sdk: &'a Sdk) -> GuardFuture<'a>;
@@ -35,6 +36,7 @@ impl PacketAuthority for OnlinePacketAccess {
     fn wire_direction(&self) -> nestlink_protocol::network_datagram::Direction { OnlinePacketAccess::wire_direction(self) }
     fn remaining_lifetime(&self) -> Duration { OnlinePacketAccess::remaining_lifetime(self) }
     fn spent_bytes(&self) -> u64 { OnlinePacketAccess::spent_bytes(self) }
+    fn stop(&mut self) { OnlinePacketAccess::stop(self) }
     fn admit_local(&mut self, packet: &[u8]) -> io::Result<PacketAdmission> { OnlinePacketAccess::admit_local(self, packet) }
     fn admit_remote(&mut self, packet: &[u8]) -> io::Result<PacketAdmission> { OnlinePacketAccess::admit_remote(self, packet) }
     fn refresh<'a>(&'a mut self, sdk: &'a Sdk) -> GuardFuture<'a> { Box::pin(async move { OnlinePacketAccess::refresh(self, sdk).await.map_err(Into::into) }) }
@@ -47,8 +49,9 @@ impl PacketAuthority for WireGuardAuthority<'_> {
     fn business_digest(&self) -> [u8; 32] { self.owner.business_digest() }
     fn transport_group(&self) -> [u8; 32] { self.owner.transport_group() }
     fn wire_direction(&self) -> nestlink_protocol::network_datagram::Direction { self.owner.wire_direction() }
-    fn remaining_lifetime(&self) -> Duration { self.owner.remaining_lifetime() }
+    fn remaining_lifetime(&self) -> Duration { self.owner.remaining_authorization_lifetime() }
     fn spent_bytes(&self) -> u64 { self.owner.spent_bytes() }
+    fn stop(&mut self) { self.owner.stop() }
     fn admit_local(&mut self, packet: &[u8]) -> io::Result<PacketAdmission> { self.owner.admit_local(packet) }
     fn admit_remote(&mut self, packet: &[u8]) -> io::Result<PacketAdmission> { self.owner.admit_remote(packet) }
     fn refresh<'a>(&'a mut self, sdk: &'a Sdk) -> GuardFuture<'a> { Box::pin(async move { self.owner.refresh(sdk, self.local).await.map_err(Into::into) }) }

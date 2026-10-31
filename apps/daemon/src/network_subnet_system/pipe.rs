@@ -87,7 +87,7 @@ impl PacketPipe {
         let (reader,writer)=stream.into_split();let mut reader=Reader::new(reader);
         let bytes=tokio::time::timeout(Duration::from_secs(2),reader.frame()).await??;
         let receipt:Receipt=serde_json::from_slice(&bytes)?;
-        if receipt.schema_version!=1||receipt.plan_digest!=plan.digest()?||peer.pid()!=i32::try_from(receipt.worker.pid()).ok()||receipt.tun_index==0||receipt.macvlan_index==0||receipt.namespace_inode==0||receipt.namespace_device==0||receipt.socket_device==0||receipt.socket_inode==0||receipt.socket_parent_device==0||receipt.socket_parent_inode==0 {
+        if receipt.schema_version!=1||receipt.plan_digest!=plan.digest()?||peer.pid()!=i32::try_from(receipt.worker.pid()).ok()||receipt.tun_index==0||receipt.macvlan_index==0||receipt.namespace_inode==0||receipt.namespace_device==0||receipt.socket_device==0||receipt.socket_inode==0||receipt.socket_parent_device==0||receipt.socket_parent_inode==0||plan.wireguard.is_some()!=receipt.wireguard_index.is_some()||receipt.wireguard_index==Some(0) {
             return Err(io::Error::other("root packet receipt differs from the exact original subnet plan").into());
         }
         Ok(Self{reader:Mutex::new(reader),writer:Mutex::new(writer),receipt})

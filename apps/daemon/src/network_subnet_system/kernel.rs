@@ -50,7 +50,7 @@ pub(super) async fn attach(plan:&Plan,namespace:&journal::Namespace)->Result {
     Ok(())
 }
 pub(super) async fn local_link(name:&str)->Result<Value> {Ok(one(&ip(&["-j","-d","link","show","dev",name]).await?)?.clone())}
-pub(super) async fn configure(plan:&Plan,journal_dir:&Path,tun:&tun_rs::AsyncDevice)->Result<Receipt> {
+pub(super) async fn configure(plan:&Plan,journal_dir:&Path,tun:&tun_rs::AsyncDevice,server_secret:Option<&[u8;32]>)->Result<Receipt> {
     let checked=plan.checked(true)?;
     let current=std::fs::metadata("/proc/self/ns/net")?;
     if namespace(&namespace_path(plan))?!=Some((current.dev(),current.ino())) {return Err(io::Error::other("subnet worker is outside its exact owned namespace").into());}
@@ -68,6 +68,7 @@ pub(super) async fn configure(plan:&Plan,journal_dir:&Path,tun:&tun_rs::AsyncDev
     command("arping",&["-D","-c","2","-w","2","-I",&plan.macvlan(),&plan.lan_gateway.to_string()]).await?;
     let lan=format!("{}/{}",plan.lan_gateway,plan.lan_prefix_len);
     command("ip",&["-4","addr","add",&lan,"dev",&plan.macvlan()]).await?;
+    if let Some(ingress)=&plan.wireguard {ingress.configure(plan,server_secret.ok_or_else(||io::Error::other("WireGuard namespace requires the explicitly approved root private key"))?).await?;}
     command("ip",&["link","set","dev",&plan.tun(),"alias",&plan.marker(),"mtu","1280"]).await?;
     for remote in &checked.remote {let prefix=format!("{}/{}",remote.network,remote.prefix_len);command("ip",&["-4","route","add",&prefix,"dev",&plan.tun(),"metric","42420"]).await?;}
     // These procfs values belong solely to the new worker namespace.
@@ -80,10 +81,12 @@ pub(super) async fn configure(plan:&Plan,journal_dir:&Path,tun:&tun_rs::AsyncDev
     let tun=local_link(&plan.tun()).await?;
     let macvlan=local_link(&plan.macvlan()).await?;
     Ok(Receipt{schema_version:1,plan_digest:plan.digest()?,worker:process_identity(std::process::id()).await?,namespace_device:current.dev(),namespace_inode:current.ino(),
-        tun_index:u32::try_from(tun["ifindex"].as_u64().ok_or_else(||io::Error::other("owned TUN index missing"))?)?,macvlan_index:u32::try_from(macvlan["ifindex"].as_u64().ok_or_else(||io::Error::other("owned macvlan index missing"))?)?,socket_device:0,socket_inode:0,socket_parent_device:0,socket_parent_inode:0})
+        tun_index:u32::try_from(tun["ifindex"].as_u64().ok_or_else(||io::Error::other("owned TUN index missing"))?)?,macvlan_index:u32::try_from(macvlan["ifindex"].as_u64().ok_or_else(||io::Error::other("owned macvlan index missing"))?)?,socket_device:0,socket_inode:0,socket_parent_device:0,socket_parent_inode:0,
+        wireguard_index:if plan.wireguard.is_some(){Some(u32::try_from(local_link(&wireguard::Ingress::interface(plan)).await?["ifindex"].as_u64().ok_or_else(||io::Error::other("owned WireGuard index missing"))?)?)}else{None}})
 }
 
 pub(super) fn rules(plan:&Plan,checked:&plan::Checked)->Result<String> {
+    if let Some(ingress)=&plan.wireguard {return ingress.rules(plan,checked);}
     use nestlink_protocol::network::{Direction,IpProtocol};
     let name=plan.namespace();let tun=plan.tun();let lan=plan.macvlan();
     let original=plan::net(checked.mapping.original)?.to_string();let alias=plan::net(checked.mapping.alias)?.to_string();

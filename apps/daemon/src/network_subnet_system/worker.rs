@@ -26,10 +26,18 @@ pub(crate) async fn run(args:SubnetWorkerArgs)->Result {
     let durable=journal::Store::read_path(&args.journal)?;
     let expected=durable.namespace.as_ref().ok_or_else(||io::Error::other("original namespace identity was not committed"))?;
     if expected.device!=namespace.device||expected.inode!=namespace.inode||expected.worker!=namespace.worker||durable.plan.digest()?!=plan.digest()? {return Err(io::Error::other("subnet namespace journal changed before configuration").into());}
+    // The stable portal key crosses only the original anonymous root control
+    // pipe. It is never serialized into the public plan or recovery journal.
+    let server_secret=if plan.wireguard.is_some(){
+        let mut bytes=zeroize::Zeroizing::new([0_u8;32]);
+        tokio::time::timeout(Duration::from_secs(1),input.read_exact(&mut *bytes)).await??;
+        Some(bytes)
+    }else{None};
     let device=tun_rs::DeviceBuilder::new().name(plan.tun()).enable(false).build_async()?;
     kernel::command("ip",&["link","set","dev",&plan.tun(),"multicast","off","addrgenmode","none"]).await?;
     let journal_dir=args.journal.parent().ok_or_else(||io::Error::other("subnet journal parent missing"))?;
-    let mut receipt=kernel::configure(plan,journal_dir,&device).await?;
+    let mut receipt=kernel::configure(plan,journal_dir,&device,server_secret.as_deref()).await?;
+    drop(server_secret);
     let parent=pipe::SocketDirectory::open(plan)?;
     if parent.device!=std::fs::metadata(journal_dir)?.dev() {return Err(io::Error::other("subnet socket handoff requires the original root journal filesystem").into());}
     let staging=journal_dir.join("network-subnet-packet.sock");
@@ -105,6 +113,7 @@ async fn configuration(plan:&Plan)->Result<serde_json::Value> {
     for link in [&tun,&lan] {if link["ifalias"].as_str()!=Some(plan.marker().as_str()) {return Err(io::Error::other("subnet interface owner marker changed").into());}}
     let mut firewall:serde_json::Value=serde_json::from_slice(&kernel::command("nft",&["-j","list","ruleset"]).await?)?;
     normalize(&mut firewall);
-    Ok(serde_json::json!({"tun":tun,"lan":lan,"addresses":kernel::ip(&["-j","addr","show"]).await?,"routes":kernel::ip(&["-j","-4","route","show","table","all"]).await?,"firewall":firewall}))
+    let wireguard=if let Some(ingress)=&plan.wireguard {Some(ingress.configuration(plan).await?)}else{None};
+    Ok(serde_json::json!({"tun":tun,"lan":lan,"wireguard":wireguard,"addresses":kernel::ip(&["-j","addr","show"]).await?,"routes":kernel::ip(&["-j","-4","route","show","table","all"]).await?,"firewall":firewall}))
 }
 fn normalize(value:&mut serde_json::Value) {match value {serde_json::Value::Array(values)=>for value in values {normalize(value);},serde_json::Value::Object(values)=>{values.remove("used");for value in values.values_mut(){normalize(value);}},_=>{}}}

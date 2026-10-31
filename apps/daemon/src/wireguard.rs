@@ -1,6 +1,6 @@
 //! Explicit per-client management and protected standard-client export.
 //! No action here creates a WG interface or an original packet owner.
-mod tools;
+pub(crate) mod tools;
 #[cfg(test)]
 mod tests;
 use base64::{Engine,engine::general_purpose::{STANDARD,URL_SAFE_NO_PAD}};
@@ -27,6 +27,10 @@ struct Account {
 }
 #[derive(clap::Subcommand)]
 enum Action {
+    /// Run one standard-client kernel ingress through its original packet owner.
+    RunPortal {
+        #[command(flatten)]portal:crate::network_subnet_system::WireGuardPortalArgs,
+    },
     /// Generate a fresh independent standard-client key with installed wg tools.
     GenerateKey {
         #[arg(long)]
@@ -91,19 +95,11 @@ enum Action {
 }
 pub(crate) async fn run(args:WireGuardArgs)->Result {
     if rustix::process::geteuid().as_raw()==0 {return Err(io::Error::other("wireguard client management must run as the original ordinary user").into());}
+    if let Action::RunPortal{portal}=args.action {return crate::network_subnet_system::run_wireguard_portal(portal).await;}
     if let Action::GenerateKey{private_key,public_key}=args.action {
-        fresh(&private_key)?;fresh(&public_key)?;
-        if private_key==public_key {return Err(io::Error::other("client private and public key paths must differ").into());}
-        let secret=tools::run("wg",&["genkey"],&[],128).await?;
-        let private=Zeroizing::new(key(std::str::from_utf8(&secret)?.trim_end_matches('\n'))?);
-        let public=public_key_for(&private).await?;
-        let encoded=Zeroizing::new(format!("{}\n",STANDARD.encode(&*private)));
-        save(&private_key,encoded.as_bytes())?;save(&public_key,format!("{}\n",STANDARD.encode(public)).as_bytes())?;
-        println!("Independent WireGuard client public key: {}",STANDARD.encode(public));
-        println!("Client private key saved to {}",private_key.display());
-        return Ok(());
+        return generate_key(&private_key,&public_key,"client").await;
     }
-    let account=match &args.action {Action::Issue{account,..}|Action::Show{account,..}|Action::Revoke{account,..}|Action::ExportConfig{account,..}=>account,Action::GenerateKey{..}=>unreachable!()};
+    let account=match &args.action {Action::Issue{account,..}|Action::Show{account,..}|Action::Revoke{account,..}|Action::ExportConfig{account,..}=>account,Action::GenerateKey{..}|Action::RunPortal{..}=>unreachable!()};
     let pin=PinnedNetworkSpace::new(account.space.clone(),digest(&account.authority)?)?;
     let installation=nestlink_local_ipc::maintenance::InstallationStartup::acquire(&std::env::current_exe()?)?;
     let directory=installation.state_directory(&account.state_dir)?;
@@ -150,7 +146,7 @@ pub(crate) async fn run(args:WireGuardArgs)->Result {
             summary(&verified,&view)?;
             println!("Protected standard WireGuard client configuration saved to {}",output.display());
         },
-        Action::GenerateKey{..}=>unreachable!(),
+        Action::GenerateKey{..}|Action::RunPortal{..}=>unreachable!(),
     }
     Ok(())
 }
@@ -158,12 +154,24 @@ fn current(directory:&Path,login:[u8;32])->Result {
     if nestlink_local_ipc::maintenance::requested(directory)?||crate::space_dns::session_snapshot(directory).ok()!=Some(login) {return Err(io::Error::other("original WireGuard management login changed or installation maintenance began").into());}
     Ok(())
 }
+pub(crate) async fn generate_key(private_key:&Path,public_key:&Path,label:&str)->Result {
+    fresh(private_key)?;fresh(public_key)?;
+    if private_key==public_key {return Err(io::Error::other("WireGuard private and public key paths must differ").into());}
+    let secret=tools::run("wg",&["genkey"],&[],128).await?;
+    let private=Zeroizing::new(key(std::str::from_utf8(&secret)?.trim_end_matches('\n'))?);
+    let public=public_key_for(&private).await?;
+    let encoded=Zeroizing::new(format!("{}\n",STANDARD.encode(&*private)));
+    save(private_key,encoded.as_bytes())?;save(public_key,format!("{}\n",STANDARD.encode(public)).as_bytes())?;
+    println!("Independent WireGuard {label} public key: {}",STANDARD.encode(public));
+    println!("Protected {label} private key saved to {}",private_key.display());
+    Ok(())
+}
 fn fresh(path:&Path)->Result {
     if !path.is_absolute()||path.try_exists()? {return Err(io::Error::other("fresh absolute private output required").into());}
     nestlink_platform_security::check_private_directory(path.parent().ok_or_else(||io::Error::other("private output parent missing"))?)?;Ok(())
 }
 fn save(path:&Path,bytes:&[u8])->Result {fresh(path)?;nestlink_platform_security::create_private(path,bytes)?;std::fs::File::open(path.parent().ok_or_else(||io::Error::other("private output parent missing"))?)?.sync_all()?;Ok(())}
-fn key(value:&str)->Result<[u8;32]> {
+pub(crate) fn key(value:&str)->Result<[u8;32]> {
     let key:[u8;32]=STANDARD.decode(value)?.try_into().map_err(|_|io::Error::other("WireGuard key must contain exactly 32 bytes"))?;
     if key==[0;32]||STANDARD.encode(key)!=value {return Err(io::Error::other("canonical nonzero standard WireGuard key required").into());}Ok(key)
 }
@@ -171,7 +179,7 @@ fn digest(value:&str)->Result<[u8;32]> {
     let value_bytes:[u8;32]=URL_SAFE_NO_PAD.decode(value)?.try_into().map_err(|_|io::Error::other("approved WireGuard digest must contain 32 bytes"))?;
     if value_bytes==[0;32]||URL_SAFE_NO_PAD.encode(value_bytes)!=value {return Err(io::Error::other("canonical nonzero authority/digest required").into());}Ok(value_bytes)
 }
-async fn public_key_for(secret:&[u8;32])->Result<[u8;32]> {
+pub(crate) async fn public_key_for(secret:&[u8;32])->Result<[u8;32]> {
     let encoded=Zeroizing::new(format!("{}\n",STANDARD.encode(secret)));
     let public=tools::run("wg",&["pubkey"],encoded.as_bytes(),128).await?;
     key(std::str::from_utf8(&public)?.trim_end_matches('\n'))

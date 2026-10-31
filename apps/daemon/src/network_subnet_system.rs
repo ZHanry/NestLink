@@ -8,6 +8,7 @@ mod journal;
 mod helper;
 mod worker;
 mod owner;
+mod wireguard;
 #[cfg(test)]
 mod native_tests;
 
@@ -19,3 +20,4 @@ use plan::{Plan,Receipt};
 pub(crate) use owner::{SubnetArgs,run as run_owner};
 pub(crate) use helper::{SystemSubnetArgs,run};
 pub(crate) use worker::{SubnetWorkerArgs,run as run_worker};
+pub(crate) use wireguard::owner::{PortalArgs as WireGuardPortalArgs,run as run_wireguard_portal};

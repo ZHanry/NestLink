@@ -132,6 +132,14 @@ impl OnlineWireGuardClient {
                 )
         }
     }
+    /// Fixed business/binding lifetime for a journaled OS plan. A same-boot
+    /// portal lease is refreshed separately and still constrains every packet
+    /// through `current`; this never extends either signed authority deadline.
+    pub fn remaining_authorization_lifetime(&self) -> Duration {
+        if self.stopped {Duration::ZERO} else {
+            self.packet.remaining_lifetime().min(self.binding_deadline.saturating_duration_since(Instant::now()))
+        }
+    }
     pub fn stop(&mut self) {
         self.stopped = true;
         self.packet.stop();

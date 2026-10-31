@@ -12,7 +12,7 @@ fn tool(name:&str)->Result<PathBuf> {
     }
     if !path.is_file() {return Err(io::Error::other("root-owned WireGuard tool is not a regular file").into());}Ok(path)
 }
-pub(super) async fn run(name:&str,args:&[&str],input:&[u8],maximum:u64)->Result<Zeroizing<Vec<u8>>> {
+pub(crate) async fn run(name:&str,args:&[&str],input:&[u8],maximum:u64)->Result<Zeroizing<Vec<u8>>> {
     if input.len()>4096||maximum==0||maximum>1_048_576 {return Err(io::Error::other("bounded WireGuard component input/output required").into());}
     let path=tool(name)?;
     let mut child=Command::new(&path).args(args).env_clear().env("LANG","C.UTF-8").current_dir("/").stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::null()).kill_on_drop(true).spawn()?;

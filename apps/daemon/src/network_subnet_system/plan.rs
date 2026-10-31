@@ -28,6 +28,8 @@ pub(super) struct Plan {
     pub lan_prefix_len:u8,
     pub physical_endpoints:Vec<IpAddr>,
     pub credentials:NetworkAccessView,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pub wireguard:Option<wireguard::Ingress>,
 }
 pub(super) struct Checked {
     pub mapping:SubnetMappingClaims,
@@ -86,13 +88,15 @@ impl Plan {
         }
         let original=net(claims.original)?;let alias=net(claims.alias)?;
         let lan=Ipv4Net::new(self.lan_gateway,self.lan_prefix_len)?;
-        if self.lan_gateway==lan.network() || self.lan_gateway==lan.broadcast() || !lan.contains(&original.network()) || !lan.contains(&original.broadcast())
+        if self.lan_gateway==lan.network() || self.lan_gateway==lan.broadcast() || (self.wireguard.is_none()&&(!lan.contains(&original.network()) || !lan.contains(&original.broadcast())))
             || (alias!=original&&alias.contains(&self.lan_gateway)) || self.lan_gateway.is_loopback() || self.lan_gateway.is_link_local() || self.lan_gateway.is_multicast() {
             return Err(io::Error::other("explicit extra gateway address must belong to the selected original LAN").into());
         }
         for prefix in remote {let remote=net(*prefix)?;if overlaps(remote,original)||overlaps(remote,alias)||remote.contains(&self.lan_gateway){return Err(io::Error::other("remote wire route would reflect into this original LAN").into());}}
         if self.physical_endpoints.is_empty() || self.physical_endpoints.len()>8 || self.physical_endpoints.iter().any(|ip|ip.is_unspecified()||ip.is_multicast()||contains_ip(alias,ip)||remote.iter().any(|prefix|net(*prefix).is_ok_and(|network|contains_ip(network,ip)))) {return Err(io::Error::other("subnet plan could capture an original physical carrier endpoint").into());}
-        Ok(Checked{mapping:claims.clone(),business:business.clone(),local_source,remote:remote.clone()})
+        let checked=Checked{mapping:claims.clone(),business:business.clone(),local_source,remote:remote.clone()};
+        if let Some(ingress)=&self.wireguard {ingress.check(self,&checked,now)?;}
+        Ok(checked)
     }
     pub fn read(path:&Path)->Result<Self> {
         let (bytes,uid)=crate::network_packet_runtime::read_public_plan(path,MAX_PLAN)?;
@@ -130,4 +134,6 @@ pub(super) struct Receipt {
     pub socket_inode:u64,
     pub socket_parent_device:u64,
     pub socket_parent_inode:u64,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pub wireguard_index:Option<u32>,
 }
