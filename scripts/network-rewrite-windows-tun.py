@@ -225,6 +225,15 @@ def main():
             foreign = await_json(case / "foreign-denied.json")
             if not foreign["denied"] or foreign["pid"] == identity["pid"] or foreign["original_pid"] != identity["pid"]:
                 raise ValueError("foreign same-SID packet session denial missing")
+            identity_negative = None
+            if scenario == "normal":
+                execute("nonoriginal-kernel-recovery-denied", [executable, *ROLE_ARGS],
+                        extra=dict(extra, NESTLINK_TUN_NATIVE_ROLE="recovery-identity-negative"))
+                identity_negative = await_json(case / "recovery-identity-negative.json")
+                if (identity_negative["rejected_fields"] != ["interface_index", "luid", "alias", "guid"]
+                    or not identity_negative["kernel_unchanged"]
+                    or identity_negative["configuration_sha256"] != receipt["provider"]["configuration_sha256"]):
+                    raise ValueError("nonoriginal PnP recovery did not preserve the exact original kernel state")
             if scenario == "normal":
                 write(case / "stop.json", {"stop": True})
                 ordinary.wait(timeout=10); helper.wait(timeout=10)
@@ -243,7 +252,8 @@ def main():
             inspection = await_json(case / "inspection.json")
             if inspection["record"] is not None or inspection["current"] is not None or (root / "receipt.json").exists():
                 raise ValueError("exact kernel/resource recovery did not clear its protected record")
-            result["cases"][scenario] = {"status": "passed", "plan": ready, "packets": packets, "foreign_process": foreign, "inspection": inspection}
+            result["cases"][scenario] = {"status": "passed", "plan": ready, "packets": packets, "foreign_process": foreign,
+                                         "recovery_identity_negative": identity_negative, "inspection": inspection}
         result["status"] = "passed"
     except BaseException as error:
         result["failure"] = {"type": type(error).__name__, "message": str(error)}

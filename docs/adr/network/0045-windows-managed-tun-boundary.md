@@ -179,6 +179,11 @@ still required before clearing any receipt or journal.
 This corrects the demonstrated crash-lifetime assumption. Its source is
 implemented; successful exact-source hosted recovery and the remaining
 conflict/partial-install/VPN-coexistence target cases are still required.
+The native fixture additionally attempts recovery with altered GUID, alias,
+LUID and interface index against the actual live original device. Each must
+be refused while both its complete snapshot and captured PnP instance remain
+unchanged. These additional checks are implemented and pending hosted execution;
+they do not replace the distinct external-replacement/VPN-coexistence cases.
 
 References: [official 0.14.1 public API](https://github.com/WireGuard/wintun/blob/bfef136abfa1665c2592be09a7e383d646cdbe6e/api/wintun.h),
 [SetupDiGetClassDevsW](https://learn.microsoft.com/en-us/windows/win32/api/setupapi/nf-setupapi-setupdigetclassdevsw),
