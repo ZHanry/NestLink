@@ -208,17 +208,19 @@ fn accept_snapshot(
     snapshot: TurnResourceSnapshotClaims,
     local: &mut PollState,
 ) -> Result<(), Error> {
-    let now = sample(context.started)?;
-    if snapshot.snapshot_sequence <= local.snapshot_sequence
-        || snapshot.issued_at_unix_ms > now.unix_ms.saturating_add(1000)
-        || snapshot.expires_at_unix_ms <= now.unix_ms
-        || snapshot.issued_at_unix_ms.saturating_add(1000) < query.issued_at_unix_ms
-        || request_started > now.monotonic_ms
-    {
-        return Err(authorization_error(ErrorCode::ReplayRejected));
-    }
-    {
+    let now = {
         let mut runtime = context.state.lock().map_err(|_| Error::Control)?;
+        // A sample taken before waiting for this lock can precede a concurrent
+        // lease/health admission that advances the same gate's clock fence.
+        let now = sample(context.started)?;
+        if snapshot.snapshot_sequence <= local.snapshot_sequence
+            || snapshot.issued_at_unix_ms > now.unix_ms.saturating_add(1000)
+            || snapshot.expires_at_unix_ms <= now.unix_ms
+            || snapshot.issued_at_unix_ms.saturating_add(1000) < query.issued_at_unix_ms
+            || request_started > now.monotonic_ms
+        {
+            return Err(authorization_error(ErrorCode::ReplayRejected));
+        }
         if !runtime.ready {
             return Err(Error::Control);
         }
@@ -233,7 +235,8 @@ fn accept_snapshot(
         {
             return Err(authorization_error(ErrorCode::IdentityMismatch));
         }
-    }
+        now
+    };
 
     // Validate every grant and peer transcript before changing shared state.
     let node_key = digest(&context.identity.public_key());

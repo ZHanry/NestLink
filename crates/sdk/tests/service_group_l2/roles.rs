@@ -657,7 +657,16 @@ async fn edge(directory: &Path) -> Result {
         &serde_json::json!({"node_id":config.node_id,"instance":instance,"original_node_control_authorized":true}),
     )?;
     let stop_path = marker.join("stop.json");
-    tokio::select! {result=&mut worker=>{result??;return Err("edge stopped before requested physical stop".into());},result=exists(&stop_path)=>result?,}
+    tokio::select! {
+        result=&mut worker=>{
+            let terminal=match Arc::try_unwrap(control) {
+                Ok(control)=>format!("{:?}",tokio::time::timeout(Duration::from_secs(1),control.wait_finished()).await),
+                Err(control)=>format!("shared-control stopped={}",*control.stopped().borrow()),
+            };
+            return Err(format!("original edge stopped before requested physical stop: worker={result:?}; control={terminal}").into());
+        },
+        result=exists(&stop_path)=>result?,
+    }
     stop.send_replace(true);
     worker.await??;
     assert!(
