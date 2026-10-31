@@ -4,6 +4,7 @@ use crate::*;
 #[cfg(not(target_arch = "wasm32"))]
 mod local_proxy;
 mod private;
+pub mod web_launch;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod web_gateway;
 #[cfg(all(not(target_arch = "wasm32"), any(unix, windows)))]

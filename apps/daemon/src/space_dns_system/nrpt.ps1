@@ -88,7 +88,18 @@ switch ([string]$request.action) {
     'baseline' { Emit @(Get-DnsClientNrptRule -ErrorAction Stop | Sort-Object Name | ForEach-Object { View $_ }) }
     'query' {
         $answer = Resolve-DnsName -Name ('os-probe.' + $request.plan.suffix) -Type A -DnsOnly -NoHostsFile -ErrorAction Stop
-        Emit @($answer | Where-Object { [string]$_.Type -eq 'A' } | ForEach-Object { [string]$_.IPAddress })
+        # IPAddress is only an alias from DnsCmdlets.Types.ps1xml. This narrow
+        # DnsLookup.dll import deliberately omits unrelated manifest modules
+        # and type files, so read the actual A record's native IP4Address.
+        $addresses = @($answer | Where-Object { [string]$_.Type -eq 'A' } | ForEach-Object {
+            $address = [System.Net.IPAddress]::Parse([string]$_.IP4Address)
+            if ($address.AddressFamily -ne [System.Net.Sockets.AddressFamily]::InterNetwork) {
+                throw 'System DNS query returned a non-IPv4 A record'
+            }
+            $address.ToString()
+        })
+        if ($addresses.Count -eq 0) { throw 'System DNS query returned no IPv4 A records' }
+        Emit $addresses
     }
     'test-change' {
         $rules = @(Owned-Rules)

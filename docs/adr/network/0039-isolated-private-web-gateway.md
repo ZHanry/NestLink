@@ -23,9 +23,14 @@ service grant, RemotePermit, host target selector or service budget owner.
 A separately authenticated management-to-gateway delegation protocol was the
 alternative. It would let the management workspace launch a remote gateway for a
 different browser login, but requires a new explicit holder/delegation contract
-and distribution lifecycle. The first slice instead uses a local, owner-private
-bootstrap capability. That choice is visible in the CLI and is not reported as
-the final management workspace launch flow.
+and distribution lifecycle. The first slice instead uses an explicit management
+to native selection handoff. The Services panel reads the original private
+consumer directory for one selected installation and exports a bounded request
+pinned to management origin, installation, service/space, revisions and target.
+The daemon restores only that installation's original SessionStore and validates
+the current private directory before constructing its original local choice. A
+downloaded file creates no membership or authority. This is visible in the CLI
+and is not reported as one-click remote gateway delegation.
 
 The browser opens a fixed service HTTPS origin, whose first DNS label is the
 service UUID. The gateway rejects an origin sharing the management site's last
@@ -42,6 +47,17 @@ the gateway verifies the random private-hop token, scheme and exact SNI/Host
 before handling bootstrap or application data. An inbound token alone would not
 authenticate a server that rebinds a stopped owner's loopback address.
 
+A reserved readiness endpoint returns only this original owner's public UUID;
+the application backend cannot handle that namespace. The daemon checks that
+fixed public HTTPS origin using no credentials, no redirects and a 64-byte body
+limit. Waiting shares the original owner expiry and remains cancelable. Only
+after readiness does it replace the initial ticket and create a separate private
+launch file; the route bootstrap never enters the management page. The page
+checks the exact selected service's launch origin/path/fragment and opens it with
+no opener or Referer. Renewal invalidates the previous ticket under the original
+admission lock, does not extend expiry/quota, and is refused after any session
+has used a ticket, including after logout.
+
 A 60-second, single-use ticket appears only in the launch URL fragment. A static
 bootstrap page first removes the fragment from browser history, then exchanges
 it through an exact-origin POST. The gateway stores only purpose-hashed ticket
@@ -57,7 +73,10 @@ This preserves ordinary server cookie login while preventing cross-service
 Domain-cookie injection. JavaScript-readable cookies, HTTP Basic/Bearer auth and
 applications requiring third-party origins remain explicit first-slice
 compatibility limits; this slice must not be described as universal application
-compatibility. Cookie storage has a cumulative 64 KiB input limit per session.
+compatibility. The Jar uses the actual backend scheme; HTTP targets requiring
+Secure application cookies need an independently approved HTTPS backend rather
+than a scheme rewrite or cookie downgrade. The launch UI displays this limit.
+Cookie storage has a cumulative 64 KiB input limit per session.
 
 Hyper 1.12.0 and hyper-util 0.1.21 already exist in the dependency graph. They now
 own HTTP/1 framing, streaming bodies and protocol upgrades in this adapter;

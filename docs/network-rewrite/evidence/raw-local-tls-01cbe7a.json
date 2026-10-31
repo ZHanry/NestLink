@@ -1,0 +1,412 @@
+{
+    "schema_version":  1,
+    "purpose":  "real-local-TLS-on-original-private-service-kernel-owner",
+    "build_provenance":  {
+                             "repository":  "ZHanry/NestLink",
+                             "source_revision":  "01cbe7a86d95b64495e2b79fb112b63bd642ff49",
+                             "workflow":  ".github/workflows/local-port-gate.yml",
+                             "run_id":  41177562082,
+                             "run_attempt":  1,
+                             "job_id":  124468164829,
+                             "runner":  "github-hosted ubuntu-24.04",
+                             "dependency_lock_sha256":  "4d8ca05568d4807a7b05d366c230e15cccfb186412ada07cc080cf547c5c6cff",
+                             "executable":  {
+                                                "build_path":  "/home/runner/work/NestLink/NestLink/target/debug/deps/private_services-2fedadcb65e7be00",
+                                                "path":  "/tmp/nestlink-raw-roles-3g9zp40z/private-services",
+                                                "sha256":  "902ee3f2964085e15a3f36f156874ed0780b43164afaf4ab780762d48229ad1d"
+                                            },
+                             "artifact_id":  13033134782,
+                             "archive_sha256":  "4feea40746345b170f56a6c26fdc191fe9a1add341f6bd89b7ad0b38ab78c5ef"
+                         },
+    "execution_provenance":  {
+                                 "environment":  "actual hosted nft kernel and ordinary UID SDK process, distinct UID 65534 probe and independent root helper",
+                                 "conclusion":  "success",
+                                 "status":  "passed_scoped_hosted_sdk_kernel_experiment",
+                                 "commands":  [
+                                                  {
+                                                      "name":  "build-sdk-raw-owner",
+                                                      "return_code":  0,
+                                                      "log":  "build-sdk-raw-owner.log",
+                                                      "log_sha256":  "d09dba8495c627f36fcacd347bf9ec2e75e823dd0c7266e56892e1a27d2cfde9"
+                                                  },
+                                                  {
+                                                      "name":  "create-unrelated-sentinel",
+                                                      "return_code":  0,
+                                                      "log":  "create-unrelated-sentinel.log",
+                                                      "log_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                                  },
+                                                  {
+                                                      "name":  "sentinel-before",
+                                                      "return_code":  0,
+                                                      "log":  "sentinel-before.log",
+                                                      "log_sha256":  "5ed9d27a4561355f7b88b70133d14da9887ebdc02481051d8720924e4b4a4fb4"
+                                                  },
+                                                  {
+                                                      "name":  "tcp-root-directory",
+                                                      "return_code":  0,
+                                                      "log":  "tcp-root-directory.log",
+                                                      "log_sha256":  "5a499ce65b58f794ecb6c7d010b7dc2520ea55b7905321355debfcc3a5b5c1c7"
+                                                  },
+                                                  {
+                                                      "name":  "tcp-public-directory",
+                                                      "return_code":  0,
+                                                      "log":  "tcp-public-directory.log",
+                                                      "log_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                                  },
+                                                  {
+                                                      "name":  "tcp-sdk-kernel-case",
+                                                      "return_code":  0,
+                                                      "log":  "tcp-sdk-kernel-case.log",
+                                                      "log_sha256":  "7038c034d14231465a04ea0483361413e5e0e8d0900921db06dfd53175a640a9"
+                                                  },
+                                                  {
+                                                      "name":  "tcp-final-inspect",
+                                                      "return_code":  0,
+                                                      "log":  "tcp-final-inspect.log",
+                                                      "log_sha256":  "60b4b577d0d0ca47cf198a3b077a4ff034ea38350324e1a60553162485ada171"
+                                                  },
+                                                  {
+                                                      "name":  "tcp-tables-after",
+                                                      "return_code":  0,
+                                                      "log":  "tcp-tables-after.log",
+                                                      "log_sha256":  "59bec16bd15afd67f9f76e0357310169aca25bc6b56b4e2a90f34035a6fb2ce2"
+                                                  },
+                                                  {
+                                                      "name":  "tcp-unrelated-after",
+                                                      "return_code":  0,
+                                                      "log":  "tcp-unrelated-after.log",
+                                                      "log_sha256":  "5ed9d27a4561355f7b88b70133d14da9887ebdc02481051d8720924e4b4a4fb4"
+                                                  },
+                                                  {
+                                                      "name":  "udp-root-directory",
+                                                      "return_code":  0,
+                                                      "log":  "udp-root-directory.log",
+                                                      "log_sha256":  "a213a01572e7235d99d52c8d6e8dd51429ada2d390912f7a682f122a9fc6dbd5"
+                                                  },
+                                                  {
+                                                      "name":  "udp-public-directory",
+                                                      "return_code":  0,
+                                                      "log":  "udp-public-directory.log",
+                                                      "log_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                                  },
+                                                  {
+                                                      "name":  "udp-sdk-kernel-case",
+                                                      "return_code":  0,
+                                                      "log":  "udp-sdk-kernel-case.log",
+                                                      "log_sha256":  "f8ad98dfadf3eda97ea15c2668ca54e7291650a35737a2884bfc59ed5f3c325c"
+                                                  },
+                                                  {
+                                                      "name":  "udp-retained-inspect",
+                                                      "return_code":  0,
+                                                      "log":  "udp-retained-inspect.log",
+                                                      "log_sha256":  "70bcc5fe818e33b3bf67499b5f1a958ab5ac3ac43dac87b68ef819d144e28e12"
+                                                  },
+                                                  {
+                                                      "name":  "udp-foreign-inject",
+                                                      "return_code":  0,
+                                                      "log":  "udp-foreign-inject.log",
+                                                      "log_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                                  },
+                                                  {
+                                                      "name":  "udp-foreign-before",
+                                                      "return_code":  0,
+                                                      "log":  "udp-foreign-before.log",
+                                                      "log_sha256":  "64ffb308bcbe931c8a84be384c7b8c896b08e92bb1a131417ea0350e62362ffa"
+                                                  },
+                                                  {
+                                                      "name":  "udp-foreign-recovery-denied",
+                                                      "return_code":  101,
+                                                      "log":  "udp-foreign-recovery-denied.log",
+                                                      "log_sha256":  "de6f9c20e101be07cfe8fe1ecb0bf77980080e5b06fec42ab32a28f75aaf45ea"
+                                                  },
+                                                  {
+                                                      "name":  "udp-foreign-after",
+                                                      "return_code":  0,
+                                                      "log":  "udp-foreign-after.log",
+                                                      "log_sha256":  "64ffb308bcbe931c8a84be384c7b8c896b08e92bb1a131417ea0350e62362ffa"
+                                                  },
+                                                  {
+                                                      "name":  "udp-foreign-operator-remove",
+                                                      "return_code":  0,
+                                                      "log":  "udp-foreign-operator-remove.log",
+                                                      "log_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                                  },
+                                                  {
+                                                      "name":  "udp-foreign-restored",
+                                                      "return_code":  0,
+                                                      "log":  "udp-foreign-restored.log",
+                                                      "log_sha256":  "3352e5e94f92c5f22003f86919ae02ba262dc788cf3be6662297baec5e0c6079"
+                                                  },
+                                                  {
+                                                      "name":  "udp-post-exit-recover",
+                                                      "return_code":  0,
+                                                      "log":  "udp-post-exit-recover.log",
+                                                      "log_sha256":  "b4b655193da4cf785413cf68df2f7b70f6d5b43ae828bc86f5b74e2f6a2808df"
+                                                  },
+                                                  {
+                                                      "name":  "udp-final-inspect",
+                                                      "return_code":  0,
+                                                      "log":  "udp-final-inspect.log",
+                                                      "log_sha256":  "60b4b577d0d0ca47cf198a3b077a4ff034ea38350324e1a60553162485ada171"
+                                                  },
+                                                  {
+                                                      "name":  "udp-tables-after",
+                                                      "return_code":  0,
+                                                      "log":  "udp-tables-after.log",
+                                                      "log_sha256":  "59bec16bd15afd67f9f76e0357310169aca25bc6b56b4e2a90f34035a6fb2ce2"
+                                                  },
+                                                  {
+                                                      "name":  "udp-unrelated-after",
+                                                      "return_code":  0,
+                                                      "log":  "udp-unrelated-after.log",
+                                                      "log_sha256":  "5ed9d27a4561355f7b88b70133d14da9887ebdc02481051d8720924e4b4a4fb4"
+                                                  },
+                                                  {
+                                                      "name":  "tcp-finally-recover-1",
+                                                      "return_code":  0,
+                                                      "log":  "tcp-finally-recover-1.log",
+                                                      "log_sha256":  "80651ff4ce6d1ce25830c88e481ddd850bc1956417cfb5db97106e930330fac2"
+                                                  },
+                                                  {
+                                                      "name":  "tcp-finally-inspect",
+                                                      "return_code":  0,
+                                                      "log":  "tcp-finally-inspect.log",
+                                                      "log_sha256":  "60b4b577d0d0ca47cf198a3b077a4ff034ea38350324e1a60553162485ada171"
+                                                  },
+                                                  {
+                                                      "name":  "udp-finally-recover-1",
+                                                      "return_code":  0,
+                                                      "log":  "udp-finally-recover-1.log",
+                                                      "log_sha256":  "80651ff4ce6d1ce25830c88e481ddd850bc1956417cfb5db97106e930330fac2"
+                                                  },
+                                                  {
+                                                      "name":  "udp-finally-inspect",
+                                                      "return_code":  0,
+                                                      "log":  "udp-finally-inspect.log",
+                                                      "log_sha256":  "60b4b577d0d0ca47cf198a3b077a4ff034ea38350324e1a60553162485ada171"
+                                                  },
+                                                  {
+                                                      "name":  "sentinel-final",
+                                                      "return_code":  0,
+                                                      "log":  "sentinel-final.log",
+                                                      "log_sha256":  "5ed9d27a4561355f7b88b70133d14da9887ebdc02481051d8720924e4b4a4fb4"
+                                                  },
+                                                  {
+                                                      "name":  "sentinel-remove",
+                                                      "return_code":  0,
+                                                      "log":  "sentinel-remove.log",
+                                                      "log_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                                                  }
+                                              ],
+                                 "local_tls":  {
+                                                   "accepted_connections":  2,
+                                                   "backend_payloads_after_tls":  3,
+                                                   "backend_payloads_before_tls":  2,
+                                                   "certificate_der":  "local-tls-certificate.der",
+                                                   "cleanup_failures":  0,
+                                                   "client_trust":  "explicit_generated_single_root",
+                                                   "completed_connections":  2,
+                                                   "failed_connections":  0,
+                                                   "helper":  {
+                                                                  "image":  "/tmp/nestlink-raw-roles-3g9zp40z/private-services",
+                                                                  "image_device":  2049,
+                                                                  "image_inode":  2372942,
+                                                                  "incarnation":  "0:40399:cd176406-6c81-4bcc-8a1d-95c3a2f1bbd6",
+                                                                  "pid":  14664,
+                                                                  "uid":  0
+                                                              },
+                                                   "kind":  "local_tls_over_original_private_tcp_service",
+                                                   "original_receipt_unchanged":  true,
+                                                   "payload":  [
+                                                                   0,
+                                                                   255,
+                                                                   128,
+                                                                   13,
+                                                                   10,
+                                                                   0,
+                                                                   98,
+                                                                   49,
+                                                                   50,
+                                                                   54,
+                                                                   50,
+                                                                   54,
+                                                                   98,
+                                                                   101,
+                                                                   45,
+                                                                   57,
+                                                                   57,
+                                                                   99,
+                                                                   55,
+                                                                   45,
+                                                                   52,
+                                                                   49,
+                                                                   102,
+                                                                   52,
+                                                                   45,
+                                                                   56,
+                                                                   98,
+                                                                   48,
+                                                                   51,
+                                                                   45,
+                                                                   57,
+                                                                   55,
+                                                                   48,
+                                                                   52,
+                                                                   101,
+                                                                   99,
+                                                                   51,
+                                                                   54,
+                                                                   49,
+                                                                   99,
+                                                                   101,
+                                                                   50
+                                                               ],
+                                                   "plan":  {
+                                                                "created_at_ms":  1793429055282,
+                                                                "endpoint":  "127.0.0.1:43903",
+                                                                "expires_at_ms":  1793429100282,
+                                                                "owner_id":  "495ee344-4653-451e-b53a-7c7445cd5a3b",
+                                                                "process":  {
+                                                                                "image":  "/tmp/nestlink-raw-roles-3g9zp40z/private-services",
+                                                                                "image_device":  2049,
+                                                                                "image_inode":  2372942,
+                                                                                "incarnation":  "1001:40227:cd176406-6c81-4bcc-8a1d-95c3a2f1bbd6",
+                                                                                "pid":  14659,
+                                                                                "uid":  1001
+                                                                            },
+                                                                "schema_version":  1,
+                                                                "transport":  "tcp"
+                                                            },
+                                                   "rejected_connections":  1,
+                                                   "rejected_handshake_backend_unchanged":  true,
+                                                   "remote_https_validated":  false,
+                                                   "reply":  [
+                                                                 0,
+                                                                 255,
+                                                                 128,
+                                                                 13,
+                                                                 10,
+                                                                 0,
+                                                                 98,
+                                                                 49,
+                                                                 50,
+                                                                 54,
+                                                                 50,
+                                                                 54,
+                                                                 98,
+                                                                 101,
+                                                                 45,
+                                                                 57,
+                                                                 57,
+                                                                 99,
+                                                                 55,
+                                                                 45,
+                                                                 52,
+                                                                 49,
+                                                                 102,
+                                                                 52,
+                                                                 45,
+                                                                 56,
+                                                                 98,
+                                                                 48,
+                                                                 51,
+                                                                 45,
+                                                                 57,
+                                                                 55,
+                                                                 48,
+                                                                 52,
+                                                                 101,
+                                                                 99,
+                                                                 51,
+                                                                 54,
+                                                                 49,
+                                                                 99,
+                                                                 101,
+                                                                 50
+                                                             ],
+                                                   "socket_closed":  true,
+                                                   "socket_rebound":  true,
+                                                   "trusted_ca_validated":  true,
+                                                   "trusted_name":  "owned-raw.nestlink.internal",
+                                                   "wrong_name":  "wrong-name.invalid",
+                                                   "wrong_name_error":  "invalid peer certificate: certificate not valid for name \"wrong-name.invalid\"; certificate is only valid for DnsName(\"owned-raw.nestlink.internal\")",
+                                                   "wrong_name_rejected":  true
+                                               },
+                                 "kernel_handles_and_byte_witnesses":  {
+                                                                           "build-sdk-raw-owner.log":  "d09dba8495c627f36fcacd347bf9ec2e75e823dd0c7266e56892e1a27d2cfde9",
+                                                                           "create-unrelated-sentinel.log":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                                                                           "sentinel-before.log":  "5ed9d27a4561355f7b88b70133d14da9887ebdc02481051d8720924e4b4a4fb4",
+                                                                           "sentinel-final.log":  "5ed9d27a4561355f7b88b70133d14da9887ebdc02481051d8720924e4b4a4fb4",
+                                                                           "sentinel-remove.log":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                                                                           "tcp/after-local-tls.nft.json":  "2d263b49b6b36fe3e706f4bac044c92f95f2d19f8d55b9008aa45e0c7c00f921",
+                                                                           "tcp/after-probes.nft.json":  "2d263b49b6b36fe3e706f4bac044c92f95f2d19f8d55b9008aa45e0c7c00f921",
+                                                                           "tcp/after-socket-close.nft.json":  "2d263b49b6b36fe3e706f4bac044c92f95f2d19f8d55b9008aa45e0c7c00f921",
+                                                                           "tcp/different-uid.log":  "d7b20b4adacff53701cb508fecf8ec4da3ca487d1e071c8d2f7f0ee897cc2956",
+                                                                           "tcp/installed.nft.json":  "2d263b49b6b36fe3e706f4bac044c92f95f2d19f8d55b9008aa45e0c7c00f921",
+                                                                           "tcp/local-tls-certificate.der":  "4117e29ace3e4d7fc43140e8dbf74bdb9150b562e892bda9fe490995b2c04bcf",
+                                                                           "tcp/private-plan/plan.json":  "7bf5094adce2bc090ac1e59e07f7a5752c88e5ef745cc95ddf58c4a8a8b88efc",
+                                                                           "tcp/root-helper.log":  "b64145950321af754cfbae539902c5fc5a27e8a903986065959c1fb1ce97e776",
+                                                                           "tcp/root-helper.stderr.log":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                                                                           "tcp/root-receipt.json":  "6db6a999c078240626e855b6c34910f06b105d686ab33f51d132f21ba6a55b89",
+                                                                           "tcp/same-uid-after.log":  "ca0449fa616428f08bd2dbe82377d52737462ff9b632b1394522fe31c10c453e",
+                                                                           "tcp/same-uid-before.log":  "56d3a91148ccf2742853c827836ed98029e7f2a2addfcf5db10b0f6b8558aa67",
+                                                                           "tcp/scenario.json":  "8a058c81db1ff50d572425857d7116a93a874a8bbab4a2615dd7a9f0acbf71cb",
+                                                                           "tcp-final-inspect.log":  "60b4b577d0d0ca47cf198a3b077a4ff034ea38350324e1a60553162485ada171",
+                                                                           "tcp-finally-inspect.log":  "60b4b577d0d0ca47cf198a3b077a4ff034ea38350324e1a60553162485ada171",
+                                                                           "tcp-finally-recover-1.log":  "80651ff4ce6d1ce25830c88e481ddd850bc1956417cfb5db97106e930330fac2",
+                                                                           "tcp-public-directory.log":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                                                                           "tcp-root-directory.log":  "5a499ce65b58f794ecb6c7d010b7dc2520ea55b7905321355debfcc3a5b5c1c7",
+                                                                           "tcp-sdk-kernel-case.log":  "7038c034d14231465a04ea0483361413e5e0e8d0900921db06dfd53175a640a9",
+                                                                           "tcp-tables-after.log":  "59bec16bd15afd67f9f76e0357310169aca25bc6b56b4e2a90f34035a6fb2ce2",
+                                                                           "tcp-unrelated-after.log":  "5ed9d27a4561355f7b88b70133d14da9887ebdc02481051d8720924e4b4a4fb4",
+                                                                           "udp/after-helper-kill.nft.json":  "3352e5e94f92c5f22003f86919ae02ba262dc788cf3be6662297baec5e0c6079",
+                                                                           "udp/after-probes.nft.json":  "3352e5e94f92c5f22003f86919ae02ba262dc788cf3be6662297baec5e0c6079",
+                                                                           "udp/after-socket-close.nft.json":  "3352e5e94f92c5f22003f86919ae02ba262dc788cf3be6662297baec5e0c6079",
+                                                                           "udp/different-uid.log":  "8f515562d0770d10b3cc04525c001b40fc53bb8772333ac6007207fa709fc9fc",
+                                                                           "udp/early-recover.log":  "5beab13da7fd2fa8e30b585169ec3f9d4e1e145483e630284579eedb596553f9",
+                                                                           "udp/empty-datagram.log":  "333f942c98d0c739e093300e812b6dabda0119a0254d5512998fe1e57ceef27d",
+                                                                           "udp/installed.nft.json":  "3352e5e94f92c5f22003f86919ae02ba262dc788cf3be6662297baec5e0c6079",
+                                                                           "udp/private-plan/plan.json":  "ac06895760defd104246c8253062c147d8d0db6c82adff9d990b958f73c3c48a",
+                                                                           "udp/root-helper.log":  "38f2a4ae993d45713e8bd70ea9a0be41521db04e720032331014dbeff50d06bf",
+                                                                           "udp/root-helper.stderr.log":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                                                                           "udp/root-receipt.json":  "a53c2dc8ad6db999bb8fde1ef378f256bbe11ebd37f267ea54cce3d9f0f44e2d",
+                                                                           "udp/same-uid-after.log":  "ac20d92b3074dcf729f62b23a9116dcb3681ae7ccea2ff6aa18aa1924404fae1",
+                                                                           "udp/same-uid-before.log":  "cf6616dd6710d100ed47e68b0c8e19956277592272c0514465e7d0d7e89f3ae2",
+                                                                           "udp/scenario.json":  "da18b75b3bd661fba232d3f09d1ea79a9f07c76a00eaaab830286fd06608d611",
+                                                                           "udp-final-inspect.log":  "60b4b577d0d0ca47cf198a3b077a4ff034ea38350324e1a60553162485ada171",
+                                                                           "udp-finally-inspect.log":  "60b4b577d0d0ca47cf198a3b077a4ff034ea38350324e1a60553162485ada171",
+                                                                           "udp-finally-recover-1.log":  "80651ff4ce6d1ce25830c88e481ddd850bc1956417cfb5db97106e930330fac2",
+                                                                           "udp-foreign-after.log":  "64ffb308bcbe931c8a84be384c7b8c896b08e92bb1a131417ea0350e62362ffa",
+                                                                           "udp-foreign-before.log":  "64ffb308bcbe931c8a84be384c7b8c896b08e92bb1a131417ea0350e62362ffa",
+                                                                           "udp-foreign-inject.log":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                                                                           "udp-foreign-operator-remove.log":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                                                                           "udp-foreign-recovery-denied.log":  "de6f9c20e101be07cfe8fe1ecb0bf77980080e5b06fec42ab32a28f75aaf45ea",
+                                                                           "udp-foreign-restored.log":  "3352e5e94f92c5f22003f86919ae02ba262dc788cf3be6662297baec5e0c6079",
+                                                                           "udp-post-exit-recover.log":  "b4b655193da4cf785413cf68df2f7b70f6d5b43ae828bc86f5b74e2f6a2808df",
+                                                                           "udp-public-directory.log":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                                                                           "udp-retained-inspect.log":  "70bcc5fe818e33b3bf67499b5f1a958ab5ac3ac43dac87b68ef819d144e28e12",
+                                                                           "udp-root-directory.log":  "a213a01572e7235d99d52c8d6e8dd51429ada2d390912f7a682f122a9fc6dbd5",
+                                                                           "udp-sdk-kernel-case.log":  "f8ad98dfadf3eda97ea15c2668ca54e7291650a35737a2884bfc59ed5f3c325c",
+                                                                           "udp-tables-after.log":  "59bec16bd15afd67f9f76e0357310169aca25bc6b56b4e2a90f34035a6fb2ce2",
+                                                                           "udp-unrelated-after.log":  "5ed9d27a4561355f7b88b70133d14da9887ebdc02481051d8720924e4b4a4fb4"
+                                                                       },
+                                 "final_recovery":  {
+                                                        "tcp":  {
+                                                                    "current":  null,
+                                                                    "journal":  null
+                                                                },
+                                                        "udp":  {
+                                                                    "current":  null,
+                                                                    "journal":  null
+                                                                }
+                                                    }
+                             },
+    "limitations":  [
+                        "Production CLI/login recovery and Windows kernel still unqualified",
+                        "Local TLS terminates at consumer gateway; remote service and optional backend HTTPS are independently authenticated hops",
+                        "Complete AC34 cross-platform target acceptance remains pending"
+                    ],
+    "local_project_toolchain_executed":  false,
+    "complete_acceptance_claimed":  false,
+    "release_qualified":  false
+}

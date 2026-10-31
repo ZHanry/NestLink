@@ -254,24 +254,23 @@ async fn actual_os_split_dns_resolves_and_recovers_without_changing_unrelated_po
                 store.save(&journal)?;
             }
             let answer = native_query(&journal.plan).await?;
-            assert!(
-                answer.contains(&expected),
-                "actual OS resolver answer: {answer}"
-            );
-            assert!(
-                recover(&store).await.is_err(),
-                "recovery must refuse a live resolver"
-            );
+            if !answer.contains(&expected) {
+                return Err(io::Error::other(format!(
+                    "actual OS resolver answer: {answer}"
+                ))
+                .into());
+            }
+            if recover(&store).await.is_ok() {
+                return Err(io::Error::other("recovery must refuse a live resolver").into());
+            }
             if committed {
                 native_change_owned(&journal.plan).await?;
-                assert!(
-                    remove(&journal).await.is_err(),
-                    "external change must be preserved"
-                );
-                assert!(
-                    store.read()?.is_some(),
-                    "external change retains the journal"
-                );
+                if remove(&journal).await.is_ok() {
+                    return Err(io::Error::other("external change must be preserved").into());
+                }
+                if store.read()?.is_none() {
+                    return Err(io::Error::other("external change retains the journal").into());
+                }
                 native_restore_owned(
                     &journal.plan,
                     journal

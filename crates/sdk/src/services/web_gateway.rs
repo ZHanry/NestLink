@@ -27,6 +27,8 @@ use tokio::{
 use url::Url;
 mod headers;
 mod tls;
+#[cfg(test)]
+mod probe_tests;
 
 const MAX_CONNECTIONS: usize = 32;
 const SETUP: Duration = Duration::from_secs(3);
@@ -63,6 +65,7 @@ pub struct PrivateWebGateway {
     private_hop: Secret,
     upstream_certificate: String,
     upstream_server_name: String,
+    context: Arc<Context>,
     stop: watch::Sender<bool>,
     task: Option<JoinHandle<PrivateWebGatewayStopReport>>,
     report: Option<PrivateWebGatewayStopReport>,
@@ -75,6 +78,30 @@ impl PrivateWebGateway {
     }
     pub fn origin(&self) -> &str {
         &self.origin
+    }
+    /// Public correlation only. This value grants no service or browser access.
+    pub fn owner_id(&self) -> &str {
+        &self.context.owner_id
+    }
+    /// Invalidate the previous ticket atomically, keeping this same service,
+    /// original expiry and quota. A consumed session can never be relaunched.
+    pub fn renew_launch_url(&mut self) -> Result<String, SdkError> {
+        let now = Instant::now();
+        let mut admission = self.context.admission.lock().map_err(|_| SdkError::Trust)?;
+        if *self.stop.borrow() || now >= self.context.deadline || admission.ticket_used || admission.session.is_some() {
+            return Err(SdkError::Trust);
+        }
+        let launch = token();
+        admission.ticket = Some((token_hash("private-web-launch", launch.expose()), self.context.deadline.min(now + TICKET_LIFETIME)));
+        self.launch = launch;
+        Ok(self.launch_url())
+    }
+    pub fn public_route_probe(&self) -> Result<PrivateWebRouteProbe, SdkError> {
+        Ok(PrivateWebRouteProbe {
+            client: reqwest::Client::builder().https_only(true).redirect(reqwest::redirect::Policy::none()).timeout(SETUP).build()?,
+            url: format!("{}/.nestlink/ready", self.origin),
+            owner_id: self.owner_id().to_owned(),
+        })
     }
     /// Contains a single-use capability. Save only in an owner-private file.
     /// It belongs in a URL fragment, never a query, log or Referer.
@@ -135,6 +162,27 @@ impl PrivateWebGateway {
         }
     }
 }
+/// A fixed public HTTPS readiness check. It sends no management authorization,
+/// private-hop header, installation proof, browser cookie or launch ticket.
+pub struct PrivateWebRouteProbe {
+    client: reqwest::Client,
+    url: String,
+    owner_id: String,
+}
+impl PrivateWebRouteProbe {
+    pub async fn check(&self) -> Result<bool, SdkError> {
+        let mut response = self.client.get(&self.url).send().await?;
+        if response.status() != reqwest::StatusCode::OK || response.content_length().is_some_and(|length| length > 64) {
+            return Ok(false);
+        }
+        let mut bytes = Vec::with_capacity(64);
+        while let Some(chunk) = response.chunk().await? {
+            if chunk.len() > 64 - bytes.len() { return Ok(false); }
+            bytes.extend_from_slice(&chunk);
+        }
+        Ok(bytes == self.owner_id.as_bytes())
+    }
+}
 impl Drop for PrivateWebGateway {
     fn drop(&mut self) {
         self.request_shutdown();
@@ -155,8 +203,10 @@ struct BrowserSession {
 struct BrowserAdmission {
     ticket: Option<([u8; 32], Instant)>,
     session: Option<Arc<BrowserSession>>,
+    ticket_used: bool,
 }
 struct Context {
+    owner_id: String,
     sdk: Arc<Sdk>,
     consumer: Arc<DeviceIdentity>,
     choice: LocalProxyServiceChoice,
@@ -212,6 +262,7 @@ impl Sdk {
         let private_hop = token();
         let (stop, stopped) = watch::channel(false);
         let context = Arc::new(Context {
+            owner_id: nestlink_auth::random_id(),
             sdk: self.clone(),
             consumer,
             choice,
@@ -224,12 +275,13 @@ impl Sdk {
                     deadline.min(Instant::now() + TICKET_LIFETIME),
                 )),
                 session: None,
+                ticket_used: false,
             }),
             stopped,
             shutdown: stop.clone(),
             deadline,
         });
-        let task = tokio::spawn(run_owner(context, listener, tls.acceptor));
+        let task = tokio::spawn(run_owner(context.clone(), listener, tls.acceptor));
         Ok(PrivateWebGateway {
             address,
             origin: origin.origin().ascii_serialization(),
@@ -237,6 +289,7 @@ impl Sdk {
             private_hop,
             upstream_certificate: tls.certificate,
             upstream_server_name: tls.server_name,
+            context,
             stop,
             task: Some(task),
             report: None,
@@ -256,6 +309,7 @@ fn response(status: StatusCode) -> Response<Body> {
     let mut response = Response::new(Body::empty());
     *response.status_mut() = status;
     headers::browser_response(response.headers_mut());
+    response.headers_mut().insert(hyper::header::CONNECTION, hyper::header::HeaderValue::from_static("close"));
     response
 }
 fn finish(
@@ -309,7 +363,10 @@ async fn run_owner(
                     };
                     let service=service_fn(move |request|handle(context.clone(),sender.clone(),request));
                     let mut builder=hyper::server::conn::http1::Builder::new();
-                    builder.keep_alive(false).max_headers(128).max_buf_size(32768).timer(TokioTimer::new()).header_read_timeout(Duration::from_secs(2));
+                    // Disabling Hyper keep-alive appends `close` even to 101's
+                    // Connection: upgrade. Ordinary responses close explicitly;
+                    // upgraded responses retain only the valid upgrade header.
+                    builder.keep_alive(true).max_headers(128).max_buf_size(32768).timer(TokioTimer::new()).header_read_timeout(Duration::from_secs(2));
                     let connection=builder.serve_connection(TokioIo::new(socket),service).with_upgrades();
                     tokio::select! {biased;
                         _=stopped(&mut stop)=>Ok(()),
@@ -357,6 +414,14 @@ async fn handle(
             return response(StatusCode::FORBIDDEN);
         }
         let path = request.uri().path();
+        if path == "/.nestlink/ready" {
+            if request.method() != hyper::Method::GET || request.uri().query().is_some() {
+                return response(StatusCode::BAD_REQUEST);
+            }
+            let mut ready = response(StatusCode::OK);
+            *ready.body_mut() = Body::from(context.owner_id.clone());
+            return ready;
+        }
         if path == "/.nestlink/launch" {
             if request.method() != hyper::Method::GET || request.uri().query().is_some() {
                 return response(StatusCode::BAD_REQUEST);
@@ -388,6 +453,7 @@ async fn handle(
                 return response(StatusCode::UNAUTHORIZED);
             }
             admission.ticket.take();
+            admission.ticket_used = true;
             let cookie = token();
             let (stopped, _) = watch::channel(false);
             admission.session = Some(Arc::new(BrowserSession {

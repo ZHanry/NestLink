@@ -4,6 +4,23 @@ Implementation state: in progress. The new source and its automated cases still
 require exact-source GitHub Actions compilation and execution. Public HTTPS and
 browser execution require the separately configured deployment below.
 
+The management workspace's Services page includes **Access private Web
+services**. Read your installations, select the actual native gateway, then read
+its original private consumer directory. Select one ready HTTP/HTTPS entry,
+enter the isolated origin, per-connection sub-reservation and fixed owner
+lifetime, and download the request. The download contains no credential and
+grants no rights. Save it in that installation owner's private directory. The
+daemon refuses a different management origin or installation, stale service or
+exposure revision, changed target, offline entry or excess allowance. Refresh the
+directory and download a new request after any such change.
+
+The page accepts only the selected service's one-use launch fragment URL,
+checks its origin and reserved path, and opens it in a separate tab with
+`noopener`, `noreferrer` and no Referer. Changing selection, logging out or
+leaving the page clears the local link. TCP/UDP entries hand off to the existing
+native proxy or a protocol client. This is an explicit native-owner handoff; it
+does not provide one-click remote gateway delegation.
+
 This entry runs on the explicitly enrolled gateway installation. It is a native
 gateway process; the visiting browser needs no TUN, SOCKS configuration or native
 network transport. It forwards only one previously approved HTTP/HTTPS service.
@@ -32,11 +49,18 @@ nestlink-daemon private-web-gateway \
   --origin https://<service-UUID>.private.example.net \
   --maximum-bytes 1048576 --lifetime-seconds 300 \
   --listen 127.0.0.1:29840 \
-  --bootstrap <new-absolute-file-in-an-owner-private-directory>
+  --bootstrap <new-absolute-private-route.json> \
+  --launch-output <new-absolute-private-launch.json>
 ```
 
-The bootstrap contains a `caddy_https_route` object and `launch_url`. It contains
-credentials and must remain owner-private. Install the route only in the stated
+Alternatively replace the service/space/origin/allowance/lifetime arguments with
+`--request <absolute-owner-private-NestLink-private-web-request.json>`, the
+management page's bounded selection. Keep `--state-dir`, `--bootstrap` and
+`--launch-output` as above.
+
+The schema-2 bootstrap contains `caddy_https_route` and the public correlation
+`gateway_owner_id`, with no launch ticket. It contains the hop credential and
+must remain owner-private. Install the route only in the stated
 HTTPS server, with no additional public route bypassing its upstream. Caddy must
 share the gateway's real loopback network namespace. The listener accepts only
 TLS. Each owner creates a fresh short-lived CA, leaf certificate and private key;
@@ -47,7 +71,21 @@ The CA pool contains only this owner's CA, and no skip-verification option is
 used. The gateway additionally authenticates the private hop using a random
 token and the real HTTPS scheme/SNI. A remote browser cannot supply that token.
 
-Open `launch_url` within 60 seconds. The ticket is in its fragment, is exchanged
+The daemon polls only the selected origin's reserved `/.nestlink/ready` URL over
+normally verified public HTTPS. It refuses redirects, sends no authorization,
+Cookie, hop header or ticket, and accepts only the original owner's UUID within
+a 64-byte response limit. The reserved endpoint is handled before any private
+application backend. The UUID correlates readiness and grants no access.
+Preparation, probes and active sessions share the original fixed owner lifetime;
+neither waiting nor ticket renewal extends it. Ctrl-C, login changes, maintenance,
+expiry and original worker cleanup still apply during preparation.
+
+Only after this check succeeds does the daemon atomically invalidate the initial
+ticket and create the separate owner-private launch JSON. Copy only its
+`launch_url` into the management page, then open it within 60 seconds (or before
+the owner's earlier expiry). Do not import or paste the route bootstrap into
+the page. Renewal is refused after any browser session has used a ticket,
+including after logout. The ticket is in its fragment, is exchanged
 once by an exact-origin POST and is removed from browser history before exchange.
 Do not paste the link into logs, diagnostics, public configuration or an unrelated
 application. The gateway then supplies only its host-only secure session cookie.
@@ -62,15 +100,32 @@ It strips incoming browser application cookies and consumes backend Set-Cookie.
 Applications requiring JavaScript-readable cookies, HTTP Basic/Bearer auth,
 third-party scripts/connections, service workers or embedding need further
 explicit compatibility work. CSP and origin isolation are enforced. Management
-workspace one-click launch, multi-user gateway delegation and public browser
-qualification remain unfinished; this CLI slice does not stand for full W25.
+workspace remote one-click launch, multi-user gateway delegation and public
+browser qualification remain unfinished; this handoff does not stand for full W25.
+
+Application cookies retain the real backend transport semantics. HTTP backends
+requiring `Secure` application cookies are unsupported: the adapter does not
+pretend that an HTTP private target is HTTPS or downgrade a Secure cookie. Use
+an explicitly approved HTTPS private backend with its original host-side CA/name
+verification. The management launch panel shows this limit before launch.
+Ordinary non-Secure server cookies over HTTP and server cookies over HTTPS
+continue through the separate per-session Jar.
+
+The application-authentication interface stays separate from gateway admission:
+the gateway session cookie proves access to one selected service; application
+login requests and responses go only through that service's fixed private lease
+and mature cookie Jar. Future compatibility modes must be explicit local policy,
+must report unsupported transport/authentication requirements, and must never
+import management cookies, browser bearer credentials or another service's Jar.
+No Basic/Bearer or JavaScript-cookie authentication adapter is implemented here.
 
 Send an exact-origin POST to `/.nestlink/logout` to revoke the browser session.
 This closes already upgraded connections as well as refusing new requests.
 Management ACL/member/host revocation is rechecked through the existing private
 lease path and by the original host. The native owner also closes on its protected
 login changing, maintenance, Ctrl-C or its fixed lifetime. Cleanup waits for all
-original private carriers and removes only the exact unchanged bootstrap file.
+original private carriers and removes only the exact unchanged bootstrap and
+launch files that this owner created.
 An incomplete physical receipt remains a cleanup failure or pending state.
 
 Remove the dedicated Caddy route separately after the owner has stopped. The
@@ -82,7 +137,8 @@ Caddy's pinned-CA and fixed-name validation. Removing the route is still require
 for operator cleanup. The generated key is held only by the live SDK TLS owner
 and is never included in the bootstrap.
 
-Automated source cases are the `web_gateway::headers::tests` unit cases and the
+Automated source cases are the `web_launch::tests`, `web_gateway::probe_tests`,
+`web_gateway::headers::tests` unit cases and the
 `web::` cases in the SDK `private_services` integration target. They verify policy,
 real management/Quinn/fixed-backend/cookie/upload/WebSocket bytes, logout and ACL
 withdrawal, and original cumulative accounting. Their Caddy hop is supplied by

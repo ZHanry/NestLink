@@ -16,33 +16,7 @@ else fetch('/.nestlink/session',{method:'POST',credentials:'same-origin',redirec
 </script></body></html>"#;
 
 pub(super) fn origin(value: &str, management: &Url) -> Result<Url, SdkError> {
-    let url = Url::parse(value).map_err(|_| SdkError::Invalid)?;
-    let host = url.host_str().ok_or(SdkError::Invalid)?;
-    let manager = management.host_str().ok_or(SdkError::Invalid)?;
-    // A conservative deployment boundary: sharing the last two DNS labels is
-    // refused even for multi-label public suffixes. Application JavaScript must
-    // have no parent domain on which it can toss management cookies.
-    let tail = |name: &str| name.rsplit('.').take(2).collect::<Vec<_>>().join(".");
-    if url.scheme() != "https"
-        || url.port().is_some()
-        || !url.username().is_empty()
-        || url.password().is_some()
-        || url.path() != "/"
-        || url.query().is_some()
-        || url.fragment().is_some()
-        || !host.is_ascii()
-        || host.parse::<std::net::IpAddr>().is_ok()
-        || !host.contains('.')
-        || host.ends_with('.')
-        || tail(host) == tail(manager)
-        || host == manager
-        || host.ends_with(&format!(".{manager}"))
-        || manager.ends_with(&format!(".{host}"))
-        || url.origin().ascii_serialization() != value.trim_end_matches('/')
-    {
-        return Err(SdkError::Invalid);
-    }
-    Ok(url)
+    super::super::web_launch::isolated_origin(value.strip_suffix('/').unwrap_or(value), management)
 }
 pub(super) fn backend(ingress: &ServiceIngress) -> Result<Url, SdkError> {
     let value = match ingress {

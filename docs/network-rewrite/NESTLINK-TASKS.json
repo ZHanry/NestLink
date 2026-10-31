@@ -2102,7 +2102,7 @@
                                           ],
                       "status":  "in_progress",
                       "implementation_status":  "in_progress",
-                      "verification_status":  "not_run",
+                      "verification_status":  "running",
                       "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
                       "owned_paths_to_review":  [
                                                     "crates/network-overlay",
@@ -2143,11 +2143,12 @@
                                                       "无未标明的外部验证缺口"
                                                   ],
                       "evidence_refs":  [
-
+                                            "docs/network-rewrite/evidence/kernel-dns-fe5b3cf.json"
                                         ],
                       "blockers":  [
 
-                                   ]
+                                   ],
+                      "verification_notes":  "Linux system resolver/ULA, ordinary ownership, exact recovery and unrelated policy preservation passed on fe5b3cf and 4a6ca59; Windows first source failed compiling Winsock adapter. New Windows run 41177705173 is under diagnosis; full cross-platform AC31/AC32 and target VPN coexistence remain open."
                   },
                   {
                       "id":  "W20",
@@ -2235,7 +2236,7 @@
                                           ],
                       "status":  "in_progress",
                       "implementation_status":  "in_progress",
-                      "verification_status":  "not_run",
+                      "verification_status":  "running",
                       "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
                       "owned_paths_to_review":  [
                                                     "crates/network-overlay",
@@ -2277,11 +2278,14 @@
                                             "docs/adr/network/0037-explicit-linux-loopback-kernel-gate.md",
                                             "scripts/network-rewrite-local-port-gate.py",
                                             "docs/adr/network/0038-local-proxy-tls-boundaries.md",
-                                            "docs/adr/network/0040-windows-local-port-admission.md"
+                                            "docs/adr/network/0040-windows-local-port-admission.md",
+                                            "docs/network-rewrite/evidence/kernel-dns-fe5b3cf.json",
+                                            "docs/network-rewrite/evidence/raw-local-tls-01cbe7a.json"
                                         ],
                       "blockers":  [
 
-                                   ]
+                                   ],
+                      "verification_notes":  "Linux real ordinary SDK/root helper/different UID TCP+UDP, helper crash persistence, empty datagrams, foreign policy preservation and original-process exit cleanup passed. Local TLS wrong-name rejection, real binary backend bytes and unchanged kernel receipt passed on 01cbe7a run 41177562082. Production CLI L3, Windows WFP kernel and target coexistence are pending; entire AC34 is not passed."
                   },
                   {
                       "id":  "W22",
@@ -2748,8 +2752,8 @@
                                               "F20",
                                               "F25"
                                           ],
-                      "status":  "not_started",
-                      "implementation_status":  "not_started",
+                      "status":  "in_progress",
+                      "implementation_status":  "in_progress",
                       "verification_status":  "not_run",
                       "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
                       "owned_paths_to_review":  [
@@ -2792,11 +2796,12 @@
                                                       "无未标明的外部验证缺口"
                                                   ],
                       "evidence_refs":  [
-
+                                            "docs/adr/network/0041-native-diagnostic-history.md"
                                         ],
                       "blockers":  [
 
-                                   ]
+                                   ],
+                      "implementation_notes":  "Partial native desktop failure-surviving redacted history/copy entry reuses Core observations and private metadata writer. New source and privacy/bound tests await Actions; complete service/browser correlation and W29 target evidence still required."
                   },
                   {
                       "id":  "W30",

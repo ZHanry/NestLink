@@ -23,6 +23,7 @@ mod native_displays;
 mod native_input;
 mod native_network;
 mod navigation;
+mod network_diagnostics;
 pub mod picker;
 mod privileged_input;
 mod remote;
@@ -195,6 +196,7 @@ pub struct DesktopApp {
     remote_inspection_succeeded: bool,
     host_notice: host_notice::HostNoticeState,
     layout_diagnostics: layout_diagnostics::Recorder,
+    network_diagnostics: network_diagnostics::Recorder,
 }
 impl DesktopApp {
     pub fn new(
@@ -301,6 +303,7 @@ impl DesktopApp {
             remote_inspection_succeeded: false,
             host_notice: host_notice::HostNoticeState::default(),
             layout_diagnostics: layout_diagnostics::Recorder::default(),
+            network_diagnostics: network_diagnostics::Recorder::default(),
         }
     }
     fn t(&self, zh: &'static str, en: &'static str) -> &'static str {
@@ -2194,6 +2197,7 @@ impl eframe::App for DesktopApp {
         let snapshot = self.bridge.snapshot();
         self.layout_diagnostics
             .begin_frame(snapshot.revision, self.remote.browser_host_details);
+        self.network_diagnostics.observe(&snapshot, self.connected, &self.directory);
         if self.generation != snapshot.generation {
             self.clear_private_view(&context);
             self.generation = snapshot.generation;

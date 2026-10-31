@@ -1,0 +1,76 @@
+name: Windows raw private service WFP SID gate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Cargo.*"
+      - "crates/**"
+      - "apps/privileged/**"
+      - "apps/server/**"
+      - "scripts/network-rewrite-windows-port-gate.py"
+      - "scripts/network_rewrite_wfp_native.py"
+      - "scripts/refactor-windows-normal-user.py"
+      - ".github/workflows/windows-local-port-gate.yml"
+  pull_request:
+    paths:
+      - "Cargo.*"
+      - "crates/**"
+      - "apps/privileged/**"
+      - "apps/server/**"
+      - "scripts/network-rewrite-windows-port-gate.py"
+      - "scripts/network_rewrite_wfp_native.py"
+      - "scripts/refactor-windows-normal-user.py"
+      - ".github/workflows/windows-local-port-gate.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-local-port-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hosted-sdk-wfp-kernel:
+    runs-on: windows-2025
+    timeout-minutes: 65
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+      RUST_BACKTRACE: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      NESTLINK_WFP_KERNEL: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+      - id: msys
+        uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e
+        with:
+          msystem: MSYS
+          install: make perl diffutils gawk sed grep coreutils nasm
+          cache: false
+      - name: Set existing native codec location
+        shell: pwsh
+        run: |
+          $codecRoot = Join-Path $env:RUNNER_TEMP 'nestlink-codecs/x86_64-pc-windows-msvc'
+          "NESTLINK_CODEC_PREFIX=$codecRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Build the locked existing native codecs on Actions
+        run: python scripts/refactor-native-codecs.py build --target x86_64-pc-windows-msvc --cache-dir "${{ runner.temp }}/nestlink-codec-sources" --work-dir "${{ runner.temp }}/nestlink-codecs" --msys-bin "${{ steps.msys.outputs.msys2-location }}/usr/bin" --nasm "${{ steps.msys.outputs.msys2-location }}/usr/bin/nasm.exe"
+      - name: Verify the exact native dependency provenance
+        run: python scripts/refactor-native-codecs.py verify --target x86_64-pc-windows-msvc --prefix "$env:NESTLINK_CODEC_PREFIX"
+      - name: Exercise actual medium SDK, separate administrator and different SID kernel probes
+        run: python -B scripts/network-rewrite-windows-port-gate.py --output "${{ runner.temp }}/windows-local-port-gate-evidence"
+      - name: Retain source/build/execution provenance, identities, WFP IDs, ACLs and physical cleanup evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: local-port-gate-windows-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/windows-local-port-gate-evidence/
+          if-no-files-found: error
+          retention-days: 30

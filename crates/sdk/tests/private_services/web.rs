@@ -247,6 +247,8 @@ impl Browser {
         let (socket, response) =
             tokio_tungstenite::client_async(request, self.connect().await?).await?;
         assert_eq!(response.status(), StatusCode::SWITCHING_PROTOCOLS);
+        assert_eq!(response.headers().get("Connection").ok_or("WebSocket Connection missing")?, "upgrade");
+        assert_eq!(response.headers().get("Upgrade").ok_or("WebSocket Upgrade missing")?, "websocket");
         Ok(socket)
     }
 }
@@ -320,6 +322,19 @@ async fn real_private_web_preserves_cookie_upload_redirect_and_websocket_then_lo
         .into_iter()
         .next()
         .ok_or("entry missing")?;
+    let selection = nestlink_sdk::services::web_launch::PrivateWebLaunchRequest {
+        schema_version: 1, management_origin: f.sdk.management_origin().into(), gateway_installation_id: f.consumer.device_id.clone(), service_id: entry.service.id.clone(), space_id: entry.exposure.space_id.clone(), expected_service_revision: entry.service.revision, expected_exposure_revision: entry.exposure.revision, target_sha256: entry.exposure.target_sha256, origin: format!("https://{}.private.example.net", f.view.id), maximum_bytes: 8192, lifetime_seconds: 20,
+    };
+    let selection = nestlink_sdk::services::web_launch::PrivateWebLaunchRequest::from_json(&serde_json::to_vec(&selection)?)?;
+    selection.validate(f.sdk.management_origin())?;
+    assert!(selection.checks_entry(&f.consumer.device_id, &entry));
+    assert!(!selection.checks_entry(&nestlink_auth::random_id(), &entry));
+    let mut stale = entry.clone(); stale.service.revision += 1;
+    assert!(!selection.checks_entry(&f.consumer.device_id, &stale));
+    let mut stale = entry.clone(); stale.exposure.revision += 1;
+    assert!(!selection.checks_entry(&f.consumer.device_id, &stale));
+    let mut changed = entry.clone(); changed.exposure.target_sha256 = [9; 32];
+    assert!(!selection.checks_entry(&f.consumer.device_id, &changed));
     let choice = LocalProxyServiceChoice::from_local_choice(
         &entry,
         "private-web.nestlink.internal",
@@ -340,6 +355,13 @@ async fn real_private_web_preserves_cookie_upload_redirect_and_websocket_then_lo
         )
         .await?;
     let mut browser = Browser::new(&gateway)?;
+    let original_launch = gateway.launch_url();
+    assert_ne!(gateway.renew_launch_url()?, original_launch);
+    let original_ticket = original_launch.split_once('#').ok_or("old ticket missing")?.1;
+    assert_eq!(browser.request(reqwest::Method::POST, "/.nestlink/session").header("Origin", &browser.origin).header("Authorization", format!("NestLinkTicket {original_ticket}")).send().await?.status(), StatusCode::UNAUTHORIZED);
+    let ready = browser.request(reqwest::Method::GET, "/.nestlink/ready").send().await?;
+    assert_eq!(ready.status(), StatusCode::OK);
+    assert_eq!(ready.text().await?, gateway.owner_id());
     assert_eq!(
         browser
             .request(reqwest::Method::GET, "/me")
@@ -349,6 +371,7 @@ async fn real_private_web_preserves_cookie_upload_redirect_and_websocket_then_lo
         StatusCode::UNAUTHORIZED
     );
     let ticket = browser.exchange(&gateway).await?;
+    assert!(gateway.renew_launch_url().is_err());
     assert_eq!(
         browser
             .request(reqwest::Method::POST, "/.nestlink/session")
@@ -430,7 +453,9 @@ async fn real_private_web_preserves_cookie_upload_redirect_and_websocket_then_lo
         StatusCode::UNAUTHORIZED
     );
     drop(socket);
+    assert!(gateway.renew_launch_url().is_err());
     finish_gateway(&mut gateway).await?;
+    assert!(gateway.renew_launch_url().is_err());
     assert_replacement_rejected(&browser).await?;
     tokio::time::timeout(Duration::from_secs(3), async {
         loop {

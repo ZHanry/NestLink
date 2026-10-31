@@ -11,6 +11,7 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 mod exposure;
+mod private_web;
 
 #[derive(Clone)]
 struct Editor {
@@ -498,6 +499,7 @@ pub(super) fn ServicesPanel(
                 </Show>
             </section>
             <exposure::ServiceExposurePanel api page session_revision auth_failure />
+            <private_web::PrivateWebPanel api session_revision auth_failure active />
             <aside class="tunnel-guide" aria-label=move || t("发布流程", "Publishing steps")>
                 <h2>{move || t("从内网到访问入口", "From internal service to ingress")}</h2>
                 <ol><li><strong>{move || t("配置入口", "Configure ingress")}</strong><p>{move || t("选择已登记的主机、边缘节点和协议。", "Choose a registered host, edge node, and protocol.")}</p></li><li><strong>{move || t("主机确认目标", "Approve the target")}</strong><p>{move || t("在 Windows 客户端选择内网地址并批准。", "Choose and approve the internal address in the Windows client.")}</p></li><li><strong>{move || t("核对发布状态", "Check publication")}</strong><p>{move || t("以服务返回的发布状态为准；保存配置不等于已发布。", "Use the service's reported publication status. Saving a configuration does not publish it.")}</p></li></ol>

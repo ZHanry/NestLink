@@ -3,6 +3,9 @@
 #[cfg(target_os = "linux")]
 #[path = "private_services/raw.rs"]
 mod raw;
+#[cfg(windows)]
+#[path = "private_services/raw_windows.rs"]
+mod raw_windows;
 #[path = "private_services/relay.rs"]
 mod relay;
 #[path = "private_services/web.rs"]

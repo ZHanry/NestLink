@@ -184,6 +184,27 @@ jobs:
             cargo test --locked -p nestlink-app-core --lib runtime::native_quality::tests:: -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $qualityLog
           }
           exit $LASTEXITCODE
+      - name: Check private Web launch boundaries and retained redacted native diagnostics
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          $accessLog = Join-Path $env:RUNNER_TEMP 'nestlink-private-web-and-diagnostic-tests.log'
+          $accessTests = @(
+            @('-p', 'nestlink-sdk', '--lib', 'services::web_gateway::'),
+            @('-p', 'nestlink-sdk', '--lib', 'services::web_launch::'),
+            @('-p', 'nestlink-desktop', '--lib', 'network_diagnostics::tests::')
+          )
+          $accessFailure = 0
+          foreach ($accessTest in $accessTests) {
+            $accessArguments = @('test', '--locked') + $accessTest + @('--', '--show-output', '--test-threads=1', '--color', 'never')
+            if ($env:RUNNER_OS -eq 'Windows') {
+              python scripts/refactor-windows-normal-user.py cargo @accessArguments 2>&1 | Tee-Object -FilePath $accessLog -Append
+            } else {
+              cargo @accessArguments 2>&1 | Tee-Object -FilePath $accessLog -Append
+            }
+            if ($LASTEXITCODE -ne 0) { $accessFailure = 1 }
+          }
+          exit $accessFailure
       - name: Check explicit PCP policy, component ownership and historical local settings
         if: ${{ !cancelled() }}
         shell: pwsh
@@ -352,6 +373,7 @@ jobs:
             ${{ runner.temp }}/nestlink-sdk-network-relay-tests.log
             ${{ runner.temp }}/nestlink-node-relay-metadata-tests.log
             ${{ runner.temp }}/nestlink-native-quality-tests.log
+            ${{ runner.temp }}/nestlink-private-web-and-diagnostic-tests.log
             ${{ runner.temp }}/nestlink-pcp-tests.log
             ${{ runner.temp }}/nestlink-selected-relay-tests.log
             ${{ runner.temp }}/nestlink-ice-quic-tests.log
