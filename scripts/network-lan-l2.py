@@ -51,9 +51,17 @@ def main():
 
     def command(name, argv, timeout=900, env=None, check=True):
         started = time.monotonic()
-        result = subprocess.run(argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                env=env, timeout=timeout, check=False)
         path = output / (name + ".log")
+        try:
+            result = subprocess.run(argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                    env=env, timeout=timeout, check=False)
+        except subprocess.TimeoutExpired as error:
+            path.write_bytes(error.stdout or b"")
+            commands.append({"name": name, "command": argv, "return_code": None,
+                             "timed_out": True, "timeout_seconds": timeout,
+                             "elapsed_seconds": time.monotonic() - started,
+                             "log": path.name, "log_sha256": sha256(path)})
+            raise RuntimeError(name + " timed out; partial same-run log retained") from error
         path.write_bytes(result.stdout)
         commands.append({"name": name, "command": argv, "return_code": result.returncode,
                          "elapsed_seconds": time.monotonic() - started,
@@ -68,6 +76,8 @@ def main():
 
     try:
         assert not subprocess.check_output(["git", "status", "--porcelain=v1", "--untracked-files=all"])
+        command("actual-dnsmasq-version", ["dnsmasq", "--version"], timeout=10)
+        command("actual-iproute-version", ["ip", "-Version"], timeout=10)
         component = command("reviewed-dns-component-boundary", ["cargo", "test", "--locked",
             "--manifest-path", "third-party/mdns-sd/Cargo.toml", "--no-default-features", "--lib",
             "service_info::tests::nestlink_routable_publication_is_default_off_exact_interface_and_reversible",
@@ -102,11 +112,11 @@ def main():
             host = "nlh" + str(index) + suffix
             peer = "nlp" + str(index)
             prefix = "192.168." + str(211 + index)
-            namespaces.append(namespace)
             ip("namespace-create-" + str(index), "netns", "add", namespace)
-            links.append(host)
+            namespaces.append(namespace)
             ip("veth-create-" + str(index), "link", "add", host, "type", "veth", "peer", "name", peer,
                "netns", namespace)
+            links.append(host)
             ip("host-address-" + str(index), "addr", "add", prefix + ".2/24", "dev", host)
             ip("host-up-" + str(index), "link", "set", host, "up")
             ip("namespace-address-" + str(index), "-n", namespace, "addr", "add", prefix + ".3/24", "dev", peer)
