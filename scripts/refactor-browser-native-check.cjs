@@ -16,6 +16,7 @@ const edgeNamespaceUi = require('./lib/refactor-browser-edge-namespace.cjs');
 const networkMembershipUi = require('./lib/refactor-browser-network-membership.cjs');
 const relayAttributesUi = require('./lib/refactor-browser-relay-attributes.cjs');
 const spacesUi = require('./lib/refactor-browser-spaces.cjs');
+const subnetUi = require('./lib/refactor-browser-subnet.cjs');
 
 const args = {};
 for (let i = 2; i < process.argv.length; i += 2) args[process.argv[i].replace(/^--/, '')] = process.argv[i + 1];
@@ -53,6 +54,7 @@ report.edge_namespace_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refact
 report.network_membership_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-network-membership.cjs'));
 report.relay_attributes_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-relay-attributes.cjs'));
 report.spaces_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-spaces.cjs'));
+report.subnet_ui_helper_sha256 = digest(path.join(__dirname, 'lib/refactor-browser-subnet.cjs'));
 const progressPath = args.report.replace(/\.json$/, '') + '-progress.jsonl';
 const progress = fs.openSync(progressPath, 'wx');
 const retainSample = value => {
@@ -154,7 +156,8 @@ async function main() {
       const observedUnix = Date.now();
       if (response.status() >= 400 && new URL(response.url()).pathname.startsWith('/api/')
           && !edgeNamespaceUi.expectedFailure(response) && !networkMembershipUi.expectedFailure(response)
-          && !relayAttributesUi.expectedFailure(response) && !spacesUi.expectedFailure(response)) {
+          && !relayAttributesUi.expectedFailure(response) && !spacesUi.expectedFailure(response)
+          && !subnetUi.expectedFailure(response)) {
         report.api_failures.push({ path: new URL(response.url()).pathname, status: response.status() });
       }
       const operation = new URL(response.url()).pathname;

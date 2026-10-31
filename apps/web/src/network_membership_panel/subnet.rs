@@ -458,7 +458,7 @@ pub(super) fn SubnetMappingPanel(
             <h2>{move || t("子网映射", "Subnet mappings")}</h2>
             <p class="muted">{move || t("为重叠站点发布明确的原网段与别名。网关必须已持有同时覆盖两个网段的独立导出授权；IPv6 当前仅支持保持原前缀。", "Publish an exact original and alias prefix for overlapping sites. The gateway needs an independent route export covering both prefixes. IPv6 currently preserves its original prefix.")}</p>
             <button type="button" class="secondary" disabled=move || busy.get() on:click=move |_| request.run(Action::Load)>{move || t("读取空间与网关", "Read space and gateways")}</button>
-            <label>{move || t("映射编号", "Mapping ID")}<input maxlength="36" disabled=move || busy.get() prop:value=move || mapping_id.get() on:input=move |e| { mapping_id.set(event_target_value(&e)); current.set(None); edited.run(()); } /></label>
+            <label>{move || t("映射编号", "Mapping ID")}<input data-subnet-field="id" maxlength="36" disabled=move || busy.get() prop:value=move || mapping_id.get() on:input=move |e| { mapping_id.set(event_target_value(&e)); current.set(None); edited.run(()); } /></label>
             <button type="button" class="secondary" disabled=move || busy.get() on:click=move |_| { mapping_id.set(nestlink_auth::random_id()); current.set(None); edited.run(()); }>{move || t("生成新的映射编号", "Generate a new mapping ID")}</button>
             <button type="button" class="secondary" disabled=move || busy.get() || policy.get().is_none() on:click=move |_| request.run(Action::Read)>{move || t("读取并核验映射", "Read and verify mapping")}</button>
             <p role="status">{move || message.get()}</p>
@@ -475,12 +475,12 @@ pub(super) fn SubnetMappingPanel(
                     <option value="">{move || t("选择有当前租约的网关", "Choose a gateway with a current lease")}</option>
                     {move || gateways.get().into_iter().map(|g| view! { <option value=g.id.clone()>{format!("{} · {} · {} {}", g.name, g.id, t("租约到期", "Lease ends"), expiry(g.lease_end))}</option> }).collect_view()}
                 </select></label>
-                <label>{move || t("原导出授权编号", "Original route export ID")}<input maxlength="36" disabled=move || busy.get() prop:value=move || export_id.get() on:input=move |e| { export_id.set(event_target_value(&e)); edited.run(()); } /></label>
-                <label>{move || t("原网段 CIDR", "Original prefix CIDR")}<input maxlength="49" disabled=move || busy.get() prop:value=move || original.get() on:input=move |e| { original.set(event_target_value(&e)); edited.run(()); } /></label>
-                <label>{move || t("别名网段 CIDR", "Alias prefix CIDR")}<input maxlength="49" disabled=move || busy.get() prop:value=move || alias.get() on:input=move |e| { alias.set(event_target_value(&e)); edited.run(()); } /></label>
+                <label>{move || t("原导出授权编号", "Original route export ID")}<input data-subnet-field="export" maxlength="36" disabled=move || busy.get() prop:value=move || export_id.get() on:input=move |e| { export_id.set(event_target_value(&e)); edited.run(()); } /></label>
+                <label>{move || t("原网段 CIDR", "Original prefix CIDR")}<input data-subnet-field="original" maxlength="49" disabled=move || busy.get() prop:value=move || original.get() on:input=move |e| { original.set(event_target_value(&e)); edited.run(()); } /></label>
+                <label>{move || t("别名网段 CIDR", "Alias prefix CIDR")}<input data-subnet-field="alias" maxlength="49" disabled=move || busy.get() prop:value=move || alias.get() on:input=move |e| { alias.set(event_target_value(&e)); edited.run(()); } /></label>
                 <label>{move || t("请求有效期（1–15分钟，从读取空间时算起）", "Requested lifetime (1–15 minutes from the space read)")}<input type="number" min="1" max="15" disabled=move || busy.get() prop:value=move || minutes.get() on:input=move |e| { minutes.set(event_target_value(&e)); edited.run(()); } /></label>
                 <p class="muted">{move || t("实际期限取映射、原导出与网关当前租约的交集。修改草稿后须重新确认；更新已有映射请使用新编号。", "The actual deadline is limited by the mapping, original export and current gateway lease. Confirm again after editing. Use a new ID to replace an existing mapping.")}</p>
-                <label><input type="checkbox" disabled=move || busy.get() prop:checked=move || approved.get() on:change=move |e| approved.set(event_target_checked(&e)) />{move || t("确认发布上述精确映射的管理授权", "Confirm publication authority for this exact mapping")}</label>
+                <label><input data-subnet-field="approval" type="checkbox" disabled=move || busy.get() prop:checked=move || approved.get() on:change=move |e| approved.set(event_target_checked(&e)) />{move || t("确认发布上述精确映射的管理授权", "Confirm publication authority for this exact mapping")}</label>
                 <button type="button" class="primary" disabled=move || busy.get() || !approved.get() || current.get().is_some() on:click=move |_| request.run(Action::Issue)>{move || t("签发新映射", "Issue new mapping")}</button>
             </Show>
         </section>

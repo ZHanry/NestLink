@@ -63,6 +63,9 @@ def completed_receipts():
         "spaces_ui": {field: True for field in RUNNER.SPACES_UI_FIELDS},
         "spaces_ui_helper_sha256": RUNNER.sha256(
             (ROOT / "scripts/lib/refactor-browser-spaces.cjs").read_bytes()),
+        "subnet_ui": {field: True for field in RUNNER.SUBNET_UI_FIELDS},
+        "subnet_ui_helper_sha256": RUNNER.sha256(
+            (ROOT / "scripts/lib/refactor-browser-subnet.cjs").read_bytes()),
         "permit_response_observer": {"passed": True, "closed": True, "listeners_removed": True,
             "pending": 0, "errors": [], "session_owner": {
                 **{key: True for key in ("session_created", "prepared_before_navigation",
@@ -131,6 +134,19 @@ class NativeRunnerTests(unittest.TestCase):
         receipts = completed_receipts()
         receipts[0]["spaces_ui_helper_sha256"] = "0" * 64
         self.assertIn("spaces-helper-source", RUNNER.validate_receipts(*receipts))
+
+    def test_subnet_requires_every_case_and_exact_helper_source(self):
+        for replacement in (None, {}, {"passed": True}):
+            receipts = completed_receipts()
+            receipts[0]["subnet_ui"] = replacement
+            self.assertTrue(any(item.startswith("subnet-") for item in RUNNER.validate_receipts(*receipts)))
+        for field in RUNNER.SUBNET_UI_FIELDS:
+            receipts = completed_receipts()
+            receipts[0]["subnet_ui"][field] = False
+            self.assertIn("subnet-" + field, RUNNER.validate_receipts(*receipts))
+        receipts = completed_receipts()
+        receipts[0]["subnet_ui_helper_sha256"] = "0" * 64
+        self.assertIn("subnet-helper-source", RUNNER.validate_receipts(*receipts))
 
     def test_membership_requires_every_real_browser_case_and_helper_source(self):
         for replacement in (None, {}, {"passed": True}):

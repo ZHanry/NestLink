@@ -2,6 +2,7 @@
 'use strict';
 const { randomUUID } = require('node:crypto');
 const { prepareManagementResponseObservation } = require('./refactor-browser-response-observer.cjs');
+const subnetUi = require('./refactor-browser-subnet.cjs');
 const PANEL = '[aria-label="Network spaces"]';
 const field = name => PANEL + ' [data-space-field="' + name + '"]';
 let active = null;
@@ -117,6 +118,12 @@ async function run(page, ready, report, { engine, disconnectedEvent } = {}) {
     check(joinBody.expected_revision === created.revision && joinBody.expected_membership_epoch === 0,
       'Device join did not use current revision and explicit epoch zero');
     facts.created_and_device_joined = true;
+
+    facts.stage = 'subnet_management_lifecycle';
+    await subnetUi.run(page, created.space_id, report);
+    await security(page);
+    await action(page, 'Read my spaces', 'GET', '/api/v3/network/spaces');
+    await read(page, name);
 
     facts.stage = 'one_use_guest_invitation';
     await page.select(field('role'), 'guest');
