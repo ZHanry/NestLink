@@ -202,6 +202,16 @@ async fn actual_quic_signed_refresh_keeps_publication_alive_past_original_issuer
             .sign_service_issuer_delegation(&f.issuer(at + 800, at + 6500))?,
     };
     let sent = renewal.clone();
+    let mut progress = Vec::new();
+    for (sequence, offset) in [(3, 1600), (4, 2400)] {
+        let mut claims = next.clone();
+        claims.lease_sequence = sequence;
+        claims.issued_at_unix_ms = at + offset;
+        progress.push((offset, ServiceLeaseRenewal {
+            lease: f.service.sign(&claims)?,
+            issuer: renewal.issuer.clone(),
+        }));
+    }
     let mut server = Abort(tokio::spawn(async move {
         let incoming = endpoint
             .accept()
@@ -215,6 +225,13 @@ async fn actual_quic_signed_refresh_keeps_publication_alive_past_original_issuer
         let _: u8 = read_message(&mut recv).await?;
         tokio::time::sleep_until(began + Duration::from_millis(800)).await;
         write_message(&mut send, &sent).await?;
+        // A healthy edge supplies continuing increasing signed progress. One
+        // response at 800ms cannot keep a silent edge healthy past its fixed
+        // two-second observation cap, even if its delegated lease lasts longer.
+        for (offset, renewal) in progress {
+            tokio::time::sleep_until(began + Duration::from_millis(offset)).await;
+            write_message(&mut send, &renewal).await?;
+        }
         connection.closed().await;
         endpoint.close(0u32.into(), b"issuer test done");
         endpoint.wait_idle().await;
@@ -258,7 +275,7 @@ async fn actual_quic_signed_refresh_keeps_publication_alive_past_original_issuer
             .lease_sequence,
         2
     );
-    assert_eq!(publication.handle().lease()?.claims().lease_sequence, 2);
+    assert_eq!(publication.handle().lease()?.claims().lease_sequence, 4);
     assert!(!runtime.0.is_finished());
     stop.send_replace(true);
     let report = tokio::time::timeout(Duration::from_secs(3), &mut runtime.0).await??;

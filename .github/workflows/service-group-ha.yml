@@ -131,6 +131,28 @@ jobs:
           (output / 'edge-progress-test-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
           print(text)
           assert passed, 'Exact signed edge-progress regression did not pass once; same-run log retained'
+      - name: Verify actual QUIC signed progress survives the original issuer expiry
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, subprocess
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'nestlink-service-deadline-evidence'
+          selected = 'services::publication::issuer::tests::actual_quic_signed_refresh_keeps_publication_alive_past_original_issuer_deadline'
+          command = ['cargo', 'test', '--locked', '-p', 'nestlink-sdk', '--lib', selected,
+              '--', '--exact', '--nocapture', '--color', 'never']
+          result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+          (output / 'issuer-progress-test.log').write_bytes(result.stdout)
+          text = result.stdout.decode(errors='replace')
+          passed = (result.returncode == 0 and ('test ' + selected + ' ... ok') in text
+              and 'test result: ok. 1 passed; 0 failed; 0 ignored;' in text)
+          receipt = {'source_revision': os.environ['GITHUB_SHA'],
+              'workflow_revision': os.environ['GITHUB_WORKFLOW_SHA'],
+              'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'runner_environment': os.environ['RUNNER_ENVIRONMENT'],
+              'command': command, 'return_code': result.returncode,
+              'log_sha256': hashlib.sha256(result.stdout).hexdigest(), 'passed': passed}
+          (output / 'issuer-progress-test-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          print(text)
+          assert passed, 'Exact actual QUIC issuer/progress regression did not pass once; same-run log retained'
       - name: Build exact source and execute real HTTP HTTPS TCP UDP failover
         run: |
           python3 -B scripts/network-rewrite-service-group.py \

@@ -86,6 +86,9 @@ pub(super) async fn poll(
     authorization: Arc<TurnAuthorization>,
     started: Instant,
 ) -> Result<(), Error> {
+    if !config.roles.contains(&(nestlink_protocol::NodeRole::NodeRelay as i32)) {
+        return std::future::pending().await;
+    }
     let client = reqwest::Client::builder()
         .timeout(Duration::from_millis(700))
         .redirect(reqwest::redirect::Policy::none())
