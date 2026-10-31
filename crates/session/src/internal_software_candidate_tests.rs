@@ -133,6 +133,7 @@ fn candidate(
             host_device_id: claims.host_device_id.clone(),
             format: format.encode().unwrap(),
             format_sha256: format.digest().unwrap(),
+            additional_formats: Vec::new(),
         };
     let permit = verified(&signer, &claims);
     let local_binding =

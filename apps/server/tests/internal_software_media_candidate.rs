@@ -54,7 +54,7 @@ fn announce(
     identity: &InstallationIdentity,
     id: &str,
     direction: MediaDirection,
-    format: VideoFormat,
+    formats: Vec<Vec<u8>>,
     now: u64,
 ) -> Result {
     let challenge = store.enrollment_challenge(principal, now)?;
@@ -73,7 +73,7 @@ fn announce(
                 adapter_luid: None,
                 driver_version: None,
             },
-            formats: vec![format.encode()?],
+            formats,
         },
         signature: String::new(),
     };
@@ -115,6 +115,13 @@ async fn call(
 #[tokio::test]
 async fn internal_candidate_http_requires_scope_auth_first_approval_and_both_renewal_proofs()
 -> Result {
+    candidate_http(false).await
+}
+#[tokio::test]
+async fn internal_candidate_http_freezes_all_explicit_lower_formats_through_approval_and_renewal() -> Result {
+    candidate_http(true).await
+}
+async fn candidate_http(adaptive: bool) -> Result {
     let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
     let deployment = random_id();
     let mut store = Store::in_memory(&deployment)?;
@@ -137,13 +144,23 @@ async fn internal_candidate_http_requires_scope_auth_first_approval_and_both_ren
     let cid = enroll(&mut store, &principal, &controller, now)?;
     let hid = enroll(&mut store, &principal, &host, now)?;
     let format = VideoFormat::legacy_h264(31, 320, 240, FrameRate::new(30, 1)?, 2000)?;
+    let additional_formats = if adaptive { vec![
+        VideoFormat::legacy_h264(31, 320, 240, FrameRate::new(22, 1)?, 1500)?.encode()?,
+        VideoFormat::legacy_h264(31, 160, 120, FrameRate::new(15, 1)?, 1000)?.encode()?,
+    ] } else { Vec::new() };
+    let policy = InternalSoftwareMediaCandidate {
+        deployment_id: deployment.clone(), account_id: principal.account_id.clone(),
+        controller_device_id: cid.clone(), host_device_id: hid.clone(),
+        format: format.encode()?, format_sha256: format.digest()?, additional_formats,
+    };
+    let exact_formats = policy.formats()?;
     announce(
         &mut store,
         &principal,
         &controller,
         &cid,
         MediaDirection::Decode,
-        format,
+        exact_formats.clone(),
         now,
     )?;
     announce(
@@ -152,17 +169,9 @@ async fn internal_candidate_http_requires_scope_auth_first_approval_and_both_ren
         &host,
         &hid,
         MediaDirection::Encode,
-        format,
+        exact_formats.clone(),
         now,
     )?;
-    let policy = InternalSoftwareMediaCandidate {
-        deployment_id: deployment.clone(),
-        account_id: principal.account_id.clone(),
-        controller_device_id: cid.clone(),
-        host_device_id: hid.clone(),
-        format: format.encode()?,
-        format_sha256: format.digest()?,
-    };
     let request = MediaRemoteRequest {
         media_format_version: 2,
         request: RemoteRequest {
@@ -233,6 +242,7 @@ async fn internal_candidate_http_requires_scope_auth_first_approval_and_both_ren
     .await?;
     assert_eq!(status, StatusCode::OK);
     let scope: FrozenMediaScope = serde_json::from_value(scope)?;
+    assert_eq!(scope.formats, exact_formats);
     let choice = MediaApprovalChoice {
         choice: ApprovalChoice {
             approved: true,

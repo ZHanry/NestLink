@@ -126,6 +126,9 @@ impl NativeSessionConfig {
             self.supported_capabilities
                 .push(nestlink_protocol::media_authority::FORMAT_CAPABILITY.into());
         }
+        if let Some(policy) = self.internal_software_media_candidate.clone() {
+            self = self.with_internal_software_media_candidate(policy)?;
+        }
         Ok(self)
     }
     /// Explicit operator configuration; never exposed by the ordinary remote UI.
@@ -151,6 +154,10 @@ impl NativeSessionConfig {
                 "candidate target differs from configured CPU target",
             ));
         }
+        // An existing one-format candidate must not begin advertising the
+        // convenience adaptive ladder. More formats require explicit policy.
+        self.media_provider = Some(crate::NativeMediaProvider::cpu_software(target)?
+            .with_exact_formats(&policy.format_set().map_err(std::io::Error::other)?)?);
         self.internal_software_media_candidate = Some(policy);
         Ok(self)
     }
@@ -170,7 +177,7 @@ impl NativeSessionConfig {
                 account,
                 controller,
                 host,
-                std::slice::from_ref(&policy.format),
+                &policy.formats().ok()?,
             )
             .is_err()
         {

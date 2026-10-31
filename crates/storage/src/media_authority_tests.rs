@@ -266,6 +266,7 @@ impl MediaLifecycle {
                 host_device_id: fixture.host_id.clone(),
                 format: fixture.format.encode()?,
                 format_sha256: fixture.format.digest()?,
+                additional_formats: Vec::new(),
             };
             fixture.store = fixture
                 .store

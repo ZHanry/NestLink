@@ -240,6 +240,31 @@ impl NativeMediaProvider {
     pub fn target(&self) -> VideoConfig {
         self.target
     }
+    /// Explicit candidate policy replaces the convenience ladder with exactly
+    /// its reviewed formats. Every target still needs its own actual probe.
+    pub(crate) fn with_exact_formats(
+        mut self,
+        formats: &nestlink_protocol::media_format::FormatSet,
+    ) -> io::Result<Self> {
+        if formats.formats().is_empty() || formats.formats().len() > 3 {
+            return Err(io::Error::other("candidate requires at most three exact targets"));
+        }
+        let mut targets = Vec::with_capacity(formats.formats().len());
+        for format in formats.formats() {
+            let config = nestlink_media_session::h264_display_config(*format, self.target.width, self.target.height)?;
+            if config.fps > self.target.fps || config.bitrate_kbps > self.target.bitrate_kbps {
+                return Err(io::Error::other("candidate exceeds explicit CPU ceiling"));
+            }
+            Self::cpu_software(config)?;
+            targets.push(config);
+        }
+        if !targets.iter().any(|config| (config.width,config.height,config.fps,config.bitrate_kbps)
+            == (self.target.width,self.target.height,self.target.fps,self.target.bitrate_kbps)) {
+            return Err(io::Error::other("candidate omits original explicit CPU ceiling"));
+        }
+        self.targets = targets.into();
+        Ok(self)
+    }
     pub fn fallback_reason(&self) -> Option<String> {
         self.state
             .lock()
@@ -672,6 +697,21 @@ mod tests {
             ..target
         })?;
         assert_eq!(minimum.targets.len(), 1);
+        Ok(())
+    }
+    #[test]
+    fn candidate_provider_keeps_old_single_target_and_uses_only_explicit_lower_targets() -> io::Result<()> {
+        use nestlink_protocol::media_format::{FormatSet,FrameRate};
+        let target=VideoConfig {width:320,height:240,fps:30,bitrate_kbps:2000};
+        let primary=VideoFormat::legacy_h264(31,320,240,FrameRate::new(30,1).map_err(io::Error::other)?,2000).map_err(io::Error::other)?;
+        let low=VideoFormat::legacy_h264(31,160,120,FrameRate::new(15,1).map_err(io::Error::other)?,1000).map_err(io::Error::other)?;
+        let single=NativeMediaProvider::cpu_software_adaptive(target)?.with_exact_formats(&FormatSet::new(vec![primary]).map_err(io::Error::other)?)?;
+        assert_eq!(single.targets.len(),1);
+        assert_eq!((single.targets[0].width,single.targets[0].height,single.targets[0].fps,single.targets[0].bitrate_kbps),(320,240,30,2000));
+        let multiple=NativeMediaProvider::cpu_software(target)?.with_exact_formats(&FormatSet::new(vec![primary,low]).map_err(io::Error::other)?)?;
+        assert_eq!(multiple.targets.len(),2);
+        assert!(multiple.targets.iter().any(|value|(value.width,value.height,value.fps,value.bitrate_kbps)==(160,120,15,1000)));
+        assert!(NativeMediaProvider::cpu_software(target)?.with_exact_formats(&FormatSet::new(vec![low]).map_err(io::Error::other)?).is_err());
         Ok(())
     }
     // Synthetic results test registry transitions only. They are not evidence of

@@ -14,6 +14,10 @@ pub struct InternalSoftwareMediaCandidate {
     /// Exact canonical observed format, not a width/FPS preset or capability range.
     pub format: Vec<u8>,
     pub format_sha256: [u8; 32],
+    /// At most two additional exact, independently observed lower CPU targets.
+    /// Omission retains the original single-format policy.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub additional_formats: Vec<Vec<u8>>,
 }
 fn denied() -> ContractError {
     ContractError::new(
@@ -47,7 +51,39 @@ impl InternalSoftwareMediaCandidate {
         {
             return Err(denied());
         }
+        if self.additional_formats.len() > 2 {
+            return Err(denied());
+        }
+        let mut exact = vec![format];
+        for encoded in &self.additional_formats {
+            let lower = VideoFormat::decode(encoded)?;
+            if lower.codec != format.codec || lower.profile != format.profile
+                || lower.chroma != format.chroma || lower.bit_depth != format.bit_depth
+                || lower.color != format.color || lower.width > format.width || lower.height > format.height
+                || u64::from(lower.width) * u64::from(format.height) != u64::from(lower.height) * u64::from(format.width)
+                || lower.frame_rate.denominator != 1
+                || !(1..=format.frame_rate.numerator).contains(&lower.frame_rate.numerator)
+                || !(64..=format.max_kbps).contains(&lower.max_kbps)
+                || !lower.width.is_multiple_of(2) || !lower.height.is_multiple_of(2)
+            {
+                return Err(denied());
+            }
+            exact.push(lower);
+        }
+        let set = FormatSet::new(exact)?;
+        if set.formats().len() != 1 + self.additional_formats.len() {
+            return Err(denied());
+        }
         Ok(format)
+    }
+    pub fn format_set(&self) -> Result<FormatSet, ContractError> {
+        let primary = self.validate()?;
+        FormatSet::new(std::iter::once(Ok(primary)).chain(
+            self.additional_formats.iter().map(|bytes| VideoFormat::decode(bytes))
+        ).collect::<Result<Vec<_>, _>>()?)
+    }
+    pub fn formats(&self) -> Result<Vec<Vec<u8>>, ContractError> {
+        self.format_set()?.formats().iter().map(|format| format.encode()).collect()
     }
     pub fn authorize_scope(
         &self,
@@ -57,12 +93,12 @@ impl InternalSoftwareMediaCandidate {
         host: &str,
         formats: &[Vec<u8>],
     ) -> Result<(), ContractError> {
-        self.validate()?;
+        let exact = self.formats()?;
         if deployment != self.deployment_id
             || account != self.account_id
             || controller != self.controller_device_id
             || host != self.host_device_id
-            || formats != std::slice::from_ref(&self.format)
+            || formats != exact.as_slice()
         {
             return Err(denied());
         }
@@ -101,7 +137,7 @@ impl InternalSoftwareMediaCandidate {
             return Err(denied());
         }
         let signed = crate::media_authority::permit_formats(claims)?.ok_or_else(denied)?;
-        if signed != FormatSet::new(vec![self.validate()?])? {
+        if signed != self.format_set()? {
             return Err(denied());
         }
         Ok(())
@@ -120,7 +156,7 @@ impl InternalSoftwareMediaCandidate {
             || value.probe.backend != "cpu-software"
             || value.probe.adapter_luid.is_some()
             || value.probe.driver_version.is_some()
-            || value.formats.as_slice() != std::slice::from_ref(&self.format)
+            || value.formats != self.formats()?
         {
             return Err(denied());
         }
@@ -144,6 +180,7 @@ mod tests {
             host_device_id: "44444444-4444-4444-8444-444444444444".into(),
             format: format.encode()?,
             format_sha256: format.digest()?,
+            additional_formats: Vec::new(),
         };
         policy.validate()?;
         // Actual principal/local identity are separate inputs; policy values
@@ -194,6 +231,8 @@ mod tests {
             );
         }
         let serialized = serde_json::to_value(&policy)?;
+        assert!(serialized.get("additional_formats").is_none());
+        assert_eq!(serde_json::from_value::<InternalSoftwareMediaCandidate>(serialized.clone())?, policy);
         for field in [
             "deployment_id",
             "account_id",
@@ -222,6 +261,34 @@ mod tests {
         bad.format = vp8.encode()?;
         bad.format_sha256 = vp8.digest()?;
         assert!(bad.validate().is_err());
+        Ok(())
+    }
+    #[test]
+    fn explicit_finite_candidate_requires_the_entire_exact_set_within_original_ceiling() -> Result<(), Box<dyn std::error::Error>> {
+        use crate::media_format::FrameRate;
+        let primary=VideoFormat::legacy_h264(31,320,240,FrameRate::new(30,1)?,2000)?;
+        let low=VideoFormat::legacy_h264(31,160,120,FrameRate::new(15,1)?,1000)?;
+        let policy=InternalSoftwareMediaCandidate {
+            deployment_id:"11111111-1111-4111-8111-111111111111".into(),
+            account_id:"22222222-2222-4222-8222-222222222222".into(),
+            controller_device_id:"33333333-3333-4333-8333-333333333333".into(),
+            host_device_id:"44444444-4444-4444-8444-444444444444".into(),
+            format:primary.encode()?,format_sha256:primary.digest()?,additional_formats:vec![low.encode()?],
+        };
+        let exact=policy.formats()?;
+        policy.authorize_scope(&policy.deployment_id,&policy.account_id,&policy.controller_device_id,&policy.host_device_id,&exact)?;
+        for incomplete in [vec![primary.encode()?],vec![low.encode()?],Vec::new()] {
+            assert!(policy.authorize_scope(&policy.deployment_id,&policy.account_id,&policy.controller_device_id,&policy.host_device_id,&incomplete).is_err());
+        }
+        for invalid in [primary,
+            VideoFormat::legacy_h264(31,320,120,FrameRate::new(15,1)?,1000)?,
+            VideoFormat::legacy_h264(31,160,120,FrameRate::new(60,1)?,1000)?,
+            VideoFormat::legacy_h264(31,160,120,FrameRate::new(15,1)?,3000)?,
+            VideoFormat::legacy_h264(31,640,480,FrameRate::new(30,1)?,2000)?,
+        ] {
+            let mut bad=policy.clone();bad.additional_formats=vec![invalid.encode()?];assert!(bad.validate().is_err());
+        }
+        let mut excessive=policy;excessive.additional_formats=vec![low.encode()?;3];assert!(excessive.validate().is_err());
         Ok(())
     }
 }

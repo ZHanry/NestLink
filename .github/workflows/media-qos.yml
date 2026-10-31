@@ -66,6 +66,14 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-storage --test control native_receiver_qos:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/media-qos-evidence/report-negotiation-tests.log"
+      - name: Require finite explicit candidate policy and original HTTP approval
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-protocol --lib internal_software_media_candidate:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/media-qos-evidence/candidate-policy-tests.log"
+          cargo test --locked -p nestlink-server --test internal_software_media_candidate -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/media-qos-evidence/candidate-http-tests.log"
+          cargo test --locked -p nestlink-app-core --lib native_media_provider::tests:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/media-qos-evidence/candidate-provider-tests.log"
       - name: Exercise original channel queues and cleanup
         if: ${{ !cancelled() }}
         shell: bash

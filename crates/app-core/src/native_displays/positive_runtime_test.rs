@@ -1,5 +1,6 @@
-//! Debug-only signed fixture. Encoded bytes and both direction announcements
-//! come from actual software MF owners; no synthetic SPS or decoder is used.
+//! Debug-only Core fixture using ordinary explicit candidate activation.
+//! Encoded bytes and both direction announcements come from actual software MF
+//! owners; no synthetic SPS or decoder is used.
 use super::*;
 use nestlink_auth::random_id;
 use nestlink_identity::{InstallationIdentity, PermitSigner, verify_permit};
@@ -535,21 +536,36 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
         )
         .is_err()
     );
-    let mut host_session = Session::activate_media_runtime_regression(
+    let primary = *set.formats().iter().find(|format| {
+        (format.width,format.height,format.frame_rate.numerator,format.max_kbps)
+            == (config.width,config.height,config.fps,config.bitrate_kbps)
+    }).ok_or("actual primary probe target missing")?;
+    let policy=nestlink_protocol::internal_software_media_candidate::InternalSoftwareMediaCandidate {
+        deployment_id:host_binding.deployment_id.clone(),account_id:host_binding.account_id.clone(),
+        controller_device_id:host_binding.controller_device_id.clone(),host_device_id:host_binding.host_device_id.clone(),
+        format:primary.encode()?,format_sha256:primary.digest()?,
+        additional_formats:set.formats().iter().filter(|format| **format!=primary)
+            .map(|format|format.encode()).collect::<Result<Vec<_>,_>>()?,
+    };
+    host_binding.media=Some(host_binding.media.take().ok_or("host local evidence absent")?
+        .with_internal_software_candidate(policy.clone(),&host_permit,&encode,now.unix_ms)?);
+    controller_binding.media=Some(controller_binding.media.take().ok_or("controller local evidence absent")?
+        .with_internal_software_candidate(policy,&controller_permit,&decode,now.unix_ms)?);
+    // Use ordinary production activation with the exact local opt-in policy.
+    // The debug fixture is still only the Core assembly and ACK barrier.
+    let mut host_session = Session::activate(
         host_permit,
         host_binding,
         nestlink_protocol::Path::Direct,
         now.monotonic_ms,
         now,
-        nestlink_session::MEDIA_REGRESSION_REQUEST_ID,
     )?;
-    let mut controller_session = Session::activate_media_runtime_regression(
+    let mut controller_session = Session::activate(
         controller_permit,
         controller_binding,
         nestlink_protocol::Path::Direct,
         now.monotonic_ms,
         now,
-        nestlink_session::MEDIA_REGRESSION_REQUEST_ID,
     )?;
     let (h, host_bridge) = tokio::io::duplex(1 << 20);
     let (c, controller_bridge) = tokio::io::duplex(1 << 20);
