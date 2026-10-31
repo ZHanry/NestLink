@@ -12,7 +12,7 @@ use nestlink_identity::network::{
     NetworkVerification, VerifiedMembership, VerifiedNetworkGrant, VerifiedNetworkPath,
 };
 use nestlink_protocol::{
-    network::{Direction, GrantClaims, IpPrefix, IpProtocol, NetworkAccessClaims, PeerId, Purpose},
+    network::{Direction, GrantClaims, IpPrefix, NetworkAccessClaims, PeerId, Purpose},
     spaces::addressing::SpaceAddressDirectory,
 };
 use std::{

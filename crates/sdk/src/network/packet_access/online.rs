@@ -176,7 +176,9 @@ impl OnlinePacketAccess {
             return Err(SdkError::Trust);
         }
         let revoked = BTreeSet::new();
-        let context = self.context(&revoked)?;
+        let pin = self.pin.clone();
+        let deployment = self.deployment.clone();
+        let context = Self::context(&pin, &deployment, self.policy.claims.scope.policy_epoch, &revoked)?;
         let source = PacketPeerAuthority::from_directory(
             &context,
             self.policy.source.member.clone(),
@@ -195,7 +197,9 @@ impl OnlinePacketAccess {
         Ok(())
     }
     fn context<'a>(
-        &'a self,
+        pin: &'a PinnedNetworkSpace,
+        deployment: &'a str,
+        policy_epoch: u64,
         revoked: &'a BTreeSet<String>,
     ) -> Result<NetworkVerification<'a>, SdkError> {
         let now_ms = u64::try_from(
@@ -206,10 +210,10 @@ impl OnlinePacketAccess {
         )
         .map_err(io::Error::other)?;
         Ok(NetworkVerification {
-            authority_key: self.pin.authority_key(),
-            deployment_id: &self.deployment,
-            space_id: self.pin.space_id(),
-            policy_epoch: self.policy.claims.scope.policy_epoch,
+            authority_key: pin.authority_key(),
+            deployment_id: deployment,
+            space_id: pin.space_id(),
+            policy_epoch,
             now_ms,
             revoked_grant_ids: revoked,
         })

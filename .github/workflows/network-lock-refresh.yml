@@ -106,6 +106,12 @@ jobs:
                       result = subprocess.run(command, stdout=stream, stderr=subprocess.STDOUT, check=False)
                   commands.append({'argv': command, 'return_code': result.returncode})
                   assert result.returncode == 0, 'Reviewed encoding selection failed'
+                  command = ['cargo', 'update', '-p', 'spin', '--precise', '0.9.8',
+                             '--manifest-path', str(manifest)]
+                  with (output / ('command-' + str(len(commands)) + '.log')).open('wb') as stream:
+                      result = subprocess.run(command, stdout=stream, stderr=subprocess.STDOUT, check=False)
+                  commands.append({'argv': command, 'return_code': result.returncode})
+                  assert result.returncode == 0, 'Reviewed spin selection failed'
               shutil.copyfile(lock, output / 'cargo-generated.lock')
               # Cargo can reselect an already-locked compatible windows-sys
               # edge even with --workspace. Preserve existing external blocks.
@@ -117,6 +123,15 @@ jobs:
                                     for part in parts[1:]]
               _, original_blocks = blocks(before_bytes.decode())
               header, generated_blocks = blocks(lock.read_text())
+              if scope == 'product':
+                  # Adding a second identity requires Cargo's version selector
+                  # on old edges. Keep their exact old package, not the new
+                  # compatible-looking provider dependency. No semantic edge
+                  # changes are authorized by this textual qualification.
+                  for name, version in [('libloading', '0.8.9'), ('nix', '0.26.4')]:
+                      assert [item['version'] for item in before if item['name'] == name] == [version]
+                      original_blocks = [(key, part.replace('\n "' + name + '",\n',
+                          '\n "' + name + ' ' + version + '",\n')) for key, part in original_blocks]
               original_by_key = dict(original_blocks)
               reviewed_feature_edges = {
                   ('petgraph', '0.8.3'): {'serde'},
@@ -128,6 +143,11 @@ jobs:
                   # the retained derivation receipt before importing a lock.
                   ('reqwest', '0.12.28'): {'cookie', 'cookie_store'},
               }
+              if scope == 'product':
+                  # flume's default fairness source activates fastrand's
+                  # maintained entropy feature, using the existing identity.
+                  assert ('getrandom', '0.4.3', 'registry+https://github.com/rust-lang/crates.io-index') in existing
+                  reviewed_feature_edges[('fastrand', '2.5.0')] = {'getrandom 0.4.3'}
               feature_keys = set()
               for key, part in generated_blocks:
                   additions = reviewed_feature_edges.get(key[:2])
