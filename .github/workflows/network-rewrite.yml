@@ -233,6 +233,18 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-sdk --test space_addressing -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-space-address-sdk-tests.log"
+      - name: Exercise private HTTP TCP UDP access, shared accounting and revocation
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-sdk --test private_services -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-private-service-sdk-tests.log"
+      - name: Exercise product original-route recovery, old input release and fresh video
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-app-core --test native_session route_set:: -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-route-set-product-tests.log"
       - name: Retain exact-source SDK and registered-chain business logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -243,6 +255,8 @@ jobs:
             ${{ runner.temp }}/network-chain-registered-tests.log
             ${{ runner.temp }}/network-route-set-sdk-tests.log
             ${{ runner.temp }}/network-space-address-sdk-tests.log
+            ${{ runner.temp }}/network-private-service-sdk-tests.log
+            ${{ runner.temp }}/network-route-set-product-tests.log
           if-no-files-found: error
           retention-days: 30
       - name: Retain original tuples, STUN mapping, business bytes and physical cleanup evidence
