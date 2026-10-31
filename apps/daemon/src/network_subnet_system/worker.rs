@@ -1,6 +1,6 @@
 use super::*;
 use std::os::unix::fs::MetadataExt;
-use tokio::{io::AsyncReadExt,net::UnixListener};
+use tokio::{io::{AsyncReadExt,AsyncWriteExt},net::UnixListener};
 
 #[derive(clap::Args)]
 pub(crate) struct SubnetWorkerArgs {
@@ -14,7 +14,13 @@ pub(crate) async fn run(args:SubnetWorkerArgs)->Result {
     let original=std::fs::metadata(format!("/proc/{}/ns/net",plan.process.pid()))?;
     if current.dev()==original.dev()&&current.ino()==original.ino() {return Err(io::Error::other("subnet worker must start inside a fresh isolated namespace").into());}
     let namespace=journal::Namespace{device:current.dev(),inode:current.ino(),worker:process_identity(std::process::id()).await?};
-    let mut input=tokio::io::stdin();let mut output=tokio::io::stdout();
+    // Tokio's generic stdin uses an uncancellable blocking read. Owning the
+    // real anonymous control pipe as an async Unix receiver lets normal owner
+    // EOF terminate this worker without a runtime-shutdown deadlock.
+    let control=rustix::io::dup(std::io::stdin())?;
+    rustix::fs::fcntl_setfl(&control,rustix::fs::OFlags::NONBLOCK)?;
+    let mut input=tokio::net::unix::pipe::Receiver::from_owned_fd(control)?;let mut output=tokio::io::stdout();
+    output.write_all(pipe::CONTROL_MAGIC).await?;output.flush().await?;
     pipe::frame(&mut output,&serde_json::to_vec(&namespace)?).await?;
     if tokio::time::timeout(Duration::from_secs(3),input.read_u8()).await??!=0xa5 {return Err(io::Error::other("subnet namespace was not durably admitted by its original root helper").into());}
     let durable=journal::Store::read_path(&args.journal)?;
@@ -50,7 +56,7 @@ pub(crate) async fn run(args:SubnetWorkerArgs)->Result {
     parent.sync()?;
     result
 }
-async fn serve(plan:&Plan,receipt:&Receipt,device:&tun_rs::AsyncDevice,listener:&UnixListener,input:&mut tokio::io::Stdin)->Result {
+async fn serve(plan:&Plan,receipt:&Receipt,device:&tun_rs::AsyncDevice,listener:&UnixListener,input:&mut (impl tokio::io::AsyncRead+Unpin))->Result {
     let wall=system_wall_ms()?;let remaining=plan.expires_at_ms.checked_sub(wall).filter(|remaining|*remaining>0).ok_or_else(||io::Error::other("original subnet deadline expired before handoff"))?;
     let deadline=tokio::time::Instant::now()+Duration::from_millis(remaining);
     let mut end=[0_u8;1];
@@ -82,7 +88,7 @@ async fn serve(plan:&Plan,receipt:&Receipt,device:&tun_rs::AsyncDevice,listener:
             if observed.elapsed()>=Duration::from_secs(1) {if configuration(plan).await?!=expected {return Err(io::Error::other("exact owned subnet kernel configuration changed").into());}observed=tokio::time::Instant::now();}
         },
         packet=reader.frame()=>{
-            let packet=packet?;
+            let packet=match packet {Ok(packet)=>packet,Err(error) if error.kind()==io::ErrorKind::UnexpectedEof=>return Ok(()),Err(error)=>return Err(error.into())};
             if packet.len()>nestlink_sdk::network::packet_access::PACKET_MTU {return Err(io::Error::other("root subnet provider refuses oversized IP injection").into());}
             let written=tokio::time::timeout(Duration::from_millis(250),device.send(&packet)).await??;
             if written!=packet.len() {return Err(io::Error::other("root subnet provider requires complete IP injection").into());}

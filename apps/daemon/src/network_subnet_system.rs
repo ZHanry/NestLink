@@ -8,6 +8,8 @@ mod journal;
 mod helper;
 mod worker;
 mod owner;
+#[cfg(test)]
+mod native_tests;
 
 use crate::{network_packet_runtime::Result,space_dns_system::{process_identity,system_wall_ms,require_system_admin}};
 use std::{io,path::{Path,PathBuf},time::Duration};

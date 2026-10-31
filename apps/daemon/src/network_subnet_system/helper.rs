@@ -11,6 +11,8 @@ enum Action {
     Review {#[arg(long)]plan:PathBuf},
     Apply {
         #[arg(long)]plan:PathBuf,
+        /// Preapprove fixed pins before the ordinary owner creates its fresh plan.
+        #[arg(long,default_value_t=0,value_parser=clap::value_parser!(u16).range(0..=60))]wait_seconds:u16,
         #[arg(long)]journal_dir:PathBuf,
         #[arg(long)]authority:String,
         #[arg(long)]approve_access_digest:String,
@@ -27,11 +29,12 @@ pub(crate) async fn run(args:SystemSubnetArgs)->Result {
         Action::InitJournal{journal_dir}=>{require_system_admin().await?;if !journal_dir.is_absolute(){return Err(io::Error::other("absolute root-private subnet journal directory required").into());}match nestlink_platform_security::new_private_directory(&journal_dir){Ok(())=>{},Err(error) if error.kind()==io::ErrorKind::AlreadyExists=>nestlink_platform_security::check_private_directory(&journal_dir)?,Err(error)=>return Err(error.into())}Ok(())},
         Action::Recover{journal_dir}=>{require_system_admin().await?;recover(&journal::Store::open(&journal_dir)?).await},
         Action::Inspect{journal_dir}=>{require_system_admin().await?;let store=journal::Store::open(&journal_dir)?;println!("{}",serde_json::to_string_pretty(&store.read()?)?);Ok(())},
-        Action::Apply{plan:path,journal_dir,authority,approve_access_digest,approve_mapping_digest,lan_interface,lan_gateway}=>{
+        Action::Apply{plan:path,wait_seconds,journal_dir,authority,approve_access_digest,approve_mapping_digest,lan_interface,lan_gateway}=>{
             require_system_admin().await?;
             // The administrator selects three independent pins and the LAN
             // exposure. A normal process cannot authorize its own root plan.
-            let plan=Plan::read(&path)?;plan.checked(true)?;
+            let deadline=tokio::time::Instant::now()+Duration::from_secs(u64::from(wait_seconds));
+            let plan=loop {match Plan::read(&path) {Ok(plan)=>break plan,Err(error) if tokio::time::Instant::now()<deadline&&error.downcast_ref::<io::Error>().is_some_and(|error|error.kind()==io::ErrorKind::NotFound)=>tokio::time::sleep(Duration::from_millis(50)).await,Err(error)=>return Err(error)}};plan.initial()?;
             if URL_SAFE_NO_PAD.encode(plan.authority)!=authority||URL_SAFE_NO_PAD.encode(plan.approved_access)!=approve_access_digest||URL_SAFE_NO_PAD.encode(plan.approved_mapping)!=approve_mapping_digest||plan.lan_index!=lan_interface||plan.lan_gateway!=lan_gateway {return Err(io::Error::other("subnet plan differs from explicit administrator approval").into());}
             let owner=nestlink_platform_security::local_port_gate::ProcessIdentity::read(plan.process.pid())?;
             let helper=nestlink_platform_security::local_port_gate::ProcessIdentity::read(std::process::id())?;
@@ -53,14 +56,19 @@ pub(crate) async fn run(args:SystemSubnetArgs)->Result {
 async fn apply(store:&journal::Store,journal:&mut journal::Journal)->Result {
     let executable=std::env::current_exe()?;
     let mut command=Command::new(kernel::tool("unshare")?);
-    command.args(["--net","--fork","--kill-child=SIGKILL","--"]).arg(&executable).arg("network-subnet-worker").arg("--journal").arg(store.path())
+    command.args(["--net","--fork","--kill-child=SIGKILL","--"]).arg(&executable)
         .env_clear().env("LANG","C.UTF-8").env("LC_ALL","C.UTF-8").stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).kill_on_drop(true);
+    #[cfg(not(test))]
+    command.arg("network-subnet-worker").arg("--journal").arg(store.path());
+    #[cfg(test)]
+    {command.args(["--exact",super::native_tests::ROLE_TEST,"--ignored","--nocapture","--test-threads=1"]).env("GITHUB_ACTIONS","true").env("NESTLINK_SUBNET_NATIVE_LAB","1").env("NESTLINK_SUBNET_NATIVE_ROLE","worker").env("NESTLINK_SUBNET_NATIVE_JOURNAL",store.path());}
     let mut child=command.spawn()?;
     let mut input=child.stdin.take().ok_or_else(||io::Error::other("subnet root control pipe missing"))?;
     let mut output=child.stdout.take().ok_or_else(||io::Error::other("subnet root namespace observation pipe missing"))?;
     let stderr=child.stderr.take().ok_or_else(||io::Error::other("subnet root diagnostic pipe missing"))?;
     let diagnostic=tokio::spawn(async move {let mut bytes=Vec::new();stderr.take(4_097).read_to_end(&mut bytes).await?;Ok::<_,io::Error>(bytes)});
     let outcome=async {
+        tokio::time::timeout(Duration::from_secs(2),pipe::control_start(&mut output)).await??;
         let namespace:journal::Namespace=serde_json::from_slice(&tokio::time::timeout(Duration::from_secs(2),pipe::message(&mut output)).await??)?;
         let actual=std::fs::metadata(format!("/proc/{}/ns/net",namespace.worker.pid()))?;
         let host=std::fs::metadata("/proc/self/ns/net")?;

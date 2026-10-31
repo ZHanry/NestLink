@@ -48,6 +48,13 @@ impl Plan {
     }
     pub fn digest(&self)->Result<[u8;32]> {Ok(nestlink_identity::digest(&serde_json::to_vec(self)?))}
     pub fn checked(&self,fresh:bool)->Result<Checked> {
+        self.check(fresh,false)
+    }
+    /// Initial administrator admission also requires the independently fetched
+    /// same-boot lease to be live. Runtime observes newer lease facts through
+    /// the original ordinary online owner, never by mutating this fixed plan.
+    pub fn initial(&self)->Result<Checked> {self.check(true,true)}
+    fn check(&self,fresh:bool,initial_node:bool)->Result<Checked> {
         let wall=system_wall_ms()?;
         if self.schema_version!=1 || !owner_id(&self.owner_id) || !self.process.valid() || self.uid==0 || self.uid>i32::MAX as u32
             || !self.path.is_absolute() || self.created_at_ms==0 || self.created_at_ms>=self.expires_at_ms || self.expires_at_ms-self.created_at_ms>60_000
@@ -55,7 +62,7 @@ impl Plan {
             || self.lan_index==0 || !interface_name(&self.lan_name) || self.lan_prefix_len==0 || self.lan_prefix_len>30
             || (fresh && (self.created_at_ms>wall || wall>=self.expires_at_ms)) {return Err(io::Error::other("invalid or expired exact subnet OS plan").into());}
         self.socket()?;
-        let now=if fresh {wall} else {self.created_at_ms};
+        let now=if initial_node {wall} else {self.created_at_ms};
         let revoked=std::collections::BTreeSet::new();
         let directory=&self.credentials.address_directory;
         let context=NetworkVerification{authority_key:&self.authority,deployment_id:&self.deployment_id,space_id:&self.space_id,policy_epoch:directory.space.policy_epoch,now_ms:now,revoked_grant_ids:&revoked};
@@ -73,7 +80,7 @@ impl Plan {
         let verified=verify_subnet_mapping(&mapping.mapping,&context,export,&gateway)?;
         let claims=verified.claims();
         let (own,remote)=if local_source {(&business.source_prefixes,&business.destination_prefixes)} else {(&business.destination_prefixes,&business.source_prefixes)};
-        if verified.digest()!=self.approved_mapping || own.as_slice()!=[claims.alias] || self.expires_at_ms>verified.effective_expires_at_ms(&gateway)
+        if verified.digest()!=self.approved_mapping || own.as_slice()!=[claims.alias] || self.expires_at_ms>claims.scope.expires_at_ms
             || !claims.original.network.is_ipv4() || !claims.alias.network.is_ipv4() || remote.is_empty() || remote.len()>2 || remote.iter().any(|prefix|!prefix.network.is_ipv4()) {
             return Err(io::Error::other("this Linux namespace provider requires the exact approved IPv4 mapping and remote prefixes").into());
         }
@@ -95,7 +102,7 @@ impl Plan {
         Ok(plan)
     }
     pub fn save_new(&self)->Result {
-        self.checked(true)?;
+        self.initial()?;
         let parent=self.path.parent().ok_or_else(||io::Error::other("subnet plan parent missing"))?;
         nestlink_platform_security::check_private_directory(parent)?;
         nestlink_platform_security::create_private(&self.path,&serde_json::to_vec(self)?)?;

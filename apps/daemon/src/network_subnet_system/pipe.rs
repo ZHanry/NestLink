@@ -4,6 +4,16 @@ use super::*;
 use crate::network_packet_runtime::{WholePacketDevice,PacketIoFuture};
 use tokio::{io::{AsyncReadExt,AsyncWriteExt},net::{UnixStream,unix::{OwnedReadHalf,OwnedWriteHalf}},sync::Mutex};
 use std::os::unix::{fs::{MetadataExt,OpenOptionsExt,FileTypeExt},io::AsRawFd};
+pub(super) const CONTROL_MAGIC:&[u8]=b"NestLink subnet namespace control v1\n";
+pub(super) async fn control_start(reader:&mut (impl tokio::io::AsyncRead+Unpin))->io::Result<()> {
+    #[cfg(not(test))]
+    {let mut bytes=vec![0_u8;CONTROL_MAGIC.len()];reader.read_exact(&mut bytes).await?;if bytes!=CONTROL_MAGIC {return Err(io::Error::other("subnet worker control preface differs"));}}
+    // The source-exact hosted native role uses Rust's test harness. Only test
+    // builds permit its bounded stdout preamble before the fixed control magic.
+    #[cfg(test)]
+    {let mut bytes=Vec::new();loop {bytes.push(reader.read_u8().await?);if bytes.ends_with(CONTROL_MAGIC){break;}if bytes.len()>512 {return Err(io::Error::other("native role preamble exceeded its fixed bound"));}}}
+    Ok(())
+}
 
 /// Retaining the selected private directory prevents a pathname replacement
 /// from redirecting a privileged socket rename or removal.
