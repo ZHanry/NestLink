@@ -74,3 +74,82 @@ jobs:
           path: ${{ runner.temp }}/offline-authority/
           if-no-files-found: error
           retention-days: 30
+
+  durable-private-service:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          components: clippy
+      - name: Compile and execute original-ledger SQLite offline cases
+        run: python3 -B scripts/network-rewrite-offline-management.py --suite storage --output "$RUNNER_TEMP/offline-storage"
+      - name: Verify historical migrations and existing shared service budgets
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-storage --lib --tests --no-fail-fast 2>&1 | tee "$RUNNER_TEMP/offline-storage/storage-regression.log"
+      - name: Strict storage and identity lint
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo clippy --locked -p nestlink-storage -p nestlink-identity -p nestlink-protocol --all-targets -- -D warnings 2>&1 | tee "$RUNNER_TEMP/offline-storage/clippy.log"
+      - name: Preserve durable offline diagnostics and exact receipts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: offline-management-storage-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/offline-storage/
+          if-no-files-found: error
+          retention-days: 30
+
+  actual-http-sdk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          components: clippy
+      - name: Configure original native SDK codec paths
+        run: echo "NESTLINK_CODEC_PREFIX=$RUNNER_TEMP/nestlink-codecs/x86_64-unknown-linux-gnu" >> "$GITHUB_ENV"
+      - name: Install hosted native SDK build tooling
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config libpipewire-0.3-dev
+      - name: Build and verify original native SDK inputs on GitHub
+        run: |
+          python3 scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir "$RUNNER_TEMP/nestlink-codec-sources" --work-dir "$RUNNER_TEMP/nestlink-codecs"
+          python3 scripts/refactor-native-codecs.py verify --target x86_64-unknown-linux-gnu --prefix "$NESTLINK_CODEC_PREFIX"
+      - name: Compile and exercise actual HTTP SDK approval and one-use activation
+        run: python3 -B scripts/network-rewrite-offline-management.py --suite sdk --output "$RUNNER_TEMP/offline-sdk"
+      - name: Strict production server and SDK lint
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/offline-sdk"
+          set -o pipefail
+          cargo clippy --locked -p nestlink-server -p nestlink-sdk --lib -- -D warnings 2>&1 | tee "$RUNNER_TEMP/offline-sdk/clippy.log"
+      - name: Preserve actual HTTP SDK diagnostics and exact receipts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: offline-management-sdk-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/offline-sdk/
+          if-no-files-found: error
+          retention-days: 30

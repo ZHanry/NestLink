@@ -9,6 +9,7 @@ const MAX_RULE_MS: u64 = 7 * 24 * 60 * 60 * 1000;
 const MAX_RULES: u64 = 256;
 mod network;
 mod relay;
+mod offline;
 
 fn mode(value: &str) -> Result<ServiceAccessMode, StorageError> {
     match value {
@@ -64,6 +65,10 @@ fn mode_available(
     maximum: u64,
 ) -> Result<u64, StorageError> {
     let held: u64 = connection.query_row("SELECT COALESCE(SUM(CASE WHEN g.terminal=1 THEN g.admitted_bytes ELSE g.grant_bytes END),0) FROM service_usage_grants g WHERE g.service_id=?1 AND EXISTS(SELECT 1 FROM private_service_leases p WHERE p.grant_id=g.grant_id)=?2",params![service,private],|r|r.get(0))?;
+    let offline: u64 = if private {
+        connection.query_row("SELECT COALESCE(SUM(promised_bytes),0) FROM offline_service_reservations WHERE service_id=?1", [service], |r| r.get(0))?
+    } else { 0 };
+    let held = held.checked_add(offline).ok_or(StorageError::Conflict)?;
     Ok(maximum.saturating_sub(held))
 }
 pub(super) fn public_reservation_limit(
@@ -389,15 +394,23 @@ impl Store {
         StorageError,
     > {
         self.validate_access(actor, now / 1000)?;
+        self.private_consumer_bound(&actor.account_id, &actor.session_id, service, consumer, now)
+    }
+    fn private_consumer_bound(
+        &self, account_id: &str, login: &str, service: &str, consumer: &str, now: u64,
+    ) -> Result<(Record, Approval, ServiceExposureView, PrivateServiceClaims, u64), StorageError> {
+        if !self.service_login_live(account_id, login, now / 1000)? {
+            return Err(StorageError::Forbidden);
+        }
         let (record, approval, view, host_epoch) = self.private_exposure_current(service, now)?;
         let (account, account_epoch, consumer_epoch, consumer_key) =
             self.private_member(&view.space_id, consumer, now)?;
-        if account != actor.account_id || consumer == record.definition.host_device_id {
+        if account != account_id || consumer == record.definition.host_device_id {
             return Err(StorageError::Forbidden);
         }
         if self
             .private_service_paths(
-                &actor.session_id,
+                login,
                 consumer,
                 &record.definition.host_device_id,
                 service,
@@ -433,7 +446,7 @@ impl Store {
             host_membership_epoch: host_epoch,
             consumer_membership_epoch: consumer_epoch,
             consumer_account_id: account,
-            consumer_login_id: actor.session_id.clone(),
+            consumer_login_id: login.into(),
             consumer_device_id: consumer.into(),
             consumer_public_key: consumer_key,
             host_public_key,

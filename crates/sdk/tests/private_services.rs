@@ -10,6 +10,8 @@ mod raw_windows;
 mod relay;
 #[path = "private_services/web.rs"]
 mod web;
+#[path = "private_services/offline.rs"]
+mod offline;
 use hickory_server::proto::{
     op::{Message, MessageType, OpCode, Query, ResponseCode},
     rr::{Name, RData, Record, RecordType, rdata::A},

@@ -497,6 +497,30 @@ pub fn router(state: AppState) -> Router {
             post(network_policy::subnet::bind_installation),
         )
         .route(
+            "/api/v3/network/spaces/{space}/offline",
+            get(network_policy::offline::policy).put(network_policy::offline::enable),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/offline/private-drafts",
+            post(network_policy::offline::draft),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/offline/bundles/{bundle}",
+            get(network_policy::offline::read).delete(network_policy::offline::revoke),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/offline/bundles/{bundle}/approval",
+            post(network_policy::offline::approve),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/offline/bundles/{bundle}/consume-challenge/{endpoint}",
+            post(network_policy::offline::challenge),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/offline/bundles/{bundle}/consume",
+            post(network_policy::offline::consume),
+        )
+        .route(
             "/api/v3/network/spaces/{space}/wireguard-client-bindings",
             post(network_policy::wireguard::issue),
         )

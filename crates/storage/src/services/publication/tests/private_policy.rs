@@ -4,6 +4,7 @@ use nestlink_identity::network::NetworkAuthoritySigner;
 use nestlink_identity::services::private::verify_private_service_lease;
 use nestlink_protocol::{services::private::*, spaces::*};
 mod relays;
+mod offline;
 
 struct PrivateAccess {
     network: NetworkAuthoritySigner,
