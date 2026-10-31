@@ -95,6 +95,24 @@ fn stored(
     ).optional()?)
 }
 
+fn address_view(row: Address, active: bool, suffix: &str) -> SpaceAddressView {
+    SpaceAddressView {
+        installation_id: row.installation,
+        account_id: row.account,
+        public_key: URL_SAFE_NO_PAD.encode(row.public_key),
+        account_member_epoch: row.account_epoch,
+        membership_epoch: row.membership_epoch,
+        address_epoch: row.epoch,
+        fqdn: format!("{}.{}", row.name, suffix),
+        name: row.name,
+        ipv4: row.ipv4,
+        ipv6: row.ipv6,
+        reserved: row.reserved,
+        revoked: row.revoked,
+        active,
+    }
+}
+
 fn directory_revision(connection: &Connection, space: &str, now: u64) -> Result<u64, StorageError> {
     let row: Option<(u64, u64)> = connection.query_row(
         "SELECT revision,last_observed_ms FROM network_space_address_directories WHERE space_id=?1",
@@ -279,21 +297,7 @@ impl Store {
             if !management(space.role) && !active {
                 continue;
             }
-            views.push(SpaceAddressView {
-                installation_id: row.installation,
-                account_id: row.account,
-                public_key: URL_SAFE_NO_PAD.encode(row.public_key),
-                account_member_epoch: row.account_epoch,
-                membership_epoch: row.membership_epoch,
-                address_epoch: row.epoch,
-                fqdn: format!("{}.{}", row.name, suffix),
-                name: row.name,
-                ipv4: row.ipv4,
-                ipv6: row.ipv6,
-                reserved: row.reserved,
-                revoked: row.revoked,
-                active,
-            });
+            views.push(address_view(row, active, &suffix));
         }
         Ok(SpaceAddressDirectory {
             space,
@@ -316,6 +320,36 @@ impl Store {
         self.validate_access(actor, now / 1000)?;
         let space = read_space(&tx, actor, id, now)?;
         self.address_directory_view(&tx, actor, space, now)
+    }
+
+    /// Call only after authorizing one exact NetworkAccess grant in this same
+    /// transaction. This is a two-peer grant projection, never directory browse.
+    pub(crate) fn space_packet_address_pair(
+        &self,
+        connection: &Connection,
+        actor: &Principal,
+        space_id: &str,
+        installations: &[String; 2],
+        now: u64,
+    ) -> Result<SpaceAddressDirectory, StorageError> {
+        self.validate_access(actor, now / 1000)?;
+        let space = read_space(connection, actor, space_id, now)?;
+        if space.archived || installations[0] == installations[1] {
+            return Err(StorageError::Forbidden);
+        }
+        let revision = directory_revision(connection, space_id, now)?;
+        let suffix = suffix(space_id);
+        let mut addresses = Vec::with_capacity(2);
+        for installation in installations {
+            require_id(installation)?;
+            let row = stored(connection, space_id, installation)?.ok_or(StorageError::Forbidden)?;
+            if row.reserved || !self.address_current(connection, &space, &row, now)? {
+                return Err(StorageError::Forbidden);
+            }
+            addresses.push(address_view(row, true, &suffix));
+        }
+        Ok(SpaceAddressDirectory { space, revision, suffix, ipv4_pool:IPV4_POOL.into(),
+            ipv6_pool:IPV6_POOL.into(),cache_max_age_seconds:0,addresses })
     }
 
     pub fn issue_space_address(

@@ -18,6 +18,7 @@ pub mod native_ice;
 pub mod native_media_format;
 pub mod native_renewal;
 pub mod network;
+pub mod network_access;
 pub mod network_datagram;
 pub mod network_datagram_v2;
 pub mod network_topology;

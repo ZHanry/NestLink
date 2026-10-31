@@ -252,7 +252,7 @@ fn private_target_consent_requires_no_public_edge_or_public_ingress() -> Result 
 }
 
 fn remove_schema_42_relays(raw: &Connection) -> Result {
-    raw.execute_batch("DROP VIEW all_relay_capacity; DROP TABLE private_service_relay_hops;
+    raw.execute_batch("DROP TABLE network_packet_access; DROP VIEW all_relay_capacity; DROP TABLE private_service_relay_hops;
         CREATE VIEW all_relay_capacity AS SELECT id,kind,controller_account_id,host_account_id,node_id,promised_until FROM relay_reservations
         UNION ALL SELECT allocation_id,'node',controller_account_id,host_account_id,node_id,promised_until FROM network_remote_relays
         UNION ALL SELECT route_id,'node',controller_account_id,host_account_id,node_id,promised_until FROM network_remote_chain_hops

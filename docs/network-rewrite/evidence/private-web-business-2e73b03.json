@@ -1,0 +1,46 @@
+{
+    "schema_version":  1,
+    "purpose":  "private Web business and network contracts after exact Upgrade header repair",
+    "build_provenance":  {
+                             "repository":  "ZHanry/NestLink",
+                             "source_revision":  "2e73b032821bb0567a12132ae3a105fa68a95e28",
+                             "workflow":  ".github/workflows/network-rewrite.yml",
+                             "run_id":  "41179533397",
+                             "run_attempt":  1,
+                             "job_id":  "124473914057",
+                             "runner":  "ubuntu-24.04",
+                             "runner_environment":  "github-hosted",
+                             "dependency_lock_sha256":  "4d8ca05568d4807a7b05d366c230e15cccfb186412ada07cc080cf547c5c6cff"
+                         },
+    "execution_provenance":  {
+                                 "kind":  "github_hosted_L2_real_management_private_carrier_backend",
+                                 "run_id":  "41179533397",
+                                 "job_id":  "124473914057",
+                                 "private_service_tests":  {
+                                                               "passed":  19,
+                                                               "failed":  0,
+                                                               "ignored":  4,
+                                                               "ignored_reason":  "Raw UID cooperation roles require their dedicated kernel workflow; not counted as passed"
+                                                           },
+                                 "web_business":  [
+                                                      "Cookie jar and application upload/download/redirect",
+                                                      "Actual WebSocket 101 Upgrade and bidirectional business",
+                                                      "Logout closes the existing upgraded connection",
+                                                      "Host and Origin rejects; private ACL revocation closes active upgrade"
+                                                  ],
+                                 "network_workflow_conclusion":  "success"
+                             },
+    "artifact":  {
+                     "id":  "13034303927",
+                     "sha256":  "84782163bf6715e69a06a1c93d50aba53db55efe558c44edaa729d551557a8c0",
+                     "log":  "network-private-service-sdk-tests.log",
+                     "log_sha256":  "ab913a01c67b4e29cb9ddce2700af90500179b6096f32d2aa6d21be5450f346d",
+                     "original_zip_digest_verified":  true
+                 },
+    "limitations":  [
+                        "This is the private SDK HTTP/WebSocket business fixture, not actual Caddy/public DNS/Chrome acceptance",
+                        "Full AC41 and AC42 groups remain open",
+                        "Windows WFP kernel, actual targets, raw IPv6 and coexistence require separate evidence",
+                        "No 0.8.0RC version, tag or release qualification is implied"
+                    ]
+}

@@ -462,6 +462,18 @@ pub fn router(state: AppState) -> Router {
             post(network_policy::issue_path),
         )
         .route(
+            "/api/v3/network/spaces/{space}/packet-access",
+            post(network_policy::network_access::issue),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/packet-access/{access}",
+            get(network_policy::network_access::read).delete(network_policy::network_access::revoke),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/packet-access/{access}/start",
+            post(network_policy::network_access::start),
+        )
+        .route(
             "/api/v3/network/spaces/{space}/topology/publishers/{node}",
             get(network_policy::topology::publisher)
                 .post(network_policy::topology::issue)

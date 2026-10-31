@@ -202,21 +202,18 @@ fn native(path: &Path) -> Value {
     {
         return json!({"status":"unsupported","events":[]});
     }
-    let events = value["events"]
-        .as_array()
-        .map(|events| {
-            events
-                .iter()
-                .rev()
-                .take(nestlink_protocol::diagnostics::TIMELINE_EVENT_LIMIT)
-                .filter_map(native_event)
-                .collect::<Vec<_>>()
-                .into_iter()
-                .rev()
-                .collect::<Vec<_>>()
-        })
-        .unwrap_or_default();
-    json!({"status":"present","events":events,"dropped_events":number(&value["dropped_events"]),"latest_terminal":native_event(&value["latest_terminal"])})
+    let Some(source_events) = value["events"].as_array() else {
+        return json!({"status":"invalid","events":[]});
+    };
+    let retained = source_events.len().min(nestlink_protocol::diagnostics::TIMELINE_EVENT_LIMIT);
+    let events = source_events.iter().rev().take(retained).filter_map(native_event)
+        .collect::<Vec<_>>().into_iter().rev().collect::<Vec<_>>();
+    let rejected = retained - events.len();
+    let latest_terminal = native_event(&value["latest_terminal"]);
+    let invalid_terminal = !value["latest_terminal"].is_null() && latest_terminal.is_none();
+    json!({"status":if rejected == 0 && !invalid_terminal {"present"} else {"partial"},"events":events,
+        "rejected_records":rejected,"omitted_records":source_events.len()-retained,
+        "dropped_events":number(&value["dropped_events"]),"latest_terminal":latest_terminal})
 }
 fn collect(directory: &Path) -> Value {
     json!({"schema_version":1,"version":env!("CARGO_PKG_VERSION"),
@@ -285,6 +282,22 @@ mod tests {
             )
             .is_err()
         );
+        Ok(())
+    }
+    #[test]
+    fn native_invalid_event_container_and_records_cannot_be_reported_as_successful_empty_history()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let temp = tempfile::tempdir()?;
+        let directory = temp.path().join("private");
+        nestlink_platform_security::new_private_directory(&directory)?;
+        let path = directory.join("native-network-diagnostics.json");
+        for (events, expected) in [(json!({}), "invalid"), (json!([{"secret":"password"}]), "partial"), (json!([]), "present")] {
+            let bytes = serde_json::to_vec(&json!({"schema_version":1,"source":"desktop_observation_of_original_core_session","events":events}))?;
+            nestlink_platform_security::replace_private_metadata(&path, &bytes)?;
+            let report = native(&path);
+            assert_eq!(report["status"], expected);
+            assert!(!report.to_string().contains("password"));
+        }
         Ok(())
     }
 }

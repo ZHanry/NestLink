@@ -1,6 +1,7 @@
 //! Legacy deployment-admin controls and scoped product-space credential issuance.
 //! Space delegation lives in spaces; business admission remains separate.
 pub(crate) mod chains;
+pub(crate) mod network_access;
 pub(crate) mod route_exports;
 pub(crate) mod route_sets;
 pub(crate) mod topology;

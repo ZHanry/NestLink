@@ -58,6 +58,16 @@ no opener or Referer. Renewal invalidates the previous ticket under the original
 admission lock, does not extend expiry/quota, and is refused after any session
 has used a ticket, including after logout.
 
+Normal readiness uses the existing WebPKI roots. A native-local optional
+`--https-root` selects one protected, absolute DER CA file no larger than 16 KiB
+and replaces those roots only for this probe. It is not a launch-request field,
+cannot be inherited from management/browser input and never disables certificate
+or exact-name verification. Browser trust remains independently administered.
+An invalid local root joins the original gateway before publishing either output.
+After a launch file was created, its expected bytes remain with the same owner
+even if readback fails, so final physical cleanup attempts route and launch-file
+removal independently and retains changed/ambiguous files as explicit failures.
+
 A 60-second, single-use ticket appears only in the launch URL fragment. A static
 bootstrap page first removes the fragment from browser history, then exchanges
 it through an exact-origin POST. The gateway stores only purpose-hashed ticket
@@ -109,3 +119,20 @@ replacement refusal. They do not establish an actual Caddy run, public DNS/ACME,
 HTTPS browser execution, management workspace integration or target-platform
 qualification. R02 requires all compilation, lock derivation and verification in
 GitHub-hosted Actions. No success is recorded before those exact-source results.
+
+The additional `private-web-gateway.yml` hosted L2 candidate uses this actual SDK
+private-service fixture and both generated owner routes with pinned Caddy 2.11.7
+and real Chrome through the repository's reviewed Puppeteer driver. The hosted
+driver deliberately simulates DNS with the VM's hosts file and frontend trust
+with a temporary OS/NSS CA; the SDK uses the production single-root readiness
+method. No Chrome certificate bypass is permitted. Its management cookie
+sentinel tests origin boundaries without claiming production management UI or
+installed-daemon login acceptance. It exercises actual browser cookie/login,
+upload/download/redirect/WSS/logout/ACL flows, actual Caddy wrong-root/name and
+same-port replacement failures, original physical/carrier/quota receipts and
+Caddy Admin route deletion plus readback. Secrets stay in a private temporary
+directory; evidence separates source/build provenance from runtime observations.
+All tooling, script validation, dependency work, formatting, compilation and
+execution remain GitHub-hosted. This checked-in candidate supplies no pass until
+its exact-source run succeeds and cannot qualify public Internet/ACME, L3/L4 or
+other browser/platform behavior. W25 therefore remains in progress.

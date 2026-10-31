@@ -2,6 +2,7 @@
 //! discovery, scheduling, TLS, SessionPermit proof and bounded business queues.
 //! Signed direct paths add admission to this same owner without another scheduler.
 pub mod routed;
+pub mod packet_access;
 pub use crate::network_topology as topology;
 use crate::{
     DeviceIdentity, NativeRelayRoute, Sdk,

@@ -1,0 +1,98 @@
+{
+    "schema_version":  1,
+    "purpose":  "reviewed-packet-parser-fixture-lock",
+    "source_revision":  "79add64b55d641b79817885cd5d107f65f0a50b4",
+    "workflow":  ".github/workflows/network-lock-refresh.yml",
+    "run_id":  41181894011,
+    "run_attempt":  1,
+    "runner":  "github-hosted ubuntu-24.04",
+    "conclusion":  "success",
+    "artifact_id":  13035715898,
+    "archive_sha256":  "34fae6a39a578f99010a48fb85dcbe9ef41c50295948eb2854834a5dcb36a6d8",
+    "receipt":  {
+                    "schema_version":  1,
+                    "purpose":  "reviewed-network-components-lock-derivation-only",
+                    "repository":  "ZHanry/NestLink",
+                    "source_revision":  "79add64b55d641b79817885cd5d107f65f0a50b4",
+                    "run_id":  "41181894011",
+                    "run_attempt":  "1",
+                    "scope":  "browser-native-fixture",
+                    "manifest_path":  "scripts/fixtures/browser-native-host/Cargo.toml",
+                    "before_lock_sha256":  "c4d8d26a8d68cdf3212fc755b73d389cf1df415dd3b48bc4003f003b73447d4b",
+                    "commands":  [
+                                     {
+                                         "argv":  [
+                                                      "cargo",
+                                                      "update",
+                                                      "--workspace",
+                                                      "--manifest-path",
+                                                      "scripts/fixtures/browser-native-host/Cargo.toml"
+                                                  ],
+                                         "return_code":  0
+                                     },
+                                     {
+                                         "argv":  [
+                                                      "cargo",
+                                                      "metadata",
+                                                      "--manifest-path",
+                                                      "scripts/fixtures/browser-native-host/Cargo.toml",
+                                                      "--locked",
+                                                      "--format-version",
+                                                      "1"
+                                                  ],
+                                         "return_code":  0
+                                     }
+                                 ],
+                    "assertions":  {
+                                       "only_selected_lock_changed":  true,
+                                       "all_existing_package_identities_and_checksums_preserved":  true,
+                                       "all_unrelated_external_package_edges_preserved":  true,
+                                       "only_exact_reviewed_component_feature_edges_added":  true,
+                                       "reviewed_crab_nat_exact_version_and_checksum":  true,
+                                       "reviewed_petgraph_exact_version_and_checksum":  true,
+                                       "reviewed_authoritative_dns_exact_version":  true,
+                                       "locked_metadata_succeeded":  true,
+                                       "protected_native_stream_reuses_existing_tokio_identity":  true,
+                                       "native_stdio_reuses_locked_tokio_util_identity":  true,
+                                       "packet_parser_exact_identity_checksum_and_only_locked_arrayvec_edge":  true,
+                                       "only_reviewed_cookie_packet_components_or_exact_product_reuse_added":  true
+                                   },
+                    "failure":  null,
+                    "product_compilation_performed":  false,
+                    "quality_or_acceptance_claimed":  false,
+                    "files":  [
+                                  {
+                                      "path":  "Cargo.lock",
+                                      "bytes":  129147,
+                                      "sha256":  "0a135a2d8a8cf655c1936665995f9527989274b490935812b253974f72302bc8"
+                                  },
+                                  {
+                                      "path":  "before.lock",
+                                      "bytes":  128713,
+                                      "sha256":  "c4d8d26a8d68cdf3212fc755b73d389cf1df415dd3b48bc4003f003b73447d4b"
+                                  },
+                                  {
+                                      "path":  "cargo-generated.lock",
+                                      "bytes":  129147,
+                                      "sha256":  "85497e67b6b34d62609f2bdfdba5e71746e5b937ca10da2912c8365165eb133d"
+                                  },
+                                  {
+                                      "path":  "command-0.log",
+                                      "bytes":  1198,
+                                      "sha256":  "bc5ef45ad4bdf75c18b42514e85c29bb3d4a24fcb870ef4b4bf3246d778a1850"
+                                  },
+                                  {
+                                      "path":  "command-1.log",
+                                      "bytes":  2574313,
+                                      "sha256":  "0a4a24d965828c1f733f297fc662007dc69396240865ced5b940b98109840fad"
+                                  },
+                                  {
+                                      "path":  "derivation.diff",
+                                      "bytes":  1062,
+                                      "sha256":  "06fa9dfa91a78b42837864fe58517b24e652ab05c59259ef1fc7eef279249a29"
+                                  }
+                              ]
+                },
+    "reviewed_change":  "Only exact etherparse0.21.0 and product-reused arrayvec0.7.8 package blocks and SDK dependency edge. All receipt file hashes, sizes, source SHA, successful assertions and before-lock SHA verified before copying the exact Actions Cargo.lock bytes.",
+    "quality_or_acceptance_claimed":  false
+}

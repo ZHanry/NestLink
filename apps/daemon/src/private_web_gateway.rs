@@ -47,6 +47,10 @@ pub(crate) struct GatewayArgs {
     /// Fresh owner-private JSON, created after HTTPS reaches this exact owner.
     #[arg(long)]
     launch_output: PathBuf,
+    /// Optional single DER CA from the local owner for this public HTTPS
+    /// origin. Never imported from a downloaded launch request.
+    #[arg(long)]
+    https_root: Option<PathBuf>,
 }
 
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
@@ -63,6 +67,10 @@ pub(crate) async fn run(args: GatewayArgs) -> Result {
         || args.bootstrap == args.launch_output
         || args
             .request
+            .as_ref()
+            .is_some_and(|path| !path.is_absolute())
+        || args
+            .https_root
             .as_ref()
             .is_some_and(|path| !path.is_absolute())
         || !args.listen.ip().is_loopback()
@@ -87,6 +95,7 @@ pub(crate) async fn run(args: GatewayArgs) -> Result {
             io::Error::other("bootstrap and launch output must both be fresh paths").into(),
         );
     }
+    let https_root = args.https_root.as_ref().map(|path| nestlink_platform_security::read_private(path, 16_384)).transpose()?;
     let installation =
         nestlink_local_ipc::maintenance::InstallationStartup::acquire(&std::env::current_exe()?)?;
     let directory = installation.state_directory(&args.state_dir)?;
@@ -147,6 +156,21 @@ pub(crate) async fn run(args: GatewayArgs) -> Result {
             },
         )
         .await?;
+    // Validate the owner's optional root before publishing any route or ticket
+    // file. A bad local trust input still joins this original gateway owner.
+    let probe = match https_root.as_ref().map_or_else(|| gateway.public_route_probe(), |root| gateway.public_route_probe_with_root(root)) {
+        Ok(probe) => probe,
+        Err(error) => {
+            gateway.request_shutdown();
+            let cleanup = loop {
+                match gateway.wait_stopped(Duration::from_secs(5)).await {
+                    PrivateWebGatewayWait::CleanupPending => continue,
+                    receipt => break receipt,
+                }
+            };
+            return Err(io::Error::other(format!("public route probe could not start: {error}; cleanup={cleanup:?}")).into());
+        }
+    };
     #[derive(serde::Serialize)]
     struct Bootstrap<'a> {
         schema_version: u32,
@@ -191,19 +215,6 @@ pub(crate) async fn run(args: GatewayArgs) -> Result {
         lifetime.as_secs(),
         args.launch_output.display()
     );
-    let probe = match gateway.public_route_probe() {
-        Ok(probe) => probe,
-        Err(error) => {
-            gateway.request_shutdown();
-            let cleanup = loop {
-                match gateway.wait_stopped(Duration::from_secs(5)).await {
-                    PrivateWebGatewayWait::CleanupPending => continue,
-                    receipt => break receipt,
-                }
-            };
-            return Err(io::Error::other(format!("public route probe could not start: {error}; cleanup={cleanup:?}; retain bootstrap {} for review",args.bootstrap.display())).into());
-        }
-    };
     let readiness = async {
         loop {
             if probe.check().await.is_ok_and(|ready| ready) {
@@ -221,9 +232,9 @@ pub(crate) async fn run(args: GatewayArgs) -> Result {
         tokio::select! {
             result=&mut signal=>break result,
             _=&mut readiness,if launch_bytes.is_none()=>{
-                let result = publish_launch(&mut gateway, &selection, &args.launch_output);
+                let result = publish_launch(&mut gateway, &selection, &args.launch_output, &mut launch_bytes);
                 match result {
-                    Ok(bytes)=>{launch_bytes=Some(bytes);println!("Private HTTPS reaches gateway owner {}. Open only launch_url from {} within 60 seconds. Never paste the route bootstrap into the browser.",gateway.owner_id(),args.launch_output.display());},
+                    Ok(())=>{println!("Private HTTPS reaches gateway owner {}. Open only launch_url from {} within 60 seconds. Never paste the route bootstrap into the browser.",gateway.owner_id(),args.launch_output.display());},
                     Err(error)=>break Err(io::Error::other(format!("launch output could not be confirmed; inspect {}: {error}",args.launch_output.display()))),
                 }
             },
@@ -245,10 +256,11 @@ pub(crate) async fn run(args: GatewayArgs) -> Result {
             ))
             .into()),
             PrivateWebGatewayWait::Stopped(report) => {
-                remove_bootstrap(&args.bootstrap, &bytes)?;
-                if let Some(bytes) = launch_bytes {
-                    remove_bootstrap(&args.launch_output, &bytes)?;
-                }
+                // Try both independently: a changed route must not retain an
+                // otherwise unchanged owner-private launch capability file.
+                let route_cleanup = remove_bootstrap(&args.bootstrap, &bytes);
+                let launch_cleanup = launch_bytes.map(|bytes| remove_bootstrap(&args.launch_output, &bytes)).transpose();
+                route_cleanup?; launch_cleanup?;
                 println!("Private Web gateway stopped: {report:?}");
                 operation?;
                 return Ok(());
@@ -260,17 +272,22 @@ fn publish_launch(
     gateway: &mut nestlink_sdk::services::web_gateway::PrivateWebGateway,
     selection: &PrivateWebLaunchRequest,
     path: &Path,
-) -> Result<Zeroizing<Vec<u8>>> {
+    owned_bytes: &mut Option<Zeroizing<Vec<u8>>>,
+) -> Result {
     let launch_url = gateway.renew_launch_url()?;
     let bytes = Zeroizing::new(serde_json::to_vec_pretty(
         &serde_json::json!({"schema_version":1,"service_id":selection.service_id,"space_id":selection.space_id,"gateway_owner_id":gateway.owner_id(),"origin":gateway.origin(),"launch_url":launch_url,"launch_ticket_lifetime_seconds":60}),
     )?);
     nestlink_platform_security::create_private(path, &bytes)?;
+    // Retain the exact created content even if confirmation fails. Once the
+    // original gateway physically stops, final cleanup can remove this file
+    // independently of route cleanup; a changed file is always retained.
+    *owned_bytes = Some(bytes);
     let actual = nestlink_platform_security::read_private(path, 65536)?;
-    if *actual != *bytes {
+    if actual.as_slice() != owned_bytes.as_ref().ok_or_else(|| io::Error::other("launch owner record missing"))?.as_slice() {
         return Err(io::Error::other("private launch file readback differs").into());
     }
-    Ok(bytes)
+    Ok(())
 }
 async fn selection(
     args: &GatewayArgs,

@@ -4,6 +4,7 @@ use nestlink_protocol::QUIC_DATAGRAM_BYTES;
 use nestlink_transport_stream::tls;
 pub mod discovery;
 mod fragments;
+pub mod packet_codec;
 pub mod node;
 pub mod routed;
 pub mod service;

@@ -58,6 +58,17 @@ Alternatively replace the service/space/origin/allowance/lifetime arguments with
 management page's bounded selection. Keep `--state-dir`, `--bootstrap` and
 `--launch-output` as above.
 
+For an independently administered enterprise HTTPS origin, the native owner may
+also supply `--https-root <absolute-owner-private-single-CA.der>`. This is one DER
+certificate, limited to 16 KiB and read through the existing protected-file
+checks. It is selected only by this local CLI invocation, never by the downloaded
+management request. This explicit mode replaces the probe's normal WebPKI roots
+with that single CA and still verifies the exact HTTPS hostname; it provides no
+TLS verification bypass. Omitting it preserves the ordinary WebPKI root set.
+The visiting browser must independently trust the frontend certificate. The
+gateway does not alter browser or operating-system trust. Invalid probe trust is
+rejected and the original gateway is joined before a route or ticket is written.
+
 The schema-2 bootstrap contains `caddy_https_route` and the public correlation
 `gateway_owner_id`, with no launch ticket. It contains the hop credential and
 must remain owner-private. Install the route only in the stated
@@ -76,6 +87,7 @@ normally verified public HTTPS. It refuses redirects, sends no authorization,
 Cookie, hop header or ticket, and accepts only the original owner's UUID within
 a 64-byte response limit. The reserved endpoint is handled before any private
 application backend. The UUID correlates readiness and grants no access.
+The optional local `--https-root` changes only this probe's trust anchor.
 Preparation, probes and active sessions share the original fixed owner lifetime;
 neither waiting nor ticket renewal extends it. Ctrl-C, login changes, maintenance,
 expiry and original worker cleanup still apply during preparation.
@@ -126,6 +138,11 @@ lease path and by the original host. The native owner also closes on its protect
 login changing, maintenance, Ctrl-C or its fixed lifetime. Cleanup waits for all
 original private carriers and removes only the exact unchanged bootstrap and
 launch files that this owner created.
+Both file removals are attempted independently. If launch creation succeeded but
+its confirmation failed, its exact expected content remains with the same owner
+so physical-stop cleanup can still remove an unchanged capability file. An
+ambiguous failed creation or a changed/unreadable file is retained for explicit
+owner inspection and is reported as failure.
 An incomplete physical receipt remains a cleanup failure or pending state.
 
 Remove the dedicated Caddy route separately after the owner has stopped. The
@@ -145,11 +162,52 @@ withdrawal, and original cumulative accounting. Their Caddy hop is supplied by
 a strict independent-CA/name TLS test client; cases also refuse plaintext, a
 wrong TLS name and a same-address/same-name replacement with an unrelated key.
 This remains a TLS loopback-contract test rather than an actual Caddy run.
-Actual Caddy HTTPS plus a supported browser must separately prove certificate
-validation, SNI/Host refusal, the real Secure cookie, upload/download, same-service
-redirect, WebSocket, logout, ACL withdrawal and final route removal. Build and
-execution provenance must be recorded separately, with exact source and artifact
-digests. R02 applies to all automated tooling and builds.
+
+The separate **Private Web gateway real Caddy and Chrome** workflow
+(`.github/workflows/private-web-gateway.yml`) builds the exact SDK/private-service
+test executable on an ordinary GitHub-hosted Ubuntu runner. The ignored
+`web::hosted::caddy_browser_fixture_role` is an explicit cooperation role, not a
+passing ordinary unit/integration case. Only this hosted runner enables it. It
+starts two actual private SDK installations/hosts/leases and their original
+authorization, carrier and cumulative accounting owners, then hands their actual
+generated routes to the repository's pinned Caddy 2.11.7 binary. The existing
+reviewed Puppeteer 25.14.0 driver runs the hosted Chrome executable. Script syntax
+checks, dependency resolution, native codec construction and Rust compilation
+also run only in that Actions job. This source is not a passed run by itself.
+
+The fixture maps two isolated service UUID names, a management cookie sentinel
+and a cross-origin attacker name through the hosted VM's actual hosts file. It
+creates a short-lived frontend CA/certificate, installs that test CA in the VM's
+OS and user NSS trust stores and passes the same single DER CA to the production
+SDK readiness probe. Chrome does not ignore certificate errors. This is a hosted
+L2 environment with simulated DNS/test trust; it does not establish public DNS,
+ACME, external Internet reachability, installed-daemon login or any L3/L4
+target-platform acceptance. The management origin is a cookie boundary sentinel,
+not the production management workspace UI.
+
+The actual Caddy/Chrome cases cover frontend CA/name validation, SNI/Host
+mismatch, wrong upstream root and name, production HTTPS readiness before ticket
+renewal, fragment removal and ticket replay, real Secure/HttpOnly/host-only
+session cookies, original backend cookie login with separate service Jars,
+management-cookie isolation, exact upload/download bytes, same-service redirects
+and external redirect refusal, browser cross-origin POST without backend side
+effects, real WSS echo, logout/ACL withdrawal closing existing upgrades, and
+refusal after a stopped owner's endpoint is rebound with the old public TLS name
+but unrelated root/key. The replacement must receive zero completed TLS
+handshakes and zero application bytes. Original gateway/host physical joins and
+zero outstanding original quota are required. Finally the driver requires the
+real Caddy Admin route-removal ACK and readback without the two exact owned IDs.
+
+The evidence receipt separates `build_source` (source/workflow SHA, run/attempt,
+Cargo.lock and test-executable digest) from `execution` (runner, case results,
+Chrome identity, physical and quota receipts). The same run retains the browser
+tool dependency lock. Only bounded, redacted runtime diagnostics and structured
+receipts enter artifacts; route hop credentials, tickets, cookies, private keys
+and the browser profile remain in a fresh private directory and are removed.
+Cleanup independently attempts original process groups, test trust, owned hosts
+line and private files; any failed physical receipt or cleanup makes the run
+fail. Exact-source success still needs the resulting Actions evidence, and the
+remaining real application/browser/platform qualification keeps W25 in progress.
 
 The generated transport uses Caddy 2.10.2's documented upstream TLS JSON shape:
 `tls.ca.provider=inline`, `tls.ca.trusted_ca_certs` (base64 DER), and

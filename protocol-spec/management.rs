@@ -1,5 +1,6 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+pub use crate::network_access::{NetworkAccessRequest, NetworkAccessStart, NetworkAccessView};
 
 /// Deployment-administrator controls. These never grant business or IP access.
 #[derive(Clone, Serialize, Deserialize, JsonSchema)]

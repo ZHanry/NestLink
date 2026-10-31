@@ -160,11 +160,9 @@ impl Recorder {
             stage,
             Stage::Stopped | Stage::CleanupFailed | Stage::OperationFailed
         );
-        if self.append().is_err() {
-            if !self.warned {
-                eprintln!("private_service_diagnostics_unavailable=true");
-                self.warned = true;
-            }
+        if self.append().is_err() && !self.warned {
+            eprintln!("private_service_diagnostics_unavailable=true");
+            self.warned = true;
         }
     }
     pub(crate) fn stopping(&mut self, cause: StopCause) {

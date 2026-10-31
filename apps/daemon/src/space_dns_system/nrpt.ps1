@@ -24,7 +24,12 @@ if ([string]$request.action -ceq 'query') {
     }
 }
 [Console]::Error.WriteLine('NestLink NRPT: provider imported')
-function Emit($value) { ConvertTo-Json -InputObject $value -Depth 20 -Compress }
+function Emit($value) {
+    # Windows PowerShell 5.1 emits no bytes for ConvertTo-Json $null. Absence is
+    # an explicit JSON result, never an empty/failed native command response.
+    if ($null -eq $value) { [Console]::WriteLine('null') }
+    else { ConvertTo-Json -InputObject $value -Depth 20 -Compress }
+}
 function View($rule) {
     [ordered]@{
         name = [string]$rule.Name

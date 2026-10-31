@@ -104,12 +104,20 @@ impl PrivateWebGateway {
         Ok(self.launch_url())
     }
     pub fn public_route_probe(&self) -> Result<PrivateWebRouteProbe, SdkError> {
+        self.route_probe(None)
+    }
+    /// Explicit native-local trust for an enterprise/test public HTTPS origin.
+    /// The browser must independently trust this CA. No remote launch request
+    /// can choose the CA, and default WebPKI roots are disabled for this mode.
+    pub fn public_route_probe_with_root(&self, ca_der: &[u8]) -> Result<PrivateWebRouteProbe, SdkError> {
+        if ca_der.is_empty() || ca_der.len() > 16_384 { return Err(SdkError::Invalid); }
+        self.route_probe(Some(reqwest::Certificate::from_der(ca_der)?))
+    }
+    fn route_probe(&self, root: Option<reqwest::Certificate>) -> Result<PrivateWebRouteProbe, SdkError> {
+        let mut client = reqwest::Client::builder().https_only(true).redirect(reqwest::redirect::Policy::none()).timeout(SETUP);
+        if let Some(root) = root { client = client.tls_built_in_root_certs(false).add_root_certificate(root); }
         Ok(PrivateWebRouteProbe {
-            client: reqwest::Client::builder()
-                .https_only(true)
-                .redirect(reqwest::redirect::Policy::none())
-                .timeout(SETUP)
-                .build()?,
+            client: client.build()?,
             url: format!("{}/.nestlink/ready", self.origin),
             owner_id: self.owner_id().to_owned(),
         })

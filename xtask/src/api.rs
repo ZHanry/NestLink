@@ -146,6 +146,9 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         NetworkPolicyView,
         NetworkMemberView,
         NetworkGrantView,
+        NetworkAccessRequest,
+        NetworkAccessStart,
+        NetworkAccessView,
         NetworkRemotePathRequest,
         NetworkRemotePathView,
         NetworkRemoteRelayRequest,
@@ -286,6 +289,7 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         "MediaScopeResponse",
     )?;
     schema::<Vec<SpaceView>>(&mut schemas, "SpacesResponse")?;
+    schema::<bool>(&mut schemas, "NetworkAccessStartResponse")?;
     schema::<Option<ServiceExposureView>>(&mut schemas, "ServiceExposureResponse")?;
     schema::<Vec<SpaceAuditEntry>>(&mut schemas, "SpaceAuditResponse")?;
     let routes: Vec<Value> = serde_json::from_slice(&fs::read(

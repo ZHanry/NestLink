@@ -1,0 +1,86 @@
+name: Private Web gateway real Caddy and Chrome
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "crates/sdk/src/services/web_gateway*"
+      - "crates/sdk/src/services/web_gateway/**"
+      - "crates/sdk/src/services/web_launch.rs"
+      - "crates/sdk/tests/private_services/web*.rs"
+      - "scripts/network-rewrite-private-web*"
+      - ".github/workflows/private-web-gateway.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: private-web-gateway-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  real-private-https-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CARGO_INCREMENTAL: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      RUST_BACKTRACE: "0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+      - name: Set ephemeral native SDK build paths
+        shell: bash
+        run: |
+          printf 'NESTLINK_CODEC_PREFIX=%s/nestlink-codecs/x86_64-unknown-linux-gnu\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          printf 'CARGO_TARGET_DIR=%s/nestlink-private-web-target\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+      - name: Install hosted native and certificate tooling
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config libpipewire-0.3-dev openssl libnss3-tools libcap2-bin
+      - name: Build and verify original SDK native codec inputs on GitHub
+        run: |
+          python3 scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir "$RUNNER_TEMP/nestlink-codec-sources" --work-dir "$RUNNER_TEMP/nestlink-codecs"
+          python3 scripts/refactor-native-codecs.py verify --target x86_64-unknown-linux-gnu --prefix "$NESTLINK_CODEC_PREFIX"
+      - name: Install existing reviewed browser driver and pinned Caddy
+        shell: bash
+        run: |
+          npm install --prefix "$RUNNER_TEMP/nestlink-private-web-tools" --ignore-scripts --no-audit --no-fund --package-lock=true puppeteer-core@25.14.0
+          mkdir -p "$RUNNER_TEMP/nestlink-private-web-caddy"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/nestlink-private-web-caddy/caddy.tar.gz" \
+            https://github.com/caddyserver/caddy/releases/download/v2.11.7/caddy_2.11.7_linux_amd64.tar.gz
+          tar --extract --gzip --no-same-owner --file "$RUNNER_TEMP/nestlink-private-web-caddy/caddy.tar.gz" --directory "$RUNNER_TEMP/nestlink-private-web-caddy" caddy
+          printf '%s  %s\n' 678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9 "$RUNNER_TEMP/nestlink-private-web-caddy/caddy" | sha256sum --check --status
+          sudo -n setcap cap_net_bind_service=+ep "$RUNNER_TEMP/nestlink-private-web-caddy/caddy"
+          test -x /opt/google/chrome/chrome
+      - name: Validate the new fixture scripts on GitHub
+        shell: bash
+        run: |
+          node --check scripts/network-rewrite-private-web.cjs
+          python3 -B -c 'import ast,pathlib; ast.parse(pathlib.Path("scripts/network-rewrite-private-web.py").read_text())'
+      - name: Build exact SDK source and exercise real Caddy TLS and Chrome
+        run: |
+          python3 -B scripts/network-rewrite-private-web.py \
+            --output "$RUNNER_TEMP/nestlink-private-web-evidence" \
+            --caddy "$RUNNER_TEMP/nestlink-private-web-caddy/caddy" \
+            --chrome /opt/google/chrome/chrome \
+            --tools "$RUNNER_TEMP/nestlink-private-web-tools/node_modules/puppeteer-core"
+      - name: Retain same-run development tool dependency integrity lock
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: private-web-tool-lock-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/nestlink-private-web-tools/package-lock.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Retain sanitized build and execution evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: private-web-caddy-chrome-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/nestlink-private-web-evidence/
+          if-no-files-found: warn
+          retention-days: 30

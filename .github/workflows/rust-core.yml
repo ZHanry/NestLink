@@ -346,6 +346,9 @@ jobs:
         run: |
           $spaceDnsLog = Join-Path $env:RUNNER_TEMP 'nestlink-space-dns-tests.log'
           $spaceDnsTests = @(
+            @{ Args = @('-p', 'nestlink-sdk', '--test', 'network_access') },
+            @{ Args = @('-p', 'nestlink-sdk', '--lib', 'network::packet_access::tests::') },
+            @{ Args = @('-p', 'nestlink-transport-quic', '--lib', 'packet_codec::tests::') },
             @{ Args = @('-p', 'nestlink-sdk', '--test', 'space_addressing') },
             @{ Args = @('-p', 'nestlink-sdk', '--test', 'space_dns') },
             @{ Args = @('-p', 'nestlink-local-ipc', '--lib', 'headless_session_owner_and_daemon_share_one_singleton_without_fake_endpoint') }
