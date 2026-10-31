@@ -49,7 +49,7 @@ REVIEWED_NETWORK_FORKS = {
     'mdns-sd': {
         'version': '0.21.6',
         'path': 'third-party/mdns-sd',
-        'provenance_sha256': 'b649938c0ff68e92a49aacc1a672857b20c585512c150ffec5df72e66b583e05',
+        'provenance_sha256': 'b8de1aa8beacdfbb6b686a3feaba59ea8f08fea218367c5a2f231fafd6d0748a',
         'archive_sha256': '8562654710f72a9cbce4b0d5b7c366a2f94330ba1ce3740f15e932ea2d37b161',
         'notes_sha256': 'bbc0642bd00dd1913d854505e9ee7d63df38575a68da94508790af390ee6e097',
     },

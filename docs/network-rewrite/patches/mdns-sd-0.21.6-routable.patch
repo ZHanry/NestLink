@@ -1,5 +1,5 @@
 diff --git a/src/service_info.rs b/src/service_info.rs
-index ba5bfd8..bf8f68e 100644
+index ba5bfd8..cc773b0 100644
 --- a/src/service_info.rs
 +++ b/src/service_info.rs
 @@ -135,6 +135,10 @@ pub struct ServiceInfo {
@@ -55,7 +55,7 @@ index ba5bfd8..bf8f68e 100644
              .copied()
              .collect()
      }
-@@ -1530,6 +1553,37 @@ mod tests {
+@@ -1530,6 +1553,38 @@ mod tests {
      use std::net::{Ipv4Addr, Ipv6Addr};
      use std::time::Duration;
  
@@ -69,6 +69,7 @@ index ba5bfd8..bf8f68e 100644
 +                ip: Ipv4Addr::new(192, 168, 42, 2),
 +                netmask: Ipv4Addr::new(255, 255, 255, 0),
 +                broadcast: Some(Ipv4Addr::new(192, 168, 42, 255)),
++                prefixlen: 24,
 +            })]),
 +            max_packet_size_v4: 1500, max_packet_size_v6: 1500,
 +        };

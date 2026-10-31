@@ -1563,6 +1563,7 @@ mod tests {
                 ip: Ipv4Addr::new(192, 168, 42, 2),
                 netmask: Ipv4Addr::new(255, 255, 255, 0),
                 broadcast: Some(Ipv4Addr::new(192, 168, 42, 255)),
+                prefixlen: 24,
             })]),
             max_packet_size_v4: 1500, max_packet_size_v6: 1500,
         };

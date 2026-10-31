@@ -107,7 +107,7 @@
                           {
                               "path":  "src/service_info.rs",
                               "original_sha256":  "97b64268a004e1040889ce7771de40a84b06503ec41d62cd4842523b2b6cdba4",
-                              "local_sha256":  "ae26d8c6615efa29a5b31dc93f949a1e64af4dde0bca1cfe36b45a800269e7a8",
+                              "local_sha256":  "c85b873532af9ba494fb4253b1117eee41ff33555751750a0061c4adc10a83ed",
                               "reason":  "Default-off selected-interface unicast routed IPv4 publication option and focused boundary regression; unchanged maintained DNS parser/cache/probe/runtime/TTL/cleanup"
                           }
                       ]
