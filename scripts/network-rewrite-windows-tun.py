@@ -287,7 +287,8 @@ def main():
                     if (not packets.get("real_http_sqlite_authority") or not packets.get("original_production_packet_loop")
                         or not packets.get("pinned_mtls_quic") or packets.get("remote_original_spent_bytes") != 5120
                         or packets.get("one_use_replay_denials") != 2 or not stopped.get("online_http_403_observed")
-                        or not stopped.get("original_udp_endpoints_rebound") or stopped.get("revocation_to_physical_cleanup_ms", 5000) >= 5000
+                        or not stopped.get("original_udp_endpoints_rebound") or stopped.get("local_original_spent_bytes") != 5120
+                        or stopped.get("revocation_to_physical_cleanup_ms", 5000) >= 5000
                         or not packets.get("same_host_only") or packets.get("production_cli_validated") is not False
                         or stopped.get("production_https_login_resume_validated") is not False):
                         raise ValueError("real HTTP/SQLite/native/QUIC online integration or five-second physical revocation cleanup failed")

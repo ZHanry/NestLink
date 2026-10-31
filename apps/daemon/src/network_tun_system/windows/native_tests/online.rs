@@ -74,11 +74,10 @@ pub(super) async fn ordinary(case: &Path, plan_path: &Path, receipt: &Path) -> R
     // Both original endpoint claims are durable, even with a different owner
     // ID. Never manufacture another in-memory packet budget after this denial.
     for (sdk, device) in [(&f.source, &f.source_device), (&f.target, &f.target_device)] {
-        assert!(
-            matches!(sdk.start_network_access(&f.space,&f.view.access.grant_id,NetworkAccessStart{
+        let repeated = sdk.start_network_access(&f.space,&f.view.access.grant_id,NetworkAccessStart{
             installation_id:device.device_id.clone(),owner_id:nestlink_auth::random_id(),
-        }).await,Err(SdkError::Api(status,_)) if status.as_u16()==409)
-        );
+        }).await;
+        assert!(matches!(&repeated,Err(SdkError::Api(status,_)) if status.as_u16()==403), "the original consumed endpoint must retain the production Forbidden contract: {repeated:?}");
     }
     let interface = nestlink_platform_network::path::NetworkPathManager::interfaces()?
         .into_iter()
@@ -199,6 +198,7 @@ pub(super) async fn ordinary(case: &Path, plan_path: &Path, receipt: &Path) -> R
     peer.close_and_wait(Instant::now() + Duration::from_secs(5))
         .await?;
     let revoked = result?;
+    assert_eq!(local.spent_bytes(),5120,"the original ordinary budget must account for both complete requests and replies");
     assert!(
         revoked.elapsed() < Duration::from_secs(5),
         "online revocation must physically release the original TUN and both packet endpoints within five seconds"
@@ -217,7 +217,7 @@ pub(super) async fn ordinary(case: &Path, plan_path: &Path, receipt: &Path) -> R
             "normal_cleanup_ms":cleanup.elapsed().as_millis(),"kernel_absent":os.absent(&plan).await?,
             "revocation_to_physical_cleanup_ms":revoked.elapsed().as_millis(),"online_http_403_observed":true,
             "original_udp_endpoints_rebound":true,"same_host_only":true,"production_cli_validated":false,
-            "production_https_login_resume_validated":false,"one_use_replay_denials":2,
+        "production_https_login_resume_validated":false,"one_use_replay_denials":2,"local_original_spent_bytes":local.spent_bytes(),
             "underlay":{"index":interface.index,"luid":interface.luid,"name":interface.name,"local":local_underlay,"remote":remote_underlay}
         }))?,
     )?;
