@@ -5,7 +5,7 @@ use nestlink_protocol::network_access::{
 };
 use nestlink_storage::network_policy::network_access::NetworkAccessBundle;
 
-fn view(bundle: NetworkAccessBundle) -> Result<NetworkAccessView, StorageError> {
+pub(super) fn view(bundle: NetworkAccessBundle) -> Result<NetworkAccessView, StorageError> {
     let [source, destination] = bundle.memberships;
     Ok(NetworkAccessView {
         source_membership: grant_view(source)?,

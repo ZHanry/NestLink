@@ -532,7 +532,7 @@ impl Store {
         Ok(())
     }
 
-    fn current_packet_access(
+    pub(super) fn current_packet_access(
         &self,
         tx: &Transaction<'_>,
         actor: &Principal,

@@ -93,6 +93,7 @@ pub(super) fn grant_id_available(
     let exists: bool = connection.query_row("SELECT EXISTS(SELECT 1 FROM network_grants WHERE space_id=?1 AND grant_id=?2 UNION ALL SELECT 1 FROM network_remote_paths WHERE space_id=?1 AND (path_grant_id=?2 OR connectivity_grant_id=?2) UNION ALL SELECT 1 FROM network_remote_relays WHERE space_id=?1 AND transit_grant_id=?2 UNION ALL SELECT 1 FROM network_remote_chain_hops WHERE space_id=?1 AND transit_grant_id=?2 UNION ALL SELECT 1 FROM network_remote_route_set_members WHERE space_id=?1 AND transit_grant_id=?2 UNION ALL SELECT 1 FROM network_route_exports WHERE space_id=?1 AND grant_id=?2 UNION ALL SELECT 1 FROM network_topology_publishers WHERE space_id=?1 AND publisher_id=?2
         UNION ALL SELECT 1 FROM network_packet_access WHERE space_id=?1 AND (access_grant_id=?2 OR connectivity_grant_id=?2 OR path_grant_id=?2)
         UNION ALL SELECT 1 FROM network_subnet_mappings WHERE space_id=?1 AND grant_id=?2
+        UNION ALL SELECT 1 FROM network_wireguard_bindings WHERE space_id=?1 AND grant_id=?2
         UNION ALL SELECT 1 FROM private_service_leases p WHERE p.space_id=?1 AND p.network_json IS NOT NULL AND
           (?2 IN(json_extract(p.network_json,'$.consumer_membership.grant_id'),json_extract(p.network_json,'$.host_membership.grant_id'),json_extract(p.network_json,'$.connectivity.grant_id'),json_extract(p.network_json,'$.path.grant_id'))
            OR EXISTS(SELECT 1 FROM json_each(p.network_json,'$.relay.transits') t WHERE json_extract(t.value,'$.grant_id')=?2)))",

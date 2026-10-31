@@ -20,13 +20,16 @@ use nestlink_sdk::network::{
 };
 use std::collections::BTreeSet;
 
-struct Gateway {
-    node: String,
-    identity: NodeIdentity,
-    mapping: SubnetMappingView,
-    reference: SubnetMappingReference,
+pub(super) struct Gateway {
+    pub(super) node: String,
+    pub(super) identity: NodeIdentity,
+    pub(super) mapping: SubnetMappingView,
+    pub(super) reference: SubnetMappingReference,
 }
 async fn gateway(f: &Fixture, seed: u8, alias: &str) -> Result<Gateway> {
+    gateway_prefix(f,seed,IpPrefix{network:"192.168.1.0".parse()?,prefix_len:24},IpPrefix{network:alias.parse()?,prefix_len:24}).await
+}
+pub(super) async fn gateway_prefix(f:&Fixture,seed:u8,original:IpPrefix,alias:IpPrefix)->Result<Gateway> {
     let identity = NodeIdentity::from_seed(&[seed; 32]);
     let node = random_id();
     let mut store = f.store()?;
@@ -59,14 +62,6 @@ async fn gateway(f: &Fixture, seed: u8, alias: &str) -> Result<Gateway> {
     let challenge = store.node_challenge(&node, now()?)?;
     let lease = store.issue_node_lease(&identity.prove(&challenge, &runtime_id)?, now()?)?;
     drop(store);
-    let original = IpPrefix {
-        network: "192.168.1.0".parse()?,
-        prefix_len: 24,
-    };
-    let alias = IpPrefix {
-        network: alias.parse()?,
-        prefix_len: 24,
-    };
     let policy = f.manager.network_policy(&f.space).await?;
     let export = f
         .manager
@@ -77,7 +72,7 @@ async fn gateway(f: &Fixture, seed: u8, alias: &str) -> Result<Gateway> {
                 grant_id: random_id(),
                 expected_revision: policy.revision,
                 expected_policy_epoch: policy.policy_epoch,
-                prefixes: vec![original, alias],
+                prefixes: if original==alias {vec![original]} else {vec![original, alias]},
                 expires_at_ms: now()? + 60_000,
             },
         )
@@ -154,7 +149,7 @@ async fn bind_request(
         expected_revision: f.manager.network_policy(&f.space).await?.revision,
     })
 }
-async fn bind(f: &Fixture, gateway: &Gateway, endpoint: usize) -> Result {
+pub(super) async fn bind(f: &Fixture, gateway: &Gateway, endpoint: usize) -> Result {
     let owner = if endpoint == 0 { &f.source } else { &f.target };
     owner
         .bind_subnet_gateway_installation(
@@ -191,7 +186,7 @@ async fn request(
         destination_mapping: destination.map(|gateway| gateway.reference.clone()),
     })
 }
-fn digest(f: &Fixture, view: &NetworkAccessView) -> Result<[u8; 32]> {
+pub(super) fn digest(f: &Fixture, view: &NetworkAccessView) -> Result<[u8; 32]> {
     let revoked = BTreeSet::new();
     Ok(verify_network_grant(
         &decode_network_grant(&view.access)?,
@@ -206,7 +201,7 @@ fn digest(f: &Fixture, view: &NetworkAccessView) -> Result<[u8; 32]> {
     )?
     .digest())
 }
-fn udp(source: [u8; 4], destination: [u8; 4], port: u16) -> Result<Vec<u8>> {
+pub(super) fn udp(source: [u8; 4], destination: [u8; 4], port: u16) -> Result<Vec<u8>> {
     let builder = etherparse::PacketBuilder::ipv4(source, destination, 64).udp(41000, port);
     let mut bytes = Vec::new();
     builder.write(&mut bytes, &[8; 64])?;

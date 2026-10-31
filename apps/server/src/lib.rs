@@ -497,6 +497,14 @@ pub fn router(state: AppState) -> Router {
             post(network_policy::subnet::bind_installation),
         )
         .route(
+            "/api/v3/network/spaces/{space}/wireguard-client-bindings",
+            post(network_policy::wireguard::issue),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/wireguard-client-bindings/{binding}",
+            get(network_policy::wireguard::read).delete(network_policy::wireguard::revoke),
+        )
+        .route(
             "/api/v3/network/spaces/{space}/subnet-packet-access",
             post(network_policy::network_access::issue_subnet),
         )

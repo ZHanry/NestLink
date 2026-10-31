@@ -38,6 +38,7 @@ pub mod turn;
 pub mod upload;
 pub mod webrtc;
 pub mod webrtc_data;
+pub mod wireguard;
 include!(concat!(env!("OUT_DIR"), "/nestlink.v1.rs"));
 include!(concat!(env!("OUT_DIR"), "/contract.rs"));
 

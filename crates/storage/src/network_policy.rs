@@ -31,6 +31,7 @@ pub use authority::{NetworkAuthorityChange, NetworkAuthorityState};
 pub mod route_exports;
 pub mod subnet;
 pub mod topology;
+pub mod wireguard;
 
 pub const MAX_NETWORK_MEMBERS: usize = 4096;
 pub const MAX_CURRENT_NETWORK_GRANTS: usize = 65_536;
@@ -740,6 +741,7 @@ pub(crate) fn read_snapshot(
         now_ms,
         &mut revoked_grant_ids,
     )?;
+    wireguard::collect_revocations(connection, space_id, now_ms, &mut revoked_grant_ids)?;
     Ok(TrustedNetworkPolicySnapshot {
         authority_key,
         deployment_id,

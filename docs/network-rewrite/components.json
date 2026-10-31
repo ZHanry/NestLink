@@ -845,8 +845,8 @@
         "W24",
         "W34"
       ],
-      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
-      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+      "validation_status": "original packet client key-binding API/SQLite/SDK slice implemented; Actions compilation/tests and actual kernel/Android/iOS qualification pending",
+      "decision_ref": "docs/adr/network/0048-wireguard-original-packet-key-binding.md"
     },
     {
       "id": "C15",

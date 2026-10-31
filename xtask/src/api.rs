@@ -16,6 +16,7 @@ use nestlink_protocol::spaces::addressing::*;
 use nestlink_protocol::spaces::service_publication::*;
 use nestlink_protocol::spaces::*;
 use nestlink_protocol::subnet::management::*;
+use nestlink_protocol::wireguard::management::*;
 use nestlink_protocol::{
     SignedNodeResourceQuery, SignedNodeResourceSnapshot, SignedNodeUsage, SignedNodeUsageAck,
     SignedRelayClose, SignedRelayCloseAck, SignedTurnCredentials, SignedTurnResourceQuery,
@@ -221,6 +222,9 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         SubnetMappingReference,
         SubnetGatewayInstallationRequest,
         SubnetNetworkAccessRequest,
+        WireGuardClientBindingRequest,
+        WireGuardClientBindingView,
+        WireGuardClientRevoke,
         RemoteRequestsResponse,
         RemotePeerKeys,
         PermitResponse,

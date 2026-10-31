@@ -185,4 +185,7 @@
   ,{"path":"/network/spaces/{space}/subnet-mappings/{mapping}","method":"delete","operation":"network_policy::subnet::revoke","request":"SubnetMappingRevoke","response":"NetworkPolicyView","status":200,"auth":true}
   ,{"path":"/network/spaces/{space}/subnet-mappings/{mapping}/installation","method":"post","operation":"network_policy::subnet::bind_installation","request":"SubnetGatewayInstallationRequest","response":"NetworkPolicyView","status":200,"auth":true}
   ,{"path":"/network/spaces/{space}/subnet-packet-access","method":"post","operation":"network_policy::network_access::issue_subnet","request":"SubnetNetworkAccessRequest","response":"NetworkAccessView","status":201,"auth":true}
+  ,{"path":"/network/spaces/{space}/wireguard-client-bindings","method":"post","operation":"network_policy::wireguard::issue","request":"WireGuardClientBindingRequest","response":"WireGuardClientBindingView","status":201,"auth":true}
+  ,{"path":"/network/spaces/{space}/wireguard-client-bindings/{binding}","method":"get","operation":"network_policy::wireguard::read","response":"WireGuardClientBindingView","status":200,"auth":true}
+  ,{"path":"/network/spaces/{space}/wireguard-client-bindings/{binding}","method":"delete","operation":"network_policy::wireguard::revoke","request":"WireGuardClientRevoke","response":"NetworkPolicyView","status":200,"auth":true}
 ]

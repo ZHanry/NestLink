@@ -7,6 +7,7 @@ mod authority;
 mod network_access;
 mod route_sets;
 mod subnet;
+mod wireguard;
 
 fn base(space: &str) -> Result<String, SdkError> {
     if !valid_id(space) {

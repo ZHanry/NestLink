@@ -22,6 +22,7 @@ pub mod service_plane;
 pub mod service_quota_recovery;
 pub mod services;
 pub mod subnet;
+pub mod wireguard;
 pub use server_identity::verify_server_identity;
 
 const PERMIT_DOMAIN: &[u8] = b"NestLink/v15/session-permit/v1\0";

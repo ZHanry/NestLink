@@ -26,6 +26,8 @@ use std::{
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 #[path = "network_access/subnet.rs"]
 mod subnet;
+#[path = "network_access/wireguard.rs"]
+mod wireguard;
 const PASSWORD: &str = "packet-access-http-integration-password";
 
 fn now() -> Result<u64> {
