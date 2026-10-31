@@ -24,6 +24,7 @@ def sha256(path):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=pathlib.Path, required=True)
+    parser.add_argument("--game", choices=("teeworlds",))
     args = parser.parse_args()
     assert os.environ["RUNNER_ENVIRONMENT"] == "github-hosted"
     output = args.output.resolve()
@@ -43,7 +44,7 @@ def main():
         "run_id": os.environ["GITHUB_RUN_ID"],
         "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
         "runner_environment": os.environ["RUNNER_ENVIRONMENT"],
-        "scope": "isolated dual LAN UDP DNS and DNS-SD mechanism; no game or target-site acceptance",
+        "scope": "isolated hosted official Teeworlds real play and revocation; no physical-site acceptance" if args.game else "isolated dual LAN UDP DNS and DNS-SD mechanism; no game or target-site acceptance",
         "lock_sha256": sha256(pathlib.Path("Cargo.lock")),
         "commands": commands,
         "passed": False,
@@ -106,6 +107,11 @@ def main():
         receipt["test_binary_sha256"] = sha256(binary)
         receipt["exact_test_selector"] = SELECTOR
         env = os.environ.copy()
+        selector = SELECTOR
+        if args.game:
+            selector = "lan::actual_teeworlds_client_server_play_revoke_and_release_original_owner"
+            env["NESTLINK_GAME_EVIDENCE"] = str(output / "actual-teeworlds")
+            assert pathlib.Path(env["NESTLINK_GAME_PREPARED"]).is_dir()
         env["NESTLINK_LAN_EVIDENCE"] = str(output / "actual-lan-execution.json")
         suffix = os.environ["GITHUB_RUN_ID"][-7:] + os.environ["GITHUB_RUN_ATTEMPT"]
         for index in range(2):
@@ -131,6 +137,8 @@ def main():
                                  "PREFIX": prefix + ".0/24", "SERVER": prefix + ".3",
                                  "NAMESPACE": namespace}.items():
                 env["NESTLINK_LAN_" + str(index) + "_" + field] = value
+            if args.game:
+                continue
             log = (output / ("actual-dnsmasq-" + str(index) + ".log")).open("wb")
             port = str(38303 if index == 0 else 38403)
             argv = ["sudo", "-n", "ip", "netns", "exec", namespace, "dnsmasq", "--no-daemon",
@@ -144,8 +152,9 @@ def main():
                              "log": "actual-dnsmasq-" + str(index) + ".log"})
             time.sleep(0.15)
             assert process.poll() is None, "actual distribution dnsmasq did not remain running"
-        command("actual-original-owner-lan", [str(binary), SELECTOR, "--exact", "--ignored",
-                 "--nocapture", "--color", "never"], timeout=90, env=env)
+        receipt["exact_test_selector"] = selector
+        command("actual-original-owner-lan", [str(binary), selector, "--exact", "--ignored",
+                 "--nocapture", "--color", "never"], timeout=120, env=env)
         actual = json.loads((output / "actual-lan-execution.json").read_text())
         assert actual["passed"] and actual["source_revision"] == source
         receipt["execution_passed"] = True
@@ -184,8 +193,8 @@ def main():
         receipt["failure"] = failure
         receipt["cleanup_errors"] = cleanup_errors
         receipt["passed"] = failure is None and not cleanup_errors
-        receipt["files"] = [{"path": path.name, "sha256": sha256(path), "bytes": path.stat().st_size}
-                            for path in sorted(output.iterdir()) if path.is_file() and path.name != "receipt.json"]
+        receipt["files"] = [{"path": str(path.relative_to(output)), "sha256": sha256(path), "bytes": path.stat().st_size}
+                            for path in sorted(output.rglob("*")) if path.is_file() and path.name != "receipt.json"]
         (output / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
     assert receipt["passed"], "hosted LAN mechanism did not qualify; exact failure and cleanup retained"
 

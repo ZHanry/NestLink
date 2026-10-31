@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "scope": "Pinned lawful upstream game inputs for explicit GitHub-hosted L2 interoperability. This manifest grants no network authority and qualifies no physical site.",
+  "teeworlds": {
+    "version": "0.7.5",
+    "source_revision": "4fc25a17fef3e6c2bf4d52b0421e0d69ecaa1e79",
+    "url": "https://github.com/teeworlds/teeworlds/releases/download/0.7.5/teeworlds-0.7.5-linux_x86_64.tar.gz",
+    "github_asset_id": 19972645,
+    "sha256": "20ff9664cb6de612278e697cfac6a9426ec4065a4f0a3fefaa5185df03e58b4c",
+    "bytes": 8992685,
+    "directory": "teeworlds-0.7.5-linux_x86_64",
+    "files": {
+      "teeworlds": "398bc6dde12b8806cf1aab0b7fa3d3e6ba487bf28642a1b09a60d5d09b0fbc90",
+      "teeworlds_srv": "e995b3b9343a2ce1cc82be75ca9eb976c75bf121f3c5c2add1d674423c7b3a42",
+      "data/maps/dm1.map": "491af17a510214506270904f147a4c30ae0a85b91bb854395bef8c397fc078c3",
+      "license.txt": "939b8a48a53be9aaa0b1774117ddcd6a9d3c3a395b8e209b6de0b465317b5e6f"
+    },
+    "license": "zlib-style source; official dm1/content CC-BY-SA-3.0, font and bundled libraries retain their included separate notices",
+    "attribution": "Magnus Auvinen and Teeworlds contributors; content authors listed in the retained official license.txt",
+    "content": "Unmodified official dm1 map and bundled data from the same pinned release archive"
+  }
+}

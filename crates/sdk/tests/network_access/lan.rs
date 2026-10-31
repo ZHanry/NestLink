@@ -36,7 +36,7 @@ async fn pump(
     let mut sequence = 0_u64;
     let mut refresh = tokio::time::interval(Duration::from_millis(250));
     let mut fetched = Instant::now();
-    let result = loop {
+    let result = async { loop {
         tokio::select! {biased;
             result=stop.changed()=>{result?;if *stop.borrow(){break Ok(access.spent_bytes());}},
             _=refresh.tick()=>{
@@ -54,16 +54,17 @@ async fn pump(
                 for fragment in encode_direct(access.business_digest(),access.wire_direction(),sequence,&buffer[..length])?{connection.send_datagram(fragment.into())?;}
             },
         }
-    };
+    }}.await;
     access.stop();
     result
 }
 fn value(name: &str) -> Result<String> {
     Ok(std::env::var(name)?)
 }
-fn policy(space: &str, index: usize) -> Result<LanPolicy> {
+fn policy(space: &str, index: usize, game: bool) -> Result<LanPolicy> {
     let address: Ipv4Addr = value(&format!("NESTLINK_LAN_{index}_ADDRESS"))?.parse()?;
-    let port = if index == 0 { 38303 } else { 38403 };
+    let port = match (game, index) { (true, 0) => 8303, (true, _) => 8304,
+        (false, 0) => 38303, (false, _) => 38403 };
     Ok(LanPolicy {
         schema_version: 1,
         space_id: space.into(),
@@ -134,9 +135,42 @@ async fn client(index: usize) -> TaskResult<serde_json::Value> {
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 #[ignore = "requires exact GitHub-hosted isolated dual-LAN namespace workflow"]
 async fn actual_lan_dns_sd_and_udp_use_original_online_owner_and_release_sockets() -> Result {
+    exercise_lan(false).await
+}
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+#[ignore = "requires pinned official Teeworlds and the explicit GitHub-hosted dual-LAN workflow"]
+async fn actual_teeworlds_client_server_play_revoke_and_release_original_owner() -> Result {
+    exercise_lan(true).await
+}
+async fn game(f: &Fixture, grant: &str) -> TaskResult<serde_json::Value> {
+    let output = std::path::PathBuf::from(std::env::var("NESTLINK_GAME_EVIDENCE")?);
+    let process = tokio::process::Command::new("python3")
+        .args(["-B", "scripts/network-games.py", "teeworlds"])
+        .kill_on_drop(true).output();
+    let revoke = async {
+        tokio::time::timeout(Duration::from_secs(35), async {
+            while !output.join("teeworlds-ready-for-revoke").try_exists()? {
+                tokio::time::sleep(Duration::from_millis(50)).await;
+            }
+            let revision = f.target.space_details(&f.space).await?.space.revision;
+            f.target.revoke_network_access(&f.space, grant, revision).await?;
+            std::fs::write(output.join("teeworlds-revoked"), b"original management revocation committed")?;
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+        }).await??;
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+    };
+    let (result, ()) = tokio::try_join!(async { Ok::<_,Box<dyn std::error::Error+Send+Sync>>(process.await?) }, revoke)?;
+    if !result.status.success() {
+        return Err(io::Error::other(format!("official Teeworlds failed: {} {}",
+            String::from_utf8_lossy(&result.stdout), String::from_utf8_lossy(&result.stderr))).into());
+    }
+    Ok(serde_json::from_slice(&std::fs::read(output.join("teeworlds-execution.json"))?)?)
+}
+async fn exercise_lan(game_mode: bool) -> Result {
     assert_eq!(std::env::var("RUNNER_ENVIRONMENT")?, "github-hosted");
     let f = Fixture::new().await?;
     let mut request = f.fresh_request().await?;
+    if game_mode { request.byte_limit = 4 * 1024 * 1024; }
     request.rules = vec![Direction::Inbound, Direction::Outbound]
         .into_iter()
         .map(|direction| NetworkRule {
@@ -169,7 +203,7 @@ async fn actual_lan_dns_sd_and_udp_use_original_online_owner_and_release_sockets
         random_id(),
     )
     .await?;
-    let policies = [policy(&f.space, 0)?, policy(&f.space, 1)?];
+    let policies = [policy(&f.space, 0, game_mode)?, policy(&f.space, 1, game_mode)?];
     let bridges = [
         LanBridge::bind(policies[0].clone(), &f.space, &source)?,
         LanBridge::bind(policies[1].clone(), &f.space, &target)?,
@@ -270,6 +304,9 @@ async fn actual_lan_dns_sd_and_udp_use_original_online_owner_and_release_sockets
             let imported=imported.ok_or_else(||io::Error::other("actual permitted DNS-SD service was not discovered"))?;
             let response=reqwest::get(format!("http://{}:38080/",policies[1].interface_address)).await?.text().await?;
             if response!="actual separately observed HTTP service"{return Err(io::Error::other("actual local advertised service unavailable").into());}
+            if game_mode {
+                return game(&f, &request.access_grant_id).await;
+            }
             let left=client(0).await?;let right=client(1).await?;
             tokio::time::sleep(Duration::from_millis(300)).await;
             Ok(serde_json::json!({"actual_dns_sd":imported,"actual_udp_dns_clients":[left,right],"game_acceptance_claimed":false,"http_virtual_data_path_qualification_claimed":false}))
@@ -289,7 +326,13 @@ async fn actual_lan_dns_sd_and_udp_use_original_online_owner_and_release_sockets
             pump(&f.target, &mut target, &bridges[1], &endpoints[1], stopped)
         )
     };
-    let execution = tokio::try_join!(owner_pair, exercise);
+    let execution = if game_mode {
+        let (owners, details) = tokio::join!(owner_pair, exercise);
+        assert!(owners.is_err(), "original online admission must stop on real management revocation");
+        details.map(|details| ((source.spent_bytes(), target.spent_bytes()), details))
+    } else {
+        tokio::try_join!(owner_pair, exercise)
+    };
     let mut cleanup = Vec::new();
     for bridge in &bridges {
         cleanup.push(
@@ -328,7 +371,7 @@ async fn actual_lan_dns_sd_and_udp_use_original_online_owner_and_release_sockets
     std::fs::write(
         output,
         serde_json::to_vec_pretty(
-            &serde_json::json!({"schema_version":1,"source_revision":value("GITHUB_SHA")?,"passed":true,"scope":"L2 actual dual LAN UDP DNS and mDNS/DNS-SD on original online HTTP/SQLite/QUIC packet owner; no game, target or virtual HTTP data path qualification","spent_bytes_original_source":left_bytes,"spent_bytes_original_destination":right_bytes,"execution":details,"cleanup":{"original_carriers_joined":true,"lan_udp_ports_rebound":true,"mdns_unregister_and_shutdown_acknowledged":true}}),
+            &serde_json::json!({"schema_version":1,"source_revision":value("GITHUB_SHA")?,"passed":true,"scope":if game_mode {"L2 official Teeworlds through original online HTTP/SQLite/QUIC LAN owner, real play and management revocation; physical sites not qualified"} else {"L2 actual dual LAN UDP DNS and mDNS/DNS-SD on original online HTTP/SQLite/QUIC packet owner; no game, target or virtual HTTP data path qualification"},"spent_bytes_original_source":left_bytes,"spent_bytes_original_destination":right_bytes,"execution":details,"cleanup":{"original_carriers_joined":true,"lan_udp_ports_rebound":true,"mdns_unregister_and_shutdown_acknowledged":true}}),
         )?,
     )?;
     f.finish().await?;

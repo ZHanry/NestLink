@@ -1,0 +1,59 @@
+name: Pinned official game interoperability
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: network-games-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  teeworlds:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      RUST_BACKTRACE: "0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          components: clippy
+      - name: Set ephemeral original SDK and lawful game paths
+        shell: bash
+        run: |
+          printf 'NESTLINK_CODEC_PREFIX=%s/nestlink-codecs/x86_64-unknown-linux-gnu\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          printf 'CARGO_TARGET_DIR=%s/nestlink-games-target\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          printf 'NESTLINK_GAME_PREPARED=%s/nestlink-pinned-games\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+      - name: Install mature game graphics, observation and original build tools
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config libpipewire-0.3-dev iproute2 dnsmasq-base xvfb xdotool imagemagick tesseract-ocr tcpdump libgl1-mesa-dri libglu1-mesa libsdl2-2.0-0 libfreetype6 libogg0 libvorbis0a libvorbisfile3
+      - name: Verify exact official client, server, map and retained upstream notices
+        run: python3 -B scripts/network-games.py prepare --game teeworlds --output "$NESTLINK_GAME_PREPARED"
+      - name: Build and verify original native SDK codec inputs on GitHub
+        run: |
+          python3 scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir "$RUNNER_TEMP/nestlink-codec-sources" --work-dir "$RUNNER_TEMP/nestlink-codecs"
+          python3 scripts/refactor-native-codecs.py verify --target x86_64-unknown-linux-gnu --prefix "$NESTLINK_CODEC_PREFIX"
+      - name: Check game and isolated fixture syntax on GitHub
+        run: python3 -B -c 'import ast,pathlib; [ast.parse(path.read_text()) for path in map(pathlib.Path,["scripts/network-lan-l2.py","scripts/network-lan-client.py","scripts/network-games.py"])]'
+      - name: Real official discovery, join, movement, snapshots, revocation and cleanup
+        run: python3 -B scripts/network-lan-l2.py --game teeworlds --output "$RUNNER_TEMP/network-game-evidence"
+      - name: Retain same-source real game and packet evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: game-teeworlds-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/network-game-evidence/
+            ${{ runner.temp }}/nestlink-pinned-games/upstream-inputs.json
+            ${{ runner.temp }}/nestlink-pinned-games/teeworlds-0.7.5-linux_x86_64/license.txt
+          if-no-files-found: warn
+          retention-days: 30
