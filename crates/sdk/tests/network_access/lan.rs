@@ -74,7 +74,7 @@ async fn actual_lan_dns_sd_and_udp_use_original_online_owner_and_release_sockets
     let publisher=mdns_sd::ServiceDaemon::new()?;
     publisher.disable_interface(mdns_sd::IfKind::All)?;publisher.enable_interface(mdns_sd::IfKind::IndexV4(policies[1].interface_index))?;
     let properties=vec![mdns_sd::TxtProperty::from(("binary",[0_u8,255,7]))];
-    let mut record=mdns_sd::ServiceInfo::new("_http._tcp.local.","actual-lan-http","actual-lan-http.local.",policies[1].interface_address,38080,properties)?;
+    let mut record=mdns_sd::ServiceInfo::new("_http._tcp.local.","actual-lan-http","actual-lan-http.local.",std::net::IpAddr::V4(policies[1].interface_address),38080,properties)?;
     record.set_interfaces(vec![mdns_sd::IfKind::IndexV4(policies[1].interface_index)]);publisher.register(record)?;
     let observer=mdns_sd::ServiceDaemon::new()?;
     observer.disable_interface(mdns_sd::IfKind::All)?;observer.enable_interface(mdns_sd::IfKind::IndexV4(policies[0].interface_index))?;

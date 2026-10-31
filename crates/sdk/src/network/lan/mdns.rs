@@ -94,7 +94,7 @@ impl Mdns {
             Some(bytes)=>TxtProperty::from((txt.key.clone(),bytes.as_slice())),None=>TxtProperty::from(txt.key.as_str()),
         }).collect();
         properties.push(TxtProperty::from(("nestlink-proxy","1")));
-        let mut record=ServiceInfo::new(&service.service_type,&instance,&host,self.peer_address,service.port as u16,properties).map_err(denied)?;
+        let mut record=ServiceInfo::new(&service.service_type,&instance,&host,std::net::IpAddr::V4(self.peer_address),service.port as u16,properties).map_err(denied)?;
         record.set_interfaces(vec![IfKind::IndexV4(policy.interface_index)]);
         let fullname=record.get_fullname().to_owned();
         self.daemon.as_ref().ok_or_else(||denied("DNS-SD is disabled"))?.register(record).map_err(denied)?;
