@@ -60,6 +60,12 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-protocol --lib native_qos:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/media-qos-evidence/report-contract-tests.log"
+      - name: Require signed two-party native-only capability negotiation
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-storage --test control native_receiver_qos:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/media-qos-evidence/report-negotiation-tests.log"
       - name: Exercise original channel queues and cleanup
         if: ${{ !cancelled() }}
         shell: bash
