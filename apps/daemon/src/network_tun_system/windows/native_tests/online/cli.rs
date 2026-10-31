@@ -51,6 +51,7 @@ pub(in super::super) async fn fixture(
         access.remote_peer(),
         selected.clone(),
     )?;
+    let remote_endpoint=peer.local_addr();
     let reserve = selected.bind_udp(bind)?;
     let owner_endpoint = reserve.local_addr()?;
     drop(reserve);
@@ -203,6 +204,7 @@ pub(in super::super) async fn fixture(
         std::net::UdpSocket::bind(owner_endpoint).is_ok(),
         "the actual production CLI still owns its original physical UDP endpoint"
     );
+    assert!(std::net::UdpSocket::bind(remote_endpoint).is_ok(),"the original remote witness still owns its physical UDP endpoint");
     let text = std::fs::read_to_string(log)?;
     assert!(
         text.contains(
