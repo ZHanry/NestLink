@@ -1,4 +1,4 @@
-//! One finite target per provider; actual CPU direction evidence only.
+//! A bounded finite set of exact targets; actual CPU direction evidence only.
 //! Probe resources are closed historical observations. Live media owners are
 //! owned/stopped/joined by the media runtime and have independent UUIDs.
 use nestlink_media_codec::VideoConfig;
@@ -21,6 +21,7 @@ use std::{
 #[derive(Clone)]
 pub struct NativeMediaProvider {
     target: VideoConfig,
+    targets: Arc<[VideoConfig]>,
     state: Arc<Mutex<ProviderState>>,
 }
 #[derive(Default)]
@@ -31,6 +32,7 @@ struct ProviderState {
 }
 struct ProbeResult {
     format: VideoFormat,
+    additional_formats: Vec<VideoFormat>,
     resource_id: String,
 }
 struct ProbeJob {
@@ -127,7 +129,9 @@ fn make_announcement(
             adapter_luid: None,
             driver_version: None,
         },
-        formats: vec![receipt.format.encode().map_err(io::Error::other)?],
+        formats: std::iter::once(receipt.format).chain(receipt.additional_formats)
+            .map(|format| format.encode().map_err(io::Error::other))
+            .collect::<io::Result<Vec<_>>>()?,
     };
     announcement.validate(now()?).map_err(io::Error::other)?;
     Ok(announcement)
@@ -183,8 +187,28 @@ impl NativeMediaProvider {
         }
         Ok(Self {
             target,
+            targets: Arc::from([target]),
             state: Arc::new(Mutex::new(ProviderState::default())),
         })
+    }
+    /// Each of at most three budgets runs the original full direction probe.
+    /// No lower rate or bitrate is inferred from the maximum target's receipt.
+    pub fn cpu_software_adaptive(target: VideoConfig) -> io::Result<Self> {
+        let mut provider = Self::cpu_software(target)?;
+        let mut targets = vec![target];
+        for (numerator, denominator) in [(3, 4), (1, 2)] {
+            let next = VideoConfig {
+                fps: (target.fps * numerator / denominator).max(target.fps.min(15)),
+                bitrate_kbps: (target.bitrate_kbps * numerator / denominator).max(64),
+                ..target
+            };
+            if !targets.iter().any(|value| value.fps == next.fps
+                && value.bitrate_kbps == next.bitrate_kbps) {
+                targets.push(next);
+            }
+        }
+        provider.targets = targets.into();
+        Ok(provider)
     }
     pub fn target(&self) -> VideoConfig {
         self.target
@@ -346,10 +370,10 @@ impl NativeMediaProvider {
             let id = next_id()?;
             let cancel = Arc::new(AtomicBool::new(false));
             let worker_cancel = cancel.clone();
-            let target = self.target;
+            let targets = self.targets.clone();
             let worker = thread::Builder::new()
                 .name("nestlink-media-renewal-probe".into())
-                .spawn(move || run_probe(target, direction, &worker_cancel))?;
+                .spawn(move || run_probes(&targets, direction, &worker_cancel))?;
             *registry = ProbeSlot::Running(ProbeJob {
                 id,
                 cancel,
@@ -387,11 +411,11 @@ impl NativeMediaProvider {
                     "previous CPU probe owner still active or quarantined",
                 ));
             }
-            let target = self.target;
+            let targets = self.targets.clone();
             let worker_cancel = cancel.clone();
             let worker = thread::Builder::new()
                 .name("nestlink-media-direction-probe".into())
-                .spawn(move || run_probe(target, direction, &worker_cancel))?;
+                .spawn(move || run_probes(&targets, direction, &worker_cancel))?;
             *guard = ProbeSlot::Running(ProbeJob {
                 id,
                 cancel: cancel.clone(),
@@ -461,6 +485,25 @@ async fn fenced_network<T>(
             .map_err(io::Error::other),
     }
 }
+fn run_probes(
+    targets: &[VideoConfig],
+    direction: MediaDirection,
+    cancel: &AtomicBool,
+) -> io::Result<ProbeResult> {
+    let mut receipts = Vec::with_capacity(targets.len());
+    for target in targets {
+        if cancel.load(Ordering::Acquire) {
+            return Err(io::Error::new(io::ErrorKind::Interrupted, "CPU target probes cancelled"));
+        }
+        // Each mature MF owner completes checked flush and close before the
+        // next exact target starts on this same original bounded worker.
+        receipts.push(run_probe(*target, direction, cancel)?);
+    }
+    let mut receipts = receipts.into_iter();
+    let mut primary = receipts.next().ok_or_else(|| io::Error::other("empty CPU probe set"))?;
+    primary.additional_formats = receipts.map(|receipt| receipt.format).collect();
+    Ok(primary)
+}
 #[cfg(windows)]
 fn run_probe(
     target: VideoConfig,
@@ -505,6 +548,7 @@ fn run_probe(
     .map_err(io::Error::other)?;
     Ok(ProbeResult {
         format,
+        additional_formats: Vec::new(),
         resource_id: format_uuid(owner.resource_id),
     })
 }
@@ -563,6 +607,22 @@ mod tests {
             assert!(NativeMediaProvider::cpu_software(bad).is_err());
         }
     }
+    #[test]
+    fn adaptive_cpu_targets_are_bounded_exact_budgets_below_the_product_ceiling() -> io::Result<()> {
+        let target = VideoConfig { width: 1920, height: 1080, fps: 60, bitrate_kbps: 8000 };
+        let provider = NativeMediaProvider::cpu_software_adaptive(target)?;
+        assert_eq!(provider.targets.len(), 3);
+        let budgets: Vec<_> = provider.targets.iter().map(|value| {
+            assert_eq!((value.width, value.height), (target.width, target.height));
+            (value.fps, value.bitrate_kbps)
+        }).collect();
+        assert_eq!(budgets, [(60, 8000), (45, 6000), (30, 4000)]);
+        let minimum = NativeMediaProvider::cpu_software_adaptive(VideoConfig {
+            fps: 1, bitrate_kbps: 64, ..target
+        })?;
+        assert_eq!(minimum.targets.len(), 1);
+        Ok(())
+    }
     // Synthetic results test registry transitions only. They are not evidence of
     // native checked close; cpu_direction_probe's Windows regressions supply that.
     fn receipt() -> io::Result<ProbeResult> {
@@ -575,6 +635,7 @@ mod tests {
                 4000,
             )
             .map_err(io::Error::other)?,
+            additional_formats: Vec::new(),
             resource_id: nestlink_auth::random_id(),
         })
     }

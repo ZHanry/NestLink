@@ -103,13 +103,13 @@ impl NativeSessionConfig {
         }
     }
 
-    /// One explicit product target; CPU direction probes run only on the
+    /// An explicit product ceiling and at most two lower exact budgets; probes run on the
     /// provider's bounded background worker, never during UI configuration.
     pub fn with_cpu_media_target(
         mut self,
         target: nestlink_media_codec::VideoConfig,
     ) -> std::io::Result<Self> {
-        self.media_provider = Some(crate::NativeMediaProvider::cpu_software(target)?);
+        self.media_provider = Some(crate::NativeMediaProvider::cpu_software_adaptive(target)?);
         if !self
             .supported_capabilities
             .iter()

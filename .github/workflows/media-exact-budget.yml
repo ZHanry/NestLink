@@ -1,0 +1,107 @@
+name: Actual Windows exact media budget replacement
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-budget:
+    runs-on: windows-2022
+    timeout-minutes: 40
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+      RUST_BACKTRACE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          components: clippy
+      - name: Require the original ordinary Windows token
+        run: python scripts/refactor-windows-normal-user.py python scripts/refactor-windows-normal-user.py --check
+      - id: msys
+        uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e
+        with:
+          msystem: MSYS
+          install: make perl diffutils gawk sed grep coreutils nasm
+          cache: false
+      - name: Build original pinned codec inputs on GitHub
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $prefix = Join-Path $env:RUNNER_TEMP 'nestlink-codecs/x86_64-pc-windows-msvc'
+          "NESTLINK_CODEC_PREFIX=$prefix" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          python scripts/refactor-native-codecs.py build --target x86_64-pc-windows-msvc --cache-dir "$env:RUNNER_TEMP/nestlink-codec-sources" --work-dir "$env:RUNNER_TEMP/nestlink-codecs" --msys-bin "${{ steps.msys.outputs.msys2-location }}/usr/bin" --nasm "${{ steps.msys.outputs.msys2-location }}/usr/bin/nasm.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-native-codecs.py verify --target x86_64-pc-windows-msvc --prefix $prefix
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Grant the normal token access to CI inputs
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+          $temporary = Join-Path $env:RUNNER_TEMP 'nestlink-normal-user-temp'
+          New-Item -ItemType Directory -Path $temporary -Force | Out-Null
+          foreach ($entry in @(
+            @{ Path = (Join-Path $env:USERPROFILE '.rustup'); Access = 'RX' },
+            @{ Path = (Join-Path $env:USERPROFILE '.cargo'); Access = 'M' },
+            @{ Path = $env:GITHUB_WORKSPACE; Access = 'M' },
+            @{ Path = $env:NESTLINK_CODEC_PREFIX; Access = 'RX' },
+            @{ Path = $temporary; Access = 'M' }
+          )) {
+            icacls $entry.Path /grant "*${sid}:(OI)(CI)$($entry.Access)" /T /Q
+            if ($LASTEXITCODE -ne 0) { throw 'CI input permission setup failed' }
+          }
+          "TEMP=$temporary" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TMP=$temporary" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Run actual signed Core high-to-low owner replacement and strict lint
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, re, subprocess
+          assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'media-exact-budget'
+          output.mkdir()
+          prefix = ['python', 'scripts/refactor-windows-normal-user.py', 'cargo']
+          commands = [
+            ('exact-core.log', prefix + ['test', '--locked', '-p', 'nestlink-app-core', '--lib', '--features', 'media-runtime-test-support', 'native_displays::positive_runtime_test::', '--', '--nocapture', '--test-threads=1', '--color', 'never']),
+            ('provider.log', prefix + ['test', '--locked', '-p', 'nestlink-app-core', '--lib', 'native_media_provider::tests::', '--', '--show-output', '--test-threads=1', '--color', 'never']),
+            ('clippy.log', prefix + ['clippy', '--locked', '-p', 'nestlink-app-core', '-p', 'nestlink-media-session', '-p', 'nestlink-daemon', '--all-targets', '--features', 'nestlink-app-core/media-runtime-test-support', '--', '-D', 'warnings']),
+          ]
+          results = []
+          for name, command in commands:
+              with (output / name).open('wb') as log:
+                  result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, check=False)
+              results.append({'argv': command, 'return_code': result.returncode})
+              print((output / name).read_text(errors='replace'))
+          log = (output / 'exact-core.log').read_text(errors='replace')
+          exact = bool(re.search(r'(?m)^test native_displays::positive_runtime_test::positive_signed_software_core_ack_au \.\.\. ok\s*$', log))
+          summaries = re.findall(r'test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored;', log)
+          qualified = exact and bool(summaries) and all(int(passed) > 0 and failed == ignored == '0' for passed, failed, ignored in summaries)
+          source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          assert source == os.environ['GITHUB_SHA']
+          receipt = {
+            'source_revision': source, 'workflow': os.environ['GITHUB_WORKFLOW_REF'],
+            'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+            'runner_environment': os.environ['RUNNER_ENVIRONMENT'], 'runner_os': os.environ['RUNNER_OS'],
+            'cargo_lock_sha256': hashlib.sha256(pathlib.Path('Cargo.lock').read_bytes()).hexdigest(),
+            'commands': results, 'actual_core_regression_passed': qualified,
+            'whole_W31_or_target_acceptance_claimed': False,
+            'scope': 'Actual ordinary-token MF probes and signed Core high-to-low exact bitrate/fps owner/ACK replacement. No shaped network, resolution downshift, physical GPU or complete W31 claim.',
+            'files': [{'path': path.name, 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()} for path in sorted(output.iterdir()) if path.is_file()],
+          }
+          (output / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          assert qualified and all(result['return_code'] == 0 for result in results)
+      - name: Retain original exact-source logs and receipts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: media-exact-budget-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/media-exact-budget/
+          if-no-files-found: error
+          retention-days: 30

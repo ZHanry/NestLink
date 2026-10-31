@@ -74,7 +74,7 @@ struct Args {
     /// Explicitly clear the persisted signed original-group opt-in.
     #[arg(long)]
     disable_native_route_set: bool,
-    /// Exact finite CPU media target, e.g. 1920x1080@30:4000. No implied presets.
+    /// CPU media ceiling, e.g. 1920x1080@30:4000; probes at most two lower budgets.
     #[arg(long, value_parser=parse_native_media_target)]
     native_media_target: Option<nestlink_media_codec::VideoConfig>,
     /// Private JSON policy for one internal software candidate; absent keeps rollout closed.

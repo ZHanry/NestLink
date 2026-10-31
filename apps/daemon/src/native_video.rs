@@ -1318,14 +1318,14 @@ fn stream_capture<D: CaptureDevice>(
             };
             let pts = clock_pts.max(previous.saturating_add(1)).max(1);
             *previous = pts;
-            let Some(encoder) = encoder.as_mut() else {
+            let Some(current_encoder) = encoder.as_mut() else {
                 return (controller, StreamExit::CaptureFailed);
             };
             if pending_sources.len() >= 16 {
                 return (controller, StreamExit::CaptureFailed);
             }
             let encoding_started = Instant::now();
-            let step = match encoder.encode_step(&pixels, pts, keyframe || repeated) {
+            let step = match current_encoder.encode_step(&pixels, pts, keyframe || repeated) {
                 Ok(step) => step,
                 Err(_) => return (controller, StreamExit::CaptureFailed),
             };
@@ -1352,7 +1352,7 @@ fn stream_capture<D: CaptureDevice>(
             let Some(repeated) = pending_sources.remove(&encoded.pts_90khz) else {
                 return (controller, StreamExit::CaptureFailed);
             };
-            let execution = encoder.execution_receipt();
+            let execution = current_encoder.execution_receipt();
             if negotiated_target {
                 let Some(receipt) = execution.as_ref() else {
                     return (controller, StreamExit::CaptureFailed);
@@ -1408,8 +1408,8 @@ fn stream_capture<D: CaptureDevice>(
             {
                 return (controller, StreamExit::TransportFailed);
             }
-            if !negotiated_target {
-                let changed = match observe_quality(
+            let hardware = current_encoder.hardware();
+            let changed = match observe_quality(
                     core,
                     identity,
                     binding,
@@ -1420,15 +1420,56 @@ fn stream_capture<D: CaptureDevice>(
                     Ok(changed) => changed,
                     Err(_) => return (controller, StreamExit::SessionEnded),
                 };
-                if let Some(kbps) = changed
-                    && encoder.set_bitrate(kbps).is_err()
-                {
-                    return (controller, StreamExit::CaptureFailed);
+            if negotiated_target {
+                let approved = match core.native_video_formats(identity) {
+                    Ok(Some(formats)) => formats,
+                    _ => return (controller, StreamExit::SessionEnded),
+                };
+                let next = match nestlink_media_session::select_h264_budget(
+                    &approved, actual, quality.fps(), quality.bitrate_kbps(),
+                ) {
+                    Ok(next) => next,
+                    Err(_) => return (controller, StreamExit::CaptureFailed),
+                };
+                if next != actual {
+                    let next_config = VideoConfig {
+                        fps: next.frame_rate.numerator,
+                        bitrate_kbps: next.max_kbps,
+                        ..*config
+                    };
+                    // Retire and join the original sealed owner before a new
+                    // one can register. The first actual replacement AU goes
+                    // through the same proposal and exact format ACK above.
+                    let Some(retired) = encoder.take() else {
+                        return (controller, StreamExit::CaptureFailed);
+                    };
+                    if retired.close().is_err() {
+                        return (controller, StreamExit::CaptureFailed);
+                    }
+                    pending_sources.clear();
+                    let next_encoder = nestlink_media_session::h264_execution_target(next, next_config)
+                        .and_then(VideoEncoder::with_execution_target);
+                    encoder = match next_encoder {
+                        Ok(next) => Some(next),
+                        Err(_) => return (controller, StreamExit::CaptureFailed),
+                    };
+                    legacy_prepare = match nestlink_media_session::LegacyPrepare::new_cpu_visible(
+                        VideoCodec::H264Baseline, next_config.width, next_config.height,
+                    ) {
+                        Ok(next) => Some((next, next_config)),
+                        Err(_) => return (controller, StreamExit::CaptureFailed),
+                    };
+                    next_frame = Instant::now();
+                    continue;
                 }
+            } else if let Some(kbps) = changed
+                && current_encoder.set_bitrate(kbps).is_err()
+            {
+                return (controller, StreamExit::CaptureFailed);
             }
             let fps = if negotiated_target {
                 config.fps
-            } else if encoder.hardware() {
+            } else if hardware {
                 quality.fps()
             } else {
                 quality.fps().min(FPS)

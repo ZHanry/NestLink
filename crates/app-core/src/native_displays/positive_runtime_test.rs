@@ -383,7 +383,7 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     let controller_identity = InstallationIdentity::generate();
     let host_device = random_id();
     let controller_device = random_id();
-    let provider = crate::NativeMediaProvider::cpu_software(config)?;
+    let provider = crate::NativeMediaProvider::cpu_software_adaptive(config)?;
     let cancelled = AtomicBool::new(false);
     let encode = provider
         .announcement(&host_device, MediaDirection::Encode, &cancelled)
@@ -392,6 +392,7 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
         .announcement(&controller_device, MediaDirection::Decode, &cancelled)
         .await?;
     assert_eq!(encode.formats, decode.formats);
+    assert_eq!(encode.formats.len(), 3); // Every exact budget was independently probed.
     assert_eq!(encode.probe.backend, "cpu-software");
     assert_eq!(decode.probe.backend, "cpu-software");
     let set = decode_formats(&encode.formats, false)?;
@@ -674,7 +675,8 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     let capture_origin = Arc::new(Mutex::new(Instant::now()));
     let encoder = ActualEncoder::start(
         config,
-        *set.formats().first().ok_or("empty signed target")?,
+        *set.formats().iter().find(|format| format.frame_rate.numerator == config.fps
+            && format.max_kbps == config.bitrate_kbps).ok_or("empty signed maximum target")?,
         capture_origin.clone(),
     );
     let (first, actual, first_execution) = encoder.next(&video).await?;
@@ -927,15 +929,25 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     assert!(encoder_before.retired_joined());
     assert!(encoder_before.check_current().is_err());
     assert!(decoder_before.check_current().is_ok()); // Encode cannot retire Decode's slot.
-    let encoder = ActualEncoder::start(config, actual, capture_origin);
+    let next_format = nestlink_media_session::select_h264_budget(
+        &set, actual, config.fps / 2, config.bitrate_kbps / 2,
+    )?;
+    assert_ne!(next_format, actual);
+    assert!(set.contains(&next_format));
+    let next_config = VideoConfig {
+        fps: next_format.frame_rate.numerator,
+        bitrate_kbps: next_format.max_kbps,
+        ..config
+    };
+    let encoder = ActualEncoder::start(next_config, next_format, capture_origin);
     let (fresh, receipt, fresh_execution) = encoder.next(&video).await?;
-    assert_eq!(receipt, actual);
+    assert_eq!(receipt, next_format);
     assert!(fresh_execution.identity()?.generation() > encoder_before.identity()?.generation());
     host.register_native_video_execution(&session_binding, fresh_execution.clone())
         .await?;
     assert!(
         !host
-            .propose_native_video_format(&session_binding, actual)
+            .propose_native_video_format(&session_binding, next_format)
             .await?
     );
     until(|| {
@@ -961,7 +973,7 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     let replacement = host
         .native_confirmed_video_format(&session_binding)?
         .ok_or("replacement ACK absent")?;
-    assert_eq!(replacement.format, actual);
+    assert_eq!(replacement.format, next_format);
     let decoder_after =
         controller.native_media_execution(&session_binding, MediaDirection::Decode)?;
     assert!(decoder_before.retired_joined());
