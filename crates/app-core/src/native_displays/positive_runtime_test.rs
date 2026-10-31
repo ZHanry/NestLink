@@ -421,6 +421,7 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
         supported_capabilities: vec![
             nestlink_protocol::media::H264_CAPABILITY.into(),
             FORMAT_CAPABILITY.into(),
+            nestlink_protocol::native_qos::CAPABILITY.into(),
         ],
         local_paths: nestlink_policy::PathSet::DIRECT,
         media: None,
