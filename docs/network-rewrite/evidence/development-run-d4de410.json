@@ -1,0 +1,51 @@
+{
+  "source_revision": "d4de410b66a700ea66148a16f8618e3110150216",
+  "qualification": "partial_laboratory_results_not_release_qualified",
+  "build_provenance": {
+    "repository": "ZHanry/NestLink",
+    "network_run": 41153496801,
+    "core_run": 41153496661,
+    "web_run": 41153496933,
+    "run_attempt": 1,
+    "runner": "GitHub-hosted",
+    "dependency_lock_sha256": "fd3a5eab62f021bac47f444336ec75e2d22167224cf3978d6b060c915b9bf179"
+  },
+  "execution_provenance": {
+    "environment": "GitHub Actions laboratory",
+    "target_device_acceptance": false,
+    "network_run_conclusion": "failure",
+    "passed": [
+      "Production socket fault slice, routed kernel NAT slice, topology carrier and independent grant vectors",
+      "Private Quinn original-connection carrier replacement job completed, including actual old carrier release, original stream data on the replacement, 1400-byte datagrams, kernel loss and final physical cleanup; this is not production W14",
+      "Seven route-set storage tests, two real HTTP route-set tests and six address-directory storage tests",
+      "Selected B candidate real SDK business proof and FileRead remains usable after A is lost, and whole-set revocation stops it",
+      "Both actual ordered chain FileRead scenarios and all four production registered-node chain scenarios",
+      "Linux and ordinary-token Windows contract clippy commands, existing scoped contract tests except the two identified schema rewind fixtures, and CI evidence tests",
+      "Core WASM, dependency audit, OpenAPI generation and scoped Linux input, system audio, portal capture and network event jobs"
+    ],
+    "failures": [
+      "Two pre35/pre36 migration fixtures retained the new migration37 route-set tables, so reopening replayed CREATE TABLE over an existing table; fixture rewind now removes the later tables and restores the original capacity view without weakening production migration",
+      "The standalone route-set admission fixture waited for NodeReady with only a controller, but real production readiness requires both endpoint roles; fixture now admits both in the unchanged shared deadline before requiring real replay rejection",
+      "The address-directory HTTP SDK fixture enrolled the unsupported platform linux; it now uses the existing linux-x11 value",
+      "Native ICE experiment stopped before runtime at SDK nonminimal_bool lint; source uses the equivalent is_none_or form",
+      "Workspace formatting failed; only unchanged-source formatter sections were reviewed and imported. New source still needs its own Actions formatter and test run"
+    ],
+    "pending_at_checkpoint": [
+      "Full Linux/Windows core and Web jobs were still running at the checkpoint; no full-workspace pass is claimed",
+      "New original-group continuous SDK owner, tracked real socket release, DNS terminal/cancellation fixes and managed OS split-DNS source are not covered by this run",
+      "New daemon test dependency edges require an Actions-derived lock before same-source validation",
+      "Production W14, remaining mandatory implementations, product surfaces and target acceptance"
+    ]
+  },
+  "reviewed_formatter_patch": {
+    "source": "network-rewrite-ubuntu-24.04-d4de410b66a700ea66148a16f8618e3110150216-1/rustfmt.patch",
+    "sha256": "fd08b00ac41671a70c89b8b7bfdf87cba31ecff0806fe08ae67488ee4eacbd1f",
+    "scope": [
+      "crates/connectivity/src/continuation.rs",
+      "crates/connectivity/src/lib.rs",
+      "crates/sdk/src/spaces/dns/authority.rs"
+    ]
+  },
+  "authorization_constraints": "Original authority, freshness, deadlines, cumulative quotas and physical cleanup remain required. No completed W12/W13/W14/W19 or public release is claimed.",
+  "local_project_toolchain_executed": false
+}

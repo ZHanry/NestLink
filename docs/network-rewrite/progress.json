@@ -6,7 +6,7 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "1e15b511219734258acbb7ecbd6c5c336ad0c7dd",
+    "source_revision":  "d4de410b66a700ea66148a16f8618e3110150216",
     "checkpoint_kind":  "work_in_progress_against_source_revision",
     "active_tasks":  [
                          "W00",
@@ -33,8 +33,8 @@
                                              "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
                                          ],
     "unverified_assumptions":  [
-                                   "Quinn continuity across authenticated carrier replacement requires W07/W09/W14 Actions experiments.",
-                                   "Existing same-socket STUN does not establish bilateral ICE or real NAT success.",
+                                   "Private original-connection Quinn replacement passed its hosted experiment at d4de410; authenticated production W14 and target continuity remain unimplemented/unverified.",
+                                   "d4de410 native ICE experiment stopped at SDK lint before runtime; source repairs require a new exact-source run.",
                                    "Existing v15 relay packet limit is not an IPv6 TUN MTU qualification."
                                ],
     "external_prerequisites":  [
@@ -65,9 +65,9 @@
                                    }
                                ],
     "next_steps":  [
-                       "Derive the narrowly reviewed Hickory authoritative-DNS dependency additions on GitHub Actions, import only verified generated locks, and run exact-source Windows/Linux contracts, original-group candidate business, directory/DNS and continuation policy tests.",
-                       "Revalidate corrected nested test-module paths and complete source inventory; diagnose route-set node snapshot timeout; re-execute private Quinn replacement with original inner-before-underlay cleanup barrier. Production W14 remains incomplete.",
-                       "Connect the original-group candidates to the sole persistent Scheduler and original transport owner, then implement authenticated production migration or safe application recovery; implement mature DNS serving and owned split-DNS installation/restoration for W19.",
+                       "Hickory locks were derived and verified on Actions. Derive new daemon test internal edges on Actions, then validate the new continuous SDK owner, physical socket release, paired route-set fixture and schema rewind repairs.",
+                       "Run actual isolated Windows NRPT and Linux resolved split-DNS queries, external-change protection and prepared/installed recovery through the new owned-system-DNS workflow. New source is not a passing result.",
+                       "Drive the single persistent Scheduler from product owners and implement authenticated production W14 migration or complete safe application recovery; retain the scoped private-experiment distinction.",
                        "Implement the remaining local prefix reachability/forwarding owner and remaining W12 acceptance, then continue every mandatory W13-W40 implementation and product surface.",
                        "Run the full same-source Windows/Linux/WASM/browser matrix and mandatory target acceptance; preserve scoped results and failures separately.",
                        "Publish 0.8.0RC only after all mandatory implementation and evidence gates; retain only local and remote main."
@@ -127,7 +127,11 @@
                            "docs/adr/network/0029-space-address-directory.md",
                            "docs/adr/network/0030-scheduler-continuation-policy.md",
                            "docs/adr/network/0031-space-dns-owner.md",
-                           "docs/network-rewrite/evidence/development-run-1e15b51.json"
+                           "docs/network-rewrite/evidence/development-run-1e15b51.json",
+                           "docs/network-rewrite/evidence/dns-lock-derivation-ca18962.json",
+                           "docs/network-rewrite/evidence/development-run-d4de410.json",
+                           "docs/adr/network/0032-managed-split-dns-recovery.md",
+                           "docs/network-rewrite/SPLIT-DNS-OPERATIONS.md"
                        ],
     "observed_actions":  [
                              {

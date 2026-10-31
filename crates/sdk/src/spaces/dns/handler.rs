@@ -1,4 +1,4 @@
-use super::{REQUEST_TIMEOUT, authority::Authority};
+use super::{REQUEST_TIMEOUT, StopState, authority::Authority};
 use hickory_server::{
     net::runtime::Time,
     proto::{op::{Header, HeaderCounts, Metadata, OpCode, ResponseCode}, rr::{DNSClass, RData, Record, RecordType, rdata::{A, AAAA}}},
@@ -10,12 +10,12 @@ use tokio::sync::{Semaphore, watch};
 
 pub(super) struct Handler {
     authority: Arc<Authority>,
-    stop: watch::Sender<bool>,
+    stop: watch::Sender<StopState>,
     capacity: Semaphore,
 }
 
 impl Handler {
-    pub(super) fn new(authority: Arc<Authority>, stop: watch::Sender<bool>) -> Self {
+    pub(super) fn new(authority: Arc<Authority>, stop: watch::Sender<StopState>) -> Self {
         Self { authority, stop, capacity: Semaphore::new(8) }
     }
 }
@@ -45,7 +45,7 @@ impl RequestHandler for Handler {
                 if in_scope && request.metadata.op_code == OpCode::Query
                     && query.query_class() == DNSClass::IN
                     && matches!(query.query_type(), RecordType::A | RecordType::AAAA)
-                    && !*self.stop.borrow()
+                    && matches!(&*self.stop.borrow(), StopState::Running)
                 {
                     if let Ok(slot) = self.capacity.try_acquire() {
                         permit = Some(slot);
@@ -68,15 +68,18 @@ impl RequestHandler for Handler {
                                 }
                                 observation = Some(current);
                             }
-                            Err(_) => {
+                            Err(error) => {
                                 metadata.response_code = ResponseCode::ServFail;
-                                let _ = self.stop.send(true);
+                                let cause = Arc::new(error);
+                                self.stop.send_if_modified(|state| {
+                                    if matches!(state, StopState::Running) { *state = StopState::Failed(cause.clone()); true } else { false }
+                                });
                             }
                         }
                     } else { metadata.response_code = ResponseCode::ServFail; }
                 }
             } else { metadata.response_code = ResponseCode::FormErr; }
-            if *self.stop.borrow() {
+            if !matches!(&*self.stop.borrow(), StopState::Running) {
                 answers.clear(); metadata.response_code = ResponseCode::ServFail;
             }
             let message = MessageResponseBuilder::from_message_request(request)

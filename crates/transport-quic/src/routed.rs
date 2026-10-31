@@ -39,6 +39,7 @@ impl DatagramVersion {
 pub struct RoutedTransport {
     connection: Option<Connection>,
     endpoint: Option<Endpoint>,
+    released: Option<tokio::sync::oneshot::Receiver<()>>,
     adjacency: Adjacency,
     receiver: TaskOwner,
     failure: tokio::sync::watch::Receiver<Option<io::ErrorKind>>,
@@ -70,13 +71,12 @@ impl RoutedTransport {
         let deadline = *self.close_deadline.get_or_insert(deadline);
         self.request_close();
         self.receiver.close_and_wait(deadline).await?;
-        if let Some(endpoint) = &self.endpoint {
-            tokio::time::timeout_at(deadline, endpoint.wait_idle())
-                .await
-                .map_err(|_| io::ErrorKind::TimedOut)?;
-        }
+        // A failed abstract receive can stop Quinn's endpoint driver before it
+        // notifies wait_idle. Release our handles, then observe the real socket
+        // and every writable poller dropping instead of waiting on that signal.
         self.connection = None;
         self.endpoint = None;
+        wait_socket_released(&mut self.released, deadline).await?;
         self.adjacency.close_and_wait(deadline).await
     }
 }
@@ -109,6 +109,7 @@ pub struct RoutedEstablishment {
     authorization: Option<RouteAuthorization>,
     connection: Option<Connection>,
     endpoint: Option<Endpoint>,
+    released: Option<tokio::sync::oneshot::Receiver<()>>,
     adjacency: Option<Adjacency>,
     receiver: Option<TaskOwner>,
     failure: Option<tokio::sync::watch::Receiver<Option<io::ErrorKind>>>,
@@ -121,6 +122,7 @@ impl RoutedEstablishment {
             authorization: Some(authorization),
             connection: None,
             endpoint: None,
+            released: None,
             adjacency: Some(adjacency),
             receiver: None,
             failure: None,
@@ -180,6 +182,11 @@ impl RoutedEstablishment {
         self.receiver = Some(receiver);
         self.failure = Some(socket.subscribe_failure());
         let destination = socket.peer_addr();
+        // Reuse the physical carrier's existing tracking adapter. Quinn keeps
+        // this owner in both Endpoint and Connection state; each writable
+        // poller retains it too. External clones therefore keep release pending.
+        let (socket, released) = crate::service::socket::tracked(socket);
+        self.released = Some(released);
         let mut endpoint = Endpoint::new_with_abstract_socket(
             settings,
             Some(server),
@@ -216,6 +223,7 @@ impl RoutedEstablishment {
         if self.close_deadline.is_some()
             || self.connection.is_none()
             || self.endpoint.is_none()
+            || self.released.is_none()
             || self.adjacency.is_none()
             || self.receiver.is_none()
             || self.failure.is_none()
@@ -225,6 +233,7 @@ impl RoutedEstablishment {
         Ok(RoutedTransport {
             connection: self.connection.take(),
             endpoint: self.endpoint.take(),
+            released: self.released.take(),
             adjacency: self.adjacency.take().ok_or_else(not_connected)?,
             receiver: self.receiver.take().ok_or_else(not_connected)?,
             failure: self.failure.take().ok_or_else(not_connected)?,
@@ -251,13 +260,9 @@ impl RoutedEstablishment {
         if let Some(receiver) = &mut self.receiver {
             receiver.close_and_wait(deadline).await?;
         }
-        if let Some(endpoint) = &self.endpoint {
-            tokio::time::timeout_at(deadline, endpoint.wait_idle())
-                .await
-                .map_err(|_| io::ErrorKind::TimedOut)?;
-        }
         self.connection = None;
         self.endpoint = None;
+        wait_socket_released(&mut self.released, deadline).await?;
         if let Some(adjacency) = &mut self.adjacency {
             adjacency.close_and_wait(deadline).await?;
         }
@@ -271,6 +276,28 @@ impl Drop for RoutedEstablishment {
 }
 fn not_connected() -> io::Error {
     io::ErrorKind::NotConnected.into()
+}
+
+/// Keep the original completion receiver in the owner across cancellation or
+/// timeout. Completion requires the original socket and its pollers to drop;
+/// connection close and endpoint idle are insufficient release receipts.
+async fn wait_socket_released(
+    released: &mut Option<tokio::sync::oneshot::Receiver<()>>,
+    deadline: Instant,
+) -> io::Result<()> {
+    if let Some(completion) = released.as_mut() {
+        tokio::time::timeout_at(deadline, completion)
+            .await
+            .map_err(|_| {
+                io::Error::new(
+                    io::ErrorKind::TimedOut,
+                    "routed inner socket or writable poller release pending",
+                )
+            })?
+            .map_err(|_| io::Error::other("routed inner socket release was not confirmed"))?;
+        *released = None;
+    }
+    Ok(())
 }
 
 #[cfg(test)]

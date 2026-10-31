@@ -643,7 +643,8 @@
       "purpose": "Private names and authoritative split DNS",
       "existing_implementation": [
         "crates/sdk/src/spaces/dns.rs: current-session, same-account authoritative loopback owner",
-        "apps/daemon/src/space_dns.rs: protected-session standalone CLI; OS split-DNS remains pending"
+        "apps/daemon/src/space_dns.rs: protected-session standalone CLI and explicit public system plan",
+        "apps/daemon/src/space_dns_system.rs: separate administrative NRPT/systemd-resolved owner and recovery journal; hosted/target verification pending"
       ],
       "candidates": [
         "hickory-server 0.26.3",
@@ -676,7 +677,7 @@
       },
       "license": "MIT OR Apache-2.0",
       "selection_reason": "prefer_mature_authoritative_DNS_not_recursive_internet_resolver",
-      "adapter_boundary": "Hickory Server owns DNS packet parsing/serialization and UDP/TCP tasks; SpaceDns supplies a single explicit loopback suffix, fresh same-account HTTP directory filtering, TTL zero, authorization deadline and owner cleanup. OS split-DNS installation remains a separate owner.",
+      "adapter_boundary": "Hickory Server owns DNS packet parsing/serialization and UDP/TCP tasks; SpaceDns supplies a single explicit loopback suffix, fresh same-account HTTP directory filtering, TTL zero, authorization deadline and owner cleanup. A separate administrative NRPT/systemd-resolved owner applies a public plan with a durable journal and compare-before-delete recovery; it never reads management credentials.",
       "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
       "security_and_operations_cost": [
         "Do not enable experimental recursive resolver or arbitrary forwarding",
@@ -687,7 +688,7 @@
         "W19",
         "W22"
       ],
-      "validation_status": "real HTTP plus UDP/TCP tests implemented; GitHub-hosted execution and target DNS installation evidence pending",
+      "validation_status": "real HTTP/UDP/TCP and ignored explicit isolated OS resolver/recovery tests implemented; GitHub-hosted execution and target VPN/install evidence pending",
       "decision_ref": "docs/adr/network/0031-space-dns-owner.md"
     },
     {

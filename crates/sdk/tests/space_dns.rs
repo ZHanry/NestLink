@@ -83,7 +83,7 @@ impl Fixture {
         let member_account = member.principal().ok_or("member not signed in")?.account_id.clone();
         let owner_device = DeviceIdentity::generate();
         let member_device = DeviceIdentity::generate();
-        owner.enroll(&owner_device, "Owner".into(), "linux".into(), vec!["controller".into()], "direct_preferred".into()).await?;
+        owner.enroll(&owner_device, "Owner".into(), "linux-x11".into(), vec!["controller".into()], "direct_preferred".into()).await?;
         member.enroll(&member_device, "Member".into(), "windows".into(), vec!["controller".into()], "direct_preferred".into()).await?;
         let space = owner.create_space(SpaceCreateRequest { name: "DNS HTTP".into() }).await?;
         let invitation = owner.invite_to_space(&space.space_id, SpaceInvitationRequest {
@@ -236,6 +236,28 @@ async fn dropping_owner_aborts_idle_tcp_and_releases_udp_and_tcp_ports() -> Resu
 }
 
 #[tokio::test]
+async fn cancelling_shutdown_retains_the_task_until_wait_or_drop_reclaims_both_sockets() -> Result {
+    use std::{future::{Future, poll_fn}, task::Poll};
+    let f = Fixture::new().await?;
+    for join in [true, false] {
+        let mut dns = f.start(false).await?;
+        let address = dns.local_addr();
+        {
+            let mut shutdown = Box::pin(dns.shutdown());
+            poll_fn(|cx| {
+                assert!(shutdown.as_mut().poll(cx).is_pending());
+                Poll::Ready(())
+            }).await;
+        }
+        assert!(!dns.is_finished(), "canceled shutdown must retain the still-owned task");
+        if join { dns.wait().await?; }
+        drop(dns);
+        rebind(address).await?;
+    }
+    Ok(())
+}
+
+#[tokio::test]
 async fn delayed_authority_fails_closed_and_stops_instead_of_using_previous_answers() -> Result {
     let f = Fixture::new().await?;
     let mut dns = f.start(false).await?;
@@ -254,6 +276,19 @@ async fn stale_forged_duplicate_and_out_of_pool_http_directory_responses_are_rej
         f.fault.store(mode, Ordering::SeqCst);
         assert!(f.start(false).await.is_err(), "directory fault {mode}");
     }
+    Ok(())
+}
+
+#[tokio::test]
+async fn authorization_failure_seen_by_query_is_reported_as_failure_after_cleanup() -> Result {
+    let f = Fixture::new().await?;
+    let mut dns = f.start(false).await?;
+    let address = dns.local_addr();
+    f.fault.store(2, Ordering::SeqCst);
+    let _ = udp(address, query(&f.name("owner"), RecordType::A)?).await;
+    dns.request_shutdown();
+    assert!(tokio::time::timeout(LIMIT, dns.wait()).await?.is_err(), "explicit cleanup must preserve the first authorization failure");
+    rebind(address).await?;
     Ok(())
 }
 

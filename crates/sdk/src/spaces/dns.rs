@@ -24,6 +24,8 @@ pub enum SpaceDnsError {
     Timeout,
     #[error("space DNS authorization failed: {0}")]
     Authorization(#[from] SdkError),
+    #[error("space DNS query authorization terminated the owner: {0}")]
+    QueryAuthorization(Arc<SpaceDnsError>),
     #[error("space DNS socket failed: {0}")]
     Io(#[from] std::io::Error),
     #[error("space DNS runtime stopped unexpectedly")]
@@ -36,8 +38,16 @@ pub enum SpaceDnsError {
 pub struct SpaceDns {
     address: SocketAddr,
     suffix: String,
-    stop: watch::Sender<bool>,
+    stop: watch::Sender<StopState>,
     task: Option<JoinHandle<Result<(), SpaceDnsError>>>,
+    cleanup_deadline: Option<tokio::time::Instant>,
+}
+
+#[derive(Clone)]
+pub(super) enum StopState {
+    Running,
+    Requested,
+    Failed(Arc<SpaceDnsError>),
 }
 
 impl SpaceDns {
@@ -56,7 +66,7 @@ impl SpaceDns {
         let address = udp.local_addr()?;
         // Either both protocols bind the same port, or neither remains owned.
         let tcp = TcpListener::bind(address).await?;
-        let (stop, mut stopping) = watch::channel(false);
+        let (stop, mut stopping) = watch::channel(StopState::Running);
         let mut server = Server::new(handler::Handler::new(authority.clone(), stop.clone()));
         server.register_socket(udp);
         server.register_listener(tcp, REQUEST_TIMEOUT, 8);
@@ -67,7 +77,12 @@ impl SpaceDns {
                     tokio::select! {
                         biased;
                         changed = stopping.changed() => {
-                            if changed.is_err() || *stopping.borrow() { return Ok(()); }
+                            if changed.is_err() { return Ok(()); }
+                            match &*stopping.borrow() {
+                                StopState::Running => {},
+                                StopState::Requested => return Ok(()),
+                                StopState::Failed(cause) => return Err(SpaceDnsError::QueryAuthorization(cause.clone())),
+                            }
                         }
                         _ = tokio::time::sleep(AUTHORIZATION_INTERVAL) => {
                             authority.observe().await?;
@@ -88,32 +103,41 @@ impl SpaceDns {
                 .map_err(|_| SpaceDnsError::Runtime)?;
             result
         });
-        Ok(Self { address, suffix, stop, task: Some(task) })
+        Ok(Self { address, suffix, stop, task: Some(task), cleanup_deadline: None })
     }
 
     pub fn local_addr(&self) -> SocketAddr { self.address }
     pub fn suffix(&self) -> &str { &self.suffix }
     pub fn is_finished(&self) -> bool { self.task.as_ref().is_none_or(JoinHandle::is_finished) }
-    pub fn request_shutdown(&self) { let _ = self.stop.send(true); }
+    pub fn request_shutdown(&self) {
+        self.stop.send_if_modified(|state| {
+            if matches!(state, StopState::Running) { *state = StopState::Requested; true } else { false }
+        });
+    }
 
     pub async fn wait(&mut self) -> Result<(), SpaceDnsError> {
         let Some(task) = self.task.as_mut() else { return Ok(()); };
-        let result = task.await.map_err(|_| SpaceDnsError::Runtime).and_then(|result| result);
+        let result = if let Some(deadline) = self.cleanup_deadline {
+            match tokio::time::timeout_at(deadline, &mut *task).await {
+                Ok(result) => result.map_err(|_| SpaceDnsError::Runtime).and_then(|result| result),
+                Err(_) => {
+                    task.abort();
+                    let _ = task.await;
+                    Err(SpaceDnsError::Timeout)
+                }
+            }
+        } else { task.await.map_err(|_| SpaceDnsError::Runtime).and_then(|result| result) };
         self.task.take();
         result
     }
 
     pub async fn shutdown(&mut self) -> Result<(), SpaceDnsError> {
         self.request_shutdown();
-        let Some(mut task) = self.task.take() else { return Ok(()); };
-        match tokio::time::timeout(CLEANUP_TIMEOUT + Duration::from_secs(1), &mut task).await {
-            Ok(result) => result.map_err(|_| SpaceDnsError::Runtime)?,
-            Err(_) => {
-                task.abort();
-                let _ = task.await;
-                Err(SpaceDnsError::Timeout)
-            }
-        }
+        self.cleanup_deadline.get_or_insert_with(|| tokio::time::Instant::now() + CLEANUP_TIMEOUT + Duration::from_secs(1));
+        // Retain the handle and original deadline in the owner across every
+        // await. Canceling this future cannot detach the owned server task or
+        // give a subsequent wait/shutdown a new cleanup budget.
+        self.wait().await
     }
 }
 

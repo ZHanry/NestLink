@@ -76,7 +76,7 @@ async fn directory_issue_reserve_rename_revoke_are_real_authorized_http_calls() 
         .enroll(
             &owner_device,
             "Owner".into(),
-            "linux".into(),
+            "linux-x11".into(),
             vec!["controller".into()],
             "direct_preferred".into(),
         )

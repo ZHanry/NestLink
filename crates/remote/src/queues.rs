@@ -1162,6 +1162,12 @@ impl ChannelRuntime {
         self.lease.stop(reason)?;
         self.wait_stopped().await
     }
+    /// An enclosing original session owner may share its first absolute close
+    /// budget with its bounded standby. Retry/cancellation never extends it.
+    pub async fn wait_stopped_before(&mut self, deadline: tokio::time::Instant) -> Result<StopReport, RemoteError> {
+        self.cleanup_deadline = Some(self.cleanup_deadline.map_or(deadline, |original| original.min(deadline)));
+        self.wait_stopped().await
+    }
 }
 impl Drop for ChannelRuntime {
     fn drop(&mut self) {

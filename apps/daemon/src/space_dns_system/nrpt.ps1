@@ -1,0 +1,122 @@
+$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+$env:PSModulePath = Join-Path ([Environment]::SystemDirectory) 'WindowsPowerShell\v1.0\Modules'
+$dnsModule = Join-Path $env:PSModulePath 'DnsClient\DnsClient.psd1'
+Import-Module -Name $dnsModule -ErrorAction Stop
+$request = $env:NESTLINK_DNS_REQUEST | ConvertFrom-Json
+Remove-Item Env:NESTLINK_DNS_REQUEST
+function Emit($value) { ConvertTo-Json -InputObject $value -Depth 20 -Compress }
+function View($rule) {
+    [ordered]@{
+        name = [string]$rule.Name
+        namespace = @($rule.Namespace | ForEach-Object { ([string]$_).ToLowerInvariant() } | Sort-Object)
+        name_servers = @($rule.NameServers | ForEach-Object { [string]$_ } | Sort-Object)
+        display_name = [string]$rule.DisplayName
+        comment = [string]$rule.Comment
+        da_enable = [bool]$rule.DAEnable
+        da_name_servers = @($rule.DANameServers | ForEach-Object { [string]$_ } | Sort-Object)
+        da_proxy_type = [string]$rule.DAProxyType
+        da_proxy_server = [string]$rule.DAProxyServerName
+        da_ipsec = [bool]$rule.DAIPsecRequired
+        da_encryption = [string]$rule.DAIPsecEncryptionType
+        dnssec_enable = [bool]$rule.DnsSecEnable
+        dnssec_validation = [bool]$rule.DnsSecValidationRequired
+        dnssec_ipsec = [bool]$rule.DnsSecIPsecRequired
+        dnssec_encryption = [string]$rule.DnsSecIPsecEncryptionType
+        name_encoding = [string]$rule.NameEncoding
+        ipsec_authority = [string]$rule.IPsecTrustAuthority
+    }
+}
+function Same-Json($left, $right) {
+    # Both objects use the fixed View property order. The expected object is
+    # rebuilt in that order before comparison, independent of JSON key order.
+    $normalized = [ordered]@{}
+    foreach ($key in $left.Keys) { $normalized[$key] = $right.$key }
+    (ConvertTo-Json -InputObject $left -Depth 20 -Compress) -ceq (ConvertTo-Json -InputObject $normalized -Depth 20 -Compress)
+}
+function Safe-Owned($view) {
+    $marker = 'NestLink:split-dns:v1:' + $request.plan.owner_id
+    ($view.display_name -ceq $marker) -and ($view.comment -ceq $marker) -and
+    ($view.namespace.Count -eq 1) -and ($view.namespace[0] -ceq ('.' + $request.plan.suffix)) -and
+    ($view.name_servers.Count -eq 1) -and ($view.name_servers[0] -ceq '127.0.0.1') -and
+    (-not $view.da_enable) -and (-not $view.dnssec_enable) -and (-not $view.dnssec_validation) -and
+    (-not $view.da_ipsec) -and (-not $view.dnssec_ipsec) -and
+    ($view.name -match '^\{?[0-9a-fA-F-]{36}\}?$')
+}
+function Owned-Rules {
+    $marker = 'NestLink:split-dns:v1:' + $request.plan.owner_id
+    @(Get-DnsClientNrptRule -ErrorAction Stop | Where-Object {
+        ([string]$_.DisplayName -ceq $marker) -or
+        (($null -ne $request.expected) -and ([string]$_.Name -ceq [string]$request.expected.name))
+    })
+}
+function Conflicts {
+    $suffix = [string]$request.plan.suffix
+    $rules = @(Get-DnsClientNrptRule -ErrorAction Stop)
+    $effective = @(Get-DnsClientNrptPolicy -Effective -ErrorAction Stop)
+    if (($rules.Count + $effective.Count) -gt 256) { throw 'NRPT policy observation limit exceeded' }
+    foreach ($rule in @($rules) + @($effective)) {
+        foreach ($entry in @($rule.Namespace)) {
+            $domain = ([string]$entry).Trim('.').ToLowerInvariant()
+            if (($domain.Length -gt 0) -and (($domain -ceq $suffix) -or $domain.EndsWith('.' + $suffix) -or $suffix.EndsWith('.' + $domain))) {
+                throw 'Another local/GPO/VPN NRPT namespace overlaps this private suffix; no existing rule is replaced'
+            }
+        }
+    }
+}
+switch ([string]$request.action) {
+    'identity' {
+        $process = Get-Process -Id ([int]$request.pid) -ErrorAction Stop
+        Emit ([ordered]@{ pid = [uint32]$process.Id; incarnation = [string]$process.StartTime.ToUniversalTime().ToFileTimeUtc(); image = [string]$process.Path })
+    }
+    'admin' {
+        $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+        if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw 'Run this public-plan helper separately as administrator; never elevate the resolver process' }
+        Emit $true
+    }
+    'baseline' { Emit @(Get-DnsClientNrptRule -ErrorAction Stop | Sort-Object Name | ForEach-Object { View $_ }) }
+    'query' {
+        $answer = Resolve-DnsName -Name ('os-probe.' + $request.plan.suffix) -Type A -DnsOnly -NoHostsFile -ErrorAction Stop
+        Emit @($answer | Where-Object { [string]$_.Type -eq 'A' } | ForEach-Object { [string]$_.IPAddress })
+    }
+    'test-change' {
+        $rules = @(Owned-Rules)
+        if ($rules.Count -ne 1) { throw 'Owned rule missing for isolated test' }
+        Set-DnsClientNrptRule -Name ([string]$rules[0].Name) -Comment 'isolated-external-change' -ErrorAction Stop
+        Emit $true
+    }
+    'test-restore' {
+        $rules = @(Owned-Rules)
+        if ($rules.Count -ne 1) { throw 'Owned rule missing for isolated test' }
+        Set-DnsClientNrptRule -Name ([string]$rules[0].Name) -Comment ('NestLink:split-dns:v1:' + $request.plan.owner_id) -ErrorAction Stop
+        Emit $true
+    }
+    'preflight' { Conflicts; Emit $true }
+    'inspect' {
+        $rules = @(Owned-Rules)
+        if ($rules.Count -gt 1) { throw 'Duplicate owned NRPT rules; recovery requires operator review' }
+        if ($rules.Count -eq 0) { Emit $null } else { Emit (View $rules[0]) }
+    }
+    'install' {
+        Conflicts
+        $marker = 'NestLink:split-dns:v1:' + $request.plan.owner_id
+        $rule = Add-DnsClientNrptRule -Namespace @('.' + $request.plan.suffix) -NameServers @('127.0.0.1') -DisplayName $marker -Comment $marker -PassThru -ErrorAction Stop
+        Emit (View $rule)
+    }
+    'remove' {
+        $rules = @(Owned-Rules)
+        if ($rules.Count -gt 1) { throw 'Duplicate owned NRPT rules; no rules were deleted' }
+        if ($rules.Count -eq 0) { Emit $true; break }
+        $view = View $rules[0]
+        if (-not (Safe-Owned $view)) { throw 'NRPT identity or settings changed; preserving rule and recovery journal' }
+        if (($null -ne $request.expected) -and (-not (Same-Json $view $request.expected))) { throw 'NRPT settings changed; preserving rule and recovery journal' }
+        # Re-read the precise GUID before deletion and compare all policy fields.
+        $again = Get-DnsClientNrptRule -Name ([string]$view.name) -ErrorAction Stop
+        if (-not (Same-Json $view (View $again))) { throw 'NRPT changed during cleanup; journal retained' }
+        Remove-DnsClientNrptRule -Name ([string]$view.name) -Confirm:$false -ErrorAction Stop
+        if (@(Owned-Rules).Count -ne 0) { throw 'NRPT removal was not confirmed' }
+        Emit $true
+    }
+    default { throw 'Unsupported constrained DNS operation' }
+}

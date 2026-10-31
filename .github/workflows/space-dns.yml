@@ -1,0 +1,111 @@
+name: Owned system split DNS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Cargo.*"
+      - "apps/daemon/**"
+      - "crates/**"
+      - "scripts/network-rewrite-system-dns.py"
+      - ".github/workflows/space-dns.yml"
+  pull_request:
+    paths:
+      - "Cargo.*"
+      - "apps/daemon/**"
+      - "crates/**"
+      - "scripts/network-rewrite-system-dns.py"
+      - ".github/workflows/space-dns.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: space-dns-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  system-dns:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - os: windows-2022
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      CARGO_INCREMENTAL: "0"
+      RUST_BACKTRACE: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          components: clippy
+      - name: Set the existing native codec location
+        shell: bash
+        run: echo "NESTLINK_CODEC_PREFIX=${{ runner.temp }}/nestlink-codecs/${{ matrix.target }}" >> "$GITHUB_ENV"
+      - name: Prepare existing Linux inputs and the actual resolved service
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config dbus libpipewire-0.3-dev pipewire-bin iproute2 systemd-resolved
+          sudo systemctl start systemd-resolved
+          systemctl is-active systemd-resolved
+          cat /etc/resolv.conf
+          resolvectl status
+      - name: Prepare existing Windows codec tools
+        if: runner.os == 'Windows'
+        id: msys
+        uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e
+        with:
+          msystem: MSYS
+          install: make perl diffutils gawk sed grep coreutils nasm
+          cache: false
+      - name: Build the locked existing native codecs on Linux
+        if: runner.os == 'Linux'
+        run: python3 scripts/refactor-native-codecs.py build --target ${{ matrix.target }} --cache-dir "${{ runner.temp }}/nestlink-codec-sources" --work-dir "${{ runner.temp }}/nestlink-codecs"
+      - name: Build the locked existing native codecs on Windows
+        if: runner.os == 'Windows'
+        run: python scripts/refactor-native-codecs.py build --target ${{ matrix.target }} --cache-dir "${{ runner.temp }}/nestlink-codec-sources" --work-dir "${{ runner.temp }}/nestlink-codecs" --msys-bin "${{ steps.msys.outputs.msys2-location }}/usr/bin" --nasm "${{ steps.msys.outputs.msys2-location }}/usr/bin/nasm.exe"
+      - run: python scripts/refactor-native-codecs.py verify --target ${{ matrix.target }} --prefix "${{ env.NESTLINK_CODEC_PREFIX }}"
+      - name: Allow the ordinary Windows token to read and execute test inputs
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dnsTestSid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+          $dnsTestTemp = Join-Path $env:RUNNER_TEMP 'nestlink-dns-normal-user-temp'
+          New-Item -ItemType Directory -Path $dnsTestTemp -Force | Out-Null
+          $dnsInputs = @(
+            @{ Path = $env:GITHUB_WORKSPACE; Access = 'M' },
+            @{ Path = $env:NESTLINK_CODEC_PREFIX; Access = 'RX' },
+            @{ Path = $dnsTestTemp; Access = 'M' }
+          )
+          foreach ($dnsInput in $dnsInputs) {
+            & icacls $dnsInput.Path /grant "*${dnsTestSid}:(OI)(CI)$($dnsInput.Access)" /T /Q
+            if ($LASTEXITCODE -ne 0) { throw 'Could not prepare ordinary DNS test inputs' }
+          }
+          "TEMP=$dnsTestTemp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "TMP=$dnsTestTemp" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Exercise ordinary daemon ownership and real elevated OS resolver recovery
+        run: python -B scripts/network-rewrite-system-dns.py --output "${{ runner.temp }}/system-dns-evidence"
+      - name: Lint all daemon targets independently of the OS test result
+        if: ${{ !cancelled() }}
+        run: cargo clippy --locked -p nestlink-daemon --all-targets -- -D warnings
+      - name: Retain source, executable digest, every command result and OS diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: system-dns-${{ matrix.os }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/system-dns-evidence/
+          if-no-files-found: error
+          retention-days: 30

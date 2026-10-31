@@ -100,6 +100,12 @@ pub struct LocalPathMeasurements {
     business_tx: Option<Timed<BusinessThroughputWindow>>,
 }
 impl LocalPathMeasurements {
+    /// Actual ACK arrival time behind the currently fresh RTT, in the local
+    /// accumulator clock domain. Reading never advances that timestamp.
+    pub fn rtt_observed_at_ms(&self, now_ms: u64) -> Option<u64> {
+        self.previous.filter(|(at, _)| now_ms >= *at)?;
+        self.rtt.filter(|timed| timed.fresh(now_ms).is_some()).map(|timed| timed.at_ms)
+    }
     pub fn observe(&mut self, now_ms: u64, sample: LocalQuicSample) {
         let previous = self.previous.replace((now_ms, sample));
         if let Some((at, old)) = previous {
@@ -300,5 +306,21 @@ mod tests {
             measurements.snapshot(&binding, 1500, false).packet_loss,
             None
         );
+    }
+    #[test]
+    fn genuine_feedback_time_survives_cached_reads_and_idle_polls_until_expiry() {
+        let mut measurements = LocalPathMeasurements::default();
+        measurements.observe(0, sample());
+        assert_eq!(measurements.rtt_observed_at_ms(0), None);
+        let acknowledged = LocalQuicSample { received_ack_frames: 2, ..sample() };
+        measurements.observe(500, acknowledged);
+        for now in [500, 999, 2000, 3499] { assert_eq!(measurements.rtt_observed_at_ms(now), Some(500)); }
+        measurements.observe(3000, acknowledged);
+        assert_eq!(measurements.rtt_observed_at_ms(3000), Some(500));
+        assert_eq!(measurements.rtt_observed_at_ms(2999), None);
+        assert_eq!(measurements.rtt_observed_at_ms(3500), None);
+        assert_eq!(measurements.rtt_observed_at_ms(499), None);
+        measurements.observe(3501, LocalQuicSample { received_ack_frames: 3, ..sample() });
+        assert_eq!(measurements.rtt_observed_at_ms(3501), Some(3501));
     }
 }

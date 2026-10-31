@@ -106,6 +106,8 @@ mod relay_allocation;
 pub use nestlink_platform_network::{
     NetworkMonitor, PlatformLinkAddress, PlatformNetworkFacts, PlatformRoute,
 };
+#[cfg(windows)]
+pub use nestlink_platform_network::system_tools;
 #[cfg(not(target_arch = "wasm32"))]
 pub use nestlink_policy::PathSet;
 #[cfg(not(target_arch = "wasm32"))]

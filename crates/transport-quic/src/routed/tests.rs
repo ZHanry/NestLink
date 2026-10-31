@@ -202,6 +202,7 @@ impl Fixture {
 }
 
 mod chain;
+mod cleanup;
 
 #[test]
 fn complete_binding_refuses_crossed_grants_actual_business_peers_adjacencies_and_stale_policy()
@@ -720,6 +721,7 @@ async fn borrowed_routed_establishment_can_be_cancelled_without_losing_original_
         // the virtual receiver and the unique physical adjacency receipt.
     }
     assert!(owner.endpoint.is_some());
+    assert!(owner.released.is_some());
     assert!(owner.receiver.is_some());
     assert!(owner.adjacency.is_some());
     assert!(owner.take_transport().is_err());

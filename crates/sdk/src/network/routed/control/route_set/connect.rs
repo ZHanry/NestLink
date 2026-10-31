@@ -17,8 +17,16 @@ impl Sdk {
         peer_key: &[u8; 32],
         setup: SessionSetup,
         address_policy: &AddressPolicy,
-        mut cancel: watch::Receiver<bool>,
+        cancel: watch::Receiver<bool>,
         deadline: Instant,
+    ) -> Result<ChannelRuntime, SessionEstablishError> {
+        self.connect_original_route_candidate(&route, selected, bind, local, peer_key, setup, address_policy, cancel, deadline).await
+    }
+    #[allow(clippy::too_many_arguments)]
+    pub(super) async fn connect_original_route_candidate(
+        &self, route: &VerifiedRemoteRouteSet, selected: usize, bind: SocketAddr,
+        local: &DeviceIdentity, peer_key: &[u8;32], setup: SessionSetup,
+        address_policy: &AddressPolicy, mut cancel: watch::Receiver<bool>, deadline: Instant,
     ) -> Result<ChannelRuntime, SessionEstablishError> {
         let permit = setup.session.current_verified_permit().clone();
         let candidate = route.candidate_for_admission(self, local, &permit, peer_key, selected)

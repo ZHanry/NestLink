@@ -22,7 +22,7 @@ use std::{
 mod chain;
 pub use chain::VerifiedRemoteChain;
 mod route_set;
-pub use route_set::{VerifiedRemoteRouteCandidate, VerifiedRemoteRouteSet};
+pub use route_set::{VerifiedRemoteRouteCandidate, VerifiedRemoteRouteSet, ContinuousRouteSetSession, RouteSetRecoveryProposal, RouteSetContinuationStatus};
 
 /// Installed by the local operator for this deployment. A response or a peer
 /// cannot replace this key. Loopback nodes require a separate explicit opt-in.

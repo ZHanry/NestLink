@@ -558,7 +558,11 @@ fn schema_35_upgrade_preserves_existing_signed_topology_and_original_sequence() 
     let signed = f.report(0, 11, NOW + 10)?;
     let original = f.accept(0, &signed, NOW + 10)?;
     let db = Connection::open(f.directory.path().join("control.sqlite3"))?;
-    db.execute_batch("DROP TABLE network_space_addresses; DROP TABLE network_space_address_directories; DROP TABLE network_remote_chain_topology_bindings; DROP TABLE network_topology_publisher_exports; DROP TABLE network_route_exports; PRAGMA user_version=34;")?;
+    // Reconstruct the actual pre-35 schema, including its original quota view.
+    // Later migrations must be absent before Store replays them.
+    db.execute_batch("DROP TABLE network_space_addresses; DROP TABLE network_space_address_directories; DROP TABLE network_remote_chain_topology_bindings; DROP TABLE network_topology_publisher_exports; DROP TABLE network_route_exports; DROP VIEW all_relay_capacity; DROP TABLE network_remote_route_set_members; DROP TABLE network_remote_route_sets;
+        CREATE VIEW all_relay_capacity AS SELECT id,kind,controller_account_id,host_account_id,node_id,promised_until FROM relay_reservations UNION ALL SELECT allocation_id,'node',controller_account_id,host_account_id,node_id,promised_until FROM network_remote_relays UNION ALL SELECT route_id,'node',controller_account_id,host_account_id,node_id,promised_until FROM network_remote_chain_hops;
+        PRAGMA user_version=34;")?;
     drop(db);
     f.restart()?;
     let retry = f.accept(0, &signed, NOW + 20)?;

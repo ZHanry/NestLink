@@ -1,8 +1,9 @@
 # ADR 0030: Optional continued policy in the sole connectivity Scheduler
 
 Status: source implemented, awaiting GitHub-hosted Actions verification. This
-is a policy slice of W13. It has no production carrier adapter and does not
-complete W13, W14, AC20 or AC21.
+is a policy and opt-in SDK owner slice of W13. Its new production API performs
+real transport-only standby preparation/probing, but does not complete W13,
+W14, AC20 or AC21.
 
 ## Choice and original authority
 
@@ -44,11 +45,13 @@ and failures from the retired connection. A work completion must match its
 one outstanding work token, epoch and deadline and cannot use feedback from
 before that work began. A cached read is not a new transport observation.
 
-The adapter must retain the genuine local feedback timestamp. Existing
-PathObservationSnapshot does not itself expose that timestamp, so reading a
-snapshot and stamping its read time is not a valid production adapter. It must
-also keep individually expired values None. This prerequisite remains open;
-the policy tests supply explicit synthetic timestamps and are L1 evidence.
+The adapter retains the genuine local feedback timestamp.
+LocalPathMeasurements::rtt_observed_at_ms returns the actual local ACK sample
+time without renewing it on idle polls or reads. The original PathObservation
+now exposes timed_snapshot, translating that sample's clock to its actual
+monotonic Instant and preserving individual None/expiry and terminal checks.
+The SDK uses that time in its original policy clock; it never stamps the time
+of a cached snapshot read. Pure policy tests remain synthetic L1 evidence.
 
 Snapshots older than three seconds become unknown. Future or non-increasing
 feedback is rejected; a reversed decision clock terminates this stage. Idle
@@ -115,9 +118,63 @@ proposal expiry, delayed/duplicate commits and terminal non-revival. Existing
 legacy Scheduler tests remain in place. Run all compilation, formatting,
 clippy and tests only in hosted Actions under R02; source is not a passed run.
 
-The next slice must connect the typed SDK original route set and genuine
-feedback timestamps to this optional phase within the original transport
-owner, perform real bounded probes, and implement W14's authenticated switch
-or safe application recovery. It must retain original cumulative quotas,
-path permissions, business proof, terminal priority and cleanup receipts.
-Actual business data, migration/recovery and target evidence remain required.
+## Opt-in SDK continuous session owner
+
+connect_continuing_network_remote_route_candidate enters the existing selected
+member's node admission, business proof and ChannelRuntime carrier owner, then
+retains that original runtime and the one Scheduler in ContinuousRouteSetSession.
+The original connect_network_remote_route_candidate API remains compatible.
+Both peers must select the same active member and drive their session owners'
+async poll at least once per second. This is an explicit caller-driven API;
+there is no second scheduler or silent background selection loop.
+
+Each poll uses the actual caller's current SDK/login and device identity.
+Authenticated route-set refresh preserves the immutable fingerprint and caps
+the original deadline. Its refresh schedule starts at the real fetched time,
+not at the time connection setup returned. Every admission/probe again checks
+the typed candidate gate, deadline, original relay pin and route binding.
+The existing signed-host resolver and all-answer address/loopback policy apply.
+
+Prepare performs actual mutual node admission and original-group inner QUIC
+TLS on the other member, within its policy work budget. It retains no business
+SessionSetup or channels for that spare. Probe sends one small encrypted
+transport DATAGRAM, waits within the original bounded work deadline for newly
+observed Quinn ACK feedback and samples the mature connection's RTT/counters.
+This is local transport feedback, not an application echo, exact probe-ACK
+cohort proof, available bandwidth or business delivery evidence. Missing
+capacity/cost remains unknown. Original node meters and statically split byte
+limits apply to preparation and these probes without replenishment.
+
+The session stores pending AdjacencyEndpoint/RoutedEstablishment/RoutedTransport
+owners before awaiting, so cancellation cannot lose their original receipts.
+The next poll retires interrupted work before starting another attempt. A
+small guardian observes the original business stop/cancel/deadline and revokes
+the spare even while the application is not polling; it owns no scheduler or
+business data and joins during cleanup. Node Pair/seen permits an original
+endpoint role only once: after an attempted member is retired, this adapter
+does not replay that allocation even if its metadata still says available.
+
+The owner consumes Retire only after actual joined physical cleanup. It keeps
+pending retirement tokens and first close deadlines across cancellation and
+failure. ChannelRuntime::wait_stopped_before caps its existing close budget,
+so an enclosing shutdown shares one absolute deadline with the spare. Drop
+requests closure and never supplies a completion receipt.
+
+A current proposal is exposed as RouteSetRecoveryProposal and explicitly
+requires fresh business admission. There is no SDK Commit API or in-place
+carrier replacement. retire_for_recovery validates the exact proposal, target
+and deadline, then retires the old business generation and every spare using
+the existing stop/input-release/queue-discard/cleanup path. The application
+must subsequently use its existing recovery coordinator to obtain new business
+and network authority; the old spare cannot be promoted into a business
+channel and no old input, clipboard, audio or arbitrary request is replayed.
+Automatic bilateral W14 negotiation and automatic redial remain open.
+
+The new real network-relay test source drives two actual owners, proves two
+node connections per original member, completes actual bounded spare probes,
+keeps FileRead on the unchanged active binding/epoch, withdraws only the spare
+and immediately rebinds its two physical sockets, then revokes and cleans the
+original active sockets. Its exact Actions run has not yet been verified.
+Production UI/daemon integration, fully automatic safe application recovery,
+authenticated W14 switching, broader quality policy and target evidence remain
+required before W13 or its acceptance groups can close.

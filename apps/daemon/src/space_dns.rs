@@ -16,6 +16,10 @@ pub(crate) struct SpaceDnsArgs {
     /// Loopback only; both UDP and TCP bind the selected port.
     #[arg(long, default_value = "127.0.0.1:5354")]
     listen: SocketAddr,
+    /// Opt in by exporting a public plan for a separate administrator helper.
+    /// Windows requires --listen 127.0.0.1:53. Does not itself elevate or install.
+    #[arg(long)]
+    system_dns_plan: Option<PathBuf>,
 }
 
 pub(crate) async fn run(args: SpaceDnsArgs) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -38,14 +42,22 @@ pub(crate) async fn run(args: SpaceDnsArgs) -> Result<(), Box<dyn std::error::Er
     let original = session_snapshot(&directory)?;
     let source = Arc::new(RwLock::new(sdk));
     let mut dns = SpaceDns::start(source.clone(), &args.space, args.listen).await?;
+    if let Some(path) = &args.system_dns_plan {
+        let expires = source.read().await.principal().ok_or_else(|| io::Error::other("DNS session ended"))?.access_expires.saturating_mul(1000);
+        let plan = crate::space_dns_system::DnsPlan::current(&args.space, dns.local_addr(), expires).await?;
+        plan.save_new(path)?;
+        println!("Public split-DNS plan: {}. Review with space-dns-system review; apply separately as administrator/root with a private --journal-dir. The helper reads no login data.", path.display());
+    }
     drop(installation);
     println!("Space DNS: {} (UDP/TCP), suffix {}", dns.local_addr(), dns.suffix());
     println!("Names identify current devices in this account; IP access requires separate authorization. Press Ctrl-C to stop.");
     let mut tick = tokio::time::interval(Duration::from_millis(250));
+    let signal = crate::space_dns_system::termination();
+    tokio::pin!(signal);
     let result = loop {
         tokio::select! {
             result = dns.wait() => break result,
-            result = tokio::signal::ctrl_c() => {
+            result = &mut signal => {
                 result?;
                 break Ok(());
             }

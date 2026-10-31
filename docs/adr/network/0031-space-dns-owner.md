@@ -123,3 +123,7 @@ directories, public bind rejection, Drop, idle TCP close and actual port rebind.
 The local-IPC test checks mutual exclusion between the headless owner and real
 daemon without a fake endpoint. These are source tests awaiting Actions, not
 recorded passes and not host split-DNS/real-device evidence.
+
+Follow-up ADR 0032 adds a separate administrative split-DNS owner and public-plan
+CLI workflow using Windows NRPT and Linux systemd-resolved. Its real OS and
+recovery tests remain awaiting hosted execution and target qualification.

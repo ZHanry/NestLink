@@ -4,6 +4,8 @@ use super::*;
 use nestlink_identity::network::{VerifiedRemoteRouteSetGrants, verify_remote_route_set_grants};
 use nestlink_protocol::api::{NetworkRemoteRouteSetRequest, NetworkRemoteRouteSetView, NodeEndpointsView};
 mod connect;
+mod continuation;
+pub use continuation::{ContinuousRouteSetSession, RouteSetRecoveryProposal, RouteSetContinuationStatus};
 
 pub(super) fn original_fingerprint(view: &NetworkRemoteRouteSetView) -> Result<[u8;32], SdkError> {
     let mut original = view.clone();
@@ -75,7 +77,7 @@ impl VerifiedRemoteRouteSet {
             || self.local_device != local.device_id || self.local_key != local.identity.public_key()
             || self.peer_key != *peer_key || self.fetched.elapsed() >= Duration::from_secs(5)
             || Instant::now() >= self.deadline
-            || !sdk.login.as_ref().is_some_and(|login| login.principal.session_id == self.login_session)
+            || sdk.login.as_ref().is_none_or(|login| login.principal.session_id != self.login_session)
         { return false; }
         let Ok(now) = unix_ms() else { return false; };
         let revoked = BTreeSet::new();

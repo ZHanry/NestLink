@@ -1,6 +1,9 @@
 //! Actual HTTP, two real NodeControl owners and one original group's admission.
 //! This proves healthy-member isolation, not selection or an in-place switch.
 use super::*;
+
+#[path = "route_set/continuation.rs"]
+mod continuation;
 use nestlink_protocol::{
     api::{NetworkRemoteRouteSetMemberRequest, NetworkRemoteRouteSetRequest},
     network::GrantClaims,
@@ -208,8 +211,65 @@ async fn original_route_set_keeps_b_admissible_after_a_stops_and_rejects_role_re
         candidate.relay(),
     )?;
     let bound = endpoint.local_addr()?;
+    let host_current = f
+        .sdk
+        .verified_network_remote_route_set(
+            &f.pin,
+            &f.host,
+            &f.permit,
+            &f.controller.identity.public_key(),
+            &set,
+        )
+        .await?;
+    assert_eq!(host_current.transport_group(), group);
+    let host_candidate = host_current
+        .candidate_for_admission(
+            &f.sdk,
+            &f.host,
+            &f.permit,
+            &f.controller.identity.public_key(),
+            1,
+        )
+        .ok_or("healthy host candidate unavailable")?;
+    assert_eq!(host_candidate.allocation_id(), candidate.allocation_id());
+    assert_eq!(host_candidate.route_binding(), candidate.route_binding());
+    assert_eq!(host_candidate.relay(), candidate.relay());
+    let mut host_endpoint = routed::AdjacencyEndpoint::bind_node(
+        "127.0.0.1:0".parse()?,
+        &f.host.identity,
+        host_candidate.relay(),
+    )?;
+    let host_bound = host_endpoint.local_addr()?;
     let connect_deadline = Instant::now() + Duration::from_secs(3);
-    let mut adjacency = endpoint
+    // NodeReady certifies a committed controller/host pair. A lone controller
+    // must remain pending; admit the actual two roles before testing replay.
+    let (mut adjacency, mut host_adjacency) = tokio::try_join!(
+        endpoint.connect_node(
+            address,
+            &f.controller.identity,
+            &f.controller.device_id,
+            candidate.allocation_id(),
+            candidate.route_binding(),
+            connect_deadline,
+        ),
+        host_endpoint.connect_node(
+            address,
+            &f.host.identity,
+            &f.host.device_id,
+            host_candidate.allocation_id(),
+            host_candidate.route_binding(),
+            connect_deadline,
+        ),
+    )
+    .map_err(|error| format!("healthy B controller/host paired admission: {error}"))?;
+    assert_eq!(second.control.counters()?.opened_connections, 2);
+    let mut replay = routed::AdjacencyEndpoint::bind_node(
+        "127.0.0.1:0".parse()?,
+        &f.controller.identity,
+        candidate.relay(),
+    )?;
+    assert!(Instant::now() < connect_deadline);
+    let replay_error = replay
         .connect_node(
             address,
             &f.controller.identity,
@@ -218,25 +278,22 @@ async fn original_route_set_keeps_b_admissible_after_a_stops_and_rejects_role_re
             candidate.route_binding(),
             connect_deadline,
         )
-        .await?;
-    let mut replay = routed::AdjacencyEndpoint::bind_node(
-        "127.0.0.1:0".parse()?,
-        &f.controller.identity,
-        candidate.relay(),
-    )?;
+        .await
+        .err()
+        .ok_or("the occupied controller role accepted a replay")?;
     assert!(
-        replay
-            .connect_node(
-                address,
-                &f.controller.identity,
-                &f.controller.device_id,
-                candidate.allocation_id(),
-                candidate.route_binding(),
-                connect_deadline
-            )
-            .await
-            .is_err()
+        replay_error
+            .downcast_ref::<tokio::time::error::Elapsed>()
+            .is_none(),
+        "role replay must be rejected before the shared admission deadline: {replay_error}",
     );
+    assert!(
+        replay_error
+            .downcast_ref::<io::Error>()
+            .is_some_and(|error| error.kind() != io::ErrorKind::TimedOut),
+        "role replay must fail through the real admission I/O: {replay_error}",
+    );
+    assert_eq!(second.control.counters()?.opened_connections, 2);
     replay
         .close_and_wait(Instant::now() + Duration::from_secs(3))
         .await?;
@@ -265,10 +322,15 @@ async fn original_route_set_keeps_b_admissible_after_a_stops_and_rejects_role_re
             "revoked original set retained B resource",
         )
     })?;
-    adjacency
-        .close_and_wait(Instant::now() + Duration::from_secs(3))
-        .await?;
+    let cleanup = Instant::now() + Duration::from_secs(3);
+    let (controller_released, host_released) = tokio::join!(
+        adjacency.close_and_wait(cleanup),
+        host_adjacency.close_and_wait(cleanup),
+    );
+    controller_released?;
+    host_released?;
     let _socket = UdpSocket::bind(bound)?;
+    let _host_socket = UdpSocket::bind(host_bound)?;
     assert!(
         f.sdk
             .verified_network_remote_route_set(

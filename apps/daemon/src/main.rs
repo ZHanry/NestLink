@@ -12,6 +12,7 @@ mod native_video;
 mod privileged_input;
 mod session_store;
 mod space_dns;
+mod space_dns_system;
 
 use clap::{Parser, Subcommand};
 use nestlink_app_core::{AppCore, Limits, ShutdownState};
@@ -58,6 +59,8 @@ struct Args {
 enum Command {
     /// Serve one space's current same-account private names on loopback UDP/TCP.
     SpaceDns(space_dns::SpaceDnsArgs),
+    /// Review/apply/recover only an explicit managed split-DNS plan; no login data.
+    SpaceDnsSystem(space_dns_system::SystemDnsArgs),
     #[command(
         name = "file-quota",
         about = "Offline native FileWrite quota metadata maintenance"
@@ -397,6 +400,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let args = Args::parse();
     match args.command {
         Some(Command::SpaceDns(command)) => return space_dns::run(command).await,
+        Some(Command::SpaceDnsSystem(command)) => return space_dns_system::run(command).await,
         Some(Command::FileQuota(command)) => return Ok(run_file_quota(command)?),
         Some(Command::Maintenance(command)) => return maintenance::run(command).await,
         Some(Command::Shutdown(command)) => return maintenance::shutdown(command).await,
