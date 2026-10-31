@@ -31,6 +31,9 @@ async fn hosted_native_role() -> Result {
     let case = path("NESTLINK_TUN_NATIVE_CASE")?;
     let plan = case.join("private-plan/plan.json");
     let receipt = path("NESTLINK_TUN_NATIVE_RECEIPT")?;
+    if role == "provider-negative" {
+        return provider_negative(&case);
+    }
     if role == "ordinary" {
         return ordinary(&case, &plan, &receipt).await;
     }
@@ -81,6 +84,42 @@ async fn hosted_native_role() -> Result {
         }
         _ => Err(io::Error::other("unknown bounded Windows TUN fixture role").into()),
     }
+}
+fn provider_negative(case: &Path) -> Result {
+    nestlink_privileged::windows::require_administrator_process()?;
+    let driver = path("NESTLINK_TUN_NATIVE_DRIVER")?;
+    let pin = hash(&std::env::var("NESTLINK_TUN_NATIVE_DRIVER_SHA256")?)?;
+    let original = std::fs::read(&driver)?;
+    let selected = PinnedProviderImage::open(&driver, pin)?;
+    assert_eq!(selected.sha256(), pin);
+    // The same locks which protect the production load keep the official
+    // bytes immutable while the selected provider can still be loaded.
+    assert!(std::fs::OpenOptions::new().write(true).open(&driver).is_err(),
+        "selected protected provider remained writable while pinned");
+    drop(selected);
+    let mut wrong = pin;
+    wrong[0] ^= 1;
+    assert!(PinnedProviderImage::open(&driver, wrong).is_err(),
+        "wrong operator digest admitted a provider");
+    let other_architecture = hash("d694fa46ab4cfebcb2632d094c7aa97278eef2f8052438621766d863ae98a931")?;
+    assert_ne!(pin, other_architecture, "dedicated fixture requires amd64");
+    assert!(PinnedProviderImage::open(&driver, other_architecture).is_err(),
+        "another architecture's official pin admitted this process provider");
+    let unsigned = path("NESTLINK_TUN_NATIVE_UNSIGNED")?;
+    let unsigned_pin = nestlink_identity::digest(&std::fs::read(&unsigned)?);
+    assert!(PinnedProviderImage::open(&unsigned, unsigned_pin).is_err(),
+        "an operator-selected matching hash admitted an unreviewed provider");
+    let writable = case.join("wintun.dll");
+    std::fs::write(&writable, &original)?;
+    assert!(PinnedProviderImage::open(&writable, pin).is_err(),
+        "official bytes on an ordinary-writable path admitted a provider");
+    assert_eq!(std::fs::read(&driver)?, original,
+        "provider rejection changed the original official image");
+    std::fs::write(case.join("provider-negative.json"),serde_json::to_vec(&serde_json::json!({
+        "official_sha256":pin,"official_bytes_unchanged":true,"pinned_image_write_denied":true,
+        "rejected":["wrong_digest","other_architecture","unreviewed_matching_digest","ordinary_writable_path"]
+    }))?)?;
+    Ok(())
 }
 fn recovery_identity_negative(case: &Path, receipt: &Path) -> Result {
     // The original helper deliberately holds its recovery journal's exclusive

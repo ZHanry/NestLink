@@ -169,6 +169,25 @@ def main():
             raise ValueError("protected fixture differs from the Actions-built executable")
         result["build_provenance"]["executable"] = {"build_path": str(artifacts[0]), "execution_path": str(executable), "sha256": digest(executable)}
         runner_sid = ps("runner-sid", "[Security.Principal.WindowsIdentity]::GetCurrent().User.Value")
+        provider_case = output / "provider-negative"
+        native.directory(provider_case, f"O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;{runner_sid})")
+        unreviewed = fixture / "unreviewed-provider"
+        native.directory(unreviewed, protected_acl)
+        (unreviewed / "wintun.dll").write_bytes(b"NestLink native provider rejection fixture; never executable.\n")
+        execute("unreviewed-provider-protected-owner", ["icacls.exe", unreviewed / "wintun.dll", "/setowner", "*S-1-5-32-544"])
+        execute("native-provider-rejections", [executable, *ROLE_ARGS], extra={
+            "NESTLINK_TUN_NATIVE_ROLE": "provider-negative", "NESTLINK_TUN_NATIVE_CASE": str(provider_case),
+            "NESTLINK_TUN_NATIVE_RECEIPT": str(fixture / "unused-provider-negative-receipt.json"),
+            "NESTLINK_TUN_NATIVE_DRIVER": str(fixture / "wintun.dll"),
+            "NESTLINK_TUN_NATIVE_DRIVER_SHA256": binaries["amd64"],
+            "NESTLINK_TUN_NATIVE_UNSIGNED": str(unreviewed / "wintun.dll")})
+        provider_negative = await_json(provider_case / "provider-negative.json")
+        if (provider_negative["rejected"] != ["wrong_digest", "other_architecture", "unreviewed_matching_digest", "ordinary_writable_path"]
+            or not provider_negative["official_bytes_unchanged"] or not provider_negative["pinned_image_write_denied"]
+            or bytes(provider_negative["official_sha256"]).hex() != binaries["amd64"]
+            or digest(fixture / "wintun.dll") != binaries["amd64"]):
+            raise ValueError("production provider trust checks did not reject unreviewed or mutable inputs")
+        result["cases"]["provider-negative"] = {"status": "passed", "receipt": provider_negative}
         for scenario in ("normal", "crash", "raw-peer"):
             case = output / scenario
             native.directory(case, f"O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;{runner_sid})")
