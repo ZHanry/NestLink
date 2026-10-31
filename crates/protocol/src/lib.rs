@@ -25,6 +25,7 @@ pub mod network_topology;
 pub mod node_discovery;
 pub mod node_resources;
 pub mod nodes;
+pub mod offline;
 pub mod relay;
 pub mod relay_close;
 pub mod relay_datagram;

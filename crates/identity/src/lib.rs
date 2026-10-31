@@ -11,6 +11,7 @@ pub mod network;
 pub mod network_topology;
 pub mod node_discovery;
 pub mod nodes;
+pub mod offline;
 pub mod reconnection;
 pub mod relay;
 pub use nodes::closes as node_closes;
