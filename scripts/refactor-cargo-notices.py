@@ -45,8 +45,18 @@ REVIEWED_PLATFORM_FORKS = {
         'notes_sha256': '087325852f43d97016bc365fc7eca7d56ec1ed59789c418be4aec9179271754b',
     },
 }
-REVIEWED_LOCAL_FORKS = {**REVIEWED_WEB_FORKS, **REVIEWED_PLATFORM_FORKS}
+REVIEWED_NETWORK_FORKS = {
+    'fast-socks5': {
+        'version': '1.0.0',
+        'path': 'third-party/fast-socks5',
+        'provenance_sha256': '1231cd11ea9ad0c32d3284ad777a44e07164146f7385cb669309226ff8b55b02',
+        'archive_sha256': '9545787d8304a71e1bf1b711705070a4c400cce9b332c4a11800627b7c9a2067',
+        'notes_sha256': '64f8d812066f54d5833362062fd61ff630b3c067911fdb2dce0df39a778c6c8d',
+    },
+}
+REVIEWED_LOCAL_FORKS = {**REVIEWED_WEB_FORKS, **REVIEWED_PLATFORM_FORKS, **REVIEWED_NETWORK_FORKS}
 REVIEWED_LICENSE_URLS = {
+    'fast-socks5': 'https://raw.githubusercontent.com/dizda/fast-socks5/bae2fc05f993d3a247b5435ba7da221f3fd80a3c/LICENSE',
     'leptos_macro': 'https://raw.githubusercontent.com/leptos-rs/leptos/fbc9ed631ff8c19c5eed02a1d4459e202cff7043/LICENSE',
     'tachys': 'https://raw.githubusercontent.com/leptos-rs/leptos/584c3a2d884b0e4dba9e3f822a9b6982cff072c7/LICENSE',
     'objc2-foundation': 'https://raw.githubusercontent.com/madsmtm/objc2/e282618be4c3a3b9542957e0c8540e9588472ce8/LICENSE.txt',

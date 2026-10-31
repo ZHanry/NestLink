@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import tarfile
 import tempfile
+import tomllib
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -263,6 +264,53 @@ class LocalWebForkTests(unittest.TestCase):
             self.assertEqual(raised.exception.index['status'], 'incomplete')
             self.assertEqual([item['name'] for item in raised.exception.index['unresolved_packages']], ['demo'])
             self.assertEqual(len(raised.exception.index['packages']), 3)
+
+
+class LocalNetworkForkTests(unittest.TestCase):
+    def fixture(self, root):
+        review = N.REVIEWED_NETWORK_FORKS['fast-socks5']
+        source = root / review['path']
+        shutil.copytree(ROOT / review['path'], source)
+        (root / 'docs/refactor').mkdir(parents=True)
+        (root / 'docs/refactor/cargo-notice-supplements.json').write_text(
+            json.dumps({'schema_version': 1, 'packages': []}))
+        (root / 'Cargo.lock').write_text(
+            'version=4\n[[package]]\nname="fast-socks5"\nversion="1.0.0"\n')
+        (root / 'LICENSE').write_text('fixture first-party license')
+        package = tomllib.loads((source / 'Cargo.toml').read_text())['package']
+        item = dict(package, id='fast-socks5-local-id', source=None,
+                    manifest_path=str(source / 'Cargo.toml'), license_file=None)
+        return source, {'workspace_members': [], 'packages': [item]}
+
+    def test_network_component_retains_upstream_mit_author_and_exact_archive(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            root = Path(scratch)
+            source, metadata = self.fixture(root)
+            result = N.collect(root, metadata, root / 'out')
+            self.assertEqual(result['status'], 'complete')
+            record, = result['packages']
+            self.assertNotIn('first_party_license_path', record)
+            self.assertEqual(record['authors_declared'],
+                             ['Jonathan Dizdarevic <dizzda@gmail.com>'])
+            self.assertEqual(record['upstream_archive_sha256'],
+                             N.digest(source / 'UPSTREAM.crate'))
+            self.assertEqual((root / 'out/fast-socks5-1.0.0/LICENSE').read_bytes(),
+                             (source / 'LICENSE').read_bytes())
+
+    def test_restored_credential_logging_and_changed_upstream_license_are_rejected(self):
+        for relative in ('src/server.rs', 'LICENSE', 'UPSTREAM.crate'):
+            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as scratch:
+                root = Path(scratch)
+                source, metadata = self.fixture(root)
+                path = source / relative
+                if relative == 'src/server.rs':
+                    with tarfile.open(source / 'UPSTREAM.crate', 'r:gz') as archive:
+                        path.write_bytes(archive.extractfile(
+                            'fast-socks5-1.0.0/src/server.rs').read())
+                else:
+                    path.write_bytes(path.read_bytes() + b'changed')
+                with self.assertRaises(ValueError):
+                    N.collect(root, metadata, root / 'out')
 
 
 if __name__ == '__main__':

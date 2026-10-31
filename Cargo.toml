@@ -37,6 +37,7 @@ members = [
     "apps/privileged",
     "xtask",
 ]
+exclude = ["third-party/fast-socks5"]
 resolver = "3"
 
 [workspace.package]

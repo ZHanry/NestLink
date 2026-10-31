@@ -58,6 +58,17 @@ jobs:
           assert native['hickory-server'] == {'version': '=0.26.3', 'default-features': False}
           assert native['async-trait'] == '=0.1.89'
           assert native['ipnet'] == '=2.12.2'
+          assert native['fast-socks5'] == {'version': '=1.0.0', 'path': '../../third-party/fast-socks5'}
+          # Verify original archive, complete source inventory, exact reviewed
+          # security patch and MIT attribution before resolving this local crate.
+          import importlib.util
+          spec = importlib.util.spec_from_file_location('notices', 'scripts/refactor-cargo-notices.py')
+          notices = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(notices)
+          vendor = pathlib.Path('third-party/fast-socks5').resolve()
+          item = tomllib.loads((vendor / 'Cargo.toml').read_text())['package']
+          item['license_file'] = item.get('license-file')
+          notices.reviewed_local_fork(pathlib.Path.cwd(), vendor, item)
           before_bytes = lock.read_bytes()
           before = tomllib.loads(before_bytes.decode())['package']
           shutil.copyfile(lock, output / 'before.lock')
@@ -126,6 +137,9 @@ jobs:
                   'reviewed_petgraph_exact_version_and_checksum': len(petgraph) == 1 and petgraph[0]['version'] == '0.8.3' and petgraph[0].get('checksum') == '8701b58ea97060d5e5b155d383a69952a60943f0e6dfe30b04c287beb0b27455',
                   'reviewed_authoritative_dns_exact_version': len(dns) == 1 and dns[0]['version'] == '0.26.3' and bool(dns[0].get('checksum')),
                   'locked_metadata_succeeded': all(item['return_code'] == 0 for item in commands),
+                  'only_reviewed_socks_component_new_external_packages': all(
+                      identity(item) in existing or not item.get('source')
+                      or item['name'] == 'tokio-stream' for item in after),
               }
               assert all(assertions.values()), 'Unreviewed dependency drift or incomplete lock derivation'
           except Exception as error:
