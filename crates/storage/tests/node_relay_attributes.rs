@@ -259,7 +259,7 @@ fn populated_schema_thirty_one_upgrade_preserves_registration_and_creates_no_met
     drop(f.store);
     let probe = Connection::open(&f.path)?;
     probe.execute_batch(
-        "DROP TABLE private_service_relay_hops; DROP TABLE private_service_usage_reports; DROP TABLE private_service_leases; DROP TABLE private_service_hosts; DROP TABLE private_service_acl; DROP TABLE service_exposures; DROP TABLE network_space_addresses; DROP TABLE network_space_address_directories; DROP TABLE network_remote_chain_topology_bindings; DROP TABLE network_topology_publisher_exports; DROP TABLE network_route_exports; DROP VIEW all_relay_capacity; DROP TABLE network_remote_route_set_members; DROP TABLE network_remote_route_sets;
+        "DROP VIEW all_relay_capacity; DROP TABLE private_service_relay_hops; DROP TABLE private_service_usage_reports; DROP TABLE private_service_leases; DROP TABLE private_service_hosts; DROP TABLE private_service_acl; DROP TABLE service_exposures; DROP TABLE network_space_addresses; DROP TABLE network_space_address_directories; DROP TABLE network_remote_chain_topology_bindings; DROP TABLE network_topology_publisher_exports; DROP TABLE network_route_exports; DROP TABLE network_remote_route_set_members; DROP TABLE network_remote_route_sets;
          DROP TABLE network_remote_chain_hops;
          DROP TABLE network_remote_chains;
          CREATE VIEW all_relay_capacity AS

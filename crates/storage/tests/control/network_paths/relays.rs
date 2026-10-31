@@ -110,7 +110,7 @@ fn migration_34_preserves_original_single_relay_credentials_and_capacity() -> Re
     let original = f.issue(request)?;
     edit_snapshot(&mut f.base, |db| {
         db.execute_batch(
-        "DROP TABLE private_service_relay_hops; DROP TABLE private_service_usage_reports; DROP TABLE private_service_leases; DROP TABLE private_service_hosts; DROP TABLE private_service_acl; DROP TABLE service_exposures; DROP TABLE network_space_addresses; DROP TABLE network_space_address_directories; DROP TABLE network_remote_chain_topology_bindings; DROP TABLE network_topology_publisher_exports; DROP TABLE network_route_exports; DROP VIEW all_relay_capacity; DROP TABLE network_remote_route_set_members; DROP TABLE network_remote_route_sets; DROP TABLE network_remote_chain_hops; DROP TABLE network_remote_chains;
+        "DROP VIEW all_relay_capacity; DROP TABLE private_service_relay_hops; DROP TABLE private_service_usage_reports; DROP TABLE private_service_leases; DROP TABLE private_service_hosts; DROP TABLE private_service_acl; DROP TABLE service_exposures; DROP TABLE network_space_addresses; DROP TABLE network_space_address_directories; DROP TABLE network_remote_chain_topology_bindings; DROP TABLE network_topology_publisher_exports; DROP TABLE network_route_exports; DROP TABLE network_remote_route_set_members; DROP TABLE network_remote_route_sets; DROP TABLE network_remote_chain_hops; DROP TABLE network_remote_chains;
          CREATE VIEW all_relay_capacity AS SELECT id,kind,controller_account_id,host_account_id,node_id,promised_until FROM relay_reservations UNION ALL SELECT allocation_id,'node',controller_account_id,host_account_id,node_id,promised_until FROM network_remote_relays;
          PRAGMA user_version=33;"
     )

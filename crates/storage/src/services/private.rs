@@ -658,7 +658,7 @@ impl Store {
             return Err(StorageError::Forbidden);
         }
         let budget = request.maximum_bytes.min(mode_available(
-            &tx,
+            tx,
             service,
             true,
             view.private_maximum_bytes,

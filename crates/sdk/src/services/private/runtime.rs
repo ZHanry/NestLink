@@ -630,22 +630,24 @@ async fn serve_relay_connection(
     grant: PrivateServiceGrant,
     policy: PrivateServiceRelayPolicy,
 ) -> Result<(), SdkError> {
-    let connecting = super::network::connect(&sdk, &host, &grant, &policy);
-    tokio::pin!(connecting);
-    let result = tokio::select! {biased;
-        _=stopped(&mut stop)=>None,
-        result=&mut connecting=>Some(result),
-    };
-    let mut owner = match result {
-        Some(Ok(owner)) => owner,
-        Some(Err(_)) => return Ok(()),
-        None => {
-            if let Ok(mut owner) = connecting.await {
-                owner
-                    .close_and_wait(tokio::time::Instant::now() + Duration::from_secs(5))
-                    .await?;
+    let mut owner = {
+        let connecting = super::network::connect(&sdk, &host, &grant, &policy);
+        tokio::pin!(connecting);
+        let result = tokio::select! {biased;
+            _=stopped(&mut stop)=>None,
+            result=&mut connecting=>Some(result),
+        };
+        match result {
+            Some(Ok(owner)) => owner,
+            Some(Err(_)) => return Ok(()),
+            None => {
+                if let Ok(mut owner) = connecting.await {
+                    owner
+                        .close_and_wait(tokio::time::Instant::now() + Duration::from_secs(5))
+                        .await?;
+                }
+                return Ok(());
             }
-            return Ok(());
         }
     };
     let expected = super::network::fingerprint(&grant)?;

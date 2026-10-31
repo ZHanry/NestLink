@@ -18,6 +18,8 @@ use nestlink_protocol::{
     service_plane::publication::{SERVICE_DELEGATION_MS, ServiceIssuerDelegation},
 };
 
+type PrivateRelayHopRow = (String, Vec<u8>, Vec<u8>, bool, u64);
+
 fn unavailable_authority(error: &StorageError) -> bool {
     matches!(
         error,
@@ -397,7 +399,7 @@ impl Store {
         let mut nodes = Vec::new();
         for (index, view) in route.nodes.iter().enumerate() {
             let node = relay_node(self, &view.node_id, now)?;
-            let row:Option<(String,Vec<u8>,Vec<u8>,bool,u64)>=tx.query_row("SELECT allocation_json,transit_claims,transit_signature,closed,promised_until FROM private_service_relay_hops WHERE grant_id=?1 AND position=?2 AND route_id=?3 AND space_id=?4 AND control_runtime_id=?5",params![grant,index as u8,route.route_id,business.claims().space_id,control],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?,r.get(4)?))).optional()?;
+            let row:Option<PrivateRelayHopRow>=tx.query_row("SELECT allocation_json,transit_claims,transit_signature,closed,promised_until FROM private_service_relay_hops WHERE grant_id=?1 AND position=?2 AND route_id=?3 AND space_id=?4 AND control_runtime_id=?5",params![grant,index as u8,route.route_id,business.claims().space_id,control],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?,r.get(4)?))).optional()?;
             let (allocation, claims, signature, closed, held) =
                 row.ok_or(StorageError::Forbidden)?;
             let allocation: RelayAllocationClaims = serde_json::from_str(&allocation)?;

@@ -522,7 +522,14 @@ fn schema_38_upgrade_preserves_existing_memberships_and_starts_an_empty_director
     join(&mut f, &owner, &device, 0)?;
     let before = f.view()?;
     let db = Connection::open(&f.path)?;
-    db.execute_batch("DROP TABLE private_service_relay_hops; DROP TABLE private_service_usage_reports; DROP TABLE private_service_leases; DROP TABLE private_service_hosts; DROP TABLE private_service_acl; DROP TABLE service_exposures; DROP TABLE network_space_addresses; DROP TABLE network_space_address_directories; PRAGMA user_version=37;")?;
+    // Restore the schema-37 capacity view before later migrations rename tables.
+    // Leaving the current view would retain its removed private relay dependency.
+    db.execute_batch("DROP VIEW all_relay_capacity; DROP TABLE private_service_relay_hops; DROP TABLE private_service_usage_reports; DROP TABLE private_service_leases; DROP TABLE private_service_hosts; DROP TABLE private_service_acl; DROP TABLE service_exposures; DROP TABLE network_space_addresses; DROP TABLE network_space_address_directories;
+        CREATE VIEW all_relay_capacity AS SELECT id,kind,controller_account_id,host_account_id,node_id,promised_until FROM relay_reservations
+        UNION ALL SELECT allocation_id,'node',controller_account_id,host_account_id,node_id,promised_until FROM network_remote_relays
+        UNION ALL SELECT route_id,'node',controller_account_id,host_account_id,node_id,promised_until FROM network_remote_chain_hops
+        UNION ALL SELECT allocation_id,'node',controller_account_id,host_account_id,node_id,promised_until FROM network_remote_route_set_members;
+        PRAGMA user_version=37;")?;
     drop(db);
     f.store = Store::open_existing(&f.path, &f.deployment)?;
     let after = f.view()?;
