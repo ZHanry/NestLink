@@ -144,6 +144,7 @@ struct State<D: InputDevice> {
     sequence: u64,
     last_action: Option<LastAction>,
     retired_from: Option<InputEpoch>,
+    cleanup_complete: bool,
 }
 #[derive(Clone, PartialEq, Eq)]
 enum LastAction {
@@ -166,6 +167,12 @@ impl<D: InputDevice> State<D> {
             .map_err(|_| io::Error::other("platform input adapter panicked"))?
     }
     fn release(&mut self) -> io::Result<()> {
+        // The stop handler owns the terminal cleanup receipt. Dropping the
+        // final state is a fallback for interrupted/failed cleanup, not a
+        // second reset of an already joined platform input owner.
+        if self.cleanup_complete {
+            return Ok(());
+        }
         let mut first_error =
             std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| self.device.begin_reset()))
                 .unwrap_or_else(|_| {
@@ -183,6 +190,7 @@ impl<D: InputDevice> State<D> {
             first_error = reset.err();
         }
         self.last_action = None;
+        self.cleanup_complete = first_error.is_none();
         first_error.map_or(Ok(()), Err)
     }
     fn release_held(&mut self) -> Option<io::Error> {
@@ -383,6 +391,7 @@ impl<D: InputDevice> InputController<D> {
             sequence: 0,
             last_action: None,
             retired_from: None,
+            cleanup_complete: false,
         }));
         if let Err(error) = lease.attach_input(epoch.connection, Box::new(Cleanup(shared.clone())))
         {
