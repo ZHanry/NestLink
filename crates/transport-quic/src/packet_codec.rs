@@ -1,6 +1,7 @@
 //! Narrow reuse of the existing NRD1 codec and bounded fragment owner for a
 //! direct raw-IP business carrier. This framing grants no packet authority.
 use crate::fragments::{Fragment, Reassembly};
+mod runtime;
 use nestlink_protocol::network_datagram as wire;
 use std::{
     io,
@@ -26,6 +27,7 @@ pub struct DirectPacketEndpoint {
     endpoint: Option<quinn::Endpoint>,
     connection: Option<quinn::Connection>,
     released: Option<tokio::sync::oneshot::Receiver<()>>,
+    runtime: std::sync::Arc<runtime::PacketRuntime>,
     path: nestlink_platform_network::path::NetworkPathManager,
     address: std::net::SocketAddr,
     expected_peer: nestlink_protocol::network::PeerId,
@@ -73,20 +75,21 @@ impl DirectPacketEndpoint {
         client.transport_config(transport);
         let socket = path.bind_udp(address)?;
         let address = socket.local_addr()?;
-        let runtime = Arc::new(quinn::TokioRuntime);
+        let runtime = Arc::new(runtime::PacketRuntime::new());
         let inner = runtime.wrap_udp_socket(socket)?;
         let (socket, released) = crate::service::socket::tracked(inner);
         let mut endpoint = quinn::Endpoint::new_with_abstract_socket(
             quinn::EndpointConfig::default(),
             Some(server),
             socket,
-            runtime,
+            runtime.clone(),
         )?;
         endpoint.set_default_client_config(client);
         Ok(Self {
             endpoint: Some(endpoint),
             connection: None,
             released: Some(released),
+            runtime,
             path,
             address,
             expected_peer,
@@ -196,6 +199,20 @@ impl DirectPacketEndpoint {
         self.request_close();
         self.connection = None;
         self.endpoint = None;
+        if let Some(mut tasks) = self.runtime.stop() {
+            tokio::time::timeout_at(deadline, async {
+                while let Some(result) = tasks.join_next().await {
+                    if let Err(error) = result {
+                        if !error.is_cancelled() {
+                            return Err(io::Error::other(error));
+                        }
+                    }
+                }
+                Ok(())
+            })
+            .await
+            .map_err(|_| io::ErrorKind::TimedOut)??;
+        }
         if let Some(released) = self.released.as_mut() {
             tokio::time::timeout_at(deadline, released)
                 .await
@@ -211,6 +228,7 @@ impl DirectPacketEndpoint {
 impl Drop for DirectPacketEndpoint {
     fn drop(&mut self) {
         self.request_close();
+        drop(self.runtime.stop());
     }
 }
 
@@ -355,6 +373,37 @@ mod tests {
         right?;
         assert!(first.connection().is_err());
         assert!(second.connection().is_err());
+        Ok(())
+    }
+    #[tokio::test]
+    async fn slow_initial_handshake_cannot_extend_terminal_physical_socket_ownership()
+    -> crate::Result<()> {
+        let (mut first, mut second) = endpoints()?;
+        let first_address = first.local_addr();
+        let second_address = second.local_addr();
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(12);
+        let accept = async {
+            tokio::time::sleep(Duration::from_secs(6)).await;
+            second.establish(None, [7; 32], [8; 32], deadline).await
+        };
+        let (left, right) = tokio::join!(
+            first.establish(Some(second_address), [7; 32], [8; 32], deadline),
+            accept
+        );
+        left?;
+        right?;
+        first.connection()?.send_datagram(b"after slow proof".to_vec().into())?;
+        assert_eq!(tokio::time::timeout_at(deadline, second.connection()?.read_datagram())
+            .await??.as_ref(), b"after slow proof");
+        let cleanup = tokio::time::Instant::now() + Duration::from_secs(5);
+        let (left, right) = tokio::join!(first.close_and_wait(cleanup), second.close_and_wait(cleanup));
+        left?;
+        right?;
+        assert!(first.released.is_none() && second.released.is_none());
+        let rebound_first = std::net::UdpSocket::bind(first_address)?;
+        let rebound_second = std::net::UdpSocket::bind(second_address)?;
+        drop((rebound_first, rebound_second));
+        assert!(first.establish(Some(second_address), [7; 32], [8; 32], deadline).await.is_err());
         Ok(())
     }
     #[tokio::test]

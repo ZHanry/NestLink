@@ -152,12 +152,12 @@ pub(crate) async fn run(args: TunArgs) -> Result {
             stopped?;
             result
         }.await;
-        access.stop();
+        crate::network_packet_runtime::PacketAuthority::stop(&mut access);
         let cleanup = release_plan_with_os(&os,&plan,&args.plan).await;
         cleanup?;
         outcome
     }.await;
-    access.stop();
+    crate::network_packet_runtime::PacketAuthority::stop(&mut access);
     let released = endpoint
         .close_and_wait(Instant::now() + Duration::from_secs(5))
         .await;

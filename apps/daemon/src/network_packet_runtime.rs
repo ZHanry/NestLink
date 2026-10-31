@@ -1,13 +1,9 @@
 //! One ordinary-user packet authorization/carrier loop for host and subnet
 //! owners. Platform adapters supply complete packets and exact owner checks.
 //! This module never creates an online start, replaces its owner or its budget.
-use nestlink_sdk::{
-    DeviceIdentity, Sdk,
-    network::{
-        packet_access::{OnlinePacketAccess, PacketAdmission, PACKET_MTU},
-        wireguard::OnlineWireGuardClient,
-    },
-};
+use nestlink_sdk::{Sdk, network::packet_access::{OnlinePacketAccess, PacketAdmission, PACKET_MTU}};
+#[cfg(target_os = "linux")]
+use nestlink_sdk::{DeviceIdentity, network::wireguard::OnlineWireGuardClient};
 use nestlink_transport_quic::packet_codec::{DirectPacketEndpoint, PacketAssembler, encode_direct};
 use serde::Serialize;
 use std::{future::Future, io, net::SocketAddr, pin::Pin, time::Duration};
@@ -41,10 +37,12 @@ impl PacketAuthority for OnlinePacketAccess {
     fn admit_remote(&mut self, packet: &[u8]) -> io::Result<PacketAdmission> { OnlinePacketAccess::admit_remote(self, packet) }
     fn refresh<'a>(&'a mut self, sdk: &'a Sdk) -> GuardFuture<'a> { Box::pin(async move { OnlinePacketAccess::refresh(self, sdk).await.map_err(Into::into) }) }
 }
+#[cfg(target_os = "linux")]
 pub(crate) struct WireGuardAuthority<'a> {
     pub owner: &'a mut OnlineWireGuardClient,
     pub local: &'a DeviceIdentity,
 }
+#[cfg(target_os = "linux")]
 impl PacketAuthority for WireGuardAuthority<'_> {
     fn business_digest(&self) -> [u8; 32] { self.owner.business_digest() }
     fn transport_group(&self) -> [u8; 32] { self.owner.transport_group() }
