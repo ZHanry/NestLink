@@ -1,4 +1,5 @@
 use nestlink_protocol::api::*;
+use nestlink_protocol::subnet::management::*;
 use nestlink_protocol::service_plane::group::*;
 use nestlink_protocol::service_plane::{
     ServiceLeaseClaims, ServiceQuotaLimitUpdate, ServiceQuotaUsageQuery, ServiceQuotaUsageView,
@@ -213,6 +214,10 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         DeviceView,
         DevicesResponse,
         RemoteView,
+        SubnetMappingRequest,
+        SubnetGatewayView,
+        SubnetMappingView,
+        SubnetMappingRevoke,
         RemoteRequestsResponse,
         RemotePeerKeys,
         PermitResponse,

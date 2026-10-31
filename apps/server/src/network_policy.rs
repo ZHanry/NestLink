@@ -4,6 +4,7 @@ pub(crate) mod chains;
 pub(crate) mod network_access;
 pub(crate) mod route_exports;
 pub(crate) mod route_sets;
+pub(crate) mod subnet;
 pub(crate) mod topology;
 use crate::{ApiError, AppState, access, now_ms};
 use axum::{

@@ -29,6 +29,7 @@ pub use route_sets::{
 mod authority;
 pub use authority::{NetworkAuthorityChange, NetworkAuthorityState};
 pub mod route_exports;
+pub mod subnet;
 pub mod topology;
 
 pub const MAX_NETWORK_MEMBERS: usize = 4096;
@@ -725,6 +726,7 @@ pub(crate) fn read_snapshot(
         now_ms,
         &mut revoked_grant_ids,
     )?;
+    subnet::collect_revocations(connection, space_id, policy_epoch, now_ms, &mut revoked_grant_ids)?;
     network_access::collect_revocations(
         connection,
         space_id,

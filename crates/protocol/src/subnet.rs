@@ -1,5 +1,6 @@
 //! Exact subnet translation authority. Parsing never publishes a route or
 //! authorizes packet forwarding; NetworkAccess remains independently required.
+pub mod management;
 use crate::{ContractError, ErrorCode, network::{GrantScope, IpPrefix, PeerId}, network_topology::BootIncarnation, valid_id};
 use serde::{Deserialize, Serialize};
 

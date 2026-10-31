@@ -180,4 +180,7 @@
   ,{"path":"/services/{id}/private-access/{reservation}","method":"get","operation":"private_services::current","response":"PrivateServiceGrant","status":200,"auth":true}
   ,{"path":"/private-service-usage","method":"post","operation":"private_services::usage","request":"SignedPrivateServiceUsage","response":"PrivateServiceUsageAck","status":200,"auth":false}
   ,{"path":"/services/{id}/private-host/{runtime}/access","method":"get","operation":"private_services::host_access","query":"ServiceQuery","response":"PrivateServiceHostAccessPage","status":200,"auth":true}
+  ,{"path":"/network/spaces/{space}/subnet-mappings","method":"post","operation":"network_policy::subnet::issue","request":"SubnetMappingRequest","response":"SubnetMappingView","status":201,"auth":true}
+  ,{"path":"/network/spaces/{space}/subnet-mappings/{mapping}","method":"get","operation":"network_policy::subnet::read","response":"SubnetMappingView","status":200,"auth":true}
+  ,{"path":"/network/spaces/{space}/subnet-mappings/{mapping}","method":"delete","operation":"network_policy::subnet::revoke","request":"SubnetMappingRevoke","response":"NetworkPolicyView","status":200,"auth":true}
 ]
