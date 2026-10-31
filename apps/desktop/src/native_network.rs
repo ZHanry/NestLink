@@ -1,8 +1,8 @@
 //! Local dialing consent, separate from administrator forwarding policy.
+use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use eframe::egui;
 use nestlink_app_core::{NativeNetworkError, NativeNetworkSettings, Snapshot};
 use nestlink_app_ipc::wire::Command;
-use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 
 #[derive(Default)]
 pub(crate) struct NativeNetworkPanel {
@@ -17,7 +17,7 @@ pub(crate) struct NativeNetworkPanel {
     route_authority: String,
     route_controller_membership: String,
     route_host_membership: String,
-    route_nodes: [String;2],
+    route_nodes: [String; 2],
     approved: bool,
     pending: bool,
     message: Option<NativeNetworkError>,

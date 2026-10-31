@@ -4,6 +4,40 @@ use nestlink_connectivity::continuation::QualityConstraints;
 use nestlink_sdk::network::routed::{ContinuousRouteSetSession, RouteSetRecoveryConfig};
 use std::sync::atomic::Ordering;
 
+fn at(phase: impl std::fmt::Display, error: impl std::fmt::Debug) -> io::Error {
+    io::Error::other(format!("route-set recovery {phase}: {error:?}"))
+}
+
+#[tokio::test]
+async fn both_explicit_recoverable_stops_keep_the_fixed_budget_but_current_group_revocation_still_wins() -> Result {
+    for reason in [StopReason::TransportLost, StopReason::NetworkChanged] {
+        let mut f = Fixture::new().await?;
+        let mut second = super::super::chain::ChainNode::new(&f).await?;
+        let (_keep_stop, stop) = watch::channel(None);
+        let (_keep_cancel, cancel) = watch::channel(false);
+        let (set, mut controller, mut host) = pair(&f, &second, stop.clone(), cancel.clone(),
+            [unused_udp()?, unused_udp()?]).await.map_err(|error| at("retirement initial pair", error))?;
+        let old = controller.channels().sender();
+        let (c, h) = tokio::try_join!(controller.shutdown(reason), host.shutdown(reason))
+            .map_err(|error| at("explicit retirement of actual pair", error))?;
+        assert_eq!(c.reason, reason);
+        assert_eq!(h.reason, reason);
+        let host_key = f.host.identity.public_key();
+        let source = controller.into_recovery_source(&f.sdk, &f.controller, &host_key, None).await
+            .map_err(|error| at("retirement must preserve original source", error))?;
+        assert_eq!(source.permit().claims(), f.permit.claims());
+        assert!(old.send(Channel::FileRead, b"retired requests cannot resume").await.is_err());
+        f.sdk.revoke_network_remote_route_set(f.pin.space_id(), &set).await?;
+        assert!(f.sdk.recover_network_route_set(&f.controller, &host_key, source,
+            config(unused_udp()?, stop, cancel)?).await.is_err());
+        assert!(f.sdk.reconnection_state(&f.permit.claims().session_id).await?.offer.is_none());
+        assert!(old.send(Channel::FileRead, b"revocation cannot revive the retired sender").await.is_err());
+        second.finish().await?;
+        f.finish().await?;
+    }
+    Ok(())
+}
+
 fn config(
     bound: SocketAddr,
     stop: watch::Receiver<Option<StopReason>>,
@@ -74,7 +108,8 @@ async fn full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_gener
     let (keep_cancel, cancel) = watch::channel(false);
     let old_addresses = [unused_udp()?, unused_udp()?];
     let (set, mut controller, mut host) =
-        pair(&f, &second, stop.clone(), cancel.clone(), old_addresses).await?;
+        pair(&f, &second, stop.clone(), cancel.clone(), old_addresses).await
+            .map_err(|error| at("initial pair", error))?;
     let old_group = controller
         .channels()
         .path_observation()
@@ -88,7 +123,7 @@ async fn full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_gener
             .send(Channel::FileRead, b"old generation file bytes"),
         controller.channels().receive()
     );
-    sent?;
+    sent.map_err(|error| at("old file send", error))?;
     assert_eq!(received?.payload, b"old generation file bytes");
     // Prepare and consume a real standby once. Recovery must allocate fresh
     // IDs even though that original node already saw both peer admissions.
@@ -97,7 +132,7 @@ async fn full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_gener
     tokio::try_join!(
         controller.poll(&f.sdk, &f.controller, &host_key, true),
         host.poll(&f.sdk, &f.host, &controller_key, true)
-    )?;
+    ).map_err(|error| at("prepare actual standby", error))?;
     let standby_addresses = [
         controller
             .standby_local_addr()
@@ -120,7 +155,7 @@ async fn full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_gener
     let (controller, host) = tokio::try_join!(
         controller.into_recovery_source(&f.sdk, &f.controller, &host_key, None),
         host.into_recovery_source(&f.sdk, &f.host, &controller_key, None),
-    )?;
+    ).map_err(|error| at("stopped old pair into unique recovery sources", error))?;
     let original_deadline = controller.deadline().min(host.deadline());
     assert!(
         old_c
@@ -158,7 +193,7 @@ async fn full_old_path_loss_and_four_lost_http_responses_recover_one_fresh_gener
             host,
             config(new_addresses[1], stop.clone(), cancel.clone())?
         ),
-    )?;
+    ).map_err(|error| at("prove successor pair", error))?;
     assert_eq!(f.recovery_faults.lost.load(Ordering::SeqCst), 4);
     assert_eq!(controller.permit().claims(), host.permit().claims());
     assert_eq!(
@@ -248,7 +283,7 @@ async fn recovery_rejects_live_sources_terminal_stops_cancel_and_narrower_local_
             cancel.clone(),
             [unused_udp()?, unused_udp()?],
         )
-        .await?;
+        .await.map_err(|error| at(format_args!("initial pair mode={mode}"), error))?;
         let host_key = f.host.identity.public_key();
         if mode == 0 {
             assert!(
@@ -258,7 +293,8 @@ async fn recovery_rejects_live_sources_terminal_stops_cancel_and_narrower_local_
                     .is_err()
             );
         } else if mode == 1 {
-            controller.shutdown(StopReason::Revoked).await?;
+            controller.shutdown(StopReason::Revoked).await
+                .map_err(|error| at("terminal controller shutdown", error))?;
             assert!(
                 controller
                     .into_recovery_source(&f.sdk, &f.controller, &host_key, None)
@@ -272,7 +308,7 @@ async fn recovery_rejects_live_sources_terminal_stops_cancel_and_narrower_local_
                 .stop(StopReason::NetworkChanged)?;
             let source = controller
                 .into_recovery_source(&f.sdk, &f.controller, &host_key, None)
-                .await?;
+                .await.map_err(|error| at(format_args!("NetworkChanged source mode={mode}"), error))?;
             let mut plan = config(unused_udp()?, stop, cancel)?;
             if mode == 2 {
                 keep_cancel.send_replace(true);
@@ -297,7 +333,8 @@ async fn recovery_rejects_live_sources_terminal_stops_cancel_and_narrower_local_
                     .is_none()
             );
         }
-        host.shutdown(StopReason::ExplicitExit).await?;
+        host.shutdown(StopReason::ExplicitExit).await
+            .map_err(|error| at(format_args!("host cleanup mode={mode}"), error))?;
         second.finish().await?;
         f.finish().await?;
     }

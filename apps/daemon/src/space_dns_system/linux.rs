@@ -97,22 +97,40 @@ fn decode_property(output: &[u8], interface: &str, name: &str) -> Result<Value> 
         ("org.freedesktop.resolve1.Link", "Domains") => "a(sb)",
         ("org.freedesktop.resolve1.Link", "DNSEx") => "a(iayqs)",
         ("org.freedesktop.resolve1.Link", "DefaultRoute") => "b",
-        ("org.freedesktop.resolve1.Link", "LLMNR" | "MulticastDNS" | "DNSSEC" | "DNSOverTLS") => "s",
+        ("org.freedesktop.resolve1.Link", "LLMNR" | "MulticastDNS" | "DNSSEC" | "DNSOverTLS") => {
+            "s"
+        }
         _ => return Err(io::Error::other("unsupported resolved property").into()),
     };
     if property.signature != expected {
-        return Err(io::Error::other("unexpected typed systemd-resolved property signature").into());
+        return Err(
+            io::Error::other("unexpected typed systemd-resolved property signature").into(),
+        );
     }
     // get-property uses json_transform_variant: data is the property itself.
     // Unlike a method reply, there is no outer one-argument array to unwrap.
     // Validate every row before a missing/foreign index can look like absence.
     match expected {
-        "a(isb)" => { let _: Vec<(i32, String, bool)> = serde_json::from_value(property.data.clone())?; }
-        "a(iiayqs)" => { let _: Vec<(i32, i32, Vec<u8>, u16, String)> = serde_json::from_value(property.data.clone())?; }
-        "a(sb)" => { let _: Vec<(String, bool)> = serde_json::from_value(property.data.clone())?; }
-        "a(iayqs)" => { let _: Vec<(i32, Vec<u8>, u16, String)> = serde_json::from_value(property.data.clone())?; }
-        "b" => { let _: bool = serde_json::from_value(property.data.clone())?; }
-        "s" => { let _: String = serde_json::from_value(property.data.clone())?; }
+        "a(isb)" => {
+            let _: Vec<(i32, String, bool)> = serde_json::from_value(property.data.clone())?;
+        }
+        "a(iiayqs)" => {
+            let _: Vec<(i32, i32, Vec<u8>, u16, String)> =
+                serde_json::from_value(property.data.clone())?;
+        }
+        "a(sb)" => {
+            let _: Vec<(String, bool)> = serde_json::from_value(property.data.clone())?;
+        }
+        "a(iayqs)" => {
+            let _: Vec<(i32, Vec<u8>, u16, String)> =
+                serde_json::from_value(property.data.clone())?;
+        }
+        "b" => {
+            let _: bool = serde_json::from_value(property.data.clone())?;
+        }
+        "s" => {
+            let _: String = serde_json::from_value(property.data.clone())?;
+        }
         _ => unreachable!(),
     }
     Ok(property.data)
@@ -317,9 +335,11 @@ pub(super) async fn install(plan: &DnsPlan) -> Result {
     // An initially random dummy MAC can otherwise change during the handoff.
     let mut address_bytes: [u8; 32] = Sha256::digest(plan.marker().as_bytes()).into();
     address_bytes[0] = (address_bytes[0] & 0xfc) | 0x02;
-    let address = address_bytes[..6].iter()
+    let address = address_bytes[..6]
+        .iter()
         .map(|byte| format!("{byte:02x}"))
-        .collect::<Vec<_>>().join(":");
+        .collect::<Vec<_>>()
+        .join(":");
     run(
         "ip",
         [
@@ -345,27 +365,43 @@ pub(super) async fn install(plan: &DnsPlan) -> Result {
     // setting, and retain its index/address while awaiting resolved. This is
     // never used to adopt an interface which preflight/create did not own.
     let created = ip(&["-j", "-d", "link", "show", "dev", &link]).await?;
-    let created = created.as_array()
+    let created = created
+        .as_array()
         .filter(|rows| rows.len() == 1)
         .and_then(|rows| rows.first())
         .ok_or_else(|| io::Error::other("exclusive dummy creation readback missing"))?;
-    let created_index = created["ifindex"].as_u64()
+    let created_index = created["ifindex"]
+        .as_u64()
         .filter(|index| *index > 0 && *index <= i32::MAX as u64)
         .ok_or_else(|| io::Error::other("invalid created interface index"))?;
-    let created_address = created["address"].as_str()
+    let created_address = created["address"]
+        .as_str()
         .filter(|address| !address.is_empty())
         .ok_or_else(|| io::Error::other("created dummy address missing"))?
         .to_owned();
     if created["ifname"] != link
         || created_address != address
         || created["linkinfo"]["info_kind"] != "dummy"
-        || created["ifalias"].as_str().is_some_and(|alias| !alias.is_empty() && alias != plan.marker())
-        || !created["flags"].as_array().is_some_and(|flags| !flags.iter().any(|flag| flag == "UP"))
+        || created["ifalias"]
+            .as_str()
+            .is_some_and(|alias| !alias.is_empty() && alias != plan.marker())
+        || !created["flags"]
+            .as_array()
+            .is_some_and(|flags| !flags.iter().any(|flag| flag == "UP"))
     {
-        return Err(io::Error::other("exclusive dummy creation changed before owner marker; preserving it and the journal").into());
+        return Err(io::Error::other(
+            "exclusive dummy creation changed before owner marker; preserving it and the journal",
+        )
+        .into());
     }
-    run("ip", ["link", "set", "dev", &link, "alias", &plan.marker()]
-        .iter().map(|argument| (*argument).into()).collect()).await?;
+    run(
+        "ip",
+        ["link", "set", "dev", &link, "alias", &plan.marker()]
+            .iter()
+            .map(|argument| (*argument).into())
+            .collect(),
+    )
+    .await?;
     // Wait for resolved's netlink observer to create its Link object. The
     // interface is still DOWN and has no DNS server during this handoff.
     tokio::time::timeout(std::time::Duration::from_secs(3), async {
@@ -574,11 +610,29 @@ mod tests {
         let manager = "org.freedesktop.resolve1.Manager";
         let link = "org.freedesktop.resolve1.Link";
         for (interface, name, signature, data) in [
-            (manager, "Domains", "a(isb)", json!([[2, "example.test", false], [7, "private.test", true]])),
-            (manager, "DNSEx", "a(iiayqs)", json!([[2, 2, [192, 0, 2, 53], 53, ""], [7, 2, [127, 0, 0, 1], 5300, ""]])),
+            (
+                manager,
+                "Domains",
+                "a(isb)",
+                json!([[2, "example.test", false], [7, "private.test", true]]),
+            ),
+            (
+                manager,
+                "DNSEx",
+                "a(iiayqs)",
+                json!([
+                    [2, 2, [192, 0, 2, 53], 53, ""],
+                    [7, 2, [127, 0, 0, 1], 5300, ""]
+                ]),
+            ),
             (link, "Domains", "a(sb)", json!([["private.test", true]])),
             (link, "Domains", "a(sb)", json!([])),
-            (link, "DNSEx", "a(iayqs)", json!([[2, [127, 0, 0, 1], 5300, ""]])),
+            (
+                link,
+                "DNSEx",
+                "a(iayqs)",
+                json!([[2, [127, 0, 0, 1], 5300, ""]]),
+            ),
             (link, "DefaultRoute", "b", json!(false)),
             (link, "LLMNR", "s", json!("no")),
         ] {

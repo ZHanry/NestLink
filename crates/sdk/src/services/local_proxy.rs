@@ -9,6 +9,7 @@ use nestlink_protocol::services::private::{PrivateServiceAccessRequest, PrivateS
 use std::{io, path::{Path, PathBuf}, sync::{Arc, OnceLock}, time::{Duration, SystemTime, UNIX_EPOCH}};
 use tokio::{net::{TcpListener, TcpStream}, sync::{Semaphore, watch}, task::{JoinHandle, JoinSet}, time::Instant};
 use zeroize::Zeroizing;
+mod local_mapping;
 
 const SETUP_BUDGET: Duration = Duration::from_secs(3);
 const MAX_LIFETIME: Duration = Duration::from_secs(3600);
@@ -60,7 +61,6 @@ impl LocalProxyServiceChoice {
             || exposure.service_id != service.id || exposure.service_revision != service.revision
             || !exposure.mode.private_enabled() || definition != declared
             || target != Some(exposure.target_sha256) || exposure.target_sha256 == [0; 32]
-            || matches!(service.definition.requested_ingress, ServiceIngress::Udp { .. })
             || maximum_bytes == 0 || maximum_bytes > service.definition.limits.maximum_bytes
             || maximum_bytes > exposure.private_maximum_bytes || port == 0
             || lifetime.is_zero() || lifetime > MAX_LIFETIME {
@@ -108,6 +108,8 @@ pub struct LocalProxyStopReport {
     pub failed_connections: u64,
     pub cleanup_failures: u64,
     pub credentials_removed: bool,
+    pub forwarded_datagrams: u64,
+    pub discarded_datagrams: u64,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LocalProxyWait {
@@ -199,9 +201,14 @@ fn flows() -> &'static Arc<Semaphore> {
 }
 
 impl Sdk {
-    /// Start a standard password-authenticated SOCKS5 TCP CONNECT entry for one
+    /// Start a standard password-authenticated SOCKS5 entry for one
     /// fixed service. The caller supplies an existing protected local directory
     /// (platform-security::new_private_directory creates one) and owns shutdown.
+    /// TCP/HTTP services accept CONNECT. UDP services accept UDP ASSOCIATE only
+    /// with an explicit nonzero loopback UDP source endpoint matching the TCP
+    /// peer IP; unspecified-source convenience clients fail closed. Every UDP
+    /// packet must name the exact chosen alias/port. Fragmented and oversize
+    /// packets are discarded; empty payloads remain individual datagrams.
     /// A desktop/daemon owner must request shutdown when its local session ends.
     pub async fn start_private_service_socks(self: &Arc<Self>, consumer: Arc<DeviceIdentity>,
         choice: LocalProxyServiceChoice, bind: SocketAddr, credential_directory: &Path)
@@ -251,7 +258,8 @@ async fn stopping(stop: &mut watch::Receiver<bool>) {
     loop { if *stop.borrow() || stop.changed().await.is_err() { return; } }
 }
 #[derive(Default)]
-struct FlowOutcome { rejected: bool, failed: bool, cleanup_failed: bool }
+struct FlowOutcome { rejected: bool, failed: bool, cleanup_failed: bool,
+    forwarded_datagrams: u64, discarded_datagrams: u64 }
 
 #[allow(clippy::too_many_arguments)]
 async fn run_owner(sdk: Arc<Sdk>, consumer: Arc<DeviceIdentity>, choice: Arc<LocalProxyServiceChoice>,
@@ -302,6 +310,8 @@ fn record_outcome(report: &mut LocalProxyStopReport,
             report.rejected_connections += u64::from(outcome.rejected);
             report.failed_connections += u64::from(outcome.failed);
             report.cleanup_failures += u64::from(outcome.cleanup_failed);
+            report.forwarded_datagrams += outcome.forwarded_datagrams;
+            report.discarded_datagrams += outcome.discarded_datagrams;
         }
         _ => report.cleanup_failures += 1,
     }
@@ -327,6 +337,10 @@ async fn authenticate_target(socket: TcpStream, credentials: &Credentials,
 async fn run_flow(sdk: Arc<Sdk>, consumer: Arc<DeviceIdentity>, choice: Arc<LocalProxyServiceChoice>,
     credentials: Arc<Credentials>, socket: TcpStream, address: SocketAddr,
     mut stop: watch::Receiver<bool>, owner_deadline: Instant) -> FlowOutcome {
+    if matches!(choice.entry.service.definition.requested_ingress, ServiceIngress::Udp { .. }) {
+        return local_mapping::run_udp_flow(sdk, consumer, choice, credentials, socket,
+            stop, owner_deadline).await;
+    }
     let setup_deadline = (Instant::now() + SETUP_BUDGET).min(owner_deadline);
     let setup = async {
         let protocol = authenticate_target(socket, &credentials, &choice).await?;

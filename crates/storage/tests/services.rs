@@ -280,7 +280,7 @@ fn schema_39_upgrade_preserves_approved_public_target_and_child_foreign_keys() -
         .replace("CREATE TABLE services (", "CREATE TABLE services_v39 (");
     raw.pragma_update(None, "foreign_keys", "OFF")?;
     raw.execute_batch(&historical)?;
-    raw.execute_batch("INSERT INTO services_v39 SELECT * FROM services; DROP TABLE services; ALTER TABLE services_v39 RENAME TO services; CREATE INDEX services_owner ON services(account_id,id); PRAGMA user_version=39;")?;
+    raw.execute_batch("INSERT INTO services_v39 SELECT * FROM services; DROP TABLE services; ALTER TABLE services_v39 RENAME TO services; CREATE INDEX services_owner ON services(account_id,id); ALTER TABLE private_service_leases DROP COLUMN network_json; PRAGMA user_version=39;")?;
     drop(raw);
     let store = Store::open_existing(&path, &deployment)?;
     assert_eq!(
@@ -304,6 +304,28 @@ fn schema_39_upgrade_preserves_approved_public_target_and_child_foreign_keys() -
         |r| r.get(0),
     )?;
     assert_eq!(definition, serde_json::to_string(&approved.definition)?);
+    Ok(())
+}
+
+#[test]
+fn schema_40_upgrade_preserves_consent_without_minting_private_network_authority() -> Result {
+    let mut f=Fixture::new()?;f.allow()?;
+    let pending=f.create()?;let challenge=f.challenge(&pending)?;
+    let proof=f.proof(&pending,&challenge)?;
+    let approved=f.store.approve_service_target(&f.admin,&pending.id,proof,1001)?;
+    let deployment=f.store.deployment_id()?;
+    let Fixture{directory,store,admin,..}=f;drop(store);
+    let path=directory.path().join("services.sqlite3");
+    let raw=Connection::open(&path)?;
+    raw.execute_batch("ALTER TABLE private_service_leases DROP COLUMN network_json; PRAGMA user_version=40;")?;
+    drop(raw);
+    let store=Store::open_existing(&path,&deployment)?;
+    assert_eq!(serde_json::to_value(store.service(&admin,&approved.id,1001)?)?,
+        serde_json::to_value(&approved)?);
+    let raw=Connection::open(&path)?;
+    assert!(!raw.prepare("PRAGMA foreign_key_check")?.exists([])?);
+    assert_eq!(raw.query_row("SELECT count(*) FROM private_service_leases WHERE network_json IS NOT NULL",[],|row|row.get::<_,u64>(0))?,0);
+    assert_eq!(raw.pragma_query_value(None,"user_version",|row|row.get::<_,i32>(0))?,nestlink_storage::SCHEMA_VERSION);
     Ok(())
 }
 #[test]

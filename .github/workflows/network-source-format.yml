@@ -38,15 +38,15 @@ jobs:
           output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'network-source-format'
           output.mkdir()
           with (output / 'rustfmt.log').open('wb') as stream:
-              result = subprocess.run(['cargo', 'fmt', '--all'], stdout=stream, stderr=subprocess.STDOUT, check=False)
+              result = subprocess.run(['cargo', 'fmt', '--all', '--exclude', 'fast-socks5'], stdout=stream, stderr=subprocess.STDOUT, check=False)
           (output / 'rustfmt.patch').write_bytes(subprocess.check_output(['git', 'diff', '--binary', '--no-ext-diff']))
           changed = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
-          assert all(path.endswith('.rs') for path in changed)
+          assert all(path.endswith('.rs') and not path.startswith('third-party/') for path in changed)
           receipt = {
               'source_revision': expected, 'workflow': os.environ['GITHUB_WORKFLOW_REF'],
               'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
               'runner_environment': os.environ['RUNNER_ENVIRONMENT'], 'runner_os': os.environ['RUNNER_OS'],
-              'command': ['cargo', 'fmt', '--all'], 'return_code': result.returncode,
+              'command': ['cargo', 'fmt', '--all', '--exclude', 'fast-socks5'], 'return_code': result.returncode,
               'changed_paths': changed, 'quality_or_acceptance_claimed': False,
               'files': [{'path': path.name, 'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
                          'bytes': path.stat().st_size} for path in sorted(output.iterdir())],

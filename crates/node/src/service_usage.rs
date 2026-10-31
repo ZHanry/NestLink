@@ -198,8 +198,11 @@ impl ServiceUsageStore {
     pub fn activate(&self, lease: &VerifiedServiceLease) -> Result<Highwater, Error> {
         self.activate_inner(lease, None)
     }
-    fn activate_inner(&self, lease: &VerifiedServiceLease,
-        private: Option<(String, [u8;32])>) -> Result<Highwater, Error> {
+    fn activate_inner(
+        &self,
+        lease: &VerifiedServiceLease,
+        private: Option<(String, [u8; 32])>,
+    ) -> Result<Highwater, Error> {
         let c = lease.claims();
         let signed = &c.usage_grant;
         let grant: ServiceUsageBudgetGrantClaims =
@@ -242,10 +245,14 @@ impl ServiceUsageStore {
         if let Some((json, issuer)) = private {
             tx.execute("INSERT INTO service_usage_local_private(grant_id,lease_json,issuer) VALUES(?1,?2,?3) ON CONFLICT(grant_id) DO NOTHING",
                 params![grant.grant_id,json,issuer])?;
-            let (stored,stored_issuer):(String,Vec<u8>) = tx.query_row(
-                "SELECT lease_json,issuer FROM service_usage_local_private WHERE grant_id=?1", [&grant.grant_id],
-                |r|Ok((r.get(0)?,r.get(1)?)))?;
-            if stored != json || stored_issuer.as_slice() != issuer { return Err(fenced()); }
+            let (stored, stored_issuer): (String, Vec<u8>) = tx.query_row(
+                "SELECT lease_json,issuer FROM service_usage_local_private WHERE grant_id=?1",
+                [&grant.grant_id],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )?;
+            if stored != json || stored_issuer.as_slice() != issuer {
+                return Err(fenced());
+            }
         }
         let result = Self::highwater(&tx, &grant.grant_id)?;
         tx.commit()?;

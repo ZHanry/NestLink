@@ -116,6 +116,37 @@ this first recovery slice; repeated multi-generation recovery needs a new
 explicitly authorized source contract. Applications rebuild platform resources,
 release inputs, discard old queues and request a fresh video keyframe.
 
+## Product ownership and local configuration
+
+App-core's existing session task owns the original route, standby, recovered
+runtime and platform cleanup. The actor lends its single authenticated management
+Client through one bounded request slot; a drop guard returns that same value
+before completion, including task cancellation. A stopped or full request owner
+does not mint a replacement Client. Actual OS network changes interrupt a route
+poll against the session's frozen network generation, using the same watcher.
+
+The explicit `NativeRouteSetSettings` pin is default-off and persists through the
+existing local network settings store. The desktop idle settings panel accepts
+the exact deployment/space/authority, controller and host membership grants and
+ordered two-node set. The daemon reads the same typed private JSON through
+`--native-route-set`; `--disable-native-route-set` clears it. The operator guide
+is [ORIGINAL-ROUTE-RECOVERY.md](../../network-rewrite/ORIGINAL-ROUTE-RECOVERY.md).
+
+This first product slice freezes a maximum 30-second original path lifetime,
+bounded further by business, membership and node-discovery expiration. Polls and
+recovery retain that ceiling and never renew it. It supports one recovery; after
+expiration or a second failure a new authorized session is required. Local
+display selection is repeated after recovery before new pixels or input attach.
+
+Management allocation commit and node resource publication are independent.
+Before the node accepts the client's certificate, its dynamic-current-pin TLS
+access_denied can be retried on the same physical socket and original absolute
+setup deadline. Local fixed-node pin failures and other TLS errors are terminal.
+After the challenge stream opens, the client signs exactly one hello and does
+not retry a rejected role. The node verifies the actual TLS peer and fresh
+nonce signature before waiting, within its original challenge deadline, for the
+exact allocation ID. It then performs the existing atomic prepare/reserve once.
+
 ## Validation and remaining evidence
 
 The following source tests must run in Actions; none has been executed locally:
@@ -132,11 +163,18 @@ The following source tests must run in Actions; none has been executed locally:
   OS-file bytes sent on FileRead, permanent old-sender failure, shared stop and
   immediate physical UDP rebind;
 - live source, terminal stop, cancellation and narrower local-consent rejection
-  before a new offer can be signed.
+  before a new offer can be signed;
+- actual app-core actors and two production listeners, pressed-input release,
+  old-generation sender rejection, actual VP8 pixels, fresh screen approval and
+  a fresh keyframe after complete old-listener loss;
+- delayed real TLS current-pin publication with the original UDP address,
+  exactly one signed hello, fixed wrong-node-pin rejection and no readmission
+  after an application rejection; authenticated Client return after task abort,
+  request-channel closure and queued-request drop.
 
 Run the relevant identity, Store control route-set and SDK network_relay route-set
 targets in the network workflow, along with format, clippy and protocol/schema
-generation. Keep exact workflow/job/run/attempt/SHA and logs as evidence. App-core
-owner driving, user-facing opt-in selection, actual platform input/media cleanup,
-keyframe behavior, mixed installed versions, target devices and full in-place
-migration are not established by these SDK tests.
+generation. Keep exact workflow/job/run/attempt/SHA and logs as evidence. The
+app-core product tests above add owner, input and actual encoded-pixel evidence;
+their source still requires exact-source Actions results. Mixed installed
+versions, target devices and full in-place migration remain separate evidence.

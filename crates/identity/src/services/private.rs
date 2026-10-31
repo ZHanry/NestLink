@@ -102,10 +102,20 @@ pub fn verify_private_service_lease(
     })
 }
 impl InstallationIdentity {
-    pub fn withdraw_private_service_host(&self, claims: &PrivateServiceHostClaims) -> Result<SignedPrivateServiceHostWithdrawal,ContractError> {
+    pub fn withdraw_private_service_host(
+        &self,
+        claims: &PrivateServiceHostClaims,
+    ) -> Result<SignedPrivateServiceHostWithdrawal, ContractError> {
         claims.validate()?;
-        let claims=encode_service_message(claims,PRIVATE_SERVICE_MESSAGE_BYTES)?;
-        Ok(SignedPrivateServiceHostWithdrawal{signature:self.key.sign(&domain_message(HOST_STOP,&claims)).to_bytes().to_vec(),claims})
+        let claims = encode_service_message(claims, PRIVATE_SERVICE_MESSAGE_BYTES)?;
+        Ok(SignedPrivateServiceHostWithdrawal {
+            signature: self
+                .key
+                .sign(&domain_message(HOST_STOP, &claims))
+                .to_bytes()
+                .to_vec(),
+            claims,
+        })
     }
     pub fn sign_private_service_host(
         &self,
@@ -190,11 +200,18 @@ pub fn verify_private_service_host(
     claims.validate()?;
     Ok(claims)
 }
-pub fn verify_private_service_host_withdrawal(signed:&SignedPrivateServiceHostWithdrawal,key:&[u8;32]) -> Result<PrivateServiceHostClaims,ContractError> {
-    if signed.claims.len()>PRIVATE_SERVICE_MESSAGE_BYTES{return Err(denied());}
-    verify_signature(key,HOST_STOP,&signed.claims,&signed.signature)?;
-    let claims:PrivateServiceHostClaims=decode_service_message(&signed.claims,PRIVATE_SERVICE_MESSAGE_BYTES)?;
-    claims.validate()?;Ok(claims)
+pub fn verify_private_service_host_withdrawal(
+    signed: &SignedPrivateServiceHostWithdrawal,
+    key: &[u8; 32],
+) -> Result<PrivateServiceHostClaims, ContractError> {
+    if signed.claims.len() > PRIVATE_SERVICE_MESSAGE_BYTES {
+        return Err(denied());
+    }
+    verify_signature(key, HOST_STOP, &signed.claims, &signed.signature)?;
+    let claims: PrivateServiceHostClaims =
+        decode_service_message(&signed.claims, PRIVATE_SERVICE_MESSAGE_BYTES)?;
+    claims.validate()?;
+    Ok(claims)
 }
 pub fn verify_private_service_usage(
     signed: &SignedPrivateServiceUsage,

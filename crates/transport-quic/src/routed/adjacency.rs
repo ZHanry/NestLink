@@ -145,8 +145,8 @@ impl AdjacencyEndpoint {
         self.finish(connection)
     }
     /// Keep this owner outside a cancellable future. Failure and cancellation
-    /// retain its original physical receipt for close_and_wait; no retry can
-    /// create another connection from the same owner.
+    /// retain its original physical receipt for close_and_wait. Only a remote
+    /// pre-admission TLS pin refusal may retry before the challenge stream.
     pub async fn connect_node(
         &mut self,
         address: SocketAddr,
@@ -174,14 +174,46 @@ impl AdjacencyEndpoint {
             .endpoint
             .as_ref()
             .ok_or_else(|| io::Error::from(io::ErrorKind::NotConnected))?;
-        let connection = tokio::time::timeout_at(
-            deadline,
-            endpoint.connect(address, "peer.nestlink.invalid")?,
-        )
-        .await??;
-        self.pending = Some(connection.clone());
-        let (mut write, mut read) =
-            tokio::time::timeout_at(deadline, connection.accept_bi()).await??;
+        // A freshly reserved allocation reaches the node's dynamic TLS pins
+        // through its independently authenticated resource stream. A TLS
+        // refusal before that publication consumed no allocation or endpoint
+        // proof. TLS 1.3 can return a client connection before the server has
+        // accepted its certificate, so this boundary includes accept_bi. The
+        // challenge stream proves that acceptance. No hello is retried.
+        let (connection, mut write, mut read) = loop {
+            let attempt: Result<_> = async {
+                let connection = tokio::time::timeout_at(
+                    deadline,
+                    endpoint.connect(address, "peer.nestlink.invalid")?,
+                )
+                .await??;
+                self.pending = Some(connection.clone());
+                let (write, read) =
+                    tokio::time::timeout_at(deadline, connection.accept_bi()).await??;
+                Ok((connection, write, read))
+            }
+            .await;
+            match attempt {
+                Ok(accepted) => break accepted,
+                Err(error)
+                    if error.downcast_ref::<quinn::ConnectionError>().is_some_and(|error| {
+                        matches!(error, quinn::ConnectionError::ConnectionClosed(close)
+                            if close.error_code == quinn::TransportErrorCode::crypto(49))
+                    }) => {
+                    // rustls CurrentClients maps an unavailable dynamic client
+                    // pin to peer access_denied (49). Local node-pin failures,
+                    // ALPN/protocol errors and all other TLS errors stay fatal.
+                    if let Some(connection) = self.pending.take() {
+                        connection.close(0u32.into(), b"node TLS admission unavailable");
+                    }
+                    if Instant::now() + Duration::from_millis(50) >= deadline {
+                        return Err(error);
+                    }
+                    tokio::time::sleep(Duration::from_millis(50)).await;
+                }
+                Err(error) => return Err(error),
+            }
+        };
         let challenge: NetworkNodeChallenge =
             tokio::time::timeout_at(deadline, crate::node::read_message(&mut read)).await??;
         let nonce: [u8; 32] = decode_exact(&challenge.nonce)?;
@@ -396,11 +428,17 @@ impl Adjacency {
             .ok_or_else(|| io::ErrorKind::NotConnected.into())
     }
     pub fn request_close(&self) {
+        self.request_close_with_code(0);
+    }
+    pub(super) fn request_close_with_code(&self, code: u32) {
+        let already_closed = self.connection.as_ref().is_some_and(|connection| connection.close_reason().is_some());
         if let Some(connection) = &self.connection {
-            connection.close(0u32.into(), b"network adjacency stopping");
+            if connection.close_reason().is_none() {
+                connection.close(code.into(), b"network adjacency stopping");
+            }
         }
-        if let Some(endpoint) = &self.endpoint {
-            endpoint.close(0u32.into(), b"network adjacency stopping");
+        if !already_closed && let Some(endpoint) = &self.endpoint {
+            endpoint.close(code.into(), b"network adjacency stopping");
         }
         if let Some(control) = &self.control {
             control.request_close();
@@ -467,6 +505,8 @@ fn decode_exact<const N: usize>(value: &str) -> io::Result<[u8; N]> {
 struct ControlClose(Connection);
 impl Drop for ControlClose {
     fn drop(&mut self) {
-        self.0.close(0u32.into(), b"network node control ended");
+        if self.0.close_reason().is_none() {
+            self.0.close(0u32.into(), b"network node control ended");
+        }
     }
 }

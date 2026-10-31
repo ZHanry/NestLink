@@ -47,6 +47,7 @@ struct Registration {
     hub: Arc<Hub>,
     allocation: String,
     token: String,
+    retired: bool,
 }
 struct RelayIo {
     endpoint: quinn::Endpoint,
@@ -57,12 +58,25 @@ struct RelayIo {
 }
 impl Drop for RelayIo {
     fn drop(&mut self) {
+        // Only an admitted, still-current NRD1 peer can advise that its old
+        // carrier retired. A guard denial/expiry always closes the pair as a
+        // revocation. This advisory provides no new allocation or permission.
+        if let Some(registration) = self.registration.as_mut() {
+            registration.retired = self.guard.as_ref().is_some_and(|guard| guard.check_live().is_ok())
+                && matches!(self.connection.close_reason(), Some(quinn::ConnectionError::ApplicationClosed(close))
+                    if close.error_code == quinn::VarInt::from_u32(nestlink_transport_quic::routed::RETIRED_CLOSE_CODE))
+                && self.connection.handshake_data()
+                    .and_then(|data| data.downcast::<quinn::crypto::rustls::HandshakeData>().ok())
+                    .is_some_and(|data| data.protocol.as_deref() == Some(nestlink_protocol::network_datagram::ALPN));
+        }
         self.streams.take();
         self.registration.take();
         // Quinn close stops the public API immediately, but its socket driver
         // can retain a previously buffered UDP transmit. Endpoint idle is the
         // public drain witness; a timeout must never be treated as clean I/O.
-        self.connection.close(1u32.into(), b"relay I/O stopped");
+        if self.connection.close_reason().is_none() {
+            self.connection.close(1u32.into(), b"relay I/O stopped");
+        }
         if let Some(guard) = self.guard.take() {
             let cleanup = guard.defer_io_confirmation();
             let endpoint = self.endpoint.clone();
@@ -91,7 +105,10 @@ impl Drop for Registration {
             && let Some(pair) = pairs.remove(&self.allocation)
         {
             for slot in pair.into_iter().flatten() {
-                slot.connection.close(1u32.into(), b"relay pair stopped");
+                if slot.connection.close_reason().is_none() {
+                    let code = if self.retired { nestlink_transport_quic::routed::RETIRED_CLOSE_CODE } else { 1 };
+                    slot.connection.close(code.into(), b"relay pair stopped");
+                }
             }
         }
     }
@@ -131,6 +148,7 @@ impl Hub {
                 hub: self.clone(),
                 allocation: allocation.into(),
                 token,
+                retired: false,
             },
             receiver,
         ))
@@ -152,17 +170,28 @@ impl Hub {
 struct Close(quinn::Connection);
 impl Drop for Close {
     fn drop(&mut self) {
-        self.0.close(1u32.into(), b"relay socket ended");
+        if self.0.close_reason().is_none() {
+            self.0.close(1u32.into(), b"relay socket ended");
+        }
     }
 }
 struct Owner {
     endpoint: quinn::Endpoint,
     control: Arc<NodeControl>,
+    retired: bool,
+}
+impl Owner {
+    fn close(&self) {
+        let code = if self.retired { nestlink_transport_quic::routed::RETIRED_CLOSE_CODE } else { 1 };
+        // Close the actual sockets before waking policy guards. A normal
+        // operator shutdown is distinct from current-control revocation.
+        self.endpoint.close(code.into(), b"relay listener ended");
+        self.control.stop();
+    }
 }
 impl Drop for Owner {
     fn drop(&mut self) {
-        self.control.stop();
-        self.endpoint.close(1u32.into(), b"relay listener ended");
+        self.close();
     }
 }
 /// Ending or canceling this listener owns terminal node stop and all its sockets.
@@ -246,9 +275,10 @@ async fn serve_inner(
     shutdown: impl Future<Output = ()> + Send,
 ) -> io::Result<()> {
     let control = selector.control();
-    let _owner = Owner {
+    let mut owner = Owner {
         endpoint: endpoint.clone(),
         control: control.clone(),
+        retired: false,
     };
     let mut stopped = control.stopped();
     let hub = Arc::new(Hub::default());
@@ -339,8 +369,8 @@ async fn serve_inner(
         }
     };
     let cleanup_deadline = tokio::time::Instant::now() + Duration::from_secs(5);
-    control.stop();
-    endpoint.close(0u32.into(), b"node listener stopping");
+    owner.retired = result.is_ok();
+    owner.close();
     tasks.abort_all();
     let mut cleanup_error = None;
     if has_topology && !observing_finished {

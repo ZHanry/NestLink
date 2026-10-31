@@ -9,8 +9,8 @@ mod native_files;
 #[cfg(windows)]
 mod native_gpu_diagnostics;
 mod native_video;
-mod privileged_input;
 mod private_service_proxy;
+mod privileged_input;
 mod session_store;
 mod space_dns;
 mod space_dns_system;
@@ -410,7 +410,9 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let args = Args::parse();
     match args.command {
         Some(Command::SpaceDns(command)) => return space_dns::run(command).await,
-        Some(Command::PrivateServiceProxy(command)) => return private_service_proxy::run(command).await,
+        Some(Command::PrivateServiceProxy(command)) => {
+            return private_service_proxy::run(command).await;
+        }
         Some(Command::SpaceDnsSystem(command)) => return space_dns_system::run(command).await,
         Some(Command::FileQuota(command)) => return Ok(run_file_quota(command)?),
         Some(Command::Maintenance(command)) => return maintenance::run(command).await,

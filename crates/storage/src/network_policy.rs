@@ -158,7 +158,7 @@ impl TrustedNetworkPolicySnapshot {
             revoked_grant_ids: &self.revoked_grant_ids,
         }
     }
-    fn verify_member(
+    pub(crate) fn verify_member(
         &self,
         signed: &SignedNetworkGrant,
         installation_id: &str,
@@ -574,7 +574,7 @@ impl Store {
     }
 }
 
-fn read_snapshot(
+pub(crate) fn read_snapshot(
     connection: &Connection,
     space_id: &str,
     now_ms: u64,

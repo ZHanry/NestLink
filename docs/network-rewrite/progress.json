@@ -6,8 +6,8 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "31f9127016db580f3f0b684d0e5b00a593e21ec9",
-    "checkpoint_kind":  "unverified_appcore_route_recovery_private_service_runtime_and_exposure_ui_before_hosted_locks",
+    "source_revision":  "64cd29ed0304486fa16520d2f236a884b7bf6295",
+    "checkpoint_kind":  "source_snapshot_includes_private_purpose_network_chain_signed_application_recovery_and_authenticated_socks_tcp_udp_pending_hosted_validation",
     "active_tasks":  [
                          "W00",
                          "W02",
@@ -26,7 +26,8 @@
                          "W13",
                          "W14",
                          "W19",
-                         "W20"
+                         "W20",
+                         "W21"
                      ],
     "satisfied_interface_dependencies":  [
                                              "W01 nine-topic source and mature-component research independently reviewed",
@@ -66,11 +67,11 @@
                                    }
                                ],
     "next_steps":  [
-                       "Derive SDK tempfile and AppCore integration-test workspace edges through Actions; import exact generated locks before full-source compilation.",
-                       "Validate AppCore original-route opt-in, unique management Client owner, old input/media cleanup, fresh successor VP8 frames and actual physical socket release.",
-                       "Validate schema40 private-only host approval without public edge, private QUIC/TCP/HTTP/UDP owners, durable shared usage, private/public/both UI and legacy quota compatibility; complete unified PrivateService routed authority.",
-                       "Repair remaining actual Windows/Linux OS DNS failures using original deadlines and ownership fences; retain every failed attempt as evidence.",
-                       "Complete all mandatory remaining W12-W40 work and exact-source target qualifications before publishing 0.8.0RC; retain only local and remote main."
+                       "Run hosted exact-source format/clippy/contracts, private service TCP/UDP/SOCKS traffic, original-route SDK/product recovery, protected daemon CLI and real OS DNS after this source snapshot.",
+                       "Preserve true revocation over non-revivable local retirement; verify bilateral signed recovery and real physical socket release without replaying old media/input.",
+                       "Validate direct private service policy intersection and independent network-purpose chain, consumer-login revocation, schema40-to41 migration and one durable shared usage owner.",
+                       "Finish W21 raw local port mappings with real local admission, and all remaining mandatory W12-W40 implementations and target qualifications.",
+                       "Publish 0.8.0RC only after required functionality and evidence gates; keep local and remote main as the only branch."
                    ],
     "evidence_index":  [
                            "docs/network-rewrite/evidence/research-review-2026-10-30.md",
@@ -134,7 +135,12 @@
                            "docs/network-rewrite/SPLIT-DNS-OPERATIONS.md",
                            "docs/network-rewrite/evidence/system-dns-lock-derivation-d3a587f.json",
                            "docs/network-rewrite/evidence/recovery-lock-817c444.json",
-                           "docs/network-rewrite/evidence/development-run-15508fe.json"
+                           "docs/network-rewrite/evidence/development-run-15508fe.json",
+                           "docs/network-rewrite/evidence/recovery-lock-fd52f01.json",
+                           "docs/network-rewrite/evidence/socks-lock-8ff5d4e.json",
+                           "docs/adr/network/0036-authenticated-local-private-service-proxy.md",
+                           "docs/network-rewrite/LOCAL-PRIVATE-SERVICE-PROXY.md",
+                           "docs/network-rewrite/ORIGINAL-ROUTE-RECOVERY.md"
                        ],
     "observed_actions":  [
                              {

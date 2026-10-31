@@ -20,6 +20,10 @@ use nestlink_transport_stream::owner::TaskOwner;
 use std::io;
 use tokio::time::Instant;
 
+/// Authenticated advisory that this original carrier has retired. It grants
+/// no new allocation, route or business permission; recovery is independent.
+pub const RETIRED_CLOSE_CODE: u32 = 0x4e02;
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum DatagramVersion {
     One,
@@ -56,14 +60,25 @@ impl RoutedTransport {
             .ok_or_else(|| io::ErrorKind::NotConnected.into())
     }
     pub fn request_close(&self) {
+        self.request_close_with_code(0);
+    }
+    /// End the original carrier without labeling its own cleanup a revocation.
+    /// A true grant revocation still takes precedence in the local observer.
+    pub fn request_close_for_recovery(&self) {
+        self.request_close_with_code(RETIRED_CLOSE_CODE);
+    }
+    fn request_close_with_code(&self, code: u32) {
+        let already_closed = self.connection.as_ref().is_some_and(|connection| connection.close_reason().is_some());
         if let Some(connection) = &self.connection {
-            connection.close(0u32.into(), b"routed transport stopping");
+            if connection.close_reason().is_none() {
+                connection.close(0u32.into(), b"routed transport stopping");
+            }
         }
-        if let Some(endpoint) = &self.endpoint {
+        if !already_closed && let Some(endpoint) = &self.endpoint {
             endpoint.close(0u32.into(), b"routed transport stopping");
         }
         self.receiver.request_close();
-        self.adjacency.request_close();
+        self.adjacency.request_close_with_code(code);
     }
     /// Cancellation retains all original task/socket receipts and the first
     /// absolute close budget. External Quinn clones can keep release pending.

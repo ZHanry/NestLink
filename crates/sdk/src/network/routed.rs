@@ -359,7 +359,11 @@ impl StopHandler for RemoteRouteStop {
         }
     }
     fn stop(&mut self, reason: StopReason, effects: StopEffects) -> io::Result<()> {
-        self.revocation.revoke();
+        if matches!(reason, StopReason::TransportLost | StopReason::NetworkChanged) {
+            self.revocation.retire_for_recovery();
+        } else {
+            self.revocation.revoke();
+        }
         match &mut self.previous {
             Some(previous) => previous.stop(reason, effects),
             None => Ok(()),
@@ -368,7 +372,7 @@ impl StopHandler for RemoteRouteStop {
 }
 impl Drop for RemoteRouteStop {
     fn drop(&mut self) {
-        self.revocation.revoke();
+        self.revocation.stop_if_live();
     }
 }
 
@@ -379,8 +383,12 @@ struct RemoteRouteOwner {
 }
 impl TransportOwner for RemoteRouteOwner {
     fn request_close(&self) {
-        self.revocation.revoke();
-        self.transport.request_close();
+        self.revocation.stop_if_live();
+        if self.revocation.is_retired() {
+            self.transport.request_close_for_recovery();
+        } else {
+            self.transport.request_close();
+        }
         if let Some(observer) = &self.observer {
             observer.request_close();
         }

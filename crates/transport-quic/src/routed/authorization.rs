@@ -26,18 +26,56 @@ struct Binding {
 /// objects. The initial policy snapshot never becomes indefinite authority.
 pub struct RouteAuthorization {
     binding: Arc<Binding>,
-    stopped: watch::Receiver<bool>,
+    stopped: watch::Receiver<RouteStop>,
 }
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum RouteStop { Live, Retired, Revoked }
 /// The policy/business owner must retain this handle and revoke it on stop,
 /// membership/policy change or business revocation. Dropping its last sender is
 /// also fail-closed; leaving a route alive requires explicit owner retention.
-pub struct RouteRevocation(watch::Sender<bool>);
+pub struct RouteRevocation(watch::Sender<RouteStop>);
 impl RouteRevocation {
     pub fn revoke(&self) {
-        self.0.send_replace(true);
+        self.0.send_replace(RouteStop::Revoked);
+    }
+    /// Permanently stop this carrier for independent application recovery.
+    /// This grants no successor authority and cannot override a revocation.
+    pub fn retire_for_recovery(&self) {
+        self.0.send_if_modified(|state| {
+            if *state != RouteStop::Live { return false; }
+            *state = RouteStop::Retired;
+            true
+        });
+    }
+    /// Cleanup ends a live authority without replacing a prior stop reason.
+    pub fn stop_if_live(&self) {
+        self.0.send_if_modified(|state| {
+            if *state != RouteStop::Live { return false; }
+            *state = RouteStop::Revoked;
+            true
+        });
+    }
+    pub fn is_retired(&self) -> bool {
+        *self.0.borrow() == RouteStop::Retired
     }
 }
 impl RouteAuthorization {
+    pub fn private_service(context:&NetworkVerification<'_>,path:&VerifiedNetworkPath,
+        connectivity:&VerifiedNetworkGrant,transit:&VerifiedNetworkGrant,
+        lease:&nestlink_identity::services::private::VerifiedPrivateServiceLease)
+        ->io::Result<(Self,RouteRevocation)>{
+        let started=Instant::now();
+        let now:u64=SystemTime::now().duration_since(UNIX_EPOCH).map_err(io::Error::other)?.as_millis().try_into().map_err(io::Error::other)?;
+        let current=NetworkVerification{authority_key:context.authority_key,deployment_id:context.deployment_id,
+            space_id:context.space_id,policy_epoch:context.policy_epoch,revoked_grant_ids:context.revoked_grant_ids,
+            now_ms:now.max(context.now_ms)};
+        let route=nestlink_identity::network::private_service_route_binding(&current,path,connectivity,transit,lease)
+            .map_err(|e|io::Error::new(io::ErrorKind::PermissionDenied,e))?;
+        let remaining=route.expires_at_ms.checked_sub(current.now_ms).filter(|n|*n>0).ok_or_else(denied)?;
+        let(stop,stopped)=watch::channel(RouteStop::Live);
+        Ok((Self{binding:Arc::new(Binding{digest:route.digest,peers:route.peers,relay:route.relay,chain:None,
+            byte_limit:route.byte_limit,deadline:started+Duration::from_millis(remaining.min(MAX_LEASE_MS))}),stopped},RouteRevocation(stop)))
+    }
     pub fn remote(
         context: &NetworkVerification<'_>,
         path: &VerifiedNetworkPath,
@@ -70,7 +108,7 @@ impl RouteAuthorization {
             .checked_sub(current.now_ms)
             .filter(|remaining| *remaining > 0)
             .ok_or_else(denied)?;
-        let (stop, stopped) = watch::channel(false);
+        let (stop, stopped) = watch::channel(RouteStop::Live);
         Ok((
             Self {
                 binding: Arc::new(Binding {
@@ -120,7 +158,7 @@ impl RouteAuthorization {
             .checked_sub(current.now_ms)
             .filter(|remaining| *remaining > 0)
             .ok_or_else(denied)?;
-        let (stop, stopped) = watch::channel(false);
+        let (stop, stopped) = watch::channel(RouteStop::Live);
         Ok((
             Self {
                 binding: Arc::new(Binding {
@@ -240,11 +278,15 @@ impl RouteAuthorization {
         self.live()
     }
     pub(crate) fn live(&self) -> io::Result<()> {
-        if *self.stopped.borrow() || self.stopped.has_changed().is_err() {
+        let state = *self.stopped.borrow();
+        if state == RouteStop::Revoked || self.stopped.has_changed().is_err() {
             return Err(denied());
         }
         if Instant::now() >= self.deadline() {
             return Err(io::ErrorKind::TimedOut.into());
+        }
+        if state == RouteStop::Retired {
+            return Err(io::Error::new(io::ErrorKind::ConnectionAborted, "original route retired"));
         }
         Ok(())
     }

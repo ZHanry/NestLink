@@ -1,6 +1,8 @@
 //! Private business authority owns the existing service gate and durable meter.
-use super::{Error, LocalTargetOwner, PreparedPrivateLocalTunnel, PublicationContext,
-    ServicePublication, ServicePublicationHandle};
+use super::{
+    Error, LocalTargetOwner, PreparedPrivateLocalTunnel, PublicationContext, ServicePublication,
+    ServicePublicationHandle,
+};
 use crate::service_usage::ServiceUsageStore;
 use nestlink_identity::{InstallationIdentity, services::private::VerifiedPrivateServiceLease};
 use nestlink_protocol::services::private::PrivateServiceOpen;
@@ -12,20 +14,45 @@ pub struct PrivateServicePublication {
     _usage_owner: crate::service_usage::PrivateServiceUsageOwner,
 }
 impl PrivateServicePublication {
-    pub fn new(authority: VerifiedPrivateServiceLease, context: &PublicationContext,
-        request_started: Instant, usage: Arc<ServiceUsageStore>) -> Result<Self, Error> {
-        let usage_owner=usage.claim_private_owner(&authority).map_err(nestlink_protocol::ContractError::from)?;
+    pub fn new(
+        authority: VerifiedPrivateServiceLease,
+        context: &PublicationContext,
+        request_started: Instant,
+        usage: Arc<ServiceUsageStore>,
+    ) -> Result<Self, Error> {
+        let usage_owner = usage
+            .claim_private_owner(&authority)
+            .map_err(nestlink_protocol::ContractError::from)?;
         let publication = ServicePublication::new_with_usage_store(
-            authority.lease().clone(), context, request_started, usage)?;
-        Ok(Self { authority, publication, _usage_owner:usage_owner })
+            authority.lease().clone(),
+            context,
+            request_started,
+            usage,
+        )?;
+        Ok(Self {
+            authority,
+            publication,
+            _usage_owner: usage_owner,
+        })
     }
-    pub fn authority(&self) -> &VerifiedPrivateServiceLease { &self.authority }
-    pub fn handle(&self) -> ServicePublicationHandle { self.publication.handle() }
-    pub fn revoke(&self) { self.publication.revoke(); }
+    pub fn authority(&self) -> &VerifiedPrivateServiceLease {
+        &self.authority
+    }
+    pub fn handle(&self) -> ServicePublicationHandle {
+        self.publication.handle()
+    }
+    pub fn revoke(&self) {
+        self.publication.revoke();
+    }
     /// The carrier creates expected_nonce freshly before receiving this open.
     /// The SDK must recheck current management authority before invoking it.
-    pub fn prepare(&self, target: &LocalTargetOwner, open: &PrivateServiceOpen,
-        expected_nonce: [u8;32], host: &InstallationIdentity) -> Result<PreparedPrivateLocalTunnel, Error> {
+    pub fn prepare(
+        &self,
+        target: &LocalTargetOwner,
+        open: &PrivateServiceOpen,
+        expected_nonce: [u8; 32],
+        host: &InstallationIdentity,
+    ) -> Result<PreparedPrivateLocalTunnel, Error> {
         target.prepare_private(&self.handle(), &self.authority, open, expected_nonce, host)
     }
 }

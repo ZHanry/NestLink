@@ -63,3 +63,29 @@ Validation must run on GitHub-hosted Actions: actual HTTP/TCP/UDP bytes, exact
 consumer and target denial, public/private isolation, shared cumulative budget,
 monotonic reports, stop/revoke and physical socket release. Target protocols and
 real-device evidence remain separate from automated laboratory evidence.
+
+The current direct-carrier slice now issues two exact installation Membership
+grants, a ConnectivityGrant and a PathGrant with `Purpose::PrivateService`.
+The independent network signer is pinned in the delegated service business
+signature. Its immutable grant set is stored on the original reservation in
+schema 41; retrying the original request returns those exact bytes. Both native
+consumer and host verify that complete typed chain during their authenticated
+current-management readback before proving service access or opening the fixed
+backend. Membership epochs, device keys, business digest, authority, space,
+policy epoch and lifetime must all agree. A remote-control grant cannot pass
+this admission path.
+
+Direct admission intersects global policy, both accounts, both installation
+limits, the service resource, host resource and consumer login. The captured
+consumer login remains current in host readback checks; sign-out cannot keep a
+previously signed private lease alive through the host's separate login. This
+slice refuses relay-only policy before reserving bytes. A private TransitGrant
+binding is available in the common routed authorization owner, but private
+relay/multi-hop orchestration and its actual business traffic remain required
+follow-up work. They are not established by a direct Quinn test.
+
+Host presence and withdrawal use the existing ten-second service lease bound;
+refresh never extends a private business lease or refunds its original promise.
+The standard W21 SOCKS integration uses this exact SDK path, and tests actual
+request/response half-close, authentication/target denial, listener collision,
+an accepted stalled authentication worker, expiration and physical cleanup.

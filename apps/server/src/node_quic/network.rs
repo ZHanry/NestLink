@@ -61,19 +61,33 @@ pub(super) async fn run(
     let binding = decode::<32>(&hello.binding_sha256)?;
     let public_key = decode::<32>(&hello.public_key)?;
     let signature = decode::<64>(&hello.signature)?;
-    if nestlink_identity::digest(&public_key) != tls_peer { return Err(failed()); }
+    if nestlink_identity::digest(&public_key) != tls_peer {
+        return Err(failed());
+    }
     nestlink_identity::network::verify_network_node_admission(
-        &hello.allocation_id,&binding,&hello.device_id,&public_key,&nonce,&signature,
-    ).map_err(|_| failed())?;
+        &hello.allocation_id,
+        &binding,
+        &hello.device_id,
+        &public_key,
+        &nonce,
+        &signature,
+    )
+    .map_err(|_| failed())?;
     // The authenticated management POST and resource push are independent.
     // Wait for this exact new ID before the single prepare/reserve operation;
     // never retry a consumed role, and never extend the original challenge end.
     let mut node_stopped = control.stopped();
-    let mut waiting_byte = [0u8;1];
+    let mut waiting_byte = [0u8; 1];
     loop {
         let snapshot = control.resource_snapshot().map_err(|_| failed())?;
-        if snapshot.network_routes.iter().any(|resource|resource.allocation.as_ref()
-            .is_some_and(|allocation|allocation.allocation_id==hello.allocation_id)) { break; }
+        if snapshot.network_routes.iter().any(|resource| {
+            resource
+                .allocation
+                .as_ref()
+                .is_some_and(|allocation| allocation.allocation_id == hello.allocation_id)
+        }) {
+            break;
+        }
         tokio::select! { biased;
             _ = connection.closed() => return Err(failed()),
             _ = node_stopped.changed() => return Err(failed()),

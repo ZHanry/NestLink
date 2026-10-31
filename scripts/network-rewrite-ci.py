@@ -199,7 +199,7 @@ def formatting_patch(source: Path, output: Path, records: list[dict]) -> bool:
         return False
     succeeded = False
     try:
-        formatted = run_command("format-patch-generate", ["cargo", "fmt", "--all"], worktree, output, records, 300)
+        formatted = run_command("format-patch-generate", ["cargo", "fmt", "--all", "--exclude", "fast-socks5"], worktree, output, records, 300)
         status = git_bytes(worktree, "status", "--porcelain=v1", "-z", "--untracked-files=all")
         (output / "format-worktree-status.json").write_text(
             json.dumps({"status": status.decode("utf-8", errors="replace").split("\0")[:-1]}, indent=2) + "\n", encoding="utf-8",
@@ -208,7 +208,8 @@ def formatting_patch(source: Path, output: Path, records: list[dict]) -> bool:
         untracked = git_bytes(worktree, "ls-files", "--others", "--exclude-standard", "-z")
         patch = git_bytes(worktree, "diff", "--no-ext-diff", "--binary", "HEAD")
         (output / "rustfmt.patch").write_bytes(patch)
-        succeeded = formatted["return_code"] == 0 and not untracked and all(name.endswith(".rs") for name in names)
+        succeeded = formatted["return_code"] == 0 and not untracked and all(
+            name.endswith(".rs") and not name.startswith("third-party/") for name in names)
         if not succeeded:
             (output / "format-patch-error.txt").write_text(
                 "Formatter failed or changed unexpected source paths. Inspect the retained log, status and patch.\n", encoding="utf-8",
@@ -303,7 +304,7 @@ def main() -> int:
             prefix = [sys.executable, "-B", "scripts/refactor-windows-normal-user.py"]
             run_command("ordinary-windows-token", prefix + [sys.executable, "-B", "scripts/refactor-windows-normal-user.py", "--check"], source, output, records, 60)
         run_command("rust-toolchain", ["rustc", "--version", "--verbose"], source, output, records, 60)
-        fmt = run_command("format-check", ["cargo", "fmt", "--all", "--", "--check"], source, output, records, 300)
+        fmt = run_command("format-check", ["cargo", "fmt", "--all", "--exclude", "fast-socks5", "--", "--check"], source, output, records, 300)
         require_unchanged_source(before, source_snapshot(source, identity["source_revision"]))
         if fmt["return_code"] != 0:
             if not formatting_patch(source, output, records):

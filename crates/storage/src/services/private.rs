@@ -7,6 +7,7 @@ use rusqlite::{Connection, Transaction, TransactionBehavior};
 
 const MAX_RULE_MS: u64 = 7 * 24 * 60 * 60 * 1000;
 const MAX_RULES: u64 = 256;
+mod network;
 
 fn mode(value: &str) -> Result<ServiceAccessMode, StorageError> {
     match value { "private" => Ok(ServiceAccessMode::Private), "public" => Ok(ServiceAccessMode::Public), "both" => Ok(ServiceAccessMode::Both), _ => Err(StorageError::Conflict) }
@@ -137,11 +138,17 @@ impl Store {
         let (record,approval,view,host_epoch) = self.private_exposure_current(service,now)?;
         let (account,account_epoch,consumer_epoch,consumer_key) = self.private_member(&view.space_id,consumer,now)?;
         if account != actor.account_id || consumer == record.definition.host_device_id { return Err(StorageError::Forbidden); }
+        if !self.private_service_paths(&actor.session_id,consumer,&record.definition.host_device_id,service,now/1000)?.contains(nestlink_protocol::Path::Direct) {
+            // The currently installed private carrier is direct. A relay-only
+            // business must wait for its separately admitted transit owner.
+            return Err(StorageError::Forbidden);
+        }
         let rule:Option<(String,u64,u64)> = self.connection.query_row("SELECT rule_id,subject_epoch,expires_at FROM private_service_acl WHERE service_id=?1 AND exposure_revision=?2 AND revoked=0 AND host_epoch=?3 AND expires_at>?4 AND ((subject_kind='account' AND subject_id=?5 AND subject_epoch=?6) OR (subject_kind='installation' AND subject_id=?7 AND subject_epoch=?8)) ORDER BY expires_at DESC,rule_id LIMIT 1",params![service,view.revision,host_epoch,now,account,account_epoch,consumer,consumer_epoch],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?))).optional()?;
         let (acl_rule_id,subject_epoch,end) = rule.ok_or(StorageError::Forbidden)?;
         let (_,_,_,host_public_key) = self.private_member(&view.space_id,&record.definition.host_device_id,now)?;
-        let space_policy_epoch = self.connection.query_row("SELECT policy_epoch FROM network_authorities WHERE space_id=?1",[&view.space_id],|r|r.get(0))?;
-        let claims = PrivateServiceClaims {schema_version:SCHEMA_VERSION,service_lease_sha256:[0;32],usage_grant_sha256:[0;32],space_id:view.space_id.clone(),space_policy_epoch,exposure_revision:view.revision,acl_rule_id,subject_epoch,host_membership_epoch:host_epoch,consumer_membership_epoch:consumer_epoch,consumer_account_id:account,consumer_device_id:consumer.into(),consumer_public_key:consumer_key,host_public_key};
+        let (space_policy_epoch,network_authority_key):(u64,Vec<u8>) = self.connection.query_row("SELECT policy_epoch,public_key FROM network_authorities WHERE space_id=?1",[&view.space_id],|r|Ok((r.get(0)?,r.get(1)?)))?;
+        let network_authority_key=network_authority_key.try_into().map_err(|_|StorageError::Conflict)?;
+        let claims = PrivateServiceClaims {schema_version:SCHEMA_VERSION,service_lease_sha256:[0;32],usage_grant_sha256:[0;32],space_id:view.space_id.clone(),space_policy_epoch,network_authority_key,exposure_revision:view.revision,acl_rule_id,subject_epoch,host_membership_epoch:host_epoch,consumer_membership_epoch:consumer_epoch,consumer_account_id:account,consumer_login_id:actor.session_id.clone(),consumer_device_id:consumer.into(),consumer_public_key:consumer_key,host_public_key};
         Ok((record,approval,view,claims,end))
     }
     pub fn private_services(&self, actor:&Principal, consumer:&str, query:ServiceQuery, now:u64) -> Result<PrivateServicePage,StorageError> {
@@ -239,6 +246,8 @@ impl Store {
         let (_,_,view,host_epoch)=self.private_exposure_current(service,now)?;
         let (account,account_epoch,consumer_epoch,key)=self.private_member(&view.space_id,&consumer,now)?;
         let c=verified.claims();
+        if !self.service_login_live(&c.consumer_account_id,&c.consumer_login_id,now/1000)?
+            || !self.private_service_paths(&c.consumer_login_id,&consumer,&verified.lease().claims().definition.host_device_id,service,now/1000)?.contains(nestlink_protocol::Path::Direct) {return Err(StorageError::Forbidden);}
         let active:bool=self.connection.query_row("SELECT EXISTS(SELECT 1 FROM private_service_acl WHERE rule_id=?1 AND service_id=?2 AND exposure_revision=?3 AND revoked=0 AND expires_at>?4 AND host_epoch=?5 AND subject_epoch=?6 AND ((subject_kind='account' AND subject_id=?7 AND subject_epoch=?8) OR (subject_kind='installation' AND subject_id=?9 AND subject_epoch=?10)))",params![c.acl_rule_id,service,view.revision,now,host_epoch,c.subject_epoch,account,account_epoch,consumer,consumer_epoch],|r|r.get(0))?;
         let epoch:u64=self.connection.query_row("SELECT policy_epoch FROM network_authorities WHERE space_id=?1",[&view.space_id],|r|r.get(0))?;
         if !active || c.consumer_account_id!=account || c.host_membership_epoch!=host_epoch || c.consumer_membership_epoch!=consumer_epoch || c.consumer_public_key!=key || c.exposure_revision!=view.revision || c.space_policy_epoch!=epoch {return Err(StorageError::Forbidden);}
