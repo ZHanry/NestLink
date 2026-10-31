@@ -228,7 +228,14 @@ def visitor(args):
             connection=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);connection.settimeout(1.5);connection.bind((args.source,0));connection.connect((VIP,29100))
             result["source_address"],result["source_port"]=connection.getsockname()
             connection.send(payload);result["passed"]=connection.recv(2048)==payload
-    except (OSError,ssl.SSLError,http.client.HTTPException) as error: result["error_type"]=type(error).__name__
+    except (OSError,ssl.SSLError,http.client.HTTPException) as error:
+        result["error_type"]=type(error).__name__
+        if isinstance(error,ssl.SSLError):
+            result["tls_library"]=error.library
+            result["tls_reason"]=error.reason
+        if isinstance(error,ssl.SSLCertVerificationError):
+            result["verify_code"]=error.verify_code
+            result["verify_message"]=error.verify_message[:256]
     finally:
         if connection is not None: connection.close()
     print(json.dumps(result));return 0
@@ -379,9 +386,32 @@ def hosted(args):
             after=command("observe")["backend_requests"];assert before==after
             cases["original_source_acl_allowed_visitor_and_denied_other_source"]=True
             if protocol=="https":
-                active="https-front-root-and-name-negatives"
-                assert request(directory,protocol,trust="none")["error_type"]=="SSLCertVerificationError"
-                assert request(directory,protocol,name="wrong.svc.nestlink.test")["error_type"]=="SSLCertVerificationError"
+                active="https-front-untrusted-root"
+                before=command("observe")["backend_requests"]
+                untrusted=request(directory,protocol,trust="none")
+                private_json(output/(phase+"-untrusted-root.json"),untrusted)
+                assert not untrusted["passed"] and untrusted["error_type"]=="SSLCertVerificationError"
+                assert untrusted["verify_code"] in (18,19,20,21)
+                assert command("observe")["backend_requests"]==before
+                assert request(directory,protocol)["passed"]
+                active="https-front-wrong-name"
+                before=command("observe")["backend_requests"]
+                wrong_name=request(directory,protocol,name="wrong.svc.nestlink.test")
+                private_json(output/(phase+"-wrong-name.json"),wrong_name)
+                # Caddy can refuse an unknown SNI before sending a certificate.
+                # OpenSSL then reports a TLS alert instead of performing its
+                # own certificate-hostname comparison. Both are a TLS refusal
+                # of this exact wrong name; timeouts/EOF/connect failures are
+                # deliberately not accepted. Adjacent valid-name requests and
+                # unchanged original backend count exclude owner/link failure.
+                certificate_name_refused=(wrong_name["error_type"]=="SSLCertVerificationError"
+                    and wrong_name.get("verify_code")==62)
+                sni_refused=(wrong_name["error_type"]=="SSLError"
+                    and wrong_name.get("tls_library")=="SSL"
+                    and wrong_name.get("tls_reason") in ("TLSV1_ALERT_UNRECOGNIZED_NAME","TLSV1_ALERT_INTERNAL_ERROR"))
+                assert not wrong_name["passed"] and (certificate_name_refused or sni_refused)
+                assert command("observe")["backend_requests"]==before
+                assert request(directory,protocol)["passed"]
                 cases.update(untrusted_frontend_root_refused=True,wrong_frontend_name_refused=True)
             active=protocol+"-active-edge-owner-failure-caddy-stays-up"
             selected_request=request(directory,protocol);assert selected_request["passed"]
