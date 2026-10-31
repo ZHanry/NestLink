@@ -134,12 +134,17 @@ async fn run(
     counts.spent = policy.spent_bytes();
     policy.stop();
     let shutdown = pipe.shutdown().await;
+    let side=if plan.local_public==fixture::identity(0).public_key(){"first_client"}else{"second_server"};
+    let closing_rtt=connection.rtt();
     drop(connection);
+    let close_started=tokio::time::Instant::now();
+    println!("Subnet native physical close: side={side}, rtt_ms={}, cleanup_budget_ms=5000",closing_rtt.as_millis());
     let close = endpoint
-        .close_and_wait(tokio::time::Instant::now() + Duration::from_secs(5))
+        .close_and_wait(close_started + Duration::from_secs(5))
         .await;
+    println!("Subnet native physical close result: side={side}, elapsed_ms={}, result={close:?}",close_started.elapsed().as_millis());
     outcome?;
     shutdown?;
-    close?;
+    close.map_err(|error|io::Error::new(error.kind(),format!("{side} original QUIC physical socket release failed after {}ms with last RTT {}ms: {error}",close_started.elapsed().as_millis(),closing_rtt.as_millis())))?;
     Ok(counts)
 }
