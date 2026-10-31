@@ -97,7 +97,7 @@ impl Session {
             || digest(&claims.members[1].public_key).as_slice()!=c.host_key_sha256
             || !operations.contains(&OfflineRemoteOperation::View)
             || operations.iter().any(|op|!c.permissions.contains(&(op.permission() as i32)))
-            || owner.connections()==0 || owner.remaining_lifetime().is_zero()
+            || !owner.has_authenticated_connection() || owner.remaining_lifetime().is_zero()
         {return Err(error(ErrorCode::IdentityMismatch,"offline authority differs from original approved remote scope"));}
         let remaining:u64=owner.remaining_lifetime().min(std::time::Duration::from_millis(claims.expires_at_ms.saturating_sub(now.unix_ms))).as_millis().try_into().map_err(|_|error(ErrorCode::LeaseExpired,"offline lifetime overflow"))?;
         let deadline_ms=now.monotonic_ms.checked_add(remaining).ok_or_else(||error(ErrorCode::LeaseExpired,"offline deadline overflow"))?;

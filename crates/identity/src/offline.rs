@@ -374,6 +374,8 @@ impl OfflineProcess {
             spent_bytes: 0,
             written_bytes: 0,
             connections: 0,
+            pending_connections: [0; 2],
+            authenticated: false,
             stopped: false,
         })
     }
@@ -400,6 +402,8 @@ pub struct OfflineAdmission {
     spent_bytes: u64,
     written_bytes: u64,
     connections: u32,
+    pending_connections: [u32; 2],
+    authenticated: bool,
     stopped: bool,
     process_stopped: Arc<AtomicBool>,
     channel_identity: Arc<crate::InstallationIdentity>,
@@ -422,6 +426,9 @@ impl OfflineAdmission {
     }
     pub fn connections(&self) -> u32 {
         self.connections
+    }
+    pub fn has_authenticated_connection(&self) -> bool {
+        self.authenticated
     }
     pub fn is_stopped(&self) -> bool {
         self.stopped || self.process_stopped.load(Ordering::Acquire)
@@ -505,7 +512,8 @@ impl OfflineAdmission {
                 "offline connection is not the exact approved direct peer",
             ));
         }
-        self.reserve_connection_attempt(wall_ms, transport)
+        self.reserve_connection_attempt(wall_ms, transport)?;
+        self.authenticate_reserved_connection(wall_ms, transport, remote_key)
     }
     /// Charge before dialing or accepting TLS. Failure, cancellation and
     /// reconnects never refund an attempt or recreate the original meter.
@@ -533,6 +541,10 @@ impl OfflineAdmission {
             ));
         }
         self.connections += 1;
+        self.pending_connections[match transport {
+            OfflineDirectTransport::Quic => 0,
+            OfflineDirectTransport::Tls => 1,
+        }] += 1;
         Ok(())
     }
     pub fn authenticate_reserved_connection(
@@ -542,7 +554,11 @@ impl OfflineAdmission {
         remote_key: &[u8; 32],
     ) -> Result<(), ContractError> {
         self.check(wall_ms)?;
-        if self.connections == 0
+        let pending = match transport {
+            OfflineDirectTransport::Quic => 0,
+            OfflineDirectTransport::Tls => 1,
+        };
+        if self.pending_connections[pending] == 0
             || *remote_key != self.claims().members[1 - self.local].public_key
             || !self
                 .claims()
@@ -554,6 +570,8 @@ impl OfflineAdmission {
                 "offline connection lacks its original attempt and authenticated direct peer",
             ));
         }
+        self.pending_connections[pending] -= 1;
+        self.authenticated = true;
         Ok(())
     }
     pub fn admit_remote_operation(
@@ -563,7 +581,7 @@ impl OfflineAdmission {
         bytes: u64,
     ) -> Result<(), ContractError> {
         self.check(wall_ms)?;
-        if self.connections == 0 {
+        if !self.authenticated {
             return Err(denied(
                 "offline operations require an authenticated direct connection",
             ));
@@ -593,7 +611,7 @@ impl OfflineAdmission {
         bytes: u64,
     ) -> Result<(), ContractError> {
         self.check(wall_ms)?;
-        if self.connections == 0 {
+        if !self.authenticated {
             return Err(denied(
                 "offline operations require an authenticated direct connection",
             ));
