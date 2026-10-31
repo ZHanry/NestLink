@@ -1,0 +1,104 @@
+name: Standard WireGuard original packet owner
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "apps/daemon/src/wireguard*"
+      - "apps/daemon/src/wireguard/**"
+      - "apps/daemon/src/network_subnet_system*"
+      - "apps/daemon/src/network_subnet_system/**"
+      - "apps/daemon/src/network_packet_runtime.rs"
+      - "crates/sdk/src/network/wireguard.rs"
+      - ".github/workflows/wireguard-native.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wireguard-native-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  kernel-and-protected-export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      CARGO_INCREMENTAL: "0"
+      RUST_BACKTRACE: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+      - name: Select ephemeral original codec and build locations
+        shell: bash
+        run: |
+          printf 'NESTLINK_CODEC_PREFIX=%s/nestlink-codecs/x86_64-unknown-linux-gnu\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          printf 'CARGO_TARGET_DIR=%s/nestlink-wireguard-target\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+      - name: Install mature distribution WireGuard and namespace tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config libpipewire-0.3-dev wireguard-tools qrencode iproute2 nftables iputils-arping kmod
+          sudo -n modprobe wireguard
+      - name: Build and verify original codec inputs on GitHub
+        run: |
+          python3 -B scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir "$RUNNER_TEMP/nestlink-codec-sources" --work-dir "$RUNNER_TEMP/nestlink-codecs"
+          python3 -B scripts/refactor-native-codecs.py verify --target x86_64-unknown-linux-gnu --prefix "$NESTLINK_CODEC_PREFIX"
+      - name: Retain exact build and actual distribution component execution
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, subprocess
+          assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted' and os.geteuid() != 0
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'wireguard-native-evidence'
+          output.mkdir(mode=0o700)
+          source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          assert source == os.environ['GITHUB_SHA']
+          digest = lambda path: hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()
+          packages = ['wireguard-tools', 'qrencode', 'libqrencode4', 'iproute2', 'nftables', 'iputils-arping', 'util-linux']
+          package_versions = subprocess.check_output(['dpkg-query', '-W', '-f=${binary:Package}\t${Version}\n', *packages], text=True)
+          (output / 'component-versions.txt').write_text(package_versions)
+          copyrights = {}
+          for name in packages:
+              path = pathlib.Path('/usr/share/doc') / name / 'copyright'
+              if path.is_file():
+                  copyrights[name] = digest(path)
+                  (output / (name + '-copyright.txt')).write_bytes(path.read_bytes())
+          build = ['cargo', 'test', '--locked', '-p', 'nestlink-daemon', '--bin', 'nestlink-daemon', '--no-run', '--message-format=json-render-diagnostics']
+          built = subprocess.run(build, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+          (output / 'build.jsonl').write_bytes(built.stdout)
+          (output / 'build.log').write_bytes(built.stderr)
+          receipt = {'schema_version': 1, 'source_revision': source,
+              'workflow_revision': os.environ['GITHUB_WORKFLOW_SHA'],
+              'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'runner_environment': os.environ['RUNNER_ENVIRONMENT'], 'ordinary_uid': os.geteuid(),
+              'cargo_lock_sha256': digest('Cargo.lock'), 'build_command': build, 'build_return_code': built.returncode,
+              'tools': {name: digest('/usr/bin/' + name) for name in ['wg', 'qrencode']},
+              'package_copyright_sha256': copyrights, 'passed': False,
+              'scope': 'Source-exact hosted production tool and kernel mechanisms; Android/iOS and physical deployment acceptance require separate device evidence'}
+          if built.returncode == 0:
+              artifacts = [item['executable'] for line in built.stdout.decode().splitlines()
+                  if (item := json.loads(line)).get('reason') == 'compiler-artifact'
+                  and item.get('target', {}).get('name') == 'nestlink-daemon' and item.get('executable')]
+              assert len(artifacts) == 1, artifacts
+              executable = pathlib.Path(artifacts[0])
+              receipt['executable_sha256'] = digest(executable)
+              command = [str(executable), 'wireguard::', '--include-ignored', '--nocapture', '--test-threads=1']
+              with (output / 'execution.log').open('wb') as log:
+                  code = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT).returncode
+              receipt.update(execution_command=command, execution_return_code=code, passed=code == 0)
+          (output / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          print(json.dumps(receipt, indent=2))
+          assert receipt['passed'], 'WireGuard mechanism failed; retained same-run receipt and logs are authoritative'
+      - name: Retain public provenance and component licenses
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: wireguard-native-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/wireguard-native-evidence/
+          if-no-files-found: warn
+          retention-days: 30

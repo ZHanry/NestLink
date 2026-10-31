@@ -799,6 +799,7 @@
       ],
       "candidates": [
         "Ubuntu kernel WireGuard and official tools",
+        "Distribution qrencode CLI from libqrencode 4.1.1 for protected SVG export",
         "BoringTun 0.7.1 portable library if userspace is required",
         "EasyTier portal code reuse and self-written crypto (not selected)"
       ],
@@ -806,6 +807,9 @@
         "https://www.wireguard.com/install/",
         "https://www.wireguard.com/protocol/",
         "https://git.zx2c4.com/wireguard-tools/",
+        "https://git.zx2c4.com/wireguard-tools/plain/COPYING",
+        "https://raw.githubusercontent.com/fukuchi/libqrencode/v4.1.1/qrenc.c",
+        "https://raw.githubusercontent.com/fukuchi/libqrencode/v4.1.1/COPYING",
         "https://github.com/cloudflare/boringtun",
         "https://crates.io/api/v1/crates/boringtun/0.7.1",
         "https://crates.io/api/v1/crates/boringtun/0.7.1/readme"
@@ -819,19 +823,22 @@
           "reviewed_at": "2026-10-30",
           "yanked": false
         },
-        "kernel_tools": "Official references identified; exact package/driver/license review and integration pending W24."
+        "kernel_tools": "Official protocol/install references and wireguard-tools COPYING reviewed 2026-10-31. Linux kernel and distribution wg implement the protocol; exact hosted package versions, binary digests and distribution copyright notices are retained by wireguard-native.yml.",
+        "qrencode": "Official v4.1.1 qrenc.c reviewed 2026-10-31: bounded stdin, SVG output, LGPL-2.1-or-later header. Invoked as an external distribution tool, with no new linked QR library or copied implementation. Exact distribution package and copyright are recorded per hosted run."
       },
       "platforms": [
         "Ubuntu 24.04 x64/ARM64 portal",
         "Android/iOS standard WireGuard clients (not native remote-control clients)"
       ],
       "version": {
-        "linux-kernel/tools": "Resolve and pin exact Ubuntu package/runtime versions in Actions W24 before integration",
+        "linux-kernel/tools": "Distribution implementation; record exact kernel/package versions and executable digests in each Actions run",
+        "qrencode": "upstream 4.1.1; exact distribution revision retained by hosted receipt",
         "boringtun": "0.7.1",
-        "status": "provisional; kernel_first; no_runtime_dependency_added"
+        "status": "kernel_first; external distribution wg/qrencode tools; no new Rust protocol/crypto dependency"
       },
       "license": {
-        "linux-wireguard/tools": "Verify chosen distribution package notices before freeze",
+        "linux-wireguard/tools": "GPL-2.0; external kernel/distribution tool, retain selected distribution copyright and packaging notices",
+        "qrencode": "LGPL-2.1-or-later; external distribution CLI, retain distribution copyright; no linked/bundled library introduced",
         "boringtun": "BSD-3-Clause"
       },
       "selection_reason": "prefer_standard_Linux_WireGuard_implementation_for_Ubuntu_portal; retain_userspace_alternative",
@@ -846,7 +853,7 @@
         "W24",
         "W34"
       ],
-      "validation_status": "original packet client key-binding API/SQLite/SDK slice implemented; Actions compilation/tests and actual kernel/Android/iOS qualification pending",
+      "validation_status": "original packet client key-binding API/SQLite/SDK and protected CLI config/QR slices implemented; source-exact tool workflow added; actual Actions results, kernel owner and Android/iOS qualification pending",
       "decision_ref": "docs/adr/network/0048-wireguard-original-packet-key-binding.md"
     },
     {
