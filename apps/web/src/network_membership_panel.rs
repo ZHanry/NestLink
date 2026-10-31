@@ -12,6 +12,7 @@ use std::sync::{
 };
 mod addressing;
 mod authority;
+mod subnet;
 mod topology;
 
 #[derive(Clone, Copy)]
@@ -334,5 +335,6 @@ pub(super) fn NetworkMembershipPanel(
         }) />
         <topology::NetworkTopologyPanel api space session_revision auth_failure />
         <addressing::SpaceAddressPanel api space session_revision auth_failure />
+        <subnet::SubnetMappingPanel api space session_revision auth_failure />
     }
 }

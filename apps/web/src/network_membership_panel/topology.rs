@@ -80,7 +80,7 @@ fn target(
     Ok((id.to_owned(), Some(node.clone())))
 }
 
-fn now_ms() -> u64 {
+pub(super) fn now_ms() -> u64 {
     #[cfg(target_arch = "wasm32")]
     {
         js_sys::Date::now() as u64
@@ -94,7 +94,7 @@ fn now_ms() -> u64 {
     }
 }
 
-fn prefixes(text: &str) -> Result<Vec<IpPrefix>, &'static str> {
+pub(super) fn prefixes(text: &str) -> Result<Vec<IpPrefix>, &'static str> {
     let invalid = || {
         t(
             "每行填写一个规范 CIDR，最多32项；不允许默认路由、主机位、回环、多播或重复网段。",
@@ -129,7 +129,7 @@ fn prefix_text(values: &[IpPrefix]) -> String {
         .join(", ")
 }
 
-fn expiry(value: u64) -> String {
+pub(super) fn expiry(value: u64) -> String {
     #[cfg(target_arch = "wasm32")]
     {
         js_sys::Date::new(&wasm_bindgen::JsValue::from_f64(value as f64))
