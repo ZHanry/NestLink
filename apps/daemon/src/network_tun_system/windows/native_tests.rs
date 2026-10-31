@@ -382,13 +382,14 @@ async fn ordinary(case: &Path, plan_path: &Path, receipt: &Path) -> Result {
     tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
     let mut idle_packet = [0_u8; 1280];
     let mut drained = 0_u64;
+    let drain_idle=std::env::var("NESTLINK_TUN_NATIVE_DRAIN_IDLE").as_deref()==Ok("1");
     loop {
         tokio::select! {biased;
             _=tick.tick()=>{
                 plan.validate(true)?;
                 if case.join("stop.json").try_exists()?{break;}
             },
-            received=device.recv(&mut idle_packet)=>{
+            received=device.recv(&mut idle_packet),if drain_idle=>{
                 let count=received?;
                 assert!(count>0 && count<=idle_packet.len());
                 drained=drained.saturating_add(1);

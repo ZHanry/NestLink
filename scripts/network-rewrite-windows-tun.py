@@ -163,7 +163,8 @@ def main():
         extra = {"NESTLINK_TUN_NATIVE_CASE": str(case), "NESTLINK_TUN_NATIVE_RECEIPT": str(root / "receipt.json"),
                  "NESTLINK_TUN_NATIVE_JOURNAL": str(root / "journal"), "NESTLINK_TUN_NATIVE_DRIVER": str(fixture / "wintun.dll"),
                  "NESTLINK_TUN_NATIVE_DRIVER_SHA256": binaries["amd64"], "TEMP": str(case), "TMP": str(case),
-                 "NESTLINK_TUN_NATIVE_PRIVATE_PARENT": str(private_parent), "NESTLINK_TUN_NATIVE_PAUSE": "0", "NESTLINK_TUN_NATIVE_FAULT": ""}
+                 "NESTLINK_TUN_NATIVE_PRIVATE_PARENT": str(private_parent), "NESTLINK_TUN_NATIVE_PAUSE": "0", "NESTLINK_TUN_NATIVE_FAULT": "",
+                 "NESTLINK_TUN_NATIVE_DRAIN_IDLE": "1"}
         ordinary = start("coexistence-original-ordinary", [sys.executable, source / "scripts/refactor-windows-normal-user.py", executable, *ROLE_ARGS],
                          dict(extra, NESTLINK_TUN_NATIVE_ROLE="ordinary"))
         ready = await_json(case / "plan-ready.json", ordinary)
@@ -313,6 +314,7 @@ def main():
                      "NESTLINK_TUN_NATIVE_PRODUCTION_DAEMON": str(production),
                      "NESTLINK_TUN_NATIVE_PAUSE": "1" if scenario == "raw-peer" or scenario in fault_stages else "0",
                      "NESTLINK_TUN_NATIVE_FAULT": fault_stages.get(scenario, "")}
+            extra["NESTLINK_TUN_NATIVE_DRAIN_IDLE"] = "0"
             role = {"online": "online", "online-cli": "online-cli-fixture"}.get(scenario, "ordinary")
             ordinary = start(scenario + "-ordinary", [sys.executable, source / "scripts/refactor-windows-normal-user.py", executable, *ROLE_ARGS], dict(extra, NESTLINK_TUN_NATIVE_ROLE=role))
             ready = await_json(case / "plan-ready.json", ordinary, budget=120 if scenario == "online-cli" else 20)
