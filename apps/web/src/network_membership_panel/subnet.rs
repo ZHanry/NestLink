@@ -34,7 +34,7 @@ enum Action {
 
 enum Reply {
     Loaded(NetworkPolicyView, Vec<Gateway>, bool),
-    Mapping(NetworkPolicyView, SubnetMappingClaims),
+    Mapping(NetworkPolicyView, Box<SubnetMappingClaims>),
     Revoked(NetworkPolicyView),
 }
 
@@ -380,7 +380,7 @@ pub(super) fn SubnetMappingPanel(
                 {
                     return Err(SdkError::Invalid);
                 }
-                Ok(Reply::Mapping(latest, claims))
+                Ok(Reply::Mapping(latest, Box::new(claims)))
             }
             .await;
             if !active() {
@@ -397,7 +397,7 @@ pub(super) fn SubnetMappingPanel(
                 }
                 Ok(Reply::Mapping(view, claims)) => {
                     policy.set(Some(view));
-                    current.set(Some(claims));
+                    current.set(Some(*claims));
                     message.set(t("映射管理授权有效；网关本机批准与原始业务授权须分别完成。", "Mapping management authority is valid. Gateway local consent and original business approval are separate requirements.").into());
                 }
                 Ok(Reply::Revoked(view)) => {
