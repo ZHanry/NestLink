@@ -144,8 +144,9 @@ fn remote_budget_offline_original_session_uses_independent_deadline_and_never_ex
     let admission=process.activate(verify_offline_bundle(&authority.sign_offline_bundle(&offline)?,&context)?,&context,digest)?;
     let owner=nestlink_session::OfflineRemoteAuthority::new(admission)?;
     owner.reserve_attempt(1_016_000,OfflineDirectTransport::Quic)?;
-    owner.authenticate(1_016_000,OfflineDirectTransport::Quic,&host.public_key())?;
     let now=ClockSample{monotonic_ms:16_000,unix_ms:1_016_000};
+    assert!(Session::activate_offline(verified(&signer,&claims),binding.clone(),owner.clone(),now).is_err());
+    owner.authenticate(1_016_000,OfflineDirectTransport::Quic,&host.public_key())?;
     assert!(Session::activate(verified(&signer,&claims),binding.clone(),Path::Direct,16_000,now).is_err());
     let mut session=Session::activate_offline(verified(&signer,&claims),binding,owner.clone(),now)?;
     assert_eq!(session.proof_transcript().permit_sha256,digest);
