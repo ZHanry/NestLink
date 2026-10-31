@@ -266,9 +266,16 @@ def hosted(args):
         result=subprocess.run(command,stdout=subprocess.PIPE,stderr=subprocess.PIPE);return result.stdout.decode()
     def stats():
         text=topology.inside("director","ipvsadm","-Ln","--stats","--exact").decode();counts={}
+        (output/"ipvs-latest.txt").write_text(text)
         for line in text.splitlines():
             fields=line.split()
-            if fields and fields[0]=="->": counts[fields[1].rsplit(":",1)[0]]=int(fields[2])
+            # ipvsadm prints a two-field destination-column header before its
+            # real seven-field rows. The header carries no connection count.
+            if fields==["->","RemoteAddress:Port"]: continue
+            if fields and fields[0]=="->":
+                if len(fields)!=7 or not all(field.isdecimal() for field in fields[2:]):
+                    raise ValueError("unrecognized-actual-ipvs-destination-statistics")
+                counts[fields[1].rsplit(":",1)[0]]=int(fields[2])
         return text,counts
     try:
         build=subprocess.run(["cargo","test","--locked","-p","nestlink-sdk","--test","service_group_l2","--no-run","--message-format=json-render-diagnostics"],stdout=subprocess.PIPE,stderr=subprocess.PIPE)

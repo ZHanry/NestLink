@@ -272,6 +272,7 @@ pub(super) fn SubnetMappingPanel(
             <p class="muted">{move || t("为重叠站点发布明确的原网段与别名。网关必须已持有同时覆盖两个网段的独立导出授权；IPv6 当前仅支持保持原前缀。", "Publish an exact original and alias prefix for overlapping sites. The gateway needs an independent route export covering both prefixes. IPv6 currently preserves its original prefix.")}</p>
             <button type="button" class="secondary" disabled=move || busy.get() on:click=move |_| request.run(Action::Load)>{move || t("读取空间与网关", "Read space and gateways")}</button>
             <label>{move || t("映射编号", "Mapping ID")}<input maxlength="36" disabled=move || busy.get() prop:value=move || mapping_id.get() on:input=move |e| { mapping_id.set(event_target_value(&e)); current.set(None); edited.run(()); } /></label>
+            <button type="button" class="secondary" disabled=move || busy.get() on:click=move |_| { mapping_id.set(nestlink_auth::random_id()); current.set(None); edited.run(()); }>{move || t("生成新的映射编号", "Generate a new mapping ID")}</button>
             <button type="button" class="secondary" disabled=move || busy.get() || policy.get().is_none() on:click=move |_| request.run(Action::Read)>{move || t("读取并核验映射", "Read and verify mapping")}</button>
             <p role="status">{move || message.get()}</p>
             <Show when=move || !problem.get().is_empty()><p role="alert">{move || problem.get()}</p></Show>
