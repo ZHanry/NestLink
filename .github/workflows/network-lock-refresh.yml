@@ -152,6 +152,9 @@ jobs:
                   # are activated. New transitive identities are reviewed from
                   # the retained derivation receipt before importing a lock.
                   ('reqwest', '0.12.28'): {'cookie', 'cookie_store'},
+                  # mdns-sd enables mio's maintained logging feature; this is
+                  # the only new edge on an existing external identity.
+                  ('mio', '1.2.4'): {'log'},
               }
               if scope == 'product':
                   # flume's default fairness source activates fastrand's
