@@ -66,7 +66,7 @@ impl OfflineRemoteAuthority {
     pub fn observe_online(&self, context:&OfflineVerification<'_>) -> Result<(),ContractError> {
         self.lock()?.observe_online(context)
     }
-    fn authorize(&self, permission: Permission, wall:u64) -> Result<(),ContractError> {
+    pub(super) fn authorize(&self, permission: Permission, wall:u64) -> Result<(),ContractError> {
         self.lock()?.admit_remote_operation(wall,operation(permission)?,0)
     }
     fn charge(&self, permission:Permission, bytes:u64, wall:u64) -> Result<(),ContractError> {
