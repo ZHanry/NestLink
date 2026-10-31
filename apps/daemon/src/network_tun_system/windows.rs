@@ -254,7 +254,7 @@ async fn apply(
         let identity=record.capture()?.ok_or_else(||io::Error::other("created original Wintun adapter missing"))?;
         if identity.index!=original.if_index()?{return Err(io::Error::other("Wintun provider and kernel adapter differ").into());}
         record.identity=Some(identity.clone());record.save(&store)?;
-        record.device_instance=Some(device_instance::capture(&identity)?);record.save(&store)?;
+        record.device_instance=Some(native("capture original PnP instance",device_instance::capture(&identity))?);record.save(&store)?;
         resources::isolate(&identity)?;
         for address in native("list fresh provider addresses",original.addresses())? {native(&format!("remove fresh automatic address {address}"),original.remove_address(address))?;}
         let [IpAddr::V4(v4),IpAddr::V6(v6)]=record.plan.local_hosts else {return Err(io::Error::other("signed dual-stack hosts missing").into());};
@@ -378,7 +378,7 @@ async fn recover(store: &AdminJournal) -> Result {
             && resources::inspect(identity)?.as_ref() != Some(installed) {
             return Err(io::Error::other("original TUN configuration changed; preserving adapter and journal").into());
         }
-        device_instance::remove_original(identity, instance)?;
+        native("remove exact original PnP instance",device_instance::remove_original(identity, instance))?;
     }
     // SetupAPI targets only the original retained device instance. Recovery
     // never opens a replacement Wintun session or invokes global driver cleanup.
