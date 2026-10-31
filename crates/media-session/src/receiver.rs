@@ -1838,17 +1838,15 @@ fn prepare_display_decoder(
                 .formats()
                 .iter()
                 .filter_map(|format| {
-                    crate::negotiated_format::format_target(
-                        *format,
-                        layout.width,
-                        layout.height,
-                        true,
-                    )
+                    (if kind == VideoCodec::H264Baseline {
+                        crate::h264_display_config(*format, layout.width, layout.height)
+                            .map(|config| (kind, config))
+                    } else { crate::negotiated_format::format_target(*format, layout.width, layout.height, true) })
                     .ok()
                     .map(|(kind, config)| (*format, kind, config))
                 })
                 .filter(|(_, codec, _)| *codec == kind)
-                .max_by_key(|(_, _, config)| (config.fps, config.bitrate_kbps))
+                .max_by_key(|(_, _, config)| (u64::from(config.width) * u64::from(config.height), config.fps, config.bitrate_kbps))
                 .ok_or_else(|| {
                     io::Error::other("selected display has no executable signed CPU target")
                 })?;
@@ -1880,8 +1878,8 @@ fn prepare_display_decoder(
             // Validate typed surface before creating the selected decoder.
             decoder.prepare = Some(crate::legacy_format::LegacyPrepare::new_cpu_visible(
                 kind,
-                layout.width,
-                layout.height,
+                decoder.stream.codec.width,
+                decoder.stream.codec.height,
             )?);
             decoder.codec = Some(if format.is_some() || negotiated {
                 VideoDecoder::with_execution_target(crate::h264_execution_target(
@@ -2110,7 +2108,13 @@ fn receive(
                         }
                         return Err(io::Error::new(io::ErrorKind::InvalidData,"video preceded exact selection acknowledgement"));
                     }
-                    if !state.selected.is_some_and(|layout| packet.width==layout.width && packet.height==layout.height) {
+                    if !state.selected.is_some_and(|layout| {
+                        match state.format.as_ref() {
+                            Some(format) => crate::negotiated_format::configured_target(format, layout.width, layout.height, true)
+                                .is_ok_and(|(_, config)| packet.width == config.width && packet.height == config.height),
+                            None => packet.width == layout.width && packet.height == layout.height,
+                        }
+                    }) {
                         return Err(io::Error::new(io::ErrorKind::InvalidData,"selected video geometry differs"));
                     }
                     // Selection may have changed while this thread awaited a

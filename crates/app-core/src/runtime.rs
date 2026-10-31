@@ -1334,6 +1334,12 @@ impl CoreHandle {
                 .ok_or(NativeVideoError::Unauthorized)?;
             nestlink_media_session::execution_receipt_matches(receipt, value.format)
                 .map_err(|_| NativeVideoError::Unauthorized)?;
+            let display_config = nestlink_media_session::h264_display_config(value.format, source_binding.width, source_binding.height)
+                .map_err(|_| NativeVideoError::Unauthorized)?;
+            let actual_config = receipt.target().config();
+            if (actual_config.width, actual_config.height) != (display_config.width, display_config.height) {
+                return Err(NativeVideoError::Unauthorized);
+            }
             if !route.format_gate.is_active() || value.format_epoch == 0 {
                 return Err(NativeVideoError::Unauthorized);
             }
@@ -1382,8 +1388,8 @@ impl CoreHandle {
             source: binding.source,
             sequence,
             pts_90khz,
-            width: binding.width,
-            height: binding.height,
+            width: delivery_guard.execution.as_ref().map_or(binding.width, |receipt| receipt.target().config().width),
+            height: delivery_guard.execution.as_ref().map_or(binding.height, |receipt| receipt.target().config().height),
             keyframe,
             payload: std::mem::take(&mut *encoded_frame),
             repeated_source,

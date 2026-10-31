@@ -1134,11 +1134,14 @@
       ],
       "candidates": [
         "Existing native APIs, locked libvpx/Opus and qualified hardware SDK providers",
-        "New codec/capture stack (rejected)"
+        "New codec/capture stack (rejected)",
+        "fast_image_resize packed BGRA downscale (selected for finite CPU path)",
+        "libyuv scaler (not selected: adds separate native supply/build closure)"
       ],
       "official_sources": [
         "https://github.com/webmproject/libvpx/tree/1024874c5919305883187e2953de8fcb4c3d7fa6",
-        "https://github.com/xiph/opus/tree/22244de5a79bd1d6d623c32e72bf1954b56235be"
+        "https://github.com/xiph/opus/tree/22244de5a79bd1d6d623c32e72bf1954b56235be",
+        "https://github.com/Cykooz/fast_image_resize/tree/6dc1fe2750a3f41a047ee69ca6fa4517d752d017"
       ],
       "maintenance_status": {
         "evidence": "Existing project native-codecs.lock.json retains exact archives, hashes and license file list; upstream security/target qualification is not re-proven here",
@@ -1151,7 +1154,17 @@
       "version": {
         "libvpx": "1.16.0 @ 1024874c5919305883187e2953de8fcb4c3d7fa6",
         "opus": "1.6.1 @ 22244de5a79bd1d6d623c32e72bf1954b56235be",
-        "other": "Existing Cargo.lock and native-codecs.lock.json"
+        "other": "Existing Cargo.lock and native-codecs.lock.json",
+        "fast_image_resize": {
+          "version": "6.1.0",
+          "commit": "6dc1fe2750a3f41a047ee69ca6fa4517d752d017",
+          "registry_sha256": "e9c50201dc184ba6553da1695aac20a042efffbe2d84542cee31917c86c3ab1e",
+          "license": "MIT OR Apache-2.0",
+          "default_features": false,
+          "features": [
+            "std"
+          ]
+        }
       },
       "license": "Preserve native codec LICENSE/PATENTS/COPYING and OS/SDK terms; exact candidate SBOM remains required",
       "selection_reason": "reuse_existing_media_owners_and_mature_implementations",
@@ -1169,7 +1182,9 @@
         "W33"
       ],
       "validation_status": "manual_selection_review_only; Actions and target qualification pending",
-      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+      "decision_ref": "docs/adr/network/0001-component-boundaries.md",
+      "resolution_adapter_decision_ref": "docs/adr/network/0055-signed-cpu-resolution-downshift.md",
+      "resolution_adapter_validation": "Hosted exact dependency derivation passed; new actual resolution execution pending. No whole W31 or physical target claim."
     },
     {
       "id": "C18",

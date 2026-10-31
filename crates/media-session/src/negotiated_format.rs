@@ -12,7 +12,29 @@ pub(crate) fn configured_target(
     cpu_visible: bool,
 ) -> io::Result<(VideoCodec, VideoConfig)> {
     selection.validate().map_err(io::Error::other)?;
+    if cpu_visible && selection.format.codec == Codec::H264 {
+        let config = h264_display_config(selection.format, width, height)?;
+        return Ok((VideoCodec::H264Baseline, config));
+    }
     format_target(selection.format, width, height, cpu_visible)
+}
+/// Signed CPU output may downscale the selected source without changing that
+/// source's logical input space. No crop, aspect change or upscale is inferred.
+pub fn h264_display_config(format: VideoFormat, width: u32, height: u32) -> io::Result<VideoConfig> {
+    software_h264_execution_limits(format)?;
+    let padded_width = width.checked_add(width & 1).ok_or_else(|| io::Error::other("display width overflow"))?;
+    let padded_height = height.checked_add(height & 1).ok_or_else(|| io::Error::other("display height overflow"))?;
+    let visible = if (format.width, format.height) == (padded_width, padded_height) {
+        (width, height)
+    } else if format.width <= width && format.height <= height
+        && u64::from(format.width) * u64::from(height) == u64::from(format.height) * u64::from(width)
+    {
+        (format.width, format.height)
+    } else {
+        return Err(io::Error::other("signed output is not an uncropped display downscale"));
+    };
+    let (_, config) = format_target(format, visible.0, visible.1, true)?;
+    Ok(config)
 }
 pub(crate) fn format_target(
     format: VideoFormat,

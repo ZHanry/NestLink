@@ -92,7 +92,7 @@ jobs:
             'cargo_lock_sha256': hashlib.sha256(pathlib.Path('Cargo.lock').read_bytes()).hexdigest(),
             'commands': results, 'actual_core_regression_passed': qualified,
             'whole_W31_or_target_acceptance_claimed': False,
-            'scope': 'Actual ordinary-token MF probes and signed Core high-to-low exact bitrate/fps owner/ACK replacement. No shaped network, resolution downshift, physical GPU or complete W31 claim.',
+            'scope': 'Actual ordinary-token MF direction probes, packed BGRA downscale and signed Core high-to-low exact resolution/bitrate/fps owner/ACK replacement with original source geometry. No shaped network, physical GPU or complete W31 claim.',
             'files': [{'path': path.name, 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()} for path in sorted(output.iterdir()) if path.is_file()],
           }
           (output / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')

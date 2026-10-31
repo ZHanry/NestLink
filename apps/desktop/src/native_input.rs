@@ -227,6 +227,16 @@ mod tests {
     }
 
     #[test]
+    fn lower_resolution_image_keeps_the_original_logical_input_space() {
+        // The image occupies half as many UI pixels while the actual approved
+        // screen retains its original negative origin and full logical bounds.
+        let image = Rect::from_min_max(Pos2::new(10.0, 20.0), Pos2::new(110.0, 70.0));
+        assert_eq!(pointer_to_logical(Pos2::new(60.0, 45.0), image, &layout()), Some((0, 70)));
+        assert_eq!(pointer_to_logical(Pos2::new(109.9, 69.9), image, &layout()), Some((99, 119)));
+        assert_eq!(pointer_to_logical(Pos2::new(110.0, 45.0), image, &layout()), None);
+    }
+
+    #[test]
     fn maps_standard_keys_and_rejects_unmapped_commands() {
         assert_eq!(key_usage(egui::Key::A), Some(4));
         assert_eq!(key_usage(egui::Key::Num1), Some(0x1e));

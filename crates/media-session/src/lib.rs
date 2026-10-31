@@ -13,9 +13,9 @@ pub mod external;
 mod legacy_format;
 mod negotiated_budget;
 mod negotiated_format;
-pub use negotiated_budget::select_h264_budget;
+pub use negotiated_budget::{select_h264_budget, select_h264_display_budget};
 pub use negotiated_format::{
-    execution_receipt_matches, h264_execution_target, software_h264_execution_limits,
+    execution_receipt_matches, h264_display_config, h264_execution_target, software_h264_execution_limits,
 };
 mod receiver;
 mod receiver_qos;

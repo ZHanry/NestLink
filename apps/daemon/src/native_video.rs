@@ -1087,23 +1087,27 @@ fn stream_capture<D: CaptureDevice>(
                         .iter()
                         .filter(|format| {
                             format.codec == codec
-                                && format.width == width
-                                && format.height == height
+                                && if codec_kind == VideoCodec::H264Baseline {
+                                    nestlink_media_session::h264_display_config(**format, binding.width, binding.height).is_ok()
+                                } else { format.width == width && format.height == height }
                                 && format.frame_rate.denominator == 1
                                 && (1..=120).contains(&format.frame_rate.numerator)
                                 && (64..=100_000).contains(&format.max_kbps)
                         })
-                        .max_by_key(|format| (format.frame_rate.numerator, format.max_kbps));
+                        .max_by_key(|format| (u64::from(format.width) * u64::from(format.height), format.frame_rate.numerator, format.max_kbps));
                     let Some(target) = target else {
                         return (controller, StreamExit::CaptureFailed);
                     };
                     execution_format = Some(*target);
-                    VideoConfig {
-                        width: binding.width,
-                        height: binding.height,
-                        fps: target.frame_rate.numerator,
-                        bitrate_kbps: target.max_kbps,
-                    }
+                    if codec_kind == VideoCodec::H264Baseline {
+                        match nestlink_media_session::h264_display_config(*target, binding.width, binding.height) {
+                            Ok(config) => config,
+                            Err(_) => return (controller, StreamExit::CaptureFailed),
+                        }
+                    } else { VideoConfig {
+                            width: binding.width, height: binding.height,
+                            fps: target.frame_rate.numerator, bitrate_kbps: target.max_kbps,
+                    } }
                 } else {
                     VideoConfig {
                         width: binding.width,
@@ -1325,7 +1329,17 @@ fn stream_capture<D: CaptureDevice>(
                 return (controller, StreamExit::CaptureFailed);
             }
             let encoding_started = Instant::now();
-            let step = match current_encoder.encode_step(&pixels, pts, keyframe || repeated) {
+            let Some((_, encode_config)) = legacy_prepare.as_ref() else {
+                return (controller, StreamExit::CaptureFailed);
+            };
+            let scaled = if (encode_config.width, encode_config.height) != (binding.width, binding.height) {
+                match nestlink_media_codec::scale_bgra(&pixels, (binding.width, binding.height), (encode_config.width, encode_config.height)) {
+                    Ok(pixels) => Some(pixels),
+                    Err(_) => return (controller, StreamExit::CaptureFailed),
+                }
+            } else { None };
+            let input = scaled.as_ref().map_or(&pixels[..], |value| &value[..]);
+            let step = match current_encoder.encode_step(input, pts, keyframe || repeated) {
                 Ok(step) => step,
                 Err(_) => return (controller, StreamExit::CaptureFailed),
             };
@@ -1425,9 +1439,10 @@ fn stream_capture<D: CaptureDevice>(
                     Ok(Some(formats)) => formats,
                     _ => return (controller, StreamExit::SessionEnded),
                 };
-                let next = match nestlink_media_session::select_h264_budget(
+                let next = match nestlink_media_session::select_h264_display_budget(
                     &approved,
                     actual,
+                    (binding.width, binding.height),
                     quality.fps(),
                     quality.bitrate_kbps(),
                 ) {
@@ -1435,10 +1450,9 @@ fn stream_capture<D: CaptureDevice>(
                     Err(_) => return (controller, StreamExit::CaptureFailed),
                 };
                 if next != actual {
-                    let next_config = VideoConfig {
-                        fps: next.frame_rate.numerator,
-                        bitrate_kbps: next.max_kbps,
-                        ..*config
+                    let next_config = match nestlink_media_session::h264_display_config(next, binding.width, binding.height) {
+                        Ok(config) => config,
+                        Err(_) => return (controller, StreamExit::CaptureFailed),
                     };
                     // Retire and join the original sealed owner before a new
                     // one can register. The first actual replacement AU goes

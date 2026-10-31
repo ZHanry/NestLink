@@ -3,11 +3,13 @@
 mod h264;
 mod opus;
 mod quality;
+mod scale;
 mod video;
 mod vp8;
 pub use h264::{H264AccessUnit, H264EncodingLimits, H264Geometry, H264SpsInfo, H264Validator};
 pub use opus::{OpusConfig, OpusDecoder, OpusEncoder};
 pub use quality::{ReceiverCondition, VideoQuality};
+pub use scale::scale_bgra;
 pub use video::{
     H264EncoderProbe, VideoCodec, VideoDecoder, VideoEncodeStep, VideoEncoder,
     h264_hardware_available, probe_h264_encoder,

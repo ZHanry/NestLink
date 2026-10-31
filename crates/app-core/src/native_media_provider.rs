@@ -200,19 +200,24 @@ impl NativeMediaProvider {
         })
     }
     /// Each of at most three budgets runs the original full direction probe.
-    /// No lower rate or bitrate is inferred from the maximum target's receipt.
+    /// No lower geometry, rate or bitrate is inferred from the maximum receipt.
     pub fn cpu_software_adaptive(target: VideoConfig) -> io::Result<Self> {
         let mut provider = Self::cpu_software(target)?;
         let mut targets = vec![target];
         for (numerator, denominator) in [(3, 4), (1, 2)] {
+            let half_geometry = numerator == 1 && target.width.is_multiple_of(4)
+                && target.height.is_multiple_of(4) && (target.fps > 15 || target.bitrate_kbps > 64);
             let next = VideoConfig {
+                // Exact half geometry is offered only when both dimensions
+                // remain even and the original aspect ratio is preserved.
+                width: if half_geometry { target.width / 2 } else { target.width },
+                height: if half_geometry { target.height / 2 } else { target.height },
                 fps: (target.fps * numerator / denominator).max(target.fps.min(15)),
                 bitrate_kbps: (target.bitrate_kbps * numerator / denominator).max(64),
-                ..target
             };
             if !targets
                 .iter()
-                .any(|value| value.fps == next.fps && value.bitrate_kbps == next.bitrate_kbps)
+                .any(|value| value.width == next.width && value.height == next.height && value.fps == next.fps && value.bitrate_kbps == next.bitrate_kbps)
             {
                 targets.push(next);
             }
@@ -637,11 +642,11 @@ mod tests {
             .targets
             .iter()
             .map(|value| {
-                assert_eq!((value.width, value.height), (target.width, target.height));
-                (value.fps, value.bitrate_kbps)
+                assert!(value.width <= target.width && value.height <= target.height);
+                (value.width, value.height, value.fps, value.bitrate_kbps)
             })
             .collect();
-        assert_eq!(budgets, [(60, 8000), (45, 6000), (30, 4000)]);
+        assert_eq!(budgets, [(1920, 1080, 60, 8000), (1920, 1080, 45, 6000), (960, 540, 30, 4000)]);
         let minimum = NativeMediaProvider::cpu_software_adaptive(VideoConfig {
             fps: 1,
             bitrate_kbps: 64,
