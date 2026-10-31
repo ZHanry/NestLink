@@ -64,7 +64,7 @@ jobs:
               'version': '=2.8.16', 'default-features': False, 'features': ['async_tokio']}
           assert daemon['dependencies']['nestlink-transport-quic'] == {'workspace': True}
           assert daemon['dependencies']['nestlink-platform-network'] == {'workspace': True}
-          assert daemon['target']['cfg(target_os = "linux")']['dev-dependencies']['etherparse'] == '=0.21.0'
+          assert daemon['target']['cfg(any(target_os = "linux", windows))']['dev-dependencies']['etherparse'] == '=0.21.0'
           assert 'fs' in daemon['target']['cfg(unix)']['dependencies']['rustix']['features']
           assert native['fast-socks5'] == {'version': '=1.0.0', 'path': '../../third-party/fast-socks5'}
           security = tomllib.loads(pathlib.Path('crates/platform-security/Cargo.toml').read_text())
