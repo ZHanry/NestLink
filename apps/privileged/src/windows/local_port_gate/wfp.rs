@@ -689,10 +689,15 @@ pub(super) fn verify(plan: &GatePlan, observed: &Value, denying: bool) -> io::Re
         }
         filter["filter_id"] = json!(0);
     }
-    if normalized != expected(plan, denying)? {
-        return Err(invalid(
-            "WFP gate does not match the complete planned SID/endpoint/protocol policy",
-        ));
+    let expected = expected(plan, denying)?;
+    if normalized != expected {
+        // Readback is still inside the installation transaction. If it fails,
+        // rollback correctly removes those objects, so a later inspect cannot
+        // explain native normalization. Retain the exact public policy values
+        // in the error before aborting; this never admits an inexact policy.
+        return Err(invalid(&format!(
+            "WFP gate does not match the complete planned SID/endpoint/protocol policy; observed={normalized}; expected={expected}"
+        )));
     }
     Ok(())
 }
