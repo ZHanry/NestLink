@@ -166,7 +166,9 @@ impl NodeGate {
                 return Err(ContractError::new(ErrorCode::LeaseExpired, reason));
             }
         }
-        if now.monotonic_ms >= self.deadline {
+        if now.monotonic_ms >= self.deadline
+            || self.claims.as_ref().is_some_and(|claims| now.unix_ms >= claims.expires_at_unix_ms)
+        {
             self.stop();
             return Err(ContractError::new(
                 ErrorCode::LeaseExpired,
