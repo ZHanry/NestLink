@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "artifact": {
+    "id": 13042475332,
+    "name": "offline-authority-b313dbf2db5536830b0c5ed46738c4bc385b4fc7-1",
+    "sha256": "9b2d8946cb6fcbdc51d943d926001baef83e7728ac86ecfde6dc54c4ea99268a",
+    "original_zip_digest_verified": true
+  },
+  "receipt": {
+    "source_revision": "b313dbf2db5536830b0c5ed46738c4bc385b4fc7",
+    "workflow": "ZHanry/NestLink/.github/workflows/offline-authority.yml@refs/heads/main",
+    "run_id": "41199333054",
+    "run_attempt": "1",
+    "runner_environment": "github-hosted",
+    "runner_os": "Linux",
+    "scope": "L1 protocol/identity/finite-owner primitives only; no production API, durable quota, carrier or target acceptance",
+    "cargo_lock_sha256": "48063b78bd20ca07f585a6100f7437057af227fde24c94fdad266f8ff457933e",
+    "build_command": [
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "nestlink-identity",
+      "--lib",
+      "--no-run",
+      "--message-format=json"
+    ],
+    "build_exit_code": 0,
+    "passed": true,
+    "executable_sha256": "7c11ff6e24035339af9465d1fe97582c693521d59fb70936a2cd6eae3f00bd9b",
+    "tests": [
+      "offline::tests::complete_chain_is_independent_and_unknown_or_missing_sections_fail",
+      "offline::tests::independent_offline_deadline_and_explicit_operations_cannot_expand",
+      "offline::tests::original_process_activation_and_cumulative_budget_survive_reconnect_only",
+      "offline::tests::private_service_pins_original_target_and_has_no_remote_rights",
+      "offline::tests::recovery_synchronizes_highest_revocation_and_cannot_revive_old_authority",
+      "offline::tests::rollback_deadline_and_local_exit_are_terminal_for_existing_owners"
+    ],
+    "execution_command": [
+      "/home/runner/work/NestLink/NestLink/target/debug/deps/nestlink_identity-7dc6be0a24abb9a1",
+      "offline::",
+      "--nocapture",
+      "--test-threads=1",
+      "--color",
+      "never"
+    ],
+    "test_exit_code": 0,
+    "files": {
+      "build.jsonl": "a949b0aa96c681512cc669200590109752bc228288073225f49d7d76d32840cb",
+      "build.log": "8bdfac3fe06aef77c2a2b7f10acd5bd58384084956bdad2316f8ed7f9fc7bb8e",
+      "inventory.log": "3f7a25506ae82d64793ffd332475d4e2be67d192bdf0d33945ddc272e4fe7933",
+      "tests.log": "91ba464169a24ed5f9895577989bf26546f2fc3c0eb5edda9f8e48c5f88bcda4"
+    }
+  },
+  "strict_lint_job_conclusion": "success",
+  "full_W27_or_AC45_AC46_passed": false,
+  "remaining": "Production admin/target consent API, durable shared reservation/consume, complete offline direct remote/private business, UI and real expiry/recovery cleanup are unimplemented or unverified."
+}

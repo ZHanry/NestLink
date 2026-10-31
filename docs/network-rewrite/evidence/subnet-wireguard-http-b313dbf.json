@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "scope": "L1/L2 real HTTP, SQLite, independent signatures, local consent, original one-use packet admission and renewable same-boot liveness. No Linux LAN forwarding, WG handshake, mobile or target acceptance.",
+  "scoped_passed": true,
+  "applicable_full_acceptance_passed": false,
+  "build_provenance": {
+    "repository": "ZHanry/NestLink",
+    "source_revision": "b313dbf2db5536830b0c5ed46738c4bc385b4fc7",
+    "run_id": 41199340461,
+    "run_attempt": 1,
+    "workflow": ".github/workflows/rust-core.yml",
+    "job_id": 124531847211,
+    "runner": "github-hosted ubuntu-24.04"
+  },
+  "execution_provenance": {
+    "environment": "github-hosted",
+    "passed": 22,
+    "failed": 0,
+    "ignored": 0,
+    "test_groups": [
+      2,
+      2,
+      3,
+      5,
+      4,
+      3,
+      1,
+      2
+    ]
+  },
+  "artifact": {
+    "id": 13041738538,
+    "name": "early-subnet-ubuntu-24.04-b313dbf2db5536830b0c5ed46738c4bc385b4fc7-1",
+    "sha256": "b92fe1f14b9eaee0b5dba312b41e1bd2dfa95762a183e018443ef75c2e0e6aff",
+    "original_zip_digest_verified": true
+  },
+  "log_sha256": "fb8fd292571a8d50aafbc781d1462ac9a1b1eb13d7c311ac9fae6c046ecbc996"
+}

@@ -1,456 +1,479 @@
 {
-    "schema_version":  1,
-    "repository":  "ZHanry/NestLink",
-    "target_release":  "0.8.0RC",
-    "target_semver":  "0.8.0-rc.1",
-    "timezone":  "Asia/Shanghai",
-    "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
-    "branch":  "main",
-    "source_revision":  "c51f8e94c688bfad1f2b4f0512386c5f9818929f",
-    "checkpoint_kind":  "W23_online_mapping_binding_and_web_management_W22_native_repair_W24_original_business_WG_binding",
-    "active_tasks":  [
-                         "W00",
-                         "W02",
-                         "W03",
-                         "W04",
-                         "W05",
-                         "W06",
-                         "W07",
-                         "W08",
-                         "W09",
-                         "W10",
-                         "W11",
-                         "W17",
-                         "W18",
-                         "W12",
-                         "W13",
-                         "W14",
-                         "W19",
-                         "W20",
-                         "W21",
-                         "W15",
-                         "W25",
-                         "W29",
-                         "W22",
-                         "W26",
-                         "W23",
-                         "W24",
-                         "W30"
-                     ],
-    "satisfied_interface_dependencies":  [
-                                             "W01 nine-topic source and mature-component research independently reviewed",
-                                             "First-slice independently versioned claims and complete device-bound path-chain types available",
-                                             "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
-                                         ],
-    "unverified_assumptions":  [
-                                   "W23 schema046 explicitly binds installation, membership digest and exact subnet mapping to original packet access; production HTTP/start/read/OnlinePacketAccess paths committed in db6668a. New early subnet cases failed in core run41193254757; exact diagnostics are still being retrieved. OS forwarding, CLI and target qualification remain in progress.",
-                                   "Web mapping issue/read/revoke panel committed in e825382; exact response signatures, policy/boot, draft approval, CAS and stale-session fencing are implemented. WASM protocol/SDK/Web compilation passed job124514176153. Browser interaction and full onboarding remain unverified.",
-                                   "Linux system DNS passed on source1d025a0; strict daemon lint and six ordinary TUN cases passed, but actual kernel TUN native execution failed after helper creation. Private permission fixture was repaired without lowering ownership checks; actual ephemeral link identity diagnostics/cleanup are being repaired.",
-                                   "Windows native run41192684769 failed before compilation because inbox Authenticode module loading inherited an incompatible module path. The native driver signature requirement remains; absolute inbox PowerShell/module environment and independent compile/lint execution are being repaired.",
-                                   "HA run41192528513 passed original bootstrap/group configuration and reached publication, then driver stats parser treated an IPVS header as a data row (IndexError). Exact-row parser repaired in c51f8e9; actual four-protocol normal/crash cases remain unproven and run41193803879 is running. All recorded HA cleanup checks were true.",
-                                   "Core run41192681583 on a0c8029 still has edge-group restart HTTP403, formatting and Windows scoped failures. New core run41193254757 is running; native/media/network events, dependency audit, generated OpenAPI and wasm jobs passed individually, not the entire run.",
-                                   "W24 draft credential is only a key-binding wrapper around original NetworkAccess/private business, with explicit per-client key/interface/identity, current portal boot, original expiry/total budget and local approval. Storage/API/OS/standard client behavior remain in progress; mobile target evidence is absent.",
-                                   "Private Web run41188549929 passed source1d5bcda eight real Caddy/Chrome cases including TLS negative and physical cleanup; public DNS/ACME and installed-target acceptance remain open.",
-                                   "W27-W28,W31-W40 and remaining W30 full product workflow remain mandatory unfinished work; all source/validation/target gaps stay separate, release_state=not_ready."
-                               ],
-    "external_prerequisites":  [
-                                   {
-                                       "id":  "target-windows",
-                                       "state":  "not_provisioned",
-                                       "purpose":  "Two authorized Windows targets, GPU/display and VPN coexistence acceptance"
-                                   },
-                                   {
-                                       "id":  "target-mobile",
-                                       "state":  "not_provisioned",
-                                       "purpose":  "Android and iOS standard WireGuard client acceptance"
-                                   },
-                                   {
-                                       "id":  "target-network",
-                                       "state":  "not_provisioned",
-                                       "purpose":  "Independent NAT sites, overlapping subnets, two public edges, fixed ingress and DNS"
-                                   },
-                                   {
-                                       "id":  "target-soak",
-                                       "state":  "not_started",
-                                       "purpose":  "Multiple cross-day 24-hour real-device runs"
-                                   },
-                                   {
-                                       "id":  "signing",
-                                       "state":  "not_verified",
-                                       "purpose":  "Actual release signing identity and disclosure"
-                                   }
-                               ],
-    "next_steps":  [
-                       "Retrieve exact core subnet and edge-group diagnostics; repair real failures and preserve assertions.",
-                       "Continue Windows/Linux TUN native owner, compile and cleanup fixes using hosted Actions only.",
-                       "Rerun real dual-edge HTTP/HTTPS/TCP/UDP normal and SIGKILL fixed-entry tests after exact IPVS stats fix.",
-                       "Complete Linux subnet namespace/TUN/nft actual business owner and CLI with explicit LAN choice and exact recovery.",
-                       "Complete W24 original-business-bound WireGuard API/CLI/kernel owner and real standard-client lab; then continue W27 offline, W28 game/discovery and all remaining product/media/distribution/compatibility/security/long-run work.",
-                       "Import exact-source Actions formatting/OpenAPI only after receipt digest verification; preserve concurrent field ownership.",
-                       "Produce complete same-source candidate artifacts and target instructions; publish 0.8.0RC only after required implementation and truthful acceptance."
-                   ],
-    "evidence_index":  [
-                           "docs/network-rewrite/evidence/research-review-2026-10-30.md",
-                           "docs/network-rewrite/evidence/baseline-github-2026-10-30.json",
-                           "docs/network-rewrite/evidence/independent-vector-build-195ff0f.json",
-                           "docs/network-rewrite/evidence/independent-vector-build-bcc161d.json",
-                           "docs/network-rewrite/IMPLEMENTATION-2026-10-30.md",
-                           "docs/network-rewrite/evidence/development-run-e3a18a1.json",
-                           "docs/network-rewrite/evidence/development-run-bdbc042.json",
-                           "docs/network-rewrite/evidence/development-run-1249075.json",
-                           "docs/network-rewrite/evidence/development-run-4492f59.json",
-                           "docs/network-rewrite/evidence/development-run-b7c3b19.json",
-                           "docs/network-rewrite/evidence/development-run-8007458.json",
-                           "docs/network-rewrite/evidence/development-run-5f01330.json",
-                           "docs/network-rewrite/evidence/development-run-b0ad444.json",
-                           "docs/network-rewrite/evidence/development-run-76dbb0e-browser.json",
-                           "docs/network-rewrite/evidence/development-run-76dbb0e-network.json",
-                           "docs/network-rewrite/evidence/pcp-lock-derivation-f09ac21.json",
-                           "docs/network-rewrite/evidence/development-run-8186f75.json",
-                           "docs/network-rewrite/evidence/development-run-e158101.json",
-                           "docs/network-rewrite/evidence/development-run-f6b026c.json",
-                           "docs/network-rewrite/BROWSER-LAB.md",
-                           "docs/adr/network/0010-bounded-management-observation.md",
-                           "docs/adr/network/0009-explicit-pcp-ice-mapping.md",
-                           "protocol-spec/node-relay-attributes.md",
-                           "docs/adr/network/0007-network-authority-lifecycle.md",
-                           "docs/adr/network/0008-signed-frozen-native-ice.md",
-                           "docs/network-rewrite/evidence/development-run-bd1f298.json",
-                           "docs/adr/network/0011-live-snapshot-network-chain-reuse.md",
-                           "docs/adr/network/0012-node-observation-deadlines-and-pending-continuity.md",
-                           "docs/refactor/crab-nat-license-review-2026-10-31.md",
-                           "docs/network-rewrite/evidence/development-run-bd1f298-browser.json",
-                           "docs/adr/network/0013-durable-authorized-topology.md",
-                           "docs/adr/network/0014-bounded-revocation-admission.md",
-                           "docs/adr/network/0015-bounded-topology-consumption.md",
-                           "docs/network-rewrite/evidence/graph-lock-derivation-a19a112.json",
-                           "docs/adr/network/0016-two-relay-carrier-binding.md",
-                           "docs/adr/network/0017-atomic-two-relay-reservation.md",
-                           "docs/adr/network/0018-chain-node-resource-admission.md",
-                           "docs/network-rewrite/evidence/development-run-0618e08.json",
-                           "docs/network-rewrite/evidence/development-run-43e8342.json",
-                           "docs/adr/network/0022-chain-topology-observation-continuity.md",
-                           "docs/adr/network/0023-live-node-topology-observation.md",
-                           "docs/network-rewrite/evidence/development-run-d1c2773.json",
-                           "docs/network-rewrite/evidence/development-run-fd1c027.json",
-                           "docs/network-rewrite/evidence/development-run-eab863b.json",
-                           "docs/adr/network/0024-scope-isolated-neighbor-observations.md",
-                           "docs/adr/network/0025-functional-crypto-build-profile.md",
-                           "docs/adr/network/0026-original-connection-quality-observation.md",
-                           "docs/adr/network/0027-quinn-carrier-replacement-feasibility.md",
-                           "docs/network-rewrite/evidence/development-run-99f647b.json",
-                           "docs/network-rewrite/evidence/development-run-cdcd667.json",
-                           "docs/adr/network/0028-original-group-route-set-admission.md",
-                           "docs/adr/network/0029-space-address-directory.md",
-                           "docs/adr/network/0030-scheduler-continuation-policy.md",
-                           "docs/adr/network/0031-space-dns-owner.md",
-                           "docs/network-rewrite/evidence/development-run-1e15b51.json",
-                           "docs/network-rewrite/evidence/dns-lock-derivation-ca18962.json",
-                           "docs/network-rewrite/evidence/development-run-d4de410.json",
-                           "docs/adr/network/0032-managed-split-dns-recovery.md",
-                           "docs/network-rewrite/SPLIT-DNS-OPERATIONS.md",
-                           "docs/network-rewrite/evidence/system-dns-lock-derivation-d3a587f.json",
-                           "docs/network-rewrite/evidence/recovery-lock-817c444.json",
-                           "docs/network-rewrite/evidence/development-run-15508fe.json",
-                           "docs/network-rewrite/evidence/recovery-lock-fd52f01.json",
-                           "docs/network-rewrite/evidence/socks-lock-8ff5d4e.json",
-                           "docs/adr/network/0036-authenticated-local-private-service-proxy.md",
-                           "docs/network-rewrite/LOCAL-PRIVATE-SERVICE-PROXY.md",
-                           "docs/network-rewrite/ORIGINAL-ROUTE-RECOVERY.md",
-                           "docs/adr/network/0037-explicit-linux-loopback-kernel-gate.md",
-                           "docs/network-rewrite/evidence/private-business-145e26b.json",
-                           "docs/network-rewrite/evidence/web-gate-lock-22eeab9.json",
-                           "docs/network-rewrite/evidence/web-gate-fixture-lock-fe5b3cf.json",
-                           "docs/network-rewrite/evidence/kernel-dns-fe5b3cf.json",
-                           "docs/network-rewrite/evidence/raw-local-tls-01cbe7a.json",
-                           "docs/adr/network/0041-native-diagnostic-history.md",
-                           "docs/network-rewrite/evidence/private-web-business-2e73b03.json",
-                           "docs/adr/network/0042-retained-local-diagnostic-export.md",
-                           "docs/network-rewrite/evidence/packet-parser-fixture-lock-79add64.json",
-                           "docs/adr/network/0043-one-use-host-packet-access.md",
-                           "docs/network-rewrite/evidence/private-web-caddy-chrome-1d5bcda.json"
-                       ],
-    "observed_actions":  [
-                             {
-                                 "run_id":  41025379244,
-                                 "source_revision":  "195ff0fcd4513625cee7735f58700203a85101d1",
-                                 "status":  "success",
-                                 "scope":  "Initial Windows/Linux L0/L1 and independent membership reference generation only"
-                             },
-                             {
-                                 "run_id":  41026898990,
-                                 "source_revision":  "2c127b283a25b4bd2106d8dff527054580a60433",
-                                 "status":  "failure",
-                                 "scope":  "Both OS contract clippy/tests passed; format check failed; reviewed formatter patch applied in 191d3ca"
-                             },
-                             {
-                                 "run_id":  41028335910,
-                                 "source_revision":  "bcc161d22f5fa0c026f690b5fc50a30cf43d7cae",
-                                 "status":  "independent_vectors_succeeded_contracts_superseded",
-                                 "scope":  "All six grant kinds independently generated; exact bytes copied with SHA-256 verification; no target acceptance claim"
-                             },
-                             {
-                                 "run_id":  41034692058,
-                                 "source_revision":  "5ede5d00f72deff02c4221f5741517182bb1452a",
-                                 "status":  "failure",
-                                 "scope":  "Linux selected contract tests/clippy and independent vectors passed; format failed; one-way blackhole passed, success/cancel host-stop order failed. Later code unverified."
-                             },
-                             {
-                                 "run_id":  41049646558,
-                                 "source_revision":  "57fb9f030126a56e4994c91b1b08cd85631ef165",
-                                 "status":  "failure",
-                                 "scope":  "Independent vectors passed; network and contract compilation/lint stopped at listener TLS type dependency, unused mut and storage needless borrow; experiments not executed; repairs pending new run."
-                             },
-                             {
-                                 "run_id":  41051310079,
-                                 "source_revision":  "e3a18a1e502767f1d7c267842a1817afcaac3fea",
-                                 "status":  "partial_failure",
-                                 "scope":  "Real routed NAT success/blackhole/cancel passed; production socket success/blackhole/cancel passed, peer-close failed; Linux contract clippy and 14 evidence tests passed; format and six contract targets failed. New source unverified."
-                             },
-                             {
-                                 "run_id":  41057091684,
-                                 "source_revision":  "124907540f3abca7bc0197772c5d27726f0142e5",
-                                 "status":  "partial_failure",
-                                 "scope":  "NAT/socket/vector jobs passed; Linux selected package checks passed; format failed. Core scoped failures and browser failure require following repairs; no release qualification."
-                             },
-                             {
-                                 "run_id":  41063477123,
-                                 "source_revision":  "4492f59febb5c4548e55b1f3eedc674fd01ad025",
-                                 "status":  "partial_failure",
-                                 "scope":  "Both OS contract clippy/tests passed; format failed. Both OS scoped routed/HTTP relay/ICE/discovery/spaces passed. Full workspace and browser fixture lifetime still failed."
-                             },
-                             {
-                                 "run_id":  41067420794,
-                                 "source_revision":  "b7c3b19a0922d633939e103487cb5e07324764cc",
-                                 "status":  "success",
-                                 "scope":  "Both OS contract fmt/clippy/tests, real routed kernel NAT, production socket and independent vector jobs passed."
-                             },
-                             {
-                                 "run_id":  41067420797,
-                                 "source_revision":  "b7c3b19a0922d633939e103487cb5e07324764cc",
-                                 "status":  "success",
-                                 "scope":  "Complete production browser/native synthetic-owned VP8/Opus/input/files/space lifecycle and physical-process cleanup passed; not external target qualification."
-                             },
-                             {
-                                 "run_id":  41145405350,
-                                 "source_revision":  "eab863bddfe0746788176bd7055cbb2cddaddc4c",
-                                 "status":  "partial_failure",
-                                 "scope":  "Both OS network contracts and topology/carrier/HTTP/NAT/socket jobs passed; SDK chain FileRead2 passed; all3 registered-node scenarios exhausted setup after repeated exact-head Conflict. Full core still pending at checkpoint."
-                             },
-                             {
-                                 "run_id":  41147405258,
-                                 "source_revision":  "99f647b546becb3ebdb31aa6e3123b289c034dcc",
-                                 "status":  "partial_failure",
-                                 "scope":  "Local quality policy and actual Quinn sampler passed; topology/carrier/HTTP/NAT/socket passed; registered scope isolation and stopped-neighbor retirement passed. Both registered FileRead transferred bytes but fixture stopped lease before revoke. Linux contract clippy/tests passed with formatting failure; core native assertion move and independent browser lock require source repairs. Full core/Windows contract pending at checkpoint."
-                             },
-                             {
-                                 "run_id":  41163165105,
-                                 "source_revision":  "6602a70a3c7211a97eb7705588d3ff4d1d24e8ed",
-                                 "status":  "partial_failure",
-                                 "scope":  "Original NRD2 SDK and registered-node business scenarios passed; private service admission six failures, recovery source three failures and product recovery timeout retained. New source repairs remain unverified."
-                             },
-                             {
-                                 "run_id":  41165795694,
-                                 "source_revision":  "e7614d62689ad9cfaa14645558966ce501ccb1b9",
-                                 "status":  "partial_failure",
-                                 "scope":  "SDK recovery 6 and signed direct 3 passed; product compile blocked by observer visibility. Both contract platforms blocked by mutable Store test fixture; carrier framing truncation classification failed. Real NAT/socket/carrier feasibility passed."
-                             },
-                             {
-                                 "run_id":  41165801131,
-                                 "source_revision":  "e7614d62689ad9cfaa14645558966ce501ccb1b9",
-                                 "status":  "failure",
-                                 "scope":  "Both OS split DNS jobs failed daemon compilation before real OS tests; no OS acceptance claimed."
-                             },
-                             {
-                                 "run_id":  41165803618,
-                                 "source_revision":  "e7614d62689ad9cfaa14645558966ce501ccb1b9",
-                                 "status":  "partial_failure",
-                                 "scope":  "Production Web build and browser contracts passed; Chrome/Edge native host failed compilation at observer visibility before business execution."
-                             },
-                             {
-                                 "run_id":  41166573234,
-                                 "source_revision":  "1216488a3526b9877af2c33233d47f7d653184f4",
-                                 "status":  "cancelled_after_compile_failure",
-                                 "scope":  "Native slice failed narrow unsafe registration lint; superseded by a9fdd62. No new business test result."
-                             },
-                             {
-                                 "run_id":  41167104969,
-                                 "source_revision":  "a9fdd62837130a10f68831362116b2b2649f33d5",
-                                 "status":  "failure",
-                                 "scope":  "Network contracts and actual product/private-service/route-set slices."
-                             },
-                             {
-                                 "run_id":  41167106875,
-                                 "source_revision":  "a9fdd62837130a10f68831362116b2b2649f33d5",
-                                 "status":  "failure",
-                                 "scope":  "Windows/Linux real owned split DNS."
-                             },
-                             {
-                                 "run_id":  41168640201,
-                                 "source_revision":  "6e938e7f40b415915bba05919b20a5f2be7d8b62",
-                                 "status":  "failure",
-                                 "scope":  "Private relay metadata verifier expected DeviceActionClaims for a raw transcript. Compilation stopped; subsequent source repair is not a pass."
-                             },
-                             {
-                                 "run_id":  41169418139,
-                                 "source_revision":  "d966af78ae1c01a27da13fc78e46425dd1000fb6",
-                                 "status":  "partial_failure",
-                                 "scope":  "Topology carrier, routed kernel NAT, production socket, Quinn feasibility and independent vectors passed. Both OS contracts failed clippy/format; host borrow and historical migration fixture blocked later slices. Repairs require subsequent exact-source evidence."
-                             },
-                             {
-                                 "run_id":  41169420222,
-                                 "source_revision":  "d966af78ae1c01a27da13fc78e46425dd1000fb6",
-                                 "status":  "failure",
-                                 "scope":  "Both OS DNS jobs failed SDK compilation before actual OS tests; no DNS execution qualified on this source."
-                             },
-                             {
-                                 "run_id":  41171087099,
-                                 "source_revision":  "145e26bf08f1d82ecfc1ea942bd9c5852124f102",
-                                 "status":  "partial_failure",
-                                 "scope":  "17 private business tests, all six one/two-relay cases and two AppCore signed-direct/recovery cases passed; full run failed lint. Exact downloaded business artifact retained separately."
-                             },
-                             {
-                                 "run_id":  41171095288,
-                                 "source_revision":  "145e26bf08f1d82ecfc1ea942bd9c5852124f102",
-                                 "status":  "success",
-                                 "scope":  "Production Web build, browser contracts and Chrome/Edge browser-to-native host passed; not target/GPU qualification."
-                             },
-                             {
-                                 "run_id":  41174233315,
-                                 "source_revision":  "22c9722863eaa0a47415e7562fa107af9bd2b87e",
-                                 "status":  "failure",
-                                 "scope":  "Raw nft exact readback and same-UID business passed; different-UID probe could not execute runner-private test binary. Source now copies and hashes one executable into a narrowly traversable lab location for all roles."
-                             },
-                             {
-                                 "run_id":  41174235577,
-                                 "source_revision":  "22c9722863eaa0a47415e7562fa107af9bd2b87e",
-                                 "status":  "failure",
-                                 "scope":  "Linux exact no-address configuration and cleanup passed, but real resolved DNS scope needed a scope-global address. Windows bootstrap advanced to private directory ownership failure. New exact ULA-only design and explicit TokenUser owner repairs require rerun."
-                             },
-                             {
-                                 "run_id":  41177043947,
-                                 "source_revision":  "fe5b3cfdb7e484a32e24aed6527f90bdd19e3a6d",
-                                 "status":  "success",
-                                 "scope":  "Both reviewed dependency locks derived; verified fixture imported, no product compilation claim"
-                             },
-                             {
-                                 "run_id":  41177213663,
-                                 "source_revision":  "0f827514b56220ba23ded014ad195d4d4933b4d1",
-                                 "status":  "success",
-                                 "scope":  "Complete hosted Rust formatting patch imported in 01cbe7a"
-                             },
-                             {
-                                 "run_id":  41177115680,
-                                 "source_revision":  "fe5b3cfdb7e484a32e24aed6527f90bdd19e3a6d",
-                                 "status":  "success",
-                                 "scope":  "Linux real raw SDK/kernel UID gate, crash persistence and cleanup"
-                             },
-                             {
-                                 "run_id":  41177113046,
-                                 "source_revision":  "fe5b3cfdb7e484a32e24aed6527f90bdd19e3a6d",
-                                 "status":  "partial_failure",
-                                 "scope":  "Linux actual resolver and daemon lint passed; Windows failed socket handle type compilation"
-                             },
-                             {
-                                 "run_id":  41177562082,
-                                 "source_revision":  "01cbe7a86d95b64495e2b79fb112b63bd642ff49",
-                                 "status":  "success",
-                                 "scope":  "Linux real raw TCP/UDP plus standard local TLS, original gate unchanged and physical release"
-                             },
-                             {
-                                 "run_id":  41185941010,
-                                 "source_revision":  "b376edbfb90ea4e30c2bfa5c8c9d252a9a643a4f",
-                                 "status":  "success",
-                                 "scope":  "Both hosted operating systems: actual split DNS owner/install/query/recovery and strict daemon lint before current TUN/group source"
-                             },
-                             {
-                                 "run_id":  41188549929,
-                                 "source_revision":  "1d5bcda4b956b4696a62c0cb4a53bab9864fb6bc",
-                                 "status":  "success",
-                                 "scope":  "Real SDK, Caddy TLS and Chrome8 browser cases, exact TLS negatives, replacement rejection, physical owner/quota/process/trust/hosts cleanup; isolated DNS/CA, no target claim"
-                             },
-                             {
-                                 "run_id":  41188850607,
-                                 "source_revision":  "09d35d4b8d8a7a81245141be3dc6c85c7991cd9e",
-                                 "status":  "failure",
-                                 "scope":  "Both OS daemon compilation stopped at service-group TLS root Vec type and maintenance error conversion; strict lint identified three service-edge errors; no DNS or TUN qualification from this source."
-                             },
-                             {
-                                 "run_id":  41189322066,
-                                 "source_revision":  "4a8ed01a3f657c719b628a08b62e88516e585ac4",
-                                 "status":  "failure",
-                                 "scope":  "Dual-edge executable compiled; coordinator original host enrollment rejected unsupported fixture platform before business traffic. No HA acceptance; namespaces cleanup also failed."
-                             },
-                             {
-                                 "run_id":  41190228476,
-                                 "source_revision":  "718b4db8744e7d053e90d83dc8853942d594b2d6",
-                                 "status":  "success",
-                                 "scope":  "Hosted formatting patch digest verified and selected unchanged TUN/subnet/production service paths imported in 8c46a16; concurrently edited protocol DTO and HA roles excluded for next same-source format."
-                             },
-                             {
-                                 "run_id":  41190632153,
-                                 "source_revision":  "8c46a1623a5ffda6c37e86f1267612d0e3eec47a",
-                                 "status":  "running",
-                                 "scope":  "Actual dual-edge IPVS HTTP/HTTPS/TCP/UDP, cooperative stop and independent SIGKILL; no pass claimed."
-                             },
-                             {
-                                 "run_id":  41190634189,
-                                 "source_revision":  "8c46a1623a5ffda6c37e86f1267612d0e3eec47a",
-                                 "status":  "running",
-                                 "scope":  "Actual split DNS both OS, managed Linux TUN and strict daemon lint; no pass claimed."
-                             },
-                             {
-                                 "run_id":  41192525715,
-                                 "source_revision":  "1d025a0679e777e6f3a5c5b307773636f9096e40",
-                                 "status":  "success",
-                                 "scope":  "Hosted formatting only; patch SHA256 5879286d8912ee2f5daaa91e46c02e14e0a9bd5e4413c2b0b3513cab353c8bea imported in fc652c3 excluding concurrent paths."
-                             },
-                             {
-                                 "run_id":  41192528513,
-                                 "source_revision":  "1d025a0679e777e6f3a5c5b307773636f9096e40",
-                                 "status":  "failure",
-                                 "scope":  "HA original group setup and publish reached; actual fixed-entry first HTTP case stopped at IPVS stats header IndexError; cleanup all true. Fixed in c51f8e9, rerun41193803879 pending."
-                             },
-                             {
-                                 "run_id":  41192531202,
-                                 "source_revision":  "1d025a0679e777e6f3a5c5b307773636f9096e40",
-                                 "status":  "failure",
-                                 "scope":  "Linux actual DNS, strict lint, six TUN ordinary cases passed; native kernel TUN execution and Windows DNS step failed. No target pass."
-                             },
-                             {
-                                 "run_id":  41192684769,
-                                 "source_revision":  "a0c80292cc1c7d4a859309faf91ab1f6547a69a1",
-                                 "status":  "failure",
-                                 "scope":  "Windows native fixture stopped at Authenticode tool environment before compile; driver gate retained."
-                             },
-                             {
-                                 "run_id":  41193251850,
-                                 "source_revision":  "e8253827ebc2214fa3609b64400da3265dc000cd",
-                                 "status":  "success",
-                                 "scope":  "Hosted formatting only; patch SHA256 86441746985840cb66192138912f464d3e6b6be28795d119d45ea75c21100feb imported into shared subnet paths in64aadb1; edited Web panel deferred to next source."
-                             },
-                             {
-                                 "run_id":  41193254757,
-                                 "source_revision":  "e8253827ebc2214fa3609b64400da3265dc000cd",
-                                 "status":  "in_progress",
-                                 "scope":  "WASM job124514176153 passed protocol/SDK/Web compilation; early subnet and edge-group cases failed and require exact diagnosis."
-                             }
-                         ],
-    "release_state":  "not_ready",
-    "branch_cleanup":  {
-                           "local_heads":  [
-                                               "main"
-                                           ],
-                           "remote_heads":  [
-                                                "main"
-                                            ],
-                           "pending_deletion":  [
-
-                                                ]
-                       },
-    "policies":  {
-                     "R01":  "required",
-                     "R02":  "required",
-                     "local_project_toolchain_executed":  false
-                 }
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "target_release": "0.8.0RC",
+  "target_semver": "0.8.0-rc.1",
+  "timezone": "Asia/Shanghai",
+  "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
+  "branch": "main",
+  "source_revision": "e36cc40b9d70626743506223de421dedb1db033d",
+  "checkpoint_kind": "W23_live_lease_W24_linux_ingress_W27_independent_primitives_exact_hosted_partial_evidence",
+  "active_tasks": [
+    "W00",
+    "W02",
+    "W03",
+    "W04",
+    "W05",
+    "W06",
+    "W07",
+    "W08",
+    "W09",
+    "W10",
+    "W11",
+    "W17",
+    "W18",
+    "W12",
+    "W13",
+    "W14",
+    "W19",
+    "W20",
+    "W21",
+    "W15",
+    "W25",
+    "W29",
+    "W22",
+    "W26",
+    "W23",
+    "W24",
+    "W30",
+    "W27"
+  ],
+  "satisfied_interface_dependencies": [
+    "W01 nine-topic source and mature-component research independently reviewed",
+    "First-slice independently versioned claims and complete device-bound path-chain types available",
+    "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
+  ],
+  "unverified_assumptions": [
+    "W23/W24 source b313dbf: 22 independent protocol/identity, SDK local consent, real HTTP/SQLite, original one-use packet, same-boot lease renewal, WireGuard client authority and revocation tests passed with zero failures/ignored. Actual namespace/Linux WG handshake, Windows endpoint and site targets remain separate open work.",
+    "W23 Linux namespace/macvlan/TUN/nft privileged owner, ordinary packet loop, CLI and dual overlapping LAN TCP/UDP lab are connected in source. Run41199335653 failed compile/lint; exact errors are under repair. Same-source production online+lifecycle end-to-end and primary/standby behavior remain unverified.",
+    "W24 Linux typed kernel ingress now connects to original subnet namespace/journal/packet owner in e36cc40. Standard client config/QR export and management exist; actual kernel handshake and Android/iOS target evidence remain outstanding.",
+    "W22 Windows542 native driver/session created; SetIpInterfaceEntry IPv4 returned87 before final OS receipt. Exact member diagnostics are being added; actual two-stack packet/crash qualification remains failed. Linux source542 failed to compile newly registered subnet fixture; no new native TUN pass claimed.",
+    "HA source542 run41198906251: HTTP path completed, HTTPS scenario failed. The HTTP/SQLite group5 tests passed on b313dbf. No overall four-protocol/SIGKILL fixed-entry acceptance has passed.",
+    "W30 source623d55a production Chrome/Edge browser checks passed real policy/role read, unapproved draft handling, actual403 reset and late-space-response fencing. Mapping issuance, OS forwarding, full onboarding and installed target UX remain open.",
+    "W27 sourceb313dbf run41199333054: all6 complete bundle/identity/finite-owner primitive tests and strict lint passed. Production enable/approval API, durable shared budget reservation/consume, direct remote/private carriers, UI and actual offline recovery/cleanup remain unimplemented or unverified.",
+    "W28,W31-W40 and remaining W30 remain mandatory unfinished work; missing implementation is not classified as an external prerequisite. Release stays not_ready."
+  ],
+  "external_prerequisites": [
+    {
+      "id": "target-windows",
+      "state": "not_provisioned",
+      "purpose": "Two authorized Windows targets, GPU/display and VPN coexistence acceptance"
+    },
+    {
+      "id": "target-mobile",
+      "state": "not_provisioned",
+      "purpose": "Android and iOS standard WireGuard client acceptance"
+    },
+    {
+      "id": "target-network",
+      "state": "not_provisioned",
+      "purpose": "Independent NAT sites, overlapping subnets, two public edges, fixed ingress and DNS"
+    },
+    {
+      "id": "target-soak",
+      "state": "not_started",
+      "purpose": "Multiple cross-day 24-hour real-device runs"
+    },
+    {
+      "id": "signing",
+      "state": "not_verified",
+      "purpose": "Actual release signing identity and disclosure"
+    }
+  ],
+  "next_steps": [
+    "Repair hosted daemon compile/lint/native failures without relaxing ownership/authority assertions; run exact-source Windows/Linux TUN and dual-LAN subnet experiments.",
+    "Complete standard WG native handshake, original business accounting and terminal cleanup; preserve target mobile acceptance gap.",
+    "Complete HA all HTTP/HTTPS/TCP/UDP cooperative stop and independent SIGKILL with exact fixed-entry tuple evidence.",
+    "Continue W27 production policy/owner approval, durable quota/one-use activation, direct business transport/UI/real disconnect and recovery tests; then W28 discovery/game, full UI, media, distribution, compatibility, security and long-run requirements.",
+    "Import matching hosted format/generated contract receipts without overwriting shared source ownership.",
+    "Produce complete same-source candidate artifacts and target runbooks; publish0.8.0RC only once required implementation/acceptance is truthful."
+  ],
+  "evidence_index": [
+    "docs/network-rewrite/evidence/research-review-2026-10-30.md",
+    "docs/network-rewrite/evidence/baseline-github-2026-10-30.json",
+    "docs/network-rewrite/evidence/independent-vector-build-195ff0f.json",
+    "docs/network-rewrite/evidence/independent-vector-build-bcc161d.json",
+    "docs/network-rewrite/IMPLEMENTATION-2026-10-30.md",
+    "docs/network-rewrite/evidence/development-run-e3a18a1.json",
+    "docs/network-rewrite/evidence/development-run-bdbc042.json",
+    "docs/network-rewrite/evidence/development-run-1249075.json",
+    "docs/network-rewrite/evidence/development-run-4492f59.json",
+    "docs/network-rewrite/evidence/development-run-b7c3b19.json",
+    "docs/network-rewrite/evidence/development-run-8007458.json",
+    "docs/network-rewrite/evidence/development-run-5f01330.json",
+    "docs/network-rewrite/evidence/development-run-b0ad444.json",
+    "docs/network-rewrite/evidence/development-run-76dbb0e-browser.json",
+    "docs/network-rewrite/evidence/development-run-76dbb0e-network.json",
+    "docs/network-rewrite/evidence/pcp-lock-derivation-f09ac21.json",
+    "docs/network-rewrite/evidence/development-run-8186f75.json",
+    "docs/network-rewrite/evidence/development-run-e158101.json",
+    "docs/network-rewrite/evidence/development-run-f6b026c.json",
+    "docs/network-rewrite/BROWSER-LAB.md",
+    "docs/adr/network/0010-bounded-management-observation.md",
+    "docs/adr/network/0009-explicit-pcp-ice-mapping.md",
+    "protocol-spec/node-relay-attributes.md",
+    "docs/adr/network/0007-network-authority-lifecycle.md",
+    "docs/adr/network/0008-signed-frozen-native-ice.md",
+    "docs/network-rewrite/evidence/development-run-bd1f298.json",
+    "docs/adr/network/0011-live-snapshot-network-chain-reuse.md",
+    "docs/adr/network/0012-node-observation-deadlines-and-pending-continuity.md",
+    "docs/refactor/crab-nat-license-review-2026-10-31.md",
+    "docs/network-rewrite/evidence/development-run-bd1f298-browser.json",
+    "docs/adr/network/0013-durable-authorized-topology.md",
+    "docs/adr/network/0014-bounded-revocation-admission.md",
+    "docs/adr/network/0015-bounded-topology-consumption.md",
+    "docs/network-rewrite/evidence/graph-lock-derivation-a19a112.json",
+    "docs/adr/network/0016-two-relay-carrier-binding.md",
+    "docs/adr/network/0017-atomic-two-relay-reservation.md",
+    "docs/adr/network/0018-chain-node-resource-admission.md",
+    "docs/network-rewrite/evidence/development-run-0618e08.json",
+    "docs/network-rewrite/evidence/development-run-43e8342.json",
+    "docs/adr/network/0022-chain-topology-observation-continuity.md",
+    "docs/adr/network/0023-live-node-topology-observation.md",
+    "docs/network-rewrite/evidence/development-run-d1c2773.json",
+    "docs/network-rewrite/evidence/development-run-fd1c027.json",
+    "docs/network-rewrite/evidence/development-run-eab863b.json",
+    "docs/adr/network/0024-scope-isolated-neighbor-observations.md",
+    "docs/adr/network/0025-functional-crypto-build-profile.md",
+    "docs/adr/network/0026-original-connection-quality-observation.md",
+    "docs/adr/network/0027-quinn-carrier-replacement-feasibility.md",
+    "docs/network-rewrite/evidence/development-run-99f647b.json",
+    "docs/network-rewrite/evidence/development-run-cdcd667.json",
+    "docs/adr/network/0028-original-group-route-set-admission.md",
+    "docs/adr/network/0029-space-address-directory.md",
+    "docs/adr/network/0030-scheduler-continuation-policy.md",
+    "docs/adr/network/0031-space-dns-owner.md",
+    "docs/network-rewrite/evidence/development-run-1e15b51.json",
+    "docs/network-rewrite/evidence/dns-lock-derivation-ca18962.json",
+    "docs/network-rewrite/evidence/development-run-d4de410.json",
+    "docs/adr/network/0032-managed-split-dns-recovery.md",
+    "docs/network-rewrite/SPLIT-DNS-OPERATIONS.md",
+    "docs/network-rewrite/evidence/system-dns-lock-derivation-d3a587f.json",
+    "docs/network-rewrite/evidence/recovery-lock-817c444.json",
+    "docs/network-rewrite/evidence/development-run-15508fe.json",
+    "docs/network-rewrite/evidence/recovery-lock-fd52f01.json",
+    "docs/network-rewrite/evidence/socks-lock-8ff5d4e.json",
+    "docs/adr/network/0036-authenticated-local-private-service-proxy.md",
+    "docs/network-rewrite/LOCAL-PRIVATE-SERVICE-PROXY.md",
+    "docs/network-rewrite/ORIGINAL-ROUTE-RECOVERY.md",
+    "docs/adr/network/0037-explicit-linux-loopback-kernel-gate.md",
+    "docs/network-rewrite/evidence/private-business-145e26b.json",
+    "docs/network-rewrite/evidence/web-gate-lock-22eeab9.json",
+    "docs/network-rewrite/evidence/web-gate-fixture-lock-fe5b3cf.json",
+    "docs/network-rewrite/evidence/kernel-dns-fe5b3cf.json",
+    "docs/network-rewrite/evidence/raw-local-tls-01cbe7a.json",
+    "docs/adr/network/0041-native-diagnostic-history.md",
+    "docs/network-rewrite/evidence/private-web-business-2e73b03.json",
+    "docs/adr/network/0042-retained-local-diagnostic-export.md",
+    "docs/network-rewrite/evidence/packet-parser-fixture-lock-79add64.json",
+    "docs/adr/network/0043-one-use-host-packet-access.md",
+    "docs/network-rewrite/evidence/private-web-caddy-chrome-1d5bcda.json",
+    "docs/adr/network/0049-subnet-fixed-authority-live-node-lease.md",
+    "docs/network-rewrite/evidence/subnet-wireguard-http-b313dbf.json",
+    "docs/network-rewrite/evidence/edge-group-http-b313dbf.json",
+    "docs/adr/network/0050-independent-finite-offline-bundle.md",
+    "docs/network-rewrite/evidence/offline-primitives-b313dbf.json",
+    "docs/network-rewrite/evidence/subnet-browser-623d55a.json"
+  ],
+  "observed_actions": [
+    {
+      "run_id": 41025379244,
+      "source_revision": "195ff0fcd4513625cee7735f58700203a85101d1",
+      "status": "success",
+      "scope": "Initial Windows/Linux L0/L1 and independent membership reference generation only"
+    },
+    {
+      "run_id": 41026898990,
+      "source_revision": "2c127b283a25b4bd2106d8dff527054580a60433",
+      "status": "failure",
+      "scope": "Both OS contract clippy/tests passed; format check failed; reviewed formatter patch applied in 191d3ca"
+    },
+    {
+      "run_id": 41028335910,
+      "source_revision": "bcc161d22f5fa0c026f690b5fc50a30cf43d7cae",
+      "status": "independent_vectors_succeeded_contracts_superseded",
+      "scope": "All six grant kinds independently generated; exact bytes copied with SHA-256 verification; no target acceptance claim"
+    },
+    {
+      "run_id": 41034692058,
+      "source_revision": "5ede5d00f72deff02c4221f5741517182bb1452a",
+      "status": "failure",
+      "scope": "Linux selected contract tests/clippy and independent vectors passed; format failed; one-way blackhole passed, success/cancel host-stop order failed. Later code unverified."
+    },
+    {
+      "run_id": 41049646558,
+      "source_revision": "57fb9f030126a56e4994c91b1b08cd85631ef165",
+      "status": "failure",
+      "scope": "Independent vectors passed; network and contract compilation/lint stopped at listener TLS type dependency, unused mut and storage needless borrow; experiments not executed; repairs pending new run."
+    },
+    {
+      "run_id": 41051310079,
+      "source_revision": "e3a18a1e502767f1d7c267842a1817afcaac3fea",
+      "status": "partial_failure",
+      "scope": "Real routed NAT success/blackhole/cancel passed; production socket success/blackhole/cancel passed, peer-close failed; Linux contract clippy and 14 evidence tests passed; format and six contract targets failed. New source unverified."
+    },
+    {
+      "run_id": 41057091684,
+      "source_revision": "124907540f3abca7bc0197772c5d27726f0142e5",
+      "status": "partial_failure",
+      "scope": "NAT/socket/vector jobs passed; Linux selected package checks passed; format failed. Core scoped failures and browser failure require following repairs; no release qualification."
+    },
+    {
+      "run_id": 41063477123,
+      "source_revision": "4492f59febb5c4548e55b1f3eedc674fd01ad025",
+      "status": "partial_failure",
+      "scope": "Both OS contract clippy/tests passed; format failed. Both OS scoped routed/HTTP relay/ICE/discovery/spaces passed. Full workspace and browser fixture lifetime still failed."
+    },
+    {
+      "run_id": 41067420794,
+      "source_revision": "b7c3b19a0922d633939e103487cb5e07324764cc",
+      "status": "success",
+      "scope": "Both OS contract fmt/clippy/tests, real routed kernel NAT, production socket and independent vector jobs passed."
+    },
+    {
+      "run_id": 41067420797,
+      "source_revision": "b7c3b19a0922d633939e103487cb5e07324764cc",
+      "status": "success",
+      "scope": "Complete production browser/native synthetic-owned VP8/Opus/input/files/space lifecycle and physical-process cleanup passed; not external target qualification."
+    },
+    {
+      "run_id": 41145405350,
+      "source_revision": "eab863bddfe0746788176bd7055cbb2cddaddc4c",
+      "status": "partial_failure",
+      "scope": "Both OS network contracts and topology/carrier/HTTP/NAT/socket jobs passed; SDK chain FileRead2 passed; all3 registered-node scenarios exhausted setup after repeated exact-head Conflict. Full core still pending at checkpoint."
+    },
+    {
+      "run_id": 41147405258,
+      "source_revision": "99f647b546becb3ebdb31aa6e3123b289c034dcc",
+      "status": "partial_failure",
+      "scope": "Local quality policy and actual Quinn sampler passed; topology/carrier/HTTP/NAT/socket passed; registered scope isolation and stopped-neighbor retirement passed. Both registered FileRead transferred bytes but fixture stopped lease before revoke. Linux contract clippy/tests passed with formatting failure; core native assertion move and independent browser lock require source repairs. Full core/Windows contract pending at checkpoint."
+    },
+    {
+      "run_id": 41163165105,
+      "source_revision": "6602a70a3c7211a97eb7705588d3ff4d1d24e8ed",
+      "status": "partial_failure",
+      "scope": "Original NRD2 SDK and registered-node business scenarios passed; private service admission six failures, recovery source three failures and product recovery timeout retained. New source repairs remain unverified."
+    },
+    {
+      "run_id": 41165795694,
+      "source_revision": "e7614d62689ad9cfaa14645558966ce501ccb1b9",
+      "status": "partial_failure",
+      "scope": "SDK recovery 6 and signed direct 3 passed; product compile blocked by observer visibility. Both contract platforms blocked by mutable Store test fixture; carrier framing truncation classification failed. Real NAT/socket/carrier feasibility passed."
+    },
+    {
+      "run_id": 41165801131,
+      "source_revision": "e7614d62689ad9cfaa14645558966ce501ccb1b9",
+      "status": "failure",
+      "scope": "Both OS split DNS jobs failed daemon compilation before real OS tests; no OS acceptance claimed."
+    },
+    {
+      "run_id": 41165803618,
+      "source_revision": "e7614d62689ad9cfaa14645558966ce501ccb1b9",
+      "status": "partial_failure",
+      "scope": "Production Web build and browser contracts passed; Chrome/Edge native host failed compilation at observer visibility before business execution."
+    },
+    {
+      "run_id": 41166573234,
+      "source_revision": "1216488a3526b9877af2c33233d47f7d653184f4",
+      "status": "cancelled_after_compile_failure",
+      "scope": "Native slice failed narrow unsafe registration lint; superseded by a9fdd62. No new business test result."
+    },
+    {
+      "run_id": 41167104969,
+      "source_revision": "a9fdd62837130a10f68831362116b2b2649f33d5",
+      "status": "failure",
+      "scope": "Network contracts and actual product/private-service/route-set slices."
+    },
+    {
+      "run_id": 41167106875,
+      "source_revision": "a9fdd62837130a10f68831362116b2b2649f33d5",
+      "status": "failure",
+      "scope": "Windows/Linux real owned split DNS."
+    },
+    {
+      "run_id": 41168640201,
+      "source_revision": "6e938e7f40b415915bba05919b20a5f2be7d8b62",
+      "status": "failure",
+      "scope": "Private relay metadata verifier expected DeviceActionClaims for a raw transcript. Compilation stopped; subsequent source repair is not a pass."
+    },
+    {
+      "run_id": 41169418139,
+      "source_revision": "d966af78ae1c01a27da13fc78e46425dd1000fb6",
+      "status": "partial_failure",
+      "scope": "Topology carrier, routed kernel NAT, production socket, Quinn feasibility and independent vectors passed. Both OS contracts failed clippy/format; host borrow and historical migration fixture blocked later slices. Repairs require subsequent exact-source evidence."
+    },
+    {
+      "run_id": 41169420222,
+      "source_revision": "d966af78ae1c01a27da13fc78e46425dd1000fb6",
+      "status": "failure",
+      "scope": "Both OS DNS jobs failed SDK compilation before actual OS tests; no DNS execution qualified on this source."
+    },
+    {
+      "run_id": 41171087099,
+      "source_revision": "145e26bf08f1d82ecfc1ea942bd9c5852124f102",
+      "status": "partial_failure",
+      "scope": "17 private business tests, all six one/two-relay cases and two AppCore signed-direct/recovery cases passed; full run failed lint. Exact downloaded business artifact retained separately."
+    },
+    {
+      "run_id": 41171095288,
+      "source_revision": "145e26bf08f1d82ecfc1ea942bd9c5852124f102",
+      "status": "success",
+      "scope": "Production Web build, browser contracts and Chrome/Edge browser-to-native host passed; not target/GPU qualification."
+    },
+    {
+      "run_id": 41174233315,
+      "source_revision": "22c9722863eaa0a47415e7562fa107af9bd2b87e",
+      "status": "failure",
+      "scope": "Raw nft exact readback and same-UID business passed; different-UID probe could not execute runner-private test binary. Source now copies and hashes one executable into a narrowly traversable lab location for all roles."
+    },
+    {
+      "run_id": 41174235577,
+      "source_revision": "22c9722863eaa0a47415e7562fa107af9bd2b87e",
+      "status": "failure",
+      "scope": "Linux exact no-address configuration and cleanup passed, but real resolved DNS scope needed a scope-global address. Windows bootstrap advanced to private directory ownership failure. New exact ULA-only design and explicit TokenUser owner repairs require rerun."
+    },
+    {
+      "run_id": 41177043947,
+      "source_revision": "fe5b3cfdb7e484a32e24aed6527f90bdd19e3a6d",
+      "status": "success",
+      "scope": "Both reviewed dependency locks derived; verified fixture imported, no product compilation claim"
+    },
+    {
+      "run_id": 41177213663,
+      "source_revision": "0f827514b56220ba23ded014ad195d4d4933b4d1",
+      "status": "success",
+      "scope": "Complete hosted Rust formatting patch imported in 01cbe7a"
+    },
+    {
+      "run_id": 41177115680,
+      "source_revision": "fe5b3cfdb7e484a32e24aed6527f90bdd19e3a6d",
+      "status": "success",
+      "scope": "Linux real raw SDK/kernel UID gate, crash persistence and cleanup"
+    },
+    {
+      "run_id": 41177113046,
+      "source_revision": "fe5b3cfdb7e484a32e24aed6527f90bdd19e3a6d",
+      "status": "partial_failure",
+      "scope": "Linux actual resolver and daemon lint passed; Windows failed socket handle type compilation"
+    },
+    {
+      "run_id": 41177562082,
+      "source_revision": "01cbe7a86d95b64495e2b79fb112b63bd642ff49",
+      "status": "success",
+      "scope": "Linux real raw TCP/UDP plus standard local TLS, original gate unchanged and physical release"
+    },
+    {
+      "run_id": 41185941010,
+      "source_revision": "b376edbfb90ea4e30c2bfa5c8c9d252a9a643a4f",
+      "status": "success",
+      "scope": "Both hosted operating systems: actual split DNS owner/install/query/recovery and strict daemon lint before current TUN/group source"
+    },
+    {
+      "run_id": 41188549929,
+      "source_revision": "1d5bcda4b956b4696a62c0cb4a53bab9864fb6bc",
+      "status": "success",
+      "scope": "Real SDK, Caddy TLS and Chrome8 browser cases, exact TLS negatives, replacement rejection, physical owner/quota/process/trust/hosts cleanup; isolated DNS/CA, no target claim"
+    },
+    {
+      "run_id": 41188850607,
+      "source_revision": "09d35d4b8d8a7a81245141be3dc6c85c7991cd9e",
+      "status": "failure",
+      "scope": "Both OS daemon compilation stopped at service-group TLS root Vec type and maintenance error conversion; strict lint identified three service-edge errors; no DNS or TUN qualification from this source."
+    },
+    {
+      "run_id": 41189322066,
+      "source_revision": "4a8ed01a3f657c719b628a08b62e88516e585ac4",
+      "status": "failure",
+      "scope": "Dual-edge executable compiled; coordinator original host enrollment rejected unsupported fixture platform before business traffic. No HA acceptance; namespaces cleanup also failed."
+    },
+    {
+      "run_id": 41190228476,
+      "source_revision": "718b4db8744e7d053e90d83dc8853942d594b2d6",
+      "status": "success",
+      "scope": "Hosted formatting patch digest verified and selected unchanged TUN/subnet/production service paths imported in 8c46a16; concurrently edited protocol DTO and HA roles excluded for next same-source format."
+    },
+    {
+      "run_id": 41190632153,
+      "source_revision": "8c46a1623a5ffda6c37e86f1267612d0e3eec47a",
+      "status": "running",
+      "scope": "Actual dual-edge IPVS HTTP/HTTPS/TCP/UDP, cooperative stop and independent SIGKILL; no pass claimed."
+    },
+    {
+      "run_id": 41190634189,
+      "source_revision": "8c46a1623a5ffda6c37e86f1267612d0e3eec47a",
+      "status": "running",
+      "scope": "Actual split DNS both OS, managed Linux TUN and strict daemon lint; no pass claimed."
+    },
+    {
+      "run_id": 41192525715,
+      "source_revision": "1d025a0679e777e6f3a5c5b307773636f9096e40",
+      "status": "success",
+      "scope": "Hosted formatting only; patch SHA256 5879286d8912ee2f5daaa91e46c02e14e0a9bd5e4413c2b0b3513cab353c8bea imported in fc652c3 excluding concurrent paths."
+    },
+    {
+      "run_id": 41192528513,
+      "source_revision": "1d025a0679e777e6f3a5c5b307773636f9096e40",
+      "status": "failure",
+      "scope": "HA original group setup and publish reached; actual fixed-entry first HTTP case stopped at IPVS stats header IndexError; cleanup all true. Fixed in c51f8e9, rerun41193803879 pending."
+    },
+    {
+      "run_id": 41192531202,
+      "source_revision": "1d025a0679e777e6f3a5c5b307773636f9096e40",
+      "status": "failure",
+      "scope": "Linux actual DNS, strict lint, six TUN ordinary cases passed; native kernel TUN execution and Windows DNS step failed. No target pass."
+    },
+    {
+      "run_id": 41192684769,
+      "source_revision": "a0c80292cc1c7d4a859309faf91ab1f6547a69a1",
+      "status": "failure",
+      "scope": "Windows native fixture stopped at Authenticode tool environment before compile; driver gate retained."
+    },
+    {
+      "run_id": 41193251850,
+      "source_revision": "e8253827ebc2214fa3609b64400da3265dc000cd",
+      "status": "success",
+      "scope": "Hosted formatting only; patch SHA256 86441746985840cb66192138912f464d3e6b6be28795d119d45ea75c21100feb imported into shared subnet paths in64aadb1; edited Web panel deferred to next source."
+    },
+    {
+      "run_id": 41193254757,
+      "source_revision": "e8253827ebc2214fa3609b64400da3265dc000cd",
+      "status": "in_progress",
+      "scope": "WASM job124514176153 passed protocol/SDK/Web compilation; early subnet and edge-group cases failed and require exact diagnosis."
+    }
+  ],
+  "release_state": "not_ready",
+  "branch_cleanup": {
+    "local_heads": [
+      "main"
+    ],
+    "remote_heads": [
+      "main"
+    ],
+    "pending_deletion": []
+  },
+  "policies": {
+    "R01": "required",
+    "R02": "required",
+    "local_project_toolchain_executed": false
+  },
+  "hosted_validation_runs": [
+    {
+      "run_id": 41199333054,
+      "source_revision": "b313dbf2db5536830b0c5ed46738c4bc385b4fc7",
+      "status": "success",
+      "scope": "6 offline authority primitive cases plus strict protocol/identity lint only; production W27/AC45/46 still open"
+    },
+    {
+      "run_id": 41199340461,
+      "source_revision": "b313dbf2db5536830b0c5ed46738c4bc385b4fc7",
+      "status": "in_progress",
+      "scope": "Early Linux subnet/WG22 and group5 scoped passes; full Rust matrix running, no full-run pass"
+    },
+    {
+      "run_id": 41195779778,
+      "source_revision": "623d55ad0573da97e5e57c50e07f29e3b64d2061",
+      "status": "success",
+      "scope": "Production Chrome/Edge management and original browser/native integration; no mapping issuance/OS/fullUI claim"
+    }
+  ]
 }

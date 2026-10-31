@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "scope": "L2 real HTTP/file SQLite atomic original group budget partitions, restart, scopes and revocation. No IPVS fixed-entry, four-protocol HA or target qualification.",
+  "scoped_passed": true,
+  "applicable_full_acceptance_passed": false,
+  "build_provenance": {
+    "repository": "ZHanry/NestLink",
+    "source_revision": "b313dbf2db5536830b0c5ed46738c4bc385b4fc7",
+    "run_id": 41199340461,
+    "run_attempt": 1,
+    "workflow": ".github/workflows/rust-core.yml",
+    "job_id": 124531847211,
+    "runner": "github-hosted ubuntu-24.04"
+  },
+  "execution_provenance": {
+    "environment": "github-hosted",
+    "passed": 5,
+    "failed": 0,
+    "ignored": 0,
+    "test_groups": [
+      5
+    ]
+  },
+  "artifact": {
+    "id": 13042410845,
+    "name": "early-edge-groups-ubuntu-24.04-b313dbf2db5536830b0c5ed46738c4bc385b4fc7-1",
+    "sha256": "586e4b2bd680423fa0b2fe2cd414df0f83e80f497a09fd97d6b7a97a1af563e2",
+    "original_zip_digest_verified": true
+  },
+  "log_sha256": "867c4ee3efa281d77eef333ff34c5885d1554a5c75f3e5e0552ff92922c50a7e"
+}

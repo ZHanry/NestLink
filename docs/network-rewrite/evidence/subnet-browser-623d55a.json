@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "source_revision": "623d55ad0573da97e5e57c50e07f29e3b64d2061",
+  "run_id": 41195779778,
+  "run_attempt": 1,
+  "workflow": ".github/workflows/web-build.yml",
+  "runner_environment": "github-hosted",
+  "scope": "Production Chrome/Edge Web mapping policy/role read, draft approval clearing, actual forbidden read, writable revision reset, draft preservation, late-space reply fencing and no unapproved writes. No mapping issuance, OS forwarding or whole W30 acceptance.",
+  "scoped_passed": true,
+  "results": [
+    {
+      "browser": "chrome",
+      "artifact": {
+        "id": 13041256805,
+        "name": "nestlink-browser-native-evidence-chrome",
+        "sha256": "5ce49d384ad285a01a0fa3c139cc2b8ec5e859a724b8e1bfbc1e821906581e15",
+        "original_zip_digest_verified": true
+      },
+      "browser_version": "Chrome/156.0.8078.47",
+      "runner": {
+        "schema_version": 1,
+        "passed": true,
+        "github_sha": "623d55ad0573da97e5e57c50e07f29e3b64d2061",
+        "scope": "Production Web/native loopback integration with real VP8/Opus, owned input and files; not physical Windows or external-network acceptance",
+        "started_unix_ms": 1793446067798,
+        "global_trust_modified": false,
+        "browser_product": "chrome",
+        "exit_codes": {
+          "browser": 0,
+          "native": 0
+        },
+        "validation_failures": [],
+        "cleanup": {
+          "browser_forced": false,
+          "native_forced": false,
+          "process_errors": [],
+          "owned_processes_stopped": true,
+          "download_directory_empty_after_probe": true,
+          "private_directory_removed": true
+        },
+        "error": null,
+        "inputs": {
+          "native_sha256": "47c34c0d41f40b987c2374f774a948b1e7ac887a6bed62856d0e6252675bcb8c",
+          "caddy_sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+          "site_index_sha256": "b84848ac3e6931093af6847dc35d7faddccc21c45d24752bd25e1a1346fcaaa1",
+          "runner_sha256": "33ee3f22636c07489cd7e47922b4701fa6f1dfd1c82eb01793864544d61f63c4"
+        },
+        "tls_verified_exact_leaf_and_ip_san": true,
+        "finished_unix_ms": 1793446224842
+      },
+      "subnet_ui": {
+        "passed": true,
+        "failures": [
+          {
+            "method": "GET",
+            "status": 403
+          }
+        ],
+        "scope": "Real production mapping management state and lifecycle; no mapping issuance or OS forwarding claim",
+        "stage": "complete",
+        "real_policy_and_role_loaded": true,
+        "draft_edits_clear_approval": true,
+        "failed_read_clears_writable_snapshot": true,
+        "failed_read_preserves_unapproved_draft": true,
+        "late_space_reply_ignored": true,
+        "no_unapproved_mapping_write": true
+      },
+      "subnet_ui_helper_sha256": "1c77a29805a67f7527cf5fc48694e5ab7954040f46c58f14b80e72eb315281a6",
+      "runner_result_sha256": "051f93a57bd35e595d4cf5763fb53334aae78bec1dc4be4461435b6f51a5fe6f",
+      "browser_report_sha256": "e3be3f413549d291804120e5cbd30c3f51ce469a26a874043a2973dcb9001a63"
+    },
+    {
+      "browser": "edge",
+      "artifact": {
+        "id": 13041143901,
+        "name": "nestlink-browser-native-evidence-edge",
+        "sha256": "88a7875a9beabc24ba01a05a392c66b395d410ae4b906c16327e471e60207a53",
+        "original_zip_digest_verified": true
+      },
+      "browser_version": "Edg/156.0.4314.56",
+      "runner": {
+        "schema_version": 1,
+        "passed": true,
+        "github_sha": "623d55ad0573da97e5e57c50e07f29e3b64d2061",
+        "scope": "Production Web/native loopback integration with real VP8/Opus, owned input and files; not physical Windows or external-network acceptance",
+        "started_unix_ms": 1793446264043,
+        "global_trust_modified": false,
+        "browser_product": "edge",
+        "exit_codes": {
+          "browser": 0,
+          "native": 0
+        },
+        "validation_failures": [],
+        "cleanup": {
+          "browser_forced": false,
+          "native_forced": false,
+          "process_errors": [],
+          "owned_processes_stopped": true,
+          "download_directory_empty_after_probe": true,
+          "private_directory_removed": true
+        },
+        "error": null,
+        "inputs": {
+          "native_sha256": "47c34c0d41f40b987c2374f774a948b1e7ac887a6bed62856d0e6252675bcb8c",
+          "caddy_sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+          "site_index_sha256": "b84848ac3e6931093af6847dc35d7faddccc21c45d24752bd25e1a1346fcaaa1",
+          "runner_sha256": "33ee3f22636c07489cd7e47922b4701fa6f1dfd1c82eb01793864544d61f63c4"
+        },
+        "tls_verified_exact_leaf_and_ip_san": true,
+        "finished_unix_ms": 1793446420122
+      },
+      "subnet_ui": {
+        "passed": true,
+        "failures": [
+          {
+            "method": "GET",
+            "status": 403
+          }
+        ],
+        "scope": "Real production mapping management state and lifecycle; no mapping issuance or OS forwarding claim",
+        "stage": "complete",
+        "real_policy_and_role_loaded": true,
+        "draft_edits_clear_approval": true,
+        "failed_read_clears_writable_snapshot": true,
+        "failed_read_preserves_unapproved_draft": true,
+        "late_space_reply_ignored": true,
+        "no_unapproved_mapping_write": true
+      },
+      "subnet_ui_helper_sha256": "1c77a29805a67f7527cf5fc48694e5ab7954040f46c58f14b80e72eb315281a6",
+      "runner_result_sha256": "1cdf7d5dec01d1b884b91c980d213fab412b0243f85dfe9e39e896e978561572",
+      "browser_report_sha256": "fac24c108d5fbcab105c304da169920531ee6dceeda652c63b14ee65f5b2d6d2"
+    }
+  ]
+}
