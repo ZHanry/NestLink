@@ -140,7 +140,7 @@ def main():
         # Capture only exact marked incarnations launched by our own fixture.
         # The retained handles also stop a child if its parent fails early.
         for marker, image in ((output / "online-cli/https-tunnel-process.json", fixture / "cloudflared.exe"),
-                              (output / "online-cli/cli-process.json", fixture / "nestlink-daemon-native.exe")):
+                              (output / "online-cli/cli-process.json", fixture / "nestlink-daemon.exe")):
             if marker in observed_children or not marker.is_file():
                 continue
             try:
@@ -258,6 +258,27 @@ def main():
         if digest(executable) != digest(artifacts[0]):
             raise ValueError("protected fixture differs from the Actions-built executable")
         result["build_provenance"]["executable"] = {"build_path": str(artifacts[0]), "execution_path": str(executable), "sha256": digest(executable)}
+        production = fixture / "nestlink-daemon.exe"
+        if https_cli:
+            _, product_build = execute("build-production-daemon", ["cargo", "build", "--locked", "-p", "nestlink-daemon", "--bin", "nestlink-daemon", "--message-format=json"], timeout=2400)
+            products = []
+            for line in product_build.splitlines():
+                try:
+                    item = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if (item.get("reason") == "compiler-artifact" and item.get("target", {}).get("name") == "nestlink-daemon"
+                    and not item.get("profile", {}).get("test") and item.get("executable")):
+                    products.append(Path(item["executable"]).resolve())
+            if len(products) != 1 or not products[0].is_relative_to(source / "target"):
+                raise ValueError("expected one exact-source production daemon executable without test hooks")
+            shutil.copyfile(products[0], production)
+            execute("production-image-protected-owner", ["icacls.exe", production, "/setowner", "*S-1-5-32-544"])
+            if digest(production) != digest(products[0]):
+                raise ValueError("protected product image differs from the Actions-built production executable")
+            result["build_provenance"]["production_executable"] = {
+                "build_path": str(products[0]), "execution_path": str(production), "sha256": digest(production),
+                "test_profile": False, "owner_and_administrator_same_product_image": True}
         provider_case = output / "provider-negative"
         native.directory(provider_case, f"O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;{runner_sid})")
         unreviewed = fixture / "unreviewed-provider"
@@ -289,6 +310,7 @@ def main():
                      "NESTLINK_TUN_NATIVE_DRIVER_SHA256": binaries["amd64"], "TEMP": str(case), "TMP": str(case),
                      "NESTLINK_TUN_NATIVE_PRIVATE_PARENT": str(private_parent),
                      "NESTLINK_TUN_NATIVE_CLOUDFLARED": str(fixture / "cloudflared.exe"),
+                     "NESTLINK_TUN_NATIVE_PRODUCTION_DAEMON": str(production),
                      "NESTLINK_TUN_NATIVE_PAUSE": "1" if scenario == "raw-peer" or scenario in fault_stages else "0",
                      "NESTLINK_TUN_NATIVE_FAULT": fault_stages.get(scenario, "")}
             role = {"online": "online", "online-cli": "online-cli-fixture"}.get(scenario, "ordinary")
@@ -305,7 +327,11 @@ def main():
             witness = begin_unrelated_adapter() if scenario == "online-cli" else None
             if witness is not None:
                 inspect_unrelated(witness, "before_cli_apply")
-            helper = start(scenario + "-administrator", [executable, *ROLE_ARGS], dict(extra, NESTLINK_TUN_NATIVE_ROLE="apply"))
+            helper_args = ([production, "network-tun-system", "apply", "--plan", case / "private-plan/plan.json",
+                            "--journal-dir", root / "journal", "--driver", fixture / "wintun.dll",
+                            "--driver-sha256", binaries["amd64"], "--receipt", root / "receipt.json"]
+                           if scenario == "online-cli" else [executable, *ROLE_ARGS])
+            helper = start(scenario + "-administrator", helper_args, dict(extra, NESTLINK_TUN_NATIVE_ROLE="apply"))
             if scenario in fault_stages:
                 observed = await_json(case / "fault-observed.json", helper)
                 helper.wait(timeout=10)
@@ -396,11 +422,13 @@ def main():
                     if scenario == "online-cli":
                         if (not stopped.get("fixture_accounts_deleted") or not stopped.get("temporary_https_tunnel_joined")
                             or not stopped.get("production_cli_validated") or stopped.get("remote_original_spent_bytes") != 5120
+                            or stopped.get("actual_owner", {}).get("actual_product_main") is not True
+                            or stopped.get("actual_owner", {}).get("product_exit_code") != 1
                             or packets.get("application_pid") != ready["separate_application_pid"]
                             or packets.get("owner_pid") != identity["pid"]):
                             raise ValueError("independent original CLI, disposable accounts or temporary HTTPS tunnel cleanup failed")
                         result["single_host_https_cli_integration"] = {"status": "passed", "cleanup": stopped,
-                            "scope": "original production Clap/SessionStore HTTPS restore and native packet loop in a distinct owner process; disposable Cloudflare-terminated management origin; one VM, not independent targets or third-party VPN acceptance"}
+                            "scope": "actual non-test product executable main/Clap/SessionStore HTTPS restore and native packet loop in a distinct medium owner process; same product executable's real high helper command; disposable Cloudflare-terminated management origin; one VM, not independent targets or third-party VPN acceptance"}
                     else:
                         result["single_host_online_integration"] = {"status": "passed", "cleanup": stopped,
                             "scope": "real management HTTP/SQLite and original native packet loop over pinned mTLS QUIC in one VM; this case alone does not qualify production HTTPS restore or independent targets"}

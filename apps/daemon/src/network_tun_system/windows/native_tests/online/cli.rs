@@ -3,90 +3,8 @@
 //! and disposable remote protocol witness, not an independent target machine.
 use super::*;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
-use clap::Parser;
 use std::{ffi::OsString, process::Stdio};
 
-#[derive(Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-struct Config {
-    directory: PathBuf,
-    space: String,
-    grant: String,
-    authority: [u8; 32],
-    approved: [u8; 32],
-    interface: u32,
-    bind: SocketAddr,
-    dial: SocketAddr,
-    plan: PathBuf,
-    receipt: PathBuf,
-}
-pub(in super::super) async fn owner(case: &Path) -> Result {
-    nestlink_privileged::windows::require_normal_user_process()?;
-    let config: Config = serde_json::from_slice(&nestlink_platform_security::read_private(
-        &path("NESTLINK_TUN_NATIVE_CLI_CONFIG")?,
-        16384,
-    )?)?;
-    let before = crate::space_dns::session_snapshot(&config.directory)?;
-    let identity = crate::identity(&config.directory)?;
-    let mut args = vec![
-        OsString::from("nestlink-daemon"),
-        OsString::from("network-tun"),
-    ];
-    for (flag, value) in [
-        ("--state-dir", config.directory.as_os_str().to_os_string()),
-        ("--space", config.space.into()),
-        ("--grant", config.grant.into()),
-        (
-            "--authority",
-            URL_SAFE_NO_PAD.encode(config.authority).into(),
-        ),
-        (
-            "--approve-digest",
-            URL_SAFE_NO_PAD.encode(config.approved).into(),
-        ),
-        ("--interface", config.interface.to_string().into()),
-        ("--bind", config.bind.to_string().into()),
-        ("--dial", config.dial.to_string().into()),
-        ("--plan", config.plan.into_os_string()),
-        ("--receipt", config.receipt.into_os_string()),
-    ] {
-        args.push(flag.into());
-        args.push(value);
-    }
-    let command = match crate::Args::try_parse_from(args)?.command {
-        Some(crate::Command::NetworkTun(command)) => command,
-        _ => {
-            return Err(io::Error::other(
-                "production TUN command was not selected by the real parser",
-            )
-            .into());
-        }
-    };
-    let outcome = super::super::super::super::owner::run(command).await;
-    if !matches!(outcome.as_ref().err().and_then(|error|error.downcast_ref::<SdkError>()),Some(SdkError::Api(status,_)) if status.as_u16()==403)
-    {
-        return Err(io::Error::other(format!("original production HTTPS CLI did not stop on the exact online revocation response: {outcome:?}")).into());
-    }
-    assert_ne!(
-        crate::space_dns::session_snapshot(&config.directory)?,
-        before,
-        "production HTTPS restore did not rewrite its protected login recovery"
-    );
-    let retained = crate::identity(&config.directory)?;
-    assert_eq!(retained.device_id, identity.device_id);
-    assert_eq!(
-        retained.identity.fingerprint(),
-        identity.identity.fingerprint()
-    );
-    std::fs::write(
-        case.join("cli-stopped.json"),
-        serde_json::to_vec(&serde_json::json!({
-            "owner_pid":std::process::id(),"actual_clap_entry":true,"actual_session_store_restore":true,
-            "original_installation_retained":true,"online_http_403_observed":true,"production_cleanup_returned":true
-        }))?,
-    )?;
-    Ok(())
-}
 pub(in super::super) async fn fixture(
     case: &Path,
     plan_path: &Path,
@@ -141,33 +59,20 @@ pub(in super::super) async fn fixture(
             .parent()
             .ok_or_else(|| io::Error::other("HTTPS CLI plan parent missing"))?,
     )?;
-    let config = Config {
-        directory: f.directory.clone(),
-        space: f.space.clone(),
-        grant: f.view.access.grant_id.clone(),
-        authority: f.authority,
-        approved: f.approved,
-        interface: interface.index,
-        bind: owner_endpoint,
-        dial: peer.local_addr(),
-        plan: plan_path.to_path_buf(),
-        receipt: receipt_path.to_path_buf(),
-    };
-    let private_config = f.directory.join("hosted-cli.json");
-    nestlink_platform_security::create_private(&private_config, &serde_json::to_vec(&config)?)?;
+    let mut args=vec![OsString::from("network-tun")];
+    for (flag,value) in [
+        ("--state-dir",f.directory.as_os_str().to_os_string()),("--space",f.space.clone().into()),
+        ("--grant",f.view.access.grant_id.clone().into()),("--authority",URL_SAFE_NO_PAD.encode(f.authority).into()),
+        ("--approve-digest",URL_SAFE_NO_PAD.encode(f.approved).into()),("--interface",interface.index.to_string().into()),
+        ("--bind",owner_endpoint.to_string().into()),("--dial",peer.local_addr().to_string().into()),
+        ("--plan",plan_path.as_os_str().to_os_string()),("--receipt",receipt_path.as_os_str().to_os_string()),
+    ]{args.push(flag.into());args.push(value);}
     let log = case.join("production-cli.log");
     let output = std::fs::File::create(&log)?;
-    let mut child = tokio::process::Command::new(std::env::current_exe()?)
-        .args([
-            "--ignored",
-            "--exact",
-            "network_tun_system::windows::native_tests::hosted_native_role",
-            "--nocapture",
-            "--test-threads=1",
-            "--color=never",
-        ])
-        .env("NESTLINK_TUN_NATIVE_ROLE", "online-cli-owner")
-        .env("NESTLINK_TUN_NATIVE_CLI_CONFIG", private_config)
+    // This is the separately built product executable: its real main, Clap
+    // dispatch, installation admission and owner run without cfg(test) hooks.
+    let mut child = tokio::process::Command::new(path("NESTLINK_TUN_NATIVE_PRODUCTION_DAEMON")?)
+        .args(args)
         .stdin(Stdio::null())
         .stdout(Stdio::from(output.try_clone()?))
         .stderr(Stdio::from(output))
@@ -271,7 +176,7 @@ pub(in super::super) async fn fixture(
                 (revoked,tokio::time::timeout_at(revoked+Duration::from_secs(5),&mut exited).await??)
             },
         };
-        assert!(status.success(),"production CLI fixture did not attest its exact expected stop");
+        assert_eq!(status.code(),Some(1),"the actual product CLI must return its original revocation error");
         Ok::<_,Box<dyn std::error::Error+Send+Sync>>(revoked)
     }.await;
     access.stop();
@@ -287,9 +192,15 @@ pub(in super::super) async fn fixture(
         std::net::UdpSocket::bind(owner_endpoint).is_ok(),
         "the actual production CLI still owns its original physical UDP endpoint"
     );
-    let stopped: serde_json::Value =
-        serde_json::from_slice(&std::fs::read(case.join("cli-stopped.json"))?)?;
     let text = std::fs::read_to_string(log)?;
+    assert!(text.contains("NestLink user daemon stopped: management operation rejected (403 Forbidden): Forbidden"),"the real product main did not report the original HTTP revocation error: {text}");
+    let retained=crate::identity(&f.directory)?;
+    assert_eq!(retained.device_id,f.source_device.device_id);
+    assert_eq!(retained.identity.fingerprint(),f.source_device.identity.fingerprint());
+    let stopped=serde_json::json!({"owner_pid":identity.pid,"actual_product_main":true,"actual_clap_entry":true,
+        "actual_session_store_restore":true,"original_installation_retained":true,"online_http_403_observed":true,
+        "production_cleanup_returned":true,"product_exit_code":1});
+    std::fs::write(case.join("cli-stopped.json"),serde_json::to_vec(&stopped)?)?;
     let counters: serde_json::Value = text
         .lines()
         .find_map(|line| line.strip_prefix("Packet owner counters: "))

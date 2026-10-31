@@ -44,9 +44,6 @@ async fn hosted_native_role() -> Result {
     if role == "online-cli-fixture" {
         return online::cli::fixture(&case, &plan, &receipt).await;
     }
-    if role == "online-cli-owner" {
-        return online::cli::owner(&case).await;
-    }
     if role == "fault-inspect" {
         let observation: serde_json::Value =
             serde_json::from_slice(&std::fs::read(case.join("fault-observed.json"))?)?;
