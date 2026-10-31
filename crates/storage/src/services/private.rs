@@ -326,7 +326,7 @@ impl Store {
                 ("installation", installation_id.clone(), epoch)
             }
         };
-        tx.execute("DELETE FROM private_service_acl WHERE service_id=?1 AND (revoked=1 OR expires_at<=?2) AND NOT EXISTS(SELECT 1 FROM private_service_leases l WHERE l.acl_rule_id=private_service_acl.rule_id)",params![service,now])?;
+        tx.execute("DELETE FROM private_service_acl WHERE service_id=?1 AND (revoked=1 OR expires_at<=?2) AND NOT EXISTS(SELECT 1 FROM private_service_leases l WHERE l.acl_rule_id=private_service_acl.rule_id) AND NOT EXISTS(SELECT 1 FROM offline_bundles o WHERE o.private_rule_id=private_service_acl.rule_id)",params![service,now])?;
         let count: u64 = tx.query_row(
             "SELECT count(*) FROM private_service_acl WHERE service_id=?1",
             [service],

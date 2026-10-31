@@ -4,6 +4,67 @@ use nestlink_identity::offline::{offline_consume_transcript, offline_draft_diges
 use nestlink_protocol::offline::{management::*, *};
 use rusqlite::Connection;
 
+#[test]
+fn offline_distinct_accounts_cannot_approve_or_consume_the_other_endpoint() -> Result {
+    let mut f = Fixture::new()?;
+    let access = configure(&mut f)?;
+    let password = "offline-distinct-account-password";
+    f.store.create_member(&f.creator,"offline-consumer",password)?;
+    let vault = VaultKey::from_bytes([19;32]);
+    let dummy = hash_password("offline-distinct-dummy-password")?;
+    let guest = f.store.login("offline-consumer",password,None,now()?/1000,&vault,&dummy)?.principal;
+    let space = &access.exposure.space_id;
+    let revision = f.store.network_policy_snapshot(space,now()?)?.revision();
+    let invitation = f.store.invite_to_space(&f.creator,space,SpaceInvitationRequest {
+        expected_revision:revision,role:nestlink_protocol::network::SpaceRole::Member,
+        target_account_id:Some(guest.account_id.clone()),expires_at_unix_ms:now()?+60_000,
+    },now()?)?;
+    f.store.accept_space_invitation(&guest,space,&invitation.invitation.invitation_id,
+        SpaceInvitationAcceptance {token:invitation.token},now()?)?;
+    let identity = InstallationIdentity::generate();
+    let consumer = random_id();
+    let challenge = f.store.enrollment_challenge(&guest,now()?/1000)?;
+    let mut registration = DeviceRegistration {challenge_id:challenge.id,device:DeviceDescriptor {
+        id:consumer.clone(),name:"separate account consumer".into(),platform:"windows".into(),
+        public_key:URL_SAFE_NO_PAD.encode(identity.public_key()),capabilities:vec!["host".into(),"vp8".into()],
+        path_mode:"direct_only".into(),
+    },signature:String::new()};
+    registration.signature = URL_SAFE_NO_PAD.encode(identity.sign_action(&f.store.registration_transcript(&guest,&registration,now()?/1000)?)?);
+    f.store.register_device(&guest,registration,now()?/1000)?;
+    let revision = f.store.network_policy_snapshot(space,now()?)?.revision();
+    f.store.join_space_device(&guest,space,SpaceDeviceJoin {expected_revision:revision,
+        expected_membership_epoch:0,installation_id:consumer.clone()},now()?)?;
+    f.store.grant_private_service(&f.creator,&f.view.id,PrivateServiceAclUpdate {
+        expected_exposure_revision:access.exposure.revision,
+        subject:PrivateServiceSubject::Installation {installation_id:consumer.clone()},expires_at_unix_ms:now()?+30_000,
+    },now()?)?;
+    f.store.set_offline_enabled(&f.creator,space,OfflineEnableUpdate {expected_revision:0,enabled:true},now()?)?;
+    assert!(f.store.set_offline_enabled(&guest,space,OfflineEnableUpdate {expected_revision:1,enabled:false},now()?).is_err());
+    let revision = f.store.network_policy_snapshot(space,now()?)?.revision();
+    let view = f.store.create_offline_private_draft(&guest,space,OfflinePrivateDraftRequest {
+        consumer_device_id:consumer,service_id:f.view.id.clone(),process_nonces:[[31;32],[32;32]],
+        expected_policy_revision:revision,expected_service_revision:f.view.revision,
+        expected_exposure_revision:access.exposure.revision,direct_transports:vec![OfflineDirectTransport::Quic],
+        maximum_bytes:4096,maximum_connections:1,expires_at_ms:now()?+20_000,
+    },now()?)?;
+    assert_eq!(view.claims.members[0].account_id,guest.account_id);
+    assert_eq!(view.claims.members[1].account_id,f.creator.account_id);
+    let source = identity.sign_offline_endpoint_approval(&access.network.public_key(),&view.claims,0,view.draft_digest)?;
+    let target = f.host.sign_offline_endpoint_approval(&access.network.public_key(),&view.claims,1,view.draft_digest)?;
+    assert!(f.store.approve_offline_bundle(&f.creator,&access.network,space,&view.claims.bundle_id,source.clone(),now()?).is_err());
+    assert!(f.store.approve_offline_bundle(&guest,&access.network,space,&view.claims.bundle_id,target.clone(),now()?).is_err());
+    f.store.approve_offline_bundle(&guest,&access.network,space,&view.claims.bundle_id,source,now()?)?;
+    f.store.approve_offline_bundle(&f.creator,&access.network,space,&view.claims.bundle_id,target,now()?)?;
+    let challenge = f.store.offline_consume_challenge(&guest,space,&view.claims.bundle_id,0,now()?)?;
+    let request = OfflineConsumeRequest {endpoint:0,draft_digest:view.draft_digest,process_nonce:view.claims.members[0].process_nonce,
+        signature:identity.sign_action(&offline_consume_transcript(&view.claims,&challenge)?)?};
+    assert!(f.store.consume_offline_bundle(&f.creator,space,&view.claims.bundle_id,request.clone(),now()?).is_err());
+    assert!(f.store.consume_offline_bundle(&guest,space,&view.claims.bundle_id,request,now()?)?.consumed[0]);
+    assert!(f.store.offline_consume_challenge(&guest,space,&view.claims.bundle_id,1,now()?).is_err());
+    ledgers(&mut f,4096,0)?;
+    Ok(())
+}
+
 fn draft(f: &mut Fixture, access: &PrivateAccess, bytes: u64) -> Result<OfflineBundleView> {
     let space = &access.exposure.space_id;
     let policy = f.store.offline_policy(&f.creator, space, now()?)?;
