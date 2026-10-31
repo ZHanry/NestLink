@@ -68,6 +68,12 @@ def main():
 
     try:
         assert not subprocess.check_output(["git", "status", "--porcelain=v1", "--untracked-files=all"])
+        component = command("reviewed-dns-component-boundary", ["cargo", "test", "--locked",
+            "--manifest-path", "third-party/mdns-sd/Cargo.toml", "--no-default-features", "--lib",
+            "service_info::tests::nestlink_routable_publication_is_default_off_exact_interface_and_reversible",
+            "--", "--exact", "--show-output", "--color", "never"])
+        assert b"test result: ok. 1 passed; 0 failed; 0 ignored;" in component.stdout
+        assert not subprocess.check_output(["git", "status", "--porcelain=v1", "--untracked-files=all"])
         unit = command("lan-unit", ["cargo", "test", "--locked", "-p", "nestlink-sdk", "--lib",
                                     "network::lan::tests::", "--", "--show-output", "--color", "never"])
         assert b"test result: ok. 5 passed; 0 failed; 0 ignored;" in unit.stdout
