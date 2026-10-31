@@ -19,6 +19,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ inputs.source_revision }}
+          fetch-depth: 0
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
         with:
@@ -33,7 +34,8 @@ jobs:
           expected = os.environ['EXPECTED_SOURCE']
           assert re.fullmatch('[0-9a-f]{40}', expected)
           assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
-          assert expected == os.environ['GITHUB_SHA'] == subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          assert expected == subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          subprocess.run(['git', 'merge-base', '--is-ancestor', expected, 'origin/main'], check=True)
           assert subprocess.check_output(['git', 'status', '--porcelain=v1', '--untracked-files=all']) == b''
           output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'network-source-format'
           output.mkdir()
@@ -45,6 +47,8 @@ jobs:
           assert all(path.endswith('.rs') and not path.startswith('third-party/') for path in changed)
           receipt = {
               'source_revision': expected, 'workflow': os.environ['GITHUB_WORKFLOW_REF'],
+              'workflow_dispatch_revision': os.environ['GITHUB_SHA'],
+              'workflow_revision': os.environ['GITHUB_WORKFLOW_SHA'],
               'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
               'runner_environment': os.environ['RUNNER_ENVIRONMENT'], 'runner_os': os.environ['RUNNER_OS'],
               'command': command, 'return_code': result.returncode,
@@ -59,7 +63,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: network-source-format-${{ github.sha }}-${{ github.run_attempt }}
+          name: network-source-format-${{ inputs.source_revision }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/network-source-format/
           if-no-files-found: error
           retention-days: 30
