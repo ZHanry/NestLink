@@ -423,12 +423,12 @@ def hosted(args):
                 cases.update(failure_mode="SIGKILL",original_edge_process_group_dead=True,original_edge_exit_code=edges[selected].returncode)
             else:
                 private_json(marker/"stop.json",{});cases["failure_mode"]="cooperative_original_owner_stop"
-            deadline=started+30;recovered=None
+            deadline=started+5;recovered=None
             while time.monotonic()<deadline:
                 result=request(directory,protocol)
                 if result["passed"] and health(selected,health_path)!="200" and BACKENDS[selected] not in stats()[1]: recovered=time.monotonic()-started;break
                 time.sleep(.1)
-            if recovered is None: raise TimeoutError("new-connection-recovery-exceeded-30-seconds")
+            if recovered is None: raise TimeoutError("new-connection-recovery-exceeded-5-seconds")
             if not crash: wait_json(marker/"stopped.json",edges[selected],15)
             assert caddies[selected].poll() is None and caddies[healthy].poll() is None
             if not crash: assert admin(selected,fixture["edges"][selected]["node_id"],"https" if protocol=="https" else "http")==[]

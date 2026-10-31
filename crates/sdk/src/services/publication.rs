@@ -20,6 +20,7 @@ use carrier::datagram::DatagramRouter;
 pub mod group;
 mod issuer;
 mod observation;
+mod renewal;
 use cleanup::ServiceCleanupMonitor;
 use issuer::ServiceIssuerOwner;
 
@@ -510,16 +511,25 @@ async fn run(context: RunContext, _revoke: Revoke) -> ServiceHostStopReport {
     let renew_target = target.clone();
     let renew_delegation = delegation.clone();
     let mut renewals = tokio::spawn(async move {
+        let sequence = renew_publication.handle().lease()?.claims().lease_sequence;
+        let mut freshness = renewal::RenewalFreshness::new(sequence, Instant::now());
         loop {
             let requested = Instant::now();
-            let signed: ServiceLeaseRenewal = read_message(&mut control_recv).await?;
+            // A dead edge cannot keep its target marked ready until the longer
+            // QUIC idle/signed-lease timeout. Retain one pending framed read up
+            // to the original stream cap; no cancelled partial read is reused.
+            let signed: ServiceLeaseRenewal = tokio::time::timeout_at(
+                freshness.deadline().into(), read_message(&mut control_recv),
+            ).await.map_err(|_| SdkError::Timeout)??;
             let candidate = renew_delegation.prepare(&signed, wall()?)?;
             let lease = candidate.lease;
             if !renew_target.accepts(&lease) {
                 return Err(SdkError::Trust);
             }
+            let sequence = lease.claims().lease_sequence;
             renew(&renew_publication, lease, requested)?;
             renew_delegation.install(candidate.issuer)?;
+            freshness.advanced(sequence, Instant::now())?;
         }
     });
     let mut renewals_joined = false;

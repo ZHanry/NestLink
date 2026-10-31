@@ -87,6 +87,28 @@ jobs:
           (output / 'deadline-test-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
           print(text)
           assert passed, 'Exact signed-deadline regression did not pass once; same-run log retained'
+      - name: Verify original signed edge progress and terminal observation gaps
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, subprocess
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'nestlink-service-deadline-evidence'
+          selected = 'services::publication::renewal::tests::original_edge_progress_gap_and_replays_cannot_extend_or_revive_health'
+          command = ['cargo', 'test', '--locked', '-p', 'nestlink-sdk', '--lib', selected,
+              '--', '--exact', '--nocapture', '--color', 'never']
+          result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+          (output / 'edge-progress-test.log').write_bytes(result.stdout)
+          text = result.stdout.decode(errors='replace')
+          passed = (result.returncode == 0 and ('test ' + selected + ' ... ok') in text
+              and 'test result: ok. 1 passed; 0 failed; 0 ignored;' in text)
+          receipt = {'source_revision': os.environ['GITHUB_SHA'],
+              'workflow_revision': os.environ['GITHUB_WORKFLOW_SHA'],
+              'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'runner_environment': os.environ['RUNNER_ENVIRONMENT'],
+              'command': command, 'return_code': result.returncode,
+              'log_sha256': hashlib.sha256(result.stdout).hexdigest(), 'passed': passed}
+          (output / 'edge-progress-test-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          print(text)
+          assert passed, 'Exact signed edge-progress regression did not pass once; same-run log retained'
       - name: Build exact source and execute real HTTP HTTPS TCP UDP failover
         run: |
           python3 -B scripts/network-rewrite-service-group.py \
