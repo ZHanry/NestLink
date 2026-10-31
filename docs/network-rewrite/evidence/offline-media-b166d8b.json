@@ -1,0 +1,484 @@
+{
+    "schema_version":  1,
+    "repository":  "ZHanry/NestLink",
+    "source_revision":  "b166d8badbb99bf16d0d56d9d2964d3cab98a6d5",
+    "task_ids":  [
+                     "W27",
+                     "W31"
+                 ],
+    "whole_task_passed":  false,
+    "release_qualification_claimed":  false,
+    "build_provenance":  {
+                             "kind":  "github_hosted_actions",
+                             "cargo_lock_sha256":  "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+                             "artifact_digest_source":  "GitHub Actions API; downloaded extracted receipts and every referenced file hash independently checked"
+                         },
+    "execution_provenance":  {
+                                 "kind":  "github_hosted_lab",
+                                 "qualified_runs":  [
+                                                        {
+                                                            "run_id":  41234465272,
+                                                            "run_url":  "https://github.com/ZHanry/NestLink/actions/runs/41234465272",
+                                                            "job_id":  124635233035,
+                                                            "workflow_conclusion":  "success",
+                                                            "artifact_id":  13054468965,
+                                                            "github_artifact_digest":  "sha256:2e402f1f6f1192b63ff4b6973ea724156bd68609b427890de6e474b610a16e3a",
+                                                            "scope":  "Actual two-account HTTP offline approval and one-use consume, original online signed remote budget/QUIC business, original finite offline QUIC remote after center stop and online expiry, process stop and both physical UDP endpoints, cancelled original socket/poller cleanup receipt, resident guard, strict SDK/server/daemon lint. TLS was added later and is not covered.",
+                                                            "all_receipt_file_hashes_verified":  true,
+                                                            "receipts":  [
+                                                                             {
+                                                                                 "relative_path":  "receipt.json",
+                                                                                 "sha256":  "fa65b8571e2bf83ed74983d2ef30bd108625c59c456e7a49fcf0cb9360039bef",
+                                                                                 "receipt":  {
+                                                                                                 "source_revision":  "b166d8badbb99bf16d0d56d9d2964d3cab98a6d5",
+                                                                                                 "run_id":  "41234465272",
+                                                                                                 "run_attempt":  "1",
+                                                                                                 "workflow":  "ZHanry/NestLink/.github/workflows/offline-authority.yml@refs/heads/main",
+                                                                                                 "runner_environment":  "github-hosted",
+                                                                                                 "runner_os":  "Linux",
+                                                                                                 "suite":  "sdk",
+                                                                                                 "scope":  "Independent private-service online enable/review/reserve/consume/recovery; original shared SQLite budget and actual HTTP/SDK. SDK also exercises direct QUIC/mTLS TCP bytes, disconnection, reconnect, half-close, deadline, byte ceiling, original ephemeral process proof, revocation and physical cleanup. Daemon suite tests its actual resident lifecycle guard against protected login/identity changes and original installation maintenance; it does not claim protected login restoration or interactive multi-process acceptance. No UDP/TLS fallback, remote-control or target-platform acceptance claimed.",
+                                                                                                 "cargo_lock_sha256":  "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+                                                                                                 "build_command":  [
+                                                                                                                       "cargo",
+                                                                                                                       "test",
+                                                                                                                       "--locked",
+                                                                                                                       "-p",
+                                                                                                                       "nestlink-sdk",
+                                                                                                                       "--test",
+                                                                                                                       "private_services",
+                                                                                                                       "--no-run",
+                                                                                                                       "--message-format=json"
+                                                                                                                   ],
+                                                                                                 "passed":  true,
+                                                                                                 "build_exit_code":  0,
+                                                                                                 "executable_sha256":  "77fd699d9de2636c453dc81e3fc78556d5712724127e2b9895ab27fcc539b749",
+                                                                                                 "tests":  [
+                                                                                                               "offline::carrier::original_installation_certificate_without_memory_process_proof_cannot_reach_target",
+                                                                                                               "offline::carrier::original_offline_deadline_closes_idle_real_stream_and_native_listener",
+                                                                                                               "offline::carrier::original_offline_process_exit_and_authenticated_recovery_close_actual_channels",
+                                                                                                               "offline::carrier::original_offline_shared_byte_budget_stops_actual_reconnect_traffic",
+                                                                                                               "offline::carrier::original_quic_real_center_disconnect_reconnect_half_close_and_socket_release",
+                                                                                                               "offline::offline_http_sdk_administrator_enable_and_direct_policy_boundaries",
+                                                                                                               "offline::offline_http_sdk_approval_exact_process_consume_budget_and_recovery"
+                                                                                                           ],
+                                                                                                 "execution_command":  [
+                                                                                                                           "/home/runner/work/NestLink/NestLink/target/debug/deps/private_services-cd6cb6aba697aea5",
+                                                                                                                           "offline::",
+                                                                                                                           "--nocapture",
+                                                                                                                           "--test-threads=1",
+                                                                                                                           "--color",
+                                                                                                                           "never"
+                                                                                                                       ],
+                                                                                                 "test_exit_code":  0,
+                                                                                                 "files":  {
+                                                                                                               "build.jsonl":  "02c2c9bab5a34e378aa7ff14fe19076f38812dc9d1d81851cf06347e0e158853",
+                                                                                                               "build.log":  "b93b9f15cb1add2a515567e5da437cbeabcc443b583247b03db431820ff583c0",
+                                                                                                               "inventory.log":  "fe78647a0666eb74bfbf453fb2a091b8d1647d3b8bb51a8ba7396a0af7b3f960",
+                                                                                                               "tests.log":  "da83469b79bfd78e812878b8b7dd950f754868b710035edc918f57187a139727"
+                                                                                                           }
+                                                                                             }
+                                                                             },
+                                                                             {
+                                                                                 "relative_path":  "remote-budget\\receipt.json",
+                                                                                 "sha256":  "1072790f5dc1596084307cfd2fe2c648aab99109458fdb3df7d62c99176c0e7f",
+                                                                                 "receipt":  {
+                                                                                                 "source_revision":  "b166d8badbb99bf16d0d56d9d2964d3cab98a6d5",
+                                                                                                 "run_id":  "41234465272",
+                                                                                                 "run_attempt":  "1",
+                                                                                                 "workflow":  "ZHanry/NestLink/.github/workflows/offline-authority.yml@refs/heads/main",
+                                                                                                 "runner_environment":  "github-hosted",
+                                                                                                 "runner_os":  "Linux",
+                                                                                                 "suite":  "remote-sdk",
+                                                                                                 "scope":  "Original remote cumulative budget reservation, strict signed scope, retained Session meter and actual HTTP/SDK/QUIC online business accounting. Storage additionally exercises independent finite offline remote draft, atomic second approval against original online totals, one-use consume, revoke without refund and original short online expiry. Remote offline carrier and target acceptance are excluded.",
+                                                                                                 "cargo_lock_sha256":  "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+                                                                                                 "build_command":  [
+                                                                                                                       "cargo",
+                                                                                                                       "test",
+                                                                                                                       "--locked",
+                                                                                                                       "-p",
+                                                                                                                       "nestlink-sdk",
+                                                                                                                       "--test",
+                                                                                                                       "end_to_end",
+                                                                                                                       "--no-run",
+                                                                                                                       "--message-format=json"
+                                                                                                                   ],
+                                                                                                 "passed":  true,
+                                                                                                 "build_exit_code":  0,
+                                                                                                 "executable_sha256":  "1a8b3b7828a56b92f02b3b380b4ec746c92a15d26453896d5ec98e139ebdb63a",
+                                                                                                 "tests":  [
+                                                                                                               "remote_budget_real_http_signed_reservation_renewal_original_quic_bytes_and_revoke"
+                                                                                                           ],
+                                                                                                 "execution_command":  [
+                                                                                                                           "/home/runner/work/NestLink/NestLink/target/debug/deps/end_to_end-47980a058bf57268",
+                                                                                                                           "remote_budget",
+                                                                                                                           "--nocapture",
+                                                                                                                           "--test-threads=1",
+                                                                                                                           "--color",
+                                                                                                                           "never"
+                                                                                                                       ],
+                                                                                                 "test_exit_code":  0,
+                                                                                                 "files":  {
+                                                                                                               "build.jsonl":  "89d35c2916d0dcab0c3d6cd3fecc94ed7a279321fb7572c7d076e6c6bc10a888",
+                                                                                                               "build.log":  "de25c0630b283c8508525051a3624cde51cade9dc62eabbe89beeadbf718a84d",
+                                                                                                               "inventory.log":  "c11e1eee30e042a40329eb672f12fd84776b3bf510e7ae2883f666f74b230e1e",
+                                                                                                               "tests.log":  "35e842c894f950c544056ceb51a5157c4b67884b163ea63b8b96494b597b198f"
+                                                                                                           }
+                                                                                             }
+                                                                             },
+                                                                             {
+                                                                                 "relative_path":  "remote-offline\\receipt.json",
+                                                                                 "sha256":  "847a5be574e24594d355eea74eeb810522925df8a347575318207f0f66e259ee",
+                                                                                 "receipt":  {
+                                                                                                 "source_revision":  "b166d8badbb99bf16d0d56d9d2964d3cab98a6d5",
+                                                                                                 "run_id":  "41234465272",
+                                                                                                 "run_attempt":  "1",
+                                                                                                 "workflow":  "ZHanry/NestLink/.github/workflows/offline-authority.yml@refs/heads/main",
+                                                                                                 "runner_environment":  "github-hosted",
+                                                                                                 "runner_os":  "Linux",
+                                                                                                 "suite":  "remote-offline",
+                                                                                                 "scope":  "Actual two-account HTTP/SDK offline draft/approval/one-use consume followed by physical management listener stop, original online permit expiry and fresh process proof plus original QUIC Session/business queues; subset permission, original meter, process stop and physical UDP release. No complete native media/input/file OS adapters, TLS fallback, UI or target acceptance claim.",
+                                                                                                 "cargo_lock_sha256":  "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+                                                                                                 "build_command":  [
+                                                                                                                       "cargo",
+                                                                                                                       "test",
+                                                                                                                       "--locked",
+                                                                                                                       "-p",
+                                                                                                                       "nestlink-sdk",
+                                                                                                                       "--test",
+                                                                                                                       "offline_remote",
+                                                                                                                       "--no-run",
+                                                                                                                       "--message-format=json"
+                                                                                                                   ],
+                                                                                                 "passed":  true,
+                                                                                                 "build_exit_code":  0,
+                                                                                                 "executable_sha256":  "696eec0d4687ee6afd1ec1558725f9b09ffe2625c4413cc8b014ee4668d51ce5",
+                                                                                                 "tests":  [
+                                                                                                               "offline_remote_actual_http_then_expired_original_quic_view_budget_and_process_stop"
+                                                                                                           ],
+                                                                                                 "execution_command":  [
+                                                                                                                           "/home/runner/work/NestLink/NestLink/target/debug/deps/offline_remote-7db6d8b1842733a7",
+                                                                                                                           "offline_remote_",
+                                                                                                                           "--nocapture",
+                                                                                                                           "--test-threads=1",
+                                                                                                                           "--color",
+                                                                                                                           "never"
+                                                                                                                       ],
+                                                                                                 "test_exit_code":  0,
+                                                                                                 "files":  {
+                                                                                                               "build.jsonl":  "32f53953c87c8028eb51c1b12c2fe74e5bdb6037a9d9982001707aa1e2607199",
+                                                                                                               "build.log":  "86978d5becc4098bd3dba6a85b41da04ce882e61b1212c2bcafc84a938cb532e",
+                                                                                                               "inventory.log":  "53892c54417ad20d3e9429dbe1ac414905f5d8c185c77bd842c89339acb5fb64",
+                                                                                                               "tests.log":  "f3ba97aea3b28ce44f6fd14905d78f05970363ab5815b643b95f17e189a28b05"
+                                                                                                           }
+                                                                                             }
+                                                                             },
+                                                                             {
+                                                                                 "relative_path":  "resident-guard\\receipt.json",
+                                                                                 "sha256":  "8a93e48694581abff1b9332ca63d79025f868788471e07e9b6c191e58275a10c",
+                                                                                 "receipt":  {
+                                                                                                 "source_revision":  "b166d8badbb99bf16d0d56d9d2964d3cab98a6d5",
+                                                                                                 "run_id":  "41234465272",
+                                                                                                 "run_attempt":  "1",
+                                                                                                 "workflow":  "ZHanry/NestLink/.github/workflows/offline-authority.yml@refs/heads/main",
+                                                                                                 "runner_environment":  "github-hosted",
+                                                                                                 "runner_os":  "Linux",
+                                                                                                 "suite":  "daemon",
+                                                                                                 "scope":  "Independent private-service online enable/review/reserve/consume/recovery; original shared SQLite budget and actual HTTP/SDK. SDK also exercises direct QUIC/mTLS TCP bytes, disconnection, reconnect, half-close, deadline, byte ceiling, original ephemeral process proof, revocation and physical cleanup. Daemon suite tests its actual resident lifecycle guard against protected login/identity changes and original installation maintenance; it does not claim protected login restoration or interactive multi-process acceptance. No UDP/TLS fallback, remote-control or target-platform acceptance claimed.",
+                                                                                                 "cargo_lock_sha256":  "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+                                                                                                 "build_command":  [
+                                                                                                                       "cargo",
+                                                                                                                       "test",
+                                                                                                                       "--locked",
+                                                                                                                       "-p",
+                                                                                                                       "nestlink-daemon",
+                                                                                                                       "--bin",
+                                                                                                                       "nestlink-daemon",
+                                                                                                                       "--no-run",
+                                                                                                                       "--message-format=json"
+                                                                                                                   ],
+                                                                                                 "passed":  true,
+                                                                                                 "build_exit_code":  0,
+                                                                                                 "executable_sha256":  "490cb636ec833ad3f6bd38c4d2f616590a3b64afad99a5a9ed0b8ae116da817a",
+                                                                                                 "tests":  [
+                                                                                                               "private_service_proxy::offline::tests::original_resident_guard_terminates_authority_on_logout_login_identity_and_maintenance"
+                                                                                                           ],
+                                                                                                 "execution_command":  [
+                                                                                                                           "/home/runner/work/NestLink/NestLink/target/debug/deps/nestlink_daemon-04ddcc1557f7b010",
+                                                                                                                           "offline::",
+                                                                                                                           "--nocapture",
+                                                                                                                           "--test-threads=1",
+                                                                                                                           "--color",
+                                                                                                                           "never"
+                                                                                                                       ],
+                                                                                                 "test_exit_code":  0,
+                                                                                                 "files":  {
+                                                                                                               "build.jsonl":  "19b55c2502fdef55f3f6b00fc38134c611b7992e817d0dcf524dfa0f6399d59f",
+                                                                                                               "build.log":  "2cacf46df4161f952b750936768fddff778f1836237e03348163aeb1b62a738a",
+                                                                                                               "inventory.log":  "1d16956fbc1afd7b7047741678b0cc3b2df4c8490a07a109756400fcf84d3724",
+                                                                                                               "tests.log":  "9197d5a6c5107a1c72e2ba44bb033e18e776afab0e9f9c576791d1cc2a84ca06"
+                                                                                                           }
+                                                                                             }
+                                                                             }
+                                                                         ],
+                                                            "original_log_summaries":  [
+                                                                                           {
+                                                                                               "result":  "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 50 filtered out; finished in 0.02s",
+                                                                                               "log":  "direct-socket-release.log"
+                                                                                           },
+                                                                                           {
+                                                                                               "result":  "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s",
+                                                                                               "log":  "direct-socket-release.log"
+                                                                                           },
+                                                                                           {
+                                                                                               "result":  "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s",
+                                                                                               "log":  "direct-socket-release.log"
+                                                                                           },
+                                                                                           {
+                                                                                               "result":  "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s",
+                                                                                               "log":  "direct-socket-release.log"
+                                                                                           },
+                                                                                           {
+                                                                                               "result":  "test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 24 filtered out; finished in 20.13s",
+                                                                                               "log":  "tests.log"
+                                                                                           },
+                                                                                           {
+                                                                                               "result":  "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 2.64s",
+                                                                                               "log":  "remote-budget\\tests.log"
+                                                                                           },
+                                                                                           {
+                                                                                               "result":  "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 17.23s",
+                                                                                               "log":  "remote-offline\\tests.log"
+                                                                                           },
+                                                                                           {
+                                                                                               "result":  "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 55 filtered out; finished in 2.05s",
+                                                                                               "log":  "resident-guard\\tests.log"
+                                                                                           }
+                                                                                       ]
+                                                        },
+                                                        {
+                                                            "run_id":  41234566427,
+                                                            "run_url":  "https://github.com/ZHanry/NestLink/actions/runs/41234566427",
+                                                            "job_id":  124635520807,
+                                                            "workflow_conclusion":  "success",
+                                                            "artifact_id":  13054149864,
+                                                            "github_artifact_digest":  "sha256:d20fba2b8e3acdeae3ebe039edb2689126e0121f0f1f79a7ac5e0d163b1481c6",
+                                                            "scope":  "Actual codecs and original media owners; original native file regression, channel queues, receiver report/negotiation, exact singleton and finite candidate HTTP approval/renewal, provider and strict Core/daemon lint.",
+                                                            "all_receipt_file_hashes_verified":  true,
+                                                            "receipts":  [
+                                                                             {
+                                                                                 "relative_path":  "receipt.json",
+                                                                                 "sha256":  "dcb3354fa53220d53acfa2e8ef82c061a2982c4b2ca74fe85f1befdc5948c587",
+                                                                                 "receipt":  {
+                                                                                                 "source_revision":  "b166d8badbb99bf16d0d56d9d2964d3cab98a6d5",
+                                                                                                 "workflow":  "ZHanry/NestLink/.github/workflows/media-qos.yml@refs/heads/main",
+                                                                                                 "run_id":  "41234566427",
+                                                                                                 "run_attempt":  "1",
+                                                                                                 "runner_environment":  "github-hosted",
+                                                                                                 "runner_os":  "Linux",
+                                                                                                 "cargo_lock_sha256":  "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+                                                                                                 "scope":  "Actual mature codecs, original media/channel owner regressions and strict lint. No physical GPU, external weak-network, full W31 or target acceptance claim.",
+                                                                                                 "files":  [
+                                                                                                               {
+                                                                                                                   "path":  "candidate-http-tests.log",
+                                                                                                                   "sha256":  "bd7dfada74ce6da3f2a0d9f6ccb238d204e3e6bca02de8cde8de11e7bc4cf4bc"
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "path":  "candidate-policy-tests.log",
+                                                                                                                   "sha256":  "69e301e90d90ceb671e9048cabd73f5daccaf2df9d9de564a30dd54116e75c18"
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "path":  "candidate-provider-tests.log",
+                                                                                                                   "sha256":  "6f87121e13a13d6e5c47135af0e3c164c1ef3ebe05181b18a37e6705137dcf21"
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "path":  "clippy.log",
+                                                                                                                   "sha256":  "0a31e01db4cb131f25d7e91ebb4f9ee516ccc3d6b54ba975da932b142856a525"
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "path":  "media-tests.log",
+                                                                                                                   "sha256":  "ac8a195fb48cd642c5e873dd16cbe8eecb6cb83ef64303bf649a7125fbb04a28"
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "path":  "native-file-tests.log",
+                                                                                                                   "sha256":  "43da82ae6e7a3262710f96df3fb314064b7ba5dbc9c8fe2ae6e1e5cffd3990fe"
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "path":  "queue-tests.log",
+                                                                                                                   "sha256":  "86461e8612cfc4d9fbcbfacc1b3fa330e701e47418a3e18a6db77b338e8dbbff"
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "path":  "report-contract-tests.log",
+                                                                                                                   "sha256":  "66f13c52b340e3df7846a012a7cb6660f305f3b81f419c638bc718678a9d23a8"
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "path":  "report-negotiation-tests.log",
+                                                                                                                   "sha256":  "338b6fafcf7f02ac9f10e19b1079699dcc9e675121ce425eee4f480e87d5074b"
+                                                                                                               }
+                                                                                                           ]
+                                                                                             }
+                                                                             }
+                                                                         ],
+                                                            "original_log_summaries":  [
+                                                                                           {
+                                                                                               "result":  "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.19s",
+                                                                                               "log":  "candidate-http-tests.log"
+                                                                                           },
+                                                                                           {
+                                                                                               "result":  "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 82 filtered out; finished in 0.00s",
+                                                                                               "log":  "candidate-policy-tests.log"
+                                                                                           },
+                                                                                           {
+                                                                                               "result":  "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 60 filtered out; finished in 0.01s",
+                                                                                               "log":  "candidate-provider-tests.log"
+                                                                                           },
+                                                                                           {
+                                                                                               "result":  "test result: ok. 34 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.42s",
+                                                                                               "log":  "media-tests.log"
+                                                                                           },
+                                                                                           {
+                                                                                               "result":  "test result: ok. 63 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.35s",
+                                                                                               "log":  "media-tests.log"
+                                                                                           },
+                                                                                           {
+                                                                                               "result":  "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 3.07s",
+                                                                                               "log":  "native-file-tests.log"
+                                                                                           },
+                                                                                           {
+                                                                                               "result":  "test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 18 filtered out; finished in 0.51s",
+                                                                                               "log":  "queue-tests.log"
+                                                                                           },
+                                                                                           {
+                                                                                               "result":  "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 83 filtered out; finished in 0.00s",
+                                                                                               "log":  "report-contract-tests.log"
+                                                                                           },
+                                                                                           {
+                                                                                               "result":  "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 95 filtered out; finished in 12.57s",
+                                                                                               "log":  "report-negotiation-tests.log"
+                                                                                           }
+                                                                                       ]
+                                                        },
+                                                        {
+                                                            "run_id":  41234569423,
+                                                            "run_url":  "https://github.com/ZHanry/NestLink/actions/runs/41234569423",
+                                                            "job_id":  124635528513,
+                                                            "workflow_conclusion":  "success",
+                                                            "artifact_id":  13055228249,
+                                                            "github_artifact_digest":  "sha256:f350aa52d623844b4e6c55c71cac310490f8c41b7561482b1c3ee8705aee49f0",
+                                                            "scope":  "Ordinary Windows token actual MF per-direction finite probes, ordinary exact candidate Session activation, spatial BGRA downscale, signed precise Core owner/format/ACK replacement and actual decoder output; strict lint.",
+                                                            "all_receipt_file_hashes_verified":  true,
+                                                            "receipts":  [
+                                                                             {
+                                                                                 "relative_path":  "receipt.json",
+                                                                                 "sha256":  "b4333d6bac89cfa1a6c8c8fe2d7f7256f250d32df09de908eaddc4256a0c6487",
+                                                                                 "receipt":  {
+                                                                                                 "source_revision":  "b166d8badbb99bf16d0d56d9d2964d3cab98a6d5",
+                                                                                                 "workflow":  "ZHanry/NestLink/.github/workflows/media-exact-budget.yml@refs/heads/main",
+                                                                                                 "run_id":  "41234569423",
+                                                                                                 "run_attempt":  "1",
+                                                                                                 "runner_environment":  "github-hosted",
+                                                                                                 "runner_os":  "Windows",
+                                                                                                 "cargo_lock_sha256":  "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+                                                                                                 "commands":  [
+                                                                                                                  {
+                                                                                                                      "argv":  [
+                                                                                                                                   "python",
+                                                                                                                                   "scripts/refactor-windows-normal-user.py",
+                                                                                                                                   "cargo",
+                                                                                                                                   "test",
+                                                                                                                                   "--locked",
+                                                                                                                                   "-p",
+                                                                                                                                   "nestlink-app-core",
+                                                                                                                                   "--lib",
+                                                                                                                                   "--features",
+                                                                                                                                   "media-runtime-test-support",
+                                                                                                                                   "native_displays::positive_runtime_test::",
+                                                                                                                                   "--",
+                                                                                                                                   "--show-output",
+                                                                                                                                   "--test-threads=1",
+                                                                                                                                   "--color",
+                                                                                                                                   "never"
+                                                                                                                               ],
+                                                                                                                      "return_code":  0
+                                                                                                                  },
+                                                                                                                  {
+                                                                                                                      "argv":  [
+                                                                                                                                   "python",
+                                                                                                                                   "scripts/refactor-windows-normal-user.py",
+                                                                                                                                   "cargo",
+                                                                                                                                   "test",
+                                                                                                                                   "--locked",
+                                                                                                                                   "-p",
+                                                                                                                                   "nestlink-app-core",
+                                                                                                                                   "--lib",
+                                                                                                                                   "native_media_provider::tests::",
+                                                                                                                                   "--",
+                                                                                                                                   "--show-output",
+                                                                                                                                   "--test-threads=1",
+                                                                                                                                   "--color",
+                                                                                                                                   "never"
+                                                                                                                               ],
+                                                                                                                      "return_code":  0
+                                                                                                                  },
+                                                                                                                  {
+                                                                                                                      "argv":  [
+                                                                                                                                   "python",
+                                                                                                                                   "scripts/refactor-windows-normal-user.py",
+                                                                                                                                   "cargo",
+                                                                                                                                   "clippy",
+                                                                                                                                   "--locked",
+                                                                                                                                   "-p",
+                                                                                                                                   "nestlink-app-core",
+                                                                                                                                   "-p",
+                                                                                                                                   "nestlink-media-session",
+                                                                                                                                   "-p",
+                                                                                                                                   "nestlink-daemon",
+                                                                                                                                   "--all-targets",
+                                                                                                                                   "--features",
+                                                                                                                                   "nestlink-app-core/media-runtime-test-support",
+                                                                                                                                   "--",
+                                                                                                                                   "-D",
+                                                                                                                                   "warnings"
+                                                                                                                               ],
+                                                                                                                      "return_code":  0
+                                                                                                                  }
+                                                                                                              ],
+                                                                                                 "actual_core_regression_passed":  true,
+                                                                                                 "whole_W31_or_target_acceptance_claimed":  false,
+                                                                                                 "scope":  "Actual ordinary-token MF direction probes, ordinary Session activation with explicit finite candidate policy, packed BGRA downscale and signed Core high-to-low exact resolution/bitrate/fps owner/ACK replacement with original source geometry. Core assembly and ACK barrier remain fixtures. No shaped network, physical GPU or complete W31 claim.",
+                                                                                                 "files":  [
+                                                                                                               {
+                                                                                                                   "path":  "clippy.log",
+                                                                                                                   "sha256":  "db0f00afc3ce6eb8951b2e16b995f1b5334ea4b84457207d859c2b7cc543ed30"
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "path":  "exact-core.log",
+                                                                                                                   "sha256":  "cf1e4abb3eb135627fe69892f4393169cd7fa48dce6a073db8120b9ad9056743"
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "path":  "provider.log",
+                                                                                                                   "sha256":  "a96640c66f1a8a00653d9d97606907a35628c0e836012a6e1b84fa7dcbcca608"
+                                                                                                               }
+                                                                                                           ]
+                                                                                             }
+                                                                             }
+                                                                         ],
+                                                            "original_log_summaries":  [
+                                                                                           {
+                                                                                               "result":  "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 69 filtered out; finished in 6.27s",
+                                                                                               "log":  "exact-core.log"
+                                                                                           },
+                                                                                           {
+                                                                                               "result":  "test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 60 filtered out; finished in 0.19s",
+                                                                                               "log":  "provider.log"
+                                                                                           }
+                                                                                       ]
+                                                        }
+                                                    ]
+                             },
+    "limitations":  [
+                        "Offline QUIC test uses actual original channel business bytes; complete AppCore native media/input/file OS adapters and product offline UI remain open. Explicit direct TLS added after this SHA requires separate evidence.",
+                        "Windows Core assembly and ACK barrier are fixtures. Actual HTTP candidate approval/renewal ran separately.",
+                        "No shaped 20-to-5Mbps/1percent loss, original file/input p95, physical GPU/real desktop qualification, full target E2E or release claim."
+                    ]
+}
