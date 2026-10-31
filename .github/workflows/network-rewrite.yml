@@ -148,6 +148,12 @@ jobs:
           cargo test --locked -p nestlink-connectivity --lib observation:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-path-observation-policy-tests.log"
           cargo test --locked -p nestlink-connectivity --lib continuation:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-continuation-policy-tests.log"
           cargo test --locked -p nestlink-remote --lib local_path_observation -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-path-observation-quic-tests.log"
+      - name: Exercise generic service framing, ALPN isolation and original physical receipts
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-transport-quic --lib service:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-service-carrier-tests.log"
       - name: Exercise node report authority, cancellation and original deadlines
         if: ${{ !cancelled() }}
         shell: bash
@@ -178,6 +184,7 @@ jobs:
             ${{ runner.temp }}/network-topology-reporter-tests.log
             ${{ runner.temp }}/network-host-prefix-tests.log
             ${{ runner.temp }}/network-chain-carrier-tests.log
+            ${{ runner.temp }}/network-service-carrier-tests.log
             ${{ runner.temp }}/network-path-observation-policy-tests.log
             ${{ runner.temp }}/network-continuation-policy-tests.log
             ${{ runner.temp }}/network-path-observation-quic-tests.log
@@ -247,6 +254,14 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-app-core --test native_session route_set:: -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-route-set-product-tests.log"
+      - name: Exercise public service original consent, half-close and physical teardown
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-sdk --lib services::publication:: -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-service-publication-owner-tests.log"
+          cargo test --locked -p nestlink-sdk --test service_publication -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-service-publication-sdk-tests.log"
+          cargo test --locked -p nestlink-sdk --test service_start_cancellation -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-service-start-cancellation-tests.log"
       - name: Exercise restricted SOCKS authentication, credential secrecy and owner cleanup
         if: ${{ !cancelled() }}
         shell: bash
@@ -272,6 +287,9 @@ jobs:
             ${{ runner.temp }}/network-space-address-sdk-tests.log
             ${{ runner.temp }}/network-private-service-sdk-tests.log
             ${{ runner.temp }}/network-route-set-product-tests.log
+            ${{ runner.temp }}/network-service-publication-owner-tests.log
+            ${{ runner.temp }}/network-service-publication-sdk-tests.log
+            ${{ runner.temp }}/network-service-start-cancellation-tests.log
             ${{ runner.temp }}/network-local-proxy-tests.log
             ${{ runner.temp }}/network-product-owner-tests.log
             ${{ runner.temp }}/network-node-admission-tests.log

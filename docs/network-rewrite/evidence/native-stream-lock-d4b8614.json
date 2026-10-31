@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "purpose": "existing-runtime-lock-edge-derivation",
+  "source_revision": "d4b861454ce51b468239b9953058b73f5cd5579c",
+  "workflow": ".github/workflows/network-lock-refresh.yml",
+  "run_id": 41164114959,
+  "run_attempt": 1,
+  "runner": "github-hosted ubuntu-24.04",
+  "conclusion": "success",
+  "commands": ["cargo update --workspace --manifest-path <selected manifest>", "cargo metadata --manifest-path <selected manifest> --locked --format-version 1"],
+  "reviewed_change": "Add the existing locked tokio dependency edge to the first-party nestlink-platform-security package in both locks; no external package identity, version, checksum or dependency edge changed.",
+  "product": {
+    "job_id": 124427846961,
+    "artifact_id": 13027914937,
+    "github_archive_digest": "sha256:546929a7d5da2297615fd13dea77ffb0a1bff20df096b731ad88e69ca2563cd6",
+    "before_lock_sha256": "d059b16861d6c4e5f7d2e3c4edd7795571443167470c5bd34e43c0400853a6a0",
+    "imported_lock_sha256": "58fdf940ea696a552579d2f38b7c66de2d6bf5fa2e2cb203ec6ec75ec9d37d92",
+    "diff_sha256": "52c196de943e4ceae55468a675b2187901c18d966cc6469a020c7bd337e70b8f"
+  },
+  "browser_native_fixture": {
+    "job_id": 124427846747,
+    "artifact_id": 13028745407,
+    "github_archive_digest": "sha256:e9697342e36b0dbcbd626adb6caead21e5d22f3e32e38a5a0a52e2e38c66d32b",
+    "before_lock_sha256": "c13ab6c0562dcc2579fa761e172ba968d3dfe17a50a3b2d42e0c0d0fc67e7d8f",
+    "imported_lock_sha256": "f19f65b69b47512ea4f72990601b7f41112747747bb53cb395f8cd144d0f6894",
+    "diff_sha256": "4ffbe0936b4bd367e1453894335c4af8aad70219e7dd97f35baebd4b89d82679"
+  },
+  "verification": {
+    "original_locks_match_before_receipts": true,
+    "all_extracted_files_match_receipt_sha256": true,
+    "both_actual_commands_returned_zero": true,
+    "all_hosted_drift_assertions_passed": true,
+    "reviewed_diff_only_adds_existing_tokio_edge": true,
+    "archive_digest_source": "GitHub artifact API; extracted contents independently hashed against retained receipt",
+    "local_project_toolchain_executed": false
+  },
+  "product_compilation_performed_by_derivation": false,
+  "quality_or_acceptance_claimed": false,
+  "release_qualified": false
+}
