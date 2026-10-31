@@ -87,8 +87,9 @@ def main():
         unit = command("lan-unit", ["cargo", "test", "--locked", "-p", "nestlink-sdk", "--lib",
                                     "network::lan::tests::", "--", "--show-output", "--color", "never"])
         assert b"test result: ok. 5 passed; 0 failed; 0 ignored;" in unit.stdout
-        command("lan-strict", ["cargo", "clippy", "--locked", "-p", "nestlink-sdk", "-p",
-                               "nestlink-daemon", "--all-targets", "--", "-D", "warnings"])
+        strict = command("lan-strict", ["cargo", "clippy", "--locked", "-p", "nestlink-sdk", "-p",
+                         "nestlink-daemon", "--all-targets", "--", "-D", "warnings"], check=False)
+        receipt["strict_passed"] = strict.returncode == 0
         build = command("original-network-access-build", ["cargo", "test", "--locked", "-p",
                         "nestlink-sdk", "--test", "network_access", "--no-run", "--message-format=json"])
         artifacts = []
@@ -148,6 +149,8 @@ def main():
         actual = json.loads((output / "actual-lan-execution.json").read_text())
         assert actual["passed"] and actual["source_revision"] == source
         receipt["execution_passed"] = True
+        if not receipt["strict_passed"]:
+            raise RuntimeError("strict SDK/daemon check failed; independent physical LAN execution and all logs retained")
     except BaseException as error:
         failure = type(error).__name__ + ": " + str(error)
     finally:
