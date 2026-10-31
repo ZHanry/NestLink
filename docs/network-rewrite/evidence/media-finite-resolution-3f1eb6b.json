@@ -1,0 +1,183 @@
+{
+    "schema_version":  1,
+    "repository":  "ZHanry/NestLink",
+    "source_revision":  "3f1eb6b7ef93f5e891e8ecf81507260644150d4b",
+    "task_ids":  [
+                     "W31"
+                 ],
+    "whole_task_passed":  false,
+    "release_qualification_claimed":  false,
+    "build_provenance":  {
+                             "windows_run_id":  41233636239,
+                             "windows_job_id":  124632763882,
+                             "windows_artifact_id":  13054203638,
+                             "windows_github_artifact_digest":  "sha256:c5cd7940c309f5e2ede69e0778953a5adfffa82471f48be624090d8921fbd591",
+                             "linux_run_id":  41233633137,
+                             "linux_job_id":  124632756114,
+                             "linux_artifact_id":  13055221108,
+                             "linux_github_artifact_digest":  "sha256:fbf7b8ad067b9afb4ea67b39203a20348ca3b43d1a15d92b648307c2394a29f6",
+                             "all_receipt_file_hashes_verified":  true,
+                             "artifact_digest_source":  "GitHub Actions API; extracted receipt file hashes independently checked",
+                             "cargo_lock_sha256":  "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd"
+                         },
+    "execution_provenance":  {
+                                 "kind":  "github_hosted_lab",
+                                 "windows":  {
+                                                 "ordinary_windows_medium_token":  true,
+                                                 "core_tests_passed":  2,
+                                                 "provider_tests_passed":  9,
+                                                 "scope":  "Actual ordinary-token MF direction probes, ordinary Session activation with explicit finite candidate policy, packed BGRA downscale and signed Core high-to-low exact resolution/bitrate/fps owner/ACK replacement with original source geometry. Core assembly and ACK barrier remain fixtures. No shaped network, physical GPU or complete W31 claim.",
+                                                 "receipt":  {
+                                                                 "source_revision":  "3f1eb6b7ef93f5e891e8ecf81507260644150d4b",
+                                                                 "workflow":  "ZHanry/NestLink/.github/workflows/media-exact-budget.yml@refs/heads/main",
+                                                                 "run_id":  "41233636239",
+                                                                 "run_attempt":  "1",
+                                                                 "runner_environment":  "github-hosted",
+                                                                 "runner_os":  "Windows",
+                                                                 "cargo_lock_sha256":  "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+                                                                 "commands":  [
+                                                                                  {
+                                                                                      "argv":  [
+                                                                                                   "python",
+                                                                                                   "scripts/refactor-windows-normal-user.py",
+                                                                                                   "cargo",
+                                                                                                   "test",
+                                                                                                   "--locked",
+                                                                                                   "-p",
+                                                                                                   "nestlink-app-core",
+                                                                                                   "--lib",
+                                                                                                   "--features",
+                                                                                                   "media-runtime-test-support",
+                                                                                                   "native_displays::positive_runtime_test::",
+                                                                                                   "--",
+                                                                                                   "--show-output",
+                                                                                                   "--test-threads=1",
+                                                                                                   "--color",
+                                                                                                   "never"
+                                                                                               ],
+                                                                                      "return_code":  0
+                                                                                  },
+                                                                                  {
+                                                                                      "argv":  [
+                                                                                                   "python",
+                                                                                                   "scripts/refactor-windows-normal-user.py",
+                                                                                                   "cargo",
+                                                                                                   "test",
+                                                                                                   "--locked",
+                                                                                                   "-p",
+                                                                                                   "nestlink-app-core",
+                                                                                                   "--lib",
+                                                                                                   "native_media_provider::tests::",
+                                                                                                   "--",
+                                                                                                   "--show-output",
+                                                                                                   "--test-threads=1",
+                                                                                                   "--color",
+                                                                                                   "never"
+                                                                                               ],
+                                                                                      "return_code":  0
+                                                                                  },
+                                                                                  {
+                                                                                      "argv":  [
+                                                                                                   "python",
+                                                                                                   "scripts/refactor-windows-normal-user.py",
+                                                                                                   "cargo",
+                                                                                                   "clippy",
+                                                                                                   "--locked",
+                                                                                                   "-p",
+                                                                                                   "nestlink-app-core",
+                                                                                                   "-p",
+                                                                                                   "nestlink-media-session",
+                                                                                                   "-p",
+                                                                                                   "nestlink-daemon",
+                                                                                                   "--all-targets",
+                                                                                                   "--features",
+                                                                                                   "nestlink-app-core/media-runtime-test-support",
+                                                                                                   "--",
+                                                                                                   "-D",
+                                                                                                   "warnings"
+                                                                                               ],
+                                                                                      "return_code":  101
+                                                                                  }
+                                                                              ],
+                                                                 "actual_core_regression_passed":  true,
+                                                                 "whole_W31_or_target_acceptance_claimed":  false,
+                                                                 "scope":  "Actual ordinary-token MF direction probes, ordinary Session activation with explicit finite candidate policy, packed BGRA downscale and signed Core high-to-low exact resolution/bitrate/fps owner/ACK replacement with original source geometry. Core assembly and ACK barrier remain fixtures. No shaped network, physical GPU or complete W31 claim.",
+                                                                 "files":  [
+                                                                               {
+                                                                                   "path":  "clippy.log",
+                                                                                   "sha256":  "41286bd4ddbc3e5084874329ba0cd92430da4ca7f3d512c8389c37de3224e933"
+                                                                               },
+                                                                               {
+                                                                                   "path":  "exact-core.log",
+                                                                                   "sha256":  "dc6068496ffda76a1bc50f29bfae435a17366693c8a16df2ee31b6668dbad8cf"
+                                                                               },
+                                                                               {
+                                                                                   "path":  "provider.log",
+                                                                                   "sha256":  "10cabc62608a2a66bec3152cdc634c87a6af547e4b69cc505c266898dd35e81b"
+                                                                               }
+                                                                           ]
+                                                             }
+                                             },
+                                 "linux":  {
+                                               "candidate_policy_tests_passed":  2,
+                                               "actual_http_approval_renewal_tests_passed":  2,
+                                               "scope":  "Actual mature codecs, original media/channel owner regressions and strict lint. No physical GPU, external weak-network, full W31 or target acceptance claim.",
+                                               "receipt":  {
+                                                               "source_revision":  "3f1eb6b7ef93f5e891e8ecf81507260644150d4b",
+                                                               "workflow":  "ZHanry/NestLink/.github/workflows/media-qos.yml@refs/heads/main",
+                                                               "run_id":  "41233633137",
+                                                               "run_attempt":  "1",
+                                                               "runner_environment":  "github-hosted",
+                                                               "runner_os":  "Linux",
+                                                               "cargo_lock_sha256":  "6dac42852248ffe27ac45f5b65cc5ec420af78ba10ccdd7f2ba5fa8e6f71dcdd",
+                                                               "scope":  "Actual mature codecs, original media/channel owner regressions and strict lint. No physical GPU, external weak-network, full W31 or target acceptance claim.",
+                                                               "files":  [
+                                                                             {
+                                                                                 "path":  "candidate-http-tests.log",
+                                                                                 "sha256":  "8bea75480dfa9888a6b0e28ebd7d5620c4ff092687afa3d78849725e56ef2db0"
+                                                                             },
+                                                                             {
+                                                                                 "path":  "candidate-policy-tests.log",
+                                                                                 "sha256":  "b0dbd167554910f0370c063a9df4ab3e19f44a5f6cfeed9421a74af9aaf3ebf7"
+                                                                             },
+                                                                             {
+                                                                                 "path":  "candidate-provider-tests.log",
+                                                                                 "sha256":  "b6e72eb4e297403ce7ad0a5d7313059bf02c55019073dd6203b30588e809a00f"
+                                                                             },
+                                                                             {
+                                                                                 "path":  "clippy.log",
+                                                                                 "sha256":  "c26cb78164c8e17d6725d94b50ee9c17ae030364631274d3a3ba59e86bcab3b9"
+                                                                             },
+                                                                             {
+                                                                                 "path":  "media-tests.log",
+                                                                                 "sha256":  "afac925e04306d823210a2ea69951c5fd3a074847f80064dde81697ec9c6eb33"
+                                                                             },
+                                                                             {
+                                                                                 "path":  "native-file-tests.log",
+                                                                                 "sha256":  "6356b3a3cd393d9b35fcd697d4fa098e68077d76be3eef679b081d18476b46da"
+                                                                             },
+                                                                             {
+                                                                                 "path":  "queue-tests.log",
+                                                                                 "sha256":  "5891966cb5a3e9fbcd5a39071adb767a3c53b10501a3974e8b7dea20828f9275"
+                                                                             },
+                                                                             {
+                                                                                 "path":  "report-contract-tests.log",
+                                                                                 "sha256":  "ffbabf18ff63ee858c6d501196c8de91c2f9daad9abd20c503c49e5e5f3706ce"
+                                                                             },
+                                                                             {
+                                                                                 "path":  "report-negotiation-tests.log",
+                                                                                 "sha256":  "9fcadf7611aa43c74c3325d2142688ad318725decd3286bce29e8949b51639b9"
+                                                                             }
+                                                                         ]
+                                                           }
+                                           }
+                             },
+    "retained_failures":  [
+                              "Both whole workflows failed strict lint at SDK offline_remote.rs while_let_loop. Neither whole run is a pass. Source b166d8b repairs it and new exact-source runs are pending."
+                          ],
+    "limitations":  [
+                        "Core assembly and ACK transit barrier remain fixtures; HTTP authorization was tested separately.",
+                        "No actual 20-to-5Mbps step, 1 percent packet loss, concurrent file/input p95, physical GPU or target acceptance in these runs.",
+                        "Actual packed BGRA spatial downscale and original source geometry, signed full finite candidate set, ordinary Session activation, MF encode/decode owner replacement and current output receipt are within the successful Windows scope."
+                    ]
+}

@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "f9692e3542917938ffb03b1cc68618ea2be783d4",
-  "checkpoint_kind": "hosted_HA_four_protocol_pass_offline_private_pass_actual_mtls_pass_remote_budget_and_windows_exact_active",
+  "source_revision": "b166d8badbb99bf16d0d56d9d2964d3cab98a6d5",
+  "checkpoint_kind": "finite_signed_resolution_real_MF_pass_strict_rerun_offline_physical_socket_fix_LAN_and_release_implementation_active",
   "active_tasks": [
     "W00",
     "W02",
@@ -37,7 +37,12 @@
     "W24",
     "W30",
     "W27",
-    "W31"
+    "W31",
+    "W28",
+    "W32",
+    "W33",
+    "W34",
+    "W35"
   ],
   "satisfied_interface_dependencies": [
     "W01 nine-topic source and mature-component research independently reviewed",
@@ -90,6 +95,13 @@
     "Produce complete same-source candidate artifacts and target runbooks; publish0.8.0RC after required implementation and release qualification are truthfully satisfied."
   ],
   "evidence_index": [
+    "docs/network-rewrite/evidence/media-finite-resolution-3f1eb6b.json",
+    "docs/network-rewrite/evidence/offline-authority-storage-3f1eb6b.json",
+    "docs/network-rewrite/evidence/prefix-probe-bcb9764.json",
+    "docs/network-rewrite/evidence/openapi-generation-3f1eb6b.json",
+    "docs/adr/network/0055-signed-cpu-resolution-downshift.md",
+    "docs/adr/network/0057-finite-internal-media-candidate.md",
+    "docs/adr/network/0058-offline-remote-physical-socket-owner.md",
     "docs/network-rewrite/evidence/research-review-2026-10-30.md",
     "docs/network-rewrite/evidence/baseline-github-2026-10-30.json",
     "docs/network-rewrite/evidence/independent-vector-build-195ff0f.json",
@@ -459,6 +471,25 @@
       "scope": "WASM job124514176153 passed protocol/SDK/Web compilation; early subnet and edge-group cases failed and require exact diagnosis."
     }
   ],
+  "current_validation_checkpoint": {
+    "source_revision": "b166d8badbb99bf16d0d56d9d2964d3cab98a6d5",
+    "completed_scope": [
+      "3f1eb6b: ordinary Windows MF/Core spatial downscale, ordinary explicitly configured finite-candidate Session activation, signed exact-format proposal/ACK and encode/decode owner replacement passed 2/2; provider passed 9/9. Whole workflow failed SDK strict lint, now repaired and rerunning.",
+      "3f1eb6b: original HTTP candidate approval and both-endpoint renewal passed for singleton and explicit three-format policy, and protocol exact-set boundary tests passed. Whole media workflow failed same SDK lint.",
+      "3f1eb6b: offline authenticated-reservation negative cases, 7 primitive/3 identity/2 Session cases, 8+5 offline storage and all 274 storage tests plus strict authority/storage lint passed. Actual HTTP/SDK approval and one-use consume passed; offline remote ended at UDP rebind failure.",
+      "bcb9764: Windows/Linux each passed all 7 prefix probe tests including unchanged 800ms listener-loss withdrawal bound; measured 688.2269ms Windows and 501.7417ms Linux.",
+      "Hosted formatter 41233502414 source 3f1eb6b: all receipt file hashes and all 40 current source blobs checked before importing only the first-party patch in 07488c1; vendor bytes unchanged."
+    ],
+    "pending_runs": [41234465272, 41234467661, 41234566427, 41234569423, 41234448949, 41233648963],
+    "implementation_remaining": [
+      "W27: complete native AppCore media/input/file OS adapters, finite offline UI and resident lifecycle remain implementation work. b166d8b attaches the existing tracked socket/poller release owner and fixes while-let strict lint; same-source verification pending.",
+      "W28: controlled LAN publication/forwarding exists; latest exact L2 rerun pending. Real production virtual data path and both actual LAN game flows remain mandatory work.",
+      "W31: actual 20-to-5Mbps/1percent loss, file/input concurrency and original 2s/p95+10ms thresholds remain unverified and require complete production exercise.",
+      "W32-W35: audit and complete existing GPU/high-format production wiring, installation and mixed-version rollback paths; do not classify unfinished implementation as external blocking.",
+      "W30 and W36-W40 complete product entry, security, full E2E, paired measurements, capacity, 24h target soak and same-source release qualification remain open."
+    ],
+    "historical_run_entries": "Earlier in_progress entries below are retained historical observations; this checkpoint and exact evidence files describe current state."
+  },
   "release_state": "not_ready",
   "branch_cleanup": {
     "local_heads": [

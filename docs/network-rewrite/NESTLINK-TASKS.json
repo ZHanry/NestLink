@@ -2619,7 +2619,7 @@
           "docs/network-rewrite/evidence/offline-resident-091686c.json"
         ]
       },
-      "implementation_notes": "Durable SQLite admin policy, exact two-account signed approval, pre-reserved shared quota, one-use consume, actual HTTP/SDK and direct private QUIC/native-stream carrier passed. Source97541a2 binds finite recovery to an original in-memory Ed25519 process key; source091686c adds resident protected-login/installation/logout/maintenance guard. Cumulative remote budgets newly implemented in73efd0d await hosted validation; actual offline remote-control production activation and full UI/multiple-resident lifecycle remain mandatory open work."
+      "implementation_notes": "3f1eb6b run41233619081 passed authenticated-reservation authority negatives, 7 primitive/3 identity/2 Session cases, 8+5 offline storage and all274 storage regressions with strict authority/storage lint. Actual HTTP SDK approval/consume and online remote signed budget/QUIC business passed; finite offline remote after online expiry reached actual View and process stop but failed physical UDP rebind. b166d8b adds original tracked socket/poller cleanup owner and repairs while-let strict lint; run41234465272 pending. Complete native AppCore media/input/file OS adapters, finite offline UI, TLS fallback and multiple-resident lifecycle remain mandatory implementation work. Evidence: offline-authority-storage-3f1eb6b.json and ADR0058; no whole W27 claim."
     },
     {
       "id": "W28",
@@ -2634,9 +2634,9 @@
         "F19",
         "F23"
       ],
-      "status": "not_started",
-      "implementation_status": "not_started",
-      "verification_status": "not_run",
+      "status": "in_progress",
+      "implementation_status": "in_progress",
+      "verification_status": "running",
       "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
       "owned_paths_to_review": [
         "crates/network-overlay",
@@ -2880,7 +2880,7 @@
         "docs/network-rewrite/evidence/media-and-native-files-2494ab3.json"
       ],
       "blockers": [],
-      "implementation_notes": "Source4794698 used an authenticated in-memory duplex for its non-QUIC branch; it is not actual TCP/TLS evidence. Source5cde425 run41222892800 and2494ab3 run41224384460 passed real loopback TCP/mutually pinned TLS1.3 certificate+ALPN checks, kernel QUIC/mTLS, VP8/revoke/receiver reports, signed capability negotiation and strict Core/daemon lint; latter also passed original native-file lifecycle exact regression. Finite independently probed signed fps/bitrate targets and actual owner/ACK replacement are wired; latest Windows rerun73efd0d pending after23b1133 toolchain-download timeout before tests. Resolution adaptation, actual20-to5Mbps/1percent loss plus files/input and all original AC53 thresholds remain mandatory open work.",
+      "implementation_notes": "Earlier actual loopback TCP/mutually pinned TLS1.3 and kernel QUIC regressions remain scoped evidence; source4794698 in-memory branch is not TCP evidence. Source3f1eb6b run41233636239 passed ordinary-token MF/Core spatial resolution/fps/bitrate downshift with exact source geometry, current-output receipts, ordinary explicit finite-candidate Session activation, proposal/ACK and real encoder/decoder owner replacement (2/2) plus provider9/9. Linux run41233633137 passed both original singleton and explicit3-format HTTP approval/renewal and exact-set policy tests. Both whole workflows failed SDK while-let strict lint; fixed b166d8b with runs41234566427/41234569423 pending. Evidence media-finite-resolution-3f1eb6b.json, ADR0055/0057. Actual20-to5Mbps/1percent loss plus files/input, original2s downshift and input p95+10ms thresholds remain mandatory open work; no whole W31/target claim.",
       "partial_verification": {
         "scoped_passed": true,
         "whole_task_passed": false,
