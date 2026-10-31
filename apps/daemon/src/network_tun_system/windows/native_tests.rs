@@ -260,9 +260,10 @@ fn recovery_identity_negative(case: &Path, receipt: &Path) -> Result {
             "an existing specific route already captures a signed remote TUN host",
         ),
     ] {
-        let error = resources::preflight(guid, name, local, remote).expect_err(
-            "preflight accepted an original adapter, address or specific route conflict",
-        );
+        let error = match resources::preflight(guid, name, local, remote) {
+            Err(error) => error,
+            Ok(()) => return Err(io::Error::other("preflight accepted an original adapter, address or specific route conflict").into()),
+        };
         assert!(
             error.to_string().contains(message),
             "preflight did not reject the selected conflict: {error}"
