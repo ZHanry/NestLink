@@ -103,7 +103,8 @@ jobs:
         run: cargo clippy --locked -p nestlink-daemon --all-targets -- -D warnings
       - name: Check managed TUN plan ownership and bounded file reads on Linux
         if: ${{ !cancelled() && runner.os == 'Linux' }}
-        run: cargo test --locked -p nestlink-daemon --bin nestlink-daemon network_tun_system:: -- --show-output --test-threads=1 --color never
+        run: |
+          cargo test --locked -p nestlink-daemon --bin nestlink-daemon network_tun_system:: -- --show-output --test-threads=1 --color never
       - name: Exercise ordinary UID TUN whole packets and original helper crash recovery
         if: ${{ !cancelled() && runner.os == 'Linux' }}
         shell: python
