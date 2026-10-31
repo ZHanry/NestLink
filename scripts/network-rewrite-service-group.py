@@ -207,6 +207,7 @@ def visitor(args):
     try:
         if args.protocol in ("http","https"):
             raw=socket.create_connection((VIP,443 if args.protocol=="https" else 80),timeout=1.5,source_address=(args.source,0))
+            result["source_address"],result["source_port"]=raw.getsockname()
             if args.protocol=="https":
                 context=ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT) if args.trust=="none" else ssl.create_default_context(cafile=str(args.root))
                 raw=context.wrap_socket(raw,server_hostname=args.name)
@@ -214,7 +215,9 @@ def visitor(args):
             connection.request("POST","/exchange",payload,{"Host":args.name,"Connection":"close","Content-Type":"application/octet-stream"})
             response=connection.getresponse();result["passed"]=response.status==200 and response.read(4096)==payload;result["status"]=response.status
         elif args.protocol=="tcp":
-            connection=socket.create_connection((VIP,29100),timeout=1.5,source_address=(args.source,0));connection.sendall(payload);connection.shutdown(socket.SHUT_WR)
+            connection=socket.create_connection((VIP,29100),timeout=1.5,source_address=(args.source,0))
+            result["source_address"],result["source_port"]=connection.getsockname()
+            connection.sendall(payload);connection.shutdown(socket.SHUT_WR)
             received=bytearray()
             while len(received)<=2048:
                 part=connection.recv(2048)
@@ -222,7 +225,9 @@ def visitor(args):
                 received.extend(part)
             result["passed"]=bytes(received)==payload
         else:
-            connection=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);connection.settimeout(1.5);connection.bind((args.source,0));connection.connect((VIP,29100));connection.send(payload);result["passed"]=connection.recv(2048)==payload
+            connection=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);connection.settimeout(1.5);connection.bind((args.source,0));connection.connect((VIP,29100))
+            result["source_address"],result["source_port"]=connection.getsockname()
+            connection.send(payload);result["passed"]=connection.recv(2048)==payload
     except (OSError,ssl.SSLError,http.client.HTTPException) as error: result["error_type"]=type(error).__name__
     finally:
         if connection is not None: connection.close()
@@ -277,6 +282,26 @@ def hosted(args):
                     raise ValueError("unrecognized-actual-ipvs-destination-statistics")
                 counts[fields[1].rsplit(":",1)[0]]=int(fields[2])
         return text,counts
+    def selected_backend(result,protocol,phase):
+        # IPVS aggregate Conns is updated asynchronously. Attribute this exact
+        # successful visitor tuple from the kernel connection table instead.
+        transport="UDP" if protocol=="udp" else "TCP"
+        port=443 if protocol=="https" else 80 if protocol=="http" else 29100
+        source=f"{result['source_address']}:{result['source_port']}"
+        virtual=f"{VIP}:{port}";deadline=time.monotonic()+3
+        while True:
+            text=topology.inside("director","ipvsadm","-Lnc").decode()
+            (output/(phase+"-ipvs-selected-connection.txt")).write_text(text)
+            rows=[fields for line in text.splitlines() if len(fields:=line.split())==6
+                and fields[0]==transport and fields[3]==source and fields[4]==virtual]
+            if len(rows)>1: raise ValueError("ambiguous-exact-visitor-ipvs-connection")
+            if rows:
+                destination=rows[0][5]
+                matches=[index for index,ip in enumerate(BACKENDS) if destination==f"{ip}:{port}"]
+                if len(matches)!=1: raise ValueError("exact-visitor-ipvs-destination-outside-group")
+                return matches[0]
+            if time.monotonic()>deadline: raise TimeoutError("exact-visitor-ipvs-connection-not-observed")
+            time.sleep(.02)
     try:
         build=subprocess.run(["cargo","test","--locked","-p","nestlink-sdk","--test","service_group_l2","--no-run","--message-format=json-render-diagnostics"],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
         (output/"build.log").write_bytes(build.stderr);(output/"build-messages.jsonl").write_bytes(build.stdout)
@@ -359,8 +384,9 @@ def hosted(args):
                 assert request(directory,protocol,name="wrong.svc.nestlink.test")["error_type"]=="SSLCertVerificationError"
                 cases.update(untrusted_frontend_root_refused=True,wrong_frontend_name_refused=True)
             active=protocol+"-active-edge-owner-failure-caddy-stays-up"
-            _,before_counts=stats();assert request(directory,protocol)["passed"];_,after_counts=stats()
-            selected=next(index for index,ip in enumerate(BACKENDS) if after_counts.get(ip,0)>before_counts.get(ip,0));healthy=1-selected
+            selected_request=request(directory,protocol);assert selected_request["passed"]
+            selected=selected_backend(selected_request,protocol,phase);healthy=1-selected
+            cases["failed_edge_selected_from_exact_visitor_ipvs_connection"]=True
             marker=directory/("edge"+str(selected+1))/"initial";started=time.monotonic()
             if crash:
                 kill_original_edge(edges[selected]);assert not (marker/"stopped.json").exists()
