@@ -1,6 +1,6 @@
 use crate::worker::{self, Worker};
 use crate::{ShutdownReport, WorkerMonitor};
-use nestlink_media_codec::{VideoCodec, VideoConfig, VideoEncoder};
+use nestlink_media_codec::{VideoCodec, VideoConfig, VideoEncoder, VideoQuality};
 use nestlink_protocol::{
     NativeVideo, NativeVideoFeedback, SCHEMA_VERSION, VIDEO_KEYFRAME_INTERVAL_MS,
 };
@@ -147,6 +147,7 @@ struct Encoder {
     prepare: crate::legacy_format::LegacyPrepare,
     codec: VideoEncoder,
     config: VideoConfig,
+    quality: VideoQuality,
     sequence: u64,
     last_pts: Option<u64>,
     next_frame: Instant,
@@ -268,6 +269,7 @@ fn send<D: CaptureDevice>(
                 )?,
                 codec: VideoEncoder::new(codec_kind, stream.codec)?,
                 config: stream.codec,
+                quality: VideoQuality::new(stream.codec.fps, stream.codec.bitrate_kbps, origin),
                 sequence: 0,
                 last_pts: None,
                 next_frame: origin,
@@ -404,11 +406,13 @@ fn send<D: CaptureDevice>(
                 ));
             }
             encoder.pending_sources.insert(pts, repeated_source);
+            let encode_started = Instant::now();
             let packet = encoder.codec.encode(
                 &pixels,
                 pts,
                 encoder.force_keyframe && now >= encoder.next_keyframe,
             )?;
+            let encoding_time = encode_started.elapsed();
             encoder.last_pixels = Some(pixels);
             encoder.last_pts = Some(pts);
             let Some(packet) = packet else {
@@ -433,8 +437,6 @@ fn send<D: CaptureDevice>(
                 stats.keyframes_encoded = stats.keyframes_encoded.saturating_add(1);
             }
             encoder.last_pts = Some(pts);
-            encoder.next_frame =
-                now + Duration::from_nanos(1_000_000_000 / u64::from(encoder.config.fps));
             if worker::stopped(&stop) {
                 return Ok(());
             }
@@ -472,6 +474,7 @@ fn send<D: CaptureDevice>(
             // queued frame before this thread is scheduled again. A failed
             // enqueue is terminal; its sequence is never reused.
             encoder.sequence = sequence;
+            let enqueue_started = Instant::now();
             let pending = sender.send(Channel::Video, &bytes);
             tokio::pin!(pending);
             let result = loop {
@@ -487,6 +490,12 @@ fn send<D: CaptureDevice>(
             // No encoded reference frame is replaced or dropped. An actual send
             // error terminates this stream, so it cannot feed dependent deltas.
             result.map_err(io::Error::other)?;
+            let encoder = codecs.get_mut(&source).ok_or_else(|| io::Error::other("missing sent encoder"))?;
+            if let Some(kbps) = encoder.quality.observe(Instant::now(), encoding_time, enqueue_started.elapsed()) {
+                encoder.codec.set_bitrate(kbps)?;
+                encoder.config.bitrate_kbps = kbps;
+            }
+            encoder.next_frame = Instant::now() + Duration::from_nanos(1_000_000_000 / u64::from(encoder.quality.fps()));
         }
     })
 }
