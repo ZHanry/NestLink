@@ -15,6 +15,43 @@ fn native_directory() -> Result<PathBuf> {
     Ok(directory)
 }
 
+#[tokio::test]
+async fn original_installation_certificate_without_memory_process_proof_cannot_reach_target() -> Result {
+    use nestlink_identity::offline::offline_channel_transcript;
+    use nestlink_transport_quic::service::{connect,read_message,write_message};
+    tokio::time::timeout(Duration::from_secs(25),async {
+        let (target,count,_echo)=echo().await?;
+        let f=Fixture::new("tcp",target).await?;
+        let directory=native_directory()?;
+        let Pair {source_process:_source_process,_host_process,source,host,..}=pair(&f,32768,20_000).await?;
+        let claims=source.claims().clone();let hash=source.digest();
+        let mut host=f.sdk.start_offline_private_service_host(f.host.clone(),host,f.consent,"127.0.0.1:0".parse()?).await?;
+        let address=host.address().ok_or("host address")?;
+        // Correct installation certificate and saved complete claims cannot
+        // replace the original consumed process's unexported memory key.
+        let forged=connect(address,&f.consumer.identity,f.host.identity.fingerprint()).await?;
+        let (mut send,mut recv)=forged.connection.open_bi().await?;
+        let source_nonce=[31u8;32];
+        write_message(&mut send,&serde_json::json!({"bundle_id":claims.bundle_id,"draft_digest":hash,"source_nonce":source_nonce})).await?;
+        let challenge:serde_json::Value=read_message(&mut recv).await?;
+        let binding=serde_json::from_value(challenge["binding"].clone())?;
+        let transcript=offline_channel_transcript(&claims,hash,&binding,0)?;
+        let installation_signature=f.consumer.identity.sign_action(&transcript)?;
+        write_message(&mut send,&serde_json::json!({"signature":installation_signature,"process_signature":installation_signature})).await?;
+        assert!(tokio::time::timeout(Duration::from_secs(3),read_message::<[u8;32]>(&mut recv)).await?.is_err());
+        drop(send);drop(recv);
+        forged.close_and_wait().await?;
+        assert_eq!(count.load(Ordering::Acquire),0,"the target never receives unauthenticated application bytes");
+        assert_eq!(host.status()?.cumulative_connections,1,"failed proof permanently spends its original connection attempt");
+        let mut proxy=f.sdk.start_offline_private_service_proxy(Arc::new(f.consumer),source,address,&directory).await?;
+        roundtrip(proxy.endpoint().ok_or("native endpoint")?,b"original memory owner").await?;
+        assert_eq!(host.status()?.cumulative_connections,2);
+        cleaned(&mut proxy).await?;cleaned(&mut host).await?;
+        std::fs::remove_dir(directory)?;std::fs::remove_dir_all(f.usage)?;
+        Ok::<_,Box<dyn std::error::Error+Send+Sync>>(())
+    }).await?
+}
+
 struct Pair {
     source_process: OfflineProcess,
     _host_process: OfflineProcess,

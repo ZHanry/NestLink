@@ -16,7 +16,8 @@ pub struct OfflineMember {
     pub account_id: String,
     pub public_key: [u8; 32],
     pub membership_epoch: u64,
-    /// Random, memory-only process nonce supplied during online approval.
+    /// Random ephemeral process public key supplied during online approval.
+    /// Its matching private key remains only in the original process memory.
     pub process_nonce: [u8; 32],
 }
 

@@ -15,7 +15,7 @@ source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(
 assert source == os.environ['GITHUB_SHA']
 output = args.output
 output.mkdir(parents=True, exist_ok=True)
-package, target, count = ('nestlink-storage', ['--lib'], 8) if args.suite == 'storage' else ('nestlink-sdk', ['--test', 'private_services'], 6)
+package, target, count = ('nestlink-storage', ['--lib'], 8) if args.suite == 'storage' else ('nestlink-sdk', ['--test', 'private_services'], 7)
 build = ['cargo', 'test', '--locked', '-p', package, *target, '--no-run', '--message-format=json']
 receipt = {
     'source_revision': source, 'run_id': os.environ['GITHUB_RUN_ID'],

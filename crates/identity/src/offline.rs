@@ -3,7 +3,6 @@
 use crate::{digest, domain_message, network::NetworkAuthoritySigner, verify_signature};
 use ed25519_dalek::Signer;
 use nestlink_protocol::{ContractError, ErrorCode, offline::*};
-use rand_core::{OsRng, RngCore};
 use std::{
     collections::BTreeSet,
     sync::{
@@ -275,6 +274,7 @@ pub struct OfflineProcess {
     installation_id: String,
     public_key: [u8; 32],
     nonce: [u8; 32],
+    channel_identity: Arc<crate::InstallationIdentity>,
     consumed: BTreeSet<String>,
     highest_wall_ms: u64,
     highest_revocation_epoch: u64,
@@ -305,12 +305,13 @@ impl OfflineProcess {
                 "offline process needs a fixed registered installation",
             ));
         }
-        let mut nonce = [0; 32];
-        OsRng.fill_bytes(&mut nonce);
+        let channel_identity = Arc::new(crate::InstallationIdentity::generate());
+        let nonce = channel_identity.public_key();
         Ok(Self {
             installation_id,
             public_key,
             nonce,
+            channel_identity,
             consumed: BTreeSet::new(),
             highest_wall_ms: now_ms,
             highest_revocation_epoch,
@@ -369,6 +370,7 @@ impl OfflineProcess {
             local,
             bundle,
             process_stopped: self.stopped.clone(),
+            channel_identity: self.channel_identity.clone(),
             spent_bytes: 0,
             written_bytes: 0,
             connections: 0,
@@ -400,6 +402,7 @@ pub struct OfflineAdmission {
     connections: u32,
     stopped: bool,
     process_stopped: Arc<AtomicBool>,
+    channel_identity: Arc<crate::InstallationIdentity>,
 }
 impl OfflineAdmission {
     pub fn claims(&self) -> &OfflineGrantBundleClaims {
@@ -446,6 +449,13 @@ impl OfflineAdmission {
     pub fn check_current(&mut self, wall_ms: u64) -> Result<(), ContractError> {
         self.check(wall_ms)
     }
+    /// Requires the unexported ephemeral private key of the original consumed
+    /// process. The public process nonce and saved installation key cannot
+    /// reproduce this signature after restart or backup restoration.
+    pub fn sign_channel_proof(&mut self, wall_ms:u64, binding:&channel::OfflineChannelBinding) -> Result<Vec<u8>,ContractError> {
+        self.check(wall_ms)?;
+        self.channel_identity.sign_action(&offline_channel_transcript(self.claims(),self.digest(),binding,self.local as u8)?)
+    }
     /// Recovery synchronizes received policy before admitting more offline I/O.
     /// A newer revocation epoch closes this owner, including unrelated changes;
     /// only a new, explicitly approved online reservation may grant new rights.
@@ -482,13 +492,27 @@ impl OfflineAdmission {
                 "offline connection is not the exact approved direct peer",
             ));
         }
-        if self.connections >= claims.resources.connection_limit {
+        self.reserve_connection_attempt(wall_ms,transport)
+    }
+    /// Charge before dialing or accepting TLS. Failure, cancellation and
+    /// reconnects never refund an attempt or recreate the original meter.
+    /// This reservation alone grants no business I/O or peer authentication.
+    pub fn reserve_connection_attempt(&mut self,wall_ms:u64,transport:OfflineDirectTransport) -> Result<(),ContractError> {
+        self.check(wall_ms)?;
+        if !self.claims().connection.direct_transports.contains(&transport) {return Err(denied("offline attempt is not an approved direct transport"));}
+        if self.connections >= self.claims().resources.connection_limit {
             self.stop();
             return Err(denied(
                 "offline cumulative connection reservation exhausted",
             ));
         }
         self.connections += 1;
+        Ok(())
+    }
+    pub fn authenticate_reserved_connection(&mut self,wall_ms:u64,transport:OfflineDirectTransport,remote_key:&[u8;32]) -> Result<(),ContractError> {
+        self.check(wall_ms)?;
+        if self.connections==0 || *remote_key!=self.claims().members[1-self.local].public_key
+            || !self.claims().connection.direct_transports.contains(&transport) {return Err(denied("offline connection lacks its original attempt and authenticated direct peer"));}
         Ok(())
     }
     pub fn admit_remote_operation(
