@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "3f1eb6b7ef93f5e891e8ecf81507260644150d4b",
+  "run_id": 41233619081,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41233619081",
+  "workflow": ".github/workflows/offline-authority.yml",
+  "workflow_conclusion": "failure",
+  "qualified_jobs": [
+    {
+      "name": "authority",
+      "conclusion": "success",
+      "runner": "github-hosted ubuntu-24.04",
+      "primitive_tests": 7,
+      "remote_identity_tests": 3,
+      "remote_session_tests": 2,
+      "failed_tests": 0,
+      "ignored_tests": 0,
+      "new_negative_coverage": "A reserved connection cannot authorize remote/private business or Session activation. Missing or mismatched transport reservations, wrong peers and repeated reservation authentication are rejected. Successful matching authentication retains the original cumulative counters.",
+      "strict_clippy": "cargo clippy --locked -p nestlink-protocol -p nestlink-identity -p nestlink-session --all-targets -- -D warnings",
+      "clippy_log_sha256": "31985b995aa1e86969bbc8ab884c98463d1866310f1b56629b9b25e446680da3",
+      "artifact_id": 13054901922,
+      "github_artifact_digest": "sha256:92ce1233a6cbc2d2d5e0a59773760fb7d017c199e6d264d44afa2b7382c79d9c"
+    },
+    {
+      "name": "durable-private-service",
+      "conclusion": "success",
+      "runner": "github-hosted ubuntu-24.04",
+      "offline_storage_tests": 8,
+      "remote_storage_tests": 5,
+      "full_storage_regression_tests": 274,
+      "full_storage_regression_test_targets": 13,
+      "failed_tests": 0,
+      "ignored_tests": 0,
+      "full_storage_command": "cargo test --locked -p nestlink-storage --lib --tests --no-fail-fast",
+      "full_storage_log_sha256": "c5b306ead019caa75dc8c7af9cb03b430ea013c103b5b95313ec067b8630097e",
+      "strict_clippy": "cargo clippy --locked -p nestlink-storage -p nestlink-identity -p nestlink-protocol --all-targets -- -D warnings",
+      "clippy_log_sha256": "82c1ab182d7c64158f5a1ce186eb583c293cab6a7c1fa06976381152b5f199a1",
+      "artifact_id": 13055106683,
+      "github_artifact_digest": "sha256:dfce0b01341fd3da6a472d2ff752d731887b4e28913a83a15fe292f8a9cc40bc"
+    }
+  ],
+  "verification": "Downloaded both successful job artifacts. Every file listed in their five receipts matched its SHA-256; all five receipts report passed and the exact source above. Reviewed 13 full-storage summaries totaling 274 passed with zero failed/ignored. Artifact digests are reported by the GitHub Actions API.",
+  "limitations": [
+    "The actual-http-sdk job failed; this is not a complete workflow, native remote carrier, release or target acceptance pass.",
+    "The successful storage suite also contains the newly finite media candidate regression; this does not independently qualify MF, native media production or target hardware.",
+    "No local formatter, compiler, lint or project test was executed."
+  ]
+}
