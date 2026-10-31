@@ -1,0 +1,116 @@
+{
+    "schema_version":  1,
+    "purpose":  "reviewed-linux-tun-provider-product-lock",
+    "source_revision":  "98f66004e102820fa599f159ac6ffd75bbc65925",
+    "workflow":  ".github/workflows/network-lock-refresh.yml",
+    "run_id":  41185477608,
+    "run_attempt":  1,
+    "runner":  "github-hosted ubuntu-24.04",
+    "artifact_id":  13036683430,
+    "archive_sha256":  "e786a1a0bf2f6333f6edda6e71a696d84d34b69d041edab08b700b36a7e0acd9",
+    "receipt":  {
+                    "schema_version":  1,
+                    "purpose":  "reviewed-network-components-lock-derivation-only",
+                    "repository":  "ZHanry/NestLink",
+                    "source_revision":  "98f66004e102820fa599f159ac6ffd75bbc65925",
+                    "run_id":  "41185477608",
+                    "run_attempt":  "1",
+                    "scope":  "product",
+                    "manifest_path":  "Cargo.toml",
+                    "before_lock_sha256":  "9f2d3e6598f95a3edf1e4fc4cd7820703d9942cae3cb9129105348c7edeca6fe",
+                    "commands":  [
+                                     {
+                                         "argv":  [
+                                                      "cargo",
+                                                      "update",
+                                                      "--workspace",
+                                                      "--manifest-path",
+                                                      "Cargo.toml"
+                                                  ],
+                                         "return_code":  0
+                                     },
+                                     {
+                                         "argv":  [
+                                                      "cargo",
+                                                      "update",
+                                                      "-p",
+                                                      "encoding_rs",
+                                                      "--precise",
+                                                      "0.8.35",
+                                                      "--manifest-path",
+                                                      "Cargo.toml"
+                                                  ],
+                                         "return_code":  0
+                                     },
+                                     {
+                                         "argv":  [
+                                                      "cargo",
+                                                      "metadata",
+                                                      "--manifest-path",
+                                                      "Cargo.toml",
+                                                      "--locked",
+                                                      "--format-version",
+                                                      "1"
+                                                  ],
+                                         "return_code":  0
+                                     }
+                                 ],
+                    "assertions":  {
+                                       "only_selected_lock_changed":  true,
+                                       "all_existing_package_identities_and_checksums_preserved":  true,
+                                       "all_unrelated_external_package_edges_preserved":  true,
+                                       "only_exact_reviewed_component_feature_edges_added":  true,
+                                       "reviewed_crab_nat_exact_version_and_checksum":  true,
+                                       "reviewed_petgraph_exact_version_and_checksum":  true,
+                                       "reviewed_authoritative_dns_exact_version":  true,
+                                       "locked_metadata_succeeded":  true,
+                                       "protected_native_stream_reuses_existing_tokio_identity":  true,
+                                       "native_stdio_reuses_locked_tokio_util_identity":  true,
+                                       "packet_parser_exact_identity_checksum_and_only_locked_arrayvec_edge":  true,
+                                       "managed_tun_exact_reviewed_provider_closure":  true,
+                                       "only_reviewed_cookie_packet_components_or_exact_product_reuse_added":  true
+                                   },
+                    "failure":  null,
+                    "product_compilation_performed":  false,
+                    "quality_or_acceptance_claimed":  false,
+                    "files":  [
+                                  {
+                                      "path":  "Cargo.lock",
+                                      "bytes":  208600,
+                                      "sha256":  "134375a45c01e06b307fd9ba7ecdfa4baa5346781ed35ff2c4c45cf87b64ac7a"
+                                  },
+                                  {
+                                      "path":  "before.lock",
+                                      "bytes":  205021,
+                                      "sha256":  "9f2d3e6598f95a3edf1e4fc4cd7820703d9942cae3cb9129105348c7edeca6fe"
+                                  },
+                                  {
+                                      "path":  "cargo-generated.lock",
+                                      "bytes":  208600,
+                                      "sha256":  "20e46037f799f31f5583ae85216174357ecf2c029acbf38321f34ffa958e2b3a"
+                                  },
+                                  {
+                                      "path":  "command-0.log",
+                                      "bytes":  1145,
+                                      "sha256":  "0025ffa6fa031b5aa77f62da0e9697634c6f28f6816f63442039f3992a443adb"
+                                  },
+                                  {
+                                      "path":  "command-1.log",
+                                      "bytes":  279,
+                                      "sha256":  "0d532564e1abdebb6ce1ae2c7e399916cc50d4369ec65cf4d7c432183e226910"
+                                  },
+                                  {
+                                      "path":  "command-2.log",
+                                      "bytes":  4239717,
+                                      "sha256":  "d3261cdf65d3f1a8ea7dfeb90e738df499efe1d79fb78df17fd945e07c89414f"
+                                  },
+                                  {
+                                      "path":  "derivation.diff",
+                                      "bytes":  7004,
+                                      "sha256":  "0ee86b66a0a49ca3917c8c5afd3d128d60581fe518c5e0ec4e202f4da00affa9"
+                                  }
+                              ]
+                },
+    "reviewed_change":  "13 exact identities; spin0.9.9 non-yanked replaces rejected0.9.8; encoding_rs pinned0.8.35; existing fastrand2.5.0 entropy feature reuses getrandom0.4.3; old libloading0.8.9 and nix0.26.4 edges merely qualified after adding a second version. All other original identities, checksums and effective edges preserved. No local dependency resolution or compilation.",
+    "qualification_claimed":  false
+}
