@@ -13,6 +13,8 @@ use tokio::time::Instant;
 
 #[derive(clap::Args)]
 pub(crate) struct TunArgs {
+    #[command(flatten)]
+    lan: crate::network_lan::attached::Options,
     /// Existing ordinary installation with protected login recovery enabled.
     #[arg(long)]
     state_dir: PathBuf,
@@ -76,6 +78,7 @@ pub(crate) async fn run(args: TunArgs) -> Result {
         return Err(io::Error::other("select concrete original underlay endpoints").into());
     }
     let approved = bytes32(&args.approve_digest)?;
+    let reviewed_lan = args.lan.prepare(&args.space)?;
     let pin = PinnedNetworkSpace::new(args.space.clone(), bytes32(&args.authority)?)?;
     let installation =
         nestlink_local_ipc::maintenance::InstallationStartup::acquire(&std::env::current_exe()?)?;
@@ -140,15 +143,22 @@ pub(crate) async fn run(args: TunArgs) -> Result {
         let outcome = async {
             let state = wait_ready(&os,&plan,&sdk,&mut access,&directory,login).await?;
             let mut device = adopt_ready(&os,&plan,&state,&sdk,&mut access,&directory,login).await?;
-            access.refresh(&sdk).await?;
+            let lan = reviewed_lan.map(|review| review.bind(&access)).transpose()?;
             // Physical binding precedes every overlay route. While a peer is
             // connecting, keep the original online authority and local login
             // observed; no packet is consumed until mTLS and digest proof pass.
-            let guard=HostGuard {os:&os,plan:&plan,state:&state,directory:&directory,login};
-            crate::network_packet_runtime::establish(&mut endpoint,args.dial,&sdk,&mut access,&guard).await?;
-            let result = crate::network_packet_runtime::packet_loop(&device,&mut endpoint,&sdk,&mut access,&guard).await;
+            let result = async {
+                access.refresh(&sdk).await?;
+                let guard=HostGuard {os:&os,plan:&plan,state:&state,directory:&directory,login,lan:lan.as_ref()};
+                crate::network_packet_runtime::establish(&mut endpoint,args.dial,&sdk,&mut access,&guard).await?;
+                let combined = crate::network_lan::attached::Device {host:&device,lan:lan.as_ref()};
+                crate::network_packet_runtime::packet_loop(&combined,&mut endpoint,&sdk,&mut access,&guard).await
+            }.await;
+            access.stop();
+            let lan_stopped=lan.as_ref().map(|lan|lan.shutdown()).transpose();
             let stopped=device.shutdown().await;
             drop(device);
+            lan_stopped?;
             stopped?;
             result
         }.await;
@@ -260,10 +270,13 @@ struct HostGuard<'a> {
     state: &'a TunState,
     directory: &'a Path,
     login: [u8; 32],
+    lan: Option<&'a crate::network_lan::attached::Attached>,
 }
 impl crate::network_packet_runtime::OwnerGuard for HostGuard<'_> {
     fn check_local(&self) -> Result {
-        local_current(self.directory, self.login)
+        local_current(self.directory, self.login)?;
+        if let Some(lan) = self.lan { lan.check()?; }
+        Ok(())
     }
     fn check(&self) -> crate::network_packet_runtime::GuardFuture<'_> {
         Box::pin(async move {

@@ -16,6 +16,8 @@ use std::{
 use tokio::time::Instant;
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
+pub(crate) mod attached;
+
 #[derive(clap::Args)]
 pub(crate) struct LanArgs {
     #[arg(long)]
@@ -42,7 +44,7 @@ pub(crate) struct LanArgs {
     #[arg(long)]
     approve_policy: String,
 }
-fn bytes32(value: &str) -> Result<[u8; 32]> {
+pub(super) fn bytes32(value: &str) -> Result<[u8; 32]> {
     let bytes: [u8; 32] = URL_SAFE_NO_PAD
         .decode(value)?
         .try_into()
@@ -52,7 +54,7 @@ fn bytes32(value: &str) -> Result<[u8; 32]> {
     }
     Ok(bytes)
 }
-fn policy_bytes(path: &Path) -> io::Result<Vec<u8>> {
+pub(super) fn policy_bytes(path: &Path) -> io::Result<Vec<u8>> {
     if !path.is_absolute() || std::fs::metadata(path)?.len() > 16_384 {
         return Err(io::Error::other(
             "bounded absolute owner-private LAN policy required",

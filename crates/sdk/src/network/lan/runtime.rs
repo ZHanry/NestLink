@@ -159,6 +159,12 @@ impl LanBridge {
         }
         self.policy.check_interface()
     }
+    /// Called only after the original admission. Exactly this virtual host
+    /// pair and UDP source/destination port belong to discovery; other admitted
+    /// traffic remains the existing TUN's responsibility.
+    pub fn handles_admitted(&self, packet: &[u8]) -> bool {
+        wire::transport_matches(packet, self.remote, self.local, self.policy.transport_port)
+    }
     /// Return one whole IP packet to the original `admit_local`/packet codec.
     /// A bounded socket poll avoids background transport owners or queues.
     pub async fn recv(&self, buffer: &mut [u8]) -> io::Result<usize> {

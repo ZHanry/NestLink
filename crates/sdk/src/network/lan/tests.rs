@@ -96,12 +96,17 @@ fn original_unicast_packet_roundtrip_preserves_payload_and_refuses_corruption() 
     let destination = Ipv4Addr::new(10, 44, 0, 3);
     let message = envelope(1)?;
     let packet = wire::packet(source, destination, 37828, &message)?;
+    assert!(wire::transport_matches(&packet, source, destination, 37828));
+    assert!(!wire::transport_matches(&packet, destination, source, 37828));
+    assert!(!wire::transport_matches(&packet, source, destination, 37829));
     assert!(packet.len() <= super::super::packet_access::PACKET_MTU);
     assert_eq!(wire::parse(&packet, source, destination, 37828)?, message);
     assert!(wire::parse(&packet, destination, source, 37828).is_err());
     assert!(wire::parse(&packet, source, destination, 37829).is_err());
     let mut corrupt = packet.clone();
     *corrupt.last_mut().ok_or("missing packet")? ^= 1;
+    assert!(wire::transport_matches(&corrupt, source, destination, 37828),
+        "corrupt reserved discovery must never fall through to a host TUN");
     assert!(wire::parse(&corrupt, source, destination, 37828).is_err());
     let mut oversized = message.clone();
     if let Some(Body::Request(request)) = &mut oversized.body {

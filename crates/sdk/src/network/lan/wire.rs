@@ -140,6 +140,23 @@ pub(super) fn parse(
     }
     Ok(envelope)
 }
+/// Select only the reserved virtual-host tuple. Malformed envelopes on this
+/// tuple still go to the strict parser and can never fall through to a TUN.
+pub(super) fn transport_matches(
+    packet: &[u8],
+    source: Ipv4Addr,
+    destination: Ipv4Addr,
+    port: u16,
+) -> bool {
+    let Ok(sliced) = SlicedPacket::from_ip(packet) else {
+        return false;
+    };
+    matches!((sliced.net, sliced.transport),
+        (Some(NetSlice::Ipv4(ip)), Some(TransportSlice::Udp(udp)))
+        if ip.header().source_addr() == source
+            && ip.header().destination_addr() == destination
+            && udp.source_port() == port && udp.destination_port() == port)
+}
 #[derive(Default)]
 pub(super) struct Replay {
     highest: u64,
