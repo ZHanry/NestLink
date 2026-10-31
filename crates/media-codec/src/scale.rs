@@ -1,6 +1,9 @@
 //! A bounded adapter to the mature packed-pixel scaler. It changes no source,
 //! authorization, colour metadata or input-coordinate space.
-use fast_image_resize::{PixelType, ResizeAlg, ResizeOptions, Resizer, images::{Image, ImageRef}};
+use fast_image_resize::{
+    PixelType, ResizeAlg, ResizeOptions, Resizer,
+    images::{Image, ImageRef},
+};
 use std::io;
 use zeroize::Zeroizing;
 
@@ -22,25 +25,37 @@ pub fn scale_bgra(
 ) -> io::Result<Zeroizing<Vec<u8>>> {
     let source_bytes = length(source.0, source.1)?;
     let target_bytes = length(target.0, target.1)?;
-    if pixels.len() != source_bytes || target.0 > source.0 || target.1 > source.1
+    if pixels.len() != source_bytes
+        || target.0 > source.0
+        || target.1 > source.1
         || u64::from(source.0) * u64::from(target.1) != u64::from(source.1) * u64::from(target.0)
     {
-        return Err(io::Error::other("scaler requires an exact bounded uncropped downscale"));
+        return Err(io::Error::other(
+            "scaler requires an exact bounded uncropped downscale",
+        ));
     }
     let mut output = Zeroizing::new(Vec::new());
-    output.try_reserve_exact(target_bytes).map_err(io::Error::other)?;
+    output
+        .try_reserve_exact(target_bytes)
+        .map_err(io::Error::other)?;
     output.resize(target_bytes, 0);
     if source == target {
         output.copy_from_slice(pixels);
         return Ok(output);
     }
-    let input = ImageRef::new(source.0, source.1, pixels, PixelType::U8x4).map_err(io::Error::other)?;
-    let mut destination = Image::from_slice_u8(target.0, target.1, &mut output, PixelType::U8x4).map_err(io::Error::other)?;
+    let input =
+        ImageRef::new(source.0, source.1, pixels, PixelType::U8x4).map_err(io::Error::other)?;
+    let mut destination = Image::from_slice_u8(target.0, target.1, &mut output, PixelType::U8x4)
+        .map_err(io::Error::other)?;
     // Nearest preserves each packed BGRA sample and uses no intermediate raw
     // pixel caches. Both caller-owned buffers retain their zeroizing lifetime.
     let mut resizer = Resizer::new();
-    let options = ResizeOptions::new().resize_alg(ResizeAlg::Nearest).use_alpha(false);
-    resizer.resize(&input, &mut destination, &options).map_err(io::Error::other)?;
+    let options = ResizeOptions::new()
+        .resize_alg(ResizeAlg::Nearest)
+        .use_alpha(false);
+    resizer
+        .resize(&input, &mut destination, &options)
+        .map_err(io::Error::other)?;
     if resizer.size_of_internal_buffers() != 0 {
         return Err(io::Error::other("unexpected scaler pixel cache"));
     }
@@ -51,12 +66,16 @@ pub fn scale_bgra(
 mod tests {
     use super::*;
     #[test]
-    fn actual_packed_scaler_preserves_colours_and_rejects_crop_upscale_or_short_input() -> io::Result<()> {
+    fn actual_packed_scaler_preserves_colours_and_rejects_crop_upscale_or_short_input()
+    -> io::Result<()> {
         let mut pixels = vec![0; 8 * 8 * 4];
         for y in 0..8 {
             for x in 0..8 {
                 pixels[(y * 8 + x) * 4..(y * 8 + x + 1) * 4].copy_from_slice(&[
-                    if x < 4 { 10 } else { 210 }, if y < 4 { 30 } else { 230 }, 80, 255,
+                    if x < 4 { 10 } else { 210 },
+                    if y < 4 { 30 } else { 230 },
+                    80,
+                    255,
                 ]);
             }
         }

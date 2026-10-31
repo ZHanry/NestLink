@@ -231,9 +231,18 @@ mod tests {
         // The image occupies half as many UI pixels while the actual approved
         // screen retains its original negative origin and full logical bounds.
         let image = Rect::from_min_max(Pos2::new(10.0, 20.0), Pos2::new(110.0, 70.0));
-        assert_eq!(pointer_to_logical(Pos2::new(60.0, 45.0), image, &layout()), Some((0, 70)));
-        assert_eq!(pointer_to_logical(Pos2::new(109.9, 69.9), image, &layout()), Some((99, 119)));
-        assert_eq!(pointer_to_logical(Pos2::new(110.0, 45.0), image, &layout()), None);
+        assert_eq!(
+            pointer_to_logical(Pos2::new(60.0, 45.0), image, &layout()),
+            Some((0, 70))
+        );
+        assert_eq!(
+            pointer_to_logical(Pos2::new(109.9, 69.9), image, &layout()),
+            Some((99, 119))
+        );
+        assert_eq!(
+            pointer_to_logical(Pos2::new(110.0, 45.0), image, &layout()),
+            None
+        );
     }
 
     #[test]

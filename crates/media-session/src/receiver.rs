@@ -1841,12 +1841,25 @@ fn prepare_display_decoder(
                     (if kind == VideoCodec::H264Baseline {
                         crate::h264_display_config(*format, layout.width, layout.height)
                             .map(|config| (kind, config))
-                    } else { crate::negotiated_format::format_target(*format, layout.width, layout.height, true) })
+                    } else {
+                        crate::negotiated_format::format_target(
+                            *format,
+                            layout.width,
+                            layout.height,
+                            true,
+                        )
+                    })
                     .ok()
                     .map(|(kind, config)| (*format, kind, config))
                 })
                 .filter(|(_, codec, _)| *codec == kind)
-                .max_by_key(|(_, _, config)| (u64::from(config.width) * u64::from(config.height), config.fps, config.bitrate_kbps))
+                .max_by_key(|(_, _, config)| {
+                    (
+                        u64::from(config.width) * u64::from(config.height),
+                        config.fps,
+                        config.bitrate_kbps,
+                    )
+                })
                 .ok_or_else(|| {
                     io::Error::other("selected display has no executable signed CPU target")
                 })?;

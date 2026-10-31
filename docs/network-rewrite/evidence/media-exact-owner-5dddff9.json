@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "source_revision": "5dddff978b5affd8785ce4527377ac373404e597",
+  "task_ids": [
+    "W31"
+  ],
+  "whole_task_passed": false,
+  "release_qualification_claimed": false,
+  "build_provenance": {
+    "repository": "ZHanry/NestLink",
+    "workflow": ".github/workflows/media-exact-budget.yml",
+    "run_id": 41228432944,
+    "run_attempt": 1,
+    "job_id": 124617377052,
+    "runner_environment": "github-hosted",
+    "runner_label": "windows-2022",
+    "cargo_lock_sha256": "87315f505621834141721a3cb214b01a0203e6eb9d25b6d3bd5fdbdc4b7852e7",
+    "artifact_id": 13052928161,
+    "artifact_sha256": "856ce2ee6471c831f8b79b72b13b1e7baf3daf70d5e61fb769d6d49b6572f4af",
+    "receipt_sha256": "b69e100c28378c0e5f1b1bc18fe7e7051bf3065b0a8b3765b5c3b24495a22c44",
+    "all_receipt_file_hashes_verified": true
+  },
+  "execution_provenance": {
+    "kind": "github_hosted_lab",
+    "ordinary_windows_medium_token": true,
+    "scope": "Actual per-direction MF software probes of three exact signed fps/bitrate targets; actual Core high-to-low MF encode and decode owner replacement through original proposal/ACK barrier, old owner checked close/join, old receipt rejection, receiver health and original lease stop. Same pixel geometry in this source; no spatial downscale, shaped network or physical GPU/target qualification.",
+    "results": {
+      "exact-core.log": [
+        [
+          "2",
+          "0",
+          "0"
+        ]
+      ],
+      "provider.log": [
+        [
+          "8",
+          "0",
+          "0"
+        ]
+      ]
+    },
+    "commands": [
+      {
+        "argv": [
+          "python",
+          "scripts/refactor-windows-normal-user.py",
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nestlink-app-core",
+          "--lib",
+          "--features",
+          "media-runtime-test-support",
+          "native_displays::positive_runtime_test::",
+          "--",
+          "--show-output",
+          "--test-threads=1",
+          "--color",
+          "never"
+        ],
+        "return_code": 0
+      },
+      {
+        "argv": [
+          "python",
+          "scripts/refactor-windows-normal-user.py",
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "nestlink-app-core",
+          "--lib",
+          "native_media_provider::tests::",
+          "--",
+          "--show-output",
+          "--test-threads=1",
+          "--color",
+          "never"
+        ],
+        "return_code": 0
+      },
+      {
+        "argv": [
+          "python",
+          "scripts/refactor-windows-normal-user.py",
+          "cargo",
+          "clippy",
+          "--locked",
+          "-p",
+          "nestlink-app-core",
+          "-p",
+          "nestlink-media-session",
+          "-p",
+          "nestlink-daemon",
+          "--all-targets",
+          "--features",
+          "nestlink-app-core/media-runtime-test-support",
+          "--",
+          "-D",
+          "warnings"
+        ],
+        "return_code": 0
+      }
+    ],
+    "files": [
+      {
+        "path": "clippy.log",
+        "sha256": "1a1740bb40f7d370027511a91ae8aee9750ea0aacbff9b3ca6bd29a401a22622"
+      },
+      {
+        "path": "exact-core.log",
+        "sha256": "77791b0319b9a7f3e6714272c3c0ebdfeff08cff9641e6d80f8774aae6f533af"
+      },
+      {
+        "path": "provider.log",
+        "sha256": "f365c46ed492ae9a1c7c18db83cb95f8c3ccb89c1dc1c6be937c96bea8da72b3"
+      }
+    ]
+  },
+  "retained_failures": [
+    {
+      "run_id": 41225399296,
+      "source_revision": "23b1133b6f0418ddcacf15d3c9a3369bf55ba87b",
+      "scope": "rustup network timeout before project tests; no pass claimed"
+    },
+    {
+      "run_id": 41226505303,
+      "source_revision": "73efd0d175e1a868031a7bc44fb83a58c9b3564a",
+      "scope": "Both actual Core tests, all8 provider tests and strict lint passed; nocapture inserted diagnostics into result line, so exact receipt parser correctly withheld workflow success. Fixed logging presentation using show-output; no test/assertion/qualification threshold reduced."
+    }
+  ],
+  "remaining": [
+    "Actual finite signed resolution downscale on source b864fdb or later",
+    "Actual20-to5Mbps/1percent loss plus file/input concurrency and original2-second/input-p95 thresholds",
+    "Physical GPU/display and complete W31/AC53 target acceptance"
+  ]
+}

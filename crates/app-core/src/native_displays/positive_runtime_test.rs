@@ -239,8 +239,13 @@ impl ActualEncoder {
                 config.width,
                 config.height,
             )?;
-            let original_pixels = Zeroizing::new([16, 128, 240, 255].repeat((source.0 * source.1) as usize));
-            let pixels = nestlink_media_codec::scale_bgra(&original_pixels, source, (config.width, config.height))?;
+            let original_pixels =
+                Zeroizing::new([16, 128, 240, 255].repeat((source.0 * source.1) as usize));
+            let pixels = nestlink_media_codec::scale_bgra(
+                &original_pixels,
+                source,
+                (config.width, config.height),
+            )?;
             let mut last_accepted_pts = None;
             let mut pending_pts = None;
             let mut request = 0usize;
@@ -944,9 +949,18 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     )?;
     assert_ne!(next_format, actual);
     assert!(set.contains(&next_format));
-    let next_config = nestlink_media_session::h264_display_config(next_format, config.width, config.height)?;
-    assert_eq!((next_config.width, next_config.height), (config.width / 2, config.height / 2));
-    let encoder = ActualEncoder::start(next_config, next_format, capture_origin, (config.width, config.height));
+    let next_config =
+        nestlink_media_session::h264_display_config(next_format, config.width, config.height)?;
+    assert_eq!(
+        (next_config.width, next_config.height),
+        (config.width / 2, config.height / 2)
+    );
+    let encoder = ActualEncoder::start(
+        next_config,
+        next_format,
+        capture_origin,
+        (config.width, config.height),
+    );
     let (fresh, receipt, fresh_execution) = encoder.next(&video).await?;
     assert_eq!(receipt, next_format);
     assert!(fresh_execution.identity()?.generation() > encoder_before.identity()?.generation());
@@ -983,8 +997,15 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     assert_eq!(replacement.format, next_format);
     let original_display = controller.native_displays(&session_binding)?;
     assert_eq!(original_display.selected.as_ref(), Some(&selection));
-    let original_source = original_display.displays.iter().find(|display| display.source == source.source).ok_or("source absent after downscale")?;
-    assert_eq!((original_source.width, original_source.height), (config.width, config.height));
+    let original_source = original_display
+        .displays
+        .iter()
+        .find(|display| display.source == source.source)
+        .ok_or("source absent after downscale")?;
+    assert_eq!(
+        (original_source.width, original_source.height),
+        (config.width, config.height)
+    );
     let decoder_after =
         controller.native_media_execution(&session_binding, MediaDirection::Decode)?;
     assert!(decoder_before.retired_joined());
@@ -1005,11 +1026,24 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     );
     let mut replacement_observer =
         PresentationObserver::start(&controller, &session_binding, &selection);
-    assert!(host.send_native_video_execution_frame(
-        &session_binding,
-        NativeVideoBinding { width: next_config.width, height: next_config.height, ..source },
-        fresh.pts_90khz, fresh.keyframe, false, fresh.data.clone(), fresh_execution.clone(),
-    ).await.is_err(), "encoded output cannot relabel the approved physical source binding");
+    assert!(
+        host.send_native_video_execution_frame(
+            &session_binding,
+            NativeVideoBinding {
+                width: next_config.width,
+                height: next_config.height,
+                ..source
+            },
+            fresh.pts_90khz,
+            fresh.keyframe,
+            false,
+            fresh.data.clone(),
+            fresh_execution.clone(),
+        )
+        .await
+        .is_err(),
+        "encoded output cannot relabel the approved physical source binding"
+    );
     let send_started = Instant::now();
     host.send_native_video_execution_frame(
         &session_binding,
@@ -1047,7 +1081,10 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
         tokio::time::sleep(Duration::from_millis(35)).await;
         if let Some(frame) = replacement_observer.take_if_ready().await? {
             assert!(!frame.hardware_decode);
-            assert_eq!((frame.width, frame.height), (next_config.width, next_config.height));
+            assert_eq!(
+                (frame.width, frame.height),
+                (next_config.width, next_config.height)
+            );
             assert!(frame.pixels.chunks_exact(4).all(|p| p[0].abs_diff(16) <= 40
                 && p[1].abs_diff(128) <= 40
                 && p[2].abs_diff(240) <= 40
