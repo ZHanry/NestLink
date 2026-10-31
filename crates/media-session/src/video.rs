@@ -167,15 +167,29 @@ fn apply_feedback(
     receiver_qos: &mut crate::ReceiverReportTracker,
 ) -> io::Result<()> {
     if bytes.starts_with(b"NLQF") {
-        if !lease.media_capability(nestlink_protocol::native_qos::CAPABILITY).map_err(io::Error::other)? {
+        if !lease
+            .media_capability(nestlink_protocol::native_qos::CAPABILITY)
+            .map_err(io::Error::other)?
+        {
             return Err(io::Error::other("unnegotiated receiver QoS report"));
         }
-        let report=nestlink_protocol::native_qos::ReceiverReport::decode(bytes).map_err(io::Error::other)?;
-        let encoder=codecs.get(&report.context.source).ok_or_else(||io::Error::other("unapproved QoS source"))?;
-        let context=nestlink_protocol::native_qos::ReceiverContext{connection_generation:epoch.connection,layout_epoch:epoch.layout,source:report.context.source,format_epoch:0,format_sha256:Vec::new()};
-        receiver_qos.accept(report,&context,encoder.sequence,Instant::now())?;
-        let mut stats=stats.lock().map_err(|_|io::Error::other("video stats poisoned"))?;
-        stats.receiver_reports=stats.receiver_reports.saturating_add(1);
+        let report = nestlink_protocol::native_qos::ReceiverReport::decode(bytes)
+            .map_err(io::Error::other)?;
+        let encoder = codecs
+            .get(&report.context.source)
+            .ok_or_else(|| io::Error::other("unapproved QoS source"))?;
+        let context = nestlink_protocol::native_qos::ReceiverContext {
+            connection_generation: epoch.connection,
+            layout_epoch: epoch.layout,
+            source: report.context.source,
+            format_epoch: 0,
+            format_sha256: Vec::new(),
+        };
+        receiver_qos.accept(report, &context, encoder.sequence, Instant::now())?;
+        let mut stats = stats
+            .lock()
+            .map_err(|_| io::Error::other("video stats poisoned"))?;
+        stats.receiver_reports = stats.receiver_reports.saturating_add(1);
         return Ok(());
     }
     let nestlink_protocol::native_displays::DisplayEnvelope::Recovery(request) =
@@ -272,8 +286,10 @@ fn send<D: CaptureDevice>(
         VideoCodec::Vp8
     };
     let mut codecs = BTreeMap::new();
-    let qos_enabled=lease.media_capability(nestlink_protocol::native_qos::CAPABILITY).map_err(io::Error::other)?;
-    let mut receiver_qos=crate::ReceiverReportTracker::default();
+    let qos_enabled = lease
+        .media_capability(nestlink_protocol::native_qos::CAPABILITY)
+        .map_err(io::Error::other)?;
+    let mut receiver_qos = crate::ReceiverReportTracker::default();
     for stream in selected {
         codecs.insert(
             stream.source,

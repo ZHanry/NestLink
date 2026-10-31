@@ -610,7 +610,7 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
             presentation: receiver.presentation(),
         })));
     let video = Arc::new(NativeVideoRoute {
-        receiver_qos:Mutex::new(nestlink_media_session::ReceiverReportTracker::default()),
+        receiver_qos: Mutex::new(nestlink_media_session::ReceiverReportTracker::default()),
         execution: Mutex::new(None),
         request_id: nestlink_session::MEDIA_REGRESSION_REQUEST_ID.into(),
         connection_generation: 9,

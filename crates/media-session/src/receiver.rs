@@ -1938,8 +1938,10 @@ fn receive(
     mut stop: watch::Receiver<bool>,
 ) -> io::Result<()> {
     let runtime = worker::runtime()?;
-    let qos_enabled=lease.media_capability(nestlink_protocol::native_qos::CAPABILITY).map_err(io::Error::other)?;
-    let mut qos_window=crate::receiver_qos::ReportWindow::new(Instant::now());
+    let qos_enabled = lease
+        .media_capability(nestlink_protocol::native_qos::CAPABILITY)
+        .map_err(io::Error::other)?;
+    let mut qos_window = crate::receiver_qos::ReportWindow::new(Instant::now());
     let codec_kind = if lease
         .media_capability(nestlink_protocol::media::H264_CAPABILITY)
         .map_err(io::Error::other)?

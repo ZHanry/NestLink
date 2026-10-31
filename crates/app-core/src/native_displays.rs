@@ -274,12 +274,26 @@ impl NativeDisplayRoute {
                 .map_err(io::Error::other)?
                 .is_some();
             if payload.starts_with(b"NLQF") {
-                if !self.state.lock().map_err(|_|io::Error::other("display state poisoned"))?.view.is_host
-                    || !self.lease.media_capability(nestlink_protocol::native_qos::CAPABILITY).map_err(io::Error::other)? {
+                if !self
+                    .state
+                    .lock()
+                    .map_err(|_| io::Error::other("display state poisoned"))?
+                    .view
+                    .is_host
+                    || !self
+                        .lease
+                        .media_capability(nestlink_protocol::native_qos::CAPABILITY)
+                        .map_err(io::Error::other)?
+                {
                     return Err(invalid("receiver QoS was not authorized for this endpoint"));
                 }
-                let report=nestlink_protocol::native_qos::ReceiverReport::decode(&payload).map_err(io::Error::other)?;
-                self.video()?.receiver_qos.lock().map_err(|_|io::Error::other("receiver QoS poisoned"))?.accept_current(report,Instant::now())?;
+                let report = nestlink_protocol::native_qos::ReceiverReport::decode(&payload)
+                    .map_err(io::Error::other)?;
+                self.video()?
+                    .receiver_qos
+                    .lock()
+                    .map_err(|_| io::Error::other("receiver QoS poisoned"))?
+                    .accept_current(report, Instant::now())?;
                 continue;
             }
             let message =
@@ -828,10 +842,27 @@ impl Shared {
 impl CoreHandle {
     /// Fresh observations of this exact original sender, never a bandwidth
     /// promise or authority to bypass its format/permission gates.
-    pub fn native_video_receiver_condition(&self,binding:&NativeSessionBinding,source:NativeVideoBinding,fps:u32)->io::Result<Option<nestlink_media_codec::ReceiverCondition>> {
-        let route=self.native_host_video_route(binding).map_err(io::Error::other)?;
-        if !route.lease.media_capability(nestlink_protocol::native_qos::CAPABILITY).map_err(io::Error::other)? {return Ok(None);}
-        let condition=route.receiver_qos.lock().map_err(|_|io::Error::other("receiver QoS poisoned"))?.current_condition(source.source,source.layout_epoch,fps,Instant::now());
+    pub fn native_video_receiver_condition(
+        &self,
+        binding: &NativeSessionBinding,
+        source: NativeVideoBinding,
+        fps: u32,
+    ) -> io::Result<Option<nestlink_media_codec::ReceiverCondition>> {
+        let route = self
+            .native_host_video_route(binding)
+            .map_err(io::Error::other)?;
+        if !route
+            .lease
+            .media_capability(nestlink_protocol::native_qos::CAPABILITY)
+            .map_err(io::Error::other)?
+        {
+            return Ok(None);
+        }
+        let condition = route
+            .receiver_qos
+            .lock()
+            .map_err(|_| io::Error::other("receiver QoS poisoned"))?
+            .current_condition(source.source, source.layout_epoch, fps, Instant::now());
         Ok(Some(condition))
     }
     /// Live owner data, never a historical announcement or an IPC-provided UUID.

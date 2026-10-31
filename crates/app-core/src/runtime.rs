@@ -1391,8 +1391,20 @@ impl CoreHandle {
         let encoded = frame.encode_validated();
         frame.payload.zeroize();
         let encoded = Zeroizing::new(encoded.map_err(|_| NativeVideoError::Invalid)?);
-        route.receiver_qos.lock().map_err(|_|NativeVideoError::Transport)?.prepared(
-            nestlink_protocol::native_qos::ReceiverContext{connection_generation:frame.connection_generation,layout_epoch:frame.layout_epoch,source:frame.source,format_epoch:frame.format_epoch,format_sha256:frame.format_sha256.clone()},sequence);
+        route
+            .receiver_qos
+            .lock()
+            .map_err(|_| NativeVideoError::Transport)?
+            .prepared(
+                nestlink_protocol::native_qos::ReceiverContext {
+                    connection_generation: frame.connection_generation,
+                    layout_epoch: frame.layout_epoch,
+                    source: frame.source,
+                    format_epoch: frame.format_epoch,
+                    format_sha256: frame.format_sha256.clone(),
+                },
+                sequence,
+            );
         if let Some(deadline) = keyframe_deadline {
             let mut stopped = route.lease.subscribe_stopped();
             if stopped.borrow().is_some() {
@@ -5024,7 +5036,9 @@ impl Actor {
                     }));
                 let video_route = if accepted && key.host_view_authorized {
                     Some(Arc::new(NativeVideoRoute {
-                        receiver_qos:Mutex::new(nestlink_media_session::ReceiverReportTracker::default()),
+                        receiver_qos: Mutex::new(
+                            nestlink_media_session::ReceiverReportTracker::default(),
+                        ),
                         execution: Mutex::new(None),
                         request_id: key.request_id.clone(),
                         connection_generation: key.connection_generation,

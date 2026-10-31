@@ -67,9 +67,14 @@ async fn pair_with_fault(quic: bool, dropped_video: Option<u64>) -> Result<Pair>
     pair_with_profile(quic, dropped_video, false).await
 }
 async fn pair_with_profile(quic: bool, dropped_video: Option<u64>, h264: bool) -> Result<Pair> {
-    pair_with_features(quic,dropped_video,h264,false).await
+    pair_with_features(quic, dropped_video, h264, false).await
 }
-async fn pair_with_features(quic: bool, dropped_video: Option<u64>, h264: bool,qos:bool) -> Result<Pair> {
+async fn pair_with_features(
+    quic: bool,
+    dropped_video: Option<u64>,
+    h264: bool,
+    qos: bool,
+) -> Result<Pair> {
     let controller = InstallationIdentity::generate();
     let host = InstallationIdentity::generate();
     let clock = RuntimeClock::default();
@@ -100,7 +105,11 @@ async fn pair_with_features(quic: bool, dropped_video: Option<u64>, h264: bool,q
         },
         local_paths: PathSet::DIRECT,
     };
-    if qos {binding.supported_capabilities.push(nestlink_protocol::native_qos::CAPABILITY.into());}
+    if qos {
+        binding
+            .supported_capabilities
+            .push(nestlink_protocol::native_qos::CAPABILITY.into());
+    }
     let claims = PermitClaims {
         media_format_version: 0,
         media_formats: Vec::new(),

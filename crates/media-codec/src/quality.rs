@@ -2,8 +2,12 @@
 //! QUIC/WebRTC remain responsible for transport congestion control.
 use std::time::{Duration, Instant};
 
-#[derive(Clone,Copy,Debug,PartialEq,Eq)]
-pub enum ReceiverCondition { Unknown, Healthy, Congested }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ReceiverCondition {
+    Unknown,
+    Healthy,
+    Congested,
+}
 
 pub struct VideoQuality {
     maximum_fps: u32,
@@ -37,14 +41,26 @@ impl VideoQuality {
     /// Returns a new bitrate only when it changed. Recovery requires four
     /// uninterrupted healthy seconds; a congested sample resets that window.
     pub fn observe(&mut self, now: Instant, encoding: Duration, enqueue: Duration) -> Option<u32> {
-        self.observe_inner(now,encoding,enqueue,None)
+        self.observe_inner(now, encoding, enqueue, None)
     }
     /// Negotiated receiver feedback may reduce the original producer budget.
     /// Missing/stale feedback never supplies an upgrade observation.
-    pub fn observe_with_receiver(&mut self, now:Instant, encoding:Duration, enqueue:Duration, receiver:ReceiverCondition)->Option<u32>{
-        self.observe_inner(now,encoding,enqueue,Some(receiver))
+    pub fn observe_with_receiver(
+        &mut self,
+        now: Instant,
+        encoding: Duration,
+        enqueue: Duration,
+        receiver: ReceiverCondition,
+    ) -> Option<u32> {
+        self.observe_inner(now, encoding, enqueue, Some(receiver))
     }
-    fn observe_inner(&mut self, now: Instant, encoding: Duration, enqueue: Duration, receiver:Option<ReceiverCondition>) -> Option<u32> {
+    fn observe_inner(
+        &mut self,
+        now: Instant,
+        encoding: Duration,
+        enqueue: Duration,
+        receiver: Option<ReceiverCondition>,
+    ) -> Option<u32> {
         let since_last = now.checked_duration_since(self.last_observation)?;
         // A paused/static producer supplies no evidence of a healthy path.
         // Resume requires a fresh uninterrupted observation window, and an old
@@ -53,9 +69,10 @@ impl VideoQuality {
             self.healthy_since = now;
         }
         self.last_observation = now;
-        let network_limited = enqueue >= Duration::from_millis(40) || receiver==Some(ReceiverCondition::Congested);
+        let network_limited =
+            enqueue >= Duration::from_millis(40) || receiver == Some(ReceiverCondition::Congested);
         let encoder_limited = encoding > Duration::from_secs_f64(1.25 / f64::from(self.fps));
-        if network_limited || encoder_limited || receiver==Some(ReceiverCondition::Unknown) {
+        if network_limited || encoder_limited || receiver == Some(ReceiverCondition::Unknown) {
             self.healthy_since = now;
         }
         if now < self.next_adjustment {
@@ -85,20 +102,36 @@ mod tests {
     use super::*;
     #[test]
     fn remote_congestion_reduces_without_local_pressure_and_missing_feedback_never_upgrades() {
-        let start=Instant::now();let mut quality=VideoQuality::new(60,6000,start);
+        let start = Instant::now();
+        let mut quality = VideoQuality::new(60, 6000, start);
         for step in 0..4 {
-            quality.observe_with_receiver(start+Duration::from_millis(step*500),Duration::ZERO,Duration::ZERO,ReceiverCondition::Congested);
+            quality.observe_with_receiver(
+                start + Duration::from_millis(step * 500),
+                Duration::ZERO,
+                Duration::ZERO,
+                ReceiverCondition::Congested,
+            );
         }
-        assert!(quality.bitrate_kbps()<2000);
-        let low=quality.bitrate_kbps();
+        assert!(quality.bitrate_kbps() < 2000);
+        let low = quality.bitrate_kbps();
         for step in 4..24 {
-            quality.observe_with_receiver(start+Duration::from_millis(step*500),Duration::ZERO,Duration::ZERO,ReceiverCondition::Unknown);
-            assert_eq!(quality.bitrate_kbps(),low);
+            quality.observe_with_receiver(
+                start + Duration::from_millis(step * 500),
+                Duration::ZERO,
+                Duration::ZERO,
+                ReceiverCondition::Unknown,
+            );
+            assert_eq!(quality.bitrate_kbps(), low);
         }
         for step in 24..32 {
-            quality.observe_with_receiver(start+Duration::from_millis(step*500),Duration::ZERO,Duration::ZERO,ReceiverCondition::Healthy);
+            quality.observe_with_receiver(
+                start + Duration::from_millis(step * 500),
+                Duration::ZERO,
+                Duration::ZERO,
+                ReceiverCondition::Healthy,
+            );
         }
-        assert!(quality.bitrate_kbps()>low && quality.bitrate_kbps()<=6000);
+        assert!(quality.bitrate_kbps() > low && quality.bitrate_kbps() <= 6000);
     }
     #[test]
     fn bandwidth_steps_reduce_within_two_seconds_and_recovery_does_not_oscillate() {

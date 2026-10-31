@@ -17,8 +17,8 @@ pub use negotiated_format::{
 };
 mod receiver;
 mod receiver_qos;
-pub use receiver_qos::ReceiverReportTracker;
 pub use legacy_format::{LegacyPrepare, LegacySurface};
+pub use receiver_qos::ReceiverReportTracker;
 mod video;
 mod worker;
 pub use audio::{AudioReceiver, AudioSender, AudioStats, AudioStream};
