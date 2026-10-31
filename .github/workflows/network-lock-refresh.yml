@@ -124,8 +124,8 @@ jobs:
                   # on old edges. Keep their exact old package, not the new
                   # compatible-looking provider dependency. No semantic edge
                   # changes are authorized by this textual qualification.
-                  for name, version in [('libloading', '0.8.9'), ('nix', '0.26.4')]:
-                      assert [item['version'] for item in before if item['name'] == name] == [version]
+                  for name, version, provider_version in [('libloading', '0.8.9', '0.9.0'), ('nix', '0.26.4', '0.31.3')]:
+                      assert {item['version'] for item in before if item['name'] == name} == {version, provider_version}, 'Previously reviewed provider identities differ: ' + name
                       original_blocks = [(key, part.replace('\n "' + name + '",\n',
                           '\n "' + name + ' ' + version + '",\n')) for key, part in original_blocks]
               original_by_key = dict(original_blocks)
