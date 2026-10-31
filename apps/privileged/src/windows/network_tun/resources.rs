@@ -254,11 +254,16 @@ pub(super) fn original(identity: &ProviderIdentity) -> io::Result<Option<MIB_IF_
     Ok(Some(row))
 }
 fn family(identity: &ProviderIdentity, family: u16) -> io::Result<MIB_IPINTERFACE_ROW> {
-    optional_family(identity, family)?.ok_or_else(|| io::Error::other(format!(
-        "original TUN IP interface family {family} is absent"
-    )))
+    optional_family(identity, family)?.ok_or_else(|| {
+        io::Error::other(format!(
+            "original TUN IP interface family {family} is absent"
+        ))
+    })
 }
-fn optional_family(identity: &ProviderIdentity, family: u16) -> io::Result<Option<MIB_IPINTERFACE_ROW>> {
+fn optional_family(
+    identity: &ProviderIdentity,
+    family: u16,
+) -> io::Result<Option<MIB_IPINTERFACE_ROW>> {
     let mut row = MIB_IPINTERFACE_ROW {
         Family: family,
         InterfaceLuid: NET_LUID_LH {
@@ -268,7 +273,9 @@ fn optional_family(identity: &ProviderIdentity, family: u16) -> io::Result<Optio
         ..Default::default()
     };
     let result = unsafe { GetIpInterfaceEntry(&mut row) };
-    if result == 1168 { return Ok(None); } // ERROR_NOT_FOUND: the IP layer was withdrawn.
+    if result == 1168 {
+        return Ok(None);
+    } // ERROR_NOT_FOUND: the IP layer was withdrawn.
     checked(result, &format!("GetIpInterfaceEntry family {family}"))?;
     Ok(Some(row))
 }
@@ -278,7 +285,8 @@ fn optional_family(identity: &ProviderIdentity, family: u16) -> io::Result<Optio
 /// Own aligned storage for the complete bounded pointer list and validate each
 /// next pointer before reading it. No OS pointer or buffer escapes this call.
 fn ipv4_dhcp(identity: &ProviderIdentity) -> io::Result<bool> {
-    optional_ipv4_dhcp(identity)?.ok_or_else(|| io::Error::other("original IPv4 TUN adapter DHCP observation missing"))
+    optional_ipv4_dhcp(identity)?
+        .ok_or_else(|| io::Error::other("original IPv4 TUN adapter DHCP observation missing"))
 }
 fn optional_ipv4_dhcp(identity: &ProviderIdentity) -> io::Result<Option<bool>> {
     const MAX_BYTES: usize = 4 * 1024 * 1024;
@@ -544,9 +552,12 @@ pub struct AddressState {
 impl AddressState {
     fn from(row: MIB_UNICASTIPADDRESS_ROW) -> io::Result<Self> {
         Ok(Self {
-            ip: address(&row.Address)?, prefix: row.OnLinkPrefixLength,
-            prefix_origin: row.PrefixOrigin, suffix_origin: row.SuffixOrigin,
-            dad: row.DadState, skip: row.SkipAsSource,
+            ip: address(&row.Address)?,
+            prefix: row.OnLinkPrefixLength,
+            prefix_origin: row.PrefixOrigin,
+            suffix_origin: row.SuffixOrigin,
+            dad: row.DadState,
+            skip: row.SkipAsSource,
         })
     }
 }
@@ -569,10 +580,16 @@ impl RouteState {
     fn from(row: MIB_IPFORWARD_ROW2) -> io::Result<Self> {
         Ok(Self {
             destination: address(&row.DestinationPrefix.Prefix)?,
-            prefix: row.DestinationPrefix.PrefixLength, next_hop: address(&row.NextHop)?,
-            metric: row.Metric, protocol: row.Protocol, origin: row.Origin,
-            loopback: row.Loopback, autoconfigure: row.AutoconfigureAddress,
-            publish: row.Publish, immortal: row.Immortal, site_prefix: row.SitePrefixLength,
+            prefix: row.DestinationPrefix.PrefixLength,
+            next_hop: address(&row.NextHop)?,
+            metric: row.Metric,
+            protocol: row.Protocol,
+            origin: row.Origin,
+            loopback: row.Loopback,
+            autoconfigure: row.AutoconfigureAddress,
+            publish: row.Publish,
+            immortal: row.Immortal,
+            site_prefix: row.SitePrefixLength,
         })
     }
 }
@@ -592,12 +609,24 @@ impl Snapshot {
     pub fn digest(&self) -> io::Result<[u8; 32]> {
         Ok(Sha256::digest(serde_json::to_vec(self)?).into())
     }
-    fn permits_recovery_remainder(&self, families: &[FamilyState], hosts: &[AddressState], paths: &[RouteState], dhcp: Option<bool>) -> bool {
+    fn permits_recovery_remainder(
+        &self,
+        families: &[FamilyState],
+        hosts: &[AddressState],
+        paths: &[RouteState],
+        dhcp: Option<bool>,
+    ) -> bool {
         fn subset<T: PartialEq>(remaining: &[T], original: &[T]) -> bool {
-            remaining.len() <= original.len() && remaining.iter().all(|row| original.contains(row)
-                && remaining.iter().filter(|v| *v == row).count() <= original.iter().filter(|v| *v == row).count())
+            remaining.len() <= original.len()
+                && remaining.iter().all(|row| {
+                    original.contains(row)
+                        && remaining.iter().filter(|v| *v == row).count()
+                            <= original.iter().filter(|v| *v == row).count()
+                })
         }
-        subset(families, &self.families) && subset(hosts, &self.addresses) && subset(paths, &self.routes)
+        subset(families, &self.families)
+            && subset(hosts, &self.addresses)
+            && subset(paths, &self.routes)
             && match dhcp {
                 Some(enabled) => enabled == self.ipv4_dhcp_enabled,
                 None => !families.iter().any(|row| row.family == AF_INET),
@@ -739,27 +768,43 @@ pub fn inspect(identity: &ProviderIdentity) -> io::Result<Option<Snapshot>> {
 /// already have withdrawn IP interfaces while retaining the PnP miniport.
 /// Every still-observable resource must be an unchanged member of the original
 /// attested inventory. Missing rows never authorize a new business session.
-pub fn verify_recovery_remainder(identity: &ProviderIdentity, expected: &Snapshot) -> io::Result<()> {
+pub fn verify_recovery_remainder(
+    identity: &ProviderIdentity,
+    expected: &Snapshot,
+) -> io::Result<()> {
     let row = original(identity)?.ok_or_else(security::denied)?;
-    if row.Mtu != expected.link_mtu || row.Type != expected.interface_type
-        || row.TunnelType != expected.tunnel_type || row.AdminStatus != expected.admin_status {
-        return Err(io::Error::other("original recovery miniport properties changed"));
+    if row.Mtu != expected.link_mtu
+        || row.Type != expected.interface_type
+        || row.TunnelType != expected.tunnel_type
+        || row.AdminStatus != expected.admin_status
+    {
+        return Err(io::Error::other(
+            "original recovery miniport properties changed",
+        ));
     }
     let mut families = Vec::new();
     for af in [AF_INET, AF_INET6] {
-        if let Some(row) = optional_family(identity, af)? { families.push(FamilyState::from(row)); }
+        if let Some(row) = optional_family(identity, af)? {
+            families.push(FamilyState::from(row));
+        }
     }
     let dhcp = optional_ipv4_dhcp(identity)?;
     let mut hosts = Vec::new();
     for row in addresses()? {
-        if on_original(identity, row.InterfaceLuid, row.InterfaceIndex) { hosts.push(AddressState::from(row)?); }
+        if on_original(identity, row.InterfaceLuid, row.InterfaceIndex) {
+            hosts.push(AddressState::from(row)?);
+        }
     }
     let mut paths = Vec::new();
     for row in routes()? {
-        if on_original(identity, row.InterfaceLuid, row.InterfaceIndex) { paths.push(RouteState::from(row)?); }
+        if on_original(identity, row.InterfaceLuid, row.InterfaceIndex) {
+            paths.push(RouteState::from(row)?);
+        }
     }
     if !expected.permits_recovery_remainder(&families, &hosts, &paths, dhcp) {
-        return Err(io::Error::other(format!("original recovery resources changed beyond kernel withdrawal: families={families:?}, addresses={hosts:?}, routes={paths:?}, ipv4_dhcp={dhcp:?}")));
+        return Err(io::Error::other(format!(
+            "original recovery resources changed beyond kernel withdrawal: families={families:?}, addresses={hosts:?}, routes={paths:?}, ipv4_dhcp={dhcp:?}"
+        )));
     }
     original(identity)?.ok_or_else(security::denied)?;
     Ok(())
@@ -932,10 +977,18 @@ mod tests {
     fn recovery_allows_only_withdrawal_and_never_substitutes_for_online_readiness() {
         let (local, remote, snapshot) = fixture();
         assert!(snapshot.permits_recovery_remainder(&[], &[], &[], None));
-        assert!(snapshot.permits_recovery_remainder(&snapshot.families[1..],
-            &snapshot.addresses[..1], &snapshot.routes[2..], Some(false)));
-        assert!(!snapshot.permits_recovery_remainder(&snapshot.families, &snapshot.addresses,
-            &snapshot.routes, None));
+        assert!(snapshot.permits_recovery_remainder(
+            &snapshot.families[1..],
+            &snapshot.addresses[..1],
+            &snapshot.routes[2..],
+            Some(false)
+        ));
+        assert!(!snapshot.permits_recovery_remainder(
+            &snapshot.families,
+            &snapshot.addresses,
+            &snapshot.routes,
+            None
+        ));
         assert!(!snapshot.permits_recovery_remainder(&[], &[], &[], Some(true)));
         let mut changed = snapshot.clone();
         changed.routes[2].autoconfigure = true;

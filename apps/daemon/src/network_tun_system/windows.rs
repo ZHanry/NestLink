@@ -2,7 +2,8 @@
 //! packet pipe. The ordinary process owns online authority and all transport.
 use super::*;
 use nestlink_privileged::windows::network_tun::{
-    AdminJournal, PacketBinding, PacketReceipt, PacketServer, PinnedProviderImage, ProviderIdentity,
+    AdminJournal, PacketBinding, PacketReceipt, PacketServer, PinnedProviderImage,
+    ProviderIdentity,
     device_instance::{self, DeviceInstance},
     resources::{self, Snapshot},
 };
@@ -91,22 +92,45 @@ impl Record {
             return Err(io::Error::other("invalid protected Windows TUN recovery record").into());
         }
         resources::guid_value(&record.guid)?;
-        let plan::HostPrincipal::Windows { sid, session, image_volume, image_index } = &record.plan.principal else {
+        let plan::HostPrincipal::Windows {
+            sid,
+            session,
+            image_volume,
+            image_index,
+        } = &record.plan.principal
+        else {
             return Err(io::Error::other("Windows TUN recovery principal is not Windows").into());
         };
-        if record.binding.process.sid != *sid || record.binding.process.session != *session
-            || record.binding.process.image_volume != *image_volume || record.binding.process.image_index != *image_index {
-            return Err(io::Error::other("Windows TUN recovery binding differs from original principal").into());
+        if record.binding.process.sid != *sid
+            || record.binding.process.session != *session
+            || record.binding.process.image_volume != *image_volume
+            || record.binding.process.image_index != *image_index
+        {
+            return Err(io::Error::other(
+                "Windows TUN recovery binding differs from original principal",
+            )
+            .into());
         }
         if let Some(instance) = &record.device_instance {
             instance.validate(&record.guid)?;
             if record.identity.is_none() {
-                return Err(io::Error::other("Windows TUN PnP record lacks its original kernel identity").into());
+                return Err(io::Error::other(
+                    "Windows TUN PnP record lacks its original kernel identity",
+                )
+                .into());
             }
         }
         if let Some(installed) = &record.installed
-            && record.identity.as_ref().map(|identity| identity.configuration_sha256) != Some(installed.digest()?) {
-            return Err(io::Error::other("Windows TUN recovery snapshot differs from its original attestation").into());
+            && record
+                .identity
+                .as_ref()
+                .map(|identity| identity.configuration_sha256)
+                != Some(installed.digest()?)
+        {
+            return Err(io::Error::other(
+                "Windows TUN recovery snapshot differs from its original attestation",
+            )
+            .into());
         }
         if let Some(identity) = &record.identity
             && (identity.adapter_guid != record.guid
@@ -372,16 +396,26 @@ async fn recover(store: &AdminJournal) -> Result {
         .into());
     }
     if record.creator.original_incarnation_alive()? {
-        return Err(io::Error::other("original administrative TUN creator is still alive; refusing device recovery").into());
+        return Err(io::Error::other(
+            "original administrative TUN creator is still alive; refusing device recovery",
+        )
+        .into());
     }
     if let Some(identity) = &record.identity
-        && resources::capture(&record.guid, &record.name, record.driver_sha256)?.is_some() {
-        let instance = record.device_instance.as_ref().ok_or_else(||io::Error::other(
-            "original PnP identity was not durably captured; preserving surviving adapter"))?;
+        && resources::capture(&record.guid, &record.name, record.driver_sha256)?.is_some()
+    {
+        let instance = record.device_instance.as_ref().ok_or_else(|| {
+            io::Error::other(
+                "original PnP identity was not durably captured; preserving surviving adapter",
+            )
+        })?;
         if let Some(installed) = &record.installed {
             resources::verify_recovery_remainder(identity, installed)?;
         }
-        native("remove exact original PnP instance",device_instance::remove_original(identity, instance))?;
+        native(
+            "remove exact original PnP instance",
+            device_instance::remove_original(identity, instance),
+        )?;
     }
     // SetupAPI targets only the original retained device instance. Recovery
     // never opens a replacement Wintun session or invokes global driver cleanup.

@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "purpose": "Retain exact-source hosted Windows medium/high TUN packets, complete live snapshot, original PnP crash recovery and raw same-SID rejection. This is mechanism qualification, not full W22 target acceptance.",
+  "source_revision": "63f91e7e557463996e27f744e858349e80477e41",
+  "workflow": ".github/workflows/windows-managed-tun.yml",
+  "run_id": 41219154119,
+  "run_attempt": 1,
+  "job_id": 124589901153,
+  "runner": "windows-2025",
+  "runner_image": "win25-vs2026 20261021.278.1",
+  "run_conclusion": "success",
+  "artifact": {
+    "id": 13049517309,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41219154119/artifacts/13049517309",
+    "digest": "sha256:8bc13d7bf35b01e4cb29d34ea693a3acc08c69d97c07217761f9d2651132d39c",
+    "receipt_sha256": "df7428b43a09020e869da986ebd175247098989b0c5dad1b03a3d3c30c867ebc",
+    "normal_cleanup_receipt_sha256": "09cc1d8b9d287b6e7fd995749e6b02150d783fdfc84bf785fe87f998abb92090",
+    "nonoriginal_identity_receipt_sha256": "cbc93276dfe24a795f8364bdc95ecb8cc8e978d47954dc34194f36ed287d2bc6",
+    "dead_owner_recovery_log_sha256": "ca5b868a835150f3aa644d6a11e9e6b413a15eadc2014a2cea389980689a01f0",
+    "raw_same_sid_log_sha256": "c1d7e4a08133f4825f3fd44f506a6b8adc9a44c53168aba215d9e2f0c1840e05"
+  },
+  "build_provenance": {
+    "source_revision": "63f91e7e557463996e27f744e858349e80477e41",
+    "workflow_ref": "ZHanry/NestLink/.github/workflows/windows-managed-tun.yml@refs/heads/main",
+    "run_id": 41219154119,
+    "attempt": 1,
+    "job": "hosted-wintun-kernel",
+    "runner_environment": "github-hosted",
+    "cargo_lock_sha256": "48063b78bd20ca07f585a6100f7437057af227fde24c94fdad266f8ff457933e",
+    "daemon_test_executable_sha256": "4e3f65fbf4f526411a7a29924eb8789b6b41cfe1bbf6a466a29873839b6b99dd",
+    "driver": "Official unmodified Wintun 0.14.1 amd64; archive, all architecture DLL and binary-license hashes retained; actual Authenticode Valid/WireGuard LLC. The protected execution copy matched the Actions-built executable.",
+    "normal_token_ipc_and_snapshot_tests": "passed",
+    "strict_daemon_all_targets_clippy": "passed without warning suppression"
+  },
+  "execution_provenance": {
+    "environment": "disposable_github_hosted_windows_vm",
+    "source_revision": "63f91e7e557463996e27f744e858349e80477e41",
+    "run_id": 41219154119,
+    "attempt": 1,
+    "started_at_unix": 1793463887.3509758,
+    "finished_at_unix": 1793464110.8369806,
+    "cases": {
+      "normal": "passed: distinct actual medium owner/high helper, exact original image identity and complete native snapshot; real IPv4/IPv6 full 1280-byte UDP request/reply; foreign same-SID process denied; original adapter absence and journal/receipt cleared",
+      "normal_cleanup_ms": 72,
+      "nonoriginal_identity": "passed: changed index, LUID, alias and GUID each refused by production exact-instance removal; complete original kernel snapshot and captured PnP instance unchanged after every rejection",
+      "crash": "passed: helper terminated without destructors; recovery refused retained live original ordinary process; ordinary process terminated; production recovery removed only captured original PnP instance, observed physical absence and cleared exact protected journal/receipt",
+      "raw_peer": "passed: distinct actual medium same-SID client sent the public hello and exact plan digest over the real named pipe; high helper refused its OS-reported nonoriginal PID before packet admission; final adapter/journal/receipt absent"
+    }
+  },
+  "prior_failed_attempt": {
+    "run_id": 41217741121,
+    "source_revision": "d9c6a03202495a4bc9dde2fafc7f5865cd7be3a6",
+    "artifact_id": 13049181338,
+    "artifact_digest": "sha256:98c7b0f1b7d6f1c13b7ec247215e4eaa973b390b85e37ac52f4b3238865d53cd",
+    "receipt_sha256": "260cfa18fdae747f58566e3fb218824b26c0efb8ec0ff9c3aa06c1519603ee9d",
+    "failure_log_sha256": "3e4d03a20ce2f4d4741972b3c34ee0db718e2fd02790324b070eaeb7f53d65d8",
+    "failure": "New negative fixture tried reopening the live helper's exclusively locked AdminJournal and received Win32 32 before its native identity assertions. No negative-case pass was claimed.",
+    "repair": "b1c7282 observes the published protected receipt and native inventory, verifies its original attestation digest and leaves the production exclusive journal lock unchanged."
+  },
+  "later_change_requires_new_evidence": "8a9f73a binds provider selection to the frozen official per-architecture binary and adds actual protected/mutable provider negative cases. Those changes are not qualified by this earlier run.",
+  "subsequent_hosted_formatting_only": {
+    "source_revision": "8a9f73a76340067b8bab1adf6fd73f4a2b1770e1",
+    "run_id": 41220114066,
+    "conclusion": "success",
+    "patch_sha256": "618729c65a80c9e8f4804eb8a81fa73ea46c2fc48ee633a4605ce008f29d778e",
+    "imported_unchanged_source_paths": [
+      "apps/daemon/src/network_tun_system/windows.rs",
+      "apps/daemon/src/network_tun_system/windows/native_tests.rs",
+      "apps/privileged/src/windows/network_tun/resources.rs"
+    ],
+    "scope": "Downloaded patch digest matched its exact-source receipt; selected source blobs were unchanged before applying only those hosted formatting hunks. No local formatter, compilation or acceptance claim."
+  },
+  "production_online_validation": false,
+  "two_target_acceptance": false,
+  "remaining_scope": "Production login, one-use online packet authority, real remote carrier on independent Windows/Linux devices, partial-install faults and other-VPN coexistence still need applicable current-source evidence.",
+  "local_review": "Downloaded retained Actions output and read/checksummed its files only. No local driver execution, project compilation, formatter, lint or test."
+}

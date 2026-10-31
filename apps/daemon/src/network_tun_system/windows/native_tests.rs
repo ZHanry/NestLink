@@ -94,31 +94,51 @@ fn provider_negative(case: &Path) -> Result {
     assert_eq!(selected.sha256(), pin);
     // The same locks which protect the production load keep the official
     // bytes immutable while the selected provider can still be loaded.
-    assert!(std::fs::OpenOptions::new().write(true).open(&driver).is_err(),
-        "selected protected provider remained writable while pinned");
+    assert!(
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open(&driver)
+            .is_err(),
+        "selected protected provider remained writable while pinned"
+    );
     drop(selected);
     let mut wrong = pin;
     wrong[0] ^= 1;
-    assert!(PinnedProviderImage::open(&driver, wrong).is_err(),
-        "wrong operator digest admitted a provider");
-    let other_architecture = hash("d694fa46ab4cfebcb2632d094c7aa97278eef2f8052438621766d863ae98a931")?;
+    assert!(
+        PinnedProviderImage::open(&driver, wrong).is_err(),
+        "wrong operator digest admitted a provider"
+    );
+    let other_architecture =
+        hash("d694fa46ab4cfebcb2632d094c7aa97278eef2f8052438621766d863ae98a931")?;
     assert_ne!(pin, other_architecture, "dedicated fixture requires amd64");
-    assert!(PinnedProviderImage::open(&driver, other_architecture).is_err(),
-        "another architecture's official pin admitted this process provider");
+    assert!(
+        PinnedProviderImage::open(&driver, other_architecture).is_err(),
+        "another architecture's official pin admitted this process provider"
+    );
     let unsigned = path("NESTLINK_TUN_NATIVE_UNSIGNED")?;
     let unsigned_pin = nestlink_identity::digest(&std::fs::read(&unsigned)?);
-    assert!(PinnedProviderImage::open(&unsigned, unsigned_pin).is_err(),
-        "an operator-selected matching hash admitted an unreviewed provider");
+    assert!(
+        PinnedProviderImage::open(&unsigned, unsigned_pin).is_err(),
+        "an operator-selected matching hash admitted an unreviewed provider"
+    );
     let writable = case.join("wintun.dll");
     std::fs::write(&writable, &original)?;
-    assert!(PinnedProviderImage::open(&writable, pin).is_err(),
-        "official bytes on an ordinary-writable path admitted a provider");
-    assert_eq!(std::fs::read(&driver)?, original,
-        "provider rejection changed the original official image");
-    std::fs::write(case.join("provider-negative.json"),serde_json::to_vec(&serde_json::json!({
-        "official_sha256":pin,"official_bytes_unchanged":true,"pinned_image_write_denied":true,
-        "rejected":["wrong_digest","other_architecture","unreviewed_matching_digest","ordinary_writable_path"]
-    }))?)?;
+    assert!(
+        PinnedProviderImage::open(&writable, pin).is_err(),
+        "official bytes on an ordinary-writable path admitted a provider"
+    );
+    assert_eq!(
+        std::fs::read(&driver)?,
+        original,
+        "provider rejection changed the original official image"
+    );
+    std::fs::write(
+        case.join("provider-negative.json"),
+        serde_json::to_vec(&serde_json::json!({
+            "official_sha256":pin,"official_bytes_unchanged":true,"pinned_image_write_denied":true,
+            "rejected":["wrong_digest","other_architecture","unreviewed_matching_digest","ordinary_writable_path"]
+        }))?,
+    )?;
     Ok(())
 }
 fn recovery_identity_negative(case: &Path, receipt: &Path) -> Result {
@@ -127,30 +147,53 @@ fn recovery_identity_negative(case: &Path, receipt: &Path) -> Result {
     // native inventory instead of opening or weakening that ownership lock.
     let receipt: PacketReceipt = serde_json::from_slice(&std::fs::read(receipt)?)?;
     let original = &receipt.provider;
-    let installed = resources::inspect(original)?.ok_or_else(||io::Error::other("original OS snapshot missing"))?;
-    assert_eq!(installed.digest()?, original.configuration_sha256,
-        "live inventory differs from the original helper's published attestation");
+    let installed = resources::inspect(original)?
+        .ok_or_else(|| io::Error::other("original OS snapshot missing"))?;
+    assert_eq!(
+        installed.digest()?,
+        original.configuration_sha256,
+        "live inventory differs from the original helper's published attestation"
+    );
     let instance = device_instance::capture(original)?;
     let mut changed_index = original.clone();
     changed_index.index ^= 1;
     let mut changed_luid = original.clone();
     changed_luid.luid ^= 1;
     let mut changed_name = original.clone();
-    changed_name.name = format!("NestLink-{}",nestlink_auth::random_id());
+    changed_name.name = format!("NestLink-{}", nestlink_auth::random_id());
     let mut changed_guid = original.clone();
-    changed_guid.adapter_guid = format!("{}{}",if original.adapter_guid.starts_with('a') { 'b' } else { 'a' },&original.adapter_guid[1..]);
+    changed_guid.adapter_guid = format!(
+        "{}{}",
+        if original.adapter_guid.starts_with('a') {
+            'b'
+        } else {
+            'a'
+        },
+        &original.adapter_guid[1..]
+    );
     for changed in [&changed_index, &changed_luid, &changed_name, &changed_guid] {
-        assert!(device_instance::remove_original(changed, &instance).is_err(),
-            "SetupAPI recovery accepted a nonoriginal kernel identity");
-        assert_eq!(resources::inspect(original)?.as_ref(), Some(&installed),
-            "a refused nonoriginal recovery changed the original device resources");
-        assert_eq!(device_instance::capture(original)?, instance,
-            "a refused nonoriginal recovery changed the captured PnP instance");
+        assert!(
+            device_instance::remove_original(changed, &instance).is_err(),
+            "SetupAPI recovery accepted a nonoriginal kernel identity"
+        );
+        assert_eq!(
+            resources::inspect(original)?.as_ref(),
+            Some(&installed),
+            "a refused nonoriginal recovery changed the original device resources"
+        );
+        assert_eq!(
+            device_instance::capture(original)?,
+            instance,
+            "a refused nonoriginal recovery changed the captured PnP instance"
+        );
     }
-    std::fs::write(case.join("recovery-identity-negative.json"),serde_json::to_vec(&serde_json::json!({
-        "rejected_fields":["interface_index","luid","alias","guid"],"kernel_unchanged":true,
-        "configuration_sha256":installed.digest()?
-    }))?)?;
+    std::fs::write(
+        case.join("recovery-identity-negative.json"),
+        serde_json::to_vec(&serde_json::json!({
+            "rejected_fields":["interface_index","luid","alias","guid"],"kernel_unchanged":true,
+            "configuration_sha256":installed.digest()?
+        }))?,
+    )?;
     Ok(())
 }
 async fn ordinary(case: &Path, plan_path: &Path, receipt: &Path) -> Result {
