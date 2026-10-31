@@ -162,8 +162,7 @@ impl Store {
             membership_digests,
             business_grant_digest: lease.digest(),
         }))?;
-        let verified_connectivity =
-            verify_network_grant(&connectivity, &snapshot.verification())?;
+        let verified_connectivity = verify_network_grant(&connectivity, &snapshot.verification())?;
         let path = network_signer.sign(&GrantClaims::Path(PathClaims {
             scope: scope(),
             peers,

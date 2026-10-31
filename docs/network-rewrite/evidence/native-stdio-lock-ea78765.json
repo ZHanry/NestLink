@@ -1,0 +1,188 @@
+{
+    "schema_version":  1,
+    "purpose":  "protected-native-stdio-existing-runtime-edge",
+    "source_revision":  "ea78765b7b5e6df8305f75cb7c2403d165c77908",
+    "workflow":  ".github/workflows/network-lock-refresh.yml",
+    "run_id":  41165193476,
+    "run_attempt":  1,
+    "runner":  "github-hosted ubuntu-24.04",
+    "conclusion":  "success",
+    "reviewed_change":  "Only add the already locked tokio-util 0.7.20 dependency edge to first-party nestlink-platform-security in both locks; external identities, checksums and edges preserved.",
+    "product":  {
+                    "archive_sha256":  "4ca85b8fd91c1cc6b2cded1ee8078b1a7885716aa37c15afac9a7bea237b6268",
+                    "artifact_id":  13029281425,
+                    "receipt":  {
+                                    "schema_version":  1,
+                                    "purpose":  "reviewed-network-components-lock-derivation-only",
+                                    "repository":  "ZHanry/NestLink",
+                                    "source_revision":  "ea78765b7b5e6df8305f75cb7c2403d165c77908",
+                                    "run_id":  "41165193476",
+                                    "run_attempt":  "1",
+                                    "scope":  "product",
+                                    "manifest_path":  "Cargo.toml",
+                                    "before_lock_sha256":  "58fdf940ea696a552579d2f38b7c66de2d6bf5fa2e2cb203ec6ec75ec9d37d92",
+                                    "commands":  [
+                                                     {
+                                                         "argv":  [
+                                                                      "cargo",
+                                                                      "update",
+                                                                      "--workspace",
+                                                                      "--manifest-path",
+                                                                      "Cargo.toml"
+                                                                  ],
+                                                         "return_code":  0
+                                                     },
+                                                     {
+                                                         "argv":  [
+                                                                      "cargo",
+                                                                      "metadata",
+                                                                      "--manifest-path",
+                                                                      "Cargo.toml",
+                                                                      "--locked",
+                                                                      "--format-version",
+                                                                      "1"
+                                                                  ],
+                                                         "return_code":  0
+                                                     }
+                                                 ],
+                                    "assertions":  {
+                                                       "only_selected_lock_changed":  true,
+                                                       "all_existing_package_identities_and_checksums_preserved":  true,
+                                                       "all_unrelated_external_package_edges_preserved":  true,
+                                                       "only_exact_reviewed_component_feature_edges_added":  true,
+                                                       "reviewed_crab_nat_exact_version_and_checksum":  true,
+                                                       "reviewed_petgraph_exact_version_and_checksum":  true,
+                                                       "reviewed_authoritative_dns_exact_version":  true,
+                                                       "locked_metadata_succeeded":  true,
+                                                       "protected_native_stream_reuses_existing_tokio_identity":  true,
+                                                       "native_stdio_reuses_locked_tokio_util_identity":  true,
+                                                       "only_reviewed_socks_component_new_external_packages":  true
+                                                   },
+                                    "failure":  null,
+                                    "product_compilation_performed":  false,
+                                    "quality_or_acceptance_claimed":  false,
+                                    "files":  [
+                                                  {
+                                                      "path":  "Cargo.lock",
+                                                      "bytes":  203586,
+                                                      "sha256":  "13833dfe9fde9e50fa2936b05e4e4de5cf09adbdb7eb48cc65e06fbcf33cd731"
+                                                  },
+                                                  {
+                                                      "path":  "before.lock",
+                                                      "bytes":  203571,
+                                                      "sha256":  "58fdf940ea696a552579d2f38b7c66de2d6bf5fa2e2cb203ec6ec75ec9d37d92"
+                                                  },
+                                                  {
+                                                      "path":  "cargo-generated.lock",
+                                                      "bytes":  203586,
+                                                      "sha256":  "13833dfe9fde9e50fa2936b05e4e4de5cf09adbdb7eb48cc65e06fbcf33cd731"
+                                                  },
+                                                  {
+                                                      "path":  "command-0.log",
+                                                      "bytes":  470,
+                                                      "sha256":  "d483a156b7ed2f4332202d132b7e03176bf4c3325e7c3875f24fe37353d111c2"
+                                                  },
+                                                  {
+                                                      "path":  "command-1.log",
+                                                      "bytes":  4132429,
+                                                      "sha256":  "10b5860f138ee57491058fdfc2d426990aa8ae343a92f25a5b983b52759b02c3"
+                                                  },
+                                                  {
+                                                      "path":  "derivation.diff",
+                                                      "bytes":  239,
+                                                      "sha256":  "e5e909dc85779eed2c576805644cf3059d00c52ddd6d234ab6bd69e15803667f"
+                                                  }
+                                              ]
+                                }
+                },
+    "browser_native_fixture":  {
+                                   "archive_sha256":  "f15cde1be73abacd7fdeff159288e314136efb83e961daaf2a94c58e16cfd2b1",
+                                   "artifact_id":  13028476629,
+                                   "receipt":  {
+                                                   "schema_version":  1,
+                                                   "purpose":  "reviewed-network-components-lock-derivation-only",
+                                                   "repository":  "ZHanry/NestLink",
+                                                   "source_revision":  "ea78765b7b5e6df8305f75cb7c2403d165c77908",
+                                                   "run_id":  "41165193476",
+                                                   "run_attempt":  "1",
+                                                   "scope":  "browser-native-fixture",
+                                                   "manifest_path":  "scripts/fixtures/browser-native-host/Cargo.toml",
+                                                   "before_lock_sha256":  "f19f65b69b47512ea4f72990601b7f41112747747bb53cb395f8cd144d0f6894",
+                                                   "commands":  [
+                                                                    {
+                                                                        "argv":  [
+                                                                                     "cargo",
+                                                                                     "update",
+                                                                                     "--workspace",
+                                                                                     "--manifest-path",
+                                                                                     "scripts/fixtures/browser-native-host/Cargo.toml"
+                                                                                 ],
+                                                                        "return_code":  0
+                                                                    },
+                                                                    {
+                                                                        "argv":  [
+                                                                                     "cargo",
+                                                                                     "metadata",
+                                                                                     "--manifest-path",
+                                                                                     "scripts/fixtures/browser-native-host/Cargo.toml",
+                                                                                     "--locked",
+                                                                                     "--format-version",
+                                                                                     "1"
+                                                                                 ],
+                                                                        "return_code":  0
+                                                                    }
+                                                                ],
+                                                   "assertions":  {
+                                                                      "only_selected_lock_changed":  true,
+                                                                      "all_existing_package_identities_and_checksums_preserved":  true,
+                                                                      "all_unrelated_external_package_edges_preserved":  true,
+                                                                      "only_exact_reviewed_component_feature_edges_added":  true,
+                                                                      "reviewed_crab_nat_exact_version_and_checksum":  true,
+                                                                      "reviewed_petgraph_exact_version_and_checksum":  true,
+                                                                      "reviewed_authoritative_dns_exact_version":  true,
+                                                                      "locked_metadata_succeeded":  true,
+                                                                      "protected_native_stream_reuses_existing_tokio_identity":  true,
+                                                                      "native_stdio_reuses_locked_tokio_util_identity":  true,
+                                                                      "only_reviewed_socks_component_new_external_packages":  true
+                                                                  },
+                                                   "failure":  null,
+                                                   "product_compilation_performed":  false,
+                                                   "quality_or_acceptance_claimed":  false,
+                                                   "files":  [
+                                                                 {
+                                                                     "path":  "Cargo.lock",
+                                                                     "bytes":  126405,
+                                                                     "sha256":  "1808bbde317823d2480ee6d82c8d5f2e8dde0d5e6822797e0494708a6c5ef0c3"
+                                                                 },
+                                                                 {
+                                                                     "path":  "before.lock",
+                                                                     "bytes":  126390,
+                                                                     "sha256":  "f19f65b69b47512ea4f72990601b7f41112747747bb53cb395f8cd144d0f6894"
+                                                                 },
+                                                                 {
+                                                                     "path":  "cargo-generated.lock",
+                                                                     "bytes":  126405,
+                                                                     "sha256":  "1808bbde317823d2480ee6d82c8d5f2e8dde0d5e6822797e0494708a6c5ef0c3"
+                                                                 },
+                                                                 {
+                                                                     "path":  "command-0.log",
+                                                                     "bytes":  1111,
+                                                                     "sha256":  "b71eda92ad3e6ecbdc7b5978f80eae3174e7fc3ea0a439ea1294330e7ed0963c"
+                                                                 },
+                                                                 {
+                                                                     "path":  "command-1.log",
+                                                                     "bytes":  2523210,
+                                                                     "sha256":  "5837cee30979bc6a591c309f6af7c1ff611eb6dc2e5d0219153b0bd781b7cda3"
+                                                                 },
+                                                                 {
+                                                                     "path":  "derivation.diff",
+                                                                     "bytes":  391,
+                                                                     "sha256":  "10fe63eadabf0b6e574073c2e0f13d288a0fe7ff7c24889e5625c9d250e486bd"
+                                                                 }
+                                                             ]
+                                               }
+                               },
+    "local_project_toolchain_executed":  false,
+    "quality_or_acceptance_claimed":  false,
+    "release_qualified":  false
+}

@@ -206,7 +206,8 @@ impl NativeSessionConfig {
         Ok(self)
     }
     pub fn with_space_path(
-        mut self, path: crate::NativeSpacePathSettings,
+        mut self,
+        path: crate::NativeSpacePathSettings,
     ) -> Result<Self, NativeNetworkError> {
         path.validate()?;
         if self.route_set.is_some() || self.relay_node_id.is_some() {

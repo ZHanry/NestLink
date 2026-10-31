@@ -359,7 +359,10 @@ impl StopHandler for RemoteRouteStop {
         }
     }
     fn stop(&mut self, reason: StopReason, effects: StopEffects) -> io::Result<()> {
-        if matches!(reason, StopReason::TransportLost | StopReason::NetworkChanged) {
+        if matches!(
+            reason,
+            StopReason::TransportLost | StopReason::NetworkChanged
+        ) {
             self.revocation.retire_for_recovery();
         } else {
             self.revocation.revoke();

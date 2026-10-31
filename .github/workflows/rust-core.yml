@@ -190,6 +190,7 @@ jobs:
             @{ Args = @('-p', 'nestlink-sdk', '--test', 'native_pcp_policy') },
             @{ Args = @('-p', 'nestlink-app-core', '--lib', 'native_session::tests') },
             @{ Args = @('-p', 'nestlink-app-core', '--test', 'native_network_settings') },
+            @{ Args = @('-p', 'nestlink-daemon', '--test', 'native_stream_stdio') },
             @{ Args = @('-p', 'nestlink-server', '--test', 'native_pcp_config') }
           )
           $pcpFailure = 0

@@ -3956,6 +3956,7 @@ dependencies = [
  "rustix 1.1.5",
  "tempfile",
  "tokio",
+ "tokio-util",
  "windows-sys 0.61.2",
  "zeroize",
 ]

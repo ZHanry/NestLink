@@ -100,7 +100,9 @@ impl Connected {
     /// owner. After transfer that owner must close/drop every endpoint and
     /// connection clone before awaiting the receipt.
     pub fn take_socket_release(&mut self) -> io::Result<SocketRelease> {
-        self.socket_closed.take().map(|completion| SocketRelease { completion })
+        self.socket_closed
+            .take()
+            .map(|completion| SocketRelease { completion })
             .ok_or_else(|| io::Error::other("service UDP release receipt already transferred"))
     }
     /// Consumes this owner and confirms physical UDP socket release after all
@@ -195,7 +197,9 @@ pub async fn write_message(
     write.write_all(&bytes).await.map_err(io::Error::other)?;
     write.flush().await
 }
-pub async fn read_message<T: DeserializeOwned>(read: &mut (impl AsyncRead + Unpin)) -> io::Result<T> {
+pub async fn read_message<T: DeserializeOwned>(
+    read: &mut (impl AsyncRead + Unpin),
+) -> io::Result<T> {
     let n = read.read_u32().await? as usize;
     if n == 0 || n > CARRIER_MESSAGE_BYTES {
         return Err(io::ErrorKind::InvalidData.into());
@@ -295,28 +299,47 @@ mod tests {
         let (mut left, mut right) = tokio::io::duplex(17);
         let worker = tokio::spawn(async move {
             let request: Vec<String> = read_message(&mut right).await?;
-            if request != ["fixed approved service"] { return Err(io::ErrorKind::InvalidData.into()); }
-            let mut end = [0;1];
-            if right.read(&mut end).await? != 0 { return Err(io::ErrorKind::InvalidData.into()); }
+            if request != ["fixed approved service"] {
+                return Err(io::ErrorKind::InvalidData.into());
+            }
+            let mut end = [0; 1];
+            if right.read(&mut end).await? != 0 {
+                return Err(io::ErrorKind::InvalidData.into());
+            }
             write_message(&mut right, &"response after request FIN").await?;
             right.shutdown().await
         });
         write_message(&mut left, &vec!["fixed approved service"]).await?;
         left.shutdown().await?;
-        assert_eq!(read_message::<String>(&mut left).await?, "response after request FIN");
+        assert_eq!(
+            read_message::<String>(&mut left).await?,
+            "response after request FIN"
+        );
         tokio::time::timeout(Duration::from_secs(1), worker).await???;
         for length in [0, CARRIER_MESSAGE_BYTES as u32 + 1] {
             // There is deliberately no payload: invalid headers must return
             // before allocating or waiting for an attacker-controlled body.
             let bytes = length.to_be_bytes();
             let mut input = bytes.as_slice();
-            assert_eq!(read_message::<Vec<u8>>(&mut input).await.err()
-                .ok_or("invalid service frame accepted")?.kind(), io::ErrorKind::InvalidData);
+            assert_eq!(
+                read_message::<Vec<u8>>(&mut input)
+                    .await
+                    .err()
+                    .ok_or("invalid service frame accepted")?
+                    .kind(),
+                io::ErrorKind::InvalidData
+            );
         }
-        let bytes = [0,0,0,8,b'['];
+        let bytes = [0, 0, 0, 8, b'['];
         let mut input = bytes.as_slice();
-        assert_eq!(read_message::<Vec<u8>>(&mut input).await.err()
-            .ok_or("truncated service frame accepted")?.kind(), io::ErrorKind::UnexpectedEof);
+        assert_eq!(
+            read_message::<Vec<u8>>(&mut input)
+                .await
+                .err()
+                .ok_or("truncated service frame accepted")?
+                .kind(),
+            io::ErrorKind::UnexpectedEof
+        );
         Ok(())
     }
     #[tokio::test]

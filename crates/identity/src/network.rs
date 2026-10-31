@@ -7,10 +7,12 @@ use nestlink_protocol::{
 };
 use std::collections::BTreeSet;
 use zeroize::Zeroizing;
-mod remote;
 mod private_service;
-pub use private_service::{PrivateServiceChainBinding,PrivateServiceRouteBinding,
-    private_service_chain_binding,private_service_path_peers,private_service_route_binding};
+mod remote;
+pub use private_service::{
+    PrivateServiceChainBinding, PrivateServiceRouteBinding, private_service_chain_binding,
+    private_service_path_peers, private_service_route_binding,
+};
 mod remote_chain;
 mod route_set;
 pub use remote::{

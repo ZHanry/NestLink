@@ -15,7 +15,10 @@ pub use listener::{
 };
 
 use crate::*;
-use nestlink_protocol::{network::{PeerId, Purpose}, network_datagram as wire};
+use nestlink_protocol::{
+    network::{PeerId, Purpose},
+    network_datagram as wire,
+};
 use nestlink_transport_stream::owner::TaskOwner;
 use std::io;
 use tokio::time::Instant;
@@ -68,7 +71,10 @@ impl RoutedTransport {
         self.request_close_with_code(RETIRED_CLOSE_CODE);
     }
     fn request_close_with_code(&self, code: u32) {
-        let already_closed = self.connection.as_ref().is_some_and(|connection| connection.close_reason().is_some());
+        let already_closed = self
+            .connection
+            .as_ref()
+            .is_some_and(|connection| connection.close_reason().is_some());
         if let Some(connection) = &self.connection
             && connection.close_reason().is_none()
         {
@@ -191,7 +197,8 @@ impl RoutedEstablishment {
         let config = Arc::new(config);
         let mut server_tls = tls::server_config(identity, peer.0)?;
         server_tls.alpn_protocols = vec![inner_alpn.to_vec()];
-        let mut server = ServerConfig::with_crypto(Arc::new(QuicServerConfig::try_from(server_tls)?));
+        let mut server =
+            ServerConfig::with_crypto(Arc::new(QuicServerConfig::try_from(server_tls)?));
         server.transport_config(config.clone());
         server.migration(false);
         let mut client_tls = tls::client_config(identity, peer.0)?;
@@ -241,7 +248,8 @@ impl RoutedEstablishment {
                 .map_err(|_| io::Error::from(io::ErrorKind::TimedOut))??,
         );
         let connection = self.connection.as_ref().ok_or_else(not_connected)?;
-        let negotiated = connection.handshake_data()
+        let negotiated = connection
+            .handshake_data()
             .and_then(|data| data.downcast::<quinn::crypto::rustls::HandshakeData>().ok())
             .is_some_and(|data| data.protocol.as_deref() == Some(inner_alpn));
         if !negotiated {

@@ -78,7 +78,9 @@ impl NativeConnection {
             Self::Original { lifetime, .. } => lifetime.network_generation,
             Self::Recovered { _lifetime, .. } => _lifetime.network_generation,
             Self::Legacy(_) => network.borrow().generation,
-            Self::Direct { network_generation, .. } => *network_generation,
+            Self::Direct {
+                network_generation, ..
+            } => *network_generation,
         };
         let mut requests_open = true;
         loop {
@@ -119,10 +121,17 @@ impl NativeConnection {
             client: Some(client),
             slot: request.slot.clone(),
         };
-        if let Self::Direct { session, admission, .. } = self {
+        if let Self::Direct {
+            session, admission, ..
+        } = self
+        {
             if let Some(client) = loan.client.as_ref() {
                 let deadline = tokio::time::Instant::now()
-                    + session.control.lease_remaining().unwrap_or_default().min(Duration::from_secs(3));
+                    + session
+                        .control
+                        .lease_remaining()
+                        .unwrap_or_default()
+                        .min(Duration::from_secs(3));
                 let reason = tokio::select! { biased;
                     _ = wait_for_fence_invalidation(request.fence.clone()) => Some(StopReason::ExplicitExit),
                     _ = wait_network_change(network, network_generation) => Some(StopReason::NetworkChanged),
@@ -131,7 +140,9 @@ impl NativeConnection {
                         if matches!(result, Ok(Ok(()))) { None } else { Some(StopReason::Revoked) }
                     },
                 };
-                if let Some(reason) = reason { let _ = session.control.stop(reason); }
+                if let Some(reason) = reason {
+                    let _ = session.control.stop(reason);
+                }
             }
             drop(loan);
             let _ = request.done.send(());
@@ -541,36 +552,36 @@ pub(super) async fn recover(
         network_generation: baseline.generation,
     };
     let result = {
-    let recovery = client.sdk.recover_network_route_set(
-        identity,
-        &context.peer_key,
-        source,
-        nestlink_sdk::network::routed::RouteSetRecoveryConfig {
-            bind: context.config.bind_address,
-            address_policy: context
-                .config
-                .address_policy()
-                .map_err(|_| Failure::local(FailureKind::Invalid))?,
-            permissions: options.granted_permissions,
-            capabilities: options.supported_capabilities,
-            local_paths: options.local_paths,
-            stop,
-            cancel,
-            media,
-        },
-    );
-    tokio::pin!(recovery);
-    tokio::select! { biased;
-        result = &mut recovery => result,
-        _ = wait_for_fence_invalidation(fence.clone()) => {
-            lifetime.cancel.send_replace(true);
-            recovery.await
-        },
-        _ = wait_network_change(network.clone(),baseline.generation) => {
-            lifetime.cancel.send_replace(true);
-            recovery.await
-        },
-    }
+        let recovery = client.sdk.recover_network_route_set(
+            identity,
+            &context.peer_key,
+            source,
+            nestlink_sdk::network::routed::RouteSetRecoveryConfig {
+                bind: context.config.bind_address,
+                address_policy: context
+                    .config
+                    .address_policy()
+                    .map_err(|_| Failure::local(FailureKind::Invalid))?,
+                permissions: options.granted_permissions,
+                capabilities: options.supported_capabilities,
+                local_paths: options.local_paths,
+                stop,
+                cancel,
+                media,
+            },
+        );
+        tokio::pin!(recovery);
+        tokio::select! { biased;
+            result = &mut recovery => result,
+            _ = wait_for_fence_invalidation(fence.clone()) => {
+                lifetime.cancel.send_replace(true);
+                recovery.await
+            },
+            _ = wait_network_change(network.clone(),baseline.generation) => {
+                lifetime.cancel.send_replace(true);
+                recovery.await
+            },
+        }
     };
     drop(old_lifetime);
     let mut session = result.map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?;
@@ -639,7 +650,9 @@ mod tests {
 
     struct ServerTask(JoinHandle<()>);
     impl Drop for ServerTask {
-        fn drop(&mut self) { self.0.abort(); }
+        fn drop(&mut self) {
+            self.0.abort();
+        }
     }
     async fn client_fixture() -> TestResult<(Client, ServerTask)> {
         let deployment_id = nestlink_auth::random_id();
@@ -651,19 +664,47 @@ mod tests {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
         let origin = format!("http://{}", listener.local_addr()?);
         let state = nestlink_server::AppState::new(
-            store, nestlink_auth::VaultKey::from_bytes([17; 32]), signer, origin.clone(), false,
+            store,
+            nestlink_auth::VaultKey::from_bytes([17; 32]),
+            signer,
+            origin.clone(),
+            false,
         )?;
         let task = ServerTask(tokio::spawn(async move {
-            let _ = axum::serve(listener, nestlink_server::router(state)
-                .into_make_service_with_connect_info::<std::net::SocketAddr>()).await;
+            let _ = axum::serve(
+                listener,
+                nestlink_server::router(state)
+                    .into_make_service_with_connect_info::<std::net::SocketAddr>(),
+            )
+            .await;
         }));
-        let mut sdk = Sdk::connect(&origin, DeploymentTrust {
-            deployment_id: deployment_id.clone(), permit_issuer,
-        }, true).await?;
-        sdk.login("admin".into(), nestlink_auth::Secret::from_text(password.into()), None).await?;
-        Ok((Client { sdk, server: ApprovedServer {
-            origin, deployment_id, permit_issuer, allow_loopback_http: true,
-        } }, task))
+        let mut sdk = Sdk::connect(
+            &origin,
+            DeploymentTrust {
+                deployment_id: deployment_id.clone(),
+                permit_issuer,
+            },
+            true,
+        )
+        .await?;
+        sdk.login(
+            "admin".into(),
+            nestlink_auth::Secret::from_text(password.into()),
+            None,
+        )
+        .await?;
+        Ok((
+            Client {
+                sdk,
+                server: ApprovedServer {
+                    origin,
+                    deployment_id,
+                    permit_issuer,
+                    allow_loopback_http: true,
+                },
+            },
+            task,
+        ))
     }
     fn fence() -> sdk_call::DispatchFence {
         sdk_call::DispatchFence {
@@ -674,11 +715,17 @@ mod tests {
         }
     }
     fn session_id(client: &Client) -> TestResult<String> {
-        Ok(client.sdk.principal().ok_or("missing login")?.session_id.clone())
+        Ok(client
+            .sdk
+            .principal()
+            .ok_or("missing login")?
+            .session_id
+            .clone())
     }
 
     #[tokio::test]
-    async fn aborted_poll_owner_returns_the_same_authenticated_client_before_completion() -> TestResult {
+    async fn aborted_poll_owner_returns_the_same_authenticated_client_before_completion()
+    -> TestResult {
         let (client, _server) = client_fixture().await?;
         let login = session_id(&client)?;
         let slot = Arc::new(Mutex::new(Some(client)));
@@ -687,7 +734,10 @@ mod tests {
         let (done, completed) = oneshot::channel::<()>();
         let mut owner = tokio::spawn(async move {
             let _done = done;
-            let loan = ClientLoan { client: take_client(&returning), slot: returning };
+            let loan = ClientLoan {
+                client: take_client(&returning),
+                slot: returning,
+            };
             assert!(loan.client.is_some());
             let _ = started.send(());
             std::future::pending::<()>().await;
@@ -706,7 +756,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn closed_and_dropped_poll_requests_return_the_original_authenticated_client() -> TestResult {
+    async fn closed_and_dropped_poll_requests_return_the_original_authenticated_client()
+    -> TestResult {
         let (client, _server) = client_fixture().await?;
         let login = session_id(&client)?;
         let identity = Arc::new(DeviceIdentity::generate());
@@ -737,7 +788,11 @@ mod tests {
     fn dropping_route_lifetime_cancels_its_original_receiver() {
         let (stop, _stopping) = watch::channel(None);
         let (cancel, cancelling) = watch::channel(false);
-        let lifetime = RouteLifetime { _stop: stop, cancel, network_generation: 1 };
+        let lifetime = RouteLifetime {
+            _stop: stop,
+            cancel,
+            network_generation: 1,
+        };
         assert!(!*cancelling.borrow());
         drop(lifetime);
         assert!(*cancelling.borrow());

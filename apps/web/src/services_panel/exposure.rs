@@ -49,7 +49,13 @@ fn now_unix_ms() -> Option<u64> {
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
-        u64::try_from(std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).ok()?.as_millis()).ok()
+        u64::try_from(
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .ok()?
+                .as_millis(),
+        )
+        .ok()
     }
 }
 
@@ -57,7 +63,9 @@ fn expiry_label(expires_at_unix_ms: u64) -> String {
     #[cfg(target_arch = "wasm32")]
     {
         js_sys::Date::new(&wasm_bindgen::JsValue::from_f64(expires_at_unix_ms as f64))
-            .to_iso_string().as_string().unwrap_or_default()
+            .to_iso_string()
+            .as_string()
+            .unwrap_or_default()
     }
     #[cfg(not(target_arch = "wasm32"))]
     {

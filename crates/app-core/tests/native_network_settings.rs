@@ -63,6 +63,70 @@ fn settings() -> NativeNetworkSettings {
 }
 
 #[tokio::test]
+async fn signed_space_choice_persists_and_only_current_explicit_disable_clears_it() -> Result {
+    let network = Arc::new(NetworkMonitor::start()?);
+    let store = Arc::new(Store::default());
+    let mut core = AppCore::with_identity_and_native_session(
+        Limits::default(), DeviceIdentity::generate(),
+        NativeSessionConfig::new(network).with_network_settings_store(store.clone())?,
+    )?;
+    let handle = core.handle();
+    let generation = handle.snapshot().generation;
+    let id = |last| format!("00000000-0000-4000-8000-{last:012}");
+    let path = NativeSpacePathSettings {
+        deployment_id: id(1), space_id: id(2), authority_key: [3; 32],
+        controller_membership_grant_id: id(4), host_membership_grant_id: id(5),
+    };
+    let mut direct = settings();
+    direct.space_path = Some(path.clone());
+    assert_eq!(handle.configure_native_network(generation, 0, direct.clone()).await?, direct);
+    assert_eq!(store.load()?, direct);
+    assert_eq!(handle.snapshot().native_network_revision, 1);
+    assert_eq!(store.saves.load(Ordering::Acquire), 1);
+
+    // A contradictory or malformed submission cannot remove the saved direct
+    // restriction, publish relay rights, or consume the current revision.
+    let mut both = direct.clone();
+    both.route_set = Some(NativeRouteSetSettings {
+        deployment_id: path.deployment_id.clone(), space_id: path.space_id.clone(),
+        authority_key: path.authority_key,
+        controller_membership_grant_id: path.controller_membership_grant_id.clone(),
+        host_membership_grant_id: path.host_membership_grant_id.clone(), node_ids: [id(6), id(7)],
+    });
+    let mut wrong_pin = direct.clone();
+    wrong_pin.space_path.as_mut().ok_or("missing direct choice")?.authority_key = [0; 32];
+    for invalid in [both, wrong_pin] {
+        assert_eq!(handle.configure_native_network(generation, 1, invalid).await,
+            Err(NativeNetworkError::Invalid));
+        assert_eq!(handle.snapshot().native_network, direct);
+        assert_eq!(store.load()?, direct);
+        assert_eq!(handle.snapshot().native_network_revision, 1);
+        assert_eq!(store.saves.load(Ordering::Acquire), 1);
+    }
+
+    let mut disabled = direct.clone();
+    disabled.space_path = None;
+    assert_eq!(handle.configure_native_network(generation, 0, disabled.clone()).await,
+        Err(NativeNetworkError::StaleGeneration));
+    assert_eq!(store.load()?, direct);
+    assert_eq!(handle.configure_native_network(generation, 1, disabled.clone()).await?, disabled);
+    assert_eq!(handle.snapshot().native_network, disabled);
+    assert!(handle.snapshot().native_network.route_set.is_none());
+    assert_eq!(handle.snapshot().native_network_revision, 2);
+    assert_eq!(store.load()?, disabled);
+    assert_eq!(store.saves.load(Ordering::Acquire), 2);
+    assert_eq!(core.shutdown(Duration::from_secs(3)).await, ShutdownState::Complete);
+
+    let mut reopened = AppCore::with_identity_and_native_session(
+        Limits::default(), DeviceIdentity::generate(),
+        NativeSessionConfig::new(Arc::new(NetworkMonitor::start()?)).with_network_settings_store(store)?,
+    )?;
+    assert_eq!(reopened.handle().snapshot().native_network, disabled);
+    assert_eq!(reopened.shutdown(Duration::from_secs(3)).await, ShutdownState::Complete);
+    Ok(())
+}
+
+#[tokio::test]
 async fn validated_idle_changes_persist_before_publication_and_advance_candidates() -> Result {
     let network = Arc::new(NetworkMonitor::start()?);
     let store = Arc::new(Store::default());

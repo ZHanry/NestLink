@@ -19,13 +19,26 @@ fn phase(name: &str, error: impl std::fmt::Debug) -> io::Error {
 async fn signed_direct_space_path_uses_original_media_and_input_owner_and_revocation_releases_pressed_keys()
 -> Result {
     let server = Server::start(None).await?;
-    let mut admin = Sdk::connect(&server.config.origin, DeploymentTrust {
-        deployment_id: server.config.deployment_id.clone(), permit_issuer: server.config.permit_issuer,
-    }, true).await?;
+    let mut admin = Sdk::connect(
+        &server.config.origin,
+        DeploymentTrust {
+            deployment_id: server.config.deployment_id.clone(),
+            permit_issuer: server.config.permit_issuer,
+        },
+        true,
+    )
+    .await?;
     admin.login("admin".into(), password(), None).await?;
-    admin.set_policy(PolicyUpdate { expected_revision: 1, policy: NetworkPolicy {
-        server_forwarding: "allow".into(), peer_path_mode: "direct_only".into(), public_ingress: "disabled".into(),
-    }}).await?;
+    admin
+        .set_policy(PolicyUpdate {
+            expected_revision: 1,
+            policy: NetworkPolicy {
+                server_forwarding: "allow".into(),
+                peer_path_mode: "direct_only".into(),
+                public_ingress: "disabled".into(),
+            },
+        })
+        .await?;
     let address = routed_ipv4()?;
     let controller_identity = DeviceIdentity::generate();
     let host_identity = DeviceIdentity::generate();
@@ -35,67 +48,143 @@ async fn signed_direct_space_path_uses_original_media_and_input_owner_and_revoca
     let mut policy = admin.configure_network_authority(&space, 0).await?;
     let grants = [nestlink_auth::random_id(), nestlink_auth::random_id()];
     let scope = NativeSpacePathSettings {
-        deployment_id: server.config.deployment_id.clone(), space_id: space.clone(),
+        deployment_id: server.config.deployment_id.clone(),
+        space_id: space.clone(),
         authority_key: server.network_authority_key,
-        controller_membership_grant_id: grants[0].clone(), host_membership_grant_id: grants[1].clone(),
+        controller_membership_grant_id: grants[0].clone(),
+        host_membership_grant_id: grants[1].clone(),
     };
     let config = || -> Result<NativeSessionConfig> {
-        let mut config = NativeSessionConfig::new(Arc::new(NetworkMonitor::start()?)).with_space_path(scope.clone())?;
+        let mut config = NativeSessionConfig::new(Arc::new(NetworkMonitor::start()?))
+            .with_space_path(scope.clone())?;
         config.bind_address = (address, 0).into();
         config.use_deployment_stun = false;
         config.private_network_prefixes = vec![format!("{address}/32")];
         config.supported_capabilities = vec!["vp8".into(), "opus".into()];
         Ok(config)
     };
-    let mut controller_core = AppCore::with_identity_and_native_session(Limits::default(), controller_identity, config()?)?;
-    let mut host_core = AppCore::with_identity_and_native_session(Limits::default(), host_identity, config()?)?;
+    let mut controller_core = AppCore::with_identity_and_native_session(
+        Limits::default(),
+        controller_identity,
+        config()?,
+    )?;
+    let mut host_core =
+        AppCore::with_identity_and_native_session(Limits::default(), host_identity, config()?)?;
     let controller = connect(&controller_core, &server).await?;
     let host = connect(&host_core, &server).await?;
     for (handle, name) in [(&controller, "controller"), (&host, "host")] {
-        success(handle.submit(Action::EnrollLocalDevice { name: name.into(), platform: "linux-x11".into(),
-            capabilities: vec![name.into(), "vp8".into(), "opus".into()], path_mode: "direct_only".into() })?).await?;
+        success(handle.submit(Action::EnrollLocalDevice {
+            name: name.into(),
+            platform: "linux-x11".into(),
+            capabilities: vec![name.into(), "vp8".into(), "opus".into()],
+            path_mode: "direct_only".into(),
+        })?)
+        .await?;
     }
     for device in [&controller_id, &host_id] {
-        policy = admin.set_network_member(&space, device, NetworkMemberRequest {
-            expected_policy_revision: policy.revision, expected_membership_epoch: 0, role: SpaceRole::Member,
-        }).await?.policy;
+        policy = admin
+            .set_network_member(
+                &space,
+                device,
+                NetworkMemberRequest {
+                    expected_policy_revision: policy.revision,
+                    expected_membership_epoch: 0,
+                    role: SpaceRole::Member,
+                },
+            )
+            .await?
+            .policy;
     }
     let expires = nestlink_remote::RuntimeClock::default().sample()?.unix_ms + 60_000;
     for (device, grant) in [(&controller_id, &grants[0]), (&host_id, &grants[1])] {
-        admin.issue_network_membership(&space, device, NetworkIssueRequest {
-            grant_id: grant.clone(), expected_policy_epoch: policy.policy_epoch,
-            expected_membership_epoch: 1, expires_at_unix_ms: expires,
-        }).await?;
+        admin
+            .issue_network_membership(
+                &space,
+                device,
+                NetworkIssueRequest {
+                    grant_id: grant.clone(),
+                    expected_policy_epoch: policy.policy_epoch,
+                    expected_membership_epoch: 1,
+                    expires_at_unix_ms: expires,
+                },
+            )
+            .await?;
     }
-    success(controller.submit(Action::RequestRemote { host_device_id: host_id,
+    success(controller.submit(Action::RequestRemote {
+        host_device_id: host_id,
         permissions: vec![Permission::View as i32, Permission::Input as i32],
-        path_mode: "direct_only".into(), access: RemoteAccess::LocalApproval })?).await?;
-    let request = controller.snapshot().selected_request.data.as_ref().ok_or("missing direct request")?.clone();
-    success(host.submit(Action::ApproveRemote { request_id: request.id.clone(), expected_nonce: request.nonce.clone(),
-        expected_policy_revision: request.policy_revision, choice: ApprovalChoice { approved: true,
-            permissions: vec![Permission::View as i32, Permission::Input as i32], paths: vec![Path::Direct as i32] } })?).await?;
-    success(controller.submit(Action::IssueRemotePermit { request_id: request.id.clone() })?).await?;
+        path_mode: "direct_only".into(),
+        access: RemoteAccess::LocalApproval,
+    })?)
+    .await?;
+    let request = controller
+        .snapshot()
+        .selected_request
+        .data
+        .as_ref()
+        .ok_or("missing direct request")?
+        .clone();
+    success(host.submit(Action::ApproveRemote {
+        request_id: request.id.clone(),
+        expected_nonce: request.nonce.clone(),
+        expected_policy_revision: request.policy_revision,
+        choice: ApprovalChoice {
+            approved: true,
+            permissions: vec![Permission::View as i32, Permission::Input as i32],
+            paths: vec![Path::Direct as i32],
+        },
+    })?)
+    .await?;
+    success(controller.submit(Action::IssueRemotePermit {
+        request_id: request.id.clone(),
+    })?)
+    .await?;
     tokio::try_join!(
-        session_success(controller.submit(Action::StartNativeSession { request_id: request.id.clone(), relay_node_id: None })?),
-        session_success(host.submit(Action::StartNativeSession { request_id: request.id.clone(), relay_node_id: None })?),
+        session_success(controller.submit(Action::StartNativeSession {
+            request_id: request.id.clone(),
+            relay_node_id: None
+        })?),
+        session_success(host.submit(Action::StartNativeSession {
+            request_id: request.id.clone(),
+            relay_node_id: None
+        })?),
     )?;
     let log = Arc::new(Mutex::new(Vec::new()));
     let (binding, input) = prepare_display(&host, &controller, log.clone()).await?;
     video(&host, &controller, &binding).await?;
-    controller.send_native_input(&input, NativeInputAction::Key { code: 8, down: true }).await?;
+    controller
+        .send_native_input(
+            &input,
+            NativeInputAction::Key {
+                code: 8,
+                down: true,
+            },
+        )
+        .await?;
     wait_input(&log, "Key { code: 8, down: true }").await?;
     let path = tokio::time::timeout(Duration::from_secs(3), async {
         loop {
             let snapshot = controller.snapshot();
-            let session = snapshot.native_session.data.as_ref().ok_or("missing direct session")?;
+            let session = snapshot
+                .native_session
+                .data
+                .as_ref()
+                .ok_or("missing direct session")?;
             assert_eq!(session.path, Some(Path::Direct as i32));
-            if let Some(binding) = session.quality.as_ref().and_then(|quality| quality.original_binding.as_ref()) {
+            if let Some(binding) = session
+                .quality
+                .as_ref()
+                .and_then(|quality| quality.original_binding.as_ref())
+            {
                 assert!(binding.transport_group.is_some());
-                if let Some(path) = &binding.path_grant_id { return Ok::<_, Box<dyn std::error::Error + Send + Sync>>(path.clone()); }
+                if let Some(path) = &binding.path_grant_id {
+                    return Ok::<_, Box<dyn std::error::Error + Send + Sync>>(path.clone());
+                }
             }
             tokio::time::sleep(Duration::from_millis(10)).await;
         }
-    }).await??;
+    })
+    .await??;
     let current = admin.network_remote_path(&space, &path).await?;
     assert_eq!(current.request_id, request.id);
     assert_eq!(current.controller_membership.grant_id, grants[0]);
@@ -103,12 +192,35 @@ async fn signed_direct_space_path_uses_original_media_and_input_owner_and_revoca
     admin.revoke_network_remote_path(&space, &path).await?;
     wait_input(&log, "release-key:8").await?;
     for handle in [&controller, &host] {
-        wait_view(handle, |snapshot| snapshot.native_session.data.as_ref()
-            .is_some_and(|session| session.status == NativeSessionStatus::Stopped)).await?;
+        wait_view(handle, |snapshot| {
+            snapshot
+                .native_session
+                .data
+                .as_ref()
+                .is_some_and(|session| session.status == NativeSessionStatus::Stopped)
+        })
+        .await?;
     }
-    assert!(controller.send_native_input(&input, NativeInputAction::Key { code: 9, down: true }).await.is_err());
-    assert_eq!(controller_core.shutdown(Duration::from_secs(5)).await, ShutdownState::Complete);
-    assert_eq!(host_core.shutdown(Duration::from_secs(5)).await, ShutdownState::Complete);
+    assert!(
+        controller
+            .send_native_input(
+                &input,
+                NativeInputAction::Key {
+                    code: 9,
+                    down: true
+                }
+            )
+            .await
+            .is_err()
+    );
+    assert_eq!(
+        controller_core.shutdown(Duration::from_secs(5)).await,
+        ShutdownState::Complete
+    );
+    assert_eq!(
+        host_core.shutdown(Duration::from_secs(5)).await,
+        ShutdownState::Complete
+    );
     Ok(())
 }
 
@@ -451,9 +563,12 @@ async fn product_route_set_recovers_after_total_old_node_loss_releases_pressed_i
         })?),
     )?;
     let input_log = Arc::new(Mutex::new(Vec::new()));
-    let (old_binding, old_input) = prepare_display(&host, &controller, input_log.clone()).await
+    let (old_binding, old_input) = prepare_display(&host, &controller, input_log.clone())
+        .await
         .map_err(|error| phase("initial display/input proof", error))?;
-    video(&host, &controller, &old_binding).await.map_err(|error| phase("initial VP8 pixels", error))?;
+    video(&host, &controller, &old_binding)
+        .await
+        .map_err(|error| phase("initial VP8 pixels", error))?;
     controller
         .send_native_input(
             &old_input,
@@ -463,7 +578,9 @@ async fn product_route_set_recovers_after_total_old_node_loss_releases_pressed_i
             },
         )
         .await?;
-    wait_input(&input_log, "Key { code: 8, down: true }").await.map_err(|error| phase("initial pressed key", error))?;
+    wait_input(&input_log, "Key { code: 8, down: true }")
+        .await
+        .map_err(|error| phase("initial pressed key", error))?;
     let old_group = tokio::time::timeout(Duration::from_secs(4), async {
         loop {
             let snapshot = controller.snapshot();
@@ -479,7 +596,8 @@ async fn product_route_set_recovers_after_total_old_node_loss_releases_pressed_i
             tokio::time::sleep(Duration::from_millis(10)).await;
         }
     })
-    .await.map_err(|error| phase("original transport-group observation", error))?;
+    .await
+    .map_err(|error| phase("original transport-group observation", error))?;
     // The actor really prepares the other original node; this is not a fake
     // proposal injected into a scheduler and does not carry business I/O.
     tokio::time::timeout(Duration::from_secs(5), async {
@@ -494,9 +612,15 @@ async fn product_route_set_recovers_after_total_old_node_loss_releases_pressed_i
             tokio::time::sleep(Duration::from_millis(10)).await;
         }
     })
-    .await.map_err(|error| phase("actual standby node pair", error))?;
-    initial_node.close().await.map_err(|error| phase("total initial-node loss", error))?;
-    wait_input(&input_log, "release-key:8").await.map_err(|error| phase("old input release", error))?;
+    .await
+    .map_err(|error| phase("actual standby node pair", error))?;
+    initial_node
+        .close()
+        .await
+        .map_err(|error| phase("total initial-node loss", error))?;
+    wait_input(&input_log, "release-key:8")
+        .await
+        .map_err(|error| phase("old input release", error))?;
     for handle in [&controller, &host] {
         wait_view(handle, |snapshot| {
             snapshot
@@ -508,7 +632,8 @@ async fn product_route_set_recovers_after_total_old_node_loss_releases_pressed_i
                         && session.connection_generation == old_binding.connection_generation + 1
                 })
         })
-        .await.map_err(|error| phase("successor generation connected", error))?;
+        .await
+        .map_err(|error| phase("successor generation connected", error))?;
     }
     assert!(
         controller

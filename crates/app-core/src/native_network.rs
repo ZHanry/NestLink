@@ -43,11 +43,19 @@ pub struct NativeSpacePathSettings {
 }
 impl NativeSpacePathSettings {
     pub fn validate(&self) -> Result<(), NativeNetworkError> {
-        if ![&self.deployment_id, &self.space_id, &self.controller_membership_grant_id,
-            &self.host_membership_grant_id].into_iter().all(|id| nestlink_protocol::valid_id(id))
+        if ![
+            &self.deployment_id,
+            &self.space_id,
+            &self.controller_membership_grant_id,
+            &self.host_membership_grant_id,
+        ]
+        .into_iter()
+        .all(|id| nestlink_protocol::valid_id(id))
             || self.authority_key == [0; 32]
             || self.controller_membership_grant_id == self.host_membership_grant_id
-        { return Err(NativeNetworkError::Invalid); }
+        {
+            return Err(NativeNetworkError::Invalid);
+        }
         Ok(())
     }
 }
@@ -142,7 +150,9 @@ impl NativeNetworkSettings {
     pub fn validate(&self) -> Result<(), NativeNetworkError> {
         if let Some(path) = &self.space_path {
             path.validate()?;
-            if self.route_set.is_some() { return Err(NativeNetworkError::Invalid); }
+            if self.route_set.is_some() {
+                return Err(NativeNetworkError::Invalid);
+            }
         }
         if let Some(route_set) = &self.route_set {
             route_set.validate()?;

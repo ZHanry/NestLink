@@ -3,8 +3,10 @@ use crate::{session_store::SessionStore, space_dns::session_snapshot};
 use nestlink_protocol::services::private::PrivateServiceEntry;
 use nestlink_sdk::{
     Sdk,
-    services::{LocalProxyServiceChoice, LocalProxyWait, LocalServiceProxy,
-        LocalNativeServiceProxy, NativeStreamWait},
+    services::{
+        LocalNativeServiceProxy, LocalProxyServiceChoice, LocalProxyWait, LocalServiceProxy,
+        NativeStreamWait,
+    },
 };
 use std::{
     io,
@@ -73,11 +75,28 @@ enum ProxyAction {
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
-enum RunningProxy { Socks(LocalServiceProxy), Native(LocalNativeServiceProxy) }
-enum ProxyWait { Pending, Stopped(String), Failed(String) }
+enum RunningProxy {
+    Socks(LocalServiceProxy),
+    Native(LocalNativeServiceProxy),
+}
+enum ProxyWait {
+    Pending,
+    Stopped(String),
+    Failed(String),
+}
 impl RunningProxy {
-    fn is_finished(&self) -> bool { match self { Self::Socks(owner) => owner.is_finished(), Self::Native(owner) => owner.is_finished() } }
-    fn request_shutdown(&self) { match self { Self::Socks(owner) => owner.request_shutdown(), Self::Native(owner) => owner.request_shutdown() } }
+    fn is_finished(&self) -> bool {
+        match self {
+            Self::Socks(owner) => owner.is_finished(),
+            Self::Native(owner) => owner.is_finished(),
+        }
+    }
+    fn request_shutdown(&self) {
+        match self {
+            Self::Socks(owner) => owner.request_shutdown(),
+            Self::Native(owner) => owner.request_shutdown(),
+        }
+    }
     async fn wait_stopped(&mut self) -> ProxyWait {
         match self {
             Self::Socks(owner) => match owner.wait_stopped(Duration::from_secs(5)).await {
@@ -103,10 +122,16 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
     nestlink_privileged::windows::require_normal_user_process()?;
     if let ProxyAction::Connect { endpoint } = &args.action {
         nestlink_platform_security::check_private_directory(&args.state_dir)?;
-        let stream = tokio::time::timeout(Duration::from_secs(3),
-            nestlink_platform_security::local_stream::connect(endpoint)).await??;
-        return Ok(nestlink_platform_security::local_stream::relay_stdio(stream,
-            crate::space_dns_system::termination()).await?);
+        let stream = tokio::time::timeout(
+            Duration::from_secs(3),
+            nestlink_platform_security::local_stream::connect(endpoint),
+        )
+        .await??;
+        return Ok(nestlink_platform_security::local_stream::relay_stdio(
+            stream,
+            crate::space_dns_system::termination(),
+        )
+        .await?);
     }
     let installation =
         nestlink_local_ipc::maintenance::InstallationStartup::acquire(&std::env::current_exe()?)?;
@@ -186,8 +211,10 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
                 .into());
             }
             let entry = selected_service(&sdk, &consumer.device_id, &service, &space).await?;
-            let datagram = matches!(&entry.service.definition.requested_ingress,
-                nestlink_protocol::api::ServiceIngress::Udp { .. });
+            let datagram = matches!(
+                &entry.service.definition.requested_ingress,
+                nestlink_protocol::api::ServiceIngress::Udp { .. }
+            );
             let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
             let remaining = sdk
                 .principal()
@@ -206,21 +233,49 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
             let credential_directory = credentials_dir.unwrap_or_else(|| directory.clone());
             let deadline = tokio::time::Instant::now() + lifetime;
             let mut proxy = if native_stream {
-                RunningProxy::Native(sdk.start_private_service_native_stream(consumer, choice, &credential_directory).await?)
+                RunningProxy::Native(
+                    sdk.start_private_service_native_stream(
+                        consumer,
+                        choice,
+                        &credential_directory,
+                    )
+                    .await?,
+                )
             } else {
-                RunningProxy::Socks(sdk.start_private_service_socks(consumer, choice, listen, &credential_directory).await?)
+                RunningProxy::Socks(
+                    sdk.start_private_service_socks(
+                        consumer,
+                        choice,
+                        listen,
+                        &credential_directory,
+                    )
+                    .await?,
+                )
             };
             drop(installation);
             match &proxy {
                 RunningProxy::Socks(owner) => {
-                    println!("Private service {service} in space {space}: SOCKS5 {}", owner.address());
-                    println!("Local credentials file: {}", owner.credentials_path().display());
+                    println!(
+                        "Private service {service} in space {space}: SOCKS5 {}",
+                        owner.address()
+                    );
+                    println!(
+                        "Local credentials file: {}",
+                        owner.credentials_path().display()
+                    );
                 }
                 RunningProxy::Native(owner) => {
-                    println!("Private service {service} in space {space}: native endpoint {}", owner.endpoint().display());
-                    println!("Connect with this command's connect --endpoint subcommand and the same --state-dir; standard native socket/pipe clients may use the endpoint directly.");
+                    println!(
+                        "Private service {service} in space {space}: native endpoint {}",
+                        owner.endpoint().display()
+                    );
+                    println!(
+                        "Connect with this command's connect --endpoint subcommand and the same --state-dir; standard native socket/pipe clients may use the endpoint directly."
+                    );
                     #[cfg(windows)]
-                    println!("Windows byte pipes have no independent write-half EOF; use SOCKS TCP for applications that require FIN before a reverse response.");
+                    println!(
+                        "Windows byte pipes have no independent write-half EOF; use SOCKS TCP for applications that require FIN before a reverse response."
+                    );
                 }
             }
             println!(
@@ -229,9 +284,15 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
             );
             println!("Press Ctrl-C to stop.");
             if datagram {
-                println!("UDP requires password authentication on a live TCP control connection and UDP ASSOCIATE with your already-bound loopback UDP IP and nonzero port. Wildcard sources are rejected.");
-                println!("Send SOCKS UDP packets to the returned relay, targeting {alias}:{port}. Empty datagrams are preserved; FRAG and payloads over 1169 bytes are discarded.");
-                println!("fast-socks5 Socks5Datagram convenience constructors request [::]:0 and cannot be used here; use Socks5Stream::request with the exact bound UDP endpoint and the library UDP codec.");
+                println!(
+                    "UDP requires password authentication on a live TCP control connection and UDP ASSOCIATE with your already-bound loopback UDP IP and nonzero port. Wildcard sources are rejected."
+                );
+                println!(
+                    "Send SOCKS UDP packets to the returned relay, targeting {alias}:{port}. Empty datagrams are preserved; FRAG and payloads over 1169 bytes are discarded."
+                );
+                println!(
+                    "fast-socks5 Socks5Datagram convenience constructors request [::]:0 and cannot be used here; use Socks5Stream::request with the exact bound UDP endpoint and the library UDP codec."
+                );
             }
             let signal = crate::space_dns_system::termination();
             tokio::pin!(signal);
@@ -282,7 +343,9 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
                 }
             }
         }
-        ProxyAction::Connect { .. } => Err(io::Error::other("native connect dispatch failed").into()),
+        ProxyAction::Connect { .. } => {
+            Err(io::Error::other("native connect dispatch failed").into())
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 use super::*;
-mod space_policy;
 mod private_policy;
+mod space_policy;
 use nestlink_auth::{VaultKey, hash_password};
 use nestlink_identity::{
     InstallationIdentity, digest,

@@ -196,10 +196,13 @@ impl AdjacencyEndpoint {
             match attempt {
                 Ok(accepted) => break accepted,
                 Err(error)
-                    if error.downcast_ref::<quinn::ConnectionError>().is_some_and(|error| {
-                        matches!(error, quinn::ConnectionError::ConnectionClosed(close)
+                    if error
+                        .downcast_ref::<quinn::ConnectionError>()
+                        .is_some_and(|error| {
+                            matches!(error, quinn::ConnectionError::ConnectionClosed(close)
                             if close.error_code == quinn::TransportErrorCode::crypto(49))
-                    }) => {
+                        }) =>
+                {
                     // rustls CurrentClients maps an unavailable dynamic client
                     // pin to peer access_denied (49). Local node-pin failures,
                     // ALPN/protocol errors and all other TLS errors stay fatal.
@@ -431,7 +434,10 @@ impl Adjacency {
         self.request_close_with_code(0);
     }
     pub(super) fn request_close_with_code(&self, code: u32) {
-        let already_closed = self.connection.as_ref().is_some_and(|connection| connection.close_reason().is_some());
+        let already_closed = self
+            .connection
+            .as_ref()
+            .is_some_and(|connection| connection.close_reason().is_some());
         if let Some(connection) = &self.connection
             && connection.close_reason().is_none()
         {

@@ -504,7 +504,9 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         if args.disable_native_route_set {
             settings.route_set = None;
         }
-        if args.disable_native_space_path { settings.space_path = None; }
+        if args.disable_native_space_path {
+            settings.space_path = None;
+        }
         if let Some(path) = args.native_space_path {
             let bytes = nestlink_platform_security::read_private(&path, 8192)?;
             let scope: nestlink_app_core::NativeSpacePathSettings = serde_json::from_slice(&bytes)?;

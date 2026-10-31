@@ -239,7 +239,8 @@ impl Sdk {
         {
             return Err(SdkError::Trust);
         }
-        let approved_until = view.approval_expires_at_unix_ms
+        let approved_until = view
+            .approval_expires_at_unix_ms
             .filter(|end| *end > private_wall_ms().unwrap_or(u64::MAX))
             .ok_or(SdkError::Trust)?;
         let usage =
@@ -413,8 +414,12 @@ async fn run_host(
     let mut workers = JoinSet::new();
     let mut refresh = tokio::time::interval(Duration::from_secs(5));
     refresh.tick().await;
-    let deadline = tokio::time::Instant::now() + Duration::from_millis(
-        presence.expires_at_unix_ms.saturating_sub(private_wall_ms().unwrap_or(u64::MAX)));
+    let deadline = tokio::time::Instant::now()
+        + Duration::from_millis(
+            presence
+                .expires_at_unix_ms
+                .saturating_sub(private_wall_ms().unwrap_or(u64::MAX)),
+        );
     let mut failed = false;
     loop {
         tokio::select! {biased;
@@ -452,7 +457,8 @@ async fn run_host(
     let mut withdrawal = presence.clone();
     withdrawal.request_sequence = withdrawal.request_sequence.saturating_add(1);
     withdrawal.issued_at_unix_ms = private_wall_ms().unwrap_or(u64::MAX);
-    withdrawal.expires_at_unix_ms = withdrawal.issued_at_unix_ms
+    withdrawal.expires_at_unix_ms = withdrawal
+        .issued_at_unix_ms
         .saturating_add(nestlink_protocol::service_plane::SERVICE_LEASE_MS);
     if let Ok(signed) = host.identity.withdraw_private_service_host(&withdrawal) {
         if !matches!(

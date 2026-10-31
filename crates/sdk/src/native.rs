@@ -682,7 +682,8 @@ impl NativeConnection {
         local: &DeviceIdentity,
         peer_key: &[u8; 32],
     ) -> Result<NativeSession, nestlink_remote::RemoteError> {
-        self.authorize_with_network_path(setup, local, peer_key, None).await
+        self.authorize_with_network_path(setup, local, peer_key, None)
+            .await
     }
     pub(crate) async fn authorize_with_network_path(
         self,
@@ -693,9 +694,16 @@ impl NativeConnection {
     ) -> Result<NativeSession, nestlink_remote::RemoteError> {
         let original = setup.session.current_verified_permit();
         let (path_grant_id, transport_group) = match network_direct {
-            Some((path, group)) if self.candidate.path() == Path::Direct => (Some(path), Some(group)),
-            Some(_) => return Err(std::io::Error::new(std::io::ErrorKind::PermissionDenied,
-                "signed direct admission cannot select a relay").into()),
+            Some((path, group)) if self.candidate.path() == Path::Direct => {
+                (Some(path), Some(group))
+            }
+            Some(_) => {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::PermissionDenied,
+                    "signed direct admission cannot select a relay",
+                )
+                .into());
+            }
             None => (None, None),
         };
         let observation_binding = nestlink_remote::PathObservationBinding {
@@ -711,7 +719,9 @@ impl NativeConnection {
         };
         let authorization_deadline_ms = setup.clock.deadline_ms(self.authorization_deadline)?;
         if observation_binding.path_grant_id.is_some() {
-            setup.session.cap_lifetime_deadline_ms(authorization_deadline_ms)?;
+            setup
+                .session
+                .cap_lifetime_deadline_ms(authorization_deadline_ms)?;
         } else {
             setup.session.cap_deadline_ms(authorization_deadline_ms)?;
         }
@@ -949,7 +959,10 @@ impl NativeEndpoint {
         Ok(())
     }
     pub(crate) fn bind_network_direct(
-        &mut self, path: String, group: [u8; 32], deadline: Instant,
+        &mut self,
+        path: String,
+        group: [u8; 32],
+        deadline: Instant,
     ) -> Result<(), DialError> {
         self.cap_authorization_deadline(deadline)?;
         self.network_direct = Some((path, group));

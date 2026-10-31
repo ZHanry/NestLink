@@ -68,7 +68,11 @@ impl LocalServiceRuntime {
         let issuer_proof = self.delegation.observation(&first, wall()?)?;
         let mut sample = observation::sample(&handle, request, || {
             (
-                *self.stop.borrow() || self.connection.as_ref().is_none_or(|connection| connection.close_reason().is_some()),
+                *self.stop.borrow()
+                    || self
+                        .connection
+                        .as_ref()
+                        .is_none_or(|connection| connection.close_reason().is_some()),
                 self.cleanup_pending(),
             )
         })?;
@@ -77,7 +81,10 @@ impl LocalServiceRuntime {
         if issuer_proof != current_proof
             || !self.target.accepts(&current)
             || *self.stop.borrow()
-            || self.connection.as_ref().is_none_or(|connection| connection.close_reason().is_some())
+            || self
+                .connection
+                .as_ref()
+                .is_none_or(|connection| connection.close_reason().is_some())
             || sample.signed_lease_envelope_sha256 != observation::envelope_digest(&current)
             || sample.verified_issuer_ed25519 != current.issuer()
         {
@@ -346,7 +353,9 @@ impl Sdk {
             }
         };
         let mut connected = connected;
-        let socket_release = connected.take_socket_release().map_err(SdkError::ServiceIo)?;
+        let socket_release = connected
+            .take_socket_release()
+            .map_err(SdkError::ServiceIo)?;
         let connection = connected.connection.clone();
         let (stop, stopped) = watch::channel(false);
         let endpoint = connected.endpoint.clone();

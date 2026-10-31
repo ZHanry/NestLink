@@ -14,7 +14,8 @@ pub(super) struct ServiceCleanupMonitor {
 }
 impl ServiceCleanupMonitor {
     pub(super) fn new(
-        task: JoinHandle<ServiceHostStopReport>, endpoint: quinn::Endpoint,
+        task: JoinHandle<ServiceHostStopReport>,
+        endpoint: quinn::Endpoint,
         release: impl Future<Output = io::Result<()>> + Send + 'static,
     ) -> Self {
         Self {
@@ -39,9 +40,14 @@ impl ServiceCleanupMonitor {
             return ServiceHostWait::CleanupPending { failed: true };
         }
         match tokio::time::timeout(budget, self.finish()).await {
-            Err(_) => ServiceHostWait::CleanupPending { failed: self.failed },
+            Err(_) => ServiceHostWait::CleanupPending {
+                failed: self.failed,
+            },
             Ok(Ok(report)) => ServiceHostWait::Stopped(report),
-            Ok(Err(())) => { self.failed = true; ServiceHostWait::CleanupPending { failed: true } }
+            Ok(Err(())) => {
+                self.failed = true;
+                ServiceHostWait::CleanupPending { failed: true }
+            }
         }
     }
     async fn finish(&mut self) -> Result<ServiceHostStopReport, ()> {
@@ -85,7 +91,9 @@ impl Drop for ServiceCleanupMonitor {
             endpoint.close(0u32.into(), b"service cleanup owner dropped");
         }
         if let Some(releasing) = self.releasing.take() {
-            self.runtime.spawn(async move { let _ = releasing.await; });
+            self.runtime.spawn(async move {
+                let _ = releasing.await;
+            });
         }
         let endpoint = self.endpoint.take();
         let release = self.release.take();
@@ -94,13 +102,23 @@ impl Drop for ServiceCleanupMonitor {
             // never labels abort() or a closed socket as completed cleanup.
             self.runtime.spawn(async move {
                 let _ = task.await;
-                if let Some(endpoint) = endpoint { endpoint.wait_idle().await; drop(endpoint); }
-                if let Some(release) = release { let _ = release.await; }
+                if let Some(endpoint) = endpoint {
+                    endpoint.wait_idle().await;
+                    drop(endpoint);
+                }
+                if let Some(release) = release {
+                    let _ = release.await;
+                }
             });
         } else if endpoint.is_some() || release.is_some() {
             self.runtime.spawn(async move {
-                if let Some(endpoint) = endpoint { endpoint.wait_idle().await; drop(endpoint); }
-                if let Some(release) = release { let _ = release.await; }
+                if let Some(endpoint) = endpoint {
+                    endpoint.wait_idle().await;
+                    drop(endpoint);
+                }
+                if let Some(release) = release {
+                    let _ = release.await;
+                }
             });
         }
     }
@@ -110,11 +128,13 @@ mod tests {
     use super::*;
     use tokio::sync::oneshot;
     type Result = std::result::Result<(), Box<dyn std::error::Error + Send + Sync>>;
-    fn endpoint_owner() -> io::Result<(quinn::Endpoint, impl Future<Output = io::Result<()>> + Send)> {
+    fn endpoint_owner() -> io::Result<(quinn::Endpoint, impl Future<Output = io::Result<()>> + Send)>
+    {
         let listener = nestlink_transport_quic::service::PrivateListener::bind(
             "127.0.0.1:0".parse().map_err(io::Error::other)?,
             &nestlink_identity::InstallationIdentity::generate(),
-        ).map_err(io::Error::other)?;
+        )
+        .map_err(io::Error::other)?;
         Ok((listener.endpoint.clone(), listener.close_and_wait()))
     }
     #[tokio::test]
@@ -176,7 +196,12 @@ mod tests {
         );
         assert!(monitor.task.is_some());
         assert!(monitor.pending());
-        assert!(monitor.endpoint.as_ref().is_some_and(|endpoint| endpoint.local_addr().is_ok()));
+        assert!(
+            monitor
+                .endpoint
+                .as_ref()
+                .is_some_and(|endpoint| endpoint.local_addr().is_ok())
+        );
         let _ = release.send(());
         assert_eq!(
             monitor.wait(Duration::from_secs(1)).await,
@@ -204,7 +229,12 @@ mod tests {
         );
         assert!(monitor.task.is_some());
         assert!(monitor.pending());
-        assert!(monitor.endpoint.as_ref().is_some_and(|endpoint| endpoint.local_addr().is_ok()));
+        assert!(
+            monitor
+                .endpoint
+                .as_ref()
+                .is_some_and(|endpoint| endpoint.local_addr().is_ok())
+        );
         let _ = release.send(());
         assert_eq!(
             monitor.wait(Duration::from_secs(1)).await,
@@ -219,19 +249,29 @@ mod tests {
         let holder = endpoint.clone();
         let task = tokio::spawn(async { ServiceHostStopReport { failed: false } });
         let mut monitor = ServiceCleanupMonitor::new(task, endpoint, socket_release);
-        assert_eq!(monitor.wait(Duration::from_millis(25)).await,
-            ServiceHostWait::CleanupPending { failed: false });
+        assert_eq!(
+            monitor.wait(Duration::from_millis(25)).await,
+            ServiceHostWait::CleanupPending { failed: false }
+        );
         assert!(monitor.task.is_none());
         assert!(monitor.releasing.is_some());
         assert!(monitor.pending());
         assert!(matches!(std::net::UdpSocket::bind(address), Err(error)
             if error.kind() == io::ErrorKind::AddrInUse));
         // Abandoning another wait must leave the same physical release task.
-        assert!(tokio::time::timeout(Duration::from_millis(10),
-            monitor.wait(Duration::from_secs(60))).await.is_err());
+        assert!(
+            tokio::time::timeout(
+                Duration::from_millis(10),
+                monitor.wait(Duration::from_secs(60))
+            )
+            .await
+            .is_err()
+        );
         drop(holder);
-        assert_eq!(monitor.wait(Duration::from_secs(1)).await,
-            ServiceHostWait::Stopped(ServiceHostStopReport { failed: false }));
+        assert_eq!(
+            monitor.wait(Duration::from_secs(1)).await,
+            ServiceHostWait::Stopped(ServiceHostStopReport { failed: false })
+        );
         let rebound = std::net::UdpSocket::bind(address)?;
         drop(rebound);
         Ok(())

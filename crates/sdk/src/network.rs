@@ -43,9 +43,13 @@ impl LegacyEndpoint {
         &self.endpoint
     }
     pub(crate) fn bind_network_direct(
-        &mut self, path: String, group: [u8; 32], deadline: Instant,
+        &mut self,
+        path: String,
+        group: [u8; 32],
+        deadline: Instant,
     ) -> Result<(), crate::native::DialError> {
-        self.endpoint.bind_network_direct(path, group, deadline.into_std())
+        self.endpoint
+            .bind_network_direct(path, group, deadline.into_std())
     }
     pub async fn establish_with_media(
         mut self,

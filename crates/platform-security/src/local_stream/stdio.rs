@@ -9,15 +9,26 @@ mod windows;
 
 /// EOF from the native peer cancels the original local input operation. Unlike
 /// tokio::io::stdin this does not leave an uninterruptible runtime-owned reader.
-pub async fn relay_stdio(stream: LocalStream, stop: impl Future<Output = io::Result<()>>) -> io::Result<()> {
+pub async fn relay_stdio(
+    stream: LocalStream,
+    stop: impl Future<Output = io::Result<()>>,
+) -> io::Result<()> {
     #[cfg(unix)]
-    { unix::relay(stream, stop).await }
+    {
+        unix::relay(stream, stop).await
+    }
     #[cfg(windows)]
-    { windows::relay(stream, stop).await }
+    {
+        windows::relay(stream, stop).await
+    }
 }
 
-async fn relay_io(input: impl AsyncRead + Unpin, output: impl AsyncWrite + Unpin,
-    stream: LocalStream, stop: impl Future<Output = io::Result<()>>) -> io::Result<()> {
+async fn relay_io(
+    input: impl AsyncRead + Unpin,
+    output: impl AsyncWrite + Unpin,
+    stream: LocalStream,
+    stop: impl Future<Output = io::Result<()>>,
+) -> io::Result<()> {
     let (mut input, mut output) = (input, output);
     let (mut remote_read, mut remote_write) = tokio::io::split(stream);
     let incoming = async {
