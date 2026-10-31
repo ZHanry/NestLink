@@ -115,8 +115,11 @@ impl ServiceResourceSet {
     pub(crate) fn observe_installation(&mut self, started: Instant) {
         self.observation.installation_ms = duration_ms(started.elapsed());
     }
-    pub(crate) fn observe_transport_gap(&mut self) {
+    pub(crate) fn observe_unavailable(&mut self, now: Instant) {
         self.observation.transport_gaps = self.observation.transport_gaps.saturating_add(1);
+        // An unavailable response contains no authority and cannot change the
+        // original deadline, sequence, lease, issuer or retired-ID fences.
+        self.expire(now);
     }
     pub(crate) fn observe_superseded(&mut self) {
         self.observation.superseded = self.observation.superseded.saturating_add(1);

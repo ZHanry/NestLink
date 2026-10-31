@@ -142,14 +142,13 @@ pub(in crate::control) async fn poll(
             return Err(Error::Control);
         }
         match response {
-            Ok(Err(Error::Transport)) | Err(_) => {
-                runtime.resources.services.observe_transport_gap();
+            Ok(Err(Error::Transport | Error::ServiceResourceStatus(429 | 500..=599))) | Err(_) => {
                 // An unavailable transport supplies no new authority. Keep the
-                // last signed snapshot's original two-second monotonic cap;
+                // last signed snapshot's original query/signed monotonic cap;
                 // publication admission independently enforces that deadline.
                 // Expired IDs are retired before a later snapshot can arrive,
                 // so a transient retry cannot revive an expired publication.
-                runtime.resources.services.expire(Instant::now());
+                runtime.resources.services.observe_unavailable(Instant::now());
                 continue;
             }
             Ok(Ok((snapshot, issuer_delegation))) => {
@@ -158,7 +157,7 @@ pub(in crate::control) async fn poll(
                     Err(error) => {
                         // A concurrent node renewal can supersede the exact query;
                         // discard it without installing its authority. Existing
-                        // owners retain only their original two-second cap.
+                        // owners retain only their original query/signed cap.
                         let current = runtime.gate.current(sample(started)?)?;
                         if snapshot.claims().query.lease_sequence < current.lease_sequence {
                             runtime.resources.services.observe_superseded();

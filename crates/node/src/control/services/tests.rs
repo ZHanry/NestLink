@@ -334,6 +334,31 @@ async fn expired_resource_snapshot_never_resurrects_the_same_publication() -> Te
     Ok(())
 }
 #[tokio::test]
+async fn unavailable_response_keeps_only_original_deadline_and_never_revives_publication() -> TestResult {
+    let fixture = Fixture::new(
+        ServiceIngress::Tcp { port: 29100 },
+        "tcp",
+        "127.0.0.1:8080".parse()?,
+        5000,
+    )?;
+    let (node, policy) = control(&fixture, true)?;
+    let mut set = ServiceResourceSet::new();
+    set.accept(snapshot(&fixture, &policy, 1, 1000, true)?, &node, Instant::now())?;
+    let original = set.publication(&fixture.claims.publication_id)?;
+    let deadline = original.deadline()?;
+    set.observe_unavailable(deadline - Duration::from_millis(1));
+    assert_eq!(original.deadline()?, deadline);
+    assert!(original.lease().is_ok());
+    assert_eq!(set.observation().transport_gaps, 1);
+    set.observe_unavailable(deadline);
+    assert!(original.lease().is_err());
+    assert!(set.active_ids().is_empty());
+    assert_eq!(set.observation().transport_gaps, 2);
+    assert!(set.accept(snapshot(&fixture, &policy, 2, 1000, true)?, &node, Instant::now()).is_err());
+    assert!(original.lease().is_err());
+    Ok(())
+}
+#[tokio::test]
 async fn snapshot_verified_by_a_foreign_issuer_is_rejected_by_actual_node_gate() -> TestResult {
     let fixture = Fixture::new(
         ServiceIngress::Tcp { port: 29100 },
