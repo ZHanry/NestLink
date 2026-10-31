@@ -6,8 +6,8 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "8c46a1623a5ffda6c37e86f1267612d0e3eec47a",
-    "checkpoint_kind":  "W22_principal_bound_TUN_W23_signed_subnet_W26_real_dual_edge_and_crash_hosted_validation",
+    "source_revision":  "c51f8e94c688bfad1f2b4f0512386c5f9818929f",
+    "checkpoint_kind":  "W23_online_mapping_binding_and_web_management_W22_native_repair_W24_original_business_WG_binding",
     "active_tasks":  [
                          "W00",
                          "W02",
@@ -33,7 +33,9 @@
                          "W29",
                          "W22",
                          "W26",
-                         "W23"
+                         "W23",
+                         "W24",
+                         "W30"
                      ],
     "satisfied_interface_dependencies":  [
                                              "W01 nine-topic source and mature-component research independently reviewed",
@@ -41,13 +43,15 @@
                                              "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
                                          ],
     "unverified_assumptions":  [
-                                   "Managed Linux TUN and Windows protected provider/packet pipe source was committed and imported from hosted fmt in 8c46a16; actual Windows daemon/OS owner integration and native qualification remain in progress.",
-                                   "Both OS system DNS/TUN run 41188850607 failed at unrelated service-group compilation and service-edge lint; those exact source failures are repaired in 718b4db and require rerun 41190634189. No TUN pass is claimed.",
-                                   "First dual-edge IPVS run 41189322066 compiled but stopped at unsupported fixture host platform linux; corrected to existing linux-x11, with stage diagnostics and four independent SIGKILL scenarios committed in 97dc0da. New run 41190632153 is pending.",
-                                   "W23 independent signed mapping, current gateway/RouteExport checks and exact local NetworkAccess consent are committed; mapping migration/API/SDK integration is in progress. No OS subnet forwarding/HA or target pass is claimed.",
-                                   "Core run 41188546492 failed; its complete routed SDK tests, real management relay, native quality, native session, native inbox, discovery and space slices passed on 1d5bcda, but group restart fixture HTTP403, service-group type errors and formatting remained.",
-                                   "Private Web run 41188549929 passed on 1d5bcda with real Caddy, Chrome eight cases, TLS negatives and physical cleanup; public DNS/ACME, installed daemon and target acceptance remain open.",
-                                   "W24,W27-W28,W30-W40 and applicable real target qualification remain mandatory unfinished work. Release state stays not_ready."
+                                   "W23 schema046 explicitly binds installation, membership digest and exact subnet mapping to original packet access; production HTTP/start/read/OnlinePacketAccess paths committed in db6668a. New early subnet cases failed in core run41193254757; exact diagnostics are still being retrieved. OS forwarding, CLI and target qualification remain in progress.",
+                                   "Web mapping issue/read/revoke panel committed in e825382; exact response signatures, policy/boot, draft approval, CAS and stale-session fencing are implemented. WASM protocol/SDK/Web compilation passed job124514176153. Browser interaction and full onboarding remain unverified.",
+                                   "Linux system DNS passed on source1d025a0; strict daemon lint and six ordinary TUN cases passed, but actual kernel TUN native execution failed after helper creation. Private permission fixture was repaired without lowering ownership checks; actual ephemeral link identity diagnostics/cleanup are being repaired.",
+                                   "Windows native run41192684769 failed before compilation because inbox Authenticode module loading inherited an incompatible module path. The native driver signature requirement remains; absolute inbox PowerShell/module environment and independent compile/lint execution are being repaired.",
+                                   "HA run41192528513 passed original bootstrap/group configuration and reached publication, then driver stats parser treated an IPVS header as a data row (IndexError). Exact-row parser repaired in c51f8e9; actual four-protocol normal/crash cases remain unproven and run41193803879 is running. All recorded HA cleanup checks were true.",
+                                   "Core run41192681583 on a0c8029 still has edge-group restart HTTP403, formatting and Windows scoped failures. New core run41193254757 is running; native/media/network events, dependency audit, generated OpenAPI and wasm jobs passed individually, not the entire run.",
+                                   "W24 draft credential is only a key-binding wrapper around original NetworkAccess/private business, with explicit per-client key/interface/identity, current portal boot, original expiry/total budget and local approval. Storage/API/OS/standard client behavior remain in progress; mobile target evidence is absent.",
+                                   "Private Web run41188549929 passed source1d5bcda eight real Caddy/Chrome cases including TLS negative and physical cleanup; public DNS/ACME and installed-target acceptance remain open.",
+                                   "W27-W28,W31-W40 and remaining W30 full product workflow remain mandatory unfinished work; all source/validation/target gaps stay separate, release_state=not_ready."
                                ],
     "external_prerequisites":  [
                                    {
@@ -77,11 +81,13 @@
                                    }
                                ],
     "next_steps":  [
-                       "Read exact-source dual-edge run 41190632153 and DNS/TUN run 41190634189 logs; fix actual failures without relaxing checks.",
-                       "Commit W23 mapping migration/API/SDK and import same-source hosted formatting and generated OpenAPI; run independent signatures, real HTTP/file SQLite, full Rust core and strict lint.",
-                       "Complete Windows TUN daemon/OS owner and original-token/driver-native fixture, then journaled subnet data plane and explicit gateway failover.",
-                       "Continue mandatory WireGuard, offline, game, complete UI, media, distribution and acceptance work; retain real target prerequisites separately.",
-                       "Publish 0.8.0RC after mandatory source/evidence gates; local and remote branch inventories are each main only at 8c46a16."
+                       "Retrieve exact core subnet and edge-group diagnostics; repair real failures and preserve assertions.",
+                       "Continue Windows/Linux TUN native owner, compile and cleanup fixes using hosted Actions only.",
+                       "Rerun real dual-edge HTTP/HTTPS/TCP/UDP normal and SIGKILL fixed-entry tests after exact IPVS stats fix.",
+                       "Complete Linux subnet namespace/TUN/nft actual business owner and CLI with explicit LAN choice and exact recovery.",
+                       "Complete W24 original-business-bound WireGuard API/CLI/kernel owner and real standard-client lab; then continue W27 offline, W28 game/discovery and all remaining product/media/distribution/compatibility/security/long-run work.",
+                       "Import exact-source Actions formatting/OpenAPI only after receipt digest verification; preserve concurrent field ownership.",
+                       "Produce complete same-source candidate artifacts and target instructions; publish 0.8.0RC only after required implementation and truthful acceptance."
                    ],
     "evidence_index":  [
                            "docs/network-rewrite/evidence/research-review-2026-10-30.md",
@@ -392,6 +398,42 @@
                                  "source_revision":  "8c46a1623a5ffda6c37e86f1267612d0e3eec47a",
                                  "status":  "running",
                                  "scope":  "Actual split DNS both OS, managed Linux TUN and strict daemon lint; no pass claimed."
+                             },
+                             {
+                                 "run_id":  41192525715,
+                                 "source_revision":  "1d025a0679e777e6f3a5c5b307773636f9096e40",
+                                 "status":  "success",
+                                 "scope":  "Hosted formatting only; patch SHA256 5879286d8912ee2f5daaa91e46c02e14e0a9bd5e4413c2b0b3513cab353c8bea imported in fc652c3 excluding concurrent paths."
+                             },
+                             {
+                                 "run_id":  41192528513,
+                                 "source_revision":  "1d025a0679e777e6f3a5c5b307773636f9096e40",
+                                 "status":  "failure",
+                                 "scope":  "HA original group setup and publish reached; actual fixed-entry first HTTP case stopped at IPVS stats header IndexError; cleanup all true. Fixed in c51f8e9, rerun41193803879 pending."
+                             },
+                             {
+                                 "run_id":  41192531202,
+                                 "source_revision":  "1d025a0679e777e6f3a5c5b307773636f9096e40",
+                                 "status":  "failure",
+                                 "scope":  "Linux actual DNS, strict lint, six TUN ordinary cases passed; native kernel TUN execution and Windows DNS step failed. No target pass."
+                             },
+                             {
+                                 "run_id":  41192684769,
+                                 "source_revision":  "a0c80292cc1c7d4a859309faf91ab1f6547a69a1",
+                                 "status":  "failure",
+                                 "scope":  "Windows native fixture stopped at Authenticode tool environment before compile; driver gate retained."
+                             },
+                             {
+                                 "run_id":  41193251850,
+                                 "source_revision":  "e8253827ebc2214fa3609b64400da3265dc000cd",
+                                 "status":  "success",
+                                 "scope":  "Hosted formatting only; patch SHA256 86441746985840cb66192138912f464d3e6b6be28795d119d45ea75c21100feb imported into shared subnet paths in64aadb1; edited Web panel deferred to next source."
+                             },
+                             {
+                                 "run_id":  41193254757,
+                                 "source_revision":  "e8253827ebc2214fa3609b64400da3265dc000cd",
+                                 "status":  "in_progress",
+                                 "scope":  "WASM job124514176153 passed protocol/SDK/Web compilation; early subnet and edge-group cases failed and require exact diagnosis."
                              }
                          ],
     "release_state":  "not_ready",

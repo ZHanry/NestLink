@@ -88,6 +88,8 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
+          $subnetLog = Join-Path $env:RUNNER_TEMP 'nestlink-subnet-tests.log'
+          $subnetFailure = 0
           $subnetCases = @(
             @{ Args = @('-p', 'nestlink-protocol', '--lib', 'subnet::') },
             @{ Args = @('-p', 'nestlink-identity', '--lib', 'subnet::') },
@@ -98,12 +100,21 @@ jobs:
           foreach ($subnetCase in $subnetCases) {
             $subnetArgs = @('test', '--locked') + $subnetCase.Args + @('--', '--show-output', '--test-threads=1', '--color', 'never')
             if ($env:RUNNER_OS -eq 'Windows') {
-              python scripts/refactor-windows-normal-user.py cargo @subnetArgs
+              python scripts/refactor-windows-normal-user.py cargo @subnetArgs 2>&1 | Tee-Object -FilePath $subnetLog -Append
             } else {
-              cargo @subnetArgs
+              cargo @subnetArgs 2>&1 | Tee-Object -FilePath $subnetLog -Append
             }
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            if ($LASTEXITCODE -ne 0) { $subnetFailure = 1 }
           }
+          exit $subnetFailure
+      - name: Retain independent subnet diagnostics before later workspace checks
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: early-subnet-${{ matrix.os }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/nestlink-subnet-tests.log
+          if-no-files-found: error
+          retention-days: 14
       - name: Check bounded Windows TUN pipe cancellation with the ordinary token
         if: ${{ !cancelled() && runner.os == 'Windows' }}
         run: |
@@ -118,10 +129,24 @@ jobs:
           exit $LASTEXITCODE
       - name: Check atomic service edge groups against real HTTP and file SQLite on Linux
         if: ${{ !cancelled() && runner.os == 'Linux' }}
-        run: cargo test --locked -p nestlink-sdk --test service_edge_groups -- --show-output --test-threads=1 --color never
+        shell: pwsh
+        run: |
+          cargo test --locked -p nestlink-sdk --test service_edge_groups -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath (Join-Path $env:RUNNER_TEMP 'nestlink-edge-group-tests.log')
+          exit $LASTEXITCODE
       - name: Check atomic service edge groups with the ordinary Windows token
         if: ${{ !cancelled() && runner.os == 'Windows' }}
-        run: python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-sdk --test service_edge_groups -- --show-output --test-threads=1 --color never
+        shell: pwsh
+        run: |
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-sdk --test service_edge_groups -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath (Join-Path $env:RUNNER_TEMP 'nestlink-edge-group-tests.log')
+          exit $LASTEXITCODE
+      - name: Retain exact-source edge group failures before later workspace checks
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: early-edge-groups-${{ matrix.os }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/nestlink-edge-group-tests.log
+          if-no-files-found: error
+          retention-days: 14
       - name: Check SDK routed contracts with the ordinary Windows token before formatting
         id: sdk_routed_windows
         if: runner.os == 'Windows'
