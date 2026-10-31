@@ -2227,8 +2227,8 @@
                                               "F12",
                                               "F23"
                                           ],
-                      "status":  "not_started",
-                      "implementation_status":  "not_started",
+                      "status":  "in_progress",
+                      "implementation_status":  "in_progress",
                       "verification_status":  "not_run",
                       "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
                       "owned_paths_to_review":  [

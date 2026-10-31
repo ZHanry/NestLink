@@ -1041,6 +1041,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7360491ce676a36bf9bb3c56c1aa791658183a54d2744120f27285738d90465a"
 
 [[package]]
+name = "fast-socks5"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "log",
+ "socket2 0.5.10",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-stream",
+]
+
+[[package]]
 name = "fastrand"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2267,6 +2280,7 @@ dependencies = [
  "async-trait",
  "base64 0.22.1",
  "bytes",
+ "fast-socks5",
  "futures-util",
  "gloo-timers",
  "hickory-server",
@@ -2280,6 +2294,7 @@ dependencies = [
  "nestlink-node",
  "nestlink-platform-clipboard",
  "nestlink-platform-network",
+ "nestlink-platform-security",
  "nestlink-policy",
  "nestlink-protocol",
  "nestlink-remote",
@@ -4000,6 +4015,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c9cc2678c2cdd569ef8215e2afd7954ada2ae20b4fdd2c5fe6139a3b02d105db"
 dependencies = [
  "rustls",
+ "tokio",
+]
+
+[[package]]
+name = "tokio-stream"
+version = "0.1.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a3d06f0b082ba57c26b79407372e57cf2a1e28124f78e9479fe80322cf53420b"
+dependencies = [
+ "futures-core",
+ "pin-project-lite",
  "tokio",
 ]
 

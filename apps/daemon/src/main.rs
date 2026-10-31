@@ -10,6 +10,7 @@ mod native_files;
 mod native_gpu_diagnostics;
 mod native_video;
 mod privileged_input;
+mod private_service_proxy;
 mod session_store;
 mod space_dns;
 mod space_dns_system;
@@ -64,6 +65,8 @@ struct Args {
 
 #[derive(Subcommand)]
 enum Command {
+    /// List approved private services or serve one through authenticated local SOCKS5.
+    PrivateServiceProxy(private_service_proxy::ProxyArgs),
     /// Serve one space's current same-account private names on loopback UDP/TCP.
     SpaceDns(space_dns::SpaceDnsArgs),
     /// Review/apply/recover only an explicit managed split-DNS plan; no login data.
@@ -407,6 +410,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let args = Args::parse();
     match args.command {
         Some(Command::SpaceDns(command)) => return space_dns::run(command).await,
+        Some(Command::PrivateServiceProxy(command)) => return private_service_proxy::run(command).await,
         Some(Command::SpaceDnsSystem(command)) => return space_dns_system::run(command).await,
         Some(Command::FileQuota(command)) => return Ok(run_file_quota(command)?),
         Some(Command::Maintenance(command)) => return maintenance::run(command).await,
@@ -481,9 +485,14 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let network_store = Arc::new(NativeNetworkFileStore::open(&state_dir)?);
     // An explicit operator argument can add consent, while ordinary UI startup
     // must preserve saved settings instead of replacing them with an empty list.
-    if !args.private_network_prefixes.is_empty() || args.native_route_set.is_some() || args.disable_native_route_set {
+    if !args.private_network_prefixes.is_empty()
+        || args.native_route_set.is_some()
+        || args.disable_native_route_set
+    {
         let mut settings = network_store.load()?;
-        if args.disable_native_route_set { settings.route_set = None; }
+        if args.disable_native_route_set {
+            settings.route_set = None;
+        }
         if let Some(path) = args.native_route_set {
             let bytes = nestlink_platform_security::read_private(&path, 8192)?;
             let route: nestlink_app_core::NativeRouteSetSettings = serde_json::from_slice(&bytes)?;

@@ -60,20 +60,30 @@ impl PrivateListener {
         let mut config = ServerConfig::with_crypto(Arc::new(crypto));
         config.transport_config(transport());
         config.migration(false);
-        let (mut endpoint, completion) = socket::client(address)?;
+        let (endpoint, completion) = socket::client(address)?;
         endpoint.set_server_config(Some(config));
-        Ok(Self { endpoint, socket_closed: Some(completion) })
+        Ok(Self {
+            endpoint,
+            socket_closed: Some(completion),
+        })
     }
     pub async fn close_and_wait(mut self) -> io::Result<()> {
-        self.endpoint.close(0u32.into(), b"private service listener stopping");
+        self.endpoint
+            .close(0u32.into(), b"private service listener stopping");
         self.endpoint.wait_idle().await;
-        let completion = self.socket_closed.take().ok_or_else(|| io::Error::other("private service release owner missing"))?;
+        let completion = self
+            .socket_closed
+            .take()
+            .ok_or_else(|| io::Error::other("private service release owner missing"))?;
         drop(self);
         socket::wait_released(completion).await
     }
 }
 impl Drop for PrivateListener {
-    fn drop(&mut self) { self.endpoint.close(0u32.into(), b"private service listener owner dropped"); }
+    fn drop(&mut self) {
+        self.endpoint
+            .close(0u32.into(), b"private service listener owner dropped");
+    }
 }
 impl Connected {
     /// Consumes this owner and confirms physical UDP socket release after all
@@ -203,7 +213,9 @@ impl BiStream {
     /// is not a successful half-close receipt, and an unfinished writer cannot
     /// certify queued application bytes before its connection is closed.
     pub async fn wait_finished(&mut self) -> io::Result<()> {
-        if !self.write_finished { return Err(io::ErrorKind::BrokenPipe.into()); }
+        if !self.write_finished {
+            return Err(io::ErrorKind::BrokenPipe.into());
+        }
         match self.send.stopped().await.map_err(io::Error::other)? {
             None => Ok(()),
             Some(_) => Err(io::ErrorKind::BrokenPipe.into()),

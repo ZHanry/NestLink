@@ -245,6 +245,19 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-app-core --test native_session route_set:: -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-route-set-product-tests.log"
+      - name: Exercise restricted SOCKS authentication, credential secrecy and owner cleanup
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-sdk --lib services::local_proxy::tests:: -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-local-proxy-tests.log"
+      - name: Exercise application management ownership and dynamic TLS admission boundaries
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-app-core --lib runtime::native_routed::tests:: -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-product-owner-tests.log"
+          cargo test --locked -p nestlink-transport-quic --lib routed::tests::node_admission:: -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-node-admission-tests.log"
       - name: Retain exact-source SDK and registered-chain business logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -257,6 +270,9 @@ jobs:
             ${{ runner.temp }}/network-space-address-sdk-tests.log
             ${{ runner.temp }}/network-private-service-sdk-tests.log
             ${{ runner.temp }}/network-route-set-product-tests.log
+            ${{ runner.temp }}/network-local-proxy-tests.log
+            ${{ runner.temp }}/network-product-owner-tests.log
+            ${{ runner.temp }}/network-node-admission-tests.log
           if-no-files-found: error
           retention-days: 30
       - name: Retain original tuples, STUN mapping, business bytes and physical cleanup evidence

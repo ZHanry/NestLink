@@ -594,17 +594,21 @@
       "purpose": "SOCKS5 protocol handling for restricted local proxies",
       "existing_implementation": [
         "crates/node/src/service_plane/stream.rs",
-        "Existing service permits and forwarding quota"
+        "crates/sdk/src/services/private/runtime.rs: fixed target, private lease and shared usage owner",
+        "crates/sdk/src/services/local_proxy.rs: authenticated fixed-service SOCKS TCP adapter"
       ],
       "candidates": [
         "fast-socks5 1.0.0",
-        "Existing suitable proxy if discovered",
+        "socks5-server 0.10.1 (GPL-3.0-or-later adoption cost rejected)",
+        "OS named pipe / Unix socket (useful local IPC, insufficient alone for ordinary SOCKS clients)",
         "Handwritten SOCKS protocol (rejected)"
       ],
       "official_sources": [
         "https://github.com/dizda/fast-socks5",
         "https://crates.io/api/v1/crates/fast-socks5/1.0.0",
-        "https://crates.io/api/v1/crates/fast-socks5/1.0.0/readme"
+        "https://crates.io/api/v1/crates/fast-socks5/1.0.0/readme",
+        "https://github.com/dizda/fast-socks5/blob/v1.0.0/src/server.rs",
+        "https://crates.io/api/v1/crates/socks5-server/0.10.1"
       ],
       "maintenance_status": {
         "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
@@ -621,22 +625,26 @@
       ],
       "version": {
         "fast-socks5": "1.0.0",
-        "status": "provisional_candidate_not_runtime_dependency"
+        "source": "third-party/fast-socks5: official crate retained with MIT notice and documented minimal security patch",
+        "upstream_crate_sha256": "9545787d8304a71e1bf1b711705070a4c400cce9b332c4a11800627b7c9a2067",
+        "status": "selected_native_runtime_path_dependency; Actions lock/build verification pending"
       },
       "license": "MIT",
-      "selection_reason": "prefer_component_custom_request_handler_over_protocol_rewrite",
-      "adapter_boundary": "Library owns SOCKS authentication/handshake and TCP/UDP framing; NestLink only resolves approved space targets, uses local access-control boundary and existing authorized forwarding.",
+      "selection_reason": "reuse_component_typestate_authentication_commands_and_replies_with_exact_private_service_routing",
+      "adapter_boundary": "Library owns SOCKS authentication, handshake, commands and replies. NestLink accepts only random-password authenticated loopback TCP CONNECT to one locally selected alias/port, obtains the existing private lease and connects only through PrivateServiceConnection. No DNS, generic outbound dial, NoAuth, BIND or UDP ASSOCIATE path is called.",
       "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
       "security_and_operations_cost": [
-        "Official README supports custom request handling, TCP/UDP, IPv4/IPv6/domain and auth; protocol-skipping options must remain disabled",
-        "Default loopback does not by itself prove safe against all local users",
-        "Zero-length UDP, maximum packets, half-close, revoke and port collision need actual verification"
+        "Official 1.0.0 source logged raw username/password bytes; vendored parser removes those two statements and rejects RFC1929 versions other than 1; original archive/license/source hashes and patch are retained",
+        "Loopback is not authentication: random per-owner credentials are delivered only through an existing owner-private directory; keep secrets out of logs, URLs and management IPC",
+        "Per-owner/process flow limits, one setup deadline, fixed owner expiry and physical worker/carrier joins are required; cancellation retains the original cleanup owner",
+        "TCP slice only: ordinary standard-client integration, FIN, auth/target denial, debug-log confidentiality, credential replacement and shutdown are Actions test obligations",
+        "Raw TCP/UDP mapping, SOCKS UDP zero-length/large-packet behavior, production daemon/desktop lifetime wiring, unified routed private carrier and ordinary-user real-device AC34 remain open"
       ],
       "work_packages": [
         "W21"
       ],
-      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
-      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+      "validation_status": "source_and_tests_added_for_authenticated_TCP_slice; no Actions pass or W21/AC34 completion claim; production and real-device qualification pending",
+      "decision_ref": "docs/adr/network/0036-authenticated-local-private-service-proxy.md"
     },
     {
       "id": "C12",

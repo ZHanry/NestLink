@@ -106,7 +106,7 @@ pub(crate) async fn run(
     Ok(())
 }
 
-fn session_snapshot(directory: &Path) -> io::Result<[u8; 32]> {
+pub(crate) fn session_snapshot(directory: &Path) -> io::Result<[u8; 32]> {
     check_private_directory(directory)?;
     let enabled = read_private(&directory.join("remember-login.json"), 16)?;
     if enabled.as_slice() != b"true" {

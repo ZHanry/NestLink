@@ -1,0 +1,46 @@
+{
+    "schema_version":  1,
+    "source_revision":  "8ff5d4eaf5416eea142537f1bbf5d65c63bbd0e6",
+    "run_id":  41161106981,
+    "run_attempt":  1,
+    "workflow":  ".github/workflows/network-lock-refresh.yml",
+    "runner":  "github-hosted Ubuntu 24.04",
+    "local_toolchain_executed":  false,
+    "release_qualified":  false,
+    "components":  [
+                       {
+                           "scope":  "product",
+                           "artifact_id":  13026983097,
+                           "archive_sha256":  "b815b9c83b80780c27b88bf52cc207526e1b853e3f0e0bb6aaca8703d201a87a",
+                           "lock_sha256":  "d059b16861d6c4e5f7d2e3c4edd7795571443167470c5bd34e43c0400853a6a0",
+                           "assertions":  {
+                                              "only_selected_lock_changed":  true,
+                                              "all_existing_package_identities_and_checksums_preserved":  true,
+                                              "all_unrelated_external_package_edges_preserved":  true,
+                                              "only_exact_reviewed_component_feature_edges_added":  true,
+                                              "reviewed_crab_nat_exact_version_and_checksum":  true,
+                                              "reviewed_petgraph_exact_version_and_checksum":  true,
+                                              "reviewed_authoritative_dns_exact_version":  true,
+                                              "locked_metadata_succeeded":  true,
+                                              "only_reviewed_socks_component_new_external_packages":  true
+                                          }
+                       },
+                       {
+                           "scope":  "fixture",
+                           "artifact_id":  13027385863,
+                           "archive_sha256":  "6f2b5e2fac3f4af02d7364254f8e91a0db2d804722864de22755f0e120a233c7",
+                           "lock_sha256":  "c13ab6c0562dcc2579fa761e172ba968d3dfe17a50a3b2d42e0c0d0fc67e7d8f",
+                           "assertions":  {
+                                              "only_selected_lock_changed":  true,
+                                              "all_existing_package_identities_and_checksums_preserved":  true,
+                                              "all_unrelated_external_package_edges_preserved":  true,
+                                              "only_exact_reviewed_component_feature_edges_added":  true,
+                                              "reviewed_crab_nat_exact_version_and_checksum":  true,
+                                              "reviewed_petgraph_exact_version_and_checksum":  true,
+                                              "reviewed_authoritative_dns_exact_version":  true,
+                                              "locked_metadata_succeeded":  true,
+                                              "only_reviewed_socks_component_new_external_packages":  true
+                                          }
+                       }
+                   ]
+}

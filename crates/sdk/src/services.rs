@@ -2,6 +2,10 @@
 //! connection is created here, and no remote response chooses the local target.
 use crate::*;
 mod private;
+#[cfg(not(target_arch = "wasm32"))]
+mod local_proxy;
+#[cfg(not(target_arch = "wasm32"))]
+pub use local_proxy::{LocalProxyError, LocalProxyServiceChoice, LocalProxyStopReport, LocalProxyWait, LocalServiceProxy};
 use nestlink_protocol::service_plane::publication::{
     ServiceEdgeNamespaceUpdate, ServiceEdgeNamespaceView, ServicePublicationRequest,
 };
