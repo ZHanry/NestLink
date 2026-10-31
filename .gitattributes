@@ -1,8 +1,5 @@
 * text=auto eol=lf
 
-# Keep the reviewed SOCKS component identical to its published archive except
-# for its explicitly recorded credential-log removal.
-third-party/fast-socks5/** -text
 
 # Keep the user's refactor plan byte-for-byte for its recorded source digest.
 docs/NestLink_重构最终方案_v3_2026-10-12.md -text
@@ -69,3 +66,7 @@ docs/refactor/history-audit/firebase-upstream-provenance-2026-10-13.json -text w
 packaging/notices/libvpx-1.16.0-LICENSE.txt -text whitespace=-blank-at-eof
 
 *.crate binary
+
+# Preserve every reviewed upstream file and provenance byte. This follows the
+# generic extension rules so those cannot normalize archive-bound JSON/text.
+third-party/fast-socks5/** -text
