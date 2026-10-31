@@ -115,12 +115,16 @@ pub struct PrivateServiceClaims {
     pub usage_grant_sha256: [u8; 32],
     pub space_id: String,
     pub space_policy_epoch: u64,
+    /// The policy-delegated service issuer pins the independent network signer
+    /// for this exact space and business grant. Peers cannot choose this key.
+    pub network_authority_key: [u8;32],
     pub exposure_revision: u64,
     pub acl_rule_id: String,
     pub subject_epoch: u64,
     pub host_membership_epoch: u64,
     pub consumer_membership_epoch: u64,
     pub consumer_account_id: String,
+    pub consumer_login_id: String,
     pub consumer_device_id: String,
     pub consumer_public_key: [u8; 32],
     pub host_public_key: [u8; 32],
@@ -137,6 +141,16 @@ pub struct SignedPrivateServiceLease {
 pub struct PrivateServiceGrant {
     pub lease: SignedPrivateServiceLease,
     pub issuer: crate::service_plane::publication::SignedServiceIssuerDelegation,
+    pub network: PrivateServiceNetworkPath,
+}
+#[derive(Debug,Clone,Serialize,Deserialize,JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct PrivateServiceNetworkPath {
+    pub grant_id:String,
+    pub consumer_membership:crate::api::NetworkGrantView,
+    pub host_membership:crate::api::NetworkGrantView,
+    pub connectivity:crate::api::NetworkGrantView,
+    pub path:crate::api::NetworkGrantView,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -216,9 +230,9 @@ impl PrivateServiceHostClaims {
 impl PrivateServiceClaims {
     pub fn validate(&self) -> Result<(), ContractError> {
         if self.schema_version != SCHEMA_VERSION
-            || [&self.space_id,&self.acl_rule_id,&self.consumer_account_id,&self.consumer_device_id].iter().any(|id| !valid_id(id))
+            || [&self.space_id,&self.acl_rule_id,&self.consumer_account_id,&self.consumer_login_id,&self.consumer_device_id].iter().any(|id| !valid_id(id))
             || [self.space_policy_epoch,self.exposure_revision,self.subject_epoch,self.host_membership_epoch,self.consumer_membership_epoch].iter().any(|n| !revision(*n))
-            || [self.service_lease_sha256,self.usage_grant_sha256,self.consumer_public_key,self.host_public_key].contains(&[0;32])
+            || [self.service_lease_sha256,self.usage_grant_sha256,self.consumer_public_key,self.host_public_key,self.network_authority_key].contains(&[0;32])
         { return Err(invalid()); }
         Ok(())
     }
