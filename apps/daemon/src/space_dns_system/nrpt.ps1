@@ -135,7 +135,10 @@ switch ([string]$request.action) {
         # Re-read the precise GUID before deletion and compare all policy fields.
         $again = Get-DnsClientNrptRule -Name ([string]$view.name) -ErrorAction Stop
         if (-not (Same-Json $view (View $again))) { throw 'NRPT changed during cleanup; journal retained' }
-        Remove-DnsClientNrptRule -Name ([string]$view.name) -Confirm:$false -ErrorAction Stop
+        # The native CIM Remove method also has its own confirmation prompt;
+        # -Confirm only controls PowerShell ShouldProcess. Suppress that
+        # provider prompt only for this already revalidated exact owned GUID.
+        Remove-DnsClientNrptRule -Name ([string]$view.name) -Force -Confirm:$false -ErrorAction Stop
         if (@(Owned-Rules).Count -ne 0) { throw 'NRPT removal was not confirmed' }
         Emit $true
     }
