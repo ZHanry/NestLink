@@ -40,6 +40,16 @@ filter IDs, effective weight, conditions, action, data and owner/group/DACL.
 Changed objects are preserved. SACL auditing is not needed for admission and no
 additional security privilege is requested to read it.
 
+The first native BFE transaction readback (Actions run 41181231766) showed its
+canonical object security and indexing representation. WFP has no SYNCHRONIZE
+right: its object ACE mask is 0x000f01ff, while the file-oriented SDDL FA mask is
+0x001f01ff. BFE also records the protected DACL as auto-inherited. WFP objects
+therefore request the explicit object mask and D:PAI from creation; the file and
+journal descriptor remains unchanged. The receive/accept filter explicitly
+requests INDEXED, the native flag observed at that layer. Exact comparison still
+includes all owner/group/DACL control bits, ordered ACEs and all filter flags;
+there is no normalization that discards a changed authorization field.
+
 Plan/receipt/journal storage reuses the existing Windows token and ACL parser.
 Trust paths retain directory/image handles, reject reparse points and removable
 or mapped volumes, and require administrator-controlled write/owner/DACL access.

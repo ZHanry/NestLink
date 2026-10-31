@@ -49,6 +49,22 @@ enum Object {
 }
 const AUTHORIZATION_SECURITY: u32 =
     OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION;
+fn object_descriptor() -> io::Result<security::Local> {
+    // WFP objects have no SYNCHRONIZE right. FILE_ALL_ACCESS (SDDL FA) is
+    // therefore not their canonical object policy: BFE maps it to 0x000f01ff
+    // and records auto-inheritance. Request that exact WFP policy up front;
+    // filesystem journals continue to use their existing file descriptor.
+    let sddl = security::text("O:BAG:BAD:PAI(A;;0x000f01ff;;;SY)(A;;0x000f01ff;;;BA)")?;
+    let mut descriptor = null_mut();
+    if unsafe {
+        ConvertStringSecurityDescriptorToSecurityDescriptorW(
+            sddl.as_ptr(), SDDL_REVISION_1, &mut descriptor, null_mut(),
+        )
+    } == 0 || descriptor.is_null() {
+        return Err(io::Error::last_os_error());
+    }
+    Ok(security::Local(descriptor))
+}
 pub(super) struct Engine(HANDLE);
 impl Drop for Engine {
     fn drop(&mut self) {
@@ -104,7 +120,7 @@ impl Engine {
                 ));
             }
             let mut objects = Objects::new(plan)?;
-            let descriptor = store::descriptor(None, false)?;
+            let descriptor = object_descriptor()?;
             result(unsafe { FwpmProviderAdd0(self.0, &objects.provider(), descriptor.0) })?;
             result(unsafe { FwpmSubLayerAdd0(self.0, &objects.sublayer(), descriptor.0) })?;
             for kind in [Kind::Allow, Kind::Drop, Kind::Outside] {
@@ -481,7 +497,9 @@ impl<'a> Objects<'a> {
                 name: self.names[index].as_mut_ptr(),
                 description: null_mut(),
             },
-            flags: FWPM_FILTER_FLAG_PERSISTENT,
+            // BFE indexes the RECV_ACCEPT filter. Keep that native flag in
+            // both the desired policy and every later exact ownership check.
+            flags: FWPM_FILTER_FLAG_PERSISTENT | if outside { FWPM_FILTER_FLAG_INDEXED } else { 0 },
             providerKey: &mut self.provider_key,
             providerData: self.data(),
             layerKey: match (outside, self.plan.endpoint.is_ipv4()) {
@@ -655,7 +673,7 @@ fn read_filter(value: &FWPM_FILTER0) -> io::Result<Value> {
 }
 fn expected(plan: &GatePlan, denying: bool) -> io::Result<Value> {
     let mut objects = Objects::new(plan)?;
-    let descriptor = store::descriptor(None, false)?;
+    let descriptor = object_descriptor()?;
     let security = read_security(descriptor.0)?;
     let mut provider = read_provider(&objects.provider())?;
     provider["security"] = security.clone();
@@ -844,7 +862,7 @@ mod tests {
         let plan = super::super::tests::plan()?;
         let value = installed(&plan, false)?;
         let original = value["provider"]["security"].clone();
-        let descriptor = store::descriptor(None, false)?;
+        let descriptor = object_descriptor()?;
         assert_eq!(read_security(descriptor.0)?, original);
         for sddl in [
             "O:BAG:BAD:P(A;;FA;;;SY)(A;;FA;;;BA)(A;;FR;;;AU)",
