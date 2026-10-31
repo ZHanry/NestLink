@@ -358,7 +358,7 @@ pub fn isolate(identity: &ProviderIdentity) -> io::Result<()> {
         // ERROR_INVALID_PARAMETER. Keep each required change attributable;
         // partial application still closes only our new original adapter.
         type Update = fn(&mut MIB_IPINTERFACE_ROW);
-        let changes: [(&str, Update); 14] = [
+        let changes: [(&str, Update); 13] = [
             ("AdvertisingEnabled", |row| row.AdvertisingEnabled = false),
             ("ForwardingEnabled", |row| row.ForwardingEnabled = false),
             ("WeakHostSend", |row| row.WeakHostSend = false),
@@ -378,26 +378,23 @@ pub fn isolate(identity: &ProviderIdentity) -> io::Result<()> {
             ("RouterDiscoveryBehavior", |row| {
                 row.RouterDiscoveryBehavior = RouterDiscoveryDisabled
             }),
-            ("LinkLocalAddressBehavior", |row| {
-                row.LinkLocalAddressBehavior = LinkLocalAlwaysOff
-            }),
             ("DadTransmits", |row| row.DadTransmits = 0),
             ("DisableDefaultRoutes", |row| {
                 row.DisableDefaultRoutes = true
             }),
         ];
         for (field, update) in changes {
-            // Windows rejects this IPv4 setting with ERROR_INVALID_PARAMETER.
-            // IPv4 instead uses active-only static addressing, independently
-            // verified below through the original adapter's DHCP state and
-            // the exact manual /32 address and host-route inventory. IPv6
-            // still requires its supported link-local generation control.
-            if af == AF_INET && field == "LinkLocalAddressBehavior" {
-                continue;
-            }
             update(&mut row);
-            // IP Helper requires this ignored IPv4 member to be zero.
-            row.SitePrefixLength = 0;
+            // Wintun rejects LinkLocalAlwaysOff in both address families. Use
+            // the documented unchanged setter sentinel; effective isolation
+            // still requires the complete exact manual-host/route inventory.
+            // Any extra generated address fails before packet handoff and on
+            // every later observation; no link-local packet is authorized.
+            row.LinkLocalAddressBehavior = LinkLocalUnchanged;
+            if af == AF_INET {
+                // IP Helper requires this ignored IPv4 member to be zero.
+                row.SitePrefixLength = 0;
+            }
             checked(
                 unsafe { SetIpInterfaceEntry(&mut row) },
                 &format!("SetIpInterfaceEntry family {af} member {field}"),
@@ -509,7 +506,7 @@ impl FamilyState {
             && !self.advertising
             && !self.default_advertising
             && self.router_discovery == RouterDiscoveryDisabled
-            && (self.family == AF_INET || self.link_local == LinkLocalAlwaysOff)
+            && matches!(self.link_local, LinkLocalAlwaysOff | LinkLocalDelayed | LinkLocalAlwaysOn)
             && self.dad == 0
             && !self.managed
             && !self.other_stateful

@@ -231,7 +231,7 @@ async fn apply(
         if record.capture()?.as_ref()!=Some(&identity) {
             return Err(io::Error::other("original TUN adapter changed before static IPv4 configuration").into());
         }
-        // NetIO rejects the IPv4 LinkLocalAddressBehavior mutation. Use the
+        // NetIO rejects the LinkLocalAddressBehavior mutation. Use the
         // reviewed Windows static-address operation on this fresh original
         // adapter only; an active-only /32 disables DHCP without a gateway.
         // Independent NetIO/GetAdaptersInfo readback below must still prove
