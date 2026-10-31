@@ -151,6 +151,19 @@ impl PrivateServiceConnection {
         self.lease.check_time(private_wall_ms()?)?;
         self.stream.as_mut().ok_or(SdkError::Trust)
     }
+    /// Transfer only the application stream to an owned HTTP/upgrade worker.
+    /// This connection remains the single carrier owner and must be physically
+    /// closed after the worker and any upgraded streams have finished.
+    pub(in crate::services) fn take_stream(&mut self) -> Result<BiStream, SdkError> {
+        if matches!(
+            self.lease.lease().claims().definition.requested_ingress,
+            ServiceIngress::Udp { .. }
+        ) {
+            return Err(SdkError::Invalid);
+        }
+        self.lease.check_time(private_wall_ms()?)?;
+        self.stream.take().ok_or(SdkError::Trust)
+    }
     pub fn lease(&self) -> &VerifiedPrivateServiceLease {
         &self.lease
     }

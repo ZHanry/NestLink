@@ -2211,7 +2211,8 @@
                                                   ],
                       "evidence_refs":  [
                                             "docs/adr/network/0034-private-service-business-authority.md",
-                                            "docs/adr/network/0037-private-service-relay-authority.md"
+                                            "docs/adr/network/0037-private-service-relay-authority.md",
+                                            "docs/network-rewrite/evidence/private-business-145e26b.json"
                                         ],
                       "blockers":  [
 
@@ -2274,7 +2275,9 @@
                                                   ],
                       "evidence_refs":  [
                                             "docs/adr/network/0037-explicit-linux-loopback-kernel-gate.md",
-                                            "scripts/network-rewrite-local-port-gate.py"
+                                            "scripts/network-rewrite-local-port-gate.py",
+                                            "docs/adr/network/0038-local-proxy-tls-boundaries.md",
+                                            "docs/adr/network/0040-windows-local-port-admission.md"
                                         ],
                       "blockers":  [
 
@@ -2487,8 +2490,8 @@
                                               "F24",
                                               "F23"
                                           ],
-                      "status":  "not_started",
-                      "implementation_status":  "not_started",
+                      "status":  "in_progress",
+                      "implementation_status":  "in_progress",
                       "verification_status":  "not_run",
                       "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
                       "owned_paths_to_review":  [
@@ -2531,7 +2534,7 @@
                                                       "无未标明的外部验证缺口"
                                                   ],
                       "evidence_refs":  [
-
+                                            "docs/adr/network/0039-isolated-private-web-gateway.md"
                                         ],
                       "blockers":  [
 

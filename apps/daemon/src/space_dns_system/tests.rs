@@ -216,7 +216,9 @@ async fn actual_os_split_dns_resolves_and_recovers_without_changing_unrelated_po
         .ipv4
         .clone();
     let sdk = Arc::new(RwLock::new(sdk));
-    let baseline = native_unrelated_state().await?;
+    let baseline = native_unrelated_state()
+        .await
+        .map_err(|error| io::Error::other(format!("capture unrelated OS DNS baseline: {error}")))?;
     for committed in [true, false] {
         let bind = if cfg!(windows) {
             "127.0.0.1:53"
@@ -227,8 +229,11 @@ async fn actual_os_split_dns_resolves_and_recovers_without_changing_unrelated_po
         let plan = DnsPlan::current(&space.space_id, dns.local_addr(), wall_ms()? + 60_000).await?;
         let temporary = tempfile::tempdir()?;
         let directory = temporary.path().join("journal");
-        new_private_directory(&directory)?;
-        let store = JournalStore::open(&directory)?;
+        new_private_directory(&directory).map_err(|error| {
+            io::Error::other(format!("create elevated DNS journal directory: {error}"))
+        })?;
+        let store = JournalStore::open(&directory)
+            .map_err(|error| io::Error::other(format!("open elevated DNS journal: {error}")))?;
         let mut journal = Journal {
             schema_version: 1,
             plan,

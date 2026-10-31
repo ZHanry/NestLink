@@ -4,8 +4,9 @@ This source implements restricted SOCKS TCP/UDP and OS-authenticated native
 stream access to one locally selected private service. The new sources need
 exact-source hosted build and execution results before qualification. Linux raw
 loopback TCP/UDP source is described below; its kernel and product qualification
-remains pending. Windows raw mappings and target ordinary-user qualification
-remain mandatory work. The native stream is an additional authenticated local entry.
+remains pending. Windows persistent WFP mappings and explicit local TLS are now
+implemented in source and await Actions and target qualification. The native
+stream is an additional authenticated local entry.
 
 The normal-user daemon command uses the existing installed device identity and
 protected management login. Sign in using the product and enable protected login
@@ -37,12 +38,12 @@ connection and connects the host's approved fixed target.
 For a selected HTTPS service, the host establishes TLS to the approved backend
 and verifies its configured server name and trusted CA. The local stream entry
 therefore carries HTTP application bytes; an HTTP client can use it to access
-that HTTPS backend. This applies to SOCKS, native streams and Linux raw TCP.
+that HTTPS backend. This applies to SOCKS, native streams and plain raw TCP.
 The private carrier and the host's verified backend TLS retain their existing
 protection. A standard HTTPS client that starts its own TLS handshake at the
-local entry needs a separate local TLS termination or approved passthrough
-implementation and qualification. Those client modes remain pending; the
-current adapter does not qualify them.
+local entry can explicitly choose the new raw TLS termination described below.
+Its compilation and actual kernel-gated business qualification remain pending.
+Opaque TLS passthrough is a separate service contract and is not implemented.
 
 The command never prints credentials or places them in a command line or URL.
 The file is created with the existing OS private-file checks, using a random
@@ -144,5 +145,32 @@ An active original helper holds the journal lock, so these recovery commands
 cannot race it. Changed rules, handles or foreign objects are preserved and
 reported. The immutable public receipt remains an audit record of that one
 installation and cannot authorize a different process or a new lifetime. Raw
-Windows support and production ordinary-user target qualification remain open;
-the Linux source and forthcoming hosted kernel scenarios do not qualify them.
+Windows target and production ordinary-user qualification remain open; the Linux
+source and hosted kernel scenarios do not qualify them.
+
+For a raw TCP listener, standard HTTPS clients can use an explicit local TLS
+certificate. Add `--local-tls-certificate <absolute-leaf-DER-path>` (repeat in
+leaf-first chain order) and `--local-tls-key <absolute-DER-key-path>`. Store these
+files in an existing owner-private directory; the key is read through the same
+bounded private-file boundary. No certificate or key is generated or trusted
+implicitly by this mode. Configure the client to trust that certificate's CA and
+verify its DNS name. UDP rejects these options. The TLS handshake has a finite
+budget and shares the original raw socket worker, cancellation and lifetime.
+Client TLS ends at the local proxy; the original private host independently
+verifies its separately approved HTTPS backend. See ADR 0038 for exact boundaries.
+
+On Windows, the same raw plan/wait/helper commands use persistent WFP rules
+instead of nftables. Admission is by exact user SID, loopback address, port and
+TCP/UDP protocol; applications under the same SID share that local access.
+The ordinary business process stays unelevated. Run the same executable's helper
+separately as administrator from an administrator-protected installation on a
+fixed local volume, with administrator-controlled journal and receipt paths.
+The helper verifies the original process creation identity and executable file
+ID, retains its original process handle and image locks, and removes only its
+unchanged WFP objects after that original process actually exits. Helper loss
+retains the persistent fence; expiry removes its allow rule. Changed filter
+identity, native owner/group/DACL or other configuration is preserved for review.
+Windows raw, SOCKS and Web gateway listeners reserve their endpoint with
+`SO_EXCLUSIVEADDRUSE` before bind, so another local socket cannot share it with
+`SO_REUSEADDR`. These Windows behaviors still require hosted kernel and target
+execution; source and native descriptor unit tests do not establish that evidence.

@@ -1,6 +1,6 @@
 //! Explicit normal-user entry to one authorized private service.
 mod host;
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", windows))]
 mod raw_gate;
 use crate::{session_store::SessionStore, space_dns::session_snapshot};
 use nestlink_protocol::services::private::PrivateServiceEntry;
@@ -11,7 +11,7 @@ use nestlink_sdk::{
         NativeStreamWait,
     },
 };
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", windows))]
 use raw_gate::wait_raw_gate;
 use std::{
     io,
@@ -48,8 +48,9 @@ enum ProxyAction {
     ///
     /// Stream entries carry application bytes. For an HTTPS service the host
     /// establishes and verifies backend TLS; use HTTP application bytes locally.
-    /// Local TLS termination or passthrough for a standard HTTPS client needs
-    /// separate implementation and qualification.
+    /// A raw TCP entry can explicitly terminate local client TLS with separate
+    /// --local-tls-certificate and --local-tls-key DER files. Clients must trust
+    /// that local certificate and verify its name; backend TLS stays independent.
     ///
     /// SOCKS UDP clients must first bind their local UDP socket and authenticate
     /// the TCP control connection. Declare that exact loopback IP and nonzero
@@ -63,6 +64,12 @@ enum ProxyAction {
         /// --gate-receipt. The same ordinary-user process waits for the helper.
         #[arg(long, conflicts_with = "native_stream")]
         raw_loopback: bool,
+        /// Local TLS certificate chain in DER format, leaf first; repeat per certificate.
+        #[arg(long, requires_all = ["raw_loopback", "local_tls_key"])]
+        local_tls_certificate: Vec<PathBuf>,
+        /// Owner-private DER key for explicit local TLS termination.
+        #[arg(long, requires_all = ["raw_loopback", "local_tls_certificate"])]
+        local_tls_key: Option<PathBuf>,
         /// Fresh absolute owner-private file for this original process's plan.
         #[arg(long, requires = "raw_loopback")]
         gate_plan: Option<PathBuf>,
@@ -115,10 +122,20 @@ enum ProxyAction {
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
+#[cfg(any(target_os = "linux", windows))]
+fn local_tls_material(path: &std::path::Path) -> Result<Vec<u8>> {
+    if !path.is_absolute() {
+        return Err(io::Error::other("local TLS material requires an absolute private path").into());
+    }
+    let parent = path.parent().ok_or_else(|| io::Error::other("local TLS parent missing"))?;
+    nestlink_platform_security::check_private_directory(parent)?;
+    Ok(nestlink_platform_security::read_private(path, 16384)?.to_vec())
+}
+
 enum RunningProxy {
     Socks(LocalServiceProxy),
     Native(LocalNativeServiceProxy),
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", windows))]
     Raw(nestlink_sdk::services::LocalRawServiceProxy),
 }
 enum ProxyWait {
@@ -131,7 +148,7 @@ impl RunningProxy {
         match self {
             Self::Socks(owner) => owner.is_finished(),
             Self::Native(owner) => owner.is_finished(),
-            #[cfg(target_os = "linux")]
+            #[cfg(any(target_os = "linux", windows))]
             Self::Raw(owner) => owner.is_finished(),
         }
     }
@@ -139,7 +156,7 @@ impl RunningProxy {
         match self {
             Self::Socks(owner) => owner.request_shutdown(),
             Self::Native(owner) => owner.request_shutdown(),
-            #[cfg(target_os = "linux")]
+            #[cfg(any(target_os = "linux", windows))]
             Self::Raw(owner) => owner.request_shutdown(),
         }
     }
@@ -155,7 +172,7 @@ impl RunningProxy {
                 NativeStreamWait::Stopped(report) => ProxyWait::Stopped(format!("{report:?}")),
                 NativeStreamWait::CleanupFailed(report) => ProxyWait::Failed(format!("{report:?}")),
             },
-            #[cfg(target_os = "linux")]
+            #[cfg(any(target_os = "linux", windows))]
             Self::Raw(owner) => match owner.wait_stopped(Duration::from_secs(5)).await {
                 nestlink_sdk::services::RawProxyWait::CleanupPending => ProxyWait::Pending,
                 nestlink_sdk::services::RawProxyWait::Stopped(report) => {
@@ -254,6 +271,8 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
         }
         ProxyAction::Serve {
             raw_loopback,
+            local_tls_certificate,
+            local_tls_key,
             gate_plan,
             gate_receipt,
             service,
@@ -321,7 +340,7 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
             let credential_directory = credentials_dir.unwrap_or_else(|| directory.clone());
             let deadline = tokio::time::Instant::now() + lifetime;
             let mut proxy = if raw_loopback {
-                #[cfg(target_os = "linux")]
+                #[cfg(any(target_os = "linux", windows))]
                 {
                     let plan_path = gate_plan.ok_or_else(|| {
                         io::Error::other("raw loopback requires an explicit --gate-plan")
@@ -329,17 +348,33 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
                     let receipt_path = gate_receipt.ok_or_else(|| {
                         io::Error::other("raw loopback requires an explicit --gate-receipt")
                     })?;
+                    if datagram && local_tls_key.is_some() {
+                        return Err(io::Error::other("local TLS termination requires a TCP service").into());
+                    }
+                    let local_tls = match local_tls_key {
+                        Some(key) => {
+                            let certificates = local_tls_certificate.iter().map(|path|
+                                local_tls_material(path)
+                            ).collect::<std::result::Result<Vec<_>, _>>()?;
+                            Some(nestlink_sdk::services::LocalRawServiceTls::from_der(
+                                certificates,
+                                local_tls_material(&key)?,
+                            )?)
+                        }
+                        None if local_tls_certificate.is_empty() => None,
+                        None => return Err(io::Error::other("local TLS requires both certificates and their private key").into()),
+                    };
                     let plan = wait_raw_gate(listen, datagram, lifetime, &plan_path, &receipt_path)
                         .await?;
                     RunningProxy::Raw(
-                        sdk.start_private_service_raw(consumer, choice, plan, &receipt_path)
+                        sdk.start_private_service_raw_with_tls(consumer, choice, plan, &receipt_path, local_tls)
                             .await?,
                     )
                 }
-                #[cfg(not(target_os = "linux"))]
+                #[cfg(not(any(target_os = "linux", windows)))]
                 {
-                    let _ = (gate_plan, gate_receipt);
-                    return Err(io::Error::other("raw loopback requires the Linux kernel UID gate; use authenticated SOCKS or the native OS endpoint on this platform").into());
+                    let _ = (gate_plan, gate_receipt, local_tls_certificate, local_tls_key);
+                    return Err(io::Error::other("raw loopback requires a supported kernel user gate; use authenticated SOCKS or the native OS endpoint on this platform").into());
                 }
             } else if native_stream {
                 RunningProxy::Native(
@@ -386,7 +421,7 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
                         "Windows byte pipes have no independent write-half EOF; use SOCKS TCP for applications that require FIN before a reverse response."
                     );
                 }
-                #[cfg(target_os = "linux")]
+                #[cfg(any(target_os = "linux", windows))]
                 RunningProxy::Raw(owner) => {
                     println!(
                         "Private service {service} in space {space}: raw loopback {}",

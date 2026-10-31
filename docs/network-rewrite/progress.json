@@ -6,8 +6,8 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "515b182b5da7bea53991447dc4bb3001d021a6df",
-    "checkpoint_kind":  "private_service_relay_compile_repairs_and_linux_raw_uid_gate_pending_hosted_derivation",
+    "source_revision":  "22c9722863eaa0a47415e7562fa107af9bd2b87e",
+    "checkpoint_kind":  "private_business_and_product_recovery_passed_partial_hosted_kernel_dns_diagnostics_windows_web_tls_in_progress",
     "active_tasks":  [
                          "W00",
                          "W02",
@@ -28,7 +28,8 @@
                          "W19",
                          "W20",
                          "W21",
-                         "W15"
+                         "W15",
+                         "W25"
                      ],
     "satisfied_interface_dependencies":  [
                                              "W01 nine-topic source and mature-component research independently reviewed",
@@ -36,12 +37,17 @@
                                              "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
                                          ],
     "unverified_assumptions":  [
-                                   "a9fdd62 signed direct AppCore media/input/revocation passed; routed recovery reached successor but exposed duplicate platform reset. 6e938e7 retains successful terminal input cleanup and failed-cleanup retry; full product rerun pending.",
-                                   "6e938e7 run 41168640201 stopped at the private relay raw transcript verifier type mismatch. d966af7 repairs request and metadata domains; no private business pass is claimed.",
-                                   "d966af7 run 41169418139 passed actual topology carrier, kernel NAT, production sockets and Quinn carrier feasibility; product/private service compilation stopped at a host setup future borrow. 515b182 scopes that future before ownership transfer.",
-                                   "d966af7 topology journal exposed a dangling all_relay_capacity view in a historical schema fixture; 515b182 restores original view/table dependency order and exact old view.",
-                                   "Linux raw TCP/UDP SDK, root nft UID gate, ordinary-user CLI plan/wait, finite per-source queues and hosted kernel experiments are implemented in source. New manifest edges require Actions lock derivation, formatting and actual tests; none is claimed passed.",
-                                   "Windows raw loopback admission, protected-login raw CLI L3, W22-W40 mandatory implementation and target qualification remain open. Existing NRD packet limits are not IPv6 TUN MTU qualification."
+                                   "145e26b exact-source hosted logs prove 17 private service cases including all six single/two-relay business cases, plus two signed-direct/route-set AppCore media/input cases passed. The enclosing network job failed native ICE lint; no full-run or target pass is claimed.",
+                                   "d02b8f0 repairs PrivateCarrier large_enum_variant and remote StopReport clone_on_copy found by exact-source Actions. Complete two-OS Core/network reruns remain required.",
+                                   "d02b8f0 raw run 41171953626 compiled the actual SDK case but strict kernel readback rejected the installed gate. Nine of ten platform tests passed; 571c00d fixes the test private directory and retains raw failed-table JSON without weakening production admission.",
+                                   "145e26b DNS compiled and ordinary-user ownership tests passed on both systems. Actual Linux resolved readback and Windows native provider deadline failed. 571c00d retains bounded configuration/stage diagnostics; OS acceptance remains failed.",
+                                   "Windows persistent WFP gate, standard local TLS termination and isolated browser private Web gateway are under source implementation in the working tree; all new source needs hosted lock derivation, formatting, compilation, actual business and target qualification.",
+                                   "W22-W24 and W26-W40 mandatory source and target qualification remain open. Existing NRD packet limits are not IPv6 TUN MTU qualification.",
+                                   "22c9722 raw kernel install/readback and same-UID transfer passed; different-UID execution was blocked by runner workspace directory permissions, so cross-UID admission is still unqualified.",
+                                   "Linux resolved v255 requires a scope-global address for unicast DNS relevance. New source adds only one owner-derived ULA/128 and exact local host route after conflict checks; it must pass actual system resolver and cleanup tests.",
+                                   "Windows source explicitly binds a new private directory to TokenUser, uses persistent exact-SID WFP rules and SO_EXCLUSIVEADDRUSE for local raw/SOCKS/Web entry. Native kernel/target evidence is still pending.",
+                                   "W25 source now authenticates the Caddy-to-gateway server with an owner-specific TLS CA/name; header tokens alone are not treated as server authentication. Management launch and actual Caddy/browser acceptance remain open.",
+                                   "145e26b full Core Linux worker exhausted its hosted disk; check-run annotation retained that infrastructure failure. Debug information is reduced in new workflow source without changing test assertions."
                                ],
     "external_prerequisites":  [
                                    {
@@ -71,11 +77,11 @@
                                    }
                                ],
     "next_steps":  [
-                       "Freeze and push the reviewed Linux raw gate source with W20/host borrow repairs. Derive both product and browser fixture locks in GitHub Actions, verify artifact receipts and import exact outputs.",
-                       "Generate and review exact-source hosted formatting, then run Linux raw SDK/kernel tests, complete Windows/Linux Core, network contracts, browser/native production and actual owned split DNS.",
-                       "Read exact-source failures, preserve failed evidence, repair production owners and continue W21 Windows/raw and every remaining mandatory W22-W40 feature.",
-                       "Obtain and record actual Windows/GPU, Android/iOS WireGuard, original NAT/public HA and cross-day soak evidence; preparation and independent source work continue meanwhile.",
-                       "Publish 0.8.0RC only after all mandatory functionality and evidence gates. Keep local/remote main-only branch state."
+                       "Read 571c00d raw run 41172874807 exact nft JSON and DNS run 41172877274 exact OS configuration/stages; fix the underlying policy/serialization/provider failures while preserving original ownership and strict assertions.",
+                       "Finish and review original-owner Windows WFP, standard local TLS and isolated private Web gateway source; derive both product and browser fixture locks in GitHub-hosted Actions and import only verified artifacts.",
+                       "Import exact-source hosted formatting and run complete two-OS Core/network, browser/native, raw kernel and real owned DNS validation. Preserve every failure and source/artifact receipt.",
+                       "Continue all independent mandatory W22-W40 implementation and prepare target acceptance without waiting for unavailable phones or external NAT hardware.",
+                       "Publish 0.8.0RC only when all mandatory source and applicable evidence gates pass; verify local and remote main-only state at completion."
                    ],
     "evidence_index":  [
                            "docs/network-rewrite/evidence/research-review-2026-10-30.md",
@@ -145,7 +151,8 @@
                            "docs/adr/network/0036-authenticated-local-private-service-proxy.md",
                            "docs/network-rewrite/LOCAL-PRIVATE-SERVICE-PROXY.md",
                            "docs/network-rewrite/ORIGINAL-ROUTE-RECOVERY.md",
-                           "docs/adr/network/0037-explicit-linux-loopback-kernel-gate.md"
+                           "docs/adr/network/0037-explicit-linux-loopback-kernel-gate.md",
+                           "docs/network-rewrite/evidence/private-business-145e26b.json"
                        ],
     "observed_actions":  [
                              {
@@ -253,13 +260,13 @@
                              {
                                  "run_id":  41167104969,
                                  "source_revision":  "a9fdd62837130a10f68831362116b2b2649f33d5",
-                                 "status":  "in_progress",
+                                 "status":  "failure",
                                  "scope":  "Network contracts and actual product/private-service/route-set slices."
                              },
                              {
                                  "run_id":  41167106875,
                                  "source_revision":  "a9fdd62837130a10f68831362116b2b2649f33d5",
-                                 "status":  "in_progress",
+                                 "status":  "failure",
                                  "scope":  "Windows/Linux real owned split DNS."
                              },
                              {
@@ -272,13 +279,37 @@
                                  "run_id":  41169418139,
                                  "source_revision":  "d966af78ae1c01a27da13fc78e46425dd1000fb6",
                                  "status":  "partial_failure",
-                                 "scope":  "Topology carrier, routed kernel NAT, production socket, Quinn feasibility and independent vectors passed; host borrow and historical migration fixture blocked later slices. Contracts pending at checkpoint."
+                                 "scope":  "Topology carrier, routed kernel NAT, production socket, Quinn feasibility and independent vectors passed. Both OS contracts failed clippy/format; host borrow and historical migration fixture blocked later slices. Repairs require subsequent exact-source evidence."
                              },
                              {
                                  "run_id":  41169420222,
                                  "source_revision":  "d966af78ae1c01a27da13fc78e46425dd1000fb6",
+                                 "status":  "failure",
+                                 "scope":  "Both OS DNS jobs failed SDK compilation before actual OS tests; no DNS execution qualified on this source."
+                             },
+                             {
+                                 "run_id":  41171087099,
+                                 "source_revision":  "145e26bf08f1d82ecfc1ea942bd9c5852124f102",
                                  "status":  "partial_failure",
-                                 "scope":  "Linux real DNS test did not execute because SDK host failed compilation; 515b182 repairs the borrow. Windows status must be read."
+                                 "scope":  "17 private business tests, all six one/two-relay cases and two AppCore signed-direct/recovery cases passed; full run failed lint. Exact downloaded business artifact retained separately."
+                             },
+                             {
+                                 "run_id":  41171095288,
+                                 "source_revision":  "145e26bf08f1d82ecfc1ea942bd9c5852124f102",
+                                 "status":  "success",
+                                 "scope":  "Production Web build, browser contracts and Chrome/Edge browser-to-native host passed; not target/GPU qualification."
+                             },
+                             {
+                                 "run_id":  41174233315,
+                                 "source_revision":  "22c9722863eaa0a47415e7562fa107af9bd2b87e",
+                                 "status":  "failure",
+                                 "scope":  "Raw nft exact readback and same-UID business passed; different-UID probe could not execute runner-private test binary. Source now copies and hashes one executable into a narrowly traversable lab location for all roles."
+                             },
+                             {
+                                 "run_id":  41174235577,
+                                 "source_revision":  "22c9722863eaa0a47415e7562fa107af9bd2b87e",
+                                 "status":  "failure",
+                                 "scope":  "Linux exact no-address configuration and cleanup passed, but real resolved DNS scope needed a scope-global address. Windows bootstrap advanced to private directory ownership failure. New exact ULA-only design and explicit TokenUser owner repairs require rerun."
                              }
                          ],
     "release_state":  "not_ready",

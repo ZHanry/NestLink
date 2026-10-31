@@ -1,11 +1,60 @@
-//! Linux ordinary-user raw TCP/UDP entry behind an administrator-installed
-//! nftables UID/endpoint fence. All remote authority remains in the original
+//! Ordinary-user raw TCP/UDP entry behind an administrator-installed
+//! kernel user/endpoint fence. All remote authority remains in the original
 //! private-service SDK; no packet chooses an Internet or local backend target.
 use super::*;
 use nestlink_node::service_plane::DatagramPacket;
-use nestlink_platform_security::local_port_gate::{GatePlan, RootGateReceipt, Transport};
+#[cfg(target_os = "linux")]
+use nestlink_platform_security::local_port_gate::{GatePlan, RootGateReceipt, Transport, wall_ms};
+#[cfg(windows)]
+use nestlink_privileged::windows::local_port_gate::{GatePlan, RootGateReceipt, Transport, wall_ms};
 use std::collections::BTreeMap;
 use tokio::{net::UdpSocket, sync::mpsc};
+
+/// Explicit local TLS termination for standard clients. This certificate is
+/// independent of the remote backend's separately approved TLS trust.
+#[derive(Clone)]
+pub struct LocalRawServiceTls {
+    acceptor: tokio_rustls::TlsAcceptor,
+}
+impl LocalRawServiceTls {
+    /// DER certificates and a DER private key are supplied by the local user.
+    /// Rustls verifies that the key matches the leaf; clients must trust the
+    /// chosen local CA and verify the name in that certificate themselves.
+    pub fn from_der(
+        certificates: Vec<Vec<u8>>,
+        private_key: Vec<u8>,
+    ) -> Result<Self, LocalProxyError> {
+        use rustls::pki_types::{CertificateDer, PrivateKeyDer};
+        let private_key = Zeroizing::new(private_key);
+        if certificates.is_empty()
+            || certificates.len() > 8
+            || certificates.iter().any(|certificate| certificate.is_empty() || certificate.len() > 16384)
+            || private_key.is_empty()
+            || private_key.len() > 16384
+        {
+            return Err(LocalProxyError::Invalid);
+        }
+        let key = PrivateKeyDer::try_from(private_key.as_slice())
+            .map_err(|_| LocalProxyError::Invalid)?
+            .clone_key();
+        let mut config = rustls::ServerConfig::builder_with_provider(Arc::new(
+            rustls::crypto::ring::default_provider(),
+        ))
+        .with_safe_default_protocol_versions()
+        .map_err(|_| LocalProxyError::Invalid)?
+        .with_no_client_auth()
+        .with_single_cert(certificates.into_iter().map(CertificateDer::from).collect(), key)
+        .map_err(|_| LocalProxyError::Invalid)?;
+        config.alpn_protocols = vec![b"http/1.1".to_vec()];
+        config.max_early_data_size = 0;
+        config.send_tls13_tickets = 0;
+        config.session_storage = Arc::new(rustls::server::NoServerSessionStorage {});
+        Ok(Self { acceptor: tokio_rustls::TlsAcceptor::from(Arc::new(config)) })
+    }
+}
+
+#[cfg(test)]
+mod tls_tests;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct RawProxyStopReport {
@@ -90,6 +139,18 @@ impl Sdk {
         plan: GatePlan,
         receipt_path: &Path,
     ) -> Result<LocalRawServiceProxy, LocalProxyError> {
+        self.start_private_service_raw_with_tls(consumer, choice, plan, receipt_path, None).await
+    }
+    /// The optional local certificate terminates client TLS before application
+    /// bytes enter the original service stream. It grants no remote authority.
+    pub async fn start_private_service_raw_with_tls(
+        self: &Arc<Self>,
+        consumer: Arc<DeviceIdentity>,
+        choice: LocalProxyServiceChoice,
+        plan: GatePlan,
+        receipt_path: &Path,
+        local_tls: Option<LocalRawServiceTls>,
+    ) -> Result<LocalRawServiceProxy, LocalProxyError> {
         if !valid_id(&consumer.device_id) {
             return Err(LocalProxyError::Invalid);
         }
@@ -101,14 +162,14 @@ impl Sdk {
         } else {
             Transport::Tcp
         };
-        if plan.transport != transport {
+        if plan.transport != transport || (transport == Transport::Udp && local_tls.is_some()) {
             return Err(LocalProxyError::Invalid);
         }
         self.principal().ok_or(SdkError::SignIn)?;
         let receipt = RootGateReceipt::read_for_current_process(receipt_path, &plan)?;
         let remaining = plan
             .expires_at_ms
-            .checked_sub(nestlink_platform_security::local_port_gate::wall_ms()?)
+            .checked_sub(wall_ms()?)
             .ok_or(LocalProxyError::Invalid)?;
         let deadline = Instant::now() + choice.lifetime.min(Duration::from_millis(remaining));
         let owner = owners()
@@ -116,8 +177,8 @@ impl Sdk {
             .try_acquire_owned()
             .map_err(|_| LocalProxyError::Busy)?;
         let listener = match transport {
-            Transport::Tcp => Listener::Tcp(TcpListener::bind(plan.endpoint).await?),
-            Transport::Udp => Listener::Udp(Arc::new(UdpSocket::bind(plan.endpoint).await?)),
+            Transport::Tcp => Listener::Tcp(bind_tcp(plan.endpoint).await?),
+            Transport::Udp => Listener::Udp(Arc::new(bind_udp(plan.endpoint).await?)),
         };
         receipt.check_current(&plan)?;
         let address = plan.endpoint;
@@ -132,6 +193,7 @@ impl Sdk {
             stopped,
             deadline,
             owner,
+            local_tls,
         ));
         Ok(LocalRawServiceProxy {
             address,
@@ -171,6 +233,7 @@ async fn run_owner(
     mut stop: watch::Receiver<bool>,
     deadline: Instant,
     _owner: tokio::sync::OwnedSemaphorePermit,
+    local_tls: Option<LocalRawServiceTls>,
 ) -> RawProxyStopReport {
     let mut report = RawProxyStopReport::default();
     let mut workers = JoinSet::new();
@@ -221,8 +284,20 @@ async fn run_owner(
                     choice.clone(),
                     stopped.clone(),
                 );
+                let local_tls = local_tls.clone();
                 workers.spawn(async move {
                     let _permit = permit;
+                    let mut stopped = stopped;
+                    if let Some(tls) = local_tls {
+                        let accepted = tokio::select! { biased;
+                            _ = stopping(&mut stopped) => return (peer, FlowOutcome::default()),
+                            result = tokio::time::timeout_at((Instant::now() + SETUP_BUDGET).min(deadline), tls.acceptor.accept(socket)) => result,
+                        };
+                        return match accepted {
+                            Ok(Ok(stream)) => (peer, super::native_stream::forward(sdk, consumer, choice, stream, stopped, deadline).await),
+                            _ => (peer, FlowOutcome { rejected: true, ..FlowOutcome::default() }),
+                        };
+                    }
                     (
                         peer,
                         super::native_stream::forward(

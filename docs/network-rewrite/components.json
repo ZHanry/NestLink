@@ -15,6 +15,24 @@
   "research_runtime_exclusion": "EasyTier is idea_reference only; no executable, library, FFI, forked core or adapted code is selected.",
   "components": [
     {
+      "id": "C24",
+      "purpose": "Isolated private Web session cookies and per-owner authenticated HTTPS proxy hop",
+      "existing_implementation": ["Locked reqwest 0.12.28 cookie Jar feature", "Locked Hyper, Axum, rustls, tokio-rustls and rcgen", "Original private service SDK lease, fixed host target, quota and carrier owner"],
+      "candidates": ["Existing reqwest CookieStore/Jar and rustls server authentication", "Forward application cookies to browser storage (rejected cross-origin cookie contamination)", "Unauthenticated loopback proxy hop (rejected endpoint replacement risk)"],
+      "official_sources": ["https://raw.githubusercontent.com/seanmonstar/reqwest/v0.12.28/Cargo.toml", "https://crates.io/api/v1/crates/cookie_store/0.22.0", "https://crates.io/api/v1/crates/cookie/0.18.1", "https://github.com/caddyserver/caddy/tree/v2.10.2/modules/caddyhttp/reverseproxy"],
+      "maintenance_status": {"reviewed_at": "2026-10-31", "evidence": "Actual pinned reqwest manifest and registry metadata reviewed; cookie and cookie_store are non-yanked MIT/Apache components. Exact generated cookie/PSL lock identities, checksums and notices must be reviewed before importing Actions output."},
+      "platforms": ["Windows x64 and Linux gateway daemon", "Standard browser through independently configured Caddy HTTPS origin"],
+      "version": {"reqwest": "Reuse locked 0.12.28; activate cookies only in the native SDK", "cookie": "Manifest constraint ^0.18.0; exact Actions lock pending", "cookie_store": "Manifest constraint ^0.22.0; exact Actions lock pending", "Caddy": "Existing 2.10.2 transport TLS inline CA schema reviewed; actual proxy execution pending"},
+      "license": "Existing Hyper/Axum/rustls/Tokio/rcgen notices retained. cookie and cookie_store MIT OR Apache-2.0; include exact new transitive license inventory in Actions notices/SBOM before release.",
+      "selection_reason": "Reuse mature HTTP, TLS and cookie implementations; add only selected-service/session/origin policy and original owner integration",
+      "adapter_boundary": "Libraries parse HTTP/WebSocket, authenticate TLS and implement cookie semantics. NestLink binds the original installation/private lease, isolated origin, single-use launch, fixed backend, finite cookie budget and physical cleanup. Independent short-lived upstream certificate prevents leftover Caddy routes trusting a replacement listener.",
+      "self_implementation_gap_if_any": "No existing private browser delegation or per-service isolated origin; public ServiceLease cannot authorize a private gateway.",
+      "security_and_operations_cost": ["Gateway TLS root/name is pinned independently by Caddy; hop header alone does not authenticate the server", "Browser receives only the host-only gateway session cookie; backend application Jar belongs to that session and one service", "Management launch, complete application compatibility and actual public HTTPS browser acceptance remain mandatory open work", "All lock derivation, format, compilation and automated tests execute only in GitHub-hosted Actions"],
+      "work_packages": ["W25", "W36"],
+      "validation_status": "source_implemented_partial; hosted compilation and business/Caddy/browser qualification pending",
+      "decision_ref": "docs/adr/network/0039-isolated-private-web-gateway.md"
+    },
+    {
       "id": "C23",
       "purpose": "Explicit Linux kernel UID admission for one ordinary-user raw loopback TCP/UDP endpoint",
       "existing_implementation": ["crates/platform-security", "crates/sdk/src/services/local_proxy", "crates/sdk/src/services/private"],
@@ -22,7 +40,7 @@
       "official_sources": ["https://netfilter.org/projects/nftables/manpage.html", "https://wiki.nftables.org/wiki-nftables/index.php/Matching_packet_metainformation"],
       "maintenance_status": {"reviewed_at": "2026-10-31", "evidence": "Mature Linux kernel firewall and distribution component; exact runner package/version and actual kernel behavior must be recorded by hosted experiments"},
       "platforms": ["Linux x64", "Linux ARM64 pending target qualification"],
-      "version": {"nftables": "Distribution-provided root-owned executable; record resolved version in Actions evidence", "rustix": "Reuse locked 1.1.2 fs/process APIs", "tokio": "Reuse existing locked process/socket/task runtime"},
+      "version": {"nftables": "Distribution-provided root-owned executable; record resolved version in Actions evidence", "rustix": "Reuse locked 1.1.5 fs/process APIs (manifest compatible requirement 1.1.2)", "tokio": "Reuse existing locked process/socket/task runtime"},
       "license": "nftables GPL-2.0 system component is invoked as a separate installed CLI; no source or library is linked or bundled by this adapter. Preserve existing rustix/Tokio/serde notices.",
       "selection_reason": "Reuse the existing private-service carrier and mature kernel filtering rather than adding a raw capability port or a racy peer-PID authorization check",
       "adapter_boundary": "nftables owns JSON parsing and kernel atomic transactions. NestLink owns exact local consent, original process/UID/endpoint, protected root receipt, bounded lifetime, original private grant/meter and physical exit/recovery receipts.",

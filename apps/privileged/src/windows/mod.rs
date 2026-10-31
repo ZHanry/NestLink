@@ -2,6 +2,7 @@
 mod client;
 mod consent;
 mod installation;
+pub mod local_port_gate;
 mod security;
 mod server;
 pub use client::{BrokerClient, BrokerInput};

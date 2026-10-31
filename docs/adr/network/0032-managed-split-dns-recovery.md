@@ -46,11 +46,33 @@ explicitly rather than adopting or modifying them.
 The dummy remains DOWN while its configuration is assembled. Default-route is
 disabled and the exact routing domain is set before introducing a DNS server;
 LLMNR, mDNS, DNSSEC and DNS-over-TLS are disabled only on this private DNS link.
-It is activated with IPv6 address generation disabled, and owns no IP address
-or unicast route. `systemd v255` explicitly sends localhost DNS servers through
-the loopback interface regardless of their associated link, which supports
-using this isolated DNS routing scope; the complete behavior still requires
-the real OS test.
+IPv6 automatic address generation is disabled in a separate DOWN-state request
+and read back before activation. The original addressless-dummy design was
+disproved by exact-source hosted run `41174235577` at `22c9722`: configuration
+and cleanup succeeded, but the actual system query returned `Name not found`.
+`systemd v255` (`db11bab38ccf1ed257f310d29070843d4c58ea01`),
+`resolved-link.c::link_relevant` and `link_allocate_scopes`, require an UP,
+carrier-present link with a non-tentative address whose scope is below LINK
+before creating its unicast DNS scope. A link-local address alone is insufficient.
+
+The adapter therefore assigns exactly one owner-derived, globally scoped ULA
+`/128`, with `nodad` and `noprefixroute`, to this new dummy. SHA-256 of the full
+random owner marker determines the ULA, so the prepared journal can independently
+recover its exact address after a crash. Mature `ipnet 2.12.2` checks all existing
+IPv6 interface prefixes and non-default routes before creation; an overlap is a
+hard error, including broad VPN ULA prefixes. No existing address or VPN route
+is replaced. The only permitted unicast route is the kernel's exact local host
+route for that address; no connected prefix, gateway, export or default route
+is installed. Additional addresses, prefix routes or altered address flags cause
+readback/recovery to preserve the resource and journal for operator review.
+
+The alternative of installing global resolved DNS/domain settings would share
+ownership with unrelated and VPN configuration and is rejected. Taking over a
+physical interface is rejected for the same reason. `systemd v255` explicitly
+sends localhost DNS servers through the loopback interface regardless of their
+associated link. The ULA activates the isolated DNS scope; DNS packets still go
+to the explicitly selected loopback resolver. The repaired complete behavior
+still requires the real OS test; source repair alone is not passing evidence.
 
 Read sources:
 
@@ -58,6 +80,7 @@ Read sources:
 - [Windows Remove-DnsClientNrptRule](https://learn.microsoft.com/en-us/powershell/module/dnsclient/remove-dnsclientnrptrule?view=windowsserver2025-ps)
 - [resolvectl interface configuration](https://www.freedesktop.org/software/systemd/man/latest/resolvectl.html)
 - [systemd v255 localhost DNS interface selection](https://github.com/systemd/systemd/blob/v255/src/resolve/resolved-dns-server.c)
+- [systemd v255 DNS scope and address eligibility](https://github.com/systemd/systemd/blob/db11bab38ccf1ed257f310d29070843d4c58ea01/src/resolve/resolved-link.c)
 - [typed resolve1 properties and methods](https://github.com/systemd/systemd/blob/v255/man/org.freedesktop.resolve1.xml)
 - [iproute2 interface identity lookup](https://github.com/iproute2/iproute2/blob/main/lib/ll_map.c)
 
@@ -94,7 +117,9 @@ the managed rule. Linux SIGTERM and Ctrl-C are handled. A killed/crashed helper
 leaves the durable recovery journal for the next explicit managed startup.
 
 Tool execution uses trusted absolute system paths, no shell input from a plan,
-bounded output and a three-second process deadline. Windows obtains the real
+bounded output and a three-second Linux process deadline. Windows retains a
+separate fifteen-second cold-provider deadline, with bounded stage diagnostics
+preserved on timeout. It obtains the real
 system directory through the existing platform boundary, starts hidden
 PowerShell without a profile, and imports DnsClient only from the system module
 directory. The subprocess inherits no caller-controlled loader, D-Bus or module
@@ -123,10 +148,11 @@ policy field, ownership display/comment markers, exact namespace, loopback serve
 and disabled DA/DNSSEC flags. External changes, duplicate owned rules or an
 unexpected GUID preserve both resource and journal. Linux compares interface
 index, exact full owner alias, dummy kind, MAC, MTU and stable configuration
-flags, plus actual addresses/routes and the typed per-link DNS settings. Carrier,
-operstate and counters are omitted from the stable projection. A configured IP,
-unicast route, foreign DNS setting or changed installed configuration prevents
-deletion. Only the kernel's intrinsic IPv6 multicast route is excluded. No
+flags, IPv6 address-generation mode, plus actual addresses/routes and the typed per-link DNS settings. Carrier,
+operstate and counters are omitted from the stable projection. Any address or
+unicast route beyond the exact owner-derived ULA `/128` and its local host route,
+foreign DNS setting or changed installed configuration prevents deletion.
+Only the kernel's intrinsic IPv6 multicast route is excluded. No
 physical/VPN link is ever adopted. Deletion is preceded by another readback;
 kernel link absence and resolved's removal of that index's DNS/domain entries
 must then be observed before the fixed journal file is removed.

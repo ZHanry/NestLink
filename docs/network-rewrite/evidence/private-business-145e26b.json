@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "kind": "partial_hosted_business_evidence",
+  "source_revision": "145e26bf08f1d82ecfc1ea942bd9c5852124f102",
+  "task_ids": ["W14", "W15", "W20", "W21"],
+  "acceptance_group_completion_claimed": false,
+  "release_qualification_claimed": false,
+  "build_provenance": {
+    "repository": "ZHanry/NestLink",
+    "workflow": ".github/workflows/network-rewrite.yml",
+    "run_id": 41171087099,
+    "run_attempt": 1,
+    "job_id": 124449000837,
+    "runner_environment": "github-hosted",
+    "runner_os": "Linux",
+    "runner_label": "ubuntu-24.04",
+    "dependency_mode": "cargo --locked; product Cargo.lock at the exact source revision",
+    "job_conclusion": "failure",
+    "job_failure_scope": "The native ICE lint command failed on PrivateCarrier large_enum_variant. The workflow retained independently executed business command results; these passes do not change the failed job or qualify native ICE.",
+    "artifact": {
+      "id": 13030734367,
+      "name": "network-chain-business-145e26bf08f1d82ecfc1ea942bd9c5852124f102-1",
+      "sha256": "4a35345747e9f7f290316309edaed958ee6898c287e4a33f7e48f8992d95ba03",
+      "contents": "Original Actions command logs; no executable artifact digest or target execution is claimed",
+      "download_digest_verified": true
+    }
+  },
+  "execution_provenance": {
+    "kind": "github_hosted_lab",
+    "evidence_level": "L2_partial",
+    "business_results": [
+      {
+        "log": "network-private-service-sdk-tests.log",
+        "passed": 17,
+        "failed": 0,
+        "ignored": 4,
+        "scope": "Real private TCP/HTTP/UDP, same-account device key binding, half-close, empty datagrams, original shared accounting, single/two registered relay authority, consumer signout, ACL revocation, fixed approval expiry, SOCKS and native local stream cleanup",
+        "ignored_scope": "Two raw kernel cases and their two cooperation roles require the separate local-port-gate workflow; none is counted as acceptance"
+      },
+      {
+        "log": "network-route-set-product-tests.log",
+        "passed": 2,
+        "failed": 0,
+        "scope": "Actual AppCore media/input owners use signed direct admission; total original-node loss reaches an authorized successor, releases pressed input once and requests a fresh keyframe"
+      },
+      {"log": "network-route-set-sdk-tests.log", "passed": 6, "failed": 0},
+      {"log": "network-product-owner-tests.log", "passed": 3, "failed": 0},
+      {"log": "network-chain-registered-tests.log", "passed": 4, "failed": 0},
+      {"log": "network-chain-sdk-tests.log", "passed": 2, "failed": 0},
+      {"log": "network-node-admission-tests.log", "passed": 4, "failed": 0},
+      {"log": "network-service-publication-owner-tests.log", "passed": 10, "failed": 0},
+      {"log": "network-service-publication-sdk-tests.log", "passed": 2, "failed": 0},
+      {"log": "network-service-start-cancellation-tests.log", "passed": 1, "failed": 0},
+      {"log": "network-signed-direct-sdk-tests.log", "passed": 3, "failed": 0},
+      {"log": "network-space-address-sdk-tests.log", "passed": 1, "failed": 0},
+      {"log": "network-local-proxy-tests.log", "passed": 7, "failed": 0}
+    ],
+    "limitations": [
+      "Hosted synthetic media/backend fixtures do not qualify external Windows/GPU, original NAT sites, mobile clients or cross-day stability.",
+      "The full run failed; these independently logged passes must not be presented as a complete green network run.",
+      "W21 raw kernel admission, standard HTTPS local TLS entry and Windows raw implementation remain independently unqualified.",
+      "W22-W40 mandatory functionality and target evidence remain open."
+    ]
+  }
+}

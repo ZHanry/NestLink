@@ -1,5 +1,6 @@
-//! Optional Windows input broker. This crate owns no network/media business.
-//! The only elevated entry point accepts a fixed local named-pipe protocol.
+//! Optional Windows privilege boundaries. The input broker accepts its fixed
+//! local pipe protocol; a separate WFP helper owns exact local socket admission.
+//! Neither helper owns remote network/media business or service authority.
 mod gate;
 #[cfg(windows)]
 pub mod windows;

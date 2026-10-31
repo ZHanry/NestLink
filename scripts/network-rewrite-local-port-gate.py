@@ -13,9 +13,11 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import signal
 import stat
 import subprocess
+import tempfile
 import time
 import uuid
 
@@ -94,6 +96,7 @@ def main() -> int:
         "commands": [], "cases": {}, "status": "failed",
     }
     executable = None
+    executable_directory = None
     roots = []
     sentinel = "nl_lab_" + uuid.uuid4().hex[:16]
     sentinel_before = None
@@ -175,8 +178,18 @@ def main() -> int:
                 artifacts.append(Path(item["executable"]).resolve())
         if len(artifacts) != 1 or not artifacts[0].is_relative_to(source / "target"):
             raise ValueError("expected one source-owned private_services test executable")
-        executable = artifacts[0]
-        receipt["executable"] = {"path": str(executable), "sha256": digest(executable)}
+        built_executable = artifacts[0]
+        executable_directory = Path(tempfile.mkdtemp(prefix="nestlink-raw-roles-", dir="/tmp"))
+        executable = executable_directory / "private-services"
+        shutil.copyfile(built_executable, executable)
+        executable.chmod(0o555)
+        executable_directory.chmod(0o755)
+        receipt["executable"] = {
+            "build_path": str(built_executable), "path": str(executable),
+            "sha256": digest(built_executable),
+        }
+        if digest(executable) != receipt["executable"]["sha256"]:
+            raise ValueError("shared ordinary/root/probe executable differs from the hosted build")
         required("create-unrelated-sentinel", ["sudo", "--non-interactive", "nft", "--json", "--file", "-"], stdin={"nftables": [
             {"add": {"table": {"family": "inet", "name": sentinel, "comment": "NestLink:raw-lab:" + sentinel}}},
             {"add": {"chain": {"family": "inet", "table": sentinel, "name": "untouched"}}},
@@ -317,7 +330,21 @@ def main() -> int:
                     except Exception as error:
                         receipt.setdefault("diagnostic_failures", []).append(str(error))
                 try:
-                    required(name + "-finally-recover", role("recover", root))
+                    # The original root helper may still hold its exact
+                    # journal while observing the just-exited test owner.
+                    # Retry only that explicit lock contention, within one
+                    # fixed budget; other recovery failures remain failures.
+                    deadline = time.monotonic() + 8
+                    attempt = 0
+                    while True:
+                        attempt += 1
+                        code, diagnostic = execute(name + f"-finally-recover-{attempt}", role("recover", root), timeout=5)
+                        if code == 0:
+                            break
+                        if ("the original gate owner or nft transaction still holds this journal" not in diagnostic
+                            or time.monotonic() >= deadline):
+                            raise RuntimeError(f"{name} final recovery failed ({code}); see retained command log")
+                        time.sleep(0.1)
                     receipt.setdefault("final_recovery", {})[name] = inspect(name + "-finally-inspect", root)
                 except Exception as error:
                     receipt["status"] = "failed"
@@ -327,6 +354,13 @@ def main() -> int:
                 if snapshot(nft("sentinel-final", ["list", "table", "inet", sentinel])) != sentinel_before:
                     raise ValueError("changed unrelated sentinel preserved for operator review")
                 nft("sentinel-remove", ["delete", "table", "inet", sentinel])
+            except Exception as error:
+                receipt["status"] = "failed"
+                receipt.setdefault("cleanup_failures", []).append(str(error))
+        if executable is not None and not receipt.get("cleanup_failures"):
+            try:
+                executable.unlink(missing_ok=True)
+                executable_directory.rmdir()
             except Exception as error:
                 receipt["status"] = "failed"
                 receipt.setdefault("cleanup_failures", []).append(str(error))

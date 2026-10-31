@@ -45,6 +45,7 @@ nestlink-platform-input.workspace = true
 nestlink-platform-audio.workspace = true
 
 [target.'cfg(target_os = "linux")'.dependencies]
+ipnet = "=2.12.2"
 nestlink-platform-input.workspace = true
 nestlink-platform-audio.workspace = true
 nestlink-platform-session.workspace = true

@@ -27,8 +27,29 @@ use zeroize::Zeroizing;
 mod local_mapping;
 #[cfg(any(unix, windows))]
 pub(super) mod native_stream;
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", windows))]
 pub(super) mod raw;
+
+pub(in crate::services) async fn bind_tcp(endpoint: SocketAddr) -> io::Result<TcpListener> {
+    #[cfg(windows)]
+    {
+        TcpListener::from_std(nestlink_platform_network::local_listener::tcp(endpoint)?)
+    }
+    #[cfg(not(windows))]
+    {
+        TcpListener::bind(endpoint).await
+    }
+}
+async fn bind_udp(endpoint: SocketAddr) -> io::Result<tokio::net::UdpSocket> {
+    #[cfg(windows)]
+    {
+        tokio::net::UdpSocket::from_std(nestlink_platform_network::local_listener::udp(endpoint)?)
+    }
+    #[cfg(not(windows))]
+    {
+        tokio::net::UdpSocket::bind(endpoint).await
+    }
+}
 
 const SETUP_BUDGET: Duration = Duration::from_secs(3);
 const MAX_LIFETIME: Duration = Duration::from_secs(3600);
@@ -139,7 +160,7 @@ impl LocalProxyServiceChoice {
         Ok(self)
     }
 
-    fn access_request(
+    pub(super) fn access_request(
         &self,
         consumer: &DeviceIdentity,
     ) -> Result<PrivateServiceAccessRequest, SdkError> {
@@ -176,7 +197,7 @@ impl LocalProxyServiceChoice {
             if *port == self.port && canonical_alias(alias).as_deref() == Some(self.alias.as_str()))
     }
 
-    fn checks_lease(&self, lease: &VerifiedPrivateServiceLease) -> bool {
+    pub(super) fn checks_lease(&self, lease: &VerifiedPrivateServiceLease) -> bool {
         let base = lease.lease().claims();
         let service = &self.entry.service;
         base.service_id == service.id
@@ -187,6 +208,18 @@ impl LocalProxyServiceChoice {
             && base.target_sha256 == self.entry.exposure.target_sha256
             && lease.claims().space_id == self.entry.exposure.space_id
             && lease.claims().exposure_revision == self.entry.exposure.revision
+    }
+
+    pub(super) fn selected_entry(&self) -> &PrivateServiceEntry {
+        &self.entry
+    }
+
+    pub(super) fn relay_policy(&self) -> &PrivateServiceRelayPolicy {
+        &self.relay_policy
+    }
+
+    pub(super) fn lifetime(&self) -> Duration {
+        self.lifetime
     }
 }
 
@@ -374,7 +407,7 @@ impl Sdk {
             .map_err(|_| LocalProxyError::Busy)?;
         nestlink_platform_security::check_private_directory(credential_directory)?;
         let deadline = Instant::now() + choice.lifetime;
-        let listener = TcpListener::bind(bind).await?;
+        let listener = bind_tcp(bind).await?;
         let address = listener.local_addr()?;
         let credentials = Arc::new(Credentials::new());
         // Serialize directly into a zeroizing buffer; serde_json::Value would

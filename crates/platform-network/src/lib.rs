@@ -1,6 +1,8 @@
 //! OS network notifications are facts that invalidate candidates, never grants.
 pub mod path;
 #[cfg(windows)]
+pub mod local_listener;
+#[cfg(windows)]
 pub mod system_tools;
 #[cfg(target_os = "android")]
 use std::sync::{Arc, Mutex};

@@ -107,7 +107,7 @@ pub(super) async fn run_udp_flow(
     };
     let setup = async {
         let (protocol, peer) = authenticate_association(socket, &credentials).await?;
-        let udp = match UdpSocket::bind(local_address).await {
+        let udp = match super::bind_udp(local_address).await {
             Ok(udp) => udp,
             Err(_) => {
                 let _ = protocol.reply_error(&ReplyError::GeneralFailure).await;

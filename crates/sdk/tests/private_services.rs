@@ -5,6 +5,8 @@
 mod raw;
 #[path = "private_services/relay.rs"]
 mod relay;
+#[path = "private_services/web.rs"]
+mod web;
 use hickory_server::proto::{
     op::{Message, MessageType, OpCode, Query, ResponseCode},
     rr::{Name, RData, Record, RecordType, rdata::A},

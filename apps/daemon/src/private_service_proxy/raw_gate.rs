@@ -1,5 +1,8 @@
 use super::*;
+#[cfg(target_os = "linux")]
 use nestlink_platform_security::local_port_gate::{GatePlan, RootGateReceipt, Transport};
+#[cfg(windows)]
+use nestlink_privileged::windows::local_port_gate::{GatePlan, RootGateReceipt, Transport};
 
 /// The caller remains the original ordinary-user socket owner while a separate
 /// administrator installs its exact plan. No child substitutes for this PID.
@@ -13,7 +16,11 @@ pub(super) async fn wait_raw_gate(
     if !plan_path.is_absolute() || !receipt_path.is_absolute() || listen.port() == 0 {
         return Err(io::Error::other("raw loopback requires an exact nonzero --listen endpoint and absolute --gate-plan/--gate-receipt paths").into());
     }
-    let expires = nestlink_platform_security::local_port_gate::wall_ms()?
+    #[cfg(target_os = "linux")]
+    use nestlink_platform_security::local_port_gate::wall_ms;
+    #[cfg(windows)]
+    use nestlink_privileged::windows::local_port_gate::wall_ms;
+    let expires = wall_ms()?
         .checked_add(lifetime.as_millis().try_into()?)
         .ok_or_else(|| io::Error::other("gate expiry overflow"))?;
     let plan = GatePlan::for_current_process(

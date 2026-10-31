@@ -22,6 +22,11 @@ jobs:
     timeout-minutes: 60
     env:
       CARGO_INCREMENTAL: "0"
+      # Large native/media test binaries exhausted the hosted Linux disk in
+      # 41171092827. Keep debug assertions and all cases; omit debug information
+      # from development/test artifacts rather than losing the runner logs.
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:

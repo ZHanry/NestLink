@@ -49,7 +49,10 @@ nestlink-platform-security.workspace = true
 nestlink-traversal.workspace = true
 nestlink-node.workspace = true
 nestlink-platform-clipboard.workspace = true
-reqwest = { workspace = true, features = ["stream"] }
+reqwest = { workspace = true, features = ["stream", "cookies"] }
+axum.workspace = true
+hyper.workspace = true
+hyper-util.workspace = true
 nestlink-remote.workspace = true
 nestlink-session.workspace = true
 nestlink-connectivity.workspace = true
@@ -59,6 +62,7 @@ nestlink-transport-wss.workspace = true
 nestlink-transport-stream.workspace = true
 rustls.workspace = true
 tokio-rustls.workspace = true
+rcgen.workspace = true
 nestlink-transport-quic.workspace = true
 tokio.workspace = true
 quinn.workspace = true
@@ -79,4 +83,8 @@ js-sys = "0.3.106"
 wasm-streams = "=0.5.0"
 gloo-timers = {version="0.3.0",features=["futures"]}
 web-sys = {version="0.3.106",features=["Window","Performance","Request","RequestInit","RequestRedirect","RequestCredentials","RequestMode","RequestCache","Response","Headers","AbortController","AbortSignal"]}
+
+[target.'cfg(windows)'.dependencies]
+nestlink-privileged.workspace = true
+socket2 = { version = "=0.6.5", features = ["all"] }
 

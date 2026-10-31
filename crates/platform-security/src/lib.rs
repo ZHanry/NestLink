@@ -324,7 +324,7 @@ mod private_acl {
         Security::{
             ACCESS_ALLOWED_ACE, ACE_HEADER, ACL, ACL_SIZE_INFORMATION, AclSizeInformation,
             Authorization::{
-                ConvertStringSecurityDescriptorToSecurityDescriptorW, GetSecurityInfo,
+                ConvertSidToStringSidW, ConvertStringSecurityDescriptorToSecurityDescriptorW, GetSecurityInfo,
                 SDDL_REVISION_1, SE_FILE_OBJECT,
             },
             CONTAINER_INHERIT_ACE, CreateWellKnownSid, DACL_SECURITY_INFORMATION, EqualSid, GetAce,
@@ -606,10 +606,26 @@ mod private_acl {
             ));
         }
         name.push(0);
-        // Protected DACL: the object's owner and SYSTEM only; inherited by children.
-        let descriptor_text: Vec<u16> = "D:P(A;OICI;FA;;;OW)(A;OICI;FA;;;SY)\0"
-            .encode_utf16()
-            .collect();
+        // Elevated tokens may default to Administrators as their object owner.
+        // Bind the fresh directory to this exact TokenUser, as required by the
+        // existing readback check, without relaxing its protected DACL.
+        let (_user_storage, user) = current_user_sid()?;
+        let mut user_text = std::ptr::null_mut();
+        // SAFETY: the live token buffer contains a valid SID; the API allocates
+        // its terminated text and the allocation is released by this frame.
+        if unsafe { ConvertSidToStringSidW(user, &mut user_text) } == 0 {
+            return Err(io::Error::last_os_error());
+        }
+        let _user_text = OwnedSecurityDescriptor(user_text.cast());
+        let mut length = 0usize;
+        while length < 256 && unsafe { *user_text.add(length) } != 0 { length += 1; }
+        if length == 256 { return Err(denied()); }
+        // SAFETY: ConvertSidToStringSidW owns this valid terminated text for
+        // the complete bounded copy; no pointer is retained in the SDDL.
+        let user = String::from_utf16(unsafe { std::slice::from_raw_parts(user_text,length) })
+            .map_err(|_| denied())?;
+        let descriptor_text: Vec<u16> = format!("O:{user}D:P(A;OICI;FA;;;OW)(A;OICI;FA;;;SY)\0")
+            .encode_utf16().collect();
         let mut descriptor = std::ptr::null_mut();
         // SAFETY: terminated UTF-16 input is alive; Win32 initializes the output allocation.
         if unsafe {

@@ -1,6 +1,9 @@
 //! Explicit privileged helper for one ordinary user's exact loopback gate.
 //! This command does not load an installation, login or private service grant.
+#[cfg(target_os = "linux")]
 use nestlink_platform_security::local_port_gate::{GateOwner, GatePlan, wall_ms};
+#[cfg(windows)]
+use nestlink_privileged::windows::local_port_gate::{GateOwner, GatePlan, wall_ms};
 use std::{io, path::PathBuf, time::Duration};
 
 #[derive(clap::Args)]

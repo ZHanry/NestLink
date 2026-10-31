@@ -3,8 +3,9 @@
 Implementation: W19/AC32 and the DNS ownership portion of W22/AC36. Current
 status: source implementation awaiting hosted execution and target qualification.
 The resolver exposes current active devices in the signed-in account only.
-Names do not grant IP or service access. This feature does not install TUN or
-routes, and it does not provide cross-account private-name access.
+Names do not grant IP or service access. This feature does not install TUN,
+network export or default routes, and it does not provide cross-account
+private-name access.
 
 ## Start the normal resolver and review a public plan
 
@@ -62,7 +63,13 @@ resolver already using its `127.0.0.53` stub. These prerequisites are detected;
 NestLink does not edit `resolv.conf` or install OS components. Unsupported DNS
 managers and insufficient privileges are errors. On Linux a unique tagged dummy
 link holds only this route-only DNS suffix and loopback server. Its default DNS
-route, LLMNR and mDNS are disabled. Existing physical/VPN interfaces are unused.
+route, LLMNR and mDNS are disabled. To satisfy resolved's DNS-scope eligibility,
+it also owns one deterministically derived random ULA `/128` and that address's
+exact kernel local host route. Automatic IPv6 addressing and connected prefix
+routes are disabled. Existing IPv6 address and non-default route prefix overlap
+causes rejection before link creation, including overlap with another VPN's ULA
+range. Existing physical/VPN interfaces are unused; actual DNS traffic goes
+through the loopback interface to the selected resolver.
 
 The helper refuses an existing overlapping private DNS namespace. It never
 replaces another NRPT rule, global DNS server, physical interface, VPN domain or

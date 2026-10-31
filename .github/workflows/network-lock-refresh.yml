@@ -108,6 +108,10 @@ jobs:
                   ('ipnet', '2.12.2'): {'serde'},
                   ('once_cell', '1.21.4'): {'critical-section', 'portable-atomic'},
                   ('url', '2.5.8'): {'serde_derive'},
+                  # Existing reqwest cookie Jar; only these two optional edges
+                  # are activated. New transitive identities are reviewed from
+                  # the retained derivation receipt before importing a lock.
+                  ('reqwest', '0.12.28'): {'cookie', 'cookie_store'},
               }
               feature_keys = set()
               for key, part in generated_blocks:
@@ -153,9 +157,10 @@ jobs:
                   'native_stdio_reuses_locked_tokio_util_identity': any(
                       item['name'] == 'nestlink-platform-security' and 'tokio-util' in item.get('dependencies', [])
                       for item in after) and any(key[:2] == ('tokio-util', '0.7.20') for key in existing),
-                  'only_reviewed_socks_component_new_external_packages': all(
+                  'only_reviewed_proxy_cookie_component_new_external_packages': all(
                       identity(item) in existing or not item.get('source')
-                      or item['name'] == 'tokio-stream' for item in after),
+                      or item['name'] in {'tokio-stream', 'cookie', 'cookie_store',
+                                          'publicsuffix', 'psl-types'} for item in after),
               }
               assert all(assertions.values()), 'Unreviewed dependency drift or incomplete lock derivation'
           except Exception as error:

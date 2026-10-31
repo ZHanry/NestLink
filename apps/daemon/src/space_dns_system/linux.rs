@@ -1,8 +1,10 @@
 #![cfg(target_os = "linux")]
 use super::{DnsPlan, Journal, ProcessIdentity, Result, Value, command, io};
+use ipnet::Ipv6Net;
 use serde_json::json;
 use sha2::{Digest, Sha256};
 use std::{
+    net::Ipv6Addr,
     os::unix::fs::MetadataExt,
     path::{Path, PathBuf},
 };
@@ -197,6 +199,73 @@ pub(super) async fn preflight(plan: &DnsPlan) -> Result {
             .into());
         }
     }
+    let (addresses, routes) = tokio::try_join!(
+        ip(&["-6", "-j", "address", "show"]),
+        ip(&["-6", "-j", "route", "show", "table", "all"])
+    )?;
+    check_activation_conflicts(activation_address(plan), &addresses, &routes)?;
+    Ok(())
+}
+
+fn activation_address(plan: &DnsPlan) -> Ipv6Addr {
+    let digest = Sha256::digest(format!("NestLink:split-dns:scope-address:v1:{}", plan.marker()));
+    let mut bytes = [0_u8; 16];
+    bytes.copy_from_slice(&digest[..16]);
+    bytes[0] = 0xfd;
+    bytes[15] |= 1;
+    Ipv6Addr::from(bytes)
+}
+
+fn check_activation_conflicts(address: Ipv6Addr, interfaces: &Value, routes: &Value) -> Result {
+    let interfaces = interfaces
+        .as_array()
+        .filter(|rows| rows.len() <= 128)
+        .ok_or_else(|| io::Error::other("invalid/bounded IPv6 interface observation"))?;
+    for interface in interfaces {
+        let addresses = interface["addr_info"]
+            .as_array()
+            .filter(|rows| rows.len() <= 128)
+            .ok_or_else(|| io::Error::other("invalid/bounded IPv6 address observation"))?;
+        for observed in addresses {
+            let local: Ipv6Addr = observed["local"]
+                .as_str()
+                .ok_or_else(|| io::Error::other("IPv6 address missing"))?
+                .parse()?;
+            let prefix = observed["prefixlen"]
+                .as_u64()
+                .and_then(|prefix| u8::try_from(prefix).ok())
+                .ok_or_else(|| io::Error::other("IPv6 address prefix missing"))?;
+            let network = Ipv6Net::new(local, prefix)?;
+            if observed["family"] != "inet6" || network.contains(&address) {
+                return Err(io::Error::other(format!(
+                    "private DNS scope address {address}/128 conflicts with an existing interface prefix; no existing address is changed"
+                ))
+                .into());
+            }
+        }
+    }
+    let routes = routes
+        .as_array()
+        .filter(|rows| rows.len() <= 4096)
+        .ok_or_else(|| io::Error::other("invalid/bounded IPv6 route observation"))?;
+    for route in routes {
+        let destination = route["dst"]
+            .as_str()
+            .ok_or_else(|| io::Error::other("IPv6 route destination missing"))?;
+        if matches!(destination, "default" | "::/0") {
+            continue;
+        }
+        let network = match destination.parse::<Ipv6Net>() {
+            Ok(network) => network,
+            Err(_) => Ipv6Net::new(destination.parse()?, 128)?,
+        };
+        if network.contains(&address) {
+            return Err(io::Error::other(format!(
+                "private DNS scope address {address}/128 conflicts with an existing route prefix; no VPN or system route is replaced"
+            ))
+            .into());
+        }
+    }
     Ok(())
 }
 
@@ -286,7 +355,8 @@ pub(super) async fn inspect(plan: &DnsPlan) -> Result<Option<Value>> {
     .parse()?;
     let configuration = json!({"ifindex":index,"ifname":link["ifname"],"ifalias":link["ifalias"],"linkinfo":{"info_kind":link["linkinfo"]["info_kind"]},"mtu":link["mtu"],"address":link["address"],"broadcast":link["broadcast"],"flags":flags,"ipv6_addr_gen_mode":address_generation});
     // The kernel's automatic IPv6 multicast route is intrinsic to an UP dummy
-    // link. Any unicast/export route or configured address is an external use.
+    // link. Retain every other route: only the exact owner ULA's local /128
+    // route is accepted below, and no exported prefix route is permitted.
     let routes6 = routes6
         .as_array()
         .ok_or_else(|| io::Error::other("invalid IPv6 route observation"))?
@@ -309,6 +379,12 @@ fn dns_value(plan: &DnsPlan) -> Value {
 fn domains_value(plan: &DnsPlan) -> Value {
     json!([[plan.suffix, true]])
 }
+fn addresses_value(plan: &DnsPlan) -> Value {
+    json!([{"family":"inet6","local":activation_address(plan).to_string(),"prefixlen":128,"scope":"global","nodad":true,"noprefixroute":true,"valid_life_time":u32::MAX,"preferred_life_time":u32::MAX}])
+}
+fn routes6_value(plan: &DnsPlan) -> Value {
+    json!([{"type":"local","dst":activation_address(plan).to_string(),"table":"local","protocol":"kernel","metric":0,"flags":[],"pref":"medium"}])
+}
 fn safe_partial(plan: &DnsPlan, current: &Value) -> bool {
     let link = &current["link"];
     let dns = &current["dns"];
@@ -320,9 +396,9 @@ fn safe_partial(plan: &DnsPlan, current: &Value) -> bool {
         && (dns == &empty || dns == &dns_value(plan))
         && (domains == &empty || domains == &domains_value(plan))
         && (dns == &empty || current["default_route"] == false)
-        && current["addresses"].as_array().is_some_and(Vec::is_empty)
+        && (current["addresses"] == empty || current["addresses"] == addresses_value(plan))
         && current["routes4"].as_array().is_some_and(Vec::is_empty)
-        && current["routes6"].as_array().is_some_and(Vec::is_empty)
+        && (current["routes6"] == empty || current["routes6"] == routes6_value(plan))
 }
 pub(super) fn verify_installed(plan: &DnsPlan, current: &Value) -> Result {
     if !safe_partial(plan, current)
@@ -333,6 +409,8 @@ pub(super) fn verify_installed(plan: &DnsPlan, current: &Value) -> Result {
         || current["mdns"] != "no"
         || current["dnssec"] != "no"
         || current["tls"] != "no"
+        || current["addresses"] != addresses_value(plan)
+        || current["routes6"] != routes6_value(plan)
         || current["link"]["ipv6_addr_gen_mode"] != 1
         || !current["link"]["flags"]
             .as_array()
@@ -443,6 +521,28 @@ pub(super) async fn install(plan: &DnsPlan) -> Result {
         )
         .into());
     }
+    // resolved creates a unicast DNS scope only for an UP link with a
+    // non-tentative, globally scoped address. The owner-derived ULA has no
+    // exported prefix route; the kernel owns only its exact local /128 route.
+    run(
+        "ip",
+        [
+            "-6",
+            "address",
+            "add",
+            &format!("{}/128", activation_address(plan)),
+            "dev",
+            &link,
+            "scope",
+            "global",
+            "nodad",
+            "noprefixroute",
+        ]
+        .iter()
+        .map(|argument| (*argument).into())
+        .collect(),
+    )
+    .await?;
     // Wait for resolved's netlink observer to create its Link object. The
     // interface is still DOWN and has no DNS server during this handoff.
     tokio::time::timeout(std::time::Duration::from_secs(3), async {
@@ -646,6 +746,31 @@ pub(super) async fn native_restore_owned(plan: &DnsPlan, expected: &Value) -> Re
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn dns_scope_address_refuses_existing_address_and_nondefault_vpn_route_prefixes() -> Result {
+        let selected = "fd84:5612:3423:7856::7".parse()?;
+        let empty = json!([]);
+        check_activation_conflicts(
+            selected,
+            &empty,
+            &json!([{"dst":"default"},{"dst":"::/0"},{"dst":"fd99:9999::/32"}]),
+        )?;
+        for addresses in [
+            json!([{"addr_info":[{"family":"inet6","local":"fd84:5612:3423:7856::2","prefixlen":64}]}]),
+            json!([{"addr_info":[{"family":"inet6","local":selected.to_string(),"prefixlen":128}]}]),
+        ] {
+            assert!(check_activation_conflicts(selected, &addresses, &empty).is_err());
+        }
+        for destination in ["fd00::/8", "fd84:5612::/32", "fd84:5612:3423:7856::7", "malformed"] {
+            assert!(
+                check_activation_conflicts(selected, &empty, &json!([{"dst":destination}])).is_err(),
+                "destination {destination}"
+            );
+        }
+        assert!(check_activation_conflicts(selected, &empty, &json!([{}])).is_err());
+        Ok(())
+    }
+
     #[test]
     fn resolved_link_paths_escape_the_leading_decimal_digit() {
         for (index, path) in [

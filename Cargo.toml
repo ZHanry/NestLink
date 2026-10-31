@@ -100,6 +100,8 @@ base64 = "0.22.1"
 subtle = "2.6.1"
 tokio = { version = "1.53.3", features = ["rt-multi-thread", "macros", "net", "signal", "time", "sync", "io-util"] }
 axum = { version = "0.8.6", features = ["ws"] }
+hyper = { version = "=1.12.0", features = ["client", "server", "http1"] }
+hyper-util = { version = "=0.1.21", features = ["tokio"] }
 tower = { version = "0.5.2", features = ["util"] }
 clap = { version = "4.5.50", features = ["derive"] }
 toml = "0.9.8"
