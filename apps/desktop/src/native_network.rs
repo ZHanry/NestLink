@@ -1,7 +1,9 @@
 //! Local dialing consent, separate from administrator forwarding policy.
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use eframe::egui;
-use nestlink_app_core::{NativeNetworkError, NativeNetworkSettings, NativeSpacePathSettings, Snapshot};
+use nestlink_app_core::{
+    NativeNetworkError, NativeNetworkSettings, NativeSpacePathSettings, Snapshot,
+};
 use nestlink_app_ipc::wire::Command;
 
 #[derive(Default, Clone, Copy, PartialEq, Eq)]
@@ -33,8 +35,11 @@ pub(crate) struct NativeNetworkPanel {
 
 impl NativeNetworkPanel {
     fn edited_space(&self) -> Option<NativeSpacePathSettings> {
-        let authority_key = URL_SAFE_NO_PAD.decode(self.route_authority.trim()).ok()?
-            .try_into().ok()?;
+        let authority_key = URL_SAFE_NO_PAD
+            .decode(self.route_authority.trim())
+            .ok()?
+            .try_into()
+            .ok()?;
         Some(NativeSpacePathSettings {
             deployment_id: self.route_deployment.trim().into(),
             space_id: self.route_space.trim().into(),
