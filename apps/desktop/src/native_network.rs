@@ -2,6 +2,7 @@
 use eframe::egui;
 use nestlink_app_core::{NativeNetworkError, NativeNetworkSettings, Snapshot};
 use nestlink_app_ipc::wire::Command;
+use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 
 #[derive(Default)]
 pub(crate) struct NativeNetworkPanel {
@@ -10,6 +11,13 @@ pub(crate) struct NativeNetworkPanel {
     use_deployment_stun: bool,
     enable_pcp: bool,
     pcp_gateway: String,
+    enable_route_set: bool,
+    route_deployment: String,
+    route_space: String,
+    route_authority: String,
+    route_controller_membership: String,
+    route_host_membership: String,
+    route_nodes: [String;2],
     approved: bool,
     pending: bool,
     message: Option<NativeNetworkError>,
@@ -43,11 +51,20 @@ impl NativeNetworkPanel {
                 .map(|gateway| gateway.to_string())
                 .unwrap_or_default();
             self.approved = false;
+            self.enable_route_set = snapshot.native_network.route_set.is_some();
+            if let Some(route) = &snapshot.native_network.route_set {
+                self.route_deployment = route.deployment_id.clone();
+                self.route_space = route.space_id.clone();
+                self.route_authority = URL_SAFE_NO_PAD.encode(route.authority_key);
+                self.route_controller_membership = route.controller_membership_grant_id.clone();
+                self.route_host_membership = route.host_membership_grant_id.clone();
+                self.route_nodes = route.node_ids.clone();
+            }
             self.pending = false;
         }
         let t = |zh, en| if english { en } else { zh };
         let mut command = None;
-        egui::CollapsingHeader::new(t("本机直连网络", "Local direct connections"))
+        egui::CollapsingHeader::new(t("本机连接网络", "Local connection network"))
             .show(ui, |ui| {
                 ui.label(t(
                     "STUN 地址由已核验的控制中心提供。只有下面明确批准的内网可作为本机直连目标；服务器和对方设备不能扩大此范围。",
@@ -75,7 +92,39 @@ impl NativeNetworkPanel {
                     .hint_text("192.168.1.0/24\nfd12:3456::/32")).changed() {
                     self.approved = false;
                 }
+                if ui.checkbox(&mut self.enable_route_set, t("使用空间内批准的双中继与安全恢复", "Use approved space relays and safe recovery")).changed() {
+                    self.approved = false;
+                }
+                if self.enable_route_set {
+                    ui.label(t("在双方设备配置相同的空间、成员凭据和节点顺序。中继切换将清理旧输入和媒体后重新认证，恢复后重新选择共享屏幕。", "Configure the same space, memberships and node order on both devices. Recovery clears old input and media before fresh authentication. Select the shared screen again afterwards."));
+                    for (label,value) in [
+                        (t("部署 ID", "Deployment ID"), &mut self.route_deployment),
+                        (t("空间 ID", "Space ID"), &mut self.route_space),
+                        (t("空间公钥（base64url）", "Space public key (base64url)"), &mut self.route_authority),
+                        (t("控制端成员凭据 ID", "Controller membership grant ID"), &mut self.route_controller_membership),
+                        (t("被控端成员凭据 ID", "Host membership grant ID"), &mut self.route_host_membership),
+                    ] {
+                        ui.label(label);
+                        if ui.add(egui::TextEdit::singleline(value).char_limit(64)).changed() { self.approved = false; }
+                    }
+                    for (index,value) in self.route_nodes.iter_mut().enumerate() {
+                        ui.label(if index == 0 { t("主中继节点 ID", "Initial relay node ID") } else { t("备用中继节点 ID", "Standby relay node ID") });
+                        if ui.add(egui::TextEdit::singleline(value).char_limit(64)).changed() { self.approved = false; }
+                    }
+                }
+                let route_set = if self.enable_route_set {
+                    URL_SAFE_NO_PAD.decode(self.route_authority.trim()).ok()
+                        .and_then(|bytes| <[u8;32]>::try_from(bytes).ok())
+                        .map(|authority_key| nestlink_app_core::NativeRouteSetSettings {
+                            deployment_id: self.route_deployment.trim().into(), space_id:self.route_space.trim().into(), authority_key,
+                            controller_membership_grant_id:self.route_controller_membership.trim().into(),
+                            host_membership_grant_id:self.route_host_membership.trim().into(),
+                            node_ids:self.route_nodes.clone().map(|id| id.trim().to_owned()),
+                        })
+                } else { None };
+                let route_valid = !self.enable_route_set || route_set.as_ref().is_some_and(|route| route.validate().is_ok());
                 let settings = NativeNetworkSettings {
+                    route_set,
                     media_route: snapshot.native_network.media_route,
                     media_interface_index: snapshot.native_network.media_interface_index,
                     use_deployment_stun: self.use_deployment_stun,
@@ -85,7 +134,10 @@ impl NativeNetworkPanel {
                 };
                 let pcp_valid = !self.enable_pcp
                     || settings.pcp_gateway.is_some_and(|gateway| gateway.is_private());
-                let valid = settings.validate().is_ok() && pcp_valid;
+                let valid = settings.validate().is_ok() && pcp_valid && route_valid;
+                if !route_valid || (self.enable_route_set && self.enable_pcp) {
+                    ui.colored_label(ui.visuals().error_fg_color, t("双中继需要有效部署、空间、公钥、两个成员凭据及不同节点，并需关闭 PCP。", "Space relays require valid deployment, space, public key, two memberships and distinct nodes, with PCP disabled."));
+                }
                 if !valid {
                     ui.colored_label(ui.visuals().error_fg_color, if !pcp_valid {
                         t("请输入明确批准的私有 PCP 网关 IPv4 地址，例如 192.168.1.1。", "Enter the explicitly approved private PCP gateway IPv4 address, such as 192.168.1.1.")
@@ -97,7 +149,7 @@ impl NativeNetworkPanel {
                     });
                 }
                 let changed = settings != snapshot.native_network || snapshot.native_network_durable == Some(false);
-                ui.checkbox(&mut self.approved, t("我批准此设备使用上面的内网和端口映射设置", "I approve this device using the private network and port mapping settings above"));
+                ui.checkbox(&mut self.approved, t("我批准此设备使用上面的网络设置", "I approve this device using the network settings above"));
                 ui.small(t("请先停止当前远控或共享。更改保存后用于后续会话。", "Stop current remote or sharing sessions first. Saved changes apply to subsequent sessions."));
                 if ui.add_enabled(valid && changed && self.approved && !self.pending,
                     egui::Button::new(t("保存本机批准", "Save local consent"))).clicked() {

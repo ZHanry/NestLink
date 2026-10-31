@@ -11,6 +11,7 @@ use nestlink_protocol::{
 };
 use rusqlite::{Connection, OptionalExtension, params};
 use std::{path::Path, sync::Mutex, time::Duration};
+mod private;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -152,6 +153,11 @@ impl ServiceUsageStore {
                 report_json TEXT NOT NULL CHECK(json_valid(report_json) AND length(report_json)<=32768),
                 ack_json TEXT CHECK(ack_json IS NULL OR (json_valid(ack_json) AND length(ack_json)<=32768)),
                 PRIMARY KEY(grant_id,report_sequence)
+            ) STRICT;
+            CREATE TABLE IF NOT EXISTS service_usage_local_private(
+                grant_id TEXT PRIMARY KEY REFERENCES service_usage_local_grants(grant_id),
+                lease_json TEXT NOT NULL CHECK(json_valid(lease_json) AND length(lease_json)<=262144),
+                issuer BLOB NOT NULL CHECK(length(issuer)=32)
             ) STRICT;",
         )?;
         let has_drain_confirmed: bool = connection.query_row(
@@ -187,6 +193,10 @@ impl ServiceUsageStore {
     }
 
     pub fn activate(&self, lease: &VerifiedServiceLease) -> Result<Highwater, Error> {
+        self.activate_inner(lease, None)
+    }
+    fn activate_inner(&self, lease: &VerifiedServiceLease,
+        private: Option<(String, [u8;32])>) -> Result<Highwater, Error> {
         let c = lease.claims();
         let signed = &c.usage_grant;
         let grant: ServiceUsageBudgetGrantClaims =
@@ -225,6 +235,14 @@ impl ServiceUsageStore {
                 "INSERT INTO service_usage_local_grants(grant_id,grant_sha256,grant_json,publication_id,publication_generation,edge_runtime_id,edge_runtime_generation,grant_bytes,maximum_connections,report_sha256) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)",
                 params![grant.grant_id,grant_digest,grant_json,grant.publication_id,grant.publication_generation,grant.edge_runtime_id,grant.edge_runtime_generation,grant.byte_ceiling,c.definition.limits.maximum_connections,[0u8;32].as_slice()],
             )?;
+        }
+        if let Some((json, issuer)) = private {
+            tx.execute("INSERT INTO service_usage_local_private(grant_id,lease_json,issuer) VALUES(?1,?2,?3) ON CONFLICT(grant_id) DO NOTHING",
+                params![grant.grant_id,json,issuer])?;
+            let (stored,stored_issuer):(String,Vec<u8>) = tx.query_row(
+                "SELECT lease_json,issuer FROM service_usage_local_private WHERE grant_id=?1", [&grant.grant_id],
+                |r|Ok((r.get(0)?,r.get(1)?)))?;
+            if stored != json || stored_issuer.as_slice() != issuer { return Err(fenced()); }
         }
         let result = Self::highwater(&tx, &grant.grant_id)?;
         tx.commit()?;
@@ -349,7 +367,7 @@ impl ServiceUsageStore {
     pub fn snapshots(&self, runtime_id: &str) -> Result<Vec<GrantSnapshot>, Error> {
         let connection = self.connection.lock().map_err(|_| fenced())?;
         let mut statement = connection.prepare(
-            "SELECT grant_id,grant_sha256,grant_json,admitted_bytes,opened_connections,closed_connections,report_sequence,report_sha256,stop_requested,drain_confirmed FROM service_usage_local_grants WHERE edge_runtime_id=?1 AND terminal=0 ORDER BY grant_id",
+            "SELECT grant_id,grant_sha256,grant_json,admitted_bytes,opened_connections,closed_connections,report_sequence,report_sha256,stop_requested,drain_confirmed FROM service_usage_local_grants WHERE edge_runtime_id=?1 AND terminal=0 AND NOT EXISTS(SELECT 1 FROM service_usage_local_private p WHERE p.grant_id=service_usage_local_grants.grant_id) ORDER BY grant_id",
         )?;
         let rows = statement
             .query_map([runtime_id], |row| {

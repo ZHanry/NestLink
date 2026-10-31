@@ -52,12 +52,23 @@ struct RecoveryResponseFaults {
 impl RecoveryResponseFaults {
     fn take(&self, path: &str) -> bool {
         use std::sync::atomic::Ordering;
-        let flag = if path.ends_with("/reconnect/offer") { &self.offer }
-            else if path.ends_with("/reconnect/approve") { &self.approval }
-            else if path.ends_with("/reconnect") { &self.commit }
-            else if path.contains("/network/spaces/") && path.ends_with("/relays") { &self.reservation }
-            else { return false; };
-        if flag.swap(false,Ordering::SeqCst) { self.lost.fetch_add(1,Ordering::SeqCst); true } else { false }
+        let flag = if path.ends_with("/reconnect/offer") {
+            &self.offer
+        } else if path.ends_with("/reconnect/approve") {
+            &self.approval
+        } else if path.ends_with("/reconnect") {
+            &self.commit
+        } else if path.contains("/network/spaces/") && path.ends_with("/relays") {
+            &self.reservation
+        } else {
+            return false;
+        };
+        if flag.swap(false, Ordering::SeqCst) {
+            self.lost.fetch_add(1, Ordering::SeqCst);
+            true
+        } else {
+            false
+        }
     }
 }
 
@@ -150,23 +161,33 @@ impl Fixture {
             false,
         )?)
         .layer(axum::middleware::from_fn(report_management_rejection))
-        .layer(axum::middleware::from_fn(move |request: axum::extract::Request, next: axum::middleware::Next| {
-            let faults = faults.clone();
-            async move {
-                let post = request.method() == axum::http::Method::POST;
-                let path = request.uri().path().to_owned();
-                let response = next.run(request).await;
-                if post && response.status().is_success() && faults.take(&path) {
-                    let (mut parts,_) = response.into_parts();
-                    parts.headers.remove(axum::http::header::CONTENT_LENGTH);
-                    // Model a response whose acknowledgement cannot be read,
-                    // including the original empty 204 acknowledgement.
-                    parts.status = axum::http::StatusCode::OK;
-                    axum::response::Response::from_parts(parts,axum::body::Body::from_stream(
-                        futures_util::stream::once(async { Err::<Vec<u8>,io::Error>(io::Error::other("recovery fixture response lost after commit")) })))
-                } else { response }
-            }
-        }));
+        .layer(axum::middleware::from_fn(
+            move |request: axum::extract::Request, next: axum::middleware::Next| {
+                let faults = faults.clone();
+                async move {
+                    let post = request.method() == axum::http::Method::POST;
+                    let path = request.uri().path().to_owned();
+                    let response = next.run(request).await;
+                    if post && response.status().is_success() && faults.take(&path) {
+                        let (mut parts, _) = response.into_parts();
+                        parts.headers.remove(axum::http::header::CONTENT_LENGTH);
+                        // Model a response whose acknowledgement cannot be read,
+                        // including the original empty 204 acknowledgement.
+                        parts.status = axum::http::StatusCode::OK;
+                        axum::response::Response::from_parts(
+                            parts,
+                            axum::body::Body::from_stream(futures_util::stream::once(async {
+                                Err::<Vec<u8>, io::Error>(io::Error::other(
+                                    "recovery fixture response lost after commit",
+                                ))
+                            })),
+                        )
+                    } else {
+                        response
+                    }
+                }
+            },
+        ));
         let mut pending = PendingFixture {
             http_task: Some(tokio::spawn(async move {
                 let _ = axum::serve(http, app).await;

@@ -5,11 +5,15 @@ use tokio::io::AsyncReadExt;
 
 pub(super) async fn forward(
     prepared: PreparedLocalTunnel,
-    mut control: BiStream,
+    control: BiStream,
     context: ForwardContext,
-    mut packets: DatagramRoute,
+    packets: DatagramRoute,
 ) -> Result<(), SdkError> {
     let mapping = DatagramMapping::new(prepared).await?;
+    forward_mapping(mapping,control,&context.connection,packets).await
+}
+pub(crate) async fn forward_mapping(mapping: DatagramMapping,mut control:BiStream,
+    connection:&quinn::Connection,mut packets:DatagramRoute) -> Result<(),SdkError> {
     let maximum_age = tokio::time::sleep(Duration::from_secs(60));
     tokio::pin!(maximum_age);
     loop {
@@ -17,7 +21,7 @@ pub(super) async fn forward(
         tokio::select! {biased;
             _=mapping.wait_stopped()=>return Ok(()),
             _=&mut maximum_age=>return Ok(()),
-            _=context.connection.closed()=>return Ok(()),
+            _=connection.closed()=>return Ok(()),
             _=AsyncReadExt::read(&mut control,&mut unexpected)=>return Ok(()),
             packet=packets.receive()=>{
                 let Some(packet)=packet else{return Ok(())};
@@ -26,7 +30,7 @@ pub(super) async fn forward(
             },
             reply=mapping.receive_reply()=>{
                 let Ok(reply)=reply else{continue;};
-                let _=carrier::datagram::send(&context.connection,reply.encode()?);
+                let _=carrier::datagram::send(connection,reply.encode()?);
             },
         }
     }

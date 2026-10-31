@@ -11,6 +11,7 @@ use crate::{
 /// deployment. Private networks always require explicit local consent.
 #[derive(Clone)]
 pub struct NativeSessionConfig {
+    pub(crate) route_set: Option<crate::NativeRouteSetSettings>,
     /// Frozen for one local session and its recovery; never a forwarding grant.
     pub(crate) relay_node_id: Option<String>,
     /// Continue already approved native offers while the desktop is in the tray.
@@ -69,6 +70,7 @@ impl NativeSessionConfig {
 
     pub fn new(network: Arc<NetworkMonitor>) -> Self {
         Self {
+            route_set: None,
             relay_node_id: None,
             listen_for_native_requests: false,
             bind_address: SocketAddr::from(([0, 0, 0, 0], 0)),
@@ -180,12 +182,20 @@ impl NativeSessionConfig {
 
     pub fn network_settings(&self) -> NativeNetworkSettings {
         NativeNetworkSettings {
+            route_set: self.route_set.clone(),
             media_route: self.media_route,
             media_interface_index: self.media_interface_index,
             use_deployment_stun: self.use_deployment_stun,
             pcp_gateway: self.pcp_gateway,
             private_network_prefixes: self.private_network_prefixes.clone(),
         }
+    }
+
+    pub fn with_route_set(mut self, route_set: crate::NativeRouteSetSettings) -> Result<Self, NativeNetworkError> {
+        route_set.validate()?;
+        if self.relay_node_id.is_some() || self.pcp_gateway.is_some() { return Err(NativeNetworkError::Invalid); }
+        self.route_set = Some(route_set);
+        Ok(self)
     }
 
     pub fn with_network_settings_store(
@@ -199,6 +209,7 @@ impl NativeSessionConfig {
         self.media_interface_index = settings.media_interface_index;
         self.use_deployment_stun = settings.use_deployment_stun;
         self.pcp_gateway = settings.pcp_gateway;
+        self.route_set = settings.route_set;
         self.private_network_prefixes = settings.private_network_prefixes;
         self.network_settings_store = Some(store);
         Ok(self)
@@ -219,12 +230,15 @@ impl NativeSessionConfig {
         self.media_interface_index = settings.media_interface_index;
         self.use_deployment_stun = settings.use_deployment_stun;
         self.pcp_gateway = settings.pcp_gateway;
+        self.route_set = settings.route_set;
         self.private_network_prefixes = settings.private_network_prefixes;
         Ok(commit)
     }
 
     pub(crate) fn validate(&self) -> bool {
-        self.relay_node_id
+        self.network_settings().validate().is_ok()
+            && (self.route_set.is_none() || self.relay_node_id.is_none())
+            && self.relay_node_id
             .as_ref()
             .is_none_or(|id| nestlink_protocol::valid_id(id))
             && self.stun_servers.len() <= 4

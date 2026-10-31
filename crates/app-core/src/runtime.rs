@@ -20,6 +20,9 @@ mod native_network_control;
 mod native_quality;
 #[path = "runtime/native_recovery.rs"]
 mod native_recovery;
+#[path = "runtime/native_routed.rs"]
+mod native_routed;
+use native_routed::NativeConnection;
 mod native_renewal;
 #[path = "runtime/service_host.rs"]
 mod service_host;
@@ -1778,6 +1781,7 @@ impl AppCore {
             native_session_key: None,
             native_session_control: None,
             native_session_task: None,
+            native_route_poll: None,
             native_recovery: None,
             browser_host: None,
             service_host_preview: None,
@@ -2012,7 +2016,7 @@ enum Job {
     },
 }
 struct EstablishedNativeSession {
-    session: LegacyConnection,
+    session: NativeConnection,
     key: NativeSessionKey,
     recovery: NativeRecoveryContext,
 }
@@ -2027,11 +2031,21 @@ struct NativeRecoveryContext {
 }
 struct NativeRecoverySource {
     key: NativeSessionKey,
-    failed: NativeSession,
-    // Its lifecycle sender must outlive SDK budget extraction from `failed`.
-    endpoint: Box<LegacyEndpoint>,
+    transport: NativeRecoveryTransport,
     budget: nestlink_remote::ReconnectionBudget,
     context: NativeRecoveryContext,
+}
+enum NativeRecoveryTransport {
+    Legacy { failed: Box<NativeSession>, endpoint: Box<LegacyEndpoint> },
+    Original { session: Box<nestlink_sdk::network::routed::ContinuousRouteSetSession>, lifetime: native_routed::RouteLifetime },
+}
+impl NativeRecoverySource {
+    fn stop(&self, reason: StopReason) {
+        match &self.transport {
+            NativeRecoveryTransport::Legacy { failed, .. } => { let _ = failed.control.stop(reason); },
+            NativeRecoveryTransport::Original { session, .. } => { let _ = session.control().stop(reason); },
+        }
+    }
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct NativeSessionKey {
@@ -2112,6 +2126,7 @@ struct Actor {
     native_session_key: Option<NativeSessionKey>,
     native_session_control: Option<NativeSessionControl>,
     native_session_task: Option<JoinHandle<NativeSessionStop>>,
+    native_route_poll: Option<mpsc::Sender<native_routed::RoutePollRequest>>,
     native_recovery: Option<Box<NativeRecoverySource>>,
     browser_host: Option<BrowserHostRuntime>,
     service_host_preview: Option<PendingServiceHostPreview>,
@@ -2194,6 +2209,7 @@ impl Actor {
                 Step::Complete(job) => self.completed(*job),
                 Step::NativeStopped(stopped) => {
                     self.native_session_task = None;
+                    self.native_route_poll = None;
                     self.native_stopped(stopped.map(|stopped| *stopped));
                 }
                 Step::BrowserHost(Some(event)) => match *event {
@@ -4315,6 +4331,7 @@ impl Actor {
         let control = self.native_session_control.clone();
         let config = self.native.clone();
         let shared = self.shared.clone();
+        let route_poll = self.native_route_poll.clone();
         let cancellation = Arc::new(AtomicBool::new(false));
         let fence = sdk_call::DispatchFence {
             generation: self.shared.generation.clone(),
@@ -4334,6 +4351,7 @@ impl Actor {
             native_connection_generation: None,
             service_host_runtime_id: None,
             future: Box::pin(async move {
+                let client = native_routed::poll_owned(client, identity.clone(), fence.clone(), route_poll).await;
                 let result = native_renewal::poll(
                     &client,
                     &identity,
@@ -4412,7 +4430,7 @@ impl Actor {
             let _ = control.stop(reason);
         }
         if recovery_matches && let Some(source) = self.native_recovery.take() {
-            let _ = source.failed.control.stop(reason);
+            source.stop(reason);
         }
         if active_matches && let Some(active) = &mut self.active {
             active.cancelled = Some(OperationStatus::Cancelled);
@@ -4949,11 +4967,8 @@ impl Actor {
         match result {
             Ok(mut established) => {
                 let key = established.key.clone();
-                let control = established.session.control.clone();
-                let initial_quality = native_quality::selected_carrier(
-                    &established.session.candidate,
-                    established.session.uses_bilateral_ice(),
-                );
+                let control = established.session.control();
+                let initial_quality = established.session.quality();
                 let deadline_expired = established
                     .recovery
                     .deadline
@@ -4968,7 +4983,7 @@ impl Actor {
                 let media_timing = SessionMediaTiming::default();
                 let video_receiver = if accepted && key.controller_view_authorized {
                     match VideoReceiver::attach_advertised_channel_timed(
-                        &mut established.session.channels,
+                        established.session.channels(),
                         key.connection_generation,
                         media_timing.playout.clone(),
                     ) {
@@ -4995,8 +5010,8 @@ impl Actor {
                         execution: Mutex::new(None),
                         request_id: key.request_id.clone(),
                         connection_generation: key.connection_generation,
-                        sender: established.session.channels.sender(),
-                        lease: established.session.channels.lease_control(),
+                        sender: established.session.channels().sender(),
+                        lease: established.session.channels().lease_control(),
                         gate: Arc::new(HostVideoGate {
                             state: Mutex::new(HostVideoGateState::default()),
                         }),
@@ -5007,7 +5022,7 @@ impl Actor {
                             }),
                         }),
                         send_order: AsyncMutex::new(()),
-                        cursor: Mutex::new(NativeVideoCursor::default()),
+                        cursor: Mutex::new(NativeVideoCursor { keyframe_pending: true, ..NativeVideoCursor::default() }),
                         timing: media_timing.clone(),
                     }))
                 } else {
@@ -5017,7 +5032,7 @@ impl Actor {
                 let audio_route = if accepted && key.audio_authorized {
                     match NativeAudioRoute::attach(
                         &self.shared,
-                        &mut established.session.channels,
+                        established.session.channels(),
                         &key,
                         self.view.generation,
                         media_timing,
@@ -5037,7 +5052,7 @@ impl Actor {
                 {
                     match NativeClipboardRoute::attach(
                         &self.shared,
-                        &mut established.session.channels,
+                        established.session.channels(),
                         &key,
                         self.view.generation,
                     ) {
@@ -5056,7 +5071,7 @@ impl Actor {
                     if accepted && (key.file_read_authorized || key.file_write_authorized) {
                         match NativeFilesRoute::attach(
                             &self.shared,
-                            &mut established.session.channels,
+                            established.session.channels(),
                             &key,
                             self.view.generation,
                         ) {
@@ -5072,7 +5087,7 @@ impl Actor {
                 self.shared.set_native_files_route(files_route.clone());
                 let input_route = if accepted && key.input_authorized {
                     match NativeInputRoute::attach(
-                        &mut established.session.channels,
+                        established.session.channels(),
                         &key,
                         self.view.generation,
                     ) {
@@ -5090,7 +5105,7 @@ impl Actor {
                     if accepted && (key.host_view_authorized || key.controller_view_authorized) {
                         match NativeDisplayRoute::attach(
                             &self.shared,
-                            &mut established.session.channels,
+                            established.session.channels(),
                             &key,
                             self.view.generation,
                         ) {
@@ -5110,10 +5125,12 @@ impl Actor {
                 let mut stop_key = key.clone();
                 let stop_control = self.native_session_control.clone();
                 let audio_owner_store = self.shared.clone();
+                let (route_poll, mut route_requests) = mpsc::channel(1);
+                self.native_route_poll = Some(route_poll);
                 self.native_session_task = Some(tokio::spawn(async move {
                     let recovery_context = established.recovery;
                     let mut session = established.session;
-                    let stopped = session.wait_stopped().await;
+                    let stopped = session.wait_owned(&mut route_requests, &recovery_context).await;
                     if let Some(control) = stop_control {
                         stop_key.lease_sequence = control.lease_sequence();
                     }
@@ -5498,6 +5515,16 @@ async fn establish_native_session(
     let address_policy = config
         .address_policy()
         .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?;
+    if config.route_set.is_some() {
+        let core_generation = fence.expected;
+        let session = native_routed::establish(client,identity,&config,permit,&peer_key,&key,options,fence).await?;
+        key.path = nestlink_protocol::Path::Relay as i32;
+        return Ok(EstablishedNativeSession {
+            session, key, recovery: NativeRecoveryContext {
+                config,peer_key,core_generation,server:client.server.clone(),deadline:None,
+            },
+        });
+    }
     let endpoint = if config.bind_address == std::net::SocketAddr::from(([0, 0, 0, 0], 0)) {
         NativeEndpoint::new_dual_stack_monitored(
             identity,
@@ -5532,7 +5559,7 @@ async fn establish_native_session(
     .await?;
     key.path = result.candidate.path() as i32;
     Ok(EstablishedNativeSession {
-        session: result,
+        session: NativeConnection::Legacy(Box::new(result)),
         key,
         recovery: NativeRecoveryContext {
             config,

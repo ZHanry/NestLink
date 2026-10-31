@@ -14,37 +14,65 @@ pub const NETWORK_RECOVERY_CAPABILITY: &str = "network-route-recovery-v1";
 /// availability is an observation and cannot change the agreed original group.
 pub fn route_set_fingerprint(path: &[u8], transits: [&[u8]; 2]) -> [u8; 32] {
     let mut bytes = b"NestLink/network/route-set-recovery/v1\0".to_vec();
-    for claims in [path, transits[0], transits[1]] { bytes.extend_from_slice(&digest(claims)); }
+    for claims in [path, transits[0], transits[1]] {
+        bytes.extend_from_slice(&digest(claims));
+    }
     digest(&bytes)
 }
 /// Stable independent request IDs. HTTP retries cannot allocate another slot,
 /// restore a consumed allocation, or restart a grant's lifetime.
-pub fn network_recovery_id(previous: &PermitClaims, choice: &ReconnectionChoice, purpose: &str) -> Result<String, ContractError> {
+pub fn network_recovery_id(
+    previous: &PermitClaims,
+    choice: &ReconnectionChoice,
+    purpose: &str,
+) -> Result<String, ContractError> {
     validate_choice(previous, choice)?;
-    if choice.network_recovery.is_none() || !["allocation", "connectivity", "path", "transit"].contains(&purpose) {
+    if choice.network_recovery.is_none()
+        || !["allocation", "connectivity", "path", "transit"].contains(&purpose)
+    {
         return Err(invalid());
     }
     let mut bytes = b"NestLink/network/recovery-request/v1\0".to_vec();
     bytes.extend_from_slice(purpose.as_bytes());
     bytes.extend_from_slice(&serde_json::to_vec(choice).map_err(|_| invalid())?);
     let hash = digest(&bytes);
-    let mut id: [u8;16] = hash[..16].try_into().map_err(|_| invalid())?;
+    let mut id: [u8; 16] = hash[..16].try_into().map_err(|_| invalid())?;
     id[6] = (id[6] & 0x0f) | 0x80;
     id[8] = (id[8] & 0x3f) | 0x80;
     Ok(uuid::Uuid::from_bytes(id).hyphenated().to_string())
 }
-pub fn validate_network_recovery(previous: &PermitClaims, choice: &nestlink_protocol::api::NetworkRouteRecoveryChoice) -> Result<(), ContractError> {
-    if choice.version != 1 || choice.capability != NETWORK_RECOVERY_CAPABILITY
+pub fn validate_network_recovery(
+    previous: &PermitClaims,
+    choice: &nestlink_protocol::api::NetworkRouteRecoveryChoice,
+) -> Result<(), ContractError> {
+    if choice.version != 1
+        || choice.capability != NETWORK_RECOVERY_CAPABILITY
         || choice.previous_path_epoch != 1
-        || !previous.paths.contains(&(nestlink_protocol::Path::Relay as i32))
-        || [&choice.space_id, &choice.route_set_id, &choice.path_grant_id, &choice.target_node_id]
-            .into_iter().any(|id| !nestlink_protocol::valid_id(id))
+        || !previous
+            .paths
+            .contains(&(nestlink_protocol::Path::Relay as i32))
+        || [
+            &choice.space_id,
+            &choice.route_set_id,
+            &choice.path_grant_id,
+            &choice.target_node_id,
+        ]
+        .into_iter()
+        .any(|id| !nestlink_protocol::valid_id(id))
         || choice.expires_at_unix_ms <= previous.issued_at_unix_ms
         || choice.expires_at_unix_ms > previous.expires_at_unix_ms
-    { return Err(invalid()); }
-    for encoded in [&choice.original_fingerprint, &choice.transport_group, &choice.target_route_binding] {
+    {
+        return Err(invalid());
+    }
+    for encoded in [
+        &choice.original_fingerprint,
+        &choice.transport_group,
+        &choice.target_route_binding,
+    ] {
         let bytes = URL_SAFE_NO_PAD.decode(encoded).map_err(|_| invalid())?;
-        if bytes.len() != 32 || URL_SAFE_NO_PAD.encode(&bytes) != *encoded { return Err(invalid()); }
+        if bytes.len() != 32 || URL_SAFE_NO_PAD.encode(&bytes) != *encoded {
+            return Err(invalid());
+        }
     }
     Ok(())
 }
@@ -66,7 +94,9 @@ pub fn validate_choice(
 ) -> Result<(), ContractError> {
     previous.validate()?;
     nonce(choice)?;
-    if let Some(recovery) = &choice.network_recovery { validate_network_recovery(previous, recovery)?; }
+    if let Some(recovery) = &choice.network_recovery {
+        validate_network_recovery(previous, recovery)?;
+    }
     if choice.previous_permit_sha256 != URL_SAFE_NO_PAD.encode(digest(&previous.encode_to_vec()))
         || previous.connection_generation.checked_add(1) != Some(choice.connection_generation)
         || previous.lease_sequence.checked_add(1) != Some(choice.lease_sequence)

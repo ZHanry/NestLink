@@ -45,7 +45,7 @@ struct Approval {
     proof: String,
     revoked: bool,
 }
-type ServiceRow = (String, String, u64, String, Vec<u8>, bool, String, String);
+type ServiceRow = (String, String, u64, String, Vec<u8>, bool, String, Option<String>);
 type ChallengeRow = (u64, u64, Vec<u8>, u64, u64);
 fn next(revision: u64) -> Result<u64, StorageError> {
     revision
@@ -88,7 +88,7 @@ impl Store {
         if !revision_valid(revision)
             || definition_digest(&definition)? != hash
             || definition.host_device_id != host
-            || definition.edge_node_id != edge
+            || definition.edge_node_id != edge.unwrap_or_default()
         {
             return Err(StorageError::Conflict);
         }
@@ -135,6 +135,9 @@ impl Store {
         {
             return Err(StorageError::Forbidden);
         }
+        if definition.edge_node_id.is_empty() {
+            return Ok(host.public_key);
+        }
         let roles: Option<String> = self
             .connection
             .query_row(
@@ -171,7 +174,7 @@ impl Store {
             || approval.policy != policy_revision
             || now_ms < approval.issued
             || now_ms >= approval.expires
-            || policy.may_publish().is_err()
+            || (!record.definition.edge_node_id.is_empty() && policy.may_publish().is_err())
             || !self.service_login_live(&record.account, &record.login, now)?
             || !self.service_login_live(&record.account, &approval.login, now)?
         {
@@ -313,7 +316,7 @@ impl Store {
         if account >= MAX_ACCOUNT_SERVICES || total >= MAX_SERVICE_RECORDS {
             return Err(StorageError::RateLimited);
         }
-        tx.execute("INSERT INTO services(id,account_id,management_session_id,host_device_id,edge_node_id,revision,definition_json,definition_sha256) VALUES(?1,?2,?3,?4,?5,1,?6,?7)",params![body.id,actor.account_id,actor.session_id,body.definition.host_device_id,body.definition.edge_node_id,serde_json::to_string(&body.definition)?,hash])?;
+        tx.execute("INSERT INTO services(id,account_id,management_session_id,host_device_id,edge_node_id,revision,definition_json,definition_sha256) VALUES(?1,?2,?3,?4,?5,1,?6,?7)",params![body.id,actor.account_id,actor.session_id,body.definition.host_device_id,(!body.definition.edge_node_id.is_empty()).then_some(body.definition.edge_node_id.as_str()),serde_json::to_string(&body.definition)?,hash])?;
         auditing::record(
             &tx,
             "service_created",
@@ -340,7 +343,7 @@ impl Store {
             return Err(StorageError::Conflict);
         }
         self.service_endpoints(&actor.account_id, &body.definition, now)?;
-        if tx.execute("UPDATE services SET management_session_id=?1,host_device_id=?2,edge_node_id=?3,revision=?4,definition_json=?5,definition_sha256=?6 WHERE id=?7 AND revision=?8 AND revoked=0",params![actor.session_id,body.definition.host_device_id,body.definition.edge_node_id,revision,serde_json::to_string(&body.definition)?,hash,id,body.expected_revision])?!=1 {return Err(StorageError::Conflict);}
+        if tx.execute("UPDATE services SET management_session_id=?1,host_device_id=?2,edge_node_id=?3,revision=?4,definition_json=?5,definition_sha256=?6 WHERE id=?7 AND revision=?8 AND revoked=0",params![actor.session_id,body.definition.host_device_id,(!body.definition.edge_node_id.is_empty()).then_some(body.definition.edge_node_id.as_str()),revision,serde_json::to_string(&body.definition)?,hash,id,body.expected_revision])?!=1 {return Err(StorageError::Conflict);}
         tx.execute(
             "UPDATE service_target_approvals SET revoked=1 WHERE service_id=?1",
             [id],
@@ -412,7 +415,9 @@ impl Store {
             return Err(StorageError::Unauthorized);
         }
         let (policy_revision, policy) = self.policy()?;
-        policy.may_publish()?;
+        if !record.definition.edge_node_id.is_empty() {
+            policy.may_publish()?;
+        }
         let now_ms = unix_ms(now)?;
         let expires = now_ms
             .checked_add(SERVICE_CHALLENGE_MS)
@@ -464,7 +469,9 @@ impl Store {
             return Err(StorageError::Unauthorized);
         }
         let (policy_revision, policy) = self.policy()?;
-        policy.may_publish()?;
+        if !record.definition.edge_node_id.is_empty() {
+            policy.may_publish()?;
+        }
         let now_ms = unix_ms(now)?;
         let row:Option<ChallengeRow>=tx.query_row("SELECT policy_revision,security_epoch,nonce,issued_at,expires_at FROM service_approval_challenges WHERE id=?1 AND service_id=?2 AND account_id=?3 AND management_session_id=?4 AND service_revision=?5 AND consumed=0",params![body.challenge_id,id,actor.account_id,actor.session_id,record.revision],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?,r.get(4)?))).optional()?;
         let (old_policy, epoch, nonce, issued, expires) = row.ok_or(StorageError::Conflict)?;

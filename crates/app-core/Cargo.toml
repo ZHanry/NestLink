@@ -35,6 +35,9 @@ prost.workspace = true
 tokio.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+nestlink-node.workspace = true
+nestlink-transport-quic.workspace = true
+uuid.workspace = true
 if-addrs.workspace = true
 nestlink-media-codec.workspace = true
 nestlink-server = { path = "../../apps/server", version = "=0.7.0-rc.1" }

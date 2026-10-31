@@ -536,8 +536,8 @@ impl Store {
                 &record.definition.host_device_id,
                 DEVICE_BYTES,
             )?,
-            Self::quota_available(tx, "node", &record.definition.edge_node_id, NODE_BYTES)?,
-            Self::quota_available(tx, "resource", &record.id, requested)?,
+            Self::quota_available(tx, "node", record.definition.accounting_node_id(), NODE_BYTES)?,
+            Self::quota_available(tx, "resource", &record.id, record.definition.limits.maximum_bytes)?,
         ]
         .into_iter()
         .fold(requested, u64::min);
@@ -565,7 +565,7 @@ impl Store {
             account_id: record.account.clone(),
             host_device_id: record.definition.host_device_id.clone(),
             service_id: record.id.clone(),
-            edge_node_id: record.definition.edge_node_id.clone(),
+            edge_node_id: record.definition.accounting_node_id().into(),
             publication_id: publication_id.into(),
             publication_generation: generation,
             service_revision: record.revision,
@@ -1298,6 +1298,13 @@ impl Store {
         key: &str,
     ) -> Result<(), StorageError> {
         require_id(key)?;
+        if scope == ServiceQuotaScope::Node {
+            let exists: bool = tx.query_row(
+                "SELECT EXISTS(SELECT 1 FROM data_nodes WHERE id=?1) OR EXISTS(SELECT 1 FROM services WHERE host_device_id=?1 AND edge_node_id IS NULL)",
+                [key], |row| row.get(0),
+            )?;
+            return if exists { Ok(()) } else { Err(StorageError::Forbidden) };
+        }
         let table = match scope {
             ServiceQuotaScope::Account => "accounts",
             ServiceQuotaScope::Device => "devices",

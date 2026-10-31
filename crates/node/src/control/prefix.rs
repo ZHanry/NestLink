@@ -93,13 +93,21 @@ struct Binding {
 impl Binding {
     fn matches(&self, control: &NodeControl, authority: &NetworkNodeTopologyAuthority) -> bool {
         let mut normalized = authority.clone();
-        for (current, original) in normalized.neighbors.iter_mut().zip(&self.authority.neighbors) {
+        for (current, original) in normalized
+            .neighbors
+            .iter_mut()
+            .zip(&self.authority.neighbors)
+        {
             current.expires_at_ms = original.expires_at_ms;
         }
         std::ptr::eq(Arc::as_ptr(&self.control), control) && normalized == self.authority
     }
 
-    fn check(&self, control: &NodeControl, authority: &NetworkNodeTopologyAuthority) -> Result<(), Error> {
+    fn check(
+        &self,
+        control: &NodeControl,
+        authority: &NetworkNodeTopologyAuthority,
+    ) -> Result<(), Error> {
         if !self.matches(control, authority) {
             return Err(Error::Control);
         }
@@ -193,7 +201,8 @@ impl LocalPrefixOwner {
     /// Current observed TCP reachability, suitable for local status displays.
     /// A true value is neither forwarding authority nor a future guarantee.
     pub fn is_reachable(&self) -> bool {
-        self.evidence(&self.binding.control, &self.binding.authority).is_ok()
+        self.evidence(&self.binding.control, &self.binding.authority)
+            .is_ok()
     }
 
     pub(super) fn evidence(
@@ -250,11 +259,17 @@ impl LocalPrefixOwner {
         };
         task.abort();
         if Instant::now() >= deadline {
-            return Err(io::Error::new(io::ErrorKind::TimedOut, "local prefix probe release pending"));
+            return Err(io::Error::new(
+                io::ErrorKind::TimedOut,
+                "local prefix probe release pending",
+            ));
         }
-        let joined = tokio::time::timeout_at(deadline, task)
-            .await
-            .map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "local prefix probe release pending"))?;
+        let joined = tokio::time::timeout_at(deadline, task).await.map_err(|_| {
+            io::Error::new(
+                io::ErrorKind::TimedOut,
+                "local prefix probe release pending",
+            )
+        })?;
         self.task = None;
         if Instant::now() >= deadline {
             let message = "local prefix probe released after its cleanup deadline".to_owned();

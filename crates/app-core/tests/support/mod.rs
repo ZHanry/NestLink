@@ -33,6 +33,7 @@ pub fn seconds() -> Result<u64> {
 
 pub struct Server {
     pub config: ApprovedServer,
+    pub network_authority_key: [u8;32],
     forbidden_responses: Arc<std::sync::Mutex<Vec<String>>>,
     task: tokio::task::JoinHandle<()>,
 }
@@ -55,6 +56,7 @@ impl Server {
         let deployment_id = random_id();
         let signer = PermitSigner::generate();
         let permit_issuer = signer.public_key();
+        let network_authority_key = signer.network_authority_signer()?.public_key();
         let mut store = Store::in_memory(&deployment_id)?;
         store.bootstrap_admin("admin", PASSWORD)?;
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
@@ -114,6 +116,7 @@ impl Server {
             .await;
         });
         Ok(Self {
+            network_authority_key,
             config: ApprovedServer {
                 origin,
                 deployment_id,

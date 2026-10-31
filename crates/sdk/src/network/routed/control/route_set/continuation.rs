@@ -102,6 +102,32 @@ pub struct ContinuousRouteSetSession {
 }
 
 impl Sdk {
+    /// Product adapter for the existing native permission and media evidence
+    /// contract. It creates the same single continuous owner as SessionSetup.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn connect_continuing_network_remote_route_native(
+        &self, route: VerifiedRemoteRouteSet, selected: usize, bind: SocketAddr,
+        local: &DeviceIdentity, peer_key: &[u8;32], permit: VerifiedPermit,
+        options: crate::native::NativeSessionOptions,
+        media: Option<crate::native::NativeMediaEvidence>,
+        address_policy: &AddressPolicy, stop: watch::Receiver<Option<StopReason>>,
+        cancel: watch::Receiver<bool>, deadline: Instant,
+    ) -> Result<ContinuousRouteSetSession, SessionEstablishError> {
+        let role = if local.device_id == permit.claims().controller_device_id {
+            nestlink_session::EndpointRole::Controller
+        } else if local.device_id == permit.claims().host_device_id {
+            nestlink_session::EndpointRole::Host
+        } else { return Err(SdkError::Trust.into()); };
+        let clock = nestlink_remote::RuntimeClock::default();
+        let binding = crate::native_recovery::binding(&permit, &options.granted_permissions,
+            &options.supported_capabilities, options.local_paths, media.as_ref(), &local.device_id)?;
+        let session = nestlink_session::Session::activate(permit, binding, nestlink_protocol::Path::Relay,
+            0, clock.sample().map_err(RemoteError::from)?).map_err(SdkError::from)?;
+        self.connect_continuing_network_remote_route_candidate(route,selected,bind,local,peer_key,
+            SessionSetup { session, path: nestlink_protocol::Path::Relay, role, clock,
+                lifecycle: nestlink_remote::SessionLifecycle::new(stop) },
+            address_policy,cancel,deadline,QualityConstraints::default()).await
+    }
     /// Both endpoints must explicitly select the same original active member
     /// and drive their returned owners to prepare/probe the common standby.
     #[allow(clippy::too_many_arguments)]

@@ -1215,6 +1215,8 @@ pub struct ServiceLimits {
 pub struct ServiceDefinition {
     pub name: String,
     pub host_device_id: String,
+    /// Empty for an installation-hosted private-only service. Public access
+    /// still requires a registered edge; existing nonempty values are stable.
     pub edge_node_id: String,
     pub requested_ingress: ServiceIngress,
     /// An empty list denies all visitors; /0 is an explicit public choice.

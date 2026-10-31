@@ -10,6 +10,7 @@ use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
 };
+mod exposure;
 
 #[derive(Clone)]
 struct Editor {
@@ -103,7 +104,7 @@ impl Editor {
                 "Host device: select a valid device.",
             ));
         }
-        if !nestlink_protocol::valid_id(&self.edge) {
+        if !self.edge.is_empty() && !nestlink_protocol::valid_id(&self.edge) {
             return Err(t(
                 "边缘节点：请选择有效节点。",
                 "Edge node: select a valid node.",
@@ -496,6 +497,7 @@ pub(super) fn ServicesPanel(
                     </super::TaskDialog>
                 </Show>
             </section>
+            <exposure::ServiceExposurePanel api page session_revision auth_failure />
             <aside class="tunnel-guide" aria-label=move || t("发布流程", "Publishing steps")>
                 <h2>{move || t("从内网到访问入口", "From internal service to ingress")}</h2>
                 <ol><li><strong>{move || t("配置入口", "Configure ingress")}</strong><p>{move || t("选择已登记的主机、边缘节点和协议。", "Choose a registered host, edge node, and protocol.")}</p></li><li><strong>{move || t("主机确认目标", "Approve the target")}</strong><p>{move || t("在 Windows 客户端选择内网地址并批准。", "Choose and approve the internal address in the Windows client.")}</p></li><li><strong>{move || t("核对发布状态", "Check publication")}</strong><p>{move || t("以服务返回的发布状态为准；保存配置不等于已发布。", "Use the service's reported publication status. Saving a configuration does not publish it.")}</p></li></ol>
@@ -513,8 +515,8 @@ pub(super) fn ServicesPanel(
                                 <input list="service-host-options" required=true prop:value=move || editor.with(|v| v.as_ref().map(|v| v.host.clone()).unwrap_or_default()) on:input=move |event| editor.update(|v| if let Some(v) = v { v.host = event_target_value(&event); }) />
                             </label>
                             <datalist id="service-host-options"><For each=move || hosts.get() key=|v| v.0.clone() children=move |(id,name)| view! { <option value=id>{name}</option> } /></datalist>
-                            <label>{move || t("边缘节点（输入名称搜索）", "Edge node (search by name)")}
-                                <input list="service-edge-options" required=true prop:value=move || editor.with(|v| v.as_ref().map(|v| v.edge.clone()).unwrap_or_default()) on:input=move |event| editor.update(|v| if let Some(v) = v { v.edge = event_target_value(&event); }) />
+                            <label>{move || t("公网边缘节点（私有服务可留空）", "Public edge node (leave empty for private services)")}
+                                <input list="service-edge-options" prop:value=move || editor.with(|v| v.as_ref().map(|v| v.edge.clone()).unwrap_or_default()) on:input=move |event| editor.update(|v| if let Some(v) = v { v.edge = event_target_value(&event); }) />
                             </label>
                             <datalist id="service-edge-options"><For each=move || edges.get() key=|v| v.0.clone() children=move |(id,name)| view! { <option value=id>{name}</option> } /></datalist>
                             </section>

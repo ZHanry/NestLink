@@ -20,8 +20,8 @@ mod remote_relays;
 pub use remote_relays::{NetworkRemoteRelayBundle, NetworkRemoteRelayIssuance};
 mod remote_chains;
 pub use remote_chains::{NetworkRemoteRelayChainBundle, NetworkRemoteRelayChainIssuance};
-mod route_sets;
 mod recovery;
+mod route_sets;
 pub use route_sets::{
     NetworkRemoteRouteSetBundle, NetworkRemoteRouteSetIssuance, NetworkRemoteRouteSetMemberBundle,
 };

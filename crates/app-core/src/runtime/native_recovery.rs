@@ -16,7 +16,7 @@ fn recoverable_stop(stopped: &NativeSessionStop, owner_pending: bool) -> bool {
 }
 
 pub(super) fn retain_source(
-    failed: LegacyConnection,
+    failed: NativeConnection,
     context: NativeRecoveryContext,
     stopped: &NativeSessionStop,
     owner_pending: bool,
@@ -24,12 +24,23 @@ pub(super) fn retain_source(
     if !recoverable_stop(stopped, owner_pending) {
         return None;
     }
-    let (failed, endpoint) = failed.into_stopped_parts().ok()?;
+    let (transport, budget) = match failed {
+        NativeConnection::Legacy(failed) => {
+            let (failed, endpoint) = (*failed).into_stopped_parts().ok()?;
+            let budget = failed.channels.lease_control().reconnection_budget().ok()?;
+            (NativeRecoveryTransport::Legacy { failed: Box::new(failed), endpoint: Box::new(endpoint) }, budget)
+        },
+        NativeConnection::Original { mut session, lifetime } => {
+            let budget = session.channels().lease_control().reconnection_budget().ok()?;
+            (NativeRecoveryTransport::Original { session, lifetime }, budget)
+        },
+        // This first safe-recovery contract authorizes one successor only.
+        NativeConnection::Recovered { .. } => return None,
+    };
     // All input/media/business cleanup has completed before this extraction.
     // The retained endpoint keeps the original network observer live, and the
     // retained session keeps its outside-stop observer live while Core waits
     // for the management client to return from an earlier operation.
-    let budget = failed.channels.lease_control().reconnection_budget().ok()?;
     if budget.deadline() <= Instant::now()
         || context
             .deadline
@@ -39,8 +50,7 @@ pub(super) fn retain_source(
     }
     Some(Box::new(NativeRecoverySource {
         key: stopped.key.clone(),
-        failed,
-        endpoint: Box::new(endpoint),
+        transport,
         budget,
         context,
     }))
@@ -119,7 +129,7 @@ impl Actor {
             || self.local_stop_reason.is_some()
         {
             if let Some(source) = self.native_recovery.take() {
-                let _ = source.failed.control.stop(StopReason::ExplicitExit);
+                source.stop(StopReason::ExplicitExit);
             }
             self.set_native_recovery_terminal(None);
             self.publish();
@@ -300,6 +310,31 @@ pub(super) fn authorize_native_session(
     Ok((key, options))
 }
 
+pub(super) async fn prepare_media(
+    client: &Client,
+    identity: &DeviceIdentity,
+    config: &NativeSessionConfig,
+    permit: &VerifiedPermit,
+    fence: &sdk_call::DispatchFence,
+) -> Result<Option<nestlink_sdk::native::NativeMediaEvidence>, Failure> {
+    if nestlink_protocol::media_authority::permit_formats(permit.claims())
+        .map_err(|_| Failure::local(FailureKind::Trust))?.is_none() { return Ok(None); }
+    let provider = config.media_provider.as_ref()
+        .ok_or_else(|| Failure::local(FailureKind::NativeSessionUnavailable))?;
+    let direction = if identity.device_id == permit.claims().controller_device_id {
+        nestlink_protocol::media_authority::MediaDirection::Decode
+    } else { nestlink_protocol::media_authority::MediaDirection::Encode };
+    let local = provider.publish(&client.sdk,identity,direction,fence).await
+        .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?;
+    fence.check()?;
+    let frozen = client.sdk.remote_media_scope(&permit.claims().session_id).await
+        .map_err(Failure::from)?.ok_or_else(|| Failure::local(FailureKind::Trust))?;
+    fence.check()?;
+    Ok(Some(nestlink_sdk::native::NativeMediaEvidence {
+        frozen,local,internal_candidate:config.internal_software_media_candidate.clone(),
+    }))
+}
+
 pub(super) async fn prove_endpoint(
     client: &Client,
     identity: &DeviceIdentity,
@@ -311,42 +346,7 @@ pub(super) async fn prove_endpoint(
 ) -> Result<LegacyConnection, Failure> {
     fence.check()?;
     let (cancel_sender, cancel_receiver) = watch::channel(false);
-    let media = if nestlink_protocol::media_authority::permit_formats(
-        endpoint.native().verified_permit().claims(),
-    )
-    .map_err(|_| Failure::local(FailureKind::Trust))?
-    .is_some()
-    {
-        let provider = config
-            .media_provider
-            .as_ref()
-            .ok_or_else(|| Failure::local(FailureKind::NativeSessionUnavailable))?;
-        let claims = endpoint.native().verified_permit().claims();
-        let direction = if identity.device_id == claims.controller_device_id {
-            nestlink_protocol::media_authority::MediaDirection::Decode
-        } else {
-            nestlink_protocol::media_authority::MediaDirection::Encode
-        };
-        let local = provider
-            .publish(&client.sdk, identity, direction, &fence)
-            .await
-            .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?;
-        fence.check()?;
-        let frozen = client
-            .sdk
-            .remote_media_scope(&claims.session_id)
-            .await
-            .map_err(Failure::from)?
-            .ok_or_else(|| Failure::local(FailureKind::Trust))?;
-        fence.check()?;
-        Some(nestlink_sdk::native::NativeMediaEvidence {
-            frozen,
-            local,
-            internal_candidate: config.internal_software_media_candidate.clone(),
-        })
-    } else {
-        None
-    };
+    let media = prepare_media(client,identity,config,endpoint.native().verified_permit(),&fence).await?;
     let establish = endpoint.establish_with_media(
         &client.sdk,
         identity,
@@ -398,8 +398,7 @@ async fn recover_native_session(
     fence.check()?;
     let NativeRecoverySource {
         key,
-        failed,
-        endpoint,
+        transport,
         budget,
         mut context,
     } = source;
@@ -408,6 +407,12 @@ async fn recover_native_session(
     if Instant::now() >= deadline || !same_server(&client.server, &context.server) {
         return Err(Failure::local(FailureKind::PermitExpired));
     }
+    let (failed,endpoint) = match transport {
+        NativeRecoveryTransport::Original { session, lifetime } => {
+            return native_routed::recover(client,identity,session,lifetime,context,fence).await;
+        },
+        NativeRecoveryTransport::Legacy { failed, endpoint } => (failed,endpoint),
+    };
     let network = context.config.network().subscribe();
     let baseline = *network.borrow();
     if !baseline.available {
@@ -422,12 +427,12 @@ async fn recover_native_session(
     let receipt = if key.is_host {
         client
             .sdk
-            .reconnect_native_host(identity, &previous, &context.peer_key, failed, cancelled)
+            .reconnect_native_host(identity, &previous, &context.peer_key, *failed, cancelled)
             .await
     } else {
         client
             .sdk
-            .reconnect_native_controller(identity, &previous, &context.peer_key, failed, cancelled)
+            .reconnect_native_controller(identity, &previous, &context.peer_key, *failed, cancelled)
             .await
     };
     // The SDK has consumed the old session and extracted/capped its budget.
@@ -495,7 +500,7 @@ async fn recover_native_session(
     key.path = session.candidate.path() as i32;
     context.deadline = Some(deadline);
     Ok(EstablishedNativeSession {
-        session,
+        session: NativeConnection::Legacy(Box::new(session)),
         key,
         recovery: context,
     })

@@ -41,6 +41,19 @@ pub fn service_node_server_config(
         vec![nestlink_protocol::service_plane::publication::SERVICE_ALPN.to_vec()];
     Ok(config)
 }
+/// The host is pinned by its installation key. Every accepted service stream
+/// additionally requires fresh consumer possession and current business ACLs.
+pub fn private_service_server_config(identity: &InstallationIdentity)
+    -> Result<ServerConfig, Box<dyn std::error::Error + Send + Sync>> {
+    let (cert,key) = certificate(identity)?;
+    let mut config = ServerConfig::builder_with_provider(Arc::new(ring::default_provider()))
+        .with_protocol_versions(&[&rustls::version::TLS13])?
+        .with_no_client_auth().with_single_cert(vec![cert],key.into())?;
+    config.alpn_protocols = vec![nestlink_protocol::service_plane::publication::SERVICE_ALPN.to_vec()];
+    config.max_early_data_size = 0;
+    config.send_tls13_tickets = 0;
+    Ok(config)
+}
 use x509_parser::prelude::FromDer;
 
 #[derive(Debug)]

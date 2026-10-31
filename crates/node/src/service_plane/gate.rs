@@ -370,18 +370,26 @@ impl ServicePublicationHandle {
     ) -> Result<ServiceFlowPermit, Error> {
         let lease = self.lease()?;
         let node = node.reserve_service_capacity(&lease)?;
-        self.reserve(source, Some(node), None)
+        self.reserve(Some(source), None, Some(node), None)
     }
     pub(crate) fn reserve_host(
         &self,
         source: IpAddr,
         target_stop: watch::Receiver<bool>,
     ) -> Result<ServiceFlowPermit, Error> {
-        self.reserve(source, None, Some(target_stop))
+        self.reserve(Some(source), None, None, Some(target_stop))
+    }
+    pub(super) fn reserve_private(
+        &self,
+        lease: &nestlink_identity::services::private::VerifiedPrivateServiceLease,
+        target_stop: watch::Receiver<bool>,
+    ) -> Result<ServiceFlowPermit, Error> {
+        self.reserve(None, Some(lease), None, Some(target_stop))
     }
     fn reserve(
         &self,
-        source: IpAddr,
+        source: Option<IpAddr>,
+        private: Option<&nestlink_identity::services::private::VerifiedPrivateServiceLease>,
         node: Option<ServiceNodePermit>,
         target_stop: Option<watch::Receiver<bool>>,
     ) -> Result<ServiceFlowPermit, Error> {
@@ -391,7 +399,16 @@ impl ServicePublicationHandle {
             .lock()
             .map_err(|_| rejected(ErrorCode::PolicyRevoked))?;
         state.live()?;
-        if !state.verified.claims().permits_source(source)
+        let admitted = match (source, private) {
+            (Some(source), None) => state.verified.claims().permits_source(source),
+            (None, Some(private)) => {
+                private.check_time(wall_clock()?)?;
+                private.lease().digest() == state.verified.digest()
+                    && private.lease().issuer() == state.verified.issuer()
+            }
+            _ => false,
+        };
+        if !admitted
             || target_stop.as_ref().is_some_and(|s| *s.borrow())
         {
             return Err(rejected(ErrorCode::PermissionRequired).into());

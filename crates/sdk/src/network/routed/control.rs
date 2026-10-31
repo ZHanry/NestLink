@@ -22,8 +22,11 @@ use std::{
 mod chain;
 pub use chain::VerifiedRemoteChain;
 mod route_set;
-pub use route_set::{VerifiedRemoteRouteCandidate, VerifiedRemoteRouteSet, ContinuousRouteSetSession, RouteSetRecoveryProposal, RouteSetContinuationStatus};
-pub use route_set::{RouteSetRecoverySource, RouteSetRecoveryConfig, RecoveredNetworkSession};
+pub use route_set::{
+    ContinuousRouteSetSession, RouteSetContinuationStatus, RouteSetRecoveryProposal,
+    VerifiedRemoteRouteCandidate, VerifiedRemoteRouteSet,
+};
+pub use route_set::{RecoveredNetworkSession, RouteSetRecoveryConfig, RouteSetRecoverySource};
 
 /// Installed by the local operator for this deployment. A response or a peer
 /// cannot replace this key. Loopback nodes require a separate explicit opt-in.
@@ -529,7 +532,7 @@ impl RemoteRouteObserver {
                     Ok(Some(view)) if view.members.get(selected).is_some_and(|member| member.available)
                         && route_set::original_fingerprint(&view).ok() == Some(self.fingerprint)
                 )
-            },
+            }
         }
     }
 

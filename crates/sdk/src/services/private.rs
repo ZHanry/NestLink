@@ -2,6 +2,8 @@
 use super::*;
 use nestlink_identity::services::private::{VerifiedPrivateServiceLease, verify_private_service_lease};
 use nestlink_protocol::services::private::*;
+#[cfg(not(target_arch = "wasm32"))]
+pub(super) mod runtime;
 
 impl Sdk {
     pub async fn service_exposure(&self, id: &str) -> Result<Option<ServiceExposureView>, SdkError> {

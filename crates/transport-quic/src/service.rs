@@ -48,6 +48,33 @@ pub struct Connected {
     pub endpoint: Endpoint,
     socket_closed: Option<tokio::sync::oneshot::Receiver<()>>,
 }
+/// One installation listener with the same physical socket receipt as service
+/// clients. The coordinator drops every connection/task clone before closing.
+pub struct PrivateListener {
+    pub endpoint: Endpoint,
+    socket_closed: Option<tokio::sync::oneshot::Receiver<()>>,
+}
+impl PrivateListener {
+    pub fn bind(address: SocketAddr, identity: &InstallationIdentity) -> Result<Self> {
+        let crypto = QuicServerConfig::try_from(tls::private_service_server_config(identity)?)?;
+        let mut config = ServerConfig::with_crypto(Arc::new(crypto));
+        config.transport_config(transport());
+        config.migration(false);
+        let (mut endpoint, completion) = socket::client(address)?;
+        endpoint.set_server_config(Some(config));
+        Ok(Self { endpoint, socket_closed: Some(completion) })
+    }
+    pub async fn close_and_wait(mut self) -> io::Result<()> {
+        self.endpoint.close(0u32.into(), b"private service listener stopping");
+        self.endpoint.wait_idle().await;
+        let completion = self.socket_closed.take().ok_or_else(|| io::Error::other("private service release owner missing"))?;
+        drop(self);
+        socket::wait_released(completion).await
+    }
+}
+impl Drop for PrivateListener {
+    fn drop(&mut self) { self.endpoint.close(0u32.into(), b"private service listener owner dropped"); }
+}
 impl Connected {
     /// Consumes this owner and confirms physical UDP socket release after all
     /// connection/endpoint/poller references are gone. Drop external clones

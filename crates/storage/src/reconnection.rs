@@ -59,10 +59,20 @@ impl Store {
         offer: ReconnectionOffer,
         now: u64,
     ) -> Result<(), StorageError> {
-        self.offer_reconnection_at_ms(actor,id,offer,now.checked_mul(1000).ok_or(StorageError::Conflict)?)
+        self.offer_reconnection_at_ms(
+            actor,
+            id,
+            offer,
+            now.checked_mul(1000).ok_or(StorageError::Conflict)?,
+        )
     }
-    pub fn offer_reconnection_at_ms(&mut self, actor: &Principal, id: &str, offer: ReconnectionOffer,
-        now_ms: u64) -> Result<(), StorageError> {
+    pub fn offer_reconnection_at_ms(
+        &mut self,
+        actor: &Principal,
+        id: &str,
+        offer: ReconnectionOffer,
+        now_ms: u64,
+    ) -> Result<(), StorageError> {
         let now = now_ms / 1000;
         let tx = self.connection.unchecked_transaction()?;
         let current = self.reconnection_access(actor, id, now, true)?;
@@ -102,10 +112,20 @@ impl Store {
         approval: ReconnectionApproval,
         now: u64,
     ) -> Result<(), StorageError> {
-        self.approve_reconnection_at_ms(actor,id,approval,now.checked_mul(1000).ok_or(StorageError::Conflict)?)
+        self.approve_reconnection_at_ms(
+            actor,
+            id,
+            approval,
+            now.checked_mul(1000).ok_or(StorageError::Conflict)?,
+        )
     }
-    pub fn approve_reconnection_at_ms(&mut self, actor: &Principal, id: &str, approval: ReconnectionApproval,
-        now_ms: u64) -> Result<(), StorageError> {
+    pub fn approve_reconnection_at_ms(
+        &mut self,
+        actor: &Principal,
+        id: &str,
+        approval: ReconnectionApproval,
+        now_ms: u64,
+    ) -> Result<(), StorageError> {
         let now = now_ms / 1000;
         let tx = self.connection.unchecked_transaction()?;
         // A same-account host may use its own login. Only the controller must use the original login.
@@ -173,10 +193,18 @@ impl Store {
         id: &str,
         now: u64,
     ) -> Result<(ReconnectionState, Option<ReconnectionReceipt>), StorageError> {
-        self.reconnection_state_at_ms(actor,id,now.checked_mul(1000).ok_or(StorageError::Conflict)?)
+        self.reconnection_state_at_ms(
+            actor,
+            id,
+            now.checked_mul(1000).ok_or(StorageError::Conflict)?,
+        )
     }
-    pub fn reconnection_state_at_ms(&self, actor: &Principal, id: &str, now_ms: u64)
-        -> Result<(ReconnectionState,Option<ReconnectionReceipt>),StorageError> {
+    pub fn reconnection_state_at_ms(
+        &self,
+        actor: &Principal,
+        id: &str,
+        now_ms: u64,
+    ) -> Result<(ReconnectionState, Option<ReconnectionReceipt>), StorageError> {
         let now = now_ms / 1000;
         self.validate_management_session(actor, now)?;
         let current = self.current_permit(actor, id, now)?;
@@ -197,7 +225,12 @@ impl Store {
             && receipt.next == current
         {
             let tx = self.connection.unchecked_transaction()?;
-            self.validate_network_recovery_choice(&tx, &receipt.previous, &receipt.submission.choice, now_ms)?;
+            self.validate_network_recovery_choice(
+                &tx,
+                &receipt.previous,
+                &receipt.submission.choice,
+                now_ms,
+            )?;
             tx.commit()?;
             let state = ReconnectionState {
                 offer: Some(ReconnectionOffer {
@@ -225,10 +258,20 @@ impl Store {
         submission: ReconnectionSubmission,
         now: u64,
     ) -> Result<ReconnectionReceipt, StorageError> {
-        self.reconnect_permit_at_ms(actor,id,submission,now.checked_mul(1000).ok_or(StorageError::Conflict)?)
+        self.reconnect_permit_at_ms(
+            actor,
+            id,
+            submission,
+            now.checked_mul(1000).ok_or(StorageError::Conflict)?,
+        )
     }
-    pub fn reconnect_permit_at_ms(&mut self, actor: &Principal, id: &str, submission: ReconnectionSubmission,
-        now_ms: u64) -> Result<ReconnectionReceipt,StorageError> {
+    pub fn reconnect_permit_at_ms(
+        &mut self,
+        actor: &Principal,
+        id: &str,
+        submission: ReconnectionSubmission,
+        now_ms: u64,
+    ) -> Result<ReconnectionReceipt, StorageError> {
         let now = now_ms / 1000;
         let tx = self.connection.unchecked_transaction()?;
         let current = self.reconnection_access(actor, id, now, true)?;
@@ -237,7 +280,12 @@ impl Store {
             && receipt.next == current
             && receipt.submission == submission
         {
-            self.validate_network_recovery_choice(&tx, &receipt.previous, &submission.choice, now_ms)?;
+            self.validate_network_recovery_choice(
+                &tx,
+                &receipt.previous,
+                &submission.choice,
+                now_ms,
+            )?;
             self.verify_reconnection_proof(
                 &receipt.previous,
                 &submission.choice,

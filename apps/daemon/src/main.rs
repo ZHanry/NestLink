@@ -47,6 +47,10 @@ struct Args {
     /// Administrator-approved private network prefixes for LAN candidates.
     #[arg(long = "private-network-prefix")]
     private_network_prefixes: Vec<String>,
+    /// Private JSON NativeRouteSetSettings: explicit pinned space and two relays.
+    /// Applies to future sessions and persists with the other local consent.
+    #[arg(long)]
+    native_route_set: Option<PathBuf>,
     /// Exact finite CPU media target, e.g. 1920x1080@30:4000. No implied presets.
     #[arg(long, value_parser=parse_native_media_target)]
     native_media_target: Option<nestlink_media_codec::VideoConfig>,
@@ -474,8 +478,14 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let network_store = Arc::new(NativeNetworkFileStore::open(&state_dir)?);
     // An explicit operator argument can add consent, while ordinary UI startup
     // must preserve saved settings instead of replacing them with an empty list.
-    if !args.private_network_prefixes.is_empty() {
+    if !args.private_network_prefixes.is_empty() || args.native_route_set.is_some() {
         let mut settings = network_store.load()?;
+        if let Some(path) = args.native_route_set {
+            let bytes = nestlink_platform_security::read_private(&path, 8192)?;
+            let route: nestlink_app_core::NativeRouteSetSettings = serde_json::from_slice(&bytes)?;
+            route.validate()?;
+            settings.route_set = Some(route);
+        }
         for prefix in args.private_network_prefixes {
             if !settings.private_network_prefixes.contains(&prefix) {
                 settings.private_network_prefixes.push(prefix);

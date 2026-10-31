@@ -559,7 +559,7 @@ impl ServiceLeaseClaims {
             || grant.account_id != self.account_id
             || grant.host_device_id != self.definition.host_device_id
             || grant.service_id != self.service_id
-            || grant.edge_node_id != self.definition.edge_node_id
+            || grant.edge_node_id != self.definition.accounting_node_id()
             || grant.publication_id != self.publication_id
             || grant.publication_generation != self.publication_generation
             || grant.service_revision != self.service_revision

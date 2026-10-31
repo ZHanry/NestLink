@@ -93,7 +93,10 @@ impl TopologyReporter {
         owners: &[&LocalPrefixOwner],
     ) -> Result<VerifiedTopologyAdvertisement, Error> {
         if owners.len() > MAX_PREFIXES {
-            return Err(rejected(ErrorCode::CapacityExceeded, "too many local prefix owners"));
+            return Err(rejected(
+                ErrorCode::CapacityExceeded,
+                "too many local prefix owners",
+            ));
         }
         let claims =
             nestlink_protocol::network_topology::TopologyPublisherClaims::decode_canonical(
@@ -136,18 +139,33 @@ impl TopologyReporter {
                 )
             })
             .collect::<Result<Vec<_>, _>>()?;
-        let observations = owners.iter()
+        let observations = owners
+            .iter()
             .map(|owner| owner.evidence(control, authority))
             .collect::<Result<Vec<_>, _>>()?;
-        let mut prefixes = observations.iter().map(|evidence| evidence.prefix).collect::<Vec<_>>();
+        let mut prefixes = observations
+            .iter()
+            .map(|evidence| evidence.prefix)
+            .collect::<Vec<_>>();
         prefixes.sort_by_key(|prefix| (prefix.network, prefix.prefix_len));
         if prefixes.windows(2).any(|pair| pair[0] == pair[1]) {
-            return Err(rejected(ErrorCode::InvalidMessage, "duplicate local prefix observation"));
+            return Err(rejected(
+                ErrorCode::InvalidMessage,
+                "duplicate local prefix observation",
+            ));
         }
-        let lifetime = observations.iter().map(|evidence| (evidence.expires_at_ms, evidence.deadline_ms))
+        let lifetime = observations
+            .iter()
+            .map(|evidence| (evidence.expires_at_ms, evidence.deadline_ms))
             .reduce(|left, right| (left.0.min(right.0), left.1.min(right.1)));
         let prepared = self.prepare_observations(
-            control, &authority.publisher, &context, &exports, neighbors, prefixes, lifetime,
+            control,
+            &authority.publisher,
+            &context,
+            &exports,
+            neighbors,
+            prefixes,
+            lifetime,
         )?;
         for (owner, evidence) in owners.iter().zip(&observations) {
             owner.check_evidence(control, authority, evidence)?;
@@ -247,7 +265,15 @@ impl TopologyReporter {
         route_exports: &[VerifiedNetworkGrant],
         neighbors: Vec<TopologyNeighbor>,
     ) -> Result<PreparedReport, Error> {
-        self.prepare_observations(control, signed_publisher, context, route_exports, neighbors, Vec::new(), None)
+        self.prepare_observations(
+            control,
+            signed_publisher,
+            context,
+            route_exports,
+            neighbors,
+            Vec::new(),
+            None,
+        )
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -261,7 +287,10 @@ impl TopologyReporter {
         prefixes: Vec<nestlink_protocol::network::IpPrefix>,
         lifetime: Option<(u64, u64)>,
     ) -> Result<PreparedReport, Error> {
-        if neighbors.len() > MAX_NEIGHBORS || route_exports.len() > MAX_PREFIXES || prefixes.len() > MAX_PREFIXES {
+        if neighbors.len() > MAX_NEIGHBORS
+            || route_exports.len() > MAX_PREFIXES
+            || prefixes.len() > MAX_PREFIXES
+        {
             return Err(rejected(
                 ErrorCode::CapacityExceeded,
                 "topology publication exceeded its budget",
@@ -343,7 +372,10 @@ impl TopologyReporter {
             .min(state.gate.deadline_ms())
             .min(lifetime.map_or(u64::MAX, |lifetime| lifetime.1));
         if now.monotonic_ms >= deadline_ms {
-            return Err(rejected(ErrorCode::LeaseExpired, "local prefix observation expired"));
+            return Err(rejected(
+                ErrorCode::LeaseExpired,
+                "local prefix observation expired",
+            ));
         }
         let sequence = state.topology.next(context.space_id)?;
         let report = TopologyReport {

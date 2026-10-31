@@ -27,6 +27,18 @@ pub(super) fn selected_carrier(
     }
 }
 
+pub(super) fn selected_routed_carrier() -> NativePathQualityView {
+    NativePathQualityView {
+        transport: nestlink_protocol::api::Transport::Quic,
+        candidate_kind: nestlink_protocol::api::CandidateKind::Relay,
+        // Routed authority has no ICE network generation. Zero is the existing
+        // unknown value; the exact signed route binding follows in observations.
+        network_generation: 0, bilateral_ice: false, original_binding: None,
+        rtt_us: None, smoothed_rtt_change_us: None, packet_window: None,
+        business_tx: None, available_bytes_per_second: None, cost: None,
+    }
+}
+
 fn micros(value: Duration) -> Option<u64> {
     u64::try_from(value.as_micros()).ok()
 }
@@ -47,19 +59,23 @@ fn current_quality(
         return quality.original_binding.is_none().then_some(quality);
     };
     let binding = &sample.binding;
+    let carrier_matches = match &binding.candidate {
+        Some(candidate) => candidate.transport == quality.transport
+            && candidate.kind == quality.candidate_kind
+            && candidate.generation == quality.network_generation
+            && Some(candidate.generation) == binding.network_generation,
+        None => binding.path == nestlink_protocol::Path::Relay
+            && binding.path_grant_id.is_some() && binding.transport_group.is_some()
+            && binding.route_binding.is_some() && binding.network_generation.is_none()
+            && quality.transport == nestlink_protocol::api::Transport::Quic
+            && quality.candidate_kind == nestlink_protocol::api::CandidateKind::Relay
+            && quality.network_generation == 0 && !quality.bilateral_ice,
+    };
     if sample.stopped
         || binding.business_generation != session.connection_generation
         || Some(binding.path as i32) != session.path
         || binding.purpose != nestlink_protocol::network::Purpose::RemoteControl
-        // This projection describes NativeSession's actual selected candidate.
-        // Missing or inconsistent candidate generations are unknown, including
-        // a routed observation which needs its own selected-route product view.
-        || binding.candidate.as_ref().is_none_or(|candidate| {
-            candidate.transport != quality.transport
-                || candidate.kind != quality.candidate_kind
-                || candidate.generation != quality.network_generation
-                || Some(candidate.generation) != binding.network_generation
-        })
+        || !carrier_matches
     {
         return None;
     }
@@ -141,6 +157,34 @@ mod tests {
         network::Purpose,
     };
     use nestlink_remote::{BusinessThroughputWindow, PacketLossWindow, PathObservationBinding};
+
+    #[test]
+    fn routed_observation_requires_all_signed_group_bindings_and_has_no_ice_generation() {
+        let mut session=session();
+        session.path=Some(Path::Relay as i32);
+        session.quality=Some(selected_routed_carrier());
+        let mut observation=sample();
+        observation.binding.path=Path::Relay;
+        observation.binding.candidate=None;
+        observation.binding.network_generation=None;
+        observation.binding.path_grant_id=Some("fixed original path".into());
+        observation.binding.transport_group=Some([7;32]);
+        observation.binding.route_binding=Some([8;32]);
+        let projected=current_quality(&session,Some(("original-request",7)),Some(&observation));
+        assert!(projected.is_some());
+        session.quality=projected;
+        for mutation in 0..5 {
+            let mut forged=observation.clone();
+            match mutation {
+                0=>forged.binding.path_grant_id=None,
+                1=>forged.binding.transport_group=None,
+                2=>forged.binding.route_binding=None,
+                3=>forged.binding.network_generation=Some(1),
+                _=>forged.binding.route_binding=Some([9;32]),
+            }
+            assert!(current_quality(&session,Some(("original-request",7)),Some(&forged)).is_none());
+        }
+    }
 
     fn session() -> NativeSessionView {
         NativeSessionView {

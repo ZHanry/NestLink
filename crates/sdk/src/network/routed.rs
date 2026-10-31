@@ -15,11 +15,12 @@ use nestlink_transport_quic::routed::{
 use std::{future::Future, io, pin::Pin, sync::Arc};
 use tokio::{sync::watch, time::Instant};
 mod control;
-pub use control::{RouteSetRecoverySource, RouteSetRecoveryConfig, RecoveredNetworkSession};
 pub use control::{
-    PinnedNetworkSpace, VerifiedRemoteChain, VerifiedRemoteRelay, VerifiedRemoteRouteCandidate,
-    VerifiedRemoteRouteSet, ContinuousRouteSetSession, RouteSetRecoveryProposal, RouteSetContinuationStatus,
+    ContinuousRouteSetSession, PinnedNetworkSpace, RouteSetContinuationStatus,
+    RouteSetRecoveryProposal, VerifiedRemoteChain, VerifiedRemoteRelay,
+    VerifiedRemoteRouteCandidate, VerifiedRemoteRouteSet,
 };
+pub use control::{RecoveredNetworkSession, RouteSetRecoveryConfig, RouteSetRecoverySource};
 use nestlink_transport_stream::owner::TaskOwner;
 
 /// Supply a current trusted policy snapshot, not claims read from a peer.

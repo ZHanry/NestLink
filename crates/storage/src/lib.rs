@@ -6,7 +6,7 @@ use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, params};
 use std::{path::Path, time::Duration};
 
 pub const APPLICATION_ID: i32 = 1_313_622_833;
-pub const SCHEMA_VERSION: i32 = 39;
+pub const SCHEMA_VERSION: i32 = 40;
 const MIGRATION: &str = include_str!("../migrations/001_initial.sql");
 const CONTROL_MIGRATION: &str = include_str!("../migrations/002_control.sql");
 const SCOPES_MIGRATION: &str = include_str!("../migrations/003_policy_scopes.sql");
@@ -415,6 +415,25 @@ impl Store {
             transaction.execute_batch(include_str!("../migrations/039_private_services.sql"))?;
             transaction.pragma_update(None, "user_version", 39)?;
             transaction.commit()?;
+        }
+        if version < 40 {
+            // This must be outside a transaction. Renaming the old parent table
+            // would rewrite child foreign keys to the temporary table name.
+            connection.pragma_update(None, "foreign_keys", "OFF")?;
+            let migrated = (|| -> Result<(), StorageError> {
+                let transaction = connection.transaction()?;
+                transaction.execute_batch(include_str!(
+                    "../migrations/040_private_service_host_accounting.sql"
+                ))?;
+                if transaction.prepare("PRAGMA foreign_key_check")?.exists([])? {
+                    return Err(StorageError::Invalid("service migration foreign key failure"));
+                }
+                transaction.pragma_update(None, "user_version", 40)?;
+                transaction.commit()?;
+                Ok(())
+            })();
+            connection.pragma_update(None, "foreign_keys", "ON")?;
+            migrated?;
         }
         Ok(Self {
             connection,

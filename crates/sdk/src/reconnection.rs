@@ -71,7 +71,9 @@ impl ReconnectedPermit {
     pub fn permit(&self) -> &VerifiedPermit {
         &self.permit
     }
-    pub fn choice(&self) -> &ReconnectionChoice { self.context.choice() }
+    pub fn choice(&self) -> &ReconnectionChoice {
+        self.context.choice()
+    }
     /// Native and browser consumers use the same original monotonic request budget.
     pub fn remaining_ms(&self) -> Result<u64, SdkError> {
         self.context.remaining()
@@ -112,7 +114,13 @@ impl ReconnectionAttempt {
             return Err(SdkError::Trust);
         }
         if unix >= self.previous.claims().expires_at_unix_ms
-            || self.offer.choice.network_recovery.as_ref().is_some_and(|recovery| unix >= recovery.expires_at_unix_ms) {
+            || self
+                .offer
+                .choice
+                .network_recovery
+                .as_ref()
+                .is_some_and(|recovery| unix >= recovery.expires_at_unix_ms)
+        {
             return Err(SdkError::Timeout);
         }
         #[cfg(not(target_arch = "wasm32"))]
@@ -322,11 +330,18 @@ impl Sdk {
         controller_key: &[u8; 32],
         offer: &ReconnectionOffer,
     ) -> Result<String, SdkError> {
-        if offer.choice.network_recovery.is_some() { return Err(SdkError::Trust); }
+        if offer.choice.network_recovery.is_some() {
+            return Err(SdkError::Trust);
+        }
         self.reconnection_host_signature_inner(local, previous, controller_key, offer)
     }
-    fn reconnection_host_signature_inner(&self, local: &DeviceIdentity, previous: &VerifiedPermit,
-        controller_key: &[u8;32], offer: &ReconnectionOffer) -> Result<String, SdkError> {
+    fn reconnection_host_signature_inner(
+        &self,
+        local: &DeviceIdentity,
+        previous: &VerifiedPermit,
+        controller_key: &[u8; 32],
+        offer: &ReconnectionOffer,
+    ) -> Result<String, SdkError> {
         self.reconnection_identity(local, previous, true)?;
         peer_proof(
             previous,
@@ -478,13 +493,30 @@ impl Sdk {
         cancelled: impl Fn() -> bool,
         deadline: Option<Started>,
     ) -> Result<ReconnectedPermit, SdkError> {
-        self.coordinate_reconnection_host_checked(local, previous, controller_key, cancelled, deadline,
-            |choice| if choice.network_recovery.is_none() { Ok(()) } else { Err(SdkError::Trust) }).await
+        self.coordinate_reconnection_host_checked(
+            local,
+            previous,
+            controller_key,
+            cancelled,
+            deadline,
+            |choice| {
+                if choice.network_recovery.is_none() {
+                    Ok(())
+                } else {
+                    Err(SdkError::Trust)
+                }
+            },
+        )
+        .await
     }
     #[allow(clippy::too_many_arguments)]
     pub(crate) async fn coordinate_reconnection_host_checked(
-        &self, local: &DeviceIdentity, previous: &VerifiedPermit, controller_key: &[u8;32],
-        cancelled: impl Fn() -> bool, deadline: Option<Started>,
+        &self,
+        local: &DeviceIdentity,
+        previous: &VerifiedPermit,
+        controller_key: &[u8; 32],
+        cancelled: impl Fn() -> bool,
+        deadline: Option<Started>,
         validate: impl Fn(&ReconnectionChoice) -> Result<(), SdkError>,
     ) -> Result<ReconnectedPermit, SdkError> {
         self.reconnection_identity(local, previous, true)?;
@@ -551,8 +583,12 @@ impl Sdk {
                     continue;
                 }
                 validate(&offer.choice)?;
-                let signature =
-                    self.reconnection_host_signature_inner(local, previous, controller_key, &offer)?;
+                let signature = self.reconnection_host_signature_inner(
+                    local,
+                    previous,
+                    controller_key,
+                    &offer,
+                )?;
                 if chosen && attempt.offer != offer {
                     return Err(SdkError::Trust);
                 }
@@ -710,13 +746,20 @@ impl Sdk {
         Ok(attempt)
     }
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn prepare_network_reconnection(&self, local: &DeviceIdentity,
-        budget: &nestlink_remote::ReconnectionBudget, recovery: nestlink_protocol::api::NetworkRouteRecoveryChoice,
+    pub(crate) fn prepare_network_reconnection(
+        &self,
+        local: &DeviceIdentity,
+        budget: &nestlink_remote::ReconnectionBudget,
+        recovery: nestlink_protocol::api::NetworkRouteRecoveryChoice,
     ) -> Result<ReconnectionAttempt, SdkError> {
         let mut attempt = self.prepare_bounded_reconnection(local, budget)?;
         attempt.offer.choice.network_recovery = Some(recovery);
-        attempt.offer.controller_signature = URL_SAFE_NO_PAD.encode(local.identity.sign_action(
-            &reconnection::transcript(budget.permit().claims(), &local.device_id, &attempt.offer.choice)?)?);
+        attempt.offer.controller_signature =
+            URL_SAFE_NO_PAD.encode(local.identity.sign_action(&reconnection::transcript(
+                budget.permit().claims(),
+                &local.device_id,
+                &attempt.offer.choice,
+            )?)?);
         attempt.check(self)?;
         Ok(attempt)
     }

@@ -26,10 +26,11 @@ fn mode_available(connection: &Connection, service: &str, private: bool, maximum
     Ok(maximum.saturating_sub(held))
 }
 pub(super) fn public_reservation_limit(connection: &Connection, record: &Record) -> Result<u64,StorageError> {
+    if record.definition.edge_node_id.is_empty() { return Err(StorageError::Forbidden); }
     let maximum = if let Some(view) = exposure(connection,&record.id)? {
         if !view.mode.public_enabled() || view.service_revision != record.revision { return Err(StorageError::Forbidden); }
         view.public_maximum_bytes
-    } else { record.definition.limits.maximum_bytes };
+    } else { return Ok(record.definition.limits.maximum_bytes); };
     mode_available(connection,&record.id,false,maximum)
 }
 fn clock(now: u64) -> Result<(),StorageError> {
@@ -70,6 +71,7 @@ impl Store {
         let tx = Transaction::new_unchecked(&self.connection,TransactionBehavior::Immediate)?;
         let record = self.service_owner(actor,service,now/1000)?;
         let approval = self.service_approval_row(service)?.ok_or(StorageError::Forbidden)?;
+        if request.mode.public_enabled() && record.definition.edge_node_id.is_empty() { return Err(StorageError::Invalid("public access requires a registered public edge")); }
         if request.expected_service_revision != record.revision { return Err(StorageError::Conflict); }
         if !self.service_approval_live(&record,&approval,now/1000)? || approval.expires <= now { return Err(StorageError::Forbidden); }
         let (_,_,_,_) = self.private_member(&request.space_id,&record.definition.host_device_id,now)?;
@@ -241,7 +243,7 @@ impl Store {
         let report_digest=digest(&signed.claims);
         if c.deployment_id!=self.deployment_id()? || c.security_epoch!=self.security_epoch()? || current_epoch!=host_epoch
             || c.host_device_id!=host || c.runtime_id!=runtime || c.grant_sha256.as_slice()!=hash.as_slice()
-            || c.sampled_at_unix_ms>now || now-c.sampled_at_unix_ms>SERVICE_LEASE_MS
+            || c.sampled_at_unix_ms>now
         {return Err(StorageError::Forbidden);}
         if c.report_sequence==sequence && report_digest.as_slice()==report_hash.as_slice() {
             let json:String=tx.query_row("SELECT ack_json FROM private_service_usage_reports WHERE grant_id=?1 AND report_sequence=?2",params![c.grant_id,sequence],|r|r.get(0))?;

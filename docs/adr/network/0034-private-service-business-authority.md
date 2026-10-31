@@ -31,6 +31,15 @@ and private sublimits cannot exceed that original total. Reservations are made
 under one immediate transaction. Mode changes, revocation, expiry or a lost
 report do not refund an unresolved promise. Neither mode has a second balance.
 
+An empty legacy edge_node_id explicitly selects a private-only installation
+host. Schema 40 stores that absence as SQL NULL and preserves existing signed
+definition bytes. Its node accounting key is the host installation ID in the
+same node ledger; no synthetic data node or second allowance is registered.
+Only this private-only target consent may be approved with public ingress
+disabled. A public or both exposure still requires a real registered edge and
+the existing public publication policy. The nullable FK migration checks all
+foreign keys before committing and restores FK enforcement on every result.
+
 Each private reservation has exactly one installation-host report owner, bound
 to its device key, runtime and current security/member epochs. Device-signed
 monotonic reports are checked against that binding and the original grant before

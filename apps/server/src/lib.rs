@@ -11,6 +11,7 @@ pub mod node_quic;
 pub mod node_relay;
 mod node_relay_attributes;
 mod node_turn;
+mod private_services;
 mod quotas;
 mod reconnection;
 mod relay;
@@ -20,7 +21,6 @@ pub mod service_edge;
 mod service_publication;
 mod service_usage;
 mod services;
-mod private_services;
 mod spaces;
 mod trusted;
 mod turn;
@@ -604,14 +604,38 @@ pub fn router(state: AppState) -> Router {
             post(services::challenge),
         )
         .route("/api/v3/services/{id}/approval", post(services::approve))
-        .route("/api/v3/services/{id}/exposure", get(private_services::exposure).put(private_services::set_exposure))
-        .route("/api/v3/services/{id}/private-policy", get(private_services::policy).post(private_services::allow))
-        .route("/api/v3/services/{id}/private-policy/{rule}", axum::routing::delete(private_services::revoke))
-        .route("/api/v3/private-services/{consumer}", get(private_services::directory))
-        .route("/api/v3/services/{id}/private-host", post(private_services::host))
-        .route("/api/v3/services/{id}/private-access", post(private_services::issue))
-        .route("/api/v3/services/{id}/private-access/{reservation}", get(private_services::current))
-        .route("/api/v3/private-service-usage", post(private_services::usage))
+        .route(
+            "/api/v3/services/{id}/exposure",
+            get(private_services::exposure).put(private_services::set_exposure),
+        )
+        .route(
+            "/api/v3/services/{id}/private-policy",
+            get(private_services::policy).post(private_services::allow),
+        )
+        .route(
+            "/api/v3/services/{id}/private-policy/{rule}",
+            axum::routing::delete(private_services::revoke),
+        )
+        .route(
+            "/api/v3/private-services/{consumer}",
+            get(private_services::directory),
+        )
+        .route(
+            "/api/v3/services/{id}/private-host",
+            post(private_services::host),
+        )
+        .route(
+            "/api/v3/services/{id}/private-access",
+            post(private_services::issue),
+        )
+        .route(
+            "/api/v3/services/{id}/private-access/{reservation}",
+            get(private_services::current),
+        )
+        .route(
+            "/api/v3/private-service-usage",
+            post(private_services::usage),
+        )
         .route(
             "/api/v3/nodes/{id}/service-namespace",
             get(service_publication::namespace).put(service_publication::set_namespace),

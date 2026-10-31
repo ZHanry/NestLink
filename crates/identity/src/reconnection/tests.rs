@@ -2,10 +2,19 @@ use super::*;
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 fn recovery(previous: &PermitClaims) -> nestlink_protocol::api::NetworkRouteRecoveryChoice {
     let id = |n| format!("{n:08}-1111-4111-8111-111111111111");
-    nestlink_protocol::api::NetworkRouteRecoveryChoice { version:1, capability:NETWORK_RECOVERY_CAPABILITY.into(),
-        space_id:id(6),route_set_id:id(7),path_grant_id:id(8),original_fingerprint:URL_SAFE_NO_PAD.encode([9;32]),
-        transport_group:URL_SAFE_NO_PAD.encode([10;32]),previous_path_epoch:1,target_node_id:id(11),
-        target_route_binding:URL_SAFE_NO_PAD.encode([12;32]),expires_at_unix_ms:previous.expires_at_unix_ms }
+    nestlink_protocol::api::NetworkRouteRecoveryChoice {
+        version: 1,
+        capability: NETWORK_RECOVERY_CAPABILITY.into(),
+        space_id: id(6),
+        route_set_id: id(7),
+        path_grant_id: id(8),
+        original_fingerprint: URL_SAFE_NO_PAD.encode([9; 32]),
+        transport_group: URL_SAFE_NO_PAD.encode([10; 32]),
+        previous_path_epoch: 1,
+        target_node_id: id(11),
+        target_route_binding: URL_SAFE_NO_PAD.encode([12; 32]),
+        expires_at_unix_ms: previous.expires_at_unix_ms,
+    }
 }
 fn fixture() -> Result<(PermitClaims, ReconnectionSubmission, PermitClaims)> {
     let id = |n| format!("{n:08}-1111-4111-8111-111111111111");
@@ -54,40 +63,50 @@ fn fixture() -> Result<(PermitClaims, ReconnectionSubmission, PermitClaims)> {
 }
 #[test]
 fn legacy_choice_preserves_exact_json_transcript_and_new_contract_is_explicit() -> Result {
-    let (previous,mut request,next) = fixture()?;
-    let legacy_json = format!("{{\"previous_permit_sha256\":\"{}\",\"connection_generation\":3,\"lease_sequence\":8,\"nonce\":\"{}\"}}",
-        request.choice.previous_permit_sha256,request.choice.nonce);
-    assert_eq!(serde_json::to_vec(&request.choice)?,legacy_json.as_bytes());
+    let (previous, mut request, next) = fixture()?;
+    let legacy_json = format!(
+        "{{\"previous_permit_sha256\":\"{}\",\"connection_generation\":3,\"lease_sequence\":8,\"nonce\":\"{}\"}}",
+        request.choice.previous_permit_sha256, request.choice.nonce
+    );
+    assert_eq!(serde_json::to_vec(&request.choice)?, legacy_json.as_bytes());
     let decoded: ReconnectionChoice = serde_json::from_str(&legacy_json)?;
-    assert_eq!(decoded,request.choice);
+    assert_eq!(decoded, request.choice);
     assert!(decoded.network_recovery.is_none());
-    let old = transcript(&previous,&previous.host_device_id,&request.choice)?;
+    let old = transcript(&previous, &previous.host_device_id, &request.choice)?;
     request.choice.network_recovery = Some(recovery(&previous));
-    validate_successor(&previous,&next,&request.choice)?;
-    assert_ne!(transcript(&previous,&previous.host_device_id,&request.choice)?.payload_sha256,old.payload_sha256);
+    validate_successor(&previous, &next, &request.choice)?;
+    assert_ne!(
+        transcript(&previous, &previous.host_device_id, &request.choice)?.payload_sha256,
+        old.payload_sha256
+    );
     let signer = PermitSigner::generate();
-    let signed = signer.sign_reconnection(&previous,&request,&next)?.encode_to_vec();
-    verify_reconnection(&signed,&signer.public_key(),&previous,&request)?;
+    let signed = signer
+        .sign_reconnection(&previous, &request, &next)?
+        .encode_to_vec();
+    verify_reconnection(&signed, &signer.public_key(), &previous, &request)?;
     let original = request.clone();
     for variant in 0..7 {
         let mut changed = original.clone();
         let recovery = changed.choice.network_recovery.as_mut().ok_or("recovery")?;
         match variant {
-            0 => recovery.target_node_id="00000013-1111-4111-8111-111111111111".into(),
-            1 => recovery.target_route_binding=URL_SAFE_NO_PAD.encode([13;32]),
-            2 => recovery.original_fingerprint=URL_SAFE_NO_PAD.encode([14;32]),
-            3 => recovery.transport_group=URL_SAFE_NO_PAD.encode([15;32]),
-            4 => recovery.capability="path-migration-v1".into(),
-            5 => recovery.previous_path_epoch=2,
-            _ => recovery.expires_at_unix_ms+=1,
+            0 => recovery.target_node_id = "00000013-1111-4111-8111-111111111111".into(),
+            1 => recovery.target_route_binding = URL_SAFE_NO_PAD.encode([13; 32]),
+            2 => recovery.original_fingerprint = URL_SAFE_NO_PAD.encode([14; 32]),
+            3 => recovery.transport_group = URL_SAFE_NO_PAD.encode([15; 32]),
+            4 => recovery.capability = "path-migration-v1".into(),
+            5 => recovery.previous_path_epoch = 2,
+            _ => recovery.expires_at_unix_ms += 1,
         }
-        assert!(verify_reconnection(&signed,&signer.public_key(),&previous,&changed).is_err());
+        assert!(verify_reconnection(&signed, &signer.public_key(), &previous, &changed).is_err());
     }
-    let a = network_recovery_id(&previous,&request.choice,"allocation")?;
-    assert_eq!(a,network_recovery_id(&previous,&request.choice,"allocation")?);
-    assert_ne!(a,network_recovery_id(&previous,&request.choice,"path")?);
+    let a = network_recovery_id(&previous, &request.choice, "allocation")?;
+    assert_eq!(
+        a,
+        network_recovery_id(&previous, &request.choice, "allocation")?
+    );
+    assert_ne!(a, network_recovery_id(&previous, &request.choice, "path")?);
     assert!(nestlink_protocol::valid_id(&a));
-    assert!(network_recovery_id(&previous,&decoded,"allocation").is_err());
+    assert!(network_recovery_id(&previous, &decoded, "allocation").is_err());
     Ok(())
 }
 #[test]

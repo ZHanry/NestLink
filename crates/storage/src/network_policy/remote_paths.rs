@@ -329,14 +329,33 @@ impl Store {
     }
     /// Only the dual-signed reconnection receipt may validate its exact previous
     /// generation. Current membership, policy, expiry and revocation still apply.
-    pub(super) fn network_route_set_recovery_path(&self, tx: &Transaction<'_>, space: &str,
-        path_id: &str, now_ms: u64, previous: &nestlink_protocol::PermitClaims,
+    pub(super) fn network_route_set_recovery_path(
+        &self,
+        tx: &Transaction<'_>,
+        space: &str,
+        path_id: &str,
+        now_ms: u64,
+        previous: &nestlink_protocol::PermitClaims,
     ) -> Result<NetworkRemotePathBundle, StorageError> {
-        self.network_path_current_with_business(tx, None, space, path_id, (1,2), now_ms, Some(previous))
+        self.network_path_current_with_business(
+            tx,
+            None,
+            space,
+            path_id,
+            (1, 2),
+            now_ms,
+            Some(previous),
+        )
     }
     #[allow(clippy::too_many_arguments)]
-    fn network_path_current_with_business(&self, tx: &Transaction<'_>, actor: Option<&Principal>,
-        space: &str, path_id: &str, shape: (u8,usize), now_ms: u64,
+    fn network_path_current_with_business(
+        &self,
+        tx: &Transaction<'_>,
+        actor: Option<&Principal>,
+        space: &str,
+        path_id: &str,
+        shape: (u8, usize),
+        now_ms: u64,
         previous: Option<&nestlink_protocol::PermitClaims>,
     ) -> Result<NetworkRemotePathBundle, StorageError> {
         let (relay_hops, relay_count) = shape;

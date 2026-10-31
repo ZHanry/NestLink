@@ -205,6 +205,70 @@ fn default_deny_saves_configuration_but_never_grants_or_publishes_a_target() -> 
     );
     Ok(())
 }
+
+#[test]
+fn private_target_consent_requires_no_public_edge_or_public_ingress() -> Result {
+    let mut f = Fixture::new()?;
+    let mut definition = f.definition();
+    definition.edge_node_id.clear();
+    assert_eq!(definition.accounting_node_id(), f.host);
+    let pending = f.store.create_service(&f.admin, ServiceCreate {
+        id: random_id(), definition,
+    }, 1001)?;
+    let challenge = f.challenge(&pending)?;
+    let proof = f.proof(&pending, &challenge)?;
+    let approved = f.store.approve_service_target(&f.admin, &pending.id, proof, 1001)?;
+    assert_eq!(approved.approval, ServiceApprovalState::ApprovedTarget);
+    assert_eq!(approved.publication, ServicePublicationStatus::NotPublished);
+    assert!(approved.definition.edge_node_id.is_empty());
+    let edge: Option<String> = f.raw()?.query_row(
+        "SELECT edge_node_id FROM services WHERE id=?1", [&pending.id], |r| r.get(0),
+    )?;
+    assert!(edge.is_none());
+    assert!(!f.raw()?.prepare("PRAGMA foreign_key_check")?.exists([])?);
+    let mut changed = approved.definition.clone();
+    changed.name = "Private service revised locally".into();
+    let changed = f.store.update_service(&f.admin, &approved.id, ServiceUpdate {
+        expected_revision: approved.revision, definition: changed,
+    }, 1001)?;
+    assert_eq!(changed.approval, ServiceApprovalState::Invalidated);
+    assert!(changed.definition.edge_node_id.is_empty());
+    Ok(())
+}
+
+#[test]
+fn schema_39_upgrade_preserves_approved_public_target_and_child_foreign_keys() -> Result {
+    let mut f = Fixture::new()?;
+    f.allow()?;
+    let pending = f.create()?;
+    let challenge = f.challenge(&pending)?;
+    let proof = f.proof(&pending, &challenge)?;
+    let approved = f.store.approve_service_target(&f.admin, &pending.id, proof, 1001)?;
+    let deployment = f.store.deployment_id()?;
+    let Fixture { directory, store, admin, .. } = f;
+    drop(store);
+    let path = directory.path().join("services.sqlite3");
+    let raw = Connection::open(&path)?;
+    // Build the historical parent table from its authoritative schema, retaining
+    // the real signed consent and challenge children created through Store.
+    let historical = include_str!("../migrations/018_service_registry.sql")
+        .split("CREATE INDEX services_owner").next().ok_or("historical schema missing")?
+        .replace("CREATE TABLE services (", "CREATE TABLE services_v39 (");
+    raw.pragma_update(None, "foreign_keys", "OFF")?;
+    raw.execute_batch(&historical)?;
+    raw.execute_batch("INSERT INTO services_v39 SELECT * FROM services; DROP TABLE services; ALTER TABLE services_v39 RENAME TO services; CREATE INDEX services_owner ON services(account_id,id); PRAGMA user_version=39;")?;
+    drop(raw);
+    let store = Store::open_existing(&path, &deployment)?;
+    assert_eq!(serde_json::to_value(store.service(&admin, &approved.id, 1001)?)?, serde_json::to_value(&approved)?);
+    let raw = Connection::open(&path)?;
+    assert!(!raw.prepare("PRAGMA foreign_key_check")?.exists([])?);
+    assert_eq!(raw.pragma_query_value(None, "user_version", |r| r.get::<_, i32>(0))?, nestlink_storage::SCHEMA_VERSION);
+    raw.pragma_update(None, "foreign_keys", "ON")?;
+    assert!(raw.execute("DELETE FROM services WHERE id=?1", [&approved.id]).is_err());
+    let definition: String = raw.query_row("SELECT definition_json FROM services WHERE id=?1", [&approved.id], |r| r.get(0))?;
+    assert_eq!(definition, serde_json::to_string(&approved.definition)?);
+    Ok(())
+}
 #[test]
 fn direct_only_allows_independent_target_consent_and_fences_all_older_challenges() -> Result {
     let mut f = Fixture::new()?;

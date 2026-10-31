@@ -1,0 +1,57 @@
+{
+    "results":  {
+                    "sdk_chain_and_recovery_integration":  "compilation stopped: missing SDK tempfile dev dependency",
+                    "routed_kernel_nat":  "passed",
+                    "windows_contract_tests":  "cancelled after partial execution; not qualified",
+                    "linux_contract_tests":  "failed: 10 legacy schema rewind fixtures and legacy public quota mode compatibility",
+                    "sdk_chain_file_reads":  "2 passed",
+                    "linux_evidence_tests":  "21 passed",
+                    "linux_contract_clippy":  "passed",
+                    "production_socket":  "passed",
+                    "native_ice_kernel_nat":  "passed",
+                    "topology_carrier_and_host_prefix":  "passed",
+                    "windows_contract_clippy":  "passed"
+                },
+    "schema_version":  1,
+    "run_attempt":  1,
+    "workflow":  ".github/workflows/network-rewrite.yml",
+    "release_qualified":  false,
+    "build_provenance":  {
+                             "runner":  "github-hosted",
+                             "linux_job":  "124409226912",
+                             "windows_job":  "124409227363"
+                         },
+    "source_revision":  "15508fe073b831019b8dc10e7cdfed7b79b5a6eb",
+    "formatting":  {
+                       "imported_only_unchanged_paths":  [
+                                                             "--include=apps/server/src/lib.rs",
+                                                             "--include=apps/server/src/private_services.rs",
+                                                             "--include=crates/identity/src/network.rs",
+                                                             "--include=crates/identity/src/network/remote.rs",
+                                                             "--include=crates/identity/src/reconnection.rs",
+                                                             "--include=crates/identity/src/reconnection/tests.rs",
+                                                             "--include=crates/identity/src/services/private.rs",
+                                                             "--include=crates/node/src/control/prefix.rs",
+                                                             "--include=crates/node/src/control/prefix/tests.rs",
+                                                             "--include=crates/node/src/control/resources/topology.rs",
+                                                             "--include=crates/node/src/control/topology.rs",
+                                                             "--include=crates/sdk/src/native.rs",
+                                                             "--include=crates/sdk/src/network/routed.rs",
+                                                             "--include=crates/sdk/src/network/routed/control.rs",
+                                                             "--include=crates/sdk/src/network/routed/control/route_set/recovery.rs",
+                                                             "--include=crates/sdk/src/reconnection.rs",
+                                                             "--include=crates/sdk/tests/network_relay.rs",
+                                                             "--include=crates/sdk/tests/network_relay/route_set/recovery.rs",
+                                                             "--include=crates/storage/src/network_policy.rs",
+                                                             "--include=crates/storage/src/network_policy/recovery.rs",
+                                                             "--include=crates/storage/src/network_policy/remote_paths.rs",
+                                                             "--include=crates/storage/src/reconnection.rs",
+                                                             "--include=crates/storage/tests/control/network_paths/route_sets/recovery.rs",
+                                                             "--include=xtask/src/api.rs"
+                                                         ],
+                       "archive_sha256":  "cbeba0ae8c3ad2767d9c9f53745c64b0aa7314951753be7ca1563c6a3746f18c",
+                       "artifact_id":  13026074086,
+                       "patch_sha256":  "a65494c01717d2e11e7e78d2c9015e34940dbb956420a3812c3635eb6c166e0f"
+                   },
+    "run_id":  "41158083548"
+}

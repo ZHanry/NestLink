@@ -14,7 +14,7 @@ use std::{
 use tokio::{sync::watch, task::JoinSet};
 mod backend_tls;
 mod cleanup;
-mod datagram;
+pub(crate) mod datagram;
 pub use backend_tls::HttpsBackendTls;
 use carrier::datagram::DatagramRouter;
 mod issuer;

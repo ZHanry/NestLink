@@ -97,12 +97,12 @@ impl DatagramReply {
     }
 }
 #[derive(Default, Clone, Copy)]
-pub(super) struct ReplayWindow {
+pub struct ReplayWindow {
     high: u64,
     bits: u64,
 }
 impl ReplayWindow {
-    pub(super) fn accept(&mut self, sequence: u64) -> Result<(), Error> {
+    pub fn accept(&mut self, sequence: u64) -> Result<(), Error> {
         if sequence == 0 || sequence > i64::MAX as u64 {
             return Err(Error::Datagram);
         }
@@ -133,12 +133,21 @@ pub struct DatagramMapping {
 }
 impl DatagramMapping {
     pub async fn new(prepared: PreparedLocalTunnel) -> Result<Self, Error> {
-        if prepared.protocol != "udp" {
+        Self::from_target(prepared.flow, prepared.address, prepared.protocol,
+            prepared.stream_id, prepared.challenge_deadline).await
+    }
+    pub async fn new_private(prepared: super::PreparedPrivateLocalTunnel) -> Result<Self, Error> {
+        Self::from_target(prepared.flow, prepared.address, prepared.protocol,
+            prepared.stream_id, prepared.challenge_deadline).await
+    }
+    async fn from_target(flow: ServiceFlowPermit, address: SocketAddr, protocol: String,
+        stream_id: String, challenge_deadline: std::time::Instant) -> Result<Self, Error> {
+        if protocol != "udp" {
             return Err(Error::Target);
         }
-        prepared.flow.check_live()?;
-        prepared.check_challenge_deadline()?;
-        let bind: SocketAddr = if prepared.address.is_ipv4() {
+        flow.check_live()?;
+        if std::time::Instant::now() >= challenge_deadline { return Err(rejected(ErrorCode::LeaseExpired).into()); }
+        let bind: SocketAddr = if address.is_ipv4() {
             "0.0.0.0:0"
         } else {
             "[::]:0"
@@ -147,16 +156,16 @@ impl DatagramMapping {
         .map_err(|_| Error::Target)?;
         let socket = UdpSocket::bind(bind).await?;
         tokio::select! { biased;
-            _=prepared.flow.wait_stopped()=>return Err(rejected(ErrorCode::PolicyRevoked).into()),
-            _=tokio::time::sleep_until(prepared.challenge_deadline.into())=>return Err(rejected(ErrorCode::LeaseExpired).into()),
-            connected=socket.connect(prepared.address)=>connected?,
+            _=flow.wait_stopped()=>return Err(rejected(ErrorCode::PolicyRevoked).into()),
+            _=tokio::time::sleep_until(challenge_deadline.into())=>return Err(rejected(ErrorCode::LeaseExpired).into()),
+            connected=socket.connect(address)=>connected?,
         }
-        prepared.flow.check_live()?;
-        prepared.check_challenge_deadline()?;
+        flow.check_live()?;
+        if std::time::Instant::now() >= challenge_deadline { return Err(rejected(ErrorCode::LeaseExpired).into()); }
         Ok(Self {
             socket,
-            flow: prepared.flow,
-            mapping_id: prepared.stream_id,
+            flow,
+            mapping_id: stream_id,
             received: Mutex::new(ReplayWindow::default()),
             sent: Mutex::new(0),
         })

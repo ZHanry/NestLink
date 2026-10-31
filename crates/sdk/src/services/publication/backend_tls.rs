@@ -48,7 +48,7 @@ impl HttpsBackendTls {
             name,
         })
     }
-    pub(super) async fn connect(self, target: TcpStream) -> std::io::Result<TlsStream<TcpStream>> {
+    pub(crate) async fn connect(self, target: TcpStream) -> std::io::Result<TlsStream<TcpStream>> {
         TlsConnector::from(self.config)
             .connect(self.name, target)
             .await

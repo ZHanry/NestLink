@@ -20,7 +20,7 @@ impl ServiceDefinition {
             || self.name.trim() != self.name
             || self.name.chars().any(char::is_control)
             || !valid_id(&self.host_device_id)
-            || !valid_id(&self.edge_node_id)
+            || (!self.edge_node_id.is_empty() && !valid_id(&self.edge_node_id))
             || self.allowed_sources.len() > 32
             || !(1..=128).contains(&self.limits.maximum_connections)
             || !(1..=1_073_741_824).contains(&self.limits.bytes_per_second)
@@ -51,6 +51,16 @@ impl ServiceDefinition {
             return Err(invalid());
         }
         Ok(())
+    }
+
+    /// Private-only services are hosted by an installation and have no public
+    /// edge. Keep their node dimension in the existing cumulative quota ledger.
+    pub fn accounting_node_id(&self) -> &str {
+        if self.edge_node_id.is_empty() {
+            &self.host_device_id
+        } else {
+            &self.edge_node_id
+        }
     }
 }
 impl ServiceSourceNetwork {

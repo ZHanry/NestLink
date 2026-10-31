@@ -157,8 +157,12 @@ impl NodeControl {
     ) -> Result<u64, Error> {
         self.check_network_topology_authority(original)?;
         let state = self.state.lock().map_err(|_| Error::Control)?;
-        state.resources.topology_deadlines.get(&original.publisher_digest)
-            .copied().ok_or(Error::Control)
+        state
+            .resources
+            .topology_deadlines
+            .get(&original.publisher_digest)
+            .copied()
+            .ok_or(Error::Control)
     }
 
     #[cfg(test)]
@@ -169,7 +173,9 @@ impl NodeControl {
         let mut state = self.state.lock().map_err(|_| Error::Control)?;
         let now = sample(self.started)?;
         let lease = state.gate.current(now)?.clone();
-        state.resources.accept(snapshot, &lease, now.monotonic_ms, now)?;
+        state
+            .resources
+            .accept(snapshot, &lease, now.monotonic_ms, now)?;
         Ok(())
     }
 

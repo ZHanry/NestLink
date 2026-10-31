@@ -51,6 +51,9 @@ impl VerifiedRemoteRouteCandidate<'_> {
     pub fn relay(&self) -> nestlink_protocol::network::PeerId { self.relay }
 }
 impl VerifiedRemoteRouteSet {
+    pub fn membership_grant_ids(&self) -> [&str;2] {
+        [&self.view.path.controller_membership.grant_id,&self.view.path.host_membership.grant_id]
+    }
     pub fn set_id(&self) -> &str { &self.view.set_id }
     pub fn path_grant_id(&self) -> &str { &self.grants.path.claims().scope.grant_id }
     pub fn transport_group(&self) -> [u8; 32] { self.grants.path.transport_group_id() }

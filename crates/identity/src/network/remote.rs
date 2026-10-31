@@ -48,15 +48,28 @@ pub fn remote_route_binding(
         return Err(denied());
     }
     Ok(RemoteRouteBinding {
-        digest: remote_route_binding_digest(path.transport_group_id(), connectivity.digest(), transit.digest(),
-            permit.digest(), permit.claims().connection_generation),
-        peers, relay: forward.relay, byte_limit: forward.byte_limit, expires_at_ms: forward.scope.expires_at_ms,
+        digest: remote_route_binding_digest(
+            path.transport_group_id(),
+            connectivity.digest(),
+            transit.digest(),
+            permit.digest(),
+            permit.claims().connection_generation,
+        ),
+        peers,
+        relay: forward.relay,
+        byte_limit: forward.byte_limit,
+        expires_at_ms: forward.scope.expires_at_ms,
     })
 }
 /// Canonical binding projection shared by endpoint and management validation.
 /// These digests are metadata; callers must separately verify all authorities.
-pub fn remote_route_binding_digest(transport_group: [u8;32], connectivity: [u8;32], transit: [u8;32],
-    permit: [u8;32], generation: u64) -> [u8;32] {
+pub fn remote_route_binding_digest(
+    transport_group: [u8; 32],
+    connectivity: [u8; 32],
+    transit: [u8; 32],
+    permit: [u8; 32],
+    generation: u64,
+) -> [u8; 32] {
     let mut transcript = b"NestLink/network-datagram/v1/route-binding\0".to_vec();
     transcript.extend_from_slice(&transport_group);
     transcript.extend_from_slice(&connectivity);
