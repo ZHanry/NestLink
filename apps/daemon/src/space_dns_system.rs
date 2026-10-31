@@ -98,7 +98,7 @@ pub(crate) fn system_wall_ms() -> Result<u64> {
 pub(crate) fn current_image_matches(process: &ProcessIdentity) -> Result<bool> {
     same_image(&process.image)
 }
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", windows))]
 pub(crate) async fn native_command(
     program: &Path,
     args: &[String],

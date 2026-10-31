@@ -263,6 +263,77 @@ fn family(identity: &ProviderIdentity, family: u16) -> io::Result<MIB_IPINTERFAC
     )?;
     Ok(row)
 }
+
+/// Independent IPv4 autoconfiguration observation. AdapterName is the OS
+/// adapter GUID; both it and Index must match the already captured fresh link.
+/// Own aligned storage for the complete bounded pointer list and validate each
+/// next pointer before reading it. No OS pointer or buffer escapes this call.
+fn ipv4_dhcp(identity: &ProviderIdentity) -> io::Result<bool> {
+    const MAX_BYTES: usize = 4 * 1024 * 1024;
+    const BUFFER_OVERFLOW: u32 = 111;
+    let mut size = 0_u32;
+    let result = unsafe { GetAdaptersInfo(null_mut(), &mut size) };
+    if result != BUFFER_OVERFLOW {
+        checked(result, "GetAdaptersInfo size")?;
+        return Err(security::denied());
+    }
+    for _ in 0..3 {
+        let requested = size as usize;
+        let row_size = std::mem::size_of::<IP_ADAPTER_INFO>();
+        if requested < row_size || requested > MAX_BYTES {
+            return Err(io::Error::other("IPv4 adapter observation exceeded its bound"));
+        }
+        let mut storage = vec![IP_ADAPTER_INFO::default(); requested.div_ceil(row_size)];
+        let capacity = storage.len() * row_size;
+        size = u32::try_from(capacity).map_err(|_| security::denied())?;
+        let result = unsafe { GetAdaptersInfo(storage.as_mut_ptr(), &mut size) };
+        if result == BUFFER_OVERFLOW {
+            continue;
+        }
+        checked(result, "GetAdaptersInfo original TUN DHCP state")?;
+        let start = storage.as_ptr().addr();
+        let returned = size as usize;
+        if returned < row_size || returned > capacity {
+            return Err(security::denied());
+        }
+        let end = start.checked_add(returned).ok_or_else(security::denied)?;
+        let mut current = storage.as_ptr();
+        let mut visited = std::collections::BTreeSet::new();
+        let mut found = None;
+        while !current.is_null() {
+            let address = current.addr();
+            if address < start
+                || address.checked_add(row_size).is_none_or(|next| next > end)
+                || !address.is_multiple_of(std::mem::align_of::<IP_ADAPTER_INFO>())
+                || visited.len() >= MAX_ROWS
+                || !visited.insert(address)
+            {
+                return Err(security::denied());
+            }
+            // SAFETY: the pointer is aligned and checked to cover one fully
+            // initialized ABI row inside this still-owned allocation.
+            let row = unsafe { &*current };
+            let length = row.AdapterName.iter().position(|byte| *byte == 0)
+                .ok_or_else(security::denied)?;
+            let name = String::from_utf8(row.AdapterName[..length].iter()
+                .map(|byte| byte.to_ne_bytes()[0]).collect())
+                .map_err(|_| security::denied())?;
+            let name = name.strip_prefix('{').and_then(|value| value.strip_suffix('}'))
+                .unwrap_or(&name);
+            let same = name.eq_ignore_ascii_case(&identity.adapter_guid);
+            if same || row.Index == identity.index {
+                if !same || row.Index != identity.index || found.is_some() {
+                    return Err(security::denied());
+                }
+                found = Some(row.DhcpEnabled != 0);
+            }
+            current = row.Next;
+        }
+        return found.ok_or_else(||io::Error::other("original IPv4 TUN adapter DHCP observation missing"));
+    }
+    Err(io::Error::other("IPv4 adapter inventory changed beyond its bounded retry budget"))
+}
+
 /// This API is limited to the helper's already captured fresh original link.
 pub fn isolate(identity: &ProviderIdentity) -> io::Result<()> {
     super::super::require_administrator_process()?;
@@ -302,6 +373,14 @@ pub fn isolate(identity: &ProviderIdentity) -> io::Result<()> {
             }),
         ];
         for (field, update) in changes {
+            // Windows rejects this IPv4 setting with ERROR_INVALID_PARAMETER.
+            // IPv4 instead uses active-only static addressing, independently
+            // verified below through the original adapter's DHCP state and
+            // the exact manual /32 address and host-route inventory. IPv6
+            // still requires its supported link-local generation control.
+            if af == AF_INET && field == "LinkLocalAddressBehavior" {
+                continue;
+            }
             update(&mut row);
             // IP Helper requires this ignored IPv4 member to be zero.
             row.SitePrefixLength = 0;
@@ -416,7 +495,7 @@ impl FamilyState {
             && !self.advertising
             && !self.default_advertising
             && self.router_discovery == RouterDiscoveryDisabled
-            && self.link_local == LinkLocalAlwaysOff
+            && (self.family == AF_INET || self.link_local == LinkLocalAlwaysOff)
             && self.dad == 0
             && !self.managed
             && !self.other_stateful
@@ -455,6 +534,7 @@ pub struct Snapshot {
     interface_type: u32,
     tunnel_type: i32,
     admin_status: i32,
+    ipv4_dhcp_enabled: bool,
     families: Vec<FamilyState>,
     addresses: Vec<AddressState>,
     routes: Vec<RouteState>,
@@ -465,6 +545,7 @@ impl Snapshot {
     }
     pub fn verify(&self, local: &[IpAddr; 2], remote: &[IpAddr; 2]) -> io::Result<()> {
         if self.mtu != 1280
+            || self.ipv4_dhcp_enabled
             || self.families.len() != 2
             || self
                 .families
@@ -530,6 +611,7 @@ pub fn inspect(identity: &ProviderIdentity) -> io::Result<Option<Snapshot>> {
         .into_iter()
         .map(|af| family(identity, af).map(FamilyState::from))
         .collect::<io::Result<Vec<_>>>()?;
+    let ipv4_dhcp_enabled = ipv4_dhcp(identity)?;
     let mut hosts = Vec::new();
     for row in addresses()? {
         if on_original(identity, row.InterfaceLuid, row.InterfaceIndex) {
@@ -570,6 +652,7 @@ pub fn inspect(identity: &ProviderIdentity) -> io::Result<Option<Snapshot>> {
         interface_type: row.Type,
         tunnel_type: row.TunnelType,
         admin_status: row.AdminStatus,
+        ipv4_dhcp_enabled,
         families,
         addresses: hosts,
         routes: paths,

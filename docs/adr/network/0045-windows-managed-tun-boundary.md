@@ -20,6 +20,44 @@ Windows helper OS state records the actual GUID/LUID/index, root-generated fresh
 
 The helper journals a fresh random adapter GUID/name before loading the provider. It records actual identity before assigning addresses, isolates only that original adapter with forwarding/weak-host/router discovery/link-local autoconfiguration disabled, and records the exact dual-stack address/route/family snapshot before accepting packets. NetIO observations use bounded allocated tables with RAII `FreeMibTable` and retained stable fields; volatile counters and route age cannot produce false ownership changes. Only local host routes are retained from automatic configuration, and only the two signed remote host routes are installed. No PowerShell/CIM process is launched on the 250ms observation path.
 
+### Family-specific autoconfiguration control
+
+Hosted source `e83a791e3c6ec0447376326f703a1616f936c3df`, run `41200744938`,
+reached the actual signed driver/session and identified Win32 error 87 at
+`SetIpInterfaceEntry`, IPv4 family 2, member `LinkLocalAddressBehavior`.
+The complete original readback had succeeded for the preceding members; this
+failure is not an authorization or unsigned-driver exception and remains a
+failed mechanism attempt.
+
+IPv6 continues to require `LinkLocalAlwaysOff` through IP Helper. IPv4 uses
+Windows `netsh interface ipv4 set address` on the original captured numeric
+index with `source=static`, the exact approved local `/32`, `gateway=none` and
+`store=active`. The executable comes from `GetSystemDirectoryW`, never PATH;
+the existing bounded child owner clears inherited loader/module variables,
+sets the OS SystemRoot explicitly, suppresses a window and joins/kills within
+its fixed timeout. GUID/name/LUID/index are checked before and after that
+single startup operation. No command is launched by periodic observations.
+
+Success is independently proved using `GetAdaptersInfo` on the same original
+GUID and index with `DhcpEnabled == false`, plus the existing complete IP
+Helper inventory requiring exactly the two signed manual `/32` and `/128`
+addresses and only their local and signed remote host routes. Extra link-local
+addresses, learned prefixes, default routes, DHCP, forwarding or replacement
+identities still fail closed. The DHCP table uses owned aligned storage,
+bounded allocation/retries, validated in-buffer list pointers and cycle limits.
+This selects supported family-specific control rather than treating error 87
+as success or dropping the original isolation requirements.
+
+Alternatives considered were retaining the failing identical IPv4/IPv6 setter,
+or accepting an unchecked IPv4 state. The former prevents every Windows native
+run; the latter cannot establish the required address/route isolation. The
+selected static operation reuses the OS network configurator and separately
+measures its effective state. Exact-source native qualification remains pending.
+
+References: [MIB_IPINTERFACE_ROW](https://learn.microsoft.com/en-us/windows/win32/api/netioapi/ns-netioapi-mib_ipinterface_row),
+[SetIpInterfaceEntry](https://learn.microsoft.com/en-us/windows/win32/api/netioapi/nf-netioapi-setipinterfaceentry),
+[GetAdaptersInfo](https://learn.microsoft.com/en-us/windows/win32/api/iphlpapi/nf-iphlpapi-getadaptersinfo).
+
 Protected receipt publication also has durable ordering: bind the single pipe and capture its receipt, save that exact receipt in the administrator journal, then publish it through the existing protected file adapter. A crash before publication is recovered as actual receipt absence; a changed receipt is never removed. Closing the original provider releases its own driver session/adapter; recovery verifies its GUID/name is physically absent. Recovery never reopens a surviving adapter just to delete it, and preserves a visible failed record if absence is not observed within five seconds. This conservative recovery case remains an explicit native qualification requirement.
 
 ## Provider choice and alternatives

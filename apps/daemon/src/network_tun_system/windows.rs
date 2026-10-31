@@ -228,7 +228,27 @@ async fn apply(
         resources::isolate(&identity)?;
         for address in native("list fresh provider addresses",original.addresses())? {native(&format!("remove fresh automatic address {address}"),original.remove_address(address))?;}
         let [IpAddr::V4(v4),IpAddr::V6(v6)]=record.plan.local_hosts else {return Err(io::Error::other("signed dual-stack hosts missing").into());};
-        native("set signed IPv4 host",original.set_network_address(v4,32,None::<std::net::Ipv4Addr>))?;
+        if record.capture()?.as_ref()!=Some(&identity) {
+            return Err(io::Error::other("original TUN adapter changed before static IPv4 configuration").into());
+        }
+        // NetIO rejects the IPv4 LinkLocalAddressBehavior mutation. Use the
+        // reviewed Windows static-address operation on this fresh original
+        // adapter only; an active-only /32 disables DHCP without a gateway.
+        // Independent NetIO/GetAdaptersInfo readback below must still prove
+        // DHCP is off and that only the two signed manual hosts/routes exist.
+        let netsh=nestlink_platform_network::system_tools::windows_netsh()?;
+        let system_root=netsh.parent().and_then(Path::parent)
+            .ok_or_else(||io::Error::other("trusted Windows system root missing"))?;
+        crate::space_dns_system::native_command(&netsh,&[
+            "interface".into(),"ipv4".into(),"set".into(),"address".into(),
+            format!("name={}",identity.index),"source=static".into(),
+            format!("address={v4}"),"mask=255.255.255.255".into(),
+            "gateway=none".into(),"store=active".into(),
+        ],Some(("SystemRoot",system_root.to_str()
+            .ok_or_else(||io::Error::other("Windows system root is not Unicode"))?.into()))).await?;
+        if record.capture()?.as_ref()!=Some(&identity) {
+            return Err(io::Error::other("original TUN adapter changed during static IPv4 configuration").into());
+        }
         native("add signed IPv6 host",original.add_address_v6(v6,128))?;
         native("set IPv4 MTU",original.set_mtu(1280))?;native("set IPv6 MTU",original.set_mtu_v6(1280))?;
         resources::install_routes(&identity,&record.plan.local_hosts,&record.plan.remote_hosts)?;
