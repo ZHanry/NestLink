@@ -250,6 +250,24 @@ enum VideoRecoveryReason {
 }
 // Reliable, View-authorized feedback. It cannot change source/layout/codec
 // consent. request_sequence is per source, distinct from frame sequence.
+// Optional negotiated observations on the existing 256-byte VideoFeedback
+// channel. NLQF/v1 framing and strict canonical decoding live in native_qos.rs.
+// No authority, format selection or media payload is carried here.
+message NativeReceiverQosReport {
+  uint64 connection_generation = 1;
+  uint64 layout_epoch = 2;
+  uint32 source = 3;
+  uint64 format_epoch = 4;
+  bytes format_sha256 = 5;
+  uint64 report_sequence = 6;
+  uint64 last_sequence = 7;
+  uint32 window_ms = 8;
+  uint64 received_payload_bytes = 9;
+  uint32 received_frames = 10;
+  optional uint32 decoded_frames = 11;
+  optional uint64 maximum_decode_us = 12;
+}
+
 message NativeVideoFeedback {
   uint32 schema_version = 1;
   uint64 connection_generation = 2;

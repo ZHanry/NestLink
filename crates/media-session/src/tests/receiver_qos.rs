@@ -6,7 +6,7 @@ async fn real_vp8_receiver_reports_cross_original_tls_and_quic_then_stop_with_or
         let mut pair=pair_with_features(quic,None,false,true).await?;
         let frames=Arc::new(Mutex::new(VecDeque::new()));
         let stopped=Arc::new(AtomicBool::new(false));
-        let display=Display{source:42,left:0,top:0,width:64,height:48,logical_width:64,logical_height:48};
+        let display=Display{source:42,logical:InputLayout{left:0,top:0,width:64,height:48}};
         let mut sender=VideoSender::attach(&mut pair.host,Capture{frames:frames.clone(),stopped:stopped.clone()},EPOCH,vec![display],vec![selected(42)])?;
         let mut receiver=VideoReceiver::attach(pair.controller,EPOCH,vec![selected(42)])?;
         let deadline=Instant::now()+Duration::from_secs(2);
