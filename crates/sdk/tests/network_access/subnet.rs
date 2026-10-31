@@ -496,14 +496,19 @@ async fn same_boot_renewal_keeps_original_signed_mapping_and_budget_beyond_first
     let bytes = udp(source_ip.octets(), [10, 210, 2, 42], 53)?;
     target.admit_remote(&bytes)?;
     let spent = target.spent_bytes();
+    let mut next_renewal = first_lease_end - nestlink_protocol::NODE_LEASE_MS
+        + nestlink_protocol::NODE_REFRESH_MS + 50;
     while now()? <= first_lease_end + 500 {
-        let mut store = f.store()?;
-        let challenge = store.node_challenge(&gateway.node, now()?)?;
-        store.issue_node_lease(
-            &gateway.identity.prove(&challenge, &mapping_claims.gateway_incarnation.runtime_id)?,
-            now()?,
-        )?;
-        drop(store);
+        if now()? >= next_renewal {
+            let mut store = f.store()?;
+            let challenge = store.node_challenge(&gateway.node, now()?)?;
+            let issued_at = now()?;
+            store.issue_node_lease(
+                &gateway.identity.prove(&challenge, &mapping_claims.gateway_incarnation.runtime_id)?,
+                issued_at,
+            )?;
+            next_renewal = issued_at + nestlink_protocol::NODE_REFRESH_MS + 50;
+        }
         target.refresh(&f.target).await?;
         assert_eq!(target.spent_bytes(), spent, "lease renewal cannot refill a budget");
         tokio::time::sleep(std::time::Duration::from_millis(700)).await;

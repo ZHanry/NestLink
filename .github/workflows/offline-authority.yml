@@ -1,0 +1,76 @@
+name: Independent finite offline authority
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  authority:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CARGO_INCREMENTAL: "0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          components: clippy
+      - name: Compile and execute the exact complete-bundle authority cases
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, subprocess
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'offline-authority'
+          output.mkdir()
+          source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          assert source == os.environ['GITHUB_SHA']
+          assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
+          command = ['cargo', 'test', '--locked', '-p', 'nestlink-identity', '--lib', '--no-run', '--message-format=json']
+          with (output / 'build.jsonl').open('w') as stream, (output / 'build.log').open('w') as errors:
+              built = subprocess.run(command, stdout=stream, stderr=errors, check=False)
+          receipt = {
+              'source_revision': source, 'workflow': os.environ['GITHUB_WORKFLOW_REF'],
+              'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'runner_environment': os.environ['RUNNER_ENVIRONMENT'], 'runner_os': os.environ['RUNNER_OS'],
+              'scope': 'L1 protocol/identity/finite-owner primitives only; no production API, durable quota, carrier or target acceptance',
+              'cargo_lock_sha256': hashlib.sha256(pathlib.Path('Cargo.lock').read_bytes()).hexdigest(),
+              'build_command': command, 'build_exit_code': built.returncode, 'passed': False,
+          }
+          if built.returncode == 0:
+              executables = [json.loads(line)['executable'] for line in (output / 'build.jsonl').read_text().splitlines()
+                             if json.loads(line).get('reason') == 'compiler-artifact'
+                             and json.loads(line).get('executable')]
+              assert len(executables) == 1, executables
+              executable = pathlib.Path(executables[0])
+              inventory = subprocess.check_output([str(executable), 'offline::', '--list'], text=True)
+              (output / 'inventory.log').write_text(inventory)
+              names = [line.removesuffix(': test') for line in inventory.splitlines() if line.endswith(': test')]
+              assert len(names) == 6 and len(set(names)) == 6, names
+              execution = [str(executable), 'offline::', '--nocapture', '--test-threads=1', '--color', 'never']
+              with (output / 'tests.log').open('w') as stream:
+                  tested = subprocess.run(execution, stdout=stream, stderr=subprocess.STDOUT, timeout=60, check=False)
+              log = (output / 'tests.log').read_text()
+              receipt.update(executable_sha256=hashlib.sha256(executable.read_bytes()).hexdigest(),
+                             tests=names, execution_command=execution, test_exit_code=tested.returncode,
+                             passed=tested.returncode == 0 and '6 passed; 0 failed; 0 ignored' in log)
+          receipt['files'] = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(output.iterdir())}
+          (output / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          assert receipt['passed'], 'Retained diagnostics; no authority qualification from this attempt'
+      - name: Lint independent authority without suppressing warnings
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo clippy --locked -p nestlink-protocol -p nestlink-identity --all-targets -- -D warnings 2>&1 | tee "$RUNNER_TEMP/offline-authority/clippy.log"
+      - name: Preserve same-source primitive evidence and exact failure logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: offline-authority-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/offline-authority/
+          if-no-files-found: error
+          retention-days: 30
