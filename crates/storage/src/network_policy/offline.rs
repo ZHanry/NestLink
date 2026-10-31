@@ -1,5 +1,5 @@
 //! Durable online enable/review/reserve/consume for independent offline bundles.
-//! Every mutation intersects the original live private-service authority in the
+//! Every mutation intersects the original private-service or remote authority in the
 //! same SQLite IMMEDIATE transaction. Unused promises are never refunded.
 use super::*;
 use crate::services::private::OfflinePrivateAuthority;
@@ -8,6 +8,16 @@ use nestlink_identity::{offline::*, verify_device_action};
 use nestlink_protocol::offline::{management::*, *};
 
 const MAX_HISTORY: u64 = 4096;
+mod remote;
+enum OriginalBusiness {
+    Private(OfflinePrivateAuthority),
+    Remote(nestlink_protocol::PermitClaims),
+}
+impl OriginalBusiness {
+    fn table(&self) -> &'static str {
+        match self { Self::Private(_) => "offline_bundles", Self::Remote(_) => "offline_remote_bundles" }
+    }
+}
 struct Row {
     claims: OfflineGrantBundleClaims,
     account: String,
@@ -19,7 +29,7 @@ struct Row {
     consumed: [bool; 2],
     signed: Option<SignedOfflineGrantBundle>,
     revoked: bool,
-    private_authority: OfflinePrivateAuthority,
+    business_authority: OriginalBusiness,
 }
 fn settings(connection: &Connection, space: &str) -> Result<OfflinePolicyView, StorageError> {
     Ok(connection
@@ -43,6 +53,8 @@ fn settings(connection: &Connection, space: &str) -> Result<OfflinePolicyView, S
 }
 fn row(connection: &Connection, space: &str, id: &str) -> Result<Row, StorageError> {
     require_id(id)?;
+    let private: bool = connection.query_row("SELECT EXISTS(SELECT 1 FROM offline_bundles WHERE space_id=?1 AND bundle_id=?2)", params![space,id], |r| r.get(0))?;
+    let table = if private { "offline_bundles" } else { "offline_remote_bundles" };
     type Stored = (
         String,
         String,
@@ -58,9 +70,14 @@ fn row(connection: &Connection, space: &str, id: &str) -> Result<Row, StorageErr
         Option<String>,
         bool,
     );
-    let stored: Stored = connection.query_row("SELECT claims_json,requester_account,requester_login,draft_digest,authority_key,approval0,approval1,consume_challenge0,consume_challenge1,consumed0,consumed1,signed_json,revoked FROM offline_bundles WHERE space_id=?1 AND bundle_id=?2",params![space,id],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?,r.get(4)?,r.get(5)?,r.get(6)?,r.get(7)?,r.get(8)?,r.get(9)?,r.get(10)?,r.get(11)?,r.get(12)?))).optional()?.ok_or(StorageError::Forbidden)?;
+    let stored: Stored = connection.query_row(&format!("SELECT claims_json,requester_account,requester_login,draft_digest,authority_key,approval0,approval1,consume_challenge0,consume_challenge1,consumed0,consumed1,signed_json,revoked FROM {table} WHERE space_id=?1 AND bundle_id=?2"),params![space,id],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?,r.get(4)?,r.get(5)?,r.get(6)?,r.get(7)?,r.get(8)?,r.get(9)?,r.get(10)?,r.get(11)?,r.get(12)?))).optional()?.ok_or(StorageError::Forbidden)?;
     let (claims, account, login, hash, key, a, b, c, d, x, y, signed, revoked) = stored;
-    let private_authority = connection.query_row("SELECT private_rule_id,private_exposure_revision FROM offline_bundles WHERE space_id=?1 AND bundle_id=?2", params![space,id], |r| Ok(OfflinePrivateAuthority {rule_id: r.get(0)?, exposure_revision: r.get(1)?}))?;
+    let business_authority = if private {
+        OriginalBusiness::Private(connection.query_row("SELECT private_rule_id,private_exposure_revision FROM offline_bundles WHERE space_id=?1 AND bundle_id=?2", params![space,id], |r| Ok(OfflinePrivateAuthority {rule_id: r.get(0)?, exposure_revision: r.get(1)?}))?)
+    } else {
+        let json: String=connection.query_row("SELECT original_permit_json FROM offline_remote_bundles WHERE space_id=?1 AND bundle_id=?2", params![space,id], |r|r.get(0))?;
+        OriginalBusiness::Remote(serde_json::from_str(&json)?)
+    };
     let claims: OfflineGrantBundleClaims = serde_json::from_str(&claims)?;
     claims.validate()?;
     let result = Row {
@@ -80,7 +97,7 @@ fn row(connection: &Connection, space: &str, id: &str) -> Result<Row, StorageErr
         consumed: [x, y],
         signed: signed.map(|v| serde_json::from_str(&v)).transpose()?,
         revoked,
-        private_authority,
+        business_authority,
     };
     if result.claims.bundle_id != id
         || result.claims.space_id != space
@@ -149,13 +166,17 @@ impl Store {
             })
         });
         if live {
-            match self.offline_private_current(
+            let current = match &row.business_authority {
+                OriginalBusiness::Private(original) => self.offline_private_current(
                 &row.account,
                 &row.login,
                 c,
-                &row.private_authority,
+                original,
                 now,
-            ) {
+                ),
+                OriginalBusiness::Remote(original) => self.offline_remote_current(&row.account, &row.login, c, original, now),
+            };
+            match current {
                 Ok(()) => {}
                 Err(
                     StorageError::Forbidden
@@ -168,7 +189,7 @@ impl Store {
         }
         if !live {
             tx.execute(
-                "UPDATE offline_bundles SET revoked=1 WHERE bundle_id=?1",
+                &format!("UPDATE {} SET revoked=1 WHERE bundle_id=?1", row.business_authority.table()),
                 [&c.bundle_id],
             )?;
         }
@@ -229,6 +250,7 @@ impl Store {
             "UPDATE offline_bundles SET revoked=1 WHERE space_id=?1",
             [space],
         )?;
+        tx.execute("UPDATE offline_remote_bundles SET revoked=1 WHERE space_id=?1", [space])?;
         observe(&tx, space, now)?;
         auditing::record(
             &tx,
@@ -254,7 +276,7 @@ impl Store {
             return Err(StorageError::Conflict);
         }
         let count: u64 = tx.query_row(
-            "SELECT count(*) FROM offline_bundles WHERE space_id=?1",
+            "SELECT (SELECT count(*) FROM offline_bundles WHERE space_id=?1)+(SELECT count(*) FROM offline_remote_bundles WHERE space_id=?1)",
             [space],
             |r| r.get(0),
         )?;
@@ -356,7 +378,7 @@ impl Store {
         }
         let column = if index == 0 { "approval0" } else { "approval1" };
         tx.execute(
-            &format!("UPDATE offline_bundles SET {column}=?1 WHERE bundle_id=?2"),
+            &format!("UPDATE {} SET {column}=?1 WHERE bundle_id=?2", stored.business_authority.table()),
             params![serde_json::to_string(&approval)?, id],
         )?;
         stored.approvals[index] = Some(approval);
@@ -368,9 +390,12 @@ impl Store {
                 &stored.claims,
                 &[a.clone(), b.clone()],
             )?;
-            self.offline_private_reserve(&tx, &stored.claims)?;
+            match &stored.business_authority {
+                OriginalBusiness::Private(_) => self.offline_private_reserve(&tx, &stored.claims)?,
+                OriginalBusiness::Remote(original) => self.offline_remote_reserve(&tx, &stored.claims, original)?,
+            }
             let signed = signer.sign_offline_bundle(&stored.claims)?;
-            tx.execute("UPDATE offline_bundles SET signed_json=?1 WHERE bundle_id=?2 AND signed_json IS NULL",params![serde_json::to_string(&signed)?,id])?;
+            tx.execute(&format!("UPDATE {} SET signed_json=?1 WHERE bundle_id=?2 AND signed_json IS NULL", stored.business_authority.table()),params![serde_json::to_string(&signed)?,id])?;
             stored.signed = Some(signed);
         }
         let result = self.offline_current(&tx, &stored, now)?;
@@ -431,7 +456,7 @@ impl Store {
         )?;
         let index = usize::from(request.endpoint);
         let column = if index == 0 { "consumed0" } else { "consumed1" };
-        if tx.execute(&format!("UPDATE offline_bundles SET {column}=1 WHERE bundle_id=?1 AND {column}=0 AND signed_json IS NOT NULL AND revoked=0"),[id])? != 1 {return Err(StorageError::Conflict);}
+        if tx.execute(&format!("UPDATE {} SET {column}=1 WHERE bundle_id=?1 AND {column}=0 AND signed_json IS NOT NULL AND revoked=0", stored.business_authority.table()),[id])? != 1 {return Err(StorageError::Conflict);}
         stored.consumed[index] = true;
         let result = self.offline_current(&tx, &stored, now)?;
         auditing::record(
@@ -462,7 +487,7 @@ impl Store {
             self.audit_admin(actor, now / 1000)?;
         }
         tx.execute(
-            "UPDATE offline_bundles SET revoked=1 WHERE bundle_id=?1",
+            &format!("UPDATE {} SET revoked=1 WHERE bundle_id=?1", stored.business_authority.table()),
             [id],
         )?;
         tx.execute("UPDATE offline_settings SET revision=revision+1,revocation_epoch=revocation_epoch+1 WHERE space_id=?1",[space])?;

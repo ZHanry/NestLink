@@ -505,6 +505,10 @@ pub fn router(state: AppState) -> Router {
             post(network_policy::offline::draft),
         )
         .route(
+            "/api/v3/network/spaces/{space}/offline/remote-drafts",
+            post(network_policy::offline::remote_draft),
+        )
+        .route(
             "/api/v3/network/spaces/{space}/offline/bundles/{bundle}",
             get(network_policy::offline::read).delete(network_policy::offline::revoke),
         )

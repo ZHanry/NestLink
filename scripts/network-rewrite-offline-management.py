@@ -21,7 +21,7 @@ package, target, count = {
     'daemon': ('nestlink-daemon', ['--bin', 'nestlink-daemon'], 1),
     'remote-identity': ('nestlink-identity', ['--lib'], 3),
     'remote-session': ('nestlink-session', ['--test', 'authorization'], 1),
-    'remote-storage': ('nestlink-storage', ['--test', 'control'], 3),
+    'remote-storage': ('nestlink-storage', ['--test', 'control'], 5),
     'remote-sdk': ('nestlink-sdk', ['--test', 'end_to_end'], 1),
 }[args.suite]
 test_filter = 'remote_budget' if args.suite.startswith('remote-') else 'offline::'
@@ -37,7 +37,7 @@ receipt = {
 }
 try:
     if args.suite.startswith('remote-'):
-        receipt['scope'] = 'Original online remote cumulative budget reservation, strict signed scope, retained Session meter and actual HTTP/SDK/QUIC business accounting; remote offline activation/carrier and target acceptance are excluded.'
+        receipt['scope'] = 'Original remote cumulative budget reservation, strict signed scope, retained Session meter and actual HTTP/SDK/QUIC online business accounting. Storage additionally exercises independent finite offline remote draft, atomic second approval against original online totals, one-use consume, revoke without refund and original short online expiry. Remote offline carrier and target acceptance are excluded.'
     with (output / 'build.jsonl').open('w') as stream, (output / 'build.log').open('w') as errors:
         built = subprocess.run(build, stdout=stream, stderr=errors, check=False)
     receipt['build_exit_code'] = built.returncode

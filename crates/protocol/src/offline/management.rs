@@ -31,6 +31,21 @@ pub struct OfflinePrivateDraftRequest {
 }
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
+pub struct OfflineRemoteDraftRequest {
+    pub session_id: String,
+    pub expected_policy_revision: u64,
+    pub expected_connection_generation: u64,
+    pub expected_lease_sequence: u64,
+    pub process_nonces: [[u8; 32]; 2],
+    pub operations: Vec<OfflineRemoteOperation>,
+    pub direct_transports: Vec<OfflineDirectTransport>,
+    pub maximum_bytes: u64,
+    pub maximum_file_write_bytes: u64,
+    pub maximum_connections: u32,
+    pub expires_at_ms: u64,
+}
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct OfflineBundleView {
     pub claims: OfflineGrantBundleClaims,
     pub draft_digest: [u8; 32],

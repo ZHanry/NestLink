@@ -151,6 +151,7 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         OfflineEnableUpdate,
         OfflinePolicyView,
         OfflinePrivateDraftRequest,
+        OfflineRemoteDraftRequest,
         OfflineBundleView,
         OfflineEndpointApproval,
         OfflineConsumeChallenge,

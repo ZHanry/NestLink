@@ -51,6 +51,18 @@ pub(crate) async fn draft(
         .await?;
     Ok((StatusCode::CREATED, Json(result)))
 }
+pub(crate) async fn remote_draft(
+    State(state): State<AppState>, headers: HeaderMap, Path(space): Path<String>,
+    Json(request): Json<OfflineRemoteDraftRequest>,
+) -> Result<(StatusCode, Json<OfflineBundleView>), ApiError> {
+    let token=member_access(&state,&headers,MemberOperation::Issue).await?;
+    let result=state.db(move |store| {
+        let now=now_ms()?;
+        let actor=store.authenticate(&token,now/1000)?;
+        store.create_offline_remote_draft(&actor,&space,request,now)
+    }).await?;
+    Ok((StatusCode::CREATED,Json(result)))
+}
 pub(crate) async fn read(
     State(state): State<AppState>,
     headers: HeaderMap,

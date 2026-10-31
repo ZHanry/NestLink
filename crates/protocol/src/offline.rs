@@ -53,6 +53,19 @@ pub enum OfflineRemoteOperation {
     FileRead,
     FileWrite,
 }
+impl OfflineRemoteOperation {
+    pub fn permission(self) -> crate::Permission {
+        match self {
+            Self::View => crate::Permission::View,
+            Self::Audio => crate::Permission::Audio,
+            Self::Input => crate::Permission::Input,
+            Self::ClipboardRead => crate::Permission::ClipboardRead,
+            Self::ClipboardWrite => crate::Permission::ClipboardWrite,
+            Self::FileRead => crate::Permission::FileRead,
+            Self::FileWrite => crate::Permission::FileWrite,
+        }
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "purpose", rename_all = "snake_case", deny_unknown_fields)]
