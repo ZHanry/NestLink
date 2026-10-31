@@ -50,7 +50,7 @@
   },
   "execution_provenance": {
     "kind": "github_hosted_lab",
-    "scope": "Actual VP8/Opus and original native media owners, authenticated native receiver reports through original TLS/QUIC, signed two-party native-only permit negotiation, original queues, lease revocation and strict media/Core/daemon lint. No shaped-network/file-concurrency, physical GPU or whole W31 qualification.",
+    "scope": "Actual VP8/Opus and original native media owners, authenticated native receiver reports through an endpoint-proof-authorized in-memory duplex stream and actual kernel UDP/QUIC/mTLS, signed two-party native-only permit negotiation, original queues, lease revocation and strict media/Core/daemon lint. The stream fixture in this historical source did not use a TCP/TLS socket and is not real TLS evidence. No shaped-network/file-concurrency, physical GPU or whole W31 qualification.",
     "results": [
       {
         "package": "nestlink-media-codec",

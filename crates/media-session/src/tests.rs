@@ -28,6 +28,8 @@ use std::{
 use tokio::{io::split, sync::watch};
 
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+trait TestWire: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send {}
+impl<T: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send> TestWire for T {}
 pub(super) const EPOCH: VideoEpoch = VideoEpoch {
     layout: 3,
     connection: 9,
@@ -206,13 +208,17 @@ async fn pair_with_features(
             bridge: None,
         });
     }
-    let (host_wire, controller_wire, bridge) = match dropped_video {
+    let (host_wire, controller_wire, bridge): (
+        Box<dyn TestWire>,
+        Box<dyn TestWire>,
+        Option<feedback::FrameBridge>,
+    ) = match dropped_video {
         Some(sequence) => {
             let (host_wire, host_bridge) = tokio::io::duplex(16384);
             let (controller_wire, controller_bridge) = tokio::io::duplex(16384);
             (
-                host_wire,
-                controller_wire,
+                Box::new(host_wire),
+                Box::new(controller_wire),
                 Some(feedback::FrameBridge::drop_video(
                     host_bridge,
                     controller_bridge,
@@ -220,9 +226,61 @@ async fn pair_with_features(
                 )),
             )
         }
+        None if qos => {
+            use nestlink_transport_stream::tls;
+            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
+            let address = listener.local_addr()?;
+            let server = tokio_rustls::TlsAcceptor::from(Arc::new(tls::server_config(
+                &host,
+                controller.fingerprint(),
+            )?));
+            let client_config = tls::client_config(&controller, host.fingerprint())?;
+            let accept = async {
+                let (tcp, _) = listener.accept().await?;
+                tcp.set_nodelay(true)?;
+                server.accept(tcp).await
+            };
+            let (controller_wire, host_wire) = tokio::time::timeout(
+                Duration::from_secs(2),
+                async {
+                    tokio::try_join!(
+                        nestlink_transport_stream::connect(
+                            address,
+                            client_config,
+                            Duration::from_secs(2),
+                        ),
+                        accept,
+                    )
+                },
+            )
+            .await??;
+            let host_tls = host_wire.get_ref().1;
+            let controller_tls = controller_wire.get_ref().1;
+            let connections: [&tokio_rustls::rustls::CommonState; 2] = [host_tls, controller_tls];
+            for connection in connections {
+                assert_eq!(
+                    connection.protocol_version(),
+                    Some(tokio_rustls::rustls::ProtocolVersion::TLSv1_3)
+                );
+                assert_eq!(connection.alpn_protocol(), Some(nestlink_protocol::ALPN.as_bytes()));
+            }
+            assert_eq!(
+                tls::certificate_fingerprint(
+                    host_tls.peer_certificates().and_then(|certs| certs.first()).ok_or("missing mTLS client certificate")?
+                )?,
+                controller.fingerprint(),
+            );
+            assert_eq!(
+                tls::certificate_fingerprint(
+                    controller_tls.peer_certificates().and_then(|certs| certs.first()).ok_or("missing mTLS server certificate")?
+                )?,
+                host.fingerprint(),
+            );
+            (Box::new(host_wire), Box::new(controller_wire), None)
+        }
         None => {
             let (host, controller) = tokio::io::duplex(16384);
-            (host, controller, None)
+            (Box::new(host), Box::new(controller), None)
         }
     };
     let (mut host_read, mut host_write) = split(host_wire);

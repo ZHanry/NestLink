@@ -71,6 +71,8 @@ jobs:
           assert security['dependencies']['tokio'] == {'workspace': True, 'features': ['process']}
           assert security['dependencies']['serde'] == {'workspace': True}
           assert security['dependencies']['serde_json'] == {'workspace': True}
+          media = tomllib.loads(pathlib.Path('crates/media-session/Cargo.toml').read_text())
+          assert media['target']['cfg(any(target_os = "windows", target_os = "linux"))']['dev-dependencies']['tokio-rustls'] == {'workspace': True}
           assert security['target']['cfg(unix)']['dependencies']['rustix'] == {
               'version': '1.1.2', 'features': ['process', 'fs']}
           assert security['target']['cfg(windows)']['dependencies']['tokio-util'] == {
@@ -235,6 +237,9 @@ jobs:
                   'native_stdio_reuses_locked_tokio_util_identity': any(
                       item['name'] == 'nestlink-platform-security' and 'tokio-util' in item.get('dependencies', [])
                       for item in after) and any(key[:2] == ('tokio-util', '0.7.20') for key in existing),
+                  'media_actual_mtls_fixture_reuses_locked_tokio_rustls_identity': scope != 'product' or any(
+                      item['name'] == 'nestlink-media-session' and 'tokio-rustls' in item.get('dependencies', [])
+                      for item in after) and any(key[0] == 'tokio-rustls' for key in existing),
                   'packet_parser_exact_identity_checksum_and_only_locked_arrayvec_edge':
                       [item for item in after if item['name'] == 'etherparse'] == [reviewed_packet_package],
                   'managed_tun_exact_reviewed_provider_closure': scope != 'product' or all(

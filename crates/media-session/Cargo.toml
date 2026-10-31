@@ -20,6 +20,7 @@ nestlink-identity.workspace = true
 nestlink-policy.workspace = true
 prost.workspace = true
 nestlink-transport-quic.workspace = true
+tokio-rustls.workspace = true
 
 [lints]
 workspace = true

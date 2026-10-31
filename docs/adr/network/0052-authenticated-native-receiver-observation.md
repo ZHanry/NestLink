@@ -22,5 +22,9 @@
 不能通过修改格式摘要或跳过协商把观测当作新格式授权。
 
 验证覆盖规范消息反例、未知观测不升级、多源/采样周期、重放/旧布局与实际 VP8 编解码，
-实际反馈通过原 TLS/QUIC 双向通道并随原 lease 撤销停止。
+历史源码 `4794698` 的流式 fixture 是经过真实 endpoint proof 的内存双工流，
+其 QUIC 分支使用真实内核 UDP/mTLS；该次结果不作为真实 TCP/TLS 证据。
+新增流式 QoS fixture 复用原 transport-stream 配置、安装公钥 pin 与 tokio-rustls，
+在 loopback TCP 上建立双向 TLS1.3，并检查双方证书和 ALPN；待新源码 Actions 验证。
+两条承载均需在原 owner 传递实际反馈并随原 lease 撤销停止。
 完整弱网/文件并发、两秒分辨率降档、Windows GPU 与原始 p95 门槛继续保留。
