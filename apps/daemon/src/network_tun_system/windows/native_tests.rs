@@ -49,7 +49,9 @@ async fn hosted_native_role() -> Result {
         )?;
         return Ok(());
     }
-    if role=="raw-foreign" {return raw_foreign(&case,&receipt).await;}
+    if role == "raw-foreign" {
+        return raw_foreign(&case, &receipt).await;
+    }
     let journal = path("NESTLINK_TUN_NATIVE_JOURNAL")?;
     match role.as_str() {
         "apply" => {
@@ -98,8 +100,11 @@ async fn ordinary(case: &Path, plan_path: &Path, receipt: &Path) -> Result {
     // In the raw-client negative scenario the original live owner never opens
     // its pipe. A distinct actual medium process gets the one connection and
     // must be rejected by the helper's OS-reported peer identity, before hello.
-    if std::env::var("NESTLINK_TUN_NATIVE_PAUSE").as_deref()==Ok("1") {
-        loop {plan.validate(true)?;tokio::time::sleep(Duration::from_millis(25)).await;}
+    if std::env::var("NESTLINK_TUN_NATIVE_PAUSE").as_deref() == Ok("1") {
+        loop {
+            plan.validate(true)?;
+            tokio::time::sleep(Duration::from_millis(25)).await;
+        }
     }
     let os = OwnerOs::new(receipt.to_path_buf())?;
     let state = tokio::time::timeout(Duration::from_secs(15), async {
@@ -147,21 +152,29 @@ async fn whole_udp(plan: &TunPlan, device: &PacketDevice, index: usize) -> Resul
     let target = SocketAddr::new(plan.remote_hosts[index], 443);
     assert_eq!(socket.send_to(&payload, target).await?, payload.len());
     let mut packet = [0; 65_536];
-    tokio::time::timeout(Duration::from_secs(2),async {
+    tokio::time::timeout(Duration::from_secs(2), async {
         // A newly enabled Windows IP interface can have queued OS-generated
         // control packets before isolation. They cannot replace the exact UDP
         // witness, and no truncated matching witness is ever skipped.
         for _ in 0..32 {
-            let length=device.recv(&mut packet).await?;
-            let sliced=etherparse::SlicedPacket::from_ip(&packet[..length])?;
-            let Some(etherparse::TransportSlice::Udp(udp))=sliced.transport else {continue;};
-            if udp.source_port()!=socket.local_addr()?.port() || udp.destination_port()!=443 {continue;}
-            assert_eq!(length,1280,"helper pipe must deliver the complete original kernel UDP IP packet");
-            assert_eq!(udp.payload(),payload);
-            return Ok::<(),Box<dyn std::error::Error+Send+Sync>>(());
+            let length = device.recv(&mut packet).await?;
+            let sliced = etherparse::SlicedPacket::from_ip(&packet[..length])?;
+            let Some(etherparse::TransportSlice::Udp(udp)) = sliced.transport else {
+                continue;
+            };
+            if udp.source_port() != socket.local_addr()?.port() || udp.destination_port() != 443 {
+                continue;
+            }
+            assert_eq!(
+                length, 1280,
+                "helper pipe must deliver the complete original kernel UDP IP packet"
+            );
+            assert_eq!(udp.payload(), payload);
+            return Ok::<(), Box<dyn std::error::Error + Send + Sync>>(());
         }
         Err(io::Error::other("bounded native kernel packet witness was not observed").into())
-    }).await??;
+    })
+    .await??;
     let mut reply = Vec::new();
     match (plan.remote_hosts[index], plan.local_hosts[index]) {
         (IpAddr::V4(source), IpAddr::V4(destination)) => {
@@ -185,22 +198,42 @@ async fn whole_udp(plan: &TunPlan, device: &PacketDevice, index: usize) -> Resul
     Ok(())
 }
 
-async fn raw_foreign(case:&Path,receipt_path:&Path)->Result {
-    use tokio::{io::{AsyncReadExt,AsyncWriteExt},net::windows::named_pipe::ClientOptions};
+async fn raw_foreign(case: &Path, receipt_path: &Path) -> Result {
+    use tokio::{
+        io::{AsyncReadExt, AsyncWriteExt},
+        net::windows::named_pipe::ClientOptions,
+    };
     nestlink_privileged::windows::require_normal_user_process()?;
-    let receipt:PacketReceipt=serde_json::from_slice(&std::fs::read(receipt_path)?)?;
-    let identity=nestlink_privileged::windows::local_port_gate::ProcessIdentity::read(std::process::id())?;
-    assert_ne!(identity.pid,receipt.binding.process.pid);
-    let endpoint=format!(r"\\.\pipe\NestLink.NetworkTun.{}",receipt.binding.owner_id);
-    let mut client=ClientOptions::new().security_qos_flags(0x0001_0000).open(endpoint)?;
-    let mut hello=[0_u8;40];hello[..8].copy_from_slice(b"NLTUN/01");hello[8..].copy_from_slice(&receipt.binding.plan_sha256);
+    let receipt: PacketReceipt = serde_json::from_slice(&std::fs::read(receipt_path)?)?;
+    let identity =
+        nestlink_privileged::windows::local_port_gate::ProcessIdentity::read(std::process::id())?;
+    assert_ne!(identity.pid, receipt.binding.process.pid);
+    let endpoint = format!(r"\\.\pipe\NestLink.NetworkTun.{}", receipt.binding.owner_id);
+    let mut client = ClientOptions::new()
+        .security_qos_flags(0x0001_0000)
+        .open(endpoint)?;
+    let mut hello = [0_u8; 40];
+    hello[..8].copy_from_slice(b"NLTUN/01");
+    hello[8..].copy_from_slice(&receipt.binding.plan_sha256);
     // Possession of the exact public plan/hello and the same SID is deliberately
     // insufficient. The administrative server must close without its reply.
-    let denied=tokio::time::timeout(Duration::from_secs(2),async {
-        if client.write_all(&hello).await.is_err(){return true;}
-        let mut response=[0_u8;40];client.read_exact(&mut response).await.is_err()
-    }).await?;
-    assert!(denied,"a raw nonoriginal same-SID process obtained an authenticated packet pipe");
-    std::fs::write(case.join("raw-foreign-denied.json"),serde_json::to_vec(&serde_json::json!({"identity":identity,"original_pid":receipt.binding.process.pid,"helper_pid":receipt.helper.pid,"denied":denied}))?)?;
+    let denied = tokio::time::timeout(Duration::from_secs(2), async {
+        if client.write_all(&hello).await.is_err() {
+            return true;
+        }
+        let mut response = [0_u8; 40];
+        client.read_exact(&mut response).await.is_err()
+    })
+    .await?;
+    assert!(
+        denied,
+        "a raw nonoriginal same-SID process obtained an authenticated packet pipe"
+    );
+    std::fs::write(
+        case.join("raw-foreign-denied.json"),
+        serde_json::to_vec(
+            &serde_json::json!({"identity":identity,"original_pid":receipt.binding.process.pid,"helper_pid":receipt.helper.pid,"denied":denied}),
+        )?,
+    )?;
     Ok(())
 }

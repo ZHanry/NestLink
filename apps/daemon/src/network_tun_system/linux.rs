@@ -245,8 +245,19 @@ pub(super) async fn create(plan: &TunPlan) -> Result<tun_rs::SyncDevice> {
     device.user(i32::try_from(plan.linux_uid()?)?)?;
     // Disable automatic IPv6/multicast configuration on our still-ephemeral
     // fresh link before asserting that no addresses/routes have appeared.
-    ip(&["link", "set", "dev", &plan.link(), "alias", &plan.marker(),
-        "multicast", "off", "addrgenmode", "none"]).await?;
+    ip(&[
+        "link",
+        "set",
+        "dev",
+        &plan.link(),
+        "alias",
+        &plan.marker(),
+        "multicast",
+        "off",
+        "addrgenmode",
+        "none",
+    ])
+    .await?;
     Ok(device)
 }
 pub(super) async fn created_identity(plan: &TunPlan) -> Result<InterfaceIdentity> {

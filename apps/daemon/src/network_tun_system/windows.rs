@@ -82,10 +82,10 @@ impl Record {
                 || identity.name != record.name
                 || identity.provider_sha256 != record.driver_sha256)
         {
-                return Err(io::Error::other(
-                    "Windows TUN identity differs from original creation intent",
-                )
-                .into());
+            return Err(io::Error::other(
+                "Windows TUN identity differs from original creation intent",
+            )
+            .into());
         }
         if let Some(receipt) = &record.receipt
             && (record.identity.as_ref() != Some(&receipt.provider)
@@ -93,10 +93,10 @@ impl Record {
                 || receipt.binding.plan_sha256 != record.plan.digest()?
                 || receipt.binding.expires_at_ms != record.plan.expires_at_ms)
         {
-                return Err(io::Error::other(
-                    "Windows TUN receipt differs from original recovery intent",
-                )
-                .into());
+            return Err(io::Error::other(
+                "Windows TUN receipt differs from original recovery intent",
+            )
+            .into());
         }
         Ok(record)
     }

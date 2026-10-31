@@ -3,9 +3,9 @@ use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_identity::network::{NetworkVerification, verify_network_grant};
 use nestlink_protocol::network::{GrantClaims, IpPrefix, NetworkAccessClaims, PeerId};
 use serde::{Deserialize, Serialize};
-use std::{collections::BTreeSet, net::IpAddr, path::Path};
 #[cfg(target_os = "linux")]
 use std::fs::File;
+use std::{collections::BTreeSet, net::IpAddr, path::Path};
 
 #[cfg(target_os = "linux")]
 pub(super) const MAX_JSON: u64 = 65_536;
@@ -266,7 +266,7 @@ impl TunPlan {
     }
     #[cfg(target_os = "linux")]
     fn read_linux(path: &Path) -> Result<Self> {
-        let (bytes,uid)=crate::network_packet_runtime::read_public_plan(path,MAX_JSON)?;
+        let (bytes, uid) = crate::network_packet_runtime::read_public_plan(path, MAX_JSON)?;
         let plan: Self = serde_json::from_slice(&bytes)?;
         plan.validate(false)?;
         if uid != plan.linux_uid()? {

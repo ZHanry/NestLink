@@ -5,10 +5,7 @@ use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_protocol::network::GrantClaims;
 use nestlink_sdk::{
     Sdk,
-    network::{
-        packet_access::OnlinePacketAccess,
-        routed::PinnedNetworkSpace,
-    },
+    network::{packet_access::OnlinePacketAccess, routed::PinnedNetworkSpace},
 };
 use nestlink_transport_quic::packet_codec::DirectPacketEndpoint;
 use std::{net::SocketAddr, path::Path};
@@ -257,12 +254,20 @@ async fn adopt_ready(
         result=tokio::time::timeout_at(deadline,wait)=>result.map_err(|_|io::Error::other("the original privileged TUN descriptor was not handed off within its finite bound"))?,
     }
 }
-struct HostGuard<'a> {os:&'a OwnerOs,plan:&'a TunPlan,state:&'a TunState,directory:&'a Path,login:[u8;32]}
+struct HostGuard<'a> {
+    os: &'a OwnerOs,
+    plan: &'a TunPlan,
+    state: &'a TunState,
+    directory: &'a Path,
+    login: [u8; 32],
+}
 impl crate::network_packet_runtime::OwnerGuard for HostGuard<'_> {
-    fn check_local(&self)->Result {local_current(self.directory,self.login)}
-    fn check(&self)->crate::network_packet_runtime::GuardFuture<'_> {
+    fn check_local(&self) -> Result {
+        local_current(self.directory, self.login)
+    }
+    fn check(&self) -> crate::network_packet_runtime::GuardFuture<'_> {
         Box::pin(async move {
-            if self.os.inspect(self.plan).await?.as_ref()!=Some(self.state) {
+            if self.os.inspect(self.plan).await?.as_ref() != Some(self.state) {
                 return Err(io::Error::other("original managed TUN configuration changed").into());
             }
             Ok(())

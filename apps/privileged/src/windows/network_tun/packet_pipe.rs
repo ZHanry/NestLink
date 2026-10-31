@@ -237,8 +237,10 @@ impl PacketServer {
             || !security::same_image(&peer.image, &self.original.image)
             || ProcessIdentity::read(peer.pid)? != self.receipt.binding.process
         {
-            return Err(io::Error::new(io::ErrorKind::PermissionDenied,
-                "TUN packet pipe client is not the original admitted ordinary process"));
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "TUN packet pipe client is not the original admitted ordinary process",
+            ));
         }
         handshake(pipe, &self.receipt.binding, false).await?;
         self.check_current()?;

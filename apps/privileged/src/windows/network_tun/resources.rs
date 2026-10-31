@@ -423,7 +423,12 @@ impl Snapshot {
     pub fn verify(&self, local: &[IpAddr; 2], remote: &[IpAddr; 2]) -> io::Result<()> {
         if self.mtu != 1280
             || self.families.len() != 2
-            || self.families.iter().map(|row| row.family).collect::<Vec<_>>() != [AF_INET, AF_INET6]
+            || self
+                .families
+                .iter()
+                .map(|row| row.family)
+                .collect::<Vec<_>>()
+                != [AF_INET, AF_INET6]
             || !self.families.iter().all(FamilyState::isolated)
             || self.addresses.len() != 2
             || self.routes.is_empty()
@@ -532,8 +537,12 @@ pub fn absent(identity: &ProviderIdentity) -> io::Result<bool> {
     if original(identity)?.is_some() {
         return Ok(false);
     }
-    if addresses()?.iter().any(|row| on_original(identity,row.InterfaceLuid,row.InterfaceIndex))
-        || routes()?.iter().any(|row| on_original(identity,row.InterfaceLuid,row.InterfaceIndex))
+    if addresses()?
+        .iter()
+        .any(|row| on_original(identity, row.InterfaceLuid, row.InterfaceIndex))
+        || routes()?
+            .iter()
+            .any(|row| on_original(identity, row.InterfaceLuid, row.InterfaceIndex))
     {
         return Ok(false);
     }
