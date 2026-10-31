@@ -186,13 +186,23 @@ pub(super) async fn ordinary(case: &Path, plan_path: &Path, receipt: &Path) -> R
         )?;
         let runtime=network_packet_runtime::packet_loop(&device,&mut endpoint,&f.source,&mut local,&guard);
         tokio::pin!(runtime);
-        let probe=probe(case,&f,&plan,&state,&mut peer,&mut remote);
+        let revocation=std::sync::OnceLock::new();
+        let probe=probe(case,&f,&plan,&state,&mut peer,&mut remote,&revocation);
         tokio::pin!(probe);
-        let revoked=tokio::select!{
-            outcome=&mut runtime=>return Err(io::Error::other(format!("original production loop ended before online revocation: {outcome:?}")).into()),
-            outcome=&mut probe=>outcome?,
+        let (revoked,outcome)=tokio::select!{
+            outcome=&mut runtime=>{
+                let started=*revocation.get().ok_or_else(||io::Error::other(format!("original production loop ended before online revocation: {outcome:?}")))?;
+                // The production poll may observe the committed revocation
+                // before the issuing HTTP response/readback has returned.
+                // Still require that exact issuing call and readback to pass.
+                let revoked=tokio::time::timeout_at(started+Duration::from_secs(5),&mut probe).await??;
+                (revoked,outcome)
+            },
+            outcome=&mut probe=>{
+                let revoked=outcome?;
+                (revoked,tokio::time::timeout_at(revoked+Duration::from_secs(5),&mut runtime).await?)
+            },
         };
-        let outcome=tokio::time::timeout_at(revoked+Duration::from_secs(5),&mut runtime).await?;
         assert!(matches!(outcome.as_ref().err().and_then(|error|error.downcast_ref::<SdkError>()),Some(SdkError::Api(status,_)) if status.as_u16()==403),"production loop must stop on the actual online revocation response: {outcome:?}");
         Ok::<_,Box<dyn std::error::Error+Send+Sync>>(revoked)
     }.await;
@@ -245,6 +255,7 @@ async fn probe(
     state: &TunState,
     peer: &mut DirectPacketEndpoint,
     access: &mut OnlinePacketAccess,
+    revocation: &std::sync::OnceLock<Instant>,
 ) -> Result<Instant> {
     let mut assembler = PacketAssembler::new(
         access.business_digest(),
@@ -333,6 +344,7 @@ async fn probe(
     }
     let revision = f.target.space_details(&f.space).await?.space.revision;
     let revoked = Instant::now();
+    assert!(revocation.set(revoked).is_ok());
     f.target
         .revoke_network_access(&f.space, &f.view.access.grant_id, revision)
         .await?;
