@@ -96,32 +96,59 @@ pub struct OfflineGrantBundleClaims {
 impl OfflineGrantBundleClaims {
     pub fn validate(&self) -> Result<(), ContractError> {
         if self.bundle_version != OFFLINE_BUNDLE_VERSION {
-            return Err(ContractError::new(ErrorCode::ProtocolMismatch, "unsupported offline bundle"));
+            return Err(ContractError::new(
+                ErrorCode::ProtocolMismatch,
+                "unsupported offline bundle",
+            ));
         }
-        if [&self.deployment_id, &self.space_id, &self.bundle_id,
-            &self.connection.connection_id, &self.connection.path_id,
-            &self.resources.reservation_id].iter().any(|id| !valid_id(id))
-            || self.policy_epoch == 0 || self.security_epoch == 0
-            || self.highest_revocation_epoch == 0 || self.issued_at_ms == 0
+        if [
+            &self.deployment_id,
+            &self.space_id,
+            &self.bundle_id,
+            &self.connection.connection_id,
+            &self.connection.path_id,
+            &self.resources.reservation_id,
+        ]
+        .iter()
+        .any(|id| !valid_id(id))
+            || self.policy_epoch == 0
+            || self.security_epoch == 0
+            || self.highest_revocation_epoch == 0
+            || self.issued_at_ms == 0
             || self.expires_at_ms <= self.issued_at_ms
             || self.expires_at_ms - self.issued_at_ms > MAX_OFFLINE_MS
             || self.expires_at_ms > i64::MAX as u64
-            || self.resources.byte_limit == 0 || self.resources.byte_limit > i64::MAX as u64
+            || self.resources.byte_limit == 0
+            || self.resources.byte_limit > i64::MAX as u64
             || self.resources.file_write_limit > self.resources.byte_limit
-            || self.resources.connection_limit == 0 || self.resources.connection_limit > 1024
+            || self.resources.connection_limit == 0
+            || self.resources.connection_limit > 1024
         {
-            return Err(invalid("invalid offline scope, finite deadline or reservation"));
+            return Err(invalid(
+                "invalid offline scope, finite deadline or reservation",
+            ));
         }
-        let ids = [&self.bundle_id, &self.connection.connection_id,
-            &self.connection.path_id, &self.resources.reservation_id];
+        let ids = [
+            &self.bundle_id,
+            &self.connection.connection_id,
+            &self.connection.path_id,
+            &self.resources.reservation_id,
+        ];
         if ids.iter().enumerate().any(|(i, id)| ids[..i].contains(id)) {
-            return Err(invalid("offline chain purposes require distinct identities"));
+            return Err(invalid(
+                "offline chain purposes require distinct identities",
+            ));
         }
         for member in &self.members {
-            if !valid_id(&member.installation_id) || !valid_id(&member.account_id)
-                || member.public_key == [0; 32] || member.process_nonce == [0; 32]
-                || member.membership_epoch == 0 {
-                return Err(invalid("offline membership needs a fixed installation and live process"));
+            if !valid_id(&member.installation_id)
+                || !valid_id(&member.account_id)
+                || member.public_key == [0; 32]
+                || member.process_nonce == [0; 32]
+                || member.membership_epoch == 0
+            {
+                return Err(invalid(
+                    "offline membership needs a fixed installation and live process",
+                ));
             }
         }
         if self.members[0].installation_id == self.members[1].installation_id
@@ -129,24 +156,50 @@ impl OfflineGrantBundleClaims {
             || self.members[0].process_nonce == self.members[1].process_nonce
             || self.connection.direct_transports.is_empty()
             || self.connection.direct_transports.len() > 2
-            || self.connection.direct_transports.windows(2).any(|pair| pair[0] >= pair[1]) {
-            return Err(invalid("offline endpoints or direct carrier set is ambiguous"));
+            || self
+                .connection
+                .direct_transports
+                .windows(2)
+                .any(|pair| pair[0] >= pair[1])
+        {
+            return Err(invalid(
+                "offline endpoints or direct carrier set is ambiguous",
+            ));
         }
         match &self.business {
-            OfflineBusiness::RemoteControl { resource_id, operations, capability_digest } => {
-                if !valid_id(resource_id) || *capability_digest == [0; 32]
-                    || operations.is_empty() || operations.len() > 6
+            OfflineBusiness::RemoteControl {
+                resource_id,
+                operations,
+                capability_digest,
+            } => {
+                if !valid_id(resource_id)
+                    || *capability_digest == [0; 32]
+                    || operations.is_empty()
+                    || operations.len() > 6
                     || operations.windows(2).any(|pair| pair[0] >= pair[1])
                     || (self.resources.file_write_limit > 0
-                        && !operations.contains(&OfflineRemoteOperation::FileWrite)) {
-                    return Err(invalid("offline remote operations or file reservation differ"));
+                        && !operations.contains(&OfflineRemoteOperation::FileWrite))
+                {
+                    return Err(invalid(
+                        "offline remote operations or file reservation differ",
+                    ));
                 }
             }
-            OfflineBusiness::PrivateService { service_id, service_revision, definition_digest, target_digest } => {
-                if !valid_id(service_id) || *service_revision == 0
-                    || *definition_digest == [0; 32] || *target_digest == [0; 32]
-                    || self.resources.file_write_limit != 0 {
-                    return Err(invalid("offline private service must fix one approved target"));
+            OfflineBusiness::PrivateService {
+                service_id,
+                service_revision,
+                definition_digest,
+                target_digest,
+            } => {
+                if !valid_id(service_id)
+                    || *service_revision == 0
+                    || *definition_digest == [0; 32]
+                    || *target_digest == [0; 32]
+                    || self.resources.file_write_limit != 0
+                {
+                    return Err(invalid(
+                        "offline private service must fix one approved target",
+                    ));
                 }
             }
         }
@@ -154,14 +207,22 @@ impl OfflineGrantBundleClaims {
     }
     pub fn canonical_bytes(&self) -> Result<Vec<u8>, ContractError> {
         self.validate()?;
-        let bytes = serde_json::to_vec(self).map_err(|_| invalid("offline bundle encoding failed"))?;
-        if bytes.len() > OFFLINE_BUNDLE_BYTES { return Err(invalid("offline bundle byte limit exceeded")); }
+        let bytes =
+            serde_json::to_vec(self).map_err(|_| invalid("offline bundle encoding failed"))?;
+        if bytes.len() > OFFLINE_BUNDLE_BYTES {
+            return Err(invalid("offline bundle byte limit exceeded"));
+        }
         Ok(bytes)
     }
     pub fn decode_canonical(bytes: &[u8]) -> Result<Self, ContractError> {
-        if bytes.len() > OFFLINE_BUNDLE_BYTES { return Err(invalid("offline bundle byte limit exceeded")); }
-        let value: Self = serde_json::from_slice(bytes).map_err(|_| invalid("invalid complete offline bundle"))?;
-        if value.canonical_bytes()? != bytes { return Err(invalid("noncanonical offline bundle")); }
+        if bytes.len() > OFFLINE_BUNDLE_BYTES {
+            return Err(invalid("offline bundle byte limit exceeded"));
+        }
+        let value: Self = serde_json::from_slice(bytes)
+            .map_err(|_| invalid("invalid complete offline bundle"))?;
+        if value.canonical_bytes()? != bytes {
+            return Err(invalid("noncanonical offline bundle"));
+        }
         Ok(value)
     }
 }
@@ -174,10 +235,15 @@ pub struct SignedOfflineGrantBundle {
 }
 impl SignedOfflineGrantBundle {
     pub fn validate(&self) -> Result<(), ContractError> {
-        if self.claims.is_empty() || self.claims.len() > OFFLINE_BUNDLE_BYTES || self.signature.len() != 64 {
+        if self.claims.is_empty()
+            || self.claims.len() > OFFLINE_BUNDLE_BYTES
+            || self.signature.len() != 64
+        {
             return Err(invalid("invalid offline signed envelope"));
         }
         Ok(())
     }
 }
-fn invalid(reason: &'static str) -> ContractError { ContractError::new(ErrorCode::InvalidMessage, reason) }
+fn invalid(reason: &'static str) -> ContractError {
+    ContractError::new(ErrorCode::InvalidMessage, reason)
+}

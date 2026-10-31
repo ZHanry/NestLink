@@ -185,7 +185,9 @@ impl VerifiedSubnetPlan {
         // The original signed authorization fixes this owner's deadline.
         // Current same-boot node leases are checked separately on every
         // observation, so renewing a healthy node never reissues authority.
-        let expires_at_ms = claims.scope.expires_at_ms
+        let expires_at_ms = claims
+            .scope
+            .expires_at_ms
             .min(business.scope.expires_at_ms)
             .min(now.saturating_add(MAX_OWNER_MS));
         let remaining = expires_at_ms

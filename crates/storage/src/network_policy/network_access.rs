@@ -380,9 +380,7 @@ impl Store {
             let claims = nestlink_protocol::subnet::SubnetMappingClaims::decode_canonical(
                 &mapping.bundle.mapping.claims,
             )?;
-            request.expires_at_unix_ms = request
-                .expires_at_unix_ms
-                .min(claims.scope.expires_at_ms);
+            request.expires_at_unix_ms = request.expires_at_unix_ms.min(claims.scope.expires_at_ms);
         }
         if request.expires_at_unix_ms <= now {
             return Err(StorageError::Forbidden);

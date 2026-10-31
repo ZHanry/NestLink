@@ -145,7 +145,8 @@ async fn inspect_inner(plan: &TunPlan) -> Result<Option<TunState>> {
             let relevant = route["dev"].as_str() == Some(name.as_str())
                 || !route["nhid"].is_null()
                 || route["nexthops"].as_array().is_some_and(|hops| {
-                    hops.iter().any(|hop| hop["dev"].as_str() == Some(name.as_str()))
+                    hops.iter()
+                        .any(|hop| hop["dev"].as_str() == Some(name.as_str()))
                 });
             if !relevant {
                 continue;

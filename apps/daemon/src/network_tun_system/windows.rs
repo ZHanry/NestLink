@@ -123,7 +123,9 @@ fn hash(value: &str) -> Result<[u8; 32]> {
     Ok(out)
 }
 fn native<T>(operation: &str, result: io::Result<T>) -> Result<T> {
-    result.map_err(|error| io::Error::new(error.kind(), format!("Windows TUN {operation}: {error}")).into())
+    result.map_err(|error| {
+        io::Error::new(error.kind(), format!("Windows TUN {operation}: {error}")).into()
+    })
 }
 pub(crate) async fn run(args: SystemTunArgs) -> Result {
     match args.action {

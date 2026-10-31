@@ -4,7 +4,14 @@ use crate::{digest, domain_message, network::NetworkAuthoritySigner, verify_sign
 use ed25519_dalek::Signer;
 use nestlink_protocol::{ContractError, ErrorCode, offline::*};
 use rand_core::{OsRng, RngCore};
-use std::{collections::BTreeSet, sync::{Arc, atomic::{AtomicBool, Ordering}}, time::{Duration, Instant}};
+use std::{
+    collections::BTreeSet,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+    time::{Duration, Instant},
+};
 
 const DOMAIN: &[u8] = b"NestLink/offline/v1/complete-direct-grant-bundle\0";
 const REFERENCE: &[u8] = b"NestLink/offline/v1/complete-direct-grant-reference\0";
@@ -26,16 +33,25 @@ pub struct VerifiedOfflineGrantBundle {
     issuer: [u8; 32],
 }
 impl VerifiedOfflineGrantBundle {
-    pub fn claims(&self) -> &OfflineGrantBundleClaims { &self.claims }
-    pub fn digest(&self) -> [u8; 32] { self.digest }
+    pub fn claims(&self) -> &OfflineGrantBundleClaims {
+        &self.claims
+    }
+    pub fn digest(&self) -> [u8; 32] {
+        self.digest
+    }
     pub fn check_current(&self, context: &OfflineVerification<'_>) -> Result<(), ContractError> {
         let c = &self.claims;
-        if self.issuer != *context.authority || c.deployment_id != context.deployment_id
-            || c.space_id != context.space_id || c.policy_epoch != context.policy_epoch
+        if self.issuer != *context.authority
+            || c.deployment_id != context.deployment_id
+            || c.space_id != context.space_id
+            || c.policy_epoch != context.policy_epoch
             || c.security_epoch != context.security_epoch
             || c.highest_revocation_epoch != context.highest_revocation_epoch
-            || context.revoked_bundle_ids.contains(&c.bundle_id) {
-            return Err(revoked("offline trust, epoch or received revocation changed"));
+            || context.revoked_bundle_ids.contains(&c.bundle_id)
+        {
+            return Err(revoked(
+                "offline trust, epoch or received revocation changed",
+            ));
         }
         if context.now_ms < c.issued_at_ms || context.now_ms >= c.expires_at_ms {
             return Err(expired());
@@ -44,22 +60,36 @@ impl VerifiedOfflineGrantBundle {
     }
 }
 impl NetworkAuthoritySigner {
-    pub fn sign_offline_bundle(&self, claims: &OfflineGrantBundleClaims) -> Result<SignedOfflineGrantBundle, ContractError> {
+    pub fn sign_offline_bundle(
+        &self,
+        claims: &OfflineGrantBundleClaims,
+    ) -> Result<SignedOfflineGrantBundle, ContractError> {
         let claims = claims.canonical_bytes()?;
         Ok(SignedOfflineGrantBundle {
-            signature: self.key.sign(&domain_message(DOMAIN, &claims)).to_bytes().to_vec(),
+            signature: self
+                .key
+                .sign(&domain_message(DOMAIN, &claims))
+                .to_bytes()
+                .to_vec(),
             claims,
         })
     }
 }
-pub fn verify_offline_bundle(signed: &SignedOfflineGrantBundle, context: &OfflineVerification<'_>) -> Result<VerifiedOfflineGrantBundle, ContractError> {
+pub fn verify_offline_bundle(
+    signed: &SignedOfflineGrantBundle,
+    context: &OfflineVerification<'_>,
+) -> Result<VerifiedOfflineGrantBundle, ContractError> {
     signed.validate()?;
     verify_signature(context.authority, DOMAIN, &signed.claims, &signed.signature)?;
     let claims = OfflineGrantBundleClaims::decode_canonical(&signed.claims)?;
     let mut reference = REFERENCE.to_vec();
     reference.extend_from_slice(context.authority);
     reference.extend_from_slice(&signed.claims);
-    let result = VerifiedOfflineGrantBundle { claims, digest: digest(&reference), issuer: *context.authority };
+    let result = VerifiedOfflineGrantBundle {
+        claims,
+        digest: digest(&reference),
+        issuer: *context.authority,
+    };
     result.check_current(context)?;
     Ok(result)
 }
@@ -77,49 +107,99 @@ pub struct OfflineProcess {
     stopped: Arc<AtomicBool>,
 }
 impl OfflineProcess {
-    pub fn new(installation_id: String, public_key: [u8; 32], now_ms: u64, highest_revocation_epoch: u64) -> Result<Self, ContractError> {
-        if !nestlink_protocol::valid_id(&installation_id) || public_key == [0; 32]
-            || now_ms == 0 || highest_revocation_epoch == 0 {
-            return Err(denied("offline process needs a fixed registered installation"));
+    pub fn new(
+        installation_id: String,
+        public_key: [u8; 32],
+        now_ms: u64,
+        highest_revocation_epoch: u64,
+    ) -> Result<Self, ContractError> {
+        if !nestlink_protocol::valid_id(&installation_id)
+            || public_key == [0; 32]
+            || now_ms == 0
+            || highest_revocation_epoch == 0
+        {
+            return Err(denied(
+                "offline process needs a fixed registered installation",
+            ));
         }
         let mut nonce = [0; 32];
         OsRng.fill_bytes(&mut nonce);
-        Ok(Self { installation_id, public_key, nonce, consumed: BTreeSet::new(),
-            highest_wall_ms: now_ms, highest_revocation_epoch, stopped: Arc::new(AtomicBool::new(false)) })
+        Ok(Self {
+            installation_id,
+            public_key,
+            nonce,
+            consumed: BTreeSet::new(),
+            highest_wall_ms: now_ms,
+            highest_revocation_epoch,
+            stopped: Arc::new(AtomicBool::new(false)),
+        })
     }
-    pub fn nonce(&self) -> [u8; 32] { self.nonce }
+    pub fn nonce(&self) -> [u8; 32] {
+        self.nonce
+    }
     /// Only call with a freshly authenticated online policy/consume response.
     /// The storage reservation must already be irrevocably committed. Exact
     /// local consent is a separate requirement, never inferred from the bundle.
-    pub fn activate(&mut self, bundle: VerifiedOfflineGrantBundle, context: &OfflineVerification<'_>, approved_digest: [u8; 32]) -> Result<OfflineAdmission, ContractError> {
-        if self.stopped.load(Ordering::Acquire) || context.now_ms < self.highest_wall_ms
-            || context.highest_revocation_epoch < self.highest_revocation_epoch {
+    pub fn activate(
+        &mut self,
+        bundle: VerifiedOfflineGrantBundle,
+        context: &OfflineVerification<'_>,
+        approved_digest: [u8; 32],
+    ) -> Result<OfflineAdmission, ContractError> {
+        if self.stopped.load(Ordering::Acquire)
+            || context.now_ms < self.highest_wall_ms
+            || context.highest_revocation_epoch < self.highest_revocation_epoch
+        {
             self.stop();
             return Err(revoked("offline process observed rollback or was stopped"));
         }
         self.highest_wall_ms = context.now_ms;
         self.highest_revocation_epoch = context.highest_revocation_epoch;
         bundle.check_current(context)?;
-        let local = bundle.claims.members.iter().position(|m|
-            m.installation_id == self.installation_id && m.public_key == self.public_key
-                && m.process_nonce == self.nonce
-        ).ok_or_else(|| denied("offline bundle belongs to another process or installation"))?;
-        if approved_digest != bundle.digest || approved_digest == [0; 32]
-            || self.consumed.len() >= 4096 || !self.consumed.insert(bundle.claims.bundle_id.clone()) {
-            return Err(denied("offline bundle approval changed or original activation was consumed"));
+        let local = bundle
+            .claims
+            .members
+            .iter()
+            .position(|m| {
+                m.installation_id == self.installation_id
+                    && m.public_key == self.public_key
+                    && m.process_nonce == self.nonce
+            })
+            .ok_or_else(|| denied("offline bundle belongs to another process or installation"))?;
+        if approved_digest != bundle.digest
+            || approved_digest == [0; 32]
+            || self.consumed.len() >= 4096
+            || !self.consumed.insert(bundle.claims.bundle_id.clone())
+        {
+            return Err(denied(
+                "offline bundle approval changed or original activation was consumed",
+            ));
         }
         let remaining = bundle.claims.expires_at_ms - context.now_ms;
         Ok(OfflineAdmission {
             deadline: Instant::now() + Duration::from_millis(remaining),
-            highest_wall_ms: context.now_ms, highest_revocation_epoch: context.highest_revocation_epoch,
-            local, bundle, process_stopped: self.stopped.clone(), spent_bytes: 0, written_bytes: 0, connections: 0, stopped: false,
+            highest_wall_ms: context.now_ms,
+            highest_revocation_epoch: context.highest_revocation_epoch,
+            local,
+            bundle,
+            process_stopped: self.stopped.clone(),
+            spent_bytes: 0,
+            written_bytes: 0,
+            connections: 0,
+            stopped: false,
         })
     }
     /// Local exit/disable is terminal for all future activations in this process.
     /// Already activated admission owners observe this shared terminal flag.
-    pub fn stop(&mut self) { self.stopped.store(true, Ordering::Release); }
+    pub fn stop(&mut self) {
+        self.stopped.store(true, Ordering::Release);
+    }
 }
-impl Drop for OfflineProcess { fn drop(&mut self) { self.stop(); } }
+impl Drop for OfflineProcess {
+    fn drop(&mut self) {
+        self.stop();
+    }
+}
 
 /// Unique cumulative budget owner. Reconnecting a carrier reuses this object;
 /// it never deserializes, clones, retries activation or refunds a reservation.
@@ -136,17 +216,39 @@ pub struct OfflineAdmission {
     process_stopped: Arc<AtomicBool>,
 }
 impl OfflineAdmission {
-    pub fn claims(&self) -> &OfflineGrantBundleClaims { self.bundle.claims() }
-    pub fn digest(&self) -> [u8; 32] { self.bundle.digest() }
-    pub fn spent_bytes(&self) -> u64 { self.spent_bytes }
-    pub fn written_bytes(&self) -> u64 { self.written_bytes }
-    pub fn connections(&self) -> u32 { self.connections }
-    pub fn is_stopped(&self) -> bool { self.stopped || self.process_stopped.load(Ordering::Acquire) }
-    pub fn remaining_lifetime(&self) -> Duration { self.deadline.saturating_duration_since(Instant::now()) }
-    pub fn stop(&mut self) { self.stopped = true; }
+    pub fn claims(&self) -> &OfflineGrantBundleClaims {
+        self.bundle.claims()
+    }
+    pub fn digest(&self) -> [u8; 32] {
+        self.bundle.digest()
+    }
+    pub fn spent_bytes(&self) -> u64 {
+        self.spent_bytes
+    }
+    pub fn written_bytes(&self) -> u64 {
+        self.written_bytes
+    }
+    pub fn connections(&self) -> u32 {
+        self.connections
+    }
+    pub fn is_stopped(&self) -> bool {
+        self.stopped || self.process_stopped.load(Ordering::Acquire)
+    }
+    pub fn remaining_lifetime(&self) -> Duration {
+        self.deadline.saturating_duration_since(Instant::now())
+    }
+    pub fn stop(&mut self) {
+        self.stopped = true;
+    }
     fn check(&mut self, wall_ms: u64) -> Result<(), ContractError> {
-        if self.is_stopped() { self.stop(); return Err(revoked("original offline owner is terminal")); }
-        if wall_ms < self.highest_wall_ms || wall_ms >= self.bundle.claims.expires_at_ms || Instant::now() >= self.deadline {
+        if self.is_stopped() {
+            self.stop();
+            return Err(revoked("original offline owner is terminal"));
+        }
+        if wall_ms < self.highest_wall_ms
+            || wall_ms >= self.bundle.claims.expires_at_ms
+            || Instant::now() >= self.deadline
+        {
             self.stop();
             return Err(expired());
         }
@@ -155,51 +257,109 @@ impl OfflineAdmission {
     }
     /// Call at least once a second even while no application I/O is pending;
     /// the carrier owner closes all channels when this check fails.
-    pub fn check_current(&mut self, wall_ms: u64) -> Result<(), ContractError> { self.check(wall_ms) }
+    pub fn check_current(&mut self, wall_ms: u64) -> Result<(), ContractError> {
+        self.check(wall_ms)
+    }
     /// Recovery synchronizes received policy before admitting more offline I/O.
     /// A newer revocation epoch closes this owner, including unrelated changes;
     /// only a new, explicitly approved online reservation may grant new rights.
-    pub fn observe_online(&mut self, context: &OfflineVerification<'_>) -> Result<(), ContractError> {
-        let result = self.check(context.now_ms).and_then(|()| self.bundle.check_current(context));
+    pub fn observe_online(
+        &mut self,
+        context: &OfflineVerification<'_>,
+    ) -> Result<(), ContractError> {
+        let result = self
+            .check(context.now_ms)
+            .and_then(|()| self.bundle.check_current(context));
         if result.is_err() || context.highest_revocation_epoch < self.highest_revocation_epoch {
             self.stop();
-            return Err(revoked("offline recovery observed changed authority or rollback"));
+            return Err(revoked(
+                "offline recovery observed changed authority or rollback",
+            ));
         }
         self.highest_revocation_epoch = context.highest_revocation_epoch;
         Ok(())
     }
     /// `remote_key` comes from the authenticated TLS/QUIC peer certificate and
     /// endpoint proof, never a discovery entry. No relay path variant exists.
-    pub fn admit_connection(&mut self, wall_ms: u64, transport: OfflineDirectTransport, remote_key: &[u8; 32]) -> Result<(), ContractError> {
+    pub fn admit_connection(
+        &mut self,
+        wall_ms: u64,
+        transport: OfflineDirectTransport,
+        remote_key: &[u8; 32],
+    ) -> Result<(), ContractError> {
         self.check(wall_ms)?;
         let claims = self.bundle.claims();
         if *remote_key != claims.members[1 - self.local].public_key
-            || !claims.connection.direct_transports.contains(&transport) {
-            return Err(denied("offline connection is not the exact approved direct peer"));
+            || !claims.connection.direct_transports.contains(&transport)
+        {
+            return Err(denied(
+                "offline connection is not the exact approved direct peer",
+            ));
         }
         if self.connections >= claims.resources.connection_limit {
             self.stop();
-            return Err(denied("offline cumulative connection reservation exhausted"));
+            return Err(denied(
+                "offline cumulative connection reservation exhausted",
+            ));
         }
         self.connections += 1;
         Ok(())
     }
-    pub fn admit_remote_operation(&mut self, wall_ms: u64, operation: OfflineRemoteOperation, bytes: u64) -> Result<(), ContractError> {
+    pub fn admit_remote_operation(
+        &mut self,
+        wall_ms: u64,
+        operation: OfflineRemoteOperation,
+        bytes: u64,
+    ) -> Result<(), ContractError> {
         self.check(wall_ms)?;
-        if self.connections == 0 { return Err(denied("offline operations require an authenticated direct connection")); }
+        if self.connections == 0 {
+            return Err(denied(
+                "offline operations require an authenticated direct connection",
+            ));
+        }
         let OfflineBusiness::RemoteControl { operations, .. } = &self.bundle.claims.business else {
-            return Err(denied("offline private service does not grant remote operations"));
+            return Err(denied(
+                "offline private service does not grant remote operations",
+            ));
         };
-        if !operations.contains(&operation) { return Err(denied("offline operation was not separately approved")); }
-        self.charge(bytes, if operation == OfflineRemoteOperation::FileWrite { bytes } else { 0 })
+        if !operations.contains(&operation) {
+            return Err(denied("offline operation was not separately approved"));
+        }
+        self.charge(
+            bytes,
+            if operation == OfflineRemoteOperation::FileWrite {
+                bytes
+            } else {
+                0
+            },
+        )
     }
-    pub fn admit_private_service(&mut self, wall_ms: u64, definition_digest: &[u8; 32], target_digest: &[u8; 32], bytes: u64) -> Result<(), ContractError> {
+    pub fn admit_private_service(
+        &mut self,
+        wall_ms: u64,
+        definition_digest: &[u8; 32],
+        target_digest: &[u8; 32],
+        bytes: u64,
+    ) -> Result<(), ContractError> {
         self.check(wall_ms)?;
-        if self.connections == 0 { return Err(denied("offline operations require an authenticated direct connection")); }
-        let OfflineBusiness::PrivateService { definition_digest: definition, target_digest: target, .. } = &self.bundle.claims.business else {
-            return Err(denied("offline remote authority does not grant private service access"));
+        if self.connections == 0 {
+            return Err(denied(
+                "offline operations require an authenticated direct connection",
+            ));
+        }
+        let OfflineBusiness::PrivateService {
+            definition_digest: definition,
+            target_digest: target,
+            ..
+        } = &self.bundle.claims.business
+        else {
+            return Err(denied(
+                "offline remote authority does not grant private service access",
+            ));
         };
-        if definition != definition_digest || target != target_digest { return Err(denied("offline private target or definition changed")); }
+        if definition != definition_digest || target != target_digest {
+            return Err(denied("offline private target or definition changed"));
+        }
         self.charge(bytes, 0)
     }
     fn charge(&mut self, bytes: u64, written: u64) -> Result<(), ContractError> {
@@ -207,16 +367,34 @@ impl OfflineAdmission {
         let files = self.written_bytes.checked_add(written);
         let limits = &self.bundle.claims.resources;
         match (spent, files) {
-            (Some(spent), Some(files)) if spent <= limits.byte_limit && files <= limits.file_write_limit => {
-                self.spent_bytes = spent; self.written_bytes = files; Ok(())
+            (Some(spent), Some(files))
+                if spent <= limits.byte_limit && files <= limits.file_write_limit =>
+            {
+                self.spent_bytes = spent;
+                self.written_bytes = files;
+                Ok(())
             }
-            _ => { self.stop(); Err(denied("offline original byte or file reservation exhausted")) }
+            _ => {
+                self.stop();
+                Err(denied(
+                    "offline original byte or file reservation exhausted",
+                ))
+            }
         }
     }
 }
-fn denied(reason: &'static str) -> ContractError { ContractError::new(ErrorCode::PermissionRequired, reason) }
-fn revoked(reason: &'static str) -> ContractError { ContractError::new(ErrorCode::PolicyRevoked, reason) }
-fn expired() -> ContractError { ContractError::new(ErrorCode::LeaseExpired, "offline original deadline or clock anchor expired") }
+fn denied(reason: &'static str) -> ContractError {
+    ContractError::new(ErrorCode::PermissionRequired, reason)
+}
+fn revoked(reason: &'static str) -> ContractError {
+    ContractError::new(ErrorCode::PolicyRevoked, reason)
+}
+fn expired() -> ContractError {
+    ContractError::new(
+        ErrorCode::LeaseExpired,
+        "offline original deadline or clock anchor expired",
+    )
+}
 
 #[cfg(test)]
 mod tests;
