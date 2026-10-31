@@ -846,6 +846,34 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
         && p[1].abs_diff(128) <= 40
         && p[2].abs_diff(240) <= 40
         && p[3] == 255));
+    // The exact-format receiver uses the same original Core feedback owner.
+    // Keep producing sealed actual AUs until its observed report reaches Core;
+    // no report or manually injected health value stands in for this path.
+    let feedback_deadline = Instant::now() + Duration::from_secs(2);
+    while host.native_video_receiver_condition(&session_binding, source, config.fps)?
+        == Some(nestlink_media_codec::ReceiverCondition::Unknown)
+        && Instant::now() < feedback_deadline
+    {
+        let (packet, receipt, execution) = encoder.next(&video).await?;
+        assert_eq!(receipt, actual);
+        host.send_native_video_execution_frame(
+            &session_binding,
+            source,
+            packet.pts_90khz,
+            packet.keyframe,
+            false,
+            packet.data,
+            execution,
+        )
+        .await?;
+        tokio::time::sleep(Duration::from_millis(35)).await;
+    }
+    let observed = host.native_video_receiver_condition(&session_binding, source, config.fps)?;
+    assert!(matches!(
+        observed,
+        Some(nestlink_media_codec::ReceiverCondition::Healthy
+            | nestlink_media_codec::ReceiverCondition::Congested)
+    ));
     let request = NativeVideoFeedback {
         schema_version: 1,
         connection_generation: 9,
@@ -1012,6 +1040,10 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
             .is_err()
     );
     host_lease.stop(StopReason::ExplicitExit)?;
+    assert!(
+        host.native_video_receiver_condition(&session_binding, source, config.fps)
+            .is_err()
+    );
     assert!(
         host.propose_native_video_format(&session_binding, actual)
             .await
