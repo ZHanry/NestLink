@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "source_revision": "4a2d7a026fb27739d5a6c837a3a6c6e8a34301a7",
+  "workflow": ".github/workflows/network-lan.yml",
+  "run_id": 41235534909,
+  "run_attempt": 1,
+  "job_id": 124638466300,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41235534909",
+  "passed": true,
+  "scope": "GitHub-hosted actual isolated dual LAN UDP broadcast/unicast DNS and DNS-SD through original HTTP/SQLite OnlinePacketAccess and encrypted QUIC owner. No physical-site, real-game or virtual HTTP data-path qualification.",
+  "checks": {
+    "reviewed_mdns_component_regression_passed": 1,
+    "sdk_lan_regressions_passed": 5,
+    "strict_sdk_daemon_all_targets_clippy": true,
+    "actual_dual_lan_integration_passed": 1,
+    "actual_distribution_dnsmasq": "2.91",
+    "actual_iproute2": "6.1.0",
+    "actual_imported_service": "_http._tcp.local.",
+    "actual_imported_port": 38080,
+    "actual_imported_virtual_ipv4": "100.64.0.3",
+    "binary_txt_preserved": [0, 255, 7],
+    "broadcast_and_followup_unicast_passed_both_directions": true,
+    "original_source_spent_bytes": 2087,
+    "original_destination_spent_bytes": 2087,
+    "original_carriers_joined": true,
+    "exclusive_lan_udp_ports_rebound": true,
+    "mdns_unregister_shutdown_acknowledged": true,
+    "owned_namespaces_and_links_removed": true
+  },
+  "artifact": {
+    "id": 13055341082,
+    "name": "network-lan-4a2d7a026fb27739d5a6c837a3a6c6e8a34301a7-1",
+    "official_digest": "sha256:bc89f3c15abbd1e8d13bb57efbac01d75e0a69afd67a669bac74105a6637e87b",
+    "downloaded_zip_sha256": "bc89f3c15abbd1e8d13bb57efbac01d75e0a69afd67a669bac74105a6637e87b",
+    "receipt_sha256": "16fb442b0362727a6bc42667e669423bcede348c3fc56525a0ec11452141785b",
+    "actual_lan_execution_sha256": "8424cbb1ea765009ebf4f9c21fe4084f68fc46d132f7202b0f98be8cf66c1b43"
+  },
+  "remaining": [
+    "Optional original managed TUN plus LAN composition source compiles and lints here; actual combined service access retains separate required evidence.",
+    "Pinned official Teeworlds and Luanti game executions retain separate required evidence.",
+    "Two physical sites and target Linux/Windows game/browser acceptance remain open."
+  ]
+}
