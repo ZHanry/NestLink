@@ -52,7 +52,7 @@ jobs:
       - name: Retain exact build and actual distribution component execution
         shell: python
         run: |
-          import hashlib, json, os, pathlib, subprocess
+          import hashlib, json, os, pathlib, re, subprocess
           assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted' and os.geteuid() != 0
           output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'wireguard-native-evidence'
           output.mkdir(mode=0o700)
@@ -88,11 +88,44 @@ jobs:
               assert len(artifacts) == 1, artifacts
               executable = pathlib.Path(artifacts[0])
               receipt['executable_sha256'] = digest(executable)
-              command = [str(executable), 'wireguard::', '--include-ignored', '--nocapture', '--test-threads=1']
-              with (output / 'execution.log').open('wb') as log:
-                  environment = dict(os.environ, NESTLINK_SUBNET_NATIVE_LAB='1')
-                  code = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, env=environment).returncode
-              receipt.update(execution_command=command, execution_return_code=code, passed=code == 0)
+              # Independently require both the tool checks and the full native
+              # scenario, with an exact inventory and no empty or ignored pass.
+              expected = {
+                  'cli': {
+                      'wireguard::tests::standard_config_uses_only_original_client_address_and_approved_destinations',
+                      'wireguard::tests::private_exports_refuse_existing_files_shared_directories_and_noncanonical_keys',
+                      'wireguard::tests::distribution_wireguard_derives_independent_keys_and_qrencode_exports_bounded_svg',
+                  },
+                  'kernel': {'network_subnet_system::native_tests::wireguard::standard_client_tcp_udp_key_source_acl_original_carrier_and_exact_cleanup'},
+              }
+              listed = subprocess.check_output([str(executable), '--list'], text=True)
+              (output / 'test-inventory.txt').write_text(listed)
+              inventory = {line.removesuffix(': test') for line in listed.splitlines() if line.endswith(': test')}
+              assert expected['cli'] <= inventory and expected['kernel'] <= inventory
+              assert {case for case in inventory if case.startswith('wireguard::tests::')} == expected['cli']
+              executions = []
+              for label, selection in (
+                  ('cli', ['wireguard::tests::']),
+                  ('kernel', ['--exact', next(iter(expected['kernel']))]),
+              ):
+                  command = [str(executable), *selection, '--include-ignored', '--nocapture', '--test-threads=1', '--color', 'never']
+                  log_path = output / (label + '-execution.log')
+                  with log_path.open('wb') as log:
+                      environment = dict(os.environ, NESTLINK_SUBNET_NATIVE_LAB='1')
+                      try:
+                          code = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, env=environment, timeout=360).returncode
+                      except subprocess.TimeoutExpired:
+                          code = 124
+                  text = log_path.read_text(errors='replace')
+                  completed = set(re.findall(r'^test ([A-Za-z0-9_:]+) \.\.\. ok$', text, re.MULTILINE))
+                  summary = re.search(r'^test result: ok\. (\d+) passed; 0 failed; 0 ignored;', text, re.MULTILINE)
+                  # The exact selector/inventory and result count remain valid
+                  # when root helper output interrupts a harness status line.
+                  passed = code == 0 and summary is not None and int(summary.group(1)) == len(expected[label])
+                  executions.append({'label': label, 'command': command, 'return_code': code,
+                      'expected': sorted(expected[label]), 'completed': sorted(completed),
+                      'log_sha256': digest(log_path), 'passed': passed})
+              receipt.update(executions=executions, passed=all(case['passed'] for case in executions))
           (output / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
           print(json.dumps(receipt, indent=2))
           assert receipt['passed'], 'WireGuard mechanism failed; retained same-run receipt and logs are authoritative'

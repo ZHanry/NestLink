@@ -82,6 +82,11 @@ SUBNET_UI_FIELDS = (
     "failed_read_clears_writable_snapshot", "failed_read_preserves_unapproved_draft",
     "late_space_reply_ignored", "no_unapproved_mapping_write",
 )
+WIREGUARD_UI_FIELDS = (
+    "passed", "real_client_space_loaded", "draft_edits_clear_approval",
+    "failed_read_clears_writable_snapshot", "failed_read_preserves_unapproved_draft",
+    "late_space_reply_ignored", "no_unapproved_client_write",
+)
 SENSITIVE_KEY = re.compile(
     r"(^|_)(password|secret|token|authorization|cookie|private_key|ice_pwd|ice_ufrag)($|_)", re.I
 )
@@ -320,6 +325,11 @@ def validate_receipts(browser, host, data, database, exit_codes, expected_browse
         require(isinstance(subnet, dict) and subnet.get(field) is True, "subnet-" + field)
     require(browser.get("subnet_ui_helper_sha256") ==
             sha256((ROOT / "scripts/lib/refactor-browser-subnet.cjs").read_bytes()), "subnet-helper-source")
+    wireguard = browser.get("wireguard_ui", {})
+    for field in WIREGUARD_UI_FIELDS:
+        require(isinstance(wireguard, dict) and wireguard.get(field) is True, "wireguard-" + field)
+    require(browser.get("wireguard_ui_helper_sha256") ==
+            sha256((ROOT / "scripts/lib/refactor-browser-wireguard.cjs").read_bytes()), "wireguard-helper-source")
     for field in ("passed", "browser_peers_closed", "browser_closed", "cleanup_requested",
                   "persistent_controller_preserved", "ui_cleanup_complete", "renewal_sequence_valid"):
         require(browser.get(field) is True, "browser-" + field)

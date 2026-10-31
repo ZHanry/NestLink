@@ -69,6 +69,7 @@ jobs:
           node --check scripts/lib/refactor-browser-relay-attributes.cjs
           node --check scripts/lib/refactor-browser-spaces.cjs
           node --check scripts/lib/refactor-browser-subnet.cjs
+          node --check scripts/lib/refactor-browser-wireguard.cjs
           node --test tests/refactor/test_browser_response_observer.cjs tests/refactor/test_browser_workspace_ui.cjs 2>&1 | tee "$RUNNER_TEMP/nestlink-browser-contracts-node.log"
       - name: Retain browser contract output
         if: always()

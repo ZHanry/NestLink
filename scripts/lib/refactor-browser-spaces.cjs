@@ -3,6 +3,7 @@
 const { randomUUID } = require('node:crypto');
 const { prepareManagementResponseObservation } = require('./refactor-browser-response-observer.cjs');
 const subnetUi = require('./refactor-browser-subnet.cjs');
+const wireguardUi = require('./refactor-browser-wireguard.cjs');
 const PANEL = '[aria-label="Network spaces"]';
 const field = name => PANEL + ' [data-space-field="' + name + '"]';
 let active = null;
@@ -121,6 +122,8 @@ async function run(page, ready, report, { engine, disconnectedEvent } = {}) {
 
     facts.stage = 'subnet_management_lifecycle';
     await subnetUi.run(page, created.space_id, report);
+    facts.stage = 'wireguard_client_management_lifecycle';
+    await wireguardUi.run(page, created.space_id, report);
     await security(page);
     await action(page, 'Read my spaces', 'GET', '/api/v3/network/spaces');
     await read(page, name);

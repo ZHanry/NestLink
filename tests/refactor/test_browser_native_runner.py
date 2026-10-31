@@ -66,6 +66,9 @@ def completed_receipts():
         "subnet_ui": {field: True for field in RUNNER.SUBNET_UI_FIELDS},
         "subnet_ui_helper_sha256": RUNNER.sha256(
             (ROOT / "scripts/lib/refactor-browser-subnet.cjs").read_bytes()),
+        "wireguard_ui": {field: True for field in RUNNER.WIREGUARD_UI_FIELDS},
+        "wireguard_ui_helper_sha256": RUNNER.sha256(
+            (ROOT / "scripts/lib/refactor-browser-wireguard.cjs").read_bytes()),
         "permit_response_observer": {"passed": True, "closed": True, "listeners_removed": True,
             "pending": 0, "errors": [], "session_owner": {
                 **{key: True for key in ("session_created", "prepared_before_navigation",
