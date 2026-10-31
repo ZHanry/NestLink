@@ -296,7 +296,8 @@ fn inspect_snapshot_at(
     let current_deadline = started
         .checked_add(Duration::from_millis(gate.deadline_ms()))
         .ok_or(Error::Control)?;
-    let deadline = original_node_deadline.map_or(current_deadline, |original| original.min(current_deadline));
+    let deadline =
+        original_node_deadline.map_or(current_deadline, |original| original.min(current_deadline));
     if deadline <= Instant::now() {
         return Err(Error::Authorization(rejected(ErrorCode::LeaseExpired)));
     }

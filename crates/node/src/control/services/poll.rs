@@ -62,24 +62,28 @@ pub(in crate::control) async fn poll(
                 .checked_add(1)
                 .filter(|n| *n <= i64::MAX as u64)
                 .ok_or(Error::Control)?;
-            (NodeResourceQueryClaims {
-                schema_version: SCHEMA_VERSION,
-                deployment_id: lease.deployment_id,
-                security_epoch: lease.security_epoch,
-                node_id: lease.node_id,
-                runtime_id: lease.runtime_id,
-                runtime_generation: lease.runtime_generation,
-                policy_revision: lease.policy_revision,
-                lease_sequence: lease.lease_sequence,
-                request_id: uuid::Uuid::new_v4().to_string(),
-                request_sequence: sequence,
-                issued_at_unix_ms: now.unix_ms,
-                expires_at_unix_ms: now
-                    .unix_ms
-                    .checked_add(SERVICE_RESOURCE_MS.min(NODE_RESOURCE_TTL_MS))
-                    .ok_or(Error::Control)?
-                    .min(lease.expires_at_unix_ms),
-            }, requested, original_node_deadline)
+            (
+                NodeResourceQueryClaims {
+                    schema_version: SCHEMA_VERSION,
+                    deployment_id: lease.deployment_id,
+                    security_epoch: lease.security_epoch,
+                    node_id: lease.node_id,
+                    runtime_id: lease.runtime_id,
+                    runtime_generation: lease.runtime_generation,
+                    policy_revision: lease.policy_revision,
+                    lease_sequence: lease.lease_sequence,
+                    request_id: uuid::Uuid::new_v4().to_string(),
+                    request_sequence: sequence,
+                    issued_at_unix_ms: now.unix_ms,
+                    expires_at_unix_ms: now
+                        .unix_ms
+                        .checked_add(SERVICE_RESOURCE_MS.min(NODE_RESOURCE_TTL_MS))
+                        .ok_or(Error::Control)?
+                        .min(lease.expires_at_unix_ms),
+                },
+                requested,
+                original_node_deadline,
+            )
         };
         let signed = identity.sign_service_query(&query)?;
         let signed_at = Instant::now();
@@ -133,8 +137,12 @@ pub(in crate::control) async fn poll(
         runtime.resources.services.observe_response(requested);
         runtime.resources.services.observe_poll_stages(
             signed_at.saturating_duration_since(requested),
-            received_at.unwrap_or(waiting_at).saturating_duration_since(signed_at),
-            verified_at.unwrap_or(waiting_at).saturating_duration_since(received_at.unwrap_or(waiting_at)),
+            received_at
+                .unwrap_or(waiting_at)
+                .saturating_duration_since(signed_at),
+            verified_at
+                .unwrap_or(waiting_at)
+                .saturating_duration_since(received_at.unwrap_or(waiting_at)),
             waiting_at.elapsed(),
         );
         if runtime.service_shutdown {
@@ -151,12 +159,20 @@ pub(in crate::control) async fn poll(
                 // publication admission independently enforces that deadline.
                 // Expired IDs are retired before a later snapshot can arrive,
                 // so a transient retry cannot revive an expired publication.
-                runtime.resources.services.observe_unavailable(Instant::now());
+                runtime
+                    .resources
+                    .services
+                    .observe_unavailable(Instant::now());
                 continue;
             }
             Ok(Ok((snapshot, issuer_delegation))) => {
                 let prior_sequence = snapshot.claims().query.lease_sequence;
-                let node_deadline = match inspect_polled_snapshot(&mut runtime.gate, &snapshot, started, original_node_deadline) {
+                let node_deadline = match inspect_polled_snapshot(
+                    &mut runtime.gate,
+                    &snapshot,
+                    started,
+                    original_node_deadline,
+                ) {
                     Ok(end) => end,
                     Err(error) => {
                         if accepted {
@@ -175,7 +191,10 @@ pub(in crate::control) async fn poll(
                         .resources
                         .services
                         .accept_checked(snapshot, node_deadline, requested);
-                runtime.resources.services.observe_installation(installation_started);
+                runtime
+                    .resources
+                    .services
+                    .observe_installation(installation_started);
                 if let Err(error) = installation {
                     runtime.resources.services.stop();
                     return Err(phase("service snapshot installation", service_error(error)));

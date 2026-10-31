@@ -122,14 +122,36 @@ fn delayed_responses_keep_the_original_monotonic_budget_and_expiry_is_terminal()
 fn signed_wall_expiry_stops_a_node_before_monotonic_rounding_can_create_an_empty_query() -> Result {
     let issuer = PermitSigner::generate().node_policy_signer()?;
     let node = NodeIdentity::generate();
-    let mut gate = NodeGate::new(id(1), id(2), id(9), node.public_key(), issuer.public_key(), vec![NodeRole::NodeRelay])?;
+    let mut gate = NodeGate::new(
+        id(1),
+        id(2),
+        id(9),
+        node.public_key(),
+        issuer.public_key(),
+        vec![NodeRole::NodeRelay],
+    )?;
     let first = challenge(&node.public_key(), 3, 6000);
-    gate.accept(&issuer.sign(&claims(&first, 1, 1000))?.encode_to_vec(), &first, 0, clock(0, 1000))?;
+    gate.accept(
+        &issuer.sign(&claims(&first, 1, 1000))?.encode_to_vec(),
+        &first,
+        0,
+        clock(0, 1000),
+    )?;
     assert!(gate.current(clock(9998, 10999)).is_ok());
     let failure = gate.current(clock(9999, 11000));
-    assert!(matches!(failure, Err(error) if error.code == nestlink_protocol::ErrorCode::LeaseExpired && error.reason == "node local lease deadline expired"));
+    assert!(
+        matches!(failure, Err(error) if error.code == nestlink_protocol::ErrorCode::LeaseExpired && error.reason == "node local lease deadline expired")
+    );
     let next = challenge(&node.public_key(), 4, 14000);
-    assert!(gate.accept(&issuer.sign(&claims(&next, 2, 11000))?.encode_to_vec(), &next, 10000, clock(10000, 11001)).is_err());
+    assert!(
+        gate.accept(
+            &issuer.sign(&claims(&next, 2, 11000))?.encode_to_vec(),
+            &next,
+            10000,
+            clock(10000, 11001)
+        )
+        .is_err()
+    );
     Ok(())
 }
 #[test]
