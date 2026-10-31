@@ -58,9 +58,14 @@ fn object_descriptor() -> io::Result<security::Local> {
     let mut descriptor = null_mut();
     if unsafe {
         ConvertStringSecurityDescriptorToSecurityDescriptorW(
-            sddl.as_ptr(), SDDL_REVISION_1, &mut descriptor, null_mut(),
+            sddl.as_ptr(),
+            SDDL_REVISION_1,
+            &mut descriptor,
+            null_mut(),
         )
-    } == 0 || descriptor.is_null() {
+    } == 0
+        || descriptor.is_null()
+    {
         return Err(io::Error::last_os_error());
     }
     Ok(security::Local(descriptor))

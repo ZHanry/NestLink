@@ -348,8 +348,15 @@ impl Store {
             }
             addresses.push(address_view(row, true, &suffix));
         }
-        Ok(SpaceAddressDirectory { space, revision, suffix, ipv4_pool:IPV4_POOL.into(),
-            ipv6_pool:IPV6_POOL.into(),cache_max_age_seconds:0,addresses })
+        Ok(SpaceAddressDirectory {
+            space,
+            revision,
+            suffix,
+            ipv4_pool: IPV4_POOL.into(),
+            ipv6_pool: IPV6_POOL.into(),
+            cache_max_age_seconds: 0,
+            addresses,
+        })
     }
 
     pub fn issue_space_address(

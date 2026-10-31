@@ -14,8 +14,8 @@ use nestlink_protocol::network::{
 };
 use rusqlite::{Connection, OptionalExtension, Transaction, TransactionBehavior, params};
 use std::collections::{BTreeMap, BTreeSet};
-mod remote_paths;
 pub mod network_access;
+mod remote_paths;
 pub use remote_paths::{NetworkRemotePathBundle, NetworkRemotePathIssuance};
 pub(crate) mod remote_relays;
 pub use remote_relays::{NetworkRemoteRelayBundle, NetworkRemoteRelayIssuance};
@@ -726,7 +726,11 @@ pub(crate) fn read_snapshot(
         &mut revoked_grant_ids,
     )?;
     network_access::collect_revocations(
-        connection, space_id, policy_epoch, now_ms, &mut revoked_grant_ids,
+        connection,
+        space_id,
+        policy_epoch,
+        now_ms,
+        &mut revoked_grant_ids,
     )?;
     Ok(TrustedNetworkPolicySnapshot {
         authority_key,

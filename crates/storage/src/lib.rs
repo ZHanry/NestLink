@@ -457,7 +457,8 @@ impl Store {
         }
         if version < 43 {
             let transaction = connection.transaction()?;
-            transaction.execute_batch(include_str!("../migrations/043_network_packet_access.sql"))?;
+            transaction
+                .execute_batch(include_str!("../migrations/043_network_packet_access.sql"))?;
             transaction.pragma_update(None, "user_version", 43)?;
             transaction.commit()?;
         }

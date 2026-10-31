@@ -95,7 +95,11 @@ pub(crate) async fn run(args: GatewayArgs) -> Result {
             io::Error::other("bootstrap and launch output must both be fresh paths").into(),
         );
     }
-    let https_root = args.https_root.as_ref().map(|path| nestlink_platform_security::read_private(path, 16_384)).transpose()?;
+    let https_root = args
+        .https_root
+        .as_ref()
+        .map(|path| nestlink_platform_security::read_private(path, 16_384))
+        .transpose()?;
     let installation =
         nestlink_local_ipc::maintenance::InstallationStartup::acquire(&std::env::current_exe()?)?;
     let directory = installation.state_directory(&args.state_dir)?;
@@ -158,7 +162,10 @@ pub(crate) async fn run(args: GatewayArgs) -> Result {
         .await?;
     // Validate the owner's optional root before publishing any route or ticket
     // file. A bad local trust input still joins this original gateway owner.
-    let probe = match https_root.as_ref().map_or_else(|| gateway.public_route_probe(), |root| gateway.public_route_probe_with_root(root)) {
+    let probe = match https_root.as_ref().map_or_else(
+        || gateway.public_route_probe(),
+        |root| gateway.public_route_probe_with_root(root),
+    ) {
         Ok(probe) => probe,
         Err(error) => {
             gateway.request_shutdown();
@@ -168,7 +175,10 @@ pub(crate) async fn run(args: GatewayArgs) -> Result {
                     receipt => break receipt,
                 }
             };
-            return Err(io::Error::other(format!("public route probe could not start: {error}; cleanup={cleanup:?}")).into());
+            return Err(io::Error::other(format!(
+                "public route probe could not start: {error}; cleanup={cleanup:?}"
+            ))
+            .into());
         }
     };
     #[derive(serde::Serialize)]
@@ -259,8 +269,11 @@ pub(crate) async fn run(args: GatewayArgs) -> Result {
                 // Try both independently: a changed route must not retain an
                 // otherwise unchanged owner-private launch capability file.
                 let route_cleanup = remove_bootstrap(&args.bootstrap, &bytes);
-                let launch_cleanup = launch_bytes.map(|bytes| remove_bootstrap(&args.launch_output, &bytes)).transpose();
-                route_cleanup?; launch_cleanup?;
+                let launch_cleanup = launch_bytes
+                    .map(|bytes| remove_bootstrap(&args.launch_output, &bytes))
+                    .transpose();
+                route_cleanup?;
+                launch_cleanup?;
                 println!("Private Web gateway stopped: {report:?}");
                 operation?;
                 return Ok(());
@@ -284,7 +297,12 @@ fn publish_launch(
     // independently of route cleanup; a changed file is always retained.
     *owned_bytes = Some(bytes);
     let actual = nestlink_platform_security::read_private(path, 65536)?;
-    if actual.as_slice() != owned_bytes.as_ref().ok_or_else(|| io::Error::other("launch owner record missing"))?.as_slice() {
+    if actual.as_slice()
+        != owned_bytes
+            .as_ref()
+            .ok_or_else(|| io::Error::other("launch owner record missing"))?
+            .as_slice()
+    {
         return Err(io::Error::other("private launch file readback differs").into());
     }
     Ok(())

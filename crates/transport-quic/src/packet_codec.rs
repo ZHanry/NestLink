@@ -2,7 +2,10 @@
 //! direct raw-IP business carrier. This framing grants no packet authority.
 use crate::fragments::{Fragment, Reassembly};
 use nestlink_protocol::network_datagram as wire;
-use std::{io, time::{Duration, Instant}};
+use std::{
+    io,
+    time::{Duration, Instant},
+};
 
 pub const ALPN: &[u8] = b"nestlink/network-packet/1";
 
@@ -25,11 +28,17 @@ impl DirectPacketEndpoint {
         expected_peer: nestlink_protocol::network::PeerId,
         path: nestlink_platform_network::path::NetworkPathManager,
     ) -> crate::Result<Self> {
-        use quinn::{Runtime, crypto::rustls::{QuicClientConfig, QuicServerConfig}};
+        use quinn::{
+            Runtime,
+            crypto::rustls::{QuicClientConfig, QuicServerConfig},
+        };
         use std::sync::Arc;
         if path.selected.is_none() || identity.fingerprint() == expected_peer.0 {
-            return Err(io::Error::new(io::ErrorKind::PermissionDenied,
-                "raw IP requires an explicit underlay interface and a distinct pinned peer").into());
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "raw IP requires an explicit underlay interface and a distinct pinned peer",
+            )
+            .into());
         }
         let mut transport = crate::transport_value();
         transport.max_concurrent_bidi_streams(1u8.into());
@@ -38,33 +47,57 @@ impl DirectPacketEndpoint {
         transport.min_mtu(1200);
         transport.mtu_discovery_config(None);
         let transport = Arc::new(transport);
-        let mut server_tls = nestlink_transport_stream::tls::server_config(identity, expected_peer.0)?;
+        let mut server_tls =
+            nestlink_transport_stream::tls::server_config(identity, expected_peer.0)?;
         server_tls.alpn_protocols = vec![ALPN.to_vec()];
-        let mut server = quinn::ServerConfig::with_crypto(Arc::new(QuicServerConfig::try_from(server_tls)?));
+        let mut server =
+            quinn::ServerConfig::with_crypto(Arc::new(QuicServerConfig::try_from(server_tls)?));
         server.transport_config(transport.clone());
         server.migration(false);
-        let mut client_tls = nestlink_transport_stream::tls::client_config(identity, expected_peer.0)?;
+        let mut client_tls =
+            nestlink_transport_stream::tls::client_config(identity, expected_peer.0)?;
         client_tls.alpn_protocols = vec![ALPN.to_vec()];
-        let mut client = quinn::ClientConfig::new(Arc::new(QuicClientConfig::try_from(client_tls)?));
+        let mut client =
+            quinn::ClientConfig::new(Arc::new(QuicClientConfig::try_from(client_tls)?));
         client.transport_config(transport);
         let socket = path.bind_udp(address)?;
         let address = socket.local_addr()?;
         let runtime = Arc::new(quinn::TokioRuntime);
         let inner = runtime.wrap_udp_socket(socket)?;
         let (socket, released) = crate::service::socket::tracked(inner);
-        let mut endpoint = quinn::Endpoint::new_with_abstract_socket(quinn::EndpointConfig::default(),
-            Some(server), socket, runtime)?;
+        let mut endpoint = quinn::Endpoint::new_with_abstract_socket(
+            quinn::EndpointConfig::default(),
+            Some(server),
+            socket,
+            runtime,
+        )?;
         endpoint.set_default_client_config(client);
-        Ok(Self { endpoint: Some(endpoint), connection: None, released: Some(released), path, address,
-            expected_peer, attempted: false, close_deadline: None })
+        Ok(Self {
+            endpoint: Some(endpoint),
+            connection: None,
+            released: Some(released),
+            path,
+            address,
+            expected_peer,
+            attempted: false,
+            close_deadline: None,
+        })
     }
-    pub fn local_addr(&self) -> std::net::SocketAddr { self.address }
-    pub fn validate_underlay(&self) -> io::Result<()> { self.path.validate_bound(self.address) }
+    pub fn local_addr(&self) -> std::net::SocketAddr {
+        self.address
+    }
+    pub fn validate_underlay(&self) -> io::Result<()> {
+        self.path.validate_bound(self.address)
+    }
     fn endpoint(&self) -> io::Result<&quinn::Endpoint> {
-        self.endpoint.as_ref().ok_or_else(|| io::ErrorKind::NotConnected.into())
+        self.endpoint
+            .as_ref()
+            .ok_or_else(|| io::ErrorKind::NotConnected.into())
     }
     pub fn connection(&self) -> io::Result<&quinn::Connection> {
-        self.connection.as_ref().ok_or_else(|| io::ErrorKind::NotConnected.into())
+        self.connection
+            .as_ref()
+            .ok_or_else(|| io::ErrorKind::NotConnected.into())
     }
     /// Both peers prove the original access digest and path transport group
     /// inside pinned TLS before exposing a datagram to the IP admission owner.
@@ -75,15 +108,29 @@ impl DirectPacketEndpoint {
         transport_group: [u8; 32],
         deadline: tokio::time::Instant,
     ) -> crate::Result<()> {
-        if self.attempted || self.close_deadline.is_some() || business_digest == [0; 32] || transport_group == [0; 32] {
-            return Err(io::Error::new(io::ErrorKind::PermissionDenied, "raw packet carrier is single-use and needs exact verified bindings").into());
+        if self.attempted
+            || self.close_deadline.is_some()
+            || business_digest == [0; 32]
+            || transport_group == [0; 32]
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "raw packet carrier is single-use and needs exact verified bindings",
+            )
+            .into());
         }
         self.attempted = true;
         self.validate_underlay()?;
         let connection = if let Some(destination) = destination {
-            tokio::time::timeout_at(deadline, self.endpoint()?.connect(destination, "peer.nestlink.invalid")?).await??
+            tokio::time::timeout_at(
+                deadline,
+                self.endpoint()?
+                    .connect(destination, "peer.nestlink.invalid")?,
+            )
+            .await??
         } else {
-            let incoming = tokio::time::timeout_at(deadline, self.endpoint()?.accept()).await?
+            let incoming = tokio::time::timeout_at(deadline, self.endpoint()?.accept())
+                .await?
                 .ok_or(io::ErrorKind::ConnectionAborted)?;
             tokio::time::timeout_at(deadline, incoming).await??
         };
@@ -97,21 +144,38 @@ impl DirectPacketEndpoint {
         binding[32..].copy_from_slice(&transport_group);
         tokio::time::timeout_at(deadline, async {
             let connection = self.connection()?;
-            let (mut send, mut receive) = if destination.is_some() { connection.open_bi().await? } else { connection.accept_bi().await? };
+            let (mut send, mut receive) = if destination.is_some() {
+                connection.open_bi().await?
+            } else {
+                connection.accept_bi().await?
+            };
             send.write_all(&binding).await?;
             send.finish()?;
             let received = receive.read_to_end(64).await?;
-            if received.as_slice() != binding || connection.max_datagram_size().is_none_or(|size| size < wire::HEADER + wire::FRAGMENT_BYTES) {
-                return Err(io::Error::new(io::ErrorKind::PermissionDenied, "raw packet grant/path proof or carrier MTU mismatch").into());
+            if received.as_slice() != binding
+                || connection
+                    .max_datagram_size()
+                    .is_none_or(|size| size < wire::HEADER + wire::FRAGMENT_BYTES)
+            {
+                return Err(io::Error::new(
+                    io::ErrorKind::PermissionDenied,
+                    "raw packet grant/path proof or carrier MTU mismatch",
+                )
+                .into());
             }
             self.validate_underlay()?;
             Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
-        }).await??;
+        })
+        .await??;
         Ok(())
     }
     pub fn request_close(&self) {
-        if let Some(connection) = &self.connection { connection.close(0u32.into(), b"raw packet business stopping"); }
-        if let Some(endpoint) = &self.endpoint { endpoint.close(0u32.into(), b"raw packet endpoint stopping"); }
+        if let Some(connection) = &self.connection {
+            connection.close(0u32.into(), b"raw packet business stopping");
+        }
+        if let Some(endpoint) = &self.endpoint {
+            endpoint.close(0u32.into(), b"raw packet endpoint stopping");
+        }
     }
     pub async fn close_and_wait(&mut self, deadline: tokio::time::Instant) -> io::Result<()> {
         let deadline = *self.close_deadline.get_or_insert(deadline);
@@ -119,15 +183,21 @@ impl DirectPacketEndpoint {
         self.connection = None;
         self.endpoint = None;
         if let Some(released) = self.released.as_mut() {
-            tokio::time::timeout_at(deadline, released).await.map_err(|_| io::ErrorKind::TimedOut)?
-                .map_err(|_| io::Error::other("raw packet physical UDP release was not confirmed"))?;
+            tokio::time::timeout_at(deadline, released)
+                .await
+                .map_err(|_| io::ErrorKind::TimedOut)?
+                .map_err(|_| {
+                    io::Error::other("raw packet physical UDP release was not confirmed")
+                })?;
             self.released = None;
         }
         Ok(())
     }
 }
 impl Drop for DirectPacketEndpoint {
-    fn drop(&mut self) { self.request_close(); }
+    fn drop(&mut self) {
+        self.request_close();
+    }
 }
 
 /// Encodes the existing bounded carrier fragments and consumes the hop locally
@@ -139,7 +209,8 @@ pub fn encode_direct(
     sequence: u64,
     packet: &[u8],
 ) -> io::Result<Vec<Vec<u8>>> {
-    let mut fragments = wire::encode(binding, direction, sequence, packet).map_err(io::Error::other)?;
+    let mut fragments =
+        wire::encode(binding, direction, sequence, packet).map_err(io::Error::other)?;
     for fragment in &mut fragments {
         wire::forward(fragment, binding, direction).map_err(io::Error::other)?;
     }
@@ -155,21 +226,47 @@ pub struct PacketAssembler {
 impl PacketAssembler {
     pub fn new(binding: [u8; 32], direction: wire::Direction, maximum: usize) -> io::Result<Self> {
         if binding == [0; 32] || maximum == 0 || maximum > wire::PACKET_BYTES {
-            return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid raw packet assembly binding or byte bound"));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "invalid raw packet assembly binding or byte bound",
+            ));
         }
-        Ok(Self { binding, direction, maximum, assembly: Reassembly::new(
-            wire::FRAGMENT_BYTES, wire::PENDING_PACKETS, wire::REPLAY_WINDOW,
-            Duration::from_millis(wire::PACKET_AGE_MS)) })
+        Ok(Self {
+            binding,
+            direction,
+            maximum,
+            assembly: Reassembly::new(
+                wire::FRAGMENT_BYTES,
+                wire::PENDING_PACKETS,
+                wire::REPLAY_WINDOW,
+                Duration::from_millis(wire::PACKET_AGE_MS),
+            ),
+        })
     }
     pub fn insert(&mut self, bytes: &[u8], now: Instant) -> io::Result<Option<Vec<u8>>> {
         let fragment = wire::decode(bytes).map_err(io::Error::other)?;
-        if fragment.binding != self.binding || fragment.direction != self.direction
-            || fragment.remaining_hops != 0 || fragment.length > self.maximum
+        if fragment.binding != self.binding
+            || fragment.direction != self.direction
+            || fragment.remaining_hops != 0
+            || fragment.length > self.maximum
         {
-            return Err(io::Error::new(io::ErrorKind::PermissionDenied, "raw packet carrier binding, direction or hop mismatch"));
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "raw packet carrier binding, direction or hop mismatch",
+            ));
         }
-        Ok(self.assembly.insert(Fragment { packet: fragment.packet, length: fragment.length,
-            index: fragment.index, payload: fragment.payload }, now)?.map(|packet| packet.bytes))
+        Ok(self
+            .assembly
+            .insert(
+                Fragment {
+                    packet: fragment.packet,
+                    length: fragment.length,
+                    index: fragment.index,
+                    payload: fragment.payload,
+                },
+                now,
+            )?
+            .map(|packet| packet.bytes))
     }
 }
 
@@ -177,7 +274,8 @@ impl PacketAssembler {
 mod tests {
     use super::*;
     #[test]
-    fn full_ipv6_minimum_mtu_reuses_existing_bounded_assembler_and_replay_window() -> io::Result<()> {
+    fn full_ipv6_minimum_mtu_reuses_existing_bounded_assembler_and_replay_window() -> io::Result<()>
+    {
         let binding = [7; 32];
         let direction = wire::Direction::FirstToSecond;
         let mut owner = PacketAssembler::new(binding, direction, 1280)?;
@@ -202,7 +300,14 @@ mod tests {
         let fragments = encode_direct(binding, direction, 1, &vec![5; 1280])?;
         let now = Instant::now();
         assert!(owner.insert(&fragments[0], now)?.is_none());
-        assert!(owner.insert(&fragments[1], now + Duration::from_millis(wire::PACKET_AGE_MS))?.is_none());
+        assert!(
+            owner
+                .insert(
+                    &fragments[1],
+                    now + Duration::from_millis(wire::PACKET_AGE_MS)
+                )?
+                .is_none()
+        );
         Ok(())
     }
 }

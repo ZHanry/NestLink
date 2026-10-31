@@ -19,32 +19,96 @@ struct Service {
 impl Service {
     async fn start(target: SocketAddr) -> Result<Self> {
         let f = Fixture::configured("http", target, "direct_only", 300_000).await?;
-        f.sdk.revoke_private_service(&f.view.id, &f.rule, f.exposure.revision).await?;
-        let policy = f.sdk.grant_private_service(&f.view.id, PrivateServiceAclUpdate {
-            expected_exposure_revision: f.exposure.revision,
-            subject: PrivateServiceSubject::Installation { installation_id: f.consumer.device_id.clone() },
-            expires_at_unix_ms: wall_ms()? + 300_000,
-        }).await?;
-        let rule = policy.rules.into_iter().find(|rule| !rule.revoked).ok_or("hosted ACL missing")?.rule_id;
-        let host = f.sdk.start_private_service_host(f.host.clone(), f.consent, PrivateServiceHostConfig {
-            listen: "127.0.0.1:0".parse()?, advertised_ip: "127.0.0.1".parse()?, usage_directory: f.usage.join("ledger"),
-        }).await?;
-        let entry = f.sdk.private_services(&f.consumer.device_id, None, 10).await?.entries.into_iter().next().ok_or("hosted entry missing")?;
-        let choice = LocalProxyServiceChoice::from_local_choice(&entry, "private-web.nestlink.internal", 443, 16_384, Duration::from_secs(240))?;
-        let gateway = f.sdk.start_private_web_gateway(Arc::new(f.consumer), choice, PrivateWebGatewayConfig {
-            listen: "127.0.0.1:0".parse()?, origin: format!("https://{}.private.example.net", f.view.id),
-        }).await?;
-        Ok(Self { sdk: f.sdk, id: f.view.id, rule, revision: f.exposure.revision, host, gateway, usage: f.usage, _server: f._server })
+        f.sdk
+            .revoke_private_service(&f.view.id, &f.rule, f.exposure.revision)
+            .await?;
+        let policy = f
+            .sdk
+            .grant_private_service(
+                &f.view.id,
+                PrivateServiceAclUpdate {
+                    expected_exposure_revision: f.exposure.revision,
+                    subject: PrivateServiceSubject::Installation {
+                        installation_id: f.consumer.device_id.clone(),
+                    },
+                    expires_at_unix_ms: wall_ms()? + 300_000,
+                },
+            )
+            .await?;
+        let rule = policy
+            .rules
+            .into_iter()
+            .find(|rule| !rule.revoked)
+            .ok_or("hosted ACL missing")?
+            .rule_id;
+        let host = f
+            .sdk
+            .start_private_service_host(
+                f.host.clone(),
+                f.consent,
+                PrivateServiceHostConfig {
+                    listen: "127.0.0.1:0".parse()?,
+                    advertised_ip: "127.0.0.1".parse()?,
+                    usage_directory: f.usage.join("ledger"),
+                },
+            )
+            .await?;
+        let entry = f
+            .sdk
+            .private_services(&f.consumer.device_id, None, 10)
+            .await?
+            .entries
+            .into_iter()
+            .next()
+            .ok_or("hosted entry missing")?;
+        let choice = LocalProxyServiceChoice::from_local_choice(
+            &entry,
+            "private-web.nestlink.internal",
+            443,
+            16_384,
+            Duration::from_secs(240),
+        )?;
+        let gateway = f
+            .sdk
+            .start_private_web_gateway(
+                Arc::new(f.consumer),
+                choice,
+                PrivateWebGatewayConfig {
+                    listen: "127.0.0.1:0".parse()?,
+                    origin: format!("https://{}.private.example.net", f.view.id),
+                },
+            )
+            .await?;
+        Ok(Self {
+            sdk: f.sdk,
+            id: f.view.id,
+            rule,
+            revision: f.exposure.revision,
+            host,
+            gateway,
+            usage: f.usage,
+            _server: f._server,
+        })
     }
     async fn quota(&self) -> Result<serde_json::Value> {
         let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
         loop {
-            let usage = self.sdk.service_quota_usage(ServiceQuotaUsageQuery { scope: ServiceQuotaScope::Resource, scope_key: self.id.clone() }).await?;
+            let usage = self
+                .sdk
+                .service_quota_usage(ServiceQuotaUsageQuery {
+                    scope: ServiceQuotaScope::Resource,
+                    scope_key: self.id.clone(),
+                })
+                .await?;
             if usage.outstanding_bytes == 0 {
                 assert!(usage.spent_bytes > 0);
-                return Ok(serde_json::json!({"spent_bytes":usage.spent_bytes,"outstanding_bytes":usage.outstanding_bytes,"limit_bytes":usage.limit_bytes}));
+                return Ok(
+                    serde_json::json!({"spent_bytes":usage.spent_bytes,"outstanding_bytes":usage.outstanding_bytes,"limit_bytes":usage.limit_bytes}),
+                );
             }
-            if tokio::time::Instant::now() >= deadline { return Err("hosted quota physical settlement timed out".into()); }
+            if tokio::time::Instant::now() >= deadline {
+                return Err("hosted quota physical settlement timed out".into());
+            }
             tokio::time::sleep(Duration::from_millis(20)).await;
         }
     }
@@ -52,10 +116,20 @@ impl Service {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "snake_case")]
-enum Action { Launch, Observe, RevokeSecond, StopFirst, StartReplacement, Finish }
+enum Action {
+    Launch,
+    Observe,
+    RevokeSecond,
+    StopFirst,
+    StartReplacement,
+    Finish,
+}
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Command { sequence: u32, action: Action }
+struct Command {
+    sequence: u32,
+    action: Action,
+}
 
 fn write(path: &std::path::Path, value: &impl Serialize) -> Result {
     nestlink_platform_security::create_private(path, &serde_json::to_vec_pretty(value)?)?;
@@ -65,8 +139,14 @@ async fn stop(gateway: &mut PrivateWebGateway) -> Result<PrivateWebGatewayStopRe
     loop {
         match gateway.wait_stopped(Duration::from_secs(5)).await {
             PrivateWebGatewayWait::CleanupPending => continue,
-            PrivateWebGatewayWait::Stopped(report) => { assert!(report.listener_closed); assert_eq!(report.cleanup_failures, 0); return Ok(report); }
-            other => return Err(format!("hosted physical gateway receipt failed: {other:?}").into()),
+            PrivateWebGatewayWait::Stopped(report) => {
+                assert!(report.listener_closed);
+                assert_eq!(report.cleanup_failures, 0);
+                return Ok(report);
+            }
+            other => {
+                return Err(format!("hosted physical gateway receipt failed: {other:?}").into());
+            }
         }
     }
 }
@@ -81,14 +161,26 @@ impl Replacement {
     async fn start(address: SocketAddr, name: String) -> Result<Self> {
         let listener = TcpListener::bind(address).await?;
         let certificate = rcgen::generate_simple_self_signed(vec![name])?;
-        let mut config = rustls::ServerConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
-            .with_safe_default_protocol_versions()?.with_no_client_auth()
-            .with_single_cert(vec![certificate.cert.der().clone()], PrivatePkcs8KeyDer::from(certificate.signing_key.serialize_der()).into())?;
+        let mut config = rustls::ServerConfig::builder_with_provider(Arc::new(
+            rustls::crypto::ring::default_provider(),
+        ))
+        .with_safe_default_protocol_versions()?
+        .with_no_client_auth()
+        .with_single_cert(
+            vec![certificate.cert.der().clone()],
+            PrivatePkcs8KeyDer::from(certificate.signing_key.serialize_der()).into(),
+        )?;
         config.alpn_protocols = vec![b"http/1.1".to_vec()];
         let acceptor = tokio_rustls::TlsAcceptor::from(Arc::new(config));
         let (stop, mut stopped) = watch::channel(false);
-        let rejected = Arc::new(AtomicU64::new(0)); let accepted = Arc::new(AtomicU64::new(0)); let application_bytes = Arc::new(AtomicU64::new(0));
-        let (rejects, accepts, bytes) = (rejected.clone(), accepted.clone(), application_bytes.clone());
+        let rejected = Arc::new(AtomicU64::new(0));
+        let accepted = Arc::new(AtomicU64::new(0));
+        let application_bytes = Arc::new(AtomicU64::new(0));
+        let (rejects, accepts, bytes) = (
+            rejected.clone(),
+            accepted.clone(),
+            application_bytes.clone(),
+        );
         let task = tokio::spawn(async move {
             let mut workers = JoinSet::new();
             loop {
@@ -117,11 +209,20 @@ impl Replacement {
             while workers.join_next().await.is_some() {}
             Ok(())
         });
-        Ok(Self { stop, task, rejected, accepted, application_bytes })
+        Ok(Self {
+            stop,
+            task,
+            rejected,
+            accepted,
+            application_bytes,
+        })
     }
     async fn finish(self) -> Result<serde_json::Value> {
-        self.stop.send_replace(true); self.task.await??;
-        Ok(serde_json::json!({"rejected_tls_handshakes":self.rejected.load(Ordering::SeqCst),"accepted_tls_handshakes":self.accepted.load(Ordering::SeqCst),"application_bytes":self.application_bytes.load(Ordering::SeqCst),"listener_joined":true}))
+        self.stop.send_replace(true);
+        self.task.await??;
+        Ok(
+            serde_json::json!({"rejected_tls_handshakes":self.rejected.load(Ordering::SeqCst),"accepted_tls_handshakes":self.accepted.load(Ordering::SeqCst),"application_bytes":self.application_bytes.load(Ordering::SeqCst),"listener_joined":true}),
+        )
     }
 }
 
@@ -131,10 +232,16 @@ async fn caddy_browser_fixture_role() -> Result {
     if std::env::var("NESTLINK_PRIVATE_WEB_L2").as_deref() != Ok("1")
         || std::env::var("GITHUB_ACTIONS").as_deref() != Ok("true")
         || std::env::var("RUNNER_ENVIRONMENT").as_deref() != Ok("github-hosted")
-    { return Err("R02: use the dedicated hosted private Web workflow".into()); }
-    let directory = PathBuf::from(std::env::var_os("NESTLINK_PRIVATE_WEB_DIRECTORY").ok_or("private fixture directory missing")?);
+    {
+        return Err("R02: use the dedicated hosted private Web workflow".into());
+    }
+    let directory = PathBuf::from(
+        std::env::var_os("NESTLINK_PRIVATE_WEB_DIRECTORY")
+            .ok_or("private fixture directory missing")?,
+    );
     nestlink_platform_security::check_private_directory(&directory)?;
-    let listener = TcpListener::bind("127.0.0.1:0").await?; let target = listener.local_addr()?;
+    let listener = TcpListener::bind("127.0.0.1:0").await?;
+    let target = listener.local_addr()?;
     let login_count = Arc::new(AtomicU64::new(0));
     let login_observer = login_count.clone();
     let backend = Router::new().route("/", get(|| async { axum::response::Html("<!doctype html><title>Private application</title><p id='application'>Private application</p>") }))
@@ -142,11 +249,23 @@ async fn caddy_browser_fixture_role() -> Result {
         .route("/download", get(|| async { vec![37u8;2048] }))
         .route("/same", get(|| async { ([("Location","/me")],StatusCode::FOUND) }))
         .route("/outside", get(|| async { ([("Location","https://untrusted.invalid/")],StatusCode::FOUND) }));
-    let _backend = Abort(tokio::spawn(async move { axum::serve(listener,backend).await }));
-    let mut first = Service::start(target).await?; let mut second = Service::start(target).await?;
+    let _backend = Abort(tokio::spawn(
+        async move { axum::serve(listener, backend).await },
+    ));
+    let mut first = Service::start(target).await?;
+    let mut second = Service::start(target).await?;
     let old_address = first.gateway.address();
-    let old_name = first.gateway.caddy_route().pointer("/handle/0/transport/tls/server_name").and_then(serde_json::Value::as_str).ok_or("upstream name missing")?.to_owned();
-    write(&directory.join("ready.json"), &serde_json::json!({"schema_version":1,"scope":"L2 hosted SDK/private Caddy Chrome; simulated DNS/test root; not public L3", "services":[{"origin":first.gateway.origin(),"owner_id":first.gateway.owner_id(),"route":first.gateway.caddy_route()},{"origin":second.gateway.origin(),"owner_id":second.gateway.owner_id(),"route":second.gateway.caddy_route()}]}))?;
+    let old_name = first
+        .gateway
+        .caddy_route()
+        .pointer("/handle/0/transport/tls/server_name")
+        .and_then(serde_json::Value::as_str)
+        .ok_or("upstream name missing")?
+        .to_owned();
+    write(
+        &directory.join("ready.json"),
+        &serde_json::json!({"schema_version":1,"scope":"L2 hosted SDK/private Caddy Chrome; simulated DNS/test root; not public L3", "services":[{"origin":first.gateway.origin(),"owner_id":first.gateway.owner_id(),"route":first.gateway.caddy_route()},{"origin":second.gateway.origin(),"owner_id":second.gateway.owner_id(),"route":second.gateway.caddy_route()}]}),
+    )?;
     let mut replacement = None;
     let mut first_report = None;
     let deadline = tokio::time::Instant::now() + Duration::from_secs(210);
@@ -178,18 +297,43 @@ async fn caddy_browser_fixture_role() -> Result {
         }
         Err("hosted command budget exhausted".into())
     }.await;
-    let replacement = match replacement {Some(replacement)=>Some(replacement.finish().await),None=>None};
-    let (first_report, second_report) = tokio::join!(async {match first_report {Some(report)=>Ok(report),None=>stop(&mut first.gateway).await}},stop(&mut second.gateway));
-    let (first_host, second_host) = tokio::join!(first.host.wait_stopped(),second.host.wait_stopped());
-    let first_report = first_report?;let second_report = second_report?;first_host?;second_host?;
+    let replacement = match replacement {
+        Some(replacement) => Some(replacement.finish().await),
+        None => None,
+    };
+    let (first_report, second_report) = tokio::join!(
+        async {
+            match first_report {
+                Some(report) => Ok(report),
+                None => stop(&mut first.gateway).await,
+            }
+        },
+        stop(&mut second.gateway)
+    );
+    let (first_host, second_host) =
+        tokio::join!(first.host.wait_stopped(), second.host.wait_stopped());
+    let first_report = first_report?;
+    let second_report = second_report?;
+    first_host?;
+    second_host?;
     let replacement = replacement.transpose()?;
     let quotas = [first.quota().await?, second.quota().await?];
-    write(&directory.join("physical-receipt.json"),&serde_json::json!({"first":{"listener_closed":first_report.listener_closed,"cleanup_failures":first_report.cleanup_failures},"second":{"listener_closed":second_report.listener_closed,"cleanup_failures":second_report.cleanup_failures},"replacement":replacement,"original_quota_usage":quotas,"host_carriers_joined":true,"public_service_grants_created":false}))?;
+    write(
+        &directory.join("physical-receipt.json"),
+        &serde_json::json!({"first":{"listener_closed":first_report.listener_closed,"cleanup_failures":first_report.cleanup_failures},"second":{"listener_closed":second_report.listener_closed,"cleanup_failures":second_report.cleanup_failures},"replacement":replacement,"original_quota_usage":quotas,"host_carriers_joined":true,"public_service_grants_created":false}),
+    )?;
     operation?;
     let replacement = replacement.ok_or("replacement endpoint was not exercised")?;
-    assert!(replacement["rejected_tls_handshakes"].as_u64().is_some_and(|count|count>0));
-    assert_eq!(replacement["accepted_tls_handshakes"],0);assert_eq!(replacement["application_bytes"],0);
-    drop(first.host);drop(second.host);
-    std::fs::remove_dir_all(first.usage)?;std::fs::remove_dir_all(second.usage)?;
+    assert!(
+        replacement["rejected_tls_handshakes"]
+            .as_u64()
+            .is_some_and(|count| count > 0)
+    );
+    assert_eq!(replacement["accepted_tls_handshakes"], 0);
+    assert_eq!(replacement["application_bytes"], 0);
+    drop(first.host);
+    drop(second.host);
+    std::fs::remove_dir_all(first.usage)?;
+    std::fs::remove_dir_all(second.usage)?;
     Ok(())
 }

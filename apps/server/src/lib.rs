@@ -467,7 +467,8 @@ pub fn router(state: AppState) -> Router {
         )
         .route(
             "/api/v3/network/spaces/{space}/packet-access/{access}",
-            get(network_policy::network_access::read).delete(network_policy::network_access::revoke),
+            get(network_policy::network_access::read)
+                .delete(network_policy::network_access::revoke),
         )
         .route(
             "/api/v3/network/spaces/{space}/packet-access/{access}/start",

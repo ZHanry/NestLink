@@ -387,7 +387,11 @@ async fn real_private_web_preserves_cookie_upload_redirect_and_websocket_then_lo
     let mut browser = Browser::new(&gateway)?;
     assert!(gateway.public_route_probe_with_root(&[]).is_err());
     assert!(gateway.public_route_probe_with_root(&[0x30, 0x00]).is_err());
-    assert!(gateway.public_route_probe_with_root(&vec![0;16_385]).is_err());
+    assert!(
+        gateway
+            .public_route_probe_with_root(&vec![0; 16_385])
+            .is_err()
+    );
     let original_launch = gateway.launch_url();
     assert_ne!(gateway.renew_launch_url()?, original_launch);
     let original_ticket = original_launch

@@ -1,7 +1,7 @@
 //! Raw IP business admission. A verified path or space membership alone never
 //! permits an OS/LAN injection. Both endpoint owners run this same policy.
-mod parse;
 mod online;
+mod parse;
 pub use online::OnlinePacketAccess;
 #[cfg(test)]
 mod tests;
@@ -92,12 +92,17 @@ impl PacketPeerAuthority {
             || observed > context.now_ms
             || context.now_ms - observed >= DIRECTORY_FRESHNESS.as_millis() as u64
         {
-            return Err(denied("raw IP address directory is stale or outside the pinned space"));
+            return Err(denied(
+                "raw IP address directory is stale or outside the pinned space",
+            ));
         }
-        let mut rows = directory.addresses.iter().filter(|row| {
-            row.installation_id == member.claims().installation_id
-        });
-        let row = rows.next().ok_or_else(|| denied("peer has no current virtual address"))?;
+        let mut rows = directory
+            .addresses
+            .iter()
+            .filter(|row| row.installation_id == member.claims().installation_id);
+        let row = rows
+            .next()
+            .ok_or_else(|| denied("peer has no current virtual address"))?;
         if rows.next().is_some()
             || !row.active
             || row.revoked
@@ -106,7 +111,9 @@ impl PacketPeerAuthority {
             || row.membership_epoch != member.claims().membership_epoch
             || row.public_key != URL_SAFE_NO_PAD.encode(member.claims().public_key)
         {
-            return Err(denied("virtual address identity or membership binding changed"));
+            return Err(denied(
+                "virtual address identity or membership binding changed",
+            ));
         }
         let v4: std::net::Ipv4Addr = row.ipv4.parse().map_err(denied)?;
         let v6: std::net::Ipv6Addr = row.ipv6.parse().map_err(denied)?;
@@ -117,18 +124,32 @@ impl PacketPeerAuthority {
             || !pool4.contains(&v4)
             || !pool6.contains(&v6)
         {
-            return Err(denied("virtual address is not canonical or inside its managed pool"));
+            return Err(denied(
+                "virtual address is not canonical or inside its managed pool",
+            ));
         }
         let hosts = [IpAddr::V4(v4), IpAddr::V6(v6)];
-        let mut prefixes = vec![prefix(IpPrefix { network: hosts[0], prefix_len: 32 })?,
-            prefix(IpPrefix { network: hosts[1], prefix_len: 128 })?];
+        let mut prefixes = vec![
+            prefix(IpPrefix {
+                network: hosts[0],
+                prefix_len: 32,
+            })?,
+            prefix(IpPrefix {
+                network: hosts[1],
+                prefix_len: 128,
+            })?,
+        ];
         for export in &exports {
             export.check_current(context).map_err(denied)?;
             let GrantClaims::RouteExport(claims) = export.claims() else {
-                return Err(denied("additional source prefixes require RouteExport authority"));
+                return Err(denied(
+                    "additional source prefixes require RouteExport authority",
+                ));
             };
             if claims.gateway != member.peer() {
-                return Err(denied("RouteExport belongs to a different authenticated peer"));
+                return Err(denied(
+                    "RouteExport belongs to a different authenticated peer",
+                ));
             }
             for value in &claims.prefixes {
                 let value = prefix(*value)?;
@@ -140,8 +161,15 @@ impl PacketPeerAuthority {
         let remaining = DIRECTORY_FRESHNESS
             .checked_sub(Duration::from_millis(context.now_ms - observed))
             .ok_or_else(|| denied("virtual address observation expired"))?;
-        Ok(Self { member, address_epoch: row.address_epoch, directory_revision: directory.revision,
-            hosts, exports, prefixes, fresh_until: Instant::now() + remaining })
+        Ok(Self {
+            member,
+            address_epoch: row.address_epoch,
+            directory_revision: directory.revision,
+            hosts,
+            exports,
+            prefixes,
+            fresh_until: Instant::now() + remaining,
+        })
     }
     pub fn peer(&self) -> PeerId {
         self.member.peer()
@@ -165,7 +193,11 @@ impl PacketPeerAuthority {
             && self.address_epoch == next.address_epoch
             && self.hosts == next.hosts
             && next.directory_revision >= self.directory_revision
-            && self.exports.iter().map(VerifiedNetworkGrant::digest).eq(next.exports.iter().map(VerifiedNetworkGrant::digest))
+            && self
+                .exports
+                .iter()
+                .map(VerifiedNetworkGrant::digest)
+                .eq(next.exports.iter().map(VerifiedNetworkGrant::digest))
     }
     fn contains(&self, address: IpAddr) -> bool {
         self.prefixes.iter().any(|value| value.contains(&address))
@@ -182,8 +214,13 @@ struct FlowKey {
 }
 impl FlowKey {
     fn reverse(&self) -> Self {
-        Self { source: self.destination, destination: self.source, protocol: self.protocol,
-            source_port: self.destination_port, destination_port: self.source_port }
+        Self {
+            source: self.destination,
+            destination: self.source,
+            protocol: self.protocol,
+            source_port: self.destination_port,
+            destination_port: self.source_port,
+        }
     }
 }
 struct Flow {
@@ -234,10 +271,14 @@ impl VerifiedPacketAccess {
         source.check_current(context)?;
         destination.check_current(context)?;
         let GrantClaims::NetworkAccess(claims) = access.claims() else {
-            return Err(denied("a separately verified NetworkAccess grant is required"));
+            return Err(denied(
+                "a separately verified NetworkAccess grant is required",
+            ));
         };
         let GrantClaims::Connectivity(connection) = connectivity.claims() else {
-            return Err(denied("a separately verified Connectivity grant is required"));
+            return Err(denied(
+                "a separately verified Connectivity grant is required",
+            ));
         };
         if path.purpose() != Purpose::NetworkPacket
             || connection.purpose != Purpose::NetworkPacket
@@ -252,14 +293,31 @@ impl VerifiedPacketAccess {
             || connection.scope.not_before_ms < claims.scope.not_before_ms
             || connection.scope.expires_at_ms > claims.scope.expires_at_ms
         {
-            return Err(denied("raw IP path, business digest or prefix owner mismatch"));
+            return Err(denied(
+                "raw IP path, business digest or prefix owner mismatch",
+            ));
         }
-        let remaining = path.claims().scope.expires_at_ms.checked_sub(context.now_ms)
-            .filter(|value| *value > 0).ok_or_else(|| denied("raw IP path expired"))?;
+        let remaining = path
+            .claims()
+            .scope
+            .expires_at_ms
+            .checked_sub(context.now_ms)
+            .filter(|value| *value > 0)
+            .ok_or_else(|| denied("raw IP path expired"))?;
         let claims = claims.clone();
-        Ok(Self { path, connectivity, access, claims, source, destination, local,
-            deadline: Instant::now() + Duration::from_millis(remaining), spent: 0,
-            flows: BTreeMap::new(), stopped: false })
+        Ok(Self {
+            path,
+            connectivity,
+            access,
+            claims,
+            source,
+            destination,
+            local,
+            deadline: Instant::now() + Duration::from_millis(remaining),
+            spent: 0,
+            flows: BTreeMap::new(),
+            stopped: false,
+        })
     }
     pub fn business_digest(&self) -> [u8; 32] {
         self.access.digest()
@@ -268,7 +326,11 @@ impl VerifiedPacketAccess {
         self.local
     }
     pub fn remote_peer(&self) -> PeerId {
-        if self.local == self.claims.source { self.claims.destination } else { self.claims.source }
+        if self.local == self.claims.source {
+            self.claims.destination
+        } else {
+            self.claims.source
+        }
     }
     pub fn spent_bytes(&self) -> u64 {
         self.spent
@@ -291,11 +353,16 @@ impl VerifiedPacketAccess {
             self.stop();
             return Err(error);
         }
-        if let Err(error) = source.check_current(context).and_then(|()| destination.check_current(context)) {
+        if let Err(error) = source
+            .check_current(context)
+            .and_then(|()| destination.check_current(context))
+        {
             self.stop();
             return Err(error);
         }
-        if !self.source.accepts_successor(&source) || !self.destination.accepts_successor(&destination) {
+        if !self.source.accepts_successor(&source)
+            || !self.destination.accepts_successor(&destination)
+        {
             self.stop();
             return Err(denied("raw IP address ownership changed"));
         }
@@ -314,18 +381,34 @@ impl VerifiedPacketAccess {
         self.destination.check_current(context)
     }
     /// Called on packets read from the owned TUN before transmitting them.
-    pub fn admit_local(&mut self, context: &NetworkVerification<'_>, bytes: &[u8]) -> io::Result<PacketAdmission> {
+    pub fn admit_local(
+        &mut self,
+        context: &NetworkVerification<'_>,
+        bytes: &[u8],
+    ) -> io::Result<PacketAdmission> {
         self.admit(context, self.local, bytes)
     }
     /// `authenticated_peer` comes from the endpoint-pinned carrier, never the
     /// packet payload. The returned admission is required before OS injection.
-    pub fn admit_remote(&mut self, context: &NetworkVerification<'_>, authenticated_peer: PeerId, bytes: &[u8]) -> io::Result<PacketAdmission> {
+    pub fn admit_remote(
+        &mut self,
+        context: &NetworkVerification<'_>,
+        authenticated_peer: PeerId,
+        bytes: &[u8],
+    ) -> io::Result<PacketAdmission> {
         if authenticated_peer != self.remote_peer() {
-            return Err(denied("raw packet arrived from a different authenticated peer"));
+            return Err(denied(
+                "raw packet arrived from a different authenticated peer",
+            ));
         }
         self.admit(context, authenticated_peer, bytes)
     }
-    fn admit(&mut self, context: &NetworkVerification<'_>, sender: PeerId, bytes: &[u8]) -> io::Result<PacketAdmission> {
+    fn admit(
+        &mut self,
+        context: &NetworkVerification<'_>,
+        sender: PeerId,
+        bytes: &[u8],
+    ) -> io::Result<PacketAdmission> {
         let current = current(context)?;
         let context = &current;
         if let Err(error) = self.check_live(context) {
@@ -341,15 +424,27 @@ impl VerifiedPacketAccess {
             return Err(denied("raw packet sender is outside the business pair"));
         };
         let (source, destination, approved_source, approved_destination) = match direction {
-            PacketDirection::SourceToDestination => (&self.claims.source_prefixes, &self.claims.destination_prefixes, &self.source, &self.destination),
-            PacketDirection::DestinationToSource => (&self.claims.destination_prefixes, &self.claims.source_prefixes, &self.destination, &self.source),
+            PacketDirection::SourceToDestination => (
+                &self.claims.source_prefixes,
+                &self.claims.destination_prefixes,
+                &self.source,
+                &self.destination,
+            ),
+            PacketDirection::DestinationToSource => (
+                &self.claims.destination_prefixes,
+                &self.claims.source_prefixes,
+                &self.destination,
+                &self.source,
+            ),
         };
         if !approved_source.contains(packet.key.source)
             || !approved_destination.contains(packet.key.destination)
             || !contains(source, packet.key.source)?
             || !contains(destination, packet.key.destination)?
         {
-            return Err(denied("raw packet source or destination prefix is not assigned and authorized"));
+            return Err(denied(
+                "raw packet source or destination prefix is not assigned and authorized",
+            ));
         }
         let now = Instant::now();
         self.flows.retain(|_, flow| now < flow.expires);
@@ -357,29 +452,45 @@ impl VerifiedPacketAccess {
         // An ICMP request can collide with the reversed id/sequence key of an
         // admitted request. It is a new request and needs its own direction
         // rule; only an EchoReply may use the original request's reply right.
-        let reverse_flow = self.flows.get(&reverse).filter(|flow| flow.initiated == direction.reverse() && !packet.echo_request);
+        let reverse_flow = self
+            .flows
+            .get(&reverse)
+            .filter(|flow| flow.initiated == direction.reverse() && !packet.echo_request);
         let reply = reverse_flow.is_some();
         let direct = self.claims.rules.iter().any(|rule| {
-            rule.direction == direction.rule() && rule.protocol == packet.protocol
+            rule.direction == direction.rule()
+                && rule.protocol == packet.protocol
                 && match rule.ports {
                     Some([low, high]) => (low..=high).contains(&packet.key.destination_port),
                     None => packet.echo_request,
                 }
         });
-        let existing = self.flows.get(&packet.key).is_some_and(|flow| flow.initiated == direction);
+        let existing = self
+            .flows
+            .get(&packet.key)
+            .is_some_and(|flow| flow.initiated == direction);
         if (!direct && !reply && !existing)
             || (packet.tcp && !existing && !reply && (!packet.syn || packet.ack))
             || (packet.tcp && reply && packet.syn && !packet.ack)
             || (packet.echo_reply && !reply)
-            || (reply && reverse_flow.is_some_and(|flow| flow.tcp && !flow.established) && !(packet.syn && packet.ack || packet.rst))
+            || (reply
+                && reverse_flow.is_some_and(|flow| flow.tcp && !flow.established)
+                && !(packet.syn && packet.ack || packet.rst))
         {
-            return Err(denied("raw packet transport direction, destination port or reply state is unauthorized"));
+            return Err(denied(
+                "raw packet transport direction, destination port or reply state is unauthorized",
+            ));
         }
-        let spent = self.spent.checked_add(bytes.len() as u64)
+        let spent = self
+            .spent
+            .checked_add(bytes.len() as u64)
             .filter(|value| *value <= self.claims.byte_limit)
             .ok_or_else(|| denied("raw IP cumulative byte quota exhausted"))?;
         if !reply && !existing && self.flows.len() >= MAX_FLOWS {
-            return Err(io::Error::new(io::ErrorKind::OutOfMemory, "raw IP reply table is full"));
+            return Err(io::Error::new(
+                io::ErrorKind::OutOfMemory,
+                "raw IP reply table is full",
+            ));
         }
         if reply {
             if let Some(flow) = self.flows.get_mut(&reverse) {
@@ -387,7 +498,10 @@ impl VerifiedPacketAccess {
             }
         } else if !packet.rst && !packet.fin {
             let flow = self.flows.entry(packet.key.clone()).or_insert(Flow {
-                initiated: direction, expires: now, tcp: packet.tcp, established: !packet.tcp,
+                initiated: direction,
+                expires: now,
+                tcp: packet.tcp,
+                established: !packet.tcp,
             });
             // A peer's unsolicited reply cannot extend the original request's
             // authority. Only activity in the authorized original direction can.
@@ -408,7 +522,11 @@ impl VerifiedPacketAccess {
             }
         }
         self.spent = spent;
-        Ok(PacketAdmission { direction, bytes: bytes.len(), reply })
+        Ok(PacketAdmission {
+            direction,
+            bytes: bytes.len(),
+            reply,
+        })
     }
 }
 
@@ -418,7 +536,9 @@ fn prefix(value: IpPrefix) -> io::Result<IpNet> {
 }
 fn contains(prefixes: &[IpPrefix], address: IpAddr) -> io::Result<bool> {
     for value in prefixes {
-        if prefix(*value)?.contains(&address) { return Ok(true); }
+        if prefix(*value)?.contains(&address) {
+            return Ok(true);
+        }
     }
     Ok(false)
 }
@@ -426,10 +546,18 @@ fn denied(error: impl std::fmt::Display) -> io::Error {
     io::Error::new(io::ErrorKind::PermissionDenied, error.to_string())
 }
 fn current<'a>(context: &NetworkVerification<'a>) -> io::Result<NetworkVerification<'a>> {
-    let wall: u64 = SystemTime::now().duration_since(UNIX_EPOCH).map_err(denied)?
-        .as_millis().try_into().map_err(denied)?;
-    Ok(NetworkVerification { authority_key: context.authority_key,
-        deployment_id: context.deployment_id, space_id: context.space_id,
-        policy_epoch: context.policy_epoch, now_ms: wall.max(context.now_ms),
-        revoked_grant_ids: context.revoked_grant_ids })
+    let wall: u64 = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(denied)?
+        .as_millis()
+        .try_into()
+        .map_err(denied)?;
+    Ok(NetworkVerification {
+        authority_key: context.authority_key,
+        deployment_id: context.deployment_id,
+        space_id: context.space_id,
+        policy_epoch: context.policy_epoch,
+        now_ms: wall.max(context.now_ms),
+        revoked_grant_ids: context.revoked_grant_ids,
+    })
 }
