@@ -4,6 +4,7 @@ use super::*;
 use crate::network_packet_runtime::{WholePacketDevice,PacketIoFuture};
 use tokio::{io::{AsyncReadExt,AsyncWriteExt},net::{UnixStream,unix::{OwnedReadHalf,OwnedWriteHalf}},sync::Mutex};
 use std::os::unix::{fs::{MetadataExt,OpenOptionsExt,FileTypeExt},io::AsRawFd};
+use std::sync::atomic::{AtomicU64,Ordering};
 pub(super) const CONTROL_MAGIC:&[u8]=b"NestLink subnet namespace control v1\n";
 pub(super) async fn control_start(reader:&mut (impl tokio::io::AsyncRead+Unpin))->io::Result<()> {
     #[cfg(not(test))]
@@ -78,7 +79,14 @@ pub(super) async fn message(reader:&mut (impl tokio::io::AsyncRead+Unpin))->io::
     if length==0||length>65_536 {return Err(io::Error::other("bounded subnet control message required"));}
     let mut bytes=vec![0_u8;length];reader.read_exact(&mut bytes).await?;Ok(bytes)
 }
-pub(super) struct PacketPipe {reader:Mutex<Reader>,writer:Mutex<OwnedWriteHalf>,pub receipt:Receipt}
+pub(super) fn challenge_frame(value:u64)->[u8;9] {let mut bytes=[0_u8;9];bytes[1..].copy_from_slice(&value.to_be_bytes());bytes}
+pub(super) fn challenge(bytes:&[u8])->io::Result<Option<u64>> {
+    if bytes.first()!=Some(&0) {return Ok(None);}
+    if bytes.len()!=9 {return Err(io::Error::other("invalid bounded subnet observation challenge"));}
+    let value=u64::from_be_bytes(bytes[1..].try_into().map_err(io::Error::other)?);
+    if value==0 {return Err(io::Error::other("subnet observation challenge cannot be zero"));}Ok(Some(value))
+}
+pub(super) struct PacketPipe {reader:Mutex<Reader>,writer:Mutex<OwnedWriteHalf>,challenge:AtomicU64,pub receipt:Receipt}
 impl PacketPipe {
     pub async fn connect(plan:&Plan)->Result<Self> {
         let stream=UnixStream::connect(plan.socket()?).await?;
@@ -90,11 +98,16 @@ impl PacketPipe {
         if receipt.schema_version!=1||receipt.plan_digest!=plan.digest()?||peer.pid()!=i32::try_from(receipt.worker.pid()).ok()||receipt.tun_index==0||receipt.macvlan_index==0||receipt.namespace_inode==0||receipt.namespace_device==0||receipt.socket_device==0||receipt.socket_inode==0||receipt.socket_parent_device==0||receipt.socket_parent_inode==0||plan.wireguard.is_some()!=receipt.wireguard_index.is_some()||receipt.wireguard_index==Some(0) {
             return Err(io::Error::other("root packet receipt differs from the exact original subnet plan").into());
         }
-        Ok(Self{reader:Mutex::new(reader),writer:Mutex::new(writer),receipt})
+        let first=tokio::time::timeout(Duration::from_secs(2),reader.frame()).await??;
+        let challenge=challenge(&first)?.ok_or_else(||io::Error::other("root subnet observation challenge is missing"))?;
+        Ok(Self{reader:Mutex::new(reader),writer:Mutex::new(writer),challenge:AtomicU64::new(challenge),receipt})
     }
+    /// Called only after the shared original packet owner refresh succeeds.
+    /// Echoing an old challenge never moves its root-issued five-second limit.
+    pub async fn heartbeat(&self)->io::Result<()> {frame(&mut *self.writer.lock().await,&challenge_frame(self.challenge.load(Ordering::Acquire))).await}
     pub async fn shutdown(&self)->io::Result<()> {self.writer.lock().await.shutdown().await}
 }
 impl WholePacketDevice for PacketPipe {
-    fn recv<'a>(&'a self,packet:&'a mut[u8])->PacketIoFuture<'a> {Box::pin(async move {let bytes=self.reader.lock().await.frame().await?;if bytes.len()>packet.len(){return Err(io::Error::other("subnet provider cannot truncate a whole packet"));}packet[..bytes.len()].copy_from_slice(&bytes);Ok(bytes.len())})}
+    fn recv<'a>(&'a self,packet:&'a mut[u8])->PacketIoFuture<'a> {Box::pin(async move {loop {let bytes=self.reader.lock().await.frame().await?;if let Some(value)=challenge(&bytes)? {self.challenge.store(value,Ordering::Release);continue;}if bytes.len()>packet.len(){return Err(io::Error::other("subnet provider cannot truncate a whole packet"));}packet[..bytes.len()].copy_from_slice(&bytes);return Ok(bytes.len());}})}
     fn send<'a>(&'a self,packet:&'a[u8])->PacketIoFuture<'a> {Box::pin(async move {frame(&mut *self.writer.lock().await,packet).await?;Ok(packet.len())})}
 }

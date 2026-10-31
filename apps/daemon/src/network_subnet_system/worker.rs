@@ -81,7 +81,11 @@ async fn serve(plan:&Plan,receipt:&Receipt,device:&tun_rs::AsyncDevice,listener:
     };
     let (reader,mut writer)=stream.into_split();let mut reader=pipe::Reader::new(reader);
     pipe::frame(&mut writer,&serde_json::to_vec(receipt)?).await?;
-    let expected=configuration(plan).await?;
+    let mut sequence=1_u64;let mut acknowledged=0_u64;
+    let mut observation_deadline=tokio::time::Instant::now()+Duration::from_secs(5);
+    let mut challenges=std::collections::VecDeque::from([(sequence,observation_deadline)]);
+    tokio::time::timeout(Duration::from_millis(250),pipe::frame(&mut writer,&pipe::challenge_frame(sequence))).await??;
+    let expected=tokio::time::timeout_at(deadline.min(observation_deadline).min(tokio::time::Instant::now()+Duration::from_secs(2)),configuration(plan)).await??;
     let mut buffer=vec![0_u8;65_536];let mut tick=tokio::time::interval(Duration::from_millis(250));
     tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
     let mut observed=tokio::time::Instant::now();
@@ -89,22 +93,34 @@ async fn serve(plan:&Plan,receipt:&Receipt,device:&tun_rs::AsyncDevice,listener:
     loop {tokio::select! {biased;
         result=&mut signal=>return result.map_err(Into::into),
         _=tokio::time::sleep_until(deadline)=>return Ok(()),
+        _=tokio::time::sleep_until(observation_deadline)=>return Err(io::Error::other("original online subnet owner stopped acknowledging fresh root observation challenges").into()),
         _=input.read(&mut end)=>return Err(io::Error::other("original root subnet helper ended").into()),
         _=tick.tick()=>{
             plan.checked(true)?;
             if Plan::read(&plan.path)?.digest()?!=plan.digest()?||process_identity(plan.process.pid()).await?!=plan.process {return Err(io::Error::other("original subnet owner intent or process changed").into());}
-            if observed.elapsed()>=Duration::from_secs(1) {if configuration(plan).await?!=expected {return Err(io::Error::other("exact owned subnet kernel configuration changed").into());}observed=tokio::time::Instant::now();}
+            if observed.elapsed()>=Duration::from_secs(1) {
+                sequence=sequence.checked_add(1).ok_or_else(||io::Error::other("subnet observation challenge exhausted"))?;
+                let now=tokio::time::Instant::now();challenges.retain(|(_,expires)|*expires>now);challenges.push_back((sequence,now+Duration::from_secs(5)));
+                if challenges.len()>8 {return Err(io::Error::other("subnet observation challenge queue exceeded its fixed bound").into());}
+                tokio::time::timeout_at(deadline.min(observation_deadline).min(now+Duration::from_millis(250)),pipe::frame(&mut writer,&pipe::challenge_frame(sequence))).await??;
+                if tokio::time::timeout_at(deadline.min(observation_deadline).min(tokio::time::Instant::now()+Duration::from_secs(2)),configuration(plan)).await??!=expected {return Err(io::Error::other("exact owned subnet kernel configuration changed").into());}observed=tokio::time::Instant::now();
+            }
         },
         packet=reader.frame()=>{
             let packet=match packet {Ok(packet)=>packet,Err(error) if error.kind()==io::ErrorKind::UnexpectedEof=>return Ok(()),Err(error)=>return Err(error.into())};
+            if let Some(value)=pipe::challenge(&packet)? {
+                let expires=challenges.iter().find(|(issued,_)|*issued==value).map(|(_,expires)|*expires).ok_or_else(||io::Error::other("subnet observation acknowledgement was never issued by this root owner"))?;
+                if expires<=tokio::time::Instant::now()||value<acknowledged {return Err(io::Error::other("stale or replayed subnet observation acknowledgement").into());}
+                acknowledged=value;observation_deadline=expires;continue;
+            }
             if packet.len()>nestlink_sdk::network::packet_access::PACKET_MTU {return Err(io::Error::other("root subnet provider refuses oversized IP injection").into());}
-            let written=tokio::time::timeout(Duration::from_millis(250),device.send(&packet)).await??;
+            let written=tokio::time::timeout_at(deadline.min(observation_deadline).min(tokio::time::Instant::now()+Duration::from_millis(250)),device.send(&packet)).await??;
             if written!=packet.len() {return Err(io::Error::other("root subnet provider requires complete IP injection").into());}
         },
         count=device.recv(&mut buffer)=>{
             let count=count?;
             if count==0||count>nestlink_sdk::network::packet_access::PACKET_MTU {return Err(io::Error::other("root subnet provider received an incomplete or oversized kernel packet").into());}
-            tokio::time::timeout(Duration::from_millis(250),pipe::frame(&mut writer,&buffer[..count])).await??;
+            tokio::time::timeout_at(deadline.min(observation_deadline).min(tokio::time::Instant::now()+Duration::from_millis(250)),pipe::frame(&mut writer,&buffer[..count])).await??;
         },
     }}
 }

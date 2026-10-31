@@ -115,6 +115,7 @@ struct Guard<'a>{plan:&'a Plan,pipe:&'a pipe::PacketPipe,directory:&'a Path,logi
 impl OwnerGuard for Guard<'_> {
     fn check_local(&self)->Result {local_current(self.plan,self.directory,self.login)}
     fn check(&self)->GuardFuture<'_> {Box::pin(async move {
+        tokio::time::timeout(Duration::from_millis(250),self.pipe.heartbeat()).await??;
         if Plan::read(&self.plan.path)?.digest()?!=self.plan.digest()?||self.pipe.receipt.plan_digest!=self.plan.digest()?||kernel::parent(self.plan).await?!=self.parent {return Err(io::Error::other("original subnet intent, root receipt or physical LAN identity changed").into());}
         Ok(())
     })}
