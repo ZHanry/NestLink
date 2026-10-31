@@ -153,7 +153,10 @@ pub fn verify_node_network_resource(
     allocation_issuer: &[u8; 32],
     now_ms: u64,
 ) -> Result<RemoteRouteBinding, ContractError> {
-    if resource.network_schema_version != 1 || !resource.chain_bundle_json.is_empty() || !resource.private_service_bundle_json.is_empty() {
+    if resource.network_schema_version != 1
+        || !resource.chain_bundle_json.is_empty()
+        || !resource.private_service_bundle_json.is_empty()
+    {
         return Err(denied());
     }
     let allocation = resource.allocation.as_ref().ok_or_else(denied)?;

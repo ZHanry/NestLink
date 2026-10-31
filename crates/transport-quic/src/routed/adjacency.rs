@@ -170,7 +170,8 @@ impl AdjacencyEndpoint {
             return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
         }
         self.attempted = true;
-        let (connection, mut write, mut read) = self.connect_before_hello(address,deadline).await?;
+        let (connection, mut write, mut read) =
+            self.connect_before_hello(address, deadline).await?;
         let challenge: NetworkNodeChallenge =
             tokio::time::timeout_at(deadline, crate::node::read_message(&mut read)).await??;
         let nonce: [u8; 32] = decode_exact(&challenge.nonce)?;
@@ -234,7 +235,8 @@ impl AdjacencyEndpoint {
             return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
         }
         self.attempted = true;
-        let (connection, mut write, mut read) = self.connect_before_hello(address,deadline).await?;
+        let (connection, mut write, mut read) =
+            self.connect_before_hello(address, deadline).await?;
         let challenge: NetworkNodeChallenge =
             tokio::time::timeout_at(deadline, crate::node::read_message(&mut read)).await??;
         if challenge.schema_version != 2 {
@@ -301,27 +303,49 @@ impl AdjacencyEndpoint {
     /// Both NRD versions use the original finite publication wait. Retry is
     /// allowed only for the node's dynamic-client-pin TLS access_denied before
     /// the challenge stream exists. No Hello or possession proof is retried.
-    async fn connect_before_hello(&mut self,address:SocketAddr,deadline:Instant)->Result<(Connection,quinn::SendStream,quinn::RecvStream)> {
-        let endpoint=self.endpoint.as_ref().ok_or_else(||io::Error::from(io::ErrorKind::NotConnected))?;
+    async fn connect_before_hello(
+        &mut self,
+        address: SocketAddr,
+        deadline: Instant,
+    ) -> Result<(Connection, quinn::SendStream, quinn::RecvStream)> {
+        let endpoint = self
+            .endpoint
+            .as_ref()
+            .ok_or_else(|| io::Error::from(io::ErrorKind::NotConnected))?;
         loop {
-            let attempt:Result<_>=async {
-                let connection=tokio::time::timeout_at(deadline,endpoint.connect(address,"peer.nestlink.invalid")?).await??;
-                self.pending=Some(connection.clone());
+            let attempt: Result<_> = async {
+                let connection = tokio::time::timeout_at(
+                    deadline,
+                    endpoint.connect(address, "peer.nestlink.invalid")?,
+                )
+                .await??;
+                self.pending = Some(connection.clone());
                 // TLS 1.3 can return a client connection before the node has
                 // accepted its certificate. The first challenge proves this.
-                let (write,read)=tokio::time::timeout_at(deadline,connection.accept_bi()).await??;
-                Ok((connection,write,read))
-            }.await;
+                let (write, read) =
+                    tokio::time::timeout_at(deadline, connection.accept_bi()).await??;
+                Ok((connection, write, read))
+            }
+            .await;
             match attempt {
-                Ok(accepted)=>return Ok(accepted),
-                Err(error) if error.downcast_ref::<quinn::ConnectionError>().is_some_and(|error|
-                    matches!(error,quinn::ConnectionError::ConnectionClosed(close)
-                        if close.error_code==quinn::TransportErrorCode::crypto(49)))=>{
-                    if let Some(connection)=self.pending.take() {connection.close(0u32.into(),b"node TLS admission unavailable");}
-                    if Instant::now()+Duration::from_millis(50)>=deadline {return Err(error);}
+                Ok(accepted) => return Ok(accepted),
+                Err(error)
+                    if error
+                        .downcast_ref::<quinn::ConnectionError>()
+                        .is_some_and(|error| {
+                            matches!(error,quinn::ConnectionError::ConnectionClosed(close)
+                        if close.error_code==quinn::TransportErrorCode::crypto(49))
+                        }) =>
+                {
+                    if let Some(connection) = self.pending.take() {
+                        connection.close(0u32.into(), b"node TLS admission unavailable");
+                    }
+                    if Instant::now() + Duration::from_millis(50) >= deadline {
+                        return Err(error);
+                    }
                     tokio::time::sleep(Duration::from_millis(50)).await;
-                },
-                Err(error)=>return Err(error),
+                }
+                Err(error) => return Err(error),
             }
         }
     }

@@ -8,7 +8,7 @@ mod relays;
 struct PrivateAccess {
     network: NetworkAuthoritySigner,
     consumer: String,
-    consumer_identity:InstallationIdentity,
+    consumer_identity: InstallationIdentity,
     exposure: ServiceExposureView,
     runtime: String,
 }
@@ -33,7 +33,12 @@ fn configure(f: &mut Fixture) -> Result<PrivateAccess> {
             platform: "windows".into(),
             public_key: URL_SAFE_NO_PAD.encode(consumer_identity.public_key()),
             capabilities: vec!["host".into(), "vp8".into()],
-            path_mode: if f.store.policy()?.1.peer_path_mode==PeerPathMode::DirectOnly {"direct_only"} else {"direct_preferred"}.into(),
+            path_mode: if f.store.policy()?.1.peer_path_mode == PeerPathMode::DirectOnly {
+                "direct_only"
+            } else {
+                "direct_preferred"
+            }
+            .into(),
         },
         signature: String::new(),
     };
@@ -119,7 +124,7 @@ fn configure(f: &mut Fixture) -> Result<PrivateAccess> {
 }
 fn request(f: &Fixture, access: &PrivateAccess) -> PrivateServiceAccessRequest {
     PrivateServiceAccessRequest {
-        route:PrivateServiceRouteRequest::Direct,
+        route: PrivateServiceRouteRequest::Direct,
         request_id: random_id(),
         consumer_device_id: access.consumer.clone(),
         expected_service_revision: f.view.revision,
@@ -308,74 +313,318 @@ fn both_modes_share_durable_allowance_exact_network_graph_and_terminal_private_o
 }
 
 #[test]
-fn private_relay_preserves_original_budget_pinned_metadata_snapshot_and_close_receipt()->Result{
-    use nestlink_identity::{PermitSigner,network::{verify_private_service_grant,verify_node_private_service_resource},relay::allocation_binding};
-    use nestlink_protocol::{NodeResourceQueryClaims,RelayCloseClaims};
-    let mut f=Fixture::with_paths(PeerPathMode::DirectPreferred)?;
-    let access=configure(&mut f)?;
-    let lifecycle=f.store.relay_lifecycle(now()?)?;
-    let relay=NodeIdentity::generate();let relay_id=random_id();
-    f.store.register_node(&f.creator,NodeRegistration{id:relay_id.clone(),name:"private route original relay owner".into(),public_key:URL_SAFE_NO_PAD.encode(relay.public_key()),roles:vec![NodeRole::NodeRelay as i32],max_connections:16,bytes_per_second:1048576})?;
-    f.store.set_node_endpoints(&f.creator,&relay_id,NodeEndpointsUpdate{expected_revision:0,endpoints:NodeEndpoints{quic_uri:Some("quic://127.0.0.1:29999".into()),wss_origin:None,allow_loopback:true}},now()?)?;
-    let challenge=f.store.node_challenge(&relay_id,now()?)?;
-    let node=f.store.issue_node_lease(&relay.prove(&challenge,&random_id())?,now()?)?;
-    let node_signer=NodePolicySigner::from_master_seed(&[220;32])?;
-    let permit_signer=PermitSigner::from_seed([221;32]);
-    let mut body=request(&f,&access);body.maximum_bytes=4096;
-    body.route=PrivateServiceRouteRequest::Relay{node_ids:vec![relay_id.clone()],topology_digests:vec![],signature:String::new()};
-    let signature=URL_SAFE_NO_PAD.encode(access.consumer_identity.sign_private_service_route(&f.view.id,&body)?);
-    if let PrivateServiceRouteRequest::Relay{signature:value,..}=&mut body.route{*value=signature;}
-    let grant=f.store.issue_private_service_grant(&lifecycle,&f.creator,&f.view.id,body.clone(),&f.service_signer,&access.network,&node_signer,now()?)?;
-    let repeat=f.store.issue_private_service_grant(&lifecycle,&f.creator,&f.view.id,body.clone(),&f.service_signer,&access.network,&node_signer,now()?)?;
-    assert_eq!(serde_json::to_vec(&grant)?,serde_json::to_vec(&repeat)?);
-    let deployment=f.store.deployment_id()?;
-    let (business,_,_,transits)=verify_private_service_grant(&grant,&node_signer.public_key(),&deployment,now()?)?;
-    assert_eq!(transits.len(),1);
-    let usage:ServiceUsageBudgetGrantClaims=decode_service_message(&business.lease().claims().usage_grant.claims,SERVICE_USAGE_BYTES)?;
-    assert_eq!(usage.byte_ceiling,4096);
-    ledgers(&mut f,0,4096)?;
-    let held:u64=f.store.connection.query_row("SELECT count(*) FROM all_relay_capacity WHERE promised_until>?1",[now()?],|r|r.get(0))?;
-    assert_eq!(held,1);
-    let remote:u64=f.store.connection.query_row("SELECT (SELECT count(*) FROM remote_requests)+(SELECT count(*) FROM relay_reservations)",[],|r|r.get(0))?;
-    assert_eq!(remote,0);
-    let mut tampered=grant.clone();
-    tampered.network.relay.as_mut().ok_or("relay missing")?.nodes[0].revision+=1;
-    assert!(verify_private_service_grant(&tampered,&node_signer.public_key(),&deployment,now()?).is_err());
-    let mut changed=body;changed.maximum_bytes+=1;
-    let signature=URL_SAFE_NO_PAD.encode(access.consumer_identity.sign_private_service_route(&f.view.id,&changed)?);
-    if let PrivateServiceRouteRequest::Relay{signature:value,..}=&mut changed.route{*value=signature;}
-    assert!(f.store.issue_private_service_grant(&lifecycle,&f.creator,&f.view.id,changed,&f.service_signer,&access.network,&node_signer,now()?).is_err());
-    ledgers(&mut f,0,4096)?;
-    let at=now()?;
-    let query=relay.sign_resource_query(&NodeResourceQueryClaims{schema_version:SCHEMA_VERSION,deployment_id:deployment.clone(),security_epoch:node.security_epoch,node_id:relay_id.clone(),runtime_id:node.runtime_id.clone(),runtime_generation:node.runtime_generation,policy_revision:node.policy_revision,lease_sequence:node.lease_sequence,request_id:random_id(),request_sequence:1,issued_at_unix_ms:at,expires_at_unix_ms:(at+NODE_RESOURCE_TTL_MS).min(node.expires_at_unix_ms)})?;
-    let snapshot=f.store.node_resource_snapshot_with_private_services(&lifecycle,&query,&permit_signer,&f.service_signer,&node_signer,now()?)?;
-    assert!(snapshot.allocations.is_empty());assert_eq!(snapshot.network_routes.len(),1);
-    let resource=&snapshot.network_routes[0];
-    assert!(resource.business_permit.is_empty());assert!(resource.relay_bundle_json.is_empty());
-    verify_node_private_service_resource(resource,&node_signer.public_key(),now()?)?;
-    assert!(nestlink_identity::network::verify_node_network_resource(resource,&permit_signer.public_key(),now()?).is_err());
-    let allocation=resource.allocation.as_ref().ok_or("allocation missing")?;
-    assert_eq!(allocation.bytes_per_allocation,private_service_wire_allowance(4096)?.min(f.store.relay_quota_current()?.limits.bytes_per_allocation));
-    let page=f.store.private_service_host_access(&f.creator,&f.view.id,&access.runtime,ServiceQuery{security_epoch:f.store.security_epoch()?,after_id:None,limit:10},&f.service_signer,&node_signer,now()?)?;
-    assert_eq!(page.grants.len(),1);assert_eq!(page.grants[0].network.grant_id,usage.grant_id);
-    for id in [&grant.network.consumer_membership.grant_id,&grant.network.host_membership.grant_id,&grant.network.connectivity.grant_id,&grant.network.path.grant_id,&grant.network.relay.as_ref().ok_or("relay missing")?.transits[0].grant_id] {
-        let collision=f.store.issue_network_membership(&f.creator,&access.network,crate::network_policy::NetworkMembershipRequest{space_id:access.exposure.space_id.clone(),installation_id:access.consumer.clone(),grant_id:id.clone(),expected_policy_epoch:business.claims().space_policy_epoch,expected_membership_epoch:business.claims().consumer_membership_epoch,expires_at_ms:now()?+5000},now()?);
-        assert!(matches!(collision,Err(StorageError::Conflict)));
+fn private_relay_preserves_original_budget_pinned_metadata_snapshot_and_close_receipt() -> Result {
+    use nestlink_identity::{
+        PermitSigner,
+        network::{verify_node_private_service_resource, verify_private_service_grant},
+        relay::allocation_binding,
+    };
+    use nestlink_protocol::{NodeResourceQueryClaims, RelayCloseClaims};
+    let mut f = Fixture::with_paths(PeerPathMode::DirectPreferred)?;
+    let access = configure(&mut f)?;
+    let lifecycle = f.store.relay_lifecycle(now()?)?;
+    let relay = NodeIdentity::generate();
+    let relay_id = random_id();
+    f.store.register_node(
+        &f.creator,
+        NodeRegistration {
+            id: relay_id.clone(),
+            name: "private route original relay owner".into(),
+            public_key: URL_SAFE_NO_PAD.encode(relay.public_key()),
+            roles: vec![NodeRole::NodeRelay as i32],
+            max_connections: 16,
+            bytes_per_second: 1048576,
+        },
+    )?;
+    f.store.set_node_endpoints(
+        &f.creator,
+        &relay_id,
+        NodeEndpointsUpdate {
+            expected_revision: 0,
+            endpoints: NodeEndpoints {
+                quic_uri: Some("quic://127.0.0.1:29999".into()),
+                wss_origin: None,
+                allow_loopback: true,
+            },
+        },
+        now()?,
+    )?;
+    let challenge = f.store.node_challenge(&relay_id, now()?)?;
+    let node = f
+        .store
+        .issue_node_lease(&relay.prove(&challenge, &random_id())?, now()?)?;
+    let node_signer = NodePolicySigner::from_master_seed(&[220; 32])?;
+    let permit_signer = PermitSigner::from_seed([221; 32]);
+    let mut body = request(&f, &access);
+    body.maximum_bytes = 4096;
+    body.route = PrivateServiceRouteRequest::Relay {
+        node_ids: vec![relay_id.clone()],
+        topology_digests: vec![],
+        signature: String::new(),
+    };
+    let signature = URL_SAFE_NO_PAD.encode(
+        access
+            .consumer_identity
+            .sign_private_service_route(&f.view.id, &body)?,
+    );
+    if let PrivateServiceRouteRequest::Relay {
+        signature: value, ..
+    } = &mut body.route
+    {
+        *value = signature;
     }
-    f.store.issue_network_membership(&f.creator,&access.network,crate::network_policy::NetworkMembershipRequest{space_id:access.exposure.space_id.clone(),installation_id:access.consumer.clone(),grant_id:random_id(),expected_policy_epoch:business.claims().space_policy_epoch,expected_membership_epoch:business.claims().consumer_membership_epoch,expires_at_ms:now()?+5000},now()?)?;
-    f.store.private_service_network_path(&f.creator,&f.view.id,&usage.grant_id,&f.service_signer,now()?)?;
-    f.store.connection.execute_batch("ALTER TABLE node_endpoints RENAME TO unavailable_private_node_endpoints;")?;
-    let failed=f.store.private_service_host_access(&f.creator,&f.view.id,&access.runtime,ServiceQuery{security_epoch:f.store.security_epoch()?,after_id:None,limit:10},&f.service_signer,&node_signer,now()?);
-    f.store.connection.execute_batch("ALTER TABLE unavailable_private_node_endpoints RENAME TO node_endpoints;")?;
-    assert!(matches!(failed,Err(StorageError::Sqlite(_))));
-    f.store.revoke_private_service(&f.creator,&f.view.id,&business.claims().acl_rule_id,access.exposure.revision,now()?)?;
-    assert!(f.store.private_service_network_path(&f.creator,&f.view.id,&usage.grant_id,&f.service_signer,now()?).is_err());
-    ledgers(&mut f,0,4096)?;
-    let close=relay.sign_relay_close(&RelayCloseClaims{schema_version:SCHEMA_VERSION,deployment_id:deployment,security_epoch:node.security_epoch,node_id:relay_id,runtime_id:node.runtime_id,runtime_generation:node.runtime_generation,allocation_id:allocation.allocation_id.clone(),allocation_binding_sha256:allocation_binding(allocation)?.to_vec(),observed_grant_sequence:1,opened_connections:2,closed_connections:2,admitted_bytes:0,closed_at_unix_ms:now()?})?;
-    let ack=f.store.accept_relay_close(&lifecycle,&close,now()?)?;
-    assert_eq!(ack.released_endpoint_slots,2);
-    assert_eq!(f.store.accept_relay_close(&lifecycle,&close,now()?)?,ack);
-    let held:u64=f.store.connection.query_row("SELECT count(*) FROM all_relay_capacity WHERE promised_until>?1",[now()?],|r|r.get(0))?;
-    assert_eq!(held,0);ledgers(&mut f,0,4096)?;
+    let grant = f.store.issue_private_service_grant(
+        &lifecycle,
+        &f.creator,
+        &f.view.id,
+        body.clone(),
+        &f.service_signer,
+        &access.network,
+        &node_signer,
+        now()?,
+    )?;
+    let repeat = f.store.issue_private_service_grant(
+        &lifecycle,
+        &f.creator,
+        &f.view.id,
+        body.clone(),
+        &f.service_signer,
+        &access.network,
+        &node_signer,
+        now()?,
+    )?;
+    assert_eq!(serde_json::to_vec(&grant)?, serde_json::to_vec(&repeat)?);
+    let deployment = f.store.deployment_id()?;
+    let (business, _, _, transits) =
+        verify_private_service_grant(&grant, &node_signer.public_key(), &deployment, now()?)?;
+    assert_eq!(transits.len(), 1);
+    let usage: ServiceUsageBudgetGrantClaims = decode_service_message(
+        &business.lease().claims().usage_grant.claims,
+        SERVICE_USAGE_BYTES,
+    )?;
+    assert_eq!(usage.byte_ceiling, 4096);
+    ledgers(&mut f, 0, 4096)?;
+    let held: u64 = f.store.connection.query_row(
+        "SELECT count(*) FROM all_relay_capacity WHERE promised_until>?1",
+        [now()?],
+        |r| r.get(0),
+    )?;
+    assert_eq!(held, 1);
+    let remote: u64 = f.store.connection.query_row(
+        "SELECT (SELECT count(*) FROM remote_requests)+(SELECT count(*) FROM relay_reservations)",
+        [],
+        |r| r.get(0),
+    )?;
+    assert_eq!(remote, 0);
+    let mut tampered = grant.clone();
+    tampered
+        .network
+        .relay
+        .as_mut()
+        .ok_or("relay missing")?
+        .nodes[0]
+        .revision += 1;
+    assert!(
+        verify_private_service_grant(&tampered, &node_signer.public_key(), &deployment, now()?)
+            .is_err()
+    );
+    let mut changed = body;
+    changed.maximum_bytes += 1;
+    let signature = URL_SAFE_NO_PAD.encode(
+        access
+            .consumer_identity
+            .sign_private_service_route(&f.view.id, &changed)?,
+    );
+    if let PrivateServiceRouteRequest::Relay {
+        signature: value, ..
+    } = &mut changed.route
+    {
+        *value = signature;
+    }
+    assert!(
+        f.store
+            .issue_private_service_grant(
+                &lifecycle,
+                &f.creator,
+                &f.view.id,
+                changed,
+                &f.service_signer,
+                &access.network,
+                &node_signer,
+                now()?
+            )
+            .is_err()
+    );
+    ledgers(&mut f, 0, 4096)?;
+    let at = now()?;
+    let query = relay.sign_resource_query(&NodeResourceQueryClaims {
+        schema_version: SCHEMA_VERSION,
+        deployment_id: deployment.clone(),
+        security_epoch: node.security_epoch,
+        node_id: relay_id.clone(),
+        runtime_id: node.runtime_id.clone(),
+        runtime_generation: node.runtime_generation,
+        policy_revision: node.policy_revision,
+        lease_sequence: node.lease_sequence,
+        request_id: random_id(),
+        request_sequence: 1,
+        issued_at_unix_ms: at,
+        expires_at_unix_ms: (at + NODE_RESOURCE_TTL_MS).min(node.expires_at_unix_ms),
+    })?;
+    let snapshot = f.store.node_resource_snapshot_with_private_services(
+        &lifecycle,
+        &query,
+        &permit_signer,
+        &f.service_signer,
+        &node_signer,
+        now()?,
+    )?;
+    assert!(snapshot.allocations.is_empty());
+    assert_eq!(snapshot.network_routes.len(), 1);
+    let resource = &snapshot.network_routes[0];
+    assert!(resource.business_permit.is_empty());
+    assert!(resource.relay_bundle_json.is_empty());
+    verify_node_private_service_resource(resource, &node_signer.public_key(), now()?)?;
+    assert!(
+        nestlink_identity::network::verify_node_network_resource(
+            resource,
+            &permit_signer.public_key(),
+            now()?
+        )
+        .is_err()
+    );
+    let allocation = resource.allocation.as_ref().ok_or("allocation missing")?;
+    assert_eq!(
+        allocation.bytes_per_allocation,
+        private_service_wire_allowance(4096)?
+            .min(f.store.relay_quota_current()?.limits.bytes_per_allocation)
+    );
+    let page = f.store.private_service_host_access(
+        &f.creator,
+        &f.view.id,
+        &access.runtime,
+        ServiceQuery {
+            security_epoch: f.store.security_epoch()?,
+            after_id: None,
+            limit: 10,
+        },
+        &f.service_signer,
+        &node_signer,
+        now()?,
+    )?;
+    assert_eq!(page.grants.len(), 1);
+    assert_eq!(page.grants[0].network.grant_id, usage.grant_id);
+    for id in [
+        &grant.network.consumer_membership.grant_id,
+        &grant.network.host_membership.grant_id,
+        &grant.network.connectivity.grant_id,
+        &grant.network.path.grant_id,
+        &grant
+            .network
+            .relay
+            .as_ref()
+            .ok_or("relay missing")?
+            .transits[0]
+            .grant_id,
+    ] {
+        let collision = f.store.issue_network_membership(
+            &f.creator,
+            &access.network,
+            crate::network_policy::NetworkMembershipRequest {
+                space_id: access.exposure.space_id.clone(),
+                installation_id: access.consumer.clone(),
+                grant_id: id.clone(),
+                expected_policy_epoch: business.claims().space_policy_epoch,
+                expected_membership_epoch: business.claims().consumer_membership_epoch,
+                expires_at_ms: now()? + 5000,
+            },
+            now()?,
+        );
+        assert!(matches!(collision, Err(StorageError::Conflict)));
+    }
+    f.store.issue_network_membership(
+        &f.creator,
+        &access.network,
+        crate::network_policy::NetworkMembershipRequest {
+            space_id: access.exposure.space_id.clone(),
+            installation_id: access.consumer.clone(),
+            grant_id: random_id(),
+            expected_policy_epoch: business.claims().space_policy_epoch,
+            expected_membership_epoch: business.claims().consumer_membership_epoch,
+            expires_at_ms: now()? + 5000,
+        },
+        now()?,
+    )?;
+    f.store.private_service_network_path(
+        &f.creator,
+        &f.view.id,
+        &usage.grant_id,
+        &f.service_signer,
+        now()?,
+    )?;
+    f.store.connection.execute_batch(
+        "ALTER TABLE node_endpoints RENAME TO unavailable_private_node_endpoints;",
+    )?;
+    let failed = f.store.private_service_host_access(
+        &f.creator,
+        &f.view.id,
+        &access.runtime,
+        ServiceQuery {
+            security_epoch: f.store.security_epoch()?,
+            after_id: None,
+            limit: 10,
+        },
+        &f.service_signer,
+        &node_signer,
+        now()?,
+    );
+    f.store.connection.execute_batch(
+        "ALTER TABLE unavailable_private_node_endpoints RENAME TO node_endpoints;",
+    )?;
+    assert!(matches!(failed, Err(StorageError::Sqlite(_))));
+    f.store.revoke_private_service(
+        &f.creator,
+        &f.view.id,
+        &business.claims().acl_rule_id,
+        access.exposure.revision,
+        now()?,
+    )?;
+    assert!(
+        f.store
+            .private_service_network_path(
+                &f.creator,
+                &f.view.id,
+                &usage.grant_id,
+                &f.service_signer,
+                now()?
+            )
+            .is_err()
+    );
+    ledgers(&mut f, 0, 4096)?;
+    let close = relay.sign_relay_close(&RelayCloseClaims {
+        schema_version: SCHEMA_VERSION,
+        deployment_id: deployment,
+        security_epoch: node.security_epoch,
+        node_id: relay_id,
+        runtime_id: node.runtime_id,
+        runtime_generation: node.runtime_generation,
+        allocation_id: allocation.allocation_id.clone(),
+        allocation_binding_sha256: allocation_binding(allocation)?.to_vec(),
+        observed_grant_sequence: 1,
+        opened_connections: 2,
+        closed_connections: 2,
+        admitted_bytes: 0,
+        closed_at_unix_ms: now()?,
+    })?;
+    let ack = f.store.accept_relay_close(&lifecycle, &close, now()?)?;
+    assert_eq!(ack.released_endpoint_slots, 2);
+    assert_eq!(f.store.accept_relay_close(&lifecycle, &close, now()?)?, ack);
+    let held: u64 = f.store.connection.query_row(
+        "SELECT count(*) FROM all_relay_capacity WHERE promised_until>?1",
+        [now()?],
+        |r| r.get(0),
+    )?;
+    assert_eq!(held, 0);
+    ledgers(&mut f, 0, 4096)?;
     Ok(())
 }

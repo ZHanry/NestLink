@@ -72,10 +72,30 @@ pub(super) fn verify(
     )?;
     private_service_path_peers(&context, &path, &connection, lease)?;
     match &view.relay {
-        None=>path.check_route(&context,&[])?,
-        Some(route)=>{
-            let transits=route.transits.iter().map(|v|Ok(verify_network_grant(&signed(v)?,&context)?)).collect::<Result<Vec<_>,StorageError>>()?;
-            if transits.len()==1 {nestlink_identity::network::private_service_route_binding(&context,&path,&connection,&transits[0],lease)?;} else {nestlink_identity::network::private_service_chain_binding(&context,&path,&connection,&transits,lease)?;}
+        None => path.check_route(&context, &[])?,
+        Some(route) => {
+            let transits = route
+                .transits
+                .iter()
+                .map(|v| Ok(verify_network_grant(&signed(v)?, &context)?))
+                .collect::<Result<Vec<_>, StorageError>>()?;
+            if transits.len() == 1 {
+                nestlink_identity::network::private_service_route_binding(
+                    &context,
+                    &path,
+                    &connection,
+                    &transits[0],
+                    lease,
+                )?;
+            } else {
+                nestlink_identity::network::private_service_chain_binding(
+                    &context,
+                    &path,
+                    &connection,
+                    &transits,
+                    lease,
+                )?;
+            }
         }
     }
     Ok(path)
@@ -93,12 +113,33 @@ impl Store {
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
         let lease = self.private_service_lease(actor, service, grant_id, service_signer, now)?;
         let lease = verify_private_service_lease(&lease, &service_signer.public_key())?;
-        let path=self.issue_private_service_network_path_in_transaction(&tx,actor,grant_id,&lease,network_signer,PathPolicy{allow_direct:true,relays:Vec::new(),max_hops:0},now)?;
+        let path = self.issue_private_service_network_path_in_transaction(
+            &tx,
+            actor,
+            grant_id,
+            &lease,
+            network_signer,
+            PathPolicy {
+                allow_direct: true,
+                relays: Vec::new(),
+                max_hops: 0,
+            },
+            now,
+        )?;
         tx.commit()?;
         Ok(path)
     }
     #[allow(clippy::too_many_arguments)]
-    pub(super) fn issue_private_service_network_path_in_transaction(&self,tx:&Transaction<'_>,actor:&Principal,grant_id:&str,lease:&VerifiedPrivateServiceLease,network_signer:&NetworkAuthoritySigner,policy:PathPolicy,now:u64)->Result<PrivateServiceNetworkPath,StorageError>{
+    pub(super) fn issue_private_service_network_path_in_transaction(
+        &self,
+        tx: &Transaction<'_>,
+        actor: &Principal,
+        grant_id: &str,
+        lease: &VerifiedPrivateServiceLease,
+        network_signer: &NetworkAuthoritySigner,
+        policy: PathPolicy,
+        now: u64,
+    ) -> Result<PrivateServiceNetworkPath, StorageError> {
         let binding = lease.claims();
         let base = lease.lease().claims();
         if actor.account_id != binding.consumer_account_id {
@@ -188,9 +229,14 @@ impl Store {
             host_membership: view(host)?,
             connectivity: view(connectivity)?,
             path: view(path)?,
-            relay:None,
+            relay: None,
         };
-        if path.relay.is_none() && GrantClaims::decode_canonical(&signed(&path.path)?.claims).is_ok_and(|c|matches!(c,GrantClaims::Path(p) if p.policy.allow_direct)) { verify(&snapshot, &path, lease)?; }
+        if path.relay.is_none()
+            && GrantClaims::decode_canonical(&signed(&path.path)?.claims)
+                .is_ok_and(|c| matches!(c,GrantClaims::Path(p) if p.policy.allow_direct))
+        {
+            verify(&snapshot, &path, lease)?;
+        }
         tx.execute("UPDATE private_service_leases SET network_json=?1 WHERE grant_id=?2 AND network_json IS NULL",params![serde_json::to_string(&path)?,grant_id])?;
         Ok(path)
     }
@@ -213,7 +259,7 @@ impl Store {
         )?;
         let path = serde_json::from_str(&json.ok_or(StorageError::Forbidden)?)?;
         verify(&snapshot, &path, &lease)?;
-        self.private_service_relay_current(&tx,grant_id,&lease,now)?;
+        self.private_service_relay_current(&tx, grant_id, &lease, now)?;
         tx.commit()?;
         Ok(path)
     }

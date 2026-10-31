@@ -598,21 +598,44 @@ impl Store {
         signer: &ServiceLeaseSigner,
         now: u64,
     ) -> Result<SignedPrivateServiceLease, StorageError> {
-        if !matches!(&request.route,PrivateServiceRouteRequest::Direct){return Err(StorageError::Forbidden);}
+        if !matches!(&request.route, PrivateServiceRouteRequest::Direct) {
+            return Err(StorageError::Forbidden);
+        }
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
-        let lease=self.issue_private_service_in_transaction(&tx,actor,service,request,signer,now)?;
+        let lease =
+            self.issue_private_service_in_transaction(&tx, actor, service, request, signer, now)?;
         tx.commit()?;
         Ok(lease)
     }
     fn issue_private_service_in_transaction(
-        &self,tx:&Transaction<'_>,actor:&Principal,service:&str,request:PrivateServiceAccessRequest,signer:&ServiceLeaseSigner,now:u64,
-    )->Result<SignedPrivateServiceLease,StorageError>{
+        &self,
+        tx: &Transaction<'_>,
+        actor: &Principal,
+        service: &str,
+        request: PrivateServiceAccessRequest,
+        signer: &ServiceLeaseSigner,
+        now: u64,
+    ) -> Result<SignedPrivateServiceLease, StorageError> {
         require_id(&request.request_id)?;
         let request_hash = digest(&serde_json::to_vec(&request)?);
         let (record, approval, view, mut binding, acl_end) =
             self.private_consumer(actor, service, &request.consumer_device_id, now)?;
-        let selected=match &request.route {PrivateServiceRouteRequest::Direct=>nestlink_protocol::Path::Direct,PrivateServiceRouteRequest::Relay{..}=>nestlink_protocol::Path::Relay};
-        if !self.private_service_paths(&actor.session_id,&request.consumer_device_id,&record.definition.host_device_id,service,now/1000)?.contains(selected) {return Err(StorageError::Forbidden);}
+        let selected = match &request.route {
+            PrivateServiceRouteRequest::Direct => nestlink_protocol::Path::Direct,
+            PrivateServiceRouteRequest::Relay { .. } => nestlink_protocol::Path::Relay,
+        };
+        if !self
+            .private_service_paths(
+                &actor.session_id,
+                &request.consumer_device_id,
+                &record.definition.host_device_id,
+                service,
+                now / 1000,
+            )?
+            .contains(selected)
+        {
+            return Err(StorageError::Forbidden);
+        }
         if request.expected_service_revision != record.revision
             || request.expected_exposure_revision != view.revision
         {
@@ -717,12 +740,22 @@ impl Store {
     ) -> Result<SignedPrivateServiceLease, StorageError> {
         require_id(grant)?;
         self.validate_access(actor, now / 1000)?;
-        let signed=self.private_service_lease_current(service,grant,signer,now)?;
-        let verified=verify_private_service_lease(&signed,&signer.public_key())?;
-        if actor.account_id!=verified.lease().claims().account_id && actor.account_id!=verified.claims().consumer_account_id {return Err(StorageError::Forbidden);}
+        let signed = self.private_service_lease_current(service, grant, signer, now)?;
+        let verified = verify_private_service_lease(&signed, &signer.public_key())?;
+        if actor.account_id != verified.lease().claims().account_id
+            && actor.account_id != verified.claims().consumer_account_id
+        {
+            return Err(StorageError::Forbidden);
+        }
         Ok(signed)
     }
-    pub(crate) fn private_service_lease_current(&self,service:&str,grant:&str,signer:&ServiceLeaseSigner,now:u64)->Result<SignedPrivateServiceLease,StorageError>{
+    pub(crate) fn private_service_lease_current(
+        &self,
+        service: &str,
+        grant: &str,
+        signer: &ServiceLeaseSigner,
+        now: u64,
+    ) -> Result<SignedPrivateServiceLease, StorageError> {
         let row:Option<(String,String)>=self.connection.query_row("SELECT l.lease_json,l.consumer_device_id FROM private_service_leases l JOIN service_usage_grants g ON g.grant_id=l.grant_id WHERE l.service_id=?1 AND l.grant_id=?2 AND l.revoked=0 AND g.terminal=0",params![service,grant],|r|Ok((r.get(0)?,r.get(1)?))).optional()?;
         let (json, consumer) = row.ok_or(StorageError::Forbidden)?;
         let signed: SignedPrivateServiceLease = serde_json::from_str(&json)?;

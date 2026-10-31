@@ -211,10 +211,20 @@ impl Sdk {
             .await?;
         let verified = self.verify_private_service_grant(&grant)?;
         match (&request.route, &grant.network.relay) {
-            (PrivateServiceRouteRequest::Direct, None) => {},
-            (PrivateServiceRouteRequest::Relay { node_ids, topology_digests, .. }, Some(route))
-                if route.nodes.iter().map(|node| &node.node_id).eq(node_ids.iter())
-                    && &route.topology_digests == topology_digests => {},
+            (PrivateServiceRouteRequest::Direct, None) => {}
+            (
+                PrivateServiceRouteRequest::Relay {
+                    node_ids,
+                    topology_digests,
+                    ..
+                },
+                Some(route),
+            ) if route
+                .nodes
+                .iter()
+                .map(|node| &node.node_id)
+                .eq(node_ids.iter())
+                && &route.topology_digests == topology_digests => {}
             _ => return Err(SdkError::Trust),
         }
         let claims = verified.lease().claims();
@@ -242,7 +252,10 @@ impl Sdk {
         id: &str,
         reservation: &str,
     ) -> Result<VerifiedPrivateServiceLease, SdkError> {
-        Ok(self.current_private_service_bundle(id, reservation).await?.1)
+        Ok(self
+            .current_private_service_bundle(id, reservation)
+            .await?
+            .1)
     }
     async fn current_private_service_bundle(
         &self,
@@ -281,28 +294,48 @@ impl Sdk {
         after: Option<&str>,
         limit: u16,
     ) -> Result<PrivateServiceHostAccessPage, SdkError> {
-        if !valid_id(runtime) || !(1..=100).contains(&limit)
-            || after.is_some_and(|id| !valid_id(id)) {
+        if !valid_id(runtime)
+            || !(1..=100).contains(&limit)
+            || after.is_some_and(|id| !valid_id(id))
+        {
             return Err(SdkError::Invalid);
         }
-        let mut path = format!("{}/private-host/{runtime}/access?security_epoch={}&limit={limit}", resource("services", service)?, self.health.security_epoch);
-        if let Some(after) = after { path.push_str(&format!("&after_id={after}")); }
-        let page: PrivateServiceHostAccessPage = self.required(Method::GET, &path, None::<&()>).await?;
-        if page.runtime_id != runtime || page.grants.len() > usize::from(limit)
-            || page.more != page.next_id.is_some() {
+        let mut path = format!(
+            "{}/private-host/{runtime}/access?security_epoch={}&limit={limit}",
+            resource("services", service)?,
+            self.health.security_epoch
+        );
+        if let Some(after) = after {
+            path.push_str(&format!("&after_id={after}"));
+        }
+        let page: PrivateServiceHostAccessPage =
+            self.required(Method::GET, &path, None::<&()>).await?;
+        if page.runtime_id != runtime
+            || page.grants.len() > usize::from(limit)
+            || page.more != page.next_id.is_some()
+        {
             return Err(SdkError::Trust);
         }
         let mut previous = after.unwrap_or("").to_owned();
         for grant in &page.grants {
             let lease = self.verify_private_service_grant(grant)?;
             let base = lease.lease().claims();
-            if base.service_id != service || base.edge_runtime_id != runtime
-                || grant.network.relay.is_none() || grant.network.grant_id <= previous {
+            if base.service_id != service
+                || base.edge_runtime_id != runtime
+                || grant.network.relay.is_none()
+                || grant.network.grant_id <= previous
+            {
                 return Err(SdkError::Trust);
             }
             previous.clone_from(&grant.network.grant_id);
         }
-        if page.more && page.next_id.as_deref() != page.grants.last().map(|grant| grant.network.grant_id.as_str()) {
+        if page.more
+            && page.next_id.as_deref()
+                != page
+                    .grants
+                    .last()
+                    .map(|grant| grant.network.grant_id.as_str())
+        {
             return Err(SdkError::Trust);
         }
         Ok(page)
@@ -318,7 +351,10 @@ impl Sdk {
             .try_into()
             .map_err(|_| SdkError::Trust)?;
         let (verified, _, _, _) = nestlink_identity::network::verify_private_service_grant(
-            grant, &policy, &self.trust.deployment_id, now,
+            grant,
+            &policy,
+            &self.trust.deployment_id,
+            now,
         )?;
         if verified.lease().claims().security_epoch != self.health.security_epoch {
             return Err(SdkError::Trust);

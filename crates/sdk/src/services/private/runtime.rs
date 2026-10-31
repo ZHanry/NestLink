@@ -1,7 +1,7 @@
 //! Native private services retain original consent, the shared durable meter,
 //! current management authorization and physical Quinn socket owners.
-use super::*;
 pub use super::network::PrivateServiceRelayPolicy;
+use super::*;
 use nestlink_identity::{
     digest,
     services::private::{verify_private_service_open, verify_private_service_ready},
@@ -107,15 +107,25 @@ enum PrivateCarrier {
 }
 impl PrivateCarrier {
     fn connection(&self) -> std::io::Result<&quinn::Connection> {
-        match self { Self::Direct(owner)=>Ok(&owner.connection), Self::Routed(owner)=>owner.connection() }
+        match self {
+            Self::Direct(owner) => Ok(&owner.connection),
+            Self::Routed(owner) => owner.connection(),
+        }
     }
     fn request_close(&self) {
-        match self { Self::Direct(owner)=>owner.connection.close(0u32.into(),b"private owner ended"), Self::Routed(owner)=>owner.request_close() }
+        match self {
+            Self::Direct(owner) => owner.connection.close(0u32.into(), b"private owner ended"),
+            Self::Routed(owner) => owner.request_close(),
+        }
     }
     async fn close(self) -> std::io::Result<()> {
         match self {
-            Self::Direct(owner)=>owner.close_and_wait().await,
-            Self::Routed(mut owner)=>owner.close_and_wait(tokio::time::Instant::now()+Duration::from_secs(5)).await,
+            Self::Direct(owner) => owner.close_and_wait().await,
+            Self::Routed(mut owner) => {
+                owner
+                    .close_and_wait(tokio::time::Instant::now() + Duration::from_secs(5))
+                    .await
+            }
         }
     }
 }
@@ -160,7 +170,10 @@ impl PrivateServiceConnection {
         }
         .encode()?;
         carrier::datagram::send(
-            self.connected.as_ref().ok_or(SdkError::Trust)?.connection()?,
+            self.connected
+                .as_ref()
+                .ok_or(SdkError::Trust)?
+                .connection()?,
             packet,
         )?;
         Ok(())
@@ -238,7 +251,13 @@ impl Sdk {
         consent: LocalServiceTargetConsent,
         config: PrivateServiceHostConfig,
     ) -> Result<PrivateServiceHost, SdkError> {
-        self.start_private_service_host_with_relay_policy(host, consent, config, PrivateServiceRelayPolicy::default()).await
+        self.start_private_service_host_with_relay_policy(
+            host,
+            consent,
+            config,
+            PrivateServiceRelayPolicy::default(),
+        )
+        .await
     }
     pub async fn start_private_service_host_with_relay_policy(
         self: &Arc<Self>,
@@ -328,7 +347,12 @@ impl Sdk {
         consumer: &DeviceIdentity,
         lease: VerifiedPrivateServiceLease,
     ) -> Result<PrivateServiceConnection, SdkError> {
-        self.connect_private_service_with_relay_policy(consumer, lease, &PrivateServiceRelayPolicy::default()).await
+        self.connect_private_service_with_relay_policy(
+            consumer,
+            lease,
+            &PrivateServiceRelayPolicy::default(),
+        )
+        .await
     }
     pub async fn connect_private_service_with_relay_policy(
         &self,
@@ -347,19 +371,25 @@ impl Sdk {
             return Err(SdkError::Trust);
         }
         let connected = if bundle.network.relay.is_some() {
-            PrivateCarrier::Routed(super::network::connect(self,consumer,&bundle,relay_policy).await?)
-        } else { PrivateCarrier::Direct(carrier::connect(
-            lease
-                .lease()
-                .claims()
-                .edge_service_address
-                .parse()
-                .map_err(|_| SdkError::Trust)?,
-            &consumer.identity,
-            digest(&lease.claims().host_public_key),
-        )
-        .await
-        .map_err(SdkError::NodeQuic)?) };
+            PrivateCarrier::Routed(
+                super::network::connect(self, consumer, &bundle, relay_policy).await?,
+            )
+        } else {
+            PrivateCarrier::Direct(
+                carrier::connect(
+                    lease
+                        .lease()
+                        .claims()
+                        .edge_service_address
+                        .parse()
+                        .map_err(|_| SdkError::Trust)?,
+                    &consumer.identity,
+                    digest(&lease.claims().host_public_key),
+                )
+                .await
+                .map_err(SdkError::NodeQuic)?,
+            )
+        };
         let result = tokio::time::timeout(Duration::from_secs(3), async {
             let (mut send, mut recv) = connected
                 .connection()?
@@ -379,7 +409,9 @@ impl Sdk {
             write_message(&mut send, &open).await?;
             let ready: PrivateServiceReady = read_message(&mut recv).await?;
             verify_private_service_ready(&lease, &open, &ready)?;
-            let (current, _) = self.current_private_service_bundle(&grant.service_id, &grant.grant_id).await?;
+            let (current, _) = self
+                .current_private_service_bundle(&grant.service_id, &grant.grant_id)
+                .await?;
             if super::network::fingerprint(&current)? != super::network::fingerprint(&bundle)? {
                 return Err(SdkError::Trust);
             }
@@ -553,48 +585,85 @@ async fn run_host(
     Ok(())
 }
 
-async fn host_inbox(sdk:&Sdk, presence:&PrivateServiceHostClaims)->Result<Vec<(PrivateServiceGrant,u64)>,SdkError> {
-    let mut grants=Vec::new();
-    let mut after=None;
+async fn host_inbox(
+    sdk: &Sdk,
+    presence: &PrivateServiceHostClaims,
+) -> Result<Vec<(PrivateServiceGrant, u64)>, SdkError> {
+    let mut grants = Vec::new();
+    let mut after = None;
     // A bounded complete scan prevents an adversarial directory from keeping
     // the host's presence refresh or cancellation loop occupied indefinitely.
     for _ in 0..16 {
-        let page=sdk.private_service_host_access(&presence.service_id,&presence.runtime_id,after.as_deref(),100).await?;
+        let page = sdk
+            .private_service_host_access(
+                &presence.service_id,
+                &presence.runtime_id,
+                after.as_deref(),
+                100,
+            )
+            .await?;
         for grant in page.grants {
-            let verified=sdk.verify_private_service_grant(&grant)?;
-            if verified.lease().claims().definition.host_device_id!=presence.host_device_id
-                || verified.lease().claims().target_sha256!=presence.target_sha256 {
+            let verified = sdk.verify_private_service_grant(&grant)?;
+            if verified.lease().claims().definition.host_device_id != presence.host_device_id
+                || verified.lease().claims().target_sha256 != presence.target_sha256
+            {
                 return Err(SdkError::Trust);
             }
-            grants.push((grant,verified.lease().claims().expires_at_unix_ms));
+            grants.push((grant, verified.lease().claims().expires_at_unix_ms));
         }
-        if !page.more {return Ok(grants);}
-        after=page.next_id;
+        if !page.more {
+            return Ok(grants);
+        }
+        after = page.next_id;
     }
     Err(SdkError::Invalid)
 }
 
 #[allow(clippy::too_many_arguments)]
 async fn serve_relay_connection(
-    sdk:Arc<Sdk>, host:Arc<DeviceIdentity>, consent:Arc<LocalServiceTargetConsent>,
-    presence:PrivateServiceHostClaims, usage:Arc<ServiceUsageStore>, mut stop:watch::Receiver<bool>,
-    grant:PrivateServiceGrant, policy:PrivateServiceRelayPolicy,
-)->Result<(),SdkError> {
-    let connecting=super::network::connect(&sdk,&host,&grant,&policy);
+    sdk: Arc<Sdk>,
+    host: Arc<DeviceIdentity>,
+    consent: Arc<LocalServiceTargetConsent>,
+    presence: PrivateServiceHostClaims,
+    usage: Arc<ServiceUsageStore>,
+    mut stop: watch::Receiver<bool>,
+    grant: PrivateServiceGrant,
+    policy: PrivateServiceRelayPolicy,
+) -> Result<(), SdkError> {
+    let connecting = super::network::connect(&sdk, &host, &grant, &policy);
     tokio::pin!(connecting);
-    let result=tokio::select! {biased;
+    let result = tokio::select! {biased;
         _=stopped(&mut stop)=>None,
         result=&mut connecting=>Some(result),
     };
-    let mut owner=match result {
-        Some(Ok(owner))=>owner,
-        Some(Err(_))=>return Ok(()),
-        None=>{if let Ok(mut owner)=connecting.await {owner.close_and_wait(tokio::time::Instant::now()+Duration::from_secs(5)).await?;}return Ok(());}
+    let mut owner = match result {
+        Some(Ok(owner)) => owner,
+        Some(Err(_)) => return Ok(()),
+        None => {
+            if let Ok(mut owner) = connecting.await {
+                owner
+                    .close_and_wait(tokio::time::Instant::now() + Duration::from_secs(5))
+                    .await?;
+            }
+            return Ok(());
+        }
     };
-    let expected=super::network::fingerprint(&grant)?;
-    let connection=owner.connection()?.clone();
-    let result=serve_established_connection(sdk,host,consent,presence,usage,stop,connection,Some(expected)).await;
-    owner.close_and_wait(tokio::time::Instant::now()+Duration::from_secs(5)).await?;
+    let expected = super::network::fingerprint(&grant)?;
+    let connection = owner.connection()?.clone();
+    let result = serve_established_connection(
+        sdk,
+        host,
+        consent,
+        presence,
+        usage,
+        stop,
+        connection,
+        Some(expected),
+    )
+    .await;
+    owner
+        .close_and_wait(tokio::time::Instant::now() + Duration::from_secs(5))
+        .await?;
     result
 }
 
@@ -608,21 +677,28 @@ async fn serve_connection(
     mut stop: watch::Receiver<bool>,
     incoming: quinn::Incoming,
 ) -> Result<(), SdkError> {
-    let result=tokio::select! {biased;
+    let result = tokio::select! {biased;
         _=stopped(&mut stop)=>return Ok(()),
         result=tokio::time::timeout(Duration::from_secs(3),incoming)=>result,
     };
-    let Ok(Ok(connection))=result else {return Ok(());};
-    serve_established_connection(sdk,host,consent,presence,usage,stop,connection,None).await
+    let Ok(Ok(connection)) = result else {
+        return Ok(());
+    };
+    serve_established_connection(sdk, host, consent, presence, usage, stop, connection, None).await
 }
 
 #[allow(clippy::too_many_arguments)]
 async fn serve_established_connection(
-    sdk: Arc<Sdk>, host: Arc<DeviceIdentity>, consent: Arc<LocalServiceTargetConsent>,
-    presence: PrivateServiceHostClaims, usage: Arc<ServiceUsageStore>, mut stop:watch::Receiver<bool>,
-    connection:quinn::Connection, expected:Option<[u8;32]>,
+    sdk: Arc<Sdk>,
+    host: Arc<DeviceIdentity>,
+    consent: Arc<LocalServiceTargetConsent>,
+    presence: PrivateServiceHostClaims,
+    usage: Arc<ServiceUsageStore>,
+    mut stop: watch::Receiver<bool>,
+    connection: quinn::Connection,
+    expected: Option<[u8; 32]>,
 ) -> Result<(), SdkError> {
-    let _connection_close=ConnectionClose(connection.clone());
+    let _connection_close = ConnectionClose(connection.clone());
     let handshake = tokio::time::timeout(Duration::from_secs(3), async {
         if !carrier::negotiated_service(&connection) {
             return Err(SdkError::Trust);
@@ -635,16 +711,18 @@ async fn serve_established_connection(
         if hello.service_id != presence.service_id || !valid_id(&hello.grant_id) {
             return Err(SdkError::Trust);
         }
-        let (bundle,lease) = sdk
+        let (bundle, lease) = sdk
             .current_private_service_bundle(&hello.service_id, &hello.grant_id)
             .await?;
         if lease.lease().claims().edge_runtime_id != presence.runtime_id {
             return Err(SdkError::Trust);
         }
         match expected {
-            None if bundle.network.relay.is_none()=>{},
-            Some(expected) if bundle.network.relay.is_some() && super::network::fingerprint(&bundle)?==expected=>{},
-            _=>return Err(SdkError::Trust),
+            None if bundle.network.relay.is_none() => {}
+            Some(expected)
+                if bundle.network.relay.is_some()
+                    && super::network::fingerprint(&bundle)? == expected => {}
+            _ => return Err(SdkError::Trust),
         }
         let nonce = random_bytes::<32>();
         write_message(&mut send, &nonce).await?;

@@ -2,8 +2,7 @@
 //! private transaction and the retained topology journal, without RemotePermit.
 use super::*;
 use crate::{
-    network_policy::topology::TopologyPublisherRequest,
-    relay_reservations::RelayLifecycle,
+    network_policy::topology::TopologyPublisherRequest, relay_reservations::RelayLifecycle,
 };
 use nestlink_identity::{
     PermitSigner,
@@ -66,10 +65,9 @@ impl PrivateChain {
                 now()?,
             )?;
             let challenge = f.store.node_challenge(&id, now()?)?;
-            let lease = f.store.issue_node_lease(
-                &identity.prove(&challenge, &random_id())?,
-                now()?,
-            )?;
+            let lease = f
+                .store
+                .issue_node_lease(&identity.prove(&challenge, &random_id())?, now()?)?;
             nodes.push((
                 id,
                 identity,
@@ -82,7 +80,9 @@ impl PrivateChain {
         }
         let nodes: [_; 2] = nodes.try_into().map_err(|_| "private relay count")?;
         let at = now()?;
-        let snapshot = f.store.network_policy_snapshot(&access.exposure.space_id, at)?;
+        let snapshot = f
+            .store
+            .network_policy_snapshot(&access.exposure.space_id, at)?;
         let epoch = snapshot.verification().policy_epoch;
         let mut publishers = Vec::new();
         for index in 0..2 {
@@ -169,9 +169,14 @@ impl PrivateChain {
 
     fn sign(&self, body: &mut PrivateServiceAccessRequest) -> Result {
         let signature = URL_SAFE_NO_PAD.encode(
-            self.access.consumer_identity.sign_private_service_route(&self.f.view.id, body)?,
+            self.access
+                .consumer_identity
+                .sign_private_service_route(&self.f.view.id, body)?,
         );
-        let PrivateServiceRouteRequest::Relay { signature: value, .. } = &mut body.route else {
+        let PrivateServiceRouteRequest::Relay {
+            signature: value, ..
+        } = &mut body.route
+        else {
             return Err("private relay selection missing".into());
         };
         *value = signature;
@@ -190,10 +195,20 @@ impl PrivateChain {
         Ok(body)
     }
 
-    fn issue(&mut self, body: PrivateServiceAccessRequest, at: u64) -> std::result::Result<PrivateServiceGrant, StorageError> {
+    fn issue(
+        &mut self,
+        body: PrivateServiceAccessRequest,
+        at: u64,
+    ) -> std::result::Result<PrivateServiceGrant, StorageError> {
         self.f.store.issue_private_service_grant(
-            &self.lifecycle, &self.f.creator, &self.f.view.id, body,
-            &self.f.service_signer, &self.access.network, &self.node_signer, at,
+            &self.lifecycle,
+            &self.f.creator,
+            &self.f.view.id,
+            body,
+            &self.f.service_signer,
+            &self.access.network,
+            &self.node_signer,
+            at,
         )
     }
 
@@ -221,25 +236,42 @@ impl PrivateChain {
         report.expires_at_ms = at + 5000;
         report.neighbors[0].up = up;
         let (id, identity, incarnation) = &self.nodes[index];
-        let snapshot = self.f.store.network_policy_snapshot(&self.access.exposure.space_id, at)?;
+        let snapshot = self
+            .f
+            .store
+            .network_policy_snapshot(&self.access.exposure.space_id, at)?;
         let publisher = verify_topology_publisher(
-            &self.publishers[index], &snapshot.verification(), id,
-            &identity.public_key(), incarnation, &[],
+            &self.publishers[index],
+            &snapshot.verification(),
+            id,
+            &identity.public_key(),
+            incarnation,
+            &[],
         )?;
         let signed = self.f.store.accept_topology_report(
-            &self.access.network, &self.access.exposure.space_id, id,
-            &identity.sign_topology_report(&report)?, at,
+            &self.access.network,
+            &self.access.exposure.space_id,
+            id,
+            &identity.sign_topology_report(&report)?,
+            at,
         )?;
         self.digests[index] = verify_topology_advertisement(
-            &signed, &publisher, &snapshot.verification(), incarnation, sequence - 1,
-        )?.digest();
+            &signed,
+            &publisher,
+            &snapshot.verification(),
+            incarnation,
+            sequence - 1,
+        )?
+        .digest();
         self.reports[index] = report;
         Ok(())
     }
 
     fn held(&self, at: u64) -> Result<u64> {
         Ok(self.f.store.connection.query_row(
-            "SELECT count(*) FROM all_relay_capacity WHERE promised_until>?1", [at], |r| r.get(0),
+            "SELECT count(*) FROM all_relay_capacity WHERE promised_until>?1",
+            [at],
+            |r| r.get(0),
         )?)
     }
 }
@@ -250,7 +282,10 @@ fn private_two_hop_second_capacity_failure_rolls_back_service_and_both_hop_promi
     f.quota(1)?;
     let body = f.request()?;
     let before = f.f.store.audit_count()?;
-    assert!(matches!(f.issue(body.clone(), f.at), Err(StorageError::RateLimited)));
+    assert!(matches!(
+        f.issue(body.clone(), f.at),
+        Err(StorageError::RateLimited)
+    ));
     assert_eq!(f.f.store.audit_count()?, before);
     let count: u64 = f.f.store.connection.query_row(
         "SELECT (SELECT count(*) FROM private_service_leases)+(SELECT count(*) FROM private_service_relay_hops)+(SELECT count(*) FROM service_usage_grants)", [], |r| r.get(0),
@@ -265,7 +300,10 @@ fn private_two_hop_second_capacity_failure_rolls_back_service_and_both_hop_promi
     let repeated = f.issue(body, f.at)?;
     assert_eq!(serde_json::to_vec(&grant)?, serde_json::to_vec(&repeated)?);
     let (_, _, _, transits) = verify_private_service_grant(
-        &grant, &f.node_signer.public_key(), &f.f.store.deployment_id()?, f.at,
+        &grant,
+        &f.node_signer.public_key(),
+        &f.f.store.deployment_id()?,
+        f.at,
     )?;
     assert_eq!(transits.len(), 2);
     assert_eq!(f.held(f.at)?, 2);
@@ -282,53 +320,91 @@ fn private_two_hop_refresh_preserves_exact_grants_and_down_up_cannot_revive_them
     let original = serde_json::to_vec(&grant.network)?;
     let promised: u64 = f.f.store.connection.query_row(
         "SELECT sum(promised_until) FROM private_service_relay_hops WHERE grant_id=?1",
-        [&grant_id], |r| r.get(0),
+        [&grant_id],
+        |r| r.get(0),
     )?;
     f.report(0, 2, true, f.at + 101)?;
     f.report(1, 2, true, f.at + 101)?;
     let current = f.f.store.private_service_network_path(
-        &f.f.creator, &f.f.view.id, &grant_id, &f.f.service_signer, f.at + 101,
+        &f.f.creator,
+        &f.f.view.id,
+        &grant_id,
+        &f.f.service_signer,
+        f.at + 101,
     )?;
     assert_eq!(serde_json::to_vec(&current)?, original);
     let retained: u64 = f.f.store.connection.query_row(
         "SELECT sum(promised_until) FROM private_service_relay_hops WHERE grant_id=?1",
-        [&grant_id], |r| r.get(0),
+        [&grant_id],
+        |r| r.get(0),
     )?;
     assert_eq!(retained, promised);
     // No consumer, host inbox or resource poll observes the intermediate down.
     // The authenticated acceptance transaction itself must fence both hops.
     f.report(0, 3, false, f.at + 202)?;
     f.report(0, 4, true, f.at + 303)?;
-    assert!(matches!(f.f.store.private_service_network_path(
-        &f.f.creator, &f.f.view.id, &grant_id, &f.f.service_signer, f.at + 303,
-    ), Err(StorageError::Forbidden)));
-    assert!(matches!(f.issue(body, f.at + 303), Err(StorageError::Forbidden)));
+    assert!(matches!(
+        f.f.store.private_service_network_path(
+            &f.f.creator,
+            &f.f.view.id,
+            &grant_id,
+            &f.f.service_signer,
+            f.at + 303,
+        ),
+        Err(StorageError::Forbidden)
+    ));
+    assert!(matches!(
+        f.issue(body, f.at + 303),
+        Err(StorageError::Forbidden)
+    ));
     let closed: u64 = f.f.store.connection.query_row(
         "SELECT count(*) FROM private_service_relay_hops WHERE grant_id=?1 AND closed=1",
-        [&grant_id], |r| r.get(0),
+        [&grant_id],
+        |r| r.get(0),
     )?;
     assert_eq!(closed, 2);
     assert_eq!(f.held(f.at + 303)?, 2);
     ledgers(&mut f.f, 0, 4096)?;
     let page = f.f.store.private_service_host_access(
-        &f.f.creator, &f.f.view.id, &f.access.runtime,
-        ServiceQuery { security_epoch: f.f.store.security_epoch()?, after_id: None, limit: 10 },
-        &f.f.service_signer, &f.node_signer, f.at + 303,
+        &f.f.creator,
+        &f.f.view.id,
+        &f.access.runtime,
+        ServiceQuery {
+            security_epoch: f.f.store.security_epoch()?,
+            after_id: None,
+            limit: 10,
+        },
+        &f.f.service_signer,
+        &f.node_signer,
+        f.at + 303,
     )?;
     assert!(page.grants.is_empty());
     let root = PermitSigner::from_seed([223; 32]);
     for index in 0..2 {
         let lease = &f.leases[index];
-        let query = f.nodes[index].1.sign_resource_query(&NodeResourceQueryClaims {
-            schema_version: SCHEMA_VERSION, deployment_id: lease.deployment_id.clone(),
-            security_epoch: lease.security_epoch, node_id: lease.node_id.clone(),
-            runtime_id: lease.runtime_id.clone(), runtime_generation: lease.runtime_generation,
-            policy_revision: lease.policy_revision, lease_sequence: lease.lease_sequence,
-            request_id: random_id(), request_sequence: 1, issued_at_unix_ms: f.at + 303,
-            expires_at_unix_ms: f.at + 303 + NODE_RESOURCE_TTL_MS,
-        })?;
+        let query = f.nodes[index]
+            .1
+            .sign_resource_query(&NodeResourceQueryClaims {
+                schema_version: SCHEMA_VERSION,
+                deployment_id: lease.deployment_id.clone(),
+                security_epoch: lease.security_epoch,
+                node_id: lease.node_id.clone(),
+                runtime_id: lease.runtime_id.clone(),
+                runtime_generation: lease.runtime_generation,
+                policy_revision: lease.policy_revision,
+                lease_sequence: lease.lease_sequence,
+                request_id: random_id(),
+                request_sequence: 1,
+                issued_at_unix_ms: f.at + 303,
+                expires_at_unix_ms: f.at + 303 + NODE_RESOURCE_TTL_MS,
+            })?;
         let snapshot = f.f.store.node_resource_snapshot_with_private_services(
-            &f.lifecycle, &query, &root, &f.f.service_signer, &f.node_signer, f.at + 303,
+            &f.lifecycle,
+            &query,
+            &root,
+            &f.f.service_signer,
+            &f.node_signer,
+            f.at + 303,
         )?;
         assert!(snapshot.allocations.is_empty());
         assert!(snapshot.network_routes.is_empty());
@@ -343,7 +419,10 @@ fn expired_private_grant_is_omitted_after_same_runtime_presence_refresh() -> Res
     let request = f.request()?;
     let grant = f.issue(request, f.at)?;
     let (business, _, _, _) = verify_private_service_grant(
-        &grant, &f.node_signer.public_key(), &f.f.store.deployment_id()?, f.at,
+        &grant,
+        &f.node_signer.public_key(),
+        &f.f.store.deployment_id()?,
+        f.at,
     )?;
     let base = business.lease().claims();
     let expires = base.expires_at_unix_ms;
@@ -364,17 +443,28 @@ fn expired_private_grant_is_omitted_after_same_runtime_presence_refresh() -> Res
         expires_at_unix_ms: expires + 5000,
     };
     f.f.store.register_private_service_host(
-        &f.f.creator, &f.f.host.sign_private_service_host(&presence)?, expires - 1,
+        &f.f.creator,
+        &f.f.host.sign_private_service_host(&presence)?,
+        expires - 1,
     )?;
     let page = f.f.store.private_service_host_access(
-        &f.f.creator, &f.f.view.id, &f.access.runtime,
-        ServiceQuery { security_epoch: f.f.store.security_epoch()?, after_id: None, limit: 10 },
-        &f.f.service_signer, &f.node_signer, expires + 1,
+        &f.f.creator,
+        &f.f.view.id,
+        &f.access.runtime,
+        ServiceQuery {
+            security_epoch: f.f.store.security_epoch()?,
+            after_id: None,
+            limit: 10,
+        },
+        &f.f.service_signer,
+        &f.node_signer,
+        expires + 1,
     )?;
     assert!(page.grants.is_empty());
     let terminal: bool = f.f.store.connection.query_row(
         "SELECT terminal FROM service_usage_grants WHERE grant_id=?1",
-        [&grant.network.grant_id], |r| r.get(0),
+        [&grant.network.grant_id],
+        |r| r.get(0),
     )?;
     assert!(!terminal);
     // Discovery omission does not manufacture a usage seal or an early relay

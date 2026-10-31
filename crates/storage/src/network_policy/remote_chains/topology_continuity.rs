@@ -121,14 +121,32 @@ pub(super) fn current(
 
 /// Uses the same retained-publisher and uninterrupted-observation rules for a
 /// private chain. No business currentness or capacity owner is substituted.
-pub(crate) fn private_current(store:&Store,tx:&Transaction<'_>,snapshot:&TrustedNetworkPolicySnapshot,grant:&str,views:&[nestlink_protocol::api::NodeEndpointsView],nodes:&[RelayNode],now:u64)->Result<(),StorageError>{
-    if nodes.len()!=2 || views.len()!=2{return Err(StorageError::Forbidden);}
+pub(crate) fn private_current(
+    store: &Store,
+    tx: &Transaction<'_>,
+    snapshot: &TrustedNetworkPolicySnapshot,
+    grant: &str,
+    views: &[nestlink_protocol::api::NodeEndpointsView],
+    nodes: &[RelayNode],
+    now: u64,
+) -> Result<(), StorageError> {
+    if nodes.len() != 2 || views.len() != 2 {
+        return Err(StorageError::Forbidden);
+    }
     for index in 0..2 {
         let binding:Option<(Vec<u8>,u64,u64,u64)>=tx.query_row("SELECT original_publisher_digest,original_sequence,latest_sequence,observed_until FROM private_service_relay_hops WHERE grant_id=?1 AND position=?2 AND closed=0",params![grant,index as u8],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?))).optional()?;
-        let (publisher,original,latest,until)=binding.ok_or(StorageError::Forbidden)?;
-        let ad=topology::current_head(store,snapshot,&views[index].node_id,now)?;
-        let ad=ad.claims();
-        if publisher!=ad.report.publisher_digest || ad.report.sequence<original || ad.report.sequence<latest || now>=until || ad.expires_at_ms<until || !adjacent(&ad.report,&nodes[index],&nodes[1-index]){return Err(StorageError::Forbidden);}
+        let (publisher, original, latest, until) = binding.ok_or(StorageError::Forbidden)?;
+        let ad = topology::current_head(store, snapshot, &views[index].node_id, now)?;
+        let ad = ad.claims();
+        if publisher != ad.report.publisher_digest
+            || ad.report.sequence < original
+            || ad.report.sequence < latest
+            || now >= until
+            || ad.expires_at_ms < until
+            || !adjacent(&ad.report, &nodes[index], &nodes[1 - index])
+        {
+            return Err(StorageError::Forbidden);
+        }
     }
     Ok(())
 }
@@ -228,7 +246,10 @@ pub(in crate::network_policy) fn report_accepted(
             )?;
         } else if private {
             tx.execute("UPDATE private_service_leases SET revoked=1 WHERE grant_id IN(SELECT grant_id FROM private_service_relay_hops WHERE route_id=?1 AND space_id=?2)",params![route,space])?;
-            tx.execute("UPDATE private_service_relay_hops SET closed=1 WHERE route_id=?1 AND space_id=?2",params![route,space])?;
+            tx.execute(
+                "UPDATE private_service_relay_hops SET closed=1 WHERE route_id=?1 AND space_id=?2",
+                params![route, space],
+            )?;
         } else {
             retire(tx, space, &route)?;
         }

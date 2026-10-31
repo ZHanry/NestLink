@@ -449,9 +449,10 @@ impl Store {
             transaction.commit()?;
         }
         if version < 42 {
-            let transaction=connection.transaction()?;
-            transaction.execute_batch(include_str!("../migrations/042_private_service_relays.sql"))?;
-            transaction.pragma_update(None,"user_version",42)?;
+            let transaction = connection.transaction()?;
+            transaction
+                .execute_batch(include_str!("../migrations/042_private_service_relays.sql"))?;
+            transaction.pragma_update(None, "user_version", 42)?;
             transaction.commit()?;
         }
         Ok(Self {

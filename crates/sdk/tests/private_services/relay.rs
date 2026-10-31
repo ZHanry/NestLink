@@ -87,11 +87,8 @@ impl RelayNode {
         let control = Arc::new(NodeControl::start(config, NodeIdentity::from_seed(&seed))?);
         let mut pending = PendingControl(Some(control.clone()));
         usage.track(&control)?;
-        let listener = routed::node_listener_with_legacy(
-            "127.0.0.1:0".parse()?,
-            &identity,
-            control.clone(),
-        )?;
+        let listener =
+            routed::node_listener_with_legacy("127.0.0.1:0".parse()?, &identity, control.clone())?;
         sdk.set_node_endpoints(
             &id,
             NodeEndpointsUpdate {
@@ -239,14 +236,19 @@ impl Relays {
                 let mut digests = vec![[0; 32]; 2];
                 for signed in advertisements {
                     let claims = TopologyAdvertisement::decode_canonical(&signed.claims)?;
-                    let Some(index) = self.nodes.iter().position(|node| node.id == claims.report.node_id) else {
+                    let Some(index) = self
+                        .nodes
+                        .iter()
+                        .position(|node| node.id == claims.report.node_id)
+                    else {
                         continue;
                     };
                     let other = &self.nodes[1 - index];
                     if claims.expires_at_ms <= now.saturating_add(200)
                         || !claims.report.neighbors.iter().any(|neighbor| {
                             neighbor.up
-                                && neighbor.remote == PeerId::from_public_key(&other.identity.public_key())
+                                && neighbor.remote
+                                    == PeerId::from_public_key(&other.identity.public_key())
                                 && neighbor.local_endpoint_revision == 1
                                 && neighbor.remote_endpoint_revision == 1
                         })
@@ -268,7 +270,11 @@ impl Relays {
                         &[],
                     )?;
                     let advertisement = verify_topology_advertisement(
-                        signed, &publisher, &context, &incarnation, 0,
+                        signed,
+                        &publisher,
+                        &context,
+                        &incarnation,
+                        0,
                     )?;
                     assert!(advertisement.claims().report.sequence > 1);
                     digests[index] = advertisement.digest();
@@ -297,14 +303,18 @@ impl Relays {
                     signature: String::new(),
                 };
                 let signed = URL_SAFE_NO_PAD.encode(
-                    consumer.identity.sign_private_service_route(service, &request)?,
+                    consumer
+                        .identity
+                        .sign_private_service_route(service, &request)?,
                 );
                 if let PrivateServiceRouteRequest::Relay { signature, .. } = &mut request.route {
                     *signature = signed;
                 }
                 match sdk.request_private_service(service, request).await {
                     Ok(lease) => return Ok(lease),
-                    Err(SdkError::Api(reqwest::StatusCode::CONFLICT, _)) if self.nodes.len() == 2 => {
+                    Err(SdkError::Api(reqwest::StatusCode::CONFLICT, _))
+                        if self.nodes.len() == 2 =>
+                    {
                         // Real periodic reports may replace the head between GET
                         // and POST. Retain the original request ID and quota.
                         tokio::time::sleep(Duration::from_millis(25)).await;
@@ -321,30 +331,56 @@ impl Relays {
                 let mut ready = true;
                 for node in &self.nodes {
                     let snapshot = node.control.resource_snapshot()?;
-                    assert!(snapshot.allocations.is_empty(), "private service allocated a legacy relay");
-                    let resources: Vec<_> = snapshot.network_routes.iter().filter(|route| {
-                        route.allocation.as_ref().is_some_and(|allocation| allocation.session_id == grant_id)
-                    }).collect();
+                    assert!(
+                        snapshot.allocations.is_empty(),
+                        "private service allocated a legacy relay"
+                    );
+                    let resources: Vec<_> = snapshot
+                        .network_routes
+                        .iter()
+                        .filter(|route| {
+                            route
+                                .allocation
+                                .as_ref()
+                                .is_some_and(|allocation| allocation.session_id == grant_id)
+                        })
+                        .collect();
                     if resources.is_empty() {
                         ready = false;
                         continue;
                     }
                     assert_eq!(resources.len(), 1);
                     let resource = resources[0];
-                    assert!(resource.business_permit.is_empty(), "private service borrowed a RemotePermit");
+                    assert!(
+                        resource.business_permit.is_empty(),
+                        "private service borrowed a RemotePermit"
+                    );
                     assert!(resource.relay_bundle_json.is_empty());
                     assert!(resource.chain_bundle_json.is_empty());
                     assert_eq!(resource.network_schema_version, self.nodes.len() as u32);
-                    let grant: PrivateServiceGrant = serde_json::from_slice(&resource.private_service_bundle_json)?;
+                    let grant: PrivateServiceGrant =
+                        serde_json::from_slice(&resource.private_service_bundle_json)?;
                     assert_eq!(grant.network.grant_id, grant_id);
-                    let path = nestlink_sdk::network_management::decode_network_grant(&grant.network.path)?;
-                    let GrantClaims::Path(path) = GrantClaims::decode_canonical(&path.claims)? else {
+                    let path = nestlink_sdk::network_management::decode_network_grant(
+                        &grant.network.path,
+                    )?;
+                    let GrantClaims::Path(path) = GrantClaims::decode_canonical(&path.claims)?
+                    else {
                         return Err("private resource did not contain a path grant".into());
                     };
                     assert_eq!(path.purpose, Purpose::PrivateService);
                     assert!(!path.policy.allow_direct);
                     assert_eq!(path.policy.max_hops as usize, self.nodes.len());
-                    assert_eq!(grant.network.relay.as_ref().ok_or("missing private relay route")?.nodes.len(), self.nodes.len());
+                    assert_eq!(
+                        grant
+                            .network
+                            .relay
+                            .as_ref()
+                            .ok_or("missing private relay route")?
+                            .nodes
+                            .len(),
+                        self.nodes.len()
+                    );
                 }
                 if ready {
                     return Ok(());
@@ -360,7 +396,10 @@ impl Relays {
                 let mut released = true;
                 for node in &self.nodes {
                     let counters = node.control.counters()?;
-                    assert!(counters.admitted_bytes > 0, "registered hop never carried the actual business");
+                    assert!(
+                        counters.admitted_bytes > 0,
+                        "registered hop never carried the actual business"
+                    );
                     released &= counters.opened_connections > 0
                         && counters.opened_connections == counters.closed_connections;
                 }
@@ -383,10 +422,15 @@ impl Relays {
 async fn consumer_login(f: &Fixture) -> Result<Sdk> {
     let mut sdk = Sdk::connect(
         &f.origin,
-        DeploymentTrust { deployment_id: f.deployment.clone(), permit_issuer: f.issuer },
+        DeploymentTrust {
+            deployment_id: f.deployment.clone(),
+            permit_issuer: f.issuer,
+        },
         true,
-    ).await?;
-    sdk.login("admin".into(), Secret::from_text(PASSWORD.into()), None).await?;
+    )
+    .await?;
+    sdk.login("admin".into(), Secret::from_text(PASSWORD.into()), None)
+        .await?;
     Ok(sdk)
 }
 async fn close_host(host: &mut PrivateServiceHost, usage: &std::path::Path) -> Result {
@@ -396,8 +440,13 @@ async fn close_host(host: &mut PrivateServiceHost, usage: &std::path::Path) -> R
     std::fs::remove_dir_all(usage)?;
     Ok(())
 }
-fn usage_grant(lease: &nestlink_identity::services::private::VerifiedPrivateServiceLease) -> Result<ServiceUsageBudgetGrantClaims> {
-    Ok(decode_service_message(&lease.lease().claims().usage_grant.claims, SERVICE_USAGE_BYTES)?)
+fn usage_grant(
+    lease: &nestlink_identity::services::private::VerifiedPrivateServiceLease,
+) -> Result<ServiceUsageBudgetGrantClaims> {
+    Ok(decode_service_message(
+        &lease.lease().claims().usage_grant.claims,
+        SERVICE_USAGE_BYTES,
+    )?)
 }
 
 #[derive(Clone, Copy)]
@@ -409,35 +458,97 @@ enum End {
 async fn tcp(hops: usize, end: End) -> Result {
     tokio::time::timeout(Duration::from_secs(30), async {
         let backend = TcpListener::bind("127.0.0.1:0").await?;
-        let approval_ms = if matches!(end, End::Expiry) { 8_000 } else { 60_000 };
-        let f = Fixture::configured("tcp", backend.local_addr()?, "relay_only", approval_ms).await?;
+        let approval_ms = if matches!(end, End::Expiry) {
+            8_000
+        } else {
+            60_000
+        };
+        let f =
+            Fixture::configured("tcp", backend.local_addr()?, "relay_only", approval_ms).await?;
         let mut relays = Relays::start(&f, hops).await?;
         let mut consumer_sdk = consumer_login(&f).await?;
         let request = f.request(&f.consumer);
         let outsider = f.request(&f.outsider);
         let policy = PrivateServiceRelayPolicy::from_local_choice(&[], true)?;
         assert!(f.sdk.pending_remote().await?.is_empty());
-        let mut host = f.sdk.start_private_service_host_with_relay_policy(
-            f.host.clone(), f.consent,
-            PrivateServiceHostConfig { listen: "127.0.0.1:0".parse()?, advertised_ip: "127.0.0.1".parse()?, usage_directory: f.usage.join("ledger") },
-            policy.clone(),
-        ).await?;
+        let mut host = f
+            .sdk
+            .start_private_service_host_with_relay_policy(
+                f.host.clone(),
+                f.consent,
+                PrivateServiceHostConfig {
+                    listen: "127.0.0.1:0".parse()?,
+                    advertised_ip: "127.0.0.1".parse()?,
+                    usage_directory: f.usage.join("ledger"),
+                },
+                policy.clone(),
+            )
+            .await?;
         // Membership and relay selection do not authorize this business.
-        assert!(relays.request(&consumer_sdk, &f.view.id, outsider, &f.outsider).await.is_err());
-        assert!(consumer_sdk.request_private_service(&f.view.id, request.clone()).await.is_err());
-        assert!(tokio::time::timeout(Duration::from_millis(100), backend.accept()).await.is_err());
-        let lease = relays.request(&consumer_sdk, &f.view.id, request, &f.consumer).await?;
+        assert!(
+            relays
+                .request(&consumer_sdk, &f.view.id, outsider, &f.outsider)
+                .await
+                .is_err()
+        );
+        assert!(
+            consumer_sdk
+                .request_private_service(&f.view.id, request.clone())
+                .await
+                .is_err()
+        );
+        assert!(
+            tokio::time::timeout(Duration::from_millis(100), backend.accept())
+                .await
+                .is_err()
+        );
+        let lease = relays
+            .request(&consumer_sdk, &f.view.id, request, &f.consumer)
+            .await?;
         let grant = usage_grant(&lease)?;
-        assert_eq!(lease.claims().consumer_login_id, consumer_sdk.principal().ok_or("missing consumer login")?.session_id);
-        assert!(lease.lease().claims().expires_at_unix_ms <= f.view.approval_expires_at_unix_ms.ok_or("missing original approval deadline")?);
+        assert_eq!(
+            lease.claims().consumer_login_id,
+            consumer_sdk
+                .principal()
+                .ok_or("missing consumer login")?
+                .session_id
+        );
+        assert!(
+            lease.lease().claims().expires_at_unix_ms
+                <= f.view
+                    .approval_expires_at_unix_ms
+                    .ok_or("missing original approval deadline")?
+        );
         if matches!(end, End::Expiry) {
-            assert_eq!(lease.lease().claims().expires_at_unix_ms, f.view.approval_expires_at_unix_ms.ok_or("missing original approval deadline")?);
+            assert_eq!(
+                lease.lease().claims().expires_at_unix_ms,
+                f.view
+                    .approval_expires_at_unix_ms
+                    .ok_or("missing original approval deadline")?
+            );
         }
-        assert!(consumer_sdk.connect_private_service_with_relay_policy(&f.outsider, lease.clone(), &policy).await.is_err());
-        assert!(consumer_sdk.connect_private_service(&f.consumer, lease.clone()).await.is_err(), "loopback relay still requires this machine's explicit local selection");
-        let mut connection = consumer_sdk.connect_private_service_with_relay_policy(&f.consumer, lease.clone(), &policy).await?;
-        let (mut target, _) = tokio::time::timeout(Duration::from_secs(3), backend.accept()).await??;
-        connection.stream()?.write_all(b"original private TCP").await?;
+        assert!(
+            consumer_sdk
+                .connect_private_service_with_relay_policy(&f.outsider, lease.clone(), &policy)
+                .await
+                .is_err()
+        );
+        assert!(
+            consumer_sdk
+                .connect_private_service(&f.consumer, lease.clone())
+                .await
+                .is_err(),
+            "loopback relay still requires this machine's explicit local selection"
+        );
+        let mut connection = consumer_sdk
+            .connect_private_service_with_relay_policy(&f.consumer, lease.clone(), &policy)
+            .await?;
+        let (mut target, _) =
+            tokio::time::timeout(Duration::from_secs(3), backend.accept()).await??;
+        connection
+            .stream()?
+            .write_all(b"original private TCP")
+            .await?;
         let mut request_bytes = [0; 20];
         target.read_exact(&mut request_bytes).await?;
         assert_eq!(&request_bytes, b"original private TCP");
@@ -447,17 +558,40 @@ async fn tcp(hops: usize, end: End) -> Result {
         assert_eq!(&reply, b"reply through registered relay");
         relays.assert_private_resources(&grant.grant_id).await?;
         match end {
-            End::Acl => { f.sdk.revoke_private_service(&f.view.id, &f.rule, f.exposure.revision).await?; }
-            End::Login => { consumer_sdk.logout().await?; assert!(f.sdk.me().await.is_ok()); }
+            End::Acl => {
+                f.sdk
+                    .revoke_private_service(&f.view.id, &f.rule, f.exposure.revision)
+                    .await?;
+            }
+            End::Login => {
+                consumer_sdk.logout().await?;
+                assert!(f.sdk.me().await.is_ok());
+            }
             End::Expiry => {
-                tokio::time::sleep(Duration::from_millis(lease.lease().claims().expires_at_unix_ms.saturating_sub(wall_ms()?) + 100)).await;
+                tokio::time::sleep(Duration::from_millis(
+                    lease
+                        .lease()
+                        .claims()
+                        .expires_at_unix_ms
+                        .saturating_sub(wall_ms()?)
+                        + 100,
+                ))
+                .await;
             }
         }
         // Keep both public owners alive: only the original current grant or
         // fixed deadline may end the already connected, locally approved TCP.
         let mut byte = [0];
-        assert_eq!(tokio::time::timeout(Duration::from_secs(3), target.read(&mut byte)).await??, 0);
-        assert!(f.sdk.current_private_service(&f.view.id, &grant.grant_id).await.is_err());
+        assert_eq!(
+            tokio::time::timeout(Duration::from_secs(3), target.read(&mut byte)).await??,
+            0
+        );
+        assert!(
+            f.sdk
+                .current_private_service(&f.view.id, &grant.grant_id)
+                .await
+                .is_err()
+        );
         relays.assert_released().await?;
         if matches!(end, End::Expiry) {
             // The local approval ends the original host listener independently
@@ -467,7 +601,9 @@ async fn tcp(hops: usize, end: End) -> Result {
                     match std::net::UdpSocket::bind(host.address()) {
                         Ok(rebound) => {
                             drop(rebound);
-                            if host.is_finished() { return Ok::<_, io::Error>(()); }
+                            if host.is_finished() {
+                                return Ok::<_, io::Error>(());
+                            }
                             tokio::time::sleep(Duration::from_millis(10)).await;
                         }
                         Err(error) if error.kind() == io::ErrorKind::AddrInUse => {
@@ -476,18 +612,21 @@ async fn tcp(hops: usize, end: End) -> Result {
                         Err(error) => return Err(error),
                     }
                 }
-            }).await??;
+            })
+            .await??;
         }
         connection.close().await?;
         close_host(&mut host, &f.usage).await?;
         relays.finish().await?;
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
-    }).await??;
+    })
+    .await??;
     Ok(())
 }
 
 #[tokio::test]
-async fn single_relay_tcp_uses_private_authority_and_acl_revoke_closes_original_backend() -> Result {
+async fn single_relay_tcp_uses_private_authority_and_acl_revoke_closes_original_backend() -> Result
+{
     tcp(1, End::Acl).await
 }
 #[tokio::test]
@@ -510,40 +649,72 @@ async fn udp(hops: usize) -> Result {
         let mut relays = Relays::start(&f, hops).await?;
         let request = f.request(&f.consumer);
         let policy = PrivateServiceRelayPolicy::from_local_choice(&[], true)?;
-        let mut host = f.sdk.start_private_service_host_with_relay_policy(
-            f.host.clone(), f.consent,
-            PrivateServiceHostConfig { listen: "127.0.0.1:0".parse()?, advertised_ip: "127.0.0.1".parse()?, usage_directory: f.usage.join("ledger") },
-            policy.clone(),
-        ).await?;
-        let lease = relays.request(&f.sdk, &f.view.id, request, &f.consumer).await?;
+        let mut host = f
+            .sdk
+            .start_private_service_host_with_relay_policy(
+                f.host.clone(),
+                f.consent,
+                PrivateServiceHostConfig {
+                    listen: "127.0.0.1:0".parse()?,
+                    advertised_ip: "127.0.0.1".parse()?,
+                    usage_directory: f.usage.join("ledger"),
+                },
+                policy.clone(),
+            )
+            .await?;
+        let lease = relays
+            .request(&f.sdk, &f.view.id, request, &f.consumer)
+            .await?;
         let grant = usage_grant(&lease)?;
-        let mut connection = f.sdk.connect_private_service_with_relay_policy(&f.consumer, lease, &policy).await?;
+        let mut connection = f
+            .sdk
+            .connect_private_service_with_relay_policy(&f.consumer, lease, &policy)
+            .await?;
         let mut bytes = [0; 128];
         for payload in [&b""[..], &b"original private UDP"[..]] {
             connection.send_datagram(payload)?;
-            let (length, peer) = tokio::time::timeout(Duration::from_secs(3), backend.recv_from(&mut bytes)).await??;
+            let (length, peer) =
+                tokio::time::timeout(Duration::from_secs(3), backend.recv_from(&mut bytes))
+                    .await??;
             assert_eq!(&bytes[..length], payload);
             backend.send_to(payload, peer).await?;
-            assert_eq!(tokio::time::timeout(Duration::from_secs(3), connection.receive_datagram()).await??, payload);
+            assert_eq!(
+                tokio::time::timeout(Duration::from_secs(3), connection.receive_datagram())
+                    .await??,
+                payload
+            );
         }
         relays.assert_private_resources(&grant.grant_id).await?;
-        f.sdk.revoke_private_service(&f.view.id, &f.rule, f.exposure.revision).await?;
-        assert!(tokio::time::timeout(Duration::from_secs(3), connection.receive_datagram()).await?.is_err());
+        f.sdk
+            .revoke_private_service(&f.view.id, &f.rule, f.exposure.revision)
+            .await?;
+        assert!(
+            tokio::time::timeout(Duration::from_secs(3), connection.receive_datagram())
+                .await?
+                .is_err()
+        );
         relays.assert_released().await?;
         let _ = connection.send_datagram(b"revoked UDP cannot reach the backend");
-        assert!(tokio::time::timeout(Duration::from_millis(200), backend.recv_from(&mut bytes)).await.is_err());
+        assert!(
+            tokio::time::timeout(Duration::from_millis(200), backend.recv_from(&mut bytes))
+                .await
+                .is_err()
+        );
         connection.close().await?;
         close_host(&mut host, &f.usage).await?;
         relays.finish().await?;
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
-    }).await??;
+    })
+    .await??;
     Ok(())
 }
 #[tokio::test]
-async fn single_relay_udp_keeps_empty_datagrams_and_acl_revocation_releases_original_mapping() -> Result {
+async fn single_relay_udp_keeps_empty_datagrams_and_acl_revocation_releases_original_mapping()
+-> Result {
     udp(1).await
 }
 #[tokio::test]
-async fn two_relay_udp_keeps_empty_datagrams_and_acl_revocation_releases_both_original_hops() -> Result {
+async fn two_relay_udp_keeps_empty_datagrams_and_acl_revocation_releases_both_original_hops()
+-> Result {
     udp(2).await
 }

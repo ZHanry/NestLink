@@ -190,9 +190,7 @@ pub async fn write_message(
     if bytes.is_empty() || bytes.len() > CARRIER_MESSAGE_BYTES {
         return Err(io::ErrorKind::InvalidData.into());
     }
-    write
-        .write_all(&(bytes.len() as u32).to_be_bytes())
-        .await?;
+    write.write_all(&(bytes.len() as u32).to_be_bytes()).await?;
     write.write_all(&bytes).await?;
     write.flush().await
 }

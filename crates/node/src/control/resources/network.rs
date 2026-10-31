@@ -41,9 +41,10 @@ impl nestlink_transport_stream::tls::CurrentClientPins for NodeControl {
                     snapshot.entries.values().any(|entry| {
                         now.monotonic_ms < entry.deadline
                             && match entry.network {
-                                Some(NetworkBinding::Chain(route) | NetworkBinding::PrivateChain(route)) => {
-                                    route.neighbors().iter().any(|peer| &peer.0 == fingerprint)
-                                }
+                                Some(
+                                    NetworkBinding::Chain(route)
+                                    | NetworkBinding::PrivateChain(route),
+                                ) => route.neighbors().iter().any(|peer| &peer.0 == fingerprint),
                                 _ => {
                                     entry.claims.controller_key_sha256.as_slice() == fingerprint
                                         || entry.claims.host_key_sha256.as_slice() == fingerprint
@@ -85,7 +86,9 @@ impl NodeControl {
                 .entries
                 .get(&allocation.allocation_id)
                 .ok_or(Error::Control)?;
-            let Some(NetworkBinding::Chain(binding) | NetworkBinding::PrivateChain(binding)) = entry.network else {
+            let Some(NetworkBinding::Chain(binding) | NetworkBinding::PrivateChain(binding)) =
+                entry.network
+            else {
                 return Err(Error::Control);
             };
             if now.monotonic_ms >= entry.deadline
@@ -114,15 +117,25 @@ impl NodeControl {
             {
                 return Err(error(ErrorCode::IdentityMismatch).into());
             }
-            let (route_id,nodes,route_transits)=if resource.private_service_bundle_json.is_empty(){
-                let view:NetworkRemoteRelayChainView=serde_json::from_slice(&resource.chain_bundle_json).map_err(|_|error(ErrorCode::InvalidMessage))?;
-                (view.route_id,view.nodes.to_vec(),view.transits.to_vec())
-            }else{
-                let view:nestlink_protocol::services::private::PrivateServiceGrant=serde_json::from_slice(&resource.private_service_bundle_json).map_err(|_|error(ErrorCode::InvalidMessage))?;
-                let route=view.network.relay.ok_or_else(||error(ErrorCode::InvalidMessage))?;
-                (route.route_id,route.nodes,route.transits)
-            };
-            if nodes.len()!=2 || route_transits.len()!=2{return Err(error(ErrorCode::InvalidMessage).into());}
+            let (route_id, nodes, route_transits) =
+                if resource.private_service_bundle_json.is_empty() {
+                    let view: NetworkRemoteRelayChainView =
+                        serde_json::from_slice(&resource.chain_bundle_json)
+                            .map_err(|_| error(ErrorCode::InvalidMessage))?;
+                    (view.route_id, view.nodes.to_vec(), view.transits.to_vec())
+                } else {
+                    let view: nestlink_protocol::services::private::PrivateServiceGrant =
+                        serde_json::from_slice(&resource.private_service_bundle_json)
+                            .map_err(|_| error(ErrorCode::InvalidMessage))?;
+                    let route = view
+                        .network
+                        .relay
+                        .ok_or_else(|| error(ErrorCode::InvalidMessage))?;
+                    (route.route_id, route.nodes, route.transits)
+                };
+            if nodes.len() != 2 || route_transits.len() != 2 {
+                return Err(error(ErrorCode::InvalidMessage).into());
+            }
             let local = binding
                 .chain
                 .relays
@@ -193,10 +206,12 @@ impl NodeControl {
         state.resources.expire(now);
         let snapshot = state.resources.snapshot.as_ref().ok_or(Error::Control)?;
         let entry = snapshot.entries.get(allocation_id).ok_or(Error::Control)?;
-        let Some(NetworkBinding::Chain(route) | NetworkBinding::PrivateChain(route)) = entry.network else {
+        let Some(NetworkBinding::Chain(route) | NetworkBinding::PrivateChain(route)) =
+            entry.network
+        else {
             return Err(Error::Control);
         };
-        let network=entry.network;
+        let network = entry.network;
         let claims = entry.claims.clone();
         let issuer = snapshot
             .claims
@@ -260,10 +275,12 @@ impl NodeControl {
         state.resources.expire(now);
         let snapshot = state.resources.snapshot.as_ref().ok_or(Error::Control)?;
         let entry = snapshot.entries.get(allocation_id).ok_or(Error::Control)?;
-        let Some(NetworkBinding::Single(route) | NetworkBinding::PrivateSingle(route)) = entry.network else {
+        let Some(NetworkBinding::Single(route) | NetworkBinding::PrivateSingle(route)) =
+            entry.network
+        else {
             return Err(Error::Control);
         };
-        let network=entry.network;
+        let network = entry.network;
         let claims = entry.claims.clone();
         let issuer = snapshot
             .claims

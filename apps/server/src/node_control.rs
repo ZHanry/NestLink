@@ -23,12 +23,19 @@ pub(super) async fn resources(
     }
     let lifecycle = state.relay_lifecycle.clone();
     let signer = state.signer.clone();
-    let service_signer=state.service_signer.clone();
-    let node_signer=state.node_signer.clone();
+    let service_signer = state.service_signer.clone();
+    let node_signer = state.node_signer.clone();
     let c = tokio::time::timeout(
         Duration::from_millis(700),
         state.db(move |s| {
-            s.node_resource_snapshot_with_private_services(&lifecycle, &signed, &signer, &service_signer, &node_signer, now_ms()?)
+            s.node_resource_snapshot_with_private_services(
+                &lifecycle,
+                &signed,
+                &signer,
+                &service_signer,
+                &node_signer,
+                now_ms()?,
+            )
         }),
     )
     .await

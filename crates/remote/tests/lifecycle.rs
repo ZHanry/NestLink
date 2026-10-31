@@ -2241,25 +2241,34 @@ struct InputCleanupReceiptProbe {
 impl InputDevice for InputCleanupReceiptProbe {
     fn inject(&mut self, input: PlatformInput<'_>) -> io::Result<()> {
         if matches!(input, PlatformInput::Release(_)) {
-            self.releases.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            self.releases
+                .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         }
         Ok(())
     }
     fn reset(&mut self) -> io::Result<()> {
-        self.resets.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        self.resets
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         if std::mem::replace(&mut self.fail_first_reset, false) {
-            return Err(io::Error::new(io::ErrorKind::TimedOut, "first platform reset did not join"));
+            return Err(io::Error::new(
+                io::ErrorKind::TimedOut,
+                "first platform reset did not join",
+            ));
         }
         Ok(())
     }
 }
 #[tokio::test]
-async fn original_input_cleanup_receipt_prevents_double_reset_but_failed_cleanup_retries_on_drop() -> Result {
+async fn original_input_cleanup_receipt_prevents_double_reset_but_failed_cleanup_retries_on_drop()
+-> Result {
     for fail_first_reset in [false, true] {
         let (session, clock, _, _) = active(15000)?;
         let (_keep, stop) = watch::channel(None);
         let lease = LeaseControl::from_proved_session(
-            session, Path::Direct, clock, SessionLifecycle::new(stop),
+            session,
+            Path::Direct,
+            clock,
+            SessionLifecycle::new(stop),
         )?;
         let resets = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let releases = Arc::new(std::sync::atomic::AtomicUsize::new(0));
@@ -2276,21 +2285,35 @@ async fn original_input_cleanup_receipt_prevents_double_reset_but_failed_cleanup
         input.apply(&InputEvent {
             epoch: epoch(),
             sequence: 1,
-            action: InputAction::Key { code: 4, down: true },
+            action: InputAction::Key {
+                code: 4,
+                down: true,
+            },
         })?;
         lease.stop(StopReason::TransportLost)?;
-        let report = lease.subscribe_stopped().borrow().clone().ok_or("missing cleanup receipt")?;
+        let report = lease
+            .subscribe_stopped()
+            .borrow()
+            .clone()
+            .ok_or("missing cleanup receipt")?;
         assert_eq!(report.reason, StopReason::TransportLost);
         assert_eq!(
             report.cleanup,
-            if fail_first_reset { CleanupStatus::Failed(io::ErrorKind::TimedOut) } else { CleanupStatus::Succeeded },
+            if fail_first_reset {
+                CleanupStatus::Failed(io::ErrorKind::TimedOut)
+            } else {
+                CleanupStatus::Succeeded
+            },
         );
         assert_eq!(lease.reconnection_budget().is_ok(), !fail_first_reset);
         assert_eq!(resets.load(std::sync::atomic::Ordering::SeqCst), 1);
         assert_eq!(releases.load(std::sync::atomic::Ordering::SeqCst), 1);
         drop(input);
         drop(lease);
-        assert_eq!(resets.load(std::sync::atomic::Ordering::SeqCst), if fail_first_reset { 2 } else { 1 });
+        assert_eq!(
+            resets.load(std::sync::atomic::Ordering::SeqCst),
+            if fail_first_reset { 2 } else { 1 }
+        );
         assert_eq!(releases.load(std::sync::atomic::Ordering::SeqCst), 1);
     }
     Ok(())

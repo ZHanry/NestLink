@@ -73,19 +73,21 @@ impl NodeResourceSnapshotClaims {
                     && route.business_permit.is_empty()
                     && route.relay_bundle_json.is_empty()
                     && route.chain_bundle_json.is_empty()
-            } else { match route.network_schema_version {
-                1 => {
-                    !route.relay_bundle_json.is_empty()
-                        && route.relay_bundle_json.len() <= 32_768
-                        && route.chain_bundle_json.is_empty()
+            } else {
+                match route.network_schema_version {
+                    1 => {
+                        !route.relay_bundle_json.is_empty()
+                            && route.relay_bundle_json.len() <= 32_768
+                            && route.chain_bundle_json.is_empty()
+                    }
+                    2 => {
+                        !route.chain_bundle_json.is_empty()
+                            && route.chain_bundle_json.len() <= 49_152
+                            && route.relay_bundle_json.is_empty()
+                    }
+                    _ => false,
                 }
-                2 => {
-                    !route.chain_bundle_json.is_empty()
-                        && route.chain_bundle_json.len() <= 49_152
-                        && route.relay_bundle_json.is_empty()
-                }
-                _ => false,
-            }};
+            };
             if !bundle_valid
                 || route.network_authority_key.len() != 32
                 || (!private && route.business_permit.is_empty())

@@ -65,7 +65,9 @@ impl RelayEndpointCandidate {
         self.network.map(NetworkBinding::digest)
     }
     pub fn network_direction(&self) -> Option<nestlink_protocol::network_datagram::Direction> {
-        let Some(NetworkBinding::Single(route) | NetworkBinding::PrivateSingle(route)) = self.network else {
+        let Some(NetworkBinding::Single(route) | NetworkBinding::PrivateSingle(route)) =
+            self.network
+        else {
             return None;
         };
         Some({
@@ -511,7 +513,7 @@ impl Pair {
 }
 #[derive(Default)]
 pub(super) struct Resources {
-    policy_issuer:Option<[u8;32]>,
+    policy_issuer: Option<[u8; 32]>,
     pub(super) services: crate::service_plane::ServiceResourceSet,
     snapshot: Option<Snapshot>,
     last_sequence: u64,
@@ -678,28 +680,46 @@ impl Resources {
                         self.network_chain_verifications += 1;
                     }
                     if !resource.private_service_bundle_json.is_empty() {
-                        let policy=self.policy_issuer.ok_or_else(||error(ErrorCode::IdentityMismatch))?;
-                        match nestlink_identity::network::verify_node_private_service_resource(resource,&policy,now.unix_ms)? {
-                            nestlink_identity::network::PrivateServiceNodeBinding::Single(route)=>NetworkBinding::PrivateSingle(RemoteRouteBinding{digest:route.digest,peers:route.peers,relay:route.relay,byte_limit:route.byte_limit,expires_at_ms:route.expires_at_ms}),
-                            nestlink_identity::network::PrivateServiceNodeBinding::Chain(route)=>NetworkBinding::PrivateChain(route),
+                        let policy = self
+                            .policy_issuer
+                            .ok_or_else(|| error(ErrorCode::IdentityMismatch))?;
+                        match nestlink_identity::network::verify_node_private_service_resource(
+                            resource,
+                            &policy,
+                            now.unix_ms,
+                        )? {
+                            nestlink_identity::network::PrivateServiceNodeBinding::Single(
+                                route,
+                            ) => NetworkBinding::PrivateSingle(RemoteRouteBinding {
+                                digest: route.digest,
+                                peers: route.peers,
+                                relay: route.relay,
+                                byte_limit: route.byte_limit,
+                                expires_at_ms: route.expires_at_ms,
+                            }),
+                            nestlink_identity::network::PrivateServiceNodeBinding::Chain(route) => {
+                                NetworkBinding::PrivateChain(route)
+                            }
                         }
-                    } else { match resource.network_schema_version {
-                        1 => NetworkBinding::Single(
-                            nestlink_identity::network::verify_node_network_resource(
-                                resource,
-                                &issuer,
-                                now.unix_ms,
-                            )?,
-                        ),
-                        2 => NetworkBinding::Chain(
-                            nestlink_identity::network::verify_node_network_chain_resource(
-                                resource,
-                                &issuer,
-                                now.unix_ms,
-                            )?,
-                        ),
-                        _ => return Err(error(ErrorCode::InvalidMessage)),
-                    }}
+                    } else {
+                        match resource.network_schema_version {
+                            1 => NetworkBinding::Single(
+                                nestlink_identity::network::verify_node_network_resource(
+                                    resource,
+                                    &issuer,
+                                    now.unix_ms,
+                                )?,
+                            ),
+                            2 => NetworkBinding::Chain(
+                                nestlink_identity::network::verify_node_network_chain_resource(
+                                    resource,
+                                    &issuer,
+                                    now.unix_ms,
+                                )?,
+                            ),
+                            _ => return Err(error(ErrorCode::InvalidMessage)),
+                        }
+                    }
                 }
             };
             routes.insert(grant.allocation_id.clone(), (route, credential));
@@ -1080,7 +1100,7 @@ pub(super) async fn poll(
         match response {
             Ok(Ok(c)) => {
                 let lease = runtime.gate.current(now)?.clone();
-                runtime.resources.policy_issuer=Some(issuer);
+                runtime.resources.policy_issuer = Some(issuer);
                 if runtime
                     .resources
                     .accept(c, &lease, request_start, now)

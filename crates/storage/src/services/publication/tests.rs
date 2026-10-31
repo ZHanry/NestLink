@@ -40,7 +40,7 @@ impl Fixture {
     fn new() -> Result<Self> {
         Self::with_paths(PeerPathMode::DirectOnly)
     }
-    fn with_paths(path_mode:PeerPathMode)->Result<Self>{
+    fn with_paths(path_mode: PeerPathMode) -> Result<Self> {
         let mut store = Store::in_memory(&random_id())?;
         let password = "service-runtime-test-password";
         store.bootstrap_admin("service-admin", password)?;
@@ -74,7 +74,12 @@ impl Fixture {
             platform: "windows".into(),
             public_key: URL_SAFE_NO_PAD.encode(host.public_key()),
             capabilities: vec!["host".into(), "vp8".into()],
-            path_mode: if path_mode==PeerPathMode::DirectOnly {"direct_only"} else {"direct_preferred"}.into(),
+            path_mode: if path_mode == PeerPathMode::DirectOnly {
+                "direct_only"
+            } else {
+                "direct_preferred"
+            }
+            .into(),
         };
         let host_id = device.id.clone();
         let mut registration = DeviceRegistration {

@@ -181,24 +181,53 @@ pub(crate) async fn issue(
     state.limit(&format!("private-service-access/{}", principal.session_id))?;
     let signer = state.service_signer.clone();
     let network_root = state.network_signer.clone();
-    let node_signer=state.node_signer.clone();
-    let lifecycle=state.relay_lifecycle.clone();
+    let node_signer = state.node_signer.clone();
+    let lifecycle = state.relay_lifecycle.clone();
     let result = state
         .db(move |store| {
             let at = now_ms()?;
             let actor = store.authenticate(&token, at / 1000)?;
-            let space=store.private_service_access_space(&actor,&id,&body.consumer_device_id,at)?;
-            let network_signer =
-                store.network_authority_signer(&network_root, &space, at)?;
-            store.issue_private_service_grant(&lifecycle,&actor,&id,body,&signer,&network_signer,&node_signer,at)
+            let space =
+                store.private_service_access_space(&actor, &id, &body.consumer_device_id, at)?;
+            let network_signer = store.network_authority_signer(&network_root, &space, at)?;
+            store.issue_private_service_grant(
+                &lifecycle,
+                &actor,
+                &id,
+                body,
+                &signer,
+                &network_signer,
+                &node_signer,
+                at,
+            )
         })
         .await?;
     Ok(Json(result))
 }
-pub(crate) async fn host_access(State(state):State<AppState>,headers:HeaderMap,Path((id,runtime)):Path<(String,String)>,Query(query):Query<ServiceQuery>)->Result<Json<PrivateServiceHostAccessPage>,ApiError>{
-    let token=access(&headers)?;
-    let signer=state.service_signer.clone();let node_signer=state.node_signer.clone();
-    state.db(move|store|{let at=now_ms()?;let actor=store.authenticate(&token,at/1000)?;Ok(Json(store.private_service_host_access(&actor,&id,&runtime,query,&signer,&node_signer,at)?))}).await
+pub(crate) async fn host_access(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path((id, runtime)): Path<(String, String)>,
+    Query(query): Query<ServiceQuery>,
+) -> Result<Json<PrivateServiceHostAccessPage>, ApiError> {
+    let token = access(&headers)?;
+    let signer = state.service_signer.clone();
+    let node_signer = state.node_signer.clone();
+    state
+        .db(move |store| {
+            let at = now_ms()?;
+            let actor = store.authenticate(&token, at / 1000)?;
+            Ok(Json(store.private_service_host_access(
+                &actor,
+                &id,
+                &runtime,
+                query,
+                &signer,
+                &node_signer,
+                at,
+            )?))
+        })
+        .await
 }
 pub(crate) async fn withdraw_host(
     State(state): State<AppState>,

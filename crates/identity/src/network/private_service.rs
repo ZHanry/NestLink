@@ -30,13 +30,27 @@ pub enum PrivateServiceNodeBinding {
 }
 
 impl crate::InstallationIdentity {
-    pub fn sign_private_service_route(&self, service: &str, request: &nestlink_protocol::services::private::PrivateServiceAccessRequest) -> Result<[u8;64],ContractError> {
-        Ok(self.key.sign(&request.route_transcript(service)?).to_bytes())
+    pub fn sign_private_service_route(
+        &self,
+        service: &str,
+        request: &nestlink_protocol::services::private::PrivateServiceAccessRequest,
+    ) -> Result<[u8; 64], ContractError> {
+        Ok(self
+            .key
+            .sign(&request.route_transcript(service)?)
+            .to_bytes())
     }
 }
 impl crate::service_plane::ServiceLeaseSigner {
-    pub fn sign_private_service_relay(&self,business_digest:&[u8;32],route:&nestlink_protocol::services::private::PrivateServiceRelayRoute)->Result<[u8;64],ContractError>{
-        Ok(self.key.sign(&route.transcript(business_digest)?).to_bytes())
+    pub fn sign_private_service_relay(
+        &self,
+        business_digest: &[u8; 32],
+        route: &nestlink_protocol::services::private::PrivateServiceRelayRoute,
+    ) -> Result<[u8; 64], ContractError> {
+        Ok(self
+            .key
+            .sign(&route.transcript(business_digest)?)
+            .to_bytes())
     }
 }
 
@@ -67,70 +81,228 @@ pub fn verify_private_service_route_request(
 
 /// A complete private grant is rooted in the pinned deployment node policy
 /// signer, independently of the remote-control allocation issuer.
-pub type VerifiedPrivateServiceGrant = (VerifiedPrivateServiceLease, VerifiedNetworkPath, VerifiedNetworkGrant, Vec<VerifiedNetworkGrant>);
+pub type VerifiedPrivateServiceGrant = (
+    VerifiedPrivateServiceLease,
+    VerifiedNetworkPath,
+    VerifiedNetworkGrant,
+    Vec<VerifiedNetworkGrant>,
+);
 pub fn verify_private_service_grant(
     grant: &nestlink_protocol::services::private::PrivateServiceGrant,
-    policy_issuer: &[u8;32],
+    policy_issuer: &[u8; 32],
     deployment: &str,
     now: u64,
-) -> Result<VerifiedPrivateServiceGrant,ContractError> {
-    let delegation = crate::service_plane::publication::verify_service_issuer_delegation(&grant.issuer,policy_issuer,deployment,now)?;
-    delegation.verify_lease(&grant.lease.service_lease,now)?;
-    let business = crate::services::private::verify_private_service_lease(&grant.lease,&delegation.claims().service_issuer)?;
+) -> Result<VerifiedPrivateServiceGrant, ContractError> {
+    let delegation = crate::service_plane::publication::verify_service_issuer_delegation(
+        &grant.issuer,
+        policy_issuer,
+        deployment,
+        now,
+    )?;
+    delegation.verify_lease(&grant.lease.service_lease, now)?;
+    let business = crate::services::private::verify_private_service_lease(
+        &grant.lease,
+        &delegation.claims().service_issuer,
+    )?;
     let binding = business.claims();
     let revoked = BTreeSet::new();
-    let context = NetworkVerification {authority_key:&binding.network_authority_key,deployment_id:deployment,space_id:&binding.space_id,policy_epoch:binding.space_policy_epoch,now_ms:now,revoked_grant_ids:&revoked};
-    let decode = |view: &nestlink_protocol::api::NetworkGrantView| verify_network_grant(&remote::signed(view)?, &context);
-    let member = |view: &nestlink_protocol::api::NetworkGrantView, installation: &str, key: &[u8;32], epoch| {
-        VerifiedMembership::from_grant(decode(view)?,&context,installation,key,epoch)
+    let context = NetworkVerification {
+        authority_key: &binding.network_authority_key,
+        deployment_id: deployment,
+        space_id: &binding.space_id,
+        policy_epoch: binding.space_policy_epoch,
+        now_ms: now,
+        revoked_grant_ids: &revoked,
     };
-    let view=&grant.network;
-    let usage: ServiceUsageBudgetGrantClaims=decode_service_message(&business.lease().claims().usage_grant.claims,SERVICE_USAGE_BYTES)?;
-    if view.grant_id != usage.grant_id {return Err(denied());}
-    let members=[member(&view.consumer_membership,&binding.consumer_device_id,&binding.consumer_public_key,binding.consumer_membership_epoch)?,member(&view.host_membership,&business.lease().claims().definition.host_device_id,&binding.host_public_key,binding.host_membership_epoch)?];
-    let connectivity=decode(&view.connectivity)?;
-    let path=VerifiedNetworkPath::from_grants(&context,members,connectivity.clone(),decode(&view.path)?,business.digest())?;
-    private_service_path_peers(&context,&path,&connectivity,&business)?;
-    let transits=match &view.relay {
-        None=>{path.check_route(&context,&[])?;Vec::new()},
-        Some(route)=>{
-            verify_private_service_transcript(&route.transcript(&business.digest())?,&delegation.claims().service_issuer,&route.signature)?;
-            if !nestlink_protocol::valid_id(&route.route_id) || route.nodes.len()!=route.transits.len() || route.nodes.len()!=route.node_public_keys.len() || !(1..=2).contains(&route.nodes.len()) || route.topology_digests.len()!=if route.nodes.len()==2 {2}else{0} || route.nodes.len()==2 && (route.nodes[0].node_id==route.nodes[1].node_id || route.node_public_keys[0]==route.node_public_keys[1]) {return Err(denied());}
-            let transits=route.transits.iter().map(decode).collect::<Result<Vec<_>,_>>()?;
-            for (index,grant) in transits.iter().enumerate() {
-                route.nodes[index].endpoints.validate()?;
-                let GrantClaims::Transit(transit)=grant.claims() else {return Err(denied());};
-                if !nestlink_protocol::valid_id(&route.nodes[index].node_id) || route.nodes[index].revision==0 || transit.route_id!=route.route_id || transit.relay!=PeerId::from_public_key(&route.node_public_keys[index]) {return Err(denied());}
+    let decode = |view: &nestlink_protocol::api::NetworkGrantView| {
+        verify_network_grant(&remote::signed(view)?, &context)
+    };
+    let member = |view: &nestlink_protocol::api::NetworkGrantView,
+                  installation: &str,
+                  key: &[u8; 32],
+                  epoch| {
+        VerifiedMembership::from_grant(decode(view)?, &context, installation, key, epoch)
+    };
+    let view = &grant.network;
+    let usage: ServiceUsageBudgetGrantClaims = decode_service_message(
+        &business.lease().claims().usage_grant.claims,
+        SERVICE_USAGE_BYTES,
+    )?;
+    if view.grant_id != usage.grant_id {
+        return Err(denied());
+    }
+    let members = [
+        member(
+            &view.consumer_membership,
+            &binding.consumer_device_id,
+            &binding.consumer_public_key,
+            binding.consumer_membership_epoch,
+        )?,
+        member(
+            &view.host_membership,
+            &business.lease().claims().definition.host_device_id,
+            &binding.host_public_key,
+            binding.host_membership_epoch,
+        )?,
+    ];
+    let connectivity = decode(&view.connectivity)?;
+    let path = VerifiedNetworkPath::from_grants(
+        &context,
+        members,
+        connectivity.clone(),
+        decode(&view.path)?,
+        business.digest(),
+    )?;
+    private_service_path_peers(&context, &path, &connectivity, &business)?;
+    let transits = match &view.relay {
+        None => {
+            path.check_route(&context, &[])?;
+            Vec::new()
+        }
+        Some(route) => {
+            verify_private_service_transcript(
+                &route.transcript(&business.digest())?,
+                &delegation.claims().service_issuer,
+                &route.signature,
+            )?;
+            if !nestlink_protocol::valid_id(&route.route_id)
+                || route.nodes.len() != route.transits.len()
+                || route.nodes.len() != route.node_public_keys.len()
+                || !(1..=2).contains(&route.nodes.len())
+                || route.topology_digests.len() != if route.nodes.len() == 2 { 2 } else { 0 }
+                || route.nodes.len() == 2
+                    && (route.nodes[0].node_id == route.nodes[1].node_id
+                        || route.node_public_keys[0] == route.node_public_keys[1])
+            {
+                return Err(denied());
             }
-            if transits.len()==1 {private_service_route_binding(&context,&path,&connectivity,&transits[0],&business)?;} else {private_service_chain_binding(&context,&path,&connectivity,&transits,&business)?;}
+            let transits = route
+                .transits
+                .iter()
+                .map(decode)
+                .collect::<Result<Vec<_>, _>>()?;
+            for (index, grant) in transits.iter().enumerate() {
+                route.nodes[index].endpoints.validate()?;
+                let GrantClaims::Transit(transit) = grant.claims() else {
+                    return Err(denied());
+                };
+                if !nestlink_protocol::valid_id(&route.nodes[index].node_id)
+                    || route.nodes[index].revision == 0
+                    || transit.route_id != route.route_id
+                    || transit.relay != PeerId::from_public_key(&route.node_public_keys[index])
+                {
+                    return Err(denied());
+                }
+            }
+            if transits.len() == 1 {
+                private_service_route_binding(
+                    &context,
+                    &path,
+                    &connectivity,
+                    &transits[0],
+                    &business,
+                )?;
+            } else {
+                private_service_chain_binding(
+                    &context,
+                    &path,
+                    &connectivity,
+                    &transits,
+                    &business,
+                )?;
+            }
             transits
         }
     };
-    Ok((business,path,connectivity,transits))
+    Ok((business, path, connectivity, transits))
 }
 
-pub fn private_service_allocation_binding(business:&VerifiedPrivateServiceLease)->[u8;32] {
-    let mut bytes=b"NestLink/private-service/v1/relay-allocation\0".to_vec();
+pub fn private_service_allocation_binding(business: &VerifiedPrivateServiceLease) -> [u8; 32] {
+    let mut bytes = b"NestLink/private-service/v1/relay-allocation\0".to_vec();
     bytes.extend_from_slice(&business.digest());
     digest(&bytes)
 }
 
 /// Call only after the fresh, exact-query snapshot signature was verified.
-pub fn verify_node_private_service_resource(resource:&nestlink_protocol::NodeNetworkRelayResource,policy_issuer:&[u8;32],now:u64)->Result<PrivateServiceNodeBinding,ContractError> {
-    if !resource.business_permit.is_empty() || !resource.relay_bundle_json.is_empty() || !resource.chain_bundle_json.is_empty() || resource.private_service_bundle_json.is_empty() || resource.private_service_bundle_json.len()>65_536 {return Err(denied());}
-    let allocation=resource.allocation.as_ref().ok_or_else(denied)?;
+pub fn verify_node_private_service_resource(
+    resource: &nestlink_protocol::NodeNetworkRelayResource,
+    policy_issuer: &[u8; 32],
+    now: u64,
+) -> Result<PrivateServiceNodeBinding, ContractError> {
+    if !resource.business_permit.is_empty()
+        || !resource.relay_bundle_json.is_empty()
+        || !resource.chain_bundle_json.is_empty()
+        || resource.private_service_bundle_json.is_empty()
+        || resource.private_service_bundle_json.len() > 65_536
+    {
+        return Err(denied());
+    }
+    let allocation = resource.allocation.as_ref().ok_or_else(denied)?;
     allocation.validate()?;
-    let grant:nestlink_protocol::services::private::PrivateServiceGrant=serde_json::from_slice(&resource.private_service_bundle_json).map_err(|_|denied())?;
-    let (business,path,connectivity,transits)=verify_private_service_grant(&grant,policy_issuer,&allocation.deployment_id,now)?;
-    let binding=business.claims();
-    let base=business.lease().claims();
-    let route=grant.network.relay.as_ref().ok_or_else(denied)?;
-    let index=route.nodes.iter().position(|node|node.node_id==allocation.node_id).ok_or_else(denied)?;
-    let GrantClaims::Transit(transit)=transits[index].claims() else{return Err(denied());};
-    if resource.network_schema_version as usize!=transits.len() || resource.network_authority_key!=binding.network_authority_key || allocation.allocation_id!=transit.scope.grant_id || allocation.session_id!=grant.network.grant_id || allocation.security_epoch!=base.security_epoch || allocation.policy_revision!=base.policy_revision || allocation.connection_generation!=1 || allocation.controller_device_id!=binding.consumer_device_id || allocation.host_device_id!=base.definition.host_device_id || allocation.controller_key_sha256!=digest(&binding.consumer_public_key) || allocation.host_key_sha256!=digest(&binding.host_public_key) || allocation.controller_account_id!=binding.consumer_account_id || allocation.host_account_id!=base.account_id || allocation.session_binding_sha256!=private_service_allocation_binding(&business) || allocation.node_key_sha256!=transit.relay.0 || allocation.node_endpoint_revision!=route.nodes[index].revision || allocation.bytes_per_allocation!=transit.byte_limit || allocation.issued_at_unix_ms!=transit.scope.not_before_ms || allocation.expires_at_unix_ms!=transit.scope.expires_at_ms || allocation.transports!=[nestlink_protocol::RelayTransport::QuicDatagram as i32] || allocation.grant_sequence!=1 {return Err(denied());}
-    let revoked=BTreeSet::new();
-    let context=NetworkVerification{authority_key:&binding.network_authority_key,deployment_id:&base.deployment_id,space_id:&binding.space_id,policy_epoch:binding.space_policy_epoch,now_ms:now,revoked_grant_ids:&revoked};
-    if transits.len()==1 {Ok(PrivateServiceNodeBinding::Single(private_service_route_binding(&context,&path,&connectivity,&transits[0],&business)?))} else {Ok(PrivateServiceNodeBinding::Chain(NodeRemoteChainBinding{chain:private_service_chain_binding(&context,&path,&connectivity,&transits,&business)?,relay:transit.relay}))}
+    let grant: nestlink_protocol::services::private::PrivateServiceGrant =
+        serde_json::from_slice(&resource.private_service_bundle_json).map_err(|_| denied())?;
+    let (business, path, connectivity, transits) =
+        verify_private_service_grant(&grant, policy_issuer, &allocation.deployment_id, now)?;
+    let binding = business.claims();
+    let base = business.lease().claims();
+    let route = grant.network.relay.as_ref().ok_or_else(denied)?;
+    let index = route
+        .nodes
+        .iter()
+        .position(|node| node.node_id == allocation.node_id)
+        .ok_or_else(denied)?;
+    let GrantClaims::Transit(transit) = transits[index].claims() else {
+        return Err(denied());
+    };
+    if resource.network_schema_version as usize != transits.len()
+        || resource.network_authority_key != binding.network_authority_key
+        || allocation.allocation_id != transit.scope.grant_id
+        || allocation.session_id != grant.network.grant_id
+        || allocation.security_epoch != base.security_epoch
+        || allocation.policy_revision != base.policy_revision
+        || allocation.connection_generation != 1
+        || allocation.controller_device_id != binding.consumer_device_id
+        || allocation.host_device_id != base.definition.host_device_id
+        || allocation.controller_key_sha256 != digest(&binding.consumer_public_key)
+        || allocation.host_key_sha256 != digest(&binding.host_public_key)
+        || allocation.controller_account_id != binding.consumer_account_id
+        || allocation.host_account_id != base.account_id
+        || allocation.session_binding_sha256 != private_service_allocation_binding(&business)
+        || allocation.node_key_sha256 != transit.relay.0
+        || allocation.node_endpoint_revision != route.nodes[index].revision
+        || allocation.bytes_per_allocation != transit.byte_limit
+        || allocation.issued_at_unix_ms != transit.scope.not_before_ms
+        || allocation.expires_at_unix_ms != transit.scope.expires_at_ms
+        || allocation.transports != [nestlink_protocol::RelayTransport::QuicDatagram as i32]
+        || allocation.grant_sequence != 1
+    {
+        return Err(denied());
+    }
+    let revoked = BTreeSet::new();
+    let context = NetworkVerification {
+        authority_key: &binding.network_authority_key,
+        deployment_id: &base.deployment_id,
+        space_id: &binding.space_id,
+        policy_epoch: binding.space_policy_epoch,
+        now_ms: now,
+        revoked_grant_ids: &revoked,
+    };
+    if transits.len() == 1 {
+        Ok(PrivateServiceNodeBinding::Single(
+            private_service_route_binding(&context, &path, &connectivity, &transits[0], &business)?,
+        ))
+    } else {
+        Ok(PrivateServiceNodeBinding::Chain(NodeRemoteChainBinding {
+            chain: private_service_chain_binding(
+                &context,
+                &path,
+                &connectivity,
+                &transits,
+                &business,
+            )?,
+            relay: transit.relay,
+        }))
+    }
 }
 
 pub fn private_service_path_peers(
@@ -206,7 +378,10 @@ pub fn private_service_route_binding(
         || forward.scope.not_before_ms < path.claims().scope.not_before_ms
         || forward.scope.expires_at_ms > path.claims().scope.expires_at_ms
         || forward.byte_limit == 0
-        || forward.byte_limit > nestlink_protocol::services::private::private_service_wire_allowance(usage.byte_ceiling)?
+        || forward.byte_limit
+            > nestlink_protocol::services::private::private_service_wire_allowance(
+                usage.byte_ceiling,
+            )?
     {
         return Err(denied());
     }
@@ -273,7 +448,10 @@ pub fn private_service_chain_binding(
             || grant.scope.grant_id == path.claims().scope.grant_id
             || grant.scope.grant_id == connectivity.claims().scope().grant_id
             || grant.byte_limit == 0
-            || grant.byte_limit > nestlink_protocol::services::private::private_service_wire_allowance(usage.byte_ceiling)?
+            || grant.byte_limit
+                > nestlink_protocol::services::private::private_service_wire_allowance(
+                    usage.byte_ceiling,
+                )?
         {
             return Err(denied());
         }

@@ -53,7 +53,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "nestlink.v1.NodeResourceSnapshotClaims.network_routes",
         "#[serde(default)]",
     );
-    config.field_attribute("nestlink.v1.NodeNetworkRelayResource.private_service_bundle_json","#[serde(default)]");
+    config.field_attribute(
+        "nestlink.v1.NodeNetworkRelayResource.private_service_bundle_json",
+        "#[serde(default)]",
+    );
     config.field_attribute(
         "nestlink.v1.NodeResourceSnapshotClaims.topology_publications_json",
         "#[serde(default)]",
