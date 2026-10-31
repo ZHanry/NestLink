@@ -269,26 +269,33 @@ pub fn isolate(identity: &ProviderIdentity) -> io::Result<()> {
     original(identity)?.ok_or_else(security::denied)?;
     for af in [AF_INET, AF_INET6] {
         let mut row = family(identity, af)?;
-        row.AdvertisingEnabled = false;
-        row.ForwardingEnabled = false;
-        row.WeakHostSend = false;
-        row.WeakHostReceive = false;
-        row.UseAutomaticMetric = false;
-        row.Metric = METRIC;
-        row.NlMtu = 1280;
-        row.ManagedAddressConfigurationSupported = false;
-        row.OtherStatefulConfigurationSupported = false;
-        row.AdvertiseDefaultRoute = false;
-        row.RouterDiscoveryBehavior = RouterDiscoveryDisabled;
-        row.LinkLocalAddressBehavior = LinkLocalAlwaysOff;
-        row.DadTransmits = 0;
-        row.DisableDefaultRoutes = true;
-        // IP Helper requires this ignored IPv4 member to be zero when setting.
-        row.SitePrefixLength = 0;
-        checked(
-            unsafe { SetIpInterfaceEntry(&mut row) },
-            &format!("SetIpInterfaceEntry family {af}"),
-        )?;
+        // A family can reject a specific member with the otherwise opaque
+        // ERROR_INVALID_PARAMETER. Keep each required change attributable;
+        // partial application still closes only our new original adapter.
+        type Update = fn(&mut MIB_IPINTERFACE_ROW);
+        let changes: [(&str, Update); 14] = [
+            ("AdvertisingEnabled", |row| row.AdvertisingEnabled = false),
+            ("ForwardingEnabled", |row| row.ForwardingEnabled = false),
+            ("WeakHostSend", |row| row.WeakHostSend = false),
+            ("WeakHostReceive", |row| row.WeakHostReceive = false),
+            ("UseAutomaticMetric", |row| row.UseAutomaticMetric = false),
+            ("Metric", |row| row.Metric = METRIC),
+            ("NlMtu", |row| row.NlMtu = 1280),
+            ("ManagedAddressConfigurationSupported", |row| row.ManagedAddressConfigurationSupported = false),
+            ("OtherStatefulConfigurationSupported", |row| row.OtherStatefulConfigurationSupported = false),
+            ("AdvertiseDefaultRoute", |row| row.AdvertiseDefaultRoute = false),
+            ("RouterDiscoveryBehavior", |row| row.RouterDiscoveryBehavior = RouterDiscoveryDisabled),
+            ("LinkLocalAddressBehavior", |row| row.LinkLocalAddressBehavior = LinkLocalAlwaysOff),
+            ("DadTransmits", |row| row.DadTransmits = 0),
+            ("DisableDefaultRoutes", |row| row.DisableDefaultRoutes = true),
+        ];
+        for (field, update) in changes {
+            update(&mut row);
+            // IP Helper requires this ignored IPv4 member to be zero.
+            row.SitePrefixLength = 0;
+            checked(unsafe { SetIpInterfaceEntry(&mut row) },
+                &format!("SetIpInterfaceEntry family {af} member {field}"))?;
+        }
     }
     Ok(())
 }
@@ -456,7 +463,7 @@ impl Snapshot {
             || self.routes.is_empty()
             || self.routes.len() > 4
         {
-            return Err(security::denied());
+            return Err(io::Error::other(format!("original TUN isolation snapshot differs from the exact required state: {self:?}")));
         }
         for host in local {
             if self.addresses.iter().filter(|row| row.ip == *host).count() != 1 {
