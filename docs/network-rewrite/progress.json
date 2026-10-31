@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "e36cc40b9d70626743506223de421dedb1db033d",
-  "checkpoint_kind": "W23_live_lease_W24_linux_ingress_W27_independent_primitives_exact_hosted_partial_evidence",
+  "source_revision": "59aad5405abe6231ddb9959d669188358d602a69",
+  "checkpoint_kind": "W23_W24_hosted_kernel_and_browser_evidence_W27_production_in_progress_W31_original_producer_bounds",
   "active_tasks": [
     "W00",
     "W02",
@@ -36,7 +36,8 @@
     "W23",
     "W24",
     "W30",
-    "W27"
+    "W27",
+    "W31"
   ],
   "satisfied_interface_dependencies": [
     "W01 nine-topic source and mature-component research independently reviewed",
@@ -44,14 +45,14 @@
     "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
   ],
   "unverified_assumptions": [
-    "W23/W24 source b313dbf: 22 independent protocol/identity, SDK local consent, real HTTP/SQLite, original one-use packet, same-boot lease renewal, WireGuard client authority and revocation tests passed with zero failures/ignored. Actual namespace/Linux WG handshake, Windows endpoint and site targets remain separate open work.",
-    "W23 Linux namespace/macvlan/TUN/nft privileged owner, ordinary packet loop, CLI and dual overlapping LAN TCP/UDP lab are connected in source. Run41199335653 failed compile/lint; exact errors are under repair. Same-source production online+lifecycle end-to-end and primary/standby behavior remain unverified.",
-    "W24 Linux typed kernel ingress now connects to original subnet namespace/journal/packet owner in e36cc40. Standard client config/QR export and management exist; actual kernel handshake and Android/iOS target evidence remain outstanding.",
-    "W22 Windows542 native driver/session created; SetIpInterfaceEntry IPv4 returned87 before final OS receipt. Exact member diagnostics are being added; actual two-stack packet/crash qualification remains failed. Linux source542 failed to compile newly registered subnet fixture; no new native TUN pass claimed.",
-    "HA source542 run41198906251: HTTP path completed, HTTPS scenario failed. The HTTP/SQLite group5 tests passed on b313dbf. No overall four-protocol/SIGKILL fixed-entry acceptance has passed.",
-    "W30 source623d55a production Chrome/Edge browser checks passed real policy/role read, unapproved draft handling, actual403 reset and late-space-response fencing. Mapping issuance, OS forwarding, full onboarding and installed target UX remain open.",
-    "W27 sourceb313dbf run41199333054: all6 complete bundle/identity/finite-owner primitive tests and strict lint passed. Production enable/approval API, durable shared budget reservation/consume, direct remote/private carriers, UI and actual offline recovery/cleanup remain unimplemented or unverified.",
-    "W28,W31-W40 and remaining W30 remain mandatory unfinished work; missing implementation is not classified as an external prerequisite. Release stays not_ready."
+    "W23 sourcec70360a run41204252074 passed real overlapping-LAN TCP/UDP/NAT/QUIC, ACL and normal/helper-SIGKILL/ordinary-SIGSTOP cleanup plus strict daemon lint. Source6301c55 run41208039887 also passed the additional6s delayed proof, original5s physical cleanup and packet proof regressions, but full workflow failed one newly introduced nested-if lint; fixede8e45e7 awaits clean same-source rerun. Production HTTP one-use starts, same-prefix primary/standby and physical two-site acceptance remain separate.",
+    "W24 source794d3d1 run41207005912 passed all3 distribution wg/config/QR/protected-export cases plus actual Linux kernel standard-client handshake, TCP/UDP/key/source ACL/original authority accounting and normal/helper-SIGKILL cleanup. Android/iOS target acceptance and complete production online lifecycle remain outstanding.",
+    "W22 source6301c55 run41208214146 passed real ordinary-token Windows TUN IPC; native readback reached exact manualIPv4/IPv6 hosts and routes without extra link-local, but receipt comparison failed on driver linkMTU versus familyIPMTU and route autoconfigure flags. Effective-state correction remains under implementation; no Windows native pass claimed.",
+    "HA source794d3d1 run41207008606 failed HTTP after strict original snapshot installation rejected a replay. Static nonsecret fence diagnostics were added; real four-protocol fixed-entry cooperative/SIGKILL validation is being rerun without extending signed authorization deadlines.",
+    "W30/W24 source467e7bd run41204581203 passed full real Chrome/Edge production Web/native integration and WireGuard client UI role/approval/403/draft/late-response fencing. Browser evidence does not cover positive client issuance, OS forwarding, phone clients or installed full onboarding.",
+    "W27 independent protocol/identity6 primitive cases passed onb313dbf. Production private-service administrator policy, exact two-party approval, durable shared quota reservation, one-use consume, authenticated recovery and typed SDK are now being implemented. Actual offline private-service and remote-control carriers/UI remain mandatory open work; no production pass yet.",
+    "W31 source84708e8/8374ca2 reuses original VideoQuality and actual mature encoder/queue costs for fixed-source production senders. Approval ceilings and missing-observation recovery bugs are repaired in source, awaiting hosted codec/media/queue/lint verification. Production receiver-feedback/resolution changes and full weak-network/file concurrency target gates remain open.",
+    "W28,W32-W40 and remainingW30/W31 are mandatory unfinished implementation/verification work, not external prerequisites. Release stays not_ready."
   ],
   "external_prerequisites": [
     {
@@ -81,12 +82,12 @@
     }
   ],
   "next_steps": [
-    "Repair hosted daemon compile/lint/native failures without relaxing ownership/authority assertions; run exact-source Windows/Linux TUN and dual-LAN subnet experiments.",
-    "Complete standard WG native handshake, original business accounting and terminal cleanup; preserve target mobile acceptance gap.",
-    "Complete HA all HTTP/HTTPS/TCP/UDP cooperative stop and independent SIGKILL with exact fixed-entry tuple evidence.",
-    "Continue W27 production policy/owner approval, durable quota/one-use activation, direct business transport/UI/real disconnect and recovery tests; then W28 discovery/game, full UI, media, distribution, compatibility, security and long-run requirements.",
-    "Import matching hosted format/generated contract receipts without overwriting shared source ownership.",
-    "Produce complete same-source candidate artifacts and target runbooks; publish0.8.0RC only once required implementation/acceptance is truthful."
+    "Complete exact-source hosted packet/Windows native/lint and HA failure repairs without relaxing authority, physical cleanup or replay assertions.",
+    "Complete W27 durable production authorization and actual direct private-service/remote-control activation, UI, stop/expiry and recovery.",
+    "Verify original media producer ceiling/freshness/backpressure changes, then complete authenticated receiver feedback, negotiated downshift and weak-network/file competition.",
+    "Implement controlled LAN discovery/game functionality; continue full UI, GPU/format, packaging/upgrade/rollback/security/end-to-end/performance/capacity/soak requirements.",
+    "Import only source-blob-matching clean files from verified hosted formatting patches, and retain exact failure and success artifacts.",
+    "Produce complete same-source candidate artifacts and target runbooks; publish0.8.0RC after required implementation and release qualification are truthfully satisfied."
   ],
   "evidence_index": [
     "docs/network-rewrite/evidence/research-review-2026-10-30.md",
@@ -173,7 +174,11 @@
     "docs/network-rewrite/evidence/edge-group-http-b313dbf.json",
     "docs/adr/network/0050-independent-finite-offline-bundle.md",
     "docs/network-rewrite/evidence/offline-primitives-b313dbf.json",
-    "docs/network-rewrite/evidence/subnet-browser-623d55a.json"
+    "docs/network-rewrite/evidence/subnet-browser-623d55a.json",
+    "docs/network-rewrite/evidence/subnet-kernel-c70360a.json",
+    "docs/network-rewrite/evidence/wireguard-kernel-794d3d1.json",
+    "docs/network-rewrite/evidence/wireguard-browser-467e7bd.json",
+    "docs/adr/network/0051-terminal-packet-and-producer-bounds.md"
   ],
   "observed_actions": [
     {
@@ -466,14 +471,86 @@
     {
       "run_id": 41199340461,
       "source_revision": "b313dbf2db5536830b0c5ed46738c4bc385b4fc7",
-      "status": "in_progress",
-      "scope": "Early Linux subnet/WG22 and group5 scoped passes; full Rust matrix running, no full-run pass"
+      "status": "failure",
+      "scope": "Historical full core matrix failed early Linux/Windows daemon build source; independent22 subnet/WG and5 group scoped cases passed. Subsequent source needs new full checks."
     },
     {
       "run_id": 41195779778,
       "source_revision": "623d55ad0573da97e5e57c50e07f29e3b64d2061",
       "status": "success",
       "scope": "Production Chrome/Edge management and original browser/native integration; no mapping issuance/OS/fullUI claim"
+    },
+    {
+      "run_id": 41204252074,
+      "source_revision": "c70360a3d90f3824263a67df4e7fc3b4732bff95",
+      "status": "success",
+      "scope": "Actual dual-overlapping-LAN kernel/TUN/NAT/QUIC TCP/UDP/ACL/accounting and three cleanup scenarios; strict daemon lint; separate production/target acceptance."
+    },
+    {
+      "run_id": 41204581203,
+      "source_revision": "467e7bdb9d483d1d0570c3a0a6118eec06e5c858",
+      "status": "success",
+      "scope": "Chrome/Edge full original production Web/native integration and exact WireGuard management approval/failure/late-reply fencing."
+    },
+    {
+      "run_id": 41207005912,
+      "source_revision": "794d3d1f45258d182a9baffd05526316b586a18d",
+      "status": "success",
+      "scope": "Distribution wg/qrencode private export and actual standard kernel WireGuard to original packet authority TCP/UDP/key/source ACL/accounting/cleanup."
+    },
+    {
+      "run_id": 41207008606,
+      "source_revision": "794d3d1f45258d182a9baffd05526316b586a18d",
+      "status": "failure",
+      "scope": "HA original service snapshot replay rejected during HTTP; no whole four-protocol pass."
+    },
+    {
+      "run_id": 41208039887,
+      "source_revision": "6301c5572daef3d3b9663202f8ae6ada8863f3ae",
+      "status": "partial_failure",
+      "scope": "All actual subnet cases including6s slow proof and5s physical socket cleanup passed; all packet codec regressions passed; strict lint failed one nested-if, fixed ine8e45e7."
+    },
+    {
+      "run_id": 41208214146,
+      "source_revision": "6301c5572daef3d3b9663202f8ae6ada8863f3ae",
+      "status": "failure",
+      "scope": "Windows actual normal-token IPC passed, native exact effective-state receipt mismatch; strict lint nested-if failure repaired ine8e45e7."
+    },
+    {
+      "run_id": 41209024456,
+      "source_revision": "e8e45e79e5af1b94bfd35ba65543670638d76ec6",
+      "status": "failure",
+      "scope": "Source predates subsequent staticstr reason fix7e3b3f2; exact logs to retain."
+    },
+    {
+      "run_id": 41209027531,
+      "source_revision": "e8e45e79e5af1b94bfd35ba65543670638d76ec6",
+      "status": "in_progress",
+      "scope": "Full hosted Rust matrix; exact results required, no pass claimed."
+    },
+    {
+      "run_id": 41209030447,
+      "source_revision": "e8e45e79e5af1b94bfd35ba65543670638d76ec6",
+      "status": "in_progress",
+      "scope": "Full network contract/real-carrier hosted checks; exact results required, no pass claimed."
+    },
+    {
+      "run_id": 41209617631,
+      "source_revision": "59aad5405abe6231ddb9959d669188358d602a69",
+      "status": "in_progress",
+      "scope": "Exact four-protocol fixed-entry HA and replay-fence diagnosis."
+    },
+    {
+      "run_id": 41209620221,
+      "source_revision": "59aad5405abe6231ddb9959d669188358d602a69",
+      "status": "in_progress",
+      "scope": "Actual mature codec/media/queue regressions and strict media lint; no whole W31/target claim."
+    },
+    {
+      "run_id": 41209622744,
+      "source_revision": "59aad5405abe6231ddb9959d669188358d602a69",
+      "status": "in_progress",
+      "scope": "Hosted formatting patch only, no quality pass claimed."
     }
   ]
 }

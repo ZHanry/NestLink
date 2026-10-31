@@ -2302,7 +2302,8 @@
       "evidence_refs": [
         "docs/adr/network/0047-signed-subnet-mapping-boundary.md",
         "docs/adr/network/0049-subnet-fixed-authority-live-node-lease.md",
-        "docs/network-rewrite/evidence/subnet-wireguard-http-b313dbf.json"
+        "docs/network-rewrite/evidence/subnet-wireguard-http-b313dbf.json",
+        "docs/network-rewrite/evidence/subnet-kernel-c70360a.json"
       ],
       "blockers": [],
       "partial_verification": {
@@ -2311,7 +2312,12 @@
         "whole_task_passed": false,
         "evidence_refs": [
           "docs/adr/network/0049-subnet-fixed-authority-live-node-lease.md",
-          "docs/network-rewrite/evidence/subnet-wireguard-http-b313dbf.json"
+          "docs/network-rewrite/evidence/subnet-wireguard-http-b313dbf.json",
+          "docs/adr/network/0047-signed-subnet-mapping-boundary.md",
+          "docs/network-rewrite/evidence/subnet-kernel-c70360a.json"
+        ],
+        "additional_scoped_evidence": [
+          "docs/network-rewrite/evidence/subnet-kernel-c70360a.json"
         ]
       }
     },
@@ -2370,7 +2376,9 @@
         "无未标明的外部验证缺口"
       ],
       "evidence_refs": [
-        "docs/network-rewrite/evidence/subnet-wireguard-http-b313dbf.json"
+        "docs/network-rewrite/evidence/subnet-wireguard-http-b313dbf.json",
+        "docs/network-rewrite/evidence/wireguard-kernel-794d3d1.json",
+        "docs/network-rewrite/evidence/wireguard-browser-467e7bd.json"
       ],
       "blockers": [],
       "partial_verification": {
@@ -2378,7 +2386,13 @@
         "scoped_passed": true,
         "whole_task_passed": false,
         "evidence_refs": [
-          "docs/network-rewrite/evidence/subnet-wireguard-http-b313dbf.json"
+          "docs/network-rewrite/evidence/subnet-wireguard-http-b313dbf.json",
+          "docs/network-rewrite/evidence/wireguard-kernel-794d3d1.json",
+          "docs/network-rewrite/evidence/wireguard-browser-467e7bd.json"
+        ],
+        "additional_scoped_evidence": [
+          "docs/network-rewrite/evidence/wireguard-kernel-794d3d1.json",
+          "docs/network-rewrite/evidence/wireguard-browser-467e7bd.json"
         ]
       }
     },
@@ -2768,7 +2782,8 @@
         "无未标明的外部验证缺口"
       ],
       "evidence_refs": [
-        "docs/network-rewrite/evidence/subnet-browser-623d55a.json"
+        "docs/network-rewrite/evidence/subnet-browser-623d55a.json",
+        "docs/network-rewrite/evidence/wireguard-browser-467e7bd.json"
       ],
       "blockers": [],
       "partial_verification": {
@@ -2776,7 +2791,11 @@
         "scoped_passed": true,
         "whole_task_passed": false,
         "evidence_refs": [
-          "docs/network-rewrite/evidence/subnet-browser-623d55a.json"
+          "docs/network-rewrite/evidence/subnet-browser-623d55a.json",
+          "docs/network-rewrite/evidence/wireguard-browser-467e7bd.json"
+        ],
+        "additional_scoped_evidence": [
+          "docs/network-rewrite/evidence/wireguard-browser-467e7bd.json"
         ]
       }
     },
@@ -2794,9 +2813,9 @@
         "F07",
         "F22"
       ],
-      "status": "not_started",
-      "implementation_status": "not_started",
-      "verification_status": "not_run",
+      "status": "in_progress",
+      "implementation_status": "in_progress",
+      "verification_status": "running",
       "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
       "owned_paths_to_review": [
         "crates/remote",
@@ -2834,8 +2853,11 @@
         "证据绑定本任务源码和制品，并区分构建来源和实际执行来源",
         "无未标明的外部验证缺口"
       ],
-      "evidence_refs": [],
-      "blockers": []
+      "evidence_refs": [
+        "docs/adr/network/0051-terminal-packet-and-producer-bounds.md"
+      ],
+      "blockers": [],
+      "implementation_notes": "Reuses existing producer control and mature codec configuration in daemon and fixed-source sender. Approved ceilings and observation gaps repaired; actual queue/codec regression pending. Receiver-feedback/resolution downshift and weak-network/file-concurrency gates remain open."
     },
     {
       "id": "W32",

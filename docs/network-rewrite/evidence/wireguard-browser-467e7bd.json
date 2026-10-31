@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "source_revision": "467e7bdb9d483d1d0570c3a0a6118eec06e5c858",
+  "run_id": 41204581203,
+  "run_attempt": 1,
+  "workflow": ".github/workflows/web-build.yml",
+  "runner_environment": "github-hosted",
+  "scope": "Production Chrome/Edge WireGuard client management authorization, draft approval clearing, real HTTP403 reset, draft preservation, late-space reply fencing, no unapproved write and full existing browser media/input/files lifecycle. Positive client issuance, kernel forwarding, mobile and whole W24/W30 acceptance retain separate evidence.",
+  "scoped_passed": true,
+  "results": [
+    {
+      "browser": "edge",
+      "artifact": {
+        "id": 13044363907,
+        "name": "nestlink-browser-native-evidence-edge",
+        "sha256": "6254e2ac1320bf8003373378c95f505a2319f1b216a7eb5136a649ef1c51b268",
+        "original_zip_digest_verified": true
+      },
+      "browser_version": "Edg/156.0.4314.56",
+      "runner": {
+        "schema_version": 1,
+        "passed": true,
+        "github_sha": "467e7bdb9d483d1d0570c3a0a6118eec06e5c858",
+        "scope": "Production Web/native loopback integration with real VP8/Opus, owned input and files; not physical Windows or external-network acceptance",
+        "started_unix_ms": 1793453547406,
+        "global_trust_modified": false,
+        "browser_product": "edge",
+        "exit_codes": {
+          "browser": 0,
+          "native": 0
+        },
+        "validation_failures": [],
+        "cleanup": {
+          "browser_forced": false,
+          "native_forced": false,
+          "process_errors": [],
+          "owned_processes_stopped": true,
+          "download_directory_empty_after_probe": true,
+          "private_directory_removed": true
+        },
+        "error": null,
+        "inputs": {
+          "native_sha256": "a4d2ed644572144b69b5633c14685ad6339b912476203576b56dd2ec372c7673",
+          "caddy_sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+          "site_index_sha256": "10290781afe6e625b9f90aef12ca2e20853016edc8c297210e0bb0da2b80b2dd",
+          "runner_sha256": "7c3aa79ec2ab4200fcd839162fee4d3eb0fab1db2566fa7f778897dd39ea3883"
+        },
+        "tls_verified_exact_leaf_and_ip_san": true,
+        "finished_unix_ms": 1793453703927
+      },
+      "wireguard_ui": {
+        "passed": true,
+        "failures": [
+          {
+            "method": "GET",
+            "status": 403
+          }
+        ],
+        "scope": "Production client management authorization, approval and late-response fencing; issuance, kernel and mobile acceptance are separate",
+        "stage": "complete",
+        "real_client_space_loaded": true,
+        "draft_edits_clear_approval": true,
+        "failed_read_clears_writable_snapshot": true,
+        "failed_read_preserves_unapproved_draft": true,
+        "late_space_reply_ignored": true,
+        "no_unapproved_client_write": true
+      },
+      "wireguard_ui_helper_sha256": "074d939718d935c879e6ac3aee06b83da6c9d7c4c118fb62a49bd154a1a0a088",
+      "runner_result_sha256": "cda507ceb83f17f8446dbd0e410693bcb1116b166b85ccdaa5cf9e948c4a115a",
+      "browser_report_sha256": "48c6239f26120836e8abc354c7ad275086d987b8356fd3ff2314569bf67bfdce"
+    },
+    {
+      "browser": "chrome",
+      "artifact": {
+        "id": 13044234549,
+        "name": "nestlink-browser-native-evidence-chrome",
+        "sha256": "31dc2d60a8a512697068a29bf4b014f378f6913bcb55dfa3198a274fc6b31cb9",
+        "original_zip_digest_verified": true
+      },
+      "browser_version": "Chrome/156.0.8078.47",
+      "runner": {
+        "schema_version": 1,
+        "passed": true,
+        "github_sha": "467e7bdb9d483d1d0570c3a0a6118eec06e5c858",
+        "scope": "Production Web/native loopback integration with real VP8/Opus, owned input and files; not physical Windows or external-network acceptance",
+        "started_unix_ms": 1793453535287,
+        "global_trust_modified": false,
+        "browser_product": "chrome",
+        "exit_codes": {
+          "browser": 0,
+          "native": 0
+        },
+        "validation_failures": [],
+        "cleanup": {
+          "browser_forced": false,
+          "native_forced": false,
+          "process_errors": [],
+          "owned_processes_stopped": true,
+          "download_directory_empty_after_probe": true,
+          "private_directory_removed": true
+        },
+        "error": null,
+        "inputs": {
+          "native_sha256": "a4d2ed644572144b69b5633c14685ad6339b912476203576b56dd2ec372c7673",
+          "caddy_sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+          "site_index_sha256": "10290781afe6e625b9f90aef12ca2e20853016edc8c297210e0bb0da2b80b2dd",
+          "runner_sha256": "7c3aa79ec2ab4200fcd839162fee4d3eb0fab1db2566fa7f778897dd39ea3883"
+        },
+        "tls_verified_exact_leaf_and_ip_san": true,
+        "finished_unix_ms": 1793453692927
+      },
+      "wireguard_ui": {
+        "passed": true,
+        "failures": [
+          {
+            "method": "GET",
+            "status": 403
+          }
+        ],
+        "scope": "Production client management authorization, approval and late-response fencing; issuance, kernel and mobile acceptance are separate",
+        "stage": "complete",
+        "real_client_space_loaded": true,
+        "draft_edits_clear_approval": true,
+        "failed_read_clears_writable_snapshot": true,
+        "failed_read_preserves_unapproved_draft": true,
+        "late_space_reply_ignored": true,
+        "no_unapproved_client_write": true
+      },
+      "wireguard_ui_helper_sha256": "074d939718d935c879e6ac3aee06b83da6c9d7c4c118fb62a49bd154a1a0a088",
+      "runner_result_sha256": "501e6bf80b2fc64e4652343ab2b5c1a0da749d99d86e0152c14f201257e75157",
+      "browser_report_sha256": "8f4fe57d0f7e4256a06a0b2c7c5e3934436d5ffed3518defd4ca6ba80421d5ad"
+    }
+  ]
+}
