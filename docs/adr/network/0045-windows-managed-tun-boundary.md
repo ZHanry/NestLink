@@ -81,11 +81,56 @@ References: [MIB_IPINTERFACE_ROW](https://learn.microsoft.com/en-us/windows/win3
 [GetAdaptersInfo](https://learn.microsoft.com/en-us/windows/win32/api/iphlpapi/nf-iphlpapi-getadaptersinfo),
 [NL_LINK_LOCAL_ADDRESS_BEHAVIOR](https://learn.microsoft.com/en-us/windows/win32/api/nldef/ne-nldef-nl_link_local_address_behavior),
 [netsh static address semantics](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/netsh-interface).
-For source comparison only, the reviewed [WireGuard Windows address configuration](https://github.com/WireGuard/wireguard-windows/blob/master/tunnel/addressconfig.go)
+For source comparison only, the reviewed [WireGuard Windows address configuration](https://github.com/WireGuard/wireguard-windows/blob/6ece77bc487c8aa697e3c092197621c4f3e5ccb8/tunnel/addressconfig.go)
 uses the supported router-discovery, DAD and managed/stateful controls without
 setting AlwaysOff. The [urnetwork Windows snapshot](https://github.com/urnetwork/windows/blob/0a0a74e8b440f648feeb35f67fb1c60baad2dd42/app/src/Service/NetworkConfig.cpp)
 also describes Wintun's IPv6 AlwaysOff rejection. These observations guide the
 independent operation and test; no upstream source was copied into NestLink.
+
+### Driver capacity, effective IP MTU and kernel local host routes
+
+Source `6301c5572daef3d3b9663202f8ae6ada8863f3ae`, hosted run
+`41208214146`, executed the replacement family operations successfully.
+Independent readback observed IPv4 DHCP disabled, both IP-family MTUs at
+1280, exactly the two approved manual `/32` and `/128` addresses, and exactly
+the two local plus two approved remote host routes. No additional link-local
+address or route was present. This attempt still failed before packet handoff
+and remains failed evidence.
+
+That readback exposed two distinct API semantics. First, `MIB_IF_ROW2.Mtu`
+describes the driver's fixed link capacity, which is 65535 for the pinned
+Wintun 0.14.1 driver. The reviewed
+[exact 0.14.1 driver source](https://github.com/WireGuard/wintun/blob/bfef136abfa1665c2592be09a7e383d646cdbe6e/driver/wintun.c)
+sets NDIS `MtuSize` to `TUN_MAX_IP_PACKET_SIZE` (`0xFFFF`) and type to
+`IF_TYPE_PROP_VIRTUAL`. The helper now names and requires that exact captured
+link capacity/type separately. Both mutable `MIB_IPINTERFACE_ROW.NlMtu`
+values must still be exactly 1280, and the ordinary/helper whole-packet pipe
+continues to reject packets larger than 1280. Setting a family MTU to the
+driver capacity is explicitly a failing regression case. No carrier budget
+or packet limit changes.
+
+Second, Microsoft documents that `InitializeIpForwardEntry` defaults
+`Loopback`, `AutoconfigureAddress`, `Publish` and `Immortal` to TRUE. The helper
+now explicitly clears all four before creating each remote host route and
+requires their independent readback to remain false, with the exact manual
+origin, management protocol and metric. Local `/32` and `/128` routes are
+created by Windows when assigning each approved local address. They must
+retain their separate exact local protocol, loopback identity, kernel metric
+256 and autoconfigured-local-address flag; an identical flag on a remote
+route is rejected. Both kinds require no publishing, no immortality and zero
+site prefix. Every approved local and remote host must occur exactly once in
+the four-route inventory. Additional link-local or broad prefixes remain
+rejected and are covered by negative regression cases.
+
+This corrects a link/IP-layer conflation and writes the previously implicit
+remote route flags. It does not treat the previous snapshot as a successful
+native test. Full kernel packet transfer, ongoing stable inventory, process
+denials and cleanup still require a new exact-source hosted run.
+
+References: [MIB_IF_ROW2](https://learn.microsoft.com/en-us/windows/win32/api/netioapi/ns-netioapi-mib_if_row2),
+[MIB_IPINTERFACE_ROW](https://learn.microsoft.com/en-us/windows/win32/api/netioapi/ns-netioapi-mib_ipinterface_row),
+[InitializeIpForwardEntry defaults](https://learn.microsoft.com/en-us/windows/win32/api/netioapi/nf-netioapi-initializeipforwardentry),
+[MIB_IPFORWARD_ROW2](https://learn.microsoft.com/en-us/windows/win32/api/netioapi/ns-netioapi-mib_ipforward_row2).
 
 Protected receipt publication also has durable ordering: bind the single pipe and capture its receipt, save that exact receipt in the administrator journal, then publish it through the existing protected file adapter. A crash before publication is recovered as actual receipt absence; a changed receipt is never removed. Closing the original provider releases its own driver session/adapter; recovery verifies its GUID/name is physically absent. Recovery never reopens a surviving adapter just to delete it, and preserves a visible failed record if absence is not observed within five seconds. This conservative recovery case remains an explicit native qualification requirement.
 

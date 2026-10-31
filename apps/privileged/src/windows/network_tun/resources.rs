@@ -19,6 +19,11 @@ use windows_sys::{
 
 const MAX_ROWS: usize = 65_536;
 const METRIC: u32 = 42420;
+// The pinned Wintun 0.14.1 driver reports its fixed NDIS packet capacity here;
+// the separately writable per-family IP MTU must still be exactly 1280.
+const WINTUN_LINK_MTU: u32 = 65_535;
+const WINTUN_INTERFACE_TYPE: u32 = 53; // IF_TYPE_PROP_VIRTUAL
+const LOCAL_HOST_ROUTE_METRIC: u32 = 256;
 fn checked(result: u32, operation: &str) -> io::Result<()> {
     if result == 0 {
         Ok(())
@@ -446,6 +451,13 @@ pub fn install_routes(
         row.SitePrefixLength = 0;
         row.Metric = METRIC;
         row.Protocol = MIB_IPPROTO_NETMGMT;
+        // InitializeIpForwardEntry deliberately defaults these to TRUE. A
+        // signed remote host is neither a local loopback nor an advertised or
+        // address-producing prefix; make every such property explicit.
+        row.Loopback = false;
+        row.AutoconfigureAddress = false;
+        row.Publish = false;
+        row.Immortal = false;
         row.ValidLifetime = u32::MAX;
         row.PreferredLifetime = u32::MAX;
         row.Origin = NlroManual;
@@ -544,7 +556,7 @@ pub struct RouteState {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Snapshot {
-    mtu: u32,
+    link_mtu: u32,
     interface_type: u32,
     tunnel_type: i32,
     admin_status: i32,
@@ -558,7 +570,10 @@ impl Snapshot {
         Ok(Sha256::digest(serde_json::to_vec(self)?).into())
     }
     pub fn verify(&self, local: &[IpAddr; 2], remote: &[IpAddr; 2]) -> io::Result<()> {
-        if self.mtu != 1280
+        if self.link_mtu != WINTUN_LINK_MTU
+            || self.interface_type != WINTUN_INTERFACE_TYPE
+            || self.tunnel_type != 0
+            || self.admin_status != 1
             || self.ipv4_dhcp_enabled
             || self.families.len() != 2
             || self
@@ -569,8 +584,7 @@ impl Snapshot {
                 != [AF_INET, AF_INET6]
             || !self.families.iter().all(FamilyState::isolated)
             || self.addresses.len() != 2
-            || self.routes.is_empty()
-            || self.routes.len() > 4
+            || self.routes.len() != 4
         {
             return Err(io::Error::other(format!(
                 "original TUN isolation snapshot differs from the exact required state: {self:?}"
@@ -596,21 +610,36 @@ impl Snapshot {
             if row.prefix != host_bits(row.destination)
                 || (!local.contains(&row.destination) && !remote.contains(&row.destination))
                 || !row.next_hop.is_unspecified()
-                || row.autoconfigure
                 || row.publish
+                || row.immortal
+                || row.site_prefix != 0
             {
                 return Err(security::denied());
             }
             if remote.contains(&row.destination)
                 && (row.metric != METRIC
                     || row.protocol != MIB_IPPROTO_NETMGMT
-                    || row.origin != NlroManual)
+                    || row.origin != NlroManual
+                    || row.loopback
+                    || row.autoconfigure)
+            {
+                return Err(security::denied());
+            }
+            // Windows creates each exact local /32 or /128 host route while
+            // assigning the approved address. Its autoconfigure flag describes
+            // that local address; it is not an extra remotely routed prefix.
+            if local.contains(&row.destination)
+                && (row.metric != LOCAL_HOST_ROUTE_METRIC
+                    || row.protocol != MIB_IPPROTO_LOCAL
+                    || row.origin != NlroManual
+                    || !row.loopback
+                    || !row.autoconfigure)
             {
                 return Err(security::denied());
             }
         }
-        for host in remote {
-            if !self.routes.iter().any(|row| row.destination == *host) {
+        for host in local.iter().chain(remote) {
+            if self.routes.iter().filter(|row| row.destination == *host).count() != 1 {
                 return Err(security::denied());
             }
         }
@@ -662,7 +691,7 @@ pub fn inspect(identity: &ProviderIdentity) -> io::Result<Option<Snapshot>> {
     // Re-read the exact identity after table snapshots; replacement is terminal.
     original(identity)?.ok_or_else(security::denied)?;
     Ok(Some(Snapshot {
-        mtu: row.Mtu,
+        link_mtu: row.Mtu,
         interface_type: row.Type,
         tunnel_type: row.TunnelType,
         admin_status: row.AdminStatus,
@@ -690,4 +719,119 @@ pub fn absent(identity: &ProviderIdentity) -> io::Result<bool> {
     }
     // A name/GUID replacement during those two table reads is also terminal.
     Ok(original(identity)?.is_none())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Stable fields from the actual 0.14.1 hosted NetIO inventory. This fixture
+    // does not replace the dedicated native kernel packet/cleanup experiment.
+    fn fixture() -> ([IpAddr; 2], [IpAddr; 2], Snapshot) {
+        let local: [IpAddr; 2] = [
+            Ipv4Addr::new(10, 81, 0, 2).into(),
+            Ipv6Addr::new(0xfd81, 0, 0, 0, 0, 0, 0, 2).into(),
+        ];
+        let remote: [IpAddr; 2] = [
+            Ipv4Addr::new(10, 81, 0, 3).into(),
+            Ipv6Addr::new(0xfd81, 0, 0, 0, 0, 0, 0, 3).into(),
+        ];
+        let snapshot = Snapshot {
+            link_mtu: WINTUN_LINK_MTU,
+            interface_type: WINTUN_INTERFACE_TYPE,
+            tunnel_type: 0,
+            admin_status: 1,
+            ipv4_dhcp_enabled: false,
+            families: [AF_INET, AF_INET6].into_iter().map(|family| FamilyState {
+                family,
+                mtu: 1280,
+                metric: METRIC,
+                automatic_metric: false,
+                forwarding: false,
+                weak_send: false,
+                weak_receive: false,
+                advertising: false,
+                default_advertising: false,
+                router_discovery: RouterDiscoveryDisabled,
+                link_local: if family == AF_INET { LinkLocalDelayed } else { LinkLocalAlwaysOn },
+                dad: 0,
+                managed: false,
+                other_stateful: false,
+                disable_default_routes: true,
+            }).collect(),
+            addresses: local.into_iter().map(|ip| AddressState {
+                ip,
+                prefix: host_bits(ip),
+                prefix_origin: IpPrefixOriginManual,
+                suffix_origin: IpSuffixOriginManual,
+                dad: IpDadStatePreferred,
+                skip: false,
+            }).collect(),
+            routes: local.into_iter().chain(remote).map(|destination| {
+                let is_local = local.contains(&destination);
+                RouteState {
+                    destination,
+                    prefix: host_bits(destination),
+                    next_hop: if destination.is_ipv4() { Ipv4Addr::UNSPECIFIED.into() } else { Ipv6Addr::UNSPECIFIED.into() },
+                    metric: if is_local { LOCAL_HOST_ROUTE_METRIC } else { METRIC },
+                    protocol: if is_local { MIB_IPPROTO_LOCAL } else { MIB_IPPROTO_NETMGMT },
+                    origin: NlroManual,
+                    loopback: is_local,
+                    autoconfigure: is_local,
+                    publish: false,
+                    immortal: false,
+                    site_prefix: 0,
+                }
+            }).collect(),
+        };
+        (local, remote, snapshot)
+    }
+
+    #[test]
+    fn driver_capacity_never_substitutes_for_each_effective_ip_mtu() {
+        let (local, remote, snapshot) = fixture();
+        snapshot.verify(&local, &remote).unwrap();
+        for family in 0..2 {
+            let mut changed = snapshot.clone();
+            changed.families[family].mtu = WINTUN_LINK_MTU;
+            assert!(changed.verify(&local, &remote).is_err());
+        }
+        let mut changed = snapshot;
+        changed.link_mtu = 1280;
+        assert!(changed.verify(&local, &remote).is_err());
+    }
+
+    #[test]
+    fn kernel_local_host_flags_never_authorize_a_remote_autoconfigured_prefix() {
+        let (local, remote, snapshot) = fixture();
+        for index in 2..4 {
+            let mut changed = snapshot.clone();
+            changed.routes[index].autoconfigure = true;
+            assert!(changed.verify(&local, &remote).is_err());
+            let mut changed = snapshot.clone();
+            changed.routes[index].loopback = true;
+            assert!(changed.verify(&local, &remote).is_err());
+        }
+        let mut changed = snapshot;
+        changed.routes[3] = changed.routes[2].clone();
+        assert!(changed.verify(&local, &remote).is_err());
+    }
+
+    #[test]
+    fn link_local_and_broader_resources_remain_outside_the_signed_inventory() {
+        let (local, remote, snapshot) = fixture();
+        let link_local = Ipv6Addr::new(0xfe80, 0, 0, 0, 0, 0, 0, 1).into();
+        let mut changed = snapshot.clone();
+        changed.addresses[1].ip = link_local;
+        assert!(changed.verify(&local, &remote).is_err());
+        let mut changed = snapshot.clone();
+        changed.addresses.push(AddressState { ip: link_local, ..changed.addresses[1].clone() });
+        assert!(changed.verify(&local, &remote).is_err());
+        let mut changed = snapshot.clone();
+        changed.routes[3].destination = link_local;
+        assert!(changed.verify(&local, &remote).is_err());
+        let mut changed = snapshot;
+        changed.routes[3].prefix = 64;
+        assert!(changed.verify(&local, &remote).is_err());
+    }
 }
