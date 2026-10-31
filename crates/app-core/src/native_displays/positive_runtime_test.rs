@@ -675,8 +675,12 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     let capture_origin = Arc::new(Mutex::new(Instant::now()));
     let encoder = ActualEncoder::start(
         config,
-        *set.formats().iter().find(|format| format.frame_rate.numerator == config.fps
-            && format.max_kbps == config.bitrate_kbps).ok_or("empty signed maximum target")?,
+        *set.formats()
+            .iter()
+            .find(|format| {
+                format.frame_rate.numerator == config.fps && format.max_kbps == config.bitrate_kbps
+            })
+            .ok_or("empty signed maximum target")?,
         capture_origin.clone(),
     );
     let (first, actual, first_execution) = encoder.next(&video).await?;
@@ -930,7 +934,10 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     assert!(encoder_before.check_current().is_err());
     assert!(decoder_before.check_current().is_ok()); // Encode cannot retire Decode's slot.
     let next_format = nestlink_media_session::select_h264_budget(
-        &set, actual, config.fps / 2, config.bitrate_kbps / 2,
+        &set,
+        actual,
+        config.fps / 2,
+        config.bitrate_kbps / 2,
     )?;
     assert_ne!(next_format, actual);
     assert!(set.contains(&next_format));

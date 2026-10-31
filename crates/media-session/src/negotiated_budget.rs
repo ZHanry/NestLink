@@ -10,7 +10,9 @@ pub fn select_h264_budget(
     kbps: u32,
 ) -> io::Result<VideoFormat> {
     if !approved.contains(&current) || current.codec != Codec::H264 || fps == 0 || kbps == 0 {
-        return Err(io::Error::other("budget selection lacks an exact approved current format"));
+        return Err(io::Error::other(
+            "budget selection lacks an exact approved current format",
+        ));
     }
     let compatible = |format: &&VideoFormat| {
         format.codec == current.codec
@@ -24,11 +26,19 @@ pub fn select_h264_budget(
             && format.frame_rate.denominator == 1
     };
     let key = |format: &&VideoFormat| (format.frame_rate.numerator, format.max_kbps);
-    let selected = approved.formats().iter().filter(compatible)
+    let selected = approved
+        .formats()
+        .iter()
+        .filter(compatible)
         .filter(|format| format.frame_rate.numerator <= fps && format.max_kbps <= kbps)
         .max_by_key(key)
-        .or_else(|| approved.formats().iter().filter(compatible)
-            .min_by_key(|format| (format.max_kbps, format.frame_rate.numerator)))
+        .or_else(|| {
+            approved
+                .formats()
+                .iter()
+                .filter(compatible)
+                .min_by_key(|format| (format.max_kbps, format.frame_rate.numerator))
+        })
         .copied()
         .ok_or_else(|| io::Error::other("no executable approved budget"))?;
     Ok(selected)
@@ -39,8 +49,14 @@ mod tests {
     use super::*;
     use nestlink_protocol::media_format::FrameRate;
     fn format(fps: u32, kbps: u32) -> io::Result<VideoFormat> {
-        VideoFormat::legacy_h264(31, 320, 240, FrameRate::new(fps, 1)
-            .map_err(io::Error::other)?, kbps).map_err(io::Error::other)
+        VideoFormat::legacy_h264(
+            31,
+            320,
+            240,
+            FrameRate::new(fps, 1).map_err(io::Error::other)?,
+            kbps,
+        )
+        .map_err(io::Error::other)
     }
     #[test]
     fn step_down_and_recovery_never_invent_or_widen_a_signed_format() -> io::Result<()> {

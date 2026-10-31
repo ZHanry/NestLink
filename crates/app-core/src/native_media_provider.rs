@@ -129,7 +129,8 @@ fn make_announcement(
             adapter_luid: None,
             driver_version: None,
         },
-        formats: std::iter::once(receipt.format).chain(receipt.additional_formats)
+        formats: std::iter::once(receipt.format)
+            .chain(receipt.additional_formats)
             .map(|format| format.encode().map_err(io::Error::other))
             .collect::<io::Result<Vec<_>>>()?,
     };
@@ -202,8 +203,10 @@ impl NativeMediaProvider {
                 bitrate_kbps: (target.bitrate_kbps * numerator / denominator).max(64),
                 ..target
             };
-            if !targets.iter().any(|value| value.fps == next.fps
-                && value.bitrate_kbps == next.bitrate_kbps) {
+            if !targets
+                .iter()
+                .any(|value| value.fps == next.fps && value.bitrate_kbps == next.bitrate_kbps)
+            {
                 targets.push(next);
             }
         }
@@ -493,14 +496,19 @@ fn run_probes(
     let mut receipts = Vec::with_capacity(targets.len());
     for target in targets {
         if cancel.load(Ordering::Acquire) {
-            return Err(io::Error::new(io::ErrorKind::Interrupted, "CPU target probes cancelled"));
+            return Err(io::Error::new(
+                io::ErrorKind::Interrupted,
+                "CPU target probes cancelled",
+            ));
         }
         // Each mature MF owner completes checked flush and close before the
         // next exact target starts on this same original bounded worker.
         receipts.push(run_probe(*target, direction, cancel)?);
     }
     let mut receipts = receipts.into_iter();
-    let mut primary = receipts.next().ok_or_else(|| io::Error::other("empty CPU probe set"))?;
+    let mut primary = receipts
+        .next()
+        .ok_or_else(|| io::Error::other("empty CPU probe set"))?;
     primary.additional_formats = receipts.map(|receipt| receipt.format).collect();
     Ok(primary)
 }
@@ -608,17 +616,29 @@ mod tests {
         }
     }
     #[test]
-    fn adaptive_cpu_targets_are_bounded_exact_budgets_below_the_product_ceiling() -> io::Result<()> {
-        let target = VideoConfig { width: 1920, height: 1080, fps: 60, bitrate_kbps: 8000 };
+    fn adaptive_cpu_targets_are_bounded_exact_budgets_below_the_product_ceiling() -> io::Result<()>
+    {
+        let target = VideoConfig {
+            width: 1920,
+            height: 1080,
+            fps: 60,
+            bitrate_kbps: 8000,
+        };
         let provider = NativeMediaProvider::cpu_software_adaptive(target)?;
         assert_eq!(provider.targets.len(), 3);
-        let budgets: Vec<_> = provider.targets.iter().map(|value| {
-            assert_eq!((value.width, value.height), (target.width, target.height));
-            (value.fps, value.bitrate_kbps)
-        }).collect();
+        let budgets: Vec<_> = provider
+            .targets
+            .iter()
+            .map(|value| {
+                assert_eq!((value.width, value.height), (target.width, target.height));
+                (value.fps, value.bitrate_kbps)
+            })
+            .collect();
         assert_eq!(budgets, [(60, 8000), (45, 6000), (30, 4000)]);
         let minimum = NativeMediaProvider::cpu_software_adaptive(VideoConfig {
-            fps: 1, bitrate_kbps: 64, ..target
+            fps: 1,
+            bitrate_kbps: 64,
+            ..target
         })?;
         assert_eq!(minimum.targets.len(), 1);
         Ok(())

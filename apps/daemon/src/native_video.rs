@@ -1410,23 +1410,26 @@ fn stream_capture<D: CaptureDevice>(
             }
             let hardware = current_encoder.hardware();
             let changed = match observe_quality(
-                    core,
-                    identity,
-                    binding,
-                    &mut quality,
-                    encoding_time,
-                    enqueue_started.elapsed(),
-                ) {
-                    Ok(changed) => changed,
-                    Err(_) => return (controller, StreamExit::SessionEnded),
-                };
+                core,
+                identity,
+                binding,
+                &mut quality,
+                encoding_time,
+                enqueue_started.elapsed(),
+            ) {
+                Ok(changed) => changed,
+                Err(_) => return (controller, StreamExit::SessionEnded),
+            };
             if negotiated_target {
                 let approved = match core.native_video_formats(identity) {
                     Ok(Some(formats)) => formats,
                     _ => return (controller, StreamExit::SessionEnded),
                 };
                 let next = match nestlink_media_session::select_h264_budget(
-                    &approved, actual, quality.fps(), quality.bitrate_kbps(),
+                    &approved,
+                    actual,
+                    quality.fps(),
+                    quality.bitrate_kbps(),
                 ) {
                     Ok(next) => next,
                     Err(_) => return (controller, StreamExit::CaptureFailed),
@@ -1447,14 +1450,17 @@ fn stream_capture<D: CaptureDevice>(
                         return (controller, StreamExit::CaptureFailed);
                     }
                     pending_sources.clear();
-                    let next_encoder = nestlink_media_session::h264_execution_target(next, next_config)
-                        .and_then(VideoEncoder::with_execution_target);
+                    let next_encoder =
+                        nestlink_media_session::h264_execution_target(next, next_config)
+                            .and_then(VideoEncoder::with_execution_target);
                     encoder = match next_encoder {
                         Ok(next) => Some(next),
                         Err(_) => return (controller, StreamExit::CaptureFailed),
                     };
                     legacy_prepare = match nestlink_media_session::LegacyPrepare::new_cpu_visible(
-                        VideoCodec::H264Baseline, next_config.width, next_config.height,
+                        VideoCodec::H264Baseline,
+                        next_config.width,
+                        next_config.height,
                     ) {
                         Ok(next) => Some((next, next_config)),
                         Err(_) => return (controller, StreamExit::CaptureFailed),
