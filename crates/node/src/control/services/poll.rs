@@ -120,6 +120,7 @@ pub(in crate::control) async fn poll(
         })
         .await;
         let mut runtime = state.lock().map_err(|_| Error::Control)?;
+        runtime.resources.services.observe_response(requested);
         if runtime.service_shutdown {
             continue;
         }
@@ -129,6 +130,7 @@ pub(in crate::control) async fn poll(
         }
         match response {
             Ok(Err(Error::Transport)) | Err(_) => {
+                runtime.resources.services.observe_transport_gap();
                 // An unavailable transport supplies no new authority. Keep the
                 // last signed snapshot's original two-second monotonic cap;
                 // publication admission independently enforces that deadline.
@@ -146,6 +148,7 @@ pub(in crate::control) async fn poll(
                         // owners retain only their original two-second cap.
                         let current = runtime.gate.current(sample(started)?)?;
                         if snapshot.claims().query.lease_sequence < current.lease_sequence {
+                            runtime.resources.services.observe_superseded();
                             continue;
                         }
                         if accepted {

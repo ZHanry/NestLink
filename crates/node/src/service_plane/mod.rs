@@ -26,7 +26,7 @@ pub use ingress::{
     ServiceWebIngress, ServiceWebVisitor,
 };
 pub use private::PrivateServicePublication;
-pub use resources::ServiceResourceSet;
+pub use resources::{ServiceResourceObservation, ServiceResourceSet};
 pub use stream::forward_streams;
 pub use target::{
     LocalTargetOwner, PendingTunnelOpen, PreparedLocalTunnel, PreparedPrivateLocalTunnel,

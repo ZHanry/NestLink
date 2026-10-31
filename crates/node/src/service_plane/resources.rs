@@ -17,6 +17,19 @@ use std::{
 };
 
 const MAX_REMEMBERED_PUBLICATIONS: usize = 4096;
+/// Bounded timing/count diagnostics. No grant, identity, address, key, response
+/// body or publication ID is retained in this observation.
+#[derive(Clone, Debug, Default)]
+pub struct ServiceResourceObservation {
+    pub accepted: u64,
+    pub transport_gaps: u64,
+    pub superseded: u64,
+    pub response_ms: u64,
+    pub max_response_ms: u64,
+    pub last_ttl_ms: u64,
+    pub last_age_ms: Option<u64>,
+    pub last_retire: Option<&'static str>,
+}
 #[derive(Debug, PartialEq, Eq)]
 struct Binding {
     deployment_id: String,
@@ -45,6 +58,8 @@ pub struct ServiceResourceSet {
     last_request_started: Option<Instant>,
     freshness: Option<Instant>,
     stopped: bool,
+    observation: ServiceResourceObservation,
+    accepted_at: Option<Instant>,
     issuer: Option<(
         SignedServiceIssuerDelegation,
         VerifiedServiceIssuerDelegation,
@@ -63,11 +78,29 @@ impl Default for ServiceResourceSet {
             last_request_started: None,
             freshness: None,
             stopped: false,
+            observation: ServiceResourceObservation::default(),
+            accepted_at: None,
             issuer: None,
         }
     }
 }
 impl ServiceResourceSet {
+    pub(crate) fn observation(&self) -> ServiceResourceObservation {
+        let mut value = self.observation.clone();
+        value.last_age_ms = self.accepted_at.map(|at| duration_ms(at.elapsed()));
+        value
+    }
+    pub(crate) fn observe_response(&mut self, requested: Instant) {
+        let elapsed = duration_ms(requested.elapsed());
+        self.observation.response_ms = elapsed;
+        self.observation.max_response_ms = self.observation.max_response_ms.max(elapsed);
+    }
+    pub(crate) fn observe_transport_gap(&mut self) {
+        self.observation.transport_gaps = self.observation.transport_gaps.saturating_add(1);
+    }
+    pub(crate) fn observe_superseded(&mut self) {
+        self.observation.superseded = self.observation.superseded.saturating_add(1);
+    }
     pub(crate) fn set_usage_store(
         &mut self,
         store: std::sync::Arc<crate::service_usage::ServiceUsageStore>,
@@ -168,10 +201,21 @@ impl ServiceResourceSet {
         let expired: Vec<_> = self
             .active
             .iter()
-            .filter(|(_, publication)| stale || publication.handle().lease().is_err())
-            .map(|(id, _)| id.clone())
+            .filter_map(|(id, publication)| {
+                let reason = if stale {
+                    Some("snapshot-expired")
+                } else {
+                    match publication.handle().lease() {
+                        Ok(_) => None,
+                        Err(Error::Authorization(error)) if error.code == ErrorCode::LeaseExpired => Some("publication-expired"),
+                        Err(_) => Some("publication-stopped"),
+                    }
+                };
+                reason.map(|reason| (id.clone(), reason))
+            })
             .collect();
-        for id in expired {
+        for (id, reason) in expired {
+            self.observation.last_retire = Some(reason);
             self.retire(&id);
         }
     }
@@ -196,6 +240,7 @@ impl ServiceResourceSet {
         if let Some(publication) = self.active.remove(id) {
             publication.revoke();
             self.terminal.insert(id.into());
+            self.observation.last_retire = Some("drain-confirmed");
             return true;
         }
         false
@@ -323,6 +368,7 @@ impl ServiceResourceSet {
             .cloned()
             .collect();
         for id in removed {
+            self.observation.last_retire = Some("snapshot-absent");
             self.retire(&id);
         }
         for lease in snapshot.leases() {
@@ -362,8 +408,14 @@ impl ServiceResourceSet {
         self.sequence = q.request_sequence;
         self.last_request_started = Some(request_started);
         self.freshness = Some(deadline);
+        self.observation.accepted = self.observation.accepted.saturating_add(1);
+        self.observation.last_ttl_ms = duration_ms(deadline.saturating_duration_since(now));
+        self.accepted_at = Some(now);
         Ok(())
     }
+}
+fn duration_ms(value: std::time::Duration) -> u64 {
+    value.as_millis().try_into().unwrap_or(u64::MAX)
 }
 impl Drop for ServiceResourceSet {
     fn drop(&mut self) {

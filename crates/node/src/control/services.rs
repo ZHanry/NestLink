@@ -24,6 +24,11 @@ fn matches_node(node: &NodeLeaseClaims, service: &ServiceLeaseClaims) -> bool {
         && node.runtime_generation == service.edge_runtime_generation
 }
 impl NodeControl {
+    /// Numeric freshness and poll diagnostics without any signed authority or
+    /// endpoint identifiers. Reading this cannot renew or create authority.
+    pub fn service_resource_observation(&self) -> Result<crate::service_plane::ServiceResourceObservation, Error> {
+        Ok(self.state.lock().map_err(|_| Error::Control)?.resources.services.observation())
+    }
     /// A completion observation for maintenance and temporary-directory owners.
     /// It becomes finished only after the control state, reporter and every
     /// outstanding publication have released their real SQLite store owner.

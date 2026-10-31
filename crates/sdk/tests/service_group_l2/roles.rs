@@ -662,6 +662,7 @@ async fn edge(directory: &Path) -> Result {
     let stop_path = marker.join("stop.json");
     tokio::select! {
         result=&mut worker=>{
+            eprintln!("group_l2_resource_observation={:?}", control.service_resource_observation());
             let terminal=match Arc::try_unwrap(control) {
                 Ok(control)=>format!("{:?}",tokio::time::timeout(Duration::from_secs(1),control.wait_finished()).await),
                 Err(control)=>format!("shared-control stopped={} terminal={:?}",*control.stopped().borrow(),control.terminal_failure()),
