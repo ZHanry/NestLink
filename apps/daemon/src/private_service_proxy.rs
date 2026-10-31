@@ -2,8 +2,8 @@
 mod host;
 #[cfg(any(target_os = "linux", windows))]
 mod raw_gate;
-use crate::{session_store::SessionStore, space_dns::session_snapshot};
 use crate::diagnostics::service::{Counters, LocalEntry, Recorder, Stage, StopCause};
+use crate::{session_store::SessionStore, space_dns::session_snapshot};
 use nestlink_protocol::services::private::PrivateServiceEntry;
 use nestlink_sdk::{
     Sdk,
@@ -169,13 +169,21 @@ impl RunningProxy {
         match self {
             Self::Socks(owner) => match owner.wait_stopped(Duration::from_secs(5)).await {
                 LocalProxyWait::CleanupPending => ProxyWait::Pending,
-                LocalProxyWait::Stopped(report) => ProxyWait::Stopped(format!("{report:?}"), Counters::from(&report)),
-                LocalProxyWait::CleanupFailed(report) => ProxyWait::Failed(format!("{report:?}"), Counters::from(&report)),
+                LocalProxyWait::Stopped(report) => {
+                    ProxyWait::Stopped(format!("{report:?}"), Counters::from(&report))
+                }
+                LocalProxyWait::CleanupFailed(report) => {
+                    ProxyWait::Failed(format!("{report:?}"), Counters::from(&report))
+                }
             },
             Self::Native(owner) => match owner.wait_stopped(Duration::from_secs(5)).await {
                 NativeStreamWait::CleanupPending => ProxyWait::Pending,
-                NativeStreamWait::Stopped(report) => ProxyWait::Stopped(format!("{report:?}"), Counters::from(&report)),
-                NativeStreamWait::CleanupFailed(report) => ProxyWait::Failed(format!("{report:?}"), Counters::from(&report)),
+                NativeStreamWait::Stopped(report) => {
+                    ProxyWait::Stopped(format!("{report:?}"), Counters::from(&report))
+                }
+                NativeStreamWait::CleanupFailed(report) => {
+                    ProxyWait::Failed(format!("{report:?}"), Counters::from(&report))
+                }
             },
             #[cfg(any(target_os = "linux", windows))]
             Self::Raw(owner) => match owner.wait_stopped(Duration::from_secs(5)).await {
@@ -294,8 +302,19 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
             relay_private_prefixes,
             allow_loopback_relay,
         } => {
-            let mut diagnostic = Recorder::new(directory.clone(), &service, &space,
-                if raw_loopback {LocalEntry::Raw} else if native_stream {LocalEntry::Native} else {LocalEntry::Socks}, relay_nodes.len());
+            let mut diagnostic = Recorder::new(
+                directory.clone(),
+                &service,
+                &space,
+                if raw_loopback {
+                    LocalEntry::Raw
+                } else if native_stream {
+                    LocalEntry::Native
+                } else {
+                    LocalEntry::Socks
+                },
+                relay_nodes.len(),
+            );
             if !nestlink_protocol::valid_id(&service)
                 || !nestlink_protocol::valid_id(&space)
                 || !listen.ip().is_loopback()
