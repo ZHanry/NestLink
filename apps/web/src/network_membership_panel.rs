@@ -10,8 +10,8 @@ use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
 };
-mod authority;
 mod addressing;
+mod authority;
 mod topology;
 
 #[derive(Clone, Copy)]

@@ -295,7 +295,14 @@ impl Store {
         relay_hops: u8,
         now_ms: u64,
     ) -> Result<NetworkRemotePathBundle, StorageError> {
-        self.network_path_current_with_shape(tx, actor, space, path_id, (relay_hops, usize::from(relay_hops)), now_ms)
+        self.network_path_current_with_shape(
+            tx,
+            actor,
+            space,
+            path_id,
+            (relay_hops, usize::from(relay_hops)),
+            now_ms,
+        )
     }
 
     pub(super) fn network_route_set_path_current(

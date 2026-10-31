@@ -102,6 +102,7 @@ jobs:
           sources = {
               'crates/sdk/src/network/routed_tests.rs': 'network::routed::tests',
               'crates/sdk/src/network/routed_tests/chain.rs': 'network::routed::tests::chain',
+              'crates/sdk/src/network/routed_tests/route_set.rs': 'network::routed::tests::route_sets',
           }
           attributes, cases = [], []
           for path, prefix in sources.items():
@@ -310,6 +311,27 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-sdk --test spaces -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $spacesLog -Append
           exit $LASTEXITCODE
+      - name: Check actual space address, DNS transports and shared daemon singleton
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          $spaceDnsLog = Join-Path $env:RUNNER_TEMP 'nestlink-space-dns-tests.log'
+          $spaceDnsTests = @(
+            @{ Args = @('-p', 'nestlink-sdk', '--test', 'space_addressing') },
+            @{ Args = @('-p', 'nestlink-sdk', '--test', 'space_dns') },
+            @{ Args = @('-p', 'nestlink-local-ipc', '--lib', 'headless_session_owner_and_daemon_share_one_singleton_without_fake_endpoint') }
+          )
+          $spaceDnsFailure = 0
+          foreach ($spaceDnsTest in $spaceDnsTests) {
+            $spaceDnsArguments = @('test', '--locked') + $spaceDnsTest.Args + @('--', '--show-output', '--test-threads=1', '--color', 'never')
+            if ($env:RUNNER_OS -eq 'Windows') {
+              python scripts/refactor-windows-normal-user.py cargo @spaceDnsArguments 2>&1 | Tee-Object -FilePath $spaceDnsLog -Append
+            } else {
+              cargo @spaceDnsArguments 2>&1 | Tee-Object -FilePath $spaceDnsLog -Append
+            }
+            if ($LASTEXITCODE -ne 0) { $spaceDnsFailure = 1 }
+          }
+          exit $spaceDnsFailure
       - if: ${{ !cancelled() }}
         run: cargo fmt --all -- --check
       - name: Retain complete SDK routed output and source test inventory
@@ -330,6 +352,7 @@ jobs:
             ${{ runner.temp }}/nestlink-native-inbox-tests.log
             ${{ runner.temp }}/nestlink-network-discovery-tests.log
             ${{ runner.temp }}/nestlink-spaces-tests.log
+            ${{ runner.temp }}/nestlink-space-dns-tests.log
           if-no-files-found: warn
           retention-days: 14
       - run: cargo check --locked -p nestlink-platform-audio

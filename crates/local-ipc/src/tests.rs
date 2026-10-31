@@ -3,6 +3,22 @@ use serde_json::json;
 type TestResult<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 #[tokio::test]
+async fn headless_session_owner_and_daemon_share_one_singleton_without_fake_endpoint() -> TestResult {
+    let temporary = tempfile::tempdir()?;
+    let directory = temporary.path().join("state");
+    let headless = HeadlessRuntimeLease::acquire(&directory)?;
+    assert!(!directory.join("daemon-endpoint.json").exists());
+    assert!(matches!(LocalServer::bind(&directory).await, Err(Error::AlreadyRunning)));
+    assert!(matches!(HeadlessRuntimeLease::acquire(&directory), Err(Error::AlreadyRunning)));
+    drop(headless);
+    let daemon = LocalServer::bind(&directory).await?;
+    assert!(matches!(HeadlessRuntimeLease::acquire(&directory), Err(Error::AlreadyRunning)));
+    drop(daemon);
+    let _headless = HeadlessRuntimeLease::acquire(&directory)?;
+    Ok(())
+}
+
+#[tokio::test]
 async fn duplex_partial_prefix_cancel_poison_is_shared_with_writer() -> TestResult {
     let temporary = tempfile::tempdir()?;
     let directory = temporary.path().join("state");

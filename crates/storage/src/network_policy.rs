@@ -21,7 +21,9 @@ pub use remote_relays::{NetworkRemoteRelayBundle, NetworkRemoteRelayIssuance};
 mod remote_chains;
 pub use remote_chains::{NetworkRemoteRelayChainBundle, NetworkRemoteRelayChainIssuance};
 mod route_sets;
-pub use route_sets::{NetworkRemoteRouteSetBundle, NetworkRemoteRouteSetIssuance, NetworkRemoteRouteSetMemberBundle};
+pub use route_sets::{
+    NetworkRemoteRouteSetBundle, NetworkRemoteRouteSetIssuance, NetworkRemoteRouteSetMemberBundle,
+};
 mod authority;
 pub use authority::{NetworkAuthorityChange, NetworkAuthorityState};
 pub mod route_exports;

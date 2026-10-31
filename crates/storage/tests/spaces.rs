@@ -1,4 +1,5 @@
 //! Real SQLite transactions exercise product delegation and invitation boundaries.
+#[path = "spaces/addressing.rs"]
 mod addressing;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_auth::{VaultKey, hash_password, random_id, token_hash};

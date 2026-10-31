@@ -72,3 +72,8 @@ These are pending hosted execution, not claimed target evidence.
 The slice does not complete W19. Split-DNS serving through a mature DNS component,
 resolver installation/restoration, offline/cache expiry, target-platform DNS
 cleanup and the managed TUN integration remain separate implementation work.
+
+Follow-up ADR 0031 adds the constrained same-account native DNS server and CLI
+owner. That later slice does not change this directory's traffic-authority
+boundary, and still requires separate system split-DNS installation/restoration
+and target-platform evidence.

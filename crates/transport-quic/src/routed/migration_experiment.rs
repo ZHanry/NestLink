@@ -164,10 +164,17 @@ impl Carrier {
         self.revocation.revoke();
         self.adjacency.request_close();
         self.socket = None;
+        eprintln!("NESTLINK_MIGRATION cleanup={} receiver_join_begin", self.address);
         self.receiver.close_and_wait(deadline).await?;
-        if let Some(released) = self.released.as_mut() { tokio::time::timeout_at(deadline, released).await??; }
+        eprintln!("NESTLINK_MIGRATION cleanup={} receiver_joined", self.address);
+        if let Some(released) = self.released.as_mut() {
+            tokio::time::timeout_at(deadline, released).await
+                .map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "prototype abstract socket release deadline"))??;
+        }
         self.released = None;
+        eprintln!("NESTLINK_MIGRATION cleanup={} abstract_socket_released", self.address);
         self.adjacency.close_and_wait(deadline).await?;
+        eprintln!("NESTLINK_MIGRATION cleanup={} adjacency_closed", self.address);
         rebind(self.address, deadline).await?;
         self.closed = true;
         Ok(())
@@ -261,7 +268,15 @@ async fn relay(index: usize) -> Result {
         tokio::pin!(run);
         tokio::select! {
             result = &mut run => result,
-            result = wait_mark(&root, "stop-all", Instant::now() + Duration::from_secs(10)) => { result?; stop.revoke(); run.await }
+            result = async {
+                let shutdown_deadline = Instant::now() + Duration::from_secs(10);
+                wait_mark(&root, "stop-all", shutdown_deadline).await?;
+                // Retain the carrier while both original inner endpoints send
+                // their close/drain packets. A shared orchestration stop is not
+                // permission to kill the underlay before its dependents close.
+                wait_mark(&root, "first-inner-idle", shutdown_deadline).await?;
+                wait_mark(&root, "second-inner-idle", shutdown_deadline).await
+            } => { result?; stop.revoke(); run.await }
         }
     };
     assert!(result.is_err());
@@ -378,10 +393,16 @@ async fn endpoint(first: bool) -> Result {
         pending_read_cancelled = true;
     } else { wait_mark(&root, "stop-all", deadline).await?; }
     drop((send, read));
+    eprintln!("NESTLINK_MIGRATION role={role} cleanup_stop_observed=true");
     connection.close(0u32.into(), b"isolated experiment finished");
     inner.close(0u32.into(), b"isolated experiment finished");
     let cleanup = Instant::now() + Duration::from_secs(5);
-    tokio::time::timeout_at(cleanup, inner.wait_idle()).await?;
+    eprintln!("NESTLINK_MIGRATION role={role} inner_idle_begin open_connections={} close_reason={:?}", inner.open_connections(), connection.close_reason());
+    tokio::time::timeout_at(cleanup, inner.wait_idle()).await
+        .map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "prototype original inner endpoint wait_idle deadline"))?;
+    eprintln!("NESTLINK_MIGRATION role={role} inner_idle_completed=true");
+    mark(&root, &format!("{role}-inner-idle"))?;
+    wait_mark(&root, if first { "second-inner-idle" } else { "first-inner-idle" }, cleanup).await?;
     drop((connection, inner));
     carriers[1].close_and_wait(cleanup).await?;
     receipt(&root, role, json!({"passed":true,"role":role,"prototype_test_filter_prefix":PREFIX,

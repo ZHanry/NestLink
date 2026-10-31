@@ -1,0 +1,41 @@
+{
+  "source_revision": "1e15b511219734258acbb7ecbd6c5c336ad0c7dd",
+  "qualification": "partial_laboratory_results_not_release_qualified",
+  "build_provenance": {
+    "repository": "ZHanry/NestLink",
+    "network_run": 41151506922,
+    "core_run": 41151506842,
+    "web_run": 41151506925,
+    "run_attempt": 1,
+    "runner": "GitHub-hosted",
+    "exact_git_tree": "9ac9380b00f11b3d73f3d421defef9feae3e4f40"
+  },
+  "execution_provenance": {
+    "environment": "GitHub Actions laboratory",
+    "target_device_acceptance": false,
+    "passed": [
+      "Real routed kernel NAT, production socket faults, topology graph/carrier, local original-connection observations and independent grant vectors",
+      "Both actual SDK ordered chain FileRead scenarios and all four registered-node scenarios passed again",
+      "Private replacement experiment observed bidirectional file payloads on the original connection/stream/exporter after original carrier and relay sockets were released; both endpoints sent and received 1400-byte datagrams with actual PLPMTUD probes and new-path kernel loss",
+      "WASM, dependency audit, OpenAPI generation and all four scoped Linux platform jobs"
+    ],
+    "failures": [
+      "Storage route-set and address test modules omitted explicit paths; rustc and rustfmt could not resolve them. Their tests did not run, and formatter generation was incomplete. Source now declares the actual nested files.",
+      "SDK complete-source inventory omitted the nested route-set module; source inventory now includes its exact module prefix rather than relaxing equality.",
+      "Actual route-set node-admission case timed out. Original setup, stopped-node join and withdrawal deadlines now report distinct stage messages; initial snapshot failure reports current allocation IDs or NodeControl errors. No deadline or admission condition was relaxed.",
+      "Private replacement experiment final cleanup timed out after real new-path data and all continuity/MTU checks. A shared stop marker stopped the underlay before the inner endpoints finished draining. Source now retains the relay until both original inner endpoints are idle, within the unchanged original cleanup deadline, and retains explicit per-stage release diagnostics. This is not production W14 migration qualification."
+    ],
+    "pending_at_checkpoint": [
+      "Final complete core and browser jobs still running at this checkpoint",
+      "New selected original-group candidate business owner, optional sole-Scheduler continuation policy and same-account authoritative DNS owner have source only",
+      "DNS dependency locks must be derived on Actions and reviewed before exact-source compile/test qualification",
+      "OS split DNS, production ongoing carrier selection/migration and remaining mandatory work packages and target qualification"
+    ]
+  },
+  "reviewed_formatter_patch": {
+    "source": "network-rewrite-ubuntu-24.04-1e15b511219734258acbb7ecbd6c5c336ad0c7dd-1/rustfmt.patch",
+    "sha256": "134d7d5dfce43d83cc05e9fd3c406be75f979cc82bda93a2850ac8baa0611545",
+    "scope": "Only unchanged-source Rust files imported; generation itself failed at missing module paths, so no formatting pass is claimed"
+  },
+  "authorization_constraints": "Original grants, deadlines, cumulative quotas, observation freshness, exact source inventories and physical-release assertions remain required. No public release or completed W13/W14/W19 acceptance is claimed."
+}

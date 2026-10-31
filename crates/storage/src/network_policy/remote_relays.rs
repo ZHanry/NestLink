@@ -118,7 +118,13 @@ impl Store {
                     query.runtime_generation,
                     now_ms
                 ],
-                |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?, r.get::<_, bool>(2)?)),
+                |r| {
+                    Ok((
+                        r.get::<_, String>(0)?,
+                        r.get::<_, String>(1)?,
+                        r.get::<_, bool>(2)?,
+                    ))
+                },
             )?
             .collect::<Result<Vec<_>, _>>()?;
         drop(statement);

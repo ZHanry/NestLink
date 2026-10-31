@@ -16,18 +16,19 @@
       "Native signed ICE/Quinn/FileRead through real kernel NATs; both SDK four-node chain FileRead scenarios; all four registered-node chain scenarios including actual revoke and two negative lifecycle cases",
       "Original-session app-core quality projection, candidate/network binding, terminal/renewal semantics and old IPC compatibility: all four focused Linux tests passed",
       "Topology carrier and journal/HTTP jobs, real routed NAT, production socket faults and independent grant vectors",
-      "Linux and Windows contract selected clippy/tests passed; complete jobs fail formatting",
+      "Windows contract selected clippy/tests passed; both complete jobs fail formatting; Linux also had one lifecycle fixture failure retained below",
       "Independent locked dependency audit, WASM and Linux platform checks passed",
       "Web site build and browser runner/observer contracts passed; full native browser runs pending at checkpoint"
     ],
     "failures": [
+      "Linux remote lifecycle partial-file backpressure scenario: 44 passed/1 failed with future lease or request clock. Fixture raised an actual 0ms monotonic renewal-request start to future 1ms using max(1); source repair preserves the real request timestamp and all production clock checks.",
       "Private migration prototype compiled and passed strict clippy. Both actual cases failed second-endpoint maximum_sent > 1200: that endpoint only sent small digest receipts. New source makes each original-stream round send and verify real file bytes in both directions; no assertion, grant deadline or quota is relaxed.",
       "Native session test still borrowed moved permit for its generation assertion. New source captures original generation before ownership transfer, preserving the original binding assertion.",
       "Linux SDK routed 18-test inventory had 17 passes and one deadline-fixture AddrInUse. That case explicitly permits cleanup timeout, giving no controller completion receipt; only its unconfirmed Drop release now waits for real rebinding within the original final cleanup deadline. All receipt-bearing owners retain immediate rebind requirements.",
       "Formatter differences in new desktop/projection/prototype source. Official formatter patch was verified and imported for unchanged-source files; the modified prototype needs a subsequent exact-source patch."
     ],
     "pending_at_checkpoint": [
-      "Complete Linux and Windows core jobs, and full browser native scenarios were still running",
+      "Final review: Web production build and both Chrome/Edge full native browser scenarios succeeded; core and network workflows failed in their recorded scopes",
       "New atomic original-group route-set authority, per-candidate availability and address/name directory implementation",
       "Repaired bidirectional carrier replacement prototype; production path migration remains incomplete",
       "All remaining mandatory implementation and external qualification"

@@ -1690,7 +1690,7 @@ async fn partial_file_backpressure_does_not_block_receive_renewal_or_revoke() ->
             .payload,
         b"opposite-direction-input"
     );
-    let started = clock.monotonic_ms().max(1);
+    let started = clock.monotonic_ms();
     claims.lease_sequence = 2;
     claims.issued_at_unix_ms = clock.sample()?.unix_ms;
     claims.expires_at_unix_ms = claims.issued_at_unix_ms + 15000;

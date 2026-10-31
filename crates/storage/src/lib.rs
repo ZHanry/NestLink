@@ -398,7 +398,9 @@ impl Store {
         }
         if version < 37 {
             let transaction = connection.transaction()?;
-            transaction.execute_batch(include_str!("../migrations/037_network_remote_route_sets.sql"))?;
+            transaction.execute_batch(include_str!(
+                "../migrations/037_network_remote_route_sets.sql"
+            ))?;
             transaction.pragma_update(None, "user_version", 37)?;
             transaction.commit()?;
         }

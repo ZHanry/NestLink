@@ -26,6 +26,8 @@ pub mod network_management;
 #[path = "network/topology.rs"]
 pub mod network_topology;
 mod spaces;
+#[cfg(not(target_arch = "wasm32"))]
+pub use spaces::dns::{SpaceDns, SpaceDnsError};
 
 #[derive(Debug, thiserror::Error)]
 pub enum SdkError {

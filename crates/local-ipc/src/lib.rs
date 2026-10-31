@@ -63,6 +63,17 @@ pub(crate) fn valid_runtime_id(value: &str) -> bool {
     nestlink_protocol::valid_id(value)
 }
 
+/// Reuses the daemon singleton and maintenance admission for a headless
+/// command that owns the protected management session, without publishing IPC.
+pub struct HeadlessRuntimeLease {
+    _state: state::StateLease,
+}
+impl HeadlessRuntimeLease {
+    pub fn acquire(directory: &Path) -> Result<Self> {
+        Ok(Self { _state: state::StateLease::acquire(directory, &nestlink_auth::random_id())? })
+    }
+}
+
 pub struct LocalServer {
     listener: TcpListener,
     acceptor: tokio_rustls::TlsAcceptor,

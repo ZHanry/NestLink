@@ -1,5 +1,6 @@
 //! Bounded candidate scheduling. NAT descriptions never decide reachability.
 pub mod observation;
+pub mod continuation;
 pub mod topology;
 use nestlink_policy::PathSet;
 pub use nestlink_protocol::api::{Candidate, CandidateKind, Transport};
@@ -26,6 +27,9 @@ pub enum Outcome {
     Connected(Candidate),
     Failed(ErrorCode),
     NetworkChanged,
+    /// An optional original-group policy stage; the transport owner still
+    /// performs all I/O and explicitly commits each proposed switch.
+    Continuing,
 }
 pub struct Scheduler {
     generation: u64,
@@ -38,6 +42,7 @@ pub struct Scheduler {
     deadlines: Vec<u64>,
     outcome: Outcome,
     failures: Vec<Failure>,
+    continuation: Option<continuation::Continuation>,
 }
 impl Scheduler {
     pub fn new(
@@ -82,6 +87,7 @@ impl Scheduler {
             deadlines: vec![0; len],
             outcome: Outcome::Checking,
             failures: Vec::new(),
+            continuation: None,
         })
     }
     pub fn outcome(&self) -> &Outcome {
@@ -215,6 +221,13 @@ impl Scheduler {
         }
     }
     pub fn network_changed(&mut self, new_generation: u64) {
+        if new_generation != self.generation
+            && let Some(continuation) = self.continuation.as_mut()
+        {
+            continuation.terminate(ErrorCode::ReplayRejected);
+            self.outcome = Outcome::NetworkChanged;
+            return;
+        }
         if self.outcome == Outcome::Checking && new_generation != self.generation {
             self.active.clear();
             self.outcome = Outcome::NetworkChanged;

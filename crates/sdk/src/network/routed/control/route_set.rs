@@ -3,8 +3,9 @@
 use super::*;
 use nestlink_identity::network::{VerifiedRemoteRouteSetGrants, verify_remote_route_set_grants};
 use nestlink_protocol::api::{NetworkRemoteRouteSetRequest, NetworkRemoteRouteSetView, NodeEndpointsView};
+mod connect;
 
-fn original_fingerprint(view: &NetworkRemoteRouteSetView) -> Result<[u8;32], SdkError> {
+pub(super) fn original_fingerprint(view: &NetworkRemoteRouteSetView) -> Result<[u8;32], SdkError> {
     let mut original = view.clone();
     for member in &mut original.members { member.available = false; }
     response_digest(&original)

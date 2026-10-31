@@ -727,7 +727,9 @@ async fn finish_mesh_after_incomplete_controller_cleanup(
         ("host", addresses[3]),
     ] {
         if role == "controller" {
-            eprintln!("SDK routed deadline cleanup phase=drop-release-wait role={role} address={address}");
+            eprintln!(
+                "SDK routed deadline cleanup phase=drop-release-wait role={role} address={address}"
+            );
             let socket = tokio::time::timeout_at(deadline, async {
                 loop {
                     match std::net::UdpSocket::bind(address) {
@@ -835,7 +837,8 @@ async fn sdk_absolute_deadline_covers_business_proof_after_real_routed_quic_esta
     host_stop.revoke();
     let cleanup = Instant::now() + Duration::from_secs(5);
     peer.close_and_wait(cleanup).await?;
-    finish_mesh_after_incomplete_controller_cleanup(relay_stop, forwarding, addresses, cleanup).await?;
+    finish_mesh_after_incomplete_controller_cleanup(relay_stop, forwarding, addresses, cleanup)
+        .await?;
     Ok(())
 }
 

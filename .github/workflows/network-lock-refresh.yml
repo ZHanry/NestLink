@@ -53,6 +53,11 @@ jobs:
           connectivity = tomllib.loads(pathlib.Path('crates/connectivity/Cargo.toml').read_text())
           assert connectivity['dependencies']['petgraph'] == '=0.8.3'
           assert connectivity['dependencies']['nestlink-identity'] == {'workspace': True}
+          sdk = tomllib.loads(pathlib.Path('crates/sdk/Cargo.toml').read_text())
+          native = sdk['target']['cfg(not(target_arch = "wasm32"))']['dependencies']
+          assert native['hickory-server'] == {'version': '=0.26.3', 'default-features': False}
+          assert native['async-trait'] == '=0.1.89'
+          assert native['ipnet'] == '=2.12.2'
           before_bytes = lock.read_bytes()
           before = tomllib.loads(before_bytes.decode())['package']
           shutil.copyfile(lock, output / 'before.lock')
@@ -97,6 +102,7 @@ jobs:
               derived = {identity(item): item.get('checksum') for item in after}
               crab = [item for item in after if item['name'] == 'crab_nat']
               petgraph = [item for item in after if item['name'] == 'petgraph']
+              dns = [item for item in after if item['name'] == 'hickory-server']
               changed = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
               assertions = {
                   'only_selected_lock_changed': set(changed) <= {lock.as_posix()},
@@ -107,6 +113,7 @@ jobs:
                       for key, part in retained.items()),
                   'reviewed_crab_nat_exact_version_and_checksum': len(crab) == 1 and crab[0]['version'] == '0.8.1' and crab[0].get('checksum') == 'b6571f33e3d6520c5b08e54b1202836c6ebe68b950f450951804d037a875c25c',
                   'reviewed_petgraph_exact_version_and_checksum': len(petgraph) == 1 and petgraph[0]['version'] == '0.8.3' and petgraph[0].get('checksum') == '8701b58ea97060d5e5b155d383a69952a60943f0e6dfe30b04c287beb0b27455',
+                  'reviewed_authoritative_dns_exact_version': len(dns) == 1 and dns[0]['version'] == '0.26.3' and bool(dns[0].get('checksum')),
                   'locked_metadata_succeeded': all(item['return_code'] == 0 for item in commands),
               }
               assert all(assertions.values()), 'Unreviewed dependency drift or incomplete lock derivation'

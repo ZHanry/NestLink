@@ -480,6 +480,7 @@ pub(super) struct RemoteRouteObserver {
 enum ReadbackKind {
     Relay,
     Chain,
+    RouteSet { selected: usize },
 }
 impl RemoteRouteObserver {
     pub(super) fn spawn(self, lease: nestlink_remote::LeaseControl) -> TaskOwner {
@@ -518,6 +519,16 @@ impl RemoteRouteObserver {
         match self.kind {
             ReadbackKind::Relay => self.matches_view::<NetworkRemoteRelayView>().await,
             ReadbackKind::Chain => self.matches_view::<NetworkRemoteRelayChainView>().await,
+            ReadbackKind::RouteSet { selected } => {
+                matches!(
+                    crate::request::<nestlink_protocol::api::NetworkRemoteRouteSetView>(
+                        &self.client, &self.origin, reqwest::Method::GET, &self.path,
+                        None, Some(self.token.expose()),
+                    ).await,
+                    Ok(Some(view)) if view.members.get(selected).is_some_and(|member| member.available)
+                        && route_set::original_fingerprint(&view).ok() == Some(self.fingerprint)
+                )
+            },
         }
     }
 

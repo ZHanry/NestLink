@@ -10,12 +10,15 @@ use zeroize::Zeroizing;
 mod remote;
 mod remote_chain;
 mod route_set;
-pub use route_set::{VerifiedRemoteRouteSetGrants, remote_route_set_reservation_transcript, verify_remote_route_set_grants};
 pub use remote::{RemoteRouteBinding, remote_route_binding, verify_node_network_resource};
 pub use remote_chain::{
     NodeRemoteChainBinding, RemoteChainBinding, remote_chain_binding,
     remote_chain_reservation_transcript, verify_network_chain_admission,
     verify_node_network_chain_resource,
+};
+pub use route_set::{
+    VerifiedRemoteRouteSetGrants, remote_route_set_reservation_transcript,
+    verify_remote_route_set_grants,
 };
 
 fn node_admission_transcript(

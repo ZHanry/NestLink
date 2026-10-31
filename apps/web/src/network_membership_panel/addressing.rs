@@ -4,11 +4,16 @@ use super::*;
 use nestlink_protocol::spaces::{SpaceDeviceView, addressing::*};
 
 #[derive(Clone, Copy)]
-enum Action { Load, Issue, Reserve, Rename, Revoke }
+enum Action {
+    Load,
+    Issue,
+    Reserve,
+    Rename,
+    Revoke,
+}
 
 fn manager(directory: &SpaceAddressDirectory) -> bool {
-    !directory.space.archived
-        && matches!(directory.space.role, SpaceRole::Owner | SpaceRole::Admin)
+    !directory.space.archived && matches!(directory.space.role, SpaceRole::Owner | SpaceRole::Admin)
 }
 
 #[component]
@@ -34,7 +39,10 @@ pub(super) fn SpaceAddressPanel(
 
     let choose = Callback::new(move |id: String| {
         let record = directory.get_untracked().and_then(|directory| {
-            directory.addresses.into_iter().find(|record| record.installation_id == id)
+            directory
+                .addresses
+                .into_iter()
+                .find(|record| record.installation_id == id)
         });
         name.set(record.as_ref().map(|r| r.name.clone()).unwrap_or_default());
         ipv4.set(record.as_ref().map(|r| r.ipv4.clone()).unwrap_or_default());
@@ -44,27 +52,45 @@ pub(super) fn SpaceAddressPanel(
     });
 
     let request = Callback::new(move |action: Action| {
-        if busy.get_untracked() { return; }
+        if busy.get_untracked() {
+            return;
+        }
         let space_id = space.get_untracked().trim().to_owned();
         if !nestlink_protocol::valid_id(&space_id) {
             problem.set(t("请先填写有效的空间编号。", "Enter a valid space ID first.").into());
             return;
         }
-        let snapshot = directory.get_untracked().filter(|d| d.space.space_id == space_id);
+        let snapshot = directory
+            .get_untracked()
+            .filter(|d| d.space.space_id == space_id);
         let installation = selected.get_untracked();
-        let record = snapshot.as_ref().and_then(|d| d.addresses.iter().find(|r| r.installation_id == installation)).cloned();
-        let device = devices.get_untracked().into_iter().find(|d| d.installation_id == installation && d.active);
-        if !matches!(action, Action::Load) && (snapshot.as_ref().is_none_or(|d| !manager(d))
-            || !nestlink_protocol::valid_id(&installation)
-            || (matches!(action, Action::Issue) && device.is_none())
-            || (!matches!(action, Action::Issue) && record.is_none())) {
+        let record = snapshot
+            .as_ref()
+            .and_then(|d| {
+                d.addresses
+                    .iter()
+                    .find(|r| r.installation_id == installation)
+            })
+            .cloned();
+        let device = devices
+            .get_untracked()
+            .into_iter()
+            .find(|d| d.installation_id == installation && d.active);
+        if !matches!(action, Action::Load)
+            && (snapshot.as_ref().is_none_or(|d| !manager(d))
+                || !nestlink_protocol::valid_id(&installation)
+                || (matches!(action, Action::Issue) && device.is_none())
+                || (!matches!(action, Action::Issue) && record.is_none()))
+        {
             problem.set(t("请重新读取目录并选择设备；只有空间所有者或管理员可以修改。", "Reload the directory and select a device. Only space owners and administrators can change it.").into());
             return;
         }
         let draft_name = name.get_untracked().trim().to_owned();
         let draft_v4 = ipv4.get_untracked().trim().to_owned();
         let draft_v6 = ipv6.get_untracked().trim().to_owned();
-        let Some(sdk) = api.get_value() else { return; };
+        let Some(sdk) = api.get_value() else {
+            return;
+        };
         let session = session_revision.get_untracked();
         let operation = generation.get_untracked();
         let alive = alive.clone();
@@ -72,70 +98,144 @@ pub(super) fn SpaceAddressPanel(
         problem.set(String::new());
         message.set(String::new());
         spawn_local(async move {
-            let active = || alive.load(Ordering::Acquire)
-                && session_revision.try_get_untracked() == Some(session)
-                && generation.try_get_untracked() == Some(operation)
-                && space.try_get_untracked().is_some_and(|s| s.trim() == space_id);
-            let result: Result<(SpaceAddressDirectory, Option<Vec<SpaceDeviceView>>), SdkError> = async {
-                let client = sdk.lock().await;
-                if !active() { return Err(SdkError::Invalid); }
-                if matches!(action, Action::Load) {
-                    let loaded = client.space_address_directory(&space_id).await?;
-                    if !active() { return Err(SdkError::Invalid); }
-                    let details = client.space_details(&space_id).await?;
-                    if details.space.space_id != space_id
-                        || loaded.space.deployment_id != client.health().deployment_id
-                        || details.space.policy_epoch != loaded.space.policy_epoch {
+            let active = || {
+                alive.load(Ordering::Acquire)
+                    && session_revision.try_get_untracked() == Some(session)
+                    && generation.try_get_untracked() == Some(operation)
+                    && space
+                        .try_get_untracked()
+                        .is_some_and(|s| s.trim() == space_id)
+            };
+            let result: Result<(SpaceAddressDirectory, Option<Vec<SpaceDeviceView>>), SdkError> =
+                async {
+                    let client = sdk.lock().await;
+                    if !active() {
                         return Err(SdkError::Invalid);
                     }
-                    return Ok((loaded, Some(details.devices)));
+                    if matches!(action, Action::Load) {
+                        let loaded = client.space_address_directory(&space_id).await?;
+                        if !active() {
+                            return Err(SdkError::Invalid);
+                        }
+                        let details = client.space_details(&space_id).await?;
+                        if details.space.space_id != space_id
+                            || loaded.space.deployment_id != client.health().deployment_id
+                            || details.space.policy_epoch != loaded.space.policy_epoch
+                        {
+                            return Err(SdkError::Invalid);
+                        }
+                        return Ok((loaded, Some(details.devices)));
+                    }
+                    let snapshot = snapshot.as_ref().ok_or(SdkError::Invalid)?;
+                    let epoch = record.as_ref().map_or(0, |r| r.address_epoch);
+                    let loaded = match action {
+                        Action::Issue => {
+                            client
+                                .issue_space_address(
+                                    &space_id,
+                                    SpaceAddressIssue {
+                                        expected_revision: snapshot.revision,
+                                        expected_address_epoch: epoch,
+                                        expected_membership_epoch: device
+                                            .as_ref()
+                                            .ok_or(SdkError::Invalid)?
+                                            .membership_epoch,
+                                        installation_id: installation,
+                                        name: draft_name,
+                                    },
+                                )
+                                .await?
+                        }
+                        Action::Reserve => {
+                            client
+                                .reserve_space_address(
+                                    &space_id,
+                                    &installation,
+                                    SpaceAddressReservation {
+                                        expected_revision: snapshot.revision,
+                                        expected_address_epoch: epoch,
+                                        ipv4: draft_v4,
+                                        ipv6: draft_v6,
+                                    },
+                                )
+                                .await?
+                        }
+                        Action::Rename => {
+                            client
+                                .rename_space_address(
+                                    &space_id,
+                                    &installation,
+                                    SpaceAddressRename {
+                                        expected_revision: snapshot.revision,
+                                        expected_address_epoch: epoch,
+                                        name: draft_name,
+                                    },
+                                )
+                                .await?
+                        }
+                        Action::Revoke => {
+                            client
+                                .revoke_space_address(
+                                    &space_id,
+                                    &installation,
+                                    SpaceAddressRevocation {
+                                        expected_revision: snapshot.revision,
+                                        expected_address_epoch: epoch,
+                                    },
+                                )
+                                .await?
+                        }
+                        Action::Load => return Err(SdkError::Invalid),
+                    };
+                    Ok((loaded, None))
                 }
-                let snapshot = snapshot.as_ref().ok_or(SdkError::Invalid)?;
-                let epoch = record.as_ref().map_or(0, |r| r.address_epoch);
-                let loaded = match action {
-                    Action::Issue => client.issue_space_address(&space_id, SpaceAddressIssue {
-                        expected_revision: snapshot.revision,
-                        expected_address_epoch: epoch,
-                        expected_membership_epoch: device.as_ref().ok_or(SdkError::Invalid)?.membership_epoch,
-                        installation_id: installation,
-                        name: draft_name,
-                    }).await?,
-                    Action::Reserve => client.reserve_space_address(&space_id, &installation, SpaceAddressReservation {
-                        expected_revision: snapshot.revision, expected_address_epoch: epoch,
-                        ipv4: draft_v4, ipv6: draft_v6,
-                    }).await?,
-                    Action::Rename => client.rename_space_address(&space_id, &installation, SpaceAddressRename {
-                        expected_revision: snapshot.revision, expected_address_epoch: epoch, name: draft_name,
-                    }).await?,
-                    Action::Revoke => client.revoke_space_address(&space_id, &installation, SpaceAddressRevocation {
-                        expected_revision: snapshot.revision, expected_address_epoch: epoch,
-                    }).await?,
-                    Action::Load => return Err(SdkError::Invalid),
-                };
-                Ok((loaded, None))
-            }.await;
-            if !active() { return; }
+                .await;
+            if !active() {
+                return;
+            }
             busy.set(false);
             match result {
                 Ok((loaded, choices)) if loaded.space.space_id == space_id => {
-                    if let Some(choices) = choices { devices.set(choices); }
+                    if let Some(choices) = choices {
+                        devices.set(choices);
+                    }
                     directory.set(Some(loaded));
-                    message.set(t("已读取服务器确认的目录。", "Server-confirmed directory loaded.").into());
+                    message.set(
+                        t(
+                            "已读取服务器确认的目录。",
+                            "Server-confirmed directory loaded.",
+                        )
+                        .into(),
+                    );
                 }
                 Ok(_) => {
                     directory.set(None);
                     devices.set(Vec::new());
-                    problem.set(t("返回的空间不匹配，请重新读取。", "The returned space does not match. Reload the directory.").into());
+                    problem.set(
+                        t(
+                            "返回的空间不匹配，请重新读取。",
+                            "The returned space does not match. Reload the directory.",
+                        )
+                        .into(),
+                    );
                 }
                 Err(error) => {
                     if matches!(&error, SdkError::SignIn)
-                        || matches!(&error, SdkError::Api(status, _) if status.as_u16() == 401) {
+                        || matches!(&error, SdkError::Api(status, _) if status.as_u16() == 401)
+                    {
                         auth_failure.run(sdk);
                         return;
                     }
                     directory.set(None);
                     devices.set(Vec::new());
-                    problem.set(format!("{} {}", sdk_error(&error), t("草稿已保留，请重新读取目录后再修改。", "Draft retained. Reload the directory before changing it.")));
+                    problem.set(format!(
+                        "{} {}",
+                        sdk_error(&error),
+                        t(
+                            "草稿已保留，请重新读取目录后再修改。",
+                            "Draft retained. Reload the directory before changing it."
+                        )
+                    ));
                 }
             }
         });

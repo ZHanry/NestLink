@@ -63,6 +63,9 @@ uuid.workspace = true
 webrtc.workspace = true
 nestlink-media-codec.workspace = true
 bytes = "=1.12.1"
+hickory-server = { version = "=0.26.3", default-features = false }
+async-trait = "=0.1.89"
+ipnet = "=2.12.2"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 reqwest.workspace = true
