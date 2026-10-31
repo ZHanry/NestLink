@@ -592,7 +592,9 @@ impl Snapshot {
         }
         for host in local {
             if self.addresses.iter().filter(|row| row.ip == *host).count() != 1 {
-                return Err(security::denied());
+                return Err(io::Error::other(format!(
+                    "original TUN does not have exactly one approved local host {host}"
+                )));
             }
         }
         for row in &self.addresses {
@@ -603,7 +605,9 @@ impl Snapshot {
                 || row.dad != IpDadStatePreferred
                 || row.skip
             {
-                return Err(security::denied());
+                return Err(io::Error::other(format!(
+                    "original TUN address differs from the exact manual host state: {row:?}"
+                )));
             }
         }
         for row in &self.routes {
@@ -614,7 +618,9 @@ impl Snapshot {
                 || row.immortal
                 || row.site_prefix != 0
             {
-                return Err(security::denied());
+                return Err(io::Error::other(format!(
+                    "original TUN route exceeds the approved host inventory: {row:?}"
+                )));
             }
             if remote.contains(&row.destination)
                 && (row.metric != METRIC
@@ -623,7 +629,9 @@ impl Snapshot {
                     || row.loopback
                     || row.autoconfigure)
             {
-                return Err(security::denied());
+                return Err(io::Error::other(format!(
+                    "original TUN remote route differs from the exact manual state: {row:?}"
+                )));
             }
             // Windows creates each exact local /32 or /128 host route while
             // assigning the approved address. Its autoconfigure flag describes
@@ -635,12 +643,16 @@ impl Snapshot {
                     || !row.loopback
                     || !row.autoconfigure)
             {
-                return Err(security::denied());
+                return Err(io::Error::other(format!(
+                    "original TUN local route differs from the exact kernel host state: {row:?}"
+                )));
             }
         }
         for host in local.iter().chain(remote) {
             if self.routes.iter().filter(|row| row.destination == *host).count() != 1 {
-                return Err(security::denied());
+                return Err(io::Error::other(format!(
+                    "original TUN does not have exactly one approved host route {host}"
+                )));
             }
         }
         Ok(())
