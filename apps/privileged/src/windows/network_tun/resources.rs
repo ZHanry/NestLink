@@ -281,20 +281,34 @@ pub fn isolate(identity: &ProviderIdentity) -> io::Result<()> {
             ("UseAutomaticMetric", |row| row.UseAutomaticMetric = false),
             ("Metric", |row| row.Metric = METRIC),
             ("NlMtu", |row| row.NlMtu = 1280),
-            ("ManagedAddressConfigurationSupported", |row| row.ManagedAddressConfigurationSupported = false),
-            ("OtherStatefulConfigurationSupported", |row| row.OtherStatefulConfigurationSupported = false),
-            ("AdvertiseDefaultRoute", |row| row.AdvertiseDefaultRoute = false),
-            ("RouterDiscoveryBehavior", |row| row.RouterDiscoveryBehavior = RouterDiscoveryDisabled),
-            ("LinkLocalAddressBehavior", |row| row.LinkLocalAddressBehavior = LinkLocalAlwaysOff),
+            ("ManagedAddressConfigurationSupported", |row| {
+                row.ManagedAddressConfigurationSupported = false
+            }),
+            ("OtherStatefulConfigurationSupported", |row| {
+                row.OtherStatefulConfigurationSupported = false
+            }),
+            ("AdvertiseDefaultRoute", |row| {
+                row.AdvertiseDefaultRoute = false
+            }),
+            ("RouterDiscoveryBehavior", |row| {
+                row.RouterDiscoveryBehavior = RouterDiscoveryDisabled
+            }),
+            ("LinkLocalAddressBehavior", |row| {
+                row.LinkLocalAddressBehavior = LinkLocalAlwaysOff
+            }),
             ("DadTransmits", |row| row.DadTransmits = 0),
-            ("DisableDefaultRoutes", |row| row.DisableDefaultRoutes = true),
+            ("DisableDefaultRoutes", |row| {
+                row.DisableDefaultRoutes = true
+            }),
         ];
         for (field, update) in changes {
             update(&mut row);
             // IP Helper requires this ignored IPv4 member to be zero.
             row.SitePrefixLength = 0;
-            checked(unsafe { SetIpInterfaceEntry(&mut row) },
-                &format!("SetIpInterfaceEntry family {af} member {field}"))?;
+            checked(
+                unsafe { SetIpInterfaceEntry(&mut row) },
+                &format!("SetIpInterfaceEntry family {af} member {field}"),
+            )?;
         }
     }
     Ok(())
@@ -463,7 +477,9 @@ impl Snapshot {
             || self.routes.is_empty()
             || self.routes.len() > 4
         {
-            return Err(io::Error::other(format!("original TUN isolation snapshot differs from the exact required state: {self:?}")));
+            return Err(io::Error::other(format!(
+                "original TUN isolation snapshot differs from the exact required state: {self:?}"
+            )));
         }
         for host in local {
             if self.addresses.iter().filter(|row| row.ip == *host).count() != 1 {

@@ -108,7 +108,8 @@ pub(in crate::control) async fn poll(
                 bytes.extend_from_slice(&chunk);
             }
             let envelope: nestlink_protocol::service_plane::publication::ServiceResourceGrant =
-                serde_json::from_slice(&bytes).map_err(|_| phase("service snapshot JSON",Error::Control))?;
+                serde_json::from_slice(&bytes)
+                    .map_err(|_| phase("service snapshot JSON", Error::Control))?;
             let snapshot = verify_service_snapshot(
                 &envelope.snapshot,
                 &issuer,
@@ -145,21 +146,25 @@ pub(in crate::control) async fn poll(
                         continue;
                     }
                 };
-                if let Err(error)=runtime
-                    .resources
-                    .services
-                    .accept_checked(snapshot, node_deadline, requested)
+                if let Err(error) =
+                    runtime
+                        .resources
+                        .services
+                        .accept_checked(snapshot, node_deadline, requested)
                 {
                     runtime.resources.services.stop();
-                    return Err(phase("service snapshot installation",service_error(error)));
+                    return Err(phase("service snapshot installation", service_error(error)));
                 }
-                if let Err(error)=runtime
+                if let Err(error) = runtime
                     .resources
                     .services
                     .set_issuer_delegation(issuer_delegation)
                 {
                     runtime.resources.services.stop();
-                    return Err(phase("service issuer delegation installation",service_error(error)));
+                    return Err(phase(
+                        "service issuer delegation installation",
+                        service_error(error),
+                    ));
                 }
                 accepted = true;
             }
@@ -168,17 +173,26 @@ pub(in crate::control) async fn poll(
                 // revoke (including a server's initial restart fence).
                 if accepted {
                     runtime.resources.services.stop();
-                    return Err(match failure {Ok(Err(error))=>phase("service snapshot response",error),Err(_)=>phase("service snapshot deadline",Error::Control),Ok(Ok(_))=>unreachable!()});
+                    return Err(match failure {
+                        Ok(Err(error)) => phase("service snapshot response", error),
+                        Err(_) => phase("service snapshot deadline", Error::Control),
+                        Ok(Ok(_)) => unreachable!(),
+                    });
                 }
             }
         }
     }
 }
-fn phase(stage:&'static str,cause:Error)->Error {Error::Phase{stage,cause:Box::new(cause)}}
-fn service_error(error:crate::service_plane::Error)->Error {
+fn phase(stage: &'static str, cause: Error) -> Error {
+    Error::Phase {
+        stage,
+        cause: Box::new(cause),
+    }
+}
+fn service_error(error: crate::service_plane::Error) -> Error {
     match error {
-        crate::service_plane::Error::Authorization(error)=>Error::Authorization(error),
-        crate::service_plane::Error::Node(error)=>error,
-        _=>Error::Control,
+        crate::service_plane::Error::Authorization(error) => Error::Authorization(error),
+        crate::service_plane::Error::Node(error) => error,
+        _ => Error::Control,
     }
 }

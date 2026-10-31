@@ -36,8 +36,14 @@ pub struct OnlineWireGuardClient {
 impl OnlineWireGuardClient {
     /// Verify a fresh management response for explicit local review/export.
     /// This does not consume an online start or grant any OS/packet owner.
-    pub fn inspect(sdk:&Sdk,pin:&PinnedNetworkSpace,local:&DeviceIdentity,id:&str,view:&WireGuardClientBindingView)->Result<VerifiedWireGuardClientBinding,SdkError> {
-        Ok(verify(sdk,pin,local,id,view)?.0)
+    pub fn inspect(
+        sdk: &Sdk,
+        pin: &PinnedNetworkSpace,
+        local: &DeviceIdentity,
+        id: &str,
+        view: &WireGuardClientBindingView,
+    ) -> Result<VerifiedWireGuardClientBinding, SdkError> {
+        Ok(verify(sdk, pin, local, id, view)?.0)
     }
     /// `approved_binding` and `approved_access` must come from two explicit
     /// local choices. Downloading a credential or knowing a WG key is not one.
@@ -136,8 +142,13 @@ impl OnlineWireGuardClient {
     /// portal lease is refreshed separately and still constrains every packet
     /// through `current`; this never extends either signed authority deadline.
     pub fn remaining_authorization_lifetime(&self) -> Duration {
-        if self.stopped {Duration::ZERO} else {
-            self.packet.remaining_lifetime().min(self.binding_deadline.saturating_duration_since(Instant::now()))
+        if self.stopped {
+            Duration::ZERO
+        } else {
+            self.packet.remaining_lifetime().min(
+                self.binding_deadline
+                    .saturating_duration_since(Instant::now()),
+            )
         }
     }
     pub fn stop(&mut self) {

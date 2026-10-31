@@ -175,8 +175,8 @@ pub(crate) async fn packet_loop<D: WholePacketDevice + ?Sized, G: OwnerGuard + ?
             _=tick.tick()=>{
                 if let Err(error)=guard.check_local(){break Err(error);}
                 if refreshed.elapsed()>=Duration::from_secs(1){
-                    if let Err(error)=access.refresh(sdk).await{break Err(error.into());}
-                    if let Err(error)=endpoint.validate_underlay(){break Err(error);}
+                    if let Err(error)=access.refresh(sdk).await{break Err(error);}
+                    if let Err(error)=endpoint.validate_underlay(){break Err(error.into());}
                     if let Err(error)=guard.check().await{break Err(error);}
                     refreshed=Instant::now();
                 }

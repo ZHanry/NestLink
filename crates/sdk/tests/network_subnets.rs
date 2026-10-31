@@ -296,11 +296,17 @@ async fn two_originally_overlapping_sites_keep_exact_signed_bytes_and_permission
     let original_export = nestlink_protocol::network::GrantClaims::decode_canonical(
         &decode_network_grant(&first.route_export)?.claims,
     )?;
-    assert_eq!(claims.scope.expires_at_ms,
-        request.expires_at_ms.min(original_export.scope().expires_at_ms),
-        "fixed mapping authority remains exactly bounded by its original request/export");
-    assert!(claims.scope.expires_at_ms > first.gateway.lease_expires_at_ms,
-        "a live node lease is checked independently and never re-signs the mapping");
+    assert_eq!(
+        claims.scope.expires_at_ms,
+        request
+            .expires_at_ms
+            .min(original_export.scope().expires_at_ms),
+        "fixed mapping authority remains exactly bounded by its original request/export"
+    );
+    assert!(
+        claims.scope.expires_at_ms > first.gateway.lease_expires_at_ms,
+        "a live node lease is checked independently and never re-signs the mapping"
+    );
     let second_request = f.request(1, "10.210.2.0").await?;
     let second = f
         .manager

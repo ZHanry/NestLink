@@ -17,8 +17,15 @@ const DOMAIN: &[u8] = b"NestLink/offline/v1/complete-direct-grant-bundle\0";
 const REFERENCE: &[u8] = b"NestLink/offline/v1/complete-direct-grant-reference\0";
 const APPROVAL: &[u8] = b"NestLink/offline/v1/exact-endpoint-approval\0";
 
-pub fn offline_draft_digest(authority: &[u8; 32], claims: &OfflineGrantBundleClaims) -> Result<[u8; 32], ContractError> {
-    if *authority == [0; 32] { return Err(denied("offline approval requires an independently pinned authority")); }
+pub fn offline_draft_digest(
+    authority: &[u8; 32],
+    claims: &OfflineGrantBundleClaims,
+) -> Result<[u8; 32], ContractError> {
+    if *authority == [0; 32] {
+        return Err(denied(
+            "offline approval requires an independently pinned authority",
+        ));
+    }
     let mut reference = REFERENCE.to_vec();
     reference.extend_from_slice(authority);
     reference.extend_from_slice(&claims.canonical_bytes()?);
@@ -32,24 +39,58 @@ fn approval_transcript(endpoint: u8, draft_digest: &[u8; 32]) -> Vec<u8> {
 impl crate::InstallationIdentity {
     /// The caller separately presents the complete draft and exact digest to
     /// the local user. A logged-in administrator cannot produce this signature.
-    pub fn sign_offline_endpoint_approval(&self, authority: &[u8; 32], claims: &OfflineGrantBundleClaims, endpoint: u8, approved_digest: [u8; 32]) -> Result<OfflineEndpointApproval, ContractError> {
-        let member = claims.members.get(usize::from(endpoint)).ok_or_else(|| denied("invalid offline endpoint role"))?;
+    pub fn sign_offline_endpoint_approval(
+        &self,
+        authority: &[u8; 32],
+        claims: &OfflineGrantBundleClaims,
+        endpoint: u8,
+        approved_digest: [u8; 32],
+    ) -> Result<OfflineEndpointApproval, ContractError> {
+        let member = claims
+            .members
+            .get(usize::from(endpoint))
+            .ok_or_else(|| denied("invalid offline endpoint role"))?;
         let draft_digest = offline_draft_digest(authority, claims)?;
         if member.public_key != self.public_key() || approved_digest != draft_digest {
-            return Err(denied("offline endpoint approval differs from the explicit local draft"));
+            return Err(denied(
+                "offline endpoint approval differs from the explicit local draft",
+            ));
         }
-        Ok(OfflineEndpointApproval { endpoint, draft_digest,
-            signature: self.key.sign(&domain_message(APPROVAL, &approval_transcript(endpoint, &draft_digest))).to_bytes().to_vec() })
+        Ok(OfflineEndpointApproval {
+            endpoint,
+            draft_digest,
+            signature: self
+                .key
+                .sign(&domain_message(
+                    APPROVAL,
+                    &approval_transcript(endpoint, &draft_digest),
+                ))
+                .to_bytes()
+                .to_vec(),
+        })
     }
 }
-pub fn verify_offline_endpoint_approvals(authority: &[u8; 32], claims: &OfflineGrantBundleClaims, approvals: &[OfflineEndpointApproval; 2]) -> Result<(), ContractError> {
+pub fn verify_offline_endpoint_approvals(
+    authority: &[u8; 32],
+    claims: &OfflineGrantBundleClaims,
+    approvals: &[OfflineEndpointApproval; 2],
+) -> Result<(), ContractError> {
     let expected = offline_draft_digest(authority, claims)?;
     for (index, approval) in approvals.iter().enumerate() {
-        if usize::from(approval.endpoint) != index || approval.draft_digest != expected || approval.signature.len() != 64 {
-            return Err(denied("both distinct offline endpoints must approve the exact complete draft"));
+        if usize::from(approval.endpoint) != index
+            || approval.draft_digest != expected
+            || approval.signature.len() != 64
+        {
+            return Err(denied(
+                "both distinct offline endpoints must approve the exact complete draft",
+            ));
         }
-        verify_signature(&claims.members[index].public_key, APPROVAL,
-            &approval_transcript(approval.endpoint, &expected), &approval.signature)?;
+        verify_signature(
+            &claims.members[index].public_key,
+            APPROVAL,
+            &approval_transcript(approval.endpoint, &expected),
+            &approval.signature,
+        )?;
     }
     Ok(())
 }

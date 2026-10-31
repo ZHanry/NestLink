@@ -329,15 +329,22 @@ async fn independent_client_key_requires_exact_original_source_authority_and_rev
             .is_err()
     );
     let spent = owner.spent_bytes();
-    owner.refresh(&f.source, &f.source_device).await
+    owner
+        .refresh(&f.source, &f.source_device)
+        .await
         .map_err(|error| format!("original source WireGuard refresh failed: {error}"))?;
     assert_eq!(owner.spent_bytes(), spent);
     let revoke = WireGuardClientRevoke {
         // An ordinary client owner reads its authorized binding view. The
         // generic network-policy management endpoint requires a manager role;
         // granting that role here would hide a real owner-permission defect.
-        expected_revision: f.source.wireguard_client_binding(&f.space,&request.grant_id).await
-            .map_err(|error| format!("source binding revision read failed: {error}"))?.policy.revision,
+        expected_revision: f
+            .source
+            .wireguard_client_binding(&f.space, &request.grant_id)
+            .await
+            .map_err(|error| format!("source binding revision read failed: {error}"))?
+            .policy
+            .revision,
         expected_client_revision: 1,
     };
     status(

@@ -473,11 +473,17 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         #[cfg(any(target_os = "linux", windows))]
         Some(Command::NetworkTunSystem(command)) => return network_tun_system::run(command).await,
         #[cfg(target_os = "linux")]
-        Some(Command::NetworkSubnet(command)) => return network_subnet_system::run_owner(command).await,
+        Some(Command::NetworkSubnet(command)) => {
+            return network_subnet_system::run_owner(command).await;
+        }
         #[cfg(target_os = "linux")]
-        Some(Command::NetworkSubnetSystem(command)) => return network_subnet_system::run(command).await,
+        Some(Command::NetworkSubnetSystem(command)) => {
+            return network_subnet_system::run(command).await;
+        }
         #[cfg(target_os = "linux")]
-        Some(Command::NetworkSubnetWorker(command)) => return network_subnet_system::run_worker(command).await,
+        Some(Command::NetworkSubnetWorker(command)) => {
+            return network_subnet_system::run_worker(command).await;
+        }
         #[cfg(target_os = "linux")]
         Some(Command::Wireguard(command)) => return wireguard::run(command).await,
         Some(Command::FileQuota(command)) => return Ok(run_file_quota(command)?),
