@@ -43,12 +43,14 @@ MAX_REMEDIATION_BYTES = 64 * 1024**2
 CURRENT_ROLES = frozenset((
     "windows-x64-setup", "windows-x64-privileged-setup",
     "linux-x64-server", "linux-arm64-server",
+    "linux-x64-network", "linux-arm64-network",
     "web-static", "oci-x64", "oci-arm64", "source", "sbom", "licenses", "materials", "acceptance",
     "native-payload-manifest", "native-packages-manifest",
 ))
 REQUIRED_CASES = frozenset((
     "windows-10-installed", "windows-11-installed", "windows-privileged-input",
     "linux-x64-server-installed", "linux-arm64-server-installed",
+    "linux-x64-network-installed", "linux-arm64-network-installed",
     "chrome-current", "edge-current", "firefox-current", "company-to-home",
     "mobile-to-home", "90-minute-soak", "turn-capacity-and-revoke", "signature-windows",
     "signature-linux-update", "signature-oci", "install-upgrade-rollback-uninstall",

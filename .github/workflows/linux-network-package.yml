@@ -1,0 +1,65 @@
+name: Linux headless network installation
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['Cargo.*', 'rust-toolchain.toml', 'apps/daemon/**', 'crates/**', 'third-party/**', 'packaging/**', 'config/product-scope.json', 'scripts/refactor-candidate-producer.py', 'scripts/refactor-linux-network-package.py', 'scripts/refactor-required-checks.py', 'tests/refactor/test_candidate_producer.py', 'tests/refactor/test_product_scope.py', '.github/workflows/linux-network-package.yml']
+  pull_request:
+    paths: ['Cargo.*', 'rust-toolchain.toml', 'apps/daemon/**', 'crates/**', 'third-party/**', 'packaging/**', 'config/product-scope.json', 'scripts/refactor-candidate-producer.py', 'scripts/refactor-linux-network-package.py', 'scripts/refactor-required-checks.py', 'tests/refactor/test_candidate_producer.py', 'tests/refactor/test_product_scope.py', '.github/workflows/linux-network-package.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: linux-network-package-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native-install:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    env:
+      CARGO_INCREMENTAL: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      CARGO_TARGET_DIR: ${{ github.workspace }}/../linux-network-build
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+      - name: Prepare existing mature native inputs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build nasm perl pkg-config libpipewire-0.3-dev libasound2-dev iproute2
+          echo "NESTLINK_CODEC_PREFIX=${{ runner.temp }}/network-codecs/${{ matrix.target }}" >> "$GITHUB_ENV"
+      - name: Verify complete role inventory and actual Debian package isolation
+        run: |
+          python3 -B -m unittest discover -s tests/refactor -p test_candidate_producer.py
+          python3 -B -m unittest discover -s tests/refactor -p test_product_scope.py
+          python3 -B -m unittest discover -s tests/refactor -p test_rc_publish.py
+      - name: Build locked codecs and exact native headless daemon on GitHub
+        run: |
+          python3 -B scripts/refactor-native-codecs.py build --target ${{ matrix.target }} --cache-dir "${{ runner.temp }}/codec-sources" --work-dir "${{ runner.temp }}/network-codecs"
+          python3 -B scripts/refactor-native-codecs.py verify --target ${{ matrix.target }} --prefix "$NESTLINK_CODEC_PREFIX"
+          cargo build --locked --release -p nestlink-daemon
+      - name: Install exact bytes, require explicit authority and remove only package files
+        run: python3 -B scripts/refactor-linux-network-package.py --binary "$CARGO_TARGET_DIR/release/nestlink-daemon" --output "${{ runner.temp }}/linux-network-package"
+      - name: Retain native package, exact hashes and actual installation logs
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: linux-network-package-${{ matrix.target }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/linux-network-package
+          if-no-files-found: error
+          retention-days: 30

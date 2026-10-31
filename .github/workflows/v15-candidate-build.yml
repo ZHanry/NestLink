@@ -162,7 +162,7 @@ jobs:
         run: |
           import os, pathlib, subprocess
           scratch = pathlib.Path(os.environ["RUNNER_TEMP"])
-          packages = ["nestlink-desktop", "nestlink-daemon", "nestlink-privileged"] if os.name == "nt" else ["nestlink-server"]
+          packages = ["nestlink-desktop", "nestlink-daemon", "nestlink-privileged"] if os.name == "nt" else ["nestlink-server", "nestlink-daemon"]
           command = ["cargo", "build", "--release", "--locked", "--target", os.environ["RUST_TARGET"]]
           for package in packages:
               command.extend(["-p", package])

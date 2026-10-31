@@ -294,6 +294,30 @@ class CandidateTests(unittest.TestCase):
         self.assertTrue((extracted / "opt/nestlink-rc/server/nestlink-server").stat().st_mode & 0o111)
         self.assertFalse((extracted / "etc/systemd").exists())
 
+    @unittest.skipUnless(shutil.which("dpkg-deb"), "Requires native Debian packaging tools")
+    def test_actual_headless_network_deb_contains_only_ordinary_daemon_without_activation(self):
+        inputs = self.root / "linux-network-input"
+        self.write(inputs / "nestlink-daemon", b"headless network fixture bytes")
+        for architecture in ("amd64", "arm64"):
+            with self.subTest(architecture=architecture):
+                output = self.root / ("network-" + architecture + ".deb")
+                P.deb_candidate(inputs, output, "network", architecture, self.value)
+                fields = P.TOOLS.run(["dpkg-deb", "--field", output, "Architecture", "Package", "Depends"]).decode()
+                self.assertIn("Architecture: " + architecture, fields)
+                self.assertIn("Package: nestlink-rc-network", fields)
+                self.assertIn("libpipewire-0.3-0", fields)
+                extracted = self.root / ("network-installed-" + architecture)
+                P.TOOLS.run(["dpkg-deb", "--extract", output, extracted])
+                executable = extracted / "opt/nestlink-rc/network/nestlink-daemon"
+                self.assertEqual(executable.read_bytes(), b"headless network fixture bytes")
+                self.assertTrue(executable.stat().st_mode & 0o111)
+                self.assertFalse((extracted / "etc").exists())
+                self.assertFalse((extracted / "var").exists())
+                self.assertFalse((extracted / "opt/nestlink-rc/server").exists())
+                control = self.root / ("network-control-" + architecture)
+                P.TOOLS.run(["dpkg-deb", "--control", output, control])
+                self.assertEqual({path.name for path in control.iterdir()}, {"control"})
+
     def test_hashed_trunk_stylesheets_are_accepted_and_missing_references_rejected(self):
         inputs = self.root / "web"
         self.write(inputs / "index.html", b'<link rel="stylesheet" href="/nestlink-cafef00d.css"><script type="module">import "./app.js";</script>')
@@ -315,7 +339,7 @@ class CandidateTests(unittest.TestCase):
         P.freeze(argparse.Namespace(cohort=self.cohort_path, bundle=self.bundle, output=output, acceptance_evidence=None))
         manifest = P.read_json(output / "candidate-build-manifest.json")
         self.assertEqual({item["role"] for item in manifest["artifacts"]}, P.CURRENT_ROLES)
-        self.assertEqual(len(manifest["artifacts"]), 14)
+        self.assertEqual(len(manifest["artifacts"]), 16)
         self.assertFalse(manifest["production_update_eligible"])
         self.assertEqual(manifest["user_full_functional_acceptance"], "pending")
         for artifact in manifest["artifacts"]:
@@ -325,7 +349,7 @@ class CandidateTests(unittest.TestCase):
         self.assertEqual(manifest["version"], "0.7.0-rc.1")
         self.assertEqual(manifest["product"], "NestLink")
         self.assertEqual({path.name for path in output.iterdir()}, {"files", "candidate-build-manifest.json"})
-        self.assertEqual(len(manifest["acceptance_cases"]), 19)
+        self.assertEqual(len(manifest["acceptance_cases"]), 21)
         self.assertTrue(all(item["status"] == "pending" for item in manifest["acceptance_cases"]))
         self.assertIn("90-minute-soak", {item["id"] for item in manifest["acceptance_cases"]})
         self.assertNotIn("72-hour-soak", {item["id"] for item in manifest["acceptance_cases"]})

@@ -27,7 +27,13 @@
         "x86_64",
         "aarch64"
       ],
-      "distribution": "Ubuntu 24.04"
+      "distribution": "Ubuntu 24.04",
+      "roles": [
+        "control-server",
+        "headless-network",
+        "subnet-gateway",
+        "wireguard-gateway"
+      ]
     }
   },
   "distribution_builds": "github-actions",

@@ -181,7 +181,7 @@ class RCPublicationTests(unittest.TestCase):
                          (producer.REPOSITORY, producer.REPOSITORY_ID, producer.VERSION, producer.SIGNING))
         self.assertEqual(P.CURRENT_ROLES, producer.CURRENT_ROLES)
         self.assertEqual(P.REQUIRED_CASES, producer.REQUIRED_CASES)
-        self.assertEqual((len(P.CURRENT_ROLES), len(P.REQUIRED_CASES)), (14, 19))
+        self.assertEqual((len(P.CURRENT_ROLES), len(P.REQUIRED_CASES)), (16, 21))
         old_spec = importlib.util.spec_from_file_location("formal_release_policy_test", ROOT / "scripts/refactor-release-publish.py")
         old = importlib.util.module_from_spec(old_spec)
         old_spec.loader.exec_module(old)

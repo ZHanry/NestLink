@@ -7,7 +7,8 @@ import re
 import subprocess
 from pathlib import Path
 
-WORKFLOWS = ("rust-core.yml", "web-build.yml", "secret-scan.yml", "codeql.yml")
+WORKFLOWS = ("rust-core.yml", "web-build.yml", "secret-scan.yml", "codeql.yml",
+             "network-rewrite.yml", "linux-network-package.yml")
 REPOSITORY = "ZHanry/NestLink"
 
 

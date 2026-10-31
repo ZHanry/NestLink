@@ -38,8 +38,10 @@ class ProductScopeTests(unittest.TestCase):
         publisher = module("refactor-rc-publish")
         self.assertEqual(set(candidate.EXPECTED),
                          {"windows-x64", "linux-x64", "linux-arm64", "web", "metadata", "oci-x64", "oci-arm64"})
-        self.assertEqual(candidate.EXPECTED["linux-x64"], {"linux-x64-server"})
-        self.assertEqual(candidate.EXPECTED["linux-arm64"], {"linux-arm64-server"})
+        self.assertEqual(candidate.EXPECTED["linux-x64"], {"linux-x64-server", "linux-x64-network"})
+        self.assertEqual(candidate.EXPECTED["linux-arm64"], {"linux-arm64-server", "linux-arm64-network"})
+        self.assertEqual(candidate.NATIVE["linux-x64"][2], ("server", "daemon"))
+        self.assertEqual(candidate.NATIVE["linux-arm64"][2], ("server", "daemon"))
         self.assertEqual(release.NATIVE["linux-x64"][2], ("server",))
         self.assertEqual(release.NATIVE["linux-arm64"][2], ("server",))
         self.assertEqual(candidate.CURRENT_ROLES, publisher.CURRENT_ROLES)
@@ -82,7 +84,8 @@ class ProductScopeTests(unittest.TestCase):
         self.assertEqual({item["platform"] for item in signing["artifacts"]}, {"windows"})
         checks = module("refactor-required-checks")
         self.assertEqual(set(checks.WORKFLOWS),
-                         {"rust-core.yml", "web-build.yml", "secret-scan.yml", "codeql.yml"})
+                         {"rust-core.yml", "web-build.yml", "secret-scan.yml", "codeql.yml",
+                          "network-rewrite.yml", "linux-network-package.yml"})
 
 
 if __name__ == "__main__":

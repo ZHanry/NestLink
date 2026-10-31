@@ -38,19 +38,25 @@ def module(name, path):
 # configuration(), load_cohort(), signing and packaging entry points are never
 # called or monkeypatched by this separate producer.
 TOOLS = module("candidate_release_utilities", "scripts/refactor-release-producer.py")
-NATIVE = TOOLS.NATIVE
+NATIVE = {
+    **TOOLS.NATIVE,
+    "linux-x64": ("x86_64-unknown-linux-gnu", "linux-x86_64", ("server", "daemon")),
+    "linux-arm64": ("aarch64-unknown-linux-gnu", "linux-aarch64", ("server", "daemon")),
+}
 VERSION = "0.7.0-rc.1"
 REPOSITORY = "ZHanry/NestLink"
 REPOSITORY_ID = "R_kgDOVNHMvg"
 CURRENT_ROLES = frozenset((
     "windows-x64-setup", "windows-x64-privileged-setup",
     "linux-x64-server", "linux-arm64-server",
+    "linux-x64-network", "linux-arm64-network",
     "web-static", "oci-x64", "oci-arm64", "source", "sbom", "licenses",
     "materials", "acceptance", "native-payload-manifest", "native-packages-manifest",
 ))
 REQUIRED_CASES = frozenset((
     "windows-10-installed", "windows-11-installed", "windows-privileged-input",
     "linux-x64-server-installed", "linux-arm64-server-installed",
+    "linux-x64-network-installed", "linux-arm64-network-installed",
     "chrome-current", "edge-current", "firefox-current",
     "company-to-home", "mobile-to-home", "90-minute-soak", "turn-capacity-and-revoke",
     "signature-windows", "signature-linux-update", "signature-oci",
@@ -59,8 +65,8 @@ REQUIRED_CASES = frozenset((
 ))
 EXPECTED = {
     "windows-x64": {"windows-x64-setup", "windows-x64-privileged-setup"},
-    "linux-x64": {"linux-x64-server"},
-    "linux-arm64": {"linux-arm64-server"},
+    "linux-x64": {"linux-x64-server", "linux-x64-network"},
+    "linux-arm64": {"linux-arm64-server", "linux-arm64-network"},
     "web": {"web-static"},
     "metadata": {"source", "sbom-input", "licenses-input"},
     "oci-x64": {"oci-x64"},
@@ -288,18 +294,20 @@ def setup_candidate(input_directory, output, role, version, iscc):
 
 
 def deb_candidate(input_directory, output, role, architecture, value):
-    require(architecture in ("amd64", "arm64") and role == "server", "Unknown candidate DEB")
+    require(architecture in ("amd64", "arm64") and role in ("server", "network"), "Unknown candidate DEB")
     with tempfile.TemporaryDirectory(prefix="candidate-deb-") as scratch:
         staging = Path(scratch)
         prefix = staging / "opt/nestlink-rc" / role
         prefix.mkdir(parents=True)
-        names = ("server",)
+        names = ("server",) if role == "server" else ("daemon",)
         for name in names:
             copy_fixed(input_directory / ("nestlink-" + name), prefix / ("nestlink-" + name))
             (prefix / ("nestlink-" + name)).chmod(0o755)
         control = staging / "DEBIAN"
         control.mkdir()
         depends = "libc6 (>= 2.39), libgcc-s1, libstdc++6"
+        if role == "network":
+            depends += ", libpipewire-0.3-0, libasound2t64, iproute2"
         deb_version = value["version"].replace("-rc.", "~rc.")
         text = (f"Package: nestlink-rc-{role}\nVersion: {deb_version}\n"
                 f"Architecture: {architecture}\nMaintainer: NestLink candidate build <candidate@invalid.example>\n"
@@ -332,6 +340,8 @@ def candidate_readme(value):
             "Formal installer lifecycle, signed upgrade/rollback, devices and cross-network acceptance remain pending.\n"
             "These packages must not be promoted into the production update channel.\n"
             "Linux server binary: /opt/nestlink-rc/server/nestlink-server --help\n"
+            "Linux headless network binary: /opt/nestlink-rc/network/nestlink-daemon --help\n"
+            "Network commands require explicit plans and ordinary-user runtime ownership; root applies only reviewed OS plans.\n"
             "Server deployment initialization is an explicit operator action.\n")
 
 
@@ -359,8 +369,8 @@ def collect_native(args):
     files.mkdir()
     (destination / "README.candidate.txt").write_text(candidate_readme(value), encoding="utf-8")
     artifacts = []
-    for role in ("desktop", "privileged") if args.target == "windows-x64" else ("server",):
-        suffix = "windows-x64" + ("-privileged" if role == "privileged" else "") if args.target == "windows-x64" else args.target + ("-server" if role == "server" else "")
+    for role in ("desktop", "privileged") if args.target == "windows-x64" else ("server", "network"):
+        suffix = "windows-x64" + ("-privileged" if role == "privileged" else "") if args.target == "windows-x64" else args.target + "-" + role
         path = files / ("NestLink-candidate-" + suffix + (".exe" if args.target == "windows-x64" else ".deb"))
         if args.target == "windows-x64":
             setup_candidate(destination, path, role, value["version"], args.iscc)
