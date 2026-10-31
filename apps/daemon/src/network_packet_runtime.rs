@@ -2,8 +2,11 @@
 //! owners. Platform adapters supply complete packets and exact owner checks.
 //! This module never creates an online start, replaces its owner or its budget.
 use nestlink_sdk::{
-    Sdk,
-    network::packet_access::{OnlinePacketAccess, PACKET_MTU},
+    DeviceIdentity, Sdk,
+    network::{
+        packet_access::{OnlinePacketAccess, PacketAdmission, PACKET_MTU},
+        wireguard::OnlineWireGuardClient,
+    },
 };
 use nestlink_transport_quic::packet_codec::{DirectPacketEndpoint, PacketAssembler, encode_direct};
 use serde::Serialize;
@@ -13,6 +16,43 @@ use tokio::time::Instant;
 pub(crate) type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 pub(crate) type PacketIoFuture<'a> = Pin<Box<dyn Future<Output = io::Result<usize>> + Send + 'a>>;
 pub(crate) type GuardFuture<'a> = Pin<Box<dyn Future<Output = Result> + Send + 'a>>;
+/// Both host/subnet and standard WireGuard ingress retain the same original
+/// noncloneable one-use packet admission owner. This adapter only supplies the
+/// extra local identity needed to refresh a separately signed WG key binding.
+pub(crate) trait PacketAuthority {
+    fn business_digest(&self) -> [u8; 32];
+    fn transport_group(&self) -> [u8; 32];
+    fn wire_direction(&self) -> nestlink_protocol::network_datagram::Direction;
+    fn remaining_lifetime(&self) -> Duration;
+    fn spent_bytes(&self) -> u64;
+    fn admit_local(&mut self, packet: &[u8]) -> io::Result<PacketAdmission>;
+    fn admit_remote(&mut self, packet: &[u8]) -> io::Result<PacketAdmission>;
+    fn refresh<'a>(&'a mut self, sdk: &'a Sdk) -> GuardFuture<'a>;
+}
+impl PacketAuthority for OnlinePacketAccess {
+    fn business_digest(&self) -> [u8; 32] { OnlinePacketAccess::business_digest(self) }
+    fn transport_group(&self) -> [u8; 32] { OnlinePacketAccess::transport_group(self) }
+    fn wire_direction(&self) -> nestlink_protocol::network_datagram::Direction { OnlinePacketAccess::wire_direction(self) }
+    fn remaining_lifetime(&self) -> Duration { OnlinePacketAccess::remaining_lifetime(self) }
+    fn spent_bytes(&self) -> u64 { OnlinePacketAccess::spent_bytes(self) }
+    fn admit_local(&mut self, packet: &[u8]) -> io::Result<PacketAdmission> { OnlinePacketAccess::admit_local(self, packet) }
+    fn admit_remote(&mut self, packet: &[u8]) -> io::Result<PacketAdmission> { OnlinePacketAccess::admit_remote(self, packet) }
+    fn refresh<'a>(&'a mut self, sdk: &'a Sdk) -> GuardFuture<'a> { Box::pin(async move { OnlinePacketAccess::refresh(self, sdk).await.map_err(Into::into) }) }
+}
+pub(crate) struct WireGuardAuthority<'a> {
+    pub owner: &'a mut OnlineWireGuardClient,
+    pub local: &'a DeviceIdentity,
+}
+impl PacketAuthority for WireGuardAuthority<'_> {
+    fn business_digest(&self) -> [u8; 32] { self.owner.business_digest() }
+    fn transport_group(&self) -> [u8; 32] { self.owner.transport_group() }
+    fn wire_direction(&self) -> nestlink_protocol::network_datagram::Direction { self.owner.wire_direction() }
+    fn remaining_lifetime(&self) -> Duration { self.owner.remaining_lifetime() }
+    fn spent_bytes(&self) -> u64 { self.owner.spent_bytes() }
+    fn admit_local(&mut self, packet: &[u8]) -> io::Result<PacketAdmission> { self.owner.admit_local(packet) }
+    fn admit_remote(&mut self, packet: &[u8]) -> io::Result<PacketAdmission> { self.owner.admit_remote(packet) }
+    fn refresh<'a>(&'a mut self, sdk: &'a Sdk) -> GuardFuture<'a> { Box::pin(async move { self.owner.refresh(sdk, self.local).await.map_err(Into::into) }) }
+}
 pub(crate) trait WholePacketDevice: Sync {
     fn recv<'a>(&'a self, packet: &'a mut [u8]) -> PacketIoFuture<'a>;
     fn send<'a>(&'a self, packet: &'a [u8]) -> PacketIoFuture<'a>;
@@ -71,11 +111,11 @@ pub(crate) fn read_public_plan(path: &std::path::Path, maximum: u64) -> Result<(
     }
     Ok((bytes, metadata.uid()))
 }
-pub(crate) async fn establish<G: OwnerGuard + ?Sized>(
+pub(crate) async fn establish<G: OwnerGuard + ?Sized, A: PacketAuthority + ?Sized>(
     endpoint: &mut DirectPacketEndpoint,
     dial: Option<SocketAddr>,
     sdk: &Sdk,
-    access: &mut OnlinePacketAccess,
+    access: &mut A,
     guard: &G,
 ) -> Result {
     let binding = access.business_digest();
@@ -102,11 +142,11 @@ struct Counters {
     rejected_packets: u64,
     spent_bytes: u64,
 }
-pub(crate) async fn packet_loop<D: WholePacketDevice + ?Sized, G: OwnerGuard + ?Sized>(
+pub(crate) async fn packet_loop<D: WholePacketDevice + ?Sized, G: OwnerGuard + ?Sized, A: PacketAuthority + ?Sized>(
     device: &D,
     endpoint: &mut DirectPacketEndpoint,
     sdk: &Sdk,
-    access: &mut OnlinePacketAccess,
+    access: &mut A,
     guard: &G,
 ) -> Result {
     // Full provider-size reads prevent truncation disguising an oversized IP
