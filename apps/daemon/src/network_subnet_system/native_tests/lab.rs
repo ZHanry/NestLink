@@ -64,7 +64,12 @@ impl Lab {
         let plan=Plan::read(&self.plan(index))?;
         nestlink_platform_security::create_private(&self.journal(index).join("lab-helper.json"),&serde_json::to_vec(&process_identity(std::process::id()).await?)?)?;
         use clap::Parser;
-        let arguments=crate::Args::try_parse_from(vec!["nestlink-daemon".into(),"network-subnet-system".into(),"apply".into(),"--plan".into(),plan.path.display().to_string(),"--journal-dir".into(),self.journal(index).display().to_string(),"--authority".into(),URL_SAFE_NO_PAD.encode(plan.authority),"--approve-access-digest".into(),URL_SAFE_NO_PAD.encode(plan.approved_access),"--approve-mapping-digest".into(),URL_SAFE_NO_PAD.encode(plan.approved_mapping),"--lan-interface".into(),plan.lan_index.to_string(),"--lan-gateway".into(),plan.lan_gateway.to_string()])?;
+        let mut arguments=vec!["nestlink-daemon".into(),"network-subnet-system".into(),"apply".into(),"--plan".into(),plan.path.display().to_string(),"--journal-dir".into(),self.journal(index).display().to_string(),"--authority".into(),URL_SAFE_NO_PAD.encode(plan.authority),"--approve-access-digest".into(),URL_SAFE_NO_PAD.encode(plan.approved_access),"--approve-mapping-digest".into(),URL_SAFE_NO_PAD.encode(plan.approved_mapping),"--lan-interface".into(),plan.lan_index.to_string(),"--lan-gateway".into(),plan.lan_gateway.to_string()];
+        if let Some(ingress)=&plan.wireguard {
+            arguments.extend(["--approve-wireguard-binding-digest".into(),URL_SAFE_NO_PAD.encode(ingress.approved_binding),"--wireguard-client-endpoint".into(),ingress.client_endpoint.to_string(),"--wireguard-listen-port".into(),ingress.listen_port.to_string(),"--wireguard-server-private-key".into(),self.root.join("wireguard-server.key").display().to_string()]);
+            if let Some(next)=ingress.underlay_next_hop {arguments.extend(["--wireguard-underlay-next-hop".into(),next.to_string()]);}
+        }
+        let arguments=crate::Args::try_parse_from(arguments)?;
         let Some(crate::Command::NetworkSubnetSystem(arguments))=arguments.command else {return Err(io::Error::other("native root helper command parsing differs").into());};
         helper::run(arguments).await
     }

@@ -76,6 +76,7 @@ jobs:
               'workflow_revision': os.environ['GITHUB_WORKFLOW_SHA'],
               'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
               'runner_environment': os.environ['RUNNER_ENVIRONMENT'], 'ordinary_uid': os.geteuid(),
+              'kernel_release': os.uname().release,
               'cargo_lock_sha256': digest('Cargo.lock'), 'build_command': build, 'build_return_code': built.returncode,
               'tools': {name: digest('/usr/bin/' + name) for name in ['wg', 'qrencode']},
               'package_copyright_sha256': copyrights, 'passed': False,
@@ -89,7 +90,8 @@ jobs:
               receipt['executable_sha256'] = digest(executable)
               command = [str(executable), 'wireguard::', '--include-ignored', '--nocapture', '--test-threads=1']
               with (output / 'execution.log').open('wb') as log:
-                  code = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT).returncode
+                  environment = dict(os.environ, NESTLINK_SUBNET_NATIVE_LAB='1')
+                  code = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, env=environment).returncode
               receipt.update(execution_command=command, execution_return_code=code, passed=code == 0)
           (output / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
           print(json.dumps(receipt, indent=2))

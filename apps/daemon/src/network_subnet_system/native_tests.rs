@@ -8,6 +8,7 @@ use tokio::{process::{Command,Child},io::{AsyncReadExt,AsyncWriteExt},net::{TcpL
 mod fixture;
 mod lab;
 mod carrier;
+mod wireguard;
 
 pub(super) const ROLE_TEST:&str="network_subnet_system::native_tests::hosted_native_role";
 fn lab_only()->Result {
@@ -95,6 +96,7 @@ async fn hosted_native_role()->Result {
     let lab=lab::Lab::checked(Path::new(&std::env::var("NESTLINK_SUBNET_NATIVE_CONFIG")?))?;
     match role.as_str() {
         "setup"=>lab.setup().await,
+        "wg-install-secrets"=>wireguard::install_secrets(&lab).await,
         "verify-host"=>lab.verify_host().await,
         "teardown"=>lab.teardown().await,
         "apply0"=>lab.apply(0).await,
@@ -108,6 +110,7 @@ async fn hosted_native_role()->Result {
         "recover1"=>helper::recover(&journal::Store::open(&lab.journal(1))?).await,
         "service0"=>service(&lab,0).await,
         "service1"=>service(&lab,1).await,
+        "probe0" if std::env::var("NESTLINK_SUBNET_NATIVE_CASE").is_ok_and(|case|case.starts_with("wg-"))=>wireguard::client_probe(&lab).await,
         "probe0"=>network_probe(0).await,
         "probe1"=>network_probe(1).await,
         _=>Err(io::Error::other("unknown source-exact native subnet role").into()),
