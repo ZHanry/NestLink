@@ -1,0 +1,62 @@
+name: Controlled dual LAN discovery mechanism
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "crates/sdk/src/network/lan*"
+      - "crates/sdk/src/network/lan/**"
+      - "apps/daemon/src/network_lan.rs"
+      - "crates/sdk/tests/network_access/lan.rs"
+      - "scripts/network-lan-*.py"
+      - ".github/workflows/network-lan.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: network-lan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  actual-dual-lan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      RUST_BACKTRACE: "0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          components: clippy
+      - name: Set ephemeral original SDK build paths
+        shell: bash
+        run: |
+          printf 'NESTLINK_CODEC_PREFIX=%s/nestlink-codecs/x86_64-unknown-linux-gnu\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          printf 'CARGO_TARGET_DIR=%s/nestlink-lan-target\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+      - name: Install actual distribution DNS services and hosted build inputs
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config libpipewire-0.3-dev iproute2 dnsmasq-base
+      - name: Build and verify original native SDK codec inputs on GitHub
+        run: |
+          python3 scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir "$RUNNER_TEMP/nestlink-codec-sources" --work-dir "$RUNNER_TEMP/nestlink-codecs"
+          python3 scripts/refactor-native-codecs.py verify --target x86_64-unknown-linux-gnu --prefix "$NESTLINK_CODEC_PREFIX"
+      - name: Check controlled fixture syntax on GitHub
+        run: python3 -B -c 'import ast,pathlib; [ast.parse(path.read_text()) for path in map(pathlib.Path,["scripts/network-lan-l2.py","scripts/network-lan-client.py"])]'
+      - name: Exercise original online owner across actual isolated LANs
+        run: python3 -B scripts/network-lan-l2.py --output "$RUNNER_TEMP/network-lan-evidence"
+      - name: Retain exact source and physical protocol evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: network-lan-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/network-lan-evidence/
+          if-no-files-found: warn
+          retention-days: 30

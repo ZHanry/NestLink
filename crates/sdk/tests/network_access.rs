@@ -28,6 +28,9 @@ type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 mod subnet;
 #[path = "network_access/wireguard.rs"]
 mod wireguard;
+#[cfg(target_os = "linux")]
+#[path = "network_access/lan.rs"]
+mod lan;
 const PASSWORD: &str = "packet-access-http-integration-password";
 
 fn now() -> Result<u64> {
