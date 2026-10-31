@@ -18,6 +18,11 @@ pub struct OnlineWireGuardClient {
     stopped:bool,
 }
 impl OnlineWireGuardClient {
+    /// Verify a fresh management response for explicit local review/export.
+    /// This does not consume an online start or grant any OS/packet owner.
+    pub fn inspect(sdk:&Sdk,pin:&PinnedNetworkSpace,local:&DeviceIdentity,id:&str,view:&WireGuardClientBindingView)->Result<VerifiedWireGuardClientBinding,SdkError> {
+        Ok(verify(sdk,pin,local,id,view)?.0)
+    }
     /// `approved_binding` and `approved_access` must come from two explicit
     /// local choices. Downloading a credential or knowing a WG key is not one.
     pub async fn start(sdk:&Sdk,pin:&PinnedNetworkSpace,local:&DeviceIdentity,id:&str,approved_binding:[u8;32],approved_access:[u8;32],owner_id:String)->Result<Self,SdkError> {
