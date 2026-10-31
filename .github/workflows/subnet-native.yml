@@ -120,6 +120,12 @@ jobs:
           (output / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
           print(json.dumps(receipt, indent=2))
           assert receipt['passed'], 'The exact-source native subnet test failed; retained logs and receipts are authoritative'
+      - name: Verify original packet proofs and slow-handshake physical cleanup
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-transport-quic --lib packet_codec::tests:: -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/subnet-native-evidence/packet-carrier-tests.log"
       - name: Lint every daemon target after the native attempt
         if: ${{ !cancelled() }}
         run: cargo clippy --locked -p nestlink-daemon --all-targets -- -D warnings
