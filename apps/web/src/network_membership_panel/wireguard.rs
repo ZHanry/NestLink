@@ -261,7 +261,7 @@ pub(super) fn WireGuardClientPanel(
         }
         let space_id = space.get_untracked().trim().to_owned();
         let binding_id = binding_id.get_untracked().trim().to_owned();
-        let access_id = access_id.get_untracked().trim().to_owned();
+        let requested_access = access_id.get_untracked().trim().to_owned();
         let draft_client = client_id.get_untracked().trim().to_owned();
         let draft_key = public_key(key.get_untracked().trim()).ok();
         let draft_ceiling = ceiling
@@ -275,7 +275,7 @@ pub(super) fn WireGuardClientPanel(
         if !nestlink_protocol::valid_id(&space_id)
             || (!matches!(action, Action::Load) && snapshot.is_none())
             || (matches!(action, Action::Preview | Action::Issue)
-                && !nestlink_protocol::valid_id(&access_id))
+                && !nestlink_protocol::valid_id(&requested_access))
             || (matches!(action, Action::Read | Action::Issue | Action::Revoke)
                 && !nestlink_protocol::valid_id(&binding_id))
             || (matches!(action, Action::Issue)
@@ -362,11 +362,11 @@ pub(super) fn WireGuardClientPanel(
                     return Ok(Reply::Revoked(after));
                 }
                 let requested = if matches!(action, Action::Preview | Action::Issue) {
-                    let view = client.network_access(&space_id, &access_id).await?;
+                    let view = client.network_access(&space_id, &requested_access).await?;
                     if !active() {
                         return Err(SdkError::Invalid);
                     }
-                    Some(prepared(&view, &latest, &access_id, account)?)
+                    Some(prepared(&view, &latest, &requested_access, account)?)
                 } else {
                     None
                 };
@@ -396,7 +396,7 @@ pub(super) fn WireGuardClientPanel(
                         installation_id: original.installation.clone(),
                         portal_node_id: original.mapping.gateway_node_id.clone(),
                         expected_portal_incarnation: original.mapping.gateway_incarnation.clone(),
-                        access_grant_id: access_id.clone(),
+                        access_grant_id: requested_access.clone(),
                         client_public_key: draft_key.ok_or(SdkError::Invalid)?,
                         client_address: original.address,
                         total_byte_ceiling: draft_ceiling.ok_or(SdkError::Invalid)?,
@@ -424,7 +424,7 @@ pub(super) fn WireGuardClientPanel(
                 if matches!(action, Action::Issue)
                     && (binding.claims.client_id != draft_client
                         || Some(binding.claims.client_public_key) != draft_key
-                        || binding.claims.access_grant_id != access_id
+                        || binding.claims.access_grant_id != requested_access
                         || Some(binding.total) != draft_ceiling)
                 {
                     return Err(SdkError::Invalid);

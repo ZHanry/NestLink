@@ -138,18 +138,19 @@ class NativeRunnerTests(unittest.TestCase):
         receipts[0]["spaces_ui_helper_sha256"] = "0" * 64
         self.assertIn("spaces-helper-source", RUNNER.validate_receipts(*receipts))
 
-    def test_subnet_requires_every_case_and_exact_helper_source(self):
-        for replacement in (None, {}, {"passed": True}):
+    def test_packet_management_requires_every_case_and_exact_helper_source(self):
+        for name, fields in (("subnet", RUNNER.SUBNET_UI_FIELDS), ("wireguard", RUNNER.WIREGUARD_UI_FIELDS)):
+            for replacement in (None, {}, {"passed": True}):
+                receipts = completed_receipts()
+                receipts[0][name + "_ui"] = replacement
+                self.assertTrue(any(item.startswith(name + "-") for item in RUNNER.validate_receipts(*receipts)))
+            for field in fields:
+                receipts = completed_receipts()
+                receipts[0][name + "_ui"][field] = False
+                self.assertIn(name + "-" + field, RUNNER.validate_receipts(*receipts))
             receipts = completed_receipts()
-            receipts[0]["subnet_ui"] = replacement
-            self.assertTrue(any(item.startswith("subnet-") for item in RUNNER.validate_receipts(*receipts)))
-        for field in RUNNER.SUBNET_UI_FIELDS:
-            receipts = completed_receipts()
-            receipts[0]["subnet_ui"][field] = False
-            self.assertIn("subnet-" + field, RUNNER.validate_receipts(*receipts))
-        receipts = completed_receipts()
-        receipts[0]["subnet_ui_helper_sha256"] = "0" * 64
-        self.assertIn("subnet-helper-source", RUNNER.validate_receipts(*receipts))
+            receipts[0][name + "_ui_helper_sha256"] = "0" * 64
+            self.assertIn(name + "-helper-source", RUNNER.validate_receipts(*receipts))
 
     def test_membership_requires_every_real_browser_case_and_helper_source(self):
         for replacement in (None, {}, {"passed": True}):
