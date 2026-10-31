@@ -3,6 +3,8 @@
 use super::*;
 use nestlink_transport_quic::packet_codec::{DirectPacketEndpoint,PacketAssembler,encode_direct};
 use nestlink_protocol::network_datagram::Direction;
+use nestlink_protocol::network::PeerId;
+use nestlink_identity::network::verify_network_grant;
 use nestlink_platform_network::path::{NetworkPathManager,RoutePolicy};
 #[derive(Debug)]
 pub(super) struct Counts {pub sent:u64,pub received:u64,pub spent:u64}

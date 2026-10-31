@@ -1,8 +1,8 @@
 //! Fixed signed mechanism credentials. These deliberately do not impersonate
 //! management HTTP or online one-use starts, which have separate real tests.
 use super::*;
-use nestlink_identity::{InstallationIdentity,network::{NetworkAuthoritySigner,SignedNetworkGrant,VerifiedMembership,VerifiedNetworkPath,verify_network_grant}};
-use nestlink_protocol::{api::{NetworkGrantView,NetworkPolicyView},network::{ConnectivityClaims,GrantScope,MembershipClaims,NetworkAccessClaims,NetworkRule,IpProtocol,Direction,RouteExportClaims,PeerPair,PathClaims,PathPolicy,Purpose,SpaceRole},network_topology::BootIncarnation,spaces::{SpaceView,addressing::{SpaceAddressDirectory,SpaceAddressView}},subnet::management::{SubnetMappingView,SubnetGatewayView}};
+use nestlink_identity::{InstallationIdentity,network::{NetworkAuthoritySigner,SignedNetworkGrant,VerifiedMembership,VerifiedNetworkPath,NetworkVerification,verify_network_grant},subnet::{SubnetGatewayState,verify_subnet_mapping}};
+use nestlink_protocol::{api::{NetworkGrantView,NetworkPolicyView},network::{ConnectivityClaims,GrantScope,MembershipClaims,NetworkAccessClaims,NetworkRule,IpProtocol,Direction,RouteExportClaims,PeerPair,PathClaims,PathPolicy,Purpose,SpaceRole,IpPrefix,PeerId,GrantClaims},network_topology::BootIncarnation,spaces::{SpaceView,addressing::{SpaceAddressDirectory,SpaceAddressView}},subnet::{SubnetMappingClaims,management::{SubnetMappingView,SubnetGatewayView}}};
 use nestlink_sdk::network::packet_access::{VerifiedPacketAccess,PacketPeerAuthority};
 use std::collections::BTreeSet;
 

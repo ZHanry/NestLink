@@ -1,0 +1,133 @@
+name: Isolated subnet kernel and carrier
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "Cargo.*"
+      - "apps/daemon/src/network_subnet_system*"
+      - "apps/daemon/src/network_subnet_system/**"
+      - "apps/daemon/src/network_packet_runtime.rs"
+      - "crates/sdk/src/network/**"
+      - "crates/identity/src/subnet*"
+      - ".github/workflows/subnet-native.yml"
+  pull_request:
+    paths:
+      - "Cargo.*"
+      - "apps/daemon/src/network_subnet_system*"
+      - "apps/daemon/src/network_subnet_system/**"
+      - "apps/daemon/src/network_packet_runtime.rs"
+      - "crates/sdk/src/network/**"
+      - "crates/identity/src/subnet*"
+      - ".github/workflows/subnet-native.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: subnet-native-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux-subnet:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      CARGO_INCREMENTAL: "0"
+      RUST_BACKTRACE: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      NESTLINK_SUBNET_NATIVE_LAB: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          components: clippy
+      - name: Prepare the existing codecs and mature namespace networking tools
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config dbus libpipewire-0.3-dev pipewire-bin iproute2 nftables iputils-arping util-linux
+          echo "NESTLINK_CODEC_PREFIX=${{ runner.temp }}/nestlink-codecs/x86_64-unknown-linux-gnu" >> "$GITHUB_ENV"
+      - name: Build and verify the locked existing native codecs
+        shell: bash
+        run: |
+          python3 scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir "${{ runner.temp }}/nestlink-codec-sources" --work-dir "${{ runner.temp }}/nestlink-codecs"
+          python3 scripts/refactor-native-codecs.py verify --target x86_64-unknown-linux-gnu --prefix "${{ env.NESTLINK_CODEC_PREFIX }}"
+      - name: Build exact source and exercise ordinary owners against real Linux networking
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, shutil, subprocess, time
+          assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
+          assert os.geteuid() != 0, 'The packet owner must use the ordinary runner UID'
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'subnet-native-evidence'
+          output.mkdir()
+          source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          assert source == os.environ['GITHUB_SHA']
+          receipt = {
+              'source_revision': source, 'run_id': os.environ['GITHUB_RUN_ID'],
+              'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'runner_environment': os.environ['RUNNER_ENVIRONMENT'],
+              'ordinary_uid': os.geteuid(), 'kernel': list(os.uname()),
+              'cargo_lock_sha256': hashlib.sha256(pathlib.Path('Cargo.lock').read_bytes()).hexdigest(),
+              'scope': 'Actual namespace/macvlan/nftables/TUN plus encrypted QUIC and production whole-IP admission under fixed signed mechanism credentials. Management HTTP/online one-use starts and physical two-device acceptance retain their separate evidence.',
+              'cleanup_scope': 'Only exact journaled namespace/socket identities and dedicated owned lab bridges/target namespaces. Unknown replacements are retained and fail the test.',
+              'passed': False,
+          }
+          tools = {}
+          for name in ('ip', 'nft', 'unshare', 'arping'):
+              selected = shutil.which(name)
+              assert selected, name
+              path = pathlib.Path(selected).resolve()
+              tools[name] = {'path': str(path), 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
+          receipt['tools'] = tools
+          packages = subprocess.run(['dpkg-query', '-W', '-f=${Package}\t${Version}\t${Architecture}\n', 'iproute2', 'nftables', 'iputils-arping', 'util-linux'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+          (output / 'tool-packages.log').write_bytes(packages.stdout)
+          build = ['cargo', 'test', '--locked', '-p', 'nestlink-daemon', '--bin', 'nestlink-daemon', '--no-run', '--message-format=json-render-diagnostics']
+          receipt['build_command'] = build
+          started = time.monotonic()
+          built = subprocess.run(build, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+          (output / 'build.jsonl').write_bytes(built.stdout)
+          (output / 'build.log').write_bytes(built.stderr)
+          receipt.update(build_return_code=built.returncode, build_seconds=time.monotonic() - started)
+          if built.returncode == 0:
+              artifacts = [item['executable'] for line in built.stdout.decode().splitlines()
+                  if (item := json.loads(line)).get('reason') == 'compiler-artifact'
+                  and item.get('target', {}).get('name') == 'nestlink-daemon' and item.get('executable')]
+              assert len(artifacts) == 1, artifacts
+              executable = pathlib.Path(artifacts[0])
+              receipt['executable_sha256'] = hashlib.sha256(executable.read_bytes()).hexdigest()
+              case = 'network_subnet_system::native_tests::overlapping_lans_kernel_nat_encrypted_udp_tcp_acl_and_exact_recovery'
+              command = [str(executable), '--exact', case, '--ignored', '--nocapture', '--test-threads=1']
+              receipt.update(execution_command=command, execution_timeout_seconds=300)
+              started = time.monotonic()
+              with (output / 'execution.log').open('wb') as log:
+                  try:
+                      code = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, timeout=300).returncode
+                  except subprocess.TimeoutExpired:
+                      code = 124
+              receipt.update(execution_return_code=code, execution_seconds=time.monotonic() - started, passed=code == 0)
+          for name, command in (
+              ('remaining-namespaces.log', ['sudo', '-n', 'ip', 'netns', 'list']),
+              ('host-links.log', ['ip', '-j', '-d', 'link', 'show']),
+              ('host-routes.log', ['ip', '-j', '-4', 'route', 'show', 'table', 'all']),
+          ):
+              result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=10)
+              (output / name).write_bytes(result.stdout)
+          (output / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          print(json.dumps(receipt, indent=2))
+          assert receipt['passed'], 'The exact-source native subnet test failed; retained logs and receipts are authoritative'
+      - name: Lint every daemon target after the native attempt
+        if: ${{ !cancelled() }}
+        run: cargo clippy --locked -p nestlink-daemon --all-targets -- -D warnings
+      - name: Retain exact build and actual kernel/carrier execution evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: subnet-native-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/subnet-native-evidence/
+          if-no-files-found: warn
+          retention-days: 30
