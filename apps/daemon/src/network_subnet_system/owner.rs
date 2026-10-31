@@ -216,7 +216,7 @@ pub(super) async fn operate<A: PacketAuthority + ?Sized, F: FnOnce(&mut A, &Rece
         prepare(access,&pipe.receipt)?;
         let guard=Guard{plan,pipe:&pipe,directory,login,parent};
         let outcome=async {
-            crate::network_packet_runtime::establish(&mut endpoint,dial,sdk,access,&guard).await?;
+            pipe.during_peer_proof(crate::network_packet_runtime::establish(&mut endpoint,dial,sdk,access,&guard)).await?;
             crate::network_packet_runtime::packet_loop(&pipe,&mut endpoint,sdk,access,&guard).await
         }.await;
         access.stop();pipe.shutdown().await?;drop(pipe);

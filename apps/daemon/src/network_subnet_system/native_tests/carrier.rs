@@ -17,6 +17,14 @@ pub(super) async fn start(
     pipes: [Arc<pipe::PacketPipe>; 2],
     stop: tokio::sync::watch::Receiver<bool>,
 ) -> Result<[tokio::task::JoinHandle<Result<Counts>>; 2]> {
+    start_after(plans,pipes,stop,Duration::ZERO).await
+}
+pub(super) async fn start_after(
+    plans: &[Plan; 2],
+    pipes: [Arc<pipe::PacketPipe>; 2],
+    stop: tokio::sync::watch::Receiver<bool>,
+    peer_delay:Duration,
+) -> Result<[tokio::task::JoinHandle<Result<Counts>>; 2]> {
     let interface = NetworkPathManager::interfaces()?
         .into_iter()
         .find(|interface| {
@@ -56,19 +64,41 @@ pub(super) async fn start(
         .claims()
         .unverified_transport_group_digest()?;
     let remote = second.local_addr();
-    let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+    let started=tokio::time::Instant::now();
+    let deadline = started + Duration::from_secs(10);
     let (left, right) = tokio::join!(
-        first.establish(Some(remote), plans[0].approved_access, group, deadline),
-        second.establish(None, plans[0].approved_access, group, deadline)
+        prove(&plans[0],&pipes[0],first.establish(Some(remote),plans[0].approved_access,group,deadline)),
+        prove(&plans[1],&pipes[1],async {tokio::time::sleep(peer_delay).await;second.establish(None,plans[0].approved_access,group,deadline).await})
     );
-    left?;
+    let discarded=left?;
     right?;
+    if !peer_delay.is_zero() {
+        assert!(started.elapsed()>=peer_delay,"actual peer proof must stay pending beyond the root challenge's initial five seconds");
+        assert!(discarded>0,"a real original LAN packet must be consumed and discarded before peer proof, without replay or a business queue");
+        println!("Subnet delayed peer proof receipt: delay_seconds={}, original_handshake_limit_seconds=10, unproved_lan_packets_discarded={discarded}, fresh_root_challenges_consumed=true",peer_delay.as_secs());
+    }
     let [left, right] = pipes;
     let [first_plan, second_plan] = plans.clone();
     Ok([
         tokio::spawn(run(first_plan, left, first, stop.clone())),
         tokio::spawn(run(second_plan, right, second, stop)),
     ])
+}
+async fn prove<F>(plan:&Plan,pipe:&pipe::PacketPipe,proof:F)->Result<u64>
+where F:std::future::Future<Output=Result> {
+    let mut policy=fixture::policy(plan)?;
+    let observed=async {
+        tokio::pin!(proof);
+        let mut tick=tokio::time::interval(Duration::from_secs(1));
+        tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+        loop {tokio::select! {biased;
+            _=tick.tick()=>{let revoked=BTreeSet::new();let context=fixture::context(plan,&revoked)?;let [source,destination]=fixture::authorities(plan)?;policy.refresh_addresses(&context,source,destination)?;tokio::time::timeout(Duration::from_millis(250),pipe.heartbeat()).await??;},
+            result=&mut proof=>return result,
+        }}
+    };
+    let result=pipe.during_peer_proof(observed).await;
+    policy.stop();
+    result
 }
 async fn run(
     plan: Plan,

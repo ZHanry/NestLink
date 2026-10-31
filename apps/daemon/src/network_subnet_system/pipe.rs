@@ -106,6 +106,23 @@ impl PacketPipe {
     /// Called only after the shared original packet owner refresh succeeds.
     /// Echoing an old challenge never moves its root-issued five-second limit.
     pub async fn heartbeat(&self)->io::Result<()> {frame(&mut *self.writer.lock().await,&challenge_frame(self.challenge.load(Ordering::Acquire))).await}
+    /// Keep the existing control channel live while the original physical
+    /// peer proof is pending. Business frames have no forwarding authority at
+    /// this boundary: consume and discard them immediately, without a queue.
+    /// Only the caller's existing successful policy refresh may acknowledge a
+    /// challenge; reading one here never sends a heartbeat or business data.
+    pub async fn during_peer_proof<F>(&self,proof:F)->Result<u64>
+    where F:std::future::Future<Output=Result> {
+        tokio::pin!(proof);
+        let mut discarded=0_u64;
+        loop {tokio::select! {biased;
+            result=&mut proof=>{result?;return Ok(discarded);},
+            bytes=async {self.reader.lock().await.frame().await}=>{
+                let bytes=bytes?;
+                if let Some(value)=challenge(&bytes)? {self.challenge.store(value,Ordering::Release);}else{discarded=discarded.checked_add(1).ok_or_else(||io::Error::other("unproved subnet packet counter exhausted"))?;}
+            },
+        }}
+    }
     pub async fn shutdown(&self)->io::Result<()> {self.writer.lock().await.shutdown().await}
 }
 impl WholePacketDevice for PacketPipe {

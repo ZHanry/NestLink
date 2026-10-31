@@ -79,9 +79,10 @@ async fn overlapping_lans_kernel_nat_encrypted_udp_tcp_acl_and_exact_recovery() 
         )
         .into());
     }
-    for mode in ["normal", "crash", "observation-gap"] {
+    for mode in ["normal", "crash", "observation-gap", "slow-proof"] {
         let crash = mode == "crash";
         let observation_gap = mode == "observation-gap";
+        let slow_proof=mode=="slow-proof";
         let lab = lab::Lab::new()?;
         nestlink_platform_security::create_private(&lab.config(), &serde_json::to_vec(&lab)?)?;
         if !lab.status("setup").await? {
@@ -109,7 +110,10 @@ async fn overlapping_lans_kernel_nat_encrypted_udp_tcp_acl_and_exact_recovery() 
             let pipes=[left?,right?];
             for (plan,pipe) in plans.iter().zip(&pipes) {assert_eq!(kernel::namespace(&kernel::namespace_path(plan))?,Some((pipe.receipt.namespace_device,pipe.receipt.namespace_inode)),"ordinary handoff must name the actual root-owned namespace inode");}
             let (stop,receiver)=tokio::sync::watch::channel(false);
-            let bridges=carrier::start(&plans,pipes.clone(),receiver).await?;
+            let peer_delay=Duration::from_secs(if slow_proof {6}else{0});
+            let early_probe=async {if slow_proof {tokio::time::sleep(Duration::from_secs(1)).await;probe(&lab,0,"before-proof").await?;}Ok::<_,Box<dyn std::error::Error+Send+Sync>>(())};
+            let (bridges,early_probe)=tokio::join!(carrier::start_after(&plans,pipes.clone(),receiver,peer_delay),early_probe);
+            early_probe?;let bridges=bridges?;
             probe(&lab,0,"udp").await?;
             probe(&lab,0,"tcp").await?;
             probe(&lab,0,"bad-port").await?;
@@ -133,7 +137,7 @@ async fn overlapping_lans_kernel_nat_encrypted_udp_tcp_acl_and_exact_recovery() 
             for plan in &plans {assert!(kernel::namespace(&kernel::namespace_path(plan))?.is_none());assert!(!plan.socket()?.try_exists()?);std::fs::remove_file(&plan.path)?;}
             // A helper restart must not reset the original kernel byte quota.
             if !crash&&!observation_gap {plans[0].save_new()?;assert!(!lab.status("reapply0").await?,"consumed original business cannot create a second kernel owner");std::fs::remove_file(&plans[0].path)?;}
-            println!("Subnet native receipt: ordinary_uid={}, overlapping_original_lans=192.168.1.0/24, distinct_aliases=10.211.1.0/24,10.211.2.0/24, real_kernel_prefix_nat=true, real_encrypted_quic_whole_packets=true, udp_mtu=1280, tcp_payload=16384, wrong_port/direction/source=denied, helper_crash={crash}, ordinary_sigstop_gap={observation_gap}, exact_namespace/socket/conntrack_cleanup=true",rustix::process::geteuid().as_raw());
+            println!("Subnet native receipt: ordinary_uid={}, overlapping_original_lans=192.168.1.0/24, distinct_aliases=10.211.1.0/24,10.211.2.0/24, real_kernel_prefix_nat=true, real_encrypted_quic_whole_packets=true, udp_mtu=1280, tcp_payload=16384, wrong_port/direction/source=denied, helper_crash={crash}, ordinary_sigstop_gap={observation_gap}, delayed_peer_proof_seconds={}, exact_namespace/socket/conntrack_cleanup=true",rustix::process::geteuid().as_raw(),peer_delay.as_secs());
             Ok::<_,Box<dyn std::error::Error+Send+Sync>>(())
         }.await;
         // All actors are exact subprocess handles. On a failure, ask the
