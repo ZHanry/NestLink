@@ -27,9 +27,26 @@ pub(super) struct Gateway {
     pub(super) reference: SubnetMappingReference,
 }
 async fn gateway(f: &Fixture, seed: u8, alias: &str) -> Result<Gateway> {
-    gateway_prefix(f,seed,IpPrefix{network:"192.168.1.0".parse()?,prefix_len:24},IpPrefix{network:alias.parse()?,prefix_len:24}).await
+    gateway_prefix(
+        f,
+        seed,
+        IpPrefix {
+            network: "192.168.1.0".parse()?,
+            prefix_len: 24,
+        },
+        IpPrefix {
+            network: alias.parse()?,
+            prefix_len: 24,
+        },
+    )
+    .await
 }
-pub(super) async fn gateway_prefix(f:&Fixture,seed:u8,original:IpPrefix,alias:IpPrefix)->Result<Gateway> {
+pub(super) async fn gateway_prefix(
+    f: &Fixture,
+    seed: u8,
+    original: IpPrefix,
+    alias: IpPrefix,
+) -> Result<Gateway> {
     let identity = NodeIdentity::from_seed(&[seed; 32]);
     let node = random_id();
     let mut store = f.store()?;
@@ -72,7 +89,11 @@ pub(super) async fn gateway_prefix(f:&Fixture,seed:u8,original:IpPrefix,alias:Ip
                 grant_id: random_id(),
                 expected_revision: policy.revision,
                 expected_policy_epoch: policy.policy_epoch,
-                prefixes: if original==alias {vec![original]} else {vec![original, alias]},
+                prefixes: if original == alias {
+                    vec![original]
+                } else {
+                    vec![original, alias]
+                },
                 expires_at_ms: now()? + 60_000,
             },
         )

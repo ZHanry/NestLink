@@ -8,7 +8,10 @@ use std::{io, os::fd::AsFd};
 /// journaling its complete identity or making the interface persistent.
 pub fn set_owner(device: impl AsFd, uid: u32) -> io::Result<()> {
     if uid == u32::MAX {
-        return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid TUN owner UID"));
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "invalid TUN owner UID",
+        ));
     }
     // Linux if_tun.h declares _IOW('T', 204, int), but tun.c consumes `arg`
     // itself with make_kuid(current_user_ns(), arg), never an int pointer.

@@ -485,7 +485,9 @@ impl Store {
         }
         if version < 47 {
             let transaction = connection.transaction()?;
-            transaction.execute_batch(include_str!("../migrations/047_wireguard_client_bindings.sql"))?;
+            transaction.execute_batch(include_str!(
+                "../migrations/047_wireguard_client_bindings.sql"
+            ))?;
             transaction.pragma_update(None, "user_version", 47)?;
             transaction.commit()?;
         }
