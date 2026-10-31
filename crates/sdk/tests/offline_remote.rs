@@ -300,9 +300,14 @@ async fn offline_remote_actual_http_then_expired_original_quic_view_budget_and_p
         )?;
         server.abort();
         let _ = server.await;
-        let proof = tokio::net::TcpListener::bind(address).await.map_err(|error| {
-            std::io::Error::new(error.kind(), format!("management TCP listener was not released: {error}"))
-        })?;
+        let proof = tokio::net::TcpListener::bind(address)
+            .await
+            .map_err(|error| {
+                std::io::Error::new(
+                    error.kind(),
+                    format!("management TCP listener was not released: {error}"),
+                )
+            })?;
         drop(proof);
         tokio::time::sleep(Duration::from_millis(
             online_expiry.saturating_sub(wall()?) + 20,
@@ -353,11 +358,17 @@ async fn offline_remote_actual_http_then_expired_original_quic_view_budget_and_p
         source_runtime.wait_stopped().await?;
         host_runtime.wait_stopped().await?;
         let released = std::net::UdpSocket::bind(peer).map_err(|error| {
-            std::io::Error::new(error.kind(), format!("offline host UDP socket was not released: {error}"))
+            std::io::Error::new(
+                error.kind(),
+                format!("offline host UDP socket was not released: {error}"),
+            )
         })?;
         drop(released);
         let released = std::net::UdpSocket::bind(source_address).map_err(|error| {
-            std::io::Error::new(error.kind(), format!("offline controller UDP socket was not released: {error}"))
+            std::io::Error::new(
+                error.kind(),
+                format!("offline controller UDP socket was not released: {error}"),
+            )
         })?;
         drop(released);
         assert!(

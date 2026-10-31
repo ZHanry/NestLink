@@ -193,9 +193,12 @@ impl OfflineRemoteOwner {
         }
         self.0.authority.check(wall()?)?;
         let peer = self.0.authority.claims()?.members[0].public_key;
-        let endpoint =
-            nestlink_transport_quic::direct::DirectEndpoint::listener(address, &self.0.local.identity, digest(&peer))
-                .map_err(SdkError::NodeQuic)?;
+        let endpoint = nestlink_transport_quic::direct::DirectEndpoint::listener(
+            address,
+            &self.0.local.identity,
+            digest(&peer),
+        )
+        .map_err(SdkError::NodeQuic)?;
         Ok(OfflineRemoteListener {
             owner: self.0.clone(),
             socket: SocketOwner(endpoint),
@@ -224,9 +227,12 @@ impl OfflineRemoteOwner {
         }
         .parse()
         .map_err(|_| SdkError::Invalid)?;
-        let endpoint =
-            nestlink_transport_quic::direct::DirectEndpoint::connector(bind, &self.0.local.identity, digest(&key))
-                .map_err(SdkError::NodeQuic)?;
+        let endpoint = nestlink_transport_quic::direct::DirectEndpoint::connector(
+            bind,
+            &self.0.local.identity,
+            digest(&key),
+        )
+        .map_err(SdkError::NodeQuic)?;
         let socket = SocketOwner(endpoint);
         let connection =
             nestlink_transport_quic::connect(socket.endpoint()?, peer, self.0.budget()?)
