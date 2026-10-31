@@ -7,7 +7,7 @@ import pathlib
 import subprocess
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--suite', choices=['storage', 'sdk', 'daemon'], required=True)
+parser.add_argument('--suite', choices=['storage', 'sdk', 'daemon', 'remote-identity', 'remote-session', 'remote-storage', 'remote-sdk'], required=True)
 parser.add_argument('--output', type=pathlib.Path, required=True)
 args = parser.parse_args()
 assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
@@ -19,7 +19,12 @@ package, target, count = {
     'storage': ('nestlink-storage', ['--lib'], 8),
     'sdk': ('nestlink-sdk', ['--test', 'private_services'], 7),
     'daemon': ('nestlink-daemon', ['--bin', 'nestlink-daemon'], 1),
+    'remote-identity': ('nestlink-identity', ['--lib'], 3),
+    'remote-session': ('nestlink-session', ['--test', 'authorization'], 1),
+    'remote-storage': ('nestlink-storage', ['--test', 'control'], 3),
+    'remote-sdk': ('nestlink-sdk', ['--test', 'end_to_end'], 1),
 }[args.suite]
+test_filter = 'remote_budget' if args.suite.startswith('remote-') else 'offline::'
 build = ['cargo', 'test', '--locked', '-p', package, *target, '--no-run', '--message-format=json']
 receipt = {
     'source_revision': source, 'run_id': os.environ['GITHUB_RUN_ID'],
@@ -31,6 +36,8 @@ receipt = {
     'build_command': build, 'passed': False,
 }
 try:
+    if args.suite.startswith('remote-'):
+        receipt['scope'] = 'Original online remote cumulative budget reservation, strict signed scope, retained Session meter and actual HTTP/SDK/QUIC business accounting; remote offline activation/carrier and target acceptance are excluded.'
     with (output / 'build.jsonl').open('w') as stream, (output / 'build.log').open('w') as errors:
         built = subprocess.run(build, stdout=stream, stderr=errors, check=False)
     receipt['build_exit_code'] = built.returncode
@@ -39,11 +46,11 @@ try:
                    if (entry := json.loads(line)).get('reason') == 'compiler-artifact' and entry.get('executable')]
     assert len(executables) == 1, executables
     executable = pathlib.Path(executables[0])
-    inventory = subprocess.check_output([str(executable), 'offline::', '--list'], text=True)
+    inventory = subprocess.check_output([str(executable), test_filter, '--list'], text=True)
     (output / 'inventory.log').write_text(inventory)
     names = [line.removesuffix(': test') for line in inventory.splitlines() if line.endswith(': test')]
     assert len(names) == count and len(set(names)) == count, names
-    execution = [str(executable), 'offline::', '--nocapture', '--test-threads=1', '--color', 'never']
+    execution = [str(executable), test_filter, '--nocapture', '--test-threads=1', '--color', 'never']
     with (output / 'tests.log').open('w') as stream:
         tested = subprocess.run(execution, stdout=stream, stderr=subprocess.STDOUT, timeout=240, check=False)
     receipt.update(executable_sha256=hashlib.sha256(executable.read_bytes()).hexdigest(), tests=names,

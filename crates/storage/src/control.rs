@@ -1047,6 +1047,13 @@ impl Store {
         {
             required_capabilities.push(nestlink_protocol::media::H264_CAPABILITY.into());
         }
+        if !self.is_browser_controller(&view.controller_device_id)?
+            && !self.is_browser_controller(&view.host_device_id)?
+            && c.capabilities.iter().any(|v| v == nestlink_protocol::remote_budget::CAPABILITY)
+            && h.capabilities.iter().any(|v| v == nestlink_protocol::remote_budget::CAPABILITY)
+        {
+            required_capabilities.push(nestlink_protocol::remote_budget::CAPABILITY.into());
+        }
         // A server version proves no peer dialect. Both signed installation
         // declarations must opt in before a permit can authorize the new bytes.
         if !self.is_browser_controller(&view.controller_device_id)?
@@ -1163,6 +1170,7 @@ impl Store {
             required_capabilities,
         };
         claims.validate()?;
+        self.ensure_remote_usage_budget(&tx, &claims)?;
         if tx.execute("UPDATE remote_requests SET lease_sequence=?1,last_renewed=?2,last_permit_json=?5 WHERE id=?3 AND lease_sequence=?4 AND status='approved'",params![sequence,now,id,sequence-1,serde_json::to_string(&claims)?])?!=1{return Err(StorageError::Conflict);}
         tx.execute("INSERT INTO leases(id,session_id,security_epoch) VALUES(?1,?1,?2) ON CONFLICT(id) DO UPDATE SET security_epoch=excluded.security_epoch WHERE leases.revoked=0",params![id,claims.security_epoch])?;
         if sequence == 1 {

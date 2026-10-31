@@ -1552,13 +1552,17 @@ async fn permit(
     let claims = state
         .db(move |s| {
             let p = s.authenticate(&token, now()?)?;
-            s.initial_permit(&p, &id, now()?)
+            let claims = s.initial_permit(&p, &id, now()?)?;
+            let budget = s.remote_usage_budget(&p, &claims, now()?)?;
+            Ok((claims, budget))
         })
         .await?;
+    permit_response(&state, claims)
+}
+fn permit_response(state: &AppState, (claims, budget): (nestlink_protocol::PermitClaims, Option<nestlink_protocol::remote_budget::RemoteUsageBudgetClaims>)) -> Result<Json<Value>, ApiError> {
     let signed = state.signer.sign(&claims).map_err(StorageError::from)?;
-    Ok(Json(
-        json!({"permit":URL_SAFE_NO_PAD.encode(signed.encode_to_vec()),"claims":claims}),
-    ))
+    let budget = budget.as_ref().map(|b| state.signer.sign_remote_usage_budget(b)).transpose().map_err(StorageError::from)?;
+    Ok(Json(json!({"permit":URL_SAFE_NO_PAD.encode(signed.encode_to_vec()),"claims":claims,"budget":budget})))
 }
 async fn remote_peer_keys(
     State(state): State<AppState>,
@@ -1585,13 +1589,12 @@ async fn current_permit(
     let claims = state
         .db(move |s| {
             let p = s.authenticate(&token, now()?)?;
-            s.current_permit(&p, &id, now()?)
+            let claims = s.current_permit(&p, &id, now()?)?;
+            let budget = s.remote_usage_budget(&p, &claims, now()?)?;
+            Ok((claims, budget))
         })
         .await?;
-    let signed = state.signer.sign(&claims).map_err(StorageError::from)?;
-    Ok(Json(
-        json!({"permit":URL_SAFE_NO_PAD.encode(signed.encode_to_vec()),"claims":claims}),
-    ))
+    permit_response(&state, claims)
 }
 async fn renew(
     State(state): State<AppState>,
@@ -1603,13 +1606,12 @@ async fn renew(
     let claims = state
         .db(move |s| {
             let p = s.authenticate(&token, now()?)?;
-            s.renew_permit(&p, &id, body, now()?)
+            let claims = s.renew_permit(&p, &id, body, now()?)?;
+            let budget = s.remote_usage_budget(&p, &claims, now()?)?;
+            Ok((claims, budget))
         })
         .await?;
-    let signed = state.signer.sign(&claims).map_err(StorageError::from)?;
-    Ok(Json(
-        json!({"permit":URL_SAFE_NO_PAD.encode(signed.encode_to_vec()),"claims":claims}),
-    ))
+    permit_response(&state, claims)
 }
 async fn signals(
     State(state): State<AppState>,

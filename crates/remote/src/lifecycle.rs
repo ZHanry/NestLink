@@ -581,6 +581,21 @@ impl LeaseControl {
     pub(crate) fn authorize(&self, channel: Channel) -> Result<(), RemoteError> {
         self.operation(permission(channel)?, || Ok(()))
     }
+    /// Charge exactly at an original carrier delivery boundary. All channels,
+    /// directions, permit copies and reconnects retain the same signed meter.
+    pub(crate) fn charge_business(&self, channel: Channel, bytes: usize) -> Result<(), RemoteError> {
+        let permission = permission(channel)?;
+        let mut managed = self.inner.lock()?;
+        self.inner.check(&mut managed)?;
+        managed.session.authorize(permission, self.inner.path, self.inner.clock.monotonic_ms())?;
+        let result = match managed.session.current_verified_permit().remote_budget() {
+            Some(budget) => budget.charge(permission, u64::try_from(bytes).map_err(io::Error::other)?),
+            None => Ok(()),
+        };
+        if result.is_err() { managed.session.stop(StopReason::Revoked); }
+        self.inner.reconcile(&mut managed);
+        result.map_err(RemoteError::from)
+    }
     pub fn current_native_permit(&self) -> Result<VerifiedPermit, RemoteError> {
         let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;

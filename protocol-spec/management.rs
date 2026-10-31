@@ -600,6 +600,8 @@ pub struct RemotePeerKeys {
 pub struct PermitResponse {
     pub permit: String,
     pub claims: crate::PermitClaims,
+    #[serde(default)]
+    pub budget: Option<crate::remote_budget::SignedRemoteUsageBudget>,
 }
 #[derive(Serialize, Deserialize, JsonSchema)]
 pub struct PolicyResponse {

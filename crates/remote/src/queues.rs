@@ -858,6 +858,7 @@ impl<R: AsyncRead + Unpin + Send + 'static, W: AsyncWrite + Unpin + Send + 'stat
                         continue;
                     }
                     reader_lease.authorize(frame.channel)?;
+                    reader_lease.charge_business(frame.channel, frame.payload.len())?;
                     reader_queue
                         .put(&reader_lease, frame.channel, &frame.payload)
                         .await?;
@@ -900,6 +901,7 @@ impl<R: AsyncRead + Unpin + Send + 'static, W: AsyncWrite + Unpin + Send + 'stat
                             {
                                 return Ok(false);
                             }
+                            writer_lease.charge_business(channel, payload.len()).map_err(io::Error::other)?;
                             write_media_bounded(&mut write, channel, &payload, queued.arrived)
                                 .await?;
                             Ok(true)

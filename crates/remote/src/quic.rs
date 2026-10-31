@@ -283,6 +283,7 @@ pub async fn authorize(
                 )
                 .await?;
                 reader_lease.authorize(channel)?;
+                reader_lease.charge_business(channel, frame.payload.len())?;
                 queue.put(&reader_lease, channel, &frame.payload).await?;
             }
         }));
@@ -307,6 +308,7 @@ pub async fn authorize(
                         {
                             return Ok(false);
                         }
+                        writer_lease.charge_business(channel, queued.frame.payload.len()).map_err(io::Error::other)?;
                         write_media_bounded(
                             &mut write,
                             channel,
@@ -355,6 +357,7 @@ pub async fn authorize(
                 {
                     continue;
                 }
+                writer_lease.charge_business(Channel::Audio, queued.frame.payload.len())?;
                 let mut complete = true;
                 for fragment in fragments {
                     if queued.arrived.elapsed() >= AGE {
@@ -386,6 +389,7 @@ pub async fn authorize(
             .await?;
             reader_lease.authorize(Channel::Audio)?;
             if let Some(queued) = assembler.push(&bytes, Instant::now())? {
+                reader_lease.charge_business(Channel::Audio, queued.frame.payload.len())?;
                 queue
                     .put_at(
                         &reader_lease,

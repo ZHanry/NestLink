@@ -321,6 +321,7 @@ impl<R: AsyncRead + Unpin, W: AsyncWrite + Unpin> AuthorizedConnection<R, W> {
     pub async fn send(&mut self, channel: Channel, payload: &[u8]) -> Result<(), RemoteError> {
         self.check_stop()?;
         self.lease.authorize(channel)?;
+        self.lease.charge_business(channel, payload.len())?;
         let outcome = lease_io(write_frame(&mut self.write, channel, payload), &self.lease).await;
         if outcome.is_err() {
             self.lease.stop(StopReason::Revoked)?;
@@ -339,7 +340,7 @@ impl<R: AsyncRead + Unpin, W: AsyncWrite + Unpin> AuthorizedConnection<R, W> {
             }
         };
         self.check_stop()?;
-        let authorization = self.lease.authorize(frame.channel);
+        let authorization = self.lease.charge_business(frame.channel, frame.payload.len());
         if let Err(error) = authorization {
             self.lease.stop(StopReason::Revoked)?;
             return Err(error);

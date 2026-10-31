@@ -24,6 +24,8 @@ mod native_ice_capabilities;
 mod native_readiness;
 #[path = "control/native_receiver_qos.rs"]
 mod native_receiver_qos;
+#[path = "control/remote_budget.rs"]
+mod remote_budget;
 #[path = "control/network_paths.rs"]
 mod network_paths;
 #[path = "control/quotas.rs"]

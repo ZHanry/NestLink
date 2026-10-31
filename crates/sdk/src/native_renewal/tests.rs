@@ -72,6 +72,7 @@ fn wrapped(mut claims: PermitClaims, format: VideoFormat) -> Result<PermitRespon
     claims.required_capabilities = vec![FORMAT_CAPABILITY.into()];
     let signer = PermitSigner::from_seed([71; 32]);
     Ok(PermitResponse {
+        budget: None,
         permit: URL_SAFE_NO_PAD.encode(signer.sign(&claims)?.encode_to_vec()),
         claims,
     })

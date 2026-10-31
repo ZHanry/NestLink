@@ -101,6 +101,28 @@ fn activate(signer: &PermitSigner, claims: &PermitClaims, binding: SessionBindin
 }
 
 #[test]
+fn remote_budget_original_session_requires_verified_budget_and_retains_meter_during_renewal() -> Result<(), Box<dyn std::error::Error>> {
+    use nestlink_protocol::remote_budget::*;
+    let (signer, _, _, mut claims, mut binding)=fixture();
+    claims.required_capabilities.push(CAPABILITY.into());binding.supported_capabilities.push(CAPABILITY.into());
+    let now=ClockSample {monotonic_ms:1000,unix_ms:1_000_000};
+    assert!(Session::activate(verified(&signer,&claims),binding.clone(),Path::Direct,1000,now).is_err());
+    let budget=RemoteUsageBudgetClaims {version:1,reservation_id:id(90),deployment_id:claims.deployment_id.clone(),security_epoch:claims.security_epoch,session_id:claims.session_id.clone(),account_id:claims.account_id.clone(),controller_device_id:claims.controller_device_id.clone(),host_device_id:claims.host_device_id.clone(),controller_key_sha256:claims.controller_key_sha256.as_slice().try_into()?,host_key_sha256:claims.host_key_sha256.as_slice().try_into()?,resource_id:claims.resource_id.clone(),connection_generation:claims.connection_generation,policy_revision:claims.policy_revision,capability_sha256:claims.capability_sha256.as_slice().try_into()?,permissions:claims.permissions.clone(),paths:claims.paths.clone(),maximum_bytes:100,maximum_file_write_bytes:0,maximum_connection_attempts:8};
+    let permit=verified(&signer,&claims).with_remote_budget(&signer.sign_remote_usage_budget(&budget)?)?;
+    let observer=permit.remote_budget().ok_or("meter")?.clone();
+    let mut session=Session::activate(permit.clone(),binding,Path::Direct,1000,now)?;
+    observer.charge(Permission::View,70)?;
+    claims.lease_sequence=2;claims.issued_at_unix_ms+=1000;claims.expires_at_unix_ms+=1000;
+    let next=verified(&signer,&claims).retain_remote_budget(&permit)?;
+    session.renew(next,2000,ClockSample {monotonic_ms:2000,unix_ms:1_001_000})?;
+    assert_eq!(session.current_verified_permit().remote_budget().ok_or("retained meter")?.spent_bytes()?,70);
+    assert!(observer.charge(Permission::View,31).is_err());
+    assert!(session.check_clock(ClockSample {monotonic_ms:2001,unix_ms:1_001_001}).is_err());
+    assert_eq!(session.state(),SessionState::Stopped(StopReason::Revoked));
+    Ok(())
+}
+
+#[test]
 fn ice_path_selection_preserves_deadline_and_invalidates_the_old_challenge() {
     let (signer, controller, _, mut claims, mut binding) = fixture();
     claims.paths.push(Path::Relay as i32);

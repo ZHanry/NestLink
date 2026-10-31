@@ -1255,7 +1255,7 @@ impl Sdk {
         {
             return Err(SdkError::Trust);
         }
-        Ok(verified)
+        attach_remote_budget(verified, response.budget)
     }
     pub fn renewal_signature(
         &self,
@@ -1367,7 +1367,7 @@ impl Sdk {
         {
             return Err(SdkError::Trust);
         }
-        Ok(verified)
+        attach_remote_budget(verified, response.budget)
     }
     async fn required<B: Serialize, R: DeserializeOwned>(
         &self,
@@ -1473,6 +1473,13 @@ async fn request<R: DeserializeOwned>(
         bytes.extend_from_slice(&chunk);
     }
     decode_response(status, &bytes)
+}
+fn attach_remote_budget(permit: VerifiedPermit, budget: Option<nestlink_protocol::remote_budget::SignedRemoteUsageBudget>) -> Result<VerifiedPermit, SdkError> {
+    match (permit.claims().required_capabilities.iter().any(|v| v == nestlink_protocol::remote_budget::CAPABILITY), budget) {
+        (true, Some(signed)) => Ok(permit.with_remote_budget(&signed)?),
+        (false, None) => Ok(permit),
+        _ => Err(SdkError::Trust),
+    }
 }
 fn decode_response<R: DeserializeOwned>(
     status: StatusCode,

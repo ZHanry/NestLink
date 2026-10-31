@@ -30,6 +30,7 @@ pub mod offline;
 pub mod relay;
 pub mod relay_close;
 pub mod relay_datagram;
+pub mod remote_budget;
 pub mod service_plane;
 pub mod service_quota_recovery;
 pub mod services;

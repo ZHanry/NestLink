@@ -262,6 +262,11 @@ impl Session {
         allow_regression: bool,
     ) -> Result<Self, ContractError> {
         validate_binding_with_rollout(&permit, &binding, path, allow_regression)?;
+        if permit.claims().required_capabilities.iter().any(|v| v == nestlink_protocol::remote_budget::CAPABILITY) {
+            let budget = permit.remote_budget().ok_or_else(|| error(ErrorCode::AuthRequired, "original cumulative remote budget required"))?;
+            budget.claims().check_permit(permit.claims())?;
+            budget.reserve_connection_attempt()?;
+        }
         if binding
             .media
             .as_ref()
@@ -643,6 +648,11 @@ impl Session {
             ));
         }
         self.validate_current_binding(&permit, self.path)?;
+        match (self.permit.remote_budget(), permit.remote_budget()) {
+            (Some(old), Some(next)) if old.claims() == next.claims() => { next.check()?; }
+            (None, None) => {}
+            _ => return Err(error(ErrorCode::PermissionRequired, "remote cumulative budget owner changed during renewal")),
+        }
         if request_started_ms <= self.last_request_ms
             || permit.claims().lease_sequence <= self.permit.claims().lease_sequence
             || permit.claims().issued_at_unix_ms < self.permit.claims().issued_at_unix_ms
@@ -697,6 +707,10 @@ impl Session {
                 },
                 "session is terminal",
             ));
+        }
+        if self.permit.remote_budget().is_some_and(|budget| budget.check().is_err()) {
+            self.stop(StopReason::Revoked);
+            return Err(error(ErrorCode::CapacityExceeded, "original cumulative remote budget terminated"));
         }
         if monotonic_ms < self.last_monotonic_ms {
             self.stop(StopReason::ClockInvalid);

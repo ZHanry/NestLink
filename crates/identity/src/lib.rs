@@ -14,6 +14,7 @@ pub mod nodes;
 pub mod offline;
 pub mod reconnection;
 pub mod relay;
+pub mod remote_budget;
 pub use nodes::closes as node_closes;
 pub use nodes::resources as node_resources;
 pub use nodes::turn;
@@ -107,6 +108,7 @@ mod installation_identity_tests {
 
 #[derive(Clone)]
 pub struct VerifiedPermit {
+    remote_budget: Option<remote_budget::VerifiedRemoteUsageBudget>,
     claims: PermitClaims,
     digest: [u8; 32],
     issuer: [u8; 32],
@@ -125,6 +127,26 @@ impl std::fmt::Debug for VerifiedPermit {
 }
 
 impl VerifiedPermit {
+    pub fn remote_budget(&self) -> Option<&remote_budget::VerifiedRemoteUsageBudget> {
+        self.remote_budget.as_ref()
+    }
+    pub fn with_remote_budget(mut self, signed: &nestlink_protocol::remote_budget::SignedRemoteUsageBudget) -> Result<Self, ContractError> {
+        self.remote_budget = Some(remote_budget::verify_remote_usage_budget(signed, &self)?);
+        Ok(self)
+    }
+    /// Carry the same original meter through a separately verified renewal or
+    /// reconnection. A successor cannot obtain an empty counter or expand it.
+    pub fn retain_remote_budget(mut self, previous: &Self) -> Result<Self, ContractError> {
+        if let Some(budget) = previous.remote_budget() {
+            if self.issuer != previous.issuer { return Err(ContractError::new(ErrorCode::IdentityMismatch, "remote budget issuer changed")); }
+            budget.claims().check_permit(&self.claims)?;
+            budget.check()?;
+            self.remote_budget = Some(budget.clone());
+        } else if self.claims.required_capabilities.iter().any(|v| v == nestlink_protocol::remote_budget::CAPABILITY) {
+            return Err(ContractError::new(ErrorCode::AuthRequired, "original remote budget owner missing"));
+        }
+        Ok(self)
+    }
     pub fn claims(&self) -> &PermitClaims {
         &self.claims
     }
@@ -162,6 +184,7 @@ pub fn verify_permit(
     let claims: PermitClaims = decode_bounded(&signed.claims, PERMIT_BYTES)?;
     claims.validate()?;
     Ok(VerifiedPermit {
+        remote_budget: None,
         issuer: *trusted_issuer,
         digest: digest(&signed.claims),
         claims,

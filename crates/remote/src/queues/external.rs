@@ -21,13 +21,15 @@ use tokio::{sync::mpsc, task::JoinHandle};
 pub struct ExternalDataEnvelope {
     queued: Queued,
     started: bool,
+    lease: LeaseControl,
 }
 
 impl ExternalDataEnvelope {
-    fn new(queued: Queued) -> Self {
+    fn new(queued: Queued, lease: LeaseControl) -> Self {
         Self {
             queued,
             started: false,
+            lease,
         }
     }
 
@@ -53,6 +55,7 @@ impl ExternalDataEnvelope {
             }
         } else {
             self.queued.check_file_delivery();
+            self.lease.charge_business(self.queued.frame.channel, self.queued.frame.payload.len()).map_err(io::Error::other)?;
             self.started = true;
         }
         if !self.queued.check_delivery() {
@@ -429,6 +432,7 @@ fn spawn_external_reader(
                     )
                     .into());
                 }
+                lease.charge_business(channel, envelope.len())?;
                 queue.put(&lease, channel, &envelope).await?;
             }
         }
@@ -452,7 +456,7 @@ fn spawn_external_writer(
             loop {
                 let queued = queue.take_queued(&lease, Some(channel)).await?;
                 lease.check_channel_binding(channel, generation)?;
-                let envelope = ExternalDataEnvelope::new(queued);
+                let envelope = ExternalDataEnvelope::new(queued, lease.clone());
                 // Keep the original per-channel delivery guard attached across
                 // the SDK's bounded SCTP send queue.
                 lease_io(

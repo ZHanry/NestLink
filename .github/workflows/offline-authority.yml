@@ -60,12 +60,16 @@ jobs:
           receipt['files'] = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(output.iterdir())}
           (output / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
           assert receipt['passed'], 'Retained diagnostics; no authority qualification from this attempt'
+      - name: Exercise original remote signed meter and retained Session
+        run: |
+          python3 -B scripts/network-rewrite-offline-management.py --suite remote-identity --output "$RUNNER_TEMP/offline-authority/remote-identity"
+          python3 -B scripts/network-rewrite-offline-management.py --suite remote-session --output "$RUNNER_TEMP/offline-authority/remote-session"
       - name: Lint independent authority without suppressing warnings
         if: ${{ !cancelled() }}
         shell: bash
         run: |
           set -o pipefail
-          cargo clippy --locked -p nestlink-protocol -p nestlink-identity --all-targets -- -D warnings 2>&1 | tee "$RUNNER_TEMP/offline-authority/clippy.log"
+          cargo clippy --locked -p nestlink-protocol -p nestlink-identity -p nestlink-session --all-targets -- -D warnings 2>&1 | tee "$RUNNER_TEMP/offline-authority/clippy.log"
       - name: Preserve same-source primitive evidence and exact failure logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -99,6 +103,9 @@ jobs:
           set -o pipefail
           cargo test --locked -p nestlink-storage --lib --tests --no-fail-fast 2>&1 | tee "$RUNNER_TEMP/offline-storage/storage-regression.log"
       - name: Strict storage and identity lint
+        if: ${{ !cancelled() }}
+        run: python3 -B scripts/network-rewrite-offline-management.py --suite remote-storage --output "$RUNNER_TEMP/offline-storage/remote-budget"
+      - name: Strict original storage and identity lint
         if: ${{ !cancelled() }}
         shell: bash
         run: |
@@ -144,7 +151,10 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/offline-sdk"
           set -o pipefail
-          cargo clippy --locked -p nestlink-server -p nestlink-sdk -p nestlink-transport-quic --lib -- -D warnings 2>&1 | tee "$RUNNER_TEMP/offline-sdk/clippy.log"
+          cargo clippy --locked -p nestlink-server -p nestlink-sdk -p nestlink-transport-quic -p nestlink-remote -p nestlink-session --lib -- -D warnings 2>&1 | tee "$RUNNER_TEMP/offline-sdk/clippy.log"
+      - name: Exercise original remote HTTP signed budget and real QUIC business
+        if: ${{ !cancelled() }}
+        run: python3 -B scripts/network-rewrite-offline-management.py --suite remote-sdk --output "$RUNNER_TEMP/offline-sdk/remote-budget"
       - name: Compile and lint original daemon resident offline entry
         if: ${{ !cancelled() }}
         shell: bash

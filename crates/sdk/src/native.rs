@@ -1978,6 +1978,9 @@ impl NativeEndpoint {
             self.check()?;
             let elapsed = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
             for attempt in scheduler.poll(elapsed) {
+                if let Some(budget) = self.permit.remote_budget() {
+                    budget.reserve_connection_attempt().map_err(|_| DialError::Expired)?;
+                }
                 let endpoint = self.endpoint_for(attempt.candidate.address);
                 let config = self.tls_config.clone();
                 let permit = &self.permit;
