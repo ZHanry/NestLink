@@ -11,8 +11,8 @@ use nestlink_sdk::{
     network::{packet_access::OnlinePacketAccess, routed::PinnedNetworkSpace},
 };
 use nestlink_transport_quic::packet_codec::{DirectPacketEndpoint, PacketAssembler, encode_direct};
-mod fixture;
 pub(super) mod cli;
+mod fixture;
 use fixture::Fixture;
 
 struct Guard<'a> {
