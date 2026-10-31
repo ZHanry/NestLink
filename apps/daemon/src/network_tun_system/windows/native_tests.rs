@@ -378,12 +378,12 @@ async fn ordinary(case: &Path, plan_path: &Path, receipt: &Path) -> Result {
     // A live unrelated VPN owner must keep draining its own device. New
     // interface events can produce background kernel control packets; leaving
     // them unread makes the original bounded pipe writer stop correctly.
-    let mut tick=tokio::time::interval(Duration::from_millis(25));
+    let mut tick = tokio::time::interval(Duration::from_millis(25));
     tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
-    let mut idle_packet=[0_u8;1280];
-    let mut drained=0_u64;
+    let mut idle_packet = [0_u8; 1280];
+    let mut drained = 0_u64;
     loop {
-        tokio::select!{biased;
+        tokio::select! {biased;
             _=tick.tick()=>{
                 plan.validate(true)?;
                 if case.join("stop.json").try_exists()?{break;}
