@@ -66,12 +66,7 @@ impl axum::serve::Listener for Listener {
     type Addr = SocketAddr;
     async fn accept(&mut self) -> (Self::Io, Self::Addr) {
         loop {
-            let Ok(slot) = self
-                .slots
-                .clone()
-                .acquire_owned()
-                .await
-            else {
+            let Ok(slot) = self.slots.clone().acquire_owned().await else {
                 // Listener::accept is infallible. A closed admission owner
                 // cannot accept more sockets; server shutdown cancels this wait.
                 std::future::pending::<()>().await;

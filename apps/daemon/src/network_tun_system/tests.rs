@@ -80,7 +80,7 @@ pub(super) fn plan() -> Result<TunPlan> {
         process: serde_json::from_value(
             json!({"pid":std::process::id(),"incarnation":"test-process-start","image":std::env::current_exe()?.to_string_lossy()}),
         )?,
-        principal: plan::HostPrincipal::Linux {uid:1000},
+        principal: plan::HostPrincipal::Linux { uid: 1000 },
         created_at_ms: now,
         expires_at_ms: now + 50_000,
         deployment_id: deployment,
@@ -150,7 +150,7 @@ fn signed_plan_binds_digest_pair_hosts_scope_and_deadline_and_rejects_extra_comm
             3 => changed.remote_peer = PeerId([4; 32]),
             4 => changed.policy_epoch += 1,
             5 => changed.space_id = nestlink_auth::random_id(),
-            6 => changed.principal = plan::HostPrincipal::Linux {uid:0},
+            6 => changed.principal = plan::HostPrincipal::Linux { uid: 0 },
             7 => changed.expires_at_ms = changed.created_at_ms + 60_001,
             8 => changed.local_hosts[0] = "127.0.0.1".parse()?,
             _ => unreachable!(),

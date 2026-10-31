@@ -219,7 +219,10 @@ pub async fn serve_with_caddy(
         identity,
         namespace,
         bind_ip,
-        ServiceEdgeIngress { caddy: caddy_config, group_health_listen: None },
+        ServiceEdgeIngress {
+            caddy: caddy_config,
+            group_health_listen: None,
+        },
         shutdown,
     )
     .await

@@ -242,7 +242,7 @@ pub(super) fn save_plan(path: &Path, plan: &GatePlan) -> io::Result<()> {
     save_owner_plan(path, &serde_json::to_vec_pretty(plan)?, &plan.process.sid)
 }
 pub(in crate::windows) fn save_owner_plan(path: &Path, bytes: &[u8], sid: &str) -> io::Result<()> {
-    if !valid_sid(sid) || bytes.is_empty() || bytes.len()>MAXIMUM_JSON as usize {
+    if !valid_sid(sid) || bytes.is_empty() || bytes.len() > MAXIMUM_JSON as usize {
         return Err(invalid("bounded original-owner public plan required"));
     }
     // Explicit administrator read admission allows an administrator using a

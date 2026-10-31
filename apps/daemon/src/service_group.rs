@@ -96,7 +96,9 @@ pub(crate) async fn run(args: GroupArgs) -> Result {
         let roots = args
             .backend_ca
             .iter()
-            .map(|path| nestlink_platform_security::read_private(path, 16_384).map(|bytes| bytes.to_vec()))
+            .map(|path| {
+                nestlink_platform_security::read_private(path, 16_384).map(|bytes| bytes.to_vec())
+            })
             .collect::<io::Result<Vec<_>>>()?;
         Some(HttpsBackendTls::new(name, roots)?)
     } else {
