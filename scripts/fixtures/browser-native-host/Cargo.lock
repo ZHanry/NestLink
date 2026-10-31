@@ -618,6 +618,35 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6ef517f0926dd24a1582492c791b6a4818a4d94e789a334894aa15b0d12f55c"
 
 [[package]]
+name = "cookie"
+version = "0.18.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a373e3602691c3cdea496d2f0ee5935151e6168fe87739483c463db1b2f2f87"
+dependencies = [
+ "percent-encoding",
+ "time",
+ "version_check",
+]
+
+[[package]]
+name = "cookie_store"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "15b2c103cf610ec6cae3da84a766285b42fd16aad564758459e6ecf128c75206"
+dependencies = [
+ "cookie",
+ "document-features",
+ "idna",
+ "log",
+ "publicsuffix",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "time",
+ "url",
+]
+
+[[package]]
 name = "cpubits"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -853,6 +882,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 3.0.8",
+]
+
+[[package]]
+name = "document-features"
+version = "0.2.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d4b8a88685455ed29a21542a33abd9cb6510b6b129abadabdcef0f4c55bc8f61"
+dependencies = [
+ "litrs",
 ]
 
 [[package]]
@@ -1870,6 +1908,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47d9d19d1d6efa0109d2f65ff4c85cddd50bd572e5a00127ab10987290bcefae"
 
 [[package]]
+name = "litrs"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4744e383959f0db86ede514b809b1c53251889093803c05267acc7d4e7030d70"
+
+[[package]]
 name = "lock_api"
 version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2198,6 +2242,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "nestlink-platform-input"
+version = "0.7.0-rc.1"
+dependencies = [
+ "futures-util",
+ "libc",
+ "nestlink-platform-clipboard",
+ "nestlink-platform-session",
+ "nestlink-remote",
+ "nestlink-session",
+ "rand_core 0.6.4",
+ "serde",
+ "tokio",
+ "windows-sys 0.61.2",
+ "x11rb",
+ "x11rb-protocol",
+ "zbus",
+]
+
+[[package]]
 name = "nestlink-platform-network"
 version = "0.7.0-rc.1"
 dependencies = [
@@ -2242,6 +2305,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "nestlink-privileged"
+version = "0.7.0-rc.1"
+dependencies = [
+ "base64 0.22.1",
+ "clap",
+ "nestlink-identity",
+ "nestlink-platform-input",
+ "nestlink-platform-security",
+ "nestlink-platform-session",
+ "nestlink-protocol",
+ "nestlink-remote",
+ "rand_core 0.6.4",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror 2.0.21",
+ "tokio",
+ "windows-sys 0.61.2",
+ "zeroize",
+]
+
+[[package]]
 name = "nestlink-protocol"
 version = "0.7.0-rc.1"
 dependencies = [
@@ -2282,12 +2367,15 @@ name = "nestlink-sdk"
 version = "0.7.0-rc.1"
 dependencies = [
  "async-trait",
+ "axum",
  "base64 0.22.1",
  "bytes",
  "fast-socks5",
  "futures-util",
  "gloo-timers",
  "hickory-server",
+ "hyper",
+ "hyper-util",
  "if-addrs",
  "ipnet",
  "js-sys",
@@ -2300,6 +2388,7 @@ dependencies = [
  "nestlink-platform-network",
  "nestlink-platform-security",
  "nestlink-policy",
+ "nestlink-privileged",
  "nestlink-protocol",
  "nestlink-remote",
  "nestlink-session",
@@ -2309,10 +2398,12 @@ dependencies = [
  "nestlink-traversal",
  "prost",
  "quinn",
+ "rcgen 0.14.10",
  "reqwest",
  "rustls",
  "serde",
  "serde_json",
+ "socket2 0.6.5",
  "thiserror 2.0.21",
  "tokio",
  "tokio-rustls",
@@ -2987,6 +3078,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "263a3f48f01e7309e857138bd47f785585b4a005e8e56c6d2824ce91195999c3"
 
 [[package]]
+name = "psl-types"
+version = "2.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "33cb294fe86a74cbcf50d4445b37da762029549ebeea341421c7c70370f86cac"
+
+[[package]]
+name = "publicsuffix"
+version = "2.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6f42ea446cab60335f76979ec15e12619a2165b5ae2c12166bef27d283a9fadf"
+dependencies = [
+ "idna",
+ "psl-types",
+]
+
+[[package]]
 name = "quinn"
 version = "0.11.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3220,6 +3327,8 @@ checksum = "eddd3ca559203180a307f12d114c268abf583f59b03cb906fd0b3ff8646c1147"
 dependencies = [
  "base64 0.22.1",
  "bytes",
+ "cookie",
+ "cookie_store",
  "futures-core",
  "futures-util",
  "http",

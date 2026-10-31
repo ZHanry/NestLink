@@ -5,7 +5,7 @@ use super::*;
 use nestlink_platform_security::local_port_gate::{
     GateOwner, GatePlan, ProcessIdentity, RootGateReceipt, Transport, wall_ms as gate_clock_ms,
 };
-use nestlink_sdk::services::{LocalProxyError, RawProxyWait};
+use nestlink_sdk::services::{LocalProxyError, LocalRawServiceTls, RawProxyWait};
 use serde_json::{Value, json};
 use std::{fs::File, process::Stdio, sync::Mutex};
 use tokio::{
@@ -407,6 +407,164 @@ async fn install(plan: &GatePlan) -> Result<(Child, RootGateReceipt)> {
     Ok((child, receipt))
 }
 
+async fn local_tls_experiment(
+    sdk: &Arc<Sdk>,
+    consumer: Arc<DeviceIdentity>,
+    choice: LocalProxyServiceChoice,
+    plan: &GatePlan,
+    receipt_path: &std::path::Path,
+    backend: &Backend,
+    original_receipt: &RootGateReceipt,
+) -> Result<Value> {
+    use rustls::{ClientConfig, RootCertStore, pki_types::ServerName};
+    let name = "owned-raw.nestlink.internal";
+    let certificate = rcgen::generate_simple_self_signed(vec![name.into()])?;
+    // This local certificate is independent of the original remote service's
+    // installation-pinned QUIC identity. Only its public DER becomes evidence.
+    std::fs::write(
+        variable("NESTLINK_RAW_KERNEL_OUTPUT")?.join("local-tls-certificate.der"),
+        certificate.cert.der().as_ref(),
+    )?;
+    let local_tls = LocalRawServiceTls::from_der(
+        vec![certificate.cert.der().to_vec()],
+        certificate.signing_key.serialize_der(),
+    )?;
+    let mut roots = RootCertStore::empty();
+    roots.add(certificate.cert.der().clone())?;
+    let mut config = ClientConfig::builder_with_provider(Arc::new(
+        rustls::crypto::ring::default_provider(),
+    ))
+    .with_safe_default_protocol_versions()?
+    .with_root_certificates(roots)
+    .with_no_client_auth();
+    config.alpn_protocols = vec![b"http/1.1".to_vec()];
+    let connector = tokio_rustls::TlsConnector::from(Arc::new(config));
+    let mut proxy = sdk
+        .start_private_service_raw_with_tls(
+            consumer,
+            choice,
+            plan.clone(),
+            receipt_path,
+            Some(local_tls),
+        )
+        .await?;
+    assert_eq!(proxy.address(), plan.endpoint);
+    let receipt = RootGateReceipt::read_for_current_process(receipt_path, plan)?;
+    assert_eq!(&receipt, original_receipt);
+    let before_wrong = backend
+        .received
+        .lock()
+        .map_err(|_| "backend witness poisoned")?
+        .len();
+    let wrong_name = ServerName::try_from("wrong-name.invalid")?;
+    let wrong = tokio::time::timeout(Duration::from_secs(5), async {
+        connector
+            .connect(wrong_name, TcpStream::connect(plan.endpoint).await?)
+            .await
+    })
+    .await?;
+    let error = match wrong {
+        Ok(_) => return Err("standard TLS client accepted the wrong certificate name".into()),
+        Err(error) => error,
+    };
+    assert!(
+        error.get_ref().is_some_and(|cause| {
+            matches!(
+                cause.downcast_ref::<rustls::Error>(),
+                Some(rustls::Error::InvalidCertificate(_))
+            )
+        }),
+        "wrong-name denial must be certificate validation, not transport failure: {error}"
+    );
+    assert_eq!(
+        backend
+            .received
+            .lock()
+            .map_err(|_| "backend witness poisoned")?
+            .len(),
+        before_wrong
+    );
+    assert!(
+        !proxy.is_finished(),
+        "certificate denial must leave the original owner alive"
+    );
+    let trusted_name = ServerName::try_from(name)?;
+    let mut stream = tokio::time::timeout(Duration::from_secs(5), async {
+        connector
+            .connect(trusted_name, TcpStream::connect(plan.endpoint).await?)
+            .await
+    })
+    .await??;
+    assert_eq!(stream.get_ref().1.alpn_protocol(), Some(b"http/1.1".as_slice()));
+    let mut payload = vec![0, 255, 128, 13, 10, 0];
+    payload.extend_from_slice(random_id().as_bytes());
+    let size = u16::try_from(payload.len())?;
+    tokio::time::timeout(Duration::from_secs(5), async {
+        stream.write_u16(size).await?;
+        stream.write_all(&payload).await?;
+        stream.shutdown().await
+    })
+    .await??;
+    let mut reply = Vec::new();
+    tokio::time::timeout(
+        Duration::from_secs(5),
+        (&mut stream).take(2049).read_to_end(&mut reply),
+    )
+    .await??;
+    assert_eq!(reply, payload);
+    drop(stream);
+    receipt.check_current(plan)?;
+    {
+        let received = backend
+            .received
+            .lock()
+            .map_err(|_| "backend witness poisoned")?;
+        assert_eq!(received.len(), before_wrong + 1);
+        assert_eq!(received.last(), Some(&payload));
+    }
+    let report = match proxy.wait_stopped(Duration::from_secs(8)).await {
+        RawProxyWait::Stopped(report) => report,
+        other => {
+            return Err(
+                format!("local TLS cleanup was not physically confirmed: {other:?}").into(),
+            );
+        }
+    };
+    assert!(report.socket_closed);
+    assert_eq!(report.accepted_connections, 2);
+    assert_eq!(report.completed_connections, 2);
+    assert_eq!(report.rejected_connections, 1);
+    assert_eq!(report.failed_connections, 0);
+    assert_eq!(report.cleanup_failures, 0);
+    assert_eq!(
+        RootGateReceipt::read_for_current_process(receipt_path, plan)?,
+        receipt,
+        "local TLS must preserve the exact original live-process gate receipt"
+    );
+    drop(TcpListener::bind(plan.endpoint).await?);
+    Ok(json!({
+        "kind":"local_tls_over_original_private_tcp_service",
+        "plan":plan, "helper":receipt.helper,
+        "trusted_name":name, "wrong_name":"wrong-name.invalid",
+        "trusted_ca_validated":true, "wrong_name_rejected":true,
+        "certificate_der":"local-tls-certificate.der",
+        "client_trust":"explicit_generated_single_root",
+        "original_receipt_unchanged":true,
+        "wrong_name_error":error.to_string(),
+        "rejected_handshake_backend_unchanged":true,
+        "backend_payloads_before_tls":before_wrong,
+        "backend_payloads_after_tls":before_wrong + 1,
+        "payload":payload, "reply":reply,
+        "accepted_connections":report.accepted_connections,
+        "completed_connections":report.completed_connections,
+        "rejected_connections":report.rejected_connections,
+        "failed_connections":report.failed_connections,
+        "cleanup_failures":report.cleanup_failures,
+        "socket_closed":report.socket_closed, "socket_rebound":true,
+        "remote_https_validated":false,
+    }))
+}
+
 async fn exercise(transport: Transport, kill_helper: bool) -> Result {
     hosted()?;
     let identity = ProcessIdentity::read(std::process::id())?;
@@ -471,7 +629,7 @@ async fn exercise(transport: Transport, kill_helper: bool) -> Result {
     drop(reserved);
     let mut proxy = f
         .sdk
-        .start_private_service_raw(consumer, choice()?, plan.clone(), &receipt_path)
+        .start_private_service_raw(consumer.clone(), choice()?, plan.clone(), &receipt_path)
         .await?;
     assert_eq!(proxy.address(), endpoint);
     let mut probes = vec![probe(endpoint, protocol, false, false, "same-uid-before").await?];
@@ -549,6 +707,26 @@ async fn exercise(transport: Transport, kill_helper: bool) -> Result {
         Transport::Tcp => drop(TcpListener::bind(endpoint).await?),
         Transport::Udp => drop(UdpSocket::bind(endpoint).await?),
     }
+    let local_tls = if transport == Transport::Tcp {
+        let result = local_tls_experiment(
+            &f.sdk,
+            consumer,
+            choice()?,
+            &plan,
+            &receipt_path,
+            &backend,
+            &receipt,
+        )
+        .await?;
+        assert_eq!(
+            installed,
+            nft_snapshot(&table, "after-local-tls").await?,
+            "local TLS must reuse the original unchanged kernel gate"
+        );
+        Some(result)
+    } else {
+        None
+    };
     // Ending a proxy is not process exit. The gate must still protect the
     // endpoint until this exact test process exits and the helper/recover joins.
     nft_snapshot(&table, "after-socket-close").await?;
@@ -573,6 +751,7 @@ async fn exercise(transport: Transport, kill_helper: bool) -> Result {
             "schema_version":1, "evidence_level":"L2_hosted_sdk_kernel", "production_cli_validated":false,
             "source_revision":std::env::var("GITHUB_SHA")?, "owner":identity, "protocol":protocol,
             "table":table, "plan":plan, "probes":probes, "backend_payloads":received,
+            "local_tls":local_tls,
             "occupied_port_rejected":true, "socket_closed":report.socket_closed,
             "cleanup_failures":report.cleanup_failures, "helper_killed":kill_helper,
             "live_process_recovery_rejected":early_recovery_rejected,

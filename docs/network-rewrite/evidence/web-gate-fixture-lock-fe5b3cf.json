@@ -1,0 +1,99 @@
+{
+    "schema_version":  1,
+    "purpose":  "isolated-private-web-reviewed-fixture-lock",
+    "source_revision":  "fe5b3cfdb7e484a32e24aed6527f90bdd19e3a6d",
+    "workflow":  ".github/workflows/network-lock-refresh.yml",
+    "run_id":  41177043947,
+    "run_attempt":  1,
+    "runner":  "github-hosted ubuntu-24.04",
+    "conclusion":  "success",
+    "artifact_id":  13033361910,
+    "archive_sha256":  "9ffe8314f5fd918a5d868bb1d8b0b99f06aa34633d70e5fc163eef545cc37cc7",
+    "receipt":  {
+                    "schema_version":  1,
+                    "purpose":  "reviewed-network-components-lock-derivation-only",
+                    "repository":  "ZHanry/NestLink",
+                    "source_revision":  "fe5b3cfdb7e484a32e24aed6527f90bdd19e3a6d",
+                    "run_id":  "41177043947",
+                    "run_attempt":  "1",
+                    "scope":  "browser-native-fixture",
+                    "manifest_path":  "scripts/fixtures/browser-native-host/Cargo.toml",
+                    "before_lock_sha256":  "3e2a2513758002df5f8d154e18e68b7c43d95e8ad84ae942a4bdf083d832ead1",
+                    "commands":  [
+                                     {
+                                         "argv":  [
+                                                      "cargo",
+                                                      "update",
+                                                      "--workspace",
+                                                      "--manifest-path",
+                                                      "scripts/fixtures/browser-native-host/Cargo.toml"
+                                                  ],
+                                         "return_code":  0
+                                     },
+                                     {
+                                         "argv":  [
+                                                      "cargo",
+                                                      "metadata",
+                                                      "--manifest-path",
+                                                      "scripts/fixtures/browser-native-host/Cargo.toml",
+                                                      "--locked",
+                                                      "--format-version",
+                                                      "1"
+                                                  ],
+                                         "return_code":  0
+                                     }
+                                 ],
+                    "assertions":  {
+                                       "only_selected_lock_changed":  true,
+                                       "all_existing_package_identities_and_checksums_preserved":  true,
+                                       "all_unrelated_external_package_edges_preserved":  true,
+                                       "only_exact_reviewed_component_feature_edges_added":  true,
+                                       "reviewed_crab_nat_exact_version_and_checksum":  true,
+                                       "reviewed_petgraph_exact_version_and_checksum":  true,
+                                       "reviewed_authoritative_dns_exact_version":  true,
+                                       "locked_metadata_succeeded":  true,
+                                       "protected_native_stream_reuses_existing_tokio_identity":  true,
+                                       "native_stdio_reuses_locked_tokio_util_identity":  true,
+                                       "only_reviewed_proxy_cookie_component_new_external_packages":  true
+                                   },
+                    "failure":  null,
+                    "product_compilation_performed":  false,
+                    "quality_or_acceptance_claimed":  false,
+                    "files":  [
+                                  {
+                                      "path":  "Cargo.lock",
+                                      "bytes":  128713,
+                                      "sha256":  "c4d8d26a8d68cdf3212fc755b73d389cf1df415dd3b48bc4003f003b73447d4b"
+                                  },
+                                  {
+                                      "path":  "before.lock",
+                                      "bytes":  126430,
+                                      "sha256":  "3e2a2513758002df5f8d154e18e68b7c43d95e8ad84ae942a4bdf083d832ead1"
+                                  },
+                                  {
+                                      "path":  "cargo-generated.lock",
+                                      "bytes":  128713,
+                                      "sha256":  "c4d8d26a8d68cdf3212fc755b73d389cf1df415dd3b48bc4003f003b73447d4b"
+                                  },
+                                  {
+                                      "path":  "command-0.log",
+                                      "bytes":  1614,
+                                      "sha256":  "95285dac07d2f544c483868739d87a28654f078c16a7d5608e49c0efe68030a3"
+                                  },
+                                  {
+                                      "path":  "command-1.log",
+                                      "bytes":  2566362,
+                                      "sha256":  "a2e29018dbb4dc86d83142773ebb8fb4a5dd53b724587077c4de7f1ddbdbcef2"
+                                  },
+                                  {
+                                      "path":  "derivation.diff",
+                                      "bytes":  4528,
+                                      "sha256":  "e6d6f82621e04b3652949800486fa2c8f45a1f12a40a2672b6d8c69ed97b4cc8"
+                                  }
+                              ]
+                },
+    "reviewed_change":  "Four exact Cookie/PSL package identities plus exact existing product document-features 0.2.12 and litrs 1.0.1 (including dependency edges) reused by fixture; all prior external identities, checksums and unrelated edges preserved.",
+    "local_project_toolchain_executed":  false,
+    "quality_or_acceptance_claimed":  false,
+    "release_qualified":  false
+}

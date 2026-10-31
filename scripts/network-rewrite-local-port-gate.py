@@ -242,8 +242,46 @@ def main() -> int:
                     raise ValueError("UID probe outcome disagrees with actual approved backend bytes")
             if name == "udp" and (probes[3]["payload"] != [] or probes[3]["allowed"] is not True or result["forwarded_datagrams"] < 6):
                 raise ValueError("real empty UDP request/reply missing")
+            local_tls = result["local_tls"]
+            if name == "tcp":
+                payload = local_tls["payload"]
+                before_tls = sum(probe["allowed"] is True for probe in probes)
+                certificate = case_output / "local-tls-certificate.der"
+                if (local_tls["kind"] != "local_tls_over_original_private_tcp_service"
+                    or local_tls["plan"] != plan or local_tls["helper"] != attestation["helper"]
+                    or local_tls["trusted_name"] != "owned-raw.nestlink.internal"
+                    or local_tls["wrong_name"] != "wrong-name.invalid"
+                    or local_tls["client_trust"] != "explicit_generated_single_root"
+                    or local_tls["certificate_der"] != certificate.name
+                    or not 0 < len(certificate.read_bytes()) <= 16384
+                    or local_tls["trusted_ca_validated"] is not True
+                    or local_tls["wrong_name_rejected"] is not True
+                    or not local_tls["wrong_name_error"]
+                    or local_tls["original_receipt_unchanged"] is not True
+                    or local_tls["rejected_handshake_backend_unchanged"] is not True
+                    or local_tls["backend_payloads_before_tls"] != before_tls
+                    or local_tls["backend_payloads_after_tls"] != before_tls + 1
+                    or len(result["backend_payloads"]) != before_tls + 1
+                    or not 6 < len(payload) <= 2048
+                    or payload[:6] != [0, 255, 128, 13, 10, 0]
+                    or local_tls["reply"] != payload
+                    or result["backend_payloads"].count(payload) != 1
+                    or local_tls["accepted_connections"] != 2
+                    or local_tls["completed_connections"] != 2
+                    or local_tls["rejected_connections"] != 1
+                    or local_tls["failed_connections"] != 0
+                    or local_tls["cleanup_failures"] != 0
+                    or local_tls["socket_closed"] is not True
+                    or local_tls["socket_rebound"] is not True
+                    or local_tls["remote_https_validated"] is not False):
+                    raise ValueError("local TLS original owner, standard trust, backend bytes or physical cleanup evidence missing")
+            elif local_tls is not None:
+                raise ValueError("UDP must not claim a TCP TLS termination experiment")
             expected = attestation["installed"]
-            for label in ["installed", "after-probes", "after-socket-close"]:
+            snapshots = ["installed", "after-probes", "after-socket-close"]
+            if name == "tcp":
+                snapshots.append("after-local-tls")
+            for label in snapshots:
                 if snapshot(json.loads((case_output / (label + ".nft.json")).read_text())) != expected:
                     raise ValueError("kernel table handles/configuration differ from root attestation")
             if name == "udp":
