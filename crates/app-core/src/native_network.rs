@@ -13,6 +13,9 @@ pub use nestlink_platform_security::MetadataCommit as NativeNetworkCommit;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct NativeNetworkSettings {
+    /// A locally pinned direct-only space path; independent of business consent.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub space_path: Option<NativeSpacePathSettings>,
     /// Explicit local approval of a pinned original route group. Absent keeps
     /// the legacy native endpoint and its direct/relay policy unchanged.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -27,6 +30,26 @@ pub struct NativeNetworkSettings {
     #[serde(default)]
     pub pcp_gateway: Option<std::net::Ipv4Addr>,
     pub private_network_prefixes: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct NativeSpacePathSettings {
+    pub deployment_id: String,
+    pub space_id: String,
+    pub authority_key: [u8; 32],
+    pub controller_membership_grant_id: String,
+    pub host_membership_grant_id: String,
+}
+impl NativeSpacePathSettings {
+    pub fn validate(&self) -> Result<(), NativeNetworkError> {
+        if ![&self.deployment_id, &self.space_id, &self.controller_membership_grant_id,
+            &self.host_membership_grant_id].into_iter().all(|id| nestlink_protocol::valid_id(id))
+            || self.authority_key == [0; 32]
+            || self.controller_membership_grant_id == self.host_membership_grant_id
+        { return Err(NativeNetworkError::Invalid); }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -84,6 +107,7 @@ impl Default for MediaRouteMode {
 impl Default for NativeNetworkSettings {
     fn default() -> Self {
         Self {
+            space_path: None,
             route_set: None,
             media_route: MediaRouteMode::default(),
             media_interface_index: None,
@@ -116,6 +140,10 @@ impl NativeNetworkSettings {
     /// destinations need no exception; metadata, loopback, mapped IPv6 and
     /// link-local destinations remain forbidden by the SDK AddressPolicy.
     pub fn validate(&self) -> Result<(), NativeNetworkError> {
+        if let Some(path) = &self.space_path {
+            path.validate()?;
+            if self.route_set.is_some() { return Err(NativeNetworkError::Invalid); }
+        }
         if let Some(route_set) = &self.route_set {
             route_set.validate()?;
             if self.pcp_gateway.is_some() {

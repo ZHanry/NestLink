@@ -69,6 +69,12 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-storage --test control network_paths::chains:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-chain-reservation-tests.log"
+      - name: Exercise shared private and public cumulative service promises
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-storage --lib services::publication::tests::private_policy:: -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-service-both-policy-tests.log"
       - name: Exercise the real HTTP topology publication and withdrawal APIs
         if: ${{ !cancelled() }}
         shell: bash
@@ -86,6 +92,7 @@ jobs:
           path: |
             ${{ runner.temp }}/network-topology-tests.log
             ${{ runner.temp }}/network-chain-reservation-tests.log
+            ${{ runner.temp }}/network-service-both-policy-tests.log
             ${{ runner.temp }}/network-topology-http-tests.log
             ${{ runner.temp }}/network-chain-http-tests.log
             ${{ runner.temp }}/network-route-export-http-tests.log
@@ -242,6 +249,12 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-sdk --test space_addressing -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-space-address-sdk-tests.log"
+      - name: Exercise signed direct authority and independent physical owner deadlines
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-sdk --lib signed_direct -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-signed-direct-sdk-tests.log"
       - name: Exercise private HTTP TCP UDP access, shared accounting and revocation
         if: ${{ !cancelled() }}
         shell: bash
@@ -285,6 +298,7 @@ jobs:
             ${{ runner.temp }}/network-chain-registered-tests.log
             ${{ runner.temp }}/network-route-set-sdk-tests.log
             ${{ runner.temp }}/network-space-address-sdk-tests.log
+            ${{ runner.temp }}/network-signed-direct-sdk-tests.log
             ${{ runner.temp }}/network-private-service-sdk-tests.log
             ${{ runner.temp }}/network-route-set-product-tests.log
             ${{ runner.temp }}/network-service-publication-owner-tests.log

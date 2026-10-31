@@ -17,7 +17,7 @@ use tokio::{sync::watch, time::Instant};
 mod control;
 pub use control::{
     ContinuousRouteSetSession, PinnedNetworkSpace, RouteSetContinuationStatus,
-    RouteSetRecoveryProposal, VerifiedRemoteChain, VerifiedRemoteRelay,
+    RouteSetRecoveryProposal, VerifiedRemoteChain, VerifiedRemoteDirect, VerifiedRemoteRelay,
     VerifiedRemoteRouteCandidate, VerifiedRemoteRouteSet,
 };
 pub use control::{RecoveredNetworkSession, RouteSetRecoveryConfig, RouteSetRecoverySource};

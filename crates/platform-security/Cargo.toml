@@ -13,6 +13,7 @@ tokio.workspace = true
 tempfile = "3.23.0"
 
 [target.'cfg(windows)'.dependencies]
+tokio-util = { version = "=0.7.20", features = ["io-util"] }
 windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Security", "Win32_Security_Cryptography", "Win32_Security_Authorization", "Win32_Storage_FileSystem", "Win32_System_Memory", "Win32_System_Threading", "Win32_System_Pipes", "Win32_System_IO"] }
 
 [target.'cfg(unix)'.dependencies]

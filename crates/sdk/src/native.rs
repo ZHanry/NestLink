@@ -516,6 +516,7 @@ pub struct NativeEndpoint {
     permit: VerifiedPermit,
     address_policy: AddressPolicy,
     authorization_deadline: Instant,
+    network_direct: Option<(String, [u8; 32])>,
     authorization_clock: Mutex<Option<u64>>,
     signal_sequence: AtomicU64,
 }
@@ -677,25 +678,43 @@ impl NativeConnection {
     /// The same API exposes independent QUIC channels or framed TLS/WSS queues.
     pub async fn authorize(
         self,
-        mut setup: nestlink_remote::SessionSetup,
+        setup: nestlink_remote::SessionSetup,
         local: &DeviceIdentity,
         peer_key: &[u8; 32],
     ) -> Result<NativeSession, nestlink_remote::RemoteError> {
+        self.authorize_with_network_path(setup, local, peer_key, None).await
+    }
+    pub(crate) async fn authorize_with_network_path(
+        self,
+        mut setup: nestlink_remote::SessionSetup,
+        local: &DeviceIdentity,
+        peer_key: &[u8; 32],
+        network_direct: Option<(String, [u8; 32])>,
+    ) -> Result<NativeSession, nestlink_remote::RemoteError> {
         let original = setup.session.current_verified_permit();
+        let (path_grant_id, transport_group) = match network_direct {
+            Some((path, group)) if self.candidate.path() == Path::Direct => (Some(path), Some(group)),
+            Some(_) => return Err(std::io::Error::new(std::io::ErrorKind::PermissionDenied,
+                "signed direct admission cannot select a relay").into()),
+            None => (None, None),
+        };
         let observation_binding = nestlink_remote::PathObservationBinding {
             business_grant_digest: original.digest(),
             business_generation: original.claims().connection_generation,
-            path_grant_id: None,
-            transport_group: None,
+            path_grant_id,
+            transport_group,
             route_binding: None,
             purpose: nestlink_protocol::network::Purpose::RemoteControl,
             path: self.candidate.path(),
             candidate: Some(self.candidate.clone()),
             network_generation: Some(self.candidate.generation),
         };
-        setup
-            .session
-            .cap_deadline_ms(setup.clock.deadline_ms(self.authorization_deadline)?)?;
+        let authorization_deadline_ms = setup.clock.deadline_ms(self.authorization_deadline)?;
+        if observation_binding.path_grant_id.is_some() {
+            setup.session.cap_lifetime_deadline_ms(authorization_deadline_ms)?;
+        } else {
+            setup.session.cap_deadline_ms(authorization_deadline_ms)?;
+        }
         setup.path = self.candidate.path();
         setup.lifecycle.network = Some(self.network);
         let native_ice = matches!(&self.transport, NativeTransport::Ice { .. });
@@ -929,6 +948,13 @@ impl NativeEndpoint {
         self.authorization_deadline = self.authorization_deadline.min(deadline);
         Ok(())
     }
+    pub(crate) fn bind_network_direct(
+        &mut self, path: String, group: [u8; 32], deadline: Instant,
+    ) -> Result<(), DialError> {
+        self.cap_authorization_deadline(deadline)?;
+        self.network_direct = Some((path, group));
+        Ok(())
+    }
     pub fn new(
         bound: SocketAddr,
         local: &DeviceIdentity,
@@ -999,6 +1025,7 @@ impl NativeEndpoint {
             permit,
             address_policy,
             authorization_deadline,
+            network_direct: None,
             authorization_clock: Mutex::new(Some(now)),
             signal_sequence: AtomicU64::new(0),
         })
@@ -1427,7 +1454,7 @@ impl NativeEndpoint {
         let mut session = tokio::select! {
             biased;
             _ = cancellation(&mut cancel) => return Err(SessionEstablishError::Cancelled),
-            result = connection.authorize(setup, local, &self.peer_key) => result?,
+            result = connection.authorize_with_network_path(setup, local, &self.peer_key, self.network_direct.clone()) => result?,
         };
         session.lifecycle_owner = Some(_stop_owner);
         if let Err(error) = self.check() {

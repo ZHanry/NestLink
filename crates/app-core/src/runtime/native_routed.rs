@@ -21,6 +21,11 @@ impl Drop for RouteLifetime {
 }
 pub(super) enum NativeConnection {
     Legacy(Box<LegacyConnection>),
+    Direct {
+        session: Box<LegacyConnection>,
+        admission: Box<nestlink_sdk::network::routed::VerifiedRemoteDirect>,
+        network_generation: u64,
+    },
     Original {
         session: Box<ContinuousRouteSetSession>,
         lifetime: RouteLifetime,
@@ -34,6 +39,7 @@ impl NativeConnection {
     pub(super) fn channels(&mut self) -> &mut ChannelRuntime {
         match self {
             Self::Legacy(session) => &mut session.channels,
+            Self::Direct { session, .. } => &mut session.channels,
             Self::Original { session, .. } => session.channels(),
             Self::Recovered { session, .. } => session.channels(),
         }
@@ -41,13 +47,14 @@ impl NativeConnection {
     pub(super) fn control(&self) -> NativeSessionControl {
         match self {
             Self::Legacy(session) => session.control.clone(),
+            Self::Direct { session, .. } => session.control.clone(),
             Self::Original { session, .. } => session.control(),
             Self::Recovered { session, .. } => session.control(),
         }
     }
     pub(super) fn quality(&self) -> crate::NativePathQualityView {
         match self {
-            Self::Legacy(session) => {
+            Self::Legacy(session) | Self::Direct { session, .. } => {
                 native_quality::selected_carrier(&session.candidate, session.uses_bilateral_ice())
             }
             _ => native_quality::selected_routed_carrier(),
@@ -56,6 +63,7 @@ impl NativeConnection {
     async fn wait_stopped(&mut self) -> Result<StopReport, SessionEstablishError> {
         match self {
             Self::Legacy(session) => session.wait_stopped().await.map_err(Into::into),
+            Self::Direct { session, .. } => session.wait_stopped().await.map_err(Into::into),
             Self::Original { session, .. } => session.wait_stopped().await,
             Self::Recovered { session, .. } => session.wait_stopped().await.map_err(Into::into),
         }
@@ -70,6 +78,7 @@ impl NativeConnection {
             Self::Original { lifetime, .. } => lifetime.network_generation,
             Self::Recovered { _lifetime, .. } => _lifetime.network_generation,
             Self::Legacy(_) => network.borrow().generation,
+            Self::Direct { network_generation, .. } => *network_generation,
         };
         let mut requests_open = true;
         loop {
@@ -110,6 +119,24 @@ impl NativeConnection {
             client: Some(client),
             slot: request.slot.clone(),
         };
+        if let Self::Direct { session, admission, .. } = self {
+            if let Some(client) = loan.client.as_ref() {
+                let deadline = tokio::time::Instant::now()
+                    + session.control.lease_remaining().unwrap_or_default().min(Duration::from_secs(3));
+                let reason = tokio::select! { biased;
+                    _ = wait_for_fence_invalidation(request.fence.clone()) => Some(StopReason::ExplicitExit),
+                    _ = wait_network_change(network, network_generation) => Some(StopReason::NetworkChanged),
+                    result = tokio::time::timeout_at(deadline,
+                        admission.check_current(&client.sdk, &request.identity, peer_key)) => {
+                        if matches!(result, Ok(Ok(()))) { None } else { Some(StopReason::Revoked) }
+                    },
+                };
+                if let Some(reason) = reason { let _ = session.control.stop(reason); }
+            }
+            drop(loan);
+            let _ = request.done.send(());
+            return;
+        }
         if let Some(client) = loan.client.as_ref()
             && request.fence.check().is_ok()
             && self.control().lease_remaining().is_ok()

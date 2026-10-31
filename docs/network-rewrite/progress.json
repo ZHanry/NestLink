@@ -6,8 +6,8 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "64cd29ed0304486fa16520d2f236a884b7bf6295",
-    "checkpoint_kind":  "source_snapshot_includes_private_purpose_network_chain_signed_application_recovery_and_authenticated_socks_tcp_udp_pending_hosted_validation",
+    "source_revision":  "ec64d7c80e68b6fa17c373e1aac5a2492886be5d",
+    "checkpoint_kind":  "pending_hosted_snapshot_signed_direct_native_stream_digest_and_recovery_cleanup_repairs",
     "active_tasks":  [
                          "W00",
                          "W02",
@@ -27,7 +27,8 @@
                          "W14",
                          "W19",
                          "W20",
-                         "W21"
+                         "W21",
+                         "W15"
                      ],
     "satisfied_interface_dependencies":  [
                                              "W01 nine-topic source and mature-component research independently reviewed",
@@ -35,8 +36,10 @@
                                              "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
                                          ],
     "unverified_assumptions":  [
-                                   "Private original-connection Quinn replacement passed its hosted experiment at d4de410; authenticated production W14 and target continuity remain unimplemented/unverified.",
-                                   "d4de410 native ICE experiment stopped at SDK lint before runtime; source repairs require a new exact-source run.",
+                                   "6602a70 registered NRD2 and original SDK chain business scopes passed; three recovery source scenarios and product route-set recovery failed. Observer cleanup source repair requires new exact-source Actions.",
+                                   "Private service 6602a70 six data scenarios were rejected at the wrong connectivity digest. VerifiedNetworkGrant digest repair and native stream additions require new exact-source Actions.",
+                                   "Signed direct path uses original native endpoint, permit and channel runtime; independent deadline and actual product media/input/revoke scenarios await hosted validation.",
+                                   "Protected local native streams and stdio use OS peer credentials and existing runtimes; Windows normal-user, Unix half-close, original owner cleanup and stdio process regressions await hosted validation.",
                                    "Existing v15 relay packet limit is not an IPv6 TUN MTU qualification."
                                ],
     "external_prerequisites":  [
@@ -67,11 +70,11 @@
                                    }
                                ],
     "next_steps":  [
-                       "Run hosted exact-source format/clippy/contracts, private service TCP/UDP/SOCKS traffic, original-route SDK/product recovery, protected daemon CLI and real OS DNS after this source snapshot.",
-                       "Preserve true revocation over non-revivable local retirement; verify bilateral signed recovery and real physical socket release without replaying old media/input.",
-                       "Validate direct private service policy intersection and independent network-purpose chain, consumer-login revocation, schema40-to41 migration and one durable shared usage owner.",
-                       "Finish W21 raw local port mappings with real local admission, and all remaining mandatory W12-W40 implementations and target qualifications.",
-                       "Publish 0.8.0RC only after required functionality and evidence gates; keep local and remote main as the only branch."
+                       "Derive reviewed Windows stdio direct dependency locks and source formatting on hosted Actions, verify original artifact hashes and import only reviewed output.",
+                       "Run exact-source network contracts, signed direct deadline/product scenarios, private TCP/HTTP/UDP/SOCKS/native streams, shared Both budget matrix, system DNS and complete workspace checks.",
+                       "Resolve product route-set recovery from retained stage diagnostics; retain revocation precedence and original deadlines.",
+                       "Finish private relay and multihop independent service authority and actual business carrier, then remaining W16/W22-W40 functionality and qualifications.",
+                       "Create 0.8.0RC only after mandatory functionality and real evidence gates. Local and remote currently contain main only."
                    ],
     "evidence_index":  [
                            "docs/network-rewrite/evidence/research-review-2026-10-30.md",
@@ -214,6 +217,12 @@
                                  "source_revision":  "99f647b546becb3ebdb31aa6e3123b289c034dcc",
                                  "status":  "partial_failure",
                                  "scope":  "Local quality policy and actual Quinn sampler passed; topology/carrier/HTTP/NAT/socket passed; registered scope isolation and stopped-neighbor retirement passed. Both registered FileRead transferred bytes but fixture stopped lease before revoke. Linux contract clippy/tests passed with formatting failure; core native assertion move and independent browser lock require source repairs. Full core/Windows contract pending at checkpoint."
+                             },
+                             {
+                                 "run_id":  41163165105,
+                                 "source_revision":  "6602a70a3c7211a97eb7705588d3ff4d1d24e8ed",
+                                 "status":  "partial_failure",
+                                 "scope":  "Original NRD2 SDK and registered-node business scenarios passed; private service admission six failures, recovery source three failures and product recovery timeout retained. New source repairs remain unverified."
                              }
                          ],
     "release_state":  "not_ready",

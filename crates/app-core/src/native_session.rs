@@ -11,6 +11,7 @@ use crate::{
 /// deployment. Private networks always require explicit local consent.
 #[derive(Clone)]
 pub struct NativeSessionConfig {
+    pub(crate) space_path: Option<crate::NativeSpacePathSettings>,
     pub(crate) route_set: Option<crate::NativeRouteSetSettings>,
     /// Frozen for one local session and its recovery; never a forwarding grant.
     pub(crate) relay_node_id: Option<String>,
@@ -70,6 +71,7 @@ impl NativeSessionConfig {
 
     pub fn new(network: Arc<NetworkMonitor>) -> Self {
         Self {
+            space_path: None,
             route_set: None,
             relay_node_id: None,
             listen_for_native_requests: false,
@@ -182,6 +184,7 @@ impl NativeSessionConfig {
 
     pub fn network_settings(&self) -> NativeNetworkSettings {
         NativeNetworkSettings {
+            space_path: self.space_path.clone(),
             route_set: self.route_set.clone(),
             media_route: self.media_route,
             media_interface_index: self.media_interface_index,
@@ -196,10 +199,20 @@ impl NativeSessionConfig {
         route_set: crate::NativeRouteSetSettings,
     ) -> Result<Self, NativeNetworkError> {
         route_set.validate()?;
-        if self.relay_node_id.is_some() || self.pcp_gateway.is_some() {
+        if self.space_path.is_some() || self.relay_node_id.is_some() || self.pcp_gateway.is_some() {
             return Err(NativeNetworkError::Invalid);
         }
         self.route_set = Some(route_set);
+        Ok(self)
+    }
+    pub fn with_space_path(
+        mut self, path: crate::NativeSpacePathSettings,
+    ) -> Result<Self, NativeNetworkError> {
+        path.validate()?;
+        if self.route_set.is_some() || self.relay_node_id.is_some() {
+            return Err(NativeNetworkError::Invalid);
+        }
+        self.space_path = Some(path);
         Ok(self)
     }
 
@@ -215,6 +228,7 @@ impl NativeSessionConfig {
         self.use_deployment_stun = settings.use_deployment_stun;
         self.pcp_gateway = settings.pcp_gateway;
         self.route_set = settings.route_set;
+        self.space_path = settings.space_path;
         self.private_network_prefixes = settings.private_network_prefixes;
         self.network_settings_store = Some(store);
         Ok(self)
@@ -236,6 +250,7 @@ impl NativeSessionConfig {
         self.use_deployment_stun = settings.use_deployment_stun;
         self.pcp_gateway = settings.pcp_gateway;
         self.route_set = settings.route_set;
+        self.space_path = settings.space_path;
         self.private_network_prefixes = settings.private_network_prefixes;
         Ok(commit)
     }
@@ -243,6 +258,7 @@ impl NativeSessionConfig {
     pub(crate) fn validate(&self) -> bool {
         self.network_settings().validate().is_ok()
             && (self.route_set.is_none() || self.relay_node_id.is_none())
+            && (self.space_path.is_none() || self.relay_node_id.is_none())
             && self
                 .relay_node_id
                 .as_ref()

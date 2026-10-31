@@ -162,11 +162,13 @@ impl Store {
             membership_digests,
             business_grant_digest: lease.digest(),
         }))?;
+        let verified_connectivity =
+            verify_network_grant(&connectivity, &snapshot.verification())?;
         let path = network_signer.sign(&GrantClaims::Path(PathClaims {
             scope: scope(),
             peers,
             purpose: Purpose::PrivateService,
-            connectivity_grant_digest: digest(&connectivity.claims),
+            connectivity_grant_digest: verified_connectivity.digest(),
             policy: PathPolicy {
                 allow_direct: true,
                 relays: Vec::new(),

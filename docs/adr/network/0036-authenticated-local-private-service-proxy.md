@@ -110,6 +110,37 @@ A one-shot unprotected TCP capability port cannot supply the necessary ordinary
 client/authentication behavior. Raw unauthenticated local TCP mapping requires
 a separate OS admission design; it is not enabled as a fallback here.
 
+The additional native stream entry reuses Tokio's UnixListener/UnixStream or
+Windows overlapped byte-mode named pipes and the existing Windows broker's
+owner-DACL/OS-peer-token pattern. It is a usable fixed-service endpoint for
+native socket/pipe clients and SSH ProxyCommand; it is not a raw loopback port.
+Unix requires an existing owner-only directory, checks kernel peer_cred UID and
+removes its own socket only if device/inode/type/owner still match. Windows uses
+an owner/SYSTEM protected DACL, rejects remote pipe clients, verifies actual
+pipe-peer SID and login session, opens clients at identification SQOS, and keeps
+a server instance alive across accepts to prevent namespace replacement.
+Neither endpoint reads a claimed UID/PID from client application bytes.
+
+Native streams use the same fixed-service choice, private grants, original
+shared reservation, setup deadline, owner/worker limits and physical private
+carrier joins. UDP choices fail before native listener or grant creation. A
+changed Unix pathname is preserved and reported as CleanupFailed. The daemon's
+serve --native-stream mode owns session/maintenance/termination shutdown, while
+its connect --endpoint mode relays redirected byte stdio without a second login
+or refresh owner. Its stdout contains application bytes only. Unix stdio uses
+Tokio AsyncFd with duplicated descriptors and restores original status flags.
+Windows uses the existing locked tokio-util 0.7.20 SyncIoBridge (MIT) and bounded
+Tokio duplex buffers, two owned synchronous pipe workers, CancelSynchronousIo,
+and retained original thread joins; cancellation or a pending wait never drops
+the physical cleanup owner. This avoids the uninterruptible Tokio stdin worker.
+Windows native byte pipes have no independent write-half EOF; applications that
+require FIN before the final reverse response must use SOCKS TCP. Unix native
+streams and stdio preserve that half-close. Unix socket path length is an OS
+limit, so callers can explicitly choose a short existing private directory.
+Actual production-child stdio tests retain stdin open while the native peer
+closes, verify unmodified binary stdout and bounded child exit; Unix also tests
+stdin EOF followed by the final reverse response. These tests run on Actions.
+
 Under R02 all build, format, lint and test execution belongs to GitHub-hosted
 Actions. Tests include the mature standard client, real private target bytes and
 FIN, wrong password/NoAuth/name/port/IP/command denial, port collision, credential
@@ -120,8 +151,9 @@ Source availability is not an Actions pass. W21 still requires a reliable OS
 admission design for raw loopback TCP/UDP mappings, complete product lifecycle
 wiring, unified routed private service carriage and ordinary Windows-user
 real-device L3 evidence. Current local-ipc is mutually pinned TLS on loopback,
-using private-directory installation keys; it is not an existing named-pipe or
-Unix-peer-credential server that can transparently admit ordinary raw clients.
+using private-directory installation keys. The added native endpoint provides
+OS-authenticated socket/pipe clients; a generic raw TCP/UDP listener still needs
+the separate kernel admission design and must not silently fall back to loopback.
 
 Sources: https://github.com/dizda/fast-socks5/tree/v1.0.0,
 https://crates.io/api/v1/crates/fast-socks5/1.0.0,

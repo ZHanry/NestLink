@@ -22,6 +22,8 @@ mod native_quality;
 mod native_recovery;
 #[path = "runtime/native_routed.rs"]
 mod native_routed;
+#[path = "runtime/native_direct.rs"]
+mod native_direct;
 use native_routed::NativeConnection;
 mod native_renewal;
 #[path = "runtime/service_host.rs"]
@@ -5532,6 +5534,19 @@ async fn establish_native_session(
     let address_policy = config
         .address_policy()
         .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?;
+    if config.space_path.is_some() {
+        let core_generation = fence.expected;
+        let session = native_direct::establish(
+            client, identity, &config, permit, &peer_key, &key, options, fence,
+        ).await?;
+        key.path = nestlink_protocol::Path::Direct as i32;
+        return Ok(EstablishedNativeSession {
+            session, key,
+            recovery: NativeRecoveryContext {
+                config, peer_key, core_generation, server: client.server.clone(), deadline: None,
+            },
+        });
+    }
     if config.route_set.is_some() {
         let core_generation = fence.expected;
         let session = native_routed::establish(

@@ -1205,6 +1205,45 @@ fn readback_sdk(f: &Fixture) -> Result<crate::Sdk> {
 }
 
 #[test]
+fn signed_direct_readback_keeps_membership_business_pin_path_and_login_independent() -> Result {
+    let f = Fixture::new(true)?;
+    let sdk = readback_sdk(&f)?;
+    let pin = super::PinnedNetworkSpace::new(SPACE.into(), f.issuer)?;
+    let mut view = f.response.path.clone();
+    let signer = NetworkAuthoritySigner::from_master_seed(&[83; 32])?;
+    let mut claims = f.path.claims().clone();
+    claims.policy = PathPolicy { allow_direct: true, relays: Vec::new(), max_hops: 0 };
+    let signed = signer.sign(&GrantClaims::Path(claims))?;
+    view.path.claims = URL_SAFE_NO_PAD.encode(signed.claims);
+    view.path.signature = URL_SAFE_NO_PAD.encode(signed.signature);
+    let path = view.path.grant_id.clone();
+    let peer = f.host.identity.public_key();
+    let route = sdk.verify_direct_readback(&pin, &f.controller, &f.permit, &peer,
+        &path, view.clone(), Instant::now())?;
+    assert_eq!(route.path_grant_id(), path);
+    assert_eq!(route.membership_grant_ids(), [view.controller_membership.grant_id.as_str(), view.host_membership.grant_id.as_str()]);
+    for mutation in 0..7 {
+        let mut other = view.clone();
+        let mut other_pin = pin.clone();
+        let mut other_peer = peer;
+        match mutation {
+            0 => other_pin = super::PinnedNetworkSpace::new(SPACE.into(), [7; 32])?,
+            1 => other_peer = [8; 32],
+            2 => std::mem::swap(&mut other.controller_membership, &mut other.host_membership),
+            3 => other.request_id = random_id(),
+            4 => other.path.grant_id = random_id(),
+            5 => other.path = f.response.path.path.clone(),
+            _ => other.connectivity = view.controller_membership.clone(),
+        }
+        assert!(sdk.verify_direct_readback(&other_pin, &f.controller, &f.permit, &other_peer,
+            &path, other, Instant::now()).is_err(), "mutation {mutation} must not create direct authority");
+    }
+    assert!(sdk.verify_direct_readback(&pin, &f.controller, &f.permit, &peer,
+        &path, view, Instant::now() - Duration::from_secs(6)).is_err());
+    Ok(())
+}
+
+#[test]
 fn management_readback_binds_both_device_roles_and_the_original_network_pin() -> Result {
     let f = Fixture::new(true)?;
     let sdk = readback_sdk(&f)?;

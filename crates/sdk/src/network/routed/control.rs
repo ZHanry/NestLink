@@ -21,6 +21,8 @@ use std::{
 };
 mod chain;
 pub use chain::VerifiedRemoteChain;
+mod direct;
+pub use direct::VerifiedRemoteDirect;
 mod route_set;
 pub use route_set::{
     ContinuousRouteSetSession, RouteSetContinuationStatus, RouteSetRecoveryProposal,
@@ -498,18 +500,19 @@ impl RemoteRouteObserver {
             interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
             loop {
                 tokio::select! { biased;
-                    _ = super::wait_setup_cancel(&mut cancel) => return,
+                    _ = super::wait_setup_cancel(&mut cancel) => { let _ = lease.stop(StopReason::Revoked); return; },
                     _ = tokio::time::sleep_until(self.deadline) => { let _ = lease.stop(StopReason::Expired); return; },
                     _ = interval.tick() => {},
                 }
                 let result = tokio::select! { biased;
-                    _ = super::wait_setup_cancel(&mut cancel) => return,
+                    _ = super::wait_setup_cancel(&mut cancel) => { let _ = lease.stop(StopReason::Revoked); return; },
                     result = tokio::time::timeout_at(
                         self.deadline.min(Instant::now() + Duration::from_secs(2)),
                         self.matches_current(),
                     ) => result,
                 };
                 if !matches!(result, Ok(true)) {
+                    let _ = lease.stop(StopReason::Revoked);
                     return;
                 }
                 if lease.remaining().is_err() {
@@ -553,6 +556,9 @@ impl RemoteRouteObserver {
 struct ObserverStop(nestlink_remote::LeaseControl);
 impl Drop for ObserverStop {
     fn drop(&mut self) {
-        let _ = self.0.stop(StopReason::Revoked);
+        // Joining this observer is part of normal carrier cleanup. A prior
+        // recoverable receipt remains valid; explicit readback/cancel denial
+        // above still calls stop and overrides recovery eligibility.
+        let _ = self.0.stop_if_running(StopReason::Revoked);
     }
 }

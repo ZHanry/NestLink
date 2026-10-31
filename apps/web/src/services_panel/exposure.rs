@@ -41,6 +41,30 @@ fn subject_label(subject: &PrivateServiceSubject) -> String {
     }
 }
 
+fn now_unix_ms() -> Option<u64> {
+    #[cfg(target_arch = "wasm32")]
+    {
+        let now = js_sys::Date::now();
+        (now.is_finite() && now >= 0.0 && now <= i64::MAX as f64).then_some(now as u64)
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        u64::try_from(std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).ok()?.as_millis()).ok()
+    }
+}
+
+fn expiry_label(expires_at_unix_ms: u64) -> String {
+    #[cfg(target_arch = "wasm32")]
+    {
+        js_sys::Date::new(&wasm_bindgen::JsValue::from_f64(expires_at_unix_ms as f64))
+            .to_iso_string().as_string().unwrap_or_default()
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        format!("{expires_at_unix_ms} ms (Unix)")
+    }
+}
+
 #[component]
 pub(super) fn ServiceExposurePanel(
     api: Api,
@@ -149,14 +173,11 @@ pub(super) fn ServiceExposurePanel(
                     .parse::<u64>()
                     .ok()
                     .filter(|m| (1..=10_080).contains(m))?;
-                let now = js_sys::Date::now();
-                if !now.is_finite() || now < 0.0 || now > i64::MAX as f64 {
-                    return None;
-                }
+                let now = now_unix_ms()?;
                 Some(Request::Allow(PrivateServiceAclUpdate {
                     expected_exposure_revision: current.exposure.revision,
                     subject,
-                    expires_at_unix_ms: (now as u64).checked_add(duration.checked_mul(60_000)?)?,
+                    expires_at_unix_ms: now.checked_add(duration.checked_mul(60_000)?)?,
                 }))
             })(),
             Action::Revoke(rule) => snapshot
@@ -272,7 +293,7 @@ pub(super) fn ServiceExposurePanel(
                 <button type="button" class="primary" disabled=move||busy.get() on:click=move|_|request.run(Action::Allow)>{move||t("授权消费者", "Authorize consumer")}</button>
                 <For each=move||policy.get().map(|p|p.rules).unwrap_or_default() key=|r|r.rule_id.clone() children=move|rule|{
                     let id=StoredValue::new(rule.rule_id.clone()); let revoked=rule.revoked;
-                    let expiry=js_sys::Date::new(&wasm_bindgen::JsValue::from_f64(rule.expires_at_unix_ms as f64)).to_iso_string().as_string().unwrap_or_default();
+                    let expiry=expiry_label(rule.expires_at_unix_ms);
                     view!{<article class="policy-form"><p>{subject_label(&rule.subject)}</p><p>{move||t("到期时间：", "Expires: ")}{expiry}</p>
                         <Show when=move||revoked><p>{move||t("已撤销", "Revoked")}</p></Show>
                         <button class="danger" type="button" disabled=move||busy.get()||revoked on:click=move|_|request.run(Action::Revoke(id.get_value()))>{move||t("撤销该消费者", "Revoke consumer")}</button></article>}

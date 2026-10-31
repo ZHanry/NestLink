@@ -3,7 +3,8 @@ use crate::{session_store::SessionStore, space_dns::session_snapshot};
 use nestlink_protocol::services::private::PrivateServiceEntry;
 use nestlink_sdk::{
     Sdk,
-    services::{LocalProxyServiceChoice, LocalProxyWait},
+    services::{LocalProxyServiceChoice, LocalProxyWait, LocalServiceProxy,
+        LocalNativeServiceProxy, NativeStreamWait},
 };
 use std::{
     io,
@@ -26,7 +27,19 @@ pub(crate) struct ProxyArgs {
 enum ProxyAction {
     /// List currently authorized private services without creating listeners.
     List,
-    /// Serve one chosen TCP/HTTP/HTTPS service until stopped or its deadline.
+    /// Relay redirected stdin/stdout to an existing same-user native endpoint.
+    /// Suitable for SSH ProxyCommand and clients with their own message framing.
+    /// Windows requires redirected pipes and has no independent write-half EOF.
+    Connect {
+        #[arg(long)]
+        endpoint: PathBuf,
+    },
+    /// Serve one chosen TCP/HTTP/HTTPS/UDP service until stopped or its deadline.
+    /// UDP clients must bind their local UDP socket first, authenticate the TCP
+    /// control connection, and declare that exact loopback IP and nonzero UDP
+    /// port in UDP ASSOCIATE. Unspecified sources such as [::]:0 are rejected.
+    /// Each UDP packet must target the selected alias/port; fragments and
+    /// payloads over 1169 bytes are discarded. Empty datagrams are preserved.
     Serve {
         #[arg(long)]
         service: String,
@@ -47,14 +60,39 @@ enum ProxyAction {
         /// Loopback only. Port zero chooses a free local port.
         #[arg(long, default_value = "127.0.0.1:0")]
         listen: SocketAddr,
-        /// Existing private directory for the create-new local credentials file.
+        /// Existing private directory for credentials or the native Unix socket.
         /// Defaults to this installation's state directory.
         #[arg(long)]
         credentials_dir: Option<PathBuf>,
+        /// Use an OS-authenticated Unix socket / Windows byte pipe instead of
+        /// SOCKS. TCP/HTTP/HTTPS only; --listen applies to SOCKS mode only.
+        #[arg(long)]
+        native_stream: bool,
     },
 }
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+
+enum RunningProxy { Socks(LocalServiceProxy), Native(LocalNativeServiceProxy) }
+enum ProxyWait { Pending, Stopped(String), Failed(String) }
+impl RunningProxy {
+    fn is_finished(&self) -> bool { match self { Self::Socks(owner) => owner.is_finished(), Self::Native(owner) => owner.is_finished() } }
+    fn request_shutdown(&self) { match self { Self::Socks(owner) => owner.request_shutdown(), Self::Native(owner) => owner.request_shutdown() } }
+    async fn wait_stopped(&mut self) -> ProxyWait {
+        match self {
+            Self::Socks(owner) => match owner.wait_stopped(Duration::from_secs(5)).await {
+                LocalProxyWait::CleanupPending => ProxyWait::Pending,
+                LocalProxyWait::Stopped(report) => ProxyWait::Stopped(format!("{report:?}")),
+                LocalProxyWait::CleanupFailed(report) => ProxyWait::Failed(format!("{report:?}")),
+            },
+            Self::Native(owner) => match owner.wait_stopped(Duration::from_secs(5)).await {
+                NativeStreamWait::CleanupPending => ProxyWait::Pending,
+                NativeStreamWait::Stopped(report) => ProxyWait::Stopped(format!("{report:?}")),
+                NativeStreamWait::CleanupFailed(report) => ProxyWait::Failed(format!("{report:?}")),
+            },
+        }
+    }
+}
 
 pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
     #[cfg(unix)]
@@ -63,6 +101,13 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
     }
     #[cfg(windows)]
     nestlink_privileged::windows::require_normal_user_process()?;
+    if let ProxyAction::Connect { endpoint } = &args.action {
+        nestlink_platform_security::check_private_directory(&args.state_dir)?;
+        let stream = tokio::time::timeout(Duration::from_secs(3),
+            nestlink_platform_security::local_stream::connect(endpoint)).await??;
+        return Ok(nestlink_platform_security::local_stream::relay_stdio(stream,
+            crate::space_dns_system::termination()).await?);
+    }
     let installation =
         nestlink_local_ipc::maintenance::InstallationStartup::acquire(&std::env::current_exe()?)?;
     let directory = installation.state_directory(&args.state_dir)?;
@@ -129,6 +174,7 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
             lifetime_seconds,
             listen,
             credentials_dir,
+            native_stream,
         } => {
             if !nestlink_protocol::valid_id(&service)
                 || !nestlink_protocol::valid_id(&space)
@@ -140,6 +186,8 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
                 .into());
             }
             let entry = selected_service(&sdk, &consumer.device_id, &service, &space).await?;
+            let datagram = matches!(&entry.service.definition.requested_ingress,
+                nestlink_protocol::api::ServiceIngress::Udp { .. });
             let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
             let remaining = sdk
                 .principal()
@@ -157,23 +205,34 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
             let sdk = Arc::new(sdk);
             let credential_directory = credentials_dir.unwrap_or_else(|| directory.clone());
             let deadline = tokio::time::Instant::now() + lifetime;
-            let mut proxy = sdk
-                .start_private_service_socks(consumer, choice, listen, &credential_directory)
-                .await?;
+            let mut proxy = if native_stream {
+                RunningProxy::Native(sdk.start_private_service_native_stream(consumer, choice, &credential_directory).await?)
+            } else {
+                RunningProxy::Socks(sdk.start_private_service_socks(consumer, choice, listen, &credential_directory).await?)
+            };
             drop(installation);
-            println!(
-                "Private service {service} in space {space}: SOCKS5 {}",
-                proxy.address()
-            );
+            match &proxy {
+                RunningProxy::Socks(owner) => {
+                    println!("Private service {service} in space {space}: SOCKS5 {}", owner.address());
+                    println!("Local credentials file: {}", owner.credentials_path().display());
+                }
+                RunningProxy::Native(owner) => {
+                    println!("Private service {service} in space {space}: native endpoint {}", owner.endpoint().display());
+                    println!("Connect with this command's connect --endpoint subcommand and the same --state-dir; standard native socket/pipe clients may use the endpoint directly.");
+                    #[cfg(windows)]
+                    println!("Windows byte pipes have no independent write-half EOF; use SOCKS TCP for applications that require FIN before a reverse response.");
+                }
+            }
             println!(
                 "Destination: {alias}:{port}; maximum {maximum_bytes} bytes per connection; owner lifetime {} seconds.",
                 lifetime.as_secs()
             );
-            println!(
-                "Local credentials file: {}",
-                proxy.credentials_path().display()
-            );
-            println!("Configure your client from that private file. Press Ctrl-C to stop.");
+            println!("Press Ctrl-C to stop.");
+            if datagram {
+                println!("UDP requires password authentication on a live TCP control connection and UDP ASSOCIATE with your already-bound loopback UDP IP and nonzero port. Wildcard sources are rejected.");
+                println!("Send SOCKS UDP packets to the returned relay, targeting {alias}:{port}. Empty datagrams are preserved; FRAG and payloads over 1169 bytes are discarded.");
+                println!("fast-socks5 Socks5Datagram convenience constructors request [::]:0 and cannot be used here; use Socks5Stream::request with the exact bound UDP endpoint and the library UDP codec.");
+            }
             let signal = crate::space_dns_system::termination();
             tokio::pin!(signal);
             let mut tick = tokio::time::interval(Duration::from_millis(250));
@@ -185,7 +244,7 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
                         if proxy.is_finished() { break Ok(()); }
                         match nestlink_local_ipc::maintenance::requested(&directory) {
                             Ok(true) => break Ok(()),
-                            Err(error) => break Err(error),
+                            Err(error) => break Err(io::Error::other(error)),
                             Ok(false) => {},
                         }
                         if session_snapshot(&directory).ok() != Some(original_login) {
@@ -200,8 +259,8 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
             // cancels the owner or permits a second runtime to replace it.
             let mut reported_pending = false;
             loop {
-                match proxy.wait_stopped(Duration::from_secs(5)).await {
-                    LocalProxyWait::CleanupPending => {
+                match proxy.wait_stopped().await {
+                    ProxyWait::Pending => {
                         if !reported_pending {
                             eprintln!(
                                 "Private proxy is joining its original connections; cleanup receipt is pending."
@@ -209,13 +268,13 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
                             reported_pending = true;
                         }
                     }
-                    LocalProxyWait::CleanupFailed(report) => {
+                    ProxyWait::Failed(report) => {
                         return Err(io::Error::other(format!(
                             "private proxy cleanup failed: {report:?}"
                         ))
                         .into());
                     }
-                    LocalProxyWait::Stopped(report) => {
+                    ProxyWait::Stopped(report) => {
                         println!("Private proxy stopped: {report:?}");
                         operation?;
                         return Ok(());
@@ -223,6 +282,7 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
                 }
             }
         }
+        ProxyAction::Connect { .. } => Err(io::Error::other("native connect dispatch failed").into()),
     }
 }
 

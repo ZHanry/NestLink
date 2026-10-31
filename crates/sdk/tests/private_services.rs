@@ -10,7 +10,8 @@ use nestlink_protocol::{api::*, services::private::*, spaces::*,
     service_plane::{ServiceQuotaScope, ServiceQuotaUsageQuery, ServiceUsageBudgetGrantClaims,
         SERVICE_USAGE_BYTES, decode_service_message}};
 use nestlink_sdk::{DeploymentTrust, DeviceIdentity, Sdk,
-    services::{LocalProxyServiceChoice, LocalProxyWait, LocalServiceTargetConsent, PrivateServiceHostConfig}};
+    services::{LocalProxyServiceChoice, LocalProxyWait, LocalServiceTargetConsent, NativeStreamWait,
+        PrivateServiceHostConfig}};
 use nestlink_server::{AppState, router};
 use nestlink_storage::Store;
 use std::{net::SocketAddr, path::PathBuf, sync::Arc, time::{Duration,SystemTime,UNIX_EPOCH}};
@@ -435,6 +436,110 @@ async fn standard_socks_udp_association_keeps_empty_boundaries_and_exact_local_p
         assert!(!credential_path.exists());drop(UdpSocket::bind(second_relay).await?);drop(TcpListener::bind(proxy_address).await?);
         let endpoint=host.address();host.wait_stopped().await?;drop(host);
         drop(std::net::UdpSocket::bind(endpoint)?);std::fs::remove_dir_all(f.usage)?;
+        Ok::<_,Box<dyn std::error::Error+Send+Sync>>(())
+    }).await??;Ok(())
+}
+
+#[tokio::test]
+async fn native_private_stream_transports_real_bytes_and_stops_active_backend_and_os_endpoint()->Result{
+    tokio::time::timeout(Duration::from_secs(30),async{
+        let backend=TcpListener::bind("127.0.0.1:0").await?;let address=backend.local_addr()?;
+        let (active,activated)=tokio::sync::oneshot::channel();
+        let backend=tokio::spawn(async move{
+            let (mut first,_)=backend.accept().await?;let mut request=[0;18];first.read_exact(&mut request).await?;
+            assert_eq!(&request,b"native fixed query");
+            first.write_all(b"native fixed response").await?;
+            let mut end=[0;1];assert_eq!(first.read(&mut end).await?,0);first.shutdown().await?;
+            let (mut second,_)=backend.accept().await?;let mut request=[0;17];second.read_exact(&mut request).await?;
+            assert_eq!(&request,b"native live query");let _=active.send(());
+            assert_eq!(second.read(&mut end).await?,0);
+            Ok::<_,Box<dyn std::error::Error+Send+Sync>>(())
+        });
+        let f=Fixture::new("tcp",address).await?;
+        let mut host=f.sdk.start_private_service_host(f.host.clone(),f.consent,PrivateServiceHostConfig{
+            listen:"127.0.0.1:0".parse()?,advertised_ip:"127.0.0.1".parse()?,usage_directory:f.usage.join("ledger")}).await?;
+        let entry=f.sdk.private_services(&f.consumer.device_id,None,20).await?.entries.remove(0);
+        let choice=LocalProxyServiceChoice::from_local_choice(&entry,"fixed.nestlink.internal",29100,4096,Duration::from_secs(20))?;
+        // Keep the Unix socket below the kernel's pathname byte limit. The
+        // existing owner-private directory boundary still authenticates it.
+        let directory=std::env::temp_dir().join(format!("nl-{}",random_id()));
+        nestlink_platform_security::new_private_directory(&directory)?;
+        let mut proxy=f.sdk.start_private_service_native_stream(Arc::new(f.consumer),choice,&directory).await?;
+        let endpoint=proxy.endpoint().to_path_buf();
+        let mut first=nestlink_platform_security::local_stream::connect(&endpoint).await?;
+        first.write_all(b"native fixed query").await?;
+        let mut response=[0;21];first.read_exact(&mut response).await?;assert_eq!(&response,b"native fixed response");drop(first);
+        let mut second=nestlink_platform_security::local_stream::connect(&endpoint).await?;
+        second.write_all(b"native live query").await?;activated.await?;
+        let report=match proxy.wait_stopped(Duration::from_secs(5)).await{
+            NativeStreamWait::Stopped(report)=>report,other=>return Err(format!("native stream cleanup incomplete: {other:?}").into()),
+        };
+        assert!(report.endpoint_removed);assert_eq!(report.cleanup_failures,0);
+        assert_eq!(report.accepted_connections,2);assert_eq!(report.completed_connections,2);
+        assert_eq!(report.rejected_connections,0);
+        let mut end=[0;1];match second.read(&mut end).await{
+            Ok(length)=>assert_eq!(length,0),
+            Err(error)=>assert!(matches!(error.kind(),std::io::ErrorKind::BrokenPipe|std::io::ErrorKind::ConnectionReset)),
+        }
+        drop(second);drop(proxy);backend.await??;
+        assert!(nestlink_platform_security::local_stream::connect(&endpoint).await.is_err());
+        let endpoint=host.address();host.wait_stopped().await?;drop(host);drop(std::net::UdpSocket::bind(endpoint)?);
+        std::fs::remove_dir_all(directory)?;std::fs::remove_dir_all(f.usage)?;
+        Ok::<_,Box<dyn std::error::Error+Send+Sync>>(())
+    }).await??;Ok(())
+}
+
+#[tokio::test]
+async fn native_private_stream_refuses_udp_without_creating_an_os_endpoint_or_reservation()->Result{
+    let f=Fixture::new("udp","127.0.0.1:29101".parse()?).await?;
+    let mut host=f.sdk.start_private_service_host(f.host.clone(),f.consent,PrivateServiceHostConfig{
+        listen:"127.0.0.1:0".parse()?,advertised_ip:"127.0.0.1".parse()?,usage_directory:f.usage.join("ledger")}).await?;
+    let entry=f.sdk.private_services(&f.consumer.device_id,None,20).await?.entries.remove(0);
+    let choice=LocalProxyServiceChoice::from_local_choice(&entry,"fixed.nestlink.internal",29100,4096,Duration::from_secs(20))?;
+    let directory=std::env::temp_dir().join(format!("nl-{}",random_id()));
+    nestlink_platform_security::new_private_directory(&directory)?;
+    assert!(f.sdk.start_private_service_native_stream(Arc::new(f.consumer),choice,&directory).await.is_err());
+    assert_eq!(std::fs::read_dir(&directory)?.count(),0);
+    let usage=f.sdk.service_quota_usage(ServiceQuotaUsageQuery{scope:ServiceQuotaScope::Resource,scope_key:f.view.id.clone()}).await?;
+    assert_eq!(usage.spent_bytes,0);assert_eq!(usage.outstanding_bytes,0);
+    host.wait_stopped().await?;drop(host);std::fs::remove_dir_all(directory)?;std::fs::remove_dir_all(f.usage)?;Ok(())
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn native_private_unix_stream_preserves_request_fin_and_replacement_path()->Result{
+    tokio::time::timeout(Duration::from_secs(25),async{
+        let backend=TcpListener::bind("127.0.0.1:0").await?;let address=backend.local_addr()?;
+        let backend=tokio::spawn(async move{
+            let (mut stream,_)=backend.accept().await?;let mut request=Vec::new();stream.read_to_end(&mut request).await?;
+            assert_eq!(request,b"native request before FIN");
+            stream.write_all(b"native late response after FIN").await?;stream.shutdown().await?;Ok::<_,std::io::Error>(())
+        });
+        let f=Fixture::new("tcp",address).await?;
+        let mut host=f.sdk.start_private_service_host(f.host.clone(),f.consent,PrivateServiceHostConfig{
+            listen:"127.0.0.1:0".parse()?,advertised_ip:"127.0.0.1".parse()?,usage_directory:f.usage.join("ledger")}).await?;
+        let entry=f.sdk.private_services(&f.consumer.device_id,None,20).await?.entries.remove(0);
+        let consumer=Arc::new(f.consumer);
+        let choice=||LocalProxyServiceChoice::from_local_choice(&entry,"fixed.nestlink.internal",29100,4096,Duration::from_secs(20));
+        let directory=std::env::temp_dir().join(format!("nl-{}",random_id()));
+        nestlink_platform_security::new_private_directory(&directory)?;
+        let mut proxy=f.sdk.start_private_service_native_stream(consumer.clone(),choice()?,&directory).await?;
+        let mut local=nestlink_platform_security::local_stream::connect(proxy.endpoint()).await?;
+        local.write_all(b"native request before FIN").await?;local.shutdown().await?;
+        let mut response=Vec::new();local.read_to_end(&mut response).await?;
+        assert_eq!(response,b"native late response after FIN");drop(local);backend.await??;
+        assert!(matches!(proxy.wait_stopped(Duration::from_secs(5)).await,NativeStreamWait::Stopped(_)));drop(proxy);
+        let mut replaced=f.sdk.start_private_service_native_stream(consumer,choice()?,&directory).await?;
+        let endpoint=replaced.endpoint().to_path_buf();std::fs::remove_file(&endpoint)?;
+        std::fs::write(&endpoint,b"replacement belongs to its new owner")?;
+        assert!(nestlink_platform_security::local_stream::connect(&endpoint).await.is_err());
+        let report=match replaced.wait_stopped(Duration::from_secs(5)).await{
+            NativeStreamWait::CleanupFailed(report)=>report,other=>return Err(format!("replacement cleanup claimed success: {other:?}").into()),
+        };
+        assert!(!report.endpoint_removed);assert!(report.cleanup_failures>0);assert_eq!(report.accepted_connections,0);
+        drop(replaced);assert_eq!(std::fs::read(&endpoint)?,b"replacement belongs to its new owner");
+        let endpoint=host.address();host.wait_stopped().await?;drop(host);drop(std::net::UdpSocket::bind(endpoint)?);
+        std::fs::remove_dir_all(directory)?;std::fs::remove_dir_all(f.usage)?;
         Ok::<_,Box<dyn std::error::Error+Send+Sync>>(())
     }).await??;Ok(())
 }

@@ -1,6 +1,6 @@
 //! One legacy connection owner on the product path. This facade reuses native
 //! discovery, scheduling, TLS, SessionPermit proof and bounded business queues.
-//! New space/path grants are not issued or negotiated by this adapter.
+//! Signed direct paths add admission to this same owner without another scheduler.
 pub mod routed;
 pub use crate::network_topology as topology;
 use crate::{
@@ -41,6 +41,11 @@ impl LegacyEndpoint {
     }
     pub fn native(&self) -> &NativeEndpoint {
         &self.endpoint
+    }
+    pub(crate) fn bind_network_direct(
+        &mut self, path: String, group: [u8; 32], deadline: Instant,
+    ) -> Result<(), crate::native::DialError> {
+        self.endpoint.bind_network_direct(path, group, deadline.into_std())
     }
     pub async fn establish_with_media(
         mut self,

@@ -596,7 +596,9 @@
         "crates/node/src/service_plane/stream.rs",
         "crates/sdk/src/services/private/runtime.rs: fixed target, private lease and shared usage owner",
         "crates/sdk/src/services/local_proxy.rs: authenticated fixed-service SOCKS TCP/UDP adapter",
-        "crates/sdk/src/services/local_proxy/local_mapping.rs: explicit-source UDP association owner using the existing private datagram connection"
+        "crates/sdk/src/services/local_proxy/local_mapping.rs: explicit-source UDP association owner using the existing private datagram connection",
+        "crates/platform-security/src/local_stream: Tokio UDS/kernel peer UID or existing-broker-pattern protected Windows pipe/token boundary; native byte stdio uses existing locked tokio-util 0.7.20 SyncIoBridge",
+        "crates/sdk/src/services/local_proxy/native_stream.rs: same fixed private-service authority for native stream clients and CLI stdio"
       ],
       "candidates": [
         "fast-socks5 1.0.0",
@@ -609,7 +611,10 @@
         "https://crates.io/api/v1/crates/fast-socks5/1.0.0",
         "https://crates.io/api/v1/crates/fast-socks5/1.0.0/readme",
         "https://github.com/dizda/fast-socks5/blob/v1.0.0/src/server.rs",
-        "https://crates.io/api/v1/crates/socks5-server/0.10.1"
+        "https://crates.io/api/v1/crates/socks5-server/0.10.1",
+        "https://docs.rs/tokio/latest/tokio/net/struct.UnixStream.html#method.peer_cred",
+        "https://docs.rs/tokio/latest/tokio/net/windows/named_pipe/struct.ServerOptions.html",
+        "https://docs.rs/tokio-util/0.7.20/tokio_util/io/struct.SyncIoBridge.html"
       ],
       "maintenance_status": {
         "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",

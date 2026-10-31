@@ -61,6 +61,8 @@ jobs:
           assert native['fast-socks5'] == {'version': '=1.0.0', 'path': '../../third-party/fast-socks5'}
           security = tomllib.loads(pathlib.Path('crates/platform-security/Cargo.toml').read_text())
           assert security['dependencies']['tokio'] == {'workspace': True}
+          assert security['target']['cfg(windows)']['dependencies']['tokio-util'] == {
+              'version': '=0.7.20', 'features': ['io-util']}
           assert {'Win32_Foundation', 'Win32_System_Pipes', 'Win32_System_IO'} <= set(
               security['target']['cfg(windows)']['dependencies']['windows-sys']['features'])
           # Verify original archive, complete source inventory, exact reviewed
@@ -144,6 +146,9 @@ jobs:
                   'protected_native_stream_reuses_existing_tokio_identity': any(
                       item['name'] == 'nestlink-platform-security' and 'tokio' in item.get('dependencies', [])
                       for item in after) and any(key[0] == 'tokio' for key in existing),
+                  'native_stdio_reuses_locked_tokio_util_identity': any(
+                      item['name'] == 'nestlink-platform-security' and 'tokio-util' in item.get('dependencies', [])
+                      for item in after) and any(key[:2] == ('tokio-util', '0.7.20') for key in existing),
                   'only_reviewed_socks_component_new_external_packages': all(
                       identity(item) in existing or not item.get('source')
                       or item['name'] == 'tokio-stream' for item in after),

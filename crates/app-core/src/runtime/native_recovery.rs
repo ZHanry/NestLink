@@ -51,7 +51,7 @@ pub(super) fn retain_source(
             )
         }
         // This first safe-recovery contract authorizes one successor only.
-        NativeConnection::Recovered { .. } => return None,
+        NativeConnection::Recovered { .. } | NativeConnection::Direct { .. } => return None,
     };
     // All input/media/business cleanup has completed before this extraction.
     // The retained endpoint keeps the original network observer live, and the

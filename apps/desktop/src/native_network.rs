@@ -92,7 +92,11 @@ impl NativeNetworkPanel {
                     .hint_text("192.168.1.0/24\nfd12:3456::/32")).changed() {
                     self.approved = false;
                 }
-                if ui.checkbox(&mut self.enable_route_set, t("使用空间内批准的双中继与安全恢复", "Use approved space relays and safe recovery")).changed() {
+                if let Some(path) = &snapshot.native_network.space_path {
+                    ui.label(format!("{} {}", t("当前仅直连空间：", "Current direct-only space:"), path.space_id));
+                    ui.small(t("由本机 daemon 的 --native-space-path 配置。直连失败或空间授权撤销时停止；不会回退到中继。", "Configured by the local daemon's --native-space-path. Direct failure or space revocation stops the session; no relay fallback is permitted."));
+                }
+                if ui.add_enabled(snapshot.native_network.space_path.is_none(), egui::Checkbox::new(&mut self.enable_route_set, t("使用空间内批准的双中继与安全恢复", "Use approved space relays and safe recovery"))).changed() {
                     self.approved = false;
                 }
                 if self.enable_route_set {
@@ -125,6 +129,7 @@ impl NativeNetworkPanel {
                 } else { None };
                 let route_valid = !self.enable_route_set || route_set.as_ref().is_some_and(|route| route.validate().is_ok());
                 let settings = NativeNetworkSettings {
+                    space_path: snapshot.native_network.space_path.clone(),
                     route_set,
                     media_route: snapshot.native_network.media_route,
                     media_interface_index: snapshot.native_network.media_interface_index,

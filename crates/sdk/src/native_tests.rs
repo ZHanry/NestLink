@@ -361,6 +361,68 @@ fn private_prefixes_never_allow_metadata_loopback_or_the_wrong_network() -> Resu
     assert!(AddressPolicy::new(&["::/129".into()]).is_err());
     Ok(())
 }
+
+#[tokio::test]
+async fn signed_direct_deadline_stops_idle_business_without_management_poll_and_releases_original_socket()
+-> Result {
+    use nestlink_remote::{SessionLifecycle, SessionSetup};
+    use nestlink_session::{EndpointRole, StopReason};
+    let controller = DeviceIdentity::generate();
+    let host = DeviceIdentity::generate();
+    let permit = permit(&controller, &host)?;
+    let mut c_endpoint = NativeEndpoint::new("127.0.0.1:0".parse()?, &controller,
+        &host.identity.public_key(), permit.clone(), vec![], loopback_policy()?)?;
+    let h_endpoint = NativeEndpoint::new("127.0.0.1:0".parse()?, &host,
+        &controller.identity.public_key(), permit.clone(), vec![], loopback_policy()?)?;
+    let path = id(40);
+    let group = [17; 32];
+    let deadline = Instant::now() + Duration::from_millis(800);
+    c_endpoint.bind_network_direct(path.clone(), group, deadline)?;
+    let (_keep, cancel) = watch::channel(false);
+    let (connected, accepted) = tokio::try_join!(
+        c_endpoint.dial_native(&controller, None, 4,
+            vec![candidate(h_endpoint.local_addr()?, CandidateKind::Lan, 4)], cancel.clone()),
+        h_endpoint.accept(cancel),
+    )?;
+    let clock = RuntimeClock::default();
+    let now = clock.sample()?;
+    let (_c_keep, c_stop) = watch::channel(None);
+    let (_h_keep, h_stop) = watch::channel(None);
+    let setup = |role, stop| -> Result<SessionSetup> {
+        Ok(SessionSetup { session: Session::activate(permit.clone(), binding(&permit)?,
+            Path::Direct, now.monotonic_ms, now)?, path: Path::Direct, role,
+            clock: clock.clone(), lifecycle: SessionLifecycle::new(stop) })
+    };
+    let host_key = host.identity.public_key();
+    let controller_key = controller.identity.public_key();
+    let (c, mut h) = tokio::try_join!(
+        connected.authorize_with_network_path(setup(EndpointRole::Controller, c_stop)?, &controller,
+            &host_key, Some((path.clone(), group))),
+        nestlink_remote::quic::authorize(accepted, None, setup(EndpointRole::Host, h_stop)?,
+            &host.identity, &controller_key),
+    )?;
+    let observation = c.path_observation().ok_or("missing direct QUIC observation")?;
+    assert_eq!(observation.binding().path_grant_id.as_deref(), Some(path.as_str()));
+    assert_eq!(observation.binding().transport_group, Some(group));
+    let control = c.control.clone();
+    let mut stopped = c.channels.lease_control().subscribe_stopped();
+    let address = c_endpoint.local_addr()?;
+    let mut owner = crate::network::LegacyEndpoint::new(c_endpoint).proved(c);
+    // No SDK, HTTP observer or application polling runs after the proof. The
+    // existing lease supervisor must wake at the independent path ceiling.
+    tokio::time::timeout_at((deadline + Duration::from_millis(200)).into(), async {
+        while stopped.borrow().is_none() { stopped.changed().await?; }
+        Ok::<_, tokio::sync::watch::error::RecvError>(())
+    }).await??;
+    assert_eq!(stopped.borrow().as_ref().ok_or("missing timed stop")?.reason, StopReason::Expired);
+    let report = tokio::time::timeout_at((deadline + Duration::from_secs(3)).into(), owner.wait_stopped()).await??;
+    assert_eq!(report.reason, StopReason::Expired);
+    assert!(control.lease_remaining().is_err());
+    let rebound = std::net::UdpSocket::bind(address)?;
+    drop(rebound);
+    tokio::time::timeout(Duration::from_secs(2), h.wait_stopped()).await??;
+    Ok(())
+}
 #[tokio::test]
 async fn actual_quic_identity_failure_terminates_the_candidate_race() -> Result {
     let controller = DeviceIdentity::generate();

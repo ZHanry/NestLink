@@ -50,8 +50,15 @@ struct Args {
     private_network_prefixes: Vec<String>,
     /// Private JSON NativeRouteSetSettings: explicit pinned space and two relays.
     /// Applies to future sessions and persists with the other local consent.
-    #[arg(long, conflicts_with = "disable_native_route_set")]
+    #[arg(long, conflicts_with_all = ["disable_native_route_set", "native_space_path"])]
     native_route_set: Option<PathBuf>,
+    /// Private JSON NativeSpacePathSettings: admit the original direct owner
+    /// through current signed membership/connectivity/path grants.
+    #[arg(long, conflicts_with_all = ["disable_native_space_path", "native_route_set"])]
+    native_space_path: Option<PathBuf>,
+    /// Clear the persisted direct-only space admission.
+    #[arg(long)]
+    disable_native_space_path: bool,
     /// Explicitly clear the persisted signed original-group opt-in.
     #[arg(long)]
     disable_native_route_set: bool,
@@ -490,15 +497,26 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     if !args.private_network_prefixes.is_empty()
         || args.native_route_set.is_some()
         || args.disable_native_route_set
+        || args.native_space_path.is_some()
+        || args.disable_native_space_path
     {
         let mut settings = network_store.load()?;
         if args.disable_native_route_set {
             settings.route_set = None;
         }
+        if args.disable_native_space_path { settings.space_path = None; }
+        if let Some(path) = args.native_space_path {
+            let bytes = nestlink_platform_security::read_private(&path, 8192)?;
+            let scope: nestlink_app_core::NativeSpacePathSettings = serde_json::from_slice(&bytes)?;
+            scope.validate()?;
+            settings.route_set = None;
+            settings.space_path = Some(scope);
+        }
         if let Some(path) = args.native_route_set {
             let bytes = nestlink_platform_security::read_private(&path, 8192)?;
             let route: nestlink_app_core::NativeRouteSetSettings = serde_json::from_slice(&bytes)?;
             route.validate()?;
+            settings.space_path = None;
             settings.route_set = Some(route);
         }
         for prefix in args.private_network_prefixes {
