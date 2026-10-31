@@ -25,36 +25,47 @@ use tokio_tungstenite::{
     tungstenite::{Message as WsMessage, protocol::WebSocketConfig},
 };
 type Socket = WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>;
-fn failure_summary(error:&Error)->String {
-    let mut phases=Vec::new();let mut current=error;
-    while let Error::Phase{stage,cause}=current {
-        phases.push(*stage);current=cause;
-        if phases.len()==8 {break;}
+fn failure_summary(error: &Error) -> String {
+    let mut phases = Vec::new();
+    let mut current = error;
+    while let Error::Phase { stage, cause } = current {
+        phases.push(*stage);
+        current = cause;
+        if phases.len() == 8 {
+            break;
+        }
     }
-    let cause=match current {
-        Error::Configuration=>"configuration".into(),
-        Error::Control=>"control".into(),
-        Error::Transport=>"transport".into(),
-        Error::Phase{..}=>"phase-depth-bound".into(),
-        Error::UsageStatus(status)=>format!("usage-http-{status}"),
-        Error::TurnResourceStatus(status)=>format!("turn-http-{status}"),
-        Error::ServiceResourceStatus(status)=>format!("service-http-{status}"),
-        Error::ServiceUsage(_)=>"service-usage-store".into(),
-        Error::Authorization(error)=>{
+    let cause = match current {
+        Error::Configuration => "configuration".into(),
+        Error::Control => "control".into(),
+        Error::Transport => "transport".into(),
+        Error::Phase { .. } => "phase-depth-bound".into(),
+        Error::UsageStatus(status) => format!("usage-http-{status}"),
+        Error::TurnResourceStatus(status) => format!("turn-http-{status}"),
+        Error::ServiceResourceStatus(status) => format!("service-http-{status}"),
+        Error::ServiceUsage(_) => "service-usage-store".into(),
+        Error::Authorization(error) => {
             // Only these static first-party fences may refine the diagnostic.
             // Arbitrary protocol response text never enters retained summaries.
-            let fence=match error.reason {
-                "service snapshot query replay fence"=>Some("query-replay-fence"),
-                "service snapshot duplicate or excess publication fence"=>Some("duplicate-publication-fence"),
-                "service snapshot retired publication fence"=>Some("retired-publication-fence"),
-                "service publication lease sequence regressed"=>Some("publication-sequence-regressed"),
-                "service publication same sequence changed"=>Some("publication-sequence-changed"),
-                _=>None,
+            let fence = match error.reason {
+                "service snapshot query replay fence" => Some("query-replay-fence"),
+                "service snapshot duplicate or excess publication fence" => {
+                    Some("duplicate-publication-fence")
+                }
+                "service snapshot retired publication fence" => Some("retired-publication-fence"),
+                "service publication lease sequence regressed" => {
+                    Some("publication-sequence-regressed")
+                }
+                "service publication same sequence changed" => Some("publication-sequence-changed"),
+                _ => None,
             };
-            match fence {Some(fence)=>format!("authorization-{:?}/{fence}",error.code),None=>format!("authorization-{:?}",error.code)}
-        },
+            match fence {
+                Some(fence) => format!("authorization-{:?}/{fence}", error.code),
+                None => format!("authorization-{:?}", error.code),
+            }
+        }
     };
-    format!("{}: {cause}",phases.join(" / "))
+    format!("{}: {cause}", phases.join(" / "))
 }
 mod closes;
 mod prefix;
@@ -342,16 +353,20 @@ impl NodeControl {
             started,
             stopped.clone(),
         ));
-        let terminal_failure=Arc::new(Mutex::new(None));
-        let failure_for_pump=terminal_failure.clone();
+        let terminal_failure = Arc::new(Mutex::new(None));
+        let failure_for_pump = terminal_failure.clone();
         let pump = tokio::spawn(async move {
             let _stopper = Stopper {
                 state: copy.clone(),
                 turn_authorization: turn_copy.clone(),
                 sender,
             };
-            let result=pump(config, identity, runtime_id, copy, turn_copy, started).await;
-            if let Err(error)=&result && let Ok(mut failure)=failure_for_pump.lock() {*failure=Some(failure_summary(error));}
+            let result = pump(config, identity, runtime_id, copy, turn_copy, started).await;
+            if let Err(error) = &result
+                && let Ok(mut failure) = failure_for_pump.lock()
+            {
+                *failure = Some(failure_summary(error));
+            }
             result
         });
         Ok(Self {
@@ -377,8 +392,11 @@ impl NodeControl {
     /// Bounded non-secret terminal diagnostics remain readable while worker
     /// cleanup still retains this shared owner. No grant/key/URL or raw server
     /// response is included, and this never changes forwarding authority.
-    pub fn terminal_failure(&self)->Option<String> {
-        self.terminal_failure.lock().ok().and_then(|failure|failure.clone())
+    pub fn terminal_failure(&self) -> Option<String> {
+        self.terminal_failure
+            .lock()
+            .ok()
+            .and_then(|failure| failure.clone())
     }
     /// Shared synchronous TURN authority consumed by the local TURN listeners.
     /// Only grants verified by the node control poll are installed into it.

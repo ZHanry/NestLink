@@ -490,12 +490,19 @@ fn send<D: CaptureDevice>(
             // No encoded reference frame is replaced or dropped. An actual send
             // error terminates this stream, so it cannot feed dependent deltas.
             result.map_err(io::Error::other)?;
-            let encoder = codecs.get_mut(&source).ok_or_else(|| io::Error::other("missing sent encoder"))?;
-            if let Some(kbps) = encoder.quality.observe(Instant::now(), encoding_time, enqueue_started.elapsed()) {
+            let encoder = codecs
+                .get_mut(&source)
+                .ok_or_else(|| io::Error::other("missing sent encoder"))?;
+            if let Some(kbps) =
+                encoder
+                    .quality
+                    .observe(Instant::now(), encoding_time, enqueue_started.elapsed())
+            {
                 encoder.codec.set_bitrate(kbps)?;
                 encoder.config.bitrate_kbps = kbps;
             }
-            encoder.next_frame = Instant::now() + Duration::from_nanos(1_000_000_000 / u64::from(encoder.quality.fps()));
+            encoder.next_frame = Instant::now()
+                + Duration::from_nanos(1_000_000_000 / u64::from(encoder.quality.fps()));
         }
     })
 }

@@ -256,7 +256,8 @@ impl ServiceResourceSet {
             return Err(nestlink_protocol::ContractError::new(
                 ErrorCode::ReplayRejected,
                 "service snapshot query replay fence",
-            ).into());
+            )
+            .into());
         }
         let remaining = c
             .expires_at_unix_ms
@@ -297,13 +298,15 @@ impl ServiceResourceSet {
             return Err(nestlink_protocol::ContractError::new(
                 ErrorCode::ReplayRejected,
                 "service snapshot duplicate or excess publication fence",
-            ).into());
+            )
+            .into());
         }
         if incoming.iter().any(|id| self.terminal.contains(id)) {
             return Err(nestlink_protocol::ContractError::new(
                 ErrorCode::ReplayRejected,
                 "service snapshot retired publication fence",
-            ).into());
+            )
+            .into());
         }
         let new_ids = incoming
             .iter()

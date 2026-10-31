@@ -87,11 +87,19 @@ mod tests {
         assert_eq!(quality.fps(), 60);
         let low = quality.bitrate_kbps();
         for step in 4..=8 {
-            quality.observe(start + Duration::from_millis(step * 500), Duration::from_millis(4), Duration::ZERO);
+            quality.observe(
+                start + Duration::from_millis(step * 500),
+                Duration::from_millis(4),
+                Duration::ZERO,
+            );
         }
         assert_eq!(quality.bitrate_kbps(), low);
         for step in 9..=12 {
-            quality.observe(start + Duration::from_millis(step * 500), Duration::from_millis(4), Duration::ZERO);
+            quality.observe(
+                start + Duration::from_millis(step * 500),
+                Duration::from_millis(4),
+                Duration::ZERO,
+            );
         }
         assert!(quality.bitrate_kbps() > low && quality.bitrate_kbps() < 3000);
         quality.observe(
@@ -109,7 +117,19 @@ mod tests {
         assert_eq!((quality.fps(), quality.bitrate_kbps()), (5, 256));
         for step in 0..=24 {
             let busy = step < 8;
-            quality.observe(start + Duration::from_millis(step * 500), if busy {Duration::from_secs(1)} else {Duration::ZERO}, if busy {Duration::from_secs(1)} else {Duration::ZERO});
+            quality.observe(
+                start + Duration::from_millis(step * 500),
+                if busy {
+                    Duration::from_secs(1)
+                } else {
+                    Duration::ZERO
+                },
+                if busy {
+                    Duration::from_secs(1)
+                } else {
+                    Duration::ZERO
+                },
+            );
             assert!(quality.fps() <= 5 && quality.bitrate_kbps() <= 256);
         }
     }
@@ -120,13 +140,38 @@ mod tests {
         quality.observe(start, Duration::ZERO, Duration::from_millis(60));
         let reduced = quality.bitrate_kbps();
         let resumed = start + Duration::from_secs(30);
-        assert_eq!(quality.observe(resumed, Duration::ZERO, Duration::ZERO), None);
-        assert_eq!(quality.observe(start + Duration::from_secs(1), Duration::ZERO, Duration::ZERO), None);
+        assert_eq!(
+            quality.observe(resumed, Duration::ZERO, Duration::ZERO),
+            None
+        );
+        assert_eq!(
+            quality.observe(
+                start + Duration::from_secs(1),
+                Duration::ZERO,
+                Duration::ZERO
+            ),
+            None
+        );
         for step in 1..8 {
-            assert_eq!(quality.observe(resumed + Duration::from_millis(step * 500), Duration::ZERO, Duration::ZERO), None);
+            assert_eq!(
+                quality.observe(
+                    resumed + Duration::from_millis(step * 500),
+                    Duration::ZERO,
+                    Duration::ZERO
+                ),
+                None
+            );
         }
         assert_eq!(quality.bitrate_kbps(), reduced);
-        assert!(quality.observe(resumed + Duration::from_secs(4), Duration::ZERO, Duration::ZERO).is_some());
+        assert!(
+            quality
+                .observe(
+                    resumed + Duration::from_secs(4),
+                    Duration::ZERO,
+                    Duration::ZERO
+                )
+                .is_some()
+        );
         assert!(quality.bitrate_kbps() > reduced && quality.bitrate_kbps() <= 6000);
     }
 }

@@ -235,14 +235,17 @@ impl ServicePublication {
             return Err(ContractError::new(
                 ErrorCode::ReplayRejected,
                 "service publication lease sequence regressed",
-            ).into());
+            )
+            .into());
         }
         if verified.claims().lease_sequence == old_sequence
-            && verified.digest() != state.verified.digest() {
+            && verified.digest() != state.verified.digest()
+        {
             return Err(ContractError::new(
                 ErrorCode::ReplayRejected,
                 "service publication same sequence changed",
-            ).into());
+            )
+            .into());
         }
         if verified.claims().lease_sequence == old_sequence {
             return Ok(());
