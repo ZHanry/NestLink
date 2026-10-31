@@ -34,7 +34,7 @@ impl Store {
         journal.plan.checked(false)?;
         if let Some(namespace)=&journal.namespace {
             if namespace.device==0||namespace.inode==0||!namespace.worker.valid() {return Err(io::Error::other("invalid original namespace identity").into());}
-            if let Some(receipt)=&journal.receipt {if receipt.namespace_device!=namespace.device||receipt.namespace_inode!=namespace.inode||receipt.worker!=namespace.worker||receipt.plan_digest!=journal.plan.digest()?||receipt.socket_device==0||receipt.socket_inode==0||receipt.socket_parent_device==0||receipt.socket_parent_inode==0 {return Err(io::Error::other("subnet receipt differs from original namespace/plan").into());}}
+            if let Some(receipt)=&journal.receipt && (receipt.namespace_device!=namespace.device||receipt.namespace_inode!=namespace.inode||receipt.worker!=namespace.worker||receipt.plan_digest!=journal.plan.digest()?||receipt.socket_device==0||receipt.socket_inode==0||receipt.socket_parent_device==0||receipt.socket_parent_inode==0) {return Err(io::Error::other("subnet receipt differs from original namespace/plan").into());}
         } else if journal.receipt.is_some() {return Err(io::Error::other("subnet receipt lacks a durable namespace identity").into());}
         Ok(journal)
     }

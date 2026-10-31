@@ -20,8 +20,14 @@ pub(super) async fn parent(plan:&Plan)->Result<Value> {
     let value=ip(&["-j","-d","link","show","dev",&plan.lan_name]).await?;
     let row=one(&value)?;
     if row["ifindex"].as_u64()!=Some(u64::from(plan.lan_index))||row["ifname"].as_str()!=Some(plan.lan_name.as_str())||row["link_type"]!="ether"||row["address"].as_str().is_none() {return Err(io::Error::other("selected original Ethernet LAN name/index changed").into());}
-    // The physical parent's mutable counters/flags are not an ownership token.
-    Ok(serde_json::json!({"name":row["ifname"],"index":row["ifindex"],"address":row["address"],"link_type":row["link_type"],"linkinfo":row["linkinfo"]}))
+    // Retain the original interface's exact identity and configuration. Linux
+    // bridge elapsed timers and learned-FDB counts change as time/traffic pass;
+    // they cannot identify an interface or invalidate its unchanged ownership.
+    let mut linkinfo=row["linkinfo"].clone();
+    if linkinfo["info_kind"]=="bridge" && let Some(data)=linkinfo["info_data"].as_object_mut() {
+        for field in ["hello_timer","tcn_timer","topology_change_timer","gc_timer","fdb_n_learned"] {data.remove(field);}
+    }
+    Ok(serde_json::json!({"name":row["ifname"],"index":row["ifindex"],"address":row["address"],"link_type":row["link_type"],"link_index":row["link_index"],"link_netnsid":row["link_netnsid"],"master":row["master"],"linkinfo":linkinfo}))
 }
 pub(super) fn namespace(path:&Path)->Result<Option<(u64,u64)>> {
     let root=Path::new("/run/netns");

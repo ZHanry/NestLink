@@ -76,7 +76,7 @@ async fn overlapping_lans_kernel_nat_encrypted_udp_tcp_acl_and_exact_recovery()-
         }.await;
         // All actors are exact subprocess handles. On a failure, ask the
         // root-private journal owner to stop/recover only their saved identities.
-        for index in 0..2 {let _=lab.status(&format!("kill-service{index}")).await;let _=finished(&mut services[index]).await;}
+        for (index,service) in services.iter_mut().enumerate() {let _=lab.status(&format!("kill-service{index}")).await;let _=finished(service).await;}
         if outcome.is_err() {for (index,helper) in helpers.iter_mut().enumerate() {let _=lab.status(&format!("kill-helper{index}")).await;let _=finished(helper).await;let _=lab.status(&format!("recover{index}")).await;}}
         let teardown=lab.status("teardown").await?;
         outcome?;

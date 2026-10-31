@@ -12,7 +12,8 @@ pub(super) async fn control_start(reader:&mut (impl tokio::io::AsyncRead+Unpin))
     // The source-exact hosted native role uses Rust's test harness. Only test
     // builds permit its bounded stdout preamble before the fixed control magic.
     #[cfg(test)]
-    {let mut bytes=Vec::new();loop {bytes.push(reader.read_u8().await?);if bytes.ends_with(CONTROL_MAGIC){break;}if bytes.len()>512 {return Err(io::Error::other("native role preamble exceeded its fixed bound"));}}}
+    {let mut bytes=Vec::new();loop {bytes.push(reader.read_u8().await?);if bytes.ends_with(CONTROL_MAGIC){break;}
+        if bytes.len()>512 {return Err(io::Error::other("native role preamble exceeded its fixed bound"));}}}
     Ok(())
 }
 

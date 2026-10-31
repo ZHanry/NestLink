@@ -98,7 +98,8 @@ async fn apply(store:&journal::Store,journal:&mut journal::Journal,server_secret
         if actual.dev()!=namespace.device||actual.ino()!=namespace.inode||(actual.dev()==host.dev()&&actual.ino()==host.ino())||process_identity(namespace.worker.pid()).await?!=namespace.worker||!crate::space_dns_system::current_image_matches(&namespace.worker)? {return Err(io::Error::other("subnet worker did not prove its exact isolated namespace").into());}
         journal.namespace=Some(namespace);store.save(journal)?;
         kernel::attach(&journal.plan,journal.namespace.as_ref().ok_or_else(||io::Error::other("committed namespace missing"))?).await?;
-        if kernel::parent(&journal.plan).await?!=journal.parent {return Err(io::Error::other("physical LAN parent changed during namespace creation").into());}
+        let parent=kernel::parent(&journal.plan).await?;
+        if parent!=journal.parent {return Err(io::Error::other(format!("physical LAN parent changed during namespace creation: original={}, observed={parent}",journal.parent)).into());}
         input.write_u8(0xa5).await?;
         if let Some(secret)=server_secret {input.write_all(secret).await?;input.flush().await?;}
         let receipt:Receipt=serde_json::from_slice(&tokio::time::timeout(Duration::from_secs(7),pipe::message(&mut output)).await??)?;
