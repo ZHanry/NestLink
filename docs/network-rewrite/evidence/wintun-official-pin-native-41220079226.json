@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "purpose": "Exact-source hosted qualification of the frozen official architecture provider selection and retained native Windows ordinary/high packet, ownership and physical cleanup mechanisms. This is not full W22 two-target acceptance.",
+  "source_revision": "8a9f73a76340067b8bab1adf6fd73f4a2b1770e1",
+  "workflow": ".github/workflows/windows-managed-tun.yml",
+  "run_id": 41220079226,
+  "run_attempt": 1,
+  "job_id": 124592629002,
+  "runner": "windows-2025",
+  "runner_image": "win25-vs2026 20261021.278.1",
+  "run_conclusion": "success",
+  "artifact": {
+    "id": 13049946755,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41220079226/artifacts/13049946755",
+    "digest": "sha256:da770159627997d7fb988fd456125ffa8202b7901552ec6071b93e70d154fbac",
+    "receipt_sha256": "15164cee566b973159fb517ec8dd3aa2ace293890423bb07e1fb3a9e45f65a1a",
+    "provider_negative_receipt_sha256": "6ccb1196e5b20c49cf1482ced6ae71eec0d59a2563ea0c4159ea98ba2296b81e",
+    "normal_cleanup_receipt_sha256": "c195fa9ac953dc20bd40659a41fd5b62a7fc34e13edd5bb60e98cf1a7b8a62cf",
+    "nonoriginal_identity_receipt_sha256": "cbc93276dfe24a795f8364bdc95ecb8cc8e978d47954dc34194f36ed287d2bc6",
+    "dead_owner_recovery_log_sha256": "a5586ee36aa115b633f5443ce0a14fad634d51e28a335510f99af0115918da97",
+    "raw_same_sid_log_sha256": "75dcf02e315155aadf66ffae74d11fa18518eb29a1e2d27205a8b08eeeb20dcd"
+  },
+  "build_provenance": {
+    "source_revision": "8a9f73a76340067b8bab1adf6fd73f4a2b1770e1",
+    "workflow_ref": "ZHanry/NestLink/.github/workflows/windows-managed-tun.yml@refs/heads/main",
+    "run_id": 41220079226,
+    "attempt": 1,
+    "job": "hosted-wintun-kernel",
+    "runner_environment": "github-hosted",
+    "cargo_lock_sha256": "48063b78bd20ca07f585a6100f7437057af227fde24c94fdad266f8ff457933e",
+    "daemon_test_executable_sha256": "5e876e69a513d5c454431fda4c751342a138935877fb4fcae98816ba16df8a8f",
+    "driver": "Official Wintun 0.14.1 amd64, frozen archive and per-architecture hashes; Authenticode Valid/WireGuard LLC and binary license retained. Protected execution copy matches the Actions-built executable.",
+    "normal_token_ipc_and_snapshot_tests": "passed",
+    "strict_daemon_all_targets_clippy": "passed without warning suppression"
+  },
+  "execution_provenance": {
+    "environment": "disposable_github_hosted_windows_vm",
+    "source_revision": "8a9f73a76340067b8bab1adf6fd73f4a2b1770e1",
+    "run_id": 41220079226,
+    "attempt": 1,
+    "started_at_unix": 1793464575.3104908,
+    "finished_at_unix": 1793464827.10895,
+    "cases": {
+      "provider_negative": "passed: protected official architecture DLL opens; retained image pin prevents write-open; wrong digest, another architecture pin, protected unsigned bytes with their matching operator digest, and official bytes on an ordinary-writable path all refused; original official bytes unchanged",
+      "normal": "passed: actual medium owner/high helper and exact original image binding, complete original kernel snapshot, real IPv4/IPv6 1280-byte UDP request/reply, foreign process rejection, original adapter absent and journal/receipt cleared",
+      "normal_cleanup_ms": 80,
+      "nonoriginal_identity": "passed: changed interface index, LUID, alias and GUID refused individually; complete original snapshot and captured PnP instance unchanged after every rejection",
+      "crash": "passed: helper killed without destructors; recovery refused live original ordinary process; ordinary process killed; production exact-original PnP recovery and physical absence succeeded",
+      "raw_peer": "passed: distinct medium same-SID raw named-pipe client sent public hello plus exact plan digest and was denied by actual OS peer identity; final adapter/journal/receipt absent"
+    }
+  },
+  "production_online_validation": false,
+  "two_target_acceptance": false,
+  "remaining_scope": "Real production login/one-use online authority and remote carrier integration, independent Windows/Linux targets, partial-install faults and other-VPN coexistence require their own applicable evidence.",
+  "local_review": "Downloaded and read/checksummed retained Actions output only. No local driver execution, compilation, formatter, lint or project test."
+}
