@@ -6,7 +6,7 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "eab863bddfe0746788176bd7055cbb2cddaddc4c",
+    "source_revision":  "99f647b546becb3ebdb31aa6e3123b289c034dcc",
     "checkpoint_kind":  "work_in_progress_against_source_revision",
     "active_tasks":  [
                          "W00",
@@ -23,7 +23,8 @@
                          "W17",
                          "W18",
                          "W12",
-                         "W13"
+                         "W13",
+                         "W14"
                      ],
     "satisfied_interface_dependencies":  [
                                              "W01 nine-topic source and mature-component research independently reviewed",
@@ -63,8 +64,8 @@
                                    }
                                ],
     "next_steps":  [
-                       "Validate isolated multi-space probes, original-connection quality observation and optimized locked arithmetic on exact-source hosted Actions; keep unchanged deadlines and exact topology-head admission.",
-                       "Resolve real registered-chain reservation Conflict using retained query/verify/POST timings, then run approved OS FileRead and neighbor-loss/multi-space cleanup without relaxing assertions.",
+                       "Run exact-source Actions for the desktop original-session quality projection and private Quinn carrier replacement switch/cancel experiment; production W14 migration remains incomplete.",
+                       "Verify registered-chain HTTP revocation before FileReadServer shutdown, native-session original-digest ownership repair and the independent browser fixture lock edge. Keep original exact-head, deadlines, quotas and assertions.",
                        "Implement the remaining local prefix reachability/forwarding owner and remaining W12 acceptance, then continue every mandatory W13-W40 implementation and product surface.",
                        "Run the full same-source Windows/Linux/WASM/browser matrix and mandatory target acceptance; preserve scoped results and failures separately.",
                        "Publish 0.8.0RC only after all mandatory implementation and evidence gates; retain only local and remote main."
@@ -116,7 +117,9 @@
                            "docs/network-rewrite/evidence/development-run-eab863b.json",
                            "docs/adr/network/0024-scope-isolated-neighbor-observations.md",
                            "docs/adr/network/0025-functional-crypto-build-profile.md",
-                           "docs/adr/network/0026-original-connection-quality-observation.md"
+                           "docs/adr/network/0026-original-connection-quality-observation.md",
+                           "docs/adr/network/0027-quinn-carrier-replacement-feasibility.md",
+                           "docs/network-rewrite/evidence/development-run-99f647b.json"
                        ],
     "observed_actions":  [
                              {
@@ -184,6 +187,12 @@
                                  "source_revision":  "eab863bddfe0746788176bd7055cbb2cddaddc4c",
                                  "status":  "partial_failure",
                                  "scope":  "Both OS network contracts and topology/carrier/HTTP/NAT/socket jobs passed; SDK chain FileRead2 passed; all3 registered-node scenarios exhausted setup after repeated exact-head Conflict. Full core still pending at checkpoint."
+                             },
+                             {
+                                 "run_id": 41147405258,
+                                 "source_revision": "99f647b546becb3ebdb31aa6e3123b289c034dcc",
+                                 "status": "partial_failure",
+                                 "scope": "Local quality policy and actual Quinn sampler passed; topology/carrier/HTTP/NAT/socket passed; registered scope isolation and stopped-neighbor retirement passed. Both registered FileRead transferred bytes but fixture stopped lease before revoke. Linux contract clippy/tests passed with formatting failure; core native assertion move and independent browser lock require source repairs. Full core/Windows contract pending at checkpoint."
                              }
                          ],
     "release_state":  "not_ready",

@@ -114,7 +114,10 @@ fn same_local_authority(
 }
 fn authorized_work(authority: &NetworkNodeTopologyAuthority, work: &Work) -> bool {
     same_local_authority(authority, &work.authority)
-        && authority.neighbors.iter().any(|neighbor| same_neighbor(neighbor, &work.neighbor))
+        && authority
+            .neighbors
+            .iter()
+            .any(|neighbor| same_neighbor(neighbor, &work.neighbor))
 }
 fn current(control: &NodeControl, work: &Work) -> bool {
     control
@@ -141,9 +144,19 @@ async fn peer_stopped(control: &NodeControl, peer: &[u8; 32]) {
 }
 async fn key_stopped(control: &NodeControl, key: &PeerKey) {
     loop {
-        if !control.network_topology_authorities().is_ok_and(|authorities| authorities.iter().any(|authority| {
-            authority.neighbors.iter().any(|neighbor| PeerKey::from(neighbor) == *key)
-        })) { return; }
+        if !control
+            .network_topology_authorities()
+            .is_ok_and(|authorities| {
+                authorities.iter().any(|authority| {
+                    authority
+                        .neighbors
+                        .iter()
+                        .any(|neighbor| PeerKey::from(neighbor) == *key)
+                })
+            })
+        {
+            return;
+        }
         tokio::time::sleep(Duration::from_millis(25)).await;
     }
 }
@@ -383,10 +396,18 @@ async fn probe(
                 session: measured.session,
                 observations: measured.observations,
                 rejected: measured.rejected,
-                next_at: if healthy { started + PERIOD } else { Deadline::now() + Duration::from_secs(1u64 << failures.min(3)) },
-                failures: if healthy { 0 } else { failures.saturating_add(1) },
+                next_at: if healthy {
+                    started + PERIOD
+                } else {
+                    Deadline::now() + Duration::from_secs(1u64 << failures.min(3))
+                },
+                failures: if healthy {
+                    0
+                } else {
+                    failures.saturating_add(1)
+                },
             }
-        },
+        }
         _ => Outcome {
             node,
             session: None,
@@ -407,15 +428,12 @@ async fn exchange(
     identity: Arc<NodeIdentity>,
 ) -> io::Result<Measured> {
     group.work.retain(|work| current(&control, work));
-    if group.work.is_empty()
-        || group.work.len() > MAX_SPACES
-    {
+    if group.work.is_empty() || group.work.len() > MAX_SPACES {
         return Err(failed());
     }
-    let mut session = match session.filter(|session| {
-        session.key == group.key
-            && session.connection.close_reason().is_none()
-    }) {
+    let mut session = match session
+        .filter(|session| session.key == group.key && session.connection.close_reason().is_none())
+    {
         Some(session) => session,
         None => {
             let address = address(&endpoint, &group.key.node).await?;
@@ -466,24 +484,44 @@ async fn exchange(
     let mut rejected = Vec::new();
     for (request, work) in requests.iter().zip(&group.work) {
         match observe_reply(&mut session, request).await {
-            Ok(true) => {},
+            Ok(true) => {}
             Ok(false) => {
-                    rejected.push(work.clone());
-                    continue;
-            },
+                rejected.push(work.clone());
+                continue;
+            }
             Err(_) => {
-                observations.retain(|observation: &Observation| current(&control, &observation.work));
-                return Ok(Measured { session: None, observations, rejected });
+                observations
+                    .retain(|observation: &Observation| current(&control, &observation.work));
+                return Ok(Measured {
+                    session: None,
+                    observations,
+                    rejected,
+                });
             }
         }
         // Consume and authenticate the already issued response to keep the
         // stream aligned; a withdrawn original Work cannot create an up edge.
-        if !current(&control, work) { continue; }
-        observations.push(Observation { work: work.clone(), completed: Deadline::now() });
+        if !current(&control, work) {
+            continue;
+        }
+        observations.push(Observation {
+            work: work.clone(),
+            completed: Deadline::now(),
+        });
     }
     observations.retain(|observation| current(&control, &observation.work));
-    if session.connection.close_reason().is_some() { return Ok(Measured { session: None, observations, rejected }); }
-    Ok(Measured { session: Some(session), observations, rejected })
+    if session.connection.close_reason().is_some() {
+        return Ok(Measured {
+            session: None,
+            observations,
+            rejected,
+        });
+    }
+    Ok(Measured {
+        session: Some(session),
+        observations,
+        rejected,
+    })
 }
 
 async fn read_reply(session: &mut Session) -> io::Result<NetworkTopologyProbeReply> {
@@ -502,8 +540,12 @@ fn rejected_reply(reply: &NetworkTopologyProbeReply, request: &NetworkTopologyPr
 
 async fn observe_reply(session: &mut Session, request: &NetworkTopologyProbe) -> io::Result<bool> {
     let first = read_reply(session).await?;
-    if rejected_reply(&first, request) { return Ok(false); }
-    let NetworkTopologyProbeReply::Prepared { probe } = first else { return Err(failed()); };
+    if rejected_reply(&first, request) {
+        return Ok(false);
+    }
+    let NetworkTopologyProbeReply::Prepared { probe } = first else {
+        return Err(failed());
+    };
     if probe.schema_version != 1
         || probe.space_id != request.space_id
         || probe.publisher_digest != request.remote_publisher_digest
@@ -517,7 +559,9 @@ async fn observe_reply(session: &mut Session, request: &NetworkTopologyProbe) ->
     // The sender rechecks the same original scope after its first write. Both
     // frames share this round trip and the unchanged whole-probe deadline.
     let committed = read_reply(session).await?;
-    if rejected_reply(&committed, request) { return Ok(false); }
+    if rejected_reply(&committed, request) {
+        return Ok(false);
+    }
     match committed {
         NetworkTopologyProbeReply::Observed { probe: confirmed } if confirmed == probe => Ok(true),
         _ => Err(failed()),
@@ -573,7 +617,10 @@ pub(super) async fn incoming(
         }
         let work = incoming_work(&control, &identity, &peer, &request)
             .ok()
-            .filter(|work| key.as_ref().is_none_or(|key| *key == PeerKey::from(&work.neighbor)))
+            .filter(|work| {
+                key.as_ref()
+                    .is_none_or(|key| *key == PeerKey::from(&work.neighbor))
+            })
             .filter(|work| current(&control, work));
         let response = if let Some(work) = work {
             key.get_or_insert_with(|| PeerKey::from(&work.neighbor));
@@ -587,15 +634,25 @@ pub(super) async fn incoming(
                 remote_endpoint_revision: work.neighbor.node.revision,
                 nonce: request.nonce,
             };
-            tokio::time::timeout(PROBE_BUDGET, write_message(&mut write,
-                &NetworkTopologyProbeReply::Prepared { probe: probe.clone() }))
-                .await.map_err(io::Error::other)??;
+            tokio::time::timeout(
+                PROBE_BUDGET,
+                write_message(
+                    &mut write,
+                    &NetworkTopologyProbeReply::Prepared {
+                        probe: probe.clone(),
+                    },
+                ),
+            )
+            .await
+            .map_err(io::Error::other)??;
             if current(&control, &work) {
                 NetworkTopologyProbeReply::Observed { probe }
             } else {
                 spaces.remove(&work.space);
                 NetworkTopologyProbeReply::Rejected {
-                    schema_version: 1, space_id: request.space_id.clone(), nonce: request.nonce,
+                    schema_version: 1,
+                    space_id: request.space_id.clone(),
+                    nonce: request.nonce,
                 }
             }
         } else {
@@ -640,5 +697,9 @@ fn incoming_work(
     {
         return Err(failed());
     }
-    Ok(Work { neighbor: neighbor.clone(), authority, space: request.space_id.clone() })
+    Ok(Work {
+        neighbor: neighbor.clone(),
+        authority,
+        space: request.space_id.clone(),
+    })
 }

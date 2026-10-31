@@ -1,0 +1,60 @@
+{
+  "source_revision": "99f647b546becb3ebdb31aa6e3123b289c034dcc",
+  "qualification": "partial_laboratory_results_not_release_qualified",
+  "build_provenance": {
+    "repository": "ZHanry/NestLink",
+    "network_run": 41147405258,
+    "core_run": 41147405270,
+    "arm64_run": 41147405284,
+    "web_run": 41147405252,
+    "run_attempt": 1,
+    "runner": "GitHub-hosted",
+    "cargo_lock_sha256": "20cef00e9b090cd3d61d9e0155e4e9f6155932ded81b0bd966da80c5833387e0"
+  },
+  "execution_provenance": {
+    "environment": "GitHub Actions laboratory",
+    "target_device_acceptance": false,
+    "passed": [
+      "Live local observation policy: 2 tests; actual original Quinn write/sampler/cleanup regression: 1 test",
+      "Topology carrier job: graph16, NRD2 codec10, routed15, reporter13, node chain admission12 and topology metadata3",
+      "Real routed kernel NAT, production socket fault scenarios and independent grant vectors",
+      "Topology journal and actual HTTP topology/chains/route-export APIs",
+      "Native signed ICE/Quinn/FileRead through two kernel NATs and both SDK four-node approved OS FileRead scenarios",
+      "Registered same-neighbor multi-space isolation and stopped-neighbor chain retirement",
+      "Linux contract selected clippy and test commands (whole job fails formatting)",
+      "Linux ARM64 server, WASM contract, audio/X11/portal/network events and OpenAPI",
+      "Web release-site build and browser runner/observer contracts (whole browser matrix fails fixture lock)"
+    ],
+    "failures": [
+      "Two registered-node FileRead scenarios completed initial reservation and file verification, then observed ExplicitExit rather than Revoked: fixture stopped the entire FileReadServer lease before issuing HTTP revoke. Source repair preserves Revoked assertions and the original 5s cleanup deadline.",
+      "Native session integration failed to compile because a new assertion borrowed permit after it was moved into NativeEndpoint. Source repair retains only the original digest before the move.",
+      "Linux contract formatting differs. Official artifact formatter patch was SHA256-verified and manually reviewed for source application.",
+      "Independent browser fixture --locked audit/build needs the new existing nestlink-remote to nestlink-connectivity dependency edge in its own Cargo.lock. Source repair adds this edge without resolving or updating external dependencies."
+    ],
+    "pending_at_checkpoint": [
+      "Full Linux and Windows core jobs and Windows contract were still running; no complete-core success is claimed",
+      "Desktop original-session quality projection and all new UI/IPC regressions",
+      "Private carrier replacement feasibility experiment; production W14 migration remains unimplemented",
+      "Remaining mandatory W12-W40 implementation and target qualification"
+    ]
+  },
+  "registered_chain_timings": {
+    "sample_scope": "job124375620980 registered chain step, unchanged exact-head admission and deadlines",
+    "query_count": 138,
+    "http_query_ms": { "min": 2.808, "max": 54.875, "mean": 10.971 },
+    "complete_query_signature_verification_ms": { "min": 14.425, "max": 14.587, "count": 5 },
+    "reservation_post_ms": [24.495, 19.978, 19.719, 20.075],
+    "reservation_attempts": [1, 1, 1, 1],
+    "reservation_status": "all created",
+    "http_409_count": 0,
+    "http_429_count": 0,
+    "interpretation": "Observed test-build arithmetic performance improvement, not a production capacity qualification or isolated causal attribution."
+  },
+  "retained_artifacts": [
+    { "id": 13022270118, "scope": "Linux contract with formatter patch", "archive_sha256": "cd264c66a5c1ab63099743f47851b3e4ee2be62cbe924ad16edc4face697c6e6", "download_verified": true, "formatter_patch_sha256": "6b0d89d49019f6a07c524ec94e24ceca1cc5faef4693ed1e7b61d59d8183e5c8" },
+    { "id": 13021841920, "scope": "Core scoped Linux SDK integration logs", "archive_sha256": "4f35acfd12e746330557802d44c54d9cc62d03d7aa36b73b5169f94ac450ef21", "download_verified": true },
+    { "id": 13021777253, "scope": "Topology carrier and local observation", "archive_sha256": "7d07549b422b8ad8232e7b9c3842aefff5287ec8739bd130fcedf08fc5e3605a" },
+    { "id": 13021049932, "scope": "SDK and registered-node business chain", "archive_sha256": "5d6b947419d9b419dca7e90ced32435f90096cb2d1e919eb5c094c41b4d6dd72" }
+  ],
+  "authorization_constraints": "Exact topology head, original grant bytes and expiry, UUIDs, quotas, TTLs, probe/HTTP budgets and acceptance assertions remain unchanged. No W13/W14 completion or release qualification is claimed."
+}

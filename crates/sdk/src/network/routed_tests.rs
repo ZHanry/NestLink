@@ -390,11 +390,19 @@ fn original_path_observation(
     permit: &VerifiedPermit,
     path: &VerifiedNetworkPath,
 ) -> Result<nestlink_remote::PathObservation> {
-    let observation = channels.path_observation().ok_or("missing original path observer")?;
+    let observation = channels
+        .path_observation()
+        .ok_or("missing original path observer")?;
     let binding = observation.binding();
     assert_eq!(binding.business_grant_digest, permit.digest());
-    assert_eq!(binding.business_generation, permit.claims().connection_generation);
-    assert_eq!(binding.path_grant_id.as_deref(), Some(path.claims().scope.grant_id.as_str()));
+    assert_eq!(
+        binding.business_generation,
+        permit.claims().connection_generation
+    );
+    assert_eq!(
+        binding.path_grant_id.as_deref(),
+        Some(path.claims().scope.grant_id.as_str())
+    );
     assert_eq!(binding.transport_group, Some(path.transport_group_id()));
     assert!(binding.route_binding.is_some());
     assert_eq!(binding.purpose, path.purpose());

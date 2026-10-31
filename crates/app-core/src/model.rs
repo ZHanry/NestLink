@@ -206,10 +206,59 @@ pub struct NativeSessionView {
     /// permit grants View. UI capture sources use this as their authorization gate.
     pub host_view_authorized: bool,
     pub path: Option<i32>,
+    /// Local observations of this exact proved session. Old IPC snapshots may
+    /// omit this field; unknown/expired measurements remain `None`.
+    #[serde(default)]
+    pub quality: Option<NativePathQualityView>,
     pub stop_reason: Option<NativeSessionStopReason>,
     pub stop_effects: Option<NativeSessionEffects>,
     pub cleanup: Option<NativeSessionCleanup>,
     pub failure: Option<Failure>,
+}
+
+/// Sanitized selected-carrier facts and local measurements. No peer address,
+/// signature, permit bytes or transferable authorization enters the snapshot.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct NativePathQualityView {
+    pub transport: Transport,
+    pub candidate_kind: CandidateKind,
+    pub network_generation: u64,
+    pub bilateral_ice: bool,
+    pub original_binding: Option<NativePathObservationBindingView>,
+    pub rtt_us: Option<u64>,
+    /// Change between locally observed smoothed RTTs, not one-way jitter.
+    pub smoothed_rtt_change_us: Option<u64>,
+    pub packet_window: Option<NativePacketObservationWindow>,
+    pub business_tx: Option<NativeBusinessTxWindow>,
+    pub available_bytes_per_second: Option<u64>,
+    pub cost: Option<u64>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct NativePathObservationBindingView {
+    pub business_grant_sha256: [u8; 32],
+    pub business_generation: u64,
+    pub path_grant_id: Option<String>,
+    pub transport_group: Option<[u8; 32]>,
+    pub route_binding: Option<[u8; 32]>,
+}
+
+/// Consecutive local Quinn counter deltas; deferred losses can refer to older
+/// packets, so these counters do not define a loss probability.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct NativePacketObservationWindow {
+    pub duration_ms: u64,
+    pub sent_packets: u64,
+    pub newly_declared_lost_packets: u64,
+}
+
+/// Complete payload bytes accepted by the local transport, not delivery or
+/// available capacity. Proof, renewal, framing and retransmission are excluded.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct NativeBusinessTxWindow {
+    pub duration_ms: u64,
+    pub payload_bytes: u64,
+    pub bytes_per_second: Option<u64>,
 }
 
 /// Sanitized state for the independently owned browser-facing host endpoint.

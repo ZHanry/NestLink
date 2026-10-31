@@ -167,6 +167,17 @@ jobs:
           $metadataLog = Join-Path $env:RUNNER_TEMP 'nestlink-node-relay-metadata-tests.log'
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-storage -p nestlink-sdk --test node_relay_attributes --no-fail-fast -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $metadataLog
           exit $LASTEXITCODE
+      - name: Check original-session quality projection and old IPC compatibility
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          $qualityLog = Join-Path $env:RUNNER_TEMP 'nestlink-native-quality-tests.log'
+          if ($env:RUNNER_OS -eq 'Windows') {
+            python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-app-core --lib runtime::native_quality::tests:: -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $qualityLog
+          } else {
+            cargo test --locked -p nestlink-app-core --lib runtime::native_quality::tests:: -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $qualityLog
+          }
+          exit $LASTEXITCODE
       - name: Check explicit PCP policy, component ownership and historical local settings
         if: ${{ !cancelled() }}
         shell: pwsh
@@ -311,6 +322,7 @@ jobs:
             ${{ runner.temp }}/nestlink-sdk-routed-tests.json
             ${{ runner.temp }}/nestlink-sdk-network-relay-tests.log
             ${{ runner.temp }}/nestlink-node-relay-metadata-tests.log
+            ${{ runner.temp }}/nestlink-native-quality-tests.log
             ${{ runner.temp }}/nestlink-pcp-tests.log
             ${{ runner.temp }}/nestlink-selected-relay-tests.log
             ${{ runner.temp }}/nestlink-ice-quic-tests.log

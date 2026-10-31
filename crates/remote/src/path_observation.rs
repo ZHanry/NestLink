@@ -8,7 +8,10 @@ use nestlink_connectivity::observation::{
 use nestlink_transport_stream::owner::TaskOwner;
 use std::{
     io,
-    sync::{Arc, atomic::{AtomicBool, Ordering}},
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
     time::{Duration, Instant},
 };
 use tokio::sync::watch;
@@ -36,7 +39,9 @@ impl PathObservation {
             || self.terminal.borrow().is_some()
             || self.terminal.has_changed().is_err()
             || self.measurements.has_changed().is_err();
-        self.measurements.borrow().snapshot(&self.binding, elapsed_ms(self.started), stopped)
+        self.measurements
+            .borrow()
+            .snapshot(&self.binding, elapsed_ms(self.started), stopped)
     }
     /// New samples and terminal sender closure wake observers. Read snapshot
     /// after either result so final state remains observable after cleanup.
@@ -73,13 +78,22 @@ impl PathObservationOwner {
         let stopped = Arc::new(AtomicBool::new(false));
         let (sender, measurements) = watch::channel(LocalPathMeasurements::default());
         let mut terminal = lease.subscribe_stopped();
-        let observation = PathObservation { binding: Arc::new(binding), measurements, terminal: terminal.clone(), started, stopped: stopped.clone() };
+        let observation = PathObservation {
+            binding: Arc::new(binding),
+            measurements,
+            terminal: terminal.clone(),
+            started,
+            stopped: stopped.clone(),
+        };
         let task = TaskOwner::new(tokio::spawn(async move {
             let _stopped = StoppedOnDrop(stopped);
             let mut interval = tokio::time::interval(POLL_PERIOD);
             interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
             loop {
-                if terminal.borrow().is_some() || terminal.has_changed().is_err() || connection.close_reason().is_some() {
+                if terminal.borrow().is_some()
+                    || terminal.has_changed().is_err()
+                    || connection.close_reason().is_some()
+                {
                     return;
                 }
                 tokio::select! { biased;
@@ -87,7 +101,10 @@ impl PathObservationOwner {
                     _ = connection.closed() => return,
                     _ = interval.tick() => {},
                 }
-                if terminal.borrow().is_some() || terminal.has_changed().is_err() || connection.close_reason().is_some() {
+                if terminal.borrow().is_some()
+                    || terminal.has_changed().is_err()
+                    || connection.close_reason().is_some()
+                {
                     return;
                 }
                 let stats = connection.stats();
@@ -98,7 +115,8 @@ impl PathObservationOwner {
                     lost_packets: stats.path.lost_packets,
                     business_tx_bytes: business_tx.business_transmitted_bytes(),
                 };
-                sender.send_modify(|measurements| measurements.observe(elapsed_ms(started), sample));
+                sender
+                    .send_modify(|measurements| measurements.observe(elapsed_ms(started), sample));
             }
         }));
         Self { observation, task }

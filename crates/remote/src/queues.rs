@@ -199,7 +199,11 @@ impl Queue {
     /// and QUIC retransmissions are not business payload throughput.
     pub(crate) fn record_business_transmit(&self, bytes: usize) {
         let bytes = u64::try_from(bytes).unwrap_or(u64::MAX);
-        let _ = self.business_transmitted.fetch_update(Ordering::Relaxed, Ordering::Relaxed, |old| Some(old.saturating_add(bytes)));
+        let _ =
+            self.business_transmitted
+                .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |old| {
+                    Some(old.saturating_add(bytes))
+                });
     }
     pub(crate) fn business_transmitted_bytes(&self) -> u64 {
         self.business_transmitted.load(Ordering::Relaxed)
@@ -945,19 +949,42 @@ impl ChannelRuntime {
             || binding.path != self.lease.selected_path()
             || binding.purpose != nestlink_protocol::network::Purpose::RemoteControl
             || binding.path_grant_id.is_some() != binding.transport_group.is_some()
-            || binding.candidate.as_ref().is_some_and(|candidate| candidate.path() != binding.path || Some(candidate.generation) != binding.network_generation)
+            || binding.candidate.as_ref().is_some_and(|candidate| {
+                candidate.path() != binding.path
+                    || Some(candidate.generation) != binding.network_generation
+            })
             || (binding.candidate.is_none() && binding.network_generation.is_some())
         {
-            return Err(io::Error::new(io::ErrorKind::InvalidInput, "path observation does not match original business admission").into());
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "path observation does not match original business admission",
+            )
+            .into());
         }
-        let connection = self.connection.as_ref().ok_or_else(|| io::Error::new(io::ErrorKind::Unsupported, "this transport has no local Quinn observations"))?.clone();
-        let owner = crate::path_observation::PathObservationOwner::start(binding, connection, &self.lease, self.outgoing.clone());
+        let connection = self
+            .connection
+            .as_ref()
+            .ok_or_else(|| {
+                io::Error::new(
+                    io::ErrorKind::Unsupported,
+                    "this transport has no local Quinn observations",
+                )
+            })?
+            .clone();
+        let owner = crate::path_observation::PathObservationOwner::start(
+            binding,
+            connection,
+            &self.lease,
+            self.outgoing.clone(),
+        );
         let observation = owner.observation();
         self.path_observation = Some(owner);
         Ok(observation)
     }
     pub fn path_observation(&self) -> Option<crate::PathObservation> {
-        self.path_observation.as_ref().map(|owner| owner.observation())
+        self.path_observation
+            .as_ref()
+            .map(|owner| owner.observation())
     }
     /// Retain a carrier's explicit close/cancellation owner. This grants no
     /// business authority; lease supervision still closes the inner transport.

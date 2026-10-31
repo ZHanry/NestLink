@@ -493,10 +493,18 @@ async fn bound_stream_header_is_rejected_before_reading_body() -> Result {
 }
 
 #[tokio::test]
-async fn local_path_observation_uses_actual_quic_writes_and_joins_without_replacing_carrier() -> Result {
+async fn local_path_observation_uses_actual_quic_writes_and_joins_without_replacing_carrier()
+-> Result {
     use crate::{PathObservationBinding, TransportOwner};
     use nestlink_protocol::network::Purpose;
-    use std::{future::Future, pin::Pin, sync::{Arc, atomic::{AtomicBool, Ordering}}};
+    use std::{
+        future::Future,
+        pin::Pin,
+        sync::{
+            Arc,
+            atomic::{AtomicBool, Ordering},
+        },
+    };
 
     struct OriginalOwner {
         socket: Option<std::net::UdpSocket>,
@@ -504,8 +512,10 @@ async fn local_path_observation_uses_actual_quic_writes_and_joins_without_replac
     }
     impl TransportOwner for OriginalOwner {
         fn request_close(&self) {}
-        fn close_and_wait(&mut self, _deadline: tokio::time::Instant)
-            -> Pin<Box<dyn Future<Output = io::Result<()>> + Send + '_>> {
+        fn close_and_wait(
+            &mut self,
+            _deadline: tokio::time::Instant,
+        ) -> Pin<Box<dyn Future<Output = io::Result<()>> + Send + '_>> {
             Box::pin(async move {
                 drop(self.socket.take());
                 self.released.store(true, Ordering::Release);
@@ -520,13 +530,22 @@ async fn local_path_observation_uses_actual_quic_writes_and_joins_without_replac
     let released = Arc::new(AtomicBool::new(false));
     let socket = std::net::UdpSocket::bind("127.0.0.1:0")?;
     let address = socket.local_addr()?;
-    let mut c = c.with_transport_owner(OriginalOwner { socket: Some(socket), released: released.clone() });
+    let mut c = c.with_transport_owner(OriginalOwner {
+        socket: Some(socket),
+        released: released.clone(),
+    });
     assert!(c.path_observation().is_none());
     let permit = c.lease_control().current_native_permit()?;
     let binding = PathObservationBinding {
-        business_grant_digest: permit.digest(), business_generation: permit.claims().connection_generation,
-        path_grant_id: None, transport_group: None, route_binding: None,
-        purpose: Purpose::RemoteControl, path: Path::Direct, candidate: None, network_generation: None,
+        business_grant_digest: permit.digest(),
+        business_generation: permit.claims().connection_generation,
+        path_grant_id: None,
+        transport_group: None,
+        route_binding: None,
+        purpose: Purpose::RemoteControl,
+        path: Path::Direct,
+        candidate: None,
+        network_generation: None,
     };
     let mut wrong = binding.clone();
     wrong.business_generation += 1;
@@ -550,9 +569,13 @@ async fn local_path_observation_uses_actual_quic_writes_and_joins_without_replac
                 break Ok::<_, watch::error::RecvError>(snapshot);
             }
         }
-    }).await??;
+    })
+    .await??;
     assert_eq!(measured.binding, binding);
-    assert_eq!(measured.business_tx.map(|window| window.payload_bytes), Some(payload.len() as u64));
+    assert_eq!(
+        measured.business_tx.map(|window| window.payload_bytes),
+        Some(payload.len() as u64)
+    );
     assert!(measured.packet_loss.is_some());
     assert_eq!(measured.available_bytes_per_second, None);
     assert_eq!(measured.cost, None);
@@ -577,7 +600,8 @@ async fn local_path_observation_uses_actual_quic_writes_and_joins_without_replac
     let _rebound = std::net::UdpSocket::bind(address)?;
     tokio::time::timeout(Duration::from_secs(1), async {
         while observation.changed().await.is_ok() {}
-    }).await?;
+    })
+    .await?;
     let stopped = observation.snapshot();
     assert!(stopped.stopped);
     assert_eq!(stopped.rtt, None);

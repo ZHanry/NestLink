@@ -2110,6 +2110,7 @@ dependencies = [
 name = "nestlink-remote"
 version = "0.7.0-rc.1"
 dependencies = [
+ "nestlink-connectivity",
  "nestlink-identity",
  "nestlink-platform-network",
  "nestlink-protocol",

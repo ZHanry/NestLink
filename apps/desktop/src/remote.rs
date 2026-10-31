@@ -4,10 +4,11 @@ use crate::{
     theme, widgets,
 };
 use eframe::egui;
+use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_app_core::{Action, BrowserHostStatus, NativeSessionStatus, Page, Snapshot};
 use nestlink_app_ipc::wire::Command;
 use nestlink_protocol::Permission;
-use nestlink_protocol::api::{ApprovalChoice, DeviceView, RemoteView, TrustChoice};
+use nestlink_protocol::api::{ApprovalChoice, CandidateKind, DeviceView, RemoteView, Transport, TrustChoice};
 use std::time::{SystemTime, UNIX_EPOCH};
 use zeroize::Zeroizing;
 
@@ -1006,14 +1007,14 @@ impl DesktopApp {
                 });
             });
             if let Some(path) = session.path {
-                ui.label(self.t(
-                    if path == 1 { "直连" } else { "中继连接" },
-                    if path == 1 {
-                        "Direct connection"
-                    } else {
-                        "Relay connection"
-                    },
-                ));
+                ui.label(match path {
+                    1 => self.t("直连", "Direct connection"),
+                    2 => self.t("中继连接", "Relay connection"),
+                    _ => self.t("未知路径", "Unknown path"),
+                });
+            }
+            if session.status == NativeSessionStatus::Connected {
+                self.native_path_quality_panel(ui, session);
             }
             egui::CollapsingHeader::new(self.t("连接诊断", "Connection diagnostics")).show(
                 ui,
@@ -1034,6 +1035,22 @@ impl DesktopApp {
                         } else {
                             self.t("未知路径", "Unknown path")
                         });
+                    }
+                    if let Some(quality) = &session.quality {
+                        ui.label(format!("{}: {}", self.t("候选网络代次", "Candidate network generation"), quality.network_generation));
+                        if let Some(binding) = &quality.original_binding {
+                            ui.small(self.t("原始授权绑定摘要（SHA-256 / base64url）", "Original admission binding digests (SHA-256 / base64url)"));
+                            ui.monospace(format!("business: {}", URL_SAFE_NO_PAD.encode(binding.business_grant_sha256)));
+                            if let Some(id) = &binding.path_grant_id {
+                                ui.label(format!("PathGrant: {id}"));
+                            }
+                            if let Some(group) = binding.transport_group {
+                                ui.monospace(format!("transport group: {}", URL_SAFE_NO_PAD.encode(group)));
+                            }
+                            if let Some(route) = binding.route_binding {
+                                ui.monospace(format!("route: {}", URL_SAFE_NO_PAD.encode(route)));
+                            }
+                        }
                     }
                     if let Some(reason) = session.stop_reason {
                         ui.label(format!("{}: {reason:?}", self.t("停止原因", "Stop reason")));
@@ -1101,6 +1118,58 @@ impl DesktopApp {
                 | NativeSessionStatus::Failed => {}
             }
         });
+    }
+
+    fn native_path_quality_panel(&self, ui: &mut egui::Ui, session: &nestlink_app_core::NativeSessionView) {
+        let unknown = self.t("未知", "Unknown");
+        let Some(quality) = session.quality.as_ref().filter(|quality| {
+            quality.original_binding.as_ref().is_none_or(|binding| binding.business_generation == session.connection_generation)
+        }) else {
+            ui.label(format!("{}: {unknown} · RTT: {unknown}", self.t("承载质量", "Path quality")));
+            return;
+        };
+        let transport = match quality.transport {
+            Transport::Quic if quality.bilateral_ice => "QUIC / ICE",
+            Transport::Quic => "QUIC",
+            Transport::Tls => "TLS / TCP",
+            Transport::Wss => "WSS / TLS / TCP",
+            Transport::WebRtc => "WebRTC",
+        };
+        let candidate = match quality.candidate_kind {
+            CandidateKind::Lan => self.t("局域网候选", "LAN candidate"),
+            CandidateKind::Ipv6 => self.t("IPv6 候选", "IPv6 candidate"),
+            CandidateKind::Reflexive => self.t("NAT 反射候选", "Reflexive candidate"),
+            CandidateKind::Relay => self.t("中继候选", "Relay candidate"),
+        };
+        ui.label(format!("{transport} · {candidate}"));
+        let latency = |value: Option<u64>| value.map_or_else(
+            || unknown.to_owned(),
+            |us| format!("{}.{:03} ms", us / 1_000, us % 1_000),
+        );
+        ui.label(format!("RTT: {} · {}: {}", latency(quality.rtt_us),
+            self.t("平滑 RTT 变化", "Smoothed RTT change"), latency(quality.smoothed_rtt_change_us)))
+            .on_hover_text(self.t("相邻本地平滑 RTT 观测的绝对变化，不是单向抖动。未测或过期时显示未知。",
+                "Absolute change between consecutive local smoothed RTT observations, not one-way jitter. Unmeasured or expired values are unknown."));
+        let packets = quality.packet_window.map_or_else(|| unknown.to_owned(), |window| {
+            if self.english {
+                format!("{} sent · {} newly declared lost / {} ms", window.sent_packets, window.newly_declared_lost_packets, window.duration_ms)
+            } else {
+                format!("发送 {} 包 · 新声明丢失 {} 包 / {} ms", window.sent_packets, window.newly_declared_lost_packets, window.duration_ms)
+            }
+        });
+        ui.label(format!("{}: {packets}", self.t("包计数窗口", "Packet counter window")))
+            .on_hover_text(self.t("新声明丢失的包可能在更早的窗口发送，这两个计数不构成丢包概率。",
+                "Newly declared losses may refer to packets sent in an earlier window; these counters do not define a loss probability."));
+        let business_tx = quality.business_tx.map_or_else(|| unknown.to_owned(), |window| {
+            let rate = window.bytes_per_second.map_or_else(|| unknown.to_owned(), |rate| format!("{rate} B/s"));
+            format!("{rate} · {} B / {} ms", window.payload_bytes, window.duration_ms)
+        });
+        ui.label(format!("{}: {business_tx}", self.t("本地业务发送", "Local business TX")))
+            .on_hover_text(self.t("原承载接受的完整业务数据，不包含凭据、续租和重传；不代表送达速率或可用带宽。",
+                "Complete business payload accepted by the original local transport, excluding proof, renewal and retransmission; not delivered rate or available capacity."));
+        let capacity = quality.available_bytes_per_second.map_or_else(|| unknown.to_owned(), |rate| format!("{rate} B/s"));
+        let cost = quality.cost.map_or_else(|| unknown.to_owned(), |cost| cost.to_string());
+        ui.small(format!("{}: {capacity} · {}: {cost}", self.t("可用带宽", "Available capacity"), self.t("费用", "Cost")));
     }
 
     fn browser_host_panel(&mut self, ui: &mut egui::Ui, snapshot: &Snapshot) {

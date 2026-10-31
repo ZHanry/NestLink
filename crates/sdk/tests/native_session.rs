@@ -126,6 +126,7 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
         )
         .await?;
     let permit = controller_sdk.permit(&request.id).await?;
+    let original_permit_digest = permit.digest();
     assert_eq!(
         host_sdk.host_permit(&host, &request.id).await?.digest(),
         permit.digest()
@@ -236,14 +237,34 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
     assert!(controller_session.uses_bilateral_ice());
     assert!(host_session.uses_bilateral_ice());
     let observations = [
-        controller_session.path_observation().ok_or("missing controller path observer")?,
-        host_session.control.path_observation().ok_or("missing host path observer")?,
+        controller_session
+            .path_observation()
+            .ok_or("missing controller path observer")?,
+        host_session
+            .control
+            .path_observation()
+            .ok_or("missing host path observer")?,
     ];
-    for (session, observation) in [(&controller_session, &observations[0]), (&host_session, &observations[1])] {
-        assert_eq!(observation.binding().business_grant_digest, permit.digest());
-        assert_eq!(observation.binding().business_generation, permit.claims().connection_generation);
-        assert_eq!(observation.binding().candidate.as_ref(), Some(&session.candidate));
-        assert_eq!(observation.binding().network_generation, Some(session.candidate.generation));
+    for (session, observation) in [
+        (&controller_session, &observations[0]),
+        (&host_session, &observations[1]),
+    ] {
+        assert_eq!(
+            observation.binding().business_grant_digest,
+            original_permit_digest
+        );
+        assert_eq!(
+            observation.binding().business_generation,
+            permit.claims().connection_generation
+        );
+        assert_eq!(
+            observation.binding().candidate.as_ref(),
+            Some(&session.candidate)
+        );
+        assert_eq!(
+            observation.binding().network_generation,
+            Some(session.candidate.generation)
+        );
         assert_eq!(observation.binding().path, Path::Direct);
         assert_eq!(observation.binding().path_grant_id, None);
         assert_eq!(observation.binding().transport_group, None);

@@ -99,6 +99,7 @@ impl Actor {
                 NativeSessionStatus::Stopped
             };
             session.host_view_authorized = false;
+            session.quality = None;
             session.stop_reason = self.local_stop_reason.or(session.stop_reason);
             session.failure = failure.clone();
             self.view.native_session.data = Some(Arc::new(session));

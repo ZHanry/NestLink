@@ -1,6 +1,6 @@
 //! Bounded candidate scheduling. NAT descriptions never decide reachability.
-pub mod topology;
 pub mod observation;
+pub mod topology;
 use nestlink_policy::PathSet;
 pub use nestlink_protocol::api::{Candidate, CandidateKind, Transport};
 use nestlink_protocol::{

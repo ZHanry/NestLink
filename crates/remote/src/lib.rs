@@ -6,10 +6,10 @@ pub mod files;
 pub mod input;
 mod lifecycle;
 mod path_observation;
-pub use path_observation::PathObservation;
 pub use nestlink_connectivity::observation::{
     BusinessThroughputWindow, PacketLossWindow, PathObservationBinding, PathObservationSnapshot,
 };
+pub use path_observation::PathObservation;
 pub mod native_renewal;
 mod queues;
 pub mod quic;

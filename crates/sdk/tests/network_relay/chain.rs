@@ -15,7 +15,7 @@ use nestlink_protocol::{
     network::{GrantClaims, PeerId},
     network_topology::{BootIncarnation, TopologyAdvertisement, TopologySync},
 };
-use nestlink_remote::files::{FileReadClient, FileReadServer, FileReadVerifier};
+use nestlink_remote::files::{FileReadClient, FileReadServer, FileReadVerifier, FileShutdown};
 use nestlink_sdk::SdkError;
 use std::collections::BTreeSet;
 
@@ -348,13 +348,18 @@ async fn topology_digests_in_space(
         eprintln!(
             "registered topology head: position={index}, sequence={}, remaining_ms={}",
             advertisement.claims().report.sequence,
-            advertisement.claims().expires_at_ms.saturating_sub(RuntimeClock::default().sample()?.unix_ms)
+            advertisement
+                .claims()
+                .expires_at_ms
+                .saturating_sub(RuntimeClock::default().sample()?.unix_ms)
         );
     }
     eprintln!(
         "registered topology query: query_us={}, verification_us={}, total_us={}, complete={}",
-        query_elapsed.as_micros(), verification_started.elapsed().as_micros(),
-        query_started.elapsed().as_micros(), !digests.contains(&[0; 32])
+        query_elapsed.as_micros(),
+        verification_started.elapsed().as_micros(),
+        query_started.elapsed().as_micros(),
+        !digests.contains(&[0; 32])
     );
     Ok((!digests.contains(&[0; 32])).then_some(digests))
 }
@@ -440,15 +445,22 @@ async fn registered_topology_owner_isolates_a_revoked_space_on_the_same_real_nei
         let mut withdrawn_at = None;
         loop {
             let current = f.sdk.network_remote_chain(f.pin.space_id(), &route).await?;
-            let path = GrantClaims::decode_canonical(&URL_SAFE_NO_PAD.decode(&current.path.path.claims)?)?;
+            let path =
+                GrantClaims::decode_canonical(&URL_SAFE_NO_PAD.decode(&current.path.path.claims)?)?;
             assert_eq!(path.scope().expires_at_ms, original_expiry);
             assert!(RuntimeClock::default().sample()?.unix_ms < original_expiry);
             readbacks += 1;
             if withdrawn_at.is_none()
                 && f.control.network_topology_authority(&other_space).is_err()
-                && second.control.network_topology_authority(&other_space).is_ok_and(|authority| {
-                    authority.neighbors.iter().all(|neighbor| neighbor.node.node_id != f.node_id)
-                })
+                && second
+                    .control
+                    .network_topology_authority(&other_space)
+                    .is_ok_and(|authority| {
+                        authority
+                            .neighbors
+                            .iter()
+                            .all(|neighbor| neighbor.node.node_id != f.node_id)
+                    })
             {
                 withdrawn_at = Some(Instant::now());
             }
@@ -581,7 +593,6 @@ async fn transfer(controller_first: bool) -> Result {
     assert!(download.source_verified());
     assert_eq!(received, bytes);
     client.retire()?;
-    server.shutdown(StopReason::ExplicitExit).await?;
     f.sdk
         .revoke_network_remote_chain(f.pin.space_id(), &route)
         .await?;
@@ -592,6 +603,14 @@ async fn transfer(controller_first: bool) -> Result {
     .await??;
     assert_eq!(a.reason, StopReason::Revoked);
     assert_eq!(b.reason, StopReason::Revoked);
+    // FileReadServer::shutdown stops its entire proved lease. Collect this
+    // worker only after both original sessions independently observed revoke.
+    assert_eq!(
+        tokio::time::timeout_at(cleanup, server.shutdown(b.reason)).await??,
+        FileShutdown::Finished
+    );
+    assert!(server.monitor().status().finished);
+    assert!(!server.monitor().status().cleanup_timed_out);
     drop((controller, host));
     let _clients = rebind(&addresses)?;
     assert_eq!(f.sdk.relay_reservations().await?.held_allocations, 3);

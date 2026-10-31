@@ -197,9 +197,8 @@ async fn authorize_remote_observed<'a>(
         }
     };
     let route_deadline = authorization.deadline();
-    let observation_binding = authority.observation_binding(
-        setup.session.current_verified_permit(), &authorization,
-    );
+    let observation_binding =
+        authority.observation_binding(setup.session.current_verified_permit(), &authorization);
     let revocation = Arc::new(revocation);
     let setup_deadline = deadline.min(route_deadline);
     let preparation = (|| -> Result<(), RemoteError> {

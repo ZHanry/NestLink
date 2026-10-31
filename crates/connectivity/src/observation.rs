@@ -82,7 +82,8 @@ struct Timed<T> {
 }
 impl<T: Copy> Timed<T> {
     fn fresh(self, now_ms: u64) -> Option<T> {
-        now_ms.checked_sub(self.at_ms)
+        now_ms
+            .checked_sub(self.at_ms)
             .filter(|age| *age < OBSERVATION_FRESHNESS_MS)
             .map(|_| self.value)
     }
@@ -108,33 +109,48 @@ impl LocalPathMeasurements {
                 || sample.lost_packets < old.lost_packets
                 || sample.business_tx_bytes < old.business_tx_bytes
             {
-                *self = Self { previous: Some((now_ms, sample)), ..Self::default() };
+                *self = Self {
+                    previous: Some((now_ms, sample)),
+                    ..Self::default()
+                };
                 return;
             }
             if sample.received_ack_frames > old.received_ack_frames {
                 if let Some(previous) = self.rtt.and_then(|value| value.fresh(now_ms)) {
-                    self.jitter = Some(Timed { at_ms: now_ms, value: sample.rtt.abs_diff(previous) });
+                    self.jitter = Some(Timed {
+                        at_ms: now_ms,
+                        value: sample.rtt.abs_diff(previous),
+                    });
                 } else {
                     self.jitter = None;
                 }
-                self.rtt = Some(Timed { at_ms: now_ms, value: sample.rtt });
+                self.rtt = Some(Timed {
+                    at_ms: now_ms,
+                    value: sample.rtt,
+                });
             }
             let duration_ms = now_ms - at;
             let sent_packets = sample.sent_packets - old.sent_packets;
             let lost_packets = sample.lost_packets - old.lost_packets;
             if sent_packets > 0 || lost_packets > 0 {
-                self.loss = Some(Timed { at_ms: now_ms, value: PacketLossWindow {
-                    duration_ms,
-                    sent_packets,
-                    newly_declared_lost_packets: lost_packets,
-                }});
+                self.loss = Some(Timed {
+                    at_ms: now_ms,
+                    value: PacketLossWindow {
+                        duration_ms,
+                        sent_packets,
+                        newly_declared_lost_packets: lost_packets,
+                    },
+                });
             }
             let payload_bytes = sample.business_tx_bytes - old.business_tx_bytes;
             if payload_bytes > 0 {
-                self.business_tx = Some(Timed { at_ms: now_ms, value: BusinessThroughputWindow {
-                    duration_ms,
-                    payload_bytes,
-                }});
+                self.business_tx = Some(Timed {
+                    at_ms: now_ms,
+                    value: BusinessThroughputWindow {
+                        duration_ms,
+                        payload_bytes,
+                    },
+                });
             }
         }
         // The first poll is only a baseline. Requiring a subsequent ACK also
@@ -151,10 +167,18 @@ impl LocalPathMeasurements {
         PathObservationSnapshot {
             binding: binding.clone(),
             stopped,
-            rtt: live.then(|| self.rtt.and_then(|value| value.fresh(now_ms))).flatten(),
-            smoothed_rtt_change: live.then(|| self.jitter.and_then(|value| value.fresh(now_ms))).flatten(),
-            packet_loss: live.then(|| self.loss.and_then(|value| value.fresh(now_ms))).flatten(),
-            business_tx: live.then(|| self.business_tx.and_then(|value| value.fresh(now_ms))).flatten(),
+            rtt: live
+                .then(|| self.rtt.and_then(|value| value.fresh(now_ms)))
+                .flatten(),
+            smoothed_rtt_change: live
+                .then(|| self.jitter.and_then(|value| value.fresh(now_ms)))
+                .flatten(),
+            packet_loss: live
+                .then(|| self.loss.and_then(|value| value.fresh(now_ms)))
+                .flatten(),
+            business_tx: live
+                .then(|| self.business_tx.and_then(|value| value.fresh(now_ms)))
+                .flatten(),
             available_bytes_per_second: None,
             cost: None,
         }
@@ -167,15 +191,25 @@ mod tests {
 
     fn binding() -> PathObservationBinding {
         PathObservationBinding {
-            business_grant_digest: [1; 32], business_generation: 7,
-            path_grant_id: Some("original-path".into()), transport_group: Some([2; 32]),
-            route_binding: Some([3; 32]), purpose: Purpose::RemoteControl,
-            path: Path::Relay, candidate: None, network_generation: None,
+            business_grant_digest: [1; 32],
+            business_generation: 7,
+            path_grant_id: Some("original-path".into()),
+            transport_group: Some([2; 32]),
+            route_binding: Some([3; 32]),
+            purpose: Purpose::RemoteControl,
+            path: Path::Relay,
+            candidate: None,
+            network_generation: None,
         }
     }
     fn sample() -> LocalQuicSample {
-        LocalQuicSample { rtt: Duration::from_millis(20), received_ack_frames: 1,
-            sent_packets: 10, lost_packets: 0, business_tx_bytes: 0 }
+        LocalQuicSample {
+            rtt: Duration::from_millis(20),
+            received_ack_frames: 1,
+            sent_packets: 10,
+            lost_packets: 0,
+            business_tx_bytes: 0,
+        }
     }
     #[test]
     fn initial_estimate_idle_and_expired_feedback_are_unknown_without_rebinding() {
@@ -183,15 +217,33 @@ mod tests {
         let mut measurements = LocalPathMeasurements::default();
         measurements.observe(0, sample());
         assert_eq!(measurements.snapshot(&binding, 0, false).rtt, None);
-        let next = LocalQuicSample { received_ack_frames: 2, sent_packets: 12,
-            lost_packets: 1, business_tx_bytes: 1200, ..sample() };
+        let next = LocalQuicSample {
+            received_ack_frames: 2,
+            sent_packets: 12,
+            lost_packets: 1,
+            business_tx_bytes: 1200,
+            ..sample()
+        };
         measurements.observe(500, next);
         let measured = measurements.snapshot(&binding, 500, false);
         assert_eq!(measured.rtt, Some(Duration::from_millis(20)));
-        assert_eq!(measured.packet_loss, Some(PacketLossWindow {
-            duration_ms: 500, sent_packets: 2, newly_declared_lost_packets: 1 }));
-        assert_eq!(measured.business_tx.and_then(BusinessThroughputWindow::bytes_per_second), Some(2400));
-        for at in [1000, 2000, 3500] { measurements.observe(at, next); }
+        assert_eq!(
+            measured.packet_loss,
+            Some(PacketLossWindow {
+                duration_ms: 500,
+                sent_packets: 2,
+                newly_declared_lost_packets: 1
+            })
+        );
+        assert_eq!(
+            measured
+                .business_tx
+                .and_then(BusinessThroughputWindow::bytes_per_second),
+            Some(2400)
+        );
+        for at in [1000, 2000, 3500] {
+            measurements.observe(at, next);
+        }
         let expired = measurements.snapshot(&binding, 3500, false);
         assert_eq!(expired.rtt, None);
         assert_eq!(expired.packet_loss, None);
@@ -205,13 +257,30 @@ mod tests {
         let mut measurements = LocalPathMeasurements::default();
         let binding = binding();
         measurements.observe(0, sample());
-        measurements.observe(500, LocalQuicSample { rtt: Duration::from_millis(25),
-            received_ack_frames: 2, ..sample() });
-        measurements.observe(1000, LocalQuicSample { rtt: Duration::from_millis(22),
-            received_ack_frames: 3, lost_packets: 4, ..sample() });
+        measurements.observe(
+            500,
+            LocalQuicSample {
+                rtt: Duration::from_millis(25),
+                received_ack_frames: 2,
+                ..sample()
+            },
+        );
+        measurements.observe(
+            1000,
+            LocalQuicSample {
+                rtt: Duration::from_millis(22),
+                received_ack_frames: 3,
+                lost_packets: 4,
+                ..sample()
+            },
+        );
         let live = measurements.snapshot(&binding, 1000, false);
         assert_eq!(live.smoothed_rtt_change, Some(Duration::from_millis(3)));
-        assert_eq!(live.packet_loss.map(|window| (window.sent_packets, window.newly_declared_lost_packets)), Some((0, 4)));
+        assert_eq!(
+            live.packet_loss
+                .map(|window| (window.sent_packets, window.newly_declared_lost_packets)),
+            Some((0, 4))
+        );
         assert_eq!(live.business_tx, None);
         let stopped = measurements.snapshot(&binding, 1000, true);
         assert!(stopped.stopped);
@@ -220,7 +289,16 @@ mod tests {
         assert_eq!(stopped.binding, binding);
         measurements.observe(900, sample());
         assert_eq!(measurements.snapshot(&binding, 900, false).rtt, None);
-        measurements.observe(1500, LocalQuicSample { received_ack_frames: 0, ..sample() });
-        assert_eq!(measurements.snapshot(&binding, 1500, false).packet_loss, None);
+        measurements.observe(
+            1500,
+            LocalQuicSample {
+                received_ack_frames: 0,
+                ..sample()
+            },
+        );
+        assert_eq!(
+            measurements.snapshot(&binding, 1500, false).packet_loss,
+            None
+        );
     }
 }

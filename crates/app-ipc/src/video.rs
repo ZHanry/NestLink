@@ -749,6 +749,7 @@ mod tests {
                     status: NativeSessionStatus::Connected,
                     host_view_authorized: false,
                     path: None,
+                    quality: None,
                     stop_reason: None,
                     stop_effects: None,
                     cleanup: None,

@@ -1,7 +1,9 @@
 # Observe the original proved business connection without replacing its owner
 
-Status: source implementation; exact-source Actions pending. W13 remains in
-progress; route selection, standby switching and product display remain open.
+Status: local observation policy and real Quinn sampling passed exact-source
+99f647b hosted Actions. Desktop display is implemented and awaits its own
+exact-source Actions. W13 remains in progress; ongoing route selection and
+standby switching remain open.
 
 The existing Scheduler ends its first successful race. Keeping a new score type
 beside it would not create ongoing production observations. A second transport
@@ -50,3 +52,18 @@ without yielding, preservation of the original carrier owner and socket release.
 Existing real NRD1, NRD2 and native ICE business tests also check original
 bindings and retain the read-only handle across cleanup. These are scoped
 laboratory checks, not full W13/AC20/AC21 or target qualification.
+
+The existing app-core actor projects the original NativeSessionControl handle
+every 500ms on its existing tick, publishing only changes. Its existing
+authenticated IPC snapshot carries an optional quality field; older messages
+without the field still decode. The projection checks the request, business
+generation, original permit/route binding, selected candidate and matching
+network generation, and clears on terminal or replacement state. Ordinary
+permit-sequence renewal preserves the original admission digest. It neither
+retains a transport owner nor dials, renews or migrates a connection.
+
+The desktop session panel shows the actual selected carrier, measured RTT and
+smoothed RTT change, independent sent/lost counters and completed local business
+TX. Missing or expired measurements, available bandwidth and cost are unknown.
+Its diagnostic section exposes binding digests without signatures, tokens or
+addresses. This display does not establish ongoing route optimization.

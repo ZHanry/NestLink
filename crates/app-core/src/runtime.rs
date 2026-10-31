@@ -20,6 +20,7 @@ mod native_network_control;
 #[path = "runtime/native_recovery.rs"]
 mod native_recovery;
 mod native_renewal;
+mod native_quality;
 #[path = "runtime/service_host.rs"]
 mod service_host;
 #[path = "runtime/service_observation.rs"]
@@ -2132,6 +2133,7 @@ impl Actor {
     async fn run(mut self) {
         let mut timer = tokio::time::interval(Duration::from_millis(100));
         timer.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+        let mut quality_deadline = tokio::time::Instant::now();
         loop {
             if !matches!(self.view.lifecycle, Lifecycle::Running) {
                 if self.active.is_none()
@@ -2205,7 +2207,13 @@ impl Actor {
                 },
                 Step::BrowserHost(None) => self.browser_host_event_lost(),
                 Step::ServiceHostCleanup(result) => self.service_host_cleanup_result(result),
-                Step::Tick => self.poll_native_session(),
+                Step::Tick => {
+                    self.poll_native_session();
+                    if tokio::time::Instant::now() >= quality_deadline {
+                        quality_deadline = tokio::time::Instant::now() + Duration::from_millis(500);
+                        self.poll_native_quality();
+                    }
+                }
             }
         }
     }
@@ -3654,6 +3662,7 @@ impl Actor {
                 status: NativeSessionStatus::Establishing,
                 host_view_authorized: false,
                 path: None,
+                quality: None,
                 stop_reason: None,
                 stop_effects: None,
                 cleanup: None,
@@ -4428,6 +4437,7 @@ impl Actor {
             let mut session = session.as_ref().clone();
             session.status = NativeSessionStatus::Stopping;
             session.host_view_authorized = false;
+            session.quality = None;
             session.stop_reason = Some(reason);
             self.view.native_session.data = Some(Arc::new(session));
         }
@@ -4493,6 +4503,7 @@ impl Actor {
                 status,
                 host_view_authorized: false,
                 path,
+                quality: None,
                 stop_reason: reason,
                 stop_effects: effects,
                 cleanup,
@@ -4939,6 +4950,10 @@ impl Actor {
             Ok(mut established) => {
                 let key = established.key.clone();
                 let control = established.session.control.clone();
+                let initial_quality = native_quality::selected_carrier(
+                    &established.session.candidate,
+                    established.session.uses_bilateral_ice(),
+                );
                 let deadline_expired = established
                     .recovery
                     .deadline
@@ -5245,6 +5260,7 @@ impl Actor {
                         },
                         host_view_authorized: accepted && key.host_view_authorized,
                         path: Some(key.path),
+                        quality: accepted.then_some(initial_quality),
                         stop_reason: None,
                         stop_effects: None,
                         cleanup: None,
@@ -5334,6 +5350,7 @@ impl Actor {
                         },
                         host_view_authorized: false,
                         path: None,
+                        quality: None,
                         stop_reason,
                         // A rejected recovery has no successor session. Retain
                         // the completed cleanup of this exact failed connection.
@@ -5975,6 +5992,7 @@ mod browser_host_data_contract_tests {
             status: NativeSessionStatus::Connected,
             host_view_authorized: true,
             path: Some(1),
+            quality: None,
             stop_reason: None,
             stop_effects: None,
             cleanup: None,

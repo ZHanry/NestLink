@@ -9,7 +9,7 @@ use nestlink_identity::{
     verify_permit,
 };
 use nestlink_protocol::{Path as NetworkPath, Permission, PermitClaims, network::*};
-use nestlink_transport_quic::routed::{RouteAuthorization, RouteRevocation};
+use super::routed::{RouteAuthorization, RouteRevocation};
 use prost::Message;
 use std::{
     collections::BTreeSet,
@@ -55,6 +55,13 @@ fn read_grant(
     )?)
 }
 pub fn prepare(root: &Path) -> Result {
+    prepare_relays(root, &["relay"])
+}
+/// Test provisioning only: all relays share the original permit, path and group.
+pub fn prepare_relays(root: &Path, relay_names: &[&str]) -> Result {
+    if relay_names.is_empty() || relay_names.len() > 2 {
+        return Err("one or two fixture relays required".into());
+    }
     let mut first = identity(root, "first")?;
     let mut second = identity(root, "second")?;
     if first.fingerprint() > second.fingerprint() {
@@ -64,8 +71,11 @@ pub fn prepare(root: &Path) -> Result {
         fs::write(root.join("second.seed"), a)?;
         std::mem::swap(&mut first, &mut second);
     }
-    let relay = identity(root, "relay")?;
-    for (name, device) in [("first", &first), ("second", &second), ("relay", &relay)] {
+    let relays = relay_names.iter().map(|name| identity(root, name)).collect::<Result<Vec<_>>>()?;
+    for (name, device) in [("first", &first), ("second", &second)] {
+        fs::write(root.join(format!("{name}.public")), device.public_key())?;
+    }
+    for (name, device) in relay_names.iter().zip(&relays) {
         fs::write(root.join(format!("{name}.public")), device.public_key())?;
     }
     let now = now_ms()?;
@@ -157,6 +167,8 @@ pub fn prepare(root: &Path) -> Result {
     }))?;
     let connectivity = verify_network_grant(&signed, &context)?;
     write_grant(root, "connectivity", signed)?;
+    let mut relay_peers: Vec<_> = relays.iter().map(|relay| PeerId(relay.fingerprint())).collect();
+    relay_peers.sort();
     let signed = signer.sign(&GrantClaims::Path(PathClaims {
         scope: scope(4),
         peers,
@@ -164,7 +176,7 @@ pub fn prepare(root: &Path) -> Result {
         connectivity_grant_digest: connectivity.digest(),
         policy: PathPolicy {
             allow_direct: false,
-            relays: vec![PeerId(relay.fingerprint())],
+            relays: relay_peers,
             max_hops: 1,
         },
     }))?;
@@ -176,14 +188,15 @@ pub fn prepare(root: &Path) -> Result {
         permit.digest(),
     )?;
     write_grant(root, "path", signed)?;
-    write_grant(
+    for (index, relay) in relays.iter().enumerate() {
+        write_grant(
         root,
-        "transit",
+        &if index == 0 { "transit".into() } else { format!("transit-{index}") },
         signer.sign(&GrantClaims::Transit(TransitClaims {
-            scope: scope(5),
+            scope: scope(5 + index as u8),
             peers,
             transport_group: path.transport_group_id(),
-            route_id: "60000000-0000-4000-8000-000000000006".into(),
+            route_id: format!("60000000-0000-4000-8000-{:012x}", 6 + index),
             relay: PeerId(relay.fingerprint()),
             previous: peers.first,
             next: peers.second,
@@ -191,6 +204,7 @@ pub fn prepare(root: &Path) -> Result {
             byte_limit: 4_000_000,
         }))?,
     )?;
+    }
     println!(
         "NESTLINK_ROUTED provisioned=true route_lifetime_ms=12000 business_lease_ms=15000 business_proof_exercised=false"
     );
@@ -206,6 +220,10 @@ pub struct Authority {
 }
 impl Authority {
     pub fn load(root: &Path) -> Result<Self> {
+        Self::load_route(root, 0)
+    }
+    pub fn load_route(root: &Path, index: usize) -> Result<Self> {
+        if index > 1 { return Err("invalid fixture route".into()); }
         let issuer = key(root, "authority")?;
         let revoked = BTreeSet::new();
         let context = NetworkVerification {
@@ -235,7 +253,7 @@ impl Authority {
             read_grant(root, "path", &context)?,
             permit.digest(),
         )?;
-        let transit = read_grant(root, "transit", &context)?;
+        let transit = read_grant(root, &if index == 0 { "transit".into() } else { format!("transit-{index}") }, &context)?;
         Ok(Self {
             issuer,
             revoked,
