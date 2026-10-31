@@ -3,6 +3,7 @@ use nestlink_identity::InstallationIdentity;
 use nestlink_protocol::QUIC_DATAGRAM_BYTES;
 use nestlink_transport_stream::tls;
 pub mod discovery;
+pub mod direct;
 mod fragments;
 pub mod node;
 pub mod packet_codec;

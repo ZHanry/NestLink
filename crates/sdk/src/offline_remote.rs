@@ -65,28 +65,33 @@ pub struct OfflineRemoteListener {
     owner: Arc<Inner>,
     socket: SocketOwner,
 }
-struct SocketOwner(Option<quinn::Endpoint>);
-impl Drop for SocketOwner {
-    fn drop(&mut self) {
-        if let Some(endpoint) = &self.0 {
-            endpoint.close(1u32.into(), b"offline setup ended");
-        }
-    }
-}
+struct SocketOwner(nestlink_transport_quic::direct::DirectEndpoint);
 impl SocketOwner {
     fn endpoint(&self) -> Result<&quinn::Endpoint, SdkError> {
-        self.0.as_ref().ok_or(SdkError::Invalid)
+        Ok(self.0.endpoint()?)
     }
-    fn take(&mut self) -> Result<quinn::Endpoint, SdkError> {
-        self.0.take().ok_or(SdkError::Invalid)
+}
+impl nestlink_remote::TransportOwner for SocketOwner {
+    fn request_close(&self) {
+        self.0.request_close();
+    }
+    fn close_and_wait(
+        &mut self,
+        deadline: tokio::time::Instant,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = io::Result<()>> + Send + '_>> {
+        Box::pin(self.0.close_and_wait(deadline))
     }
 }
 pub struct OfflineRemoteRuntime {
     channels: ChannelRuntime,
+    local_address: SocketAddr,
     authority: OfflineRemoteAuthority,
     recovery: Option<JoinHandle<()>>,
 }
 impl OfflineRemoteRuntime {
+    pub fn local_address(&self) -> SocketAddr {
+        self.local_address
+    }
     pub fn channels(&mut self) -> &mut ChannelRuntime {
         &mut self.channels
     }
@@ -189,11 +194,11 @@ impl OfflineRemoteOwner {
         self.0.authority.check(wall()?)?;
         let peer = self.0.authority.claims()?.members[0].public_key;
         let endpoint =
-            nestlink_transport_quic::listener(address, &self.0.local.identity, digest(&peer))
+            nestlink_transport_quic::direct::DirectEndpoint::listener(address, &self.0.local.identity, digest(&peer))
                 .map_err(SdkError::NodeQuic)?;
         Ok(OfflineRemoteListener {
             owner: self.0.clone(),
-            socket: SocketOwner(Some(endpoint)),
+            socket: SocketOwner(endpoint),
         })
     }
     pub async fn connect(
@@ -220,14 +225,14 @@ impl OfflineRemoteOwner {
         .parse()
         .map_err(|_| SdkError::Invalid)?;
         let endpoint =
-            nestlink_transport_quic::connector(bind, &self.0.local.identity, digest(&key))
+            nestlink_transport_quic::direct::DirectEndpoint::connector(bind, &self.0.local.identity, digest(&key))
                 .map_err(SdkError::NodeQuic)?;
-        let mut socket = SocketOwner(Some(endpoint));
+        let socket = SocketOwner(endpoint);
         let connection =
             nestlink_transport_quic::connect(socket.endpoint()?, peer, self.0.budget()?)
                 .await
                 .map_err(SdkError::NodeQuic)?;
-        self.0.finish(connection, socket.take()?, lifecycle).await
+        self.0.finish(connection, socket, lifecycle).await
     }
 }
 impl OfflineRemoteListener {
@@ -235,7 +240,7 @@ impl OfflineRemoteListener {
         Ok(self.socket.endpoint()?.local_addr()?)
     }
     pub async fn accept(
-        mut self,
+        self,
         lifecycle: SessionLifecycle,
     ) -> Result<OfflineRemoteRuntime, SdkError> {
         let incoming = tokio::time::timeout(self.owner.budget()?, self.socket.endpoint()?.accept())
@@ -249,8 +254,7 @@ impl OfflineRemoteListener {
             .await
             .map_err(|_| SdkError::Timeout)?
             .map_err(io::Error::other)?;
-        let endpoint = self.socket.take()?;
-        self.owner.finish(connection, endpoint, lifecycle).await
+        self.owner.finish(connection, self.socket, lifecycle).await
     }
 }
 impl Inner {
@@ -265,10 +269,9 @@ impl Inner {
     async fn finish(
         self: &Arc<Self>,
         connection: quinn::Connection,
-        endpoint: quinn::Endpoint,
+        socket: SocketOwner,
         lifecycle: SessionLifecycle,
     ) -> Result<OfflineRemoteRuntime, SdkError> {
-        let mut socket = SocketOwner(Some(endpoint));
         let index = match self.role {
             EndpointRole::Controller => 0,
             EndpointRole::Host => 1,
@@ -322,9 +325,10 @@ impl Inner {
             self.authority.clone(),
             clock.sample()?,
         )?;
+        let local_address = socket.endpoint()?.local_addr()?;
         let channels = nestlink_remote::quic::authorize(
             connection,
-            Some(socket.take()?),
+            Some(socket.endpoint()?.clone()),
             SessionSetup {
                 session,
                 path: Path::Direct,
@@ -335,14 +339,12 @@ impl Inner {
             &self.local.identity,
             &peer,
         )
-        .await?;
+        .await?
+        .with_transport_owner(socket);
         let owner = self.clone();
         let lease = channels.lease_control();
         let recovery = tokio::spawn(async move {
-            loop {
-                let Ok(remaining) = lease.remaining() else {
-                    break;
-                };
+            while let Ok(remaining) = lease.remaining() {
                 tokio::time::sleep(remaining.min(Duration::from_secs(2))).await;
                 if lease.remaining().is_err() {
                     break;
@@ -360,6 +362,7 @@ impl Inner {
         });
         Ok(OfflineRemoteRuntime {
             channels,
+            local_address,
             authority: self.authority.clone(),
             recovery: Some(recovery),
         })

@@ -158,6 +158,12 @@ jobs:
       - name: Exercise independent remote authority through original Session and QUIC after online expiry
         if: ${{ !cancelled() }}
         run: python3 -B scripts/network-rewrite-offline-management.py --suite remote-offline --output "$RUNNER_TEMP/offline-sdk/remote-offline"
+      - name: Require original direct socket release receipt across cancelled cleanup
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-transport-quic direct::tests -- --nocapture 2>&1 | tee "$RUNNER_TEMP/offline-sdk/direct-socket-release.log"
       - name: Compile and lint original daemon resident offline entry
         if: ${{ !cancelled() }}
         shell: bash
