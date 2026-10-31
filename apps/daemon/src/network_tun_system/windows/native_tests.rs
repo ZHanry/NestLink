@@ -65,7 +65,7 @@ async fn hosted_native_role() -> Result {
             .await
         }
         "recover" => recover(&AdminJournal::open(&journal)?).await,
-        "recovery-identity-negative" => recovery_identity_negative(&case, &journal),
+        "recovery-identity-negative" => recovery_identity_negative(&case, &receipt),
         "inspect" => {
             let store = AdminJournal::open(&journal)?;
             let record = store
@@ -82,12 +82,16 @@ async fn hosted_native_role() -> Result {
         _ => Err(io::Error::other("unknown bounded Windows TUN fixture role").into()),
     }
 }
-fn recovery_identity_negative(case: &Path, journal: &Path) -> Result {
-    let store = AdminJournal::open(journal)?;
-    let record = Record::read(&store.read()?.ok_or_else(||io::Error::other("original recovery fixture missing"))?)?;
-    let original = record.identity.as_ref().ok_or_else(||io::Error::other("original kernel identity missing"))?;
-    let instance = record.device_instance.as_ref().ok_or_else(||io::Error::other("original PnP instance missing"))?;
-    let installed = record.installed.as_ref().ok_or_else(||io::Error::other("original OS snapshot missing"))?;
+fn recovery_identity_negative(case: &Path, receipt: &Path) -> Result {
+    // The original helper deliberately holds its recovery journal's exclusive
+    // lock throughout packet ownership. Observe its published attestation and
+    // native inventory instead of opening or weakening that ownership lock.
+    let receipt: PacketReceipt = serde_json::from_slice(&std::fs::read(receipt)?)?;
+    let original = &receipt.provider;
+    let installed = resources::inspect(original)?.ok_or_else(||io::Error::other("original OS snapshot missing"))?;
+    assert_eq!(installed.digest()?, original.configuration_sha256,
+        "live inventory differs from the original helper's published attestation");
+    let instance = device_instance::capture(original)?;
     let mut changed_index = original.clone();
     changed_index.index ^= 1;
     let mut changed_luid = original.clone();
@@ -97,11 +101,11 @@ fn recovery_identity_negative(case: &Path, journal: &Path) -> Result {
     let mut changed_guid = original.clone();
     changed_guid.adapter_guid = format!("{}{}",if original.adapter_guid.starts_with('a') { 'b' } else { 'a' },&original.adapter_guid[1..]);
     for changed in [&changed_index, &changed_luid, &changed_name, &changed_guid] {
-        assert!(device_instance::remove_original(changed, instance).is_err(),
+        assert!(device_instance::remove_original(changed, &instance).is_err(),
             "SetupAPI recovery accepted a nonoriginal kernel identity");
-        assert_eq!(resources::inspect(original)?.as_ref(), Some(installed),
+        assert_eq!(resources::inspect(original)?.as_ref(), Some(&installed),
             "a refused nonoriginal recovery changed the original device resources");
-        assert_eq!(&device_instance::capture(original)?, instance,
+        assert_eq!(device_instance::capture(original)?, instance,
             "a refused nonoriginal recovery changed the captured PnP instance");
     }
     std::fs::write(case.join("recovery-identity-negative.json"),serde_json::to_vec(&serde_json::json!({
