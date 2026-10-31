@@ -543,17 +543,22 @@ async fn actual_probe_failure_withdraws_and_recovery_cannot_acknowledge_old_evid
     let address = listener.local_addr()?;
     let fixture = Fixture::new("http://127.0.0.1:9".into(), address, 10_000)?;
     let mut owner = fixture.owner()?;
-    let original = reachable(&owner).await.map_err(|error| format!("initial real prefix probe: {error}"))?;
+    let original = reachable(&owner)
+        .await
+        .map_err(|error| format!("initial real prefix probe: {error}"))?;
     drop(listener);
     tokio::time::timeout(Duration::from_millis(800), async {
         while owner.is_reachable() {
             tokio::time::sleep(Duration::from_millis(5)).await;
         }
     })
-    .await.map_err(|error| format!("withdrawal after actual listener close: {error}"))?;
+    .await
+    .map_err(|error| format!("withdrawal after actual listener close: {error}"))?;
     fixture.refresh(std::slice::from_ref(&fixture.authority))?;
     let listener = TcpListener::bind(address).await?;
-    let recovered = reachable(&owner).await.map_err(|error| format!("recovery after actual listener rebind: {error}"))?;
+    let recovered = reachable(&owner)
+        .await
+        .map_err(|error| format!("recovery after actual listener rebind: {error}"))?;
     assert_ne!(recovered.continuity, original.continuity);
     assert!(
         owner

@@ -146,7 +146,10 @@ impl DirectPacketEndpoint {
             tokio::time::timeout_at(deadline, incoming).await??
         };
         let mut pending = PendingConnection(Some(connection));
-        let connection = pending.0.as_ref().ok_or_else(|| io::Error::from(io::ErrorKind::NotConnected))?;
+        let connection = pending
+            .0
+            .as_ref()
+            .ok_or_else(|| io::Error::from(io::ErrorKind::NotConnected))?;
         if crate::routed::authenticated_peer_fingerprint(connection)? != self.expected_peer.0 {
             return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
         }
@@ -286,32 +289,70 @@ mod tests {
     use super::*;
     fn endpoints() -> crate::Result<(DirectPacketEndpoint, DirectPacketEndpoint)> {
         use nestlink_platform_network::path::{NetworkPathManager, RoutePolicy};
-        let interface = NetworkPathManager::interfaces()?.into_iter().find(|interface| {
-            interface.up && interface.addresses.iter().any(|ip| ip.is_ipv4() && !ip.is_loopback() && !ip.is_unspecified())
-        }).ok_or_else(|| io::Error::other("hosted packet fixture needs an active IPv4 interface"))?;
-        let address = interface.addresses.iter().copied().find(|ip| ip.is_ipv4() && !ip.is_loopback() && !ip.is_unspecified())
+        let interface = NetworkPathManager::interfaces()?
+            .into_iter()
+            .find(|interface| {
+                interface.up
+                    && interface
+                        .addresses
+                        .iter()
+                        .any(|ip| ip.is_ipv4() && !ip.is_loopback() && !ip.is_unspecified())
+            })
+            .ok_or_else(|| {
+                io::Error::other("hosted packet fixture needs an active IPv4 interface")
+            })?;
+        let address = interface
+            .addresses
+            .iter()
+            .copied()
+            .find(|ip| ip.is_ipv4() && !ip.is_loopback() && !ip.is_unspecified())
             .ok_or_else(|| io::Error::other("hosted packet fixture source missing"))?;
         let path = NetworkPathManager::new(RoutePolicy::Interface(interface.index))?;
         let first = nestlink_identity::InstallationIdentity::generate();
         let second = nestlink_identity::InstallationIdentity::generate();
-        Ok((DirectPacketEndpoint::bind((address, 0).into(), &first,
-            nestlink_protocol::network::PeerId(second.fingerprint()), path.clone())?,
-            DirectPacketEndpoint::bind((address, 0).into(), &second,
-            nestlink_protocol::network::PeerId(first.fingerprint()), path)?))
+        Ok((
+            DirectPacketEndpoint::bind(
+                (address, 0).into(),
+                &first,
+                nestlink_protocol::network::PeerId(second.fingerprint()),
+                path.clone(),
+            )?,
+            DirectPacketEndpoint::bind(
+                (address, 0).into(),
+                &second,
+                nestlink_protocol::network::PeerId(first.fingerprint()),
+                path,
+            )?,
+        ))
     }
     #[tokio::test]
-    async fn exact_mutual_proof_exposes_only_the_authenticated_datagram_connection() -> crate::Result<()> {
+    async fn exact_mutual_proof_exposes_only_the_authenticated_datagram_connection()
+    -> crate::Result<()> {
         let (mut first, mut second) = endpoints()?;
         let destination = second.local_addr();
         let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
-        let (left, right) = tokio::join!(first.establish(Some(destination), [7; 32], [8; 32], deadline),
-            second.establish(None, [7; 32], [8; 32], deadline));
-        left?; right?;
-        first.connection()?.send_datagram(b"actual packet carrier".to_vec().into())?;
-        assert_eq!(tokio::time::timeout_at(deadline, second.connection()?.read_datagram()).await??.as_ref(), b"actual packet carrier");
+        let (left, right) = tokio::join!(
+            first.establish(Some(destination), [7; 32], [8; 32], deadline),
+            second.establish(None, [7; 32], [8; 32], deadline)
+        );
+        left?;
+        right?;
+        first
+            .connection()?
+            .send_datagram(b"actual packet carrier".to_vec().into())?;
+        assert_eq!(
+            tokio::time::timeout_at(deadline, second.connection()?.read_datagram())
+                .await??
+                .as_ref(),
+            b"actual packet carrier"
+        );
         let cleanup = tokio::time::Instant::now() + Duration::from_secs(5);
-        let (left, right) = tokio::join!(first.close_and_wait(cleanup), second.close_and_wait(cleanup));
-        left?; right?;
+        let (left, right) = tokio::join!(
+            first.close_and_wait(cleanup),
+            second.close_and_wait(cleanup)
+        );
+        left?;
+        right?;
         assert!(first.connection().is_err());
         assert!(second.connection().is_err());
         Ok(())
@@ -321,39 +362,66 @@ mod tests {
         let (mut first, mut second) = endpoints()?;
         let destination = second.local_addr();
         let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
-        let (left, right) = tokio::join!(first.establish(Some(destination), [7; 32], [8; 32], deadline),
-            second.establish(None, [9; 32], [8; 32], deadline));
+        let (left, right) = tokio::join!(
+            first.establish(Some(destination), [7; 32], [8; 32], deadline),
+            second.establish(None, [9; 32], [8; 32], deadline)
+        );
         assert!(left.is_err());
         assert!(right.is_err());
         assert!(first.connection().is_err());
         assert!(second.connection().is_err());
         let cleanup = tokio::time::Instant::now() + Duration::from_secs(5);
-        let (left, right) = tokio::join!(first.close_and_wait(cleanup), second.close_and_wait(cleanup));
-        left?; right?;
+        let (left, right) = tokio::join!(
+            first.close_and_wait(cleanup),
+            second.close_and_wait(cleanup)
+        );
+        left?;
+        right?;
         assert!(first.released.is_none());
         assert!(second.released.is_none());
         Ok(())
     }
     #[tokio::test]
-    async fn incomplete_mutual_proof_times_out_without_exposing_or_restarting_connection() -> crate::Result<()> {
+    async fn incomplete_mutual_proof_times_out_without_exposing_or_restarting_connection()
+    -> crate::Result<()> {
         let (mut first, mut second) = endpoints()?;
         let destination = second.local_addr();
         let deadline = tokio::time::Instant::now() + Duration::from_secs(3);
         let accept = async {
-            let incoming = tokio::time::timeout_at(deadline, second.endpoint()?.accept()).await?
+            let incoming = tokio::time::timeout_at(deadline, second.endpoint()?.accept())
+                .await?
                 .ok_or_else(|| io::Error::from(io::ErrorKind::ConnectionAborted))?;
-            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(tokio::time::timeout_at(deadline, incoming).await??)
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(
+                tokio::time::timeout_at(deadline, incoming).await??,
+            )
         };
-        let (result, connection) = tokio::join!(first.establish(Some(destination), [7; 32], [8; 32], deadline), accept);
+        let (result, connection) = tokio::join!(
+            first.establish(Some(destination), [7; 32], [8; 32], deadline),
+            accept
+        );
         let connection = connection?;
         assert!(result.is_err());
         assert!(first.connection().is_err());
-        assert!(first.establish(Some(destination), [7; 32], [8; 32], tokio::time::Instant::now() + Duration::from_secs(3)).await.is_err());
+        assert!(
+            first
+                .establish(
+                    Some(destination),
+                    [7; 32],
+                    [8; 32],
+                    tokio::time::Instant::now() + Duration::from_secs(3)
+                )
+                .await
+                .is_err()
+        );
         tokio::time::timeout(Duration::from_secs(3), connection.closed()).await?;
         drop(connection);
         let cleanup = tokio::time::Instant::now() + Duration::from_secs(5);
-        let (left, right) = tokio::join!(first.close_and_wait(cleanup), second.close_and_wait(cleanup));
-        left?; right?;
+        let (left, right) = tokio::join!(
+            first.close_and_wait(cleanup),
+            second.close_and_wait(cleanup)
+        );
+        left?;
+        right?;
         Ok(())
     }
     #[test]

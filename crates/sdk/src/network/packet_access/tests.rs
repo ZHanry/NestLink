@@ -462,10 +462,12 @@ fn contradictory_tcp_control_flags_cannot_create_or_reuse_a_flow() -> Result {
     for flags in [0x03, 0x06, 0x05] {
         let mut packet = Vec::new();
         PacketBuilder::ipv4([10, 44, 0, 2], [10, 44, 0, 3], 64)
-            .tcp(41000, 22, 1, 4096).write(&mut packet, b"")?;
+            .tcp(41000, 22, 1, 4096)
+            .write(&mut packet, b"")?;
         packet[33] = flags;
         let checksum = etherparse::TcpHeaderSlice::from_slice(&packet[20..])?
-            .to_header().calc_checksum_ipv4_raw([10, 44, 0, 2], [10, 44, 0, 3], b"")?;
+            .to_header()
+            .calc_checksum_ipv4_raw([10, 44, 0, 2], [10, 44, 0, 3], b"")?;
         packet[36..38].copy_from_slice(&checksum.to_be_bytes());
         assert!(owner.admit_local(&fixture.context(), &packet).is_err());
     }
