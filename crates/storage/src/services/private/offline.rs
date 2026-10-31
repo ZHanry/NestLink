@@ -2,13 +2,18 @@
 use super::*;
 use nestlink_protocol::offline::{management::OfflinePrivateDraftRequest, *};
 
+pub(crate) struct OfflinePrivateAuthority {
+    pub rule_id: String,
+    pub exposure_revision: u64,
+}
+
 impl Store {
     pub(crate) fn offline_private_draft(
         &self,
         actor: &Principal,
         request: &OfflinePrivateDraftRequest,
         now: u64,
-    ) -> Result<(OfflineBusiness, [OfflineMember; 2]), StorageError> {
+    ) -> Result<(OfflineBusiness, [OfflineMember; 2], OfflinePrivateAuthority), StorageError> {
         let (record, approval, view, binding, acl_end) =
             self.private_consumer(actor, &request.service_id, &request.consumer_device_id, now)?;
         if !self
@@ -53,6 +58,7 @@ impl Store {
                 target_digest: view.target_sha256,
             },
             members,
+            OfflinePrivateAuthority { rule_id: binding.acl_rule_id, exposure_revision: view.revision },
         ))
     }
 
@@ -61,6 +67,7 @@ impl Store {
         account: &str,
         login: &str,
         claims: &OfflineGrantBundleClaims,
+        original: &OfflinePrivateAuthority,
         now: u64,
     ) -> Result<(), StorageError> {
         let OfflineBusiness::PrivateService {
@@ -79,7 +86,9 @@ impl Store {
             &claims.members[0].installation_id,
             now,
         )?;
-        if view.space_id != claims.space_id
+        if binding.acl_rule_id != original.rule_id
+            || view.revision != original.exposure_revision
+            || view.space_id != claims.space_id
             || record.revision != *service_revision
             || record.hash != *definition_digest
             || view.target_sha256 != *target_digest

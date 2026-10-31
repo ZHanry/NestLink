@@ -357,16 +357,7 @@ fn offline_recovery_applies_acl_revocation_and_cannot_revive_after_regrant() -> 
         access.exposure.revision,
         now()?,
     )?;
-    assert!(
-        !f.store
-            .offline_bundle(
-                &f.creator,
-                &view.claims.space_id,
-                &view.claims.bundle_id,
-                now()?
-            )?
-            .live
-    );
+    // No intermediate observation: a new rule cannot repair the old grant.
     f.store.grant_private_service(
         &f.creator,
         &f.view.id,

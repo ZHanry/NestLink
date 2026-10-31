@@ -9,6 +9,7 @@ const MAX_RULE_MS: u64 = 7 * 24 * 60 * 60 * 1000;
 const MAX_RULES: u64 = 256;
 mod network;
 mod offline;
+pub(crate) use offline::OfflinePrivateAuthority;
 mod relay;
 
 fn mode(value: &str) -> Result<ServiceAccessMode, StorageError> {

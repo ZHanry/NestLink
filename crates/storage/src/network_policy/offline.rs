@@ -5,6 +5,7 @@ use super::*;
 use nestlink_auth::{random_bytes, random_id};
 use nestlink_identity::{offline::*, verify_device_action};
 use nestlink_protocol::offline::{management::*, *};
+use crate::services::private::OfflinePrivateAuthority;
 
 const MAX_HISTORY: u64 = 4096;
 struct Row {
@@ -18,6 +19,7 @@ struct Row {
     consumed: [bool; 2],
     signed: Option<SignedOfflineGrantBundle>,
     revoked: bool,
+    private_authority: OfflinePrivateAuthority,
 }
 fn settings(connection: &Connection, space: &str) -> Result<OfflinePolicyView, StorageError> {
     Ok(connection
@@ -58,6 +60,7 @@ fn row(connection: &Connection, space: &str, id: &str) -> Result<Row, StorageErr
     );
     let stored: Stored = connection.query_row("SELECT claims_json,requester_account,requester_login,draft_digest,authority_key,approval0,approval1,consume_challenge0,consume_challenge1,consumed0,consumed1,signed_json,revoked FROM offline_bundles WHERE space_id=?1 AND bundle_id=?2",params![space,id],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?,r.get(4)?,r.get(5)?,r.get(6)?,r.get(7)?,r.get(8)?,r.get(9)?,r.get(10)?,r.get(11)?,r.get(12)?))).optional()?.ok_or(StorageError::Forbidden)?;
     let (claims, account, login, hash, key, a, b, c, d, x, y, signed, revoked) = stored;
+    let private_authority = connection.query_row("SELECT private_rule_id,private_exposure_revision FROM offline_bundles WHERE space_id=?1 AND bundle_id=?2", params![space,id], |r| Ok(OfflinePrivateAuthority {rule_id: r.get(0)?, exposure_revision: r.get(1)?}))?;
     let claims: OfflineGrantBundleClaims = serde_json::from_str(&claims)?;
     claims.validate()?;
     let result = Row {
@@ -77,6 +80,7 @@ fn row(connection: &Connection, space: &str, id: &str) -> Result<Row, StorageErr
         consumed: [x, y],
         signed: signed.map(|v| serde_json::from_str(&v)).transpose()?,
         revoked,
+        private_authority,
     };
     if result.claims.bundle_id != id
         || result.claims.space_id != space
@@ -145,7 +149,7 @@ impl Store {
             })
         });
         if live {
-            match self.offline_private_current(&row.account, &row.login, c, now) {
+            match self.offline_private_current(&row.account, &row.login, c, &row.private_authority, now) {
                 Ok(()) => {}
                 Err(
                     StorageError::Forbidden
@@ -251,7 +255,7 @@ impl Store {
         if count >= MAX_HISTORY {
             return Err(StorageError::RateLimited);
         }
-        let (business, members) = self.offline_private_draft(actor, &request, now)?;
+        let (business, members, original) = self.offline_private_draft(actor, &request, now)?;
         let claims = OfflineGrantBundleClaims {
             bundle_version: OFFLINE_BUNDLE_VERSION,
             deployment_id: self.deployment_id()?,
@@ -277,9 +281,9 @@ impl Store {
             },
         };
         claims.validate()?;
-        self.offline_private_current(&actor.account_id, &actor.session_id, &claims, now)?;
+        self.offline_private_current(&actor.account_id, &actor.session_id, &claims, &original, now)?;
         let hash = offline_draft_digest(&snapshot.authority_key, &claims)?;
-        tx.execute("INSERT INTO offline_bundles(bundle_id,space_id,requester_account,requester_login,claims_json,draft_digest,authority_key,consume_challenge0,consume_challenge1) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9)",params![claims.bundle_id,space,actor.account_id,actor.session_id,serde_json::to_string(&claims)?,hash,snapshot.authority_key,random_bytes::<32>(),random_bytes::<32>()])?;
+        tx.execute("INSERT INTO offline_bundles(bundle_id,space_id,requester_account,requester_login,claims_json,draft_digest,authority_key,consume_challenge0,consume_challenge1,private_rule_id,private_exposure_revision) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11)",params![claims.bundle_id,space,actor.account_id,actor.session_id,serde_json::to_string(&claims)?,hash,snapshot.authority_key,random_bytes::<32>(),random_bytes::<32>(),original.rule_id,original.exposure_revision])?;
         let result = self.offline_current(&tx, &row(&tx, space, &claims.bundle_id)?, now)?;
         auditing::record(
             &tx,

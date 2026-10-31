@@ -13,6 +13,8 @@ CREATE TABLE offline_bundles (
     claims_json TEXT NOT NULL,
     draft_digest BLOB NOT NULL UNIQUE CHECK(length(draft_digest)=32),
     authority_key BLOB NOT NULL CHECK(length(authority_key)=32),
+    private_rule_id TEXT NOT NULL REFERENCES private_service_acl(rule_id),
+    private_exposure_revision INTEGER NOT NULL CHECK(private_exposure_revision>0),
     approval0 TEXT, approval1 TEXT,
     consume_challenge0 BLOB NOT NULL CHECK(length(consume_challenge0)=32),
     consume_challenge1 BLOB NOT NULL CHECK(length(consume_challenge1)=32),
