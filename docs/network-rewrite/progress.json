@@ -6,8 +6,8 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "b376edbfb90ea4e30c2bfa5c8c9d252a9a643a4f",
-    "checkpoint_kind":  "W22_managed_linux_TUN_W26_atomic_group_source_awaiting_hosted_format_lock_and_contracts",
+    "source_revision":  "8c46a1623a5ffda6c37e86f1267612d0e3eec47a",
+    "checkpoint_kind":  "W22_principal_bound_TUN_W23_signed_subnet_W26_real_dual_edge_and_crash_hosted_validation",
     "active_tasks":  [
                          "W00",
                          "W02",
@@ -32,7 +32,8 @@
                          "W25",
                          "W29",
                          "W22",
-                         "W26"
+                         "W26",
+                         "W23"
                      ],
     "satisfied_interface_dependencies":  [
                                              "W01 nine-topic source and mature-component research independently reviewed",
@@ -40,11 +41,13 @@
                                              "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
                                          ],
     "unverified_assumptions":  [
-                                   "Uncommitted Linux TUN ordinary-owner/helper and atomic multi-edge group source are under manual review; neither is build- or target-qualified.",
-                                   "Owned system split DNS run41185941010 succeeded on b376edb on Linux and Windows, including strict daemon lint before the current TUN source.",
-                                   "WFP kernel run41182932352 succeeded on79fb710. This is hosted SID/process isolation evidence, not GPU/VPN coexistence target acceptance.",
-                                   "W22 Windows provider and W23-W24,W27-W28,W30-W40 implementation and applicable target qualification remain open; release_state stays not_ready.",
-                                   "Private Web run41188549929 succeeded on1d5bcda after exact Host repair; real Caddy/Chrome8 cases and cleanup passed. Public DNS/ACME/installed daemon/physical acceptance remain open."
+                                   "Managed Linux TUN and Windows protected provider/packet pipe source was committed and imported from hosted fmt in 8c46a16; actual Windows daemon/OS owner integration and native qualification remain in progress.",
+                                   "Both OS system DNS/TUN run 41188850607 failed at unrelated service-group compilation and service-edge lint; those exact source failures are repaired in 718b4db and require rerun 41190634189. No TUN pass is claimed.",
+                                   "First dual-edge IPVS run 41189322066 compiled but stopped at unsupported fixture host platform linux; corrected to existing linux-x11, with stage diagnostics and four independent SIGKILL scenarios committed in 97dc0da. New run 41190632153 is pending.",
+                                   "W23 independent signed mapping, current gateway/RouteExport checks and exact local NetworkAccess consent are committed; mapping migration/API/SDK integration is in progress. No OS subnet forwarding/HA or target pass is claimed.",
+                                   "Core run 41188546492 failed; its complete routed SDK tests, real management relay, native quality, native session, native inbox, discovery and space slices passed on 1d5bcda, but group restart fixture HTTP403, service-group type errors and formatting remained.",
+                                   "Private Web run 41188549929 passed on 1d5bcda with real Caddy, Chrome eight cases, TLS negatives and physical cleanup; public DNS/ACME, installed daemon and target acceptance remain open.",
+                                   "W24,W27-W28,W30-W40 and applicable real target qualification remain mandatory unfinished work. Release state stays not_ready."
                                ],
     "external_prerequisites":  [
                                    {
@@ -74,11 +77,11 @@
                                    }
                                ],
     "next_steps":  [
-                       "Freeze reviewed TUN/group source, commit and push main; derive/review/import exact reused dependency lock on Actions.",
-                       "Import same-source Actions Rust formatting and OpenAPI artifacts, then validate strict daemon/core and real HTTP file-SQLite group contracts on Linux and Windows.",
-                       "Run ordinary-user Linux TUN create/adopt/whole-packet/cleanup/crash-recovery experiment and real Caddy/Chrome fixture; fix all actual failures.",
-                       "Complete real fixed-entry dual-edge HTTP/HTTPS/TCP/UDP hosted experiment, Windows TUN, subnet, WireGuard, offline, game, UI, media, distribution and acceptance work.",
-                       "Publish0.8.0RC only after mandatory source/evidence gates; local and remote currently each have only main."
+                       "Read exact-source dual-edge run 41190632153 and DNS/TUN run 41190634189 logs; fix actual failures without relaxing checks.",
+                       "Commit W23 mapping migration/API/SDK and import same-source hosted formatting and generated OpenAPI; run independent signatures, real HTTP/file SQLite, full Rust core and strict lint.",
+                       "Complete Windows TUN daemon/OS owner and original-token/driver-native fixture, then journaled subnet data plane and explicit gateway failover.",
+                       "Continue mandatory WireGuard, offline, game, complete UI, media, distribution and acceptance work; retain real target prerequisites separately.",
+                       "Publish 0.8.0RC after mandatory source/evidence gates; local and remote branch inventories are each main only at 8c46a16."
                    ],
     "evidence_index":  [
                            "docs/network-rewrite/evidence/research-review-2026-10-30.md",
@@ -359,6 +362,36 @@
                                  "source_revision":  "1d5bcda4b956b4696a62c0cb4a53bab9864fb6bc",
                                  "status":  "success",
                                  "scope":  "Real SDK, Caddy TLS and Chrome8 browser cases, exact TLS negatives, replacement rejection, physical owner/quota/process/trust/hosts cleanup; isolated DNS/CA, no target claim"
+                             },
+                             {
+                                 "run_id":  41188850607,
+                                 "source_revision":  "09d35d4b8d8a7a81245141be3dc6c85c7991cd9e",
+                                 "status":  "failure",
+                                 "scope":  "Both OS daemon compilation stopped at service-group TLS root Vec type and maintenance error conversion; strict lint identified three service-edge errors; no DNS or TUN qualification from this source."
+                             },
+                             {
+                                 "run_id":  41189322066,
+                                 "source_revision":  "4a8ed01a3f657c719b628a08b62e88516e585ac4",
+                                 "status":  "failure",
+                                 "scope":  "Dual-edge executable compiled; coordinator original host enrollment rejected unsupported fixture platform before business traffic. No HA acceptance; namespaces cleanup also failed."
+                             },
+                             {
+                                 "run_id":  41190228476,
+                                 "source_revision":  "718b4db8744e7d053e90d83dc8853942d594b2d6",
+                                 "status":  "success",
+                                 "scope":  "Hosted formatting patch digest verified and selected unchanged TUN/subnet/production service paths imported in 8c46a16; concurrently edited protocol DTO and HA roles excluded for next same-source format."
+                             },
+                             {
+                                 "run_id":  41190632153,
+                                 "source_revision":  "8c46a1623a5ffda6c37e86f1267612d0e3eec47a",
+                                 "status":  "running",
+                                 "scope":  "Actual dual-edge IPVS HTTP/HTTPS/TCP/UDP, cooperative stop and independent SIGKILL; no pass claimed."
+                             },
+                             {
+                                 "run_id":  41190634189,
+                                 "source_revision":  "8c46a1623a5ffda6c37e86f1267612d0e3eec47a",
+                                 "status":  "running",
+                                 "scope":  "Actual split DNS both OS, managed Linux TUN and strict daemon lint; no pass claimed."
                              }
                          ],
     "release_state":  "not_ready",
