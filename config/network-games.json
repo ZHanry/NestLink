@@ -1,6 +1,32 @@
 {
   "schema_version": 1,
   "scope": "Pinned lawful upstream game inputs for explicit GitHub-hosted L2 interoperability. This manifest grants no network authority and qualifies no physical site.",
+  "luanti": {
+    "version": "5.13.0",
+    "source_revision": "5ab66da6f72e89fe9c9b71b3e952da1676a8e172",
+    "url": "https://codeload.github.com/luanti-org/luanti/tar.gz/5ab66da6f72e89fe9c9b71b3e952da1676a8e172",
+    "sha256": "70a0f704c2cc6a21f56df303d840a02bac2b533abfe192598dea8c02dec9d95e",
+    "bytes": 12282160,
+    "directory": "luanti-5ab66da6f72e89fe9c9b71b3e952da1676a8e172",
+    "files": {"LICENSE.txt": "8f24005e2313e7a15cbfcd91fed60f77a0f4d9b52c1cf29ed0b9dfe455fa3c8d"},
+    "license": "LGPL-2.1-or-later engine; media CC-BY-SA-3.0/4.0 and the individually retained licenses in LICENSE.txt",
+    "attribution": "Perttu Ahola and Luanti contributors; full upstream source and media notices retained",
+    "content": {
+      "name": "Minetest Game",
+      "version": "5.8.0",
+      "source_revision": "b9c089474cc343b37f90cb8cefc4b5553af2e9ea",
+      "url": "https://codeload.github.com/luanti-org/minetest_game/tar.gz/b9c089474cc343b37f90cb8cefc4b5553af2e9ea",
+      "sha256": "7bb2b3391b8429c45e5381fe47df16578471abda683ad511fe2b4283f6f920c3",
+      "bytes": 2609015,
+      "directory": "minetest_game-b9c089474cc343b37f90cb8cefc4b5553af2e9ea",
+      "files": {
+        "LICENSE.txt": "f8a254e8d5f6b3ca3873f990986e86c864f943aa5dc9bf56808c5f4bfa509db0",
+        "game.conf": "7be29100744da20fe5449668b0f2679dcc5de9a248a6150dd204c50e95291371"
+      },
+      "license": "LGPL-2.1 source and CC-BY-SA-3.0 media, with each mod's full author/license notices retained",
+      "attribution": "Perttu Ahola and Minetest Game contributors; see each unchanged mod's README and license notices"
+    }
+  },
   "teeworlds": {
     "version": "0.7.5",
     "source_revision": "4fc25a17fef3e6c2bf4d52b0421e0d69ecaa1e79",

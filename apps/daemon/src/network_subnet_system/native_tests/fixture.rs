@@ -73,8 +73,16 @@ pub(super) fn identity(index: usize) -> InstallationIdentity {
 }
 impl Fixture {
     pub fn new() -> Result<Self> {
+        Self::with_limits(40_000, 1_048_576)
+    }
+    pub fn for_game() -> Result<Self> {
+        // A separately explicit game grant permits its real media/map transfer.
+        // Existing mechanism tests retain their original 40s/1MiB limits.
+        Self::with_limits(60_000, 16 * 1_048_576)
+    }
+    fn with_limits(lifetime_ms: u64, byte_limit: u64) -> Result<Self> {
         let created = system_wall_ms()?;
-        let expires = created + 40_000;
+        let expires = created + lifetime_ms;
         let signer = NetworkAuthoritySigner::from_master_seed(&[89; 32])?;
         let authority = signer.public_key();
         let revoked = BTreeSet::new();
@@ -213,7 +221,7 @@ impl Fixture {
                     ports: Some([TCP, TCP]),
                 },
             ],
-            byte_limit: 1_048_576,
+            byte_limit,
         }))?;
         let access_digest = verify_network_grant(&access, &context)?.digest();
         let mut members = memberships

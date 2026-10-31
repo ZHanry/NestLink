@@ -11,6 +11,7 @@ use tokio::{
 };
 mod carrier;
 mod fixture;
+mod games;
 mod lab;
 mod wireguard;
 

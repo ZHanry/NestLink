@@ -57,3 +57,52 @@ jobs:
             ${{ runner.temp }}/nestlink-pinned-games/teeworlds-0.7.5-linux_x86_64/license.txt
           if-no-files-found: warn
           retention-days: 30
+  luanti:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      RUST_BACKTRACE: "0"
+      NESTLINK_SUBNET_NATIVE_LAB: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          components: clippy
+      - name: Set original daemon and exact upstream build paths
+        shell: bash
+        run: |
+          printf 'NESTLINK_CODEC_PREFIX=%s/nestlink-codecs/x86_64-unknown-linux-gnu\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          printf 'CARGO_TARGET_DIR=%s/nestlink-luanti-target\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          printf 'NESTLINK_GAME_PREPARED=%s/nestlink-pinned-luanti\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+      - name: Install mature original kernel, source build, rendering and capture tools
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config libpipewire-0.3-dev iproute2 nftables iputils-arping util-linux xvfb xdotool imagemagick tcpdump libpng-dev libjpeg-dev libgl1-mesa-dev libgl1-mesa-dri libsqlite3-dev libogg-dev libvorbis-dev libopenal-dev libfreetype6-dev zlib1g-dev libgmp-dev libjsoncpp-dev libzstd-dev libluajit-5.1-dev libsdl2-dev
+      - name: Verify and build exact official Luanti and complete Minetest Game content
+        run: python3 -B scripts/network-games.py prepare --game luanti --output "$NESTLINK_GAME_PREPARED"
+      - name: Build and verify original native SDK codec inputs on GitHub
+        run: |
+          python3 scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir "$RUNNER_TEMP/nestlink-codec-sources" --work-dir "$RUNNER_TEMP/nestlink-codecs"
+          python3 scripts/refactor-native-codecs.py verify --target x86_64-unknown-linux-gnu --prefix "$NESTLINK_CODEC_PREFIX"
+      - name: Check original game fixtures on GitHub
+        run: python3 -B -c 'import ast,pathlib; [ast.parse(path.read_text()) for path in map(pathlib.Path,["scripts/network-games.py","scripts/network-luanti-l2.py"])]'
+      - name: Real direct IP join, game input, original packet stop and exact kernel cleanup
+        run: python3 -B scripts/network-luanti-l2.py --output "$RUNNER_TEMP/network-luanti-evidence"
+      - name: Retain exact source, game inputs, build and real kernel execution
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: game-luanti-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/network-luanti-evidence/
+            ${{ runner.temp }}/nestlink-pinned-luanti/upstream-inputs.json
+            ${{ runner.temp }}/nestlink-pinned-luanti/luanti-build.json
+            ${{ runner.temp }}/nestlink-pinned-luanti/luanti-5ab66da6f72e89fe9c9b71b3e952da1676a8e172/LICENSE.txt
+            ${{ runner.temp }}/nestlink-pinned-luanti/minetest_game-b9c089474cc343b37f90cb8cefc4b5553af2e9ea/LICENSE.txt
+          if-no-files-found: warn
+          retention-days: 30
