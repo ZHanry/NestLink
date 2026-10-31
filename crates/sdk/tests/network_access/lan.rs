@@ -259,12 +259,11 @@ async fn actual_lan_dns_sd_and_udp_use_original_online_owner_and_release_sockets
         let result:TaskResult<serde_json::Value>=async {
             let mut imported=None;let deadline=Instant::now()+Duration::from_secs(12);
             while Instant::now()<deadline {
-                if let Ok(mdns_sd::ServiceEvent::ServiceResolved(info))=browsing.try_recv() {
-                    if info.get_property("nestlink-proxy").is_some() {
+                if let Ok(mdns_sd::ServiceEvent::ServiceResolved(info))=browsing.try_recv()
+                    && info.get_property("nestlink-proxy").is_some() {
                         let remote:Ipv4Addr=issued.address_directory.addresses.iter().find(|row|row.installation_id==f.target_device.device_id).ok_or_else(||io::Error::other("missing original target assignment"))?.ipv4.parse()?;
                         if info.port!=38080 || !info.get_addresses_v4().contains(&remote) || info.get_addresses_v4().contains(&policies[1].interface_address) || info.get_property_val("binary")!=Some(Some(&[0,255,7][..])) {return Err(io::Error::other("actual imported DNS-SD endpoint or binary TXT mismatch").into());}
                         imported=Some(serde_json::json!({"fullname":info.fullname,"host":info.host,"port":info.port,"virtual_ipv4":remote.to_string(),"binary_txt_preserved":true}));break;
-                    }
                 }
                 tokio::time::sleep(Duration::from_millis(25)).await;
             }
