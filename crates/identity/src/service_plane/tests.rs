@@ -1,5 +1,6 @@
 use super::publication::*;
 use super::*;
+mod private_network;
 use crate::nodes::{NodeIdentity, NodePolicySigner};
 use nestlink_protocol::service_plane::publication::*;
 use nestlink_protocol::{

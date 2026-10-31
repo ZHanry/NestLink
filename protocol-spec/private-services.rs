@@ -136,14 +136,14 @@ pub struct SignedPrivateServiceLease {
     pub claims: Vec<u8>,
     pub signature: Vec<u8>,
 }
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct PrivateServiceGrant {
     pub lease: SignedPrivateServiceLease,
     pub issuer: crate::service_plane::publication::SignedServiceIssuerDelegation,
     pub network: PrivateServiceNetworkPath,
 }
-#[derive(Debug,Clone,Serialize,Deserialize,JsonSchema)]
+#[derive(Clone,Serialize,Deserialize,JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct PrivateServiceNetworkPath {
     pub grant_id:String,
