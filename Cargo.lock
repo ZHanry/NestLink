@@ -2060,6 +2060,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "fast_image_resize"
+version = "6.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e9c50201dc184ba6553da1695aac20a042efffbe2d84542cee31917c86c3ab1e"
+dependencies = [
+ "cfg-if",
+ "document-features",
+ "num-traits",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "fastrand"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2972,6 +2984,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "if-addrs"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c0a05c691e1fae256cf7013d99dad472dc52d5543322761f83ec8d47eab40d2b"
+dependencies = [
+ "libc",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
 name = "image"
 version = "0.25.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3490,6 +3512,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "mdns-sd"
+version = "0.21.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8562654710f72a9cbce4b0d5b7c366a2f94330ba1ce3740f15e932ea2d37b161"
+dependencies = [
+ "fastrand",
+ "flume",
+ "if-addrs 0.15.0",
+ "mio",
+ "socket-pktinfo",
+ "socket2 0.6.5",
+]
+
+[[package]]
 name = "memchr"
 version = "2.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3561,6 +3597,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1788edb87fdc09c7e26304471e2f5be8cdefb1b6930d6e3985fc02ff53bf86ee"
 dependencies = [
  "libc",
+ "log",
  "wasi",
  "windows-sys 0.61.2",
 ]
@@ -3642,7 +3679,7 @@ version = "0.7.0-rc.1"
 dependencies = [
  "axum",
  "base64 0.22.1",
- "if-addrs",
+ "if-addrs 0.14.0",
  "nestlink-auth",
  "nestlink-identity",
  "nestlink-media-codec",
@@ -3833,6 +3870,7 @@ name = "nestlink-media-codec"
 version = "0.7.0-rc.1"
 dependencies = [
  "cc",
+ "fast_image_resize",
  "serde",
  "serde_json",
  "sha2 0.10.9",
@@ -4029,7 +4067,7 @@ dependencies = [
 name = "nestlink-platform-network"
 version = "0.7.0-rc.1"
 dependencies = [
- "if-addrs",
+ "if-addrs 0.14.0",
  "libc",
  "nestlink-traversal",
  "serde_json",
@@ -4159,10 +4197,11 @@ dependencies = [
  "hickory-server",
  "hyper",
  "hyper-util",
- "if-addrs",
+ "if-addrs 0.14.0",
  "ipnet",
  "js-sys",
  "log",
+ "mdns-sd",
  "nestlink-auth",
  "nestlink-connectivity",
  "nestlink-identity",
@@ -4190,6 +4229,7 @@ dependencies = [
  "rustls",
  "serde",
  "serde_json",
+ "socket-pktinfo",
  "socket2 0.6.5",
  "tempfile",
  "thiserror 2.0.21",
@@ -6569,6 +6609,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd538fb6910ac1099850255cf94a94df6551fbdd602454387d0adb2d1ca6dead"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "socket-pktinfo"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e8e43b4bdce7cff8a4d3f8025ee38fce5ca138fab868ebbf9529c81328fbf9d"
+dependencies = [
+ "libc",
+ "socket2 0.6.5",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

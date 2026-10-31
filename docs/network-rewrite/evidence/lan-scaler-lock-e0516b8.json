@@ -1,0 +1,202 @@
+{
+  "schema_version": 1,
+  "source_revision": "e0516b85e38462f034075328f92b2f65fed705cc",
+  "task_ids": [
+    "W28",
+    "W31"
+  ],
+  "whole_task_passed": false,
+  "build_provenance": {
+    "repository": "ZHanry/NestLink",
+    "workflow": ".github/workflows/network-lock-refresh.yml",
+    "run_id": 41229635282,
+    "run_attempt": 1,
+    "runner_environment": "github-hosted",
+    "job_ids": [
+      124620975888,
+      124620976244
+    ]
+  },
+  "execution_provenance": {
+    "kind": "github_hosted_dependency_derivation_only",
+    "product_compilation_performed": false,
+    "target_qualification_claimed": false
+  },
+  "records": [
+    {
+      "scope": "product",
+      "artifact_id": 13053113707,
+      "artifact_sha256": "070b8958d8baa6054eb2e6e1e884dc485daec6a8ba1981799300ed70af3b796c",
+      "all_receipt_file_hashes_verified": true,
+      "before_sha256": "87315f505621834141721a3cb214b01a0203e6eb9d25b6d3bd5fdbdc4b7852e7",
+      "imported_sha256": "bc77f9742e8b3417fcf03af21bab52e1796a95b92deb0c41747d5a71ab07f615",
+      "assertions": {
+        "only_selected_lock_changed": true,
+        "all_existing_package_identities_and_checksums_preserved": true,
+        "all_unrelated_external_package_edges_preserved": true,
+        "only_exact_reviewed_component_feature_edges_added": true,
+        "reviewed_crab_nat_exact_version_and_checksum": true,
+        "reviewed_petgraph_exact_version_and_checksum": true,
+        "reviewed_authoritative_dns_exact_version": true,
+        "locked_metadata_succeeded": true,
+        "lan_and_scaler_exact_reviewed_package_closure": true,
+        "protected_native_stream_reuses_existing_tokio_identity": true,
+        "native_stdio_reuses_locked_tokio_util_identity": true,
+        "media_actual_mtls_fixture_reuses_locked_tokio_rustls_identity": true,
+        "packet_parser_exact_identity_checksum_and_only_locked_arrayvec_edge": true,
+        "managed_tun_exact_reviewed_provider_closure": true,
+        "tun_native_fixture_reuses_exact_locked_packet_parser": true,
+        "only_reviewed_cookie_packet_components_or_exact_product_reuse_added": true
+      },
+      "new_registry_packages": [
+        {
+          "name": "fast_image_resize",
+          "version": "6.1.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "checksum": "e9c50201dc184ba6553da1695aac20a042efffbe2d84542cee31917c86c3ab1e",
+          "dependencies": [
+            "cfg-if",
+            "document-features",
+            "num-traits",
+            "thiserror 2.0.21"
+          ]
+        },
+        {
+          "name": "if-addrs",
+          "version": "0.15.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "checksum": "c0a05c691e1fae256cf7013d99dad472dc52d5543322761f83ec8d47eab40d2b",
+          "dependencies": [
+            "libc",
+            "windows-sys 0.61.2"
+          ]
+        },
+        {
+          "name": "mdns-sd",
+          "version": "0.21.6",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "checksum": "8562654710f72a9cbce4b0d5b7c366a2f94330ba1ce3740f15e932ea2d37b161",
+          "dependencies": [
+            "fastrand",
+            "flume",
+            "if-addrs 0.15.0",
+            "mio",
+            "socket-pktinfo",
+            "socket2 0.6.5"
+          ]
+        },
+        {
+          "name": "socket-pktinfo",
+          "version": "0.4.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "checksum": "3e8e43b4bdce7cff8a4d3f8025ee38fce5ca138fab868ebbf9529c81328fbf9d",
+          "dependencies": [
+            "libc",
+            "socket2 0.6.5",
+            "windows-sys 0.61.2"
+          ]
+        }
+      ],
+      "receipt_sha256": "95be9309ad9569b4f47afbd4ee361158f004e661d6e36a5a5d4cab4337c0adc8"
+    },
+    {
+      "scope": "browser-native-fixture",
+      "artifact_id": 13053470500,
+      "artifact_sha256": "8793999ec414cb88d917ed5348a5c9b2789b7597680d4fa10d4438edf857f3aa",
+      "all_receipt_file_hashes_verified": true,
+      "before_sha256": "0a135a2d8a8cf655c1936665995f9527989274b490935812b253974f72302bc8",
+      "imported_sha256": "5b36b15c69f01423d0e437a6681a1070b58854b23ea36a40561ae0796de5fd8f",
+      "assertions": {
+        "only_selected_lock_changed": true,
+        "all_existing_package_identities_and_checksums_preserved": true,
+        "all_unrelated_external_package_edges_preserved": true,
+        "only_exact_reviewed_component_feature_edges_added": true,
+        "reviewed_crab_nat_exact_version_and_checksum": true,
+        "reviewed_petgraph_exact_version_and_checksum": true,
+        "reviewed_authoritative_dns_exact_version": true,
+        "locked_metadata_succeeded": true,
+        "lan_and_scaler_exact_reviewed_package_closure": true,
+        "protected_native_stream_reuses_existing_tokio_identity": true,
+        "native_stdio_reuses_locked_tokio_util_identity": true,
+        "media_actual_mtls_fixture_reuses_locked_tokio_rustls_identity": true,
+        "packet_parser_exact_identity_checksum_and_only_locked_arrayvec_edge": true,
+        "managed_tun_exact_reviewed_provider_closure": true,
+        "tun_native_fixture_reuses_exact_locked_packet_parser": true,
+        "only_reviewed_cookie_packet_components_or_exact_product_reuse_added": true
+      },
+      "new_registry_packages": [
+        {
+          "name": "fast_image_resize",
+          "version": "6.1.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "checksum": "e9c50201dc184ba6553da1695aac20a042efffbe2d84542cee31917c86c3ab1e",
+          "dependencies": [
+            "cfg-if",
+            "document-features",
+            "num-traits",
+            "thiserror 2.0.21"
+          ]
+        },
+        {
+          "name": "flume",
+          "version": "0.12.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "checksum": "5e139bc46ca777eb5efaf62df0ab8cc5fd400866427e56c68b22e414e53bd3be",
+          "dependencies": [
+            "spin"
+          ]
+        },
+        {
+          "name": "if-addrs",
+          "version": "0.15.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "checksum": "c0a05c691e1fae256cf7013d99dad472dc52d5543322761f83ec8d47eab40d2b",
+          "dependencies": [
+            "libc",
+            "windows-sys 0.61.2"
+          ]
+        },
+        {
+          "name": "mdns-sd",
+          "version": "0.21.6",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "checksum": "8562654710f72a9cbce4b0d5b7c366a2f94330ba1ce3740f15e932ea2d37b161",
+          "dependencies": [
+            "fastrand",
+            "flume",
+            "if-addrs 0.15.0",
+            "mio",
+            "socket-pktinfo",
+            "socket2 0.6.5"
+          ]
+        },
+        {
+          "name": "socket-pktinfo",
+          "version": "0.4.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "checksum": "3e8e43b4bdce7cff8a4d3f8025ee38fce5ca138fab868ebbf9529c81328fbf9d",
+          "dependencies": [
+            "libc",
+            "socket2 0.6.5",
+            "windows-sys 0.61.2"
+          ]
+        },
+        {
+          "name": "spin",
+          "version": "0.9.9",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "checksum": "3763264f6b73151db08c50ff20d7d8a0b8796e021cdea7ceedad07b80155fa0e",
+          "dependencies": [
+            "lock_api"
+          ]
+        }
+      ],
+      "receipt_sha256": "cf7e4189c9295f149fe574bc31122ce7f54730807b480470ef4117fd69cbbcda"
+    }
+  ],
+  "retained_failure": {
+    "run_id": 41228661123,
+    "source_revision": "bf251d069734f25753a3cba7800b8d9db5ecd675",
+    "reason": "Original external-block retention omitted newly activated mio logging edge; locked metadata refused drift. Precise existing mio+log feature reviewed and preserved; unrelated windows-sys choices still retained."
+  }
+}
