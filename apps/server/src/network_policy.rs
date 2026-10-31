@@ -2,12 +2,12 @@
 //! Space delegation lives in spaces; business admission remains separate.
 pub(crate) mod chains;
 pub(crate) mod network_access;
+pub(crate) mod offline;
 pub(crate) mod route_exports;
 pub(crate) mod route_sets;
 pub(crate) mod subnet;
 pub(crate) mod topology;
 pub(crate) mod wireguard;
-pub(crate) mod offline;
 use crate::{ApiError, AppState, access, now_ms};
 use axum::{
     Json,

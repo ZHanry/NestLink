@@ -5,10 +5,10 @@ use nestlink_identity::network::SignedNetworkGrant;
 use nestlink_protocol::network::{CLAIM_BYTES, GrantClaims, SCHEMA_VERSION as NETWORK_SCHEMA};
 mod authority;
 mod network_access;
+mod offline;
 mod route_sets;
 mod subnet;
 mod wireguard;
-mod offline;
 
 fn base(space: &str) -> Result<String, SdkError> {
     if !valid_id(space) {

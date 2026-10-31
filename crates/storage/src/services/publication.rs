@@ -507,17 +507,31 @@ impl Store {
     /// Commit the complete offline promise to the same irreversible spend used
     /// by online reports. Existing outstanding online grants remain reserved.
     pub(super) fn reserve_offline_service_budget(
-        tx: &Transaction<'_>, record: &Record, requested: u64,
+        tx: &Transaction<'_>,
+        record: &Record,
+        requested: u64,
     ) -> Result<(), StorageError> {
-        let fenced: bool = tx.query_row("SELECT restore_fenced FROM service_quota_settings WHERE singleton=1", [], |r| r.get(0))?;
+        let fenced: bool = tx.query_row(
+            "SELECT restore_fenced FROM service_quota_settings WHERE singleton=1",
+            [],
+            |r| r.get(0),
+        )?;
         if fenced || requested == 0 || requested > record.definition.limits.maximum_bytes {
             return Err(StorageError::RateLimited);
         }
         let scopes = [
             ("account", record.account.as_str(), ACCOUNT_BYTES),
-            ("device", record.definition.host_device_id.as_str(), DEVICE_BYTES),
+            (
+                "device",
+                record.definition.host_device_id.as_str(),
+                DEVICE_BYTES,
+            ),
             ("node", record.definition.accounting_node_id(), NODE_BYTES),
-            ("resource", record.id.as_str(), record.definition.limits.maximum_bytes),
+            (
+                "resource",
+                record.id.as_str(),
+                record.definition.limits.maximum_bytes,
+            ),
         ];
         for (scope, key, default) in scopes {
             if Self::quota_available(tx, scope, key, default)? < requested {

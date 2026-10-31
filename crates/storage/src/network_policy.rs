@@ -28,11 +28,11 @@ pub use route_sets::{
 };
 mod authority;
 pub use authority::{NetworkAuthorityChange, NetworkAuthorityState};
+pub mod offline;
 pub mod route_exports;
 pub mod subnet;
 pub mod topology;
 pub mod wireguard;
-pub mod offline;
 
 pub const MAX_NETWORK_MEMBERS: usize = 4096;
 pub const MAX_CURRENT_NETWORK_GRANTS: usize = 65_536;

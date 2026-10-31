@@ -88,16 +88,26 @@ pub fn verify_offline_endpoint_approvals(
 
 /// Verify one endpoint while the other endpoint's independent review is pending.
 pub fn verify_offline_endpoint_approval(
-    authority: &[u8; 32], claims: &OfflineGrantBundleClaims, approval: &OfflineEndpointApproval,
+    authority: &[u8; 32],
+    claims: &OfflineGrantBundleClaims,
+    approval: &OfflineEndpointApproval,
 ) -> Result<(), ContractError> {
     let expected = offline_draft_digest(authority, claims)?;
-    let member = claims.members.get(usize::from(approval.endpoint))
+    let member = claims
+        .members
+        .get(usize::from(approval.endpoint))
         .ok_or_else(|| denied("invalid offline endpoint role"))?;
     if approval.draft_digest != expected || approval.signature.len() != 64 {
-        return Err(denied("offline endpoint must approve the exact complete draft"));
+        return Err(denied(
+            "offline endpoint must approve the exact complete draft",
+        ));
     }
-    verify_signature(&member.public_key, APPROVAL,
-        &approval_transcript(approval.endpoint, &expected), &approval.signature)
+    verify_signature(
+        &member.public_key,
+        APPROVAL,
+        &approval_transcript(approval.endpoint, &expected),
+        &approval.signature,
+    )
 }
 
 pub struct OfflineVerification<'a> {
@@ -118,20 +128,32 @@ pub fn offline_consume_transcript(
     challenge: &management::OfflineConsumeChallenge,
 ) -> Result<nestlink_protocol::DeviceActionClaims, ContractError> {
     claims.validate()?;
-    let member = claims.members.get(usize::from(challenge.endpoint))
+    let member = claims
+        .members
+        .get(usize::from(challenge.endpoint))
         .ok_or_else(|| denied("invalid offline consume endpoint"))?;
-    if challenge.bundle_id != claims.bundle_id || challenge.process_nonce != member.process_nonce
-        || challenge.challenge == [0; 32] || challenge.expires_at_ms != claims.expires_at_ms {
-        return Err(denied("offline consume challenge differs from the original process"));
+    if challenge.bundle_id != claims.bundle_id
+        || challenge.process_nonce != member.process_nonce
+        || challenge.challenge == [0; 32]
+        || challenge.expires_at_ms != claims.expires_at_ms
+    {
+        return Err(denied(
+            "offline consume challenge differs from the original process",
+        ));
     }
-    let payload = serde_json::to_vec(challenge).map_err(|_| denied("invalid offline consume payload"))?;
+    let payload =
+        serde_json::to_vec(challenge).map_err(|_| denied("invalid offline consume payload"))?;
     Ok(nestlink_protocol::DeviceActionClaims {
         schema_version: nestlink_protocol::SCHEMA_VERSION,
         action: nestlink_protocol::DeviceAction::Approve as i32,
-        deployment_id: claims.deployment_id.clone(), security_epoch: claims.security_epoch,
-        account_id: member.account_id.clone(), device_id: member.installation_id.clone(),
-        resource_id: claims.bundle_id.clone(), challenge: challenge.challenge.to_vec(),
-        payload_sha256: digest(&payload).to_vec(), expires_at_unix_ms: challenge.expires_at_ms,
+        deployment_id: claims.deployment_id.clone(),
+        security_epoch: claims.security_epoch,
+        account_id: member.account_id.clone(),
+        device_id: member.installation_id.clone(),
+        resource_id: claims.bundle_id.clone(),
+        challenge: challenge.challenge.to_vec(),
+        payload_sha256: digest(&payload).to_vec(),
+        expires_at_unix_ms: challenge.expires_at_ms,
     })
 }
 
