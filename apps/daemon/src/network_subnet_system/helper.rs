@@ -35,10 +35,10 @@ enum Action {
 pub(crate) async fn run(args:SystemSubnetArgs)->Result {
     match args.action {
         Action::GenerateWireguardServerKey{private_key,public_key}=>{require_system_admin().await?;crate::wireguard::generate_key(&private_key,&public_key,"portal server").await},
-        Action::Review{plan}=>{println!("{}",serde_json::to_string_pretty(&Plan::read(&plan)?)?);Ok(())},
+        Action::Review{plan}=>{println!("{}",serde_json::to_string_pretty(&Plan::read(&plan)?.review()?)?);Ok(())},
         Action::InitJournal{journal_dir}=>{require_system_admin().await?;if !journal_dir.is_absolute(){return Err(io::Error::other("absolute root-private subnet journal directory required").into());}match nestlink_platform_security::new_private_directory(&journal_dir){Ok(())=>{},Err(error) if error.kind()==io::ErrorKind::AlreadyExists=>nestlink_platform_security::check_private_directory(&journal_dir)?,Err(error)=>return Err(error.into())}Ok(())},
         Action::Recover{journal_dir}=>{require_system_admin().await?;recover(&journal::Store::open(&journal_dir)?).await},
-        Action::Inspect{journal_dir}=>{require_system_admin().await?;let store=journal::Store::open(&journal_dir)?;println!("{}",serde_json::to_string_pretty(&store.read()?)?);Ok(())},
+        Action::Inspect{journal_dir}=>{require_system_admin().await?;let store=journal::Store::open(&journal_dir)?;let review=store.read()?.map(|journal|->Result<_>{Ok(serde_json::json!({"schema_version":journal.schema_version,"plan":journal.plan.review()?,"parent":journal.parent,"namespace":journal.namespace,"receipt":journal.receipt}))}).transpose()?;println!("{}",serde_json::to_string_pretty(&review)?);Ok(())},
         Action::Apply{plan:path,wait_seconds,journal_dir,authority,approve_access_digest,approve_mapping_digest,lan_interface,lan_gateway,approve_wireguard_binding_digest,wireguard_client_endpoint,wireguard_listen_port,wireguard_underlay_next_hop,wireguard_server_private_key}=>{
             require_system_admin().await?;
             // The administrator selects three independent pins and the LAN

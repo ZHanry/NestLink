@@ -49,6 +49,12 @@ impl Plan {
         Ok(path)
     }
     pub fn digest(&self)->Result<[u8;32]> {Ok(nestlink_identity::digest(&serde_json::to_vec(self)?))}
+    /// Deliberate operator review excludes every serialized signed credential.
+    /// The exact file remains owner-private and is authenticated again on apply.
+    pub fn review(&self)->Result<serde_json::Value> {
+        let checked=self.checked(false)?;
+        Ok(serde_json::json!({"schema_version":self.schema_version,"owner_id":self.owner_id,"process":self.process,"uid":self.uid,"path":self.path,"plan_digest":URL_SAFE_NO_PAD.encode(self.digest()?),"created_at_ms":self.created_at_ms,"expires_at_ms":self.expires_at_ms,"deployment_id":self.deployment_id,"space_id":self.space_id,"authority":URL_SAFE_NO_PAD.encode(self.authority),"local_public":URL_SAFE_NO_PAD.encode(self.local_public),"approved_access_digest":URL_SAFE_NO_PAD.encode(self.approved_access),"approved_mapping_digest":URL_SAFE_NO_PAD.encode(self.approved_mapping),"lan_name":self.lan_name,"lan_index":self.lan_index,"lan_gateway":self.lan_gateway,"lan_prefix_len":self.lan_prefix_len,"physical_endpoints":self.physical_endpoints,"mapping_claims":checked.mapping,"business_claims":checked.business,"wireguard_enabled":self.wireguard.is_some()}))
+    }
     pub fn checked(&self,fresh:bool)->Result<Checked> {
         self.check(fresh,false)
     }
