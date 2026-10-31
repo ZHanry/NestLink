@@ -83,6 +83,28 @@ jobs:
           python scripts/refactor-windows-normal-user.py rustc -vV
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-platform-security --tests -p nestlink-privileged --lib --no-fail-fast
+      - name: Check independent subnet signatures and exact local consent
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $subnetCases = @(
+            @{ Args = @('-p', 'nestlink-protocol', '--lib', 'subnet::') },
+            @{ Args = @('-p', 'nestlink-identity', '--lib', 'subnet::') },
+            @{ Args = @('-p', 'nestlink-sdk', '--lib', 'network::subnet::') }
+          )
+          foreach ($subnetCase in $subnetCases) {
+            $subnetArgs = @('test', '--locked') + $subnetCase.Args + @('--', '--show-output', '--test-threads=1', '--color', 'never')
+            if ($env:RUNNER_OS -eq 'Windows') {
+              python scripts/refactor-windows-normal-user.py cargo @subnetArgs
+            } else {
+              cargo @subnetArgs
+            }
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+      - name: Check bounded Windows TUN pipe cancellation with the ordinary token
+        if: ${{ !cancelled() && runner.os == 'Windows' }}
+        run: python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-privileged --lib windows::network_tun:: -- --show-output --test-threads=1 --color never
       - name: Check SDK routed contracts on Linux before formatting
         id: sdk_routed_linux
         if: runner.os == 'Linux'

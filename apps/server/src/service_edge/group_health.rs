@@ -66,12 +66,17 @@ impl axum::serve::Listener for Listener {
     type Addr = SocketAddr;
     async fn accept(&mut self) -> (Self::Io, Self::Addr) {
         loop {
-            let slot = self
+            let Ok(slot) = self
                 .slots
                 .clone()
                 .acquire_owned()
                 .await
-                .expect("health admission semaphore stays open");
+            else {
+                // Listener::accept is infallible. A closed admission owner
+                // cannot accept more sockets; server shutdown cancels this wait.
+                std::future::pending::<()>().await;
+                continue;
+            };
             match self.socket.accept().await {
                 Ok((socket, peer)) => {
                     return (

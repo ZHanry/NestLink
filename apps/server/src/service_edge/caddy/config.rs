@@ -59,8 +59,8 @@ impl CaddyServiceConfig {
         {
             return Err(denied());
         }
-        if let Some(group) = &self.edge_group {
-            if !valid_id(&group.group_id)
+        if let Some(group) = &self.edge_group
+            && (!valid_id(&group.group_id)
                 || !nestlink_protocol::services::revision_valid(group.revision)
                 || group.aggregate_sha256 == [0; 32]
                 || group.ingress_ip.is_unspecified()
@@ -72,10 +72,9 @@ impl CaddyServiceConfig {
                 || group
                     .https_root
                     .as_ref()
-                    .is_some_and(|path| !path.is_absolute())
-            {
-                return Err(denied());
-            }
+                    .is_some_and(|path| !path.is_absolute()))
+        {
+            return Err(denied());
         }
         let url = reqwest::Url::parse(&self.dns_json_endpoint).map_err(fault)?;
         if url.scheme() != "https"

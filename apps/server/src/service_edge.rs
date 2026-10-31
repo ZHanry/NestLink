@@ -219,11 +219,15 @@ pub async fn serve_with_caddy(
         identity,
         namespace,
         bind_ip,
-        caddy_config,
-        None,
+        ServiceEdgeIngress { caddy: caddy_config, group_health_listen: None },
         shutdown,
     )
     .await
+}
+/// Operator-selected HTTP ingress and the readiness endpoint tied to its owner.
+pub struct ServiceEdgeIngress {
+    pub caddy: Option<caddy::CaddyServiceConfig>,
+    pub group_health_listen: Option<std::net::SocketAddr>,
 }
 pub async fn serve_with_caddy_and_health(
     endpoint: Endpoint,
@@ -231,8 +235,7 @@ pub async fn serve_with_caddy_and_health(
     identity: Arc<NodeIdentity>,
     namespace: ServiceEdgeNamespaceView,
     bind_ip: IpAddr,
-    caddy_config: Option<caddy::CaddyServiceConfig>,
-    group_health_listen: Option<std::net::SocketAddr>,
+    ingress_config: ServiceEdgeIngress,
     shutdown: impl std::future::Future<Output = ()>,
 ) -> io::Result<()> {
     namespace.config.validate().map_err(fault)?;
@@ -248,7 +251,7 @@ pub async fn serve_with_caddy_and_health(
         )
         .map_err(fault)?,
     );
-    let driver = match caddy_config {
+    let driver = match ingress_config.caddy {
         Some(config) => Some(caddy::Controller::start(config, &namespace).await?),
         None => None,
     };
@@ -263,7 +266,7 @@ pub async fn serve_with_caddy_and_health(
         openings: Arc::new(Semaphore::new(SERVICE_MAX_OPENINGS)),
         caddy: driver.as_ref().map(caddy::Driver::controller),
     });
-    let health = match group_health_listen {
+    let health = match ingress_config.group_health_listen {
         Some(address) => Some(group_health::Driver::start(address, edge.clone()).await?),
         None => None,
     };

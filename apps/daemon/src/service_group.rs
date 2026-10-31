@@ -96,7 +96,7 @@ pub(crate) async fn run(args: GroupArgs) -> Result {
         let roots = args
             .backend_ca
             .iter()
-            .map(|path| nestlink_platform_security::read_private(path, 16_384))
+            .map(|path| nestlink_platform_security::read_private(path, 16_384).map(|bytes| bytes.to_vec()))
             .collect::<io::Result<Vec<_>>>()?;
         Some(HttpsBackendTls::new(name, roots)?)
     } else {
@@ -246,7 +246,7 @@ async fn wait_stop(
             _ = tokio::time::sleep_until(deadline) => return Ok("original_deadline"),
             _ = tick.tick() => {
                 if session_snapshot(directory).ok() != Some(login) { return Ok("original_login_changed"); }
-                if nestlink_local_ipc::maintenance::requested(directory)? { return Ok("installation_maintenance"); }
+                if nestlink_local_ipc::maintenance::requested(directory).map_err(io::Error::other)? { return Ok("installation_maintenance"); }
             }
         }
     }

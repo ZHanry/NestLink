@@ -414,8 +414,10 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 identity,
                 namespace,
                 ingress_ip,
-                caddy_config,
-                group_health_listen,
+                nestlink_server::service_edge::ServiceEdgeIngress {
+                    caddy: caddy_config,
+                    group_health_listen,
+                },
                 shutdown(),
             )
             .await;
