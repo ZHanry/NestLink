@@ -1,5 +1,6 @@
 //! Real management HTTP/middleware, SQLite and SDK owners in the hosted VM.
 use super::*;
+use base64::Engine;
 use nestlink_auth::{Secret, VaultKey, random_id};
 use nestlink_identity::{
     PermitSigner,
@@ -18,9 +19,9 @@ use nestlink_sdk::{DeploymentTrust, DeviceIdentity, network_management::decode_n
 use nestlink_server::{AppState, router};
 use nestlink_storage::Store;
 
-const PASSWORD: &str = "hosted-windows-online-packet-fixture-password";
+mod https;
 
-struct Server(tokio::task::JoinHandle<io::Result<()>>);
+struct Server(tokio::task::JoinHandle<io::Result<()>>,Option<tokio::sync::oneshot::Sender<()>>);
 impl Drop for Server {
     fn drop(&mut self) {
         self.0.abort();
@@ -28,6 +29,7 @@ impl Drop for Server {
 }
 pub(super) struct Fixture {
     _server: Server,
+    _tunnel: Option<tokio::process::Child>,
     _private: tempfile::TempDir,
     pub directory: PathBuf,
     pub source: Sdk,
@@ -38,14 +40,15 @@ pub(super) struct Fixture {
     pub authority: [u8; 32],
     pub view: nestlink_protocol::network_access::NetworkAccessView,
     pub approved: [u8; 32],
+    pub origin: String,
 }
 impl Fixture {
-    pub async fn new() -> Result<Self> {
+    pub async fn new(https_case: Option<&Path>) -> Result<Self> {
         // Secrets and the management database never enter the uploaded public
         // evidence directory, including if the coordinator terminates us.
         let private = tempfile::Builder::new()
             .prefix("nestlink-tun-online-private-")
-            .tempdir_in(std::env::var("RUNNER_TEMP")?)?;
+            .tempdir_in(std::env::var("NESTLINK_TUN_NATIVE_PRIVATE_PARENT")?)?;
         let directory = private.path().join("original-installation");
         nestlink_platform_security::new_private_directory(&directory)?;
         let source_device = crate::identity(&directory)?;
@@ -55,25 +58,31 @@ impl Fixture {
         let issuer = signer.public_key();
         let authority = signer.network_authority_signer()?.public_key();
         let mut store = Store::open(&private.path().join("management.sqlite3"), &deployment)?;
-        store.bootstrap_admin("manager", PASSWORD)?;
+        let password = Secret::from_text(base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(nestlink_auth::random_bytes::<32>()));
+        let account=format!("lab-{}",random_id());
+        store.bootstrap_admin(&account, password.expose())?;
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
-        let origin = format!("http://{}", listener.local_addr()?);
+        let (tunnel,origin) = if let Some(case) = https_case {
+            let (tunnel,origin) = https::start(listener.local_addr()?,case).await?;
+            (Some(tunnel),origin)
+        } else {(None,format!("http://{}", listener.local_addr()?))};
         let app = router(AppState::new(
             store,
-            VaultKey::from_bytes([63; 32]),
+            VaultKey::from_bytes(nestlink_auth::random_bytes()),
             signer,
             origin.clone(),
-            false,
-        )?);
+            https_case.is_some(),
+        )?).layer(axum::middleware::from_fn(https::fixture_scope));
+        let (shutdown,stopped)=tokio::sync::oneshot::channel();
         let server = Server(tokio::spawn(async move {
             axum::serve(
                 listener,
                 app.into_make_service_with_connect_info::<SocketAddr>(),
             )
-            .await
-        }));
-        let source = login(&origin, &deployment, issuer).await?;
-        let target = login(&origin, &deployment, issuer).await?;
+            .with_graceful_shutdown(async {let _=stopped.await;}).await
+        }),Some(shutdown));
+        let source = login(&origin, &deployment, issuer, &account,&password,https_case.is_none()).await?;
+        let target = login(&origin, &deployment, issuer, &account,&password,https_case.is_none()).await?;
         let space = source
             .create_space(SpaceCreateRequest {
                 name: "hosted original Windows packet owner".into(),
@@ -141,6 +150,7 @@ impl Fixture {
         .digest();
         Ok(Self {
             _server: server,
+            _tunnel: tunnel,
             _private: private,
             directory,
             source,
@@ -151,20 +161,39 @@ impl Fixture {
             authority,
             view,
             approved,
+            origin,
         })
     }
+    pub async fn finish(mut self)->Result {
+        drop(self.source);drop(self.target);
+        if let Some(shutdown)=self._server.1.take(){let _=shutdown.send(());}
+        tokio::time::timeout(Duration::from_secs(5),&mut self._server.0).await???;
+        if let Some(tunnel)=self._tunnel.as_mut(){
+            if tunnel.try_wait()?.is_none(){tunnel.kill().await?;}
+            let _=tunnel.wait().await?;
+        }
+        self._private.close()?;
+        Ok(())
+    }
 }
-async fn login(origin: &str, deployment: &str, issuer: [u8; 32]) -> Result<Sdk> {
-    let mut sdk = Sdk::connect(
+async fn login(origin: &str, deployment: &str, issuer: [u8; 32],account:&str,password:&Secret,allow_loopback:bool) -> Result<Sdk> {
+    let deadline=Instant::now()+Duration::from_secs(20);
+    let mut sdk = loop{match Sdk::connect(
         origin,
         DeploymentTrust {
             deployment_id: deployment.into(),
             permit_issuer: issuer,
         },
-        true,
+        allow_loopback,
     )
-    .await?;
-    sdk.login("manager".into(), Secret::from_text(PASSWORD.into()), None)
+    .await{
+        Ok(sdk)=>break sdk,
+        Err(error) if !allow_loopback && Instant::now()<deadline && match &error{SdkError::Transport(_) | SdkError::Timeout=>true,SdkError::Api(status,_)=>status.is_server_error(),_=>false}=>{
+            tokio::time::sleep(Duration::from_millis(250)).await;
+        },
+        Err(error)=>return Err(error.into()),
+    }};
+    sdk.login(account.into(), Secret::from_text(password.expose().into()), None)
         .await?;
     Ok(sdk)
 }

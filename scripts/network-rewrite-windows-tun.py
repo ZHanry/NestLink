@@ -27,6 +27,12 @@ from network_rewrite_wfp_native import Native, checked
 
 DRIVER_URL = "https://www.wintun.net/builds/wintun-0.14.1.zip"
 ARCHIVE_SHA256 = "07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51"
+CLOUDFLARED_TAG = "2026.10.7"
+CLOUDFLARED_COMMIT = "872b241f94871665c1c157adefcf90c11f0ead96"
+CLOUDFLARED_URL = f"https://github.com/cloudflare/cloudflared/releases/download/{CLOUDFLARED_TAG}/cloudflared-windows-amd64.exe"
+CLOUDFLARED_SHA256 = "2493dbc168923bb3e59e5e7716f71deced92992eea9acd6e9d74f84ac7751343"
+CLOUDFLARED_LICENSE_URL = f"https://raw.githubusercontent.com/cloudflare/cloudflared/{CLOUDFLARED_COMMIT}/LICENSE"
+CLOUDFLARED_LICENSE_SHA256 = "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd"
 ROLE = "network_tun_system::windows::native_tests::hosted_native_role"
 ROLE_ARGS = ["--ignored", "--exact", ROLE, "--nocapture", "--test-threads=1", "--color=never"]
 
@@ -68,6 +74,9 @@ def main():
               "execution_provenance": {"environment": "disposable_github_hosted_windows_vm", "source_revision": env["GITHUB_SHA"],
                   "started_at_unix": time.time(), "run_id": env["GITHUB_RUN_ID"], "attempt": env["GITHUB_RUN_ATTEMPT"]}}
     native, active, retained = Native(), [], []
+    https_cli = env.get("NESTLINK_TUN_HTTPS_CLI_LAB") == "true"
+    private_parent = temp / ("nestlink-tun-private-" + uuid.uuid4().hex)
+    observed_children = set()
     fixture = Path(env["PROGRAMFILES"]) / ("NestLink-TUN-Lab-" + uuid.uuid4().hex)
     protected_acl = "O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FRFX;;;BU)"
 
@@ -103,6 +112,7 @@ def main():
     def await_json(path, process=None, budget=20):
         deadline = time.monotonic() + budget
         while time.monotonic() < deadline:
+            retain_fixture_children()
             try:
                 return json.loads(path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
@@ -126,16 +136,49 @@ def main():
         retained.append(handle)
         return handle
 
+    def retain_fixture_children():
+        # Capture only exact marked incarnations launched by our own fixture.
+        # The retained handles also stop a child if its parent fails early.
+        for marker, image in ((output / "online-cli/https-tunnel-process.json", fixture / "cloudflared.exe"),
+                              (output / "online-cli/cli-process.json", fixture / "nestlink-daemon-native.exe")):
+            if marker in observed_children or not marker.is_file():
+                continue
+            try:
+                identity = json.loads(marker.read_text(encoding="utf-8"))["identity"]
+            except (OSError, json.JSONDecodeError):
+                continue
+            if (Path(identity["image"]).resolve() != image.resolve() or identity["elevated"]
+                or not 0x2000 <= identity["integrity"] < 0x3000 or identity["sid"] != runner_sid):
+                raise ValueError("fixture child differs from its frozen protected image or original medium user")
+            owner_handle(identity)
+            observed_children.add(marker)
+
     try:
         if subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip() != env["GITHUB_SHA"] or subprocess.check_output(["git", "status", "--porcelain=v1", "--untracked-files=all"]):
             raise ValueError("exact clean source SHA required before building")
         execute("actual-medium-token", [sys.executable, source / "scripts/refactor-windows-normal-user.py", "--check"])
+        runner_sid = ps("runner-sid", "[Security.Principal.WindowsIdentity]::GetCurrent().User.Value")
+        native.directory(private_parent, f"O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;{runner_sid})")
         archive = output / "wintun-0.14.1.zip"
         with urllib.request.urlopen(DRIVER_URL, timeout=60) as response, archive.open("xb") as stream:
             shutil.copyfileobj(response, stream)
         if digest(archive) != ARCHIVE_SHA256:
             raise ValueError("official Wintun archive differs from the frozen published SHA256")
         native.directory(fixture, protected_acl)
+        if https_cli:
+            for url, destination, expected in (
+                (CLOUDFLARED_URL, fixture / "cloudflared.exe", CLOUDFLARED_SHA256),
+                (CLOUDFLARED_LICENSE_URL, output / "cloudflared-license.txt", CLOUDFLARED_LICENSE_SHA256)):
+                with urllib.request.urlopen(url, timeout=60) as response, destination.open("xb") as stream:
+                    shutil.copyfileobj(response, stream)
+                if digest(destination) != expected:
+                    raise ValueError("frozen official HTTPS fixture tool or license digest differs")
+            execute("https-tool-protected-owner", ["icacls.exe", fixture / "cloudflared.exe", "/setowner", "*S-1-5-32-544"])
+            result["build_provenance"]["https_fixture_tool"] = {
+                "tag": CLOUDFLARED_TAG, "commit": CLOUDFLARED_COMMIT, "url": CLOUDFLARED_URL,
+                "executable_sha256": CLOUDFLARED_SHA256, "license": "Apache-2.0", "license_url": CLOUDFLARED_LICENSE_URL,
+                "license_sha256": CLOUDFLARED_LICENSE_SHA256, "test_fixture_only": True,
+                "tls_boundary": "Cloudflare public-PKI termination with a loopback-only HTTP origin"}
         binaries = {}
         with zipfile.ZipFile(archive) as package:
             (output / "wintun-license.txt").write_bytes(package.read("wintun/LICENSE.txt"))
@@ -168,7 +211,6 @@ def main():
         if digest(executable) != digest(artifacts[0]):
             raise ValueError("protected fixture differs from the Actions-built executable")
         result["build_provenance"]["executable"] = {"build_path": str(artifacts[0]), "execution_path": str(executable), "sha256": digest(executable)}
-        runner_sid = ps("runner-sid", "[Security.Principal.WindowsIdentity]::GetCurrent().User.Value")
         provider_case = output / "provider-negative"
         native.directory(provider_case, f"O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;{runner_sid})")
         unreviewed = fixture / "unreviewed-provider"
@@ -189,7 +231,7 @@ def main():
             raise ValueError("production provider trust checks did not reject unreviewed or mutable inputs")
         result["cases"]["provider-negative"] = {"status": "passed", "receipt": provider_negative}
         fault_stages = {"fault-provider": "provider_created", "fault-addresses": "addresses_installed", "fault-routes": "routes_installed"}
-        scenarios = ("normal", "crash", "raw-peer", "online", *fault_stages)
+        scenarios = ("normal", "crash", "raw-peer", "online", *fault_stages, *(("online-cli",) if https_cli else ()))
         for scenario in scenarios:
             case = output / scenario
             native.directory(case, f"O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;{runner_sid})")
@@ -198,14 +240,21 @@ def main():
             extra = {"NESTLINK_TUN_NATIVE_CASE": str(case), "NESTLINK_TUN_NATIVE_RECEIPT": str(root / "receipt.json"),
                      "NESTLINK_TUN_NATIVE_JOURNAL": str(root / "journal"), "NESTLINK_TUN_NATIVE_DRIVER": str(fixture / "wintun.dll"),
                      "NESTLINK_TUN_NATIVE_DRIVER_SHA256": binaries["amd64"], "TEMP": str(case), "TMP": str(case),
+                     "NESTLINK_TUN_NATIVE_PRIVATE_PARENT": str(private_parent),
+                     "NESTLINK_TUN_NATIVE_CLOUDFLARED": str(fixture / "cloudflared.exe"),
                      "NESTLINK_TUN_NATIVE_PAUSE": "1" if scenario == "raw-peer" or scenario in fault_stages else "0",
                      "NESTLINK_TUN_NATIVE_FAULT": fault_stages.get(scenario, "")}
-            ordinary = start(scenario + "-ordinary", [sys.executable, source / "scripts/refactor-windows-normal-user.py", executable, *ROLE_ARGS], dict(extra, NESTLINK_TUN_NATIVE_ROLE="online" if scenario == "online" else "ordinary"))
-            ready = await_json(case / "plan-ready.json", ordinary)
+            role = {"online": "online", "online-cli": "online-cli-fixture"}.get(scenario, "ordinary")
+            ordinary = start(scenario + "-ordinary", [sys.executable, source / "scripts/refactor-windows-normal-user.py", executable, *ROLE_ARGS], dict(extra, NESTLINK_TUN_NATIVE_ROLE=role))
+            ready = await_json(case / "plan-ready.json", ordinary, budget=120 if scenario == "online-cli" else 20)
             identity = ready["identity"]
             if identity["elevated"] or not 0x2000 <= identity["integrity"] < 0x3000 or identity["sid"] != runner_sid or identity["session"] <= 0:
                 raise ValueError("ordinary actor was not the original medium non-admin user")
             handle = owner_handle(identity)
+            if scenario == "online-cli" and (ready.get("separate_application_pid") == identity["pid"]
+                or ready.get("production_https_login_restore_before_plan") is not True
+                or not re.fullmatch(r"https://[a-z0-9-]+\.trycloudflare\.com", ready.get("fixture_origin", ""))):
+                raise ValueError("actual independent production CLI and standard HTTPS restore were not established before the plan")
             helper = start(scenario + "-administrator", [executable, *ROLE_ARGS], dict(extra, NESTLINK_TUN_NATIVE_ROLE="apply"))
             if scenario in fault_stages:
                 observed = await_json(case / "fault-observed.json", helper)
@@ -277,23 +326,32 @@ def main():
                     or identity_negative["configuration_sha256"] != receipt["provider"]["configuration_sha256"]
                     or identity_negative["preflight_rejected"] != ["existing_guid_alias", "configured_host_address", "specific_remote_route"]):
                     raise ValueError("nonoriginal PnP recovery did not preserve the exact original kernel state")
-            if scenario in ("normal", "online"):
+            if scenario in ("normal", "online", "online-cli"):
                 write(case / "stop.json", {"stop": True})
                 ordinary.wait(timeout=10); helper.wait(timeout=10)
                 stopped = await_json(case / "ordinary-stopped.json")
                 if ordinary.returncode or helper.returncode or not stopped["kernel_absent"] or stopped["normal_cleanup_ms"] >= 5000:
                     raise ValueError("normal original provider cleanup failed")
-                if scenario == "online":
+                if scenario in ("online", "online-cli"):
                     if (not packets.get("real_http_sqlite_authority") or not packets.get("original_production_packet_loop")
                         or not packets.get("pinned_mtls_quic") or packets.get("remote_original_spent_bytes") != 5120
                         or packets.get("one_use_replay_denials") != 2 or not stopped.get("online_http_403_observed")
                         or not stopped.get("original_udp_endpoints_rebound") or stopped.get("local_original_spent_bytes") != 5120
                         or stopped.get("revocation_to_physical_cleanup_ms", 5000) >= 5000
-                        or not packets.get("same_host_only") or packets.get("production_cli_validated") is not False
-                        or stopped.get("production_https_login_resume_validated") is not False):
+                        or not packets.get("same_host_only") or packets.get("production_cli_validated") is not (scenario == "online-cli")
+                        or stopped.get("production_https_login_resume_validated") is not (scenario == "online-cli")):
                         raise ValueError("real HTTP/SQLite/native/QUIC online integration or five-second physical revocation cleanup failed")
-                    result["single_host_online_integration"] = {"status": "passed", "cleanup": stopped,
-                        "scope": "real management HTTP/SQLite and original native packet loop over pinned mTLS QUIC in one VM; production HTTPS login resume/full CLI and independent targets are not qualified"}
+                    if scenario == "online-cli":
+                        if (not stopped.get("fixture_accounts_deleted") or not stopped.get("temporary_https_tunnel_joined")
+                            or not stopped.get("production_cli_validated") or stopped.get("remote_original_spent_bytes") != 5120
+                            or packets.get("application_pid") != ready["separate_application_pid"]
+                            or packets.get("owner_pid") != identity["pid"]):
+                            raise ValueError("independent original CLI, disposable accounts or temporary HTTPS tunnel cleanup failed")
+                        result["single_host_https_cli_integration"] = {"status": "passed", "cleanup": stopped,
+                            "scope": "original production Clap/SessionStore HTTPS restore and native packet loop in a distinct owner process; disposable Cloudflare-terminated management origin; one VM, not independent targets or third-party VPN acceptance"}
+                    else:
+                        result["single_host_online_integration"] = {"status": "passed", "cleanup": stopped,
+                            "scope": "real management HTTP/SQLite and original native packet loop over pinned mTLS QUIC in one VM; this case alone does not qualify production HTTPS restore or independent targets"}
             else:
                 helper.kill(); helper.wait(timeout=10)
                 code, log = execute("live-owner-recovery-denied", [executable, *ROLE_ARGS], extra=dict(extra, NESTLINK_TUN_NATIVE_ROLE="recover"), required=False)
@@ -328,7 +386,7 @@ def main():
             # ProgramFiles is outside the uploaded evidence tree and the hosted
             # VM is disposable, so leaving only a pathname would lose evidence.
             inspections = result.setdefault("failure_inspections", {})
-            for scenario in ("normal", "crash", "raw-peer", "online", "fault-provider", "fault-addresses", "fault-routes"):
+            for scenario in ("normal", "crash", "raw-peer", "online", "fault-provider", "fault-addresses", "fault-routes", "online-cli"):
                 case, root = output / scenario, fixture / scenario
                 if not case.is_dir() or not root.is_dir():
                     continue
@@ -354,7 +412,22 @@ def main():
             if log_path.is_file():
                 command["log_sha256"] = digest(log_path)
         result["fixture_preserved_for_disposable_vm"] = str(fixture)
+        # The exclusive random parent contains only this run's random database
+        # and protected login. Resolve and bound the exact recursive target.
+        try:
+            target = private_parent.resolve()
+            if target == temp or not target.is_relative_to(temp) or target.name != private_parent.name:
+                raise ValueError("private fixture cleanup escaped the exact RUNNER_TEMP child")
+            if target.exists():
+                shutil.rmtree(target)
+            result["private_fixture_state_deleted"] = not target.exists()
+        except Exception as cleanup_error:
+            result["status"] = "failed"
+            result["private_fixture_state_deleted"] = False
+            result["private_fixture_cleanup_error"] = str(cleanup_error)
         write(output / "receipt.json", result)
+        if result.get("private_fixture_state_deleted") is not True:
+            raise RuntimeError("temporary management database and protected login cleanup failed")
 
 
 if __name__ == "__main__":

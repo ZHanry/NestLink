@@ -1,7 +1,12 @@
 name: Windows managed TUN ordinary and administrator mechanism
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      production_https_cli:
+        description: Exercise the production CLI with disposable public-PKI HTTPS management
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -21,6 +26,7 @@ jobs:
       RUST_BACKTRACE: "1"
       PYTHONDONTWRITEBYTECODE: "1"
       NESTLINK_TUN_NATIVE_LAB: "1"
+      NESTLINK_TUN_HTTPS_CLI_LAB: ${{ inputs.production_https_cli }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:

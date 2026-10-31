@@ -12,6 +12,7 @@ use nestlink_sdk::{
 };
 use nestlink_transport_quic::packet_codec::{DirectPacketEndpoint, PacketAssembler, encode_direct};
 mod fixture;
+pub(super) mod cli;
 use fixture::Fixture;
 
 struct Guard<'a> {
@@ -43,7 +44,7 @@ impl OwnerGuard for Guard<'_> {
 }
 pub(super) async fn ordinary(case: &Path, plan_path: &Path, receipt: &Path) -> Result {
     nestlink_privileged::windows::require_normal_user_process()?;
-    let f = Fixture::new().await?;
+    let f = Fixture::new(None).await?;
     nestlink_platform_security::create_private(&f.directory.join("remember-login.json"), b"true")?;
     let store = crate::session_store::SessionStore::new(f.directory.clone());
     store.save(
@@ -329,7 +330,10 @@ async fn probe(
         serde_json::to_vec(&serde_json::json!({
             "receipt":state,"ipv4_packet_bytes":1280,"ipv6_packet_bytes":1280,"kernel_udp_replies":2,
             "real_http_sqlite_authority":true,"original_production_packet_loop":true,"pinned_mtls_quic":true,
-            "remote_original_spent_bytes":access.spent_bytes(),"one_use_replay_denials":2,"same_host_only":true,"production_cli_validated":false
+            "remote_original_spent_bytes":access.spent_bytes(),"one_use_replay_denials":2,"same_host_only":true,
+            "production_cli_validated":plan.process.pid()!=std::process::id(),
+            "production_https_login_resume_validated":plan.process.pid()!=std::process::id(),
+            "application_pid":std::process::id(),"owner_pid":plan.process.pid()
         }))?,
     )?;
     let mut tick = tokio::time::interval(Duration::from_millis(100));
