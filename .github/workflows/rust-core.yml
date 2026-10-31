@@ -97,6 +97,8 @@ jobs:
             @{ Args = @('-p', 'nestlink-sdk', '--test', 'network_subnets') }
             @{ Args = @('-p', 'nestlink-sdk', '--test', 'network_access', 'subnet::') }
             @{ Args = @('-p', 'nestlink-sdk', '--test', 'network_access', 'wireguard::') }
+            @{ Args = @('-p', 'nestlink-protocol', '--test', 'wireguard') }
+            @{ Args = @('-p', 'nestlink-identity', '--lib', 'wireguard::') }
           )
           foreach ($subnetCase in $subnetCases) {
             $subnetArgs = @('test', '--locked') + $subnetCase.Args + @('--', '--show-output', '--test-threads=1', '--color', 'never')

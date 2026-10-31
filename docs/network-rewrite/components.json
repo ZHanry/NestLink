@@ -538,7 +538,8 @@
         "https://github.com/tun-rs/tun-rs",
         "https://crates.io/api/v1/crates/tun-rs/2.8.16",
         "https://crates.io/api/v1/crates/tun-rs/2.8.16/readme",
-        "https://www.wintun.net/"
+        "https://www.wintun.net/",
+        "https://www.wintun.net/builds/wintun-0.14.1.zip"
       ],
       "maintenance_status": {
         "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
@@ -554,16 +555,16 @@
       ],
       "version": {
         "tun-rs": "2.8.16",
-        "windows-driver": "not_yet_frozen",
-        "status": "selected_linux_host_tun_source_adapter_actions_lock_pending"
+        "windows-driver": "0.14.1; official archive SHA256 07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51",
+        "status": "locked_linux_windows_source_adapters; native_kernel_and_target_qualification_pending"
       },
       "license": {
         "tun-rs": "Apache-2.0",
-        "windows-driver": "Separate official Wintun binary redistribution terms/version/signature require review before adoption"
+        "windows-driver": "Exact Wintun Prebuilt Binaries License reviewed; section 3(d) permits redistribution alongside software using the Permitted API, preserving notices. Retained license SHA256 183adac21e7d96c508c8fd34d394b7b6708bc81564ad1bad61ab66143a008cd2; separate from source GPL-2.0."
       },
-      "selection_reason": "Select exact tun-rs 2.8.16 with default features disabled and async_tokio only for the Linux host-only ordinary owner. Reuse the kernel TUN and existing process/security/underlay boundaries; do not implement a general driver. Windows provider and driver distribution still need an independently proven ordinary-user handle boundary.",
-      "adapter_boundary": "Provider owns TUN I/O; minimal privileged NestLink broker owns exact device/routes/DNS/MTU ledger, physical endpoint bypass and recovery.",
-      "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
+      "selection_reason": "Select exact tun-rs 2.8.16 with default features disabled and async_tokio only for both host platforms. Linux's original ordinary UID adopts the exact persistent descriptor. Windows keeps the original provider/session in a separate minimal administrator helper and authenticates the original ordinary packet owner through protected local IPC; it does not assume driver handles or private rings can be transferred. Actual native qualification remains pending.",
+      "adapter_boundary": "Provider owns driver/session/packet I/O. Original ordinary process retains login, online one-use authority, full packet ACL and cumulative budget plus physical mTLS transport. Minimal privileged helper owns only fresh exact device/host addresses/routes/MTU ledger, protected OS-authenticated IPC where required, and recovery. DNS remains the existing separate owned resolver component.",
+      "self_implementation_gap_if_any": "Only NestLink authorization/principal/IPC/OS resource lifecycle. Linux tun-rs 2.8.16 user() passes a pointer for scalar TUNSETOWNER; existing rustix IntegerSetter supplies that single ABI correction before strict actual UID identity readback (ADR0046). No driver, network stack, ring or generic ioctl engine replacement.",
       "security_and_operations_cost": [
         "README identifies Windows wintun.dll dependency and Linux/Windows support; provider license does not cover driver distribution",
         "Do not permit generic privileged command execution",
@@ -573,8 +574,8 @@
         "W22",
         "W34"
       ],
-      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
-      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+      "validation_status": "Hosted41194242039 proved official amd64 DLL Authenticode Valid/WireGuard LLC and two medium-token IPC framing/cancellation tests on source297211e; native driver/packets did not execute due daemon API compile failure. Later exact-source native and production/two-target evidence required. See wintun-authenticode-ipc-41194242039.json and wintun-binary-provenance-41192684769.json.",
+      "decision_ref": "docs/adr/network/0044-ordinary-managed-tun-provider.md; docs/adr/network/0045-windows-managed-tun-boundary.md; docs/adr/network/0046-linux-tun-owner-scalar-ioctl.md"
     },
     {
       "id": "C10",
