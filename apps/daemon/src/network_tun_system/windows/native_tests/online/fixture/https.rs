@@ -21,45 +21,55 @@ pub(super) async fn fixture_scope(
         .trim_start_matches('/')
         .split('/')
         .collect::<Vec<_>>();
-    let allowed = matches!((request.method(), path.as_slice()),
-        (&Method::GET, ["api", "v3", "health"]) |
-        (&Method::POST, ["api", "v3", "health", "proof"]) |
-        (&Method::POST, ["api", "v3", "auth", "login" | "restore" | "refresh"]) |
-        (&Method::GET, ["api", "v3", "auth", "me"]) |
-        (&Method::POST, ["api", "v3", "devices"]) |
-        (&Method::POST, ["api", "v3", "devices", "challenge"]) |
-        (&Method::POST, ["api", "v3", "network", "spaces"]) |
-        (&Method::GET, ["api", "v3", "network", "spaces", _]) |
-        (&Method::GET, ["api", "v3", "network", "spaces", _, "addressing"]) |
-        (
-            &Method::POST,
-            [
-                "api",
-                "v3",
-                "network",
-                "spaces",
-                _,
-                "devices" | "addresses" | "packet-access",
-            ],
-        ) |
-        (&Method::POST, ["api", "v3", "network", "spaces", _, "members", _, "grants"]) |
-        (
-            &Method::GET | &Method::DELETE,
-            ["api", "v3", "network", "spaces", _, "packet-access", _],
-        ) |
-        (
-            &Method::POST,
-            [
-                "api",
-                "v3",
-                "network",
-                "spaces",
-                _,
-                "packet-access",
-                _,
-                "start",
-            ],
-        )
+    let allowed = matches!(
+        (request.method(), path.as_slice()),
+        (&Method::GET, ["api", "v3", "health"])
+            | (&Method::POST, ["api", "v3", "health", "proof"])
+            | (
+                &Method::POST,
+                ["api", "v3", "auth", "login" | "restore" | "refresh"]
+            )
+            | (&Method::GET, ["api", "v3", "auth", "me"])
+            | (&Method::POST, ["api", "v3", "devices"])
+            | (&Method::POST, ["api", "v3", "devices", "challenge"])
+            | (&Method::POST, ["api", "v3", "network", "spaces"])
+            | (&Method::GET, ["api", "v3", "network", "spaces", _])
+            | (
+                &Method::GET,
+                ["api", "v3", "network", "spaces", _, "addressing"]
+            )
+            | (
+                &Method::POST,
+                [
+                    "api",
+                    "v3",
+                    "network",
+                    "spaces",
+                    _,
+                    "devices" | "addresses" | "packet-access",
+                ],
+            )
+            | (
+                &Method::POST,
+                ["api", "v3", "network", "spaces", _, "members", _, "grants"]
+            )
+            | (
+                &Method::GET | &Method::DELETE,
+                ["api", "v3", "network", "spaces", _, "packet-access", _],
+            )
+            | (
+                &Method::POST,
+                [
+                    "api",
+                    "v3",
+                    "network",
+                    "spaces",
+                    _,
+                    "packet-access",
+                    _,
+                    "start",
+                ],
+            )
     );
     if allowed {
         next.run(request).await

@@ -12,9 +12,9 @@ mod native_files;
 mod native_gpu_diagnostics;
 mod native_video;
 #[cfg(any(target_os = "linux", windows))]
-mod network_packet_runtime;
-#[cfg(any(target_os = "linux", windows))]
 mod network_lan;
+#[cfg(any(target_os = "linux", windows))]
+mod network_packet_runtime;
 #[cfg(target_os = "linux")]
 mod network_subnet_system;
 #[cfg(any(target_os = "linux", windows))]
@@ -467,7 +467,10 @@ mod entry_tests {
         }
         let bytes = size(super::run);
         println!("Original command dispatcher future bytes: {bytes}");
-        assert!(bytes <= 64 * 1024, "the daemon entry must not embed unrelated business owner futures: {bytes}");
+        assert!(
+            bytes <= 64 * 1024,
+            "the daemon entry must not embed unrelated business owner futures: {bytes}"
+        );
     }
 }
 async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -477,7 +480,9 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // selected command (including a synchronous quota inspection) even starts.
     match args.command.take() {
         #[cfg(any(target_os = "linux", windows))]
-        Some(Command::LocalPortGate(command)) => return Box::pin(local_port_gate::run(command)).await,
+        Some(Command::LocalPortGate(command)) => {
+            return Box::pin(local_port_gate::run(command)).await;
+        }
         Some(Command::SpaceDns(command)) => return Box::pin(space_dns::run(command)).await,
         Some(Command::PrivateServiceProxy(command)) => {
             return Box::pin(private_service_proxy::run(command)).await;
@@ -485,15 +490,21 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         Some(Command::PrivateWebGateway(command)) => {
             return Box::pin(private_web_gateway::run(command)).await;
         }
-        Some(Command::SpaceDnsSystem(command)) => return Box::pin(space_dns_system::run(command)).await,
+        Some(Command::SpaceDnsSystem(command)) => {
+            return Box::pin(space_dns_system::run(command)).await;
+        }
         Some(Command::Diagnostics(command)) => return Ok(diagnostics::run_export(command)?),
         Some(Command::ServiceGroup(command)) => return Box::pin(service_group::run(command)).await,
         #[cfg(any(target_os = "linux", windows))]
-        Some(Command::NetworkTun(command)) => return Box::pin(network_tun_system::run_owner(command)).await,
+        Some(Command::NetworkTun(command)) => {
+            return Box::pin(network_tun_system::run_owner(command)).await;
+        }
         #[cfg(any(target_os = "linux", windows))]
         Some(Command::NetworkLan(command)) => return Box::pin(network_lan::run(command)).await,
         #[cfg(any(target_os = "linux", windows))]
-        Some(Command::NetworkTunSystem(command)) => return Box::pin(network_tun_system::run(command)).await,
+        Some(Command::NetworkTunSystem(command)) => {
+            return Box::pin(network_tun_system::run(command)).await;
+        }
         #[cfg(target_os = "linux")]
         Some(Command::NetworkSubnet(command)) => {
             return Box::pin(network_subnet_system::run_owner(command)).await;
