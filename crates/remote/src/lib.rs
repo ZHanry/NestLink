@@ -340,7 +340,9 @@ impl<R: AsyncRead + Unpin, W: AsyncWrite + Unpin> AuthorizedConnection<R, W> {
             }
         };
         self.check_stop()?;
-        let authorization = self.lease.charge_business(frame.channel, frame.payload.len());
+        let authorization = self
+            .lease
+            .charge_business(frame.channel, frame.payload.len());
         if let Err(error) = authorization {
             self.lease.stop(StopReason::Revoked)?;
             return Err(error);

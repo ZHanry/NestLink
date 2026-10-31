@@ -36,7 +36,8 @@ async fn real_http_sdk_registration_approval_native_quic_and_revoke() -> Result 
     actual_http_quic_with_budget(false).await
 }
 #[tokio::test]
-async fn remote_budget_real_http_signed_reservation_renewal_original_quic_bytes_and_revoke() -> Result {
+async fn remote_budget_real_http_signed_reservation_renewal_original_quic_bytes_and_revoke()
+-> Result {
     actual_http_quic_with_budget(true).await
 }
 async fn actual_http_quic_with_budget(budget_enabled: bool) -> Result {
@@ -79,7 +80,15 @@ async fn actual_http_quic_with_budget(budget_enabled: bool) -> Result {
             &controller,
             "Controller".into(),
             "windows".into(),
-            if budget_enabled {vec!["controller".into(), "vp8".into(),nestlink_protocol::remote_budget::CAPABILITY.into()]} else {vec!["controller".into(), "vp8".into()]},
+            if budget_enabled {
+                vec![
+                    "controller".into(),
+                    "vp8".into(),
+                    nestlink_protocol::remote_budget::CAPABILITY.into(),
+                ]
+            } else {
+                vec!["controller".into(), "vp8".into()]
+            },
             "direct_preferred".into(),
         )
         .await?;
@@ -88,7 +97,15 @@ async fn actual_http_quic_with_budget(budget_enabled: bool) -> Result {
             &host,
             "Host".into(),
             "linux-x11".into(),
-            if budget_enabled {vec!["host".into(), "vp8".into(),nestlink_protocol::remote_budget::CAPABILITY.into()]} else {vec!["host".into(), "vp8".into()]},
+            if budget_enabled {
+                vec![
+                    "host".into(),
+                    "vp8".into(),
+                    nestlink_protocol::remote_budget::CAPABILITY.into(),
+                ]
+            } else {
+                vec!["host".into(), "vp8".into()]
+            },
             "direct_preferred".into(),
         )
         .await?;
@@ -96,11 +113,20 @@ async fn actual_http_quic_with_budget(budget_enabled: bool) -> Result {
     assert_eq!(controller_devices.len(), 1);
     assert_eq!(
         controller_devices[0].device.capabilities,
-        if budget_enabled {vec!["controller".to_owned(),"vp8".to_owned(),nestlink_protocol::remote_budget::CAPABILITY.into(),nestlink_protocol::native_ice::CAPABILITY.into()]} else {vec![
-            "controller".to_owned(),
-            "vp8".to_owned(),
-            nestlink_protocol::native_ice::CAPABILITY.into()
-        ]},
+        if budget_enabled {
+            vec![
+                "controller".to_owned(),
+                "vp8".to_owned(),
+                nestlink_protocol::remote_budget::CAPABILITY.into(),
+                nestlink_protocol::native_ice::CAPABILITY.into(),
+            ]
+        } else {
+            vec![
+                "controller".to_owned(),
+                "vp8".to_owned(),
+                nestlink_protocol::native_ice::CAPABILITY.into(),
+            ]
+        },
         "registration preserves explicit codecs and adds the SDK's native transport capability"
     );
     assert_eq!(host_sdk.devices().await?.len(), 1);
@@ -149,9 +175,21 @@ async fn actual_http_quic_with_budget(budget_enabled: bool) -> Result {
     let host_permit = host_sdk.host_permit(&host, &view.id).await?;
     let remote_meter = permit.remote_budget().cloned();
     if let Some(budget) = &remote_meter {
-        assert_eq!(budget.claims(),initial.remote_budget().ok_or("missing original meter")?.claims());
-        assert_eq!(budget.claims(),host_permit.remote_budget().ok_or("missing host meter")?.claims());
-        assert_eq!(budget.spent_bytes()?,0);
+        assert_eq!(
+            budget.claims(),
+            initial
+                .remote_budget()
+                .ok_or("missing original meter")?
+                .claims()
+        );
+        assert_eq!(
+            budget.claims(),
+            host_permit
+                .remote_budget()
+                .ok_or("missing host meter")?
+                .claims()
+        );
+        assert_eq!(budget.spent_bytes()?, 0);
     }
     assert_eq!(permit.digest(), host_permit.digest());
     assert!(matches!(
@@ -232,10 +270,18 @@ async fn actual_http_quic_with_budget(budget_enabled: bool) -> Result {
         connection_generation: claims.connection_generation,
         capability_sha256: claims.capability_sha256.as_slice().try_into()?,
         granted_permissions: vec![Permission::View],
-        supported_capabilities: if budget_enabled {vec!["vp8".into(),nestlink_protocol::native_ice::CAPABILITY.into(),nestlink_protocol::remote_budget::CAPABILITY.into()]} else {vec![
-            "vp8".into(),
-            nestlink_protocol::native_ice::CAPABILITY.into(),
-        ]},
+        supported_capabilities: if budget_enabled {
+            vec![
+                "vp8".into(),
+                nestlink_protocol::native_ice::CAPABILITY.into(),
+                nestlink_protocol::remote_budget::CAPABILITY.into(),
+            ]
+        } else {
+            vec![
+                "vp8".into(),
+                nestlink_protocol::native_ice::CAPABILITY.into(),
+            ]
+        },
         local_paths: PathSet::DIRECT,
     };
     let server = listener(
@@ -303,8 +349,11 @@ async fn actual_http_quic_with_budget(budget_enabled: bool) -> Result {
     );
     assert!(channel.send(Channel::Input, b"not-approved").await.is_err());
     if let Some(budget) = &remote_meter {
-        assert_eq!(budget.spent_bytes()?, 2 * b"authenticated-data-channel".len() as u64);
-        assert_eq!(budget.connection_attempts()?,2);
+        assert_eq!(
+            budget.spent_bytes()?,
+            2 * b"authenticated-data-channel".len() as u64
+        );
+        assert_eq!(budget.connection_attempts()?, 2);
     }
     host_sdk.revoke_remote(&view.id).await?;
     assert!(controller_sdk.permit(&view.id).await.is_err());

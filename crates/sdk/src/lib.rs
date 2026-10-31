@@ -23,12 +23,12 @@ use url::Url;
 mod diagnostics;
 mod media_authority;
 pub mod network_management;
+#[path = "network/topology.rs"]
+pub mod network_topology;
 #[cfg(not(target_arch = "wasm32"))]
 mod offline_channel;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod offline_remote;
-#[path = "network/topology.rs"]
-pub mod network_topology;
 mod spaces;
 #[cfg(not(target_arch = "wasm32"))]
 pub use spaces::dns::{SpaceDns, SpaceDnsError};
@@ -1478,8 +1478,18 @@ async fn request<R: DeserializeOwned>(
     }
     decode_response(status, &bytes)
 }
-fn attach_remote_budget(permit: VerifiedPermit, budget: Option<nestlink_protocol::remote_budget::SignedRemoteUsageBudget>) -> Result<VerifiedPermit, SdkError> {
-    match (permit.claims().required_capabilities.iter().any(|v| v == nestlink_protocol::remote_budget::CAPABILITY), budget) {
+fn attach_remote_budget(
+    permit: VerifiedPermit,
+    budget: Option<nestlink_protocol::remote_budget::SignedRemoteUsageBudget>,
+) -> Result<VerifiedPermit, SdkError> {
+    match (
+        permit
+            .claims()
+            .required_capabilities
+            .iter()
+            .any(|v| v == nestlink_protocol::remote_budget::CAPABILITY),
+        budget,
+    ) {
         (true, Some(signed)) => Ok(permit.with_remote_budget(&signed)?),
         (false, None) => Ok(permit),
         _ => Err(SdkError::Trust),

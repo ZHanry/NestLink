@@ -101,73 +101,232 @@ fn activate(signer: &PermitSigner, claims: &PermitClaims, binding: SessionBindin
 }
 
 #[test]
-fn remote_budget_original_session_requires_verified_budget_and_retains_meter_during_renewal() -> Result<(), Box<dyn std::error::Error>> {
+fn remote_budget_original_session_requires_verified_budget_and_retains_meter_during_renewal()
+-> Result<(), Box<dyn std::error::Error>> {
     use nestlink_protocol::remote_budget::*;
-    let (signer, _, _, mut claims, mut binding)=fixture();
-    claims.required_capabilities.push(CAPABILITY.into());binding.supported_capabilities.push(CAPABILITY.into());
-    let now=ClockSample {monotonic_ms:1000,unix_ms:1_000_000};
-    assert!(Session::activate(verified(&signer,&claims),binding.clone(),Path::Direct,1000,now).is_err());
-    let budget=RemoteUsageBudgetClaims {version:1,reservation_id:id(90),deployment_id:claims.deployment_id.clone(),security_epoch:claims.security_epoch,session_id:claims.session_id.clone(),account_id:claims.account_id.clone(),controller_device_id:claims.controller_device_id.clone(),host_device_id:claims.host_device_id.clone(),controller_key_sha256:claims.controller_key_sha256.as_slice().try_into()?,host_key_sha256:claims.host_key_sha256.as_slice().try_into()?,resource_id:claims.resource_id.clone(),connection_generation:claims.connection_generation,policy_revision:claims.policy_revision,capability_sha256:claims.capability_sha256.as_slice().try_into()?,permissions:claims.permissions.clone(),paths:claims.paths.clone(),maximum_bytes:100,maximum_file_write_bytes:0,maximum_connection_attempts:8};
-    let permit=verified(&signer,&claims).with_remote_budget(&signer.sign_remote_usage_budget(&budget)?)?;
-    let observer=permit.remote_budget().ok_or("meter")?.clone();
-    let mut session=Session::activate(permit.clone(),binding,Path::Direct,1000,now)?;
-    observer.charge(Permission::View,70)?;
-    claims.lease_sequence=2;claims.issued_at_unix_ms+=1000;claims.expires_at_unix_ms+=1000;
-    let next=verified(&signer,&claims).retain_remote_budget(&permit)?;
-    session.renew(next,2000,ClockSample {monotonic_ms:2000,unix_ms:1_001_000})?;
-    assert_eq!(session.current_verified_permit().remote_budget().ok_or("retained meter")?.spent_bytes()?,70);
-    assert!(observer.charge(Permission::View,31).is_err());
-    assert!(session.check_clock(ClockSample {monotonic_ms:2001,unix_ms:1_001_001}).is_err());
-    assert_eq!(session.state(),SessionState::Stopped(StopReason::Revoked));
+    let (signer, _, _, mut claims, mut binding) = fixture();
+    claims.required_capabilities.push(CAPABILITY.into());
+    binding.supported_capabilities.push(CAPABILITY.into());
+    let now = ClockSample {
+        monotonic_ms: 1000,
+        unix_ms: 1_000_000,
+    };
+    assert!(
+        Session::activate(
+            verified(&signer, &claims),
+            binding.clone(),
+            Path::Direct,
+            1000,
+            now
+        )
+        .is_err()
+    );
+    let budget = RemoteUsageBudgetClaims {
+        version: 1,
+        reservation_id: id(90),
+        deployment_id: claims.deployment_id.clone(),
+        security_epoch: claims.security_epoch,
+        session_id: claims.session_id.clone(),
+        account_id: claims.account_id.clone(),
+        controller_device_id: claims.controller_device_id.clone(),
+        host_device_id: claims.host_device_id.clone(),
+        controller_key_sha256: claims.controller_key_sha256.as_slice().try_into()?,
+        host_key_sha256: claims.host_key_sha256.as_slice().try_into()?,
+        resource_id: claims.resource_id.clone(),
+        connection_generation: claims.connection_generation,
+        policy_revision: claims.policy_revision,
+        capability_sha256: claims.capability_sha256.as_slice().try_into()?,
+        permissions: claims.permissions.clone(),
+        paths: claims.paths.clone(),
+        maximum_bytes: 100,
+        maximum_file_write_bytes: 0,
+        maximum_connection_attempts: 8,
+    };
+    let permit = verified(&signer, &claims)
+        .with_remote_budget(&signer.sign_remote_usage_budget(&budget)?)?;
+    let observer = permit.remote_budget().ok_or("meter")?.clone();
+    let mut session = Session::activate(permit.clone(), binding, Path::Direct, 1000, now)?;
+    observer.charge(Permission::View, 70)?;
+    claims.lease_sequence = 2;
+    claims.issued_at_unix_ms += 1000;
+    claims.expires_at_unix_ms += 1000;
+    let next = verified(&signer, &claims).retain_remote_budget(&permit)?;
+    session.renew(
+        next,
+        2000,
+        ClockSample {
+            monotonic_ms: 2000,
+            unix_ms: 1_001_000,
+        },
+    )?;
+    assert_eq!(
+        session
+            .current_verified_permit()
+            .remote_budget()
+            .ok_or("retained meter")?
+            .spent_bytes()?,
+        70
+    );
+    assert!(observer.charge(Permission::View, 31).is_err());
+    assert!(
+        session
+            .check_clock(ClockSample {
+                monotonic_ms: 2001,
+                unix_ms: 1_001_001
+            })
+            .is_err()
+    );
+    assert_eq!(session.state(), SessionState::Stopped(StopReason::Revoked));
     Ok(())
 }
 
 #[test]
-fn remote_budget_offline_original_session_uses_independent_deadline_and_never_exports_or_renews_online_authority() -> Result<(),Box<dyn std::error::Error>> {
-    use nestlink_identity::{network::NetworkAuthoritySigner,offline::*};
+fn remote_budget_offline_original_session_uses_independent_deadline_and_never_exports_or_renews_online_authority()
+-> Result<(), Box<dyn std::error::Error>> {
+    use nestlink_identity::{network::NetworkAuthoritySigner, offline::*};
     use nestlink_protocol::offline::*;
-    let (signer,controller,host,claims,binding)=fixture();
-    let mut process=OfflineProcess::new(claims.controller_device_id.clone(),controller.public_key(),1_000_000,1)?;
-    let host_process=OfflineProcess::new(claims.host_device_id.clone(),host.public_key(),1_000_000,1)?;
-    let authority=NetworkAuthoritySigner::from_master_seed(&[49;32])?;
-    let offline=OfflineGrantBundleClaims{
-        bundle_version:1,deployment_id:claims.deployment_id.clone(),space_id:id(40),bundle_id:id(41),policy_epoch:1,security_epoch:1,highest_revocation_epoch:1,
-        issued_at_ms:1_000_000,expires_at_ms:1_060_000,
-        members:[OfflineMember{installation_id:claims.controller_device_id.clone(),account_id:claims.account_id.clone(),public_key:controller.public_key(),membership_epoch:1,process_nonce:process.nonce()},OfflineMember{installation_id:claims.host_device_id.clone(),account_id:id(42),public_key:host.public_key(),membership_epoch:1,process_nonce:host_process.nonce()}],
-        connection:OfflineConnection{connection_id:id(43),path_id:id(44),direct_transports:vec![OfflineDirectTransport::Quic]},
-        business:OfflineBusiness::RemoteControl{resource_id:claims.resource_id.clone(),operations:vec![OfflineRemoteOperation::View],capability_digest:[7;32]},
-        resources:OfflineResourceReservation{reservation_id:id(45),byte_limit:32,file_write_limit:0,connection_limit:2},
+    let (signer, controller, host, claims, binding) = fixture();
+    let mut process = OfflineProcess::new(
+        claims.controller_device_id.clone(),
+        controller.public_key(),
+        1_000_000,
+        1,
+    )?;
+    let host_process = OfflineProcess::new(
+        claims.host_device_id.clone(),
+        host.public_key(),
+        1_000_000,
+        1,
+    )?;
+    let authority = NetworkAuthoritySigner::from_master_seed(&[49; 32])?;
+    let offline = OfflineGrantBundleClaims {
+        bundle_version: 1,
+        deployment_id: claims.deployment_id.clone(),
+        space_id: id(40),
+        bundle_id: id(41),
+        policy_epoch: 1,
+        security_epoch: 1,
+        highest_revocation_epoch: 1,
+        issued_at_ms: 1_000_000,
+        expires_at_ms: 1_060_000,
+        members: [
+            OfflineMember {
+                installation_id: claims.controller_device_id.clone(),
+                account_id: claims.account_id.clone(),
+                public_key: controller.public_key(),
+                membership_epoch: 1,
+                process_nonce: process.nonce(),
+            },
+            OfflineMember {
+                installation_id: claims.host_device_id.clone(),
+                account_id: id(42),
+                public_key: host.public_key(),
+                membership_epoch: 1,
+                process_nonce: host_process.nonce(),
+            },
+        ],
+        connection: OfflineConnection {
+            connection_id: id(43),
+            path_id: id(44),
+            direct_transports: vec![OfflineDirectTransport::Quic],
+        },
+        business: OfflineBusiness::RemoteControl {
+            resource_id: claims.resource_id.clone(),
+            operations: vec![OfflineRemoteOperation::View],
+            capability_digest: [7; 32],
+        },
+        resources: OfflineResourceReservation {
+            reservation_id: id(45),
+            byte_limit: 32,
+            file_write_limit: 0,
+            connection_limit: 2,
+        },
     };
-    let revoked=std::collections::BTreeSet::new();let public=authority.public_key();
-    let context=OfflineVerification{authority:&public,deployment_id:&claims.deployment_id,space_id:&offline.space_id,policy_epoch:1,security_epoch:1,highest_revocation_epoch:1,revoked_bundle_ids:&revoked,now_ms:1_000_000};
-    let digest=offline_draft_digest(&public,&offline)?;
-    let admission=process.activate(verify_offline_bundle(&authority.sign_offline_bundle(&offline)?,&context)?,&context,digest)?;
-    let owner=nestlink_session::OfflineRemoteAuthority::new(admission)?;
-    owner.reserve_attempt(1_016_000,OfflineDirectTransport::Quic)?;
-    let now=ClockSample{monotonic_ms:16_000,unix_ms:1_016_000};
-    assert!(Session::activate_offline(verified(&signer,&claims),binding.clone(),owner.clone(),now).is_err());
-    owner.authenticate(1_016_000,OfflineDirectTransport::Quic,&host.public_key())?;
-    assert!(Session::activate(verified(&signer,&claims),binding.clone(),Path::Direct,16_000,now).is_err());
-    let mut session=Session::activate_offline(verified(&signer,&claims),binding,owner.clone(),now)?;
-    assert_eq!(session.proof_transcript().permit_sha256,digest);
-    assert!(session.authorize(Permission::View,Path::Direct,16_000).is_err());
-    for (role,key) in [(EndpointRole::Controller,&controller),(EndpointRole::Host,&host)] {
-        let proof=key.prove(&session.proof_transcript())?;
-        session.confirm_endpoint(role,&key.public_key(),&proof,16_000)?;
+    let revoked = std::collections::BTreeSet::new();
+    let public = authority.public_key();
+    let context = OfflineVerification {
+        authority: &public,
+        deployment_id: &claims.deployment_id,
+        space_id: &offline.space_id,
+        policy_epoch: 1,
+        security_epoch: 1,
+        highest_revocation_epoch: 1,
+        revoked_bundle_ids: &revoked,
+        now_ms: 1_000_000,
+    };
+    let digest = offline_draft_digest(&public, &offline)?;
+    let admission = process.activate(
+        verify_offline_bundle(&authority.sign_offline_bundle(&offline)?, &context)?,
+        &context,
+        digest,
+    )?;
+    let owner = nestlink_session::OfflineRemoteAuthority::new(admission)?;
+    owner.reserve_attempt(1_016_000, OfflineDirectTransport::Quic)?;
+    let now = ClockSample {
+        monotonic_ms: 16_000,
+        unix_ms: 1_016_000,
+    };
+    assert!(
+        Session::activate_offline(
+            verified(&signer, &claims),
+            binding.clone(),
+            owner.clone(),
+            now
+        )
+        .is_err()
+    );
+    owner.authenticate(1_016_000, OfflineDirectTransport::Quic, &host.public_key())?;
+    assert!(
+        Session::activate(
+            verified(&signer, &claims),
+            binding.clone(),
+            Path::Direct,
+            16_000,
+            now
+        )
+        .is_err()
+    );
+    let mut session =
+        Session::activate_offline(verified(&signer, &claims), binding, owner.clone(), now)?;
+    assert_eq!(session.proof_transcript().permit_sha256, digest);
+    assert!(
+        session
+            .authorize(Permission::View, Path::Direct, 16_000)
+            .is_err()
+    );
+    for (role, key) in [
+        (EndpointRole::Controller, &controller),
+        (EndpointRole::Host, &host),
+    ] {
+        let proof = key.prove(&session.proof_transcript())?;
+        session.confirm_endpoint(role, &key.public_key(), &proof, 16_000)?;
     }
-    session.authorize(Permission::View,Path::Direct,16_000)?;
-    assert!(session.authorize(Permission::Input,Path::Direct,16_000).is_err());
-    assert!(session.authorize(Permission::View,Path::Relay,16_000).is_err());
-    assert!(session.current_input_permit(Path::Direct,16_000).is_err());
-    assert!(session.renew(verified(&signer,&claims),16_001,now).is_err());
-    session.charge_business(Permission::View,Path::Direct,30,now)?;
-    assert_eq!(owner.status()?.remaining_bytes,2);
+    session.authorize(Permission::View, Path::Direct, 16_000)?;
+    assert!(
+        session
+            .authorize(Permission::Input, Path::Direct, 16_000)
+            .is_err()
+    );
+    assert!(
+        session
+            .authorize(Permission::View, Path::Relay, 16_000)
+            .is_err()
+    );
+    assert!(session.current_input_permit(Path::Direct, 16_000).is_err());
+    assert!(
+        session
+            .renew(verified(&signer, &claims), 16_001, now)
+            .is_err()
+    );
+    session.charge_business(Permission::View, Path::Direct, 30, now)?;
+    assert_eq!(owner.status()?.remaining_bytes, 2);
     session.stop(StopReason::TransportLost);
     assert!(!owner.status()?.stopped);
-    owner.reserve_attempt(1_016_000,OfflineDirectTransport::Quic)?;
-    assert_eq!(owner.status()?.connection_attempts,2);
-    assert_eq!(owner.status()?.remaining_bytes,2);
-    process.stop();assert!(owner.check(1_016_001).is_err());
+    owner.reserve_attempt(1_016_000, OfflineDirectTransport::Quic)?;
+    assert_eq!(owner.status()?.connection_attempts, 2);
+    assert_eq!(owner.status()?.remaining_bytes, 2);
+    process.stop();
+    assert!(owner.check(1_016_001).is_err());
     Ok(())
 }
 

@@ -55,7 +55,9 @@ impl ExternalDataEnvelope {
             }
         } else {
             self.queued.check_file_delivery();
-            self.lease.charge_business(self.queued.frame.channel, self.queued.frame.payload.len()).map_err(io::Error::other)?;
+            self.lease
+                .charge_business(self.queued.frame.channel, self.queued.frame.payload.len())
+                .map_err(io::Error::other)?;
             self.started = true;
         }
         if !self.queued.check_delivery() {

@@ -118,7 +118,8 @@ async fn internal_candidate_http_requires_scope_auth_first_approval_and_both_ren
     candidate_http(false).await
 }
 #[tokio::test]
-async fn internal_candidate_http_freezes_all_explicit_lower_formats_through_approval_and_renewal() -> Result {
+async fn internal_candidate_http_freezes_all_explicit_lower_formats_through_approval_and_renewal()
+-> Result {
     candidate_http(true).await
 }
 async fn candidate_http(adaptive: bool) -> Result {
@@ -144,14 +145,22 @@ async fn candidate_http(adaptive: bool) -> Result {
     let cid = enroll(&mut store, &principal, &controller, now)?;
     let hid = enroll(&mut store, &principal, &host, now)?;
     let format = VideoFormat::legacy_h264(31, 320, 240, FrameRate::new(30, 1)?, 2000)?;
-    let additional_formats = if adaptive { vec![
-        VideoFormat::legacy_h264(31, 320, 240, FrameRate::new(22, 1)?, 1500)?.encode()?,
-        VideoFormat::legacy_h264(31, 160, 120, FrameRate::new(15, 1)?, 1000)?.encode()?,
-    ] } else { Vec::new() };
+    let additional_formats = if adaptive {
+        vec![
+            VideoFormat::legacy_h264(31, 320, 240, FrameRate::new(22, 1)?, 1500)?.encode()?,
+            VideoFormat::legacy_h264(31, 160, 120, FrameRate::new(15, 1)?, 1000)?.encode()?,
+        ]
+    } else {
+        Vec::new()
+    };
     let policy = InternalSoftwareMediaCandidate {
-        deployment_id: deployment.clone(), account_id: principal.account_id.clone(),
-        controller_device_id: cid.clone(), host_device_id: hid.clone(),
-        format: format.encode()?, format_sha256: format.digest()?, additional_formats,
+        deployment_id: deployment.clone(),
+        account_id: principal.account_id.clone(),
+        controller_device_id: cid.clone(),
+        host_device_id: hid.clone(),
+        format: format.encode()?,
+        format_sha256: format.digest()?,
+        additional_formats,
     };
     let exact_formats = policy.formats()?;
     announce(

@@ -265,8 +265,18 @@ impl Session {
         allow_regression: bool,
     ) -> Result<Self, ContractError> {
         validate_binding_with_rollout(&permit, &binding, path, allow_regression)?;
-        if permit.claims().required_capabilities.iter().any(|v| v == nestlink_protocol::remote_budget::CAPABILITY) {
-            let budget = permit.remote_budget().ok_or_else(|| error(ErrorCode::AuthRequired, "original cumulative remote budget required"))?;
+        if permit
+            .claims()
+            .required_capabilities
+            .iter()
+            .any(|v| v == nestlink_protocol::remote_budget::CAPABILITY)
+        {
+            let budget = permit.remote_budget().ok_or_else(|| {
+                error(
+                    ErrorCode::AuthRequired,
+                    "original cumulative remote budget required",
+                )
+            })?;
             budget.claims().check_permit(permit.claims())?;
             budget.reserve_connection_attempt()?;
         }
@@ -407,7 +417,10 @@ impl Session {
     ) -> Result<(), ContractError> {
         self.check_clock(now)?;
         if self.offline.is_some() {
-            return Err(error(ErrorCode::PermissionRequired, "finite offline authority cannot renew an online permit"));
+            return Err(error(
+                ErrorCode::PermissionRequired,
+                "finite offline authority cannot renew an online permit",
+            ));
         }
         if self.permit.claims().lease_sequence != expected_sequence
             || expected_sequence.checked_add(1) != Some(permit.claims().lease_sequence)
@@ -465,7 +478,10 @@ impl Session {
     ) -> Result<(), ContractError> {
         self.check_clock(now)?;
         if self.offline.is_some() && path != Path::Direct {
-            return Err(error(ErrorCode::PermissionRequired, "offline authority is direct only"));
+            return Err(error(
+                ErrorCode::PermissionRequired,
+                "offline authority is direct only",
+            ));
         }
         if self.state != SessionState::AwaitingProof || self.proved != 0 {
             return Err(error(
@@ -502,7 +518,10 @@ impl Session {
     /// local lease and with fresh control-plane consent from both endpoints.
     pub fn reconnection_permit(&self, now: ClockSample) -> Result<VerifiedPermit, ContractError> {
         if self.offline.is_some() {
-            return Err(error(ErrorCode::PermissionRequired, "offline recovery retains its own original authority"));
+            return Err(error(
+                ErrorCode::PermissionRequired,
+                "offline recovery retains its own original authority",
+            ));
         }
         if !matches!(
             self.state,
@@ -522,7 +541,11 @@ impl Session {
     pub fn proof_transcript(&self) -> EndpointProofClaims {
         EndpointProofClaims {
             schema_version: SCHEMA_VERSION,
-            permit_sha256: self.offline.as_ref().map_or_else(|| self.permit.digest(), OfflineRemoteAuthority::digest).to_vec(),
+            permit_sha256: self
+                .offline
+                .as_ref()
+                .map_or_else(|| self.permit.digest(), OfflineRemoteAuthority::digest)
+                .to_vec(),
             challenge: self.challenge.to_vec(),
             controller_key_sha256: self.binding.controller_key_sha256.to_vec(),
             host_key_sha256: self.binding.host_key_sha256.to_vec(),
@@ -610,7 +633,10 @@ impl Session {
         self.check_live(monotonic_ms)?;
         if let Some(offline) = &self.offline {
             if self.state != SessionState::Active || path != Path::Direct {
-                return Err(error(ErrorCode::AuthRequired, "proved direct offline session required"));
+                return Err(error(
+                    ErrorCode::AuthRequired,
+                    "proved direct offline session required",
+                ));
             }
             return offline.authorize(permission, self.last_unix_ms);
         }
@@ -650,7 +676,10 @@ impl Session {
     ) -> Result<VerifiedPermit, ContractError> {
         self.authorize(Permission::Input, path, monotonic_ms)?;
         if self.offline.is_some() {
-            return Err(error(ErrorCode::PermissionRequired, "offline input cannot export an online permit"));
+            return Err(error(
+                ErrorCode::PermissionRequired,
+                "offline input cannot export an online permit",
+            ));
         }
         Ok(self.permit.clone())
     }
@@ -664,7 +693,10 @@ impl Session {
     ) -> Result<(), ContractError> {
         self.check_live(now.monotonic_ms)?;
         if self.offline.is_some() {
-            return Err(error(ErrorCode::PermissionRequired, "finite offline authority cannot renew an online permit"));
+            return Err(error(
+                ErrorCode::PermissionRequired,
+                "finite offline authority cannot renew an online permit",
+            ));
         }
         if now.unix_ms < self.last_unix_ms {
             self.stop(StopReason::ClockInvalid);
@@ -675,9 +707,16 @@ impl Session {
         }
         self.validate_current_binding(&permit, self.path)?;
         match (self.permit.remote_budget(), permit.remote_budget()) {
-            (Some(old), Some(next)) if old.claims() == next.claims() => { next.check()?; }
+            (Some(old), Some(next)) if old.claims() == next.claims() => {
+                next.check()?;
+            }
             (None, None) => {}
-            _ => return Err(error(ErrorCode::PermissionRequired, "remote cumulative budget owner changed during renewal")),
+            _ => {
+                return Err(error(
+                    ErrorCode::PermissionRequired,
+                    "remote cumulative budget owner changed during renewal",
+                ));
+            }
         }
         if request_started_ms <= self.last_request_ms
             || permit.claims().lease_sequence <= self.permit.claims().lease_sequence
@@ -710,8 +749,11 @@ impl Session {
     }
 
     pub fn stop(&mut self, reason: StopReason) -> StopEffects {
-        if !matches!(reason, StopReason::TransportLost | StopReason::NetworkChanged)
-            && let Some(offline) = &self.offline {
+        if !matches!(
+            reason,
+            StopReason::TransportLost | StopReason::NetworkChanged
+        ) && let Some(offline) = &self.offline
+        {
             offline.stop();
         }
         if !matches!(self.state, SessionState::Stopped(_)) {
@@ -739,13 +781,22 @@ impl Session {
             ));
         }
         if let Some(offline) = &self.offline
-            && let Err(failure) = offline.check(self.last_unix_ms) {
+            && let Err(failure) = offline.check(self.last_unix_ms)
+        {
             self.stop(StopReason::Revoked);
             return Err(failure);
         }
-        if self.offline.is_none() && self.permit.remote_budget().is_some_and(|budget| budget.check().is_err()) {
+        if self.offline.is_none()
+            && self
+                .permit
+                .remote_budget()
+                .is_some_and(|budget| budget.check().is_err())
+        {
             self.stop(StopReason::Revoked);
-            return Err(error(ErrorCode::CapacityExceeded, "original cumulative remote budget terminated"));
+            return Err(error(
+                ErrorCode::CapacityExceeded,
+                "original cumulative remote budget terminated",
+            ));
         }
         if monotonic_ms < self.last_monotonic_ms {
             self.stop(StopReason::ClockInvalid);
@@ -783,7 +834,8 @@ impl Session {
         }
         self.last_unix_ms = now.unix_ms;
         if let Some(offline) = &self.offline
-            && let Err(failure) = offline.check(now.unix_ms) {
+            && let Err(failure) = offline.check(now.unix_ms)
+        {
             self.stop(StopReason::Revoked);
             return Err(failure);
         }

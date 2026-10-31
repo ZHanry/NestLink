@@ -5,19 +5,26 @@
 mod mdns;
 mod policy;
 mod runtime;
-mod wire;
 #[cfg(test)]
 mod tests;
+mod wire;
 
 pub use policy::{LanPolicy, MdnsRule, UdpRule};
 pub use runtime::LanBridge;
 
-use std::{io, time::{SystemTime, UNIX_EPOCH}};
+use std::{
+    io,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 fn denied(message: impl std::fmt::Display) -> io::Error {
     io::Error::new(io::ErrorKind::PermissionDenied, message.to_string())
 }
 fn wall_ms() -> io::Result<u64> {
-    SystemTime::now().duration_since(UNIX_EPOCH).map_err(io::Error::other)?
-        .as_millis().try_into().map_err(io::Error::other)
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(io::Error::other)?
+        .as_millis()
+        .try_into()
+        .map_err(io::Error::other)
 }

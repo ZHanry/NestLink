@@ -170,17 +170,37 @@ fn independent_offline_deadline_and_explicit_operations_cannot_expand()
             .admit_connection(NOW, OfflineDirectTransport::Quic, &[99; 32])
             .is_err()
     );
-    assert!(owner.authenticate_reserved_connection(NOW, OfflineDirectTransport::Quic, &[12; 32]).is_err());
+    assert!(
+        owner
+            .authenticate_reserved_connection(NOW, OfflineDirectTransport::Quic, &[12; 32])
+            .is_err()
+    );
     owner.reserve_connection_attempt(NOW, OfflineDirectTransport::Quic)?;
     assert!(!owner.has_authenticated_connection());
-    assert!(owner.admit_remote_operation(NOW, OfflineRemoteOperation::View, 1).is_err());
-    assert!(owner.authenticate_reserved_connection(NOW, OfflineDirectTransport::Tls, &[12; 32]).is_err());
-    assert!(owner.authenticate_reserved_connection(NOW, OfflineDirectTransport::Quic, &[99; 32]).is_err());
+    assert!(
+        owner
+            .admit_remote_operation(NOW, OfflineRemoteOperation::View, 1)
+            .is_err()
+    );
+    assert!(
+        owner
+            .authenticate_reserved_connection(NOW, OfflineDirectTransport::Tls, &[12; 32])
+            .is_err()
+    );
+    assert!(
+        owner
+            .authenticate_reserved_connection(NOW, OfflineDirectTransport::Quic, &[99; 32])
+            .is_err()
+    );
     assert!(!owner.has_authenticated_connection());
     assert_eq!(owner.spent_bytes(), 0);
     owner.authenticate_reserved_connection(NOW, OfflineDirectTransport::Quic, &[12; 32])?;
     assert!(owner.has_authenticated_connection());
-    assert!(owner.authenticate_reserved_connection(NOW, OfflineDirectTransport::Quic, &[12; 32]).is_err());
+    assert!(
+        owner
+            .authenticate_reserved_connection(NOW, OfflineDirectTransport::Quic, &[12; 32])
+            .is_err()
+    );
     owner.admit_remote_operation(NOW, OfflineRemoteOperation::View, 1)?;
     assert!(
         owner
@@ -336,7 +356,11 @@ fn private_service_pins_original_target_and_has_no_remote_rights()
     f.claims.resources.file_write_limit = 0;
     let mut owner = f.activate()?;
     owner.reserve_connection_attempt(NOW, OfflineDirectTransport::Tls)?;
-    assert!(owner.admit_private_service(NOW, &[31; 32], &[32; 32], 10).is_err());
+    assert!(
+        owner
+            .admit_private_service(NOW, &[31; 32], &[32; 32], 10)
+            .is_err()
+    );
     assert_eq!(owner.spent_bytes(), 0);
     owner.authenticate_reserved_connection(NOW, OfflineDirectTransport::Tls, &[12; 32])?;
     assert!(

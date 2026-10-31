@@ -130,7 +130,10 @@ impl VerifiedPermit {
     pub fn remote_budget(&self) -> Option<&remote_budget::VerifiedRemoteUsageBudget> {
         self.remote_budget.as_ref()
     }
-    pub fn with_remote_budget(mut self, signed: &nestlink_protocol::remote_budget::SignedRemoteUsageBudget) -> Result<Self, ContractError> {
+    pub fn with_remote_budget(
+        mut self,
+        signed: &nestlink_protocol::remote_budget::SignedRemoteUsageBudget,
+    ) -> Result<Self, ContractError> {
         self.remote_budget = Some(remote_budget::verify_remote_usage_budget(signed, &self)?);
         Ok(self)
     }
@@ -138,12 +141,25 @@ impl VerifiedPermit {
     /// reconnection. A successor cannot obtain an empty counter or expand it.
     pub fn retain_remote_budget(mut self, previous: &Self) -> Result<Self, ContractError> {
         if let Some(budget) = previous.remote_budget() {
-            if self.issuer != previous.issuer { return Err(ContractError::new(ErrorCode::IdentityMismatch, "remote budget issuer changed")); }
+            if self.issuer != previous.issuer {
+                return Err(ContractError::new(
+                    ErrorCode::IdentityMismatch,
+                    "remote budget issuer changed",
+                ));
+            }
             budget.claims().check_permit(&self.claims)?;
             budget.check()?;
             self.remote_budget = Some(budget.clone());
-        } else if self.claims.required_capabilities.iter().any(|v| v == nestlink_protocol::remote_budget::CAPABILITY) {
-            return Err(ContractError::new(ErrorCode::AuthRequired, "original remote budget owner missing"));
+        } else if self
+            .claims
+            .required_capabilities
+            .iter()
+            .any(|v| v == nestlink_protocol::remote_budget::CAPABILITY)
+        {
+            return Err(ContractError::new(
+                ErrorCode::AuthRequired,
+                "original remote budget owner missing",
+            ));
         }
         Ok(self)
     }

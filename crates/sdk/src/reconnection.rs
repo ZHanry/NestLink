@@ -376,7 +376,8 @@ impl Sdk {
             &self.trust.permit_issuer,
             attempt.previous.claims(),
             submission,
-        )?.retain_remote_budget(&attempt.previous)?;
+        )?
+        .retain_remote_budget(&attempt.previous)?;
         attempt.check(self)?;
         Ok(ReconnectedPermit {
             permit: next,

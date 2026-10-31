@@ -39,22 +39,71 @@ fn peer(
     Ok(key)
 }
 impl crate::offline_channel::Owner for Shared {
-    fn claims(&self)->Result<nestlink_protocol::offline::OfflineGrantBundleClaims,SdkError> {Ok(self.lock()?.authority.claims().clone())}
-    fn digest(&self)->Result<[u8;32],SdkError> {Ok(self.lock()?.authority.digest())}
-    fn sign(&self,wall:u64,binding:&nestlink_protocol::offline::channel::OfflineChannelBinding)->Result<Vec<u8>,SdkError> {Ok(self.lock()?.authority.sign_channel_proof(wall,binding)?)}
-    fn authenticate(&self,wall:u64,transport:OfflineDirectTransport,peer:&[u8;32])->Result<(),SdkError> {Ok(self.lock()?.authority.authenticate_reserved_connection(wall,transport,peer)?)}
+    fn claims(&self) -> Result<nestlink_protocol::offline::OfflineGrantBundleClaims, SdkError> {
+        Ok(self.lock()?.authority.claims().clone())
+    }
+    fn digest(&self) -> Result<[u8; 32], SdkError> {
+        Ok(self.lock()?.authority.digest())
+    }
+    fn sign(
+        &self,
+        wall: u64,
+        binding: &nestlink_protocol::offline::channel::OfflineChannelBinding,
+    ) -> Result<Vec<u8>, SdkError> {
+        Ok(self.lock()?.authority.sign_channel_proof(wall, binding)?)
+    }
+    fn authenticate(
+        &self,
+        wall: u64,
+        transport: OfflineDirectTransport,
+        peer: &[u8; 32],
+    ) -> Result<(), SdkError> {
+        Ok(self
+            .lock()?
+            .authority
+            .authenticate_reserved_connection(wall, transport, peer)?)
+    }
 }
-async fn host_proof(shared:&Shared,host:&DeviceIdentity,connection:&quinn::Connection)->Result<BiStream,SdkError> {
-    let key=peer(shared,connection,0)?;
-    let (mut send,mut recv)=connection.accept_bi().await.map_err(std::io::Error::other)?;
-    crate::offline_channel::prove(shared,host,&mut recv,&mut send,1,OfflineDirectTransport::Quic,&key).await?;
-    Ok(BiStream::new(send,recv))
+async fn host_proof(
+    shared: &Shared,
+    host: &DeviceIdentity,
+    connection: &quinn::Connection,
+) -> Result<BiStream, SdkError> {
+    let key = peer(shared, connection, 0)?;
+    let (mut send, mut recv) = connection
+        .accept_bi()
+        .await
+        .map_err(std::io::Error::other)?;
+    crate::offline_channel::prove(
+        shared,
+        host,
+        &mut recv,
+        &mut send,
+        1,
+        OfflineDirectTransport::Quic,
+        &key,
+    )
+    .await?;
+    Ok(BiStream::new(send, recv))
 }
-async fn source_proof(shared:&Shared,consumer:&DeviceIdentity,connection:&quinn::Connection)->Result<BiStream,SdkError> {
-    let key=peer(shared,connection,1)?;
-    let (mut send,mut recv)=connection.open_bi().await.map_err(std::io::Error::other)?;
-    crate::offline_channel::prove(shared,consumer,&mut recv,&mut send,0,OfflineDirectTransport::Quic,&key).await?;
-    Ok(BiStream::new(send,recv))
+async fn source_proof(
+    shared: &Shared,
+    consumer: &DeviceIdentity,
+    connection: &quinn::Connection,
+) -> Result<BiStream, SdkError> {
+    let key = peer(shared, connection, 1)?;
+    let (mut send, mut recv) = connection.open_bi().await.map_err(std::io::Error::other)?;
+    crate::offline_channel::prove(
+        shared,
+        consumer,
+        &mut recv,
+        &mut send,
+        0,
+        OfflineDirectTransport::Quic,
+        &key,
+    )
+    .await?;
+    Ok(BiStream::new(send, recv))
 }
 async fn forward<A: AsyncRead + AsyncWrite + Unpin, B: AsyncRead + AsyncWrite + Unpin>(
     shared: Arc<Shared>,

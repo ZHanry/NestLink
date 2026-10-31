@@ -123,14 +123,18 @@ async fn original_resident_guard_terminates_authority_on_logout_login_identity_a
         let mut maintenance = None;
         match mode {
             0 => std::fs::remove_file(directory.join("remember-login.json"))?,
-            1 => {nestlink_platform_security::replace_private_metadata(
-                &directory.join("management-login.enc"),
-                b"replacement login",
-            )?;},
-            2 => {nestlink_platform_security::replace_private_metadata(
-                &directory.join("installation-device.json"),
-                b"{\"fixture\":\"replacement identity\"}",
-            )?;},
+            1 => {
+                nestlink_platform_security::replace_private_metadata(
+                    &directory.join("management-login.enc"),
+                    b"replacement login",
+                )?;
+            }
+            2 => {
+                nestlink_platform_security::replace_private_metadata(
+                    &directory.join("installation-device.json"),
+                    b"{\"fixture\":\"replacement identity\"}",
+                )?;
+            }
             _ => {
                 maintenance = Some(nestlink_local_ipc::maintenance::MaintenanceGuard::acquire(
                     &directory,

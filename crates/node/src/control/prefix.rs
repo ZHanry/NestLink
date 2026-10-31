@@ -71,7 +71,10 @@ impl PrefixEvidence {
         let evidence = Self {
             prefix,
             expires_at_ms: started.unix_ms.checked_add(lifetime)?.min(wall_cap),
-            deadline_ms: started.monotonic_ms.checked_add(lifetime)?.min(monotonic_cap),
+            deadline_ms: started
+                .monotonic_ms
+                .checked_add(lifetime)?
+                .min(monotonic_cap),
             continuity,
         };
         (completed.unix_ms < evidence.expires_at_ms

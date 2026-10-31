@@ -460,7 +460,8 @@ impl Coordinator {
             if grant.payload[..32] != digest(&proof.encode()?) {
                 return Err(SdkError::Trust);
             }
-            let next = verify_permit(&grant.payload[32..], &self.current.issuer())?.retain_remote_budget(&self.current)?;
+            let next = verify_permit(&grant.payload[32..], &self.current.issuer())?
+                .retain_remote_budget(&self.current)?;
             self.successor(&next)?;
             let applied = self.sign(
                 self.envelope(

@@ -1,6 +1,10 @@
 use super::denied;
 use serde::{Deserialize, Serialize};
-use std::{collections::BTreeSet, io, net::{Ipv4Addr, SocketAddrV4}};
+use std::{
+    collections::BTreeSet,
+    io,
+    net::{Ipv4Addr, SocketAddrV4},
+};
 
 /// A locally reviewed, owner-private opt-in, independent from the signed
 /// NetworkAccess grant. No policy is synthesized from space membership.
@@ -51,42 +55,66 @@ impl LanPolicy {
         let mut ports = BTreeSet::new();
         let mut ids = BTreeSet::new();
         let mut services = BTreeSet::new();
-        if self.schema_version != 1 || !nestlink_protocol::valid_id(&self.space_id)
-            || self.interface_index == 0 || !self.interface_address.is_private()
+        if self.schema_version != 1
+            || !nestlink_protocol::valid_id(&self.space_id)
+            || self.interface_index == 0
+            || !self.interface_address.is_private()
             || !(16..=30).contains(&prefix.prefix_len())
             || !prefix.contains(&self.interface_address)
             || [prefix.network(), prefix.broadcast()].contains(&self.interface_address)
-            || self.transport_port < 1024 || self.transport_port == 5353
+            || self.transport_port < 1024
+            || self.transport_port == 5353
             || !(1..=100).contains(&self.packets_per_second)
             || !(1024..=131_072).contains(&self.bytes_per_second)
-            || self.udp.len() > 8 || self.mdns.len() > 8
+            || self.udp.len() > 8
+            || self.mdns.len() > 8
             || self.udp.is_empty() && self.mdns.is_empty()
-        { return Err(denied("invalid bounded explicit LAN policy")); }
+        {
+            return Err(denied("invalid bounded explicit LAN policy"));
+        }
         for rule in &self.udp {
-            if !name(&rule.id, 32) || !ids.insert(&rule.id)
-                || rule.port < 1024 || [self.transport_port,5353].contains(&rule.port)
-                || !ports.insert(rule.port) || rule.local_target.port() != rule.port
+            if !name(&rule.id, 32)
+                || !ids.insert(&rule.id)
+                || rule.port < 1024
+                || [self.transport_port, 5353].contains(&rule.port)
+                || !ports.insert(rule.port)
+                || rule.local_target.port() != rule.port
                 || !prefix.contains(rule.local_target.ip())
-                || [prefix.network(),prefix.broadcast(),self.interface_address].contains(rule.local_target.ip())
+                || [prefix.network(), prefix.broadcast(), self.interface_address]
+                    .contains(rule.local_target.ip())
                 || !rule.allow_local_to_peer && !rule.allow_peer_to_local
-            { return Err(denied("UDP discovery requires unique ports and one exact other LAN server")); }
+            {
+                return Err(denied(
+                    "UDP discovery requires unique ports and one exact other LAN server",
+                ));
+            }
         }
         for rule in &self.mdns {
-            let labels:Vec<_> = rule.service_type.split('.').collect();
-            if labels.len()!=4 || !labels[0].starts_with('_')
-                || !name(&labels[0][1..],15) || !["_tcp","_udp"].contains(&labels[1])
-                || labels[2]!="local" || !labels[3].is_empty()
-            {return Err(denied("only explicit DNS-SD service types under .local. are allowed"));}
-            if rule.port==0 || !services.insert((&rule.service_type,rule.port))
+            let labels: Vec<_> = rule.service_type.split('.').collect();
+            if labels.len() != 4
+                || !labels[0].starts_with('_')
+                || !name(&labels[0][1..], 15)
+                || !["_tcp", "_udp"].contains(&labels[1])
+                || labels[2] != "local"
+                || !labels[3].is_empty()
+            {
+                return Err(denied(
+                    "only explicit DNS-SD service types under .local. are allowed",
+                ));
+            }
+            if rule.port == 0
+                || !services.insert((&rule.service_type, rule.port))
                 || !rule.allow_export && !rule.allow_import
                 || rule.allow_import != rule.allow_routable_publication
-            {return Err(denied("invalid explicit DNS-SD port or direction"));}
+            {
+                return Err(denied("invalid explicit DNS-SD port or direction"));
+            }
         }
         Ok(())
     }
     pub(super) fn prefix(&self) -> io::Result<ipnet::Ipv4Net> {
-        let value:ipnet::Ipv4Net=self.local_prefix.parse().map_err(denied)?;
-        if value.to_string()!=self.local_prefix || value.network()!=value.addr() {
+        let value: ipnet::Ipv4Net = self.local_prefix.parse().map_err(denied)?;
+        if value.to_string() != self.local_prefix || value.network() != value.addr() {
             return Err(denied("canonical LAN prefix required"));
         }
         Ok(value)
@@ -94,13 +122,28 @@ impl LanPolicy {
     /// Read-only interface observation. A changed address/index permanently
     /// terminates the resident command; it cannot silently choose another LAN.
     pub fn check_interface(&self) -> io::Result<()> {
-        let matches = nestlink_platform_network::path::NetworkPathManager::interfaces()?.into_iter().filter(|item| {
-            item.up && item.index==self.interface_index && item.addresses.contains(&std::net::IpAddr::V4(self.interface_address))
-        }).count();
-        if matches!=1 {return Err(denied("original selected LAN interface changed or disappeared"));}
+        let matches = nestlink_platform_network::path::NetworkPathManager::interfaces()?
+            .into_iter()
+            .filter(|item| {
+                item.up
+                    && item.index == self.interface_index
+                    && item
+                        .addresses
+                        .contains(&std::net::IpAddr::V4(self.interface_address))
+            })
+            .count();
+        if matches != 1 {
+            return Err(denied(
+                "original selected LAN interface changed or disappeared",
+            ));
+        }
         Ok(())
     }
 }
-pub(super) fn name(value:&str, maximum:usize)->bool {
-    !value.is_empty() && value.len()<=maximum && value.bytes().all(|b|b.is_ascii_alphanumeric() || b==b'-' || b==b'_')
+pub(super) fn name(value: &str, maximum: usize) -> bool {
+    !value.is_empty()
+        && value.len() <= maximum
+        && value
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
 }

@@ -308,7 +308,9 @@ pub async fn authorize(
                         {
                             return Ok(false);
                         }
-                        writer_lease.charge_business(channel, queued.frame.payload.len()).map_err(io::Error::other)?;
+                        writer_lease
+                            .charge_business(channel, queued.frame.payload.len())
+                            .map_err(io::Error::other)?;
                         write_media_bounded(
                             &mut write,
                             channel,

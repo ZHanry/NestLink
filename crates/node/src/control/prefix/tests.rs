@@ -587,32 +587,67 @@ async fn actual_probe_failure_withdraws_and_recovery_cannot_acknowledge_old_evid
 }
 
 #[test]
-fn completed_measurement_keeps_original_start_and_expires_before_slow_probe_completion() -> TestResult {
+fn completed_measurement_keeps_original_start_and_expires_before_slow_probe_completion()
+-> TestResult {
     use nestlink_session::ClockSample;
-    let prefix = IpPrefix { network: "192.0.2.33".parse()?, prefix_len: 32 };
-    let started = ClockSample { unix_ms: 10_000, monotonic_ms: 100 };
-    let before = ClockSample { unix_ms: 10_699, monotonic_ms: 799 };
+    let prefix = IpPrefix {
+        network: "192.0.2.33".parse()?,
+        prefix_len: 32,
+    };
+    let started = ClockSample {
+        unix_ms: 10_000,
+        monotonic_ms: 100,
+    };
+    let before = ClockSample {
+        unix_ms: 10_699,
+        monotonic_ms: 799,
+    };
     let original = PrefixEvidence::measured(prefix, started, before, 20_000, 20_000, 4)
         .ok_or("measurement must remain usable strictly before the local cap")?;
     assert_eq!(original.expires_at_ms, 10_700);
     assert_eq!(original.deadline_ms, 800);
     assert!(original.expires_at_ms < started.unix_ms + FRESH_MS);
     for completed in [
-        ClockSample { unix_ms: 10_700, monotonic_ms: 799 },
-        ClockSample { unix_ms: 10_699, monotonic_ms: 800 },
-        ClockSample { unix_ms: 9_999, monotonic_ms: 800 },
+        ClockSample {
+            unix_ms: 10_700,
+            monotonic_ms: 799,
+        },
+        ClockSample {
+            unix_ms: 10_699,
+            monotonic_ms: 800,
+        },
+        ClockSample {
+            unix_ms: 9_999,
+            monotonic_ms: 800,
+        },
     ] {
         assert!(PrefixEvidence::measured(prefix, started, completed, 20_000, 20_000, 4).is_none());
     }
     let capped = PrefixEvidence::measured(prefix, started, started, 10_300, 350, 4)
         .ok_or("shorter original authority cap remains live")?;
     assert_eq!((capped.expires_at_ms, capped.deadline_ms), (10_300, 350));
-    let mut measurement = Measurement { terminal: false, continuity: 4, evidence: Some(original) };
-    measurement.expire(ClockSample { unix_ms: 10_700, monotonic_ms: 800 });
+    let mut measurement = Measurement {
+        terminal: false,
+        continuity: 4,
+        evidence: Some(original),
+    };
+    measurement.expire(ClockSample {
+        unix_ms: 10_700,
+        monotonic_ms: 800,
+    });
     assert!(measurement.evidence.is_none());
     assert_eq!(measurement.continuity, 5);
-    assert!(PrefixEvidence::measured(prefix, started, before, 20_000, 20_000, measurement.continuity)
-        .is_some_and(|evidence| evidence.continuity != 4));
+    assert!(
+        PrefixEvidence::measured(
+            prefix,
+            started,
+            before,
+            20_000,
+            20_000,
+            measurement.continuity
+        )
+        .is_some_and(|evidence| evidence.continuity != 4)
+    );
     Ok(())
 }
 

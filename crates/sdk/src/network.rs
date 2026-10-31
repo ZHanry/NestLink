@@ -1,8 +1,8 @@
 //! One legacy connection owner on the product path. This facade reuses native
 //! discovery, scheduling, TLS, SessionPermit proof and bounded business queues.
 //! Signed direct paths add admission to this same owner without another scheduler.
-pub mod packet_access;
 pub mod lan;
+pub mod packet_access;
 pub mod routed;
 pub mod subnet;
 pub mod wireguard;

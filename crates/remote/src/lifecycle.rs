@@ -583,13 +583,26 @@ impl LeaseControl {
     }
     /// Charge exactly at an original carrier delivery boundary. All channels,
     /// directions, permit copies and reconnects retain the same signed meter.
-    pub(crate) fn charge_business(&self, channel: Channel, bytes: usize) -> Result<(), RemoteError> {
+    pub(crate) fn charge_business(
+        &self,
+        channel: Channel,
+        bytes: usize,
+    ) -> Result<(), RemoteError> {
         let permission = permission(channel)?;
         let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
-        managed.session.authorize(permission, self.inner.path, self.inner.clock.monotonic_ms())?;
-        let result = managed.session.charge_business(permission, self.inner.path, u64::try_from(bytes).map_err(io::Error::other)?, self.inner.clock.sample()?);
-        if result.is_err() { managed.session.stop(StopReason::Revoked); }
+        managed
+            .session
+            .authorize(permission, self.inner.path, self.inner.clock.monotonic_ms())?;
+        let result = managed.session.charge_business(
+            permission,
+            self.inner.path,
+            u64::try_from(bytes).map_err(io::Error::other)?,
+            self.inner.clock.sample()?,
+        );
+        if result.is_err() {
+            managed.session.stop(StopReason::Revoked);
+        }
         self.inner.reconcile(&mut managed);
         result.map_err(RemoteError::from)
     }
@@ -597,7 +610,11 @@ impl LeaseControl {
         let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
         if managed.session.is_offline() {
-            return Err(io::Error::new(io::ErrorKind::PermissionDenied, "offline owner cannot export an online permit").into());
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "offline owner cannot export an online permit",
+            )
+            .into());
         }
         Ok(managed.session.current_verified_permit().clone())
     }

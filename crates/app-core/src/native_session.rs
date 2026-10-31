@@ -156,8 +156,10 @@ impl NativeSessionConfig {
         }
         // An existing one-format candidate must not begin advertising the
         // convenience adaptive ladder. More formats require explicit policy.
-        self.media_provider = Some(crate::NativeMediaProvider::cpu_software(target)?
-            .with_exact_formats(&policy.format_set().map_err(std::io::Error::other)?)?);
+        self.media_provider = Some(
+            crate::NativeMediaProvider::cpu_software(target)?
+                .with_exact_formats(&policy.format_set().map_err(std::io::Error::other)?)?,
+        );
         self.internal_software_media_candidate = Some(policy);
         Ok(self)
     }
