@@ -2,8 +2,8 @@
 //! accepted by decoding this bundle. Every section is mandatory.
 use crate::{ContractError, ErrorCode, valid_id};
 use serde::{Deserialize, Serialize};
-pub mod management;
 pub mod channel;
+pub mod management;
 
 pub const OFFLINE_BUNDLE_VERSION: u16 = 1;
 pub const MAX_OFFLINE_MS: u64 = 30 * 60 * 1000;

@@ -160,24 +160,45 @@ pub fn offline_consume_transcript(
 /// Fresh application proof supplements mutual TLS certificate possession. Its
 /// distinct typed payload cannot replay the online consume device action.
 pub fn offline_channel_transcript(
-    claims: &OfflineGrantBundleClaims, digest: [u8;32], binding: &channel::OfflineChannelBinding, endpoint: u8,
+    claims: &OfflineGrantBundleClaims,
+    digest: [u8; 32],
+    binding: &channel::OfflineChannelBinding,
+    endpoint: u8,
 ) -> Result<nestlink_protocol::DeviceActionClaims, ContractError> {
     claims.validate()?;
-    let member = claims.members.get(usize::from(endpoint)).ok_or_else(|| denied("invalid offline channel endpoint"))?;
-    if binding.bundle_id != claims.bundle_id || binding.draft_digest != digest
-        || binding.source_nonce == [0;32] || binding.host_nonce == [0;32]
-        || binding.source_nonce == binding.host_nonce || digest == [0;32] {
-        return Err(denied("offline channel differs from the complete consumed bundle"));
+    let member = claims
+        .members
+        .get(usize::from(endpoint))
+        .ok_or_else(|| denied("invalid offline channel endpoint"))?;
+    if binding.bundle_id != claims.bundle_id
+        || binding.draft_digest != digest
+        || binding.source_nonce == [0; 32]
+        || binding.host_nonce == [0; 32]
+        || binding.source_nonce == binding.host_nonce
+        || digest == [0; 32]
+    {
+        return Err(denied(
+            "offline channel differs from the complete consumed bundle",
+        ));
     }
     let mut payload = b"NestLink/offline/v1/direct-channel-proof\0".to_vec();
-    payload.extend_from_slice(&serde_json::to_vec(binding).map_err(|_| denied("invalid offline channel payload"))?);
+    payload.extend_from_slice(
+        &serde_json::to_vec(binding).map_err(|_| denied("invalid offline channel payload"))?,
+    );
     payload.extend_from_slice(&member.process_nonce);
     payload.push(endpoint);
-    Ok(nestlink_protocol::DeviceActionClaims {schema_version:nestlink_protocol::SCHEMA_VERSION,
-        action:nestlink_protocol::DeviceAction::Approve as i32,deployment_id:claims.deployment_id.clone(),
-        security_epoch:claims.security_epoch,account_id:member.account_id.clone(),device_id:member.installation_id.clone(),
-        resource_id:claims.bundle_id.clone(),challenge:crate::digest(&payload).to_vec(),
-        payload_sha256:crate::digest(&payload).to_vec(),expires_at_unix_ms:claims.expires_at_ms})
+    Ok(nestlink_protocol::DeviceActionClaims {
+        schema_version: nestlink_protocol::SCHEMA_VERSION,
+        action: nestlink_protocol::DeviceAction::Approve as i32,
+        deployment_id: claims.deployment_id.clone(),
+        security_epoch: claims.security_epoch,
+        account_id: member.account_id.clone(),
+        device_id: member.installation_id.clone(),
+        resource_id: claims.bundle_id.clone(),
+        challenge: crate::digest(&payload).to_vec(),
+        payload_sha256: crate::digest(&payload).to_vec(),
+        expires_at_unix_ms: claims.expires_at_ms,
+    })
 }
 
 pub struct VerifiedOfflineGrantBundle {
@@ -264,7 +285,9 @@ pub struct OfflineProcess {
 #[derive(Clone)]
 pub struct OfflineProcessStop(Arc<AtomicBool>);
 impl OfflineProcessStop {
-    pub fn stop(&self) { self.0.store(true, Ordering::Release); }
+    pub fn stop(&self) {
+        self.0.store(true, Ordering::Release);
+    }
 }
 impl OfflineProcess {
     pub fn new(
@@ -297,7 +320,9 @@ impl OfflineProcess {
     pub fn nonce(&self) -> [u8; 32] {
         self.nonce
     }
-    pub fn stop_handle(&self) -> OfflineProcessStop { OfflineProcessStop(self.stopped.clone()) }
+    pub fn stop_handle(&self) -> OfflineProcessStop {
+        OfflineProcessStop(self.stopped.clone())
+    }
     /// Only call with a freshly authenticated online policy/consume response.
     /// The storage reservation must already be irrevocably committed. Exact
     /// local consent is a separate requirement, never inferred from the bundle.

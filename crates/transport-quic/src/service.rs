@@ -67,14 +67,18 @@ pub struct PrivateListener {
 impl PrivateListener {
     pub fn bind(address: SocketAddr, identity: &InstallationIdentity) -> Result<Self> {
         let crypto = QuicServerConfig::try_from(tls::private_service_server_config(identity)?)?;
-        Self::bind_crypto(address,crypto)
+        Self::bind_crypto(address, crypto)
     }
     /// Exact fixed-device offline owners additionally require mutual TLS pins;
     /// the independent complete bundle and fresh endpoint proof remain required.
-    pub fn bind_pinned(address: SocketAddr, identity: &InstallationIdentity, peer_fingerprint: [u8;32]) -> Result<Self> {
-        let mut config = tls::server_config(identity,peer_fingerprint)?;
+    pub fn bind_pinned(
+        address: SocketAddr,
+        identity: &InstallationIdentity,
+        peer_fingerprint: [u8; 32],
+    ) -> Result<Self> {
+        let mut config = tls::server_config(identity, peer_fingerprint)?;
         config.alpn_protocols = vec![SERVICE_ALPN.to_vec()];
-        Self::bind_crypto(address,QuicServerConfig::try_from(config)?)
+        Self::bind_crypto(address, QuicServerConfig::try_from(config)?)
     }
     fn bind_crypto(address: SocketAddr, crypto: QuicServerConfig) -> Result<Self> {
         let mut config = ServerConfig::with_crypto(Arc::new(crypto));
@@ -145,13 +149,15 @@ pub async fn connect(
     identity: &InstallationIdentity,
     edge_fingerprint: [u8; 32],
 ) -> Result<Connected> {
-    connect_cancellable(address,identity,edge_fingerprint,std::future::pending()).await
+    connect_cancellable(address, identity, edge_fingerprint, std::future::pending()).await
 }
 /// Cancellation enters the original physical socket cleanup path instead of
 /// abandoning the endpoint while its connection attempt is pending.
 pub async fn connect_cancellable(
-    address: SocketAddr, identity: &InstallationIdentity, edge_fingerprint: [u8;32],
-    cancelled: impl std::future::Future<Output=()>,
+    address: SocketAddr,
+    identity: &InstallationIdentity,
+    edge_fingerprint: [u8; 32],
+    cancelled: impl std::future::Future<Output = ()>,
 ) -> Result<Connected> {
     let bind = if address.is_ipv4() {
         "0.0.0.0:0"

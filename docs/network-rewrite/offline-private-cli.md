@@ -9,7 +9,7 @@ nestlink-daemon private-service-proxy --state-dir <本机私有状态目录> off
 nestlink-daemon private-service-proxy --state-dir <另一台设备的私有状态目录> offline --space <同一空间 UUID> --role source --peer <宿主实际监听 IP:端口>
 ```
 
-标准输入是一行一个 JSON 命令，最大 65536 字节。标准输出是一行一个 `{ "event": ..., "data": ... }` 事件；`command_failed` 表示当前命令失败，原始进程及已有 owner 的终态不会因此重建。交互终端直接粘贴 JSON 即可。脚本必须持续保留标准输入；EOF、Ctrl-C、本机退出登录、身份文件变化、安装维护、原定期限或累计额度耗尽都会停止原 owner 并等待实际清理。
+标准输入是一行一个 JSON 命令，最大 65536 字节。标准输出是一行一个 `{ "event": ..., "data": ... }` 事件；`command_failed` 表示当前命令失败，原始进程及已有 owner 的终态不会因此重建。交互终端直接粘贴 JSON 即可。脚本必须持续保留标准输入；EOF、Ctrl-C、本机退出登录、身份文件变化、安装维护、原定期限或累计额度耗尽都会停止原 owner 并等待实际清理。Unix 平台若状态目录过长，可为 source 显式传入 `--endpoint-dir <较短的现有私有目录>`；该目录须通过原有的本机所有权检查。
 
 1. 空间管理员执行 `{"command":"policy"}`，根据返回的 revision 执行 `{"command":"enable","expected_revision":0,"enabled":true}`。已有 revision 必须原样传入，不能假定为零。
 2. 宿主执行 `{"command":"service","service_id":"<服务 UUID>"}` 查看完整服务及 exposure，然后提交本机明确选择：

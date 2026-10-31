@@ -370,28 +370,40 @@ fn both_endpoint_approvals_bind_the_complete_budget_process_and_authority()
     swapped.swap(0, 1);
     assert!(verify_offline_endpoint_approvals(&f.authority, &f.claims, &swapped).is_err());
     let binding = channel::OfflineChannelBinding {
-        bundle_id: f.claims.bundle_id.clone(), draft_digest: selected,
-        source_nonce: [21;32], host_nonce: [22;32],
+        bundle_id: f.claims.bundle_id.clone(),
+        draft_digest: selected,
+        source_nonce: [21; 32],
+        host_nonce: [22; 32],
     };
     let transcript = offline_channel_transcript(&f.claims, selected, &binding, 0)?;
     let signature = source.sign_action(&transcript)?;
     crate::verify_device_action(&transcript, &source.public_key(), &signature)?;
     let wrong_endpoint = offline_channel_transcript(&f.claims, selected, &binding, 1)?;
-    assert!(crate::verify_device_action(&wrong_endpoint, &source.public_key(), &signature).is_err());
+    assert!(
+        crate::verify_device_action(&wrong_endpoint, &source.public_key(), &signature).is_err()
+    );
     let mut changed = binding.clone();
     changed.host_nonce[0] ^= 1;
     let changed_proof = offline_channel_transcript(&f.claims, selected, &changed, 0)?;
     assert!(crate::verify_device_action(&changed_proof, &source.public_key(), &signature).is_err());
-    changed.source_nonce = [0;32];
+    changed.source_nonce = [0; 32];
     assert!(offline_channel_transcript(&f.claims, selected, &changed, 0).is_err());
-    assert!(offline_channel_transcript(&f.claims, [9;32], &binding, 0).is_err());
+    assert!(offline_channel_transcript(&f.claims, [9; 32], &binding, 0).is_err());
     assert!(offline_channel_transcript(&f.claims, selected, &binding, 2).is_err());
-    let consume = offline_consume_transcript(&f.claims, &management::OfflineConsumeChallenge {
-        bundle_id:f.claims.bundle_id.clone(), endpoint:0, draft_digest:selected,
-        process_nonce:f.claims.members[0].process_nonce, challenge:[21;32],
-        expires_at_ms:f.claims.expires_at_ms,
-    })?;
-    assert!(crate::verify_device_action(&consume, &source.public_key(), &signature).is_err(),
-        "a live channel proof cannot replay the one-use online consume");
+    let consume = offline_consume_transcript(
+        &f.claims,
+        &management::OfflineConsumeChallenge {
+            bundle_id: f.claims.bundle_id.clone(),
+            endpoint: 0,
+            draft_digest: selected,
+            process_nonce: f.claims.members[0].process_nonce,
+            challenge: [21; 32],
+            expires_at_ms: f.claims.expires_at_ms,
+        },
+    )?;
+    assert!(
+        crate::verify_device_action(&consume, &source.public_key(), &signature).is_err(),
+        "a live channel proof cannot replay the one-use online consume"
+    );
     Ok(())
 }
