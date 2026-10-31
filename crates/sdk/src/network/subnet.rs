@@ -156,10 +156,11 @@ impl VerifiedSubnetPlan {
             ));
         }
         let alias = prefix(claims.alias)?;
+        let original = prefix(claims.original)?;
         for value in remote {
-            if overlaps(alias, prefix(*value)?) {
+            if overlaps(alias, prefix(*value)?) || overlaps(original, prefix(*value)?) {
                 return Err(denied(
-                    "subnet grant would reflect a wire prefix to the same gateway",
+                    "subnet grant would reflect a wire prefix to its alias or original LAN",
                 ));
             }
         }

@@ -121,7 +121,7 @@ async fn coordinator(directory: &Path) -> Result {
     let admin = store
         .login("admin", PASSWORD, None, wall()?, &vault, &dummy)?
         .principal;
-    let mut node_ids = vec![random_id(), random_id()];
+    let mut node_ids = [random_id(), random_id()];
     node_ids.sort();
     let mut namespaces = Vec::new();
     for (index, id) in node_ids.iter().enumerate() {

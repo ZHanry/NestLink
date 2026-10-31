@@ -223,7 +223,7 @@ async fn apply(
         resources::isolate(&identity)?;
         for address in original.addresses()? {original.remove_address(address)?;}
         let [IpAddr::V4(v4),IpAddr::V6(v6)]=record.plan.local_hosts else {return Err(io::Error::other("signed dual-stack hosts missing").into());};
-        original.add_address_v4(v4,32,None::<std::net::Ipv4Addr>)?;original.add_address_v6(v6,128)?;
+        original.set_network_address(v4,32,None::<std::net::Ipv4Addr>)?;original.add_address_v6(v6,128)?;
         original.set_mtu(1280)?;original.set_mtu_v6(1280)?;
         resources::install_routes(&identity,&record.plan.local_hosts,&record.plan.remote_hosts)?;
         let snapshot=resources::inspect(&identity)?.ok_or_else(||io::Error::other("Wintun disappeared during readback"))?;

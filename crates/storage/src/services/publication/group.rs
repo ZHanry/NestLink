@@ -286,6 +286,17 @@ impl Store {
         }
         let member = view.member(&binding.member_node_id)?;
         let edge = self.service_edge_live(&member.node_id, now)?;
+        // The original slice belongs to its exact process and key. Reject a
+        // replacement before constructing claims with the old usage grant;
+        // that intentionally cannot validate against the replacement runtime.
+        // The poll owner can then retire this member while healthy members
+        // retain their original grants and no unsealed budget is refunded.
+        if old.edge_runtime_id != edge.runtime
+            || old.edge_runtime_generation != edge.generation
+            || old.edge_key_sha256 != digest(&edge.key)
+        {
+            return Err(StorageError::Forbidden);
+        }
         let claims = self.make_service_claims(
             &record,
             &approval,

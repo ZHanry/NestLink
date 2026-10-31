@@ -166,6 +166,10 @@ fn two_overlapping_sites_have_distinct_aliases_and_exact_local_intent()
     };
     check_mapping_conflicts(&[first.clone(), second], &[local])?;
     let access = fixture.access(&first)?;
+    let GrantClaims::NetworkAccess(mut reflected_claims) = access.claims().clone() else {return Err("expected raw-IP access".into());};
+    reflected_claims.source_prefixes = vec![IpPrefix {network:"192.168.1.42".parse()?,prefix_len:32}];
+    let reflected = verify_network_grant(&fixture.signer.sign(&GrantClaims::NetworkAccess(reflected_claims))?,&fixture.context())?;
+    assert!(VerifiedSubnetPlan::new(&fixture.context(),&gateway(first.claims()),first.clone(),reflected.clone(),consent(&first,&reflected)?,interfaces(),&["203.0.113.8".parse()?]).is_err(),"a remote wire route must not be delivered back into this gateway's original LAN");
     let approved = consent(&first, &access)?;
     let plan = VerifiedSubnetPlan::new(
         &fixture.context(),
@@ -201,7 +205,7 @@ fn ambiguity_local_conflicts_and_forged_interface_names_are_rejected()
     assert!(check_mapping_conflicts(&[first.clone(), duplicate], &[]).is_err());
     assert!(
         check_mapping_conflicts(
-            &[first.clone()],
+            std::slice::from_ref(&first),
             &[IpPrefix {
                 network: "10.210.0.0".parse()?,
                 prefix_len: 16
