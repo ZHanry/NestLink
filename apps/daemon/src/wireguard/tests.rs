@@ -37,11 +37,12 @@ fn standard_config_uses_only_original_client_address_and_approved_destinations()
 #[test]
 fn private_exports_refuse_existing_files_shared_directories_and_noncanonical_keys()->Result {
     let directory=tempfile::tempdir()?;
+    use std::os::unix::fs::PermissionsExt;
+    std::fs::set_permissions(directory.path(),std::fs::Permissions::from_mode(0o700))?;
     let path=directory.path().join("client.conf");
     save(&path,b"test-only-private-config")?;
     assert!(save(&path,b"replacement").is_err());
     assert_eq!(&*nestlink_platform_security::read_private(&path,128)?,b"test-only-private-config");
-    use std::os::unix::fs::PermissionsExt;
     std::fs::set_permissions(directory.path(),std::fs::Permissions::from_mode(0o755))?;
     assert!(save(&directory.path().join("qr.svg"),b"test-only-private-qr").is_err());
     assert!(key(&STANDARD.encode([0;32])).is_err());
