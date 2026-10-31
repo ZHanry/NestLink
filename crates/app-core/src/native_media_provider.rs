@@ -114,6 +114,9 @@ fn make_announcement(
     direction: MediaDirection,
     receipt: ProbeResult,
 ) -> io::Result<MediaAnnouncement> {
+    let formats = nestlink_protocol::media_format::FormatSet::new(
+        std::iter::once(receipt.format).chain(receipt.additional_formats).collect(),
+    ).map_err(io::Error::other)?;
     let announcement = MediaAnnouncement {
         version: 2,
         device_id: device_id.into(),
@@ -129,8 +132,7 @@ fn make_announcement(
             adapter_luid: None,
             driver_version: None,
         },
-        formats: std::iter::once(receipt.format)
-            .chain(receipt.additional_formats)
+        formats: formats.formats().iter()
             .map(|format| format.encode().map_err(io::Error::other))
             .collect::<io::Result<Vec<_>>>()?,
     };

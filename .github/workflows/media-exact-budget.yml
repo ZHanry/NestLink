@@ -80,7 +80,7 @@ jobs:
               results.append({'argv': command, 'return_code': result.returncode})
               print((output / name).read_text(errors='replace'))
           log = (output / 'exact-core.log').read_text(errors='replace')
-          exact = bool(re.search(r'(?m)^test native_displays::positive_runtime_test::positive_signed_software_core_ack_au \.\.\. ok\s*$', log))
+          exact = bool(re.search(r'(?m)^test runtime::native_displays::positive_runtime_test::positive_signed_software_core_ack_au \.\.\. ok\s*$', log))
           summaries = re.findall(r'test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored;', log)
           qualified = exact and bool(summaries) and all(int(passed) > 0 and failed == ignored == '0' for passed, failed, ignored in summaries)
           source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
