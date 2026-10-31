@@ -196,16 +196,30 @@ fn original_process_activation_and_cumulative_budget_survive_reconnect_only()
 -> Result<(), Box<dyn std::error::Error>> {
     let mut f = Fixture::new()?;
     let mut owner = f.activate()?;
-    let binding=channel::OfflineChannelBinding {bundle_id:f.claims.bundle_id.clone(),draft_digest:owner.digest(),source_nonce:[21;32],host_nonce:[22;32]};
-    let transcript=offline_channel_transcript(&f.claims,owner.digest(),&binding,0)?;
-    let signature=owner.sign_channel_proof(NOW,&binding)?;
-    crate::verify_device_action(&transcript,&f.claims.members[0].process_nonce,&signature)?;
-    let restored_installation=crate::InstallationIdentity::from_seed([11;32]);
-    let forged=restored_installation.sign_action(&transcript)?;
-    assert!(crate::verify_device_action(&transcript,&f.claims.members[0].process_nonce,&forged).is_err(),"restored installation key cannot reproduce the original ephemeral process proof");
-    let restarted_process=OfflineProcess::new(id(11),[11;32],NOW,4)?;
-    let forged=restarted_process.channel_identity.sign_action(&transcript)?;
-    assert!(crate::verify_device_action(&transcript,&f.claims.members[0].process_nonce,&forged).is_err());
+    let binding = channel::OfflineChannelBinding {
+        bundle_id: f.claims.bundle_id.clone(),
+        draft_digest: owner.digest(),
+        source_nonce: [21; 32],
+        host_nonce: [22; 32],
+    };
+    let transcript = offline_channel_transcript(&f.claims, owner.digest(), &binding, 0)?;
+    let signature = owner.sign_channel_proof(NOW, &binding)?;
+    crate::verify_device_action(&transcript, &f.claims.members[0].process_nonce, &signature)?;
+    let restored_installation = crate::InstallationIdentity::from_seed([11; 32]);
+    let forged = restored_installation.sign_action(&transcript)?;
+    assert!(
+        crate::verify_device_action(&transcript, &f.claims.members[0].process_nonce, &forged)
+            .is_err(),
+        "restored installation key cannot reproduce the original ephemeral process proof"
+    );
+    let restarted_process = OfflineProcess::new(id(11), [11; 32], NOW, 4)?;
+    let forged = restarted_process
+        .channel_identity
+        .sign_action(&transcript)?;
+    assert!(
+        crate::verify_device_action(&transcript, &f.claims.members[0].process_nonce, &forged)
+            .is_err()
+    );
     assert!(
         f.activate().is_err(),
         "a second entry point cannot reset this reservation"
@@ -223,7 +237,7 @@ fn original_process_activation_and_cumulative_budget_survive_reconnect_only()
             .is_err()
     );
     assert!(owner.is_stopped());
-    assert!(owner.sign_channel_proof(NOW+1,&binding).is_err());
+    assert!(owner.sign_channel_proof(NOW + 1, &binding).is_err());
     assert_eq!(owner.spent_bytes(), 100);
     assert!(
         owner

@@ -452,9 +452,19 @@ impl OfflineAdmission {
     /// Requires the unexported ephemeral private key of the original consumed
     /// process. The public process nonce and saved installation key cannot
     /// reproduce this signature after restart or backup restoration.
-    pub fn sign_channel_proof(&mut self, wall_ms:u64, binding:&channel::OfflineChannelBinding) -> Result<Vec<u8>,ContractError> {
+    pub fn sign_channel_proof(
+        &mut self,
+        wall_ms: u64,
+        binding: &channel::OfflineChannelBinding,
+    ) -> Result<Vec<u8>, ContractError> {
         self.check(wall_ms)?;
-        self.channel_identity.sign_action(&offline_channel_transcript(self.claims(),self.digest(),binding,self.local as u8)?)
+        self.channel_identity
+            .sign_action(&offline_channel_transcript(
+                self.claims(),
+                self.digest(),
+                binding,
+                self.local as u8,
+            )?)
     }
     /// Recovery synchronizes received policy before admitting more offline I/O.
     /// A newer revocation epoch closes this owner, including unrelated changes;
@@ -492,14 +502,27 @@ impl OfflineAdmission {
                 "offline connection is not the exact approved direct peer",
             ));
         }
-        self.reserve_connection_attempt(wall_ms,transport)
+        self.reserve_connection_attempt(wall_ms, transport)
     }
     /// Charge before dialing or accepting TLS. Failure, cancellation and
     /// reconnects never refund an attempt or recreate the original meter.
     /// This reservation alone grants no business I/O or peer authentication.
-    pub fn reserve_connection_attempt(&mut self,wall_ms:u64,transport:OfflineDirectTransport) -> Result<(),ContractError> {
+    pub fn reserve_connection_attempt(
+        &mut self,
+        wall_ms: u64,
+        transport: OfflineDirectTransport,
+    ) -> Result<(), ContractError> {
         self.check(wall_ms)?;
-        if !self.claims().connection.direct_transports.contains(&transport) {return Err(denied("offline attempt is not an approved direct transport"));}
+        if !self
+            .claims()
+            .connection
+            .direct_transports
+            .contains(&transport)
+        {
+            return Err(denied(
+                "offline attempt is not an approved direct transport",
+            ));
+        }
         if self.connections >= self.claims().resources.connection_limit {
             self.stop();
             return Err(denied(
@@ -509,10 +532,25 @@ impl OfflineAdmission {
         self.connections += 1;
         Ok(())
     }
-    pub fn authenticate_reserved_connection(&mut self,wall_ms:u64,transport:OfflineDirectTransport,remote_key:&[u8;32]) -> Result<(),ContractError> {
+    pub fn authenticate_reserved_connection(
+        &mut self,
+        wall_ms: u64,
+        transport: OfflineDirectTransport,
+        remote_key: &[u8; 32],
+    ) -> Result<(), ContractError> {
         self.check(wall_ms)?;
-        if self.connections==0 || *remote_key!=self.claims().members[1-self.local].public_key
-            || !self.claims().connection.direct_transports.contains(&transport) {return Err(denied("offline connection lacks its original attempt and authenticated direct peer"));}
+        if self.connections == 0
+            || *remote_key != self.claims().members[1 - self.local].public_key
+            || !self
+                .claims()
+                .connection
+                .direct_transports
+                .contains(&transport)
+        {
+            return Err(denied(
+                "offline connection lacks its original attempt and authenticated direct peer",
+            ));
+        }
         Ok(())
     }
     pub fn admit_remote_operation(

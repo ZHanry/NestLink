@@ -1,5 +1,5 @@
 use nestlink_protocol::api::*;
-use nestlink_protocol::offline::{OfflineEndpointApproval,management::*};
+use nestlink_protocol::offline::{OfflineEndpointApproval, management::*};
 use nestlink_protocol::service_plane::group::*;
 use nestlink_protocol::service_plane::{
     ServiceLeaseClaims, ServiceQuotaLimitUpdate, ServiceQuotaUsageQuery, ServiceQuotaUsageView,

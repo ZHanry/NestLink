@@ -143,7 +143,9 @@ impl LocalGuard {
                     || nestlink_local_ipc::maintenance::requested(&directory).ok() != Some(false)
                 {
                     cancelled.store(true, Ordering::Release);
-                    if let Ok(process) = stopper.lock() && let Some(stop) = process.as_ref() {
+                    if let Ok(process) = stopper.lock()
+                        && let Some(stop) = process.as_ref()
+                    {
                         stop.stop();
                     }
                     break;
@@ -175,7 +177,9 @@ impl LocalGuard {
     }
     fn stop(&self) {
         self.stopped.store(true, Ordering::Release);
-        if let Ok(process) = self.process.lock() && let Some(stop) = process.as_ref() {
+        if let Ok(process) = self.process.lock()
+            && let Some(stop) = process.as_ref()
+        {
             stop.stop();
         }
     }
@@ -482,7 +486,11 @@ impl Resident {
                         .revoke_offline_bundle(&self.args.space, &bundle_id)
                         .await?,
                 )?;
-                if let Some(owner) = &self.owner && owner.status().is_ok_and(|status| status.bundle_id == bundle_id) {
+                if let Some(owner) = &self.owner
+                    && owner
+                        .status()
+                        .is_ok_and(|status| status.bundle_id == bundle_id)
+                {
                     owner.stop();
                 }
             }

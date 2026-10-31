@@ -26,7 +26,7 @@ struct Challenge {
     binding: OfflineChannelBinding,
     proof: EndpointProof,
 }
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct EndpointProof {
     signature: Vec<u8>,
@@ -90,12 +90,18 @@ async fn host_proof(
     let signature = host
         .identity
         .sign_action(&offline_channel_transcript(&claims, hash, &binding, 1)?)?;
-    let process_signature=shared.lock()?.authority.sign_channel_proof(wall()?,&binding)?;
+    let process_signature = shared
+        .lock()?
+        .authority
+        .sign_channel_proof(wall()?, &binding)?;
     write_message(
         &mut send,
         &Challenge {
             binding: binding.clone(),
-            proof:EndpointProof {signature,process_signature},
+            proof: EndpointProof {
+                signature,
+                process_signature,
+            },
         },
     )
     .await?;
@@ -105,11 +111,16 @@ async fn host_proof(
         &key,
         &proof.signature,
     )?;
-    verify_device_action(&offline_channel_transcript(&claims,hash,&binding,0)?,&claims.members[0].process_nonce,&proof.process_signature)?;
-    shared
-        .lock()?
-        .authority
-        .authenticate_reserved_connection(wall()?, OfflineDirectTransport::Quic, &key)?;
+    verify_device_action(
+        &offline_channel_transcript(&claims, hash, &binding, 0)?,
+        &claims.members[0].process_nonce,
+        &proof.process_signature,
+    )?;
+    shared.lock()?.authority.authenticate_reserved_connection(
+        wall()?,
+        OfflineDirectTransport::Quic,
+        &key,
+    )?;
     write_message(&mut send, &hash).await?;
     Ok(BiStream::new(send, recv))
 }
@@ -143,26 +154,37 @@ async fn source_proof(
         &key,
         &challenge.proof.signature,
     )?;
-    verify_device_action(&offline_channel_transcript(&claims,hash,&challenge.binding,1)?,&claims.members[1].process_nonce,&challenge.proof.process_signature)?;
-    let process_signature=shared.lock()?.authority.sign_channel_proof(wall()?,&challenge.binding)?;
+    verify_device_action(
+        &offline_channel_transcript(&claims, hash, &challenge.binding, 1)?,
+        &claims.members[1].process_nonce,
+        &challenge.proof.process_signature,
+    )?;
+    let process_signature = shared
+        .lock()?
+        .authority
+        .sign_channel_proof(wall()?, &challenge.binding)?;
     write_message(
         &mut send,
-        &EndpointProof {signature:consumer.identity.sign_action(&offline_channel_transcript(
-            &claims,
-            hash,
-            &challenge.binding,
-            0,
-        )?)?,process_signature},
+        &EndpointProof {
+            signature: consumer.identity.sign_action(&offline_channel_transcript(
+                &claims,
+                hash,
+                &challenge.binding,
+                0,
+            )?)?,
+            process_signature,
+        },
     )
     .await?;
     let ready: [u8; 32] = read_message(&mut recv).await?;
     if ready != hash {
         return Err(SdkError::Trust);
     }
-    shared
-        .lock()?
-        .authority
-        .authenticate_reserved_connection(wall()?, OfflineDirectTransport::Quic, &key)?;
+    shared.lock()?.authority.authenticate_reserved_connection(
+        wall()?,
+        OfflineDirectTransport::Quic,
+        &key,
+    )?;
     Ok(BiStream::new(send, recv))
 }
 async fn forward<A: AsyncRead + AsyncWrite + Unpin, B: AsyncRead + AsyncWrite + Unpin>(
@@ -269,7 +291,10 @@ async fn host_flow(
     consent: Arc<LocalServiceTargetConsent>,
     incoming: quinn::Incoming,
 ) -> Result<(), SdkError> {
-    shared.lock()?.authority.reserve_connection_attempt(wall()?,OfflineDirectTransport::Quic)?;
+    shared
+        .lock()?
+        .authority
+        .reserve_connection_attempt(wall()?, OfflineDirectTransport::Quic)?;
     let connection = tokio::select! {biased;
         _=shared.stopped()=>return Ok(()),
         result=tokio::time::timeout(Duration::from_secs(2),incoming)=>result.map_err(|_|SdkError::Timeout)?.map_err(io::Error::other)?,
@@ -395,11 +420,18 @@ async fn source_flow<S: AsyncRead + AsyncWrite + Unpin>(
 ) -> FlowOutcome {
     let key = match shared.lock() {
         Ok(mut state) => {
-            if state.authority.reserve_connection_attempt(wall().unwrap_or(0),OfflineDirectTransport::Quic).is_err() {
-                return FlowOutcome {failed:true,..Default::default()};
+            if state
+                .authority
+                .reserve_connection_attempt(wall().unwrap_or(0), OfflineDirectTransport::Quic)
+                .is_err()
+            {
+                return FlowOutcome {
+                    failed: true,
+                    ..Default::default()
+                };
             }
             state.authority.claims().members[1].public_key
-        },
+        }
         Err(_) => {
             return FlowOutcome {
                 failed: true,

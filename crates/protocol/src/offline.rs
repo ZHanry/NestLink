@@ -1,8 +1,8 @@
 //! Independent finite offline authority. No online grant is lengthened or
 //! accepted by decoding this bundle. Every section is mandatory.
 use crate::{ContractError, ErrorCode, valid_id};
-use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 pub mod channel;
 pub mod management;
 
@@ -22,7 +22,9 @@ pub struct OfflineMember {
     pub process_nonce: [u8; 32],
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, JsonSchema,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum OfflineDirectTransport {
     Quic,
@@ -38,7 +40,9 @@ pub struct OfflineConnection {
     pub direct_transports: Vec<OfflineDirectTransport>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, JsonSchema,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum OfflineRemoteOperation {
     View,

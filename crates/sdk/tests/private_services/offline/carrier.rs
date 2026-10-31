@@ -10,15 +10,16 @@ use std::sync::atomic::{AtomicU64, Ordering};
 fn native_directory() -> Result<PathBuf> {
     // The durable usage fixture is deliberately longer than a Unix socket path.
     // Use another real owner-private directory for the authenticated endpoint.
-    let directory=std::env::temp_dir().join(random_id());
+    let directory = std::env::temp_dir().join(random_id());
     nestlink_platform_security::new_private_directory(&directory)?;
     Ok(directory)
 }
 
 #[tokio::test]
-async fn original_installation_certificate_without_memory_process_proof_cannot_reach_target() -> Result {
+async fn original_installation_certificate_without_memory_process_proof_cannot_reach_target()
+-> Result {
     use nestlink_identity::offline::offline_channel_transcript;
-    use nestlink_transport_quic::service::{connect,read_message,write_message};
+    use nestlink_transport_quic::service::{connect, read_message, write_message};
     tokio::time::timeout(Duration::from_secs(25),async {
         let (target,count,_echo)=echo().await?;
         let f=Fixture::new("tcp",target).await?;
@@ -398,7 +399,7 @@ async fn original_offline_process_exit_and_authenticated_recovery_close_actual_c
             let (target, _, _echo) = echo().await?;
             let f = Fixture::new("tcp", target).await?;
             let directory = native_directory()?;
-        let pair = pair(&f, 32768, 15_000).await?;
+            let pair = pair(&f, 32768, 15_000).await?;
             let Pair {
                 source_process,
                 _host_process,
@@ -449,7 +450,7 @@ async fn original_offline_process_exit_and_authenticated_recovery_close_actual_c
             cleaned(&mut proxy).await?;
             cleaned(&mut host).await?;
             std::fs::remove_dir(directory)?;
-        std::fs::remove_dir_all(f.usage)?;
+            std::fs::remove_dir_all(f.usage)?;
             Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
         })
         .await??;
