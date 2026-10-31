@@ -547,7 +547,19 @@ async fn actual_probe_failure_withdraws_and_recovery_cannot_acknowledge_old_evid
     let original = reachable(&owner)
         .await
         .map_err(|error| format!("initial real prefix probe: {error}"))?;
+    // Observe the exact successful probe's accepted socket and its actual EOF
+    // before closing the sole listener. This excludes an undrained Windows
+    // accept backlog from the listener-close failure measurement.
+    let (mut accepted, _) = tokio::time::timeout(PROBE_BUDGET, listener.accept()).await??;
+    let mut byte = [0_u8; 1];
+    assert_eq!(
+        tokio::time::timeout(PROBE_BUDGET, accepted.read(&mut byte)).await??,
+        0,
+        "the original successful probe sends no payload and has physically closed"
+    );
+    drop(accepted);
     drop(listener);
+    let closed = Instant::now();
     tokio::time::timeout(Duration::from_millis(800), async {
         while owner.is_reachable() {
             tokio::time::sleep(Duration::from_millis(5)).await;
@@ -555,6 +567,7 @@ async fn actual_probe_failure_withdraws_and_recovery_cannot_acknowledge_old_evid
     })
     .await
     .map_err(|error| format!("withdrawal after actual listener close: {error}"))?;
+    eprintln!("actual listener-close withdrawal: {:?}", closed.elapsed());
     fixture.refresh(std::slice::from_ref(&fixture.authority))?;
     let listener = TcpListener::bind(address).await?;
     let recovered = reachable(&owner)

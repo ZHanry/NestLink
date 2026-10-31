@@ -1,0 +1,46 @@
+name: Original host-prefix probe lifecycle
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prefix:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+      - name: Exercise original prefix owner and physical listener closure
+        shell: pwsh
+        run: |
+          $prefixArgs = @('test', '--locked', '-p', 'nestlink-node', '--lib', 'control::prefix::', '--', '--show-output', '--color', 'never')
+          if ($env:RUNNER_OS -eq 'Windows') {
+            python scripts/refactor-windows-normal-user.py cargo @prefixArgs 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/prefix-tests.log"
+          } else {
+            cargo @prefixArgs 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/prefix-tests.log"
+          }
+          exit $LASTEXITCODE
+      - name: Retain exact source original-deadline test log
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: network-prefix-${{ runner.os }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/prefix-tests.log
+          if-no-files-found: error
+          retention-days: 30
