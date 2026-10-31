@@ -137,7 +137,12 @@ impl Admin {
             .await?
             .ok_or_else(denied)?;
         let object = body.as_object().ok_or_else(denied)?;
-        if object.len() != if self.provisioned_certificates.is_some(){3}else{2}
+        if object.len()
+            != if self.provisioned_certificates.is_some() {
+                3
+            } else {
+                2
+            }
             || object.get("@id").and_then(Value::as_str)
                 != Some(config::certificate_id(node).as_str())
             || object.get("load_files") != self.provisioned_certificates.as_ref()
@@ -334,7 +339,7 @@ mod tests {
             admin: transport,
             public_ips: vec!["1.1.1.1".parse()?],
             dns_json_endpoint: "https://dns.google/resolve".into(),
-            edge_group:None,
+            edge_group: None,
         };
         config.validate()?;
         let node = uuid::Uuid::new_v4().to_string();

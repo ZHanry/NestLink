@@ -52,11 +52,14 @@ fn parse(bytes: &[u8], name: &str, kind: u16) -> io::Result<Vec<Answer>> {
     Ok(response.answers)
 }
 async fn query(config: &CaddyServiceConfig, name: &str, kind: u16) -> io::Result<Vec<Answer>> {
-    let client = config.https_client(reqwest::Client::builder()
-        .no_proxy()
-        .redirect(reqwest::redirect::Policy::none())
-        .connect_timeout(Duration::from_secs(1))
-        .timeout(Duration::from_secs(3)))?
+    let client = config
+        .https_client(
+            reqwest::Client::builder()
+                .no_proxy()
+                .redirect(reqwest::redirect::Policy::none())
+                .connect_timeout(Duration::from_secs(1))
+                .timeout(Duration::from_secs(3)),
+        )?
         .build()
         .map_err(fault)?;
     let response = client
@@ -92,13 +95,22 @@ pub(super) async fn ownership(config: &CaddyServiceConfig, entry: &Entry) -> io:
         }
     }
     let expected: BTreeSet<_> = config.public_ips.iter().copied().collect();
-    let proof = if let Some(binding)=&entry.edge_group {
-        use base64::{Engine,engine::general_purpose::URL_SAFE_NO_PAD};
-        format!("\"nestlink-group-v1:{}:{}:{}:{}:{}\"",config.deployment_id,binding.group.group_id,binding.group.revision,entry.service_id,URL_SAFE_NO_PAD.encode(binding.aggregate_sha256))
-    } else { format!(
-        "\"nestlink-v1:{}:{}:{}\"",
-        config.deployment_id, entry.node_id, entry.service_id
-    ) };
+    let proof = if let Some(binding) = &entry.edge_group {
+        use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
+        format!(
+            "\"nestlink-group-v1:{}:{}:{}:{}:{}\"",
+            config.deployment_id,
+            binding.group.group_id,
+            binding.group.revision,
+            entry.service_id,
+            URL_SAFE_NO_PAD.encode(binding.aggregate_sha256)
+        )
+    } else {
+        format!(
+            "\"nestlink-v1:{}:{}:{}\"",
+            config.deployment_id, entry.node_id, entry.service_id
+        )
+    };
     if addresses != expected || txt.len() != 1 || txt[0].data != proof {
         return Err(denied());
     }
@@ -111,16 +123,29 @@ pub(super) async fn probe(config: &CaddyServiceConfig, entry: &Entry) -> io::Res
     // The group frontdoor must be qualified separately. Per-edge readiness
     // reaches this member directly with the same original hostname and normal
     // TLS verification, rather than accepting another edge's probe token.
-    let addresses=if let Some(binding)=&entry.edge_group {vec![binding.group.member(&entry.node_id).map_err(fault)?.ingress_ip]}else{config.public_ips.clone()};
+    let addresses = if let Some(binding) = &entry.edge_group {
+        vec![
+            binding
+                .group
+                .member(&entry.node_id)
+                .map_err(fault)?
+                .ingress_ip,
+        ]
+    } else {
+        config.public_ips.clone()
+    };
     let probes = addresses.iter().map(|ip| async move {
         let port = if entry.scheme == "https" { 443 } else { 80 };
-        let client = config.https_client(reqwest::Client::builder()
-            .no_proxy()
-            .redirect(reqwest::redirect::Policy::none())
-            .connect_timeout(Duration::from_secs(1))
-            .timeout(Duration::from_secs(3))
-            .pool_max_idle_per_host(0)
-            .resolve(&entry.hostname, (*ip, port).into()))?
+        let client = config
+            .https_client(
+                reqwest::Client::builder()
+                    .no_proxy()
+                    .redirect(reqwest::redirect::Policy::none())
+                    .connect_timeout(Duration::from_secs(1))
+                    .timeout(Duration::from_secs(3))
+                    .pool_max_idle_per_host(0)
+                    .resolve(&entry.hostname, (*ip, port).into()),
+            )?
             .build()
             .map_err(fault)?;
         let response = client

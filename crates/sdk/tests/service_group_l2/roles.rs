@@ -3,7 +3,7 @@ use base64::{Engine,engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_auth::{Secret,VaultKey,hash_password,random_id};
 use nestlink_identity::{PermitSigner,nodes::NodeIdentity,service_plane::group::service_edge_group_digest};
 use nestlink_node::control::{NodeConfig,NodeControl};
-use nestlink_protocol::{NodeRole,api::*,service_plane::{group::*,publication::*}};
+use nestlink_protocol::{NodeRole,api::*,service_plane::{ServiceQuotaUsageQuery,ServiceQuotaScope,group::*,publication::*}};
 use nestlink_sdk::{DeploymentTrust,DeviceIdentity,Sdk,services::{HttpsBackendTls,LocalServiceTargetConsent,LocalServiceGroupChoice,LocalServiceGroupRuntime,ServiceGroupHostWait}};
 use nestlink_server::{AppState,router,service_edge::{self,caddy::{CaddyAdmin,CaddyEdgeGroupConfig,CaddyServiceConfig},frontdoor::{FixedIngressConfig,FixedIngressHealth}}};
 use nestlink_storage::Store;
@@ -46,7 +46,7 @@ async fn coordinator(directory:&Path)->Result {
     let mut namespaces=Vec::new();
     for(index,id)in node_ids.iter().enumerate(){
         let identity=NodeIdentity::from_seed(&[151+index as u8;32]);
-        store.register_node(&admin,NodeRegistration{id:id.clone(),name:format!("hosted group edge {}",index+1),public_key:URL_SAFE_NO_PAD.encode(identity.public_key()),roles:vec![NodeRole::NodeEdge as i32],max_connections:32,bytes_per_second:2_097_152})?;
+        store.register_node(&admin,NodeRegistration{id:id.clone(),name:format!("hosted group edge {}",index+1),public_key:URL_SAFE_NO_PAD.encode(identity.public_key()),roles:vec![NodeRole::NodeEdge as i32],max_connections:128,bytes_per_second:2_097_152})?;
         namespaces.push(store.set_service_edge_namespace(&admin,id,ServiceEdgeNamespaceUpdate{expected_revision:0,config:ServiceEdgeNamespace{service_suffix:"svc.nestlink.test".into(),management_hostname:"control.nestlink.test".into(),public_ports:vec![29100],quic_address:format!("10.244.1.{}:29199",11+index)}},wall()?)?);
     }
     let listener=TcpListener::bind("0.0.0.0:29200").await?;let origin="http://127.0.0.1:29200".to_owned();
@@ -59,11 +59,11 @@ async fn coordinator(directory:&Path)->Result {
     sdk.enroll(&host,"real fixed group target".into(),"linux".into(),vec!["host".into(),"vp8".into()],"direct_only".into()).await?;
     let observed=Arc::new(AtomicU64::new(0));
     let backend=Backend::start(&protocol,observed.clone()).await?;
-    let definition=sdk.create_service(&ServiceCreate{id:random_id(),definition:ServiceDefinition{name:format!("real dual-edge {protocol}"),host_device_id:host.device_id.clone(),edge_node_id:node_ids[0].clone(),requested_ingress:match protocol.as_str(){"http"=>ServiceIngress::Http{hostname:HOSTNAME.into()},"https"=>ServiceIngress::Https{hostname:HOSTNAME.into()},"tcp"=>ServiceIngress::Tcp{port:29100},"udp"=>ServiceIngress::Udp{port:29100},_=>unreachable!()},allowed_sources:vec![ServiceSourceNetwork{address:"10.244.2.2".into(),prefix:32}],limits:ServiceLimits{maximum_connections:16,bytes_per_second:1_048_576,maximum_bytes:BYTES,idle_timeout_seconds:5}}}).await?;
+    let definition=sdk.create_service(&ServiceCreate{id:random_id(),definition:ServiceDefinition{name:format!("real dual-edge {protocol}"),host_device_id:host.device_id.clone(),edge_node_id:node_ids[0].clone(),requested_ingress:match protocol.as_str(){"http"=>ServiceIngress::Http{hostname:HOSTNAME.into()},"https"=>ServiceIngress::Https{hostname:HOSTNAME.into()},"tcp"=>ServiceIngress::Tcp{port:29100},"udp"=>ServiceIngress::Udp{port:29100},_=>unreachable!()},allowed_sources:vec![ServiceSourceNetwork{address:"10.244.2.2".into(),prefix:32}],limits:ServiceLimits{maximum_connections:64,bytes_per_second:1_048_576,maximum_bytes:BYTES,idle_timeout_seconds:5}}}).await?;
     let mut consent=LocalServiceTargetConsent::from_local_choice(&definition,&protocol,backend.address)?;
     if let Some(tls)=backend.tls.as_ref(){consent=consent.with_https_backend_tls(tls.clone())?;}
     let approved=sdk.approve_service_target(&host,&consent,180_000).await?;
-    let group=sdk.set_service_edge_group(&definition.id,&ServiceEdgeGroupUpdate{group_version:1,expected_revision:0,expected_service_revision:approved.revision,public_ips:vec![VIP.parse()?],members:node_ids.iter().enumerate().map(|(index,node)|Ok(ServiceEdgeGroupMember{node_id:node.clone(),namespace_revision:namespaces[index].revision,ingress_ip:format!("10.244.1.{}",11+index).parse()?,limits:ServiceLimits{maximum_connections:8,bytes_per_second:524_288,maximum_bytes:BYTES/2,idle_timeout_seconds:5}})).collect::<Result<_>>()?}).await?;
+    let group=sdk.set_service_edge_group(&definition.id,&ServiceEdgeGroupUpdate{group_version:1,expected_revision:0,expected_service_revision:approved.revision,public_ips:vec![VIP.parse()?],members:node_ids.iter().enumerate().map(|(index,node)|Ok(ServiceEdgeGroupMember{node_id:node.clone(),namespace_revision:namespaces[index].revision,ingress_ip:format!("10.244.1.{}",11+index).parse()?,limits:ServiceLimits{maximum_connections:32,bytes_per_second:524_288,maximum_bytes:BYTES/2,idle_timeout_seconds:5}})).collect::<Result<_>>()?}).await?;
     let digest=service_edge_group_digest(&group)?;let mut edges=Vec::new();
     for(index,namespace)in namespaces.into_iter().enumerate(){
         let local=directory.join(format!("edge{}",index+1));nestlink_platform_security::new_private_directory(&local)?;
@@ -136,7 +136,8 @@ async fn edge(directory:&Path)->Result {
     let (stop,mut stopped)=watch::channel(false);let edge_control=control.clone();let namespace=config.namespace.clone();let caddy=config.caddy.clone();let bind=fixture.group.members[index].ingress_ip;
     let mut worker=tokio::spawn(async move{service_edge::serve_with_caddy_and_health(endpoint,edge_control,identity,namespace,bind,Some(caddy),Some(SocketAddr::new(bind,29201)),async move{while !*stopped.borrow(){if stopped.changed().await.is_err(){break;}}}).await});
     write(&marker.join("ready.json"),&serde_json::json!({"node_id":config.node_id,"instance":instance,"original_node_control_authorized":true}))?;
-    tokio::select!{result=&mut worker=>{result??;return Err("edge stopped before requested physical stop".into());},result=exists(&marker.join("stop.json"))=>result?,}
+    let stop_path=marker.join("stop.json");
+    tokio::select!{result=&mut worker=>{result??;return Err("edge stopped before requested physical stop".into());},result=exists(&stop_path)=>result?,}
     stop.send_replace(true);worker.await??;
     assert!(control.wait_service_usage_settled(Duration::from_secs(8)).await?);
     write(&marker.join("stopped.json"),&serde_json::json!({"original_ingress_joined":true,"original_grants_settled":true,"caddy_owned_by_external_fixture":true}))?;

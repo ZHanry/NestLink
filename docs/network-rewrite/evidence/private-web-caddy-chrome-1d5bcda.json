@@ -1,0 +1,137 @@
+{
+    "schema_version":  1,
+    "purpose":  "Real original private SDK business through Caddy 2.11.7 and Chrome; original artifact checksum verified",
+    "artifact":  {
+                     "id":  "13037384364",
+                     "sha256":  "0b3b1d06293d3af5b4132b6b3628717839a44847ed2ad57d8f6df9005d2dfa0d",
+                     "run_id":  "41188549929",
+                     "original_zip_digest_verified":  true
+                 },
+    "receipt":  {
+                    "schema_version":  1,
+                    "passed":  true,
+                    "evidence_level":  "L2_hosted_real_sdk_caddy_chrome",
+                    "scope":  "Simulated DNS and trusted test CA on one hosted VM; not public L3, ACME, physical platform or installed daemon login acceptance",
+                    "build_source":  {
+                                         "repository":  "ZHanry/NestLink",
+                                         "source_revision":  "1d5bcda4b956b4696a62c0cb4a53bab9864fb6bc",
+                                         "workflow_revision":  "1d5bcda4b956b4696a62c0cb4a53bab9864fb6bc",
+                                         "run_id":  "41188549929",
+                                         "run_attempt":  "1",
+                                         "runner_environment":  "github-hosted",
+                                         "cargo_lock_sha256":  "48063b78bd20ca07f585a6100f7437057af227fde24c94fdad266f8ff457933e",
+                                         "test_executable_sha256":  "dbc1bb5b5bb7295d02dc1ae201dbc43770add9158ed51c92cc84b788bc659e15",
+                                         "command":  [
+                                                         "cargo",
+                                                         "test",
+                                                         "--locked",
+                                                         "-p",
+                                                         "nestlink-sdk",
+                                                         "--test",
+                                                         "private_services",
+                                                         "--no-run"
+                                                     ]
+                                     },
+                    "execution":  {
+                                      "runner_environment":  "github-hosted",
+                                      "runner_uid":  1001,
+                                      "started_unix_ms":  1793438706033,
+                                      "cases":  {
+                                                    "real_os_name_mapping_and_frontend_ca_name":  true,
+                                                    "untrusted_frontend_root_refused":  true,
+                                                    "sni_host_mismatch_refused":  true,
+                                                    "real_caddy_wrong_upstream_root_refused":  true,
+                                                    "real_caddy_wrong_upstream_name_refused":  true,
+                                                    "old_caddy_route_replacement_endpoint_refused":  true
+                                                },
+                                      "caddy_readiness":  {
+                                                              "attempts":  2,
+                                                              "last_status":  200,
+                                                              "owner_matched":  true,
+                                                              "transport_error":  null
+                                                          },
+                                      "browser":  {
+                                                      "schema_version":  1,
+                                                      "passed":  true,
+                                                      "scope":  "Real Chrome/Caddy TLS, simulated hosted DNS and temporary CA; not Internet/ACME or installed daemon acceptance",
+                                                      "certificate_errors_ignored":  false,
+                                                      "completed_cases":  [
+                                                                              "single-use-fragment-and-real-secure-cookie",
+                                                                              "single-use-ticket-replay-refused",
+                                                                              "original-cookie-login-and-cross-service-jar-isolation",
+                                                                              "real-browser-file-upload-and-download",
+                                                                              "same-origin-redirect-and-external-redirect-refusal",
+                                                                              "cross-origin-browser-csrf-refused",
+                                                                              "real-browser-websocket-and-logout-physical-close",
+                                                                              "original-management-acl-withdrawal-closes-existing-websocket"
+                                                                          ],
+                                                      "error_case":  null,
+                                                      "browser_version":  "Chrome/156.0.8078.47",
+                                                      "browser_executable_sha256":  "95dc9473b4f904cb3ab0800fc7206081fcae12abc094a088bd741a13f1747b72",
+                                                      "browser_closed":  true
+                                                  },
+                                      "physical_receipt":  {
+                                                               "first":  {
+                                                                             "cleanup_failures":  0,
+                                                                             "listener_closed":  true
+                                                                         },
+                                                               "host_carriers_joined":  true,
+                                                               "original_quota_usage":  [
+                                                                                            {
+                                                                                                "limit_bytes":  131072,
+                                                                                                "outstanding_bytes":  0,
+                                                                                                "spent_bytes":  14648
+                                                                                            },
+                                                                                            {
+                                                                                                "limit_bytes":  131072,
+                                                                                                "outstanding_bytes":  0,
+                                                                                                "spent_bytes":  5870
+                                                                                            }
+                                                                                        ],
+                                                               "public_service_grants_created":  false,
+                                                               "replacement":  {
+                                                                                   "accepted_tls_handshakes":  0,
+                                                                                   "application_bytes":  0,
+                                                                                   "listener_joined":  true,
+                                                                                   "rejected_tls_handshakes":  1
+                                                                               },
+                                                               "second":  {
+                                                                              "cleanup_failures":  0,
+                                                                              "listener_closed":  true
+                                                                          }
+                                                           },
+                                      "finished_unix_ms":  1793438889502
+                                  },
+                    "tools":  {
+                                  "caddy_sha256":  "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+                                  "chrome_sha256":  "95dc9473b4f904cb3ab0800fc7206081fcae12abc094a088bd741a13f1747b72",
+                                  "puppeteer_version":  "25.14.0",
+                                  "runner_sha256":  "1967115d43e77d2b94b0f16506eb61d4d9036f19c570f7daefc30373d2c4dc33",
+                                  "browser_probe_sha256":  "0621856ccfbaaaa78bd15ff4d85d18600b7ed79ba32cb4f3d3361a20dde5ae8a"
+                              },
+                    "cleanup":  {
+                                    "caddy_route_delete_ack_and_readback":  true,
+                                    "owned_process_groups_empty":  {
+                                                                       "browser":  true,
+                                                                       "sdk_fixture":  true,
+                                                                       "caddy":  true
+                                                                   },
+                                    "owned_process_exit_codes":  {
+                                                                     "sdk_fixture":  0,
+                                                                     "caddy":  0,
+                                                                     "browser":  0
+                                                                 },
+                                    "nss_root_removed":  true,
+                                    "os_root_removed":  true,
+                                    "owned_hosts_entry_removed":  true,
+                                    "test_os_nss_trust_and_hosts_removed":  true,
+                                    "private_capabilities_keys_and_profile_removed":  true
+                                },
+                    "error_code":  null
+                },
+    "limitations":  [
+                        "Hosted isolated DNS and explicitly selected temporary CA; no public DNS/ACME qualification",
+                        "Installed daemon protected-login and actual physical targets remain separate required evidence",
+                        "This scoped success does not complete AC41/AC42 or authorize a 0.8.0RC release claim"
+                    ]
+}

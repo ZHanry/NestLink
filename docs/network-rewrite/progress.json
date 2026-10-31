@@ -43,8 +43,8 @@
                                    "Uncommitted Linux TUN ordinary-owner/helper and atomic multi-edge group source are under manual review; neither is build- or target-qualified.",
                                    "Owned system split DNS run41185941010 succeeded on b376edb on Linux and Windows, including strict daemon lint before the current TUN source.",
                                    "WFP kernel run41182932352 succeeded on79fb710. This is hosted SID/process isolation evidence, not GPU/VPN coexistence target acceptance.",
-                                   "Private Web run41185938481 compiled b376edb but failed Caddy HTTPS readiness; verified artifact13036918546 retained. Caddy2.11 upstream Host default has been identified in pinned upstream source; explicit approved Host repair and sanitized readiness diagnostics are unverified.",
-                                   "W22 Windows provider and W23-W24,W27-W28,W30-W40 implementation and applicable target qualification remain open; release_state stays not_ready."
+                                   "W22 Windows provider and W23-W24,W27-W28,W30-W40 implementation and applicable target qualification remain open; release_state stays not_ready.",
+                                   "Private Web run41188549929 succeeded on1d5bcda after exact Host repair; real Caddy/Chrome8 cases and cleanup passed. Public DNS/ACME/installed daemon/physical acceptance remain open."
                                ],
     "external_prerequisites":  [
                                    {
@@ -158,7 +158,8 @@
                            "docs/network-rewrite/evidence/private-web-business-2e73b03.json",
                            "docs/adr/network/0042-retained-local-diagnostic-export.md",
                            "docs/network-rewrite/evidence/packet-parser-fixture-lock-79add64.json",
-                           "docs/adr/network/0043-one-use-host-packet-access.md"
+                           "docs/adr/network/0043-one-use-host-packet-access.md",
+                           "docs/network-rewrite/evidence/private-web-caddy-chrome-1d5bcda.json"
                        ],
     "observed_actions":  [
                              {
@@ -352,6 +353,12 @@
                                  "source_revision":  "b376edbfb90ea4e30c2bfa5c8c9d252a9a643a4f",
                                  "status":  "success",
                                  "scope":  "Both hosted operating systems: actual split DNS owner/install/query/recovery and strict daemon lint before current TUN/group source"
+                             },
+                             {
+                                 "run_id":  41188549929,
+                                 "source_revision":  "1d5bcda4b956b4696a62c0cb4a53bab9864fb6bc",
+                                 "status":  "success",
+                                 "scope":  "Real SDK, Caddy TLS and Chrome8 browser cases, exact TLS negatives, replacement rejection, physical owner/quota/process/trust/hosts cleanup; isolated DNS/CA, no target claim"
                              }
                          ],
     "release_state":  "not_ready",
