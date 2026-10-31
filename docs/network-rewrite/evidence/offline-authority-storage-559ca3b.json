@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "559ca3b82c750fe2896b2fed5033cbc388244ec8",
+  "run_id": 41231842651,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41231842651",
+  "workflow": ".github/workflows/offline-authority.yml",
+  "workflow_conclusion": "failure",
+  "qualified_jobs": [
+    {
+      "name": "authority",
+      "job_id": 124627506772,
+      "conclusion": "success",
+      "runner": "github-hosted ubuntu-24.04",
+      "primitive_tests": 7,
+      "remote_identity_tests": 3,
+      "remote_session_tests": 2,
+      "failed_tests": 0,
+      "ignored_tests": 0,
+      "strict_clippy_packages": ["nestlink-protocol", "nestlink-identity", "nestlink-session"],
+      "strict_clippy_arguments": ["--all-targets", "--", "-D", "warnings"],
+      "clippy_log_sha256": "ab7d6dd65f6376aad1f9e1a636868470c798dab2cfd75cb91acde3d5e2961841",
+      "artifact_id": 13053763564,
+      "artifact_name": "offline-authority-559ca3b82c750fe2896b2fed5033cbc388244ec8-1",
+      "github_artifact_digest": "sha256:dcaab5396c982979346b45195f7c4587193a3d2675c771235b032e6b714ab645"
+    },
+    {
+      "name": "durable-private-service",
+      "job_id": 124627506517,
+      "conclusion": "success",
+      "runner": "github-hosted ubuntu-24.04",
+      "offline_storage_tests": 8,
+      "remote_storage_tests": 5,
+      "full_storage_regression_tests": 274,
+      "full_storage_regression_test_targets": 13,
+      "failed_tests": 0,
+      "ignored_tests": 0,
+      "full_storage_command": ["cargo", "test", "--locked", "-p", "nestlink-storage", "--lib", "--tests", "--no-fail-fast"],
+      "full_storage_log_sha256": "967a275629d2b347cdbe8d285c8e93090e4f20be0e5fdcab9048605a2e040090",
+      "strict_clippy_packages": ["nestlink-storage", "nestlink-identity", "nestlink-protocol"],
+      "strict_clippy_arguments": ["--all-targets", "--", "-D", "warnings"],
+      "clippy_log_sha256": "2d3feadad2bc99d04c3e2d3a21a8e18b527ebd7dc66acd0b8ee0d0b14489c418",
+      "artifact_id": 13054027991,
+      "artifact_name": "offline-management-storage-559ca3b82c750fe2896b2fed5033cbc388244ec8-1",
+      "github_artifact_digest": "sha256:7782e2ed11c64021288ddf7b1814a19d8f0ea5bcd06da2ea33c75e70213fd9b3"
+    }
+  ],
+  "verification": "Downloaded both qualified job artifacts; checked every file listed by their five receipts against the recorded SHA-256. Reviewed all 13 full-storage summaries: 274 passed, zero failed and zero ignored. The artifact digests above are reported by the GitHub Actions API.",
+  "limitations": [
+    "The actual-http-sdk job failed; this run does not qualify the complete workflow, SDK/carrier behavior, release or target acceptance.",
+    "These results precede the new authenticated-versus-reserved-transport state and Session negative assertion in 7e8ce76 and 5df7a57. Those changes require fresh hosted execution.",
+    "No local project formatter, compiler, lint or test was executed. Local operations were source review, Git, artifact download and SHA-256 verification only."
+  ]
+}
