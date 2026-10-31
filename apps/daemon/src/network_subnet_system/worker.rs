@@ -43,9 +43,9 @@ pub(crate) async fn run(args:SubnetWorkerArgs)->Result {
     let staging=journal_dir.join("network-subnet-packet.sock");
     // Set creation permissions before bind. Never chmod/chown a pathname in
     // the ordinary owner's directory after it can be replaced with a symlink.
-    let previous=rustix::fs::umask(rustix::fs::Mode::from_raw_mode(0o155));
+    let previous=rustix::process::umask(rustix::fs::Mode::from_raw_mode(0o155));
     let bound=UnixListener::bind(&staging);
-    rustix::fs::umask(previous);
+    rustix::process::umask(previous);
     let listener=bound?;
     let socket=pipe::socket_metadata(&staging)?.ok_or_else(||io::Error::other("new root packet socket missing"))?;
     receipt.socket_device=socket.dev();receipt.socket_inode=socket.ino();receipt.socket_parent_device=parent.device;receipt.socket_parent_inode=parent.inode;
@@ -87,7 +87,7 @@ async fn serve(plan:&Plan,receipt:&Receipt,device:&tun_rs::AsyncDevice,listener:
     let mut observed=tokio::time::Instant::now();
     let signal=crate::space_dns_system::termination();tokio::pin!(signal);
     loop {tokio::select! {biased;
-        result=&mut signal=>return result,
+        result=&mut signal=>return result.map_err(Into::into),
         _=tokio::time::sleep_until(deadline)=>return Ok(()),
         _=input.read(&mut end)=>return Err(io::Error::other("original root subnet helper ended").into()),
         _=tick.tick()=>{

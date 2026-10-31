@@ -4,6 +4,7 @@ use super::*;
 use nestlink_identity::{InstallationIdentity,network::{NetworkAuthoritySigner,SignedNetworkGrant,VerifiedMembership,VerifiedNetworkPath,NetworkVerification,verify_network_grant},subnet::{SubnetGatewayState,verify_subnet_mapping}};
 use nestlink_protocol::{api::{NetworkGrantView,NetworkPolicyView},network::{ConnectivityClaims,GrantScope,MembershipClaims,NetworkAccessClaims,NetworkRule,IpProtocol,Direction,RouteExportClaims,PeerPair,PathClaims,PathPolicy,Purpose,SpaceRole,IpPrefix,PeerId,GrantClaims},network_topology::BootIncarnation,spaces::{SpaceView,addressing::{SpaceAddressDirectory,SpaceAddressView}},subnet::{SubnetMappingClaims,management::{SubnetMappingView,SubnetGatewayView}}};
 use nestlink_sdk::network::packet_access::{VerifiedPacketAccess,PacketPeerAuthority};
+use nestlink_protocol::network_access::NetworkAccessView;
 use std::collections::BTreeSet;
 
 pub(super) const DEPLOYMENT:&str="eebf5d3b-7986-4f10-942c-bbe5da0b1b12";

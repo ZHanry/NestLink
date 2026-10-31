@@ -90,7 +90,7 @@ async fn apply(store:&journal::Store,journal:&mut journal::Journal,server_secret
     let mut output=child.stdout.take().ok_or_else(||io::Error::other("subnet root namespace observation pipe missing"))?;
     let stderr=child.stderr.take().ok_or_else(||io::Error::other("subnet root diagnostic pipe missing"))?;
     let diagnostic=tokio::spawn(async move {let mut bytes=Vec::new();stderr.take(4_097).read_to_end(&mut bytes).await?;Ok::<_,io::Error>(bytes)});
-    let outcome=async {
+    let outcome:Result=async {
         tokio::time::timeout(Duration::from_secs(2),pipe::control_start(&mut output)).await??;
         let namespace:journal::Namespace=serde_json::from_slice(&tokio::time::timeout(Duration::from_secs(2),pipe::message(&mut output)).await??)?;
         let actual=std::fs::metadata(format!("/proc/{}/ns/net",namespace.worker.pid()))?;
@@ -112,7 +112,7 @@ async fn apply(store:&journal::Store,journal:&mut journal::Journal,server_secret
         let signal=crate::space_dns_system::termination();tokio::pin!(signal);
         let mut observed=tokio::time::Instant::now();
         loop {tokio::select! {biased;
-            result=&mut signal=>return result,
+            result=&mut signal=>return result.map_err(Into::into),
             status=child.wait()=>{if status?.success(){return Ok(());}return Err(io::Error::other("original isolated subnet worker stopped; recovering exact namespace").into());},
             _=tick.tick()=>{
                 journal.plan.checked(true)?;
