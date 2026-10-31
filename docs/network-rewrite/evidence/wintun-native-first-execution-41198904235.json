@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "purpose": "retain the first real signed provider/session execution and exact IPv4 isolation failure; no packet acceptance",
+  "source_revision": "542203016fdef3f0b520f7f96c6c8a3afb9c08fe",
+  "workflow": ".github/workflows/windows-managed-tun.yml",
+  "run_id": 41198904235,
+  "run_attempt": 1,
+  "job_id": 124530601100,
+  "runner": "windows-2025",
+  "runner_image": "win25-vs2026 20261021.278.1",
+  "run_conclusion": "failure",
+  "artifact": {
+    "id": 13042181123,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41198904235/artifacts/13042181123",
+    "digest": "sha256:ff0d517ce8ad0ee66121f621f3ad869419c1ade80275ff03f92e305cc2b90182",
+    "receipt_sha256": "2530e192e4ee2e59202d9128fe440f6bdaf195cb28ecfa3c148d45c58f32756f",
+    "administrator_log_sha256": "0ac692c20ef5142b0cd36810a2808b29917493d20ed09d9f8c9db63a8a5cdedd",
+    "final_inspection_sha256": "1f22bec4f1b77cc54b04bc4833486e9b498406a005069bb2e3a8ab6c0b811bc9"
+  },
+  "build": {
+    "daemon_test_executable_sha256": "68ddc9c44dbeea3e6c4436b8c73897f1f79972b79667a9b9550f608a0a56e9e0",
+    "dependency_lock_sha256": "48063b78bd20ca07f585a6100f7437057af227fde24c94fdad266f8ff457933e",
+    "result": "successful exact-source hosted daemon compilation; copied protected executable hash matched",
+    "driver": "Official unmodified Wintun0.14.1 amd64 DLL; archive, per-DLL and exact binary-license hashes retained in the receipt; Authenticode Valid/WireGuard LLC"
+  },
+  "actual_execution": {
+    "ordinary_token_ipc_tests": "2 passed before elevated compilation",
+    "ordinary_actor": "actual medium non-elevated process generated its original-principal plan; timed out before provider receipt admission",
+    "administrator_actor": "Actual separate high process executed the production pinned provider creation, captured the original GUID/LUID/index and reached resources::isolate. This phase attribution follows the exact source call sequence and the named native API error.",
+    "failure": "SetIpInterfaceEntry family 2: The parameter is incorrect. (os error 87) (Win32 87)",
+    "failure_phase": "IPv4 interface isolation; individual rejected member not yet identified",
+    "cleanup": "The failed production apply closed its original provider, verified original adapter/address/route absence and cleared its exact protected record. A separate administrator inspect then returned success and {current:null,record:null}.",
+    "final_inspection": {"current": null, "record": null}
+  },
+  "subsequent_source": "260293d attributes each unchanged required isolation-field update to its native SetIpInterfaceEntry result, retaining the complete original Snapshot requirements; a later exact-source hosted run must identify and resolve the incompatible field.",
+  "native_whole_packets": "not_executed",
+  "normal_and_crash_packet_session_cleanup": "not_executed",
+  "production_online_validation": false,
+  "two_target_acceptance": false,
+  "local_review": "Retained artifact metadata and file hashes read only; no local driver execution, compilation, lint, formatter or test."
+}
