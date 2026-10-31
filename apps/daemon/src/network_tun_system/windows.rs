@@ -122,6 +122,9 @@ fn hash(value: &str) -> Result<[u8; 32]> {
     }
     Ok(out)
 }
+fn native<T>(operation: &str, result: io::Result<T>) -> Result<T> {
+    result.map_err(|error| io::Error::new(error.kind(), format!("Windows TUN {operation}: {error}")).into())
+}
 pub(crate) async fn run(args: SystemTunArgs) -> Result {
     match args.action {
         Action::Review { plan } => {
@@ -211,20 +214,21 @@ async fn apply(
     let outcome=async {
         // A fresh random identity is journaled before create. Never open an
         // existing named adapter or delete the shared installed Wintun driver.
-        let created=tun_rs::DeviceBuilder::new().name(&record.name).description(record.plan.marker())
+        let created=native("create original pinned provider and session",tun_rs::DeviceBuilder::new().name(&record.name).description(record.plan.marker())
             .device_guid(resources::guid_value(&record.guid)?)
             .wintun_file(image.path().to_str().ok_or_else(||io::Error::other("non-Unicode pinned Wintun path"))?.into())
-            .delete_driver(false).mtu(1280).build_async()?;
+            .delete_driver(false).mtu(1280).build_async())?;
         device=Some(created);
         let original=device.as_ref().ok_or_else(||io::Error::other("provider missing"))?;
         let identity=record.capture()?.ok_or_else(||io::Error::other("created original Wintun adapter missing"))?;
         if identity.index!=original.if_index()?{return Err(io::Error::other("Wintun provider and kernel adapter differ").into());}
         record.identity=Some(identity.clone());record.save(&store)?;
         resources::isolate(&identity)?;
-        for address in original.addresses()? {original.remove_address(address)?;}
+        for address in native("list fresh provider addresses",original.addresses())? {native(&format!("remove fresh automatic address {address}"),original.remove_address(address))?;}
         let [IpAddr::V4(v4),IpAddr::V6(v6)]=record.plan.local_hosts else {return Err(io::Error::other("signed dual-stack hosts missing").into());};
-        original.set_network_address(v4,32,None::<std::net::Ipv4Addr>)?;original.add_address_v6(v6,128)?;
-        original.set_mtu(1280)?;original.set_mtu_v6(1280)?;
+        native("set signed IPv4 host",original.set_network_address(v4,32,None::<std::net::Ipv4Addr>))?;
+        native("add signed IPv6 host",original.add_address_v6(v6,128))?;
+        native("set IPv4 MTU",original.set_mtu(1280))?;native("set IPv6 MTU",original.set_mtu_v6(1280))?;
         resources::install_routes(&identity,&record.plan.local_hosts,&record.plan.remote_hosts)?;
         let snapshot=resources::inspect(&identity)?.ok_or_else(||io::Error::other("Wintun disappeared during readback"))?;
         snapshot.verify(&record.plan.local_hosts,&record.plan.remote_hosts)?;

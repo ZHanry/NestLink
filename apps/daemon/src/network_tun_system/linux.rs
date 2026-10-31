@@ -137,9 +137,19 @@ async fn inspect_inner(plan: &TunPlan) -> Result<Option<TunState>> {
     }
     let mut routes = Vec::new();
     for family in ["-4", "-6"] {
-        let observed =
-            json_ip(&["-j", family, "route", "show", "table", "all", "dev", &name]).await?;
+        // A `dev` selector makes iproute2 omit the actual `dev` attribute.
+        // Read complete rows instead, retaining any relevant multipath or
+        // opaque nexthop-ID row for the strict verifier to reject below.
+        let observed = json_ip(&["-j", family, "route", "show", "table", "all"]).await?;
         for route in rows(&observed)? {
+            let relevant = route["dev"].as_str() == Some(name.as_str())
+                || !route["nhid"].is_null()
+                || route["nexthops"].as_array().is_some_and(|hops| {
+                    hops.iter().any(|hop| hop["dev"].as_str() == Some(name.as_str()))
+                });
+            if !relevant {
+                continue;
+            }
             let mut route = route.clone();
             // Carrier state is volatile while the sole ordinary descriptor is
             // detached; no other route flag is ignored in ownership readback.
@@ -148,6 +158,17 @@ async fn inspect_inner(plan: &TunPlan) -> Result<Option<TunState>> {
             }
             routes.push(route);
         }
+    }
+    // No name-to-index replacement may be hidden by the intervening tables.
+    let after = json_ip(&["-j", "-d", "link", "show", "dev", &name]).await?;
+    let [after] = rows(&after)?.as_slice() else {
+        return Err(io::Error::other("TUN changed during route readback").into());
+    };
+    if after["ifindex"].as_u64() != Some(u64::from(index))
+        || after["ifalias"].as_str() != Some(marker.as_str())
+        || after["linkinfo"]["info_kind"] != "tun"
+    {
+        return Err(io::Error::other("TUN identity changed during route readback").into());
     }
     addresses.sort_by_key(Value::to_string);
     routes.sort_by_key(Value::to_string);

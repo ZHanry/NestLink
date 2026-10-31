@@ -258,6 +258,32 @@ def main():
                 process.kill()
             process.wait(timeout=10)
             log.close()
+        if result["status"] != "passed":
+            # Retain exact public recovery metadata and kernel identity after
+            # stopping our original actors. Never recover/delete on failure.
+            # ProgramFiles is outside the uploaded evidence tree and the hosted
+            # VM is disposable, so leaving only a pathname would lose evidence.
+            inspections = result.setdefault("failure_inspections", {})
+            for scenario in ("normal", "crash", "raw-peer"):
+                case, root = output / scenario, fixture / scenario
+                if not case.is_dir() or not root.is_dir():
+                    continue
+                try:
+                    code, _ = execute(scenario + "-failure-inspection", [executable, *ROLE_ARGS],
+                        extra={"NESTLINK_TUN_NATIVE_CASE": str(case),
+                            "NESTLINK_TUN_NATIVE_RECEIPT": str(root / "receipt.json"),
+                            "NESTLINK_TUN_NATIVE_JOURNAL": str(root / "journal"),
+                            "NESTLINK_TUN_NATIVE_ROLE": "inspect"}, timeout=10, required=False)
+                    inspections[scenario] = {"return_code": code}
+                    for name, original in (("protected-journal.json", root / "journal/network-tun-owner.json"),
+                                           ("protected-receipt.json", root / "receipt.json")):
+                        if original.is_file():
+                            if not 0 < original.stat().st_size <= 65_536:
+                                raise ValueError("failure metadata exceeds the production bound")
+                            shutil.copyfile(original, case / name)
+                            inspections[scenario][name] = digest(case / name)
+                except Exception as diagnostic:
+                    inspections[scenario] = {"diagnostic_error": str(diagnostic)}
         result["execution_provenance"]["finished_at_unix"] = time.time()
         for command in result["commands"]:
             log_path = output / command["log"]

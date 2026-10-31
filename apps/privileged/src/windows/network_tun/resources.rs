@@ -19,11 +19,12 @@ use windows_sys::{
 
 const MAX_ROWS: usize = 65_536;
 const METRIC: u32 = 42420;
-fn checked(result: u32) -> io::Result<()> {
+fn checked(result: u32, operation: &str) -> io::Result<()> {
     if result == 0 {
         Ok(())
     } else {
-        Err(io::Error::from_raw_os_error(result as i32))
+        let error = io::Error::from_raw_os_error(result as i32);
+        Err(io::Error::new(error.kind(), format!("{operation}: {error} (Win32 {result})")))
     }
 }
 struct Allocation(*mut std::ffi::c_void);
@@ -66,7 +67,7 @@ fn alias(row: &MIB_IF_ROW2) -> io::Result<String> {
 }
 fn interfaces() -> io::Result<Vec<MIB_IF_ROW2>> {
     let mut table = null_mut();
-    checked(unsafe { GetIfTable2(&mut table) })?;
+    checked(unsafe { GetIfTable2(&mut table) }, "GetIfTable2")?;
     let _allocation = Allocation(table.cast());
     if table.is_null() {
         return Err(security::denied());
@@ -107,7 +108,7 @@ fn sockaddr(value: IpAddr) -> SOCKADDR_INET {
 }
 fn addresses() -> io::Result<Vec<MIB_UNICASTIPADDRESS_ROW>> {
     let mut table = null_mut();
-    checked(unsafe { GetUnicastIpAddressTable(AF_UNSPEC, &mut table) })?;
+    checked(unsafe { GetUnicastIpAddressTable(AF_UNSPEC, &mut table) }, "GetUnicastIpAddressTable")?;
     let _allocation = Allocation(table.cast());
     if table.is_null() {
         return Err(security::denied());
@@ -119,7 +120,7 @@ fn addresses() -> io::Result<Vec<MIB_UNICASTIPADDRESS_ROW>> {
 }
 fn routes() -> io::Result<Vec<MIB_IPFORWARD_ROW2>> {
     let mut table = null_mut();
-    checked(unsafe { GetIpForwardTable2(AF_UNSPEC, &mut table) })?;
+    checked(unsafe { GetIpForwardTable2(AF_UNSPEC, &mut table) }, "GetIpForwardTable2")?;
     let _allocation = Allocation(table.cast());
     if table.is_null() {
         return Err(security::denied());
@@ -227,7 +228,7 @@ fn original(identity: &ProviderIdentity) -> io::Result<Option<MIB_IF_ROW2>> {
         InterfaceIndex: identity.index,
         ..Default::default()
     };
-    checked(unsafe { GetIfEntry2(&mut row) })?;
+    checked(unsafe { GetIfEntry2(&mut row) }, "GetIfEntry2")?;
     if unsafe { row.InterfaceLuid.Value } != identity.luid
         || !same_guid(
             &row.InterfaceGuid,
@@ -247,7 +248,7 @@ fn family(identity: &ProviderIdentity, family: u16) -> io::Result<MIB_IPINTERFAC
         InterfaceIndex: identity.index,
         ..Default::default()
     };
-    checked(unsafe { GetIpInterfaceEntry(&mut row) })?;
+    checked(unsafe { GetIpInterfaceEntry(&mut row) }, &format!("GetIpInterfaceEntry family {family}"))?;
     Ok(row)
 }
 /// This API is limited to the helper's already captured fresh original link.
@@ -272,7 +273,7 @@ pub fn isolate(identity: &ProviderIdentity) -> io::Result<()> {
         row.DisableDefaultRoutes = true;
         // IP Helper requires this ignored IPv4 member to be zero when setting.
         row.SitePrefixLength = 0;
-        checked(unsafe { SetIpInterfaceEntry(&mut row) })?;
+        checked(unsafe { SetIpInterfaceEntry(&mut row) }, &format!("SetIpInterfaceEntry family {af}"))?;
     }
     Ok(())
 }
@@ -296,7 +297,7 @@ pub fn install_routes(
             {
                 continue;
             }
-            checked(unsafe { DeleteIpForwardEntry2(&row) })?;
+            checked(unsafe { DeleteIpForwardEntry2(&row) }, "DeleteIpForwardEntry2 on fresh original adapter")?;
         }
     }
     for host in remote {
@@ -319,7 +320,7 @@ pub fn install_routes(
         row.ValidLifetime = u32::MAX;
         row.PreferredLifetime = u32::MAX;
         row.Origin = NlroManual;
-        checked(unsafe { CreateIpForwardEntry2(&row) })?;
+        checked(unsafe { CreateIpForwardEntry2(&row) }, &format!("CreateIpForwardEntry2 signed host {host}"))?;
     }
     Ok(())
 }
