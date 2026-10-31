@@ -7,9 +7,17 @@ use nestlink_sdk::network::{
     routed::PinnedNetworkSpace,
 };
 use nestlink_transport_quic::packet_codec::{DirectPacketEndpoint, PacketAssembler, encode_direct};
-use std::{io, net::Ipv4Addr, time::Duration};
+use std::{
+    io,
+    net::{Ipv4Addr, SocketAddrV4},
+    time::Duration,
+};
 use tokio::{sync::watch, time::Instant};
 type TaskResult<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+
+fn plain_error(error: Box<dyn std::error::Error + Send + Sync>) -> Box<dyn std::error::Error> {
+    error
+}
 
 async fn pump(
     sdk: &Sdk,
@@ -68,11 +76,10 @@ fn policy(space: &str, index: usize) -> Result<LanPolicy> {
         udp: vec![UdpRule {
             id: "actual-dns-service".into(),
             port,
-            local_target: (
+            local_target: SocketAddrV4::new(
                 value(&format!("NESTLINK_LAN_{index}_SERVER"))?.parse::<Ipv4Addr>()?,
                 port,
-            )
-                .into(),
+            ),
             allow_local_to_peer: true,
             allow_peer_to_local: true,
             allow_broadcast_discovery: true,
@@ -196,13 +203,15 @@ async fn actual_lan_dns_sd_and_udp_use_original_online_owner_and_release_sockets
             &f.source_device.identity,
             source.remote_peer(),
             path.clone(),
-        )?,
+        )
+        .map_err(plain_error)?,
         DirectPacketEndpoint::bind(
             (address, 0).into(),
             &f.target_device.identity,
             target.remote_peer(),
             path,
-        )?,
+        )
+        .map_err(plain_error)?,
     ];
     let [first, second] = &mut endpoints;
     let second_address = second.local_addr();
@@ -219,7 +228,8 @@ async fn actual_lan_dns_sd_and_udp_use_original_online_owner_and_release_sockets
             target.transport_group(),
             Instant::now() + Duration::from_secs(5)
         )
-    )?;
+    )
+    .map_err(plain_error)?;
     let publisher = mdns_sd::ServiceDaemon::new()?;
     publisher.disable_interface(mdns_sd::IfKind::All)?;
     publisher.enable_interface(mdns_sd::IfKind::IndexV4(policies[1].interface_index))?;
@@ -308,8 +318,7 @@ async fn actual_lan_dns_sd_and_udp_use_original_online_owner_and_release_sockets
         let rebound = std::net::UdpSocket::bind((Ipv4Addr::UNSPECIFIED, policy.udp[0].port))?;
         drop(rebound);
     }
-    let ((left_bytes, right_bytes), details) =
-        execution.map_err(|error| error as Box<dyn std::error::Error>)?;
+    let ((left_bytes, right_bytes), details) = execution.map_err(plain_error)?;
     assert!(
         left_bytes > 0
             && right_bytes > 0
