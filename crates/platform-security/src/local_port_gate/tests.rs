@@ -266,11 +266,13 @@ fn ordinary_plan_file_roundtrip_is_create_new_bounded_and_no_follow() -> io::Res
         wall_ms()? + 60_000,
     )?;
     let temporary = tempfile::tempdir()?;
-    let path = temporary.path().join("plan.json");
+    let private = temporary.path().join("private-plan");
+    crate::new_private_directory(&private)?;
+    let path = private.join("plan.json");
     plan.save_new(&path)?;
     assert_eq!(GatePlan::read_public(&path)?, plan);
     assert!(plan.save_new(&path).is_err());
-    let link = temporary.path().join("linked.json");
+    let link = private.join("linked.json");
     symlink(&path, &link)?;
     assert!(GatePlan::read_public(&link).is_err());
     std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644))?;

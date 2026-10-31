@@ -58,7 +58,7 @@ fn root_role(action: &str) -> Result<Command> {
         command.arg(format!(
             "NESTLINK_RAW_KERNEL_PLAN={}",
             variable("NESTLINK_RAW_KERNEL_OUTPUT")?
-                .join("plan.json")
+                .join("private-plan/plan.json")
                 .display()
         ));
     }
@@ -377,7 +377,9 @@ impl Reservation {
 
 async fn install(plan: &GatePlan) -> Result<(Child, RootGateReceipt)> {
     let output = variable("NESTLINK_RAW_KERNEL_OUTPUT")?;
-    plan.save_new(&output.join("plan.json"))?;
+    let private_plan = output.join("private-plan");
+    nestlink_platform_security::new_private_directory(&private_plan)?;
+    plan.save_new(&private_plan.join("plan.json"))?;
     let mut command = root_role("install")?;
     command
         .stdout(File::create(output.join("root-helper.log"))?)

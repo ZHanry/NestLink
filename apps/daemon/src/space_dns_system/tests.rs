@@ -239,6 +239,10 @@ async fn actual_os_split_dns_resolves_and_recovers_without_changing_unrelated_po
         let operation = async {
             install(&journal.plan).await?;
             let observation = inspect(&journal.plan).await?.ok_or("OS policy missing")?;
+            // This contains only the product-owned OS policy. Retain the exact
+            // readback in hosted evidence before any assertion or recovery can
+            // fail, so unknown kernel/resolved fields never invite guessing.
+            eprintln!("owned OS DNS installed readback: {observation}");
             verify_installed(&journal.plan, &observation)?;
             if committed {
                 journal.installed = Some(observation);

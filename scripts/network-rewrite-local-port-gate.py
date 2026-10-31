@@ -297,8 +297,25 @@ def main() -> int:
         # Recover only exact product journals after their test owner exits.
         # Unrecoverable/foreign state remains on the disposable VM and is
         # reported as failed; no flush or blanket table deletion is used.
-        for name, root, _ in roots:
+        for name, root, case_output in roots:
             if executable is not None:
+                # Installation may reject a real kernel serialization before
+                # publishing its receipt. Preserve the raw, narrowly selected
+                # table before recovery validates it again. This observation
+                # grants no cleanup authority and never lists other tables.
+                if name not in receipt["cases"]:
+                    try:
+                        plan_path = case_output / "private-plan" / "plan.json"
+                        plan = json.loads(plan_path.read_text())
+                        owner = str(uuid.UUID(plan["owner_id"]))
+                        if owner != plan["owner_id"]:
+                            raise ValueError("noncanonical diagnostic owner")
+                        execute(name + "-failure-owned-table", [
+                            "sudo", "--non-interactive", "nft", "--json", "--handle", "--numeric",
+                            "list", "table", "inet", "nlp_" + owner.replace("-", ""),
+                        ])
+                    except Exception as error:
+                        receipt.setdefault("diagnostic_failures", []).append(str(error))
                 try:
                     required(name + "-finally-recover", role("recover", root))
                     receipt.setdefault("final_recovery", {})[name] = inspect(name + "-finally-inspect", root)

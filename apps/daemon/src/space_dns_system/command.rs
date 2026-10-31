@@ -63,9 +63,11 @@ pub(super) async fn run(
         .ok_or_else(|| io::Error::other("missing OS tool stderr"))?;
     let mut stdout = stdout.take(65_537);
     let mut stderr = stderr.take(4_097);
+    // Keep bounded stage diagnostics when a native provider fails to finish.
+    // A timeout must identify how far the trusted operation actually reached.
+    let mut errors = Vec::new();
     let execution = async {
         let mut output = Vec::new();
-        let mut errors = Vec::new();
         let (out, err, status) = tokio::join!(
             stdout.read_to_end(&mut output),
             stderr.read_to_end(&mut errors),
@@ -86,7 +88,11 @@ pub(super) async fn run(
         Err(_) => {
             let _ = child.kill().await;
             let _ = child.wait().await;
-            Err(io::Error::other("OS DNS command timed out; journal retained for recovery").into())
+            Err(io::Error::other(format!(
+                "OS DNS command timed out; journal retained for recovery; native diagnostics: {}",
+                String::from_utf8_lossy(&errors)
+            ))
+            .into())
         }
     }
 }

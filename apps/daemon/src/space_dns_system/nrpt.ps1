@@ -1,14 +1,18 @@
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
+[Console]::Error.WriteLine('NestLink NRPT: script entered')
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
 $env:PSModulePath = Join-Path ([Environment]::SystemDirectory) 'WindowsPowerShell\v1.0\Modules'
+[Console]::Error.WriteLine('NestLink NRPT: bootstrap complete')
 $request = $env:NESTLINK_DNS_REQUEST | ConvertFrom-Json
 Remove-Item Env:NESTLINK_DNS_REQUEST
+[Console]::Error.WriteLine('NestLink NRPT: request parsed')
 # Import only the Microsoft provider used by this operation. Importing the
 # aggregate DnsClient manifest also loads every unrelated DNS adapter/cache/DoH
 # module and type/format file on each short-lived owner command. Keep the same
 # DNS cmdlets, trusted absolute system paths and bounded cold-start deadline.
 $dnsDirectory = Join-Path $env:PSModulePath 'DnsClient'
+[Console]::Error.WriteLine('NestLink NRPT: importing constrained provider')
 if ([string]$request.action -ceq 'query') {
     Import-Module -Name (Join-Path $dnsDirectory 'DnsLookup.dll') -ErrorAction Stop
 } else {
@@ -17,6 +21,7 @@ if ([string]$request.action -ceq 'query') {
         Import-Module -Name (Join-Path $dnsDirectory 'PS_DnsClientNrptPolicy_v1.0.0.cdxml') -ErrorAction Stop
     }
 }
+[Console]::Error.WriteLine('NestLink NRPT: provider imported')
 function Emit($value) { ConvertTo-Json -InputObject $value -Depth 20 -Compress }
 function View($rule) {
     [ordered]@{
@@ -76,6 +81,7 @@ function Conflicts {
         }
     }
 }
+[Console]::Error.WriteLine('NestLink NRPT: dispatching native operation')
 switch ([string]$request.action) {
     'baseline' { Emit @(Get-DnsClientNrptRule -ErrorAction Stop | Sort-Object Name | ForEach-Object { View $_ }) }
     'query' {

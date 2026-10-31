@@ -330,9 +330,11 @@ pub(super) fn verify_installed(plan: &DnsPlan, current: &Value) -> Result {
             .as_array()
             .is_some_and(|flags| flags.iter().any(|flag| flag == "UP"))
     {
-        return Err(io::Error::other(
-            "resolved did not confirm the exact isolated DNS configuration",
-        )
+        return Err(io::Error::other(format!(
+            "resolved did not confirm the exact isolated DNS configuration; expected DNS {} and domains {}; owned configuration observed: {current}",
+            dns_value(plan),
+            domains_value(plan)
+        ))
         .into());
     }
     Ok(())
@@ -483,7 +485,7 @@ pub(super) async fn remove(journal: &Journal) -> Result {
             .as_ref()
             .is_some_and(|expected| expected != &current)
     {
-        return Err(io::Error::other("managed interface/DNS changed; preserving it and the recovery journal for explicit operator review").into());
+        return Err(io::Error::other(format!("managed interface/DNS changed; preserving it and the recovery journal for explicit operator review; owned configuration observed: {current}")).into());
     }
     // Readback immediately before the narrow deletion detects replacement or
     // an administrator's configuration change. No physical/VPN link is used.
