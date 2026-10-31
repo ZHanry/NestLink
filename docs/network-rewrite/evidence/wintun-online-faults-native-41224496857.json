@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "purpose": "Retain the passing native HTTP/SQLite/QUIC packet integration and original partial-install cleanup steps while preserving the overall failed strict-lint conclusion. This single-VM L2 result is not production HTTPS CLI or independent-device acceptance.",
+  "source_revision": "f45b41a464f2a66e893e6b7acc793e8016915205",
+  "workflow": ".github/workflows/windows-managed-tun.yml",
+  "run_id": 41224496857,
+  "run_attempt": 1,
+  "job_id": 124605708061,
+  "runner": "windows-2025",
+  "runner_image": "win25-vs2026 20261021.278.1",
+  "run_conclusion": "failure",
+  "native_step_conclusion": "success",
+  "normal_token_ipc_step_conclusion": "success",
+  "strict_daemon_all_targets_clippy": {
+    "conclusion": "failure",
+    "reason": "The new native preflight fixture used expect_err(), rejected by the repository's existing -D clippy::expect-used. All native scenarios had already passed; this does not make the whole run green.",
+    "repair_revision": "2d1c2d2e8fcc96d6628f192e61cb3104e2d59617",
+    "repair": "An explicit match still treats Ok as a hard fixture failure and retains the exact conflict error and unchanged-kernel assertions. No lint suppression or weaker rejection assertion."
+  },
+  "artifact": {
+    "id": 13051802217,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41224496857/artifacts/13051802217",
+    "digest": "sha256:920621961f3eb74d0b41feaffe3e58f022d2aeb47717247495d8da39628d4bd8",
+    "receipt_sha256": "29b8f4797ad78ca3d97a41c9f19446c5cccde39d29d2e02c96379e7cf0a4e0b0",
+    "online_packets_sha256": "7b41b48c0907edbe3c9a42f23ce412b82ad43c6efaae3fba5d46400b850fbb68",
+    "online_cleanup_sha256": "48062d050e790c1b8765a6109fbff0a72f02ef3eaf45d3303fa7483e0a2c2134",
+    "online_owner_log_sha256": "3b33776dcd9ef5d4d87b95f2e54c1c4db82dd772912a49d39af00695c0b9586b",
+    "normal_conflict_negative_sha256": "5dc4b8c5bce1ce76e76c42ced1acea7a415f096c363e275e663f15b703303a42",
+    "fault_provider_observed_sha256": "4930b3e951d41aff3f1376eeb86aa8c8ad08c09fde4dee041de5bb8d9790c889",
+    "fault_provider_absent_sha256": "2e87621ffc47404d2b46a1b3331d42fa95b567dea088707c39ae0c23ba268d80",
+    "fault_addresses_observed_sha256": "359332b8e47e4a0be2dfaf26714c616360f46ae782ae6764e0b7fb220a3b00d7",
+    "fault_addresses_absent_sha256": "3b09ffe291a352832659391482926e1dd7081ad2ace6260b9bb39ffc8c2ed484",
+    "fault_routes_observed_sha256": "270e778c7640f402f8abf45504548c39b9ba03ee44163e46c8eefdbcb3f84a9a",
+    "fault_routes_absent_sha256": "fdfec30543542daaf12e05e6a5e6ab53f2bb8439da33f2a2bf8c24dc302a437c"
+  },
+  "build_provenance": {
+    "source_revision": "f45b41a464f2a66e893e6b7acc793e8016915205",
+    "workflow_ref": "ZHanry/NestLink/.github/workflows/windows-managed-tun.yml@refs/heads/main",
+    "run_id": 41224496857,
+    "attempt": 1,
+    "job": "hosted-wintun-kernel",
+    "runner_environment": "github-hosted",
+    "cargo_lock_sha256": "87315f505621834141721a3cb214b01a0203e6eb9d25b6d3bd5fdbdc4b7852e7",
+    "daemon_test_executable_sha256": "16fd58272b60f631499776e61bdc84fb1e75bf8456d54cb0989aa38a9b2a8898",
+    "driver": "Frozen official Wintun 0.14.1 amd64, protected immutable image, Authenticode Valid/WireGuard LLC; archive, all architecture DLL and license hashes retained."
+  },
+  "execution_provenance": {
+    "environment": "disposable_github_hosted_windows_vm",
+    "source_revision": "f45b41a464f2a66e893e6b7acc793e8016915205",
+    "started_at_unix": 1793467836.6057088,
+    "finished_at_unix": 1793468097.8483987,
+    "cases": {
+      "provider_negative": "passed: original image immutability and four unreviewed/mutable provider selection refusals",
+      "normal": "passed: original medium/high image and OS identity, complete native snapshot, full IPv4/IPv6 1280-byte UDP and physical original cleanup in 81 ms",
+      "conflicts": "passed: original GUID/alias, configured host address and existing specific remote route each rejected with the exact production conflict error; original complete snapshot and captured PnP identity unchanged after every rejection",
+      "crash": "passed: helper death, live original owner recovery denial, then exact captured PnP recovery after original owner death",
+      "raw_peer": "passed: OS-reported nonoriginal same-SID medium raw pipe client rejected before packet admission",
+      "online": "passed: actual management HTTP authentication/middleware and durable SQLite, original OS-protected installation identity, two durable one-use starts and two Forbidden replay denials, independently pinned original nonloopback interface sockets bound before overlay routes, actual peer mTLS/digest proof and unchanged production establish/packet_loop over the original Wintun packet pipe",
+      "online_packet_counters": {"sent_packets": 2, "received_packets": 2, "rejected_packets": 25, "local_spent_bytes": 5120, "remote_spent_bytes": 5120, "each_ipv4_ipv6_request_reply_ip_bytes": 1280},
+      "online_revocation": {"real_delete_and_http_403_readback": true, "original_kernel_absent": true, "both_original_underlay_udp_endpoints_rebound": true, "revocation_to_physical_cleanup_ms": 793, "provider_cleanup_ms": 70},
+      "partial_install": "passed independently after provider creation, signed host address installation, and host route installation; cfg(test)-only bounded faults take the original production apply error/cleanup path, retain the captured original identity/PnP observation, confirm exact kernel absence and clear the unchanged protected journal without publishing a packet-ready receipt; original ordinary owner remained alive during helper cleanup"
+    }
+  },
+  "prior_online_fixture_failure": {
+    "run_id": 41223168706,
+    "source_revision": "4fc9c30cdbf0aca9c252bd1011f6e1e770e272c1",
+    "artifact_id": 13051270606,
+    "artifact_digest": "sha256:fd60357e12760369fb136e63dd9ad7411a9f34b46cfbc0c895aea7982d66a2f1",
+    "receipt_sha256": "f8153b9607ff8a7f0f2052c20e4316d4c9afa3c43bdb0d4f2c6001f5814a1cc5",
+    "online_log_sha256": "a848d1962858a9d868a25899ed0835125720bdff180f0672377d4ae2270a0955",
+    "failure": "Fixture incorrectly expected HTTP 409 for a consumed start. The production contract and preexisting SDK regression require 403 Forbidden. No production status or one-use behavior was changed."
+  },
+  "production_online_cli_validation": false,
+  "production_https_login_resume_validation": false,
+  "two_target_acceptance": false,
+  "remaining_scope": "Current-source all-green strict checks, production HTTPS management login restoration/full CLI, independently deployed Windows/Linux targets and applicable unrelated VPN coexistence acceptance remain required.",
+  "local_review": "Downloaded/read/checksummed retained Actions files only. No local project compilation, formatter, lint, driver execution or test."
+}
