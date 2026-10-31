@@ -8,6 +8,7 @@ license.workspace = true
 [dependencies]
 sha2.workspace = true
 zeroize.workspace = true
+fast_image_resize = { version = "=6.1.0", default-features = false, features = ["std"] }
 
 [build-dependencies]
 cc = "=1.8.0"

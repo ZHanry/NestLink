@@ -59,6 +59,12 @@ jobs:
           assert native['async-trait'] == '=0.1.89'
           assert native['ipnet'] == '=2.12.2'
           assert native['etherparse'] == '=0.21.0'
+          assert native['mdns-sd'] == {'version': '=0.21.6', 'default-features': False}
+          assert native['socket-pktinfo'] == '=0.4.0'
+          assert native['socket2'] == {'version': '=0.6.5', 'features': ['all']}
+          codec = tomllib.loads(pathlib.Path('crates/media-codec/Cargo.toml').read_text())
+          assert codec['dependencies']['fast_image_resize'] == {
+              'version': '=6.1.0', 'default-features': False, 'features': ['std']}
           daemon = tomllib.loads(pathlib.Path('apps/daemon/Cargo.toml').read_text())
           assert daemon['target']['cfg(target_os = "linux")']['dependencies']['tun-rs'] == {
               'version': '=2.8.16', 'default-features': False, 'features': ['async_tokio']}
@@ -130,6 +136,12 @@ jobs:
                       assert {item['version'] for item in before if item['name'] == name} == {version, provider_version}, 'Previously reviewed provider identities differ: ' + name
                       original_blocks = [(key, part.replace('\n "' + name + '",\n',
                           '\n "' + name + ' ' + version + '",\n')) for key, part in original_blocks]
+              # mDNS adds a second if-addrs identity. Every old edge continues
+              # to select the exact previously reviewed 0.14.0 package.
+              old_if_addrs = {item['version'] for item in before if item['name'] == 'if-addrs'}
+              assert '0.14.0' in old_if_addrs and old_if_addrs <= {'0.14.0', '0.15.0'}
+              original_blocks = [(key, part.replace('\n "if-addrs",\n',
+                  '\n "if-addrs 0.14.0",\n')) for key, part in original_blocks]
               original_by_key = dict(original_blocks)
               reviewed_feature_edges = {
                   ('petgraph', '0.8.3'): {'serde'},
@@ -172,6 +184,24 @@ jobs:
               petgraph = [item for item in after if item['name'] == 'petgraph']
               dns = [item for item in after if item['name'] == 'hickory-server']
               registry = 'registry+https://github.com/rust-lang/crates.io-index'
+              reviewed_lan_scaler_packages = {
+                  ('mdns-sd', '0.21.6', registry): {
+                      'name': 'mdns-sd', 'version': '0.21.6', 'source': registry,
+                      'checksum': '8562654710f72a9cbce4b0d5b7c366a2f94330ba1ce3740f15e932ea2d37b161',
+                      'dependencies': ['fastrand', 'flume', 'if-addrs 0.15.0', 'mio', 'socket-pktinfo', 'socket2 0.6.5']},
+                  ('if-addrs', '0.15.0', registry): {
+                      'name': 'if-addrs', 'version': '0.15.0', 'source': registry,
+                      'checksum': 'c0a05c691e1fae256cf7013d99dad472dc52d5543322761f83ec8d47eab40d2b',
+                      'dependencies': ['libc', 'windows-sys 0.61.2']},
+                  ('socket-pktinfo', '0.4.0', registry): {
+                      'name': 'socket-pktinfo', 'version': '0.4.0', 'source': registry,
+                      'checksum': '3e8e43b4bdce7cff8a4d3f8025ee38fce5ca138fab868ebbf9529c81328fbf9d',
+                      'dependencies': ['libc', 'socket2 0.6.5', 'windows-sys 0.61.2']},
+                  ('fast_image_resize', '6.1.0', registry): {
+                      'name': 'fast_image_resize', 'version': '6.1.0', 'source': registry,
+                      'checksum': 'e9c50201dc184ba6553da1695aac20a042efffbe2d84542cee31917c86c3ab1e',
+                      'dependencies': ['cfg-if', 'document-features', 'num-traits', 'thiserror 2.0.21']},
+              }
               reviewed_cookie_packages = {
                   ('cookie', '0.18.2', registry): '1a373e3602691c3cdea496d2f0ee5935151e6168fe87739483c463db1b2f2f87',
                   ('cookie_store', '0.22.1', registry): '15b2c103cf610ec6cae3da84a766285b42fd16aad564758459e6ecf128c75206',
@@ -231,6 +261,10 @@ jobs:
                   'reviewed_petgraph_exact_version_and_checksum': len(petgraph) == 1 and petgraph[0]['version'] == '0.8.3' and petgraph[0].get('checksum') == '8701b58ea97060d5e5b155d383a69952a60943f0e6dfe30b04c287beb0b27455',
                   'reviewed_authoritative_dns_exact_version': len(dns) == 1 and dns[0]['version'] == '0.26.3' and bool(dns[0].get('checksum')),
                   'locked_metadata_succeeded': all(item['return_code'] == 0 for item in commands),
+                  'lan_and_scaler_exact_reviewed_package_closure': all(
+                      item == reviewed_lan_scaler_packages[identity(item)]
+                      for item in after if identity(item) in reviewed_lan_scaler_packages) and
+                      set(reviewed_lan_scaler_packages) <= set(derived),
                   'protected_native_stream_reuses_existing_tokio_identity': any(
                       item['name'] == 'nestlink-platform-security' and 'tokio' in item.get('dependencies', [])
                       for item in after) and any(key[0] == 'tokio' for key in existing),
@@ -253,6 +287,7 @@ jobs:
                           item.get('checksum') == reviewed_cookie_packages[identity(item)])
                       or (identity(item) == packet_key and item == reviewed_packet_package)
                       or (identity(item) in reviewed_tun_packages and item.get('checksum') == reviewed_tun_packages[identity(item)])
+                      or item == reviewed_lan_scaler_packages.get(identity(item))
                       or item == reviewed_product_reuse.get(identity(item)) for item in after),
               }
               assert all(assertions.values()), 'Unreviewed dependency drift or incomplete lock derivation'
