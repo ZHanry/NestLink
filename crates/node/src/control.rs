@@ -519,11 +519,22 @@ async fn pump(
     let resources = resources::poll(config.clone(), identity.clone(), state.clone(), started);
     let service = services::poll(config.clone(), identity.clone(), state.clone(), started);
     let turn = turn::poll(config, identity, state, turn_authorization, started);
-    tokio::select! {
-        result=leases=>result.map_err(|cause| Error::Phase { stage: "lease pump", cause: Box::new(cause) }),
-        result=resources=>result.map_err(|cause| Error::Phase { stage: "resource poll", cause: Box::new(cause) }),
-        result=turn=>result.map_err(|cause| Error::Phase { stage: "TURN resource poll", cause: Box::new(cause) }),
-        result=service=>result.map_err(|cause| Error::Phase { stage:"service resource poll",cause:Box::new(cause) }),
+    // Each independent authenticated poll must be schedulable while another
+    // verifies a bounded signature envelope. Running all four as branches of
+    // one task lets synchronous verification starve the other original TTLs.
+    // One JoinSet still owns every worker; any terminal result cancels and
+    // joins its siblings before this control owner returns.
+    let mut workers = tokio::task::JoinSet::new();
+    workers.spawn(async move { ("lease pump", leases.await) });
+    workers.spawn(async move { ("resource poll", resources.await) });
+    workers.spawn(async move { ("TURN resource poll", turn.await) });
+    workers.spawn(async move { ("service resource poll", service.await) });
+    let first = workers.join_next().await;
+    workers.abort_all();
+    while workers.join_next().await.is_some() {}
+    match first {
+        Some(Ok((stage, result))) => result.map_err(|cause| Error::Phase { stage, cause: Box::new(cause) }),
+        Some(Err(_)) | None => Err(Error::Control),
     }
 }
 async fn lease_pump(

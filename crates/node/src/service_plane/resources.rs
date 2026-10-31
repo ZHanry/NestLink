@@ -305,9 +305,10 @@ impl ServiceResourceSet {
             .into());
         }
         // VerifiedServiceSnapshot already enforces its signed <=2s lifetime.
-        // Use the same receipt/request intersection as the original node lease;
-        // subtracting response latency from an old request anchor counts it twice.
-        let deadline = super::gate::signed_deadline(c.issued_at_unix_ms, c.expires_at_unix_ms, request_started, now, wall)?.min(node_deadline);
+        // Retain both the response's signed expiry and the original query's
+        // shorter lifetime. A response's later issuance is not a new request
+        // anchor and must not subtract inbound/queue time twice.
+        let deadline = super::gate::signed_query_deadline(q.issued_at_unix_ms, c.issued_at_unix_ms, c.expires_at_unix_ms, request_started, now, wall)?.min(node_deadline);
         if deadline <= now { return Err(rejected(ErrorCode::LeaseExpired).into()); }
         let binding = Binding {
             deployment_id: q.deployment_id.clone(),

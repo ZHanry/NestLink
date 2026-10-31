@@ -100,6 +100,16 @@ pub(super) fn signed_deadline(issued: u64, expires: u64, request_started: Instan
         .filter(|end| *end > now)
         .ok_or_else(|| ContractError::new(ErrorCode::LeaseExpired, "service original request lifetime passed before receipt"))
 }
+/// A response can be issued after the original query, while its signed end is
+/// still capped by that query's original expiry. Use the original query's
+/// signed start for the request cap; using response issuance would subtract
+/// the server's inbound/queue time a second time.
+pub(super) fn signed_query_deadline(query_issued: u64, response_issued: u64, expires: u64, request_started: Instant, now: Instant, wall: u64) -> Result<Instant, ContractError> {
+    if query_issued > response_issued || response_issued > wall {
+        return Err(ContractError::new(ErrorCode::LeaseExpired, "service signed deadline has a future request or issuance"));
+    }
+    signed_deadline(query_issued, expires, request_started, now, wall)
+}
 impl State {
     fn live(&mut self) -> Result<Instant, ContractError> {
         if self.stopped {

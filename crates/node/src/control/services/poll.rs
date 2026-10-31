@@ -37,7 +37,7 @@ pub(in crate::control) async fn poll(
         if shutdown_requested {
             return std::future::pending().await;
         }
-        let query = {
+        let (query, requested) = {
             let mut runtime = state.lock().map_err(|_| Error::Control)?;
             if runtime.service_shutdown {
                 continue;
@@ -45,6 +45,7 @@ pub(in crate::control) async fn poll(
             if !runtime.ready {
                 continue;
             }
+            let requested = Instant::now();
             let now = sample(started)?;
             let lease = runtime.gate.current(now)?.clone();
             if !lease.public_ingress_allowed || !lease.server_forwarding_allowed {
@@ -58,7 +59,7 @@ pub(in crate::control) async fn poll(
                 .checked_add(1)
                 .filter(|n| *n <= i64::MAX as u64)
                 .ok_or(Error::Control)?;
-            NodeResourceQueryClaims {
+            (NodeResourceQueryClaims {
                 schema_version: SCHEMA_VERSION,
                 deployment_id: lease.deployment_id,
                 security_epoch: lease.security_epoch,
@@ -75,11 +76,11 @@ pub(in crate::control) async fn poll(
                     .checked_add(SERVICE_RESOURCE_MS.min(NODE_RESOURCE_TTL_MS))
                     .ok_or(Error::Control)?
                     .min(lease.expires_at_unix_ms),
-            }
+            }, requested)
         };
         let signed = identity.sign_service_query(&query)?;
-        // Preserve the exact pre-send monotonic anchor through verification.
-        let requested = Instant::now();
+        // Preserve the original pre-sign/query monotonic anchor. Signing and
+        // sending cannot shift the original signed query's finite lifetime.
         let response = tokio::time::timeout(Duration::from_millis(700), async {
             let response = client
                 .post(&url)
