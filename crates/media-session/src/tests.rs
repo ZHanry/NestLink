@@ -240,9 +240,8 @@ async fn pair_with_features(
                 tcp.set_nodelay(true)?;
                 server.accept(tcp).await
             };
-            let (controller_wire, host_wire) = tokio::time::timeout(
-                Duration::from_secs(2),
-                async {
+            let (controller_wire, host_wire) =
+                tokio::time::timeout(Duration::from_secs(2), async {
                     tokio::try_join!(
                         nestlink_transport_stream::connect(
                             address,
@@ -251,9 +250,8 @@ async fn pair_with_features(
                         ),
                         accept,
                     )
-                },
-            )
-            .await??;
+                })
+                .await??;
             let host_tls = host_wire.get_ref().1;
             let controller_tls = controller_wire.get_ref().1;
             let connections: [&tokio_rustls::rustls::CommonState; 2] = [host_tls, controller_tls];
@@ -262,17 +260,26 @@ async fn pair_with_features(
                     connection.protocol_version(),
                     Some(tokio_rustls::rustls::ProtocolVersion::TLSv1_3)
                 );
-                assert_eq!(connection.alpn_protocol(), Some(nestlink_protocol::ALPN.as_bytes()));
+                assert_eq!(
+                    connection.alpn_protocol(),
+                    Some(nestlink_protocol::ALPN.as_bytes())
+                );
             }
             assert_eq!(
                 tls::certificate_fingerprint(
-                    host_tls.peer_certificates().and_then(|certs| certs.first()).ok_or("missing mTLS client certificate")?
+                    host_tls
+                        .peer_certificates()
+                        .and_then(|certs| certs.first())
+                        .ok_or("missing mTLS client certificate")?
                 )?,
                 controller.fingerprint(),
             );
             assert_eq!(
                 tls::certificate_fingerprint(
-                    controller_tls.peer_certificates().and_then(|certs| certs.first()).ok_or("missing mTLS server certificate")?
+                    controller_tls
+                        .peer_certificates()
+                        .and_then(|certs| certs.first())
+                        .ok_or("missing mTLS server certificate")?
                 )?,
                 host.fingerprint(),
             );

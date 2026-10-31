@@ -871,8 +871,10 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     let observed = host.native_video_receiver_condition(&session_binding, source, config.fps)?;
     assert!(matches!(
         observed,
-        Some(nestlink_media_codec::ReceiverCondition::Healthy
-            | nestlink_media_codec::ReceiverCondition::Congested)
+        Some(
+            nestlink_media_codec::ReceiverCondition::Healthy
+                | nestlink_media_codec::ReceiverCondition::Congested
+        )
     ));
     let request = NativeVideoFeedback {
         schema_version: 1,
