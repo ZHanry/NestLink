@@ -375,12 +375,25 @@ async fn ordinary(case: &Path, plan_path: &Path, receipt: &Path) -> Result {
             &serde_json::json!({"receipt":state,"ipv4_packet_bytes":1280,"ipv6_packet_bytes":1280,"kernel_udp_replies":2}),
         )?,
     )?;
+    // A live unrelated VPN owner must keep draining its own device. New
+    // interface events can produce background kernel control packets; leaving
+    // them unread makes the original bounded pipe writer stop correctly.
+    let mut tick=tokio::time::interval(Duration::from_millis(25));
+    tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+    let mut idle_packet=[0_u8;1280];
+    let mut drained=0_u64;
     loop {
-        plan.validate(true)?;
-        if case.join("stop.json").try_exists()? {
-            break;
+        tokio::select!{biased;
+            _=tick.tick()=>{
+                plan.validate(true)?;
+                if case.join("stop.json").try_exists()?{break;}
+            },
+            received=device.recv(&mut idle_packet)=>{
+                let count=received?;
+                assert!(count>0 && count<=idle_packet.len());
+                drained=drained.saturating_add(1);
+            },
         }
-        tokio::time::sleep(Duration::from_millis(25)).await;
     }
     let started = Instant::now();
     device.shutdown().await?;
@@ -389,7 +402,7 @@ async fn ordinary(case: &Path, plan_path: &Path, receipt: &Path) -> Result {
     std::fs::write(
         case.join("ordinary-stopped.json"),
         serde_json::to_vec(
-            &serde_json::json!({"normal_cleanup_ms":started.elapsed().as_millis(),"kernel_absent":os.absent(&plan).await?}),
+            &serde_json::json!({"normal_cleanup_ms":started.elapsed().as_millis(),"kernel_absent":os.absent(&plan).await?,"idle_kernel_packets_drained_without_business_admission":drained}),
         )?,
     )?;
     Ok(())
