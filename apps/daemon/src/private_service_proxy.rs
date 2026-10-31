@@ -3,6 +3,7 @@ mod host;
 #[cfg(any(target_os = "linux", windows))]
 mod raw_gate;
 use crate::{session_store::SessionStore, space_dns::session_snapshot};
+use crate::diagnostics::service::{Counters, LocalEntry, Recorder, Stage, StopCause};
 use nestlink_protocol::services::private::PrivateServiceEntry;
 use nestlink_sdk::{
     Sdk,
@@ -144,8 +145,8 @@ enum RunningProxy {
 }
 enum ProxyWait {
     Pending,
-    Stopped(String),
-    Failed(String),
+    Stopped(String, Counters),
+    Failed(String, Counters),
 }
 impl RunningProxy {
     fn is_finished(&self) -> bool {
@@ -168,22 +169,22 @@ impl RunningProxy {
         match self {
             Self::Socks(owner) => match owner.wait_stopped(Duration::from_secs(5)).await {
                 LocalProxyWait::CleanupPending => ProxyWait::Pending,
-                LocalProxyWait::Stopped(report) => ProxyWait::Stopped(format!("{report:?}")),
-                LocalProxyWait::CleanupFailed(report) => ProxyWait::Failed(format!("{report:?}")),
+                LocalProxyWait::Stopped(report) => ProxyWait::Stopped(format!("{report:?}"), Counters::from(&report)),
+                LocalProxyWait::CleanupFailed(report) => ProxyWait::Failed(format!("{report:?}"), Counters::from(&report)),
             },
             Self::Native(owner) => match owner.wait_stopped(Duration::from_secs(5)).await {
                 NativeStreamWait::CleanupPending => ProxyWait::Pending,
-                NativeStreamWait::Stopped(report) => ProxyWait::Stopped(format!("{report:?}")),
-                NativeStreamWait::CleanupFailed(report) => ProxyWait::Failed(format!("{report:?}")),
+                NativeStreamWait::Stopped(report) => ProxyWait::Stopped(format!("{report:?}"), Counters::from(&report)),
+                NativeStreamWait::CleanupFailed(report) => ProxyWait::Failed(format!("{report:?}"), Counters::from(&report)),
             },
             #[cfg(any(target_os = "linux", windows))]
             Self::Raw(owner) => match owner.wait_stopped(Duration::from_secs(5)).await {
                 nestlink_sdk::services::RawProxyWait::CleanupPending => ProxyWait::Pending,
                 nestlink_sdk::services::RawProxyWait::Stopped(report) => {
-                    ProxyWait::Stopped(format!("{report:?}"))
+                    ProxyWait::Stopped(format!("{report:?}"), Counters::from(&report))
                 }
                 nestlink_sdk::services::RawProxyWait::CleanupFailed(report) => {
-                    ProxyWait::Failed(format!("{report:?}"))
+                    ProxyWait::Failed(format!("{report:?}"), Counters::from(&report))
                 }
             },
         }
@@ -293,6 +294,8 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
             relay_private_prefixes,
             allow_loopback_relay,
         } => {
+            let mut diagnostic = Recorder::new(directory.clone(), &service, &space,
+                if raw_loopback {LocalEntry::Raw} else if native_stream {LocalEntry::Native} else {LocalEntry::Socks}, relay_nodes.len());
             if !nestlink_protocol::valid_id(&service)
                 || !nestlink_protocol::valid_id(&space)
                 || !listen.ip().is_loopback()
@@ -343,6 +346,8 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
             let sdk = Arc::new(sdk);
             let credential_directory = credentials_dir.unwrap_or_else(|| directory.clone());
             let deadline = tokio::time::Instant::now() + lifetime;
+            diagnostic.observe(Stage::SelectionValidated);
+            diagnostic.observe(Stage::ListenerStarting);
             let mut proxy = if raw_loopback {
                 #[cfg(any(target_os = "linux", windows))]
                 {
@@ -420,6 +425,7 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
                     .await?,
                 )
             };
+            diagnostic.observe(Stage::ListenerReady);
             drop(installation);
             match &proxy {
                 RunningProxy::Socks(owner) => {
@@ -475,23 +481,24 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
             let signal = crate::space_dns_system::termination();
             tokio::pin!(signal);
             let mut tick = tokio::time::interval(Duration::from_millis(250));
-            let operation: io::Result<()> = loop {
+            let (operation, stop_cause): (io::Result<()>, StopCause) = loop {
                 tokio::select! {
-                    result = &mut signal => break result,
-                    _ = tokio::time::sleep_until(deadline) => break Ok(()),
+                    result = &mut signal => break (result, StopCause::UserStop),
+                    _ = tokio::time::sleep_until(deadline) => break (Ok(()), StopCause::Deadline),
                     _ = tick.tick() => {
-                        if proxy.is_finished() { break Ok(()); }
+                        if proxy.is_finished() { break (Ok(()), StopCause::OwnerEnded); }
                         match nestlink_local_ipc::maintenance::requested(&directory) {
-                            Ok(true) => break Ok(()),
-                            Err(error) => break Err(io::Error::other(error)),
+                            Ok(true) => break (Ok(()), StopCause::Maintenance),
+                            Err(error) => break (Err(io::Error::other(error)), StopCause::InspectionFailed),
                             Ok(false) => {},
                         }
                         if session_snapshot(&directory).ok() != Some(original_login) {
-                            break Err(io::Error::other("protected management session changed; private proxy stopped"));
+                            break (Err(io::Error::other("protected management session changed; private proxy stopped")), StopCause::LoginChanged);
                         }
                     }
                 }
             };
+            diagnostic.stopping(stop_cause);
             proxy.request_shutdown();
             // Keep the same owner and join handle until its actual flow drains
             // and exact credential cleanup have completed. A wait timeout never
@@ -501,19 +508,22 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
                 match proxy.wait_stopped().await {
                     ProxyWait::Pending => {
                         if !reported_pending {
+                            diagnostic.observe(Stage::CleanupPending);
                             eprintln!(
                                 "Private proxy is joining its original connections; cleanup receipt is pending."
                             );
                             reported_pending = true;
                         }
                     }
-                    ProxyWait::Failed(report) => {
+                    ProxyWait::Failed(report, counters) => {
+                        diagnostic.finish(counters, true);
                         return Err(io::Error::other(format!(
                             "private proxy cleanup failed: {report:?}"
                         ))
                         .into());
                     }
-                    ProxyWait::Stopped(report) => {
+                    ProxyWait::Stopped(report, counters) => {
+                        diagnostic.finish(counters, false);
                         println!("Private proxy stopped: {report:?}");
                         operation?;
                         return Ok(());

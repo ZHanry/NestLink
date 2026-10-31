@@ -64,11 +64,13 @@ def main():
                   "workflow_ref": env["GITHUB_WORKFLOW_REF"], "workflow_revision": env["GITHUB_WORKFLOW_SHA"],
                   "run_id": env["GITHUB_RUN_ID"], "attempt": env["GITHUB_RUN_ATTEMPT"], "job": env["GITHUB_JOB"],
                   "runner_environment": env["RUNNER_ENVIRONMENT"], "runner_os": env["RUNNER_OS"],
-                  "runner_arch": env.get("RUNNER_ARCH"), "image_os": env.get("ImageOS"), "image_version": env.get("ImageVersion")},
+                  "runner_arch": env.get("RUNNER_ARCH"), "image_os": env.get("IMAGEOS"), "image_version": env.get("IMAGEVERSION")},
               "execution_provenance": {"source_revision": env["GITHUB_SHA"], "environment": "disposable_github_hosted_windows_vm",
                   "workflow_run": env["GITHUB_RUN_ID"], "attempt": env["GITHUB_RUN_ATTEMPT"], "started_at_unix": time.time()}}
     native, account, wfp = Native(), None, None
-    fixture = Path(env["ProgramFiles"]) / ("NestLink-WFP-Lab-" + uuid.uuid4().hex)
+    # Python's Windows environment mapping normalizes names to uppercase;
+    # converting it to a plain dict removes case-insensitive lookup semantics.
+    fixture = Path(env["PROGRAMFILES"]) / ("NestLink-WFP-Lab-" + uuid.uuid4().hex)
     executable = None
     active, owner_handles, roots = [], [], []
     sentinel = "NestLink-WFP-Lab-" + uuid.uuid4().hex

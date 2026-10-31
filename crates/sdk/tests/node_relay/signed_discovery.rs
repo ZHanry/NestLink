@@ -267,7 +267,7 @@ async fn establish_joins_the_existing_shared_allocation_when_capacity_is_full() 
         Ok(address) => address,
         Err(_) => return Ok(()),
     };
-    let mut f = Fixture::with_quic_bound(None, "0.0.0.0:0").await?;
+    let mut f = Fixture::with_independent_quic_bound("0.0.0.0:0").await?;
     approve_quic_endpoint(&mut f, address).await?;
 
     // Keep the fixture's initial reservation as the first slot, then allow one
@@ -331,7 +331,10 @@ async fn establish_rendezvous_refreshes_allocation_after_node_endpoint_revision_
         Ok(address) => address,
         Err(_) => return Ok(()),
     };
-    let mut f = Fixture::with_quic_bound(None, "0.0.0.0:0").await?;
+    // This case verifies the independent node's allocation revision and close
+    // receipt. The management-origin combined relay is also Path::Relay, so
+    // keep its production fallback out of this narrowly selected fixture.
+    let mut f = Fixture::with_independent_quic_bound("0.0.0.0:0").await?;
     approve_quic_endpoint(&mut f, address).await?;
     let (_cancel, cancel) = watch::channel(false);
     let mut controller_establish = Box::pin(f.endpoints[0].establish(
@@ -373,12 +376,36 @@ async fn establish_rendezvous_refreshes_allocation_after_node_endpoint_revision_
         )
         .await?;
 
-    let (controller, host) = tokio::try_join!(
+    let (mut controller, mut host) = tokio::try_join!(
         &mut controller_establish,
         f.endpoints[1].establish(&f.sdk, &f.host, local_options(), &[], vec![], cancel,),
     )?;
-    assert_eq!(controller.candidate.path(), Path::Relay);
-    assert_eq!(host.candidate.path(), Path::Relay);
+    for candidate in [&controller.candidate, &host.candidate] {
+        assert_eq!(candidate.path(), Path::Relay);
+        assert_eq!(candidate.transport, nestlink_protocol::api::Transport::Quic);
+        assert_eq!(candidate.address.ip(), address);
+        assert_eq!(candidate.address.port(), port);
+    }
+    let request = b"revised independent node request\0\xff\x80";
+    let reply = b"revised independent node reply\0\x80\xff";
+    let (sent, received) = tokio::join!(
+        controller.channels.send(Channel::Video, request),
+        host.channels.receive(),
+    );
+    sent?;
+    assert_eq!(received?.payload, request);
+    let (sent, received) = tokio::join!(
+        host.channels.send(Channel::Video, reply),
+        controller.channels.receive(),
+    );
+    sent?;
+    assert_eq!(received?.payload, reply);
+    let counters = f.control.counters()?;
+    assert_eq!(
+        counters.opened_connections, 2,
+        "the revised pair must use the original independent node: {counters:?}"
+    );
+    assert!(counters.admitted_bytes >= (request.len() + reply.len()) as u64);
     controller
         .control
         .stop(nestlink_sdk::StopReason::ExplicitExit)?;

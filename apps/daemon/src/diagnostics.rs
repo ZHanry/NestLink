@@ -1,4 +1,7 @@
 //! A bounded private diagnostic ring containing fixed labels and timings only.
+mod export;
+pub(crate) mod service;
+pub(crate) use export::{ExportArgs, run_export};
 use nestlink_app_core::BrowserHostDiagnostic;
 use std::{
     path::PathBuf,

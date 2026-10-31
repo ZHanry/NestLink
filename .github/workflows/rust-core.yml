@@ -192,7 +192,8 @@ jobs:
           $accessTests = @(
             @{ Args = @('-p', 'nestlink-sdk', '--lib', 'services::web_gateway::') },
             @{ Args = @('-p', 'nestlink-sdk', '--lib', 'services::web_launch::') },
-            @{ Args = @('-p', 'nestlink-desktop', '--lib', 'network_diagnostics::tests::') }
+            @{ Args = @('-p', 'nestlink-desktop', '--lib', 'network_diagnostics::tests::') },
+            @{ Args = @('-p', 'nestlink-daemon', '--bin', 'nestlink-daemon', 'diagnostics::') }
           )
           $accessFailure = 0
           foreach ($accessTest in $accessTests) {

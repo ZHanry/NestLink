@@ -87,6 +87,8 @@ enum Command {
     SpaceDns(space_dns::SpaceDnsArgs),
     /// Review/apply/recover only an explicit managed split-DNS plan; no login data.
     SpaceDnsSystem(space_dns_system::SystemDnsArgs),
+    /// Export bounded, re-redacted retained diagnostics without management login.
+    Diagnostics(diagnostics::ExportArgs),
     #[command(
         name = "file-quota",
         about = "Offline native FileWrite quota metadata maintenance"
@@ -435,6 +437,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             return private_web_gateway::run(command).await;
         }
         Some(Command::SpaceDnsSystem(command)) => return space_dns_system::run(command).await,
+        Some(Command::Diagnostics(command)) => return Ok(diagnostics::run_export(command)?),
         Some(Command::FileQuota(command)) => return Ok(run_file_quota(command)?),
         Some(Command::Maintenance(command)) => return maintenance::run(command).await,
         Some(Command::Shutdown(command)) => return maintenance::shutdown(command).await,
