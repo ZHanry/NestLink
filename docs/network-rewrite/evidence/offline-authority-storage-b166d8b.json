@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "repository": "ZHanry/NestLink",
+  "source_revision": "b166d8badbb99bf16d0d56d9d2964d3cab98a6d5",
+  "run_id": 41234465272,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41234465272",
+  "workflow": ".github/workflows/offline-authority.yml",
+  "workflow_conclusion": "success",
+  "qualified_jobs": [
+    {
+      "name": "authority",
+      "conclusion": "success",
+      "runner": "github-hosted ubuntu-24.04",
+      "primitive_tests": 7,
+      "remote_identity_tests": 3,
+      "remote_session_tests": 2,
+      "failed_tests": 0,
+      "ignored_tests": 0,
+      "coverage": "Reserved transports grant no original business authority; matching remote peer and pending transport authentication is mandatory before Session activation. Duplicate authentication and wrong-key/transport cases fail without refunding original cumulative counters.",
+      "strict_clippy": "cargo clippy --locked -p nestlink-protocol -p nestlink-identity -p nestlink-session --all-targets -- -D warnings",
+      "clippy_log_sha256": "c70c6cd294fe374a53a256a329d14a418af2b50a1a57ab462cc9c211a42c517d",
+      "artifact_id": 13054793670,
+      "github_artifact_digest": "sha256:083ba0ee1ab0e6d8fe404097a68bae3058152f2ba2acb753fc5e4548d5d7a09c"
+    },
+    {
+      "name": "durable-private-service",
+      "conclusion": "success",
+      "runner": "github-hosted ubuntu-24.04",
+      "offline_storage_tests": 8,
+      "remote_storage_tests": 5,
+      "full_storage_regression_tests": 274,
+      "full_storage_regression_test_targets": 13,
+      "failed_tests": 0,
+      "ignored_tests": 0,
+      "full_storage_command": "cargo test --locked -p nestlink-storage --lib --tests --no-fail-fast",
+      "full_storage_log_sha256": "061528cc11865c23e90ab65b825fed3c2ca397a9477aae7b8c49bcf38e262e75",
+      "strict_clippy": "cargo clippy --locked -p nestlink-storage -p nestlink-identity -p nestlink-protocol --all-targets -- -D warnings",
+      "clippy_log_sha256": "dff4ba83d08443faa56393612657630ac120f7dee82b60ff8efadf99fcb6a91a",
+      "artifact_id": 13054204267,
+      "github_artifact_digest": "sha256:049f5e3c5a4e4f5189974a62bd50c991692e2283d075d1f20327cf83bdb33bac"
+    }
+  ],
+  "verification": "Downloaded both successful job artifacts. Every file in all five SHA256 receipt inventories matched; all five receipts passed at the exact source. Reviewed 13 full-storage summaries totaling 274 passed, zero failed and zero ignored. The exact workflow also completed actual-http-sdk successfully; its artifact and production-carrier qualification are recorded separately by that implementation owner.",
+  "limitations": [
+    "This file qualifies authority and storage only. It does not substitute for the independently retained actual-http-sdk evidence or installed-device acceptance.",
+    "Storage historical migrations and restored cumulative-budget fences pass; legitimate old packaged executable and physical upgrade/rollback matrices remain separate W35 evidence.",
+    "No local formatter, compiler, lint or project test was executed."
+  ]
+}

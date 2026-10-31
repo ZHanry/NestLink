@@ -85,7 +85,7 @@ class ProductScopeTests(unittest.TestCase):
         checks = module("refactor-required-checks")
         self.assertEqual(set(checks.WORKFLOWS),
                          {"rust-core.yml", "web-build.yml", "secret-scan.yml", "codeql.yml",
-                          "network-rewrite.yml", "linux-network-package.yml"})
+                          "network-rewrite.yml", "linux-network-package.yml", "network-upgrade.yml"})
 
 
 if __name__ == "__main__":

@@ -1,0 +1,53 @@
+name: Retained server compatibility and schema rollback
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'crates/operations/**', 'crates/storage/**', 'apps/server/**', 'packaging/linux/lifecycle.py', 'scripts/network-rewrite-upgrade.py', '.github/workflows/network-upgrade.yml']
+  pull_request:
+    paths: ['Cargo.*', 'rust-toolchain.toml', 'compatibility.json', 'crates/operations/**', 'crates/storage/**', 'apps/server/**', 'packaging/linux/lifecycle.py', 'scripts/network-rewrite-upgrade.py', '.github/workflows/network-upgrade.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: network-upgrade-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  retained-server:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            architecture: x64
+          - os: ubuntu-24.04-arm
+            architecture: arm64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      CARGO_TARGET_DIR: ${{ github.workspace }}/../upgrade-build
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+      - name: Build exact current server from the committed lock
+        run: cargo build --locked -p nestlink-server
+      - name: Execute retained old packages and real encrypted migration transactions
+        run: python3 -B scripts/network-rewrite-upgrade.py --current "$CARGO_TARGET_DIR/debug/nestlink-server" --output "${{ runner.temp }}/network-upgrade"
+      - name: Retain old manifest, native identities and exact refusal and recovery logs
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: network-upgrade-${{ matrix.architecture }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/network-upgrade
+          if-no-files-found: error
+          retention-days: 30
