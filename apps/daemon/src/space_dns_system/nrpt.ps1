@@ -7,7 +7,7 @@ Remove-Item Env:NESTLINK_DNS_REQUEST
 # Import only the Microsoft provider used by this operation. Importing the
 # aggregate DnsClient manifest also loads every unrelated DNS adapter/cache/DoH
 # module and type/format file on each short-lived owner command. Keep the same
-# DNS cmdlets, trusted absolute system paths and three-second process deadline.
+# DNS cmdlets, trusted absolute system paths and bounded cold-start deadline.
 $dnsDirectory = Join-Path $env:PSModulePath 'DnsClient'
 if ([string]$request.action -ceq 'query') {
     Import-Module -Name (Join-Path $dnsDirectory 'DnsLookup.dll') -ErrorAction Stop

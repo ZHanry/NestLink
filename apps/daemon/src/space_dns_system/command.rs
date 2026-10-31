@@ -2,6 +2,14 @@ use super::{Result, io};
 use std::{path::Path, process::Stdio, time::Duration};
 use tokio::{io::AsyncReadExt, process::Command};
 
+// A cold Windows PowerShell/CIM provider startup is part of the native NRPT
+// operation. Bound that startup separately from the small Linux CLI budget;
+// timeout still fails the operation and retains the recovery journal.
+#[cfg(windows)]
+const COMMAND_TIMEOUT: Duration = Duration::from_secs(15);
+#[cfg(not(windows))]
+const COMMAND_TIMEOUT: Duration = Duration::from_secs(3);
+
 /// Bounded native execution. No shell command is accepted from a plan.
 pub(super) async fn run(
     program: &Path,
@@ -73,7 +81,7 @@ pub(super) async fn run(
         }
         Ok(output)
     };
-    match tokio::time::timeout(Duration::from_secs(3), execution).await {
+    match tokio::time::timeout(COMMAND_TIMEOUT, execution).await {
         Ok(result) => result,
         Err(_) => {
             let _ = child.kill().await;

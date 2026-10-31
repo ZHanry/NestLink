@@ -82,6 +82,17 @@ async fn property(path: &str, interface: &str, name: &str) -> Result<Value> {
     decode_property(&output, interface, name)
 }
 
+fn link_bus_path(index: u64) -> String {
+    // systemd's sd_bus_path_encode escapes the first decimal digit as its
+    // ASCII byte, then preserves subsequent digits: index 5 is /link/_35.
+    let decimal = index.to_string();
+    format!(
+        "/org/freedesktop/resolve1/link/_{:02x}{}",
+        decimal.as_bytes()[0],
+        &decimal[1..]
+    )
+}
+
 fn decode_property(output: &[u8], interface: &str, name: &str) -> Result<Value> {
     #[derive(serde::Deserialize)]
     #[serde(deny_unknown_fields)]
@@ -232,7 +243,7 @@ pub(super) async fn inspect(plan: &DnsPlan) -> Result<Option<Value>> {
         .as_u64()
         .filter(|value| *value <= i32::MAX as u64)
         .ok_or_else(|| io::Error::other("invalid interface index"))?;
-    let path = format!("/org/freedesktop/resolve1/link/_{index}");
+    let path = link_bus_path(index);
     let iface = "org.freedesktop.resolve1.Link";
     let (dns, domains, default_route, llmnr, mdns, dnssec, tls) = tokio::try_join!(
         property(&path, iface, "DNSEx"),
@@ -385,9 +396,9 @@ pub(super) async fn install(plan: &DnsPlan) -> Result {
         || created["ifalias"]
             .as_str()
             .is_some_and(|alias| !alias.is_empty() && alias != plan.marker())
-        || !created["flags"]
+        || created["flags"]
             .as_array()
-            .is_some_and(|flags| !flags.iter().any(|flag| flag == "UP"))
+            .is_none_or(|flags| flags.iter().any(|flag| flag == "UP"))
     {
         return Err(io::Error::other(
             "exclusive dummy creation changed before owner marker; preserving it and the journal",
@@ -419,7 +430,7 @@ pub(super) async fn install(plan: &DnsPlan) -> Result {
                 {
                     return Err(io::Error::other(format!("created interface incarnation changed before DNS setup; expected index {created_index}, address {created_address}; observed index {}, address {}; journal retained",observed["ifindex"],observed["address"])).into());
                 }
-                let path = format!("/org/freedesktop/resolve1/link/_{created_index}");
+                let path = link_bus_path(created_index);
                 if property(&path, "org.freedesktop.resolve1.Link", "DefaultRoute")
                     .await
                     .is_ok()
@@ -605,6 +616,19 @@ pub(super) async fn native_restore_owned(plan: &DnsPlan, expected: &Value) -> Re
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn resolved_link_paths_escape_the_leading_decimal_digit() {
+        for (index, path) in [
+            (1, "/org/freedesktop/resolve1/link/_31"),
+            (5, "/org/freedesktop/resolve1/link/_35"),
+            (12, "/org/freedesktop/resolve1/link/_312"),
+            (128, "/org/freedesktop/resolve1/link/_3128"),
+            (2147483647, "/org/freedesktop/resolve1/link/_32147483647"),
+        ] {
+            assert_eq!(link_bus_path(index), path);
+        }
+    }
+
     #[test]
     fn busctl_property_data_preserves_full_arrays_empty_arrays_and_scalars() -> Result {
         let manager = "org.freedesktop.resolve1.Manager";

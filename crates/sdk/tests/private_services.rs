@@ -624,7 +624,7 @@ async fn private_udp_preserves_empty_datagrams_transports_dns_and_revokes_live_m
         connection.send_datagram(&query.to_vec()?)?;
         let response=Message::from_vec(&connection.receive_datagram().await?)?;
         assert_eq!(response.metadata.id,8173);assert_eq!(response.metadata.response_code,ResponseCode::NoError);
-        assert!(response.answers.iter().any(|r|matches!(&r.data,RData::A(A(ip)) if *ip=="192.0.2.81".parse::<std::net::Ipv4Addr>().unwrap())));
+        assert!(response.answers.iter().any(|r|matches!(&r.data,RData::A(A(ip)) if *ip==std::net::Ipv4Addr::new(192,0,2,81))));
         backend.await??;
         f.sdk.revoke_private_service(&f.view.id,&f.rule,f.exposure.revision).await?;
         assert!(tokio::time::timeout(Duration::from_secs(3),connection.receive_datagram()).await?.is_err());
