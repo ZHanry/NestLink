@@ -7,6 +7,7 @@ on:
       - "Cargo.*"
       - "crates/**"
       - "apps/server/**"
+      - "apps/daemon/**"
       - "scripts/network-rewrite-local-port-gate.py"
       - ".github/workflows/local-port-gate.yml"
   pull_request:
@@ -14,9 +15,10 @@ on:
       - "Cargo.*"
       - "crates/**"
       - "apps/server/**"
+      - "apps/daemon/**"
       - "scripts/network-rewrite-local-port-gate.py"
       - ".github/workflows/local-port-gate.yml"
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 permissions:
   contents: read
