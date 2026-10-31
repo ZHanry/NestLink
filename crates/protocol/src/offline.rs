@@ -38,6 +38,7 @@ pub struct OfflineConnection {
 #[serde(rename_all = "snake_case")]
 pub enum OfflineRemoteOperation {
     View,
+    Audio,
     Input,
     ClipboardRead,
     ClipboardWrite,
@@ -175,7 +176,7 @@ impl OfflineGrantBundleClaims {
                 if !valid_id(resource_id)
                     || *capability_digest == [0; 32]
                     || operations.is_empty()
-                    || operations.len() > 6
+                    || operations.len() > 7
                     || operations.windows(2).any(|pair| pair[0] >= pair[1])
                     || (self.resources.file_write_limit > 0
                         && !operations.contains(&OfflineRemoteOperation::FileWrite))
@@ -246,4 +247,14 @@ impl SignedOfflineGrantBundle {
 }
 fn invalid(reason: &'static str) -> ContractError {
     ContractError::new(ErrorCode::InvalidMessage, reason)
+}
+
+/// Device consent to the exact complete draft, separate from the authority
+/// signature and from an account's management session. Both endpoints approve.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OfflineEndpointApproval {
+    pub endpoint: u8,
+    pub draft_digest: [u8; 32],
+    pub signature: Vec<u8>,
 }

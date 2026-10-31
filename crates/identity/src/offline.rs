@@ -15,6 +15,44 @@ use std::{
 
 const DOMAIN: &[u8] = b"NestLink/offline/v1/complete-direct-grant-bundle\0";
 const REFERENCE: &[u8] = b"NestLink/offline/v1/complete-direct-grant-reference\0";
+const APPROVAL: &[u8] = b"NestLink/offline/v1/exact-endpoint-approval\0";
+
+pub fn offline_draft_digest(authority: &[u8; 32], claims: &OfflineGrantBundleClaims) -> Result<[u8; 32], ContractError> {
+    if *authority == [0; 32] { return Err(denied("offline approval requires an independently pinned authority")); }
+    let mut reference = REFERENCE.to_vec();
+    reference.extend_from_slice(authority);
+    reference.extend_from_slice(&claims.canonical_bytes()?);
+    Ok(digest(&reference))
+}
+fn approval_transcript(endpoint: u8, draft_digest: &[u8; 32]) -> Vec<u8> {
+    let mut transcript = vec![endpoint];
+    transcript.extend_from_slice(draft_digest);
+    transcript
+}
+impl crate::InstallationIdentity {
+    /// The caller separately presents the complete draft and exact digest to
+    /// the local user. A logged-in administrator cannot produce this signature.
+    pub fn sign_offline_endpoint_approval(&self, authority: &[u8; 32], claims: &OfflineGrantBundleClaims, endpoint: u8, approved_digest: [u8; 32]) -> Result<OfflineEndpointApproval, ContractError> {
+        let member = claims.members.get(usize::from(endpoint)).ok_or_else(|| denied("invalid offline endpoint role"))?;
+        let draft_digest = offline_draft_digest(authority, claims)?;
+        if member.public_key != self.public_key() || approved_digest != draft_digest {
+            return Err(denied("offline endpoint approval differs from the explicit local draft"));
+        }
+        Ok(OfflineEndpointApproval { endpoint, draft_digest,
+            signature: self.key.sign(&domain_message(APPROVAL, &approval_transcript(endpoint, &draft_digest))).to_bytes().to_vec() })
+    }
+}
+pub fn verify_offline_endpoint_approvals(authority: &[u8; 32], claims: &OfflineGrantBundleClaims, approvals: &[OfflineEndpointApproval; 2]) -> Result<(), ContractError> {
+    let expected = offline_draft_digest(authority, claims)?;
+    for (index, approval) in approvals.iter().enumerate() {
+        if usize::from(approval.endpoint) != index || approval.draft_digest != expected || approval.signature.len() != 64 {
+            return Err(denied("both distinct offline endpoints must approve the exact complete draft"));
+        }
+        verify_signature(&claims.members[index].public_key, APPROVAL,
+            &approval_transcript(approval.endpoint, &expected), &approval.signature)?;
+    }
+    Ok(())
+}
 
 pub struct OfflineVerification<'a> {
     pub authority: &'a [u8; 32],
@@ -148,7 +186,7 @@ impl OfflineProcess {
     ) -> Result<OfflineAdmission, ContractError> {
         if self.stopped.load(Ordering::Acquire)
             || context.now_ms < self.highest_wall_ms
-            || context.highest_revocation_epoch < self.highest_revocation_epoch
+            || context.highest_revocation_epoch != self.highest_revocation_epoch
         {
             self.stop();
             return Err(revoked("offline process observed rollback or was stopped"));

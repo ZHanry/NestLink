@@ -15,46 +15,173 @@
   "research_runtime_exclusion": "EasyTier is idea_reference only; no executable, library, FFI, forked core or adapted code is selected.",
   "components": [
     {
+      "id": "C25",
+      "purpose": "Finite offline complete authority, exact endpoint consent and one-process cumulative meter",
+      "existing_implementation": [
+        "Existing network authority Ed25519 purpose separation and installation keys",
+        "Locked serde_json bounded canonical claims",
+        "std::time::Instant and shared terminal atomics",
+        "Existing SQLite service/account/resource reservation ledgers for pending production connection"
+      ],
+      "candidates": [
+        "Independent complete OfflineGrantBundle over existing signing primitives (selected)",
+        "Lengthen old online permit/grant expiry (rejected: incomplete offline authority and implicit gateway renewal)",
+        "Add another crypto, clock or storage implementation (rejected duplicate common components)"
+      ],
+      "official_sources": [
+        "https://docs.rs/ed25519-dalek/",
+        "https://doc.rust-lang.org/std/time/struct.Instant.html",
+        "https://www.sqlite.org/transactional.html"
+      ],
+      "maintenance_status": {
+        "reviewed_at": "2026-10-31",
+        "evidence": "Reuse exact already locked dependencies; no new package or local dependency resolution. Sourceb313dbf hosted offline-authority41199333054 passed6 primitive cases and strict lint only."
+      },
+      "platforms": [
+        "Windows and Linux native installation runtime",
+        "Web management is prospective; browser does not become an offline native host"
+      ],
+      "version": {
+        "ed25519_dalek": "Existing Cargo.lock",
+        "serde_json": "Existing Cargo.lock",
+        "clock": "Rust1.96 std::time::Instant",
+        "sqlite": "Existing locked rusqlite, production adapter pending"
+      },
+      "license": "Reuse existing dependency notices; no new redistributed crypto/database implementation.",
+      "selection_reason": "Product policy requires one separately signed complete authorization chain; existing mature crypto, serialization, clocks and durable ledgers cover common mechanisms.",
+      "adapter_boundary": "NestLink binds both exact installation/process identities, approved operation/target, direct-only carriers, finite deadline, irreversible reservation identity and cumulative meter. This module grants no legacy online permit or node resource.",
+      "self_implementation_gap_if_any": "The original online contracts intentionally stop with online lease expiry and cannot authorize independent offline operation.",
+      "security_and_operations_cost": [
+        "Fresh online admin/target enable, exact endpoint proof and durable shared quota/consume integration remain mandatory unfinished production work",
+        "Process nonce is memory-only; restart/backup cannot restore authority",
+        "Central revocations not received while offline are bounded by the original30minute maximum, never claimed instantaneous",
+        "All automatic verification runs on GitHub-hosted Actions"
+      ],
+      "work_packages": [
+        "W27",
+        "W36"
+      ],
+      "validation_status": "Partial L1 primitives passed; production API, durable reservations, transport/UI and target acceptance remain open.",
+      "decision_ref": "docs/adr/network/0050-independent-finite-offline-bundle.md"
+    },
+    {
       "id": "C24",
       "purpose": "Isolated private Web session cookies and per-owner authenticated HTTPS proxy hop",
-      "existing_implementation": ["Locked reqwest 0.12.28 cookie Jar feature", "Locked Hyper, Axum, rustls, tokio-rustls and rcgen", "Original private service SDK lease, fixed host target, quota and carrier owner"],
-      "candidates": ["Existing reqwest CookieStore/Jar and rustls server authentication", "Forward application cookies to browser storage (rejected cross-origin cookie contamination)", "Unauthenticated loopback proxy hop (rejected endpoint replacement risk)"],
-      "official_sources": ["https://raw.githubusercontent.com/seanmonstar/reqwest/v0.12.28/Cargo.toml", "https://crates.io/api/v1/crates/cookie_store/0.22.1", "https://crates.io/api/v1/crates/cookie/0.18.2", "https://crates.io/api/v1/crates/publicsuffix/2.3.0", "https://crates.io/api/v1/crates/psl-types/2.0.11", "https://crates.io/api/v1/crates/document-features/0.2.12", "https://crates.io/api/v1/crates/litrs/1.0.1", "https://github.com/caddyserver/caddy/tree/v2.10.2/modules/caddyhttp/reverseproxy"],
-      "maintenance_status": {"reviewed_at": "2026-10-31", "evidence": "Official exact-version registry metadata reviewed 2026-10-31: all six Cookie/PSL/fixture packages non-yanked and MIT/Apache; checksums match Actions 41176147017. Product lock passed. Fixture must rerun with exact product document-features/litrs identities and edges. Registry metadata is not a security guarantee."},
-      "platforms": ["Windows x64 and Linux gateway daemon", "Standard browser through independently configured Caddy HTTPS origin"],
-      "version": {"reqwest": "Reuse locked 0.12.28; activate cookies only in the native SDK", "cookie": "0.18.2; verified Actions product lock, checksum in web-gate-lock-22eeab9.json", "cookie_store": "0.22.1; verified Actions product lock, checksum in web-gate-lock-22eeab9.json", "publicsuffix": "2.3.0", "psl-types": "2.0.11", "fixture_product_reuse": "document-features 0.2.12 and litrs 1.0.1; exact fixture derivation pending", "Caddy": "Existing 2.10.2 transport TLS inline CA schema reviewed; actual proxy execution pending"},
+      "existing_implementation": [
+        "Locked reqwest 0.12.28 cookie Jar feature",
+        "Locked Hyper, Axum, rustls, tokio-rustls and rcgen",
+        "Original private service SDK lease, fixed host target, quota and carrier owner"
+      ],
+      "candidates": [
+        "Existing reqwest CookieStore/Jar and rustls server authentication",
+        "Forward application cookies to browser storage (rejected cross-origin cookie contamination)",
+        "Unauthenticated loopback proxy hop (rejected endpoint replacement risk)"
+      ],
+      "official_sources": [
+        "https://raw.githubusercontent.com/seanmonstar/reqwest/v0.12.28/Cargo.toml",
+        "https://crates.io/api/v1/crates/cookie_store/0.22.1",
+        "https://crates.io/api/v1/crates/cookie/0.18.2",
+        "https://crates.io/api/v1/crates/publicsuffix/2.3.0",
+        "https://crates.io/api/v1/crates/psl-types/2.0.11",
+        "https://crates.io/api/v1/crates/document-features/0.2.12",
+        "https://crates.io/api/v1/crates/litrs/1.0.1",
+        "https://github.com/caddyserver/caddy/tree/v2.10.2/modules/caddyhttp/reverseproxy"
+      ],
+      "maintenance_status": {
+        "reviewed_at": "2026-10-31",
+        "evidence": "Official exact-version registry metadata reviewed 2026-10-31: all six Cookie/PSL/fixture packages non-yanked and MIT/Apache; checksums match Actions 41176147017. Product lock passed. Fixture must rerun with exact product document-features/litrs identities and edges. Registry metadata is not a security guarantee."
+      },
+      "platforms": [
+        "Windows x64 and Linux gateway daemon",
+        "Standard browser through independently configured Caddy HTTPS origin"
+      ],
+      "version": {
+        "reqwest": "Reuse locked 0.12.28; activate cookies only in the native SDK",
+        "cookie": "0.18.2; verified Actions product lock, checksum in web-gate-lock-22eeab9.json",
+        "cookie_store": "0.22.1; verified Actions product lock, checksum in web-gate-lock-22eeab9.json",
+        "publicsuffix": "2.3.0",
+        "psl-types": "2.0.11",
+        "fixture_product_reuse": "document-features 0.2.12 and litrs 1.0.1; exact fixture derivation pending",
+        "Caddy": "Existing 2.10.2 transport TLS inline CA schema reviewed; actual proxy execution pending"
+      },
       "license": "Existing Hyper/Axum/rustls/Tokio/rcgen notices retained. cookie and cookie_store MIT OR Apache-2.0; include exact new transitive license inventory in Actions notices/SBOM before release.",
       "selection_reason": "Reuse mature HTTP, TLS and cookie implementations; add only selected-service/session/origin policy and original owner integration",
       "adapter_boundary": "Libraries parse HTTP/WebSocket, authenticate TLS and implement cookie semantics. NestLink binds the original installation/private lease, isolated origin, single-use launch, fixed backend, finite cookie budget and physical cleanup. Independent short-lived upstream certificate prevents leftover Caddy routes trusting a replacement listener.",
       "self_implementation_gap_if_any": "No existing private browser delegation or per-service isolated origin; public ServiceLease cannot authorize a private gateway.",
-      "security_and_operations_cost": ["Gateway TLS root/name is pinned independently by Caddy; hop header alone does not authenticate the server", "Browser receives only the host-only gateway session cookie; backend application Jar belongs to that session and one service", "Management launch, complete application compatibility and actual public HTTPS browser acceptance remain mandatory open work", "All lock derivation, format, compilation and automated tests execute only in GitHub-hosted Actions"],
-      "work_packages": ["W25", "W36"],
+      "security_and_operations_cost": [
+        "Gateway TLS root/name is pinned independently by Caddy; hop header alone does not authenticate the server",
+        "Browser receives only the host-only gateway session cookie; backend application Jar belongs to that session and one service",
+        "Management launch, complete application compatibility and actual public HTTPS browser acceptance remain mandatory open work",
+        "All lock derivation, format, compilation and automated tests execute only in GitHub-hosted Actions"
+      ],
+      "work_packages": [
+        "W25",
+        "W36"
+      ],
       "validation_status": "source_implemented_partial; hosted compilation and business/Caddy/browser qualification pending",
       "decision_ref": "docs/adr/network/0039-isolated-private-web-gateway.md"
     },
     {
       "id": "C23",
       "purpose": "Explicit Linux kernel UID admission for one ordinary-user raw loopback TCP/UDP endpoint",
-      "existing_implementation": ["crates/platform-security", "crates/sdk/src/services/local_proxy", "crates/sdk/src/services/private"],
-      "candidates": ["Installed nftables JSON CLI and Linux socket-owner metadata", "Post-accept TCP PID lookup (rejected race)", "Dedicated client network namespace (different application launch requirement)"],
-      "official_sources": ["https://netfilter.org/projects/nftables/manpage.html", "https://wiki.nftables.org/wiki-nftables/index.php/Matching_packet_metainformation"],
-      "maintenance_status": {"reviewed_at": "2026-10-31", "evidence": "Mature Linux kernel firewall and distribution component; exact runner package/version and actual kernel behavior must be recorded by hosted experiments"},
-      "platforms": ["Linux x64", "Linux ARM64 pending target qualification"],
-      "version": {"nftables": "Distribution-provided root-owned executable; record resolved version in Actions evidence", "rustix": "Reuse locked 1.1.5 fs/process APIs (manifest compatible requirement 1.1.2)", "tokio": "Reuse existing locked process/socket/task runtime"},
+      "existing_implementation": [
+        "crates/platform-security",
+        "crates/sdk/src/services/local_proxy",
+        "crates/sdk/src/services/private"
+      ],
+      "candidates": [
+        "Installed nftables JSON CLI and Linux socket-owner metadata",
+        "Post-accept TCP PID lookup (rejected race)",
+        "Dedicated client network namespace (different application launch requirement)"
+      ],
+      "official_sources": [
+        "https://netfilter.org/projects/nftables/manpage.html",
+        "https://wiki.nftables.org/wiki-nftables/index.php/Matching_packet_metainformation"
+      ],
+      "maintenance_status": {
+        "reviewed_at": "2026-10-31",
+        "evidence": "Mature Linux kernel firewall and distribution component; exact runner package/version and actual kernel behavior must be recorded by hosted experiments"
+      },
+      "platforms": [
+        "Linux x64",
+        "Linux ARM64 pending target qualification"
+      ],
+      "version": {
+        "nftables": "Distribution-provided root-owned executable; record resolved version in Actions evidence",
+        "rustix": "Reuse locked 1.1.5 fs/process APIs (manifest compatible requirement 1.1.2)",
+        "tokio": "Reuse existing locked process/socket/task runtime"
+      },
       "license": "nftables GPL-2.0 system component is invoked as a separate installed CLI; no source or library is linked or bundled by this adapter. Preserve existing rustix/Tokio/serde notices.",
       "selection_reason": "Reuse the existing private-service carrier and mature kernel filtering rather than adding a raw capability port or a racy peer-PID authorization check",
       "adapter_boundary": "nftables owns JSON parsing and kernel atomic transactions. NestLink owns exact local consent, original process/UID/endpoint, protected root receipt, bounded lifetime, original private grant/meter and physical exit/recovery receipts.",
       "self_implementation_gap_if_any": "No existing raw TCP/UDP local peer credential boundary; the thin privileged helper adds only exact UID kernel admission and owned-resource recovery.",
-      "security_and_operations_cost": ["Administrator explicitly installs each kernel gate; ordinary clients and business runtime remain unprivileged", "Same OS user's applications share local access", "Helper crash retains kernel fence and journal", "Changed or foreign rules/handles are preserved", "Windows raw ports and protected-login CLI L3 remain separate mandatory work"],
-      "work_packages": ["W21", "W36"],
+      "security_and_operations_cost": [
+        "Administrator explicitly installs each kernel gate; ordinary clients and business runtime remain unprivileged",
+        "Same OS user's applications share local access",
+        "Helper crash retains kernel fence and journal",
+        "Changed or foreign rules/handles are preserved",
+        "Windows raw ports and protected-login CLI L3 remain separate mandatory work"
+      ],
+      "work_packages": [
+        "W21",
+        "W36"
+      ],
       "validation_status": "implemented_unverified; all build, kernel experiments and automated checks pending GitHub-hosted Actions",
       "decision_ref": "docs/adr/network/0037-explicit-linux-loopback-kernel-gate.md"
     },
     {
       "id": "C22",
       "purpose": "Explicit nonce-owned PCP UDP mapping of the original native ICE port",
-      "existing_implementation": ["crates/sdk/src/native/ice.rs", "crates/traversal"],
-      "candidates": ["crab_nat 0.8.1", "portmapper 0.20.0", "igd-next 0.18.0", "natpmp 0.5.0"],
+      "existing_implementation": [
+        "crates/sdk/src/native/ice.rs",
+        "crates/traversal"
+      ],
+      "candidates": [
+        "crab_nat 0.8.1",
+        "portmapper 0.20.0",
+        "igd-next 0.18.0",
+        "natpmp 0.5.0"
+      ],
       "official_sources": [
         "https://crates.io/api/v1/crates/crab_nat/0.8.1",
         "https://github.com/ryco117/crab_nat/tree/296cc168bb0805fe64b9378d0cc76a833e903ce0"
@@ -65,7 +192,11 @@
         "yanked": false,
         "evidence": "Exact official version metadata and request/response/nonce/deletion source reviewed; no local dependency resolution, compilation or tests"
       },
-      "platforms": ["Windows x64", "Linux x64", "Linux ARM64"],
+      "platforms": [
+        "Windows x64",
+        "Linux x64",
+        "Linux ARM64"
+      ],
       "version": {
         "crab_nat": "=0.8.1",
         "source_commit": "296cc168bb0805fe64b9378d0cc76a833e903ce0",
@@ -83,7 +214,9 @@
         "Finite lease after crash is not a durable ownership journal or immediate router cleanup",
         "Controlled real-UDP responder tests are L1; actual kernel NAT/router and target evidence remain pending"
       ],
-      "work_packages": ["W10"],
+      "work_packages": [
+        "W10"
+      ],
       "validation_status": "Linux Actions component UDP, SDK policy and pre-agent cleanup passed at 8186f75; integrated Core fixture repair and Windows/actual-router qualification remain pending",
       "decision_ref": "docs/adr/network/0009-explicit-pcp-ice-mapping.md"
     },

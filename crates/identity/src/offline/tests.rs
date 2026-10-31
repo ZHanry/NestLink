@@ -326,3 +326,30 @@ fn private_service_pins_original_target_and_has_no_remote_rights()
     );
     Ok(())
 }
+
+#[test]
+fn both_endpoint_approvals_bind_the_complete_budget_process_and_authority() -> Result<(), Box<dyn std::error::Error>> {
+    let mut f = Fixture::new()?;
+    let source = crate::InstallationIdentity::from_seed([11; 32]);
+    let target = crate::InstallationIdentity::from_seed([12; 32]);
+    f.claims.members[0].public_key = source.public_key();
+    f.claims.members[1].public_key = target.public_key();
+    let selected = offline_draft_digest(&f.authority, &f.claims)?;
+    let approvals = [source.sign_offline_endpoint_approval(&f.authority, &f.claims, 0, selected)?,
+        target.sign_offline_endpoint_approval(&f.authority, &f.claims, 1, selected)?];
+    verify_offline_endpoint_approvals(&f.authority, &f.claims, &approvals)?;
+    assert!(source.sign_offline_endpoint_approval(&f.authority, &f.claims, 1, selected).is_err());
+    assert!(source.sign_offline_endpoint_approval(&f.authority, &f.claims, 0, [9; 32]).is_err());
+    assert!(verify_offline_endpoint_approvals(&f.authority, &f.claims, &[approvals[0].clone(), approvals[0].clone()]).is_err());
+    assert!(verify_offline_endpoint_approvals(&[9; 32], &f.claims, &approvals).is_err());
+    let mut increased = f.claims.clone();
+    increased.resources.byte_limit += 1;
+    assert!(verify_offline_endpoint_approvals(&f.authority, &increased, &approvals).is_err());
+    let mut restarted = f.claims.clone();
+    restarted.members[0].process_nonce[0] ^= 1;
+    assert!(verify_offline_endpoint_approvals(&f.authority, &restarted, &approvals).is_err());
+    let mut swapped = approvals.clone();
+    swapped.swap(0, 1);
+    assert!(verify_offline_endpoint_approvals(&f.authority, &f.claims, &swapped).is_err());
+    Ok(())
+}

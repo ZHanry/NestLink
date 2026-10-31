@@ -49,14 +49,14 @@ jobs:
               inventory = subprocess.check_output([str(executable), 'offline::', '--list'], text=True)
               (output / 'inventory.log').write_text(inventory)
               names = [line.removesuffix(': test') for line in inventory.splitlines() if line.endswith(': test')]
-              assert len(names) == 6 and len(set(names)) == 6, names
+              assert len(names) == 7 and len(set(names)) == 7, names
               execution = [str(executable), 'offline::', '--nocapture', '--test-threads=1', '--color', 'never']
               with (output / 'tests.log').open('w') as stream:
                   tested = subprocess.run(execution, stdout=stream, stderr=subprocess.STDOUT, timeout=60, check=False)
               log = (output / 'tests.log').read_text()
               receipt.update(executable_sha256=hashlib.sha256(executable.read_bytes()).hexdigest(),
                              tests=names, execution_command=execution, test_exit_code=tested.returncode,
-                             passed=tested.returncode == 0 and '6 passed; 0 failed; 0 ignored' in log)
+                             passed=tested.returncode == 0 and '7 passed; 0 failed; 0 ignored' in log)
           receipt['files'] = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(output.iterdir())}
           (output / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
           assert receipt['passed'], 'Retained diagnostics; no authority qualification from this attempt'
