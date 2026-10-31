@@ -24,6 +24,7 @@ impl Drop for RestoreFlags {
 }
 struct Fd(AsyncFd<RestoreFlags>);
 impl Fd {
+    #[allow(unsafe_code)]
     fn new(fd: OwnedFd, original: OFlags) -> io::Result<Self> {
         let fd = RestoreFlags { fd, original };
         fcntl_setfl(&fd, original | OFlags::NONBLOCK)?;
