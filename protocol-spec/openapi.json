@@ -1560,6 +1560,114 @@
         "title": "NetworkRemoteRelayView",
         "type": "object"
       },
+      "NetworkRemoteRouteSetMemberRequest": {
+        "additionalProperties": false,
+        "description": "Two independently reserved one-hop routes under one original PathGrant.\nMembers are ordered by allocation ID; this order does not select a primary.",
+        "properties": {
+          "allocation_id": {
+            "type": "string"
+          },
+          "node_id": {
+            "type": "string"
+          },
+          "transit_grant_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "allocation_id",
+          "transit_grant_id",
+          "node_id"
+        ],
+        "title": "NetworkRemoteRouteSetMemberRequest",
+        "type": "object"
+      },
+      "NetworkRemoteRouteSetMemberView": {
+        "additionalProperties": false,
+        "properties": {
+          "allocation_id": {
+            "type": "string"
+          },
+          "available": {
+            "description": "Current management observation of this original node binding. An\nunavailable member does not revoke another member's original authority.",
+            "type": "boolean"
+          },
+          "node": {
+            "$ref": "#/components/schemas/NodeEndpointsView"
+          },
+          "transit": {
+            "$ref": "#/components/schemas/NetworkGrantView"
+          }
+        },
+        "required": [
+          "allocation_id",
+          "transit",
+          "node",
+          "available"
+        ],
+        "title": "NetworkRemoteRouteSetMemberView",
+        "type": "object"
+      },
+      "NetworkRemoteRouteSetRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "device_id": {
+            "type": "string"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/NetworkRemoteRouteSetMemberRequest"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "path": {
+            "$ref": "#/components/schemas/NetworkRemotePathRequest"
+          },
+          "set_id": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "set_id",
+          "path",
+          "members",
+          "device_id",
+          "signature"
+        ],
+        "title": "NetworkRemoteRouteSetRequest",
+        "type": "object"
+      },
+      "NetworkRemoteRouteSetView": {
+        "additionalProperties": false,
+        "properties": {
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/NetworkRemoteRouteSetMemberView"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "path": {
+            "$ref": "#/components/schemas/NetworkRemotePathView"
+          },
+          "set_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "set_id",
+          "path",
+          "members"
+        ],
+        "title": "NetworkRemoteRouteSetView",
+        "type": "object"
+      },
       "NetworkRevokeGrantRequest": {
         "additionalProperties": false,
         "properties": {
@@ -5211,6 +5319,228 @@
           "signature"
         ],
         "title": "SignedTurnResourceSnapshot",
+        "type": "object"
+      },
+      "SpaceAddressDirectory": {
+        "properties": {
+          "addresses": {
+            "description": "Members see their own active records; managers also see stale tombstones.",
+            "items": {
+              "$ref": "#/components/schemas/SpaceAddressView"
+            },
+            "type": "array"
+          },
+          "cache_max_age_seconds": {
+            "description": "Consumers must revalidate; this slice installs no resolver or OS routes.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "ipv4_pool": {
+            "type": "string"
+          },
+          "ipv6_pool": {
+            "type": "string"
+          },
+          "revision": {
+            "description": "Independent from the network authority revision and policy epoch.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "space": {
+            "$ref": "#/components/schemas/SpaceView"
+          },
+          "suffix": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "space",
+          "revision",
+          "suffix",
+          "ipv4_pool",
+          "ipv6_pool",
+          "cache_max_age_seconds",
+          "addresses"
+        ],
+        "title": "SpaceAddressDirectory",
+        "type": "object"
+      },
+      "SpaceAddressIssue": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_address_epoch": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expected_membership_epoch": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expected_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "installation_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "expected_revision",
+          "expected_address_epoch",
+          "expected_membership_epoch",
+          "installation_id",
+          "name"
+        ],
+        "title": "SpaceAddressIssue",
+        "type": "object"
+      },
+      "SpaceAddressRename": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_address_epoch": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expected_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "expected_revision",
+          "expected_address_epoch",
+          "name"
+        ],
+        "title": "SpaceAddressRename",
+        "type": "object"
+      },
+      "SpaceAddressReservation": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_address_epoch": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expected_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "ipv4": {
+            "type": "string"
+          },
+          "ipv6": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "expected_revision",
+          "expected_address_epoch",
+          "ipv4",
+          "ipv6"
+        ],
+        "title": "SpaceAddressReservation",
+        "type": "object"
+      },
+      "SpaceAddressRevocation": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_address_epoch": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expected_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "expected_revision",
+          "expected_address_epoch"
+        ],
+        "title": "SpaceAddressRevocation",
+        "type": "object"
+      },
+      "SpaceAddressView": {
+        "properties": {
+          "account_id": {
+            "type": "string"
+          },
+          "account_member_epoch": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "active": {
+            "description": "A fresh server observation, never an authorization or an offline lease.",
+            "type": "boolean"
+          },
+          "address_epoch": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "fqdn": {
+            "type": "string"
+          },
+          "installation_id": {
+            "type": "string"
+          },
+          "ipv4": {
+            "type": "string"
+          },
+          "ipv6": {
+            "type": "string"
+          },
+          "membership_epoch": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "public_key": {
+            "type": "string"
+          },
+          "reserved": {
+            "type": "boolean"
+          },
+          "revoked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "installation_id",
+          "account_id",
+          "public_key",
+          "account_member_epoch",
+          "membership_epoch",
+          "address_epoch",
+          "name",
+          "fqdn",
+          "ipv4",
+          "ipv6",
+          "reserved",
+          "revoked",
+          "active"
+        ],
         "type": "object"
       },
       "SpaceAuditEntry": {
@@ -9360,6 +9690,558 @@
         "x-server-role": "control"
       }
     },
+    "/network/spaces/{space}/addresses": {
+      "post": {
+        "operationId": "spaces::addressing::issue",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpaceAddressIssue"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceAddressDirectory"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/network/spaces/{space}/addresses/{installation}": {
+      "delete": {
+        "operationId": "spaces::addressing::revoke",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "installation",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpaceAddressRevocation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceAddressDirectory"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/network/spaces/{space}/addresses/{installation}/name": {
+      "put": {
+        "operationId": "spaces::addressing::rename",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "installation",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpaceAddressRename"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceAddressDirectory"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/network/spaces/{space}/addresses/{installation}/reservation": {
+      "put": {
+        "operationId": "spaces::addressing::reserve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "installation",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpaceAddressReservation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceAddressDirectory"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/network/spaces/{space}/addressing": {
+      "get": {
+        "operationId": "spaces::addressing::list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceAddressDirectory"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
     "/network/spaces/{space}/archive": {
       "post": {
         "operationId": "spaces::archive",
@@ -12604,6 +13486,122 @@
         "x-server-role": "control"
       }
     },
+    "/network/spaces/{space}/remote/{request}/route-sets": {
+      "post": {
+        "operationId": "network_policy::route_sets::issue",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "request",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NetworkRemoteRouteSetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkRemoteRouteSetView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
     "/network/spaces/{space}/route-export-grants/{grant}": {
       "delete": {
         "operationId": "network_policy::route_exports::revoke",
@@ -12863,6 +13861,209 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NetworkGrantView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/network/spaces/{space}/route-sets/{set}": {
+      "delete": {
+        "operationId": "network_policy::route_sets::revoke",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "set",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      },
+      "get": {
+        "operationId": "network_policy::route_sets::read",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "set",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkRemoteRouteSetView"
                 }
               }
             },

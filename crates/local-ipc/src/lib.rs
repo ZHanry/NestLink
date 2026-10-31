@@ -70,7 +70,9 @@ pub struct HeadlessRuntimeLease {
 }
 impl HeadlessRuntimeLease {
     pub fn acquire(directory: &Path) -> Result<Self> {
-        Ok(Self { _state: state::StateLease::acquire(directory, &nestlink_auth::random_id())? })
+        Ok(Self {
+            _state: state::StateLease::acquire(directory, &nestlink_auth::random_id())?,
+        })
     }
 }
 

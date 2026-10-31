@@ -94,7 +94,13 @@ impl ChainNode {
                 tokio::time::sleep(Duration::from_millis(10)).await;
             }
         })
-        .await?;
+        .await
+        .map_err(|error| {
+            io::Error::new(
+                io::ErrorKind::TimedOut,
+                format!("fixture B node lease readiness: {error}"),
+            )
+        })?;
         let (shutdown, mut stopped) = watch::channel(false);
         let endpoint = listener.endpoint()?.clone();
         let selector = nestlink_server::relay_selector::RelaySelector::new(control.clone());
@@ -127,12 +133,34 @@ impl ChainNode {
     pub(super) async fn finish(&mut self) -> Result {
         self.shutdown.send_replace(true);
         if let Some(task) = self.task.as_mut() {
-            tokio::time::timeout(Duration::from_secs(5), task).await???;
+            tokio::time::timeout(Duration::from_secs(5), task)
+                .await
+                .map_err(|error| {
+                    io::Error::new(
+                        io::ErrorKind::TimedOut,
+                        format!("fixture B node listener task join: {error}"),
+                    )
+                })?
+                .map_err(|error| {
+                    io::Error::other(format!("fixture B node listener task join failed: {error}"))
+                })?
+                .map_err(|error| {
+                    io::Error::new(
+                        error.kind(),
+                        format!("fixture B node listener shutdown: {error}"),
+                    )
+                })?;
         }
         self.task = None;
         self.listener
             .close_and_wait(Instant::now() + Duration::from_secs(5))
-            .await?;
+            .await
+            .map_err(|error| {
+                io::Error::new(
+                    error.kind(),
+                    format!("fixture B node listener physical release: {error}"),
+                )
+            })?;
         Ok(())
     }
 }

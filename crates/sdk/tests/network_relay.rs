@@ -282,7 +282,13 @@ impl Fixture {
                 tokio::time::sleep(Duration::from_millis(10)).await;
             }
         })
-        .await?;
+        .await
+        .map_err(|error| {
+            io::Error::new(
+                io::ErrorKind::TimedOut,
+                format!("fixture A node lease readiness: {error}"),
+            )
+        })?;
         let allocation = random_id();
         sdk.reserve_network_remote_relay(
             &space,
@@ -319,7 +325,13 @@ impl Fixture {
                 tokio::time::sleep(Duration::from_millis(10)).await;
             }
         })
-        .await?;
+        .await
+        .map_err(|error| {
+            io::Error::new(
+                io::ErrorKind::TimedOut,
+                format!("fixture A legacy relay resource readiness: {error}"),
+            )
+        })?;
         let endpoint = node.endpoint()?.clone();
         let shared = control.clone();
         let node_identity = Arc::new(NodeIdentity::from_seed(&node_seed));
@@ -469,12 +481,34 @@ impl Fixture {
     async fn finish(&mut self) -> Result {
         self.shutdown.send_replace(true);
         if let Some(task) = self.node_task.as_mut() {
-            tokio::time::timeout(Duration::from_secs(5), task).await???;
+            tokio::time::timeout(Duration::from_secs(5), task)
+                .await
+                .map_err(|error| {
+                    io::Error::new(
+                        io::ErrorKind::TimedOut,
+                        format!("fixture A node listener task join: {error}"),
+                    )
+                })?
+                .map_err(|error| {
+                    io::Error::other(format!("fixture A node listener task join failed: {error}"))
+                })?
+                .map_err(|error| {
+                    io::Error::new(
+                        error.kind(),
+                        format!("fixture A node listener shutdown: {error}"),
+                    )
+                })?;
         }
         self.node_task = None;
         self.node
             .close_and_wait(Instant::now() + Duration::from_secs(5))
-            .await?;
+            .await
+            .map_err(|error| {
+                io::Error::new(
+                    error.kind(),
+                    format!("fixture A node listener physical release: {error}"),
+                )
+            })?;
         if let Some(task) = self.http_task.take() {
             task.abort();
             assert!(task.await.is_err_and(|e| e.is_cancelled()));
