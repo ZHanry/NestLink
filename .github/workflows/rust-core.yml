@@ -105,7 +105,8 @@ jobs:
           }
       - name: Check bounded Windows TUN pipe cancellation with the ordinary token
         if: ${{ !cancelled() && runner.os == 'Windows' }}
-        run: python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-privileged --lib windows::network_tun:: -- --show-output --test-threads=1 --color never
+        run: |
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-privileged --lib windows::network_tun:: -- --show-output --test-threads=1 --color never
       - name: Check SDK routed contracts on Linux before formatting
         id: sdk_routed_linux
         if: runner.os == 'Linux'
