@@ -784,19 +784,33 @@ impl Store {
     }
     /// Service business authority intersects the same stored path policy
     /// dimensions as remote control, without acquiring any remote permissions.
-    pub(crate) fn private_service_paths(&self, consumer_login:&str, consumer_id:&str,
-        host_id:&str, service:&str, now:u64) -> Result<PathSet,StorageError> {
-        let consumer=self.device_record_at(consumer_id,now)?;
-        let host=self.device_record_at(host_id,now)?;
-        Ok(PolicyScopes {global:self.policy()?.1,
-            account:self.path_limit("account",&consumer.account)?,
-            device:self.path_limit("device",consumer_id)?,resource:self.path_limit("resource",service)?,
-            session:PeerPathMode::DirectPreferred,controller_local:consumer.mode,host_local:host.mode,
-        }.effective_paths().map_err(|_|StorageError::Forbidden)?
-            .intersection(mode_paths(self.path_limit("account",&host.account)?))
-            .intersection(mode_paths(self.path_limit("device",host_id)?))
-            .intersection(mode_paths(self.path_limit("resource",host_id)?))
-            .intersection(mode_paths(self.path_limit("login_session",consumer_login)?)))
+    pub(crate) fn private_service_paths(
+        &self,
+        consumer_login: &str,
+        consumer_id: &str,
+        host_id: &str,
+        service: &str,
+        now: u64,
+    ) -> Result<PathSet, StorageError> {
+        let consumer = self.device_record_at(consumer_id, now)?;
+        let host = self.device_record_at(host_id, now)?;
+        Ok(PolicyScopes {
+            global: self.policy()?.1,
+            account: self.path_limit("account", &consumer.account)?,
+            device: self.path_limit("device", consumer_id)?,
+            resource: self.path_limit("resource", service)?,
+            session: PeerPathMode::DirectPreferred,
+            controller_local: consumer.mode,
+            host_local: host.mode,
+        }
+        .effective_paths()
+        .map_err(|_| StorageError::Forbidden)?
+        .intersection(mode_paths(self.path_limit("account", &host.account)?))
+        .intersection(mode_paths(self.path_limit("device", host_id)?))
+        .intersection(mode_paths(self.path_limit("resource", host_id)?))
+        .intersection(mode_paths(
+            self.path_limit("login_session", consumer_login)?,
+        )))
     }
     pub fn initial_permit(
         &mut self,

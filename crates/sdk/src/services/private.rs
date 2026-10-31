@@ -4,9 +4,9 @@ use nestlink_identity::services::private::{
     VerifiedPrivateServiceLease, verify_private_service_lease,
 };
 use nestlink_protocol::services::private::*;
+mod network;
 #[cfg(not(target_arch = "wasm32"))]
 pub(super) mod runtime;
-mod network;
 
 impl Sdk {
     pub async fn service_exposure(

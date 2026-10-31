@@ -187,14 +187,24 @@ pub(crate) async fn issue(
             let actor = store.authenticate(&token, at / 1000)?;
             let lease = store.issue_private_service(&actor, &id, body, &signer, at)?;
             let verified = nestlink_identity::services::private::verify_private_service_lease(
-                &lease, &signer.public_key())?;
-            let network_signer = store.network_authority_signer(&network_root,
-                &verified.claims().space_id, at)?;
+                &lease,
+                &signer.public_key(),
+            )?;
+            let network_signer =
+                store.network_authority_signer(&network_root, &verified.claims().space_id, at)?;
             let usage: nestlink_protocol::service_plane::ServiceUsageBudgetGrantClaims =
-                decode_service_message(&verified.lease().claims().usage_grant.claims,
-                    nestlink_protocol::service_plane::SERVICE_USAGE_BYTES)?;
-            let network = store.issue_private_service_network_path(&actor, &id,
-                &usage.grant_id, &signer, &network_signer, at)?;
+                decode_service_message(
+                    &verified.lease().claims().usage_grant.claims,
+                    nestlink_protocol::service_plane::SERVICE_USAGE_BYTES,
+                )?;
+            let network = store.issue_private_service_network_path(
+                &actor,
+                &id,
+                &usage.grant_id,
+                &signer,
+                &network_signer,
+                at,
+            )?;
             Ok((lease, network))
         })
         .await?;
@@ -234,7 +244,8 @@ pub(crate) async fn current(
             let at = now_ms()?;
             let actor = store.authenticate(&token, at / 1000)?;
             let lease = store.private_service_lease(&actor, &id, &reservation, &signer, at)?;
-            let network = store.private_service_network_path(&actor, &id, &reservation, &signer, at)?;
+            let network =
+                store.private_service_network_path(&actor, &id, &reservation, &signer, at)?;
             Ok((lease, network))
         })
         .await?;

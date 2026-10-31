@@ -62,12 +62,19 @@ impl Drop for RelayIo {
         // carrier retired. A guard denial/expiry always closes the pair as a
         // revocation. This advisory provides no new allocation or permission.
         if let Some(registration) = self.registration.as_mut() {
-            registration.retired = self.guard.as_ref().is_some_and(|guard| guard.check_live().is_ok())
+            registration.retired = self
+                .guard
+                .as_ref()
+                .is_some_and(|guard| guard.check_live().is_ok())
                 && matches!(self.connection.close_reason(), Some(quinn::ConnectionError::ApplicationClosed(close))
                     if close.error_code == quinn::VarInt::from_u32(nestlink_transport_quic::routed::RETIRED_CLOSE_CODE))
-                && self.connection.handshake_data()
+                && self
+                    .connection
+                    .handshake_data()
                     .and_then(|data| data.downcast::<quinn::crypto::rustls::HandshakeData>().ok())
-                    .is_some_and(|data| data.protocol.as_deref() == Some(nestlink_protocol::network_datagram::ALPN));
+                    .is_some_and(|data| {
+                        data.protocol.as_deref() == Some(nestlink_protocol::network_datagram::ALPN)
+                    });
         }
         self.streams.take();
         self.registration.take();
@@ -106,7 +113,11 @@ impl Drop for Registration {
         {
             for slot in pair.into_iter().flatten() {
                 if slot.connection.close_reason().is_none() {
-                    let code = if self.retired { nestlink_transport_quic::routed::RETIRED_CLOSE_CODE } else { 1 };
+                    let code = if self.retired {
+                        nestlink_transport_quic::routed::RETIRED_CLOSE_CODE
+                    } else {
+                        1
+                    };
                     slot.connection.close(code.into(), b"relay pair stopped");
                 }
             }
@@ -182,7 +193,11 @@ struct Owner {
 }
 impl Owner {
     fn close(&self) {
-        let code = if self.retired { nestlink_transport_quic::routed::RETIRED_CLOSE_CODE } else { 1 };
+        let code = if self.retired {
+            nestlink_transport_quic::routed::RETIRED_CLOSE_CODE
+        } else {
+            1
+        };
         // Close the actual sockets before waking policy guards. A normal
         // operator shutdown is distinct from current-control revocation.
         self.endpoint.close(code.into(), b"relay listener ended");

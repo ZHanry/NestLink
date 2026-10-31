@@ -47,7 +47,9 @@ impl Store {
         let query = match scope {
             "account" => "SELECT count(*) FROM accounts WHERE id=?1 AND disabled=0",
             "device" => "SELECT count(*) FROM devices WHERE id=?1 AND revoked=0",
-            "resource" => "SELECT EXISTS(SELECT 1 FROM devices WHERE id=?1 AND revoked=0) OR EXISTS(SELECT 1 FROM services WHERE id=?1 AND revoked=0)",
+            "resource" => {
+                "SELECT EXISTS(SELECT 1 FROM devices WHERE id=?1 AND revoked=0) OR EXISTS(SELECT 1 FROM services WHERE id=?1 AND revoked=0)"
+            }
             "login_session" => "SELECT count(*) FROM management_sessions WHERE id=?1 AND revoked=0",
             _ => return Err(StorageError::Invalid("unknown path policy scope")),
         };

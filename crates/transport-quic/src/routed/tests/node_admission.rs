@@ -65,10 +65,14 @@ fn serve(
             let (mut write, mut read) =
                 tokio::time::timeout_at(deadline, connection.open_bi()).await??;
             let nonce = [29; 32];
-            crate::node::write_message(&mut write, &NetworkNodeChallenge {
-                schema_version: 1,
-                nonce: URL_SAFE_NO_PAD.encode(nonce),
-            }).await?;
+            crate::node::write_message(
+                &mut write,
+                &NetworkNodeChallenge {
+                    schema_version: 1,
+                    nonce: URL_SAFE_NO_PAD.encode(nonce),
+                },
+            )
+            .await?;
             let hello: NetworkNodeHello =
                 tokio::time::timeout_at(deadline, crate::node::read_message(&mut read)).await??;
             stats.hellos += 1;
@@ -76,22 +80,38 @@ fn serve(
             assert_eq!(hello.allocation_id, ALLOCATION);
             assert_eq!(hello.device_id, INSTALLATIONS[0]);
             assert_eq!(hello.binding_sha256, URL_SAFE_NO_PAD.encode(BINDING));
-            let public_key: [u8; 32] = URL_SAFE_NO_PAD.decode(&hello.public_key)?
-                .try_into().map_err(|_| "public key length")?;
-            let signature: [u8; 64] = URL_SAFE_NO_PAD.decode(&hello.signature)?
-                .try_into().map_err(|_| "signature length")?;
-            assert_eq!(authenticated_peer_fingerprint(&connection)?, nestlink_identity::digest(&public_key));
+            let public_key: [u8; 32] = URL_SAFE_NO_PAD
+                .decode(&hello.public_key)?
+                .try_into()
+                .map_err(|_| "public key length")?;
+            let signature: [u8; 64] = URL_SAFE_NO_PAD
+                .decode(&hello.signature)?
+                .try_into()
+                .map_err(|_| "signature length")?;
+            assert_eq!(
+                authenticated_peer_fingerprint(&connection)?,
+                nestlink_identity::digest(&public_key)
+            );
             nestlink_identity::network::verify_network_node_admission(
-                ALLOCATION, &BINDING, INSTALLATIONS[0], &public_key, &nonce, &signature,
+                ALLOCATION,
+                &BINDING,
+                INSTALLATIONS[0],
+                &public_key,
+                &nonce,
+                &signature,
             )?;
             if close_after_hello {
                 connection.close(1u32.into(), b"allocation already consumed");
             } else {
-                crate::node::write_message(&mut write, &NetworkNodeReady {
-                    schema_version: 1,
-                    allocation_id: ALLOCATION.into(),
-                    binding_sha256: URL_SAFE_NO_PAD.encode(BINDING),
-                }).await?;
+                crate::node::write_message(
+                    &mut write,
+                    &NetworkNodeReady {
+                        schema_version: 1,
+                        allocation_id: ALLOCATION.into(),
+                        binding_sha256: URL_SAFE_NO_PAD.encode(BINDING),
+                    },
+                )
+                .await?;
                 let _ = tokio::time::timeout_at(deadline, connection.closed()).await?;
             }
             return Ok(stats);
@@ -101,14 +121,17 @@ fn serve(
 }
 
 #[tokio::test]
-async fn delayed_current_client_pin_keeps_the_same_udp_owner_and_sends_one_signed_hello() -> TestResult {
+async fn delayed_current_client_pin_keeps_the_same_udp_owner_and_sends_one_signed_hello()
+-> TestResult {
     let identity = InstallationIdentity::generate();
     let node = NodeIdentity::generate();
     let pins = Pins::new(identity.fingerprint(), false);
     let deadline = Instant::now() + Duration::from_secs(5);
     let (mut listener, mut server) = serve(&node, pins.clone(), false, deadline)?;
     let mut owner = AdjacencyEndpoint::bind_node(
-        "127.0.0.1:0".parse()?, &identity, PeerId::from_public_key(&node.public_key()),
+        "127.0.0.1:0".parse()?,
+        &identity,
+        PeerId::from_public_key(&node.public_key()),
     )?;
     let local = owner.local_addr()?;
     let publish = pins.clone();
@@ -117,9 +140,16 @@ async fn delayed_current_client_pin_keeps_the_same_udp_owner_and_sends_one_signe
         tokio::time::sleep(Duration::from_millis(150)).await;
         publish.ready.store(true, Ordering::SeqCst);
     }));
-    let mut adjacency = owner.connect_node(
-        listener.local_addr()?, &identity, INSTALLATIONS[0], ALLOCATION, BINDING, deadline,
-    ).await?;
+    let mut adjacency = owner
+        .connect_node(
+            listener.local_addr()?,
+            &identity,
+            INSTALLATIONS[0],
+            ALLOCATION,
+            BINDING,
+            deadline,
+        )
+        .await?;
     assert!(pins.denied.load(Ordering::SeqCst) >= 1);
     adjacency.close_and_wait(deadline).await?;
     let stats = tokio::time::timeout_at(deadline, &mut server.0).await???;
@@ -140,14 +170,26 @@ async fn a_wrong_fixed_node_pin_is_terminal_before_any_signed_hello() -> TestRes
     let deadline = Instant::now() + Duration::from_secs(5);
     let (mut listener, mut server) = serve(&node, pins, false, deadline)?;
     let mut owner = AdjacencyEndpoint::bind_node(
-        "127.0.0.1:0".parse()?, &identity, PeerId(InstallationIdentity::generate().fingerprint()),
+        "127.0.0.1:0".parse()?,
+        &identity,
+        PeerId(InstallationIdentity::generate().fingerprint()),
     )?;
     let local = owner.local_addr()?;
-    let result = owner.connect_node(
-        listener.local_addr()?, &identity, INSTALLATIONS[0], ALLOCATION, BINDING, deadline,
-    ).await;
+    let result = owner
+        .connect_node(
+            listener.local_addr()?,
+            &identity,
+            INSTALLATIONS[0],
+            ALLOCATION,
+            BINDING,
+            deadline,
+        )
+        .await;
     let error = result.err().ok_or("wrong node pin was accepted")?;
-    assert!(matches!(error.downcast_ref::<quinn::ConnectionError>(), Some(quinn::ConnectionError::TransportError(_))));
+    assert!(matches!(
+        error.downcast_ref::<quinn::ConnectionError>(),
+        Some(quinn::ConnectionError::TransportError(_))
+    ));
     owner.close_and_wait(deadline).await?;
     listener.request_close();
     let stats = tokio::time::timeout_at(deadline, &mut server.0).await???;
@@ -166,13 +208,24 @@ async fn unavailable_dynamic_pin_never_extends_the_original_setup_deadline() -> 
     let cleanup = Instant::now() + Duration::from_secs(5);
     let (mut listener, mut server) = serve(&node, pins.clone(), false, cleanup)?;
     let mut owner = AdjacencyEndpoint::bind_node(
-        "127.0.0.1:0".parse()?, &identity, PeerId::from_public_key(&node.public_key()),
+        "127.0.0.1:0".parse()?,
+        &identity,
+        PeerId::from_public_key(&node.public_key()),
     )?;
     let local = owner.local_addr()?;
     let original = Instant::now() + Duration::from_millis(400);
-    let connected = tokio::time::timeout_at(original + Duration::from_secs(1), owner.connect_node(
-        listener.local_addr()?, &identity, INSTALLATIONS[0], ALLOCATION, BINDING, original,
-    )).await?;
+    let connected = tokio::time::timeout_at(
+        original + Duration::from_secs(1),
+        owner.connect_node(
+            listener.local_addr()?,
+            &identity,
+            INSTALLATIONS[0],
+            ALLOCATION,
+            BINDING,
+            original,
+        ),
+    )
+    .await?;
     assert!(connected.is_err());
     assert!(pins.denied.load(Ordering::SeqCst) >= 2);
     owner.close_and_wait(cleanup).await?;
@@ -192,18 +245,34 @@ async fn application_rejection_after_hello_cannot_redial_or_reuse_the_owner() ->
     let deadline = Instant::now() + Duration::from_secs(5);
     let (mut listener, mut server) = serve(&node, pins, true, deadline)?;
     let mut owner = AdjacencyEndpoint::bind_node(
-        "127.0.0.1:0".parse()?, &identity, PeerId::from_public_key(&node.public_key()),
+        "127.0.0.1:0".parse()?,
+        &identity,
+        PeerId::from_public_key(&node.public_key()),
     )?;
     let local = owner.local_addr()?;
     for _ in 0..2 {
-        assert!(owner.connect_node(
-            listener.local_addr()?, &identity, INSTALLATIONS[0], ALLOCATION, BINDING, deadline,
-        ).await.is_err());
+        assert!(
+            owner
+                .connect_node(
+                    listener.local_addr()?,
+                    &identity,
+                    INSTALLATIONS[0],
+                    ALLOCATION,
+                    BINDING,
+                    deadline,
+                )
+                .await
+                .is_err()
+        );
     }
     let stats = tokio::time::timeout_at(deadline, &mut server.0).await???;
     assert_eq!(stats.handshakes, 1);
     assert_eq!(stats.hellos, 1);
-    assert!(tokio::time::timeout(Duration::from_millis(150), listener.endpoint()?.accept()).await.is_err());
+    assert!(
+        tokio::time::timeout(Duration::from_millis(150), listener.endpoint()?.accept())
+            .await
+            .is_err()
+    );
     owner.close_and_wait(deadline).await?;
     listener.close_and_wait(deadline).await?;
     drop(std::net::UdpSocket::bind(local)?);

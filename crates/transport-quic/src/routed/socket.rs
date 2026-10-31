@@ -23,7 +23,8 @@ use tokio::{
 fn connection_fault(error: quinn::ConnectionError) -> io::ErrorKind {
     match error {
         quinn::ConnectionError::ApplicationClosed(close)
-            if close.error_code == quinn::VarInt::from_u32(super::RETIRED_CLOSE_CODE) => {
+            if close.error_code == quinn::VarInt::from_u32(super::RETIRED_CLOSE_CODE) =>
+        {
             io::ErrorKind::ConnectionAborted
         }
         // Routed allocations have no implicit reconnect authority. An
@@ -37,10 +38,17 @@ fn connection_fault(error: quinn::ConnectionError) -> io::ErrorKind {
 
 fn record_failure(failure: &watch::Sender<Option<io::ErrorKind>>, kind: io::ErrorKind) {
     failure.send_if_modified(|current| {
-        let recoverable = |kind| matches!(kind,
-            io::ErrorKind::UnexpectedEof | io::ErrorKind::BrokenPipe
-            | io::ErrorKind::ConnectionReset | io::ErrorKind::ConnectionAborted
-            | io::ErrorKind::NotConnected | io::ErrorKind::TimedOut);
+        let recoverable = |kind| {
+            matches!(
+                kind,
+                io::ErrorKind::UnexpectedEof
+                    | io::ErrorKind::BrokenPipe
+                    | io::ErrorKind::ConnectionReset
+                    | io::ErrorKind::ConnectionAborted
+                    | io::ErrorKind::NotConnected
+                    | io::ErrorKind::TimedOut
+            )
+        };
         // Local retirement never hides a later actual denial or protocol fault.
         if current.is_some_and(|current| !recoverable(current) || recoverable(kind)) {
             return false;
@@ -156,12 +164,16 @@ impl RoutedSocket {
                 }
             };
             let result: io::Result<()> = receive.await;
-            let kind = result.err().map_or(io::ErrorKind::PermissionDenied, |error| error.kind());
+            let kind = result
+                .err()
+                .map_or(io::ErrorKind::PermissionDenied, |error| error.kind());
             record_failure(&failed, kind);
             if copy.close_reason().is_none() {
                 let code = if kind == io::ErrorKind::ConnectionAborted {
                     super::RETIRED_CLOSE_CODE
-                } else { 1 };
+                } else {
+                    1
+                };
                 copy.close(code.into(), b"routed UDP receive ended");
             }
         }));
@@ -209,10 +221,17 @@ impl RoutedSocket {
 impl Drop for RoutedSocket {
     fn drop(&mut self) {
         if self.connection.close_reason().is_none() {
-            let code = if self.authorization.live().is_err_and(|error| error.kind() == io::ErrorKind::ConnectionAborted) {
+            let code = if self
+                .authorization
+                .live()
+                .is_err_and(|error| error.kind() == io::ErrorKind::ConnectionAborted)
+            {
                 super::RETIRED_CLOSE_CODE
-            } else { 0 };
-            self.connection.close(code.into(), b"routed UDP owner dropped");
+            } else {
+                0
+            };
+            self.connection
+                .close(code.into(), b"routed UDP owner dropped");
         }
         self.receiver.request_close();
     }

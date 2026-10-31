@@ -441,9 +441,11 @@ impl Store {
             migrated?;
         }
         if version < 41 {
-            let transaction=connection.transaction()?;
-            transaction.execute_batch(include_str!("../migrations/041_private_service_network_path.sql"))?;
-            transaction.pragma_update(None,"user_version",41)?;
+            let transaction = connection.transaction()?;
+            transaction.execute_batch(include_str!(
+                "../migrations/041_private_service_network_path.sql"
+            ))?;
+            transaction.pragma_update(None, "user_version", 41)?;
             transaction.commit()?;
         }
         Ok(Self {

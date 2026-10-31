@@ -212,14 +212,23 @@ fn route_retirement_is_permanent_and_a_true_revocation_always_overrides_it() -> 
     let deadline = authorization.deadline();
     owner.retire_for_recovery();
     assert!(owner.is_retired());
-    assert_eq!(authorization.check_live().err().map(|error| error.kind()), Some(io::ErrorKind::ConnectionAborted));
+    assert_eq!(
+        authorization.check_live().err().map(|error| error.kind()),
+        Some(io::ErrorKind::ConnectionAborted)
+    );
     owner.stop_if_live();
     assert!(owner.is_retired());
     owner.revoke();
     assert!(!owner.is_retired());
-    assert_eq!(authorization.check_live().err().map(|error| error.kind()), Some(io::ErrorKind::PermissionDenied));
+    assert_eq!(
+        authorization.check_live().err().map(|error| error.kind()),
+        Some(io::ErrorKind::PermissionDenied)
+    );
     owner.retire_for_recovery();
-    assert_eq!(authorization.check_live().err().map(|error| error.kind()), Some(io::ErrorKind::PermissionDenied));
+    assert_eq!(
+        authorization.check_live().err().map(|error| error.kind()),
+        Some(io::ErrorKind::PermissionDenied)
+    );
     assert_eq!(authorization.deadline(), deadline);
     Ok(())
 }

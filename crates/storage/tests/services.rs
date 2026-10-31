@@ -309,23 +309,47 @@ fn schema_39_upgrade_preserves_approved_public_target_and_child_foreign_keys() -
 
 #[test]
 fn schema_40_upgrade_preserves_consent_without_minting_private_network_authority() -> Result {
-    let mut f=Fixture::new()?;f.allow()?;
-    let pending=f.create()?;let challenge=f.challenge(&pending)?;
-    let proof=f.proof(&pending,&challenge)?;
-    let approved=f.store.approve_service_target(&f.admin,&pending.id,proof,1001)?;
-    let deployment=f.store.deployment_id()?;
-    let Fixture{directory,store,admin,..}=f;drop(store);
-    let path=directory.path().join("services.sqlite3");
-    let raw=Connection::open(&path)?;
-    raw.execute_batch("ALTER TABLE private_service_leases DROP COLUMN network_json; PRAGMA user_version=40;")?;
+    let mut f = Fixture::new()?;
+    f.allow()?;
+    let pending = f.create()?;
+    let challenge = f.challenge(&pending)?;
+    let proof = f.proof(&pending, &challenge)?;
+    let approved = f
+        .store
+        .approve_service_target(&f.admin, &pending.id, proof, 1001)?;
+    let deployment = f.store.deployment_id()?;
+    let Fixture {
+        directory,
+        store,
+        admin,
+        ..
+    } = f;
+    drop(store);
+    let path = directory.path().join("services.sqlite3");
+    let raw = Connection::open(&path)?;
+    raw.execute_batch(
+        "ALTER TABLE private_service_leases DROP COLUMN network_json; PRAGMA user_version=40;",
+    )?;
     drop(raw);
-    let store=Store::open_existing(&path,&deployment)?;
-    assert_eq!(serde_json::to_value(store.service(&admin,&approved.id,1001)?)?,
-        serde_json::to_value(&approved)?);
-    let raw=Connection::open(&path)?;
+    let store = Store::open_existing(&path, &deployment)?;
+    assert_eq!(
+        serde_json::to_value(store.service(&admin, &approved.id, 1001)?)?,
+        serde_json::to_value(&approved)?
+    );
+    let raw = Connection::open(&path)?;
     assert!(!raw.prepare("PRAGMA foreign_key_check")?.exists([])?);
-    assert_eq!(raw.query_row("SELECT count(*) FROM private_service_leases WHERE network_json IS NOT NULL",[],|row|row.get::<_,u64>(0))?,0);
-    assert_eq!(raw.pragma_query_value(None,"user_version",|row|row.get::<_,i32>(0))?,nestlink_storage::SCHEMA_VERSION);
+    assert_eq!(
+        raw.query_row(
+            "SELECT count(*) FROM private_service_leases WHERE network_json IS NOT NULL",
+            [],
+            |row| row.get::<_, u64>(0)
+        )?,
+        0
+    );
+    assert_eq!(
+        raw.pragma_query_value(None, "user_version", |row| row.get::<_, i32>(0))?,
+        nestlink_storage::SCHEMA_VERSION
+    );
     Ok(())
 }
 #[test]

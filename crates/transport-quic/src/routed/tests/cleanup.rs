@@ -2,24 +2,39 @@
 use super::*;
 
 #[tokio::test]
-async fn only_the_explicit_retired_close_is_recoverable_and_unknown_application_closes_stay_denied() -> TestResult {
+async fn only_the_explicit_retired_close_is_recoverable_and_unknown_application_closes_stay_denied()
+-> TestResult {
     for code in [RETIRED_CLOSE_CODE, 7] {
         let fixture = Fixture::new()?;
         let deadline = Instant::now() + Duration::from_secs(5);
-        let (mut relay, mut adjacency, addresses) = pair(&fixture.relay, &fixture.first, deadline).await?;
+        let (mut relay, mut adjacency, addresses) =
+            pair(&fixture.relay, &fixture.first, deadline).await?;
         let (authorization, _owner) = fixture.authorization()?;
-        let (socket, receiver) = socket::RoutedSocket::new(authorization, adjacency.connection()?.clone(), true)?;
+        let (socket, receiver) =
+            socket::RoutedSocket::new(authorization, adjacency.connection()?.clone(), true)?;
         let failure = socket.subscribe_failure();
-        relay.connection()?.close(code.into(), b"actual authenticated node stop");
-        assert_eq!(observed_failure(failure, deadline).await?, if code == RETIRED_CLOSE_CODE {
-            io::ErrorKind::ConnectionAborted
-        } else { io::ErrorKind::PermissionDenied });
+        relay
+            .connection()?
+            .close(code.into(), b"actual authenticated node stop");
+        assert_eq!(
+            observed_failure(failure, deadline).await?,
+            if code == RETIRED_CLOSE_CODE {
+                io::ErrorKind::ConnectionAborted
+            } else {
+                io::ErrorKind::PermissionDenied
+            }
+        );
         receiver.close_and_wait(deadline).await?;
         drop(socket);
-        let (local, remote) = tokio::join!(adjacency.close_and_wait(deadline), relay.close_and_wait(deadline));
+        let (local, remote) = tokio::join!(
+            adjacency.close_and_wait(deadline),
+            relay.close_and_wait(deadline)
+        );
         local?;
         remote?;
-        for address in addresses { drop(std::net::UdpSocket::bind(address)?); }
+        for address in addresses {
+            drop(std::net::UdpSocket::bind(address)?);
+        }
     }
     Ok(())
 }
