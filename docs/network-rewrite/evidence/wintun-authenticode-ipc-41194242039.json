@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "purpose": "actual hosted Authenticode and ordinary-token IPC evidence; native driver packets remain unverified",
+  "source_revision": "297211e0dd501ffe688c155ae054604732744d35",
+  "workflow": ".github/workflows/windows-managed-tun.yml",
+  "run_id": 41194242039,
+  "run_attempt": 1,
+  "job_id": 124517077154,
+  "job": "hosted-wintun-kernel",
+  "runner": "windows-2025",
+  "runner_image": "win25-vs2026 20261021.278.1",
+  "run_conclusion": "failure",
+  "artifact": {
+    "id": 13040575043,
+    "url": "https://github.com/ZHanry/NestLink/actions/runs/41194242039/artifacts/13040575043",
+    "digest": "sha256:d869346ebf9fe84faf15c2b74e297abe20e2a721c4b249a24f38eb94ef68bc21",
+    "receipt_entry": "receipt.json",
+    "receipt_sha256": "a64938077779fe0d254a60daf8df057d12142b20d359fd1fbc15daaefa1f05d2"
+  },
+  "driver": {
+    "archive_url": "https://www.wintun.net/builds/wintun-0.14.1.zip",
+    "archive_sha256": "07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51",
+    "architecture": "amd64",
+    "dll_sha256": "e5da8447dc2c320edc0fc52fa01885c103de8c118481f683643cacc3220dafce",
+    "license_review": "docs/network-rewrite/evidence/wintun-binary-provenance-41192684769.json",
+    "authenticode_entry": "official-driver-authenticode.log",
+    "authenticode_sha256": "2f25c56ca773132fad4f9b0c8fb41476c06be95b9eed272c31fba9e477e2b060",
+    "authenticode": {
+      "Status": "Valid",
+      "Subject": "CN=WireGuard LLC, O=WireGuard LLC, L=Boulder, S=Colorado, C=US, SERIALNUMBER=4227913, OID.2.5.4.15=Private Organization, OID.1.3.6.1.4.1.311.60.2.1.2=Ohio, OID.1.3.6.1.4.1.311.60.2.1.3=US",
+      "Thumbprint": "DF98E075A012ED8C86FBCF14854B8F9555CB3D45"
+    }
+  },
+  "ordinary_token_ipc": {
+    "step": "Verify Windows TUN IPC tests using the normal token",
+    "status": "passed",
+    "passed_tests": 2,
+    "tests": [
+      "windows::network_tun::packet_pipe::tests::invalid_frame_and_cancelled_write_are_terminal",
+      "windows::network_tun::packet_pipe::tests::bounded_packet_reader_retains_partial_header_and_body_across_cancellation"
+    ],
+    "scope": "Actual medium-token Windows named-pipe framing/cancellation unit tests; not driver session or authenticated original-process native acceptance."
+  },
+  "failures": [
+    {
+      "step": "Driver license, pinned archive, Authenticode, actual medium/admin packet and crash evidence",
+      "phase": "build-same-daemon-image",
+      "reason": "Windows fixture used unavailable add_address_v4 API; source repair selects the supported set_network_address method. Native driver and packet cases were not executed."
+    },
+    {
+      "step": "Check the Windows daemon privilege adapter strictly",
+      "reason": "VS 2026 rejected the Windows SDK C++/WinRT experimental coroutine header in C++17 mode (STL1011). Source repair selects C++20 standard coroutine support while retaining warnings-as-errors; rerun required."
+    }
+  ],
+  "native_driver_packets": "not_executed",
+  "normal_and_crash_kernel_cleanup": "not_executed",
+  "production_online_validation": false,
+  "two_target_acceptance": false,
+  "local_review": "Retained receipt and signature log hashes checked; no local compilation, test, driver load or experiment."
+}

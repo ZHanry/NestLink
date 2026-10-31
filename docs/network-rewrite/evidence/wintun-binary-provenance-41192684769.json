@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "purpose": "official Wintun binary archive and license review; no native acceptance",
+  "version": "0.14.1",
+  "source_url": "https://www.wintun.net/builds/wintun-0.14.1.zip",
+  "archive_sha256": "07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51",
+  "acquisition": {
+    "kind": "github_hosted_actions",
+    "source_revision": "a0c80292cc1c7d4a859309faf91ab1f6547a69a1",
+    "workflow": ".github/workflows/windows-managed-tun.yml",
+    "run_id": 41192684769,
+    "run_attempt": 1,
+    "job": "hosted-wintun-kernel",
+    "runner": "windows-2025",
+    "runner_image": "win25-vs2026 20261021.278.1",
+    "artifact_id": 13039721801,
+    "artifact_url": "https://github.com/ZHanry/NestLink/actions/runs/41192684769/artifacts/13039721801",
+    "artifact_digest": "sha256:40ae3c7d12923aabc0a3ea787fc56e8e924d2b1440c8a39a4bb2192ca9560516"
+  },
+  "review": {
+    "date": "2026-10-31",
+    "method": "Read the retained Actions archive/license and verify its published archive SHA256 and per-entry hashes. No local driver load, native experiment, compilation or project test was performed.",
+    "binary_license_entry": "wintun/LICENSE.txt",
+    "binary_license_sha256": "183adac21e7d96c508c8fd34d394b7b6708bc81564ad1bad61ab66143a008cd2",
+    "license_copy": "docs/network-rewrite/research/wintun-0.14.1-prebuilt-license.txt",
+    "distribution_condition": "Section 3(d) permits redistribution alongside other software that uses the Software only via the Permitted API (the distributed wintun.h API interfaces). Preserve all proprietary notices and do not modify/reverse engineer the DLL. This is the exact binary-distribution license, separate from the GPL-2.0 upstream source license.",
+    "adapter_boundary": "Unmodified signed DLL through the selected maintained tun-rs provider; NestLink adds only local principal/pipe/OS-resource lifecycle and uses native Windows IP Helper for exact product configuration. No Wintun source or ring implementation is copied."
+  },
+  "dll_entries": [
+    {"architecture": "amd64", "path": "wintun/bin/amd64/wintun.dll", "bytes": 427552, "sha256": "e5da8447dc2c320edc0fc52fa01885c103de8c118481f683643cacc3220dafce"},
+    {"architecture": "arm", "path": "wintun/bin/arm/wintun.dll", "bytes": 364552, "sha256": "daad267411ecdc70a0535e274d2c3e9da3d0084bdac7662cb8424dd4a031b4d9"},
+    {"architecture": "arm64", "path": "wintun/bin/arm64/wintun.dll", "bytes": 222488, "sha256": "f7ba89005544be9d85231a9e0d5f23b2d15b3311667e2dad0debd344918a3f80"},
+    {"architecture": "x86", "path": "wintun/bin/x86/wintun.dll", "bytes": 550928, "sha256": "d694fa46ab4cfebcb2632d094c7aa97278eef2f8052438621766d863ae98a931"}
+  ],
+  "authenticode": {
+    "status": "unverified",
+    "reason": "The first hosted fixture's Windows PowerShell 5.1 inherited a PowerShell 7 module path and could not load the inbox security module. Source now selects the absolute inbox executable and inbox module path; a later exact-source Actions run must prove Valid/WireGuard LLC."
+  },
+  "native_packet_validation": "not_run_in_this_receipt",
+  "production_online_validation": false,
+  "two_target_acceptance": false
+}

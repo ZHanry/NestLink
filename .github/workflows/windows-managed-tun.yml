@@ -43,12 +43,14 @@ jobs:
         run: python scripts/refactor-native-codecs.py build --target x86_64-pc-windows-msvc --cache-dir "${{ runner.temp }}/nestlink-codec-sources" --work-dir "${{ runner.temp }}/nestlink-codecs" --msys-bin "${{ steps.msys.outputs.msys2-location }}/usr/bin" --nasm "${{ steps.msys.outputs.msys2-location }}/usr/bin/nasm.exe"
       - name: Verify the native codec provenance
         run: python scripts/refactor-native-codecs.py verify --target x86_64-pc-windows-msvc --prefix "$env:NESTLINK_CODEC_PREFIX"
-      - name: Driver license, pinned archive, Authenticode, actual medium/admin packet and crash evidence
-        run: python -B scripts/network-rewrite-windows-tun.py --output "${{ runner.temp }}/windows-managed-tun-evidence"
       - name: Verify Windows TUN IPC tests using the normal token
         if: ${{ !cancelled() }}
         run: |
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-privileged --lib windows::network_tun:: -- --show-output
+      # Create the shared Cargo target/lock with the actual ordinary token.
+      # An elevated-first build can give .cargo-build-lock an Admins-only DACL.
+      - name: Driver license, pinned archive, Authenticode, actual medium/admin packet and crash evidence
+        run: python -B scripts/network-rewrite-windows-tun.py --output "${{ runner.temp }}/windows-managed-tun-evidence"
       - name: Check the Windows daemon privilege adapter strictly
         if: ${{ !cancelled() }}
         run: cargo clippy --locked -p nestlink-daemon --all-targets -- -D warnings
