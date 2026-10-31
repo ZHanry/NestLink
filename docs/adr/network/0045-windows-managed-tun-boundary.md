@@ -132,7 +132,60 @@ References: [MIB_IF_ROW2](https://learn.microsoft.com/en-us/windows/win32/api/ne
 [InitializeIpForwardEntry defaults](https://learn.microsoft.com/en-us/windows/win32/api/netioapi/nf-netioapi-initializeipforwardentry),
 [MIB_IPFORWARD_ROW2](https://learn.microsoft.com/en-us/windows/win32/api/netioapi/ns-netioapi-mib_ipforward_row2).
 
-Protected receipt publication also has durable ordering: bind the single pipe and capture its receipt, save that exact receipt in the administrator journal, then publish it through the existing protected file adapter. A crash before publication is recovered as actual receipt absence; a changed receipt is never removed. Closing the original provider releases its own driver session/adapter; recovery verifies its GUID/name is physically absent. Recovery never reopens a surviving adapter just to delete it, and preserves a visible failed record if absence is not observed within five seconds. This conservative recovery case remains an explicit native qualification requirement.
+Protected receipt publication also has durable ordering: bind the single pipe and capture its receipt, save that exact receipt in the administrator journal, then publish it through the existing protected file adapter. A crash before publication is recovered as actual receipt absence; a changed receipt is never removed. Closing the original provider releases its own driver session/adapter; recovery independently verifies physical absence of the original GUID/name/LUID/index and its address/route rows within five seconds.
+
+### Exact PnP recovery after a terminated creator
+
+Hosted source `25e51f1c1ae1416175ec1ddfe3a6431054b5225d`, run
+`41210354511`, passed the full normal case: separate real medium/high token
+processes, complete 1280-byte IPv4 and IPv6 kernel UDP requests/replies,
+foreign same-SID rejection, normal shutdown and original kernel-resource
+absence. The crash case also transferred both families and denied recovery
+while the original ordinary process remained alive. After terminating both
+original processes, however, the adapter survived and the prior passive
+five-second absence wait failed. The run therefore failed; the raw-client
+scenario and complete crash recovery were not qualified.
+
+The official 0.14.1 public API documents that `WintunCloseAdapter` removes an
+adapter only for the original `WintunCreateAdapter` object. Reopening a named
+adapter with `WintunOpenAdapter` cannot safely manufacture that ownership.
+The upstream provider's internal orphan cleanup also enumerates other
+Wintun devices. Neither provider reopening nor a global orphan/driver cleanup
+operation is used as NestLink recovery.
+
+The replacement adds a thin adapter over the OS SetupAPI device lifecycle.
+After creating the fresh original link, it captures the actual PnP instance
+ID by matching the network-class Wintun device's `NetCfgInstanceId` to the
+original GUID. It additionally checks the exact Wintun hardware ID and
+`SWD\\WINTUN\\` device namespace, with bounded enumeration and buffers plus
+RAII device-set/registry handles. The original PnP identity is durably saved
+before assigning addresses or publishing a packet receipt. It is not an
+instruction supplied by an online grant or an ordinary caller.
+
+The unreleased protected recovery record advances to schema 2 and saves the
+original ordinary binding and administrative creator incarnation before
+device creation. Recovery reuses the existing kernel process-handle/time/wait
+primitives to prove both original incarnations are physically dead. Expiry,
+token/image changes or an access error cannot substitute for death. It then
+requires the unchanged original GUID/name/LUID/index, durable PnP instance and,
+when installed, the complete attested snapshot. SetupAPI opens one exact
+device-info element and rechecks its instance ID, hardware ID and adapter
+GUID before `DIF_REMOVE` on only that element. No packet session or shared
+driver is opened or deleted. A replacement, changed configuration, missing
+durable identity or ambiguous observation retains the visible failed record.
+The existing independent physical address/route/interface absence check is
+still required before clearing any receipt or journal.
+
+This corrects the demonstrated crash-lifetime assumption. Its source is
+implemented; successful exact-source hosted recovery and the remaining
+conflict/partial-install/VPN-coexistence target cases are still required.
+
+References: [official 0.14.1 public API](https://github.com/WireGuard/wintun/blob/bfef136abfa1665c2592be09a7e383d646cdbe6e/api/wintun.h),
+[SetupDiGetClassDevsW](https://learn.microsoft.com/en-us/windows/win32/api/setupapi/nf-setupapi-setupdigetclassdevsw),
+[SetupDiGetDeviceInstanceIdW](https://learn.microsoft.com/en-us/windows/win32/api/setupapi/nf-setupapi-setupdigetdeviceinstanceidw),
+[SetupDiOpenDeviceInfoW](https://learn.microsoft.com/en-us/windows/win32/api/setupapi/nf-setupapi-setupdiopendeviceinfow),
+[DIF_REMOVE](https://learn.microsoft.com/en-us/windows-hardware/drivers/install/dif-remove),
+[SP_REMOVEDEVICE_PARAMS](https://learn.microsoft.com/en-us/windows/win32/api/setupapi/ns-setupapi-sp_removedevice_params).
 
 ## Provider choice and alternatives
 

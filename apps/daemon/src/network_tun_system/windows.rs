@@ -2,7 +2,8 @@
 //! packet pipe. The ordinary process owns online authority and all transport.
 use super::*;
 use nestlink_privileged::windows::network_tun::{
-    AdminJournal, PacketReceipt, PacketServer, PinnedProviderImage, ProviderIdentity,
+    AdminJournal, PacketBinding, PacketReceipt, PacketServer, PinnedProviderImage, ProviderIdentity,
+    device_instance::{self, DeviceInstance},
     resources::{self, Snapshot},
 };
 use std::{net::IpAddr, path::Path};
@@ -53,11 +54,14 @@ enum Action {
 struct Record {
     schema_version: u16,
     plan: TunPlan,
+    binding: PacketBinding,
+    creator: nestlink_privileged::windows::local_port_gate::ProcessIdentity,
     guid: String,
     name: String,
     driver_sha256: [u8; 32],
     receipt_path: PathBuf,
     identity: Option<ProviderIdentity>,
+    device_instance: Option<DeviceInstance>,
     installed: Option<Snapshot>,
     receipt: Option<PacketReceipt>,
 }
@@ -69,14 +73,37 @@ impl Record {
     fn read(bytes: &[u8]) -> Result<Self> {
         let record: Self = serde_json::from_slice(bytes)?;
         record.plan.validate(false)?;
-        if record.schema_version != 1
+        if record.schema_version != 2
             || record.name != format!("NestLink-{}", record.guid)
             || record.driver_sha256 == [0; 32]
             || !record.receipt_path.is_absolute()
+            || record.binding.schema_version != 1
+            || record.binding.owner_id != record.plan.owner_id
+            || record.binding.plan_sha256 != record.plan.digest()?
+            || record.binding.expires_at_ms != record.plan.expires_at_ms
+            || record.binding.process.pid != record.plan.process.pid()
+            || record.creator.pid == record.binding.process.pid
+            || !record.creator.elevated
+            || record.creator.integrity != 0x3000
+            || record.creator.image_volume != record.binding.process.image_volume
+            || record.creator.image_index != record.binding.process.image_index
         {
             return Err(io::Error::other("invalid protected Windows TUN recovery record").into());
         }
         resources::guid_value(&record.guid)?;
+        let plan::HostPrincipal::Windows { sid, session, image_volume, image_index } = &record.plan.principal else {
+            return Err(io::Error::other("Windows TUN recovery principal is not Windows").into());
+        };
+        if record.binding.process.sid != *sid || record.binding.process.session != *session
+            || record.binding.process.image_volume != *image_volume || record.binding.process.image_index != *image_index {
+            return Err(io::Error::other("Windows TUN recovery binding differs from original principal").into());
+        }
+        if let Some(instance) = &record.device_instance {
+            instance.validate(&record.guid)?;
+            if record.identity.is_none() {
+                return Err(io::Error::other("Windows TUN PnP record lacks its original kernel identity").into());
+            }
+        }
         if let Some(identity) = &record.identity
             && (identity.adapter_guid != record.guid
                 || identity.name != record.name
@@ -89,9 +116,8 @@ impl Record {
         }
         if let Some(receipt) = &record.receipt
             && (record.identity.as_ref() != Some(&receipt.provider)
-                || receipt.binding.owner_id != record.plan.owner_id
-                || receipt.binding.plan_sha256 != record.plan.digest()?
-                || receipt.binding.expires_at_ms != record.plan.expires_at_ms)
+                || receipt.binding != record.binding
+                || receipt.helper != record.creator)
         {
             return Err(io::Error::other(
                 "Windows TUN receipt differs from original recovery intent",
@@ -201,13 +227,16 @@ async fn apply(
     let name = format!("NestLink-{guid}");
     resources::preflight(&guid, &name, &plan.local_hosts, &plan.remote_hosts)?;
     let mut record = Record {
-        schema_version: 1,
+        schema_version: 2,
         plan,
+        binding: binding.clone(),
+        creator: helper,
         guid,
         name,
         driver_sha256: pin,
         receipt_path,
         identity: None,
+        device_instance: None,
         installed: None,
         receipt: None,
     };
@@ -225,6 +254,7 @@ async fn apply(
         let identity=record.capture()?.ok_or_else(||io::Error::other("created original Wintun adapter missing"))?;
         if identity.index!=original.if_index()?{return Err(io::Error::other("Wintun provider and kernel adapter differ").into());}
         record.identity=Some(identity.clone());record.save(&store)?;
+        record.device_instance=Some(device_instance::capture(&identity)?);record.save(&store)?;
         resources::isolate(&identity)?;
         for address in native("list fresh provider addresses",original.addresses())? {native(&format!("remove fresh automatic address {address}"),original.remove_address(address))?;}
         let [IpAddr::V4(v4),IpAddr::V6(v6)]=record.plan.local_hosts else {return Err(io::Error::other("signed dual-stack hosts missing").into());};
@@ -331,21 +361,27 @@ async fn recover(store: &AdminJournal) -> Result {
         return Ok(());
     };
     let record = Record::read(&bytes)?;
-    if system_wall_ms()? < record.plan.expires_at_ms
-        && process_identity(record.plan.process.pid())
-            .await
-            .ok()
-            .as_ref()
-            == Some(&record.plan.process)
-    {
+    if record.binding.process.original_incarnation_alive()? {
         return Err(io::Error::other(
             "original ordinary owner is still alive; stop it before Windows TUN recovery",
         )
         .into());
     }
-    // A crashed Wintun creator should lose its original software-device handle.
-    // Never reopen a surviving GUID just to delete it: that would silently
-    // adopt another session. Retain a visible exact recovery failure instead.
+    if record.creator.original_incarnation_alive()? {
+        return Err(io::Error::other("original administrative TUN creator is still alive; refusing device recovery").into());
+    }
+    if let Some(identity) = &record.identity
+        && resources::capture(&record.guid, &record.name, record.driver_sha256)?.is_some() {
+        let instance = record.device_instance.as_ref().ok_or_else(||io::Error::other(
+            "original PnP identity was not durably captured; preserving surviving adapter"))?;
+        if let Some(installed) = &record.installed
+            && resources::inspect(identity)?.as_ref() != Some(installed) {
+            return Err(io::Error::other("original TUN configuration changed; preserving adapter and journal").into());
+        }
+        device_instance::remove_original(identity, instance)?;
+    }
+    // SetupAPI targets only the original retained device instance. Recovery
+    // never opens a replacement Wintun session or invokes global driver cleanup.
     confirm_absence(&record).await?;
     clear_record(store, &record)?;
     println!("Original Wintun adapter absent; exact protected journal recovered.");

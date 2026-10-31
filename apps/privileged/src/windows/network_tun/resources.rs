@@ -224,7 +224,7 @@ pub fn capture(
     }
     Ok(found)
 }
-fn original(identity: &ProviderIdentity) -> io::Result<Option<MIB_IF_ROW2>> {
+pub(super) fn original(identity: &ProviderIdentity) -> io::Result<Option<MIB_IF_ROW2>> {
     let Some(current) = capture(
         &identity.adapter_guid,
         &identity.name,
@@ -518,10 +518,7 @@ impl FamilyState {
             && !self.advertising
             && !self.default_advertising
             && self.router_discovery == RouterDiscoveryDisabled
-            && matches!(
-                self.link_local,
-                LinkLocalAlwaysOff | LinkLocalDelayed | LinkLocalAlwaysOn
-            )
+            && [LinkLocalAlwaysOff, LinkLocalDelayed, LinkLocalAlwaysOn].contains(&self.link_local)
             && self.dad == 0
             && !self.managed
             && !self.other_stateful
@@ -832,9 +829,9 @@ mod tests {
     }
 
     #[test]
-    fn driver_capacity_never_substitutes_for_each_effective_ip_mtu() {
+    fn driver_capacity_never_substitutes_for_each_effective_ip_mtu() -> io::Result<()> {
         let (local, remote, snapshot) = fixture();
-        snapshot.verify(&local, &remote).unwrap();
+        snapshot.verify(&local, &remote)?;
         for family in 0..2 {
             let mut changed = snapshot.clone();
             changed.families[family].mtu = WINTUN_LINK_MTU;
@@ -843,6 +840,7 @@ mod tests {
         let mut changed = snapshot;
         changed.link_mtu = 1280;
         assert!(changed.verify(&local, &remote).is_err());
+        Ok(())
     }
 
     #[test]

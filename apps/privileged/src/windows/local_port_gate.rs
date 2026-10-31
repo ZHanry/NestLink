@@ -111,6 +111,12 @@ impl ProcessIdentity {
         }
         alive(&handle)
     }
+    /// Physical incarnation liveness for ownership-safe recovery. Token/image
+    /// changes and access errors are never interpreted as process exit.
+    pub fn original_incarnation_alive(&self) -> io::Result<bool> {
+        self.validate()?;
+        self.still_alive()
+    }
     /// The administrator-owned receipt already attests the helper's token and
     /// image. Medium-integrity clients need only query the original kernel
     /// incarnation and liveness, without querying another user's admin token.
