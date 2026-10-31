@@ -86,7 +86,7 @@ pub(in crate::control) async fn poll(
                 .json(&signed)
                 .send()
                 .await
-                .map_err(|_| Error::Control)?;
+                .map_err(|_| Error::Transport)?;
             if !response.status().is_success() {
                 return Err(Error::ServiceResourceStatus(response.status().as_u16()));
             }
@@ -97,7 +97,7 @@ pub(in crate::control) async fn poll(
                 .checked_mul(6)
                 .ok_or(Error::Control)?;
             while let Some(chunk) = chunks.next().await {
-                let chunk = chunk.map_err(|_| Error::Control)?;
+                let chunk = chunk.map_err(|_| Error::Transport)?;
                 if bytes
                     .len()
                     .checked_add(chunk.len())
@@ -128,6 +128,15 @@ pub(in crate::control) async fn poll(
             return Err(Error::Control);
         }
         match response {
+            Ok(Err(Error::Transport)) | Err(_) => {
+                // An unavailable transport supplies no new authority. Keep the
+                // last signed snapshot's original two-second monotonic cap;
+                // publication admission independently enforces that deadline.
+                // Expired IDs are retired before a later snapshot can arrive,
+                // so a transient retry cannot revive an expired publication.
+                runtime.resources.services.expire(Instant::now());
+                continue;
+            }
             Ok(Ok((snapshot, issuer_delegation))) => {
                 let node_deadline = match inspect_snapshot(&mut runtime.gate, &snapshot, started) {
                     Ok(end) => end,

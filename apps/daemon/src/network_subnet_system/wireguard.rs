@@ -213,6 +213,10 @@ impl Ingress {
             4096,
         )
         .await?;
+        // The exact peer/key and deny-by-default namespace firewall are already
+        // installed. The kernel requires the WG device UP before its /32 route;
+        // forwarding is enabled only later by the common namespace provider.
+        kernel::command("ip", &["link", "set", "dev", &name, "up"]).await?;
         let client_route = format!("{}/32", claims.client_address);
         kernel::command(
             "ip",
@@ -268,7 +272,6 @@ impl Ingress {
             }
         }
         std::fs::write(format!("/proc/sys/net/ipv4/conf/{name}/rp_filter"), b"0")?;
-        kernel::command("ip", &["link", "set", "dev", &name, "up"]).await?;
         self.configuration(plan).await?;
         Ok(())
     }

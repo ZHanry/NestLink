@@ -163,7 +163,7 @@ impl ServiceResourceSet {
             self.terminal.insert(id.into());
         }
     }
-    fn expire(&mut self, now: Instant) {
+    pub(crate) fn expire(&mut self, now: Instant) {
         let stale = self.freshness.is_some_and(|end| now >= end);
         let expired: Vec<_> = self
             .active
