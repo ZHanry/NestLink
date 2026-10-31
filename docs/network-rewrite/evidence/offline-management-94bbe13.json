@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "source_revision": "94bbe13a10e1f79dd81dec967273cefe3a492570",
+  "workflow": ".github/workflows/offline-authority.yml",
+  "run_id": 41213258639,
+  "run_attempt": 1,
+  "url": "https://github.com/ZHanry/NestLink/actions/runs/41213258639",
+  "runner_environment": "github-hosted",
+  "runner_os": "Linux",
+  "conclusion": "success",
+  "scope": "Independent private-service production online enable, fixed draft review, both original endpoint/account approvals, shared durable quota reservation, one-use process-bound consume and authenticated recovery. Actual offline business carriers, daemon/UI and remote-control shared quota are excluded.",
+  "jobs": [
+    {
+      "name": "authority",
+      "job_id": 124572459243,
+      "tests": 7,
+      "strict_protocol_identity_clippy": "passed",
+      "artifact_id": 13047526209,
+      "artifact_name": "offline-authority-94bbe13a10e1f79dd81dec967273cefe3a492570-1",
+      "artifact_zip_sha256": "9f72e94c38055bcc9bc0d27da68fcc7a9b76ea1f35efe148be74de9e7d42cde8",
+      "receipt_sha256": "9ca8ef87e6bf839323e77324beb5a732561bd9489421a311b7fff845c6e394e4",
+      "executable_sha256": "3ba4b4dd4ddc8729e77de5d948566947dffb1550c628a7ea324c641ab8ce4224"
+    },
+    {
+      "name": "durable-private-service",
+      "job_id": 124572459217,
+      "offline_sqlite_tests": 8,
+      "all_storage_lib_and_integration_tests": 268,
+      "strict_storage_all_targets_clippy": "passed",
+      "artifact_id": 13046983761,
+      "artifact_name": "offline-management-storage-94bbe13a10e1f79dd81dec967273cefe3a492570-1",
+      "artifact_zip_sha256": "c69605448b0795c19acd3d7ab7ed0c5150a87748d9ce7370a251ee5cb1e28576",
+      "receipt_sha256": "3bc37455ea989d700db164753043cb436f6526148b176dbc1e796b22667ae112",
+      "executable_sha256": "6d8860c8c89121205c3f533bc6999461cd27e5c9576a3e71c6abb76ed7ec585e"
+    },
+    {
+      "name": "actual-http-sdk",
+      "job_id": 124572459062,
+      "actual_http_sdk_tests": 2,
+      "strict_server_sdk_lib_clippy": "passed",
+      "artifact_id": 13046902691,
+      "artifact_name": "offline-management-sdk-94bbe13a10e1f79dd81dec967273cefe3a492570-1",
+      "artifact_zip_sha256": "2fc2a2318960b764376c772b1f146419acca7403f2e04a260d4a7aa3f5a91fa4",
+      "receipt_sha256": "ffdbee3d3a09f7ad2844f9eaa73b89c9b53338e18cd8ae333c77d24493060aae",
+      "executable_sha256": "65b7018b9f485bea79aa882f501307ab35c7073040eceab1a4f654217d9f27ef"
+    }
+  ],
+  "artifact_verification": "All three downloaded ZIP hashes match the GitHub artifact digest. Every receipt-listed extracted file hash was independently checked.",
+  "verified_behaviors": [
+    "both exact complete approvals are necessary before signing and permanent shared budget debit",
+    "different registered endpoint accounts cannot approve or consume each other's endpoint, even with the other endpoint's signed request",
+    "ordinary space membership cannot enable deployment-admin offline policy",
+    "online promises and offline promises share all original service quota ledgers and the original private exposure sublimit",
+    "failed audit transaction rolls back every ledger debit, reservation and second approval",
+    "exact device, process nonce, complete digest and fresh consume challenge are verified before one-use activation",
+    "two real SQLite connections competing for the original endpoint produce exactly one durable consume",
+    "expired or revoked authority, restore fences and administrator disable fail closed with no refund",
+    "original ACL rule and exposure remain pinned across revoke and regrant without an intermediate observation",
+    "actual HTTP and SDK activate both original process owners, reject replay/restart and apply recovery revocation before continued use"
+  ],
+  "not_claimed": [
+    "actual business bytes after control-plane disconnection",
+    "physical offline carrier and local endpoint cleanup",
+    "daemon resident-process command or product UI acceptance",
+    "remote-control original shared cumulative byte budget",
+    "cross-platform target installation acceptance",
+    "complete W27 or AC45/AC46 qualification"
+  ],
+  "full_W27_or_AC45_AC46_passed": false
+}

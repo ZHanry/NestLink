@@ -2,10 +2,10 @@
 //! Every mutation intersects the original live private-service authority in the
 //! same SQLite IMMEDIATE transaction. Unused promises are never refunded.
 use super::*;
+use crate::services::private::OfflinePrivateAuthority;
 use nestlink_auth::{random_bytes, random_id};
 use nestlink_identity::{offline::*, verify_device_action};
 use nestlink_protocol::offline::{management::*, *};
-use crate::services::private::OfflinePrivateAuthority;
 
 const MAX_HISTORY: u64 = 4096;
 struct Row {
@@ -149,7 +149,13 @@ impl Store {
             })
         });
         if live {
-            match self.offline_private_current(&row.account, &row.login, c, &row.private_authority, now) {
+            match self.offline_private_current(
+                &row.account,
+                &row.login,
+                c,
+                &row.private_authority,
+                now,
+            ) {
                 Ok(()) => {}
                 Err(
                     StorageError::Forbidden
@@ -281,7 +287,13 @@ impl Store {
             },
         };
         claims.validate()?;
-        self.offline_private_current(&actor.account_id, &actor.session_id, &claims, &original, now)?;
+        self.offline_private_current(
+            &actor.account_id,
+            &actor.session_id,
+            &claims,
+            &original,
+            now,
+        )?;
         let hash = offline_draft_digest(&snapshot.authority_key, &claims)?;
         tx.execute("INSERT INTO offline_bundles(bundle_id,space_id,requester_account,requester_login,claims_json,draft_digest,authority_key,consume_challenge0,consume_challenge1,private_rule_id,private_exposure_revision) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11)",params![claims.bundle_id,space,actor.account_id,actor.session_id,serde_json::to_string(&claims)?,hash,snapshot.authority_key,random_bytes::<32>(),random_bytes::<32>(),original.rule_id,original.exposure_revision])?;
         let result = self.offline_current(&tx, &row(&tx, space, &claims.bundle_id)?, now)?;
@@ -351,15 +363,15 @@ impl Store {
         if stored.signed.is_none()
             && let [Some(a), Some(b)] = &stored.approvals
         {
-                verify_offline_endpoint_approvals(
-                    &stored.authority,
-                    &stored.claims,
-                    &[a.clone(), b.clone()],
-                )?;
-                self.offline_private_reserve(&tx, &stored.claims)?;
-                let signed = signer.sign_offline_bundle(&stored.claims)?;
-                tx.execute("UPDATE offline_bundles SET signed_json=?1 WHERE bundle_id=?2 AND signed_json IS NULL",params![serde_json::to_string(&signed)?,id])?;
-                stored.signed = Some(signed);
+            verify_offline_endpoint_approvals(
+                &stored.authority,
+                &stored.claims,
+                &[a.clone(), b.clone()],
+            )?;
+            self.offline_private_reserve(&tx, &stored.claims)?;
+            let signed = signer.sign_offline_bundle(&stored.claims)?;
+            tx.execute("UPDATE offline_bundles SET signed_json=?1 WHERE bundle_id=?2 AND signed_json IS NULL",params![serde_json::to_string(&signed)?,id])?;
+            stored.signed = Some(signed);
         }
         let result = self.offline_current(&tx, &stored, now)?;
         auditing::record(

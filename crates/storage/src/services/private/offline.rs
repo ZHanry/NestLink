@@ -58,7 +58,10 @@ impl Store {
                 target_digest: view.target_sha256,
             },
             members,
-            OfflinePrivateAuthority { rule_id: binding.acl_rule_id, exposure_revision: view.revision },
+            OfflinePrivateAuthority {
+                rule_id: binding.acl_rule_id,
+                exposure_revision: view.revision,
+            },
         ))
     }
 
@@ -100,7 +103,8 @@ impl Store {
             || binding.host_public_key != claims.members[1].public_key
             || binding.consumer_account_id != claims.members[0].account_id
             || record.account != claims.members[1].account_id
-            || claims.resources.connection_limit > u32::from(record.definition.limits.maximum_connections)
+            || claims.resources.connection_limit
+                > u32::from(record.definition.limits.maximum_connections)
             || !self
                 .private_service_paths(
                     login,
