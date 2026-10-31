@@ -59,7 +59,7 @@ jobs:
           assert native['async-trait'] == '=0.1.89'
           assert native['ipnet'] == '=2.12.2'
           assert native['etherparse'] == '=0.21.0'
-          assert native['mdns-sd'] == {'version': '=0.21.6', 'default-features': False}
+          assert native['mdns-sd'] == {'version': '=0.21.6', 'path': '../../third-party/mdns-sd', 'default-features': False}
           assert native['socket-pktinfo'] == '=0.4.0'
           assert native['socket2'] == {'version': '=0.6.5', 'features': ['all']}
           codec = tomllib.loads(pathlib.Path('crates/media-codec/Cargo.toml').read_text())
@@ -95,11 +95,21 @@ jobs:
           item = tomllib.loads((vendor / 'Cargo.toml').read_text())['package']
           item['license_file'] = item.get('license-file')
           notices.reviewed_local_fork(pathlib.Path.cwd(), vendor, item)
+          vendor = pathlib.Path('third-party/mdns-sd').resolve()
+          item = tomllib.loads((vendor / 'Cargo.toml').read_text())['package']
+          item['license_file'] = item.get('license-file')
+          notices.reviewed_local_fork(pathlib.Path.cwd(), vendor, item)
           before_bytes = lock.read_bytes()
           before = tomllib.loads(before_bytes.decode())['package']
           shutil.copyfile(lock, output / 'before.lock')
           identity = lambda item: (item['name'], item['version'], item.get('source', ''))
           existing = {identity(item): item.get('checksum') for item in before}
+          mdns_registry = ('mdns-sd', '0.21.6', 'registry+https://github.com/rust-lang/crates.io-index')
+          mdns_local = ('mdns-sd', '0.21.6', '')
+          expected_mdns = {'name': 'mdns-sd', 'version': '0.21.6',
+                           'dependencies': ['fastrand', 'flume', 'if-addrs 0.15.0', 'mio', 'socket-pktinfo', 'socket2 0.6.5']}
+          old_mdns = [item for item in before if item['name'] == 'mdns-sd']
+          assert old_mdns == [dict(expected_mdns, source=mdns_registry[2], checksum='8562654710f72a9cbce4b0d5b7c366a2f94330ba1ce3740f15e932ea2d37b161')] or old_mdns == [expected_mdns]
           commands, assertions, failure = [], {}, None
           try:
               command = ['cargo', 'update', '--workspace', '--manifest-path', str(manifest)]
@@ -171,7 +181,7 @@ jobs:
                       expected_package['dependencies'] = sorted(set(previous.get('dependencies', [])) | additions)
                       assert tomllib.loads('[[package]]' + part)['package'][0] == expected_package, 'Unreviewed component feature dependency drift: ' + str(key)
               assert {key[:2] for key in feature_keys} == set(reviewed_feature_edges)
-              retained = {key: part for key, part in original_blocks if key[2] and key not in feature_keys}
+              retained = {key: part for key, part in original_blocks if key[2] and key not in feature_keys and key != mdns_registry}
               lock.write_text(header + ''.join('[[package]]' + retained.get(key, part)
                                               for key, part in generated_blocks))
               for command in [
@@ -188,10 +198,7 @@ jobs:
               dns = [item for item in after if item['name'] == 'hickory-server']
               registry = 'registry+https://github.com/rust-lang/crates.io-index'
               reviewed_lan_scaler_packages = {
-                  ('mdns-sd', '0.21.6', registry): {
-                      'name': 'mdns-sd', 'version': '0.21.6', 'source': registry,
-                      'checksum': '8562654710f72a9cbce4b0d5b7c366a2f94330ba1ce3740f15e932ea2d37b161',
-                      'dependencies': ['fastrand', 'flume', 'if-addrs 0.15.0', 'mio', 'socket-pktinfo', 'socket2 0.6.5']},
+                  mdns_local: expected_mdns,
                   ('if-addrs', '0.15.0', registry): {
                       'name': 'if-addrs', 'version': '0.15.0', 'source': registry,
                       'checksum': 'c0a05c691e1fae256cf7013d99dad472dc52d5543322761f83ec8d47eab40d2b',
@@ -254,7 +261,8 @@ jobs:
               changed = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
               assertions = {
                   'only_selected_lock_changed': set(changed) <= {lock.as_posix()},
-                  'all_existing_package_identities_and_checksums_preserved': all(derived.get(key) == checksum and key in derived for key, checksum in existing.items()),
+                  'all_existing_package_identities_and_checksums_preserved_except_reviewed_mdns_source': all(derived.get(key) == checksum and key in derived for key, checksum in existing.items() if key != mdns_registry),
+                  'only_mdns_source_changed_to_reviewed_local_fork': [item for item in after if item['name'] == 'mdns-sd'] == [expected_mdns] and mdns_registry not in derived,
                   'all_unrelated_external_package_edges_preserved': all(
                       tomllib.loads('[[package]]' + part)['package'][0] ==
                       tomllib.loads('[[package]]' + dict(blocks(lock.read_text())[1])[key])['package'][0]

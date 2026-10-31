@@ -117,7 +117,7 @@ impl Inner {
         let peer=self.authority.claims()?.members[1-index].public_key;
         let actual=connection.peer_identity().ok_or(SdkError::Trust)?;
         let protocol=connection.handshake_data().and_then(|data|data.downcast::<quinn::crypto::rustls::HandshakeData>().ok()).and_then(|data|data.protocol);
-        if protocol.as_deref()!=Some(ALPN) || nestlink_transport_stream::tls::peer_identity_fingerprint(actual.as_ref()).map_err(|_|SdkError::Trust)?!=digest(&peer){return Err(SdkError::Trust);}
+        if protocol.as_deref()!=Some(ALPN.as_bytes()) || nestlink_transport_stream::tls::peer_identity_fingerprint(actual.as_ref()).map_err(|_|SdkError::Trust)?!=digest(&peer){return Err(SdkError::Trust);}
         tokio::time::timeout(self.budget()?,async {
             let (mut send,mut recv)=match self.role {EndpointRole::Controller=>connection.open_bi().await,EndpointRole::Host=>connection.accept_bi().await}.map_err(io::Error::other)?;
             crate::offline_channel::prove(&self.authority,&self.local,&mut recv,&mut send,index as u8,OfflineDirectTransport::Quic,&peer).await?;
