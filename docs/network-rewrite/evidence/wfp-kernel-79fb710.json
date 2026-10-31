@@ -1,0 +1,149 @@
+{
+    "schema_version":  1,
+    "purpose":  "real-windows-sdk-wfp-ordinary-sid-admission",
+    "source_revision":  "79fb7107ee72b82ca8300488a7d46777e7f9cd1d",
+    "workflow":  ".github/workflows/windows-local-port-gate.yml",
+    "run_id":  41182932352,
+    "run_attempt":  1,
+    "job_id":  124483881259,
+    "conclusion":  "success",
+    "evidence_level":  "L2_hosted_sdk_kernel",
+    "artifact_id":  13035108543,
+    "archive_sha256":  "835daf128c9dc38882966c7b70fdde75f70c526eee6c97d21b9815a2fcd48c6f",
+    "receipt_sha256":  "b2ecb629b8d8eed116aaa9ad0f7f6cc026dcbe5321c87e13b42823e56c7f010a",
+    "receipt_bytes":  69041,
+    "all_declared_log_digests_verified":  true,
+    "build_provenance":  {
+                             "source_revision":  "79fb7107ee72b82ca8300488a7d46777e7f9cd1d",
+                             "lock_sha256":  "9f2d3e6598f95a3edf1e4fc4cd7820703d9942cae3cb9129105348c7edeca6fe",
+                             "workflow_ref":  "ZHanry/NestLink/.github/workflows/windows-local-port-gate.yml@refs/heads/main",
+                             "workflow_revision":  "79fb7107ee72b82ca8300488a7d46777e7f9cd1d",
+                             "run_id":  "41182932352",
+                             "attempt":  "1",
+                             "job":  "hosted-sdk-wfp-kernel",
+                             "runner_environment":  "github-hosted",
+                             "runner_os":  "Windows",
+                             "runner_arch":  "X64",
+                             "image_os":  "win25-vs2026",
+                             "image_version":  "20261030.294.1",
+                             "executable":  {
+                                                "build_path":  "D:\\a\\NestLink\\NestLink\\target\\debug\\deps\\private_services-a49651e767f4a74f.exe",
+                                                "execution_path":  "C:\\Program Files\\NestLink-WFP-Lab-5fa5b722f39848749f6ca990ca30ff69\\private-services.exe",
+                                                "sha256":  "293f85ca7042075ae453379763ffae9fec64fa7dccdaaea0309f1291ea87247e"
+                                            }
+                         },
+    "execution_provenance":  {
+                                 "source_revision":  "79fb7107ee72b82ca8300488a7d46777e7f9cd1d",
+                                 "environment":  "disposable_github_hosted_windows_vm",
+                                 "workflow_run":  "41182932352",
+                                 "attempt":  "1",
+                                 "started_at_unix":  1793433862.2269495,
+                                 "services":  {
+                                                  "SecondaryLogon":  "Stopped",
+                                                  "BFE":  "Running"
+                                              },
+                                 "different_sid":  "S-1-5-21-3077485881-3661871218-4154919024-1003",
+                                 "ordinary_tokens":  [
+                                                         {
+                                                             "identity":  {
+                                                                              "creation":  134379076137575656,
+                                                                              "elevated":  false,
+                                                                              "image":  "C:\\Program Files\\NestLink-WFP-Lab-5fa5b722f39848749f6ca990ca30ff69\\private-services.exe",
+                                                                              "image_index":  281474978095990,
+                                                                              "image_volume":  1422631540,
+                                                                              "integrity":  8192,
+                                                                              "pid":  7636,
+                                                                              "session":  2,
+                                                                              "sid":  "S-1-5-21-3077485881-3661871218-4154919024-500"
+                                                                          },
+                                                             "role":  "identity"
+                                                         },
+                                                         {
+                                                             "identity":  {
+                                                                              "creation":  134379076139146026,
+                                                                              "elevated":  false,
+                                                                              "image":  "C:\\Program Files\\NestLink-WFP-Lab-5fa5b722f39848749f6ca990ca30ff69\\private-services.exe",
+                                                                              "image_index":  281474978095990,
+                                                                              "image_volume":  1422631540,
+                                                                              "integrity":  8192,
+                                                                              "pid":  4068,
+                                                                              "session":  2,
+                                                                              "sid":  "S-1-5-21-3077485881-3661871218-4154919024-1003"
+                                                                          },
+                                                             "role":  "identity"
+                                                         }
+                                                     ],
+                                 "finished_at_unix":  1793434060.075398,
+                                 "logs":  {
+                                              "allow-owner-evidence-only.log":  "5f10553b25f3c8915fbead7960b07eea150891be15d2f81f2e602f6ad4212458",
+                                              "build-same-sdk-executable.log":  "c7cfeb86aa7887e3f864b22931c14e35dfb47cfd43f41645d7115449a2bf6596",
+                                              "create-unrelated-firewall-sentinel.log":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                                              "native-service-capabilities.log":  "11ba42cd156537ced7648be06344f3f6397468a4859446dc3e33be0f1ff7de07",
+                                              "protect-executable-owner.log":  "1088827c23c1420ff94b08a9455e56013ee1c4683de02c9dd5290d2e830b0e4e",
+                                              "remove-exact-unrelated-sentinel.log":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                                              "runner-user-sid.log":  "cf5ada291d76b76cb3482a21a67c5eb493b8bfdac29b1f737959235c75f30a05",
+                                              "same-sid-capability.log":  "3ced5ba521d88646ab6bee76f6e6a206f12d00605731a4a07aecbfec3f667fe2",
+                                              "sentinel-observe-0cc4c.log":  "8b62aa3fe914088c4091a36e16f485a6735f3146a4d80757b9bba75e5f6588dd",
+                                              "sentinel-observe-3ad2b.log":  "8b62aa3fe914088c4091a36e16f485a6735f3146a4d80757b9bba75e5f6588dd",
+                                              "sentinel-observe-4b72c.log":  "8b62aa3fe914088c4091a36e16f485a6735f3146a4d80757b9bba75e5f6588dd",
+                                              "sentinel-observe-e8650.log":  "8b62aa3fe914088c4091a36e16f485a6735f3146a4d80757b9bba75e5f6588dd",
+                                              "start-native-secondary-logon.log":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                                              "tcp-administrative-helper.log":  "e3960e77948c7836ac055c5a07424325f24fd1c92b5bc0e950aef1aa635fe014",
+                                              "tcp-inspect-4b4655.log":  "e6a46d222fc5a882304034f635c52fce113741a9d212bfd9fd6f52c7c75f892e",
+                                              "tcp-inspect-846126.log":  "e6a46d222fc5a882304034f635c52fce113741a9d212bfd9fd6f52c7c75f892e",
+                                              "tcp-live-control.log":  "4bd74b97f0e03bb64354fbeffa578a4450b02528301baa859c2865de987f4171",
+                                              "tcp-ordinary-sdk.log":  "bf579b78cce493eafbf7dba8cb57f14b9731b4852f9169368bf803a166ebc20c",
+                                              "tcp-preflight-same.log":  "19ec6cbb6f7398147bc34bca646b9a2a10203e4307b7854c671a1fd66a97e12e",
+                                              "tcp-recover-ef1f32.log":  "880348eedd1534aad2cb298a5fb2ad3ca8e25afcb9efcefd046f63fe14e9a843",
+                                              "tcp-retained-same.log":  "853c2e58f0bbb96f584da7ca2410dfbffd1841a9c06caf27f1153828300a3ed7",
+                                              "tcp-same-after.log":  "9f37e3c8a9948907c3a8be330bdd723690340f4828da4c2396da2d89312ed8af",
+                                              "tcp-same-before.log":  "986666554565a31532e5578d6468d9747351b5b9f35d7e43f23eaf5be53455e5",
+                                              "udp-administrative-helper.log":  "82b5b049b9a51ba59b003d46fbd3e5bb96b1ca34bf31c56a12fe44ff0e6bf588",
+                                              "udp-empty.log":  "e79255db9e89dceefd85578edb300b61a02956f54b9be1a3246a087ce66f4b8b",
+                                              "udp-inspect-0b83f1.log":  "e6a46d222fc5a882304034f635c52fce113741a9d212bfd9fd6f52c7c75f892e",
+                                              "udp-inspect-17bf82.log":  "99efce0d2af4816627fa34e2748275520a01e29c7f93c15f8a773592ef0407e0",
+                                              "udp-inspect-1c734f.log":  "7989d783ccad9ed8b70fa08064c5c4ccb17394afac809dcff5de99ccbc0173ad",
+                                              "udp-inspect-3fec31.log":  "99efce0d2af4816627fa34e2748275520a01e29c7f93c15f8a773592ef0407e0",
+                                              "udp-inspect-6cfff5.log":  "e6a46d222fc5a882304034f635c52fce113741a9d212bfd9fd6f52c7c75f892e",
+                                              "udp-live-control.log":  "4d966b38f9ca857ab46061aa7a7656aa22c703082aea156a23426d8b6d8a9452",
+                                              "udp-ordinary-sdk.log":  "d5b67df62fcb3e16352f9dc3058141ac58f023e1259710d876c74f97fbafd46c",
+                                              "udp-preflight-same.log":  "54a6389c159e6c898d71a449802420762a9894f301006c451e5d6ceb98cc8153",
+                                              "udp-recover-33cf56.log":  "5fc815368413af407e274db732eb63b9266ba6ed999cf41658613a39ae9c6c4d",
+                                              "udp-recover-7c2c24.log":  "880348eedd1534aad2cb298a5fb2ad3ca8e25afcb9efcefd046f63fe14e9a843",
+                                              "udp-recover-8f8e2d.log":  "30d7ee3a8fa26fcf5b420857156802157f50f32d4c60415cb1c87cea09e09ee0",
+                                              "udp-recover-cbbe69.log":  "73b7991fae3d53c8e1be63884b40bcaea1ffe50dfdaa0313967d0a808f48df0d",
+                                              "udp-retained-same.log":  "a1933bfaa1b1fe23d7aa8eeca9d866a92d2218f4a885efe588a839c1a35bcf28",
+                                              "udp-same-after.log":  "8cea74e4b904293b6d01ccb3ed995037e6e131a3748c82710836279f441b2bc0",
+                                              "udp-same-before.log":  "ebec58704d1b8c4a97258283ad1f7fb470f844720fe7ff4eb02032cfa89b3d81",
+                                              "verify-medium-token-capability.log":  "9a78495ced036f2cea52ee26245417703dcf60565618f373fec28b24fee32212"
+                                          }
+                             },
+    "protocol_scoped_cases":  {
+                                  "tcp":  {
+                                              "status":  "passed_scoped_hosted_sdk_kernel",
+                                              "cleanup_failures":  0,
+                                              "socket_closed":  true,
+                                              "owner_process_exited":  true,
+                                              "gate_and_journal_removed":  true,
+                                              "unrelated_firewall_preserved":  true,
+                                              "expiry_deny_all":  true,
+                                              "helper_crash_persistent_sid_fence":  false,
+                                              "foreign_filter_preserved":  false
+                                          },
+                                  "udp":  {
+                                              "status":  "passed_scoped_hosted_sdk_kernel",
+                                              "cleanup_failures":  0,
+                                              "socket_closed":  true,
+                                              "owner_process_exited":  true,
+                                              "gate_and_journal_removed":  true,
+                                              "unrelated_firewall_preserved":  true,
+                                              "expiry_deny_all":  false,
+                                              "helper_crash_persistent_sid_fence":  true,
+                                              "foreign_filter_preserved":  true
+                                          }
+                              },
+    "scope":  "Real ordinary SDK TCP/UDP, same SID allowed/different SID denied, TCP expiry deny-all, UDP persistent SID fence after helper kill, live recovery rejection, exact cleanup after process exit, foreign WFP policy and unrelated firewall preservation. False per-protocol flags denote the independently exercised complementary protocol scenario, not an overall failure. Full receipt remains in the verified artifact.",
+    "production_cli_validated":  false,
+    "target_device_acceptance_claimed":  false,
+    "W21_AC_completion_claimed":  false
+}

@@ -555,13 +555,13 @@
       "version": {
         "tun-rs": "2.8.16",
         "windows-driver": "not_yet_frozen",
-        "status": "provisional_candidate_not_runtime_dependency"
+        "status": "selected_linux_host_tun_source_adapter_actions_lock_pending"
       },
       "license": {
         "tun-rs": "Apache-2.0",
         "windows-driver": "Separate official Wintun binary redistribution terms/version/signature require review before adoption"
       },
-      "selection_reason": "candidate_requires_platform_and_distribution_prototype",
+      "selection_reason": "Select exact tun-rs 2.8.16 with default features disabled and async_tokio only for the Linux host-only ordinary owner. Reuse the kernel TUN and existing process/security/underlay boundaries; do not implement a general driver. Windows provider and driver distribution still need an independently proven ordinary-user handle boundary.",
       "adapter_boundary": "Provider owns TUN I/O; minimal privileged NestLink broker owns exact device/routes/DNS/MTU ledger, physical endpoint bypass and recovery.",
       "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
       "security_and_operations_cost": [

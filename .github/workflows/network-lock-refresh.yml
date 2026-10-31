@@ -59,6 +59,11 @@ jobs:
           assert native['async-trait'] == '=0.1.89'
           assert native['ipnet'] == '=2.12.2'
           assert native['etherparse'] == '=0.21.0'
+          daemon = tomllib.loads(pathlib.Path('apps/daemon/Cargo.toml').read_text())
+          assert daemon['target']['cfg(target_os = "linux")']['dependencies']['tun-rs'] == {
+              'version': '=2.8.16', 'default-features': False, 'features': ['async_tokio']}
+          assert daemon['dependencies']['nestlink-transport-quic'] == {'workspace': True}
+          assert daemon['dependencies']['nestlink-platform-network'] == {'workspace': True}
           assert native['fast-socks5'] == {'version': '=1.0.0', 'path': '../../third-party/fast-socks5'}
           security = tomllib.loads(pathlib.Path('crates/platform-security/Cargo.toml').read_text())
           assert security['dependencies']['tokio'] == {'workspace': True, 'features': ['process']}
@@ -92,6 +97,15 @@ jobs:
                   result = subprocess.run(command, stdout=stream, stderr=subprocess.STDOUT, check=False)
               commands.append({'argv': command, 'return_code': result.returncode})
               assert result.returncode == 0, 'Lock command failed; review retained log'
+              if scope == 'product':
+                  # Reuse the reviewed encoding implementation, without the
+                  # new optional SIMD dependency family selected by latest.
+                  command = ['cargo', 'update', '-p', 'encoding_rs', '--precise', '0.8.35',
+                             '--manifest-path', str(manifest)]
+                  with (output / ('command-' + str(len(commands)) + '.log')).open('wb') as stream:
+                      result = subprocess.run(command, stdout=stream, stderr=subprocess.STDOUT, check=False)
+                  commands.append({'argv': command, 'return_code': result.returncode})
+                  assert result.returncode == 0, 'Reviewed encoding selection failed'
               shutil.copyfile(lock, output / 'cargo-generated.lock')
               # Cargo can reselect an already-locked compatible windows-sys
               # edge even with --workspace. Preserve existing external blocks.
@@ -147,6 +161,21 @@ jobs:
                   ('psl-types', '2.0.11', registry): '33cb294fe86a74cbcf50d4445b37da762029549ebeea341421c7c70370f86cac',
               }
               packet_key = ('etherparse', '0.21.0', registry)
+              reviewed_tun_packages = {
+                  ('tun-rs', '2.8.16', registry): '280a6cc03289f9254d9268eadd5712c476dbd7a47ef51aae86e8b9d0b45dcd43',
+                  ('nix', '0.31.3', registry): 'cf20d2fde8ff38632c426f1165ed7436270b44f199fc55284c38276f9db47c3d',
+                  ('getifaddrs', '0.6.2', registry): 'a542e1b7ac1f3d62c5777d430d66eca9cb59e813c46b86e29fa9ce94ff9a4810',
+                  ('libloading', '0.9.0', registry): '754ca22de805bb5744484a5b151a9e1a8e837d5dc232c2d7d8c2e3492edc8b60',
+                  ('widestring', '1.2.1', registry): '72069c3113ab32ab29e5584db3c6ec55d416895e60715417b5b883a357c3e471',
+                  ('winreg', '0.56.0', registry): '7d6f32a0ff4a9f6f01231eb2059cc85479330739333e0e58cadf03b6af2cca10',
+                  ('encoding_rs', '0.8.35', registry): '75030f3c4f45dafd7586dd6780965a8c7e8e285a5ecb86713e63a79c5b2766f3',
+                  ('route_manager', '0.2.17', registry): '694798681cd69a10928204225a680ad9416b081d9e9f8718d7a61e2d134da323',
+                  ('netlink-packet-core', '0.9.0', registry): '2d6e2daf9a8c2e21302714706860a0e6be02e03d17294ecc66b354ea7d4059dd',
+                  ('netlink-packet-route', '0.33.0', registry): '59d48ffc8b73a506e1ff0878528c72668f2bfbc3d875b6be890a96be5d0d5576',
+                  ('netlink-sys', '0.9.0', registry): 'c99d38e00b420df49e940fe0826e667c3dad82ac68eb4c2bbf754c1c14a83a10',
+                  ('flume', '0.12.0', registry): '5e139bc46ca777eb5efaf62df0ab8cc5fd400866427e56c68b22e414e53bd3be',
+                  ('spin', '0.9.8', registry): '6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67',
+              }
               reviewed_packet_package = {
                   'name': 'etherparse', 'version': '0.21.0', 'source': registry,
                   'checksum': '17304d06addb3283cdc4bd528e42dd95e73c8ee2d6492ffce415e93660885449',
@@ -192,11 +221,14 @@ jobs:
                       for item in after) and any(key[:2] == ('tokio-util', '0.7.20') for key in existing),
                   'packet_parser_exact_identity_checksum_and_only_locked_arrayvec_edge':
                       [item for item in after if item['name'] == 'etherparse'] == [reviewed_packet_package],
+                  'managed_tun_exact_reviewed_provider_closure': scope != 'product' or all(
+                      derived.get(key) == checksum for key, checksum in reviewed_tun_packages.items()),
                   'only_reviewed_cookie_packet_components_or_exact_product_reuse_added': all(
                       identity(item) in existing or not item.get('source')
                       or (identity(item) in reviewed_cookie_packages and
                           item.get('checksum') == reviewed_cookie_packages[identity(item)])
                       or (identity(item) == packet_key and item == reviewed_packet_package)
+                      or (identity(item) in reviewed_tun_packages and item.get('checksum') == reviewed_tun_packages[identity(item)])
                       or item == reviewed_product_reuse.get(identity(item)) for item in after),
               }
               assert all(assertions.values()), 'Unreviewed dependency drift or incomplete lock derivation'
