@@ -2854,10 +2854,12 @@
         "无未标明的外部验证缺口"
       ],
       "evidence_refs": [
-        "docs/adr/network/0051-terminal-packet-and-producer-bounds.md"
+        "docs/adr/network/0051-terminal-packet-and-producer-bounds.md",
+        "docs/adr/network/0052-authenticated-native-receiver-observation.md",
+        "docs/network-rewrite/evidence/media-receiver-4794698.json"
       ],
       "blockers": [],
-      "implementation_notes": "Reuses existing producer control and mature codec configuration in daemon and fixed-source sender. Approved ceilings and observation gaps repaired; actual queue/codec regression pending. Receiver-feedback/resolution downshift and weak-network/file-concurrency gates remain open."
+      "implementation_notes": "Original producer control respects approval ceilings and observation freshness. Authenticated bounded receiver observations are negotiated only by both signed native declarations, track exact original connection/layout/source/format, and feed original fixed-source and daemon VideoQuality. Source4794698 hosted run41217399922 passed actual TLS/QUIC/VP8/revoke, codec/queue/report/negotiation and strict Core/daemon lint. Original Core host runtime, exact negotiated resolution adaptation and real weak-network/file-concurrency qualification remain mandatory open work."
     },
     {
       "id": "W32",

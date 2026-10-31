@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "59aad5405abe6231ddb9959d669188358d602a69",
-  "checkpoint_kind": "W23_W24_hosted_kernel_and_browser_evidence_W27_production_in_progress_W31_original_producer_bounds",
+  "source_revision": "d20d1afd61fbf2342ef236b75c164e8309aa77b6",
+  "checkpoint_kind": "W31_authenticated_receiver_and_original_producer_lab_pass_W22_crash_W26_HA_W27_carrier_active",
   "active_tasks": [
     "W00",
     "W02",
@@ -51,8 +51,9 @@
     "HA source794d3d1 run41207008606 failed HTTP after strict original snapshot installation rejected a replay. Static nonsecret fence diagnostics were added; real four-protocol fixed-entry cooperative/SIGKILL validation is being rerun without extending signed authorization deadlines.",
     "W30/W24 source467e7bd run41204581203 passed full real Chrome/Edge production Web/native integration and WireGuard client UI role/approval/403/draft/late-response fencing. Browser evidence does not cover positive client issuance, OS forwarding, phone clients or installed full onboarding.",
     "W27 independent protocol/identity6 primitive cases passed onb313dbf. Production private-service administrator policy, exact two-party approval, durable shared quota reservation, one-use consume, authenticated recovery and typed SDK are now being implemented. Actual offline private-service and remote-control carriers/UI remain mandatory open work; no production pass yet.",
-    "W31 source84708e8/8374ca2 reuses original VideoQuality and actual mature encoder/queue costs for fixed-source production senders. Approval ceilings and missing-observation recovery bugs are repaired in source, awaiting hosted codec/media/queue/lint verification. Production receiver-feedback/resolution changes and full weak-network/file concurrency target gates remain open.",
-    "W28,W32-W40 and remainingW30/W31 are mandatory unfinished implementation/verification work, not external prerequisites. Release stays not_ready."
+    "W28,W32-W40 and remainingW30/W31 are mandatory unfinished implementation/verification work, not external prerequisites. Release stays not_ready.",
+    "W31 source4794698 run41217399922 passed33 codec,61 media,13 queue,1 strict report,1 five-way capability matrix and strictmedia/Core/daemon all-target lint. Actual fixed-source TLS/QUIC feedback and revoke passed; original Core native feedback runtime, exact negotiated format/resolution adaptation and shaped-network/file competition still require implementation and evidence. No wholeW31/AC53 qualification.",
+    "W27 source94bbe13 passed durable original SQLite/two-account signed approval/one-use quota/HTTP SDK; direct finite offline QUIC/native proxy carrier and resident CLI added subsequently; source854d3d1 run41218101083 pending exact original carrier/daemon validation. No wholeW27/remote-control claim."
   ],
   "external_prerequisites": [
     {
@@ -178,7 +179,10 @@
     "docs/network-rewrite/evidence/subnet-kernel-c70360a.json",
     "docs/network-rewrite/evidence/wireguard-kernel-794d3d1.json",
     "docs/network-rewrite/evidence/wireguard-browser-467e7bd.json",
-    "docs/adr/network/0051-terminal-packet-and-producer-bounds.md"
+    "docs/adr/network/0051-terminal-packet-and-producer-bounds.md",
+    "docs/adr/network/0052-authenticated-native-receiver-observation.md",
+    "docs/network-rewrite/evidence/media-producer-59aad54.json",
+    "docs/network-rewrite/evidence/media-receiver-4794698.json"
   ],
   "observed_actions": [
     {
@@ -551,6 +555,12 @@
       "source_revision": "59aad5405abe6231ddb9959d669188358d602a69",
       "status": "in_progress",
       "scope": "Hosted formatting patch only, no quality pass claimed."
+    },
+    {
+      "run_id": 41217399922,
+      "source_revision": "47946984f07eda74c9fa2aae5b136964878885e0",
+      "status": "success",
+      "scope": "Actual native receiver feedback on original TLS/QUIC, mature codec/queue/lease regressions, signed both-native-only negotiation and strict media/Core/daemon lint. No fullW31/target qualification."
     }
   ]
 }

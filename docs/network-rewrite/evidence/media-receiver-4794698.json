@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "source_revision": "47946984f07eda74c9fa2aae5b136964878885e0",
+  "task_ids": [
+    "W31"
+  ],
+  "whole_task_passed": false,
+  "release_qualification_claimed": false,
+  "build_provenance": {
+    "repository": "ZHanry/NestLink",
+    "workflow": ".github/workflows/media-qos.yml",
+    "run_id": 41217399922,
+    "run_attempt": 1,
+    "job_id": 124584711837,
+    "runner_environment": "github-hosted",
+    "runner_label": "ubuntu-24.04",
+    "cargo_lock_sha256": "48063b78bd20ca07f585a6100f7437057af227fde24c94fdad266f8ff457933e",
+    "artifact": {
+      "id": 13049095214,
+      "name": "media-qos-47946984f07eda74c9fa2aae5b136964878885e0-1",
+      "sha256": "12582878dbf812339ffebca6900bfdc268accb651127f7605e5f31d770d26076",
+      "download_digest_verified": true,
+      "files": [
+        {
+          "path": "clippy.log",
+          "sha256": "4c42451b07fb140995c5af4cf55f94dbf7d08f46fd9b415abb15c4903c580346"
+        },
+        {
+          "path": "media-tests.log",
+          "sha256": "2d8c61c5d5a755986c71f932bca0994fbdf1c9c826fd6680373c567dbb7ab6fe"
+        },
+        {
+          "path": "queue-tests.log",
+          "sha256": "8dd5394e882447118491219e9e873714b9a8c2285e0935bd6d04e433bc397a56"
+        },
+        {
+          "path": "receipt.json",
+          "sha256": "0e1682f6b2affc5aafafd0a8daeb73503eec8b18434e877ef0131407112da5f9"
+        },
+        {
+          "path": "report-contract-tests.log",
+          "sha256": "c3975b2847808137a605bc1f31a6283f7585f8bceac128a662f58e6bd30576ac"
+        },
+        {
+          "path": "report-negotiation-tests.log",
+          "sha256": "85f47300970591b6e41d3bb5afbf20868bb6a268ec18dc72a698ea130af20650"
+        }
+      ]
+    }
+  },
+  "execution_provenance": {
+    "kind": "github_hosted_lab",
+    "scope": "Actual VP8/Opus and original native media owners, authenticated native receiver reports through original TLS/QUIC, signed two-party native-only permit negotiation, original queues, lease revocation and strict media/Core/daemon lint. No shaped-network/file-concurrency, physical GPU or whole W31 qualification.",
+    "results": [
+      {
+        "package": "nestlink-media-codec",
+        "passed": 33,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "package": "nestlink-media-session",
+        "passed": 61,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "package": "nestlink-remote",
+        "selector": "queues::",
+        "passed": 13,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "package": "nestlink-protocol",
+        "selector": "native_qos::",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "package": "nestlink-storage",
+        "selector": "control/native_receiver_qos:: (five capability combinations including browser exclusion and renewal)",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0
+      }
+    ],
+    "strict_clippy": {
+      "packages": [
+        "nestlink-media-codec",
+        "nestlink-media-session",
+        "nestlink-app-core",
+        "nestlink-daemon"
+      ],
+      "all_targets": true,
+      "warnings_denied": true,
+      "passed": true
+    }
+  },
+  "retained_failures": [
+    {
+      "run_id": 41215646013,
+      "source_revision": "154d2ae24d986df48d91a0e19484c1ad9a1214c0",
+      "scope": "New receiver fixture used wrong Display fields and JSON telemetry exceeded original256-byte budget. Corrected to original InputLayout and already locked generated Protobuf; original channel budget unchanged."
+    }
+  ],
+  "remaining": [
+    "Exact-format bitrate/frame-rate/resolution switching through original negotiated owner and ACK",
+    "Actual20-to5Mbps with1percent loss and concurrent file transfer under original latency/quality gates",
+    "Original Core native host feedback runtime and physical Windows GPU/display target qualification"
+  ]
+}
