@@ -30,10 +30,15 @@ impl Lab {
             nestlink_platform_security::new_private_directory(&self.journal(index))?;
             kernel::command("ip",&["link","add","name",&self.bridge(index),"type","bridge"]).await?;
             let bridge=kernel::local_link(&self.bridge(index)).await?;owned.bridges.push((self.bridge(index),bridge["ifindex"].as_u64().ok_or_else(||io::Error::other("owned lab bridge index missing"))?));self.save(&owned)?;
+            // The isolated lab is IPv4-only. Disable autoconfiguration solely
+            // on this journaled lab link before UP so DAD cannot change the
+            // host's route snapshot after the setup boundary.
+            std::fs::write(format!("/proc/sys/net/ipv6/conf/{}/disable_ipv6",self.bridge(index)),b"1")?;
             kernel::command("ip",&["link","set","dev",&self.bridge(index),"alias",&format!("NestLink:subnet:lab:{}",self.id),"addrgenmode","none","up"]).await?;
             kernel::command("ip",&["netns","add",&self.target(index)]).await?;
             let target=std::fs::metadata(Path::new("/run/netns").join(self.target(index)))?;owned.targets.push((self.target(index),target.dev(),target.ino()));self.save(&owned)?;
             kernel::command("ip",&["link","add","name",&self.veth(index),"type","veth","peer","name","eth0","netns",&self.target(index)]).await?;
+            std::fs::write(format!("/proc/sys/net/ipv6/conf/{}/disable_ipv6",self.veth(index)),b"1")?;
             kernel::command("ip",&["link","set","dev",&self.veth(index),"alias",&format!("NestLink:subnet:lab:{}",self.id),"addrgenmode","none","master",&self.bridge(index),"up"]).await?;
             kernel::command("ip",&["-n",&self.target(index),"link","set","dev","lo","up"]).await?;
             kernel::command("ip",&["-n",&self.target(index),"link","set","dev","eth0","mtu","1280","up"]).await?;
@@ -90,4 +95,6 @@ impl Lab {
         rustix::process::kill_process(pid,rustix::process::Signal::CONT)?;Ok(())
     }
 }
-async fn host()->Result<serde_json::Value> {Ok(serde_json::json!({"routes":kernel::ip(&["-j","-4","route","show","table","all"]).await?,"routes6":kernel::ip(&["-j","-6","route","show","table","all"]).await?,"firewall":serde_json::from_slice::<serde_json::Value>(&kernel::command("nft",&["-j","list","ruleset"]).await?)?,"forwarding":std::fs::read_to_string("/proc/sys/net/ipv4/ip_forward")?,"rp_filter":std::fs::read_to_string("/proc/sys/net/ipv4/conf/all/rp_filter")?}))}
+// Stateless nft output retains every table, chain, rule and configuration but
+// excludes packet/byte counters changed by unrelated hosted-runner traffic.
+async fn host()->Result<serde_json::Value> {Ok(serde_json::json!({"routes":kernel::ip(&["-j","-4","route","show","table","all"]).await?,"routes6":kernel::ip(&["-j","-6","route","show","table","all"]).await?,"firewall":serde_json::from_slice::<serde_json::Value>(&kernel::command("nft",&["--stateless","-j","list","ruleset"]).await?)?,"forwarding":std::fs::read_to_string("/proc/sys/net/ipv4/ip_forward")?,"rp_filter":std::fs::read_to_string("/proc/sys/net/ipv4/conf/all/rp_filter")?}))}

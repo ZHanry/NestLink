@@ -109,6 +109,7 @@ impl PacketPipe {
     pub async fn shutdown(&self)->io::Result<()> {self.writer.lock().await.shutdown().await}
 }
 impl WholePacketDevice for PacketPipe {
-    fn recv<'a>(&'a self,packet:&'a mut[u8])->PacketIoFuture<'a> {Box::pin(async move {loop {let bytes=self.reader.lock().await.frame().await?;if let Some(value)=challenge(&bytes)? {self.challenge.store(value,Ordering::Release);continue;}if bytes.len()>packet.len(){return Err(io::Error::other("subnet provider cannot truncate a whole packet"));}packet[..bytes.len()].copy_from_slice(&bytes);return Ok(bytes.len());}})}
+    fn recv<'a>(&'a self,packet:&'a mut[u8])->PacketIoFuture<'a> {Box::pin(async move {loop {let bytes=self.reader.lock().await.frame().await?;if let Some(value)=challenge(&bytes)? {self.challenge.store(value,Ordering::Release);continue;}
+        if bytes.len()>packet.len(){return Err(io::Error::other("subnet provider cannot truncate a whole packet"));}packet[..bytes.len()].copy_from_slice(&bytes);return Ok(bytes.len());}})}
     fn send<'a>(&'a self,packet:&'a[u8])->PacketIoFuture<'a> {Box::pin(async move {frame(&mut *self.writer.lock().await,packet).await?;Ok(packet.len())})}
 }

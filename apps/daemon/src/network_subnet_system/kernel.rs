@@ -76,13 +76,16 @@ pub(super) async fn configure(plan:&Plan,journal_dir:&Path,tun:&tun_rs::AsyncDev
     command("ip",&["-4","addr","add",&lan,"dev",&plan.macvlan()]).await?;
     if let Some(ingress)=&plan.wireguard {ingress.configure(plan,server_secret.ok_or_else(||io::Error::other("WireGuard namespace requires the explicitly approved root private key"))?).await?;}
     command("ip",&["link","set","dev",&plan.tun(),"alias",&plan.marker(),"mtu","1280"]).await?;
+    // Linux rejects a route through a DOWN nexthop. The complete firewall is
+    // already installed; forwarding remains disabled until every route and
+    // source-validation setting has been installed in this owned namespace.
+    command("ip",&["link","set","dev",&plan.tun(),"up"]).await?;
     for remote in &checked.remote {let prefix=format!("{}/{}",remote.network,remote.prefix_len);command("ip",&["-4","route","add",&prefix,"dev",&plan.tun(),"metric","42420"]).await?;}
     // These procfs values belong solely to the new worker namespace.
     std::fs::write("/proc/sys/net/ipv4/conf/all/rp_filter",b"0")?;
     std::fs::write("/proc/sys/net/ipv4/conf/default/rp_filter",b"0")?;
     for interface in [plan.tun(),plan.macvlan()] {std::fs::write(format!("/proc/sys/net/ipv4/conf/{interface}/rp_filter"),b"0")?;}
     std::fs::write("/proc/sys/net/ipv4/ip_forward",b"1")?;
-    command("ip",&["link","set","dev",&plan.tun(),"up"]).await?;
     let _=tun;
     let tun=local_link(&plan.tun()).await?;
     let macvlan=local_link(&plan.macvlan()).await?;
