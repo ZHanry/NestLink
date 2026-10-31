@@ -68,6 +68,31 @@ def stop_group(process):
         subprocess.run(["sudo", "-n", "kill", "-KILL", "--", f"-{process.pid}"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         process.wait(timeout=5)
+    deadline=time.monotonic()+3
+    while group_alive(process.pid):
+        subprocess.run(["sudo","-n","kill","-KILL","--",f"-{process.pid}"],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        if time.monotonic()>deadline: raise TimeoutError("owned-process-group-remains")
+        time.sleep(.05)
+
+def group_alive(group):
+    for entry in Path("/proc").iterdir():
+        if not entry.name.isdigit(): continue
+        try:
+            fields=(entry/"stat").read_text().rsplit(")",1)[1].split()
+            if int(fields[2])==group and fields[0]!="Z": return True
+        except (FileNotFoundError,ProcessLookupError,PermissionError): pass
+    return False
+
+def kill_original_edge(process):
+    # Kill the actual independently owned edge role, including NodeControl,
+    # without running Rust Drop, edge shutdown or a fabricated usage seal.
+    run(["sudo","-n","kill","-KILL","--",f"-{process.pid}"])
+    process.wait(timeout=5)
+    deadline=time.monotonic()+5
+    while group_alive(process.pid):
+        if time.monotonic()>deadline: raise TimeoutError("killed-original-edge-process-group-remains")
+        time.sleep(.05)
+    if process.returncode==0: raise AssertionError("SIGKILL-must-not-be-a-cooperative-success")
 
 class Topology:
     def __init__(self):
@@ -129,7 +154,18 @@ class Topology:
         if self.bridge_created:
             try: run(["sudo", "-n", "ip", "link", "delete", self.bridge])
             except subprocess.CalledProcessError: failures.append(self.bridge)
-        if failures: raise RuntimeError("owned-topology-cleanup-failed")
+        # Namespace deletion can concurrently remove its root veth peer after
+        # the preceding presence read. A failed deletion is not completion;
+        # verify actual absence of every exact owned name before acknowledging.
+        deadline=time.monotonic()+3
+        while True:
+            links=json.loads(run(["sudo","-n","ip","-json","link","show"]))
+            namespaces=json.loads(run(["sudo","-n","ip","-json","netns","list"]))
+            remaining_links={entry["ifname"] for entry in links}.intersection(self.links+[self.bridge])
+            remaining_namespaces={entry["name"] for entry in namespaces}.intersection(self.names.values())
+            if not remaining_links and not remaining_namespaces: return
+            if time.monotonic()>deadline: raise RuntimeError("owned-topology-absence-readback-failed")
+            time.sleep(.05)
 
 def certificate(directory):
     run(["openssl","req","-x509","-newkey","rsa:2048","-sha256","-nodes","-days","1","-subj","/CN=NestLink W26 isolated root","-addext","basicConstraints=critical,CA:TRUE,pathlen:0","-addext","keyUsage=critical,keyCertSign,cRLSign","-keyout",directory/"root.key","-out",directory/"root.pem"])
@@ -205,15 +241,16 @@ def hosted(args):
     if sha(args.caddy)!=CADDY_SHA: raise ValueError("reviewed Caddy 2.11.7 binary required")
     private=Path(tempfile.mkdtemp(prefix="nestlink-w26-private-",dir=temp));private.chmod(0o700)
     topology=Topology();processes=[];streams=[];dns=None;hosts_line=None
-    receipt={"schema_version":1,"passed":False,"evidence_level":"L2_hosted_actual_ipvs_keepalived_dual_edge","scope":"Isolated Linux routing, DNS and operator CA; not public Internet/ACME, director HA, physical deployment or old-session continuity","build_provenance":{"source_revision":env["GITHUB_SHA"],"workflow_revision":env.get("GITHUB_WORKFLOW_SHA"),"run_id":env["GITHUB_RUN_ID"],"run_attempt":env["GITHUB_RUN_ATTEMPT"],"runner_environment":env["RUNNER_ENVIRONMENT"],"cargo_lock_sha256":sha(root/"Cargo.lock")},"execution_provenance":{"runner_environment":env["RUNNER_ENVIRONMENT"],"protocols":{},"started_unix_ms":int(time.time()*1000)},"tools":{"caddy_sha256":CADDY_SHA,"runner_sha256":sha(__file__)},"cleanup":{},"error_code":None}
+    receipt={"schema_version":1,"passed":False,"evidence_level":"L2_hosted_actual_ipvs_keepalived_dual_edge","scope":"Isolated Linux routing, DNS and operator CA; not public Internet/ACME, director HA, physical deployment or old-session continuity","build_provenance":{"source_revision":env["GITHUB_SHA"],"workflow_revision":env.get("GITHUB_WORKFLOW_SHA"),"run_id":env["GITHUB_RUN_ID"],"run_attempt":env["GITHUB_RUN_ATTEMPT"],"runner_environment":env["RUNNER_ENVIRONMENT"],"cargo_lock_sha256":sha(root/"Cargo.lock")},"execution_provenance":{"runner_environment":env["RUNNER_ENVIRONMENT"],"protocols":{},"crash_protocols":{},"started_unix_ms":int(time.time()*1000)},"tools":{"caddy_sha256":CADDY_SHA,"runner_sha256":sha(__file__)},"cleanup":{},"error_code":None}
     active="hosted-source-build"
     username=pwd.getpwuid(os.geteuid()).pw_name
     def spawn(command, path, extra_env=None):
         stream=open(path,"wb");streams.append(stream)
-        process=subprocess.Popen([str(part) for part in command],stdout=stream,stderr=subprocess.STDOUT,env=extra_env,start_new_session=True);processes.append(process);return process
+        process=subprocess.Popen([str(part) for part in command],stdin=subprocess.DEVNULL,stdout=stream,stderr=subprocess.STDOUT,env=extra_env,start_new_session=True);processes.append(process);return process
     def ns_user(name, command): return topology.ns(name,"runuser","-u",username,"--",*command)
     def role(binary,directory,name,index=None,instance="initial"):
-        values={"GITHUB_ACTIONS":"true","RUNNER_ENVIRONMENT":"github-hosted","RUST_BACKTRACE":"0","NESTLINK_GROUP_L2":"1","NESTLINK_GROUP_L2_ROLE":name,"NESTLINK_GROUP_L2_DIRECTORY":str(directory),"NESTLINK_GROUP_L2_PROTOCOL":"http" if directory.name=="dns-stale" else directory.name}
+        protocol="http" if directory.name=="dns-stale" else directory.name.removeprefix("crash-")
+        values={"GITHUB_ACTIONS":"true","RUNNER_ENVIRONMENT":"github-hosted","RUST_BACKTRACE":"0","NESTLINK_GROUP_L2":"1","NESTLINK_GROUP_L2_ROLE":name,"NESTLINK_GROUP_L2_DIRECTORY":str(directory),"NESTLINK_GROUP_L2_PROTOCOL":protocol}
         if index is not None: values.update(NESTLINK_GROUP_L2_EDGE=str(index),NESTLINK_GROUP_L2_INSTANCE=instance)
         command=[str(binary),"--ignored","--exact",ROLE,"--nocapture"]
         if index is None:
@@ -247,8 +284,9 @@ def hosted(args):
         active="isolated-kernel-topology";topology.setup()
         hosts_line="10.244.1.254 doh.nestlink.test # "+topology.prefix+"\n";run(["sudo","-n","tee","-a","/etc/hosts"],input=hosts_line.encode())
         receipt["tools"]["keepalived_version"]=subprocess.run(["keepalived","--version"],check=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT).stdout.decode(errors="replace")[:2048]
-        for phase in ("http","https","tcp","udp","dns-stale"):
-            protocol="http" if phase=="dns-stale" else phase
+        for phase in ("http","https","tcp","udp","crash-http","crash-https","crash-tcp","crash-udp","dns-stale"):
+            crash=phase.startswith("crash-")
+            protocol="http" if phase=="dns-stale" else phase.removeprefix("crash-")
             active=phase+"-original-owner-setup";directory=private/phase;directory.mkdir(mode=0o700);certificate(directory)
             coordinator=role(binary,directory,"coordinator");fixture=wait_json(directory/"fixture.json",coordinator,25)
             config=(directory/"frontdoor"/"keepalived.conf").read_text()
@@ -269,9 +307,9 @@ def hosted(args):
                     time.sleep(.05)
                 edges.append(role(binary,directory,"edge",index));wait_json(directory/name/"initial"/"ready.json",edges[-1],15)
             sequence=0
-            def command(action,seconds=25):
+            def command(action,seconds=25,**payload):
                 nonlocal sequence
-                sequence+=1;private_json(directory/f"command-{sequence}.json",{"action":action});return wait_json(directory/f"ack-{sequence}.json",coordinator,seconds)["result"]
+                sequence+=1;private_json(directory/f"command-{sequence}.json",{"action":action,**payload});return wait_json(directory/f"ack-{sequence}.json",coordinator,seconds)["result"]
             if phase=="dns-stale":
                 active="actual-caddy-stale-group-dns-proof"
                 rejected=command("publish_reject",30)
@@ -302,7 +340,7 @@ def hosted(args):
                 snapshot,counts=stats()
                 if success>=8 and all(counts.get(ip,0)>0 for ip in BACKENDS): break
                 if time.monotonic()>deadline: raise TimeoutError("actual-fixed-entry-did-not-use-both-edges")
-            (output/(protocol+"-ipvs-before.txt")).write_text(snapshot)
+            (output/(phase+"-ipvs-before.txt")).write_text(snapshot)
             cases={"original_sdk_dual_member_ready":True,"actual_ipvs_both_members_have_connections":True,"wrong_group_revision_health_refused":True,"initial_successful_new_requests":success}
             active=protocol+"-visitor-source-acl";before=command("observe")["backend_requests"]
             assert not request(directory,protocol,source="10.244.2.3")["passed"]
@@ -316,36 +354,55 @@ def hosted(args):
             active=protocol+"-active-edge-owner-failure-caddy-stays-up"
             _,before_counts=stats();assert request(directory,protocol)["passed"];_,after_counts=stats()
             selected=next(index for index,ip in enumerate(BACKENDS) if after_counts.get(ip,0)>before_counts.get(ip,0));healthy=1-selected
-            marker=directory/("edge"+str(selected+1))/"initial";started=time.monotonic();private_json(marker/"stop.json",{})
+            marker=directory/("edge"+str(selected+1))/"initial";started=time.monotonic()
+            if crash:
+                kill_original_edge(edges[selected]);assert not (marker/"stopped.json").exists()
+                cases.update(failure_mode="SIGKILL",original_edge_process_group_dead=True,original_edge_exit_code=edges[selected].returncode)
+            else:
+                private_json(marker/"stop.json",{});cases["failure_mode"]="cooperative_original_owner_stop"
             deadline=started+30;recovered=None
             while time.monotonic()<deadline:
                 result=request(directory,protocol)
                 if result["passed"] and health(selected,health_path)!="200" and BACKENDS[selected] not in stats()[1]: recovered=time.monotonic()-started;break
                 time.sleep(.1)
             if recovered is None: raise TimeoutError("new-connection-recovery-exceeded-30-seconds")
-            wait_json(marker/"stopped.json",edges[selected],15)
+            if not crash: wait_json(marker/"stopped.json",edges[selected],15)
             assert caddies[selected].poll() is None and caddies[healthy].poll() is None
-            assert admin(selected,fixture["edges"][selected]["node_id"],"https" if protocol=="https" else "http")==[]
+            if not crash: assert admin(selected,fixture["edges"][selected]["node_id"],"https" if protocol=="https" else "http")==[]
+            elif protocol in ("http","https"):
+                assert admin(selected,fixture["edges"][selected]["node_id"],protocol)!=[]
+                cases["crashed_caddy_route_retained_until_original_reconcile"]=True
             # Continue real new visitor tuples after the failure. A still-open
             # Caddy TCP listener must never qualify its stopped original owner.
             for _ in range(6): assert request(directory,protocol)["passed"]
-            cases.update(failed_node_id=fixture["edges"][selected]["node_id"],new_connection_recovery_seconds=recovered,caddy_process_remained_running=True,failed_edge_route_removed=True,healthy_sibling_new_requests=True)
+            cases.update(failed_node_id=fixture["edges"][selected]["node_id"],new_connection_recovery_seconds=recovered,caddy_process_remained_running=True,failed_edge_route_removed_before_restore=not crash,healthy_sibling_new_requests=True)
+            crash_observation=command("observe_crash",member_index=selected) if crash else None
             active=protocol+"-all-member-revocation-and-old-edge-restore";command("revoke")
             for index in range(2):
+                if crash and index==selected: continue
                 for scheme in ("http","https"): assert admin(index,fixture["edges"][index]["node_id"],scheme)==[]
             assert not request(directory,protocol)["passed"]
-            private_json(marker/"finish.json",{});edges[selected].wait(timeout=12);assert edges[selected].returncode==0
+            if not crash:
+                private_json(marker/"finish.json",{});edges[selected].wait(timeout=12);assert edges[selected].returncode==0
             restored=role(binary,directory,"edge",selected,"restored");restored_marker=directory/("edge"+str(selected+1))/"restored";wait_json(restored_marker/"ready.json",restored,15)
-            time.sleep(1)
+            deadline=time.monotonic()+10
+            while health(selected,health_path)!="503" or any(admin(selected,fixture["edges"][selected]["node_id"],scheme)!=[] for scheme in ("http","https")):
+                if time.monotonic()>deadline: raise TimeoutError("restored-original-controller-did-not-reconcile-old-route")
+                time.sleep(.05)
             assert health(selected,health_path)!="200" and not request(directory,protocol)["passed"]
             for scheme in ("http","https"): assert admin(selected,fixture["edges"][selected]["node_id"],scheme)==[]
             private_json(restored_marker/"stop.json",{});wait_json(restored_marker/"stopped.json",restored,15);private_json(restored_marker/"finish.json",{});restored.wait(timeout=12);assert restored.returncode==0
             other_marker=directory/("edge"+str(healthy+1))/"initial";private_json(other_marker/"stop.json",{});wait_json(other_marker/"stopped.json",edges[healthy],15)
             physical=command("finish",20);coordinator.wait(timeout=12);assert coordinator.returncode==0
             private_json(other_marker/"finish.json",{});edges[healthy].wait(timeout=12);assert edges[healthy].returncode==0
-            cases.update(all_member_route_delete_ack_readback=True,revocation_blocks_fixed_entry=True,new_runtime_cannot_revive_old_group=True,original_four_scope_and_member_quota_sealed=True,original_usage_store_closed=True)
-            receipt["execution_provenance"]["protocols"][protocol]={"cases":cases,"physical_receipt":physical}
-            (output/(protocol+"-ipvs-after.txt")).write_text(stats()[0])
+            cases.update(all_member_route_delete_ack_readback=True,revocation_blocks_fixed_entry=True,new_runtime_cannot_revive_old_group=True,original_four_scope_and_member_quota_sealed=not crash,original_usage_store_closed=True)
+            if crash:
+                assert physical["failed_runtime_unsealed_promise_retained"] and physical["healthy_original_grant_sealed"]
+                assert physical["outstanding_bytes"]==crash_observation["original_failed_node_usage"]["outstanding_bytes"]>0
+                cases.update(unknown_failed_slice_retained_without_new_grant=True,healthy_original_slice_sealed=True)
+            else: assert physical["outstanding_bytes"]==0
+            receipt["execution_provenance"]["crash_protocols" if crash else "protocols"][protocol]={"cases":cases,"crash_observation":crash_observation,"physical_receipt":physical}
+            (output/(phase+"-ipvs-after.txt")).write_text(stats()[0])
             dns.close();dns=None;stop_group(keepalived)
             for process in caddies+proxy: stop_group(process)
             # This entire namespace was created by this fixture; the mature

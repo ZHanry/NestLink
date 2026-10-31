@@ -130,7 +130,17 @@ director、edge1 和 edge2 namespaces，构建同一 SHA 的原 SDK 验收角色
 四协议请求、允许及拒绝来源、精确旧健康 revision、HTTPS 错误根/名称、停止
 原 edge owner 而 Caddy 仍存活、新连接恢复时间、全入口撤销、原 identity/账本
 新 runtime 的旧组拒绝、双 Caddy 路由删除回读及原配额物理结算。另有真实 HTTPS
-DoH 的旧组 TXT revision 反例。该合作停止案例不冒充 SIGKILL 案例。
+DoH 的旧组 TXT revision 反例。
+
+同一个候选 driver 另为四协议各建立一套独立 crash fixture，在 IPVS 实际分配到
+活动 member 后对该 edge 原进程组执行 SIGKILL，并确认原进程组确实消失、没有
+合作停止 receipt，且 Caddy 继续运行。健康 member 继续使用原 slice；测量
+director 删除失效 destination 后的新请求恢复时间。被杀进程遗留的 Caddy 路由
+由撤销后的原 identity/原账本新 runtime 通过原 Controller reconciliation 删除并
+回读，不通过测试夹具伪造清理。最终仅健康 grant 可以封存；失败 member 的未知
+余额必须原样保留，account/device/resource 三类未结值相等且只属于失败 node。
+新 runtime 不得补报旧 runtime seal、恢复旧组或重领预算。合作停止与 SIGKILL
+分别保存案例和 receipt，源码存在不代表任一案例已经运行通过。
 
 产物保存 source/workflow/run/attempt、Cargo.lock 和可执行文件摘要、工具来源、
 实际请求/失败/回收 receipt，以及有界脱敏日志。TLS 私钥、节点身份、原目标选择、
