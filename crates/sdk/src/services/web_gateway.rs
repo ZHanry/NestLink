@@ -26,9 +26,9 @@ use tokio::{
 };
 use url::Url;
 mod headers;
-mod tls;
 #[cfg(test)]
 mod probe_tests;
+mod tls;
 
 const MAX_CONNECTIONS: usize = 32;
 const SETUP: Duration = Duration::from_secs(3);
@@ -88,17 +88,28 @@ impl PrivateWebGateway {
     pub fn renew_launch_url(&mut self) -> Result<String, SdkError> {
         let now = Instant::now();
         let mut admission = self.context.admission.lock().map_err(|_| SdkError::Trust)?;
-        if *self.stop.borrow() || now >= self.context.deadline || admission.ticket_used || admission.session.is_some() {
+        if *self.stop.borrow()
+            || now >= self.context.deadline
+            || admission.ticket_used
+            || admission.session.is_some()
+        {
             return Err(SdkError::Trust);
         }
         let launch = token();
-        admission.ticket = Some((token_hash("private-web-launch", launch.expose()), self.context.deadline.min(now + TICKET_LIFETIME)));
+        admission.ticket = Some((
+            token_hash("private-web-launch", launch.expose()),
+            self.context.deadline.min(now + TICKET_LIFETIME),
+        ));
         self.launch = launch;
         Ok(self.launch_url())
     }
     pub fn public_route_probe(&self) -> Result<PrivateWebRouteProbe, SdkError> {
         Ok(PrivateWebRouteProbe {
-            client: reqwest::Client::builder().https_only(true).redirect(reqwest::redirect::Policy::none()).timeout(SETUP).build()?,
+            client: reqwest::Client::builder()
+                .https_only(true)
+                .redirect(reqwest::redirect::Policy::none())
+                .timeout(SETUP)
+                .build()?,
             url: format!("{}/.nestlink/ready", self.origin),
             owner_id: self.owner_id().to_owned(),
         })
@@ -172,12 +183,16 @@ pub struct PrivateWebRouteProbe {
 impl PrivateWebRouteProbe {
     pub async fn check(&self) -> Result<bool, SdkError> {
         let mut response = self.client.get(&self.url).send().await?;
-        if response.status() != reqwest::StatusCode::OK || response.content_length().is_some_and(|length| length > 64) {
+        if response.status() != reqwest::StatusCode::OK
+            || response.content_length().is_some_and(|length| length > 64)
+        {
             return Ok(false);
         }
         let mut bytes = Vec::with_capacity(64);
         while let Some(chunk) = response.chunk().await? {
-            if chunk.len() > 64 - bytes.len() { return Ok(false); }
+            if chunk.len() > 64 - bytes.len() {
+                return Ok(false);
+            }
             bytes.extend_from_slice(&chunk);
         }
         Ok(bytes == self.owner_id.as_bytes())
@@ -309,7 +324,10 @@ fn response(status: StatusCode) -> Response<Body> {
     let mut response = Response::new(Body::empty());
     *response.status_mut() = status;
     headers::browser_response(response.headers_mut());
-    response.headers_mut().insert(hyper::header::CONNECTION, hyper::header::HeaderValue::from_static("close"));
+    response.headers_mut().insert(
+        hyper::header::CONNECTION,
+        hyper::header::HeaderValue::from_static("close"),
+    );
     response
 }
 fn finish(

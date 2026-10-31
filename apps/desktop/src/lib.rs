@@ -2197,7 +2197,8 @@ impl eframe::App for DesktopApp {
         let snapshot = self.bridge.snapshot();
         self.layout_diagnostics
             .begin_frame(snapshot.revision, self.remote.browser_host_details);
-        self.network_diagnostics.observe(&snapshot, self.connected, &self.directory);
+        self.network_diagnostics
+            .observe(&snapshot, self.connected, &self.directory);
         if self.generation != snapshot.generation {
             self.clear_private_view(&context);
             self.generation = snapshot.generation;

@@ -6,7 +6,7 @@ use nestlink_sdk::{
     services::{
         LocalProxyServiceChoice,
         web_gateway::{PrivateWebGatewayConfig, PrivateWebGatewayWait},
-        web_launch::{PrivateWebLaunchRequest, PRIVATE_WEB_REQUEST_BYTES},
+        web_launch::{PRIVATE_WEB_REQUEST_BYTES, PrivateWebLaunchRequest},
     },
 };
 use std::{
@@ -61,19 +61,31 @@ pub(crate) async fn run(args: GatewayArgs) -> Result {
     if !args.bootstrap.is_absolute()
         || !args.launch_output.is_absolute()
         || args.bootstrap == args.launch_output
-        || args.request.as_ref().is_some_and(|path| !path.is_absolute())
+        || args
+            .request
+            .as_ref()
+            .is_some_and(|path| !path.is_absolute())
         || !args.listen.ip().is_loopback()
     {
-        return Err(io::Error::other("choose a loopback upstream and separate new absolute private bootstrap/launch paths").into());
+        return Err(io::Error::other(
+            "choose a loopback upstream and separate new absolute private bootstrap/launch paths",
+        )
+        .into());
     }
     let parent = args
         .bootstrap
         .parent()
         .ok_or_else(|| io::Error::other("bootstrap parent missing"))?;
     nestlink_platform_security::check_private_directory(parent)?;
-    nestlink_platform_security::check_private_directory(args.launch_output.parent().ok_or_else(|| io::Error::other("launch parent missing"))?)?;
+    nestlink_platform_security::check_private_directory(
+        args.launch_output
+            .parent()
+            .ok_or_else(|| io::Error::other("launch parent missing"))?,
+    )?;
     if args.bootstrap.try_exists()? || args.launch_output.try_exists()? {
-        return Err(io::Error::other("bootstrap and launch output must both be fresh paths").into());
+        return Err(
+            io::Error::other("bootstrap and launch output must both be fresh paths").into(),
+        );
     }
     let installation =
         nestlink_local_ipc::maintenance::InstallationStartup::acquire(&std::env::current_exe()?)?;
@@ -92,7 +104,13 @@ pub(crate) async fn run(args: GatewayArgs) -> Result {
     let original_login = session_snapshot(&directory)?;
     let consumer = Arc::new(crate::identity(&directory)?);
     let selection = selection(&args, &sdk, &consumer.device_id).await?;
-    let entry = selected_service(&sdk, &consumer.device_id, &selection.service_id, &selection.space_id).await?;
+    let entry = selected_service(
+        &sdk,
+        &consumer.device_id,
+        &selection.service_id,
+        &selection.space_id,
+    )
+    .await?;
     if !selection.checks_entry(&consumer.device_id, &entry) {
         return Err(io::Error::other("private Web selection changed, is offline, or exceeds current authority; refresh the directory and choose again").into());
     }
@@ -188,7 +206,9 @@ pub(crate) async fn run(args: GatewayArgs) -> Result {
     };
     let readiness = async {
         loop {
-            if probe.check().await.is_ok_and(|ready| ready) { return; }
+            if probe.check().await.is_ok_and(|ready| ready) {
+                return;
+            }
             tokio::time::sleep(Duration::from_secs(1)).await;
         }
     };
@@ -226,7 +246,9 @@ pub(crate) async fn run(args: GatewayArgs) -> Result {
             .into()),
             PrivateWebGatewayWait::Stopped(report) => {
                 remove_bootstrap(&args.bootstrap, &bytes)?;
-                if let Some(bytes) = launch_bytes { remove_bootstrap(&args.launch_output, &bytes)?; }
+                if let Some(bytes) = launch_bytes {
+                    remove_bootstrap(&args.launch_output, &bytes)?;
+                }
                 println!("Private Web gateway stopped: {report:?}");
                 operation?;
                 return Ok(());
@@ -234,26 +256,66 @@ pub(crate) async fn run(args: GatewayArgs) -> Result {
         }
     }
 }
-fn publish_launch(gateway: &mut nestlink_sdk::services::web_gateway::PrivateWebGateway, selection: &PrivateWebLaunchRequest, path: &Path) -> Result<Zeroizing<Vec<u8>>> {
+fn publish_launch(
+    gateway: &mut nestlink_sdk::services::web_gateway::PrivateWebGateway,
+    selection: &PrivateWebLaunchRequest,
+    path: &Path,
+) -> Result<Zeroizing<Vec<u8>>> {
     let launch_url = gateway.renew_launch_url()?;
-    let bytes = Zeroizing::new(serde_json::to_vec_pretty(&serde_json::json!({"schema_version":1,"service_id":selection.service_id,"space_id":selection.space_id,"gateway_owner_id":gateway.owner_id(),"origin":gateway.origin(),"launch_url":launch_url,"launch_ticket_lifetime_seconds":60}))?);
+    let bytes = Zeroizing::new(serde_json::to_vec_pretty(
+        &serde_json::json!({"schema_version":1,"service_id":selection.service_id,"space_id":selection.space_id,"gateway_owner_id":gateway.owner_id(),"origin":gateway.origin(),"launch_url":launch_url,"launch_ticket_lifetime_seconds":60}),
+    )?);
     nestlink_platform_security::create_private(path, &bytes)?;
     let actual = nestlink_platform_security::read_private(path, 65536)?;
-    if *actual != *bytes { return Err(io::Error::other("private launch file readback differs").into()); }
+    if *actual != *bytes {
+        return Err(io::Error::other("private launch file readback differs").into());
+    }
     Ok(bytes)
 }
-async fn selection(args: &GatewayArgs, sdk: &Sdk, installation: &str) -> Result<PrivateWebLaunchRequest> {
+async fn selection(
+    args: &GatewayArgs,
+    sdk: &Sdk,
+    installation: &str,
+) -> Result<PrivateWebLaunchRequest> {
     let selection = if let Some(path) = &args.request {
-        let bytes = nestlink_platform_security::read_private(path, PRIVATE_WEB_REQUEST_BYTES as u64)?;
+        let bytes =
+            nestlink_platform_security::read_private(path, PRIVATE_WEB_REQUEST_BYTES as u64)?;
         PrivateWebLaunchRequest::from_json(&bytes)?
     } else {
-        let service = args.service.as_deref().ok_or_else(|| io::Error::other("service missing"))?;
-        let space = args.space.as_deref().ok_or_else(|| io::Error::other("space missing"))?;
+        let service = args
+            .service
+            .as_deref()
+            .ok_or_else(|| io::Error::other("service missing"))?;
+        let space = args
+            .space
+            .as_deref()
+            .ok_or_else(|| io::Error::other("space missing"))?;
         let entry = selected_service(sdk, installation, service, space).await?;
-        PrivateWebLaunchRequest { schema_version: 1, management_origin: sdk.management_origin().into(), gateway_installation_id: installation.into(), service_id: service.into(), space_id: space.into(), expected_service_revision: entry.service.revision, expected_exposure_revision: entry.exposure.revision, target_sha256: entry.exposure.target_sha256, origin: args.origin.clone().ok_or_else(|| io::Error::other("origin missing"))?, maximum_bytes: args.maximum_bytes.ok_or_else(|| io::Error::other("maximum bytes missing"))?, lifetime_seconds: args.lifetime_seconds.unwrap_or(300) }
+        PrivateWebLaunchRequest {
+            schema_version: 1,
+            management_origin: sdk.management_origin().into(),
+            gateway_installation_id: installation.into(),
+            service_id: service.into(),
+            space_id: space.into(),
+            expected_service_revision: entry.service.revision,
+            expected_exposure_revision: entry.exposure.revision,
+            target_sha256: entry.exposure.target_sha256,
+            origin: args
+                .origin
+                .clone()
+                .ok_or_else(|| io::Error::other("origin missing"))?,
+            maximum_bytes: args
+                .maximum_bytes
+                .ok_or_else(|| io::Error::other("maximum bytes missing"))?,
+            lifetime_seconds: args.lifetime_seconds.unwrap_or(300),
+        }
     };
     selection.validate(sdk.management_origin())?;
-    if selection.gateway_installation_id != installation { return Err(io::Error::other("launch request belongs to another gateway installation").into()); }
+    if selection.gateway_installation_id != installation {
+        return Err(
+            io::Error::other("launch request belongs to another gateway installation").into(),
+        );
+    }
     Ok(selection)
 }
 fn remove_bootstrap(path: &Path, original: &[u8]) -> io::Result<()> {

@@ -5,9 +5,15 @@ use leptos::{prelude::*, task::spawn_local};
 use nestlink_protocol::{api::ServiceIngress, services::private::PrivateServicePage};
 use nestlink_sdk::{SdkError, services::web_launch::PrivateWebLaunchRequest};
 use nestlink_web::i18n::{sdk_error, text as t};
-use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
 
-enum Read { Installations, Directory(Option<String>) }
+enum Read {
+    Installations,
+    Directory(Option<String>),
+}
 
 #[component]
 pub(super) fn PrivateWebPanel(
@@ -36,63 +42,156 @@ pub(super) fn PrivateWebPanel(
     on_cleanup(move || cleanup.store(false, Ordering::Release));
     Effect::new(move |_| {
         let _ = session_revision.get();
-        installations.set(Vec::new()); installation.set(String::new());
+        installations.set(Vec::new());
+        installation.set(String::new());
     });
     Effect::new(move |_| {
         let _ = (session_revision.get(), installation.get(), active.get());
         generation.update(|value| *value = value.wrapping_add(1));
-        page.set(None); service.set(String::new()); management.set(String::new());
-        busy.set(false); problem.set(String::new()); notice.set(String::new());
+        page.set(None);
+        service.set(String::new());
+        management.set(String::new());
+        busy.set(false);
+        problem.set(String::new());
+        notice.set(String::new());
     });
     Effect::new(move |_| {
-        let _ = (session_revision.get(), installation.get(), service.get(), origin.get(), maximum.get(), lifetime.get(), active.get());
-        prepared.set(None); launch_input.set(String::new()); launch.set(None);
+        let _ = (
+            session_revision.get(),
+            installation.get(),
+            service.get(),
+            origin.get(),
+            maximum.get(),
+            lifetime.get(),
+            active.get(),
+        );
+        prepared.set(None);
+        launch_input.set(String::new());
+        launch.set(None);
     });
     let read = Callback::new(move |command: Read| {
-        if busy.get_untracked() || !active.get_untracked() { return; }
-        let Some(sdk) = api.get_value() else { return; };
+        if busy.get_untracked() || !active.get_untracked() {
+            return;
+        }
+        let Some(sdk) = api.get_value() else {
+            return;
+        };
         let selected = installation.get_untracked();
         if !matches!(command, Read::Installations) && !nestlink_protocol::valid_id(&selected) {
-            problem.set(t("请选择实际运行网关的原生设备。", "Choose the native installation that will run the gateway.").into()); return;
+            problem.set(
+                t(
+                    "请选择实际运行网关的原生设备。",
+                    "Choose the native installation that will run the gateway.",
+                )
+                .into(),
+            );
+            return;
         }
-        let revision = session_revision.get_untracked(); let epoch = generation.get_untracked();
-        let alive = alive.clone(); busy.set(true); problem.set(String::new());
-        prepared.set(None); launch.set(None); launch_input.set(String::new());
+        let revision = session_revision.get_untracked();
+        let epoch = generation.get_untracked();
+        let alive = alive.clone();
+        busy.set(true);
+        problem.set(String::new());
+        prepared.set(None);
+        launch.set(None);
+        launch_input.set(String::new());
         spawn_local(async move {
-            let current = || alive.load(Ordering::Acquire) && active.try_get_untracked() == Some(true)
-                && session_revision.try_get_untracked() == Some(revision) && generation.try_get_untracked() == Some(epoch);
+            let current = || {
+                alive.load(Ordering::Acquire)
+                    && active.try_get_untracked() == Some(true)
+                    && session_revision.try_get_untracked() == Some(revision)
+                    && generation.try_get_untracked() == Some(epoch)
+            };
             let result = async {
                 let client = sdk.lock().await;
-                if !current() { return Err(SdkError::Invalid); }
+                if !current() {
+                    return Err(SdkError::Invalid);
+                }
                 match command {
                     Read::Installations => {
-                        let devices = client.devices().await?.into_iter().filter(|device| !device.revoked).map(|device| (device.device.id, device.device.name)).collect();
+                        let devices = client
+                            .devices()
+                            .await?
+                            .into_iter()
+                            .filter(|device| !device.revoked)
+                            .map(|device| (device.device.id, device.device.name))
+                            .collect();
                         Ok((Some(devices), None, client.management_origin().to_owned()))
                     }
-                    Read::Directory(after) => Ok((None, Some(client.private_services(&selected, after.as_deref(), 50).await?), client.management_origin().to_owned())),
+                    Read::Directory(after) => Ok((
+                        None,
+                        Some(
+                            client
+                                .private_services(&selected, after.as_deref(), 50)
+                                .await?,
+                        ),
+                        client.management_origin().to_owned(),
+                    )),
                 }
-            }.await;
-            if !current() { return; }
+            }
+            .await;
+            if !current() {
+                return;
+            }
             busy.set(false);
             match result {
                 Ok((devices, directory, manager)) => {
                     management.set(manager);
-                    if let Some(devices) = devices { installations.set(devices); }
-                    if let Some(directory) = directory { page.set(Some(directory)); service.set(String::new()); }
+                    if let Some(devices) = devices {
+                        installations.set(devices);
+                    }
+                    if let Some(directory) = directory {
+                        page.set(Some(directory));
+                        service.set(String::new());
+                    }
                 }
-                Err(error) if matches!(&error, SdkError::SignIn) || matches!(&error, SdkError::Api(status, _) if status.as_u16() == 401) => auth_failure.run(sdk),
-                Err(error) => { page.set(None); problem.set(sdk_error(&error).to_string()); }
+                Err(error)
+                    if matches!(&error, SdkError::SignIn)
+                        || matches!(&error, SdkError::Api(status, _) if status.as_u16() == 401) =>
+                {
+                    auth_failure.run(sdk)
+                }
+                Err(error) => {
+                    page.set(None);
+                    problem.set(sdk_error(&error).to_string());
+                }
             }
         });
     });
     let export = move |_| {
-        if !active.get_untracked() || busy.get_untracked() { return; }
+        if !active.get_untracked() || busy.get_untracked() {
+            return;
+        }
         let result = (|| -> Result<PrivateWebLaunchRequest, ()> {
-            let entry = page.get_untracked().and_then(|page| page.entries.into_iter().find(|entry| entry.service.id == service.get_untracked())).ok_or(())?;
-            let request = PrivateWebLaunchRequest { schema_version: 1, management_origin: management.get_untracked(), gateway_installation_id: installation.get_untracked(), service_id: entry.service.id.clone(), space_id: entry.exposure.space_id.clone(), expected_service_revision: entry.service.revision, expected_exposure_revision: entry.exposure.revision, target_sha256: entry.exposure.target_sha256, origin: origin.get_untracked(), maximum_bytes: maximum.get_untracked().parse().map_err(|_| ())?, lifetime_seconds: lifetime.get_untracked().parse().map_err(|_| ())? };
-            request.validate(&management.get_untracked()).map_err(|_| ())?;
-            if !request.checks_entry(&installation.get_untracked(), &entry) { return Err(()); }
-            save_request(&request)?; Ok(request)
+            let entry = page
+                .get_untracked()
+                .and_then(|page| {
+                    page.entries
+                        .into_iter()
+                        .find(|entry| entry.service.id == service.get_untracked())
+                })
+                .ok_or(())?;
+            let request = PrivateWebLaunchRequest {
+                schema_version: 1,
+                management_origin: management.get_untracked(),
+                gateway_installation_id: installation.get_untracked(),
+                service_id: entry.service.id.clone(),
+                space_id: entry.exposure.space_id.clone(),
+                expected_service_revision: entry.service.revision,
+                expected_exposure_revision: entry.exposure.revision,
+                target_sha256: entry.exposure.target_sha256,
+                origin: origin.get_untracked(),
+                maximum_bytes: maximum.get_untracked().parse().map_err(|_| ())?,
+                lifetime_seconds: lifetime.get_untracked().parse().map_err(|_| ())?,
+            };
+            request
+                .validate(&management.get_untracked())
+                .map_err(|_| ())?;
+            if !request.checks_entry(&installation.get_untracked(), &entry) {
+                return Err(());
+            }
+            save_request(&request)?;
+            Ok(request)
         })();
         match result {
             Ok(request) => { prepared.set(Some(request)); problem.set(String::new()); notice.set(t("启动请求已下载。在选定原生网关设备上运行下方命令；配置文件不会创建安装、空间成员或访问授权。", "Launch request downloaded. Run the command below on the selected native gateway. The file creates no installation, space membership, or access rights.").into()); }
@@ -100,11 +199,22 @@ pub(super) fn PrivateWebPanel(
         }
     };
     let validate_launch = move |_| {
-        if !active.get_untracked() || busy.get_untracked() { return; }
-        let checked = prepared.get_untracked().and_then(|request| request.checked_launch_url(launch_input.get_untracked().trim()).ok());
+        if !active.get_untracked() || busy.get_untracked() {
+            return;
+        }
+        let checked = prepared.get_untracked().and_then(|request| {
+            request
+                .checked_launch_url(launch_input.get_untracked().trim())
+                .ok()
+        });
         launch_input.set(String::new());
-        if let Some(checked) = checked { launch.set(Some(checked)); problem.set(String::new()); }
-        else { launch.set(None); problem.set(t("链接不是本次所选服务的单次 fragment URL。只粘贴 daemon 在 HTTPS 就绪后输出文件中的 launch_url；不要粘贴 route bootstrap。", "This is not the selected service's one-use fragment URL. Paste only launch_url from the daemon's file created after HTTPS readiness; never paste the route bootstrap.").into()); }
+        if let Some(checked) = checked {
+            launch.set(Some(checked));
+            problem.set(String::new());
+        } else {
+            launch.set(None);
+            problem.set(t("链接不是本次所选服务的单次 fragment URL。只粘贴 daemon 在 HTTPS 就绪后输出文件中的 launch_url；不要粘贴 route bootstrap。", "This is not the selected service's one-use fragment URL. Paste only launch_url from the daemon's file created after HTTPS readiness; never paste the route bootstrap.").into());
+        }
     };
     view! {
         <section class="policy-form form-stack" aria-label=move || t("访问私有 Web 服务", "Access private Web services") aria-busy=move || busy.get().to_string()>
@@ -142,16 +252,31 @@ pub(super) fn PrivateWebPanel(
 fn save_request(request: &PrivateWebLaunchRequest) -> Result<(), ()> {
     use wasm_bindgen::JsCast;
     let content = serde_json::to_string_pretty(request).map_err(|_| ())?;
-    let parts = js_sys::Array::new(); parts.push(&content.into());
+    let parts = js_sys::Array::new();
+    parts.push(&content.into());
     let blob = web_sys::Blob::new_with_str_sequence(&parts).map_err(|_| ())?;
     let url = web_sys::Url::create_object_url_with_blob(&blob).map_err(|_| ())?;
     let result = (|| {
-        let document = web_sys::window().and_then(|window| window.document()).ok_or(())?;
-        let anchor = document.create_element("a").map_err(|_| ())?.dyn_into::<web_sys::HtmlAnchorElement>().map_err(|_| ())?;
-        anchor.set_href(&url); anchor.set_download("NestLink-private-web-request.json"); anchor.click(); Ok(())
+        let document = web_sys::window()
+            .and_then(|window| window.document())
+            .ok_or(())?;
+        let anchor = document
+            .create_element("a")
+            .map_err(|_| ())?
+            .dyn_into::<web_sys::HtmlAnchorElement>()
+            .map_err(|_| ())?;
+        anchor.set_href(&url);
+        anchor.set_download("NestLink-private-web-request.json");
+        anchor.click();
+        Ok(())
     })();
-    spawn_local(async move { gloo_timers::future::TimeoutFuture::new(10_000).await; let _ = web_sys::Url::revoke_object_url(&url); });
+    spawn_local(async move {
+        gloo_timers::future::TimeoutFuture::new(10_000).await;
+        let _ = web_sys::Url::revoke_object_url(&url);
+    });
     result
 }
 #[cfg(not(target_arch = "wasm32"))]
-fn save_request(_request: &PrivateWebLaunchRequest) -> Result<(), ()> { Err(()) }
+fn save_request(_request: &PrivateWebLaunchRequest) -> Result<(), ()> {
+    Err(())
+}

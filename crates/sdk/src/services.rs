@@ -4,9 +4,9 @@ use crate::*;
 #[cfg(not(target_arch = "wasm32"))]
 mod local_proxy;
 mod private;
-pub mod web_launch;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod web_gateway;
+pub mod web_launch;
 #[cfg(all(not(target_arch = "wasm32"), any(unix, windows)))]
 pub use local_proxy::native_stream::{
     LocalNativeServiceProxy, NativeStreamStopReport, NativeStreamWait,

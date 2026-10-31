@@ -127,9 +127,18 @@ impl DesktopApp {
                                     }
                                     ui.separator();
                                 }
-                                if ui.add_enabled(self.network_diagnostics.has_observations(),
-                                    egui::Button::new(self.t("复制连接诊断", "Copy connection diagnostics"))).clicked() {
-                                    if let Ok(report) = serde_json::to_string_pretty(&self.network_diagnostics.export()) {
+                                if ui
+                                    .add_enabled(
+                                        self.network_diagnostics.has_observations(),
+                                        egui::Button::new(
+                                            self.t("复制连接诊断", "Copy connection diagnostics"),
+                                        ),
+                                    )
+                                    .clicked()
+                                {
+                                    if let Ok(report) = serde_json::to_string_pretty(
+                                        &self.network_diagnostics.export(),
+                                    ) {
                                         context.copy_text(report);
                                     }
                                     ui.close();

@@ -255,10 +255,9 @@ async fn actual_os_split_dns_resolves_and_recovers_without_changing_unrelated_po
             }
             let answer = native_query(&journal.plan).await?;
             if !answer.contains(&expected) {
-                return Err(io::Error::other(format!(
-                    "actual OS resolver answer: {answer}"
-                ))
-                .into());
+                return Err(
+                    io::Error::other(format!("actual OS resolver answer: {answer}")).into(),
+                );
             }
             if recover(&store).await.is_ok() {
                 return Err(io::Error::other("recovery must refuse a live resolver").into());
