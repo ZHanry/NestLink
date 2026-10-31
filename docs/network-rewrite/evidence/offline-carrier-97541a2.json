@@ -1,0 +1,96 @@
+{
+    "schema_version":  1,
+    "source_revision":  "97541a240f75305f479ae98f81ddce3fecad0850",
+    "workflow":  ".github/workflows/offline-authority.yml",
+    "run_id":  41220272087,
+    "run_attempt":  1,
+    "url":  "https://github.com/ZHanry/NestLink/actions/runs/41220272087",
+    "runner_environment":  "github-hosted",
+    "runner_os":  "Linux",
+    "conclusion":  "success",
+    "scope":  "Original finite private-service direct QUIC/mTLS TCP carrier and actual OS-authenticated native stream after physical center disconnection. Same original opaque online-consume owner, ephemeral process proof, fixed target, cumulative bytes and failed connection attempts, idle deadlines, authenticated recovery and original physical socket cleanup. Resident daemon production entry compiles and passes strict lint; interactive process acceptance is excluded.",
+    "jobs":  [
+                 {
+                     "name":  "durable-private-service",
+                     "job_id":  124593184140,
+                     "conclusion":  "success",
+                     "tests":  [
+                                   "services::publication::tests::private_policy::offline::offline_consume_binds_exact_process_digest_and_device_then_burns_durably",
+                                   "services::publication::tests::private_policy::offline::offline_distinct_accounts_cannot_approve_or_consume_the_other_endpoint",
+                                   "services::publication::tests::private_policy::offline::offline_exact_both_approvals_charge_original_online_ledgers_without_refund",
+                                   "services::publication::tests::private_policy::offline::offline_failed_audit_rolls_back_both_approval_and_all_original_budget_debits",
+                                   "services::publication::tests::private_policy::offline::offline_outstanding_online_promise_blocks_second_approval_without_partial_spend",
+                                   "services::publication::tests::private_policy::offline::offline_recovery_applies_acl_revocation_and_cannot_revive_after_regrant",
+                                   "services::publication::tests::private_policy::offline::offline_restore_fence_and_administrator_disable_fail_closed_without_refund",
+                                   "services::publication::tests::private_policy::offline::offline_sqlite_two_connections_can_consume_original_endpoint_only_once"
+                               ],
+                     "strict_lint":  "passed",
+                     "artifact_id":  13050076436,
+                     "artifact_name":  "offline-management-storage-97541a240f75305f479ae98f81ddce3fecad0850-1",
+                     "artifact_zip_sha256":  "504d740c0812e25e66493181f2e50a020932d058842959782fedbd27ed896bf0",
+                     "receipt_sha256":  "93c6215f753c9b89b6a58b664b7c53c7859696c57b62505b2f17f1768490ee96",
+                     "executable_sha256":  "e8a7e1d74bff9dc135611c352debe90a35cbc529a6af3b3982596eec9a625485",
+                     "all_storage_tests":  269
+                 },
+                 {
+                     "name":  "actual-http-sdk",
+                     "job_id":  124593184378,
+                     "conclusion":  "success",
+                     "tests":  [
+                                   "offline::carrier::original_installation_certificate_without_memory_process_proof_cannot_reach_target",
+                                   "offline::carrier::original_offline_deadline_closes_idle_real_stream_and_native_listener",
+                                   "offline::carrier::original_offline_process_exit_and_authenticated_recovery_close_actual_channels",
+                                   "offline::carrier::original_offline_shared_byte_budget_stops_actual_reconnect_traffic",
+                                   "offline::carrier::original_quic_real_center_disconnect_reconnect_half_close_and_socket_release",
+                                   "offline::offline_http_sdk_administrator_enable_and_direct_policy_boundaries",
+                                   "offline::offline_http_sdk_approval_exact_process_consume_budget_and_recovery"
+                               ],
+                     "strict_lint":  "passed",
+                     "artifact_id":  13049459119,
+                     "artifact_name":  "offline-management-sdk-97541a240f75305f479ae98f81ddce3fecad0850-1",
+                     "artifact_zip_sha256":  "02e7d88402851acf6aba0b70c29226ca9e83f31ad32fabf3b22c13b7506c2d2d",
+                     "receipt_sha256":  "91e116339756577635edbd6fb44df4fcb8b480200a864f3240a7794f0a64736c",
+                     "executable_sha256":  "02741bac4b0eef469f6908ea3ebaf46fa5954aed7221a1082a34902bc6e20d37"
+                 },
+                 {
+                     "name":  "authority",
+                     "job_id":  124593184387,
+                     "conclusion":  "success",
+                     "tests":  [
+                                   "offline::tests::both_endpoint_approvals_bind_the_complete_budget_process_and_authority",
+                                   "offline::tests::complete_chain_is_independent_and_unknown_or_missing_sections_fail",
+                                   "offline::tests::independent_offline_deadline_and_explicit_operations_cannot_expand",
+                                   "offline::tests::original_process_activation_and_cumulative_budget_survive_reconnect_only",
+                                   "offline::tests::private_service_pins_original_target_and_has_no_remote_rights",
+                                   "offline::tests::recovery_synchronizes_highest_revocation_and_cannot_revive_old_authority",
+                                   "offline::tests::rollback_deadline_and_local_exit_are_terminal_for_existing_owners"
+                               ],
+                     "strict_lint":  "passed",
+                     "artifact_id":  13048958754,
+                     "artifact_name":  "offline-authority-97541a240f75305f479ae98f81ddce3fecad0850-1",
+                     "artifact_zip_sha256":  "6814f813eea908e7f9222028c80dbe4b66a7986b16abc0b11de31a3c31040206",
+                     "receipt_sha256":  "f5136b6f112af0c3b0e7a843b9d8b11478b247a767a13d100db63a2bbccc4f57",
+                     "executable_sha256":  "95b83532aac38dd216f4a2e70eab0d7289f769a7420403927705781e266fe7d6"
+                 }
+             ],
+    "artifact_verification":  "Every downloaded ZIP matched the GitHub artifact digest; every receipt-listed extracted file was independently SHA-256 verified.",
+    "verified_behaviors":  [
+                               "correct installation certificate and saved full claims without original process memory key cannot touch the fixed target",
+                               "same original owner carries real application bytes after actual management server termination",
+                               "fresh reconnects retain cumulative bidirectional bytes and original deadline",
+                               "failed endpoint proof permanently spends an original connection attempt",
+                               "TCP write half-close preserves the reverse response on Unix",
+                               "actual byte ceiling, idle expiry, process stop and recovered revocation close existing flows",
+                               "authenticated unchanged-state recovery keeps original authority despite response latency",
+                               "original QUIC physical release receipts complete and host UDP port rebinds",
+                               "source original owner-private native endpoint is removed"
+                           ],
+    "not_claimed":  [
+                        "UDP and TLS fallback carrier acceptance",
+                        "interactive resident multi-process or protected login restoration acceptance",
+                        "remote-control original shared cumulative budget or actual remote offline carrier",
+                        "cross-platform target acceptance",
+                        "complete W27 or AC45/AC46"
+                    ],
+    "full_W27_or_AC45_AC46_passed":  false
+}

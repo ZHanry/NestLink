@@ -1,0 +1,89 @@
+{
+    "schema_version":  1,
+    "source_revision":  "091686cef34363eab216930e6fa75c8636559796",
+    "workflow":  ".github/workflows/offline-authority.yml",
+    "run_id":  41222241357,
+    "run_attempt":  1,
+    "url":  "https://github.com/ZHanry/NestLink/actions/runs/41222241357",
+    "runner_environment":  "github-hosted",
+    "runner_os":  "Linux",
+    "conclusion":  "success",
+    "scope":  "Follow-up of original finite private-service HTTP/SDK/QUIC authority and resident lifecycle guard. Same seven real SDK cases, eight SQLite cases, seven identity cases, 269 full storage regressions and all strict lints passed; one original daemon guard test additionally exercised local logout, protected login replacement, installation identity replacement and original maintenance while the authority was idle.",
+    "receipts":  [
+                     {
+                         "artifact_id":  13050706617,
+                         "artifact_name":  "offline-authority-091686cef34363eab216930e6fa75c8636559796-1",
+                         "artifact_zip_sha256":  "3e9ac2ad9976105ce8c185d1ab51513f0328cde53b2ed34ec504d61a89b5d47f",
+                         "receipt_path":  "receipt.json",
+                         "receipt_sha256":  "91de0aa94a3119be0817cdd6885a821116c7b584101044bc1a3f42e5797c3da5",
+                         "executable_sha256":  "7f94e0ee8e56439e35887b6e38558603afa9b8749749861526daa0b43ad6481c",
+                         "tests":  [
+                                       "offline::tests::both_endpoint_approvals_bind_the_complete_budget_process_and_authority",
+                                       "offline::tests::complete_chain_is_independent_and_unknown_or_missing_sections_fail",
+                                       "offline::tests::independent_offline_deadline_and_explicit_operations_cannot_expand",
+                                       "offline::tests::original_process_activation_and_cumulative_budget_survive_reconnect_only",
+                                       "offline::tests::private_service_pins_original_target_and_has_no_remote_rights",
+                                       "offline::tests::recovery_synchronizes_highest_revocation_and_cannot_revive_old_authority",
+                                       "offline::tests::rollback_deadline_and_local_exit_are_terminal_for_existing_owners"
+                                   ],
+                         "passed":  true
+                     },
+                     {
+                         "artifact_id":  13050378486,
+                         "artifact_name":  "offline-management-storage-091686cef34363eab216930e6fa75c8636559796-1",
+                         "artifact_zip_sha256":  "28311c0b870373985e955eda3b450d01f1b0cff68b004781bde3d7e02480912c",
+                         "receipt_path":  "receipt.json",
+                         "receipt_sha256":  "24770c13c193c55d5725a04917adb9b0b9ad8e6333b59468121d3a06549bd046",
+                         "executable_sha256":  "1b0103e2d5417c4bcbdad5bb8d9d8e70d8e51b3172582e0d2ddc5283d47558dc",
+                         "tests":  [
+                                       "services::publication::tests::private_policy::offline::offline_consume_binds_exact_process_digest_and_device_then_burns_durably",
+                                       "services::publication::tests::private_policy::offline::offline_distinct_accounts_cannot_approve_or_consume_the_other_endpoint",
+                                       "services::publication::tests::private_policy::offline::offline_exact_both_approvals_charge_original_online_ledgers_without_refund",
+                                       "services::publication::tests::private_policy::offline::offline_failed_audit_rolls_back_both_approval_and_all_original_budget_debits",
+                                       "services::publication::tests::private_policy::offline::offline_outstanding_online_promise_blocks_second_approval_without_partial_spend",
+                                       "services::publication::tests::private_policy::offline::offline_recovery_applies_acl_revocation_and_cannot_revive_after_regrant",
+                                       "services::publication::tests::private_policy::offline::offline_restore_fence_and_administrator_disable_fail_closed_without_refund",
+                                       "services::publication::tests::private_policy::offline::offline_sqlite_two_connections_can_consume_original_endpoint_only_once"
+                                   ],
+                         "passed":  true
+                     },
+                     {
+                         "artifact_id":  13050043974,
+                         "artifact_name":  "offline-management-sdk-091686cef34363eab216930e6fa75c8636559796-1",
+                         "artifact_zip_sha256":  "9c9b6c023b7c558c1dab4412a83f7588a9c70afc850fea8526be23f9a9314fe3",
+                         "receipt_path":  "receipt.json",
+                         "receipt_sha256":  "4071d75c135c2c9e17b2b0a01e9e732e343031a0730adc0f55cdc0eacbbadee3",
+                         "executable_sha256":  "2645d140e1fd6509ebc47d323bec3b6e507b1af1ffcff753e93a12d7236bdcb7",
+                         "tests":  [
+                                       "offline::carrier::original_installation_certificate_without_memory_process_proof_cannot_reach_target",
+                                       "offline::carrier::original_offline_deadline_closes_idle_real_stream_and_native_listener",
+                                       "offline::carrier::original_offline_process_exit_and_authenticated_recovery_close_actual_channels",
+                                       "offline::carrier::original_offline_shared_byte_budget_stops_actual_reconnect_traffic",
+                                       "offline::carrier::original_quic_real_center_disconnect_reconnect_half_close_and_socket_release",
+                                       "offline::offline_http_sdk_administrator_enable_and_direct_policy_boundaries",
+                                       "offline::offline_http_sdk_approval_exact_process_consume_budget_and_recovery"
+                                   ],
+                         "passed":  true
+                     },
+                     {
+                         "artifact_id":  13050043974,
+                         "artifact_name":  "offline-management-sdk-091686cef34363eab216930e6fa75c8636559796-1",
+                         "artifact_zip_sha256":  "9c9b6c023b7c558c1dab4412a83f7588a9c70afc850fea8526be23f9a9314fe3",
+                         "receipt_path":  "resident-guard/receipt.json",
+                         "receipt_sha256":  "daf10df7d6f82b22a1c3bb96e94a5a316be8d09207ebce03d225966f85bd6013",
+                         "executable_sha256":  "0191878979d84e0af3a32090fb3fd541af139ebe6b3121b27af8a8134ce7644a",
+                         "tests":  [
+                                       "private_service_proxy::offline::tests::original_resident_guard_terminates_authority_on_logout_login_identity_and_maintenance"
+                                   ],
+                         "passed":  true
+                     }
+                 ],
+    "artifact_verification":  "Every ZIP matched its official GitHub artifact SHA-256; each receipt-listed file was independently hashed and matched. Exact source/run/attempt and successful execution were checked.",
+    "limitations":  [
+                        "No interactive two-resident multi-process acceptance claimed.",
+                        "No protected-login restoration acceptance claimed.",
+                        "No remote-control shared-budget/carrier acceptance claimed.",
+                        "No private-service UDP or TLS fallback acceptance claimed.",
+                        "No Windows/Linux target-platform or AC45/AC46 whole-group pass claimed."
+                    ]
+}
