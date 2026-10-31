@@ -188,7 +188,7 @@ def main():
             or digest(fixture / "wintun.dll") != binaries["amd64"]):
             raise ValueError("production provider trust checks did not reject unreviewed or mutable inputs")
         result["cases"]["provider-negative"] = {"status": "passed", "receipt": provider_negative}
-        for scenario in ("normal", "crash", "raw-peer"):
+        for scenario in ("normal", "crash", "raw-peer", "online"):
             case = output / scenario
             native.directory(case, f"O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;{runner_sid})")
             root = fixture / scenario
@@ -197,7 +197,7 @@ def main():
                      "NESTLINK_TUN_NATIVE_JOURNAL": str(root / "journal"), "NESTLINK_TUN_NATIVE_DRIVER": str(fixture / "wintun.dll"),
                      "NESTLINK_TUN_NATIVE_DRIVER_SHA256": binaries["amd64"], "TEMP": str(case), "TMP": str(case),
                      "NESTLINK_TUN_NATIVE_PAUSE": "1" if scenario == "raw-peer" else "0"}
-            ordinary = start(scenario + "-ordinary", [sys.executable, source / "scripts/refactor-windows-normal-user.py", executable, *ROLE_ARGS], dict(extra, NESTLINK_TUN_NATIVE_ROLE="ordinary"))
+            ordinary = start(scenario + "-ordinary", [sys.executable, source / "scripts/refactor-windows-normal-user.py", executable, *ROLE_ARGS], dict(extra, NESTLINK_TUN_NATIVE_ROLE="online" if scenario == "online" else "ordinary"))
             ready = await_json(case / "plan-ready.json", ordinary)
             identity = ready["identity"]
             if identity["elevated"] or not 0x2000 <= identity["integrity"] < 0x3000 or identity["sid"] != runner_sid or identity["session"] <= 0:
@@ -253,12 +253,22 @@ def main():
                     or not identity_negative["kernel_unchanged"]
                     or identity_negative["configuration_sha256"] != receipt["provider"]["configuration_sha256"]):
                     raise ValueError("nonoriginal PnP recovery did not preserve the exact original kernel state")
-            if scenario == "normal":
+            if scenario in ("normal", "online"):
                 write(case / "stop.json", {"stop": True})
                 ordinary.wait(timeout=10); helper.wait(timeout=10)
                 stopped = await_json(case / "ordinary-stopped.json")
                 if ordinary.returncode or helper.returncode or not stopped["kernel_absent"] or stopped["normal_cleanup_ms"] >= 5000:
                     raise ValueError("normal original provider cleanup failed")
+                if scenario == "online":
+                    if (not packets.get("real_http_sqlite_authority") or not packets.get("original_production_packet_loop")
+                        or not packets.get("pinned_mtls_quic") or packets.get("remote_original_spent_bytes") != 5120
+                        or packets.get("one_use_replay_denials") != 2 or not stopped.get("online_http_403_observed")
+                        or not stopped.get("original_udp_endpoints_rebound") or stopped.get("revocation_to_physical_cleanup_ms", 5000) >= 5000
+                        or not packets.get("same_host_only") or packets.get("production_cli_validated") is not False
+                        or stopped.get("production_https_login_resume_validated") is not False):
+                        raise ValueError("real HTTP/SQLite/native/QUIC online integration or five-second physical revocation cleanup failed")
+                    result["single_host_online_integration"] = {"status": "passed", "cleanup": stopped,
+                        "scope": "real management HTTP/SQLite and original native packet loop over pinned mTLS QUIC in one VM; production HTTPS login resume/full CLI and independent targets are not qualified"}
             else:
                 helper.kill(); helper.wait(timeout=10)
                 code, log = execute("live-owner-recovery-denied", [executable, *ROLE_ARGS], extra=dict(extra, NESTLINK_TUN_NATIVE_ROLE="recover"), required=False)
@@ -293,7 +303,7 @@ def main():
             # ProgramFiles is outside the uploaded evidence tree and the hosted
             # VM is disposable, so leaving only a pathname would lose evidence.
             inspections = result.setdefault("failure_inspections", {})
-            for scenario in ("normal", "crash", "raw-peer"):
+            for scenario in ("normal", "crash", "raw-peer", "online"):
                 case, root = output / scenario, fixture / scenario
                 if not case.is_dir() or not root.is_dir():
                     continue

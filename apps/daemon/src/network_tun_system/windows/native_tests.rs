@@ -3,6 +3,7 @@
 use super::*;
 use std::net::SocketAddr;
 use tokio::time::Instant;
+mod online;
 
 fn lab() -> Result {
     if std::env::var("NESTLINK_TUN_NATIVE_LAB").as_deref() != Ok("1")
@@ -36,6 +37,9 @@ async fn hosted_native_role() -> Result {
     }
     if role == "ordinary" {
         return ordinary(&case, &plan, &receipt).await;
+    }
+    if role == "online" {
+        return online::ordinary(&case, &plan, &receipt).await;
     }
     if role == "foreign" {
         nestlink_privileged::windows::require_normal_user_process()?;
