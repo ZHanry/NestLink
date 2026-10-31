@@ -1,5 +1,5 @@
-//! Host-only managed Linux TUN. The ordinary owner holds all packet policy,
-//! login and carrier state; the separate root command only owns one OS plan.
+//! Host-only managed TUN. The ordinary owner holds all packet policy,
+//! login and carrier state; the separate administrator owns one OS plan.
 //! This module never turns space membership into permission to inject IP.
 #[cfg(target_os = "linux")]
 mod linux;

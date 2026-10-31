@@ -84,8 +84,13 @@ def main():
         return completed.returncode, text
 
     def ps(name, code):
-        return execute(name, ["powershell.exe", "-NoLogo", "-NoProfile", "-NonInteractive", "-Command",
-                              "$ErrorActionPreference='Stop'; " + code])[1].lstrip("\ufeff").strip()
+        # The workflow shell is PowerShell 7. Its inherited module search path
+        # must not be used by the separately selected system Windows PS 5.1.
+        # Keep Authenticode checking on the real inbox security implementation.
+        system_ps = Path(env["SYSTEMROOT"]) / "System32/WindowsPowerShell/v1.0"
+        return execute(name, [system_ps / "powershell.exe", "-NoLogo", "-NoProfile", "-NonInteractive", "-Command",
+                              "$ErrorActionPreference='Stop'; " + code],
+                       extra={"PSModulePath": str(system_ps / "Modules")})[1].lstrip("\ufeff").strip()
 
     def start(name, argv, extra):
         log = (output / (name + ".log")).open("wb")
@@ -164,14 +169,15 @@ def main():
             raise ValueError("protected fixture differs from the Actions-built executable")
         result["build_provenance"]["executable"] = {"build_path": str(artifacts[0]), "execution_path": str(executable), "sha256": digest(executable)}
         runner_sid = ps("runner-sid", "[Security.Principal.WindowsIdentity]::GetCurrent().User.Value")
-        for scenario in ("normal", "crash"):
+        for scenario in ("normal", "crash", "raw-peer"):
             case = output / scenario
             native.directory(case, f"O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;{runner_sid})")
             root = fixture / scenario
             native.directory(root, protected_acl)
             extra = {"NESTLINK_TUN_NATIVE_CASE": str(case), "NESTLINK_TUN_NATIVE_RECEIPT": str(root / "receipt.json"),
                      "NESTLINK_TUN_NATIVE_JOURNAL": str(root / "journal"), "NESTLINK_TUN_NATIVE_DRIVER": str(fixture / "wintun.dll"),
-                     "NESTLINK_TUN_NATIVE_DRIVER_SHA256": binaries["amd64"], "TEMP": str(case), "TMP": str(case)}
+                     "NESTLINK_TUN_NATIVE_DRIVER_SHA256": binaries["amd64"], "TEMP": str(case), "TMP": str(case),
+                     "NESTLINK_TUN_NATIVE_PAUSE": "1" if scenario == "raw-peer" else "0"}
             ordinary = start(scenario + "-ordinary", [sys.executable, source / "scripts/refactor-windows-normal-user.py", executable, *ROLE_ARGS], dict(extra, NESTLINK_TUN_NATIVE_ROLE="ordinary"))
             ready = await_json(case / "plan-ready.json", ordinary)
             identity = ready["identity"]
@@ -179,6 +185,35 @@ def main():
                 raise ValueError("ordinary actor was not the original medium non-admin user")
             handle = owner_handle(identity)
             helper = start(scenario + "-administrator", [executable, *ROLE_ARGS], dict(extra, NESTLINK_TUN_NATIVE_ROLE="apply"))
+            if scenario == "raw-peer":
+                published = await_json(root / "receipt.json", helper)
+                if (published["binding"]["process"] != identity or published["helper"]["pid"] != helper.pid
+                    or not published["helper"]["elevated"] or published["helper"]["integrity"] != 0x3000):
+                    raise ValueError("raw-client negative lacks the original medium/high OS binding")
+                execute("raw-same-sid-pipe-client", [sys.executable, source / "scripts/refactor-windows-normal-user.py", executable, *ROLE_ARGS], extra=dict(extra, NESTLINK_TUN_NATIVE_ROLE="raw-foreign"))
+                denied = await_json(case / "raw-foreign-denied.json")
+                helper.wait(timeout=10)
+                helper_log = (output / (scenario + "-administrator.log")).read_text(encoding="utf-8", errors="replace")
+                if (helper.returncode == 0 or "TUN packet pipe client is not the original admitted ordinary process" not in helper_log
+                    or not denied["denied"] or denied["identity"]["elevated"] or not 0x2000 <= denied["identity"]["integrity"] < 0x3000
+                    or denied["identity"]["sid"] != identity["sid"] or denied["identity"]["pid"] == identity["pid"]
+                    or denied["original_pid"] != identity["pid"] or denied["helper_pid"] != helper.pid):
+                    raise ValueError("actual raw same-SID OS client was not rejected before packet admission")
+                code, log = execute("raw-peer-live-owner-recovery-denied", [executable, *ROLE_ARGS], extra=dict(extra, NESTLINK_TUN_NATIVE_ROLE="recover"), required=False)
+                # The helper already confirmed physical cleanup and may have
+                # cleared its exact record. If no record remains, recovery is
+                # a no-op; it must never introduce a replacement adapter.
+                if code and "original ordinary owner is still alive" not in log:
+                    raise ValueError("unexpected raw-peer recovery failure")
+                checked(native.kernel.TerminateProcess(handle, 73)); checked(native.kernel.WaitForSingleObject(handle, 5000) == 0)
+                ordinary.wait(timeout=10)
+                execute("raw-peer-dead-owner-recovery", [executable, *ROLE_ARGS], extra=dict(extra, NESTLINK_TUN_NATIVE_ROLE="recover"))
+                execute("raw-peer-final-inspection", [executable, *ROLE_ARGS], extra=dict(extra, NESTLINK_TUN_NATIVE_ROLE="inspect"))
+                inspection = await_json(case / "inspection.json")
+                if inspection["record"] is not None or inspection["current"] is not None or (root / "receipt.json").exists():
+                    raise ValueError("raw-peer negative did not close and recover its exact original adapter")
+                result["cases"][scenario] = {"status": "passed", "plan": ready, "receipt": published, "raw_foreign": denied, "inspection": inspection}
+                continue
             packets = await_json(case / "packets-ready.json", ordinary)
             receipt = packets["receipt"]
             if (receipt["binding"]["process"] != identity or receipt["helper"]["pid"] != helper.pid

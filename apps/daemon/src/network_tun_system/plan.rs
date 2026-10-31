@@ -5,11 +5,7 @@ use nestlink_protocol::network::{GrantClaims, IpPrefix, NetworkAccessClaims, Pee
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeSet, net::IpAddr, path::Path};
 #[cfg(target_os = "linux")]
-use std::{
-    fs::{File, OpenOptions},
-    io::Read,
-    os::unix::fs::{MetadataExt, OpenOptionsExt},
-};
+use std::fs::File;
 
 #[cfg(target_os = "linux")]
 pub(super) const MAX_JSON: u64 = 65_536;
@@ -270,47 +266,10 @@ impl TunPlan {
     }
     #[cfg(target_os = "linux")]
     fn read_linux(path: &Path) -> Result<Self> {
-        if !path.is_absolute() {
-            return Err(io::Error::other("absolute public TUN plan path required").into());
-        }
-        // The ordinary owner controls this path. Inspect the same descriptor
-        // that supplies the bytes, never metadata from a preceding pathname
-        // lookup. NONBLOCK prevents a raced FIFO from stalling root monitoring
-        // and NOFOLLOW rejects a raced final symlink before any read occurs.
-        let file = OpenOptions::new()
-            .read(true)
-            .custom_flags(
-                (rustix::fs::OFlags::NOFOLLOW | rustix::fs::OFlags::NONBLOCK).bits() as i32,
-            )
-            .open(path)?;
-        let metadata = file.metadata()?;
-        if !metadata.is_file() || metadata.mode() & 0o077 != 0 || metadata.len() > MAX_JSON {
-            return Err(
-                io::Error::other("bounded owner-private regular public TUN plan required").into(),
-            );
-        }
-        let mut bytes = Vec::new();
-        (&file).take(MAX_JSON + 1).read_to_end(&mut bytes)?;
-        if bytes.len() > MAX_JSON as usize {
-            return Err(io::Error::other("TUN plan exceeds its bound").into());
-        }
-        let after = file.metadata()?;
-        if metadata.uid() != after.uid()
-            || metadata.mode() != after.mode()
-            || metadata.len() != after.len()
-            || metadata.len() != bytes.len() as u64
-            || metadata.mtime() != after.mtime()
-            || metadata.mtime_nsec() != after.mtime_nsec()
-            || metadata.ctime() != after.ctime()
-            || metadata.ctime_nsec() != after.ctime_nsec()
-        {
-            return Err(
-                io::Error::other("TUN plan changed while reading its original descriptor").into(),
-            );
-        }
+        let (bytes,uid)=crate::network_packet_runtime::read_public_plan(path,MAX_JSON)?;
         let plan: Self = serde_json::from_slice(&bytes)?;
         plan.validate(false)?;
-        if metadata.uid() != plan.linux_uid()? {
+        if uid != plan.linux_uid()? {
             return Err(io::Error::other(
                 "TUN public input must belong to its captured ordinary UID",
             )

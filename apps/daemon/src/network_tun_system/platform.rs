@@ -106,12 +106,7 @@ impl OwnerOs {
             // Remember the original receipt before it can disappear during
             // cleanup. A removed pathname alone never proves kernel absence.
             if let Some(original) = self.original.get() {
-                return Ok(resources::capture(
-                    &original.adapter_guid,
-                    &original.name,
-                    original.provider_sha256,
-                )?
-                .is_none());
+                return Ok(resources::absent(original)?);
             }
             match self.inspect(plan).await? {
                 Some(_) => Ok(false),

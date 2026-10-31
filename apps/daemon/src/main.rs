@@ -13,6 +13,8 @@ mod native_gpu_diagnostics;
 mod native_video;
 #[cfg(any(target_os = "linux", windows))]
 mod network_tun_system;
+#[cfg(any(target_os = "linux", windows))]
+mod network_packet_runtime;
 mod private_service_proxy;
 mod private_web_gateway;
 mod privileged_input;

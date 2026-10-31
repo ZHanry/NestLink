@@ -6,11 +6,11 @@ use nestlink_protocol::network::GrantClaims;
 use nestlink_sdk::{
     Sdk,
     network::{
-        packet_access::{OnlinePacketAccess, PACKET_MTU},
+        packet_access::OnlinePacketAccess,
         routed::PinnedNetworkSpace,
     },
 };
-use nestlink_transport_quic::packet_codec::{DirectPacketEndpoint, PacketAssembler, encode_direct};
+use nestlink_transport_quic::packet_codec::DirectPacketEndpoint;
 use std::{net::SocketAddr, path::Path};
 use tokio::time::Instant;
 
@@ -147,8 +147,9 @@ pub(crate) async fn run(args: TunArgs) -> Result {
             // Physical binding precedes every overlay route. While a peer is
             // connecting, keep the original online authority and local login
             // observed; no packet is consumed until mTLS and digest proof pass.
-            establish(&os,&mut endpoint,args.dial,&sdk,&mut access,&directory,login,&plan,&state).await?;
-            let result = packet_loop(&os,&device,&mut endpoint,&sdk,&mut access,&directory,login,&plan,&state).await;
+            let guard=HostGuard {os:&os,plan:&plan,state:&state,directory:&directory,login};
+            crate::network_packet_runtime::establish(&mut endpoint,args.dial,&sdk,&mut access,&guard).await?;
+            let result = crate::network_packet_runtime::packet_loop(&device,&mut endpoint,&sdk,&mut access,&guard).await;
             let stopped=device.shutdown().await;
             drop(device);
             stopped?;
@@ -256,114 +257,17 @@ async fn adopt_ready(
         result=tokio::time::timeout_at(deadline,wait)=>result.map_err(|_|io::Error::other("the original privileged TUN descriptor was not handed off within its finite bound"))?,
     }
 }
-#[allow(clippy::too_many_arguments)]
-async fn establish(
-    os: &OwnerOs,
-    endpoint: &mut DirectPacketEndpoint,
-    dial: Option<SocketAddr>,
-    sdk: &Sdk,
-    access: &mut OnlinePacketAccess,
-    directory: &Path,
-    login: [u8; 32],
-    plan: &TunPlan,
-    state: &TunState,
-) -> Result {
-    let binding = access.business_digest();
-    let group = access.transport_group();
-    let deadline = Instant::now() + access.remaining_lifetime().min(Duration::from_secs(10));
-    let signal = crate::space_dns_system::termination();
-    tokio::pin!(signal);
-    let connection = endpoint.establish(dial, binding, group, deadline);
-    tokio::pin!(connection);
-    let mut tick = tokio::time::interval(Duration::from_secs(1));
-    tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
-    loop {
-        tokio::select! {biased;
-            result=&mut signal=>{result?;return Err(io::Error::other("original TUN stopped during physical peer proof").into());},
-            _=tick.tick()=>{
-                local_current(directory,login)?;
-                access.refresh(sdk).await?;
-                if os.inspect(plan).await?.as_ref()!=Some(state){return Err(io::Error::other("original managed TUN changed during peer proof").into());}
-            },
-            result=&mut connection=>return result,
-        }
+struct HostGuard<'a> {os:&'a OwnerOs,plan:&'a TunPlan,state:&'a TunState,directory:&'a Path,login:[u8;32]}
+impl crate::network_packet_runtime::OwnerGuard for HostGuard<'_> {
+    fn check_local(&self)->Result {local_current(self.directory,self.login)}
+    fn check(&self)->crate::network_packet_runtime::GuardFuture<'_> {
+        Box::pin(async move {
+            if self.os.inspect(self.plan).await?.as_ref()!=Some(self.state) {
+                return Err(io::Error::other("original managed TUN configuration changed").into());
+            }
+            Ok(())
+        })
     }
-}
-#[derive(Default, Serialize)]
-struct Counters {
-    sent_packets: u64,
-    received_packets: u64,
-    rejected_packets: u64,
-    spent_bytes: u64,
-}
-#[allow(clippy::too_many_arguments)]
-async fn packet_loop(
-    os: &OwnerOs,
-    device: &PacketDevice,
-    endpoint: &mut DirectPacketEndpoint,
-    sdk: &Sdk,
-    access: &mut OnlinePacketAccess,
-    directory: &Path,
-    login: [u8; 32],
-    plan: &TunPlan,
-    state: &TunState,
-) -> Result {
-    // A 65536-byte read prevents a provider truncating an oversized packet to
-    // an apparently valid approved prefix. IPv6's 1280-byte complete packet is
-    // split only by the already authenticated bounded carrier codec.
-    let mut buffer = vec![0_u8; 65_536];
-    let mut assembler = PacketAssembler::new(
-        access.business_digest(),
-        access.wire_direction().reverse(),
-        PACKET_MTU,
-    )?;
-    let connection = endpoint.connection()?.clone();
-    let mut sequence = 0_u64;
-    let mut counters = Counters::default();
-    let signal = crate::space_dns_system::termination();
-    tokio::pin!(signal);
-    let mut tick = tokio::time::interval(Duration::from_millis(250));
-    tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
-    let mut refreshed = Instant::now();
-    let outcome = loop {
-        tokio::select! {biased;
-            result=&mut signal=>break result.map_err(Into::into),
-            _=tick.tick()=>{
-                if let Err(error)=local_current(directory,login){break Err(error);}
-                if refreshed.elapsed()>=Duration::from_secs(1){
-                    if let Err(error)=access.refresh(sdk).await{break Err(error.into());}
-                    if let Err(error)=endpoint.validate_underlay(){break Err(error.into());}
-                    match os.inspect(plan).await {Ok(Some(current)) if current==*state=>{},Ok(_)=>break Err(io::Error::other("managed TUN configuration changed").into()),Err(error)=>break Err(error)}
-                    refreshed=Instant::now();
-                }
-            },
-            result=connection.read_datagram()=>{
-                let bytes=match result{Ok(bytes)=>bytes,Err(error)=>break Err(error.into())};
-                let packet=match assembler.insert(&bytes,std::time::Instant::now()){Ok(Some(packet))=>packet,Ok(None)=>continue,Err(error)=>break Err(error.into())};
-                if access.admit_remote(&packet).is_err(){counters.rejected_packets=counters.rejected_packets.saturating_add(1);continue;}
-                match tokio::time::timeout(Duration::from_millis(250),device.send(&packet)).await {
-                    Ok(Ok(written)) if written==packet.len()=>counters.received_packets=counters.received_packets.saturating_add(1),
-                    Ok(Err(error))=>break Err(error.into()),
-                    _=>break Err(io::Error::other("complete TUN injection did not finish within its bound").into()),
-                }
-            },
-            result=device.recv(&mut buffer)=>{
-                let count=match result{Ok(count) if count>0=>count,Ok(_)=>break Err(io::Error::other("owned TUN descriptor ended").into()),Err(error)=>break Err(error.into())};
-                if count>PACKET_MTU || access.admit_local(&buffer[..count]).is_err(){counters.rejected_packets=counters.rejected_packets.saturating_add(1);continue;}
-                sequence=match sequence.checked_add(1){Some(value)=>value,None=>break Err(io::Error::other("raw packet sequence exhausted").into())};
-                let fragments=match encode_direct(access.business_digest(),access.wire_direction(),sequence,&buffer[..count]){Ok(fragments)=>fragments,Err(error)=>break Err(error.into())};
-                let mut failed=None;
-                for fragment in fragments {if let Err(error)=connection.send_datagram(fragment.into()){failed=Some(error);break;}}
-                if let Some(error)=failed{break Err(error.into());}
-                counters.sent_packets=counters.sent_packets.saturating_add(1);
-            },
-        }
-    };
-    counters.spent_bytes = access.spent_bytes();
-    // Only bounded aggregate counters are printed. No packet, address, signed
-    // credential, application content or private key enters diagnostics.
-    println!("TUN packet counters: {}", serde_json::to_string(&counters)?);
-    outcome
 }
 #[cfg(all(test, target_os = "linux"))]
 pub(super) async fn release_plan(plan: &TunPlan, path: &Path) -> Result {

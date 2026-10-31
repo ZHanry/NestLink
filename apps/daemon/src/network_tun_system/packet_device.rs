@@ -9,6 +9,14 @@ type Inner = nestlink_privileged::windows::network_tun::PacketPipe;
 pub(super) struct PacketDevice {
     inner: Option<Inner>,
 }
+impl crate::network_packet_runtime::WholePacketDevice for PacketDevice {
+    fn recv<'a>(&'a self,packet:&'a mut [u8])->crate::network_packet_runtime::PacketIoFuture<'a> {
+        Box::pin(self.recv(packet))
+    }
+    fn send<'a>(&'a self,packet:&'a [u8])->crate::network_packet_runtime::PacketIoFuture<'a> {
+        Box::pin(self.send(packet))
+    }
+}
 impl PacketDevice {
     #[cfg(target_os = "linux")]
     pub fn linux(device: tun_rs::AsyncDevice) -> Self {

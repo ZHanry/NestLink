@@ -423,12 +423,18 @@ impl Snapshot {
     pub fn verify(&self, local: &[IpAddr; 2], remote: &[IpAddr; 2]) -> io::Result<()> {
         if self.mtu != 1280
             || self.families.len() != 2
+            || self.families.iter().map(|row| row.family).collect::<Vec<_>>() != [AF_INET, AF_INET6]
             || !self.families.iter().all(FamilyState::isolated)
             || self.addresses.len() != 2
             || self.routes.is_empty()
             || self.routes.len() > 4
         {
             return Err(security::denied());
+        }
+        for host in local {
+            if self.addresses.iter().filter(|row| row.ip == *host).count() != 1 {
+                return Err(security::denied());
+            }
         }
         for row in &self.addresses {
             if !local.contains(&row.ip)
@@ -518,4 +524,19 @@ pub fn inspect(identity: &ProviderIdentity) -> io::Result<Option<Snapshot>> {
         addresses: hosts,
         routes: paths,
     }))
+}
+
+/// Interface disappearance alone cannot clear a durable address/route record.
+/// Observe all original kernel identifiers, and never mutate a surviving row.
+pub fn absent(identity: &ProviderIdentity) -> io::Result<bool> {
+    if original(identity)?.is_some() {
+        return Ok(false);
+    }
+    if addresses()?.iter().any(|row| on_original(identity,row.InterfaceLuid,row.InterfaceIndex))
+        || routes()?.iter().any(|row| on_original(identity,row.InterfaceLuid,row.InterfaceIndex))
+    {
+        return Ok(false);
+    }
+    // A name/GUID replacement during those two table reads is also terminal.
+    Ok(original(identity)?.is_none())
 }

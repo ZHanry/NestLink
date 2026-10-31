@@ -243,7 +243,10 @@ pub(super) async fn create(plan: &TunPlan) -> Result<tun_rs::SyncDevice> {
     let device = tun_rs::DeviceBuilder::new().enable(false).build_sync()?;
     device.set_name(&plan.link())?;
     device.user(i32::try_from(plan.linux_uid()?)?)?;
-    ip(&["link", "set", "dev", &plan.link(), "alias", &plan.marker()]).await?;
+    // Disable automatic IPv6/multicast configuration on our still-ephemeral
+    // fresh link before asserting that no addresses/routes have appeared.
+    ip(&["link", "set", "dev", &plan.link(), "alias", &plan.marker(),
+        "multicast", "off", "addrgenmode", "none"]).await?;
     Ok(device)
 }
 pub(super) async fn created_identity(plan: &TunPlan) -> Result<InterfaceIdentity> {
@@ -257,9 +260,10 @@ pub(super) async fn created_identity(plan: &TunPlan) -> Result<InterfaceIdentity
         || !state.addresses.is_empty()
         || !state.routes.is_empty()
     {
-        return Err(io::Error::other(
-            "new ephemeral TUN did not match its unconfigured original identity",
-        )
+        return Err(io::Error::other(format!(
+            "new ephemeral TUN did not match its unconfigured original identity (marker_match={}, uid_match={}, up={}, persistent={}, addresses={}, routes={})",
+            state.identity.marker==plan.marker(),state.identity.uid==plan.linux_uid()?,state.up,state.persistent,state.addresses.len(),state.routes.len(),
+        ))
         .into());
     }
     Ok(state.identity)

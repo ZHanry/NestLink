@@ -77,28 +77,26 @@ impl Record {
             return Err(io::Error::other("invalid protected Windows TUN recovery record").into());
         }
         resources::guid_value(&record.guid)?;
-        if let Some(identity) = &record.identity {
-            if identity.adapter_guid != record.guid
+        if let Some(identity) = &record.identity
+            && (identity.adapter_guid != record.guid
                 || identity.name != record.name
-                || identity.provider_sha256 != record.driver_sha256
-            {
+                || identity.provider_sha256 != record.driver_sha256)
+        {
                 return Err(io::Error::other(
                     "Windows TUN identity differs from original creation intent",
                 )
                 .into());
-            }
         }
-        if let Some(receipt) = &record.receipt {
-            if record.identity.as_ref() != Some(&receipt.provider)
+        if let Some(receipt) = &record.receipt
+            && (record.identity.as_ref() != Some(&receipt.provider)
                 || receipt.binding.owner_id != record.plan.owner_id
                 || receipt.binding.plan_sha256 != record.plan.digest()?
-                || receipt.binding.expires_at_ms != record.plan.expires_at_ms
-            {
+                || receipt.binding.expires_at_ms != record.plan.expires_at_ms)
+        {
                 return Err(io::Error::other(
                     "Windows TUN receipt differs from original recovery intent",
                 )
                 .into());
-            }
         }
         Ok(record)
     }
@@ -284,7 +282,11 @@ async fn pump(
 }
 async fn confirm_absence(record: &Record) -> Result {
     tokio::time::timeout(Duration::from_secs(5),async {
-        loop {if record.capture()?.is_none(){return Ok::<(),Box<dyn std::error::Error+Send+Sync>>(());}tokio::time::sleep(Duration::from_millis(25)).await;}
+        loop {
+            let absent=match &record.identity {Some(identity)=>resources::absent(identity)?,None=>record.capture()?.is_none()};
+            if absent{return Ok::<(),Box<dyn std::error::Error+Send+Sync>>(());}
+            tokio::time::sleep(Duration::from_millis(25)).await;
+        }
     }).await.map_err(|_|io::Error::other("original Wintun adapter absence not observed within five seconds; protected recovery record retained"))??;
     Ok(())
 }
