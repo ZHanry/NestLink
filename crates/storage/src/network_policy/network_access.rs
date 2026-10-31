@@ -382,8 +382,7 @@ impl Store {
             )?;
             request.expires_at_unix_ms = request
                 .expires_at_unix_ms
-                .min(claims.scope.expires_at_ms)
-                .min(mapping.bundle.gateway.lease_expires_at_ms);
+                .min(claims.scope.expires_at_ms);
         }
         if request.expires_at_unix_ms <= now {
             return Err(StorageError::Forbidden);

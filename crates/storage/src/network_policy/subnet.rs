@@ -278,8 +278,7 @@ impl Store {
         let export = exports.into_iter().next().ok_or(StorageError::Forbidden)?;
         let expires_at_ms = request
             .expires_at_ms
-            .min(export.claims().scope().expires_at_ms)
-            .min(gateway.lease_expires_at_ms);
+            .min(export.claims().scope().expires_at_ms);
         if expires_at_ms <= now {
             return Err(StorageError::Forbidden);
         }

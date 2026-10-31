@@ -469,6 +469,72 @@ async fn independently_bound_overlapping_sites_admit_only_alias_packets_and_node
 }
 
 #[tokio::test]
+async fn same_boot_renewal_keeps_original_signed_mapping_and_budget_beyond_first_lease()
+-> Result {
+    let f = Fixture::new().await?;
+    let gateway = gateway(&f, 62, "10.210.2.0").await?;
+    let mapping_claims = nestlink_protocol::subnet::SubnetMappingClaims::decode_canonical(
+        &gateway.mapping.mapping.claims,
+    )?;
+    let first_lease_end = gateway.mapping.gateway.lease_expires_at_ms;
+    assert!(mapping_claims.scope.expires_at_ms > first_lease_end + 15_000);
+    bind(&f, &gateway, 1).await?;
+    let issued = f.target.issue_subnet_network_access(
+        &f.space, &request(&f, None, Some(&gateway)).await?,
+    ).await?;
+    let access_claims = nestlink_protocol::network::GrantClaims::decode_canonical(
+        &decode_network_grant(&issued.access)?.claims,
+    )?;
+    assert!(access_claims.scope().expires_at_ms > first_lease_end + 15_000);
+    let business = digest(&f, &issued)?;
+    let pin = PinnedNetworkSpace::new(f.space.clone(), f.authority)?;
+    let owner = random_id();
+    let mut target = OnlinePacketAccess::start(
+        &f.target, &pin, &f.target_device, &issued.access.grant_id, business, owner.clone(),
+    ).await?;
+    let source_ip: std::net::Ipv4Addr = issued.address_directory.addresses[0].ipv4.parse()?;
+    let bytes = udp(source_ip.octets(), [10, 210, 2, 42], 53)?;
+    target.admit_remote(&bytes)?;
+    let spent = target.spent_bytes();
+    while now()? <= first_lease_end + 500 {
+        let mut store = f.store()?;
+        let challenge = store.node_challenge(&gateway.node, now()?)?;
+        store.issue_node_lease(
+            &gateway.identity.prove(&challenge, &mapping_claims.gateway_incarnation.runtime_id)?,
+            now()?,
+        )?;
+        drop(store);
+        target.refresh(&f.target).await?;
+        assert_eq!(target.spent_bytes(), spent, "lease renewal cannot refill a budget");
+        tokio::time::sleep(std::time::Duration::from_millis(700)).await;
+    }
+    let current = f.target.network_access(&f.space, &issued.access.grant_id).await?;
+    assert_eq!(current.subnet_mappings[0].mapping, gateway.mapping.mapping);
+    exact_grants(&current, &issued)?;
+    assert!(current.subnet_mappings[0].gateway.lease_expires_at_ms > first_lease_end);
+    target.admit_remote(&bytes)?;
+    let plan = target.subnet_plan(
+        SubnetLocalConsent::approve(owner, gateway.reference.mapping_digest, business)?,
+        SubnetInterfaces {
+            tun: SubnetInterface { index: 12, name: "nltfixture".into() },
+            lan: SubnetInterface { index: 13, name: "ethfixture".into() },
+        },
+        &["127.0.0.1".parse()?],
+    )?;
+    assert!(plan.view().expires_at_ms > current.subnet_mappings[0].gateway.lease_expires_at_ms);
+    f.manager.revoke_subnet_mapping(
+        &f.space, &gateway.reference.mapping_id,
+        &SubnetMappingRevoke {
+            expected_revision: f.manager.network_policy(&f.space).await?.revision,
+            expected_mapping_revision: 1,
+        },
+    ).await?;
+    assert!(target.refresh(&f.target).await.is_err());
+    assert!(target.admit_remote(&bytes).is_err());
+    f.finish().await
+}
+
+#[tokio::test]
 async fn original_export_revoke_and_observed_mapping_expiry_cannot_revive_a_bound_packet_graph()
 -> Result {
     for expired in [false, true] {

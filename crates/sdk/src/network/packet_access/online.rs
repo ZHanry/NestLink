@@ -504,7 +504,7 @@ fn mapping_exports(
         if !result[endpoint].is_empty()
             || prefixes.as_slice() != [claims.alias]
             || business.scope.not_before_ms < claims.scope.not_before_ms
-            || business.scope.expires_at_ms > verified.effective_expires_at_ms(&gateway)
+            || business.scope.expires_at_ms > claims.scope.expires_at_ms
             || business.scope.grant_id == claims.scope.grant_id
             || business.scope.grant_id == mapping.route_export.grant_id
         {
