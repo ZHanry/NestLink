@@ -3,6 +3,7 @@
 //! Signed direct paths add admission to this same owner without another scheduler.
 pub mod packet_access;
 pub mod routed;
+pub mod subnet;
 pub use crate::network_topology as topology;
 use crate::{
     DeviceIdentity, NativeRelayRoute, Sdk,

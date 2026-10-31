@@ -33,6 +33,7 @@ pub mod service_quota_recovery;
 pub mod services;
 pub mod signaling;
 pub mod spaces;
+pub mod subnet;
 pub mod turn;
 pub mod upload;
 pub mod webrtc;
