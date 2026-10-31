@@ -43,7 +43,7 @@ fn failure_summary(error:&Error)->String {
         Error::Authorization(error)=>{
             // Only these static first-party fences may refine the diagnostic.
             // Arbitrary protocol response text never enters retained summaries.
-            let fence=match error.reason.as_str() {
+            let fence=match error.reason {
                 "service snapshot query replay fence"=>Some("query-replay-fence"),
                 "service snapshot duplicate or excess publication fence"=>Some("duplicate-publication-fence"),
                 "service snapshot retired publication fence"=>Some("retired-publication-fence"),
