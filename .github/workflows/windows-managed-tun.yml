@@ -62,6 +62,7 @@ jobs:
       # Create the shared Cargo target/lock with the actual ordinary token.
       # An elevated-first build can give .cargo-build-lock an Admins-only DACL.
       - name: Driver license, pinned archive, Authenticode, actual medium/admin packet and crash evidence
+        if: ${{ !cancelled() }}
         run: python -B scripts/network-rewrite-windows-tun.py --output "${{ runner.temp }}/windows-managed-tun-evidence"
       - name: Check the Windows daemon privilege adapter strictly
         if: ${{ !cancelled() }}
