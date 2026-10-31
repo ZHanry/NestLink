@@ -395,6 +395,24 @@
         "title": "AuditRetentionUpdate",
         "type": "object"
       },
+      "BootIncarnation": {
+        "additionalProperties": false,
+        "properties": {
+          "runtime_generation": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "runtime_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "runtime_generation",
+          "runtime_id"
+        ],
+        "type": "object"
+      },
       "BrowserEndpointLease": {
         "additionalProperties": false,
         "properties": {
@@ -1209,7 +1227,6 @@
           "byte_limit",
           "expires_at_unix_ms"
         ],
-        "title": "NetworkAccessRequest",
         "type": "object"
       },
       "NetworkAccessStart": {
@@ -1255,6 +1272,13 @@
           },
           "source_membership": {
             "$ref": "#/components/schemas/NetworkGrantView"
+          },
+          "subnet_mappings": {
+            "description": "Fresh online association to the exact original mapping credentials.\nEmpty for the original host-only API; never populated from peer input.",
+            "items": {
+              "$ref": "#/components/schemas/SubnetMappingView"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -1265,7 +1289,6 @@
           "path",
           "address_directory"
         ],
-        "title": "NetworkAccessView",
         "type": "object"
       },
       "NetworkAuthorityChangeRequest": {
@@ -6442,6 +6465,34 @@
         "title": "SignedServiceUsageRuntimeStop",
         "type": "object"
       },
+      "SignedSubnetMapping": {
+        "additionalProperties": false,
+        "properties": {
+          "claims": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "signature": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "claims",
+          "signature"
+        ],
+        "type": "object"
+      },
       "SignedTurnCredentials": {
         "additionalProperties": false,
         "properties": {
@@ -6567,6 +6618,34 @@
         "title": "SignedTurnResourceSnapshot",
         "type": "object"
       },
+      "SignedWireGuardClientBinding": {
+        "additionalProperties": false,
+        "properties": {
+          "claims": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "signature": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "claims",
+          "signature"
+        ],
+        "type": "object"
+      },
       "SpaceAddressDirectory": {
         "properties": {
           "addresses": {
@@ -6610,7 +6689,6 @@
           "cache_max_age_seconds",
           "addresses"
         ],
-        "title": "SpaceAddressDirectory",
         "type": "object"
       },
       "SpaceAddressIssue": {
@@ -7462,6 +7540,242 @@
         "title": "Array_of_SpaceView",
         "type": "array"
       },
+      "SubnetGatewayInstallationRequest": {
+        "additionalProperties": false,
+        "description": "The installation's account explicitly joins its independently proven\nenrollment identity to the accepted node boot and approved mapping.",
+        "properties": {
+          "expected_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "installation_id": {
+            "type": "string"
+          },
+          "mapping": {
+            "$ref": "#/components/schemas/SubnetMappingReference"
+          },
+          "membership_grant_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mapping",
+          "installation_id",
+          "membership_grant_id",
+          "expected_revision"
+        ],
+        "title": "SubnetGatewayInstallationRequest",
+        "type": "object"
+      },
+      "SubnetGatewayView": {
+        "additionalProperties": false,
+        "properties": {
+          "incarnation": {
+            "$ref": "#/components/schemas/BootIncarnation"
+          },
+          "lease_expires_at_ms": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "mapping_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "node_id": {
+            "type": "string"
+          },
+          "public_key": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 32,
+            "minItems": 32,
+            "type": "array"
+          }
+        },
+        "required": [
+          "node_id",
+          "public_key",
+          "incarnation",
+          "mapping_revision",
+          "lease_expires_at_ms"
+        ],
+        "type": "object"
+      },
+      "SubnetMappingReference": {
+        "additionalProperties": false,
+        "description": "An exact immutable reference selected by an authenticated local owner.",
+        "properties": {
+          "expected_mapping_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "mapping_digest": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 32,
+            "minItems": 32,
+            "type": "array"
+          },
+          "mapping_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mapping_id",
+          "mapping_digest",
+          "expected_mapping_revision"
+        ],
+        "type": "object"
+      },
+      "SubnetMappingRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "alias": {
+            "$ref": "#/components/schemas/IpPrefix"
+          },
+          "expected_gateway_incarnation": {
+            "$ref": "#/components/schemas/BootIncarnation"
+          },
+          "expected_policy_epoch": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expected_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expires_at_ms": {
+            "description": "Effective expiry is intersected with the original export and currently\naccepted node lease. A read never renews the resulting signed interval.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "gateway_node_id": {
+            "type": "string"
+          },
+          "grant_id": {
+            "type": "string"
+          },
+          "mapping_version": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "original": {
+            "$ref": "#/components/schemas/IpPrefix"
+          },
+          "route_export_grant_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mapping_version",
+          "grant_id",
+          "gateway_node_id",
+          "route_export_grant_id",
+          "expected_revision",
+          "expected_policy_epoch",
+          "expected_gateway_incarnation",
+          "original",
+          "alias",
+          "expires_at_ms"
+        ],
+        "title": "SubnetMappingRequest",
+        "type": "object"
+      },
+      "SubnetMappingRevoke": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_mapping_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expected_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "expected_revision",
+          "expected_mapping_revision"
+        ],
+        "title": "SubnetMappingRevoke",
+        "type": "object"
+      },
+      "SubnetMappingView": {
+        "additionalProperties": false,
+        "properties": {
+          "gateway": {
+            "$ref": "#/components/schemas/SubnetGatewayView"
+          },
+          "mapping": {
+            "$ref": "#/components/schemas/SignedSubnetMapping"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/NetworkPolicyView"
+          },
+          "route_export": {
+            "$ref": "#/components/schemas/NetworkGrantView"
+          }
+        },
+        "required": [
+          "mapping",
+          "route_export",
+          "gateway",
+          "policy"
+        ],
+        "type": "object"
+      },
+      "SubnetNetworkAccessRequest": {
+        "additionalProperties": false,
+        "description": "The original host API remains host-only. This separate request requires a\npreapproved exact gateway installation for every non-host endpoint.",
+        "properties": {
+          "destination_mapping": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubnetMappingReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "packet": {
+            "$ref": "#/components/schemas/NetworkAccessRequest"
+          },
+          "source_mapping": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubnetMappingReference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "packet"
+        ],
+        "title": "SubnetNetworkAccessRequest",
+        "type": "object"
+      },
       "Transport": {
         "enum": [
           "quic",
@@ -7849,6 +8163,147 @@
           "candidates",
           "end_of_candidates"
         ],
+        "type": "object"
+      },
+      "WireGuardClientBindingRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "access_grant_id": {
+            "type": "string"
+          },
+          "binding_version": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "client_address": {
+            "format": "ipv4",
+            "type": "string"
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "client_public_key": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 32,
+            "minItems": 32,
+            "type": "array"
+          },
+          "expected_client_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expected_policy_epoch": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expected_portal_incarnation": {
+            "$ref": "#/components/schemas/BootIncarnation"
+          },
+          "expected_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expires_at_ms": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "grant_id": {
+            "type": "string"
+          },
+          "installation_id": {
+            "type": "string"
+          },
+          "portal_node_id": {
+            "type": "string"
+          },
+          "total_byte_ceiling": {
+            "description": "Immutable across this client's rotations. Increasing a limit requires a\nseparately reviewed quota operation, not reissuing this credential.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "binding_version",
+          "grant_id",
+          "client_id",
+          "expected_client_revision",
+          "expected_revision",
+          "expected_policy_epoch",
+          "installation_id",
+          "portal_node_id",
+          "expected_portal_incarnation",
+          "access_grant_id",
+          "client_public_key",
+          "client_address",
+          "total_byte_ceiling",
+          "expires_at_ms"
+        ],
+        "title": "WireGuardClientBindingRequest",
+        "type": "object"
+      },
+      "WireGuardClientBindingView": {
+        "additionalProperties": false,
+        "properties": {
+          "binding": {
+            "$ref": "#/components/schemas/SignedWireGuardClientBinding"
+          },
+          "committed_bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "packet_access": {
+            "$ref": "#/components/schemas/NetworkAccessView"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/NetworkPolicyView"
+          },
+          "total_byte_ceiling": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "binding",
+          "packet_access",
+          "policy",
+          "total_byte_ceiling",
+          "committed_bytes"
+        ],
+        "title": "WireGuardClientBindingView",
+        "type": "object"
+      },
+      "WireGuardClientRevoke": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_client_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expected_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "expected_revision",
+          "expected_client_revision"
+        ],
+        "title": "WireGuardClientRevoke",
         "type": "object"
       }
     },
@@ -16398,6 +16853,556 @@
         "x-server-role": "control"
       }
     },
+    "/network/spaces/{space}/subnet-mappings": {
+      "post": {
+        "operationId": "network_policy::subnet::issue",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubnetMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubnetMappingView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/network/spaces/{space}/subnet-mappings/{mapping}": {
+      "delete": {
+        "operationId": "network_policy::subnet::revoke",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mapping",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubnetMappingRevoke"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkPolicyView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      },
+      "get": {
+        "operationId": "network_policy::subnet::read",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mapping",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubnetMappingView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/network/spaces/{space}/subnet-mappings/{mapping}/installation": {
+      "post": {
+        "operationId": "network_policy::subnet::bind_installation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mapping",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubnetGatewayInstallationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkPolicyView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/network/spaces/{space}/subnet-packet-access": {
+      "post": {
+        "operationId": "network_policy::network_access::issue_subnet",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubnetNetworkAccessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkAccessView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
     "/network/spaces/{space}/topology/publishers/{node}": {
       "delete": {
         "operationId": "network_policy::topology::revoke",
@@ -16928,6 +17933,333 @@
           }
         },
         "security": [],
+        "x-server-role": "control"
+      }
+    },
+    "/network/spaces/{space}/wireguard-client-bindings": {
+      "post": {
+        "operationId": "network_policy::wireguard::issue",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WireGuardClientBindingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WireGuardClientBindingView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/network/spaces/{space}/wireguard-client-bindings/{binding}": {
+      "delete": {
+        "operationId": "network_policy::wireguard::revoke",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "binding",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WireGuardClientRevoke"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkPolicyView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      },
+      "get": {
+        "operationId": "network_policy::wireguard::read",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "binding",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WireGuardClientBindingView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
         "x-server-role": "control"
       }
     },
