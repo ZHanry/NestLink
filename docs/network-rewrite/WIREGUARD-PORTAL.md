@@ -134,3 +134,5 @@ sudo nestlink-daemon network-subnet-system recover \
 真实 HTTP/SQLite SDK 测试覆盖源账号/目标账号/管理员权限边界、精确安装/地址/门户启动、原一次性 start、双向原包拒绝、撤销、轮换、累计额度和数据库重开。`wireguard-native.yml` 保留源码 SHA、可执行文件摘要、锁文件摘要、内核、发行版包版本和 copyright，以及实际测试命令和退出结果。工具实验使用真正的 `wg genkey/pubkey` 和 `qrencode`，内核实验使用隔离命名空间中的标准 WireGuard peer、真实 TCP/UDP、原加密包承载、错误 key/源地址/端口和原 helper 崩溃后的恢复。
 
 只有对应精确源码的成功 receipt 才能作为通过证据。上述 Linux hosted 机制不能代替 Android/iOS 标准客户端设备、物理 NAT/防火墙暴露、实际安装升级卸载和跨机部署验收。
+
+源码 `794d3d1f45258d182a9baffd05526316b586a18d` 的 [Actions 41207005912](https://github.com/ZHanry/NestLink/actions/runs/41207005912) 已通过三项 CLI/成熟工具用例和完整的实际内核场景，包含正常关闭与原 helper SIGKILL 后恢复。[精确源码证据](evidence/wireguard-kernel-794d3d1.json) 保存下载制品摘要、执行文件和日志摘要及范围限制。实验使用 1500 字节物理链路承载 1280 字节 WireGuard 内层包和封装开销；实际部署同样需要为外层开销预留 MTU，当前默认拒绝规则不会靠外层 IP 分片绕过这个要求。
