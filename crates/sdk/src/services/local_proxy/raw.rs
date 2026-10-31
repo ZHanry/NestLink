@@ -6,7 +6,9 @@ use nestlink_node::service_plane::DatagramPacket;
 #[cfg(target_os = "linux")]
 use nestlink_platform_security::local_port_gate::{GatePlan, RootGateReceipt, Transport, wall_ms};
 #[cfg(windows)]
-use nestlink_privileged::windows::local_port_gate::{GatePlan, RootGateReceipt, Transport, wall_ms};
+use nestlink_privileged::windows::local_port_gate::{
+    GatePlan, RootGateReceipt, Transport, wall_ms,
+};
 use std::collections::BTreeMap;
 use tokio::{net::UdpSocket, sync::mpsc};
 
@@ -28,7 +30,9 @@ impl LocalRawServiceTls {
         let private_key = Zeroizing::new(private_key);
         if certificates.is_empty()
             || certificates.len() > 8
-            || certificates.iter().any(|certificate| certificate.is_empty() || certificate.len() > 16384)
+            || certificates
+                .iter()
+                .any(|certificate| certificate.is_empty() || certificate.len() > 16384)
             || private_key.is_empty()
             || private_key.len() > 16384
         {
@@ -43,13 +47,18 @@ impl LocalRawServiceTls {
         .with_safe_default_protocol_versions()
         .map_err(|_| LocalProxyError::Invalid)?
         .with_no_client_auth()
-        .with_single_cert(certificates.into_iter().map(CertificateDer::from).collect(), key)
+        .with_single_cert(
+            certificates.into_iter().map(CertificateDer::from).collect(),
+            key,
+        )
         .map_err(|_| LocalProxyError::Invalid)?;
         config.alpn_protocols = vec![b"http/1.1".to_vec()];
         config.max_early_data_size = 0;
         config.send_tls13_tickets = 0;
         config.session_storage = Arc::new(rustls::server::NoServerSessionStorage {});
-        Ok(Self { acceptor: tokio_rustls::TlsAcceptor::from(Arc::new(config)) })
+        Ok(Self {
+            acceptor: tokio_rustls::TlsAcceptor::from(Arc::new(config)),
+        })
     }
 }
 
@@ -139,7 +148,8 @@ impl Sdk {
         plan: GatePlan,
         receipt_path: &Path,
     ) -> Result<LocalRawServiceProxy, LocalProxyError> {
-        self.start_private_service_raw_with_tls(consumer, choice, plan, receipt_path, None).await
+        self.start_private_service_raw_with_tls(consumer, choice, plan, receipt_path, None)
+            .await
     }
     /// The optional local certificate terminates client TLS before application
     /// bytes enter the original service stream. It grants no remote authority.

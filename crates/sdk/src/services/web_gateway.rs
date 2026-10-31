@@ -3,13 +3,27 @@
 //! host retain possession proofs, target TLS, durable budget and revocation.
 use super::LocalProxyServiceChoice;
 use crate::{DeviceIdentity, Sdk, SdkError};
-use axum::{body::Body, http::{Request, Response, StatusCode}};
+use axum::{
+    body::Body,
+    http::{Request, Response, StatusCode},
+};
 use hyper::{body::Incoming, service::service_fn};
 use hyper_util::rt::{TokioIo, TokioTimer};
 use nestlink_auth::{Secret, token, token_hash};
 use reqwest::cookie::Jar;
-use std::{convert::Infallible, io, net::SocketAddr, sync::{Arc, Mutex, atomic::AtomicUsize}, time::Duration};
-use tokio::{net::TcpListener, sync::{mpsc, oneshot, watch}, task::{JoinHandle, JoinSet}, time::Instant};
+use std::{
+    convert::Infallible,
+    io,
+    net::SocketAddr,
+    sync::{Arc, Mutex, atomic::AtomicUsize},
+    time::Duration,
+};
+use tokio::{
+    net::TcpListener,
+    sync::{mpsc, oneshot, watch},
+    task::{JoinHandle, JoinSet},
+    time::Instant,
+};
 use url::Url;
 mod headers;
 mod tls;
@@ -56,17 +70,24 @@ pub struct PrivateWebGateway {
 }
 
 impl PrivateWebGateway {
-    pub fn address(&self) -> SocketAddr { self.address }
-    pub fn origin(&self) -> &str { &self.origin }
+    pub fn address(&self) -> SocketAddr {
+        self.address
+    }
+    pub fn origin(&self) -> &str {
+        &self.origin
+    }
     /// Contains a single-use capability. Save only in an owner-private file.
     /// It belongs in a URL fragment, never a query, log or Referer.
     pub fn launch_url(&self) -> String {
-        format!("{}/.nestlink/launch#{}",self.origin,self.launch.expose())
+        format!("{}/.nestlink/launch#{}", self.origin, self.launch.expose())
     }
     /// A route for a dedicated Caddy HTTPS server with strict_sni_host=true.
     /// The serialized value contains the private-hop secret and must be private.
     pub fn caddy_route(&self) -> serde_json::Value {
-        let host=Url::parse(&self.origin).ok().and_then(|url|url.host_str().map(str::to_owned)).unwrap_or_default();
+        let host = Url::parse(&self.origin)
+            .ok()
+            .and_then(|url| url.host_str().map(str::to_owned))
+            .unwrap_or_default();
         serde_json::json!({"match":[{"host":[host]}],"terminal":true,"handle":[{
             "handler":"reverse_proxy","upstreams":[{"dial":self.address.to_string()}],
             "transport":{"protocol":"http","versions":["1.1"],"keep_alive":{"enabled":false},
@@ -78,59 +99,80 @@ impl PrivateWebGateway {
             }}},"flush_interval":-1,"stream_close_delay":"1h"
         }]})
     }
-    pub fn is_finished(&self) -> bool { self.report.is_some() || self.task.as_ref().is_none_or(JoinHandle::is_finished) }
-    pub fn request_shutdown(&self) { self.stop.send_replace(true); }
+    pub fn is_finished(&self) -> bool {
+        self.report.is_some() || self.task.as_ref().is_none_or(JoinHandle::is_finished)
+    }
+    pub fn request_shutdown(&self) {
+        self.stop.send_replace(true);
+    }
     /// Keep this same owner after a timeout. It retains every HTTP/upgraded
     /// worker and the original private carrier's physical release receipt.
-    pub async fn wait_stopped(&mut self, budget:Duration)->PrivateWebGatewayWait {
+    pub async fn wait_stopped(&mut self, budget: Duration) -> PrivateWebGatewayWait {
         self.request_shutdown();
-        if let Some(task)=self.task.as_mut() {
-            match tokio::time::timeout(budget,&mut *task).await {
-                Err(_)=>return PrivateWebGatewayWait::CleanupPending,
-                Ok(result)=>{
-                    self.report=Some(result.unwrap_or_else(|_|PrivateWebGatewayStopReport{cleanup_failures:1,..Default::default()}));
+        if let Some(task) = self.task.as_mut() {
+            match tokio::time::timeout(budget, &mut *task).await {
+                Err(_) => return PrivateWebGatewayWait::CleanupPending,
+                Ok(result) => {
+                    self.report = Some(result.unwrap_or_else(|_| PrivateWebGatewayStopReport {
+                        cleanup_failures: 1,
+                        ..Default::default()
+                    }));
                     self.task.take();
                 }
             }
         }
-        let report=self.report.clone().unwrap_or_else(||PrivateWebGatewayStopReport{cleanup_failures:1,..Default::default()});
-        if report.listener_closed && report.cleanup_failures==0 {PrivateWebGatewayWait::Stopped(report)} else {PrivateWebGatewayWait::CleanupFailed(report)}
+        let report = self
+            .report
+            .clone()
+            .unwrap_or_else(|| PrivateWebGatewayStopReport {
+                cleanup_failures: 1,
+                ..Default::default()
+            });
+        if report.listener_closed && report.cleanup_failures == 0 {
+            PrivateWebGatewayWait::Stopped(report)
+        } else {
+            PrivateWebGatewayWait::CleanupFailed(report)
+        }
     }
 }
 impl Drop for PrivateWebGateway {
     fn drop(&mut self) {
         self.request_shutdown();
-        if let Some(task)=self.task.take() {self.runtime.spawn(async move {let _=task.await;});}
+        if let Some(task) = self.task.take() {
+            self.runtime.spawn(async move {
+                let _ = task.await;
+            });
+        }
     }
 }
 
 struct BrowserSession {
-    cookie_hash:[u8;32],
-    stopped:watch::Sender<bool>,
-    cookies:Jar,
-    cookie_bytes:AtomicUsize,
+    cookie_hash: [u8; 32],
+    stopped: watch::Sender<bool>,
+    cookies: Jar,
+    cookie_bytes: AtomicUsize,
 }
 struct BrowserAdmission {
-    ticket:Option<([u8;32],Instant)>,
-    session:Option<Arc<BrowserSession>>,
+    ticket: Option<([u8; 32], Instant)>,
+    session: Option<Arc<BrowserSession>>,
 }
 struct Context {
-    sdk:Arc<Sdk>,
-    consumer:Arc<DeviceIdentity>,
-    choice:LocalProxyServiceChoice,
-    origin:Url,
-    backend:Url,
-    hop_hash:[u8;32],
-    admission:Mutex<BrowserAdmission>,
-    stopped:watch::Receiver<bool>,
-    shutdown:watch::Sender<bool>,
-    deadline:Instant,
+    sdk: Arc<Sdk>,
+    consumer: Arc<DeviceIdentity>,
+    choice: LocalProxyServiceChoice,
+    origin: Url,
+    backend: Url,
+    hop_hash: [u8; 32],
+    admission: Mutex<BrowserAdmission>,
+    stopped: watch::Receiver<bool>,
+    shutdown: watch::Sender<bool>,
+    deadline: Instant,
 }
 struct Forward {
-    request:Request<Incoming>,
-    upgrade:Option<hyper::upgrade::OnUpgrade>,
-    session:Arc<BrowserSession>,
-    response:oneshot::Sender<Response<Body>>,
+    request: Request<Incoming>,
+    upgrade: Option<hyper::upgrade::OnUpgrade>,
+    session: Arc<BrowserSession>,
+    response: oneshot::Sender<Response<Body>>,
 }
 enum WorkerError {
     Forward,
@@ -141,52 +183,105 @@ impl Sdk {
     /// The local caller selects an existing private directory entry and an
     /// explicitly enrolled gateway installation. A browser cannot choose a URL,
     /// local port, service, space, relay or target through this listener.
-    pub async fn start_private_web_gateway(self:&Arc<Self>,consumer:Arc<DeviceIdentity>,choice:LocalProxyServiceChoice,config:PrivateWebGatewayConfig)->Result<PrivateWebGateway,SdkError> {
+    pub async fn start_private_web_gateway(
+        self: &Arc<Self>,
+        consumer: Arc<DeviceIdentity>,
+        choice: LocalProxyServiceChoice,
+        config: PrivateWebGatewayConfig,
+    ) -> Result<PrivateWebGateway, SdkError> {
         self.principal().ok_or(SdkError::SignIn)?;
-        if !config.listen.ip().is_loopback() || !nestlink_protocol::valid_id(&consumer.device_id) {return Err(SdkError::Invalid);}
-        let origin=headers::origin(&config.origin,&self.origin)?;
-        if !origin.host_str().is_some_and(|host|host.starts_with(&format!("{}.",choice.selected_entry().service.id))){return Err(SdkError::Invalid);}
-        let backend=headers::backend(&choice.selected_entry().service.definition.requested_ingress)?;
-        let tls=tls::UpstreamTls::generate(choice.lifetime())?;
-        let deadline=Instant::now()+choice.lifetime();
+        if !config.listen.ip().is_loopback() || !nestlink_protocol::valid_id(&consumer.device_id) {
+            return Err(SdkError::Invalid);
+        }
+        let origin = headers::origin(&config.origin, &self.origin)?;
+        if !origin.host_str().is_some_and(|host| {
+            host.starts_with(&format!("{}.", choice.selected_entry().service.id))
+        }) {
+            return Err(SdkError::Invalid);
+        }
+        let backend =
+            headers::backend(&choice.selected_entry().service.definition.requested_ingress)?;
+        let tls = tls::UpstreamTls::generate(choice.lifetime())?;
+        let deadline = Instant::now() + choice.lifetime();
         #[cfg(any(target_os = "linux", windows))]
-        let listener=super::local_proxy::bind_tcp(config.listen).await?;
+        let listener = super::local_proxy::bind_tcp(config.listen).await?;
         #[cfg(not(any(target_os = "linux", windows)))]
-        let listener=TcpListener::bind(config.listen).await?;
-        let address=listener.local_addr()?;
-        let launch=token();let private_hop=token();
-        let (stop,stopped)=watch::channel(false);
-        let context=Arc::new(Context{
-            sdk:self.clone(),consumer,choice,origin:origin.clone(),backend,
-            hop_hash:token_hash("private-web-hop",private_hop.expose()),
-            admission:Mutex::new(BrowserAdmission{ticket:Some((token_hash("private-web-launch",launch.expose()),deadline.min(Instant::now()+TICKET_LIFETIME))),session:None}),
-            stopped,shutdown:stop.clone(),deadline,
+        let listener = TcpListener::bind(config.listen).await?;
+        let address = listener.local_addr()?;
+        let launch = token();
+        let private_hop = token();
+        let (stop, stopped) = watch::channel(false);
+        let context = Arc::new(Context {
+            sdk: self.clone(),
+            consumer,
+            choice,
+            origin: origin.clone(),
+            backend,
+            hop_hash: token_hash("private-web-hop", private_hop.expose()),
+            admission: Mutex::new(BrowserAdmission {
+                ticket: Some((
+                    token_hash("private-web-launch", launch.expose()),
+                    deadline.min(Instant::now() + TICKET_LIFETIME),
+                )),
+                session: None,
+            }),
+            stopped,
+            shutdown: stop.clone(),
+            deadline,
         });
-        let task=tokio::spawn(run_owner(context,listener,tls.acceptor));
-        Ok(PrivateWebGateway{address,origin:origin.origin().ascii_serialization(),launch,private_hop,upstream_certificate:tls.certificate,upstream_server_name:tls.server_name,stop,task:Some(task),report:None,runtime:tokio::runtime::Handle::current()})
+        let task = tokio::spawn(run_owner(context, listener, tls.acceptor));
+        Ok(PrivateWebGateway {
+            address,
+            origin: origin.origin().ascii_serialization(),
+            launch,
+            private_hop,
+            upstream_certificate: tls.certificate,
+            upstream_server_name: tls.server_name,
+            stop,
+            task: Some(task),
+            report: None,
+            runtime: tokio::runtime::Handle::current(),
+        })
     }
 }
 
-async fn stopped(stop:&mut watch::Receiver<bool>) {
-    loop {if *stop.borrow() || stop.changed().await.is_err(){return;}}
-}
-fn response(status:StatusCode)->Response<Body> {
-    let mut response=Response::new(Body::empty());*response.status_mut()=status;
-    headers::browser_response(response.headers_mut());response
-}
-fn finish(report:&mut PrivateWebGatewayStopReport,result:Option<Result<Result<(),WorkerError>,tokio::task::JoinError>>) {
-    report.completed_workers+=1;
-    match result {
-        Some(Ok(Ok(())))=>{},
-        Some(Ok(Err(WorkerError::Forward)))=>report.failed_workers+=1,
-        Some(Ok(Err(WorkerError::Cleanup)))=>{report.failed_workers+=1;report.cleanup_failures+=1;},
-        _=>report.cleanup_failures+=1,
+async fn stopped(stop: &mut watch::Receiver<bool>) {
+    loop {
+        if *stop.borrow() || stop.changed().await.is_err() {
+            return;
+        }
     }
 }
-async fn run_owner(context:Arc<Context>,listener:TcpListener,acceptor:tokio_rustls::TlsAcceptor)->PrivateWebGatewayStopReport {
-    let mut report=PrivateWebGatewayStopReport::default();
-    let (sender,mut queue)=mpsc::channel::<Forward>(MAX_CONNECTIONS);
-    let mut workers=JoinSet::new();let mut stop=context.stopped.clone();
+fn response(status: StatusCode) -> Response<Body> {
+    let mut response = Response::new(Body::empty());
+    *response.status_mut() = status;
+    headers::browser_response(response.headers_mut());
+    response
+}
+fn finish(
+    report: &mut PrivateWebGatewayStopReport,
+    result: Option<Result<Result<(), WorkerError>, tokio::task::JoinError>>,
+) {
+    report.completed_workers += 1;
+    match result {
+        Some(Ok(Ok(()))) => {}
+        Some(Ok(Err(WorkerError::Forward))) => report.failed_workers += 1,
+        Some(Ok(Err(WorkerError::Cleanup))) => {
+            report.failed_workers += 1;
+            report.cleanup_failures += 1;
+        }
+        _ => report.cleanup_failures += 1,
+    }
+}
+async fn run_owner(
+    context: Arc<Context>,
+    listener: TcpListener,
+    acceptor: tokio_rustls::TlsAcceptor,
+) -> PrivateWebGatewayStopReport {
+    let mut report = PrivateWebGatewayStopReport::default();
+    let (sender, mut queue) = mpsc::channel::<Forward>(MAX_CONNECTIONS);
+    let mut workers = JoinSet::new();
+    let mut stop = context.stopped.clone();
     loop {
         tokio::select! {biased;
             _=stopped(&mut stop)=>break,
@@ -225,80 +320,188 @@ async fn run_owner(context:Arc<Context>,listener:TcpListener,acceptor:tokio_rust
             }
         }
     }
-    drop(listener);report.listener_closed=true;
+    drop(listener);
+    report.listener_closed = true;
     context.shutdown.send_replace(true);
     // The receiver closes ordinary HTTP sockets; session stop closes upgraded
     // streams whose outer Hyper driver already returned its upgrade ownership.
-    if let Ok(mut admission)=context.admission.lock() {
+    if let Ok(mut admission) = context.admission.lock() {
         admission.ticket.take();
-        if let Some(session)=admission.session.take(){session.stopped.send_replace(true);}
+        if let Some(session) = admission.session.take() {
+            session.stopped.send_replace(true);
+        }
     }
     queue.close();
-    while let Some(work)=queue.recv().await {let _=work.response.send(response(StatusCode::SERVICE_UNAVAILABLE));}
+    while let Some(work) = queue.recv().await {
+        let _ = work
+            .response
+            .send(response(StatusCode::SERVICE_UNAVAILABLE));
+    }
     // Own stop can be false on natural expiry; every worker also uses deadline.
-    while !workers.is_empty(){finish(&mut report,workers.join_next().await);}
+    while !workers.is_empty() {
+        finish(&mut report, workers.join_next().await);
+    }
     report
 }
 
-async fn handle(context:Arc<Context>,sender:mpsc::Sender<Forward>,mut request:Request<Incoming>)->Result<Response<Body>,Infallible> {
-    let result=async {
-        if Instant::now()>=context.deadline || *context.stopped.borrow() {return response(StatusCode::SERVICE_UNAVAILABLE);}
-        if headers::authenticate(&request,&context.origin,&context.hop_hash).is_err(){return response(StatusCode::FORBIDDEN);}
-        let path=request.uri().path();
-        if path=="/.nestlink/launch" {
-            if request.method()!=hyper::Method::GET || request.uri().query().is_some(){return response(StatusCode::BAD_REQUEST);}
-            let mut page=response(StatusCode::OK);
-            page.headers_mut().insert(hyper::header::CONTENT_TYPE,hyper::header::HeaderValue::from_static("text/html; charset=utf-8"));
-            *page.body_mut()=Body::from(headers::LAUNCH_PAGE);
+async fn handle(
+    context: Arc<Context>,
+    sender: mpsc::Sender<Forward>,
+    mut request: Request<Incoming>,
+) -> Result<Response<Body>, Infallible> {
+    let result = async {
+        if Instant::now() >= context.deadline || *context.stopped.borrow() {
+            return response(StatusCode::SERVICE_UNAVAILABLE);
+        }
+        if headers::authenticate(&request, &context.origin, &context.hop_hash).is_err() {
+            return response(StatusCode::FORBIDDEN);
+        }
+        let path = request.uri().path();
+        if path == "/.nestlink/launch" {
+            if request.method() != hyper::Method::GET || request.uri().query().is_some() {
+                return response(StatusCode::BAD_REQUEST);
+            }
+            let mut page = response(StatusCode::OK);
+            page.headers_mut().insert(
+                hyper::header::CONTENT_TYPE,
+                hyper::header::HeaderValue::from_static("text/html; charset=utf-8"),
+            );
+            *page.body_mut() = Body::from(headers::LAUNCH_PAGE);
             return page;
         }
-        if path=="/.nestlink/session" {
-            if request.method()!=hyper::Method::POST || !headers::same_origin(request.headers(),&context.origin) || request.uri().query().is_some(){return response(StatusCode::FORBIDDEN);}
-            let Some(ticket)=headers::launch_ticket(request.headers()) else{return response(StatusCode::UNAUTHORIZED);};
-            let Ok(mut admission)=context.admission.lock() else{return response(StatusCode::SERVICE_UNAVAILABLE);};
-            if !admission.ticket.as_ref().is_some_and(|(hash,end)|Instant::now()<*end && *hash==token_hash("private-web-launch",ticket)) {return response(StatusCode::UNAUTHORIZED);}
-            admission.ticket.take();let cookie=token();let (stopped,_)=watch::channel(false);
-            admission.session=Some(Arc::new(BrowserSession{cookie_hash:token_hash("private-web-cookie",cookie.expose()),stopped,cookies:Jar::default(),cookie_bytes:AtomicUsize::new(0)}));
-            let mut issued=response(StatusCode::NO_CONTENT);
-            let value=format!("{SESSION_COOKIE}={}; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age={}",cookie.expose(),context.deadline.saturating_duration_since(Instant::now()).as_secs());
-            if let Ok(value)=value.parse(){issued.headers_mut().insert(hyper::header::SET_COOKIE,value);}else{return response(StatusCode::SERVICE_UNAVAILABLE);}
+        if path == "/.nestlink/session" {
+            if request.method() != hyper::Method::POST
+                || !headers::same_origin(request.headers(), &context.origin)
+                || request.uri().query().is_some()
+            {
+                return response(StatusCode::FORBIDDEN);
+            }
+            let Some(ticket) = headers::launch_ticket(request.headers()) else {
+                return response(StatusCode::UNAUTHORIZED);
+            };
+            let Ok(mut admission) = context.admission.lock() else {
+                return response(StatusCode::SERVICE_UNAVAILABLE);
+            };
+            if !admission.ticket.as_ref().is_some_and(|(hash, end)| {
+                Instant::now() < *end && *hash == token_hash("private-web-launch", ticket)
+            }) {
+                return response(StatusCode::UNAUTHORIZED);
+            }
+            admission.ticket.take();
+            let cookie = token();
+            let (stopped, _) = watch::channel(false);
+            admission.session = Some(Arc::new(BrowserSession {
+                cookie_hash: token_hash("private-web-cookie", cookie.expose()),
+                stopped,
+                cookies: Jar::default(),
+                cookie_bytes: AtomicUsize::new(0),
+            }));
+            let mut issued = response(StatusCode::NO_CONTENT);
+            let value = format!(
+                "{SESSION_COOKIE}={}; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age={}",
+                cookie.expose(),
+                context
+                    .deadline
+                    .saturating_duration_since(Instant::now())
+                    .as_secs()
+            );
+            if let Ok(value) = value.parse() {
+                issued
+                    .headers_mut()
+                    .insert(hyper::header::SET_COOKIE, value);
+            } else {
+                return response(StatusCode::SERVICE_UNAVAILABLE);
+            }
             return issued;
         }
-        let session={
-            let Ok(admission)=context.admission.lock() else{return response(StatusCode::SERVICE_UNAVAILABLE);};
-            let Some(session)=admission.session.as_ref() else{return response(StatusCode::UNAUTHORIZED);};
-            let Some(cookie)=headers::session_cookie(request.headers()) else{return response(StatusCode::UNAUTHORIZED);};
-            if *session.stopped.borrow() || session.cookie_hash!=token_hash("private-web-cookie",cookie){return response(StatusCode::UNAUTHORIZED);}
+        let session = {
+            let Ok(admission) = context.admission.lock() else {
+                return response(StatusCode::SERVICE_UNAVAILABLE);
+            };
+            let Some(session) = admission.session.as_ref() else {
+                return response(StatusCode::UNAUTHORIZED);
+            };
+            let Some(cookie) = headers::session_cookie(request.headers()) else {
+                return response(StatusCode::UNAUTHORIZED);
+            };
+            if *session.stopped.borrow()
+                || session.cookie_hash != token_hash("private-web-cookie", cookie)
+            {
+                return response(StatusCode::UNAUTHORIZED);
+            }
             session.clone()
         };
-        if path=="/.nestlink/logout" {
-            if request.method()!=hyper::Method::POST || !headers::same_origin(request.headers(),&context.origin){return response(StatusCode::FORBIDDEN);}
+        if path == "/.nestlink/logout" {
+            if request.method() != hyper::Method::POST
+                || !headers::same_origin(request.headers(), &context.origin)
+            {
+                return response(StatusCode::FORBIDDEN);
+            }
             session.stopped.send_replace(true);
-            if let Ok(mut admission)=context.admission.lock(){admission.session.take();}
-            let mut removed=response(StatusCode::NO_CONTENT);
-            removed.headers_mut().insert(hyper::header::SET_COOKIE,hyper::header::HeaderValue::from_static("__Host-nl_private_web=; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=0"));
+            if let Ok(mut admission) = context.admission.lock() {
+                admission.session.take();
+            }
+            let mut removed = response(StatusCode::NO_CONTENT);
+            removed.headers_mut().insert(
+                hyper::header::SET_COOKIE,
+                hyper::header::HeaderValue::from_static(
+                    "__Host-nl_private_web=; Path=/; Secure; HttpOnly; SameSite=Strict; Max-Age=0",
+                ),
+            );
             return removed;
         }
-        if path.starts_with("/.nestlink/"){return response(StatusCode::NOT_FOUND);}
-        let websocket=match headers::application_request(&mut request,&context.origin,&context.backend,&session){Ok(upgrade)=>upgrade,Err(_)=>return response(StatusCode::FORBIDDEN)};
-        let upgrade=websocket.then(||hyper::upgrade::on(&mut request));
-        let (response_tx,response_rx)=oneshot::channel();
-        if sender.try_send(Forward{request,upgrade,session,response:response_tx}).is_err(){return response(StatusCode::SERVICE_UNAVAILABLE);}
-        match response_rx.await {Ok(response)=>response,Err(_)=>response(StatusCode::BAD_GATEWAY)}
-    }.await;
+        if path.starts_with("/.nestlink/") {
+            return response(StatusCode::NOT_FOUND);
+        }
+        let websocket = match headers::application_request(
+            &mut request,
+            &context.origin,
+            &context.backend,
+            &session,
+        ) {
+            Ok(upgrade) => upgrade,
+            Err(_) => return response(StatusCode::FORBIDDEN),
+        };
+        let upgrade = websocket.then(|| hyper::upgrade::on(&mut request));
+        let (response_tx, response_rx) = oneshot::channel();
+        if sender
+            .try_send(Forward {
+                request,
+                upgrade,
+                session,
+                response: response_tx,
+            })
+            .is_err()
+        {
+            return response(StatusCode::SERVICE_UNAVAILABLE);
+        }
+        match response_rx.await {
+            Ok(response) => response,
+            Err(_) => response(StatusCode::BAD_GATEWAY),
+        }
+    }
+    .await;
     Ok(result)
 }
 
-async fn admit(context:&Context)->Result<nestlink_identity::services::private::VerifiedPrivateServiceLease,SdkError> {
-    let request=context.choice.access_request(&context.consumer)?;
-    let lease=context.sdk.request_private_service(&context.choice.selected_entry().service.id,request).await?;
-    if !context.choice.checks_lease(&lease){return Err(SdkError::Trust);}
+async fn admit(
+    context: &Context,
+) -> Result<nestlink_identity::services::private::VerifiedPrivateServiceLease, SdkError> {
+    let request = context.choice.access_request(&context.consumer)?;
+    let lease = context
+        .sdk
+        .request_private_service(&context.choice.selected_entry().service.id, request)
+        .await?;
+    if !context.choice.checks_lease(&lease) {
+        return Err(SdkError::Trust);
+    }
     Ok(lease)
 }
-async fn forward(context:Arc<Context>,work:Forward)->Result<(),WorkerError> {
-    let mut stop=context.stopped.clone();let mut session_stop=work.session.stopped.subscribe();
-    let setup_deadline=context.deadline.min(Instant::now()+SETUP);
-    let lease=tokio::select! {biased;
+async fn forward(context: Arc<Context>, work: Forward) -> Result<(), WorkerError> {
+    let mut stop = context.stopped.clone();
+    let mut session_stop = work.session.stopped.subscribe();
+    let setup_deadline = context.deadline.min(Instant::now() + SETUP);
+    let lease = tokio::select! {biased;
         _=stopped(&mut stop)=>return Ok(()),
         _=stopped(&mut session_stop)=>return Ok(()),
         result=tokio::time::timeout_at(setup_deadline,admit(&context))=>match result {
@@ -306,61 +509,115 @@ async fn forward(context:Arc<Context>,work:Forward)->Result<(),WorkerError> {
             _=>{let _=work.response.send(response(StatusCode::FORBIDDEN));return Ok(());}
         },
     };
-    let connecting=context.sdk.connect_private_service_with_relay_policy(&context.consumer,lease,context.choice.relay_policy());tokio::pin!(connecting);
-    let admitted=tokio::select! {biased;
+    let connecting = context.sdk.connect_private_service_with_relay_policy(
+        &context.consumer,
+        lease,
+        context.choice.relay_policy(),
+    );
+    tokio::pin!(connecting);
+    let admitted = tokio::select! {biased;
         _=stopped(&mut stop)=>None,
         _=stopped(&mut session_stop)=>None,
         _=tokio::time::sleep_until(setup_deadline)=>None,
         result=&mut connecting=>Some(result),
     };
-    let mut connection=match admitted {
-        Some(Ok(connection))=>connection,
-        Some(Err(_))=>return Err(WorkerError::Cleanup),
-        None=>{
-            let mut connection=connecting.await.map_err(|_|WorkerError::Cleanup)?;
-            connection.close().await.map_err(|_|WorkerError::Cleanup)?;
+    let mut connection = match admitted {
+        Some(Ok(connection)) => connection,
+        Some(Err(_)) => return Err(WorkerError::Cleanup),
+        None => {
+            let mut connection = connecting.await.map_err(|_| WorkerError::Cleanup)?;
+            connection.close().await.map_err(|_| WorkerError::Cleanup)?;
             return Ok(());
         }
     };
-    let lease=connection.lease().clone();
-    let grant:Result<nestlink_protocol::service_plane::ServiceUsageBudgetGrantClaims,_>=nestlink_protocol::service_plane::decode_service_message(&lease.lease().claims().usage_grant.claims,nestlink_protocol::service_plane::SERVICE_USAGE_BYTES);
-    let grant=match grant {Ok(grant)=>grant,Err(_)=>{connection.close().await.map_err(|_|WorkerError::Cleanup)?;return Err(WorkerError::Forward);}};
-    let monitor=async {
-        let mut tick=tokio::time::interval(Duration::from_secs(1));
-        loop {
-            tick.tick().await;
-            let current=context.sdk.current_private_service(&context.choice.selected_entry().service.id,&grant.grant_id).await?;
-            if current.digest()!=lease.digest(){return Err::<(),SdkError>(SdkError::Trust);}
+    let lease = connection.lease().clone();
+    let grant: Result<nestlink_protocol::service_plane::ServiceUsageBudgetGrantClaims, _> =
+        nestlink_protocol::service_plane::decode_service_message(
+            &lease.lease().claims().usage_grant.claims,
+            nestlink_protocol::service_plane::SERVICE_USAGE_BYTES,
+        );
+    let grant = match grant {
+        Ok(grant) => grant,
+        Err(_) => {
+            connection.close().await.map_err(|_| WorkerError::Cleanup)?;
+            return Err(WorkerError::Forward);
         }
     };
-    let transfer=async {
-        let stream=connection.take_stream().map_err(io::Error::other)?;
-        let (mut sender,http)=hyper::client::conn::http1::handshake::<_,Incoming>(TokioIo::new(stream)).await.map_err(io::Error::other)?;
-        let exchange=async {
-            let backend=headers::application_url(&context.backend,work.request.uri().path_and_query().ok_or_else(||io::Error::other("private web request path missing"))?.as_str())?;
-            let mut upstream=sender.send_request(work.request).await.map_err(io::Error::other)?;
-            drop(sender);
-            let websocket=work.upgrade.is_some();
-            if (upstream.status()==StatusCode::SWITCHING_PROTOCOLS)!=websocket {return Err(io::Error::other("private web upgrade was refused"));}
-            let upgraded=websocket.then(||hyper::upgrade::on(&mut upstream));
-            headers::application_response(upstream.headers_mut(),&context.origin,&backend,&work.session,websocket)?;
-            if work.response.send(upstream.map(Body::new)).is_err(){return Err(io::Error::other("private web browser disconnected"));}
-            if let (Some(browser),Some(upstream))=(work.upgrade,upgraded) {
-                let (browser,upstream)=tokio::try_join!(browser,upstream).map_err(io::Error::other)?;
-                tokio::io::copy_bidirectional(&mut TokioIo::new(browser),&mut TokioIo::new(upstream)).await?;
+    let monitor = async {
+        let mut tick = tokio::time::interval(Duration::from_secs(1));
+        loop {
+            tick.tick().await;
+            let current = context
+                .sdk
+                .current_private_service(
+                    &context.choice.selected_entry().service.id,
+                    &grant.grant_id,
+                )
+                .await?;
+            if current.digest() != lease.digest() {
+                return Err::<(), SdkError>(SdkError::Trust);
             }
-            Ok::<(),io::Error>(())
-        };
-        tokio::try_join!(async {http.with_upgrades().await.map_err(io::Error::other)},exchange)?;
-        Ok::<(),io::Error>(())
+        }
     };
-    let result=tokio::select! {biased;
+    let transfer = async {
+        let stream = connection.take_stream().map_err(io::Error::other)?;
+        let (mut sender, http) =
+            hyper::client::conn::http1::handshake::<_, Incoming>(TokioIo::new(stream))
+                .await
+                .map_err(io::Error::other)?;
+        let exchange = async {
+            let backend = headers::application_url(
+                &context.backend,
+                work.request
+                    .uri()
+                    .path_and_query()
+                    .ok_or_else(|| io::Error::other("private web request path missing"))?
+                    .as_str(),
+            )?;
+            let mut upstream = sender
+                .send_request(work.request)
+                .await
+                .map_err(io::Error::other)?;
+            drop(sender);
+            let websocket = work.upgrade.is_some();
+            if (upstream.status() == StatusCode::SWITCHING_PROTOCOLS) != websocket {
+                return Err(io::Error::other("private web upgrade was refused"));
+            }
+            let upgraded = websocket.then(|| hyper::upgrade::on(&mut upstream));
+            headers::application_response(
+                upstream.headers_mut(),
+                &context.origin,
+                &backend,
+                &work.session,
+                websocket,
+            )?;
+            if work.response.send(upstream.map(Body::new)).is_err() {
+                return Err(io::Error::other("private web browser disconnected"));
+            }
+            if let (Some(browser), Some(upstream)) = (work.upgrade, upgraded) {
+                let (browser, upstream) =
+                    tokio::try_join!(browser, upstream).map_err(io::Error::other)?;
+                tokio::io::copy_bidirectional(
+                    &mut TokioIo::new(browser),
+                    &mut TokioIo::new(upstream),
+                )
+                .await?;
+            }
+            Ok::<(), io::Error>(())
+        };
+        tokio::try_join!(
+            async { http.with_upgrades().await.map_err(io::Error::other) },
+            exchange
+        )?;
+        Ok::<(), io::Error>(())
+    };
+    let result = tokio::select! {biased;
         _=stopped(&mut stop)=>Ok(()),
         _=stopped(&mut session_stop)=>Ok(()),
         _=tokio::time::sleep_until(context.deadline)=>Ok(()),
         _=monitor=>Ok(()),
         result=transfer=>result,
     };
-    connection.close().await.map_err(|_|WorkerError::Cleanup)?;
-    result.map_err(|_|WorkerError::Forward)
+    connection.close().await.map_err(|_| WorkerError::Cleanup)?;
+    result.map_err(|_| WorkerError::Forward)
 }

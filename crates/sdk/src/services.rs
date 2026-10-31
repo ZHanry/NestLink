@@ -11,7 +11,9 @@ pub use local_proxy::native_stream::{
     LocalNativeServiceProxy, NativeStreamStopReport, NativeStreamWait,
 };
 #[cfg(any(target_os = "linux", windows))]
-pub use local_proxy::raw::{LocalRawServiceProxy, LocalRawServiceTls, RawProxyStopReport, RawProxyWait};
+pub use local_proxy::raw::{
+    LocalRawServiceProxy, LocalRawServiceTls, RawProxyStopReport, RawProxyWait,
+};
 #[cfg(not(target_arch = "wasm32"))]
 pub use local_proxy::{
     LocalProxyError, LocalProxyServiceChoice, LocalProxyStopReport, LocalProxyWait,

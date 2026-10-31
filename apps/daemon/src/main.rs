@@ -431,7 +431,9 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         Some(Command::PrivateServiceProxy(command)) => {
             return private_service_proxy::run(command).await;
         }
-        Some(Command::PrivateWebGateway(command)) => return private_web_gateway::run(command).await,
+        Some(Command::PrivateWebGateway(command)) => {
+            return private_web_gateway::run(command).await;
+        }
         Some(Command::SpaceDnsSystem(command)) => return space_dns_system::run(command).await,
         Some(Command::FileQuota(command)) => return Ok(run_file_quota(command)?),
         Some(Command::Maintenance(command)) => return maintenance::run(command).await,

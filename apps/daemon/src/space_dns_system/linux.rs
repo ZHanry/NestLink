@@ -208,7 +208,10 @@ pub(super) async fn preflight(plan: &DnsPlan) -> Result {
 }
 
 fn activation_address(plan: &DnsPlan) -> Ipv6Addr {
-    let digest = Sha256::digest(format!("NestLink:split-dns:scope-address:v1:{}", plan.marker()));
+    let digest = Sha256::digest(format!(
+        "NestLink:split-dns:scope-address:v1:{}",
+        plan.marker()
+    ));
     let mut bytes = [0_u8; 16];
     bytes.copy_from_slice(&digest[..16]);
     bytes[0] = 0xfd;
@@ -348,11 +351,10 @@ pub(super) async fn inspect(plan: &DnsPlan) -> Result<Option<Value>> {
         .filter(|flag| !matches!(flag.as_str(), Some("LOWER_UP" | "DORMANT" | "RUNNING")))
         .cloned()
         .collect::<Vec<_>>();
-    let address_generation: u8 = std::fs::read_to_string(format!(
-        "/proc/sys/net/ipv6/conf/{link_name}/addr_gen_mode"
-    ))?
-    .trim()
-    .parse()?;
+    let address_generation: u8 =
+        std::fs::read_to_string(format!("/proc/sys/net/ipv6/conf/{link_name}/addr_gen_mode"))?
+            .trim()
+            .parse()?;
     let configuration = json!({"ifindex":index,"ifname":link["ifname"],"ifalias":link["ifalias"],"linkinfo":{"info_kind":link["linkinfo"]["info_kind"]},"mtu":link["mtu"],"address":link["address"],"broadcast":link["broadcast"],"flags":flags,"ipv6_addr_gen_mode":address_generation});
     // The kernel's automatic IPv6 multicast route is intrinsic to an UP dummy
     // link. Retain every other route: only the exact owner ULA's local /128
@@ -512,8 +514,7 @@ pub(super) async fn install(plan: &DnsPlan) -> Result {
             .collect(),
     )
     .await?;
-    if std::fs::read_to_string(format!("/proc/sys/net/ipv6/conf/{link}/addr_gen_mode"))?
-        .trim()
+    if std::fs::read_to_string(format!("/proc/sys/net/ipv6/conf/{link}/addr_gen_mode"))?.trim()
         != "1"
     {
         return Err(io::Error::other(
@@ -761,9 +762,15 @@ mod tests {
         ] {
             assert!(check_activation_conflicts(selected, &addresses, &empty).is_err());
         }
-        for destination in ["fd00::/8", "fd84:5612::/32", "fd84:5612:3423:7856::7", "malformed"] {
+        for destination in [
+            "fd00::/8",
+            "fd84:5612::/32",
+            "fd84:5612:3423:7856::7",
+            "malformed",
+        ] {
             assert!(
-                check_activation_conflicts(selected, &empty, &json!([{"dst":destination}])).is_err(),
+                check_activation_conflicts(selected, &empty, &json!([{"dst":destination}]))
+                    .is_err(),
                 "destination {destination}"
             );
         }

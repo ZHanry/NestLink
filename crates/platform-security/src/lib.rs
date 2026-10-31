@@ -324,8 +324,8 @@ mod private_acl {
         Security::{
             ACCESS_ALLOWED_ACE, ACE_HEADER, ACL, ACL_SIZE_INFORMATION, AclSizeInformation,
             Authorization::{
-                ConvertSidToStringSidW, ConvertStringSecurityDescriptorToSecurityDescriptorW, GetSecurityInfo,
-                SDDL_REVISION_1, SE_FILE_OBJECT,
+                ConvertSidToStringSidW, ConvertStringSecurityDescriptorToSecurityDescriptorW,
+                GetSecurityInfo, SDDL_REVISION_1, SE_FILE_OBJECT,
             },
             CONTAINER_INHERIT_ACE, CreateWellKnownSid, DACL_SECURITY_INFORMATION, EqualSid, GetAce,
             GetAclInformation, GetLengthSid, GetSecurityDescriptorControl,
@@ -618,14 +618,19 @@ mod private_acl {
         }
         let _user_text = OwnedSecurityDescriptor(user_text.cast());
         let mut length = 0usize;
-        while length < 256 && unsafe { *user_text.add(length) } != 0 { length += 1; }
-        if length == 256 { return Err(denied()); }
+        while length < 256 && unsafe { *user_text.add(length) } != 0 {
+            length += 1;
+        }
+        if length == 256 {
+            return Err(denied());
+        }
         // SAFETY: ConvertSidToStringSidW owns this valid terminated text for
         // the complete bounded copy; no pointer is retained in the SDDL.
-        let user = String::from_utf16(unsafe { std::slice::from_raw_parts(user_text,length) })
+        let user = String::from_utf16(unsafe { std::slice::from_raw_parts(user_text, length) })
             .map_err(|_| denied())?;
         let descriptor_text: Vec<u16> = format!("O:{user}D:P(A;OICI;FA;;;OW)(A;OICI;FA;;;SY)\0")
-            .encode_utf16().collect();
+            .encode_utf16()
+            .collect();
         let mut descriptor = std::ptr::null_mut();
         // SAFETY: terminated UTF-16 input is alive; Win32 initializes the output allocation.
         if unsafe {

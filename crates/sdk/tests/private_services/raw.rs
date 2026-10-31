@@ -431,12 +431,11 @@ async fn local_tls_experiment(
     )?;
     let mut roots = RootCertStore::empty();
     roots.add(certificate.cert.der().clone())?;
-    let mut config = ClientConfig::builder_with_provider(Arc::new(
-        rustls::crypto::ring::default_provider(),
-    ))
-    .with_safe_default_protocol_versions()?
-    .with_root_certificates(roots)
-    .with_no_client_auth();
+    let mut config =
+        ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
+            .with_safe_default_protocol_versions()?
+            .with_root_certificates(roots)
+            .with_no_client_auth();
     config.alpn_protocols = vec![b"http/1.1".to_vec()];
     let connector = tokio_rustls::TlsConnector::from(Arc::new(config));
     let mut proxy = sdk
@@ -495,7 +494,10 @@ async fn local_tls_experiment(
             .await
     })
     .await??;
-    assert_eq!(stream.get_ref().1.alpn_protocol(), Some(b"http/1.1".as_slice()));
+    assert_eq!(
+        stream.get_ref().1.alpn_protocol(),
+        Some(b"http/1.1".as_slice())
+    );
     let mut payload = vec![0, 255, 128, 13, 10, 0];
     payload.extend_from_slice(random_id().as_bytes());
     let size = u16::try_from(payload.len())?;

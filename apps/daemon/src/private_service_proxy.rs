@@ -125,9 +125,13 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>
 #[cfg(any(target_os = "linux", windows))]
 fn local_tls_material(path: &std::path::Path) -> Result<Vec<u8>> {
     if !path.is_absolute() {
-        return Err(io::Error::other("local TLS material requires an absolute private path").into());
+        return Err(
+            io::Error::other("local TLS material requires an absolute private path").into(),
+        );
     }
-    let parent = path.parent().ok_or_else(|| io::Error::other("local TLS parent missing"))?;
+    let parent = path
+        .parent()
+        .ok_or_else(|| io::Error::other("local TLS parent missing"))?;
     nestlink_platform_security::check_private_directory(parent)?;
     Ok(nestlink_platform_security::read_private(path, 16384)?.to_vec())
 }
@@ -349,31 +353,51 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
                         io::Error::other("raw loopback requires an explicit --gate-receipt")
                     })?;
                     if datagram && local_tls_key.is_some() {
-                        return Err(io::Error::other("local TLS termination requires a TCP service").into());
+                        return Err(io::Error::other(
+                            "local TLS termination requires a TCP service",
+                        )
+                        .into());
                     }
                     let local_tls = match local_tls_key {
                         Some(key) => {
-                            let certificates = local_tls_certificate.iter().map(|path|
-                                local_tls_material(path)
-                            ).collect::<std::result::Result<Vec<_>, _>>()?;
+                            let certificates = local_tls_certificate
+                                .iter()
+                                .map(|path| local_tls_material(path))
+                                .collect::<std::result::Result<Vec<_>, _>>()?;
                             Some(nestlink_sdk::services::LocalRawServiceTls::from_der(
                                 certificates,
                                 local_tls_material(&key)?,
                             )?)
                         }
                         None if local_tls_certificate.is_empty() => None,
-                        None => return Err(io::Error::other("local TLS requires both certificates and their private key").into()),
+                        None => {
+                            return Err(io::Error::other(
+                                "local TLS requires both certificates and their private key",
+                            )
+                            .into());
+                        }
                     };
                     let plan = wait_raw_gate(listen, datagram, lifetime, &plan_path, &receipt_path)
                         .await?;
                     RunningProxy::Raw(
-                        sdk.start_private_service_raw_with_tls(consumer, choice, plan, &receipt_path, local_tls)
-                            .await?,
+                        sdk.start_private_service_raw_with_tls(
+                            consumer,
+                            choice,
+                            plan,
+                            &receipt_path,
+                            local_tls,
+                        )
+                        .await?,
                     )
                 }
                 #[cfg(not(any(target_os = "linux", windows)))]
                 {
-                    let _ = (gate_plan, gate_receipt, local_tls_certificate, local_tls_key);
+                    let _ = (
+                        gate_plan,
+                        gate_receipt,
+                        local_tls_certificate,
+                        local_tls_key,
+                    );
                     return Err(io::Error::other("raw loopback requires a supported kernel user gate; use authenticated SOCKS or the native OS endpoint on this platform").into());
                 }
             } else if native_stream {

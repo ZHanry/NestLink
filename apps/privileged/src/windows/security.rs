@@ -344,8 +344,16 @@ pub(super) fn private_owner_acl(handle: HANDLE, owner: &str) -> io::Result<()> {
 pub(super) fn private_administrator_acl(handle: HANDLE) -> io::Result<()> {
     checked_acl(handle, None, u32::MAX)
 }
-const PROTECTED_WRITE: u32 = 0x40000000 | 0x10000000 | 0x00010000 | 0x00040000
-    | 0x00080000 | 0x00000002 | 0x00000004 | 0x00000010 | 0x00000040 | 0x00000100;
+const PROTECTED_WRITE: u32 = 0x40000000
+    | 0x10000000
+    | 0x00010000
+    | 0x00040000
+    | 0x00080000
+    | 0x00000002
+    | 0x00000004
+    | 0x00000010
+    | 0x00000040
+    | 0x00000100;
 fn checked_acl(handle: HANDLE, private_owner: Option<&str>, forbidden: u32) -> io::Result<()> {
     let mut descriptor = null_mut();
     // SAFETY: live file handle, documented read-only security information query.
@@ -367,24 +375,32 @@ fn checked_acl(handle: HANDLE, private_owner: Option<&str>, forbidden: u32) -> i
     let descriptor = Local(descriptor);
     checked_descriptor(descriptor.0, private_owner, forbidden)
 }
-fn checked_descriptor(descriptor: *mut c_void, private_owner: Option<&str>, forbidden: u32) -> io::Result<()> {
+fn checked_descriptor(
+    descriptor: *mut c_void,
+    private_owner: Option<&str>,
+    forbidden: u32,
+) -> io::Result<()> {
     // SAFETY: the caller retains an OS-returned or SDDL-created allocation.
-    if descriptor.is_null() || unsafe { IsValidSecurityDescriptor(descriptor) } == 0 { return Err(denied()); }
+    if descriptor.is_null() || unsafe { IsValidSecurityDescriptor(descriptor) } == 0 {
+        return Err(denied());
+    }
     let mut owner = null_mut();
     let mut defaulted = 0;
     // SAFETY: descriptor and returned SID remain live until Local drops.
     if unsafe { GetSecurityDescriptorOwner(descriptor, &mut owner, &mut defaulted) } == 0
         || owner.is_null()
         || unsafe { IsValidSid(owner) } == 0
-        || match private_owner { Some(expected) => sid_string(owner)? != expected, None => !administrative(owner)? }
+        || match private_owner {
+            Some(expected) => sid_string(owner)? != expected,
+            None => !administrative(owner)?,
+        }
     {
         return Err(denied());
     }
     let mut present = 0;
     let mut acl = null_mut();
     // SAFETY: writable outputs for a live, OS-validated security descriptor.
-    if unsafe { GetSecurityDescriptorDacl(descriptor, &mut present, &mut acl, &mut defaulted) }
-        == 0
+    if unsafe { GetSecurityDescriptorDacl(descriptor, &mut present, &mut acl, &mut defaulted) } == 0
         || present == 0
         || acl.is_null()
         || unsafe { IsValidAcl(acl) } == 0
@@ -421,10 +437,14 @@ fn checked_descriptor(descriptor: *mut c_void, private_owner: Option<&str>, forb
             || std::mem::offset_of!(ACCESS_ALLOWED_ACE, SidStart)
                 + unsafe { GetLengthSid(sid) } as usize
                 > header.AceSize as usize
-            || !(administrative(sid)? || match private_owner {
-                Some(expected) => { let actual = sid_string(sid)?; actual == expected || actual == "S-1-3-4" },
-                None => false,
-            })
+            || !(administrative(sid)?
+                || match private_owner {
+                    Some(expected) => {
+                        let actual = sid_string(sid)?;
+                        actual == expected || actual == "S-1-3-4"
+                    }
+                    None => false,
+                })
         {
             return Err(denied());
         }
@@ -436,10 +456,21 @@ fn checked_descriptor(descriptor: *mut c_void, private_owner: Option<&str>, forb
 mod acl_tests {
     use super::*;
     fn check(sddl: &str, owner: Option<&str>, forbidden: u32) -> io::Result<()> {
-        let text = text(sddl)?; let mut descriptor = null_mut();
+        let text = text(sddl)?;
+        let mut descriptor = null_mut();
         // These are real self-relative Windows security descriptors, parsed
         // and validated by the same APIs used for opened production objects.
-        if unsafe { ConvertStringSecurityDescriptorToSecurityDescriptorW(text.as_ptr(), SDDL_REVISION_1, &mut descriptor, null_mut()) } == 0 { return Err(io::Error::last_os_error()); }
+        if unsafe {
+            ConvertStringSecurityDescriptorToSecurityDescriptorW(
+                text.as_ptr(),
+                SDDL_REVISION_1,
+                &mut descriptor,
+                null_mut(),
+            )
+        } == 0
+        {
+            return Err(io::Error::last_os_error());
+        }
         let descriptor = Local(descriptor);
         checked_descriptor(descriptor.0, owner, forbidden)
     }
@@ -449,12 +480,27 @@ mod acl_tests {
         assert!(check(descriptor, None, PROTECTED_WRITE & !0x6).is_ok());
         assert!(check(descriptor, None, PROTECTED_WRITE).is_err());
         for rights in ["GW", "GA", "WD", "WO", "SD", "0x40", "0x10", "0x100"] {
-            assert!(check(&format!("O:BAG:BAD:P(A;;FA;;;BA)(A;;{rights};;;AU)"), None, PROTECTED_WRITE & !0x6).is_err(), "unsafe ancestor rights {rights}");
+            assert!(
+                check(
+                    &format!("O:BAG:BAD:P(A;;FA;;;BA)(A;;{rights};;;AU)"),
+                    None,
+                    PROTECTED_WRITE & !0x6
+                )
+                .is_err(),
+                "unsafe ancestor rights {rights}"
+            );
         }
     }
     #[test]
     fn original_strict_policy_and_private_modes_reject_widened_access() {
-        assert!(check("O:BAG:BAD:P(A;;FA;;;BA)(A;;FA;;;SY)(A;;FR;;;BU)", None, PROTECTED_WRITE).is_ok());
+        assert!(
+            check(
+                "O:BAG:BAD:P(A;;FA;;;BA)(A;;FA;;;SY)(A;;FR;;;BU)",
+                None,
+                PROTECTED_WRITE
+            )
+            .is_ok()
+        );
         assert!(check("O:BAG:BAD:P(A;;FA;;;BA)(A;;FR;;;BU)", None, u32::MAX).is_err());
         assert!(check("O:BAG:BAD:P(A;;FA;;;BA)(A;;FA;;;SY)", None, u32::MAX).is_ok());
         let owner = "S-1-5-21-1-2-3-1001";

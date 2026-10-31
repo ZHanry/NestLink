@@ -100,13 +100,20 @@ fn normalize(mut item: Value) -> Value {
         // A different protocol, duplicate selector or opaque expression is
         // retained and therefore fails the complete expected-rule comparison.
         for (protocol, number) in [("tcp", 6), ("udp", 17)] {
-            let selector = json!({"match":{"op":"==","left":{"meta":{"key":"l4proto"}},"right":number}});
+            let selector =
+                json!({"match":{"op":"==","left":{"meta":{"key":"l4proto"}},"right":number}});
             let payloads = expressions.iter().filter(|expression| {
                 let right = &expression["match"]["right"];
                 right.as_u64().is_some()
                     && **expression == json!({"match":{"op":"==","left":{"payload":{"protocol":protocol,"field":"dport"}},"right":right}})
             }).count();
-            if payloads == 1 && expressions.iter().filter(|expression| **expression == selector).count() == 1 {
+            if payloads == 1
+                && expressions
+                    .iter()
+                    .filter(|expression| **expression == selector)
+                    .count()
+                    == 1
+            {
                 expressions.retain(|expression| *expression != selector);
             }
         }
@@ -164,7 +171,10 @@ pub(super) fn verify(plan: &GatePlan, snapshot: &Value, denying: bool) -> io::Re
     let expected_output = if denying {
         vec![normalize(rule(plan, "output", "drop"))]
     } else {
-        vec![normalize(rule(plan, "output", "allow")), normalize(rule(plan, "output", "drop"))]
+        vec![
+            normalize(rule(plan, "output", "allow")),
+            normalize(rule(plan, "output", "drop")),
+        ]
     };
     let actual_output: Vec<Value> = rules
         .iter()
@@ -178,7 +188,9 @@ pub(super) fn verify(plan: &GatePlan, snapshot: &Value, denying: bool) -> io::Re
         .cloned()
         .map(normalize)
         .collect();
-    if actual_output != expected_output || actual_input != vec![normalize(rule(plan, "input", "outside"))] {
+    if actual_output != expected_output
+        || actual_input != vec![normalize(rule(plan, "input", "outside"))]
+    {
         return Err(invalid(
             "gate rules differ from the exact UID/endpoint/protocol deny policy",
         ));
