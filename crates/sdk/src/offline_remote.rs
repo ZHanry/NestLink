@@ -17,6 +17,8 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use tokio::task::JoinHandle;
+mod tls;
+pub use tls::OfflineRemoteTlsListener;
 
 fn wall() -> Result<u64, SdkError> {
     SystemTime::now()
@@ -347,6 +349,9 @@ impl Inner {
         )
         .await?
         .with_transport_owner(socket);
+        Ok(self.runtime(channels, local_address))
+    }
+    fn runtime(self: &Arc<Self>, channels: ChannelRuntime, local_address: SocketAddr) -> OfflineRemoteRuntime {
         let owner = self.clone();
         let lease = channels.lease_control();
         let recovery = tokio::spawn(async move {
@@ -366,11 +371,11 @@ impl Inner {
                 }
             }
         });
-        Ok(OfflineRemoteRuntime {
+        OfflineRemoteRuntime {
             channels,
             local_address,
             authority: self.authority.clone(),
             recovery: Some(recovery),
-        })
+        }
     }
 }

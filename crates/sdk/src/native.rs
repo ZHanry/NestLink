@@ -862,7 +862,7 @@ impl NativeConnection {
         })
     }
 }
-async fn authorize_stream<
+pub(crate) async fn authorize_stream<
     T: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send + 'static,
 >(
     io: T,

@@ -40,7 +40,7 @@ try:
     if args.suite.startswith('remote-'):
         receipt['scope'] = 'Original remote cumulative budget reservation, strict signed scope, retained Session meter and actual HTTP/SDK/QUIC online business accounting. Storage additionally exercises independent finite offline remote draft, atomic second approval against original online totals, one-use consume, revoke without refund and original short online expiry. Remote offline carrier and target acceptance are excluded.'
     if args.suite == 'remote-offline':
-        receipt['scope'] = 'Actual two-account HTTP/SDK offline draft/approval/one-use consume followed by physical management listener stop, original online permit expiry and fresh process proof plus original QUIC Session/business queues; subset permission, original meter, process stop and physical UDP release. No complete native media/input/file OS adapters, TLS fallback, UI or target acceptance claim.'
+        receipt['scope'] = 'Actual two-account HTTP/SDK offline draft/approval/one-use consume followed by physical management listener stop, original online permit expiry and fresh process proof plus original QUIC and explicit pinned TLS1.3 Session/business queues sharing one original finite meter; subset permission, process stop, physical UDP release and TLS listener cleanup. No complete native media/input/file OS adapters, automatic fallback UI or target acceptance claim.'
     with (output / 'build.jsonl').open('w') as stream, (output / 'build.log').open('w') as errors:
         built = subprocess.run(build, stdout=stream, stderr=errors, check=False)
     receipt['build_exit_code'] = built.returncode

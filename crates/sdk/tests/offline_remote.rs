@@ -180,7 +180,7 @@ async fn offline_remote_actual_http_then_expired_original_quic_view_budget_and_p
                     expected_lease_sequence: original.claims().lease_sequence,
                     process_nonces: [source_process.nonce(), host_process.nonce()],
                     operations: vec![OfflineRemoteOperation::View],
-                    direct_transports: vec![OfflineDirectTransport::Quic],
+                    direct_transports: vec![OfflineDirectTransport::Quic, OfflineDirectTransport::Tls],
                     maximum_bytes: 4096,
                     maximum_file_write_bytes: 0,
                     maximum_connections: 4,
@@ -349,6 +349,25 @@ async fn offline_remote_actual_http_then_expired_original_quic_view_budget_and_p
         );
         assert!(source.status()?.remaining_bytes < 4096);
         assert_eq!(source.status()?.connection_attempts, 1);
+        let before_tls_bytes = source.status()?.remaining_bytes;
+        // An explicitly approved second direct carrier shares the same original
+        // process, reservation and independent finite authority after expiry.
+        let tls_listener = target.listen_tls("127.0.0.1:0".parse()?).await?;
+        let tls_peer = tls_listener.address()?;
+        let (_tls_source_stop, tls_source_stop) = watch::channel(None);
+        let (_tls_host_stop, tls_host_stop) = watch::channel(None);
+        let (tls_host, tls_source) = tokio::join!(
+            tls_listener.accept(SessionLifecycle::new(tls_host_stop)),
+            source.connect_tls(tls_peer, SessionLifecycle::new(tls_source_stop))
+        );
+        let mut tls_host = tls_host?;
+        let mut tls_source = tls_source?;
+        assert!(tls_source.channels().lease_control().current_native_permit().is_err());
+        assert!(tls_source.channels().send(Channel::Input, b"not approved offline").await.is_err());
+        tls_host.channels().send(Channel::Video, b"original remote offline TLS frame").await?;
+        assert_eq!(tls_source.channels().receive().await?.payload, b"original remote offline TLS frame");
+        assert_eq!(source.status()?.connection_attempts, 2);
+        assert!(source.status()?.remaining_bytes < before_tls_bytes);
         source_process.stop();
         assert!(
             tokio::time::timeout(Duration::from_secs(2), source_runtime.channels().receive())
@@ -357,6 +376,13 @@ async fn offline_remote_actual_http_then_expired_original_quic_view_budget_and_p
         );
         source_runtime.wait_stopped().await?;
         host_runtime.wait_stopped().await?;
+        assert!(tokio::time::timeout(Duration::from_secs(2), tls_source.channels().receive()).await?.is_err());
+        tls_source.wait_stopped().await?;
+        tls_host.wait_stopped().await?;
+        let released_tls = tokio::net::TcpListener::bind(tls_peer).await.map_err(|error| {
+            std::io::Error::new(error.kind(), format!("offline TLS listener was not released: {error}"))
+        })?;
+        drop(released_tls);
         let released = std::net::UdpSocket::bind(peer).map_err(|error| {
             std::io::Error::new(
                 error.kind(),
@@ -377,6 +403,7 @@ async fn offline_remote_actual_http_then_expired_original_quic_view_budget_and_p
                 .await
                 .is_err()
         );
+        assert!(source.connect_tls(tls_peer, SessionLifecycle::new(watch::channel(None).1)).await.is_err());
         target.stop();
         drop(host_process);
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
