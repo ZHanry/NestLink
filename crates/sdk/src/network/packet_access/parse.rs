@@ -198,6 +198,9 @@ pub(super) fn packet(bytes: &[u8]) -> io::Result<Packet> {
         }
         _ => return Err(denied("unknown or opaque raw transport protocol is denied")),
     }
+    if packet.tcp && ((packet.syn && (packet.fin || packet.rst)) || (packet.fin && packet.rst)) {
+        return Err(denied("contradictory raw TCP control flags are denied"));
+    }
     if matches!(packet.protocol, IpProtocol::Tcp | IpProtocol::Udp)
         && (packet.key.source_port == 0 || packet.key.destination_port == 0)
     {

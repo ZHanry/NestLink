@@ -596,6 +596,13 @@
         "title": "DevicesResponse",
         "type": "object"
       },
+      "Direction": {
+        "enum": [
+          "inbound",
+          "outbound"
+        ],
+        "type": "string"
+      },
       "EnrollmentChallenge": {
         "properties": {
           "deployment_id": {
@@ -794,6 +801,15 @@
           "prefix_len"
         ],
         "type": "object"
+      },
+      "IpProtocol": {
+        "enum": [
+          "tcp",
+          "udp",
+          "icmp_v4",
+          "icmp_v6"
+        ],
+        "type": "string"
       },
       "Login": {
         "additionalProperties": false,
@@ -1092,6 +1108,165 @@
           "combined_relay"
         ],
         "type": "string"
+      },
+      "NetworkAccessRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "access_grant_id": {
+            "type": "string"
+          },
+          "byte_limit": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "connectivity_grant_id": {
+            "type": "string"
+          },
+          "destination_installation_id": {
+            "type": "string"
+          },
+          "destination_membership_grant_id": {
+            "type": "string"
+          },
+          "destination_prefixes": {
+            "items": {
+              "$ref": "#/components/schemas/IpPrefix"
+            },
+            "type": "array"
+          },
+          "expected_destination_address_epoch": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expected_directory_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expected_policy_epoch": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expected_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expected_source_address_epoch": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expires_at_unix_ms": {
+            "description": "At most 60 seconds; issuance also intersects both original memberships.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "path_grant_id": {
+            "type": "string"
+          },
+          "rules": {
+            "description": "Inbound means source -> destination; Outbound means destination ->\nsource at both endpoints, regardless of which peer dials the carrier.",
+            "items": {
+              "$ref": "#/components/schemas/NetworkRule"
+            },
+            "type": "array"
+          },
+          "source_installation_id": {
+            "type": "string"
+          },
+          "source_membership_grant_id": {
+            "type": "string"
+          },
+          "source_prefixes": {
+            "description": "The initial host-only API accepts only the exact current /32 or /128.",
+            "items": {
+              "$ref": "#/components/schemas/IpPrefix"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "access_grant_id",
+          "connectivity_grant_id",
+          "path_grant_id",
+          "source_installation_id",
+          "destination_installation_id",
+          "source_membership_grant_id",
+          "destination_membership_grant_id",
+          "expected_revision",
+          "expected_policy_epoch",
+          "expected_directory_revision",
+          "expected_source_address_epoch",
+          "expected_destination_address_epoch",
+          "source_prefixes",
+          "destination_prefixes",
+          "rules",
+          "byte_limit",
+          "expires_at_unix_ms"
+        ],
+        "title": "NetworkAccessRequest",
+        "type": "object"
+      },
+      "NetworkAccessStart": {
+        "additionalProperties": false,
+        "description": "A fresh online start attempt by the account that owns this exact endpoint.\nThe public owner ID correlates one ordinary runtime; it is not a capability.",
+        "properties": {
+          "installation_id": {
+            "type": "string"
+          },
+          "owner_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "installation_id",
+          "owner_id"
+        ],
+        "title": "NetworkAccessStart",
+        "type": "object"
+      },
+      "NetworkAccessStartResponse": {
+        "title": "boolean",
+        "type": "boolean"
+      },
+      "NetworkAccessView": {
+        "additionalProperties": false,
+        "properties": {
+          "access": {
+            "$ref": "#/components/schemas/NetworkGrantView"
+          },
+          "address_directory": {
+            "$ref": "#/components/schemas/SpaceAddressDirectory",
+            "description": "Fresh grant-scoped disclosure of exactly the two authorized endpoints.\nThis does not widen the ordinary directory API's visibility. Its rows\nstill confer no packet authority without independently verified grants."
+          },
+          "connectivity": {
+            "$ref": "#/components/schemas/NetworkGrantView"
+          },
+          "destination_membership": {
+            "$ref": "#/components/schemas/NetworkGrantView"
+          },
+          "path": {
+            "$ref": "#/components/schemas/NetworkGrantView"
+          },
+          "source_membership": {
+            "$ref": "#/components/schemas/NetworkGrantView"
+          }
+        },
+        "required": [
+          "source_membership",
+          "destination_membership",
+          "access",
+          "connectivity",
+          "path",
+          "address_directory"
+        ],
+        "title": "NetworkAccessView",
+        "type": "object"
       },
       "NetworkAuthorityChangeRequest": {
         "additionalProperties": false,
@@ -1741,6 +1916,94 @@
           "expires_at_ms"
         ],
         "title": "NetworkRouteExportRequest",
+        "type": "object"
+      },
+      "NetworkRouteRecoveryChoice": {
+        "additionalProperties": false,
+        "properties": {
+          "capability": {
+            "type": "string"
+          },
+          "expires_at_unix_ms": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "original_fingerprint": {
+            "type": "string"
+          },
+          "path_grant_id": {
+            "type": "string"
+          },
+          "previous_path_epoch": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "route_set_id": {
+            "type": "string"
+          },
+          "space_id": {
+            "type": "string"
+          },
+          "target_node_id": {
+            "type": "string"
+          },
+          "target_route_binding": {
+            "type": "string"
+          },
+          "transport_group": {
+            "type": "string"
+          },
+          "version": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "capability",
+          "space_id",
+          "route_set_id",
+          "path_grant_id",
+          "original_fingerprint",
+          "transport_group",
+          "previous_path_epoch",
+          "target_node_id",
+          "target_route_binding",
+          "expires_at_unix_ms"
+        ],
+        "type": "object"
+      },
+      "NetworkRule": {
+        "additionalProperties": false,
+        "properties": {
+          "direction": {
+            "$ref": "#/components/schemas/Direction"
+          },
+          "ports": {
+            "items": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "protocol": {
+            "$ref": "#/components/schemas/IpProtocol"
+          }
+        },
+        "required": [
+          "protocol",
+          "direction"
+        ],
         "type": "object"
       },
       "NetworkTopologyEnvelope": {
@@ -2689,6 +2952,491 @@
         ],
         "type": "object"
       },
+      "PrivateServiceAccessRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "consumer_device_id": {
+            "type": "string"
+          },
+          "expected_exposure_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expected_service_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maximum_bytes": {
+            "description": "A bounded sub-reservation, never a second service allowance.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "request_id": {
+            "description": "Retried requests retain this ID and every original request field.",
+            "type": "string"
+          },
+          "route": {
+            "$ref": "#/components/schemas/PrivateServiceRouteRequest",
+            "default": {
+              "kind": "direct"
+            }
+          }
+        },
+        "required": [
+          "request_id",
+          "consumer_device_id",
+          "expected_service_revision",
+          "expected_exposure_revision",
+          "maximum_bytes"
+        ],
+        "title": "PrivateServiceAccessRequest",
+        "type": "object"
+      },
+      "PrivateServiceAclRevocation": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_exposure_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "expected_exposure_revision"
+        ],
+        "title": "PrivateServiceAclRevocation",
+        "type": "object"
+      },
+      "PrivateServiceAclUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_exposure_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expires_at_unix_ms": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/PrivateServiceSubject"
+          }
+        },
+        "required": [
+          "expected_exposure_revision",
+          "subject",
+          "expires_at_unix_ms"
+        ],
+        "title": "PrivateServiceAclUpdate",
+        "type": "object"
+      },
+      "PrivateServiceAclView": {
+        "additionalProperties": false,
+        "properties": {
+          "expires_at_unix_ms": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "host_membership_epoch": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "revoked": {
+            "type": "boolean"
+          },
+          "rule_id": {
+            "type": "string"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/PrivateServiceSubject"
+          },
+          "subject_epoch": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rule_id",
+          "subject",
+          "subject_epoch",
+          "host_membership_epoch",
+          "expires_at_unix_ms",
+          "revoked"
+        ],
+        "type": "object"
+      },
+      "PrivateServiceAvailability": {
+        "enum": [
+          "offline",
+          "ready",
+          "quota_exceeded"
+        ],
+        "type": "string"
+      },
+      "PrivateServiceEntry": {
+        "additionalProperties": false,
+        "properties": {
+          "availability": {
+            "$ref": "#/components/schemas/PrivateServiceAvailability"
+          },
+          "exposure": {
+            "$ref": "#/components/schemas/ServiceExposureView"
+          },
+          "service": {
+            "$ref": "#/components/schemas/ServiceView"
+          }
+        },
+        "required": [
+          "service",
+          "exposure",
+          "availability"
+        ],
+        "type": "object"
+      },
+      "PrivateServiceGrant": {
+        "additionalProperties": false,
+        "properties": {
+          "issuer": {
+            "$ref": "#/components/schemas/SignedServiceIssuerDelegation"
+          },
+          "lease": {
+            "$ref": "#/components/schemas/SignedPrivateServiceLease"
+          },
+          "network": {
+            "$ref": "#/components/schemas/PrivateServiceNetworkPath"
+          }
+        },
+        "required": [
+          "lease",
+          "issuer",
+          "network"
+        ],
+        "type": "object"
+      },
+      "PrivateServiceHostAccessPage": {
+        "additionalProperties": false,
+        "properties": {
+          "grants": {
+            "items": {
+              "$ref": "#/components/schemas/PrivateServiceGrant"
+            },
+            "type": "array"
+          },
+          "more": {
+            "type": "boolean"
+          },
+          "next_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "runtime_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "runtime_id",
+          "grants",
+          "more"
+        ],
+        "title": "PrivateServiceHostAccessPage",
+        "type": "object"
+      },
+      "PrivateServiceNetworkPath": {
+        "additionalProperties": false,
+        "properties": {
+          "connectivity": {
+            "$ref": "#/components/schemas/NetworkGrantView"
+          },
+          "consumer_membership": {
+            "$ref": "#/components/schemas/NetworkGrantView"
+          },
+          "grant_id": {
+            "type": "string"
+          },
+          "host_membership": {
+            "$ref": "#/components/schemas/NetworkGrantView"
+          },
+          "path": {
+            "$ref": "#/components/schemas/NetworkGrantView"
+          },
+          "relay": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PrivateServiceRelayRoute"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "grant_id",
+          "consumer_membership",
+          "host_membership",
+          "connectivity",
+          "path"
+        ],
+        "type": "object"
+      },
+      "PrivateServicePage": {
+        "additionalProperties": false,
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/PrivateServiceEntry"
+            },
+            "type": "array"
+          },
+          "more": {
+            "type": "boolean"
+          },
+          "next_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "security_epoch": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "security_epoch",
+          "entries",
+          "more"
+        ],
+        "title": "PrivateServicePage",
+        "type": "object"
+      },
+      "PrivateServicePolicyView": {
+        "additionalProperties": false,
+        "properties": {
+          "exposure": {
+            "$ref": "#/components/schemas/ServiceExposureView"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/PrivateServiceAclView"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "exposure",
+          "rules"
+        ],
+        "title": "PrivateServicePolicyView",
+        "type": "object"
+      },
+      "PrivateServiceRelayRoute": {
+        "additionalProperties": false,
+        "properties": {
+          "node_public_keys": {
+            "items": {
+              "items": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "maxItems": 32,
+              "minItems": 32,
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/NodeEndpointsView"
+            },
+            "type": "array"
+          },
+          "route_id": {
+            "type": "string"
+          },
+          "signature": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "topology_digests": {
+            "items": {
+              "items": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "maxItems": 32,
+              "minItems": 32,
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "transits": {
+            "items": {
+              "$ref": "#/components/schemas/NetworkGrantView"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "route_id",
+          "transits",
+          "nodes",
+          "node_public_keys",
+          "topology_digests",
+          "signature"
+        ],
+        "type": "object"
+      },
+      "PrivateServiceRouteRequest": {
+        "description": "Relays are ordered from the canonical first peer, independently of which\nbusiness endpoint requested the route. Selection grants no remote authority.",
+        "oneOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "direct",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "relay",
+                "type": "string"
+              },
+              "node_ids": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "signature": {
+                "type": "string"
+              },
+              "topology_digests": {
+                "items": {
+                  "items": {
+                    "format": "uint8",
+                    "maximum": 255,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "maxItems": 32,
+                  "minItems": 32,
+                  "type": "array"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "kind",
+              "node_ids",
+              "topology_digests",
+              "signature"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "PrivateServiceSubject": {
+        "oneOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "account_id": {
+                "type": "string"
+              },
+              "kind": {
+                "const": "account",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "account_id"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "installation_id": {
+                "type": "string"
+              },
+              "kind": {
+                "const": "installation",
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "installation_id"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "PrivateServiceUsageAck": {
+        "additionalProperties": false,
+        "properties": {
+          "grant_id": {
+            "type": "string"
+          },
+          "report_sequence": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "report_sha256": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 32,
+            "minItems": 32,
+            "type": "array"
+          },
+          "terminal": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "grant_id",
+          "report_sequence",
+          "report_sha256",
+          "terminal"
+        ],
+        "title": "PrivateServiceUsageAck",
+        "type": "object"
+      },
       "ProbeIdentity": {
         "additionalProperties": false,
         "properties": {
@@ -2756,6 +3504,17 @@
             "format": "uint64",
             "minimum": 0,
             "type": "integer"
+          },
+          "network_recovery": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NetworkRouteRecoveryChoice"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Absent on v15 exchanges: omission preserves their exact signed bytes.\nNew callers explicitly opt into this contract; legacy coordinators must\nreject it instead of approving an unrecognised target selection."
           },
           "nonce": {
             "type": "string"
@@ -3603,6 +4362,14 @@
         "title": "ServerIdentityProof",
         "type": "object"
       },
+      "ServiceAccessMode": {
+        "enum": [
+          "private",
+          "public",
+          "both"
+        ],
+        "type": "string"
+      },
       "ServiceApprovalChallenge": {
         "additionalProperties": false,
         "properties": {
@@ -3696,7 +4463,6 @@
           "invalidated",
           "revoked"
         ],
-        "title": "ServiceApprovalState",
         "type": "string"
       },
       "ServiceCreate": {
@@ -3727,6 +4493,7 @@
             "type": "array"
           },
           "edge_node_id": {
+            "description": "Empty for an installation-hosted private-only service. Public access\nstill requires a registered edge; existing nonempty values are stable.",
             "type": "string"
           },
           "host_device_id": {
@@ -3822,6 +4589,115 @@
           "config"
         ],
         "title": "ServiceEdgeNamespaceView",
+        "type": "object"
+      },
+      "ServiceExposureResponse": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/ServiceExposureView"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Nullable_ServiceExposureView"
+      },
+      "ServiceExposureUpdate": {
+        "additionalProperties": false,
+        "description": "Missing policies preserve legacy public-only behavior. A policy is a fence:\nstale/revoked target revisions never fall back to that legacy behavior.",
+        "properties": {
+          "expected_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expected_service_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ServiceAccessMode"
+          },
+          "private_maximum_bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "public_maximum_bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "space_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "expected_revision",
+          "expected_service_revision",
+          "space_id",
+          "mode",
+          "private_maximum_bytes",
+          "public_maximum_bytes"
+        ],
+        "title": "ServiceExposureUpdate",
+        "type": "object"
+      },
+      "ServiceExposureView": {
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/ServiceAccessMode"
+          },
+          "private_maximum_bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "public_maximum_bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "service_id": {
+            "type": "string"
+          },
+          "service_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "space_id": {
+            "type": "string"
+          },
+          "target_sha256": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 32,
+            "minItems": 32,
+            "type": "array"
+          }
+        },
+        "required": [
+          "service_id",
+          "revision",
+          "service_revision",
+          "target_sha256",
+          "space_id",
+          "mode",
+          "private_maximum_bytes",
+          "public_maximum_bytes"
+        ],
         "type": "object"
       },
       "ServiceIngress": {
@@ -4266,7 +5142,6 @@
           "published",
           "stopping"
         ],
-        "title": "ServicePublicationStatus",
         "type": "string"
       },
       "ServiceQuery": {
@@ -4909,6 +5784,125 @@
         "title": "SignedNodeUsageAck",
         "type": "object"
       },
+      "SignedPrivateServiceHost": {
+        "additionalProperties": false,
+        "properties": {
+          "claims": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "signature": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "claims",
+          "signature"
+        ],
+        "title": "SignedPrivateServiceHost",
+        "type": "object"
+      },
+      "SignedPrivateServiceHostWithdrawal": {
+        "additionalProperties": false,
+        "properties": {
+          "claims": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "signature": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "claims",
+          "signature"
+        ],
+        "title": "SignedPrivateServiceHostWithdrawal",
+        "type": "object"
+      },
+      "SignedPrivateServiceLease": {
+        "additionalProperties": false,
+        "properties": {
+          "claims": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "service_lease": {
+            "$ref": "#/components/schemas/SignedServiceLease"
+          },
+          "signature": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "service_lease",
+          "claims",
+          "signature"
+        ],
+        "type": "object"
+      },
+      "SignedPrivateServiceUsage": {
+        "additionalProperties": false,
+        "properties": {
+          "claims": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "signature": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "claims",
+          "signature"
+        ],
+        "title": "SignedPrivateServiceUsage",
+        "type": "object"
+      },
       "SignedRelayClose": {
         "properties": {
           "claims": {
@@ -4991,7 +5985,6 @@
           "claims",
           "signature"
         ],
-        "title": "SignedServiceIssuerDelegation",
         "type": "object"
       },
       "SignedServiceLease": {
@@ -12093,6 +13086,449 @@
         "x-server-role": "control"
       }
     },
+    "/network/spaces/{space}/packet-access": {
+      "post": {
+        "operationId": "network_policy::network_access::issue",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NetworkAccessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkAccessView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/network/spaces/{space}/packet-access/{access}": {
+      "delete": {
+        "operationId": "network_policy::network_access::revoke",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "access",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NetworkRevokeGrantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkPolicyView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      },
+      "get": {
+        "operationId": "network_policy::network_access::read",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "access",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkAccessView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/network/spaces/{space}/packet-access/{access}/start": {
+      "post": {
+        "operationId": "network_policy::network_access::start",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "access",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NetworkAccessStart"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkAccessStartResponse"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
     "/network/spaces/{space}/paths/{path}": {
       "delete": {
         "operationId": "network_policy::revoke_path",
@@ -17706,6 +19142,226 @@
         "x-server-role": "control"
       }
     },
+    "/private-service-usage": {
+      "post": {
+        "operationId": "private_services::usage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignedPrivateServiceUsage"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateServiceUsageAck"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [],
+        "x-server-role": "control"
+      }
+    },
+    "/private-services/{consumer}": {
+      "get": {
+        "operationId": "private_services::directory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "consumer",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "after_id",
+            "required": false,
+            "schema": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "security_epoch",
+            "required": true,
+            "schema": {
+              "format": "uint64",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateServicePage"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
     "/relay/quota": {
       "get": {
         "operationId": "quotas::get",
@@ -22191,6 +23847,1077 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ServiceApprovalChallenge"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/services/{id}/exposure": {
+      "get": {
+        "operationId": "private_services::exposure",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExposureResponse"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      },
+      "put": {
+        "operationId": "private_services::set_exposure",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceExposureUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceExposureView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/services/{id}/private-access": {
+      "post": {
+        "operationId": "private_services::issue",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrivateServiceAccessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateServiceGrant"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/services/{id}/private-access/{reservation}": {
+      "get": {
+        "operationId": "private_services::current",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "reservation",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateServiceGrant"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/services/{id}/private-host": {
+      "delete": {
+        "operationId": "private_services::withdraw_host",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignedPrivateServiceHostWithdrawal"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      },
+      "post": {
+        "operationId": "private_services::host",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignedPrivateServiceHost"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/services/{id}/private-host/{runtime}/access": {
+      "get": {
+        "operationId": "private_services::host_access",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "runtime",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "after_id",
+            "required": false,
+            "schema": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "security_epoch",
+            "required": true,
+            "schema": {
+              "format": "uint64",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateServiceHostAccessPage"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/services/{id}/private-policy": {
+      "get": {
+        "operationId": "private_services::policy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateServicePolicyView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      },
+      "post": {
+        "operationId": "private_services::allow",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrivateServiceAclUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateServicePolicyView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/services/{id}/private-policy/{rule}": {
+      "delete": {
+        "operationId": "private_services::revoke",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "rule",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrivateServiceAclRevocation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateServicePolicyView"
                 }
               }
             },

@@ -454,3 +454,22 @@ fn directory_cannot_rebind_an_assigned_address_to_a_different_peer() -> Result {
     assert!(fixture.prefix_authorities().is_err());
     Ok(())
 }
+
+#[test]
+fn contradictory_tcp_control_flags_cannot_create_or_reuse_a_flow() -> Result {
+    let fixture = Fixture::new()?;
+    let mut owner = fixture.owner(4096)?;
+    for flags in [0x03, 0x06, 0x05] {
+        let mut packet = Vec::new();
+        PacketBuilder::ipv4([10, 44, 0, 2], [10, 44, 0, 3], 64)
+            .tcp(41000, 22, 1, 4096).write(&mut packet, b"")?;
+        packet[33] = flags;
+        let checksum = etherparse::TcpHeaderSlice::from_slice(&packet[20..])?
+            .to_header().calc_checksum_ipv4_raw([10, 44, 0, 2], [10, 44, 0, 3], b"")?;
+        packet[36..38].copy_from_slice(&checksum.to_be_bytes());
+        assert!(owner.admit_local(&fixture.context(), &packet).is_err());
+    }
+    assert!(owner.flows.is_empty());
+    assert_eq!(owner.spent_bytes(), 0);
+    Ok(())
+}
