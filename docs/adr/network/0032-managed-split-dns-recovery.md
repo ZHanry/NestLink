@@ -3,6 +3,18 @@
 Status: source implementation awaiting GitHub-hosted formatter, compilation,
 unit tests and real OS tests. No local DNS or system configuration was changed.
 
+The first exact-source OS experiment at `5f969a2` failed on both systems.
+Linux rejected an existing resolved domain because the adapter incorrectly
+unwrapped `busctl get-property` as a method reply. The v255 implementation
+(`src/busctl/busctl.c`, `get_property` and `json_transform_variant`) returns the
+property directly in `data`. The repaired adapter checks the exact D-Bus
+signature and complete typed rows, preserving empty arrays and scalar values.
+Windows reached its original three-second command deadline during the initial
+administrator check, before any policy was installed. Process/token actions
+now avoid importing the unrelated DnsClient module. Failures identify their
+specific constrained action. All deadlines and recovery assertions remain;
+these repairs require another hosted run and are not passing OS evidence.
+
 This is the next W19/AC32 and W22/AC36 slice after ADR 0031. The normal resolver
 retains its current-session and same-account boundary. A separate administrative
 command installs only one explicit `s-<canonical-space-UUID>.nestlink.internal`

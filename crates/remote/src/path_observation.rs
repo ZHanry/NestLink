@@ -50,12 +50,16 @@ impl PathObservation {
             || self.terminal.borrow().is_some()
             || self.terminal.has_changed().is_err()
             || self.measurements.has_changed().is_err();
-        if stopped { return None; }
+        if stopped {
+            return None;
+        }
         let measurements = self.measurements.borrow();
         let now_ms = elapsed_ms(self.started);
         let at_ms = measurements.rtt_observed_at_ms(now_ms)?;
-        Some((self.started.checked_add(Duration::from_millis(at_ms))?,
-            measurements.snapshot(&self.binding, now_ms, false)))
+        Some((
+            self.started.checked_add(Duration::from_millis(at_ms))?,
+            measurements.snapshot(&self.binding, now_ms, false),
+        ))
     }
     /// New samples and terminal sender closure wake observers. Read snapshot
     /// after either result so final state remains observable after cleanup.

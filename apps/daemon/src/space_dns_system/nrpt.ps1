@@ -2,10 +2,14 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
 $env:PSModulePath = Join-Path ([Environment]::SystemDirectory) 'WindowsPowerShell\v1.0\Modules'
-$dnsModule = Join-Path $env:PSModulePath 'DnsClient\DnsClient.psd1'
-Import-Module -Name $dnsModule -ErrorAction Stop
 $request = $env:NESTLINK_DNS_REQUEST | ConvertFrom-Json
 Remove-Item Env:NESTLINK_DNS_REQUEST
+# Process/token checks do not use CIM or DNS. Loading the whole DNS module
+# before these checks needlessly consumed their bounded command deadline.
+if ([string]$request.action -notin @('identity', 'admin')) {
+    $dnsModule = Join-Path $env:PSModulePath 'DnsClient\DnsClient.psd1'
+    Import-Module -Name $dnsModule -ErrorAction Stop
+}
 function Emit($value) { ConvertTo-Json -InputObject $value -Depth 20 -Compress }
 function View($rule) {
     [ordered]@{

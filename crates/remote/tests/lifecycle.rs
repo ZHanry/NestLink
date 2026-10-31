@@ -1657,6 +1657,7 @@ async fn idle_resume_releases_keys_and_pointer_and_closes_owned_transport() -> R
 #[tokio::test]
 async fn partial_file_backpressure_does_not_block_receive_renewal_or_revoke() -> Result {
     let (session, clock, signer, mut claims) = active(15000)?;
+    let activation_completed_ms = clock.monotonic_ms();
     let (revoke, stop) = watch::channel(None);
     let (peer, stream) = tokio::io::duplex(64);
     let (read, write) = split(stream);
@@ -1690,7 +1691,14 @@ async fn partial_file_backpressure_does_not_block_receive_renewal_or_revoke() ->
             .payload,
         b"opposite-direction-input"
     );
+    // Duplex I/O and optimized signatures can finish in the activation's
+    // original millisecond. A distinct renewal request must actually start
+    // later; do not fabricate a future timestamp or weaken the replay fence.
+    if clock.monotonic_ms() <= activation_completed_ms {
+        tokio::time::sleep(Duration::from_millis(1)).await;
+    }
     let started = clock.monotonic_ms();
+    assert!(started > activation_completed_ms);
     claims.lease_sequence = 2;
     claims.issued_at_unix_ms = clock.sample()?.unix_ms;
     claims.expires_at_unix_ms = claims.issued_at_unix_ms + 15000;
