@@ -281,7 +281,9 @@ fn ipv4_dhcp(identity: &ProviderIdentity) -> io::Result<bool> {
         let requested = size as usize;
         let row_size = std::mem::size_of::<IP_ADAPTER_INFO>();
         if requested < row_size || requested > MAX_BYTES {
-            return Err(io::Error::other("IPv4 adapter observation exceeded its bound"));
+            return Err(io::Error::other(
+                "IPv4 adapter observation exceeded its bound",
+            ));
         }
         let mut storage = vec![IP_ADAPTER_INFO::default(); requested.div_ceil(row_size)];
         let capacity = storage.len() * row_size;
@@ -313,12 +315,21 @@ fn ipv4_dhcp(identity: &ProviderIdentity) -> io::Result<bool> {
             // SAFETY: the pointer is aligned and checked to cover one fully
             // initialized ABI row inside this still-owned allocation.
             let row = unsafe { &*current };
-            let length = row.AdapterName.iter().position(|byte| *byte == 0)
+            let length = row
+                .AdapterName
+                .iter()
+                .position(|byte| *byte == 0)
                 .ok_or_else(security::denied)?;
-            let name = String::from_utf8(row.AdapterName[..length].iter()
-                .map(|byte| byte.to_ne_bytes()[0]).collect())
-                .map_err(|_| security::denied())?;
-            let name = name.strip_prefix('{').and_then(|value| value.strip_suffix('}'))
+            let name = String::from_utf8(
+                row.AdapterName[..length]
+                    .iter()
+                    .map(|byte| byte.to_ne_bytes()[0])
+                    .collect(),
+            )
+            .map_err(|_| security::denied())?;
+            let name = name
+                .strip_prefix('{')
+                .and_then(|value| value.strip_suffix('}'))
                 .unwrap_or(&name);
             let same = name.eq_ignore_ascii_case(&identity.adapter_guid);
             if same || row.Index == identity.index {
@@ -329,9 +340,12 @@ fn ipv4_dhcp(identity: &ProviderIdentity) -> io::Result<bool> {
             }
             current = row.Next;
         }
-        return found.ok_or_else(||io::Error::other("original IPv4 TUN adapter DHCP observation missing"));
+        return found
+            .ok_or_else(|| io::Error::other("original IPv4 TUN adapter DHCP observation missing"));
     }
-    Err(io::Error::other("IPv4 adapter inventory changed beyond its bounded retry budget"))
+    Err(io::Error::other(
+        "IPv4 adapter inventory changed beyond its bounded retry budget",
+    ))
 }
 
 /// This API is limited to the helper's already captured fresh original link.
