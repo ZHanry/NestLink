@@ -63,6 +63,24 @@ async fn hosted_native_role() -> Result {
         )?;
         return Ok(());
     }
+    if role == "coexist-check" {
+        require_system_admin().await?;
+        let plan=TunPlan::read(&plan)?;
+        plan.validate(true)?;
+        let original:PacketReceipt=serde_json::from_slice(&std::fs::read(receipt)?)?;
+        assert!(original.binding.process.original_incarnation_alive()?);
+        let snapshot=resources::inspect(&original.provider)?.ok_or_else(||io::Error::other("the unrelated original adapter disappeared"))?;
+        snapshot.verify(&plan.local_hosts,&plan.remote_hosts)?;
+        assert_eq!(snapshot.digest()?,original.provider.configuration_sha256,"another managed owner changed the unrelated original adapter configuration");
+        let phase=std::env::var("NESTLINK_TUN_NATIVE_COEXIST_PHASE")?;
+        assert!(["before_cli_apply","during_cli_packets","after_cli_cleanup"].contains(&phase.as_str()));
+        std::fs::write(case.join(format!("preserved-{phase}.json")),serde_json::to_vec(&serde_json::json!({
+            "original_provider":original.provider,"original_owner":original.binding.process,"complete_snapshot":snapshot,
+            "snapshot_sha256":snapshot.digest()?,"original_owner_still_alive":true,"phase":phase,
+            "scope":"unrelated live Wintun adapter preservation in the same hosted VM; not third-party VPN or independent target acceptance"
+        }))?)?;
+        return Ok(());
+    }
     if role == "foreign" {
         nestlink_privileged::windows::require_normal_user_process()?;
         let receipt: PacketReceipt = serde_json::from_slice(&std::fs::read(receipt)?)?;

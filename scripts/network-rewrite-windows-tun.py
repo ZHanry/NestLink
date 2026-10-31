@@ -153,6 +153,53 @@ def main():
             owner_handle(identity)
             observed_children.add(marker)
 
+    def begin_unrelated_adapter():
+        # An independently owned, already-live Wintun adapter stays present
+        # across the second CLI's installation, actual packets and cleanup.
+        # This is an exact preservation negative, not third-party VPN traffic.
+        case, root = output / "coexistence-preservation", fixture / "coexistence-preservation"
+        native.directory(case, f"O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;{runner_sid})")
+        native.directory(root, protected_acl)
+        extra = {"NESTLINK_TUN_NATIVE_CASE": str(case), "NESTLINK_TUN_NATIVE_RECEIPT": str(root / "receipt.json"),
+                 "NESTLINK_TUN_NATIVE_JOURNAL": str(root / "journal"), "NESTLINK_TUN_NATIVE_DRIVER": str(fixture / "wintun.dll"),
+                 "NESTLINK_TUN_NATIVE_DRIVER_SHA256": binaries["amd64"], "TEMP": str(case), "TMP": str(case),
+                 "NESTLINK_TUN_NATIVE_PRIVATE_PARENT": str(private_parent), "NESTLINK_TUN_NATIVE_PAUSE": "0", "NESTLINK_TUN_NATIVE_FAULT": ""}
+        ordinary = start("coexistence-original-ordinary", [sys.executable, source / "scripts/refactor-windows-normal-user.py", executable, *ROLE_ARGS],
+                         dict(extra, NESTLINK_TUN_NATIVE_ROLE="ordinary"))
+        ready = await_json(case / "plan-ready.json", ordinary)
+        identity = ready["identity"]
+        if identity["elevated"] or not 0x2000 <= identity["integrity"] < 0x3000 or identity["sid"] != runner_sid:
+            raise ValueError("unrelated adapter owner did not retain its original ordinary token")
+        owner_handle(identity)
+        helper = start("coexistence-original-administrator", [executable, *ROLE_ARGS], dict(extra, NESTLINK_TUN_NATIVE_ROLE="apply"))
+        packets = await_json(case / "packets-ready.json", ordinary)
+        receipt = packets["receipt"]
+        if (receipt["binding"]["process"] != identity or receipt["helper"]["pid"] != helper.pid
+            or not receipt["helper"]["elevated"] or receipt["helper"]["integrity"] != 0x3000
+            or packets["kernel_udp_replies"] != 2 or packets["ipv4_packet_bytes"] != 1280 or packets["ipv6_packet_bytes"] != 1280):
+            raise ValueError("independent unrelated provider was not originally active with complete kernel packets")
+        return {"case": case, "root": root, "extra": extra, "ordinary": ordinary, "helper": helper, "plan": ready, "packets": packets, "observations": {}}
+
+    def inspect_unrelated(witness, phase):
+        execute("unrelated-preservation-" + phase, [executable, *ROLE_ARGS],
+                extra=dict(witness["extra"], NESTLINK_TUN_NATIVE_ROLE="coexist-check", NESTLINK_TUN_NATIVE_COEXIST_PHASE=phase))
+        witness["observations"][phase] = await_json(witness["case"] / ("preserved-" + phase + ".json"))
+
+    def stop_unrelated(witness):
+        write(witness["case"] / "stop.json", {"stop": True})
+        witness["ordinary"].wait(timeout=10)
+        witness["helper"].wait(timeout=10)
+        stopped = await_json(witness["case"] / "ordinary-stopped.json")
+        if witness["ordinary"].returncode or witness["helper"].returncode or not stopped["kernel_absent"] or stopped["normal_cleanup_ms"] >= 5000:
+            raise ValueError("unrelated original adapter did not complete its own separate five-second cleanup")
+        execute("unrelated-own-final-inspection", [executable, *ROLE_ARGS], extra=dict(witness["extra"], NESTLINK_TUN_NATIVE_ROLE="inspect"))
+        final = await_json(witness["case"] / "inspection.json")
+        if final["record"] is not None or final["current"] is not None or (witness["root"] / "receipt.json").exists():
+            raise ValueError("unrelated original adapter retained its own protected recovery state after its own stop")
+        result["unrelated_wintun_preservation"] = {"status": "passed", "plan": witness["plan"], "packets": witness["packets"],
+            "observations": witness["observations"], "own_cleanup": stopped, "final_inspection": final,
+            "third_party_vpn_acceptance": False, "independent_target_acceptance": False}
+
     try:
         if subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip() != env["GITHUB_SHA"] or subprocess.check_output(["git", "status", "--porcelain=v1", "--untracked-files=all"]):
             raise ValueError("exact clean source SHA required before building")
@@ -255,6 +302,9 @@ def main():
                 or ready.get("production_https_login_restore_before_plan") is not True
                 or not re.fullmatch(r"https://[a-z0-9-]+\.trycloudflare\.com", ready.get("fixture_origin", ""))):
                 raise ValueError("actual independent production CLI and standard HTTPS restore were not established before the plan")
+            witness = begin_unrelated_adapter() if scenario == "online-cli" else None
+            if witness is not None:
+                inspect_unrelated(witness, "before_cli_apply")
             helper = start(scenario + "-administrator", [executable, *ROLE_ARGS], dict(extra, NESTLINK_TUN_NATIVE_ROLE="apply"))
             if scenario in fault_stages:
                 observed = await_json(case / "fault-observed.json", helper)
@@ -312,6 +362,8 @@ def main():
                 or receipt["helper"]["image_volume"] != identity["image_volume"] or receipt["helper"]["image_index"] != identity["image_index"]
                 or packets["kernel_udp_replies"] != 2 or packets["ipv4_packet_bytes"] != 1280 or packets["ipv6_packet_bytes"] != 1280):
                 raise ValueError("separate high helper/medium owner/full kernel packet binding failed")
+            if witness is not None:
+                inspect_unrelated(witness, "during_cli_packets")
             execute(scenario + "-foreign-process-denied", [sys.executable, source / "scripts/refactor-windows-normal-user.py", executable, *ROLE_ARGS], extra=dict(extra, NESTLINK_TUN_NATIVE_ROLE="foreign"))
             foreign = await_json(case / "foreign-denied.json")
             if not foreign["denied"] or foreign["pid"] == identity["pid"] or foreign["original_pid"] != identity["pid"]:
@@ -364,6 +416,9 @@ def main():
             inspection = await_json(case / "inspection.json")
             if inspection["record"] is not None or inspection["current"] is not None or (root / "receipt.json").exists():
                 raise ValueError("exact kernel/resource recovery did not clear its protected record")
+            if witness is not None:
+                inspect_unrelated(witness, "after_cli_cleanup")
+                stop_unrelated(witness)
             result["cases"][scenario] = {"status": "passed", "plan": ready, "packets": packets, "foreign_process": foreign,
                                          "recovery_identity_negative": identity_negative, "inspection": inspection}
         result["status"] = "passed"
@@ -386,7 +441,7 @@ def main():
             # ProgramFiles is outside the uploaded evidence tree and the hosted
             # VM is disposable, so leaving only a pathname would lose evidence.
             inspections = result.setdefault("failure_inspections", {})
-            for scenario in ("normal", "crash", "raw-peer", "online", "fault-provider", "fault-addresses", "fault-routes", "online-cli"):
+            for scenario in ("normal", "crash", "raw-peer", "online", "fault-provider", "fault-addresses", "fault-routes", "online-cli", "coexistence-preservation"):
                 case, root = output / scenario, fixture / scenario
                 if not case.is_dir() or not root.is_dir():
                     continue
