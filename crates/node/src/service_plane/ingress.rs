@@ -117,7 +117,7 @@ impl IngressNamespace {
     }
     fn key(&self, lease: &VerifiedServiceLease) -> Result<Key, Error> {
         let definition = &lease.claims().definition;
-        if definition.edge_node_id != self.edge_node_id {
+        if lease.claims().edge_node_id() != self.edge_node_id {
             return Err(Error::Ingress);
         }
         match &definition.requested_ingress {

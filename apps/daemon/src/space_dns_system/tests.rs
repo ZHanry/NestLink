@@ -97,6 +97,27 @@ fn journal_refuses_symlink_directory_and_a_widened_private_directory() -> Result
     Ok(())
 }
 
+#[cfg(target_os = "linux")]
+#[test]
+fn public_plan_refuses_symlinks_and_fifos_without_blocking_the_helper() -> Result {
+    use std::os::unix::fs::symlink;
+    let temporary = tempfile::tempdir()?;
+    let path = temporary.path().join("plan.json");
+    create_private(&path, &serde_json::to_vec(&complete_plan()?)?)?;
+    assert!(read_plan(&path).is_ok());
+    let alias = temporary.path().join("alias.json");
+    symlink(&path, &alias)?;
+    assert!(read_plan(&alias).is_err());
+    let fifo = temporary.path().join("plan-fifo");
+    if !std::process::Command::new("/usr/bin/mkfifo").arg("--").arg(&fifo).status()?.success() {
+        return Err("could not create the Linux FIFO fixture".into());
+    }
+    let (send, receive) = std::sync::mpsc::channel();
+    std::thread::spawn(move || { let _ = send.send(read_plan(&fifo).is_err()); });
+    assert!(receive.recv_timeout(Duration::from_secs(1))?, "the administrative monitor must reject a FIFO before reading");
+    Ok(())
+}
+
 struct HttpServer(tokio::task::JoinHandle<std::io::Result<()>>);
 impl Drop for HttpServer {
     fn drop(&mut self) {

@@ -131,6 +131,7 @@ impl Fixture {
             edge_runtime_generation: 1,
             ingress_claim_id: id(11),
             ingress_claim_revision: 1,
+            edge_group: None,
             usage_grant,
             lease_sequence: 1,
             issued_at_unix_ms: now,
@@ -168,7 +169,7 @@ impl Fixture {
         grant.account_id = c.account_id.clone();
         grant.host_device_id = c.definition.host_device_id.clone();
         grant.service_id = c.service_id.clone();
-        grant.edge_node_id = c.definition.edge_node_id.clone();
+        grant.edge_node_id = c.accounting_node_id().into();
         grant.publication_id = c.publication_id.clone();
         grant.publication_generation = c.publication_generation;
         grant.service_revision = c.service_revision;
@@ -178,7 +179,7 @@ impl Fixture {
         grant.ingress_claim_revision = c.ingress_claim_revision;
         grant.edge_runtime_id = c.edge_runtime_id.clone();
         grant.edge_runtime_generation = c.edge_runtime_generation;
-        grant.byte_ceiling = grant.byte_ceiling.min(c.definition.limits.maximum_bytes);
+        grant.byte_ceiling = grant.byte_ceiling.min(c.effective_limits().maximum_bytes);
         self.claims.usage_grant = self.signer.sign_usage_budget_grant(&grant)?;
         Ok(())
     }

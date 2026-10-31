@@ -28,7 +28,9 @@ use std::{
 };
 use tokio::{io::AsyncReadExt, sync::Semaphore, task::JoinSet};
 pub mod caddy;
+pub mod frontdoor;
 mod udp;
+mod group_health;
 use carrier::datagram::DatagramRouter;
 enum Ingress {
     Tcp(ServiceTcpIngress),
@@ -60,7 +62,10 @@ struct Host {
     runtime: String,
     token: String,
     datagrams: DatagramRouter,
+    ready:Arc<std::sync::atomic::AtomicBool>,
 }
+struct HostReady(Host);
+impl Drop for HostReady {fn drop(&mut self){self.0.ready.store(false,std::sync::atomic::Ordering::SeqCst);}}
 struct Edge {
     node: Arc<NodeControl>,
     identity: Arc<NodeIdentity>,
@@ -125,7 +130,7 @@ impl Drop for Registration {
 fn configured(edge: &Edge, publication: &ServicePublicationHandle) -> io::Result<()> {
     let lease = publication.lease().map_err(fault)?;
     let c = lease.claims();
-    if c.definition.edge_node_id != edge.namespace.node_id
+    if c.edge_node_id() != edge.namespace.node_id
         || c.ingress_claim_revision != edge.namespace.revision
         || c.edge_service_address != edge.namespace.config.quic_address
         || c.edge_key_sha256 != digest(&edge.identity.public_key())
@@ -202,6 +207,13 @@ pub async fn serve_with_caddy(
     caddy_config: Option<caddy::CaddyServiceConfig>,
     shutdown: impl std::future::Future<Output = ()>,
 ) -> io::Result<()> {
+    serve_with_caddy_and_health(endpoint,node,identity,namespace,bind_ip,caddy_config,None,shutdown).await
+}
+pub async fn serve_with_caddy_and_health(
+    endpoint:Endpoint,node:Arc<NodeControl>,identity:Arc<NodeIdentity>,namespace:ServiceEdgeNamespaceView,
+    bind_ip:IpAddr,caddy_config:Option<caddy::CaddyServiceConfig>,group_health_listen:Option<std::net::SocketAddr>,
+    shutdown:impl std::future::Future<Output=()>,
+)->io::Result<()> {
     namespace.config.validate().map_err(fault)?;
     if !valid_id(&namespace.node_id) || namespace.revision == 0 {
         return Err(denied());
@@ -230,6 +242,7 @@ pub async fn serve_with_caddy(
         openings: Arc::new(Semaphore::new(SERVICE_MAX_OPENINGS)),
         caddy: driver.as_ref().map(caddy::Driver::controller),
     });
+    let health=match group_health_listen {Some(address)=>Some(group_health::Driver::start(address,edge.clone()).await?),None=>None};
     let connection_slots = Arc::new(Semaphore::new(SERVICE_MAX_OPENINGS));
     let mut connections = JoinSet::new();
     let mut node_stop = node.stopped();
@@ -243,10 +256,14 @@ pub async fn serve_with_caddy(
         }
     };
     tokio::pin!(caddy_failure);
+    let health_failed=health.as_ref().map(group_health::Driver::failed);
+    let health_failure=async move {match health_failed{Some(failed)=>failed.await,None=>std::future::pending().await}};
+    tokio::pin!(health_failure);
     let result = loop {
         tokio::select! {biased;
             _=&mut shutdown=>break Ok(()),
             _=&mut caddy_failure=>break Err(denied()),
+            _=&mut health_failure=>break Err(denied()),
             _=node_stop.changed()=>{if *node_stop.borrow(){break Err(denied());}},
             Some(_)=connections.join_next()=>{},
             _=drain_tick.tick()=>{if let Err(error)=complete_ready_drains(&edge){break Err(error);}},
@@ -282,6 +299,7 @@ pub async fn serve_with_caddy(
         .wait_service_usage_settled(Duration::from_secs(5))
         .await
         .map_err(fault)?;
+    if let Some(health)=health {health.shutdown().await?;}
     if let Some(driver) = driver {
         driver.shutdown().await?;
     }
@@ -402,6 +420,7 @@ async fn attach(edge: Arc<Edge>, connection: Connection) -> io::Result<()> {
             runtime: proof.host_runtime_id.clone(),
             token: uuid::Uuid::new_v4().to_string(),
             datagrams: DatagramRouter::new(),
+            ready:Arc::new(std::sync::atomic::AtomicBool::new(false)),
         };
         {
             let mut hosts = edge.hosts.lock().map_err(|_| denied())?;
@@ -471,6 +490,8 @@ async fn attach(edge: Arc<Edge>, connection: Connection) -> io::Result<()> {
         close_ingress(ingress).await;
         return Err(error);
     }
+    host.ready.store(true,std::sync::atomic::Ordering::SeqCst);
+    let _ready=HostReady(host.clone());
     let renewals = async {
         let mut tick = tokio::time::interval(Duration::from_millis(25));
         tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);

@@ -181,6 +181,7 @@ async fn run() -> Result {
         public_ips: public_ips.clone(),
         dns_json_endpoint: std::env::var("NESTLINK_WEB_DOH_URL")
             .unwrap_or_else(|_| "https://dns.google/resolve".into()),
+        edge_group:None,
     };
     config.validate()?;
     let caddy_json = work.join("Caddy.json");

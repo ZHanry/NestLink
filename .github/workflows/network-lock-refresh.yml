@@ -64,6 +64,8 @@ jobs:
               'version': '=2.8.16', 'default-features': False, 'features': ['async_tokio']}
           assert daemon['dependencies']['nestlink-transport-quic'] == {'workspace': True}
           assert daemon['dependencies']['nestlink-platform-network'] == {'workspace': True}
+          assert daemon['target']['cfg(target_os = "linux")']['dev-dependencies']['etherparse'] == '=0.21.0'
+          assert 'fs' in daemon['target']['cfg(unix)']['dependencies']['rustix']['features']
           assert native['fast-socks5'] == {'version': '=1.0.0', 'path': '../../third-party/fast-socks5'}
           security = tomllib.loads(pathlib.Path('crates/platform-security/Cargo.toml').read_text())
           assert security['dependencies']['tokio'] == {'workspace': True, 'features': ['process']}
@@ -237,6 +239,9 @@ jobs:
                       [item for item in after if item['name'] == 'etherparse'] == [reviewed_packet_package],
                   'managed_tun_exact_reviewed_provider_closure': scope != 'product' or all(
                       derived.get(key) == checksum for key, checksum in reviewed_tun_packages.items()),
+                  'tun_native_fixture_reuses_exact_locked_packet_parser': scope != 'product' or any(
+                      item['name'] == 'nestlink-daemon' and 'etherparse' in item.get('dependencies', [])
+                      for item in after),
                   'only_reviewed_cookie_packet_components_or_exact_product_reuse_added': all(
                       identity(item) in existing or not item.get('source')
                       or (identity(item) in reviewed_cookie_packages and

@@ -6,8 +6,8 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "79fb7107ee72b82ca8300488a7d46777e7f9cd1d",
-    "checkpoint_kind":  "W22_one_use_network_access_and_packet_source_W25_real_browser_fixture_ready_for_hosted_validation",
+    "source_revision":  "b376edbfb90ea4e30c2bfa5c8c9d252a9a643a4f",
+    "checkpoint_kind":  "W22_managed_linux_TUN_W26_atomic_group_source_awaiting_hosted_format_lock_and_contracts",
     "active_tasks":  [
                          "W00",
                          "W02",
@@ -31,7 +31,8 @@
                          "W15",
                          "W25",
                          "W29",
-                         "W22"
+                         "W22",
+                         "W26"
                      ],
     "satisfied_interface_dependencies":  [
                                              "W01 nine-topic source and mature-component research independently reviewed",
@@ -39,13 +40,11 @@
                                              "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
                                          ],
     "unverified_assumptions":  [
-                                   "Network41179533397 and Web41179533670 succeeded on2e73b03. New Caddy/Chrome/test trust hosted L2 source is ready; it is not public DNS/ACME or target acceptance.",
-                                   "W19 Linux actual OS resolver passed. Windows install/query/recovery/external-change/delete passed in6604e47 but PowerShell5.1 null output caused final absence parse failure; explicit JSON null repair is in this source checkpoint.",
-                                   "W21 WFP exact comparison identified native object mask0x000f01ff, D:PAI and receive filter INDEXED.79fb710 requests those exact values without discarding fields; Windows run41182932352 is validating the actual kernel.",
-                                   "W29 scoped SDK/native/desktop diagnostics passed on2e73b03. Daemon malformed native history and collapsible_if repairs await this checkpoint Core.",
-                                   "W22 explicit destination approval, two-endpoint one-use online start, durable revocation, current scoped addresses, cumulative packet admission and existing datagram codec are source implementation. Etherparse0.21.0 and exact reused arrayvec0.7.8 product/fixture locks derived on Actions and reviewed. TUN OS owner and production CLI integration remain in progress; no TUN acceptance claimed.",
-                                   "Core41179533450 Linux workspace had one stale independent-node fixture failure, repaired in3fee92a; Core41180722633 is validating that repair and contains the now-repaired diagnostic lint.",
-                                   "W22-W24,W26-W28,W30-W40 mandatory implementation and applicable target qualifications remain open; release stays not_ready."
+                                   "Uncommitted Linux TUN ordinary-owner/helper and atomic multi-edge group source are under manual review; neither is build- or target-qualified.",
+                                   "Owned system split DNS run41185941010 succeeded on b376edb on Linux and Windows, including strict daemon lint before the current TUN source.",
+                                   "WFP kernel run41182932352 succeeded on79fb710. This is hosted SID/process isolation evidence, not GPU/VPN coexistence target acceptance.",
+                                   "Private Web run41185938481 compiled b376edb but failed Caddy HTTPS readiness; verified artifact13036918546 retained. Caddy2.11 upstream Host default has been identified in pinned upstream source; explicit approved Host repair and sanitized readiness diagnostics are unverified.",
+                                   "W22 Windows provider and W23-W24,W27-W28,W30-W40 implementation and applicable target qualification remain open; release_state stays not_ready."
                                ],
     "external_prerequisites":  [
                                    {
@@ -75,12 +74,11 @@
                                    }
                                ],
     "next_steps":  [
-                       "Import complete hosted formatting for this exact source and generate/import same-source OpenAPI before drift validation.",
-                       "Run actual private Web Caddy/Chrome workflow, DNS repair, network and scoped packet/HTTP access contracts on both operating systems; repair actual failures.",
-                       "Read Windows WFP79fb710 kernel result without relaxing ownership comparison.",
-                       "Complete managed TUN ordinary owner and minimal privileged OS helper with peer/source/ACL/MTU/physical cleanup, then subnet and WireGuard.",
-                       "Continue independent multi-edge fixed ingress, offline/game/media/distribution implementation and target acceptance preparation.",
-                       "Publish0.8.0RC after all mandatory source and applicable evidence gates, then reverify local/remote main-only branches."
+                       "Freeze reviewed TUN/group source, commit and push main; derive/review/import exact reused dependency lock on Actions.",
+                       "Import same-source Actions Rust formatting and OpenAPI artifacts, then validate strict daemon/core and real HTTP file-SQLite group contracts on Linux and Windows.",
+                       "Run ordinary-user Linux TUN create/adopt/whole-packet/cleanup/crash-recovery experiment and real Caddy/Chrome fixture; fix all actual failures.",
+                       "Complete real fixed-entry dual-edge HTTP/HTTPS/TCP/UDP hosted experiment, Windows TUN, subnet, WireGuard, offline, game, UI, media, distribution and acceptance work.",
+                       "Publish0.8.0RC only after mandatory source/evidence gates; local and remote currently each have only main."
                    ],
     "evidence_index":  [
                            "docs/network-rewrite/evidence/research-review-2026-10-30.md",
@@ -348,6 +346,12 @@
                                  "source_revision":  "01cbe7a86d95b64495e2b79fb112b63bd642ff49",
                                  "status":  "success",
                                  "scope":  "Linux real raw TCP/UDP plus standard local TLS, original gate unchanged and physical release"
+                             },
+                             {
+                                 "run_id":  41185941010,
+                                 "source_revision":  "b376edbfb90ea4e30c2bfa5c8c9d252a9a643a4f",
+                                 "status":  "success",
+                                 "scope":  "Both hosted operating systems: actual split DNS owner/install/query/recovery and strict daemon lint before current TUN/group source"
                              }
                          ],
     "release_state":  "not_ready",

@@ -65,6 +65,29 @@ pub(crate) struct ProcessIdentity {
     incarnation: String,
     image: String,
 }
+#[cfg(target_os = "linux")]
+impl ProcessIdentity {
+    pub(crate) fn pid(&self) -> u32 { self.pid }
+    pub(crate) fn valid(&self) -> bool {
+        self.pid > 0 && !self.incarnation.is_empty() && self.incarnation.len() <= 128
+            && !self.image.is_empty() && self.image.len() <= 32768 && Path::new(&self.image).is_absolute()
+    }
+}
+
+// Share only the original bounded process/command primitives with the explicit
+// host TUN owner. DNS plans, journals and OS backend mutation stay private.
+#[cfg(target_os = "linux")]
+pub(crate) async fn process_identity(pid: u32) -> Result<ProcessIdentity> { identity(pid).await }
+#[cfg(target_os = "linux")]
+pub(crate) async fn require_system_admin() -> Result { require_admin().await }
+#[cfg(target_os = "linux")]
+pub(crate) fn system_wall_ms() -> Result<u64> { wall_ms() }
+#[cfg(target_os = "linux")]
+pub(crate) fn current_image_matches(process: &ProcessIdentity) -> Result<bool> { same_image(&process.image) }
+#[cfg(target_os = "linux")]
+pub(crate) async fn native_command(program: &Path, args: &[String], environment: Option<(&str, String)>) -> Result<Vec<u8>> {
+    command::run(program, args, environment).await
+}
 
 /// Contains public identifiers only. Never references a session store or token.
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -369,16 +392,46 @@ async fn probe_socket(plan: &DnsPlan) -> Result {
 fn read_plan(path: &Path) -> Result<DnsPlan> {
     // Administrator explicitly selects this public input file. None of its
     // fields become filesystem paths or arbitrary executable arguments.
+    #[cfg(unix)]
+    let file = {
+        use std::os::unix::fs::OpenOptionsExt;
+        OpenOptions::new().read(true)
+            .custom_flags((rustix::fs::OFlags::NOFOLLOW | rustix::fs::OFlags::NONBLOCK).bits() as i32)
+            .open(path)?
+    };
+    #[cfg(not(unix))]
+    let file = {
     let metadata = std::fs::symlink_metadata(path)?;
     if !metadata.is_file() || metadata.len() > MAX_JOURNAL {
         return Err(io::Error::other("plan must be a bounded regular JSON file").into());
     }
+        File::open(path)?
+    };
+    // Validate the descriptor that supplies the bytes. On Linux an owner can
+    // replace this input between monitor iterations; a FIFO must never stall
+    // the privileged owner or prevent its original expiry from being checked.
+    let metadata = file.metadata()?;
+    if !metadata.is_file() || metadata.len() > MAX_JOURNAL {
+        return Err(io::Error::other("plan must be a bounded regular JSON file").into());
+    }
     let mut bytes = Vec::new();
-    File::open(path)?
+    (&file)
         .take(MAX_JOURNAL + 1)
         .read_to_end(&mut bytes)?;
     if bytes.len() > MAX_JOURNAL as usize {
         return Err(io::Error::other("plan exceeds limit").into());
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        let after = file.metadata()?;
+        if metadata.uid() != after.uid() || metadata.mode() != after.mode()
+            || metadata.len() != after.len() || metadata.len() != bytes.len() as u64
+            || metadata.mtime() != after.mtime() || metadata.mtime_nsec() != after.mtime_nsec()
+            || metadata.ctime() != after.ctime() || metadata.ctime_nsec() != after.ctime_nsec()
+        {
+            return Err(io::Error::other("DNS plan changed while reading its original descriptor").into());
+        }
     }
     let plan: DnsPlan = serde_json::from_slice(&bytes)?;
     plan.validate(false)?;

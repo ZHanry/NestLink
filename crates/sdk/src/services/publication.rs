@@ -19,6 +19,7 @@ pub use backend_tls::HttpsBackendTls;
 use carrier::datagram::DatagramRouter;
 mod issuer;
 mod observation;
+pub mod group;
 use cleanup::ServiceCleanupMonitor;
 use issuer::ServiceIssuerOwner;
 
@@ -191,6 +192,22 @@ impl Sdk {
             )
             =>grant?,
         };
+        self.attach_service_publication(host,consent,grant,requested,cancelled,None).await
+    }
+    async fn attach_service_publication(
+        &self,
+        host: Arc<DeviceIdentity>,
+        consent: LocalServiceTargetConsent,
+        grant: ServicePublicationGrant,
+        requested: Instant,
+        mut cancelled: watch::Receiver<bool>,
+        group: Option<&nestlink_protocol::service_plane::group::ServiceEdgeGroupView>,
+    ) -> Result<LocalServiceRuntime,SdkError> {
+        if *cancelled.borrow() { return Err(interrupted()); }
+        let principal=self.principal().ok_or(SdkError::SignIn)?;
+        let revision=consent.revision.checked_add(1).ok_or(SdkError::Invalid)?;
+        if host.device_id != consent.host_device_id || principal.account_id != consent.account_id
+            || consent.protocol=="https" && consent.backend_tls.is_none() { return Err(SdkError::Trust); }
         let policy: [u8; 32] = URL_SAFE_NO_PAD
             .decode(&self.health.node_policy_issuer)
             .map_err(|_| SdkError::Trust)?
@@ -204,6 +221,11 @@ impl Sdk {
         )?));
         let lease = delegation.verify_lease(&grant.lease, wall()?)?;
         let c = lease.claims();
+        match (group,&c.edge_group) {
+            (None,None)=>{},
+            (Some(selected),Some(binding)) if selected==&binding.group=>{},
+            _=>return Err(SdkError::Trust),
+        }
         if c.security_epoch != self.health.security_epoch
             || c.service_revision != revision
             || c.account_id != principal.account_id
@@ -217,14 +239,20 @@ impl Sdk {
             policy_revision: c.policy_revision,
             service_lease_issuer: lease.issuer(),
         };
-        let target = Arc::new(LocalTargetOwner::from_local_choice(
+        let target_owner = if let Some(group) = group {
+            LocalTargetOwner::from_local_group_choice(
+                context.clone(),consent.original_view,consent.target_id,consent.protocol,
+                consent.address,host.identity.public_key(),group,
+            )?
+        } else { LocalTargetOwner::from_local_choice(
             context.clone(),
             consent.original_view,
             consent.target_id,
             consent.protocol,
             consent.address,
             host.identity.public_key(),
-        )?);
+        )? };
+        let target=Arc::new(target_owner);
         let backend_tls = consent.backend_tls;
         if !target.accepts(&lease) {
             return Err(SdkError::Trust);

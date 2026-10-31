@@ -126,6 +126,7 @@ impl Fixture {
             edge_runtime_generation: 1,
             ingress_claim_id: id(11),
             ingress_claim_revision: 1,
+            edge_group: None,
             usage_grant,
             lease_sequence: 1,
             issued_at_unix_ms: at,

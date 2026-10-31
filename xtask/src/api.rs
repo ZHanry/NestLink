@@ -10,6 +10,7 @@ use nestlink_protocol::service_plane::{
         ServicePublicationRequest, ServiceResourceGrant, SignedServiceIssuerDelegation,
     },
 };
+use nestlink_protocol::service_plane::group::*;
 use nestlink_protocol::services::private::*;
 use nestlink_protocol::spaces::addressing::*;
 use nestlink_protocol::spaces::service_publication::*;
@@ -240,6 +241,12 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         ServiceEdgeNamespaceUpdate,
         ServiceEdgeNamespaceView,
         ServicePublicationRequest,
+        ServiceEdgeGroupMember,
+        ServiceEdgeGroupUpdate,
+        ServiceEdgeGroupView,
+        ServiceEdgeGroupBinding,
+        ServiceGroupPublicationRequest,
+        ServiceGroupPublicationGrant,
         ServicePublicationGrant,
         ServiceResourceGrant,
         ServiceLeaseRenewal,

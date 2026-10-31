@@ -15,6 +15,25 @@ use tokio::{
 };
 
 #[test]
+fn grouped_host_enforces_its_slice_and_requires_explicit_original_target_group_choice()->TestResult {
+    use nestlink_protocol::{api::ServiceLimits,service_plane::group::*};
+    let mut fixture=Fixture::new(ServiceIngress::Tcp{port:29100},"tcp","127.0.0.1:8080".parse()?,5000)?;
+    let legacy=fixture.owner()?;
+    let limits=ServiceLimits{maximum_connections:1,bytes_per_second:524288,maximum_bytes:32,idle_timeout_seconds:5};
+    let group=ServiceEdgeGroupView{group_version:1,group_id:id(20),revision:1,service_id:fixture.claims.service_id.clone(),service_revision:fixture.claims.service_revision,definition_sha256:fixture.claims.definition_sha256,target_sha256:fixture.claims.target_sha256,public_ips:vec!["1.1.1.1".parse()?],members:vec![ServiceEdgeGroupMember{node_id:id(8),namespace_revision:1,ingress_ip:"192.168.40.2".parse()?,limits},ServiceEdgeGroupMember{node_id:id(13),namespace_revision:1,ingress_ip:"192.168.40.3".parse()?,limits}]};
+    fixture.claims.edge_group=Some(ServiceEdgeGroupBinding{aggregate_sha256:nestlink_identity::service_plane::group::service_edge_group_digest(&group)?,group:group.clone(),member_node_id:id(13),allocation:limits});
+    fixture.refresh_usage_binding()?;
+    let verified=fixture.verified()?;assert!(!legacy.accepts(&verified));
+    let selected=LocalTargetOwner::from_local_group_choice(fixture.context.clone(),fixture.original.clone(),fixture.claims.target_id.clone(),fixture.protocol.clone(),fixture.address,fixture.host.public_key(),&group)?;
+    assert!(selected.accepts(&verified));
+    let publication=fixture.publication()?;let handle=publication.handle();let (_stop,stopped)=watch::channel(false);
+    let flow=handle.reserve_host("127.0.0.1".parse()?,stopped.clone())?;
+    assert!(handle.reserve_host("127.0.0.1".parse()?,stopped).is_err());
+    assert_eq!(flow.chunk_budget()?,32);flow.try_charge(32)?;assert!(flow.try_charge(1).is_err());
+    drop(flow);publication.revoke();Ok(())
+}
+
+#[test]
 fn host_publication_enforces_the_signed_grant_ceiling_below_definition_maximum() -> TestResult {
     let mut fixture = Fixture::new(
         ServiceIngress::Tcp { port: 29100 },

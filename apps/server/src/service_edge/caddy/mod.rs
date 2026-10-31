@@ -9,7 +9,7 @@ mod admin;
 mod config;
 mod dns;
 mod route;
-pub use config::{CaddyAdmin, CaddyServiceConfig};
+pub use config::{CaddyAdmin, CaddyServiceConfig,CaddyEdgeGroupConfig};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum State {
@@ -32,6 +32,7 @@ struct Entry {
     publication: ServicePublicationHandle,
     node: Arc<NodeControl>,
     connection: Connection,
+    edge_group: Option<nestlink_protocol::service_plane::group::ServiceEdgeGroupBinding>,
     stop: watch::Sender<bool>,
     state: watch::Sender<State>,
 }
@@ -59,6 +60,8 @@ pub(super) struct Controller {
     deployment_id: String,
     service_suffix: String,
     failure: watch::Sender<bool>,
+    edge_group: Option<CaddyEdgeGroupConfig>,
+    public_ips: Vec<IpAddr>,
 }
 pub(super) struct Driver {
     controller: Controller,
@@ -132,6 +135,8 @@ impl Controller {
             deployment_id: config.deployment_id.clone(),
             service_suffix: namespace.config.service_suffix.clone(),
             failure,
+            edge_group:config.edge_group.clone(),
+            public_ips:config.public_ips.clone(),
         };
         let copy = controller.clone();
         let config = Arc::new(config);
@@ -188,8 +193,16 @@ impl Controller {
     ) -> io::Result<Route> {
         let lease = publication.lease().map_err(fault)?;
         let c = lease.claims();
-        if c.deployment_id != self.deployment_id || c.definition.edge_node_id != self.node_id {
+        if c.deployment_id != self.deployment_id || c.edge_node_id() != self.node_id {
             return Err(denied());
+        }
+        match (&self.edge_group,&c.edge_group) {
+            (None,None)=>{},
+            (Some(selected),Some(binding)) if selected.group_id==binding.group.group_id
+                && selected.revision==binding.group.revision && selected.aggregate_sha256==binding.aggregate_sha256
+                && self.public_ips==binding.group.public_ips
+                && binding.group.member(&self.node_id).is_ok_and(|member|member.ingress_ip==selected.ingress_ip)=>{},
+            _=>return Err(denied()),
         }
         let (stop, _) = watch::channel(false);
         let (state, rx) = watch::channel(State::Pending);
@@ -210,6 +223,7 @@ impl Controller {
             publication,
             node,
             connection,
+            edge_group:c.edge_group.clone(),
             stop,
             state,
         });

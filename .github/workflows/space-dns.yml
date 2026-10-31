@@ -101,6 +101,53 @@ jobs:
       - name: Lint all daemon targets independently of the OS test result
         if: ${{ !cancelled() }}
         run: cargo clippy --locked -p nestlink-daemon --all-targets -- -D warnings
+      - name: Check managed TUN plan ownership and bounded file reads on Linux
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        run: cargo test --locked -p nestlink-daemon --bin nestlink-daemon network_tun_system:: -- --show-output --test-threads=1 --color never
+      - name: Exercise ordinary UID TUN whole packets and original helper crash recovery
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, subprocess
+          assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted' and os.geteuid() != 0
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'tun-native-evidence'
+          output.mkdir()
+          source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          assert source == os.environ['GITHUB_SHA']
+          build = ['cargo', 'test', '--locked', '-p', 'nestlink-daemon', '--bin', 'nestlink-daemon', '--no-run', '--message-format=json-render-diagnostics']
+          result = subprocess.run(build, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+          (output / 'build.jsonl').write_bytes(result.stdout)
+          (output / 'build.log').write_bytes(result.stderr)
+          receipt = {'source_revision': source, 'run_id': os.environ['GITHUB_RUN_ID'],
+              'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'], 'runner_environment': os.environ['RUNNER_ENVIRONMENT'],
+              'ordinary_uid': os.geteuid(), 'build_command': build, 'build_return_code': result.returncode,
+              'cargo_lock_sha256': hashlib.sha256(pathlib.Path('Cargo.lock').read_bytes()).hexdigest(),
+              'scope': 'Kernel TUN mechanism only; production login/online authorization and two-device acceptance remain separate',
+              'passed': False}
+          if result.returncode == 0:
+              artifacts = [item['executable'] for line in result.stdout.decode().splitlines()
+                  if (item := json.loads(line)).get('reason') == 'compiler-artifact'
+                  and item.get('target', {}).get('name') == 'nestlink-daemon' and item.get('executable')]
+              assert len(artifacts) == 1, artifacts
+              executable = pathlib.Path(artifacts[0])
+              receipt['executable_sha256'] = hashlib.sha256(executable.read_bytes()).hexdigest()
+              case = 'network_tun_system::native_tests::ordinary_uid_root_helper_whole_packets_normal_close_and_crash_recovery'
+              command = [str(executable), '--exact', case, '--ignored', '--nocapture', '--test-threads=1']
+              environment = dict(os.environ, NESTLINK_TUN_NATIVE_LAB='1')
+              with (output / 'execution.log').open('wb') as log:
+                  code = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, env=environment).returncode
+              receipt.update(execution_command=command, execution_return_code=code, passed=code == 0)
+          (output / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          print(json.dumps(receipt, indent=2))
+          assert receipt['passed'], 'Real TUN mechanism failed; retained logs and receipt are authoritative'
+      - name: Retain TUN build and actual kernel execution provenance
+        if: ${{ always() && runner.os == 'Linux' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: tun-native-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/tun-native-evidence/
+          if-no-files-found: warn
+          retention-days: 30
       - name: Retain source, executable digest, every command result and OS diagnostics
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a

@@ -77,6 +77,18 @@ enum Command {
         /// Private Caddy configuration enables HTTP/HTTPS publication.
         #[arg(long)]
         caddy_config: Option<PathBuf>,
+        /// Original group/host/route readiness for the dedicated IPVS checker.
+        /// Bind the exact explicit ingress IP on a separate unclaimed port.
+        #[arg(long)]
+        group_health_listen: Option<SocketAddr>,
+    },
+    /// Export an exact approved group's dedicated Ubuntu IPVS/keepalived bundle.
+    /// Does not alter host routing or publish a service.
+    FixedIngressBootstrap {
+        #[arg(long)]
+        config:PathBuf,
+        #[arg(long)]
+        output_directory:PathBuf,
     },
     /// Generate dedicated Caddy JSON without replacing existing files.
     CaddyBootstrap {
@@ -361,6 +373,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             quic_listen,
             ingress_ip,
             caddy_config,
+            group_health_listen,
         } => {
             let config = nestlink_node::control::NodeConfig::load(&config)?;
             if !config
@@ -395,18 +408,24 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 config,
                 nestlink_identity::nodes::NodeIdentity::from_seed(&seed),
             )?);
-            let result = nestlink_server::service_edge::serve_with_caddy(
+            let result = nestlink_server::service_edge::serve_with_caddy_and_health(
                 endpoint,
                 control.clone(),
                 identity,
                 namespace,
                 ingress_ip,
                 caddy_config,
+                group_health_listen,
                 shutdown(),
             )
             .await;
             control.stop();
             result?;
+        }
+        Command::FixedIngressBootstrap{config,output_directory}=>{
+            let config=nestlink_server::service_edge::frontdoor::FixedIngressConfig::load(&config)?;
+            config.write_bundle(&output_directory)?;
+            println!("Exact group IPVS-NAT bundle created at {}. Apply it only to an explicitly prepared dedicated Ubuntu director; actual fixed-entry acceptance is still required.",output_directory.display());
         }
         Command::CaddyBootstrap {
             caddy_config,

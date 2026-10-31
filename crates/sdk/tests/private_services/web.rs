@@ -109,6 +109,8 @@ struct Browser {
 impl Browser {
     fn new(gateway: &PrivateWebGateway) -> Result<Self> {
         let route = gateway.caddy_route();
+        assert_eq!(route.pointer("/handle/0/headers/request/set/Host/0").and_then(serde_json::Value::as_str),
+            url::Url::parse(gateway.origin())?.host_str());
         let transport = route
             .pointer("/handle/0/transport/tls")
             .ok_or("upstream TLS missing")?;

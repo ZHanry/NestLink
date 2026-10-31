@@ -11,6 +11,7 @@ use nestlink_protocol::{
 };
 use zeroize::Zeroizing;
 pub mod publication;
+pub mod group;
 
 pub(crate) const LEASE: &[u8] = b"NestLink/v15/service-publication-lease/v1\0";
 pub(crate) const QUERY: &[u8] = b"NestLink/v15/service-resource-query/v1\0";
@@ -58,15 +59,17 @@ impl ServiceLeaseSigner {
     }
     pub fn sign(&self, claims: &ServiceLeaseClaims) -> Result<SignedServiceLease, ContractError> {
         claims.validate()?;
+        group::check_binding(claims)?;
         if definition_digest(&claims.definition)? != claims.definition_sha256 {
             return Err(invalid());
         }
         verify_service_usage_budget_grant(&claims.usage_grant, &self.public_key())?;
+        let purpose = group::purpose(claims);
         let claims = encode(claims, SERVICE_MESSAGE_BYTES)?;
         Ok(SignedServiceLease {
             signature: self
                 .key
-                .sign(&domain_message(LEASE, &claims))
+                .sign(&domain_message(purpose, &claims))
                 .to_bytes()
                 .to_vec(),
             claims,
@@ -125,15 +128,18 @@ pub fn verify_service_lease(
     signed: &SignedServiceLease,
     issuer: &[u8; 32],
 ) -> Result<VerifiedServiceLease, ContractError> {
+    // Parse only the bounded candidate to choose the signature purpose. No
+    // authority is exposed until this exact transcript's signature validates.
+    let claims: ServiceLeaseClaims = decode(&signed.claims, SERVICE_MESSAGE_BYTES)?;
     verify_json(
         &signed.claims,
         &signed.signature,
         issuer,
-        LEASE,
+        group::purpose(&claims),
         SERVICE_MESSAGE_BYTES,
     )?;
-    let claims: ServiceLeaseClaims = decode(&signed.claims, SERVICE_MESSAGE_BYTES)?;
     claims.validate()?;
+    group::check_binding(&claims)?;
     verify_service_usage_budget_grant(&claims.usage_grant, issuer)?;
     if definition_digest(&claims.definition)? != claims.definition_sha256 {
         return Err(invalid());
@@ -236,7 +242,7 @@ pub fn verify_service_snapshot(
         if c.deployment_id != query.deployment_id
             || c.security_epoch != query.security_epoch
             || c.policy_revision != query.policy_revision
-            || c.definition.edge_node_id != query.node_id
+            || c.edge_node_id() != query.node_id
             || c.edge_runtime_id != query.runtime_id
             || c.edge_runtime_generation != query.runtime_generation
             || c.edge_key_sha256 != digest(node_public_key)

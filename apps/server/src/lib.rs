@@ -679,6 +679,18 @@ pub fn router(state: AppState) -> Router {
                 .post(service_publication::publish)
                 .delete(service_publication::stop),
         )
+        .route(
+            "/api/v3/services/{id}/edge-group",
+            get(service_publication::group::config)
+                .put(service_publication::group::set_config)
+                .delete(service_publication::group::revoke_config),
+        )
+        .route(
+            "/api/v3/services/{id}/publication-group",
+            get(service_publication::group::inspect)
+                .post(service_publication::group::publish)
+                .delete(service_publication::group::stop),
+        )
         .route("/api/v3/policy", get(policy).put(update_policy))
         .route("/api/v3/policy/scopes", get(path_limits))
         .route("/api/v3/policy/scopes/{scope}/{id}", put(update_path_limit))

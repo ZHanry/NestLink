@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::net::{IpAddr, SocketAddr};
 pub mod observation;
 pub mod publication;
+pub mod group;
 
 pub const SERVICE_LEASE_MS: u64 = 10_000;
 pub const SERVICE_RESOURCE_MS: u64 = 2_000;
@@ -210,6 +211,10 @@ pub struct ServiceLeaseClaims {
     pub edge_runtime_generation: u64,
     pub ingress_claim_id: String,
     pub ingress_claim_revision: u64,
+    /// Explicit independent multi-edge protocol. None keeps legacy JSON and
+    /// lease signing semantics byte-for-byte; older verifiers reject Some.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub edge_group: Option<group::ServiceEdgeGroupBinding>,
     /// Immutable per-publication byte authority; renewed leases carry the
     /// same signed grant byte-for-byte.
     pub usage_grant: SignedServiceUsageBudgetGrant,
@@ -511,8 +516,18 @@ pub fn decode_service_message<T: DeserializeOwned>(
 }
 
 impl ServiceLeaseClaims {
+    pub fn edge_node_id(&self) -> &str {
+        self.edge_group.as_ref().map_or(self.definition.edge_node_id.as_str(), |binding| binding.member_node_id.as_str())
+    }
+    pub fn accounting_node_id(&self) -> &str {
+        self.edge_group.as_ref().map_or(self.definition.accounting_node_id(), |binding| binding.member_node_id.as_str())
+    }
+    pub fn effective_limits(&self) -> crate::api::ServiceLimits {
+        self.edge_group.as_ref().map_or(self.definition.limits, |binding| binding.allocation)
+    }
     pub fn validate(&self) -> Result<(), ContractError> {
         self.definition.validate()?;
+        if let Some(binding) = &self.edge_group { binding.validate(self)?; }
         publication::service_socket(&self.edge_service_address)?;
         if self.usage_grant.signature.len() != 64 {
             return Err(invalid());
@@ -559,7 +574,7 @@ impl ServiceLeaseClaims {
             || grant.account_id != self.account_id
             || grant.host_device_id != self.definition.host_device_id
             || grant.service_id != self.service_id
-            || grant.edge_node_id != self.definition.accounting_node_id()
+            || grant.edge_node_id != self.accounting_node_id()
             || grant.publication_id != self.publication_id
             || grant.publication_generation != self.publication_generation
             || grant.service_revision != self.service_revision
@@ -569,7 +584,8 @@ impl ServiceLeaseClaims {
             || grant.ingress_claim_revision != self.ingress_claim_revision
             || grant.edge_runtime_id != self.edge_runtime_id
             || grant.edge_runtime_generation != self.edge_runtime_generation
-            || grant.byte_ceiling > self.definition.limits.maximum_bytes
+            || grant.byte_ceiling > self.effective_limits().maximum_bytes
+            || self.edge_group.is_some() && grant.byte_ceiling != self.effective_limits().maximum_bytes
             || grant.issued_at_unix_ms > self.issued_at_unix_ms
             || grant.expires_at_unix_ms < self.expires_at_unix_ms
         {
@@ -713,6 +729,7 @@ mod tests {
             edge_runtime_generation: 1,
             ingress_claim_id: id(11),
             ingress_claim_revision: 1,
+            edge_group: None,
             usage_grant: SignedServiceUsageBudgetGrant {
                 claims: encode_service_message(
                     &ServiceUsageBudgetGrantClaims {

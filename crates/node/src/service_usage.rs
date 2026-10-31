@@ -239,7 +239,7 @@ impl ServiceUsageStore {
         } else {
             tx.execute(
                 "INSERT INTO service_usage_local_grants(grant_id,grant_sha256,grant_json,publication_id,publication_generation,edge_runtime_id,edge_runtime_generation,grant_bytes,maximum_connections,report_sha256) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)",
-                params![grant.grant_id,grant_digest,grant_json,grant.publication_id,grant.publication_generation,grant.edge_runtime_id,grant.edge_runtime_generation,grant.byte_ceiling,c.definition.limits.maximum_connections,[0u8;32].as_slice()],
+                params![grant.grant_id,grant_digest,grant_json,grant.publication_id,grant.publication_generation,grant.edge_runtime_id,grant.edge_runtime_generation,grant.byte_ceiling,c.effective_limits().maximum_connections,[0u8;32].as_slice()],
             )?;
         }
         if let Some((json, issuer)) = private {

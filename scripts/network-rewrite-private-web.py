@@ -201,10 +201,16 @@ def main():
         caddy_log=open(private/"caddy.log","wb");streams.append(caddy_log)
         caddy=subprocess.Popen([str(args.caddy),"run","--config",str(private/"caddy.json")],stdout=caddy_log,stderr=subprocess.STDOUT,start_new_session=True)
         deadline=time.monotonic()+15
+        readiness={"attempts":0,"last_status":None,"owner_matched":False,"transport_error":None}
+        receipt["execution"]["caddy_readiness"]=readiness
         while True:
+            readiness["attempts"]+=1
             try:
-                if https(services[0]["origin"])[1].decode()==services[0]["owner_id"]: break
-            except (OSError,ssl.SSLError): pass
+                status,body=https(services[0]["origin"])
+                readiness.update(last_status=status,owner_matched=body==services[0]["owner_id"].encode(),transport_error=None)
+                if status==200 and readiness["owner_matched"]: break
+            except (OSError,ssl.SSLError) as error:
+                readiness["transport_error"]=type(error).__name__
             if time.monotonic()>deadline: raise TimeoutError("real-caddy-readiness-failed")
             time.sleep(.1)
         cases=receipt["execution"]["cases"]

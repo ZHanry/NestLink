@@ -52,7 +52,7 @@ pub(super) async fn cleanup(admin: &admin::Admin, entry: &Entry) {
     let _lifecycle = admin.lifecycle.clone().lock_owned().await;
     loop {
         if admin.remove(&entry.id).await.is_ok()
-            && (entry.scheme != "https"
+            && (entry.scheme != "https" || entry.edge_group.is_some()
                 || admin
                     .certificate_host(
                         &entry.node_id,
@@ -97,7 +97,7 @@ async fn activate(
     admin
         .install(&entry.node_id, entry.scheme, &route(entry, false))
         .await?;
-    if entry.scheme == "https" {
+    if entry.scheme == "https" && entry.edge_group.is_none() {
         admin
             .certificate_host(&entry.node_id, &entry.service_suffix, &entry.hostname, true)
             .await?;

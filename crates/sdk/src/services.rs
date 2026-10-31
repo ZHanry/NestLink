@@ -1,6 +1,7 @@
 //! Service configuration and explicit local target consent. No listener or target
 //! connection is created here, and no remote response chooses the local target.
 use crate::*;
+mod edge_group;
 #[cfg(not(target_arch = "wasm32"))]
 mod local_proxy;
 mod private;
@@ -36,6 +37,8 @@ mod publication;
 pub use publication::{
     HttpsBackendTls, LocalServiceRuntime, ServiceHostStopReport, ServiceHostWait,
 };
+#[cfg(not(target_arch = "wasm32"))]
+pub use publication::group::{LocalServiceGroupChoice, LocalServiceGroupRuntime, ServiceGroupHostWait};
 
 /// Created only from an explicit local choice. It cannot be deserialized from IPC
 /// or a server response. Keep this owner beside the local target registration;

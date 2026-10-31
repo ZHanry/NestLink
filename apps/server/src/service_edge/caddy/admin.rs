@@ -331,6 +331,7 @@ mod tests {
             admin: transport,
             public_ips: vec!["1.1.1.1".parse()?],
             dns_json_endpoint: "https://dns.google/resolve".into(),
+            edge_group:None,
         };
         config.validate()?;
         let node = uuid::Uuid::new_v4().to_string();

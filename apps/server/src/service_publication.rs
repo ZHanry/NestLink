@@ -1,4 +1,5 @@
 use crate::{ApiError, AppState, access, now, now_ms};
+pub(crate) mod group;
 use axum::{
     Json,
     extract::{Path, State},

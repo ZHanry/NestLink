@@ -678,6 +678,7 @@ impl Store {
             now,
         )?;
         let claims = ServiceLeaseClaims {
+            edge_group: None,
             schema_version: SCHEMA_VERSION,
             deployment_id: self.deployment_id()?,
             security_epoch: self.security_epoch()?,

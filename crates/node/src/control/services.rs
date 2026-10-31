@@ -18,7 +18,7 @@ fn matches_node(node: &NodeLeaseClaims, service: &ServiceLeaseClaims) -> bool {
     node.deployment_id == service.deployment_id
         && node.security_epoch == service.security_epoch
         && node.policy_revision == service.policy_revision
-        && node.node_id == service.definition.edge_node_id
+        && node.node_id == service.edge_node_id()
         && node.node_key_sha256 == service.edge_key_sha256
         && node.runtime_id == service.edge_runtime_id
         && node.runtime_generation == service.edge_runtime_generation

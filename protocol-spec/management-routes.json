@@ -151,6 +151,12 @@
   {"path":"/service-usage/quota","method":"get","operation":"service_usage::admin_usage","status":200,"auth":true,"administrator":true,"query":"ServiceQuotaUsageQuery","response":"ServiceQuotaUsageView"},
   {"path":"/service-usage/quota","method":"put","operation":"service_usage::set_limit","status":200,"auth":true,"administrator":true,"request":"ServiceQuotaLimitUpdate","response":"ServiceQuotaUsageView"},
   {"path":"/services/{id}/publication","method":"get","operation":"service_publication::inspect","status":200,"auth":true,"response":"ServicePublicationGrant"},
+  {"path":"/services/{id}/edge-group","method":"get","operation":"service_publication::group::config","status":200,"auth":true,"response":"ServiceEdgeGroupView"},
+  {"path":"/services/{id}/edge-group","method":"put","operation":"service_publication::group::set_config","status":200,"auth":true,"request":"ServiceEdgeGroupUpdate","response":"ServiceEdgeGroupView"},
+  {"path":"/services/{id}/edge-group","method":"delete","operation":"service_publication::group::revoke_config","status":204,"auth":true,"request":"ServicePublicationRequest"},
+  {"path":"/services/{id}/publication-group","method":"get","operation":"service_publication::group::inspect","status":200,"auth":true,"response":"ServiceGroupPublicationGrant"},
+  {"path":"/services/{id}/publication-group","method":"post","operation":"service_publication::group::publish","status":200,"auth":true,"request":"ServiceGroupPublicationRequest","response":"ServiceGroupPublicationGrant"},
+  {"path":"/services/{id}/publication-group","method":"delete","operation":"service_publication::group::stop","status":204,"auth":true,"request":"ServiceGroupPublicationRequest"},
   {"path":"/services/{id}/publication","method":"post","operation":"service_publication::publish","status":200,"auth":true,"request":"ServicePublicationRequest","response":"ServicePublicationGrant"},
   {"path":"/services/{id}/publication","method":"delete","operation":"service_publication::stop","status":204,"auth":true,"request":"ServicePublicationRequest"}
   ,{"path":"/network/spaces/{space}/topology/publishers/{node}","method":"post","operation":"network_policy::topology::issue","request":"NetworkTopologyPublisherRequest","response":"NetworkTopologyEnvelope","status":201,"auth":true}

@@ -11,10 +11,13 @@ mod native_files;
 #[cfg(windows)]
 mod native_gpu_diagnostics;
 mod native_video;
+#[cfg(target_os = "linux")]
+mod network_tun_system;
 mod private_service_proxy;
 mod private_web_gateway;
 mod privileged_input;
 mod session_store;
+mod service_group;
 mod space_dns;
 mod space_dns_system;
 
@@ -89,6 +92,14 @@ enum Command {
     SpaceDnsSystem(space_dns_system::SystemDnsArgs),
     /// Export bounded, re-redacted retained diagnostics without management login.
     Diagnostics(diagnostics::ExportArgs),
+    /// Approve one fixed local target and every member of a public edge group.
+    ServiceGroup(service_group::GroupArgs),
+    /// Explicit ordinary-user host packet tunnel with separate local OS approval.
+    #[cfg(target_os = "linux")]
+    NetworkTun(network_tun_system::TunArgs),
+    /// Review, apply or recover one exact host-only TUN OS plan; reads no login.
+    #[cfg(target_os = "linux")]
+    NetworkTunSystem(network_tun_system::SystemTunArgs),
     #[command(
         name = "file-quota",
         about = "Offline native FileWrite quota metadata maintenance"
@@ -438,6 +449,11 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         }
         Some(Command::SpaceDnsSystem(command)) => return space_dns_system::run(command).await,
         Some(Command::Diagnostics(command)) => return Ok(diagnostics::run_export(command)?),
+        Some(Command::ServiceGroup(command)) => return service_group::run(command).await,
+        #[cfg(target_os = "linux")]
+        Some(Command::NetworkTun(command)) => return network_tun_system::run_owner(command).await,
+        #[cfg(target_os = "linux")]
+        Some(Command::NetworkTunSystem(command)) => return network_tun_system::run(command).await,
         Some(Command::FileQuota(command)) => return Ok(run_file_quota(command)?),
         Some(Command::Maintenance(command)) => return maintenance::run(command).await,
         Some(Command::Shutdown(command)) => return maintenance::shutdown(command).await,

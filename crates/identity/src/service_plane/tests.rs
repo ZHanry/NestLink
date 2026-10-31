@@ -1,6 +1,7 @@
 use super::publication::*;
 use super::*;
 mod private_network;
+mod groups;
 use crate::nodes::{NodeIdentity, NodePolicySigner};
 use nestlink_protocol::service_plane::publication::*;
 use nestlink_protocol::{
@@ -91,6 +92,7 @@ impl Fixture {
             edge_runtime_generation: 1,
             ingress_claim_id: id(11),
             ingress_claim_revision: 1,
+            edge_group: None,
             usage_grant,
             lease_sequence: 1,
             issued_at_unix_ms: 10000,
@@ -116,7 +118,7 @@ impl Fixture {
                     account_id: claims.account_id.clone(),
                     host_device_id: claims.definition.host_device_id.clone(),
                     service_id: claims.service_id.clone(),
-                    edge_node_id: claims.definition.edge_node_id.clone(),
+                    edge_node_id: claims.accounting_node_id().into(),
                     publication_id: claims.publication_id.clone(),
                     publication_generation: claims.publication_generation,
                     service_revision: claims.service_revision,
@@ -128,7 +130,7 @@ impl Fixture {
                     edge_runtime_generation: claims.edge_runtime_generation,
                     grant_id: id(12),
                     grant_sequence: 1,
-                    byte_ceiling: claims.definition.limits.maximum_bytes,
+                    byte_ceiling: claims.effective_limits().maximum_bytes,
                     issued_at_unix_ms: 9_000,
                     expires_at_unix_ms: 30_000,
                 })?;

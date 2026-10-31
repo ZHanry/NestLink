@@ -13,6 +13,20 @@ pub struct CaddyServiceConfig {
     pub public_ips: Vec<IpAddr>,
     /// An operator-selected HTTPS DNS-over-HTTPS JSON endpoint.
     pub dns_json_endpoint: String,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pub edge_group: Option<CaddyEdgeGroupConfig>,
+}
+#[derive(Debug,Clone,Serialize,Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CaddyEdgeGroupConfig {
+    pub group_id:String,
+    pub revision:u64,
+    pub aggregate_sha256:[u8;32],
+    pub ingress_ip:IpAddr,
+    /// Certificates are provisioned independently for this exact service
+    /// hostname on every edge; HTTP-01 is not randomly sent to another edge.
+    pub certificate:PathBuf,
+    pub private_key:PathBuf,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "transport", rename_all = "snake_case", deny_unknown_fields)]
@@ -40,6 +54,14 @@ impl CaddyServiceConfig {
                 .any(|(i, ip)| self.public_ips[..i].contains(ip))
         {
             return Err(denied());
+        }
+        if let Some(group)=&self.edge_group {
+            if !valid_id(&group.group_id) || !nestlink_protocol::services::revision_valid(group.revision)
+                || group.aggregate_sha256==[0;32] || group.ingress_ip.is_unspecified() || group.ingress_ip.is_multicast()
+                || matches!(group.ingress_ip,IpAddr::V4(ip) if ip.is_broadcast())
+                || !group.certificate.is_absolute() || !group.private_key.is_absolute() || group.certificate==group.private_key {
+                return Err(denied());
+            }
         }
         let url = reqwest::Url::parse(&self.dns_json_endpoint).map_err(fault)?;
         if url.scheme() != "https"
@@ -94,7 +116,7 @@ impl CaddyServiceConfig {
         {
             return Err(denied());
         }
-        Ok(json!({
+        let mut bootstrap=json!({
             "admin": {"listen": self.admin_listen()?, "enforce_origin": true, "origins": [self.origin()], "config": {"persist": false}},
             "apps": {"http": {"servers": {
                 "nestlink_https": {
@@ -113,7 +135,15 @@ impl CaddyServiceConfig {
                         {"handle":[{"handler":"static_response","status_code":404}],"terminal":true}]
                 }
             }},"tls":{"certificates":{"@id":certificate_id(&namespace.node_id),"automate":[]}}}
-        }))
+        });
+        if let Some(group)=&self.edge_group {
+            // Reuse the original protected file checks and let mature Caddy
+            // validate PEM/key/SAN semantics. No certificate parser is added.
+            nestlink_platform_security::read_private(&group.certificate,64*1024).map_err(fault)?;
+            nestlink_platform_security::read_private(&group.private_key,16*1024).map_err(fault)?;
+            bootstrap["apps"]["tls"]["certificates"]["load_files"]=json!([{"certificate":group.certificate,"key":group.private_key}]);
+        }
+        Ok(bootstrap)
     }
 }
 fn management_route(host: &str, upstream: SocketAddr, web_root: &Path) -> io::Result<Value> {
@@ -177,6 +207,7 @@ mod tests {
             },
             public_ips: vec!["1.1.1.1".parse()?],
             dns_json_endpoint: "https://dns.google/resolve".into(),
+            edge_group:None,
         };
         let namespace = ServiceEdgeNamespaceView {
             node_id: uuid::Uuid::new_v4().to_string(),
@@ -224,6 +255,7 @@ mod tests {
             },
             public_ips: vec!["1.1.1.1".parse()?],
             dns_json_endpoint: "https://dns.google/resolve".into(),
+            edge_group:None,
         };
         config.validate()?;
         for address in ["0.0.0.0:2019", "1.1.1.1:2019", "127.0.0.1:0"] {

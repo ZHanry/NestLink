@@ -415,8 +415,7 @@ impl ServicePublicationHandle {
             >= state
                 .verified
                 .claims()
-                .definition
-                .limits
+                .effective_limits()
                 .maximum_bytes
                 .min(state.grant_ceiling)
         {
@@ -426,8 +425,7 @@ impl ServicePublicationHandle {
             state
                 .verified
                 .claims()
-                .definition
-                .limits
+                .effective_limits()
                 .maximum_connections,
         );
         let active_flows = state
@@ -511,8 +509,7 @@ impl ServiceFlowPermit {
                 state
                     .verified
                     .claims()
-                    .definition
-                    .limits
+                    .effective_limits()
                     .idle_timeout_seconds,
             )))
             .ok_or_else(|| rejected(ErrorCode::LeaseExpired))?;
@@ -575,8 +572,7 @@ impl ServiceFlowPermit {
                     n > state
                         .verified
                         .claims()
-                        .definition
-                        .limits
+                        .effective_limits()
                         .maximum_bytes
                         .min(state.grant_ceiling)
                 })
@@ -592,7 +588,7 @@ impl ServiceFlowPermit {
                 .lock()
                 .map_err(|_| rejected(ErrorCode::PolicyRevoked))?;
             state.live()?;
-            let limits = state.verified.claims().definition.limits;
+            let limits = state.verified.claims().effective_limits();
             if state
                 .meter
                 .counters()
@@ -645,8 +641,7 @@ impl ServiceFlowPermit {
                 .map_err(|_| rejected(ErrorCode::PolicyRevoked))?;
             lease
                 .claims()
-                .definition
-                .limits
+                .effective_limits()
                 .maximum_bytes
                 .min(state.grant_ceiling)
                 .saturating_sub(state.meter.counters().admitted_bytes)
@@ -659,7 +654,7 @@ impl ServiceFlowPermit {
             .unwrap_or(u64::MAX);
         let budget = remaining
             .max(1)
-            .min(lease.claims().definition.limits.bytes_per_second)
+            .min(lease.claims().effective_limits().bytes_per_second)
             .min(node_rate)
             .min(16 * 1024);
         usize::try_from(budget)

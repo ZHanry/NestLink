@@ -149,11 +149,15 @@ impl PrivateWebGateway {
             .ok()
             .and_then(|url| url.host_str().map(str::to_owned))
             .unwrap_or_default();
+        // Caddy 2.11 supplies the upstream host as a TLS transport default.
+        // Preserve this exact approved public host for gateway authentication;
+        // the fresh upstream TLS name remains independently verified.
         serde_json::json!({"match":[{"host":[host]}],"terminal":true,"handle":[{
             "handler":"reverse_proxy","upstreams":[{"dial":self.address.to_string()}],
             "transport":{"protocol":"http","versions":["1.1"],"keep_alive":{"enabled":false},
                 "tls":{"ca":{"provider":"inline","trusted_ca_certs":[self.upstream_certificate]},"server_name":self.upstream_server_name}},
             "headers":{"request":{"set":{
+                "Host":[host],
                 "X-NestLink-Token":[self.private_hop.expose()],
                 "X-NestLink-Scheme":["{http.request.scheme}"],
                 "X-NestLink-SNI":["{http.request.tls.server_name}"]

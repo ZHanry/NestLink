@@ -21,6 +21,7 @@ use std::{
     sync::Mutex,
     time::{Duration, Instant},
 };
+pub mod group;
 #[cfg(test)]
 mod tests;
 
@@ -83,6 +84,7 @@ struct PublicationVersion {
     generation: u64,
     sequence: u64,
     usage_grant: SignedServiceUsageBudgetGrant,
+    edge_group: Option<nestlink_protocol::service_plane::group::ServiceEdgeGroupBinding>,
 }
 struct PublicationIdentity<'a> {
     id: &'a str,
@@ -317,6 +319,7 @@ impl Store {
             generation,
             sequence,
             usage_grant,
+            edge_group,
         } = version;
         let claims = ServiceLeaseClaims {
             schema_version: SCHEMA_VERSION,
@@ -355,6 +358,7 @@ impl Store {
             ingress_claim_id: id,
             ingress_claim_revision: edge.namespace.revision,
             usage_grant,
+            edge_group,
             lease_sequence: sequence,
             issued_at_unix_ms: now_ms,
             expires_at_unix_ms: bounded_add(now_ms, SERVICE_LEASE_MS)?
@@ -380,7 +384,11 @@ impl Store {
         edge: &Edge,
         now_ms: u64,
     ) -> Result<(), StorageError> {
-        let limits = &record.definition.limits;
+        self.service_capacity_for_edge(record, edge, &record.definition.edge_node_id, &record.definition.limits, now_ms)
+    }
+    fn service_capacity_for_edge(
+        &self, record: &Record, edge: &Edge, node_id: &str, limits: &ServiceLimits, now_ms: u64,
+    ) -> Result<(), StorageError> {
         let sample =
             |sql: &str, account: Option<&str>| -> Result<(u64, u64, u64, u64), StorageError> {
                 let row = |r: &rusqlite::Row<'_>| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?));
@@ -399,7 +407,7 @@ impl Store {
         )?;
         let node = sample(
             "SELECT count(*),COALESCE(sum(maximum_connections),0),COALESCE(sum(bytes_per_second),0),COALESCE(sum(maximum_bytes),0) FROM service_publications WHERE promised_until>?1 AND node_id=?2",
-            Some(&record.definition.edge_node_id),
+            Some(node_id),
         )?;
         for (held, maxima) in [
             (
@@ -530,6 +538,16 @@ impl Store {
         requested: u64,
         now_ms: u64,
     ) -> Result<SignedServiceUsageBudgetGrant, StorageError> {
+        Self::reserve_service_usage_for_edge(tx, signer, record, approval, publication_id, generation,
+            runtime_id, runtime_generation, ingress_revision, requested, now_ms,
+            record.definition.accounting_node_id(), &record.definition.limits)
+    }
+    #[allow(clippy::too_many_arguments)]
+    fn reserve_service_usage_for_edge(
+        tx: &Transaction<'_>, signer: &ServiceLeaseSigner, record: &Record, approval: &Approval,
+        publication_id: &str, generation: u64, runtime_id: &str, runtime_generation: u64,
+        ingress_revision: u64, requested: u64, now_ms: u64, node_id: &str, limits: &ServiceLimits,
+    ) -> Result<SignedServiceUsageBudgetGrant, StorageError> {
         let quota_revision: u64 = tx.query_row(
             "SELECT revision FROM service_quota_settings WHERE singleton=1",
             [],
@@ -543,7 +561,7 @@ impl Store {
         if restore_fenced {
             return Err(StorageError::RateLimited);
         }
-        if requested == 0 || requested > record.definition.limits.maximum_bytes {
+        if requested == 0 || requested > limits.maximum_bytes {
             return Err(StorageError::RateLimited);
         }
         let capacity = [
@@ -557,7 +575,7 @@ impl Store {
             Self::quota_available(
                 tx,
                 "node",
-                record.definition.accounting_node_id(),
+                node_id,
                 NODE_BYTES,
             )?,
             Self::quota_available(
@@ -593,7 +611,7 @@ impl Store {
             account_id: record.account.clone(),
             host_device_id: record.definition.host_device_id.clone(),
             service_id: record.id.clone(),
-            edge_node_id: record.definition.accounting_node_id().into(),
+            edge_node_id: node_id.into(),
             publication_id: publication_id.into(),
             publication_generation: generation,
             service_revision: record.revision,
@@ -619,7 +637,7 @@ impl Store {
         let grant_sha256 = digest(&signed.claims);
         tx.execute(
             "INSERT INTO service_usage_grants(grant_id,grant_sequence,publication_id,publication_generation,deployment_id,security_epoch,policy_revision,quota_revision,account_id,host_device_id,service_id,node_id,edge_runtime_id,edge_runtime_generation,maximum_connections,bytes_per_second,grant_json,grant_sha256,grant_bytes,report_sha256) VALUES(?1,1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19)",
-            params![claims.grant_id,publication_id,generation,claims.deployment_id,claims.security_epoch,claims.policy_revision,quota_revision,claims.account_id,claims.host_device_id,claims.service_id,claims.edge_node_id,claims.edge_runtime_id,claims.edge_runtime_generation,record.definition.limits.maximum_connections,record.definition.limits.bytes_per_second,grant_json,grant_sha256,capacity,[0u8;32].as_slice()],
+            params![claims.grant_id,publication_id,generation,claims.deployment_id,claims.security_epoch,claims.policy_revision,quota_revision,claims.account_id,claims.host_device_id,claims.service_id,claims.edge_node_id,claims.edge_runtime_id,claims.edge_runtime_generation,limits.maximum_connections,limits.bytes_per_second,grant_json,grant_sha256,capacity,[0u8;32].as_slice()],
         )?;
         Ok(signed)
     }
@@ -639,6 +657,7 @@ impl Store {
             return Err(StorageError::Conflict);
         }
         let (record, approval, edge) = self.service_publication_facts(id, now_ms)?;
+        group::single_ingress_available(&tx, &record, now_ms)?;
         let old:Option<String>=tx.query_row("SELECT claims_json FROM service_publications WHERE service_id=?1 AND state=0 AND control_runtime_id=?2",params![id,life.runtime_id],|r|r.get(0)).optional()?;
         let claims = if let Some(json) = old {
             let old: ServiceLeaseClaims = serde_json::from_str(&json)?;
@@ -654,6 +673,7 @@ impl Store {
                     generation: old.publication_generation,
                     sequence: next(old.lease_sequence)?,
                     usage_grant: old.usage_grant.clone(),
+                    edge_group: None,
                 },
                 now_ms,
             )?;
@@ -708,6 +728,7 @@ impl Store {
                     generation,
                     sequence: 1,
                     usage_grant,
+                    edge_group: None,
                 },
                 now_ms,
             )?
@@ -749,6 +770,7 @@ impl Store {
                 generation: claims.publication_generation,
                 sequence: claims.lease_sequence,
                 usage_grant: claims.usage_grant.clone(),
+                edge_group: None,
             },
             now_ms,
         )?;
@@ -770,6 +792,7 @@ impl Store {
         id: &str,
         now_ms: u64,
     ) -> Result<ServicePublicationStatus, StorageError> {
+        if let Some(status) = self.group_publication_status(id, now_ms)? { return Ok(status); }
         type Row = (u32, String, bool, u64);
         let row: Option<Row> = self.connection.query_row(
             "SELECT p.state,p.claims_json,COALESCE(p.control_runtime_id=s.control_runtime_id AND s.restore_fenced=0,0),n.last_issued_at FROM service_publications p JOIN service_publication_settings s ON s.singleton=1 JOIN data_nodes n ON n.id=p.node_id WHERE p.service_id=?1 AND p.state IN (0,1) AND p.promised_until>?2",
@@ -809,6 +832,7 @@ impl Store {
                 generation: claims.publication_generation,
                 sequence: claims.lease_sequence,
                 usage_grant: claims.usage_grant.clone(),
+                edge_group: None,
             },
             at,
         )?;
@@ -907,6 +931,21 @@ impl Store {
         let mut leases = Vec::new();
         for (id, service, json) in rows {
             let old: ServiceLeaseClaims = serde_json::from_str(&json)?;
+            if old.edge_group.is_some() {
+                let next = match self.group_member_claims(&old, now_ms, next(old.lease_sequence)?) {
+                    Ok((claims, _)) if old.expires_at_unix_ms > now_ms && old.edge_node_id() == q.node_id.as_str() => claims,
+                    Ok(_) | Err(StorageError::Forbidden | StorageError::Unauthorized | StorageError::Invalid(_)) => {
+                        tx.execute("UPDATE service_publications SET state=1 WHERE id=?1", [&id])?;
+                        continue;
+                    }
+                    Err(error) => return Err(error),
+                };
+                self.hold_group_namespace(&tx, &next, now_ms)?;
+                let signed = signer.sign(&next)?;
+                tx.execute("UPDATE service_publications SET claims_json=?1,promised_until=MAX(promised_until,?2) WHERE id=?3 AND state=0",params![serde_json::to_string(&next)?,bounded_add(next.expires_at_unix_ms,HOLD_MARGIN_MS)?,id])?;
+                leases.push(signed);
+                continue;
+            }
             let facts = self.service_publication_facts(&service, now_ms);
             let (record, approval, current) = match facts {
                 Ok(f) => f,
@@ -927,6 +966,7 @@ impl Store {
                     generation: old.publication_generation,
                     sequence: next(old.lease_sequence)?,
                     usage_grant: old.usage_grant.clone(),
+                    edge_group: None,
                 },
                 now_ms,
             )?;

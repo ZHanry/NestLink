@@ -91,6 +91,12 @@ jobs:
           $sdkLog = Join-Path $env:RUNNER_TEMP 'nestlink-sdk-routed-tests.log'
           cargo test --locked -p nestlink-sdk --lib network::routed::tests:: -- --show-output --test-threads=1 --color never 2>&1 | Tee-Object -FilePath $sdkLog
           exit $LASTEXITCODE
+      - name: Check atomic service edge groups against real HTTP and file SQLite on Linux
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        run: cargo test --locked -p nestlink-sdk --test service_edge_groups -- --show-output --test-threads=1 --color never
+      - name: Check atomic service edge groups with the ordinary Windows token
+        if: ${{ !cancelled() && runner.os == 'Windows' }}
+        run: python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-sdk --test service_edge_groups -- --show-output --test-threads=1 --color never
       - name: Check SDK routed contracts with the ordinary Windows token before formatting
         id: sdk_routed_windows
         if: runner.os == 'Windows'
