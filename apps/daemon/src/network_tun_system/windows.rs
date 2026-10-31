@@ -104,6 +104,10 @@ impl Record {
                 return Err(io::Error::other("Windows TUN PnP record lacks its original kernel identity").into());
             }
         }
+        if let Some(installed) = &record.installed
+            && record.identity.as_ref().map(|identity| identity.configuration_sha256) != Some(installed.digest()?) {
+            return Err(io::Error::other("Windows TUN recovery snapshot differs from its original attestation").into());
+        }
         if let Some(identity) = &record.identity
             && (identity.adapter_guid != record.guid
                 || identity.name != record.name
@@ -374,9 +378,8 @@ async fn recover(store: &AdminJournal) -> Result {
         && resources::capture(&record.guid, &record.name, record.driver_sha256)?.is_some() {
         let instance = record.device_instance.as_ref().ok_or_else(||io::Error::other(
             "original PnP identity was not durably captured; preserving surviving adapter"))?;
-        if let Some(installed) = &record.installed
-            && resources::inspect(identity)?.as_ref() != Some(installed) {
-            return Err(io::Error::other("original TUN configuration changed; preserving adapter and journal").into());
+        if let Some(installed) = &record.installed {
+            resources::verify_recovery_remainder(identity, installed)?;
         }
         native("remove exact original PnP instance",device_instance::remove_original(identity, instance))?;
     }

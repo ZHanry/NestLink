@@ -167,8 +167,9 @@ original ordinary binding and administrative creator incarnation before
 device creation. Recovery reuses the existing kernel process-handle/time/wait
 primitives to prove both original incarnations are physically dead. Expiry,
 token/image changes or an access error cannot substitute for death. It then
-requires the unchanged original GUID/name/LUID/index, durable PnP instance and,
-when installed, the complete attested snapshot. SetupAPI opens one exact
+requires the unchanged original GUID/name/LUID/index, durable PnP instance and
+an exact subset of the attested resources still present after kernel withdrawal.
+SetupAPI opens one exact
 device-info element and rechecks its instance ID, hardware ID and adapter
 GUID before `DIF_REMOVE` on only that element. No packet session or shared
 driver is opened or deleted. A replacement, changed configuration, missing
@@ -184,6 +185,29 @@ LUID and interface index against the actual live original device. Each must
 be refused while both its complete snapshot and captured PnP instance remain
 unchanged. These additional checks are implemented and pending hosted execution;
 they do not replace the distinct external-replacement/VPN-coexistence cases.
+
+Source `d69e4227bf2921e25cbc5015679a5a5bbc155039`, hosted run
+`41214798231`, compiled the PnP adapter, passed ordinary IPC/regressions and
+strict Windows clippy, and again passed normal full dual-stack packets and
+cleanup. It captured the original PnP instance successfully. Crash recovery
+then failed before removal because the IP Helper family lookup returned
+`ERROR_NOT_FOUND` (1168), while the original miniport was still enumerated.
+Requiring an online-complete snapshot after both process deaths was therefore
+a second unsupported lifetime assumption. This failed run is retained.
+
+The recovery-only observation now permits the kernel to have withdrawn
+families, addresses or routes. Every remaining family/address/route must
+exactly match a member of the original snapshot, with no added or duplicated
+row, changed MTU, altered route flag or DHCP enablement. A missing IPv4 DHCP
+entry is accepted only when the IPv4 IP interface itself is absent. All
+miniport properties and original kernel identifiers still match, and both
+original process incarnations must already be dead before this observation.
+Any original address/route rows that survive a family withdrawal are still
+checked individually. This cannot qualify the live packet owner: its existing
+complete two-family/two-address/four-route check remains unchanged, and an
+empty recovery remainder explicitly fails the online readiness regression.
+SetupAPI removal and the final complete physical absence check remain
+mandatory. A new exact-source native run is required for this adjustment.
 
 References: [official 0.14.1 public API](https://github.com/WireGuard/wintun/blob/bfef136abfa1665c2592be09a7e383d646cdbe6e/api/wintun.h),
 [SetupDiGetClassDevsW](https://learn.microsoft.com/en-us/windows/win32/api/setupapi/nf-setupapi-setupdigetclassdevsw),
