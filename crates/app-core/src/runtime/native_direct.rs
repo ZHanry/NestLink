@@ -202,7 +202,7 @@ pub(super) async fn establish(
     tokio::pin!(connect);
     let connected = tokio::select! { biased;
         _ = wait_for_fence_invalidation(fence.clone()) => None,
-        _ = wait_network_change(network.clone(), baseline.generation) => None,
+        _ = native_routed::wait_network_change(network.clone(), baseline.generation) => None,
         result = &mut connect => Some(result),
     };
     let Some(connected) = connected else {

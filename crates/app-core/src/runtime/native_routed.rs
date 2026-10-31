@@ -629,7 +629,7 @@ pub(super) async fn recover(
     })
 }
 
-async fn wait_network_change(
+pub(super) async fn wait_network_change(
     mut network: watch::Receiver<nestlink_platform_network::NetworkState>,
     generation: u64,
 ) {
