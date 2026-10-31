@@ -62,7 +62,7 @@ impl Ingress {
         }
         let claims=nestlink_protocol::wireguard::WireGuardClientBindingClaims::decode_canonical(&self.binding.claims)?;
         let peer=STANDARD.encode(claims.client_public_key);
-        if fields["public-key"]!=STANDARD.encode(self.server_public_key)||fields["listen-port"]!=self.listen_port.to_string()||fields["peers"]!=peer
+        if fields["public-key"]!=STANDARD.encode(self.server_public_key)||fields["listen-port"].as_str().and_then(|value|value.parse::<u16>().ok())!=Some(self.listen_port)||fields["peers"]!=peer
             ||fields["allowed-ips"]!=format!("{peer}\t{}/32",claims.client_address)||fields["endpoints"]!=format!("{peer}\t{}",self.client_endpoint)
             ||fields["persistent-keepalive"]!=format!("{peer}\t25") {
             return Err(io::Error::other("original WireGuard key, exact peer/address or physical endpoint changed").into());

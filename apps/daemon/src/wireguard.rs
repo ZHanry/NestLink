@@ -160,7 +160,7 @@ pub(crate) async fn generate_key(private_key:&Path,public_key:&Path,label:&str)-
     let secret=tools::run("wg",&["genkey"],&[],128).await?;
     let private=Zeroizing::new(key(std::str::from_utf8(&secret)?.trim_end_matches('\n'))?);
     let public=public_key_for(&private).await?;
-    let encoded=Zeroizing::new(format!("{}\n",STANDARD.encode(&*private)));
+    let encoded=Zeroizing::new(format!("{}\n",STANDARD.encode(private.as_slice())));
     save(private_key,encoded.as_bytes())?;save(public_key,format!("{}\n",STANDARD.encode(public)).as_bytes())?;
     println!("Independent WireGuard {label} public key: {}",STANDARD.encode(public));
     println!("Protected {label} private key saved to {}",private_key.display());
