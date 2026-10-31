@@ -63,6 +63,30 @@ jobs:
           sudo -n setcap cap_net_bind_service=+ep "$RUNNER_TEMP/nestlink-service-group-caddy/caddy"
       - name: Validate the hosted driver syntax on GitHub
         run: python3 -B -c 'import ast,pathlib; ast.parse(pathlib.Path("scripts/network-rewrite-service-group.py").read_text())'
+      - name: Verify exact original signed-deadline latency and clock bounds
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, subprocess
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'nestlink-service-deadline-evidence'
+          output.mkdir(mode=0o700)
+          selected = 'service_plane::tests::signed_service_deadline_counts_response_latency_once_and_keeps_both_original_caps'
+          command = ['cargo', 'test', '--locked', '-p', 'nestlink-node', '--lib', selected,
+              '--', '--exact', '--nocapture', '--color', 'never']
+          result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+          log = output / 'deadline-test.log'
+          log.write_bytes(result.stdout)
+          text = result.stdout.decode(errors='replace')
+          passed = (result.returncode == 0 and ('test ' + selected + ' ... ok') in text
+              and 'test result: ok. 1 passed; 0 failed; 0 ignored;' in text)
+          receipt = {'source_revision': os.environ['GITHUB_SHA'],
+              'workflow_revision': os.environ['GITHUB_WORKFLOW_SHA'],
+              'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'runner_environment': os.environ['RUNNER_ENVIRONMENT'],
+              'command': command, 'return_code': result.returncode,
+              'log_sha256': hashlib.sha256(result.stdout).hexdigest(), 'passed': passed}
+          (output / 'deadline-test-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          print(text)
+          assert passed, 'Exact signed-deadline regression did not pass once; same-run log retained'
       - name: Build exact source and execute real HTTP HTTPS TCP UDP failover
         run: |
           python3 -B scripts/network-rewrite-service-group.py \
@@ -73,6 +97,8 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: service-group-ipvs-${{ github.sha }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/nestlink-service-group-evidence/
+          path: |
+            ${{ runner.temp }}/nestlink-service-group-evidence/
+            ${{ runner.temp }}/nestlink-service-deadline-evidence/
           if-no-files-found: warn
           retention-days: 30
