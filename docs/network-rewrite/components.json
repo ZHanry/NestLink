@@ -884,20 +884,24 @@
         "webrtc-mdns 0.10.0 transitive ICE dependency"
       ],
       "candidates": [
-        "Evaluate existing webrtc-mdns for required DNS-SD scope",
-        "Mature dedicated DNS-SD library if existing ICE component lacks required records",
+        "webrtc-mdns 0.10.0: retained for ICE only; lacks product PTR/SRV/TXT DNS-SD lifecycle",
+        "mdns-sd 0.21.6: selected maintained DNS-SD daemon with typed service records and interface selection",
+        "socket-pktinfo 0.4.0: selected existing mdns-sd provider for exact local UDP interface/destination provenance",
         "No rewrite of mDNS protocol"
       ],
       "official_sources": [
         "https://github.com/webrtc-rs/webrtc",
-        "https://crates.io/api/v1/crates/webrtc-mdns/0.10.0"
+        "https://crates.io/api/v1/crates/webrtc-mdns/0.10.0",
+        "https://crates.io/api/v1/crates/mdns-sd/0.21.6",
+        "https://crates.io/api/v1/crates/socket-pktinfo/0.4.0",
+        "https://crates.io/api/v1/crates/if-addrs/0.15.0"
       ],
       "maintenance_status": {
         "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
-        "name": "webrtc-mdns",
-        "version": "0.10.0",
-        "published_at": "2025-09-20",
-        "reviewed_at": "2026-10-30",
+        "name": "mdns-sd",
+        "version": "0.21.6",
+        "published_at": "2026-10-19",
+        "reviewed_at": "2026-11-01",
         "yanked": false
       },
       "platforms": [
@@ -907,22 +911,26 @@
       ],
       "version": {
         "webrtc-mdns": "0.10.0",
-        "status": "existing_transitive_not_yet_selected_for_product_DNS_SD"
+        "mdns-sd": "=0.21.6; default-features=false; sha256 8562654710f72a9cbce4b0d5b7c366a2f94330ba1ce3740f15e932ea2d37b161",
+        "socket-pktinfo": "=0.4.0; sha256 3e8e43b4bdce7cff8a4d3f8025ee38fce5ca138fab868ebbf9529c81328fbf9d",
+        "if-addrs": "0.15.0 transitive only; sha256 c0a05c691e1fae256cf7013d99dad472dc52d5543322761f83ec8d47eab40d2b; existing SDK 0.14.0 preserved",
+        "status": "selected_for_thin_production_adapter; hosted_lock_build_and_target_evidence_pending"
       },
       "license": "MIT OR Apache-2.0",
-      "selection_reason": "reuse_only_after_feature_match; do_not_confuse_ICE_mDNS_with_complete_DNS_SD",
-      "adapter_boundary": "Mature component owns multicast/DNS protocol; NestLink restricts explicit service types/ports, space membership, forwarding direction, dedup/TTL/rate and cleanup.",
+      "selection_reason": "Dedicated maintained DNS-SD component supplies PTR/SRV/TXT records, binary TXT, probing, interface pinning and unregister/shutdown receipts; existing ICE mDNS remains separate.",
+      "adapter_boundary": "Mature components own DNS-SD, packet info, protobuf, IP checksums and the original NRD1 bounded opaque fragment owner. NestLink adds exact local consent, original NetworkAccess binding, allowlisted service/UDP ports, forwarding direction, replay/dedup/TTL/rate and lifecycle only.",
       "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
       "security_and_operations_cost": [
-        "Actual DNS-SD record support and two-network behavior are still open",
+        "Source adapter is not an execution pass; hosted actual DNS-SD and two-network/game behavior remain open",
+        "Imported service descriptions expire locally after ten seconds; normal stop sends goodbyes. Third-party DNS caches retain upstream TTL after a crash; cached names never authorize packet access",
         "No .local replacement for private split DNS",
         "Two real games and separate mDNS service test cannot be replaced by ping or discovery mocks"
       ],
       "work_packages": [
         "W28"
       ],
-      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
-      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+      "validation_status": "source integrated with original packet owner and ordinary resident CLI; hosted lock/build/negative/physical integration and two real-game target acceptance pending",
+      "decision_ref": "docs/adr/network/0054-controlled-lan-discovery-adapter.md"
     },
     {
       "id": "C14",

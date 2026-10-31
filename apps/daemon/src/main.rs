@@ -13,6 +13,8 @@ mod native_gpu_diagnostics;
 mod native_video;
 #[cfg(any(target_os = "linux", windows))]
 mod network_packet_runtime;
+#[cfg(any(target_os = "linux", windows))]
+mod network_lan;
 #[cfg(target_os = "linux")]
 mod network_subnet_system;
 #[cfg(any(target_os = "linux", windows))]
@@ -103,6 +105,9 @@ enum Command {
     /// Explicit ordinary-user host packet tunnel with separate local OS approval.
     #[cfg(any(target_os = "linux", windows))]
     NetworkTun(network_tun_system::TunArgs),
+    /// Relay explicit LAN UDP discovery and selected DNS-SD through one original packet owner.
+    #[cfg(any(target_os = "linux", windows))]
+    NetworkLan(network_lan::LanArgs),
     /// Review, apply or recover one exact host-only TUN OS plan; reads no login.
     #[cfg(any(target_os = "linux", windows))]
     NetworkTunSystem(network_tun_system::SystemTunArgs),
@@ -470,6 +475,8 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         Some(Command::ServiceGroup(command)) => return service_group::run(command).await,
         #[cfg(any(target_os = "linux", windows))]
         Some(Command::NetworkTun(command)) => return network_tun_system::run_owner(command).await,
+        #[cfg(any(target_os = "linux", windows))]
+        Some(Command::NetworkLan(command)) => return network_lan::run(command).await,
         #[cfg(any(target_os = "linux", windows))]
         Some(Command::NetworkTunSystem(command)) => return network_tun_system::run(command).await,
         #[cfg(target_os = "linux")]
