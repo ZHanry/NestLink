@@ -1,0 +1,42 @@
+{
+    "schema_version":  1,
+    "source_revision":  "bcb9764a463f47ed62585fa181519895dcc69b50",
+    "workflow":  ".github/workflows/network-prefix.yml",
+    "run_id":  41232290368,
+    "run_attempt":  1,
+    "run_url":  "https://github.com/ZHanry/NestLink/actions/runs/41232290368",
+    "passed":  true,
+    "scope":  "Original nonloopback TCP prefix observation lifecycle on GitHub-hosted Ubuntu and normal-token Windows; no end-to-end network failure-detection claim",
+    "original_limits":  {
+                            "probe_cadence_ms":  500,
+                            "physical_probe_budget_ms":  700,
+                            "signed_freshness_upper_bound_ms":  1000,
+                            "withdrawal_regression_deadline_ms":  800
+                        },
+    "explicit_conservative_change":  {
+                                         "local_measurement_validity_ms":  700,
+                                         "anchor":  "original attempt start under both wall and monotonic clocks",
+                                         "availability_cost":  "Successful probes taking over 200ms can produce a short withdrawal; late completion cannot publish already expired measurement",
+                                         "adr":  "docs/adr/network/0035-explicit-host-prefix-observation.md"
+                                     },
+    "artifacts":  [
+                      {
+                          "artifact_id":  13054475687,
+                          "name":  "network-prefix-Windows-bcb9764a463f47ed62585fa181519895dcc69b50-1",
+                          "official_digest":  "sha256:92ae3deaa005799ad2946b40ab7f230e4ba129da7eb8b1e3004259af6584f84f",
+                          "zip_sha256":  "92ae3deaa005799ad2946b40ab7f230e4ba129da7eb8b1e3004259af6584f84f",
+                          "log_sha256":  "c07303e1738a7e8c67fa797a0cafeb562c05a9573fa687c054d76f83faaafac3",
+                          "tests_passed":  7,
+                          "actual_listener_close_withdrawal_ms":  688.2269
+                      },
+                      {
+                          "artifact_id":  13053629899,
+                          "name":  "network-prefix-Linux-bcb9764a463f47ed62585fa181519895dcc69b50-1",
+                          "official_digest":  "sha256:c94c6c8628fb83fb6da06d20914d591e69f60314e717604477f5376444e50ff4",
+                          "zip_sha256":  "c94c6c8628fb83fb6da06d20914d591e69f60314e717604477f5376444e50ff4",
+                          "log_sha256":  "6536a4fab42ded13ee2db6c26bf27373d09ec48b281b18ca7a0d619f94cc4d3a",
+                          "tests_passed":  7,
+                          "actual_listener_close_withdrawal_ms":  501.7417
+                      }
+                  ]
+}
