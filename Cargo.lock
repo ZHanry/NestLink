@@ -1988,6 +1988,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b5343afd4a8365a643ac588dab4cf234a190c7f6c88c9f6dd6ffe00837661b7"
 
 [[package]]
+name = "etherparse"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "17304d06addb3283cdc4bd528e42dd95e73c8ee2d6492ffce415e93660885449"
+dependencies = [
+ "arrayvec",
+]
+
+[[package]]
 name = "euclid"
 version = "0.22.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4093,6 +4102,7 @@ dependencies = [
  "axum",
  "base64 0.22.1",
  "bytes",
+ "etherparse",
  "fast-socks5",
  "futures-util",
  "gloo-timers",

@@ -158,7 +158,8 @@ jobs:
               product_packages = tomllib.loads(pathlib.Path('Cargo.lock').read_text())['package']
               reviewed_product_reuse = {
                   identity(item): item for item in product_packages
-                  if item['name'] in {'tokio-stream', 'document-features', 'litrs'}
+                  if item['name'] in {'tokio-stream', 'document-features', 'litrs'} or
+                     identity(item) == ('arrayvec', '0.7.8', registry)
               }
               assert any(key[:2] == ('document-features', '0.2.12') and
                          item.get('checksum') == 'd4b8a88685455ed29a21542a33abd9cb6510b6b129abadabdcef0f4c55bc8f61'
@@ -166,6 +167,10 @@ jobs:
               assert any(key[:2] == ('litrs', '1.0.1') and
                          item.get('checksum') == '4744e383959f0db86ede514b809b1c53251889093803c05267acc7d4e7030d70'
                          for key, item in reviewed_product_reuse.items())
+              assert reviewed_product_reuse.get(('arrayvec', '0.7.8', registry)) == {
+                  'name': 'arrayvec', 'version': '0.7.8', 'source': registry,
+                  'checksum': 'd3fb67a6e08acf24fdeccbac2cb6ac4305825bd1f117462e0e6f2f193345ad56',
+              }
               changed = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
               assertions = {
                   'only_selected_lock_changed': set(changed) <= {lock.as_posix()},
