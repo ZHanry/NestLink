@@ -73,11 +73,19 @@ pub(super) fn check_prefixes(
     }
     for mapping in mappings {
         let claims = SubnetMappingClaims::decode_canonical(&mapping.bundle.mapping.claims)?;
-        let original = ipnet::IpNet::new(claims.original.network,claims.original.prefix_len).map_err(|_| StorageError::Forbidden)?;
-        let remote = if mapping.endpoint==0 {&request.destination_prefixes} else {&request.source_prefixes};
+        let original = ipnet::IpNet::new(claims.original.network, claims.original.prefix_len)
+            .map_err(|_| StorageError::Forbidden)?;
+        let remote = if mapping.endpoint == 0 {
+            &request.destination_prefixes
+        } else {
+            &request.source_prefixes
+        };
         for value in remote {
-            let remote = ipnet::IpNet::new(value.network,value.prefix_len).map_err(|_| StorageError::Forbidden)?;
-            if original.contains(&remote.addr()) || remote.contains(&original.addr()) {return Err(StorageError::Forbidden);}
+            let remote = ipnet::IpNet::new(value.network, value.prefix_len)
+                .map_err(|_| StorageError::Forbidden)?;
+            if original.contains(&remote.addr()) || remote.contains(&original.addr()) {
+                return Err(StorageError::Forbidden);
+            }
         }
     }
     // Independently approved sites still cannot reflect an ambiguous wire
