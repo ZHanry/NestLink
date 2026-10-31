@@ -649,7 +649,13 @@ impl Snapshot {
             }
         }
         for host in local.iter().chain(remote) {
-            if self.routes.iter().filter(|row| row.destination == *host).count() != 1 {
+            if self
+                .routes
+                .iter()
+                .filter(|row| row.destination == *host)
+                .count()
+                != 1
+            {
                 return Err(io::Error::other(format!(
                     "original TUN does not have exactly one approved host route {host}"
                 )));
@@ -754,47 +760,73 @@ mod tests {
             tunnel_type: 0,
             admin_status: 1,
             ipv4_dhcp_enabled: false,
-            families: [AF_INET, AF_INET6].into_iter().map(|family| FamilyState {
-                family,
-                mtu: 1280,
-                metric: METRIC,
-                automatic_metric: false,
-                forwarding: false,
-                weak_send: false,
-                weak_receive: false,
-                advertising: false,
-                default_advertising: false,
-                router_discovery: RouterDiscoveryDisabled,
-                link_local: if family == AF_INET { LinkLocalDelayed } else { LinkLocalAlwaysOn },
-                dad: 0,
-                managed: false,
-                other_stateful: false,
-                disable_default_routes: true,
-            }).collect(),
-            addresses: local.into_iter().map(|ip| AddressState {
-                ip,
-                prefix: host_bits(ip),
-                prefix_origin: IpPrefixOriginManual,
-                suffix_origin: IpSuffixOriginManual,
-                dad: IpDadStatePreferred,
-                skip: false,
-            }).collect(),
-            routes: local.into_iter().chain(remote).map(|destination| {
-                let is_local = local.contains(&destination);
-                RouteState {
-                    destination,
-                    prefix: host_bits(destination),
-                    next_hop: if destination.is_ipv4() { Ipv4Addr::UNSPECIFIED.into() } else { Ipv6Addr::UNSPECIFIED.into() },
-                    metric: if is_local { LOCAL_HOST_ROUTE_METRIC } else { METRIC },
-                    protocol: if is_local { MIB_IPPROTO_LOCAL } else { MIB_IPPROTO_NETMGMT },
-                    origin: NlroManual,
-                    loopback: is_local,
-                    autoconfigure: is_local,
-                    publish: false,
-                    immortal: false,
-                    site_prefix: 0,
-                }
-            }).collect(),
+            families: [AF_INET, AF_INET6]
+                .into_iter()
+                .map(|family| FamilyState {
+                    family,
+                    mtu: 1280,
+                    metric: METRIC,
+                    automatic_metric: false,
+                    forwarding: false,
+                    weak_send: false,
+                    weak_receive: false,
+                    advertising: false,
+                    default_advertising: false,
+                    router_discovery: RouterDiscoveryDisabled,
+                    link_local: if family == AF_INET {
+                        LinkLocalDelayed
+                    } else {
+                        LinkLocalAlwaysOn
+                    },
+                    dad: 0,
+                    managed: false,
+                    other_stateful: false,
+                    disable_default_routes: true,
+                })
+                .collect(),
+            addresses: local
+                .into_iter()
+                .map(|ip| AddressState {
+                    ip,
+                    prefix: host_bits(ip),
+                    prefix_origin: IpPrefixOriginManual,
+                    suffix_origin: IpSuffixOriginManual,
+                    dad: IpDadStatePreferred,
+                    skip: false,
+                })
+                .collect(),
+            routes: local
+                .into_iter()
+                .chain(remote)
+                .map(|destination| {
+                    let is_local = local.contains(&destination);
+                    RouteState {
+                        destination,
+                        prefix: host_bits(destination),
+                        next_hop: if destination.is_ipv4() {
+                            Ipv4Addr::UNSPECIFIED.into()
+                        } else {
+                            Ipv6Addr::UNSPECIFIED.into()
+                        },
+                        metric: if is_local {
+                            LOCAL_HOST_ROUTE_METRIC
+                        } else {
+                            METRIC
+                        },
+                        protocol: if is_local {
+                            MIB_IPPROTO_LOCAL
+                        } else {
+                            MIB_IPPROTO_NETMGMT
+                        },
+                        origin: NlroManual,
+                        loopback: is_local,
+                        autoconfigure: is_local,
+                        publish: false,
+                        immortal: false,
+                        site_prefix: 0,
+                    }
+                })
+                .collect(),
         };
         (local, remote, snapshot)
     }
@@ -837,7 +869,10 @@ mod tests {
         changed.addresses[1].ip = link_local;
         assert!(changed.verify(&local, &remote).is_err());
         let mut changed = snapshot.clone();
-        changed.addresses.push(AddressState { ip: link_local, ..changed.addresses[1].clone() });
+        changed.addresses.push(AddressState {
+            ip: link_local,
+            ..changed.addresses[1].clone()
+        });
         assert!(changed.verify(&local, &remote).is_err());
         let mut changed = snapshot.clone();
         changed.routes[3].destination = link_local;
