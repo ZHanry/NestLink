@@ -104,6 +104,18 @@ impl Drop for HttpServer {
     }
 }
 
+#[cfg(windows)]
+#[tokio::test]
+async fn native_process_identity_is_stable_and_bound_to_the_actual_image() -> Result {
+    let first = identity(std::process::id()).await?;
+    assert_eq!(first.pid, std::process::id());
+    assert!(first.incarnation.parse::<u64>()? > 0);
+    assert!(same_image(&first.image)?);
+    assert_eq!(identity(std::process::id()).await?, first);
+    assert!(identity(0).await.is_err());
+    Ok(())
+}
+
 /// This test is intentionally explicit: it changes only a fresh random private
 /// suffix on an isolated hosted VM and uses the real OS resolver. Never invoke
 /// it on a developer workstation or reuse a non-ephemeral runner.
@@ -263,6 +275,9 @@ async fn actual_os_split_dns_resolves_and_recovers_without_changing_unrelated_po
             Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
         }
         .await;
+        if let Err(error) = &operation {
+            eprintln!("actual split-DNS operation failed before cleanup: {error}");
+        }
         let stopped = dns.shutdown().await;
         // Re-open after losing the controller's in-memory state, including the
         // crash window before installed readback was committed.
@@ -272,8 +287,9 @@ async fn actual_os_split_dns_resolves_and_recovers_without_changing_unrelated_po
         if let Err(error) = cleanup {
             let retained = temporary.keep();
             return Err(io::Error::other(format!(
-                "OS cleanup requires recovery; test journal retained at {}: {error}",
-                retained.display()
+                "OS cleanup requires recovery; test journal retained at {}: {error}; original operation: {}",
+                retained.display(),
+                operation.as_ref().err().map_or_else(|| "succeeded".into(), ToString::to_string)
             ))
             .into());
         }

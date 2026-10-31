@@ -181,6 +181,22 @@ fn overlaps(domain: &str, suffix: &str) -> bool {
             || domain.ends_with(&format!(".{suffix}")))
 }
 
+fn check_link_owner(plan: &DnsPlan, link: &Value) -> Result {
+    if link["ifname"] != plan.link()
+        || link["ifalias"] != plan.marker()
+        || link["linkinfo"]["info_kind"] != "dummy"
+    {
+        // These are public owner/configuration fields, not unrelated interface
+        // data. Preserve the actual observation when refusing unsafe cleanup.
+        let observed = json!({"ifindex":link["ifindex"], "ifname":link["ifname"], "ifalias":link["ifalias"], "info_kind":link["linkinfo"]["info_kind"]});
+        return Err(io::Error::other(format!(
+            "interface name belongs to another owner; no configuration was deleted; expected marker {}; observed {observed}",
+            plan.marker()
+        )).into());
+    }
+    Ok(())
+}
+
 pub(super) async fn inspect(plan: &DnsPlan) -> Result<Option<Value>> {
     let links = ip(&["-j", "-d", "link", "show"]).await?;
     let rows = links
@@ -192,12 +208,7 @@ pub(super) async fn inspect(plan: &DnsPlan) -> Result<Option<Value>> {
     let Some(link) = rows.iter().find(|link| link["ifname"] == plan.link()) else {
         return Ok(None);
     };
-    if link["ifalias"] != plan.marker() || link["linkinfo"]["info_kind"] != "dummy" {
-        return Err(io::Error::other(
-            "interface name belongs to another owner; no configuration was deleted",
-        )
-        .into());
-    }
+    check_link_owner(plan, link)?;
     let index = link["ifindex"]
         .as_u64()
         .filter(|value| *value <= i32::MAX as u64)
@@ -316,17 +327,50 @@ pub(super) async fn install(plan: &DnsPlan) -> Result {
         .collect(),
     )
     .await?;
+    // Linux 6.8/6.14 rtnl_create_link does not apply IFLA_IFALIAS, even though
+    // iproute2 accepts `link add ... alias ...`. The existing-device set path
+    // does apply it. Bind this just-created, still-DOWN dummy before any DNS
+    // setting, and retain its index/address while awaiting resolved. This is
+    // never used to adopt an interface which preflight/create did not own.
+    let created = ip(&["-j", "-d", "link", "show", "dev", &link]).await?;
+    let created = created.as_array()
+        .filter(|rows| rows.len() == 1)
+        .and_then(|rows| rows.first())
+        .ok_or_else(|| io::Error::other("exclusive dummy creation readback missing"))?;
+    let created_index = created["ifindex"].as_u64()
+        .filter(|index| *index > 0 && *index <= i32::MAX as u64)
+        .ok_or_else(|| io::Error::other("invalid created interface index"))?;
+    let created_address = created["address"].as_str()
+        .filter(|address| !address.is_empty())
+        .ok_or_else(|| io::Error::other("created dummy address missing"))?
+        .to_owned();
+    if created["ifname"] != link
+        || created["linkinfo"]["info_kind"] != "dummy"
+        || created["ifalias"].as_str().is_some_and(|alias| !alias.is_empty() && alias != plan.marker())
+        || !created["flags"].as_array().is_some_and(|flags| !flags.iter().any(|flag| flag == "UP"))
+    {
+        return Err(io::Error::other("exclusive dummy creation changed before owner marker; preserving it and the journal").into());
+    }
+    run("ip", ["link", "set", "dev", &link, "alias", &plan.marker()]
+        .iter().map(|argument| (*argument).into()).collect()).await?;
     // Wait for resolved's netlink observer to create its Link object. The
     // interface is still DOWN and has no DNS server during this handoff.
     tokio::time::timeout(std::time::Duration::from_secs(3), async {
         loop {
             let links = ip(&["-j", "-d", "link", "show"]).await?;
-            if let Some(index) = links
+            if let Some(observed) = links
                 .as_array()
                 .and_then(|rows| rows.iter().find(|row| row["ifname"] == link))
-                .and_then(|row| row["ifindex"].as_u64())
             {
-                let path = format!("/org/freedesktop/resolve1/link/_{index}");
+                // The exclusive create and this owner must still agree before
+                // any per-link DNS setting can touch the observed interface.
+                check_link_owner(plan, observed)?;
+                if observed["ifindex"].as_u64() != Some(created_index)
+                    || observed["address"].as_str() != Some(created_address.as_str())
+                {
+                    return Err(io::Error::other("created interface incarnation changed before DNS setup; journal retained").into());
+                }
+                let path = format!("/org/freedesktop/resolve1/link/_{created_index}");
                 if property(&path, "org.freedesktop.resolve1.Link", "DefaultRoute")
                     .await
                     .is_ok()

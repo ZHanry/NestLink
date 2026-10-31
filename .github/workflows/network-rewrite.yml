@@ -75,6 +75,7 @@ jobs:
           cargo test --locked -p nestlink-server --test network_policy topology:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-topology-http-tests.log"
           cargo test --locked -p nestlink-server --test network_policy chains:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-chain-http-tests.log"
           cargo test --locked -p nestlink-server --test network_policy route_exports:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-route-export-http-tests.log"
+          cargo test --locked -p nestlink-server --lib node_quic::prefixes:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-local-prefix-config-tests.log"
       - name: Retain exact-source topology journal and admission logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -86,6 +87,7 @@ jobs:
             ${{ runner.temp }}/network-topology-http-tests.log
             ${{ runner.temp }}/network-chain-http-tests.log
             ${{ runner.temp }}/network-route-export-http-tests.log
+            ${{ runner.temp }}/network-local-prefix-config-tests.log
           if-no-files-found: error
           retention-days: 30
       - name: Exercise atomic original-group candidates and current per-node authority

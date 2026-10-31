@@ -16,6 +16,33 @@ pub fn require_normal_user_process() -> std::io::Result<()> {
     }
 }
 
+/// Read-only local process identity. These observations are not a broker
+/// grant and retain the existing token, incarnation, image and alive checks.
+pub struct LocalProcessFacts {
+    pub pid: u32,
+    pub creation: u64,
+    pub image: std::path::PathBuf,
+}
+
+pub fn local_process_facts(pid: u32) -> std::io::Result<LocalProcessFacts> {
+    let peer = security::Peer::open(pid)?;
+    Ok(LocalProcessFacts {
+        pid: peer.pid,
+        creation: peer.creation,
+        image: peer.image,
+    })
+}
+
+/// Administrative helpers use the same elevated high-integrity gate as the
+/// existing local broker. This function never elevates or launches a process.
+pub fn require_administrator_process() -> std::io::Result<()> {
+    if security::Peer::open(std::process::id())?.is_broker() {
+        Ok(())
+    } else {
+        Err(security::denied())
+    }
+}
+
 #[cfg(test)]
 mod process_identity_tests {
     #[test]

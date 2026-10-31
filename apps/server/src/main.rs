@@ -99,6 +99,10 @@ enum Command {
         listen: SocketAddr,
         #[arg(long, default_value = "0.0.0.0:28743")]
         quic_listen: SocketAddr,
+        /// Protected local JSON choices for zero-payload exact-host probes.
+        /// Does not authorize subnet forwarding or change local routing.
+        #[arg(long)]
+        local_prefixes: Option<PathBuf>,
     },
     /// Run managed TURN listeners attached to an authenticated relay node lease.
     NodeTurn {
@@ -425,8 +429,12 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             config,
             listen,
             quic_listen,
+            local_prefixes,
         } => {
             let config = nestlink_node::control::NodeConfig::load(&config)?;
+            let local_prefixes = local_prefixes.as_deref().map(|path| {
+                nestlink_server::node_quic::LocalPrefixRegistration::load(path, &config.deployment_id, &config.node_id)
+            }).transpose()?.unwrap_or_default();
             if !config
                 .roles
                 .contains(&(nestlink_protocol::NodeRole::NodeRelay as i32))
@@ -473,11 +481,12 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             let endpoint = quic_owner.endpoint()?.clone();
             let mut quic_stop = stopped;
             tasks.spawn(async move {
-                nestlink_server::node_quic::serve_with_topology_identity(
+                nestlink_server::node_quic::serve_with_topology_and_prefixes(
                     endpoint,
                     selector,
                     std::sync::Arc::new(listener_identity),
                     topology_reporter,
+                    local_prefixes,
                     async move {
                         if !*quic_stop.borrow() {
                             let _ = quic_stop.changed().await;

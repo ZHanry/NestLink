@@ -80,8 +80,12 @@ No local compilation, formatting or test execution qualifies these assertions.
 Actions execution and target evidence must be recorded separately.
 
 This slice supplies host reachability observations only. The production relay
-must still receive explicit protected local choices to enable the adapter; an
-empty local choice keeps prefix publication disabled. NetworkAccess issuance,
+receives explicit protected local choices through `relay --local-prefixes`.
+The private file pins deployment, node, space and the exact publisher grant.
+Each choice starts at most once and the original report owner joins all probe
+owners under one cleanup deadline. An empty local choice keeps prefix
+publication disabled. See `docs/network-rewrite/HOST-PREFIX-OPERATIONS.md`.
+NetworkAccess issuance,
 current delegation, raw-IP ACL and anti-spoofing, TUN/LAN forwarding, subnet
 overlap, gateway failover and full AC18/AC19 qualification remain separate
 required work. Neither RouteExport nor TCP reachability authorizes forwarding.

@@ -7,7 +7,6 @@ async fn invoke(
     action: &str,
     plan: Option<&DnsPlan>,
     expected: Option<&Value>,
-    pid: u32,
 ) -> Result<Value> {
     let source = include_str!("nrpt.ps1");
     let encoded = STANDARD.encode(
@@ -16,7 +15,7 @@ async fn invoke(
             .flat_map(u16::to_le_bytes)
             .collect::<Vec<_>>(),
     );
-    let request = json!({"action": action, "plan":plan, "expected":expected, "pid":pid});
+    let request = json!({"action": action, "plan":plan, "expected":expected});
     let bytes = command::run(
         &nestlink_sdk::system_tools::windows_powershell()?,
         &[
@@ -33,24 +32,27 @@ async fn invoke(
 }
 
 pub(super) async fn identity(pid: u32) -> Result<ProcessIdentity> {
-    Ok(serde_json::from_value(
-        invoke("identity", None, None, pid).await?,
-    )?)
+    let observed = nestlink_privileged::windows::local_process_facts(pid)?;
+    Ok(ProcessIdentity {
+        pid: observed.pid,
+        incarnation: observed.creation.to_string(),
+        image: observed.image.to_str().ok_or_else(|| io::Error::other("non-Unicode resolver image"))?.into(),
+    })
 }
 pub(super) async fn require_admin() -> Result {
-    invoke("admin", None, None, 0).await?;
+    nestlink_privileged::windows::require_administrator_process()?;
     Ok(())
 }
 pub(super) async fn preflight(plan: &DnsPlan) -> Result {
-    invoke("preflight", Some(plan), None, 0).await?;
+    invoke("preflight", Some(plan), None).await?;
     Ok(())
 }
 pub(super) async fn inspect(plan: &DnsPlan) -> Result<Option<Value>> {
-    let state = invoke("inspect", Some(plan), None, 0).await?;
+    let state = invoke("inspect", Some(plan), None).await?;
     Ok(if state.is_null() { None } else { Some(state) })
 }
 pub(super) async fn install(plan: &DnsPlan) -> Result {
-    invoke("install", Some(plan), None, 0).await?;
+    invoke("install", Some(plan), None).await?;
     Ok(())
 }
 pub(super) fn verify_installed(plan: &DnsPlan, current: &Value) -> Result {
@@ -77,25 +79,25 @@ pub(super) fn verify_installed(plan: &DnsPlan, current: &Value) -> Result {
     Ok(())
 }
 pub(super) async fn remove(journal: &Journal) -> Result {
-    invoke("remove", Some(&journal.plan), journal.installed.as_ref(), 0).await?;
+    invoke("remove", Some(&journal.plan), journal.installed.as_ref()).await?;
     Ok(())
 }
 
 #[cfg(test)]
 pub(super) async fn native_unrelated_state() -> Result<Value> {
-    invoke("baseline", None, None, 0).await
+    invoke("baseline", None, None).await
 }
 #[cfg(test)]
 pub(super) async fn native_query(plan: &DnsPlan) -> Result<String> {
-    Ok(invoke("query", Some(plan), None, 0).await?.to_string())
+    Ok(invoke("query", Some(plan), None).await?.to_string())
 }
 #[cfg(test)]
 pub(super) async fn native_change_owned(plan: &DnsPlan) -> Result {
-    invoke("test-change", Some(plan), None, 0).await?;
+    invoke("test-change", Some(plan), None).await?;
     Ok(())
 }
 #[cfg(test)]
 pub(super) async fn native_restore_owned(plan: &DnsPlan, _expected: &Value) -> Result {
-    invoke("test-restore", Some(plan), None, 0).await?;
+    invoke("test-restore", Some(plan), None).await?;
     Ok(())
 }

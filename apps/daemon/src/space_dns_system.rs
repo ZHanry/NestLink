@@ -133,6 +133,7 @@ impl DnsPlan {
     fn marker(&self) -> String {
         format!("NestLink:split-dns:v1:{}", self.owner_id)
     }
+    #[cfg(any(target_os = "linux", test))]
     fn link(&self) -> String {
         format!("nl-dns-{}", &self.owner_id[..8])
     }

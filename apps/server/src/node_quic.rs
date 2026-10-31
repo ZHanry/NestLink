@@ -22,7 +22,9 @@ use std::{
 use tokio::{sync::watch, task::JoinSet};
 mod chain;
 mod network;
+mod prefixes;
 mod topology;
+pub use prefixes::LocalPrefixRegistration;
 
 fn failed() -> io::Error {
     io::Error::new(
@@ -176,7 +178,7 @@ pub async fn serve_with_selector(
     selector: Arc<RelaySelector>,
     shutdown: impl Future<Output = ()> + Send,
 ) -> io::Result<()> {
-    serve_inner(endpoint, selector, None, None, shutdown).await
+    serve_inner(endpoint, selector, None, None, Vec::new(), shutdown).await
 }
 /// The production registered node identity signs reciprocal NRD2 possession;
 /// all listeners of this node continue sharing the same RelaySelector.
@@ -186,7 +188,7 @@ pub async fn serve_with_chain_identity(
     identity: Arc<nestlink_identity::nodes::NodeIdentity>,
     shutdown: impl Future<Output = ()> + Send,
 ) -> io::Result<()> {
-    serve_inner(endpoint, selector, Some(identity), None, shutdown).await
+    serve_inner(endpoint, selector, Some(identity), None, Vec::new(), shutdown).await
 }
 /// The registered relay owns real adjacency observations and their periodic
 /// signed reports alongside the original chain and legacy forwarding tasks.
@@ -197,13 +199,26 @@ pub async fn serve_with_topology_identity(
     reporter: Arc<nestlink_node::control::TopologyReporter>,
     shutdown: impl Future<Output = ()> + Send,
 ) -> io::Result<()> {
-    serve_inner(endpoint, selector, Some(identity), Some(reporter), shutdown).await
+    serve_inner(endpoint, selector, Some(identity), Some(reporter), Vec::new(), shutdown).await
+}
+/// Explicit protected local approvals feed the existing topology owner. They
+/// permit only zero-payload host probes; publication still requires live grants.
+pub async fn serve_with_topology_and_prefixes(
+    endpoint: quinn::Endpoint,
+    selector: Arc<RelaySelector>,
+    identity: Arc<nestlink_identity::nodes::NodeIdentity>,
+    reporter: Arc<nestlink_node::control::TopologyReporter>,
+    prefixes: Vec<LocalPrefixRegistration>,
+    shutdown: impl Future<Output = ()> + Send,
+) -> io::Result<()> {
+    serve_inner(endpoint, selector, Some(identity), Some(reporter), prefixes, shutdown).await
 }
 async fn serve_inner(
     endpoint: quinn::Endpoint,
     selector: Arc<RelaySelector>,
     identity: Option<Arc<nestlink_identity::nodes::NodeIdentity>>,
     reporter: Option<Arc<nestlink_node::control::TopologyReporter>>,
+    prefixes: Vec<LocalPrefixRegistration>,
     shutdown: impl Future<Output = ()> + Send,
 ) -> io::Result<()> {
     let control = selector.control();
@@ -228,6 +243,7 @@ async fn serve_inner(
                     selector.clone(),
                     identity,
                     reporter,
+                    prefixes,
                 )
                 .await
             }

@@ -4,12 +4,10 @@ $ProgressPreference = 'SilentlyContinue'
 $env:PSModulePath = Join-Path ([Environment]::SystemDirectory) 'WindowsPowerShell\v1.0\Modules'
 $request = $env:NESTLINK_DNS_REQUEST | ConvertFrom-Json
 Remove-Item Env:NESTLINK_DNS_REQUEST
-# Process/token checks do not use CIM or DNS. Loading the whole DNS module
-# before these checks needlessly consumed their bounded command deadline.
-if ([string]$request.action -notin @('identity', 'admin')) {
-    $dnsModule = Join-Path $env:PSModulePath 'DnsClient\DnsClient.psd1'
-    Import-Module -Name $dnsModule -ErrorAction Stop
-}
+# Process/token checks reuse the existing native local-process owner. Only
+# actual DNS operations need the constrained PowerShell DNS module.
+$dnsModule = Join-Path $env:PSModulePath 'DnsClient\DnsClient.psd1'
+Import-Module -Name $dnsModule -ErrorAction Stop
 function Emit($value) { ConvertTo-Json -InputObject $value -Depth 20 -Compress }
 function View($rule) {
     [ordered]@{
@@ -70,15 +68,6 @@ function Conflicts {
     }
 }
 switch ([string]$request.action) {
-    'identity' {
-        $process = Get-Process -Id ([int]$request.pid) -ErrorAction Stop
-        Emit ([ordered]@{ pid = [uint32]$process.Id; incarnation = [string]$process.StartTime.ToUniversalTime().ToFileTimeUtc(); image = [string]$process.Path })
-    }
-    'admin' {
-        $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-        if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw 'Run this public-plan helper separately as administrator; never elevate the resolver process' }
-        Emit $true
-    }
     'baseline' { Emit @(Get-DnsClientNrptRule -ErrorAction Stop | Sort-Object Name | ForEach-Object { View $_ }) }
     'query' {
         $answer = Resolve-DnsName -Name ('os-probe.' + $request.plan.suffix) -Type A -DnsOnly -NoHostsFile -ErrorAction Stop

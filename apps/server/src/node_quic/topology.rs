@@ -212,6 +212,7 @@ pub(super) async fn run(
     selector: Arc<RelaySelector>,
     identity: Arc<NodeIdentity>,
     reporter: Arc<TopologyReporter>,
+    mut prefixes: Vec<super::LocalPrefixRegistration>,
 ) -> io::Result<()> {
     let mut tick = tokio::time::interval(PERIOD);
     tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
@@ -282,6 +283,11 @@ pub(super) async fn run(
                 for authority in authorities {
                     if reports.len() >= MAX_REPORTS { break; }
                     let space = space(&authority)?;
+                    for prefix in &mut prefixes {
+                        if let Err(error) = prefix.observe(&control, &authority) {
+                            tracing::warn!(space = %space, error = %error, "explicit local prefix observation refused");
+                        }
+                    }
                     if reporting.get(&space).copied().unwrap_or_default() >= 2 { continue; }
                     let local = PeerId::from_public_key(&identity.public_key());
                     let neighbors = authority.neighbors.iter().map(|neighbor| TopologyNeighbor {
@@ -297,8 +303,10 @@ pub(super) async fn run(
                     // and retire a healthy edge under the original 1s report TTL.
                     *reporting.entry(space.clone()).or_default() += 1;
                     let reporter = reporter.clone(); let control = control.clone();
+                    let owners = prefixes.iter().filter_map(|prefix| prefix.reachable(&authority)).collect::<Vec<_>>();
                     reports.spawn(async move {
-                        if let Err(error) = reporter.publish_authority(&control, &authority, neighbors).await {
+                        let observed = owners.iter().map(Arc::as_ref).collect::<Vec<_>>();
+                        if let Err(error) = reporter.publish_authority_with_prefixes(&control, &authority, neighbors, &observed).await {
                             tracing::debug!(space = %space, error = %error, "topology observation report failed");
                         }
                         space
@@ -308,6 +316,7 @@ pub(super) async fn run(
         }
     }}.await;
     drop(observations);
+    for prefix in &prefixes { prefix.revoke(); }
     probes.abort_all();
     reports.abort_all();
     let deadline = Deadline::now() + Duration::from_secs(5);
@@ -327,6 +336,9 @@ pub(super) async fn run(
         if joined.is_err_and(|error| !error.is_cancelled()) {
             cleanup_failed = true;
         }
+    }
+    for prefix in &mut prefixes {
+        if prefix.close(deadline).await.is_err() { cleanup_failed = true; }
     }
     if cleanup_failed {
         Err(failed())
