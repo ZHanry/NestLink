@@ -231,11 +231,18 @@ impl ServicePublication {
             return Err(rejected(ErrorCode::PolicyRevoked).into());
         }
         let old_sequence = state.verified.claims().lease_sequence;
-        if verified.claims().lease_sequence < old_sequence
-            || verified.claims().lease_sequence == old_sequence
-                && verified.digest() != state.verified.digest()
-        {
-            return Err(rejected(ErrorCode::ReplayRejected).into());
+        if verified.claims().lease_sequence < old_sequence {
+            return Err(ContractError::new(
+                ErrorCode::ReplayRejected,
+                "service publication lease sequence regressed",
+            ).into());
+        }
+        if verified.claims().lease_sequence == old_sequence
+            && verified.digest() != state.verified.digest() {
+            return Err(ContractError::new(
+                ErrorCode::ReplayRejected,
+                "service publication same sequence changed",
+            ).into());
         }
         if verified.claims().lease_sequence == old_sequence {
             return Ok(());

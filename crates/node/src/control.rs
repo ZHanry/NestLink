@@ -40,7 +40,19 @@ fn failure_summary(error:&Error)->String {
         Error::TurnResourceStatus(status)=>format!("turn-http-{status}"),
         Error::ServiceResourceStatus(status)=>format!("service-http-{status}"),
         Error::ServiceUsage(_)=>"service-usage-store".into(),
-        Error::Authorization(error)=>format!("authorization-{:?}",error.code),
+        Error::Authorization(error)=>{
+            // Only these static first-party fences may refine the diagnostic.
+            // Arbitrary protocol response text never enters retained summaries.
+            let fence=match error.reason.as_str() {
+                "service snapshot query replay fence"=>Some("query-replay-fence"),
+                "service snapshot duplicate or excess publication fence"=>Some("duplicate-publication-fence"),
+                "service snapshot retired publication fence"=>Some("retired-publication-fence"),
+                "service publication lease sequence regressed"=>Some("publication-sequence-regressed"),
+                "service publication same sequence changed"=>Some("publication-sequence-changed"),
+                _=>None,
+            };
+            match fence {Some(fence)=>format!("authorization-{:?}/{fence}",error.code),None=>format!("authorization-{:?}",error.code)}
+        },
     };
     format!("{}: {cause}",phases.join(" / "))
 }
