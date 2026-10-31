@@ -1,6 +1,8 @@
 //! Exercise the SDK adapter through physical QUIC neighbors and business proof.
 #[path = "routed_tests/chain.rs"]
 mod chain;
+#[path = "routed_tests/route_set.rs"]
+mod route_sets;
 use super::{RemoteRouteAuthority, authorize_remote};
 use crate::DeviceIdentity;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
@@ -706,6 +708,51 @@ async fn finish_mesh(
     Ok(forwarded)
 }
 
+// This one deadline fixture accepts Cleanup(TimedOut): the controller owner
+// then has only requested Drop teardown, with no completion receipt. Wait for
+// its real UDP release within the original final cleanup budget. The relay and
+// host owners have explicit receipts and must still permit immediate rebinding.
+async fn finish_mesh_after_incomplete_controller_cleanup(
+    relay_stop: RouteRevocation,
+    mut forwarding: Forwarding,
+    addresses: [SocketAddr; 4],
+    deadline: Instant,
+) -> Result<u64> {
+    relay_stop.revoke();
+    let forwarded = tokio::time::timeout_at(deadline, &mut forwarding.0).await???;
+    for (role, address) in [
+        ("relay-controller", addresses[0]),
+        ("controller", addresses[1]),
+        ("relay-host", addresses[2]),
+        ("host", addresses[3]),
+    ] {
+        if role == "controller" {
+            eprintln!("SDK routed deadline cleanup phase=drop-release-wait role={role} address={address}");
+            let socket = tokio::time::timeout_at(deadline, async {
+                loop {
+                    match std::net::UdpSocket::bind(address) {
+                        Ok(socket) => return Ok(socket),
+                        Err(error) if error.kind() == io::ErrorKind::AddrInUse => {
+                            tokio::time::sleep(Duration::from_millis(10)).await;
+                        }
+                        Err(error) => return Err(error),
+                    }
+                }
+            })
+            .await
+            .map_err(|_| io::Error::new(io::ErrorKind::TimedOut,
+                format!("SDK routed deadline cleanup phase=drop-release-wait role={role} address={address}")))??;
+            drop(socket);
+        } else {
+            drop(std::net::UdpSocket::bind(address).map_err(|error| {
+                io::Error::new(error.kind(), format!("SDK routed deadline cleanup phase=receipt-rebind role={role} address={address}: {error}"))
+            })?);
+        }
+        eprintln!("SDK routed deadline cleanup phase=rebound role={role} address={address}");
+    }
+    Ok(forwarded)
+}
+
 #[tokio::test]
 async fn sdk_preflight_rejects_an_existing_stop_and_a_dropped_stop_source_with_socket_receipts()
 -> Result {
@@ -788,7 +835,7 @@ async fn sdk_absolute_deadline_covers_business_proof_after_real_routed_quic_esta
     host_stop.revoke();
     let cleanup = Instant::now() + Duration::from_secs(5);
     peer.close_and_wait(cleanup).await?;
-    finish_mesh(relay_stop, forwarding, addresses, cleanup).await?;
+    finish_mesh_after_incomplete_controller_cleanup(relay_stop, forwarding, addresses, cleanup).await?;
     Ok(())
 }
 

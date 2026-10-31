@@ -416,11 +416,11 @@
       ],
       "version": {
         "ipnet": "2.12.2",
-        "status": "existing_transitive; direct integration pending Actions"
+        "status": "locked_direct_storage_dependency_for_space_address_directory; exact-source_Actions_pending"
       },
       "license": "MIT OR Apache-2.0",
       "selection_reason": "prefer_existing_locked_IP_library",
-      "adapter_boundary": "Library parses and computes IPv4/IPv6 networks; NestLink defines per-space allocations, reservations, exact export policies and explicit overlap mappings.",
+      "adapter_boundary": "Library parses and computes IPv4/IPv6 networks; NestLink defines per-space allocations, reservations, exact export policies and explicit overlap mappings. ADR 0029 connects bounded stable dual-stack directory allocation without installing routes or DNS; host overlap detection remains required before system installation.",
       "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
       "security_and_operations_cost": [
         "Canonicalize prefixes, reject default-route exports and ambiguous mappings",

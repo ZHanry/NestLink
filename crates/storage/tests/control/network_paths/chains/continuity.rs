@@ -296,7 +296,7 @@ fn schema_36_retires_unprovable_old_chains_without_refunding_or_resigning_them()
     let issued = f.issue(request)?;
     edit_snapshot(&mut f.base, |db| {
         db.execute_batch(
-            "DROP TABLE network_remote_chain_topology_bindings; PRAGMA user_version=35;",
+            "DROP TABLE network_space_addresses; DROP TABLE network_space_address_directories; DROP TABLE network_remote_chain_topology_bindings; PRAGMA user_version=35;",
         )?;
         Ok(())
     })?;

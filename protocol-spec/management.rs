@@ -114,6 +114,42 @@ pub struct NetworkRemoteRelayView {
     pub node: NodeEndpointsView,
 }
 
+/// Two independently reserved one-hop routes under one original PathGrant.
+/// Members are ordered by allocation ID; this order does not select a primary.
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkRemoteRouteSetMemberRequest {
+    pub allocation_id: String,
+    pub transit_grant_id: String,
+    pub node_id: String,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkRemoteRouteSetRequest {
+    pub set_id: String,
+    pub path: NetworkRemotePathRequest,
+    pub members: [NetworkRemoteRouteSetMemberRequest; 2],
+    pub device_id: String,
+    pub signature: String,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkRemoteRouteSetMemberView {
+    pub allocation_id: String,
+    pub transit: NetworkGrantView,
+    pub node: NodeEndpointsView,
+    /// Current management observation of this original node binding. An
+    /// unavailable member does not revoke another member's original authority.
+    pub available: bool,
+}
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkRemoteRouteSetView {
+    pub set_id: String,
+    pub path: NetworkRemotePathView,
+    pub members: [NetworkRemoteRouteSetMemberView; 2],
+}
+
 /// Ordered from the canonical first business peer. A single device signature
 /// binds the entire requested chain, including the exact current topology.
 #[derive(Clone, Serialize, Deserialize, JsonSchema)]

@@ -1,4 +1,5 @@
 //! Thin signed-fixture provisioning; production code verifies every object.
+use super::routed::{RouteAuthorization, RouteRevocation};
 use super::{Result, identity};
 use nestlink_identity::{
     PermitSigner, VerifiedPermit, digest,
@@ -9,7 +10,6 @@ use nestlink_identity::{
     verify_permit,
 };
 use nestlink_protocol::{Path as NetworkPath, Permission, PermitClaims, network::*};
-use super::routed::{RouteAuthorization, RouteRevocation};
 use prost::Message;
 use std::{
     collections::BTreeSet,
@@ -71,7 +71,10 @@ pub fn prepare_relays(root: &Path, relay_names: &[&str]) -> Result {
         fs::write(root.join("second.seed"), a)?;
         std::mem::swap(&mut first, &mut second);
     }
-    let relays = relay_names.iter().map(|name| identity(root, name)).collect::<Result<Vec<_>>>()?;
+    let relays = relay_names
+        .iter()
+        .map(|name| identity(root, name))
+        .collect::<Result<Vec<_>>>()?;
     for (name, device) in [("first", &first), ("second", &second)] {
         fs::write(root.join(format!("{name}.public")), device.public_key())?;
     }
@@ -167,7 +170,10 @@ pub fn prepare_relays(root: &Path, relay_names: &[&str]) -> Result {
     }))?;
     let connectivity = verify_network_grant(&signed, &context)?;
     write_grant(root, "connectivity", signed)?;
-    let mut relay_peers: Vec<_> = relays.iter().map(|relay| PeerId(relay.fingerprint())).collect();
+    let mut relay_peers: Vec<_> = relays
+        .iter()
+        .map(|relay| PeerId(relay.fingerprint()))
+        .collect();
     relay_peers.sort();
     let signed = signer.sign(&GrantClaims::Path(PathClaims {
         scope: scope(4),
@@ -190,20 +196,24 @@ pub fn prepare_relays(root: &Path, relay_names: &[&str]) -> Result {
     write_grant(root, "path", signed)?;
     for (index, relay) in relays.iter().enumerate() {
         write_grant(
-        root,
-        &if index == 0 { "transit".into() } else { format!("transit-{index}") },
-        signer.sign(&GrantClaims::Transit(TransitClaims {
-            scope: scope(5 + index as u8),
-            peers,
-            transport_group: path.transport_group_id(),
-            route_id: format!("60000000-0000-4000-8000-{:012x}", 6 + index),
-            relay: PeerId(relay.fingerprint()),
-            previous: peers.first,
-            next: peers.second,
-            remaining_hops: 1,
-            byte_limit: 4_000_000,
-        }))?,
-    )?;
+            root,
+            &if index == 0 {
+                "transit".into()
+            } else {
+                format!("transit-{index}")
+            },
+            signer.sign(&GrantClaims::Transit(TransitClaims {
+                scope: scope(5 + index as u8),
+                peers,
+                transport_group: path.transport_group_id(),
+                route_id: format!("60000000-0000-4000-8000-{:012x}", 6 + index),
+                relay: PeerId(relay.fingerprint()),
+                previous: peers.first,
+                next: peers.second,
+                remaining_hops: 1,
+                byte_limit: 4_000_000,
+            }))?,
+        )?;
     }
     println!(
         "NESTLINK_ROUTED provisioned=true route_lifetime_ms=12000 business_lease_ms=15000 business_proof_exercised=false"
@@ -223,7 +233,9 @@ impl Authority {
         Self::load_route(root, 0)
     }
     pub fn load_route(root: &Path, index: usize) -> Result<Self> {
-        if index > 1 { return Err("invalid fixture route".into()); }
+        if index > 1 {
+            return Err("invalid fixture route".into());
+        }
         let issuer = key(root, "authority")?;
         let revoked = BTreeSet::new();
         let context = NetworkVerification {
@@ -253,7 +265,15 @@ impl Authority {
             read_grant(root, "path", &context)?,
             permit.digest(),
         )?;
-        let transit = read_grant(root, &if index == 0 { "transit".into() } else { format!("transit-{index}") }, &context)?;
+        let transit = read_grant(
+            root,
+            &if index == 0 {
+                "transit".into()
+            } else {
+                format!("transit-{index}")
+            },
+            &context,
+        )?;
         Ok(Self {
             issuer,
             revoked,

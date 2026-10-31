@@ -12,6 +12,7 @@ const NOW: u64 = 1_002_000;
 mod chains;
 #[path = "network_paths/relays.rs"]
 mod relays;
+mod route_sets;
 struct Setup {
     store: Store,
     controller: Principal,

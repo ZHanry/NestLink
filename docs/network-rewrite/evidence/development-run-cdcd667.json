@@ -1,0 +1,42 @@
+{
+  "source_revision": "cdcd6672f1a66a60a958bd6d9b8aee5fd465c567",
+  "qualification": "partial_laboratory_results_not_release_qualified",
+  "build_provenance": {
+    "repository": "ZHanry/NestLink",
+    "network_run": 41148867805,
+    "core_run": 41148867789,
+    "web_run": 41148867786,
+    "run_attempt": 1,
+    "runner": "GitHub-hosted"
+  },
+  "execution_provenance": {
+    "environment": "GitHub Actions laboratory",
+    "target_device_acceptance": false,
+    "passed": [
+      "Native signed ICE/Quinn/FileRead through real kernel NATs; both SDK four-node chain FileRead scenarios; all four registered-node chain scenarios including actual revoke and two negative lifecycle cases",
+      "Original-session app-core quality projection, candidate/network binding, terminal/renewal semantics and old IPC compatibility: all four focused Linux tests passed",
+      "Topology carrier and journal/HTTP jobs, real routed NAT, production socket faults and independent grant vectors",
+      "Linux and Windows contract selected clippy/tests passed; complete jobs fail formatting",
+      "Independent locked dependency audit, WASM and Linux platform checks passed",
+      "Web site build and browser runner/observer contracts passed; full native browser runs pending at checkpoint"
+    ],
+    "failures": [
+      "Private migration prototype compiled and passed strict clippy. Both actual cases failed second-endpoint maximum_sent > 1200: that endpoint only sent small digest receipts. New source makes each original-stream round send and verify real file bytes in both directions; no assertion, grant deadline or quota is relaxed.",
+      "Native session test still borrowed moved permit for its generation assertion. New source captures original generation before ownership transfer, preserving the original binding assertion.",
+      "Linux SDK routed 18-test inventory had 17 passes and one deadline-fixture AddrInUse. That case explicitly permits cleanup timeout, giving no controller completion receipt; only its unconfirmed Drop release now waits for real rebinding within the original final cleanup deadline. All receipt-bearing owners retain immediate rebind requirements.",
+      "Formatter differences in new desktop/projection/prototype source. Official formatter patch was verified and imported for unchanged-source files; the modified prototype needs a subsequent exact-source patch."
+    ],
+    "pending_at_checkpoint": [
+      "Complete Linux and Windows core jobs, and full browser native scenarios were still running",
+      "New atomic original-group route-set authority, per-candidate availability and address/name directory implementation",
+      "Repaired bidirectional carrier replacement prototype; production path migration remains incomplete",
+      "All remaining mandatory implementation and external qualification"
+    ]
+  },
+  "retained_artifacts": [
+    {"id": 13021883557, "scope": "Linux contract and formatting", "archive_sha256": "68c01f424e525d0ed449f36e5b929c9b9261bfe4d6602920e1243090781183fd", "download_verified": true, "formatter_patch_sha256": "2b9e9f16fefd2130d9ebb1f4b2f15d9fe755dbf36f9756758587c9c9b051b22c"},
+    {"id": 13022023549, "scope": "Linux scoped SDK and app-core quality logs", "archive_sha256": "bf32d790bac0060aa7c876e0fb3cbbdbb71d3f296aa2a8c5403d0d79f9020bdd", "download_verified": true},
+    {"id": 13021744308, "scope": "Actual private carrier replacement switch/cancel failures and cleanup", "archive_sha256": "606d6113e5228f7f86a3a2063943b58d6bcb4ad07dbf00c890058dced6fabdaf"}
+  ],
+  "authorization_constraints": "Exact topology head, original grant bytes/expiry, cumulative quotas, TTLs, operation budgets and strong assertions are unchanged. No full W13/W14/W19 acceptance or public release is claimed."
+}

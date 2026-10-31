@@ -1678,7 +1678,8 @@
                                                    "ADR 0018 adds complete schema2 node snapshots, exact fixed-neighbor TLS pins and fresh challenge possession, reusing the existing shared slots/meters/deadlines/continuity fences. 0c0a2d2 Actions found two storage fixture failures, graph pagination recovery and missing actual HTTP routes; repairs and new snapshot/admission regressions require new exact-source Actions. Production listener/dialer, reporting and business integration remain open.",
                                                    "ADR 0022/0023 source now adds durable uninterrupted topology fences, policy-signed current publisher bootstrap, real same-socket mutual-TLS probes and periodic reports, and registered-node FileRead/neighbor-loss scenarios using actual reports. This new source is unverified; local prefix reachability/forwarding ownership and remaining W12 acceptance remain required.",
                                      "Exact eab863b Actions passed both OS contracts and actual topology HTTP/carrier/SDK chain FileRead, while all registered chains hit exact-head reservation Conflict. New source isolates shared-neighbor scopes with per-scope typed rejection and post-write confirmation, adds a real multi-space withdrawal regression and retains original TTLs/deadlines. Required prefix-owner and full registered-node acceptance remain incomplete.",
-                                     "Exact 99f647b Actions passed real multi-space isolation and stopped-neighbor retirement. Both registered FileRead cases transferred correct bytes but failed after the fixture prematurely stopped the host lease; source repair orders real HTTP revoke before worker cleanup and keeps the original deadline/assertions. All four reservations succeeded on attempt one in 19.7-24.5ms. Remaining prefix ownership and complete W12 acceptance are still required."
+                                     "Exact 99f647b Actions passed real multi-space isolation and stopped-neighbor retirement. Both registered FileRead cases transferred correct bytes but failed after the fixture prematurely stopped the host lease; source repair orders real HTTP revoke before worker cleanup and keeps the original deadline/assertions. All four reservations succeeded on attempt one in 19.7-24.5ms. Remaining prefix ownership and complete W12 acceptance are still required.",
+                                     "Exact cdcd667 hosted Actions native-ICE job passed every registered-chain case including both real FileRead/revoke orders, multi-space isolation and stopped-neighbor retirement. This scoped pass does not complete prefix forwarding ownership or full W12 acceptance."
                                                ]
                   },
                   {
@@ -1749,7 +1750,8 @@
                       "implementation_notes":  [
                                                    "The original proved native/NRD1/NRD2 ChannelRuntime now owns bounded local Quinn quality sampling and read-only handles, with original permit/group/purpose/route/candidate bindings and synchronous terminal visibility. This source awaits hosted Actions.",
                                      "Initial RTT estimates and expired/idle measurements remain unknown; loss counters are not fabricated percentages; business TX is not available bandwidth. No standby/successor selection or migration is implemented by this slice. W13 is incomplete.",
-                                     "Exact 99f647b hosted Actions passed both local observation policy regressions and the original Quinn write/cleanup regression. Source now projects the original read-only native observation through existing app-core/IPC to the desktop, with request/candidate/network-generation/permit fences, terminal clearing and old IPC compatibility. Product projection awaits Actions; continuous main/standby route selection remains required."
+                                     "Exact 99f647b hosted Actions passed both local observation policy regressions and the original Quinn write/cleanup regression. Source now projects the original read-only native observation through existing app-core/IPC to the desktop, with request/candidate/network-generation/permit fences, terminal clearing and old IPC compatibility. Product projection awaits Actions; continuous main/standby route selection remains required.",
+                                     "Exact cdcd667 Actions passed all four app-core projection/IPC regressions. New source adds one original PathGrant with two atomically reserved one-hop candidates, static split of one cumulative byte budget, independently observed node availability, current signed node resources and pinned SDK readback. This authority/data-admission slice awaits hosted checks; ongoing Scheduler ownership, carrier standby/switching and full W13 acceptance remain required."
                                                ]
                   },
                   {
@@ -1820,6 +1822,7 @@
         "implementation_notes": [
             "A private Linux libtest prototype reuses Quinn rebind_abstract and the existing signed routed carriers in four independent network namespaces. Dedicated Actions explicitly execute switch/cancel roles, retain original connection/stream/TLS exporter and measure inner/outer RTT/cwnd/PMTU after old physical paths close. This source has not yet executed and does not implement production migration.",
             "Production proposal/ACK, path epoch, simultaneous proposals, lost ACK, bounded drain, business proof and safe application recovery remain required. W14/AC22 completion stays false; feasibility does not authorize reuse of consumed production node allocations."
+            ,"The first exact cdcd667 feasibility run compiled and executed both cases but failed the second endpoint's large-packet assertion because only its peer sent file payloads. New source transfers phase/round/direction-bound file data in both directions while preserving every original PMTU, deadline, quota, identity and cleanup assertion; re-execution remains required."
         ]
                   },
                   {
@@ -2093,8 +2096,8 @@
                                               "F11",
                                               "F13"
                                           ],
-                      "status":  "not_started",
-                      "implementation_status":  "not_started",
+        "status":  "in_progress",
+        "implementation_status":  "in_progress",
                       "verification_status":  "not_run",
                       "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
                       "owned_paths_to_review":  [

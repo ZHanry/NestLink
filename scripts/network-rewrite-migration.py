@@ -171,6 +171,12 @@ def case(experiment: SOCKET.Experiment, executable: Path, name: str, private: Pa
             require(endpoint.get("application_file_bytes_after_old_closed") == 262_144
                     and endpoint.get("joined_receiver_tasks") == 2 and endpoint.get("abstract_socket_release_receipts") == 2,
                     "missing real application data or original cleanup receipts")
+            require(endpoint.get("bidirectional_application_file_verified") is True
+                    and endpoint.get("application_file_bytes_sent_before_switch") == 131_072
+                    and endpoint.get("application_file_bytes_received_before_switch") == 131_072
+                    and endpoint.get("application_file_bytes_sent_after_old_closed") == 262_144
+                    and endpoint.get("application_file_bytes_received_after_old_closed") == 262_144,
+                    "both original stream directions must verify file bytes before and after carrier replacement")
             samples = endpoint.get("samples", [])
             require(len(samples) == 12 and len({sample["stable_id"] for sample in samples}) == 1, "measurement trajectory changed inner connection")
             require(all(sample["cwnd_bytes"] > 0 and sample["rtt_us"] > 0 and 1200 <= sample["current_mtu_bytes"] <= 1400 for sample in samples), "missing observed RTT/cwnd/PMTU state")

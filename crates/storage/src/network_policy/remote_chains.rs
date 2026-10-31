@@ -93,7 +93,7 @@ impl Store {
             remote_paths::grant_id_available(&tx, &space_id, id)?;
         }
         let exists: bool = tx.query_row(
-            "SELECT EXISTS(SELECT 1 FROM all_relay_capacity WHERE id=?1 UNION ALL SELECT 1 FROM turn_grants WHERE id=?1 UNION ALL SELECT 1 FROM network_remote_chains WHERE route_id=?1)",
+            "SELECT EXISTS(SELECT 1 FROM all_relay_capacity WHERE id=?1 UNION ALL SELECT 1 FROM turn_grants WHERE id=?1 UNION ALL SELECT 1 FROM network_remote_chains WHERE route_id=?1 UNION ALL SELECT 1 FROM network_remote_route_sets WHERE set_id=?1)",
             [&request.route_id], |r|r.get(0),
         )?;
         if exists {

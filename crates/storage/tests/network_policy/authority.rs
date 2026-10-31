@@ -306,7 +306,7 @@ fn schema_twenty_nine_upgrade_keeps_the_existing_authority_key_and_grant() -> Re
     // Reconstruct the populated pre-lifecycle schema, retaining the original
     // authority, memberships, credentials and restore/security fences.
     probe.execute_batch(
-        "DROP TABLE network_remote_chain_topology_bindings; DROP TABLE network_topology_publisher_exports; DROP TABLE network_route_exports; DROP VIEW all_relay_capacity;
+        "DROP TABLE network_space_addresses; DROP TABLE network_space_address_directories; DROP TABLE network_remote_chain_topology_bindings; DROP TABLE network_topology_publisher_exports; DROP TABLE network_route_exports; DROP VIEW all_relay_capacity; DROP TABLE network_remote_route_set_members; DROP TABLE network_remote_route_sets;
          DROP TABLE network_remote_chain_hops;
          DROP TABLE network_remote_chains;
          CREATE VIEW all_relay_capacity AS

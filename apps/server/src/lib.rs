@@ -407,6 +407,26 @@ pub fn router(state: AppState) -> Router {
             get(spaces::service_policy),
         )
         .route(
+            "/api/v3/network/spaces/{space}/addressing",
+            get(spaces::addressing::list),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/addresses",
+            post(spaces::addressing::issue),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/addresses/{installation}/reservation",
+            put(spaces::addressing::reserve),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/addresses/{installation}/name",
+            put(spaces::addressing::rename),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/addresses/{installation}",
+            delete(spaces::addressing::revoke),
+        )
+        .route(
             "/api/v3/network/spaces/{space}/services/{service}",
             put(spaces::bind_service).delete(spaces::revoke_service),
         )
@@ -482,6 +502,14 @@ pub fn router(state: AppState) -> Router {
         .route(
             "/api/v3/network/spaces/{space}/relay-chains/{route}",
             get(network_policy::chains::read).delete(network_policy::chains::revoke),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/remote/{request}/route-sets",
+            post(network_policy::route_sets::issue),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/route-sets/{set}",
+            get(network_policy::route_sets::read).delete(network_policy::route_sets::revoke),
         )
         .route("/api/v3/relay/usage", get(quotas::usage))
         .route("/api/v3/relay/reservations", get(relay::reservations))

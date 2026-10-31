@@ -3,6 +3,8 @@
 mod chain;
 #[path = "network_relay/multi_node.rs"]
 mod multi_node;
+#[path = "network_relay/route_set.rs"]
+mod route_sets;
 #[path = "../../node/tests/support/service_usage_directory.rs"]
 mod service_usage_directory;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};

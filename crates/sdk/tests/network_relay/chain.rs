@@ -19,10 +19,10 @@ use nestlink_remote::files::{FileReadClient, FileReadServer, FileReadVerifier, F
 use nestlink_sdk::SdkError;
 use std::collections::BTreeSet;
 
-struct ChainNode {
-    id: String,
+pub(super) struct ChainNode {
+    pub(super) id: String,
     identity: Arc<NodeIdentity>,
-    control: Arc<NodeControl>,
+    pub(super) control: Arc<NodeControl>,
     listener: NetworkNodeListener,
     shutdown: watch::Sender<bool>,
     task: Option<JoinHandle<io::Result<()>>>,
@@ -39,7 +39,7 @@ impl Drop for ChainNode {
     }
 }
 impl ChainNode {
-    async fn new(f: &Fixture) -> Result<Self> {
+    pub(super) async fn new(f: &Fixture) -> Result<Self> {
         let seed = random_bytes::<32>();
         let identity = Arc::new(NodeIdentity::from_seed(&seed));
         let id = random_id();
@@ -124,7 +124,7 @@ impl ChainNode {
             _usage: usage,
         })
     }
-    async fn finish(&mut self) -> Result {
+    pub(super) async fn finish(&mut self) -> Result {
         self.shutdown.send_replace(true);
         if let Some(task) = self.task.as_mut() {
             tokio::time::timeout(Duration::from_secs(5), task).await???;

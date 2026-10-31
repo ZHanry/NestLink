@@ -4,6 +4,7 @@ use super::*;
 use nestlink_identity::network::SignedNetworkGrant;
 use nestlink_protocol::network::{CLAIM_BYTES, GrantClaims, SCHEMA_VERSION as NETWORK_SCHEMA};
 mod authority;
+mod route_sets;
 
 fn base(space: &str) -> Result<String, SdkError> {
     if !valid_id(space) {

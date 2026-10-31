@@ -88,6 +88,30 @@ jobs:
             ${{ runner.temp }}/network-route-export-http-tests.log
           if-no-files-found: error
           retention-days: 30
+      - name: Exercise atomic original-group candidates and current per-node authority
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-storage --test control network_paths::route_sets:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-route-set-storage-tests.log"
+          cargo test --locked -p nestlink-server --test network_policy route_sets:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-route-set-http-tests.log"
+      - name: Exercise identity-bound stable address directory and atomic changes
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-storage --test spaces addressing:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-space-address-storage-tests.log"
+      - name: Retain exact-source route-set and address directory admission logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: network-route-set-directory-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/network-route-set-storage-tests.log
+            ${{ runner.temp }}/network-route-set-http-tests.log
+            ${{ runner.temp }}/network-space-address-storage-tests.log
+          if-no-files-found: error
+          retention-days: 30
   topology-carrier:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -186,6 +210,13 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-sdk --test network_relay chain:: -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-chain-registered-tests.log"
+      - name: Exercise actual route-set SDK node admission and space address APIs
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-sdk --test network_relay route_sets:: -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-route-set-sdk-tests.log"
+          cargo test --locked -p nestlink-sdk --test space_addressing -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/network-space-address-sdk-tests.log"
       - name: Retain exact-source SDK and registered-chain business logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -194,6 +225,8 @@ jobs:
           path: |
             ${{ runner.temp }}/network-chain-sdk-tests.log
             ${{ runner.temp }}/network-chain-registered-tests.log
+            ${{ runner.temp }}/network-route-set-sdk-tests.log
+            ${{ runner.temp }}/network-space-address-sdk-tests.log
           if-no-files-found: error
           retention-days: 30
       - name: Retain original tuples, STUN mapping, business bytes and physical cleanup evidence

@@ -1,4 +1,5 @@
 //! Typed product space calls; server membership is not business authorization.
+mod addressing;
 use super::{Method, Sdk, SdkError, valid_id};
 use nestlink_protocol::spaces::service_publication::*;
 use nestlink_protocol::spaces::*;

@@ -11,6 +11,7 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 mod authority;
+mod addressing;
 mod topology;
 
 #[derive(Clone, Copy)]
@@ -332,5 +333,6 @@ pub(super) fn NetworkMembershipPanel(
             policy.set(None); member.set(None); devices.set(Vec::new()); message.set(String::new());
         }) />
         <topology::NetworkTopologyPanel api space session_revision auth_failure />
+        <addressing::SpaceAddressPanel api space session_revision auth_failure />
     }
 }

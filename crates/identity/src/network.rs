@@ -9,6 +9,8 @@ use std::collections::BTreeSet;
 use zeroize::Zeroizing;
 mod remote;
 mod remote_chain;
+mod route_set;
+pub use route_set::{VerifiedRemoteRouteSetGrants, remote_route_set_reservation_transcript, verify_remote_route_set_grants};
 pub use remote::{RemoteRouteBinding, remote_route_binding, verify_node_network_resource};
 pub use remote_chain::{
     NodeRemoteChainBinding, RemoteChainBinding, remote_chain_binding,

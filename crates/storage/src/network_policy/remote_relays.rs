@@ -109,7 +109,7 @@ impl Store {
             api::{NetworkGrantView, NetworkRemotePathView, NetworkRemoteRelayView},
         };
         use prost::Message;
-        let mut statement = tx.prepare("SELECT space_id,allocation_id FROM network_remote_relays WHERE node_id=?1 AND runtime_id=?2 AND runtime_generation=?3 AND closed=0 AND promised_until>?4 ORDER BY allocation_id")?;
+        let mut statement = tx.prepare("SELECT space_id,allocation_id,0 FROM network_remote_relays WHERE node_id=?1 AND runtime_id=?2 AND runtime_generation=?3 AND closed=0 AND promised_until>?4 UNION ALL SELECT space_id,allocation_id,1 FROM network_remote_route_set_members WHERE node_id=?1 AND runtime_id=?2 AND runtime_generation=?3 AND closed=0 AND promised_until>?4 ORDER BY allocation_id")?;
         let rows = statement
             .query_map(
                 params![
@@ -118,15 +118,18 @@ impl Store {
                     query.runtime_generation,
                     now_ms
                 ],
-                |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)),
+                |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?, r.get::<_, bool>(2)?)),
             )?
             .collect::<Result<Vec<_>, _>>()?;
         drop(statement);
         let mut resources = Vec::new();
-        for (space, id) in rows {
-            let bundle = match self
-                .network_relay_current_in_transaction(tx, lifecycle, None, &space, &id, now_ms)
-            {
+        for (space, id, route_set) in rows {
+            let current = if route_set {
+                self.network_route_set_member_current(tx, lifecycle, &space, &id, now_ms)
+            } else {
+                self.network_relay_current_in_transaction(tx, lifecycle, None, &space, &id, now_ms)
+            };
+            let bundle = match current {
                 Ok(bundle) => bundle,
                 Err(StorageError::Forbidden | StorageError::Unauthorized) => continue,
                 Err(StorageError::Proof(error))
@@ -293,7 +296,7 @@ impl Store {
                 "network relay lifetime exceeds live authority",
             ));
         }
-        let exists: bool = tx.query_row("SELECT EXISTS(SELECT 1 FROM all_relay_capacity WHERE id=?1 UNION ALL SELECT 1 FROM turn_grants WHERE id=?1)",
+        let exists: bool = tx.query_row("SELECT EXISTS(SELECT 1 FROM all_relay_capacity WHERE id=?1 UNION ALL SELECT 1 FROM turn_grants WHERE id=?1 UNION ALL SELECT 1 FROM network_remote_route_sets WHERE set_id=?1)",
             [&allocation.allocation_id], |r|r.get(0))?;
         if exists
             || request.transit_grant_id == request.path.path_grant_id

@@ -81,7 +81,8 @@ both endpoints rebind to the already authenticated second carrier, the old
 receiver tasks are joined, abstract socket release receipts are collected,
 all four old physical UDP endpoints are closed and rebound, and every old
 veth end is administratively down. Only then are another 262144 application
-bytes transferred on the original stream. The original Quinn `stable_id`,
+bytes in each direction transferred on the original stream, with separate
+phase/round/direction tags and digest receipts. The original Quinn `stable_id`,
 stream ID and TLS exporter digest must remain unchanged. The two endpoints
 must agree on the exporter digest. Old logical counters must remain frozen.
 

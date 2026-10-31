@@ -6,7 +6,7 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "99f647b546becb3ebdb31aa6e3123b289c034dcc",
+    "source_revision":  "cdcd6672f1a66a60a958bd6d9b8aee5fd465c567",
     "checkpoint_kind":  "work_in_progress_against_source_revision",
     "active_tasks":  [
                          "W00",
@@ -24,7 +24,8 @@
                          "W18",
                          "W12",
                          "W13",
-                         "W14"
+                         "W14",
+                         "W19"
                      ],
     "satisfied_interface_dependencies":  [
                                              "W01 nine-topic source and mature-component research independently reviewed",
@@ -64,8 +65,9 @@
                                    }
                                ],
     "next_steps":  [
-                       "Run exact-source Actions for the desktop original-session quality projection and private Quinn carrier replacement switch/cancel experiment; production W14 migration remains incomplete.",
-                       "Verify registered-chain HTTP revocation before FileReadServer shutdown, native-session original-digest ownership repair and the independent browser fixture lock edge. Keep original exact-head, deadlines, quotas and assertions.",
+                       "Run exact-source Actions for atomic original-group candidate issuance/readback/node admission, independently available relays and stable dual-stack address/name management through real SDK/HTTP and Web UI.",
+                       "Re-execute the bidirectional private Quinn replacement experiment, copied original native generation assertion and bounded no-receipt deadline-fixture cleanup. Production W14 migration remains incomplete; preserve all original authority and acceptance bounds.",
+                       "Connect the original-group candidates to the sole persistent Scheduler and original transport owner, then implement authenticated production migration or safe application recovery; implement mature DNS serving and owned split-DNS installation/restoration for W19.",
                        "Implement the remaining local prefix reachability/forwarding owner and remaining W12 acceptance, then continue every mandatory W13-W40 implementation and product surface.",
                        "Run the full same-source Windows/Linux/WASM/browser matrix and mandatory target acceptance; preserve scoped results and failures separately.",
                        "Publish 0.8.0RC only after all mandatory implementation and evidence gates; retain only local and remote main."
@@ -119,7 +121,10 @@
                            "docs/adr/network/0025-functional-crypto-build-profile.md",
                            "docs/adr/network/0026-original-connection-quality-observation.md",
                            "docs/adr/network/0027-quinn-carrier-replacement-feasibility.md",
-                           "docs/network-rewrite/evidence/development-run-99f647b.json"
+                           "docs/network-rewrite/evidence/development-run-99f647b.json",
+                           "docs/network-rewrite/evidence/development-run-cdcd667.json",
+                           "docs/adr/network/0028-original-group-route-set-reservation.md",
+                           "docs/adr/network/0029-space-address-directory.md"
                        ],
     "observed_actions":  [
                              {

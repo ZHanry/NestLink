@@ -87,7 +87,7 @@ pub(super) fn grant_id_available(
     id: &str,
 ) -> Result<(), StorageError> {
     require_id(id)?;
-    let exists: bool = connection.query_row("SELECT EXISTS(SELECT 1 FROM network_grants WHERE space_id=?1 AND grant_id=?2 UNION ALL SELECT 1 FROM network_remote_paths WHERE space_id=?1 AND (path_grant_id=?2 OR connectivity_grant_id=?2) UNION ALL SELECT 1 FROM network_remote_relays WHERE space_id=?1 AND transit_grant_id=?2 UNION ALL SELECT 1 FROM network_remote_chain_hops WHERE space_id=?1 AND transit_grant_id=?2 UNION ALL SELECT 1 FROM network_route_exports WHERE space_id=?1 AND grant_id=?2 UNION ALL SELECT 1 FROM network_topology_publishers WHERE space_id=?1 AND publisher_id=?2)",
+    let exists: bool = connection.query_row("SELECT EXISTS(SELECT 1 FROM network_grants WHERE space_id=?1 AND grant_id=?2 UNION ALL SELECT 1 FROM network_remote_paths WHERE space_id=?1 AND (path_grant_id=?2 OR connectivity_grant_id=?2) UNION ALL SELECT 1 FROM network_remote_relays WHERE space_id=?1 AND transit_grant_id=?2 UNION ALL SELECT 1 FROM network_remote_chain_hops WHERE space_id=?1 AND transit_grant_id=?2 UNION ALL SELECT 1 FROM network_remote_route_set_members WHERE space_id=?1 AND transit_grant_id=?2 UNION ALL SELECT 1 FROM network_route_exports WHERE space_id=?1 AND grant_id=?2 UNION ALL SELECT 1 FROM network_topology_publishers WHERE space_id=?1 AND publisher_id=?2)",
         params![space,id], |r|r.get(0))?;
     if exists {
         return Err(StorageError::Conflict);
@@ -295,6 +295,30 @@ impl Store {
         relay_hops: u8,
         now_ms: u64,
     ) -> Result<NetworkRemotePathBundle, StorageError> {
+        self.network_path_current_with_shape(tx, actor, space, path_id, (relay_hops, usize::from(relay_hops)), now_ms)
+    }
+
+    pub(super) fn network_route_set_path_current(
+        &self,
+        tx: &Transaction<'_>,
+        actor: Option<&Principal>,
+        space: &str,
+        path_id: &str,
+        now_ms: u64,
+    ) -> Result<NetworkRemotePathBundle, StorageError> {
+        self.network_path_current_with_shape(tx, actor, space, path_id, (1, 2), now_ms)
+    }
+
+    fn network_path_current_with_shape(
+        &self,
+        tx: &Transaction<'_>,
+        actor: Option<&Principal>,
+        space: &str,
+        path_id: &str,
+        shape: (u8, usize),
+        now_ms: u64,
+    ) -> Result<NetworkRemotePathBundle, StorageError> {
+        let (relay_hops, relay_count) = shape;
         require_id(path_id)?;
         if let Some(actor) = actor {
             self.validate_access(actor, checked_seconds(now_ms)?)?;
@@ -362,7 +386,7 @@ impl Store {
             || if relay_hops > 0 {
                 relay_hops > 2
                     || policy.allow_direct
-                    || policy.relays.len() != usize::from(relay_hops)
+                    || policy.relays.len() != relay_count
                     || policy.max_hops != relay_hops
             } else {
                 !policy.allow_direct || !policy.relays.is_empty() || policy.max_hops != 0

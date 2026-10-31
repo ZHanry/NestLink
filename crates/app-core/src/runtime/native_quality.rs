@@ -8,7 +8,10 @@ use crate::{
 use nestlink_protocol::api::Candidate;
 use nestlink_remote::PathObservationSnapshot;
 
-pub(super) fn selected_carrier(candidate: &Candidate, bilateral_ice: bool) -> NativePathQualityView {
+pub(super) fn selected_carrier(
+    candidate: &Candidate,
+    bilateral_ice: bool,
+) -> NativePathQualityView {
     NativePathQualityView {
         transport: candidate.transport,
         candidate_kind: candidate.kind,
@@ -67,17 +70,23 @@ fn current_quality(
         transport_group: binding.transport_group,
         route_binding: binding.route_binding,
     };
-    if quality.original_binding.as_ref().is_some_and(|original| *original != original_binding) {
+    if quality
+        .original_binding
+        .as_ref()
+        .is_some_and(|original| *original != original_binding)
+    {
         return None;
     }
     quality.original_binding = Some(original_binding);
     quality.rtt_us = sample.rtt.and_then(micros);
     quality.smoothed_rtt_change_us = sample.smoothed_rtt_change.and_then(micros);
-    quality.packet_window = sample.packet_loss.map(|window| NativePacketObservationWindow {
-        duration_ms: window.duration_ms,
-        sent_packets: window.sent_packets,
-        newly_declared_lost_packets: window.newly_declared_lost_packets,
-    });
+    quality.packet_window = sample
+        .packet_loss
+        .map(|window| NativePacketObservationWindow {
+            duration_ms: window.duration_ms,
+            sent_packets: window.sent_packets,
+            newly_declared_lost_packets: window.newly_declared_lost_packets,
+        });
     quality.business_tx = sample.business_tx.map(|window| NativeBusinessTxWindow {
         duration_ms: window.duration_ms,
         payload_bytes: window.payload_bytes,
@@ -100,12 +109,14 @@ impl Actor {
             && self.boundary.is_none();
         let quality = if current {
             self.native_session_control.as_ref().and_then(|control| {
-                let sample = control.path_observation().map(|observation| observation.snapshot());
+                let sample = control
+                    .path_observation()
+                    .map(|observation| observation.snapshot());
                 current_quality(
                     session,
-                    self.native_session_key.as_ref().map(|key| {
-                        (key.request_id.as_str(), key.connection_generation)
-                    }),
+                    self.native_session_key
+                        .as_ref()
+                        .map(|key| (key.request_id.as_str(), key.connection_generation)),
                     sample.as_ref(),
                 )
             })
@@ -124,7 +135,11 @@ impl Actor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nestlink_protocol::{Path, api::{CandidateKind, Transport}, network::Purpose};
+    use nestlink_protocol::{
+        Path,
+        api::{CandidateKind, Transport},
+        network::Purpose,
+    };
     use nestlink_remote::{BusinessThroughputWindow, PacketLossWindow, PathObservationBinding};
 
     fn session() -> NativeSessionView {
@@ -135,12 +150,15 @@ mod tests {
             status: NativeSessionStatus::Connected,
             host_view_authorized: false,
             path: Some(Path::Direct as i32),
-            quality: Some(selected_carrier(&Candidate {
-                address: std::net::SocketAddr::from(([192, 0, 2, 1], 1234)),
-                transport: Transport::Quic,
-                kind: CandidateKind::Reflexive,
-                generation: 5,
-            }, true)),
+            quality: Some(selected_carrier(
+                &Candidate {
+                    address: std::net::SocketAddr::from(([192, 0, 2, 1], 1234)),
+                    transport: Transport::Quic,
+                    kind: CandidateKind::Reflexive,
+                    generation: 5,
+                },
+                true,
+            )),
             stop_reason: None,
             stop_effects: None,
             cleanup: None,
@@ -170,9 +188,14 @@ mod tests {
             rtt: Some(Duration::from_millis(23)),
             smoothed_rtt_change: Some(Duration::from_millis(4)),
             packet_loss: Some(PacketLossWindow {
-                duration_ms: 500, sent_packets: 2, newly_declared_lost_packets: 3,
+                duration_ms: 500,
+                sent_packets: 2,
+                newly_declared_lost_packets: 3,
             }),
-            business_tx: Some(BusinessThroughputWindow { duration_ms: 500, payload_bytes: 2000 }),
+            business_tx: Some(BusinessThroughputWindow {
+                duration_ms: 500,
+                payload_bytes: 2000,
+            }),
             available_bytes_per_second: None,
             cost: None,
         }
@@ -187,7 +210,10 @@ mod tests {
         // An ordinary renewal keeps the original observation binding rather
         // than relabeling measurements with the new permit sequence.
         session.lease_sequence += 1;
-        assert_eq!(current_quality(&session, Some(("original-request", 7)), Some(&sample)), session.quality);
+        assert_eq!(
+            current_quality(&session, Some(("original-request", 7)), Some(&sample)),
+            session.quality
+        );
         assert!(current_quality(&session, Some(("other-request", 7)), Some(&sample)).is_none());
         assert!(current_quality(&session, Some(("original-request", 8)), Some(&sample)).is_none());
         let mut stopped = sample.clone();
@@ -195,11 +221,19 @@ mod tests {
         assert!(current_quality(&session, Some(("original-request", 7)), Some(&stopped)).is_none());
         let mut replacement = sample.clone();
         replacement.binding.business_grant_digest = [9; 32];
-        assert!(current_quality(&session, Some(("original-request", 7)), Some(&replacement)).is_none());
-        for status in [NativeSessionStatus::Establishing, NativeSessionStatus::Stopping,
-            NativeSessionStatus::Stopped, NativeSessionStatus::Failed] {
+        assert!(
+            current_quality(&session, Some(("original-request", 7)), Some(&replacement)).is_none()
+        );
+        for status in [
+            NativeSessionStatus::Establishing,
+            NativeSessionStatus::Stopping,
+            NativeSessionStatus::Stopped,
+            NativeSessionStatus::Failed,
+        ] {
             session.status = status;
-            assert!(current_quality(&session, Some(("original-request", 7)), Some(&sample)).is_none());
+            assert!(
+                current_quality(&session, Some(("original-request", 7)), Some(&sample)).is_none()
+            );
         }
     }
 
@@ -210,8 +244,18 @@ mod tests {
         let mut sample = sample();
         let measured = current_quality(&session, Some(("original-request", 7)), Some(&sample))
             .ok_or("original live observation missing")?;
-        assert_eq!(measured.business_tx.and_then(|window| window.bytes_per_second), Some(4000));
-        assert_eq!(measured.packet_window.map(|window| window.newly_declared_lost_packets), Some(3));
+        assert_eq!(
+            measured
+                .business_tx
+                .and_then(|window| window.bytes_per_second),
+            Some(4000)
+        );
+        assert_eq!(
+            measured
+                .packet_window
+                .map(|window| window.newly_declared_lost_packets),
+            Some(3)
+        );
         session.quality = Some(measured);
         sample.rtt = None;
         sample.smoothed_rtt_change = None;
@@ -248,17 +292,21 @@ mod tests {
                     }
                 }
             }
-            assert!(current_quality(&session, Some(("original-request", 7)), Some(&sample)).is_none());
+            assert!(
+                current_quality(&session, Some(("original-request", 7)), Some(&sample)).is_none()
+            );
         }
     }
 
     #[test]
     fn old_ipc_session_without_quality_still_decodes() -> Result<(), serde_json::Error> {
-        let decoded: NativeSessionView = serde_json::from_str(r#"{
+        let decoded: NativeSessionView = serde_json::from_str(
+            r#"{
             "request_id":"old-session", "connection_generation":7,
             "lease_sequence":2, "status":"connected", "host_view_authorized":false,
             "path":1, "stop_reason":null, "stop_effects":null, "cleanup":null, "failure":null
-        }"#)?;
+        }"#,
+        )?;
         assert_eq!(decoded.quality, None);
         Ok(())
     }

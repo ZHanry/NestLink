@@ -4,6 +4,7 @@ use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_auth::{random_id, token, token_hash};
 use nestlink_protocol::{network::SpaceRole, spaces::*};
 use rusqlite::{Connection, OptionalExtension, Transaction, TransactionBehavior, params};
+pub mod addressing;
 pub mod service_publication;
 
 const MAX_SPACES: u64 = 256;

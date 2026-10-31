@@ -18,6 +18,7 @@ rand_core.workspace = true
 thiserror.workspace = true
 zeroize.workspace = true
 prost.workspace = true
+ipnet = "=2.12.2"
 
 [dev-dependencies]
 tempfile = "3.23.0"

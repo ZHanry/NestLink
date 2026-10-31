@@ -558,7 +558,7 @@ fn schema_35_upgrade_preserves_existing_signed_topology_and_original_sequence() 
     let signed = f.report(0, 11, NOW + 10)?;
     let original = f.accept(0, &signed, NOW + 10)?;
     let db = Connection::open(f.directory.path().join("control.sqlite3"))?;
-    db.execute_batch("DROP TABLE network_remote_chain_topology_bindings; DROP TABLE network_topology_publisher_exports; DROP TABLE network_route_exports; PRAGMA user_version=34;")?;
+    db.execute_batch("DROP TABLE network_space_addresses; DROP TABLE network_space_address_directories; DROP TABLE network_remote_chain_topology_bindings; DROP TABLE network_topology_publisher_exports; DROP TABLE network_route_exports; PRAGMA user_version=34;")?;
     drop(db);
     f.restart()?;
     let retry = f.accept(0, &signed, NOW + 20)?;

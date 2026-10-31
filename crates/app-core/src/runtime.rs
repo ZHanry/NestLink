@@ -17,10 +17,10 @@ mod native_channel;
 mod native_inbox;
 #[path = "runtime/native_network_control.rs"]
 mod native_network_control;
+mod native_quality;
 #[path = "runtime/native_recovery.rs"]
 mod native_recovery;
 mod native_renewal;
-mod native_quality;
 #[path = "runtime/service_host.rs"]
 mod service_host;
 #[path = "runtime/service_observation.rs"]

@@ -205,22 +205,34 @@ fn exporter(connection: &Connection) -> Result<[u8; 32]> {
 }
 async fn transfer(first: bool, send: &mut quinn::SendStream, read: &mut quinn::RecvStream, bytes: &[u8], phase: u8, round: u8, deadline: Instant) -> Result<u128> {
     let began = Instant::now();
-    let mut body = Vec::with_capacity(bytes.len() + 2);
-    body.extend_from_slice(&[phase, round]);
+    let mut body = Vec::with_capacity(bytes.len() + 3);
+    body.extend_from_slice(&[phase, round, u8::from(!first)]);
     body.extend_from_slice(bytes);
-    // A real authenticated QUIC application stream carries fresh phase-tagged
-    // file bytes and a digest receipt, never UDP echo or a replacement session.
+    let mut expected = body.clone();
+    expected[2] = u8::from(first);
+    // Each direction carries fresh phase/round/direction-tagged OS file bytes
+    // and its own digest receipt on the original authenticated stream. Both
+    // senders must exercise their actual congestion and PLPMTUD state; short
+    // digest-only replies cannot establish the second sender's packet budget.
     tokio::time::timeout_at(deadline, async {
         if first {
             write_frame(send, Channel::Control, &body).await?;
             let ack = read_frame(read).await?;
             assert_eq!(ack.channel, Channel::Control);
             assert_eq!(ack.payload, digest(&body));
+            let frame = read_frame(read).await?;
+            assert_eq!(frame.channel, Channel::Control);
+            assert_eq!(frame.payload, expected);
+            write_frame(send, Channel::Control, &digest(&expected)).await?;
         } else {
             let frame = read_frame(read).await?;
             assert_eq!(frame.channel, Channel::Control);
-            assert_eq!(frame.payload, body);
-            write_frame(send, Channel::Control, &digest(&body)).await?;
+            assert_eq!(frame.payload, expected);
+            write_frame(send, Channel::Control, &digest(&expected)).await?;
+            write_frame(send, Channel::Control, &body).await?;
+            let ack = read_frame(read).await?;
+            assert_eq!(ack.channel, Channel::Control);
+            assert_eq!(ack.payload, digest(&body));
         }
         Ok::<_, io::Error>(())
     }).await??;
@@ -348,6 +360,7 @@ async fn endpoint(first: bool) -> Result {
         assert_eq!(send.id(), stream_id);
     }
     assert_eq!(old_counts, carriers[0].facts.snapshot());
+    println!("NESTLINK_MIGRATION role={role} final_observation={}", stats(&connection, &carriers[1], "new-after-old-release", began));
     assert!(carriers[1].facts.maximum_sent.load(Ordering::Relaxed) > 1200);
     assert!(carriers[1].facts.maximum_received.load(Ordering::Relaxed) > 1200);
     assert!(connection.stats().path.sent_plpmtud_probes > 0);
@@ -378,6 +391,9 @@ async fn endpoint(first: bool) -> Result {
         "original_path_epoch":wire::PATH_EPOCH,"production_migration_protocol_exercised":false,"business_endpoint_proof_exercised":false,
         "old_physical_closed_before_new_application_bytes":true,"old_counts_frozen":true,
         "application_file_bytes_before_switch":payload.len()*4,"application_file_bytes_after_old_closed":payload.len()*8,
+        "application_file_bytes_sent_before_switch":payload.len()*4,"application_file_bytes_received_before_switch":payload.len()*4,
+        "application_file_bytes_sent_after_old_closed":payload.len()*8,"application_file_bytes_received_after_old_closed":payload.len()*8,
+        "bidirectional_application_file_verified":true,
         "application_payload_sha256":digest(&payload),"samples":samples,"stream_roundtrips":stream_roundtrips,
         "old_logical_socket":old_counts,"new_logical_socket":carriers[1].facts.snapshot(),
         "pending_read_cancelled":pending_read_cancelled,"explicit_close_completed":true,

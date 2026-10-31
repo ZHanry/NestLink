@@ -127,6 +127,7 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
         .await?;
     let permit = controller_sdk.permit(&request.id).await?;
     let original_permit_digest = permit.digest();
+    let original_business_generation = permit.claims().connection_generation;
     assert_eq!(
         host_sdk.host_permit(&host, &request.id).await?.digest(),
         permit.digest()
@@ -255,7 +256,7 @@ async fn coordinator_exchanges_current_signed_candidates_proves_and_stops_on_net
         );
         assert_eq!(
             observation.binding().business_generation,
-            permit.claims().connection_generation
+            original_business_generation
         );
         assert_eq!(
             observation.binding().candidate.as_ref(),

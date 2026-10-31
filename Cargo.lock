@@ -4061,6 +4061,7 @@ name = "nestlink-storage"
 version = "0.7.0-rc.1"
 dependencies = [
  "base64 0.22.1",
+ "ipnet",
  "nestlink-auth",
  "nestlink-identity",
  "nestlink-policy",

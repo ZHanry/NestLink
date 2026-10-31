@@ -1,4 +1,5 @@
 //! Space operations authenticate accounts and delegate only explicit space roles.
+pub(crate) mod addressing;
 use crate::{ApiError, AppState, access, now_ms};
 use axum::{
     Json,

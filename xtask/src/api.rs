@@ -11,6 +11,7 @@ use nestlink_protocol::service_plane::{
     },
 };
 use nestlink_protocol::spaces::service_publication::*;
+use nestlink_protocol::spaces::addressing::*;
 use nestlink_protocol::spaces::*;
 use nestlink_protocol::{
     SignedNodeResourceQuery, SignedNodeResourceSnapshot, SignedNodeUsage, SignedNodeUsageAck,
@@ -149,6 +150,10 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         NetworkRemoteRelayRequest,
         NetworkRemoteRelayChainRequest,
         NetworkRemoteRelayChainView,
+        NetworkRemoteRouteSetRequest,
+        NetworkRemoteRouteSetMemberRequest,
+        NetworkRemoteRouteSetView,
+        NetworkRemoteRouteSetMemberView,
         NetworkTopologyPublisherRequest,
         NetworkRouteExportRequest,
         NetworkTopologyQuery,
@@ -168,6 +173,12 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         SpaceServiceBindingRequest,
         SpaceServiceRuleRequest,
         SpaceServicePolicyView,
+        SpaceAddressIssue,
+        SpaceAddressReservation,
+        SpaceAddressRename,
+        SpaceAddressRevocation,
+        SpaceAddressView,
+        SpaceAddressDirectory,
         NodeUsageQuery,
         NodeUsageView,
         NodeUsagePage,
