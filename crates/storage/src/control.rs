@@ -1049,8 +1049,12 @@ impl Store {
         }
         if !self.is_browser_controller(&view.controller_device_id)?
             && !self.is_browser_controller(&view.host_device_id)?
-            && c.capabilities.iter().any(|v| v == nestlink_protocol::remote_budget::CAPABILITY)
-            && h.capabilities.iter().any(|v| v == nestlink_protocol::remote_budget::CAPABILITY)
+            && c.capabilities
+                .iter()
+                .any(|v| v == nestlink_protocol::remote_budget::CAPABILITY)
+            && h.capabilities
+                .iter()
+                .any(|v| v == nestlink_protocol::remote_budget::CAPABILITY)
         {
             required_capabilities.push(nestlink_protocol::remote_budget::CAPABILITY.into());
         }

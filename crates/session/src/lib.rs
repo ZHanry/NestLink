@@ -5,6 +5,8 @@ use nestlink_protocol::{
     ContractError, EndpointProofClaims, ErrorCode, Path, Permission, SCHEMA_VERSION,
 };
 use rand_core::{OsRng, RngCore};
+mod offline_remote;
+pub use offline_remote::{OfflineRemoteAuthority, OfflineRemoteStatus};
 #[cfg(all(feature = "media-runtime-test-support", not(debug_assertions)))]
 compile_error!("media-runtime-test-support is restricted to debug regression builds");
 #[cfg(feature = "media-runtime-test-support")]
@@ -232,6 +234,7 @@ pub struct Session {
     media_regression: bool,
     binding: SessionBinding,
     permit: VerifiedPermit,
+    offline: Option<OfflineRemoteAuthority>,
     path: Path,
     state: SessionState,
     deadline_ms: u64,
@@ -285,6 +288,7 @@ impl Session {
             media_regression: allow_regression,
             binding,
             permit,
+            offline: None,
             path,
             state: SessionState::AwaitingProof,
             deadline_ms,
@@ -402,6 +406,9 @@ impl Session {
         now: ClockSample,
     ) -> Result<(), ContractError> {
         self.check_clock(now)?;
+        if self.offline.is_some() {
+            return Err(error(ErrorCode::PermissionRequired, "finite offline authority cannot renew an online permit"));
+        }
         if self.permit.claims().lease_sequence != expected_sequence
             || expected_sequence.checked_add(1) != Some(permit.claims().lease_sequence)
         {
@@ -412,6 +419,7 @@ impl Session {
             media_regression: self.media_regression,
             binding: self.binding.clone(),
             permit: self.permit.clone(),
+            offline: None,
             path: self.path,
             state: self.state,
             deadline_ms: self.deadline_ms,
@@ -456,6 +464,9 @@ impl Session {
         now: ClockSample,
     ) -> Result<(), ContractError> {
         self.check_clock(now)?;
+        if self.offline.is_some() && path != Path::Direct {
+            return Err(error(ErrorCode::PermissionRequired, "offline authority is direct only"));
+        }
         if self.state != SessionState::AwaitingProof || self.proved != 0 {
             return Err(error(
                 ErrorCode::ReplayRejected,
@@ -490,6 +501,9 @@ impl Session {
     /// A stopped connection can replace its transport only within its original
     /// local lease and with fresh control-plane consent from both endpoints.
     pub fn reconnection_permit(&self, now: ClockSample) -> Result<VerifiedPermit, ContractError> {
+        if self.offline.is_some() {
+            return Err(error(ErrorCode::PermissionRequired, "offline recovery retains its own original authority"));
+        }
         if !matches!(
             self.state,
             SessionState::Stopped(StopReason::TransportLost | StopReason::NetworkChanged)
@@ -508,7 +522,7 @@ impl Session {
     pub fn proof_transcript(&self) -> EndpointProofClaims {
         EndpointProofClaims {
             schema_version: SCHEMA_VERSION,
-            permit_sha256: self.permit.digest().to_vec(),
+            permit_sha256: self.offline.as_ref().map_or_else(|| self.permit.digest(), OfflineRemoteAuthority::digest).to_vec(),
             challenge: self.challenge.to_vec(),
             controller_key_sha256: self.binding.controller_key_sha256.to_vec(),
             host_key_sha256: self.binding.host_key_sha256.to_vec(),
@@ -594,6 +608,12 @@ impl Session {
         monotonic_ms: u64,
     ) -> Result<(), ContractError> {
         self.check_live(monotonic_ms)?;
+        if let Some(offline) = &self.offline {
+            if self.state != SessionState::Active || path != Path::Direct {
+                return Err(error(ErrorCode::AuthRequired, "proved direct offline session required"));
+            }
+            return offline.authorize(permission, self.last_unix_ms);
+        }
         if self.permit.claims().is_setup() {
             return Err(error(
                 ErrorCode::AuthRequired,
@@ -629,6 +649,9 @@ impl Session {
         monotonic_ms: u64,
     ) -> Result<VerifiedPermit, ContractError> {
         self.authorize(Permission::Input, path, monotonic_ms)?;
+        if self.offline.is_some() {
+            return Err(error(ErrorCode::PermissionRequired, "offline input cannot export an online permit"));
+        }
         Ok(self.permit.clone())
     }
 
@@ -640,6 +663,9 @@ impl Session {
         now: ClockSample,
     ) -> Result<(), ContractError> {
         self.check_live(now.monotonic_ms)?;
+        if self.offline.is_some() {
+            return Err(error(ErrorCode::PermissionRequired, "finite offline authority cannot renew an online permit"));
+        }
         if now.unix_ms < self.last_unix_ms {
             self.stop(StopReason::ClockInvalid);
             return Err(error(
@@ -684,6 +710,10 @@ impl Session {
     }
 
     pub fn stop(&mut self, reason: StopReason) -> StopEffects {
+        if !matches!(reason, StopReason::TransportLost | StopReason::NetworkChanged)
+            && let Some(offline) = &self.offline {
+            offline.stop();
+        }
         if !matches!(self.state, SessionState::Stopped(_)) {
             self.state = SessionState::Stopped(reason);
         }
@@ -708,7 +738,12 @@ impl Session {
                 "session is terminal",
             ));
         }
-        if self.permit.remote_budget().is_some_and(|budget| budget.check().is_err()) {
+        if let Some(offline) = &self.offline
+            && let Err(failure) = offline.check(self.last_unix_ms) {
+            self.stop(StopReason::Revoked);
+            return Err(failure);
+        }
+        if self.offline.is_none() && self.permit.remote_budget().is_some_and(|budget| budget.check().is_err()) {
             self.stop(StopReason::Revoked);
             return Err(error(ErrorCode::CapacityExceeded, "original cumulative remote budget terminated"));
         }
@@ -747,6 +782,11 @@ impl Session {
             ));
         }
         self.last_unix_ms = now.unix_ms;
+        if let Some(offline) = &self.offline
+            && let Err(failure) = offline.check(now.unix_ms) {
+            self.stop(StopReason::Revoked);
+            return Err(failure);
+        }
         Ok(())
     }
 }

@@ -89,9 +89,16 @@ impl Sdk {
             .await
     }
     pub async fn create_offline_remote_draft(
-        &self, space: &str, request: &OfflineRemoteDraftRequest,
+        &self,
+        space: &str,
+        request: &OfflineRemoteDraftRequest,
     ) -> Result<OfflineBundleView, SdkError> {
-        self.required(Method::POST, &format!("{}/offline/remote-drafts",base(space)?),Some(request)).await
+        self.required(
+            Method::POST,
+            &format!("{}/offline/remote-drafts", base(space)?),
+            Some(request),
+        )
+        .await
     }
     /// `approved_digest` is supplied only after the local user reviewed the
     /// complete fixed draft, budget, deadline and operation list.

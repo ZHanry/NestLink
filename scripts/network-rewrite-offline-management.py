@@ -7,7 +7,7 @@ import pathlib
 import subprocess
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--suite', choices=['storage', 'sdk', 'daemon', 'remote-identity', 'remote-session', 'remote-storage', 'remote-sdk'], required=True)
+parser.add_argument('--suite', choices=['storage', 'sdk', 'daemon', 'remote-identity', 'remote-session', 'remote-storage', 'remote-sdk', 'remote-offline'], required=True)
 parser.add_argument('--output', type=pathlib.Path, required=True)
 args = parser.parse_args()
 assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
@@ -20,11 +20,12 @@ package, target, count = {
     'sdk': ('nestlink-sdk', ['--test', 'private_services'], 7),
     'daemon': ('nestlink-daemon', ['--bin', 'nestlink-daemon'], 1),
     'remote-identity': ('nestlink-identity', ['--lib'], 3),
-    'remote-session': ('nestlink-session', ['--test', 'authorization'], 1),
+    'remote-session': ('nestlink-session', ['--test', 'authorization'], 2),
     'remote-storage': ('nestlink-storage', ['--test', 'control'], 5),
     'remote-sdk': ('nestlink-sdk', ['--test', 'end_to_end'], 1),
+    'remote-offline': ('nestlink-sdk', ['--test', 'offline_remote'], 1),
 }[args.suite]
-test_filter = 'remote_budget' if args.suite.startswith('remote-') else 'offline::'
+test_filter = 'offline_remote_' if args.suite == 'remote-offline' else ('remote_budget' if args.suite.startswith('remote-') else 'offline::')
 build = ['cargo', 'test', '--locked', '-p', package, *target, '--no-run', '--message-format=json']
 receipt = {
     'source_revision': source, 'run_id': os.environ['GITHUB_RUN_ID'],
@@ -38,6 +39,8 @@ receipt = {
 try:
     if args.suite.startswith('remote-'):
         receipt['scope'] = 'Original remote cumulative budget reservation, strict signed scope, retained Session meter and actual HTTP/SDK/QUIC online business accounting. Storage additionally exercises independent finite offline remote draft, atomic second approval against original online totals, one-use consume, revoke without refund and original short online expiry. Remote offline carrier and target acceptance are excluded.'
+    if args.suite == 'remote-offline':
+        receipt['scope'] = 'Actual two-account HTTP/SDK offline draft/approval/one-use consume followed by physical management listener stop, original online permit expiry and fresh process proof plus original QUIC Session/business queues; subset permission, original meter, process stop and physical UDP release. No complete native media/input/file OS adapters, TLS fallback, UI or target acceptance claim.'
     with (output / 'build.jsonl').open('w') as stream, (output / 'build.log').open('w') as errors:
         built = subprocess.run(build, stdout=stream, stderr=errors, check=False)
     receipt['build_exit_code'] = built.returncode

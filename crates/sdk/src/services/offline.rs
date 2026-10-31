@@ -5,7 +5,7 @@ use super::*;
 use crate::network_management::ConsumedOfflineBundle;
 use nestlink_protocol::offline::{OfflineBusiness, OfflineDirectTransport};
 use nestlink_transport_quic::service::{
-    self as carrier, BiStream, PrivateListener, read_message, write_message,
+    self as carrier, BiStream, PrivateListener,
 };
 use std::{
     io,

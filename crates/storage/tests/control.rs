@@ -24,8 +24,6 @@ mod native_ice_capabilities;
 mod native_readiness;
 #[path = "control/native_receiver_qos.rs"]
 mod native_receiver_qos;
-#[path = "control/remote_budget.rs"]
-mod remote_budget;
 #[path = "control/network_paths.rs"]
 mod network_paths;
 #[path = "control/quotas.rs"]
@@ -34,6 +32,8 @@ mod quotas;
 mod reconnection;
 #[path = "control/relay_candidates.rs"]
 mod relay_candidates;
+#[path = "control/remote_budget.rs"]
+mod remote_budget;
 #[path = "control/remote_password.rs"]
 mod remote_password;
 #[path = "control/trusted.rs"]

@@ -588,10 +588,7 @@ impl LeaseControl {
         let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
         managed.session.authorize(permission, self.inner.path, self.inner.clock.monotonic_ms())?;
-        let result = match managed.session.current_verified_permit().remote_budget() {
-            Some(budget) => budget.charge(permission, u64::try_from(bytes).map_err(io::Error::other)?),
-            None => Ok(()),
-        };
+        let result = managed.session.charge_business(permission, self.inner.path, u64::try_from(bytes).map_err(io::Error::other)?, self.inner.clock.sample()?);
         if result.is_err() { managed.session.stop(StopReason::Revoked); }
         self.inner.reconcile(&mut managed);
         result.map_err(RemoteError::from)
@@ -599,6 +596,9 @@ impl LeaseControl {
     pub fn current_native_permit(&self) -> Result<VerifiedPermit, RemoteError> {
         let mut managed = self.inner.lock()?;
         self.inner.check(&mut managed)?;
+        if managed.session.is_offline() {
+            return Err(io::Error::new(io::ErrorKind::PermissionDenied, "offline owner cannot export an online permit").into());
+        }
         Ok(managed.session.current_verified_permit().clone())
     }
     pub(crate) fn selected_path(&self) -> Path {

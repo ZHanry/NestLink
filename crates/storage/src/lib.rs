@@ -500,13 +500,16 @@ impl Store {
         }
         if version < 49 {
             let transaction = connection.transaction()?;
-            transaction.execute_batch(include_str!("../migrations/049_remote_cumulative_budget.sql"))?;
+            transaction.execute_batch(include_str!(
+                "../migrations/049_remote_cumulative_budget.sql"
+            ))?;
             transaction.pragma_update(None, "user_version", 49)?;
             transaction.commit()?;
         }
         if version < 50 {
             let transaction = connection.transaction()?;
-            transaction.execute_batch(include_str!("../migrations/050_offline_remote_bundles.sql"))?;
+            transaction
+                .execute_batch(include_str!("../migrations/050_offline_remote_bundles.sql"))?;
             transaction.pragma_update(None, "user_version", 50)?;
             transaction.commit()?;
         }

@@ -23,6 +23,10 @@ use url::Url;
 mod diagnostics;
 mod media_authority;
 pub mod network_management;
+#[cfg(not(target_arch = "wasm32"))]
+mod offline_channel;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod offline_remote;
 #[path = "network/topology.rs"]
 pub mod network_topology;
 mod spaces;

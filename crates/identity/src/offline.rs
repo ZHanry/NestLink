@@ -405,6 +405,9 @@ pub struct OfflineAdmission {
     channel_identity: Arc<crate::InstallationIdentity>,
 }
 impl OfflineAdmission {
+    pub fn local_endpoint(&self) -> usize {
+        self.local
+    }
     pub fn claims(&self) -> &OfflineGrantBundleClaims {
         self.bundle.claims()
     }

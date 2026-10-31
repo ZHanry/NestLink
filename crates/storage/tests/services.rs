@@ -777,7 +777,11 @@ fn account_history_challenge_capacity_and_cursor_epoch_are_bounded_on_disk() -> 
     );
     f.store.revoke_service(&f.admin, &first.id, 1, 1001)?;
     assert!(f.create().is_err());
-    let available = last.services.iter().find(|view| view.id != first.id).ok_or("missing unrevoked service")?;
+    let available = last
+        .services
+        .iter()
+        .find(|view| view.id != first.id)
+        .ok_or("missing unrevoked service")?;
     for _ in 0..16 {
         f.store
             .service_approval_challenge(&f.admin, &available.id, available.revision, 1001)?;

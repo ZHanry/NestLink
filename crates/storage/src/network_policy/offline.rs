@@ -11,11 +11,14 @@ const MAX_HISTORY: u64 = 4096;
 mod remote;
 enum OriginalBusiness {
     Private(OfflinePrivateAuthority),
-    Remote(nestlink_protocol::PermitClaims),
+    Remote(Box<nestlink_protocol::PermitClaims>),
 }
 impl OriginalBusiness {
     fn table(&self) -> &'static str {
-        match self { Self::Private(_) => "offline_bundles", Self::Remote(_) => "offline_remote_bundles" }
+        match self {
+            Self::Private(_) => "offline_bundles",
+            Self::Remote(_) => "offline_remote_bundles",
+        }
     }
 }
 struct Row {
@@ -53,8 +56,16 @@ fn settings(connection: &Connection, space: &str) -> Result<OfflinePolicyView, S
 }
 fn row(connection: &Connection, space: &str, id: &str) -> Result<Row, StorageError> {
     require_id(id)?;
-    let private: bool = connection.query_row("SELECT EXISTS(SELECT 1 FROM offline_bundles WHERE space_id=?1 AND bundle_id=?2)", params![space,id], |r| r.get(0))?;
-    let table = if private { "offline_bundles" } else { "offline_remote_bundles" };
+    let private: bool = connection.query_row(
+        "SELECT EXISTS(SELECT 1 FROM offline_bundles WHERE space_id=?1 AND bundle_id=?2)",
+        params![space, id],
+        |r| r.get(0),
+    )?;
+    let table = if private {
+        "offline_bundles"
+    } else {
+        "offline_remote_bundles"
+    };
     type Stored = (
         String,
         String,
@@ -76,7 +87,7 @@ fn row(connection: &Connection, space: &str, id: &str) -> Result<Row, StorageErr
         OriginalBusiness::Private(connection.query_row("SELECT private_rule_id,private_exposure_revision FROM offline_bundles WHERE space_id=?1 AND bundle_id=?2", params![space,id], |r| Ok(OfflinePrivateAuthority {rule_id: r.get(0)?, exposure_revision: r.get(1)?}))?)
     } else {
         let json: String=connection.query_row("SELECT original_permit_json FROM offline_remote_bundles WHERE space_id=?1 AND bundle_id=?2", params![space,id], |r|r.get(0))?;
-        OriginalBusiness::Remote(serde_json::from_str(&json)?)
+        OriginalBusiness::Remote(Box::new(serde_json::from_str(&json)?))
     };
     let claims: OfflineGrantBundleClaims = serde_json::from_str(&claims)?;
     claims.validate()?;
@@ -167,14 +178,12 @@ impl Store {
         });
         if live {
             let current = match &row.business_authority {
-                OriginalBusiness::Private(original) => self.offline_private_current(
-                &row.account,
-                &row.login,
-                c,
-                original,
-                now,
-                ),
-                OriginalBusiness::Remote(original) => self.offline_remote_current(&row.account, &row.login, c, original, now),
+                OriginalBusiness::Private(original) => {
+                    self.offline_private_current(&row.account, &row.login, c, original, now)
+                }
+                OriginalBusiness::Remote(original) => {
+                    self.offline_remote_current(&row.account, &row.login, c, original, now)
+                }
             };
             match current {
                 Ok(()) => {}
@@ -189,7 +198,10 @@ impl Store {
         }
         if !live {
             tx.execute(
-                &format!("UPDATE {} SET revoked=1 WHERE bundle_id=?1", row.business_authority.table()),
+                &format!(
+                    "UPDATE {} SET revoked=1 WHERE bundle_id=?1",
+                    row.business_authority.table()
+                ),
                 [&c.bundle_id],
             )?;
         }
@@ -250,7 +262,10 @@ impl Store {
             "UPDATE offline_bundles SET revoked=1 WHERE space_id=?1",
             [space],
         )?;
-        tx.execute("UPDATE offline_remote_bundles SET revoked=1 WHERE space_id=?1", [space])?;
+        tx.execute(
+            "UPDATE offline_remote_bundles SET revoked=1 WHERE space_id=?1",
+            [space],
+        )?;
         observe(&tx, space, now)?;
         auditing::record(
             &tx,
@@ -378,7 +393,10 @@ impl Store {
         }
         let column = if index == 0 { "approval0" } else { "approval1" };
         tx.execute(
-            &format!("UPDATE {} SET {column}=?1 WHERE bundle_id=?2", stored.business_authority.table()),
+            &format!(
+                "UPDATE {} SET {column}=?1 WHERE bundle_id=?2",
+                stored.business_authority.table()
+            ),
             params![serde_json::to_string(&approval)?, id],
         )?;
         stored.approvals[index] = Some(approval);
@@ -391,11 +409,21 @@ impl Store {
                 &[a.clone(), b.clone()],
             )?;
             match &stored.business_authority {
-                OriginalBusiness::Private(_) => self.offline_private_reserve(&tx, &stored.claims)?,
-                OriginalBusiness::Remote(original) => self.offline_remote_reserve(&tx, &stored.claims, original)?,
+                OriginalBusiness::Private(_) => {
+                    self.offline_private_reserve(&tx, &stored.claims)?
+                }
+                OriginalBusiness::Remote(original) => {
+                    self.offline_remote_reserve(&tx, &stored.claims, original)?
+                }
             }
             let signed = signer.sign_offline_bundle(&stored.claims)?;
-            tx.execute(&format!("UPDATE {} SET signed_json=?1 WHERE bundle_id=?2 AND signed_json IS NULL", stored.business_authority.table()),params![serde_json::to_string(&signed)?,id])?;
+            tx.execute(
+                &format!(
+                    "UPDATE {} SET signed_json=?1 WHERE bundle_id=?2 AND signed_json IS NULL",
+                    stored.business_authority.table()
+                ),
+                params![serde_json::to_string(&signed)?, id],
+            )?;
             stored.signed = Some(signed);
         }
         let result = self.offline_current(&tx, &stored, now)?;
@@ -487,7 +515,10 @@ impl Store {
             self.audit_admin(actor, now / 1000)?;
         }
         tx.execute(
-            &format!("UPDATE {} SET revoked=1 WHERE bundle_id=?1", stored.business_authority.table()),
+            &format!(
+                "UPDATE {} SET revoked=1 WHERE bundle_id=?1",
+                stored.business_authority.table()
+            ),
             [id],
         )?;
         tx.execute("UPDATE offline_settings SET revision=revision+1,revocation_epoch=revocation_epoch+1 WHERE space_id=?1",[space])?;

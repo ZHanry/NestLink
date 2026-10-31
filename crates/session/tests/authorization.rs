@@ -123,6 +123,54 @@ fn remote_budget_original_session_requires_verified_budget_and_retains_meter_dur
 }
 
 #[test]
+fn remote_budget_offline_original_session_uses_independent_deadline_and_never_exports_or_renews_online_authority() -> Result<(),Box<dyn std::error::Error>> {
+    use nestlink_identity::{network::NetworkAuthoritySigner,offline::*};
+    use nestlink_protocol::offline::*;
+    let (signer,controller,host,claims,binding)=fixture();
+    let mut process=OfflineProcess::new(claims.controller_device_id.clone(),controller.public_key(),1_000_000,1)?;
+    let host_process=OfflineProcess::new(claims.host_device_id.clone(),host.public_key(),1_000_000,1)?;
+    let authority=NetworkAuthoritySigner::from_master_seed(&[49;32])?;
+    let offline=OfflineGrantBundleClaims{
+        bundle_version:1,deployment_id:claims.deployment_id.clone(),space_id:id(40),bundle_id:id(41),policy_epoch:1,security_epoch:1,highest_revocation_epoch:1,
+        issued_at_ms:1_000_000,expires_at_ms:1_060_000,
+        members:[OfflineMember{installation_id:claims.controller_device_id.clone(),account_id:claims.account_id.clone(),public_key:controller.public_key(),membership_epoch:1,process_nonce:process.nonce()},OfflineMember{installation_id:claims.host_device_id.clone(),account_id:id(42),public_key:host.public_key(),membership_epoch:1,process_nonce:host_process.nonce()}],
+        connection:OfflineConnection{connection_id:id(43),path_id:id(44),direct_transports:vec![OfflineDirectTransport::Quic]},
+        business:OfflineBusiness::RemoteControl{resource_id:claims.resource_id.clone(),operations:vec![OfflineRemoteOperation::View],capability_digest:[7;32]},
+        resources:OfflineResourceReservation{reservation_id:id(45),byte_limit:32,file_write_limit:0,connection_limit:2},
+    };
+    let revoked=std::collections::BTreeSet::new();let public=authority.public_key();
+    let context=OfflineVerification{authority:&public,deployment_id:&claims.deployment_id,space_id:&offline.space_id,policy_epoch:1,security_epoch:1,highest_revocation_epoch:1,revoked_bundle_ids:&revoked,now_ms:1_000_000};
+    let digest=offline_draft_digest(&public,&offline)?;
+    let admission=process.activate(verify_offline_bundle(&authority.sign_offline_bundle(&offline)?,&context)?,&context,digest)?;
+    let owner=nestlink_session::OfflineRemoteAuthority::new(admission)?;
+    owner.reserve_attempt(1_016_000,OfflineDirectTransport::Quic)?;
+    owner.authenticate(1_016_000,OfflineDirectTransport::Quic,&host.public_key())?;
+    let now=ClockSample{monotonic_ms:16_000,unix_ms:1_016_000};
+    assert!(Session::activate(verified(&signer,&claims),binding.clone(),Path::Direct,16_000,now).is_err());
+    let mut session=Session::activate_offline(verified(&signer,&claims),binding,owner.clone(),now)?;
+    assert_eq!(session.proof_transcript().permit_sha256,digest);
+    assert!(session.authorize(Permission::View,Path::Direct,16_000).is_err());
+    for (role,key) in [(EndpointRole::Controller,&controller),(EndpointRole::Host,&host)] {
+        let proof=key.prove(&session.proof_transcript())?;
+        session.confirm_endpoint(role,&key.public_key(),&proof,16_000)?;
+    }
+    session.authorize(Permission::View,Path::Direct,16_000)?;
+    assert!(session.authorize(Permission::Input,Path::Direct,16_000).is_err());
+    assert!(session.authorize(Permission::View,Path::Relay,16_000).is_err());
+    assert!(session.current_input_permit(Path::Direct,16_000).is_err());
+    assert!(session.renew(verified(&signer,&claims),16_001,now).is_err());
+    session.charge_business(Permission::View,Path::Direct,30,now)?;
+    assert_eq!(owner.status()?.remaining_bytes,2);
+    session.stop(StopReason::TransportLost);
+    assert!(!owner.status()?.stopped);
+    owner.reserve_attempt(1_016_000,OfflineDirectTransport::Quic)?;
+    assert_eq!(owner.status()?.connection_attempts,2);
+    assert_eq!(owner.status()?.remaining_bytes,2);
+    process.stop();assert!(owner.check(1_016_001).is_err());
+    Ok(())
+}
+
+#[test]
 fn ice_path_selection_preserves_deadline_and_invalidates_the_old_challenge() {
     let (signer, controller, _, mut claims, mut binding) = fixture();
     claims.paths.push(Path::Relay as i32);
