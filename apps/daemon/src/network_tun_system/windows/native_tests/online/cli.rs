@@ -206,7 +206,7 @@ pub(in super::super) async fn fixture(
     let text = std::fs::read_to_string(log)?;
     assert!(
         text.contains(
-            "NestLink user daemon stopped: management operation rejected (403 Forbidden): Forbidden"
+            "NestLink user daemon stopped: management operation rejected (403 Forbidden): PermissionRequired"
         ),
         "the real product main did not report the original HTTP revocation error: {text}"
     );
