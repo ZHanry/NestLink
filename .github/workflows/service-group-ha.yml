@@ -109,6 +109,28 @@ jobs:
           (output / 'availability-test-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
           print(text)
           assert passed, 'Exact original availability cap regression did not pass once; same-run log retained'
+      - name: Verify in-flight service queries retain their original node cap
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, subprocess
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'nestlink-service-deadline-evidence'
+          selected = 'control::services::tests::in_flight_service_query_keeps_original_node_cap_across_same_binding_renewal'
+          command = ['cargo', 'test', '--locked', '-p', 'nestlink-node', '--lib', selected,
+              '--', '--exact', '--nocapture', '--color', 'never']
+          result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+          (output / 'inflight-test.log').write_bytes(result.stdout)
+          text = result.stdout.decode(errors='replace')
+          passed = (result.returncode == 0 and ('test ' + selected + ' ... ok') in text
+              and 'test result: ok. 1 passed; 0 failed; 0 ignored;' in text)
+          receipt = {'source_revision': os.environ['GITHUB_SHA'],
+              'workflow_revision': os.environ['GITHUB_WORKFLOW_SHA'],
+              'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'runner_environment': os.environ['RUNNER_ENVIRONMENT'],
+              'command': command, 'return_code': result.returncode,
+              'log_sha256': hashlib.sha256(result.stdout).hexdigest(), 'passed': passed}
+          (output / 'inflight-test-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          print(text)
+          assert passed, 'Exact original in-flight node cap regression did not pass once; same-run log retained'
       - name: Verify original signed edge progress and terminal observation gaps
         shell: python
         run: |

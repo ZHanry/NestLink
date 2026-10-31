@@ -257,6 +257,25 @@ fn inspect_snapshot(
     snapshot: &VerifiedServiceSnapshot,
     started: Instant,
 ) -> Result<Instant, Error> {
+    inspect_snapshot_at(gate, snapshot, started, None)
+}
+// Only the original poll retains this cap before signing/sending the exact
+// query. A concurrent same-binding NodeGate renewal may advance its sequence,
+// but cannot replace the original query's independent node deadline.
+fn inspect_polled_snapshot(
+    gate: &mut crate::gate::NodeGate,
+    snapshot: &VerifiedServiceSnapshot,
+    started: Instant,
+    original_node_deadline: Instant,
+) -> Result<Instant, Error> {
+    inspect_snapshot_at(gate, snapshot, started, Some(original_node_deadline))
+}
+fn inspect_snapshot_at(
+    gate: &mut crate::gate::NodeGate,
+    snapshot: &VerifiedServiceSnapshot,
+    started: Instant,
+    original_node_deadline: Option<Instant>,
+) -> Result<Instant, Error> {
     if snapshot.policy_issuer() != gate.trusted_policy_issuer() {
         return Err(Error::Authorization(rejected(ErrorCode::IdentityMismatch)));
     }
@@ -268,14 +287,20 @@ fn inspect_snapshot(
         || q.runtime_id != node.runtime_id
         || q.runtime_generation != node.runtime_generation
         || q.policy_revision != node.policy_revision
-        || q.lease_sequence != node.lease_sequence
+        || q.lease_sequence > node.lease_sequence
+        || (original_node_deadline.is_none() && q.lease_sequence != node.lease_sequence)
         || snapshot.node_key_sha256().as_slice() != node.node_key_sha256.as_slice()
     {
         return Err(Error::Authorization(rejected(ErrorCode::IdentityMismatch)));
     }
-    started
+    let current_deadline = started
         .checked_add(Duration::from_millis(gate.deadline_ms()))
-        .ok_or(Error::Control)
+        .ok_or(Error::Control)?;
+    let deadline = original_node_deadline.map_or(current_deadline, |original| original.min(current_deadline));
+    if deadline <= Instant::now() {
+        return Err(Error::Authorization(rejected(ErrorCode::LeaseExpired)));
+    }
+    Ok(deadline)
 }
 impl ServiceNodePermit {
     pub fn stopped(&self) -> watch::Receiver<bool> {

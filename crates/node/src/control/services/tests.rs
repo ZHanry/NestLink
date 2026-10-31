@@ -359,6 +359,48 @@ async fn unavailable_response_keeps_only_original_deadline_and_never_revives_pub
     Ok(())
 }
 #[tokio::test]
+async fn in_flight_service_query_keeps_original_node_cap_across_same_binding_renewal() -> TestResult {
+    let fixture = Fixture::new(ServiceIngress::Tcp { port: 29100 }, "tcp", "127.0.0.1:8080".parse()?, 5000)?;
+    let (node, policy) = control(&fixture, true)?;
+    let original = snapshot(&fixture, &policy, 1, 1000, true)?;
+    let original_deadline = {
+        let state = node.state.lock().map_err(|_| "control lock poisoned")?;
+        node.started + Duration::from_millis(state.gate.deadline_ms())
+    };
+    tokio::time::sleep(Duration::from_millis(2)).await;
+    let mut state = node.state.lock().map_err(|_| "control lock poisoned")?;
+    let now = crate::control::sample(node.started)?;
+    let mut lease = state.gate.current(now)?.clone();
+    lease.lease_sequence += 1;
+    lease.issued_at_unix_ms = now.unix_ms;
+    lease.expires_at_unix_ms = now.unix_ms + 10000;
+    let challenge = NodeChallenge {
+        schema_version: SCHEMA_VERSION,
+        deployment_id: lease.deployment_id.clone(),
+        security_epoch: lease.security_epoch,
+        node_id: lease.node_id.clone(),
+        node_key_sha256: lease.node_key_sha256.clone(),
+        request_id: lease.request_id.clone(),
+        nonce: lease.nonce.clone(),
+        expires_at_unix_ms: now.unix_ms + 2000,
+    };
+    state.gate.accept(&policy.sign(&lease)?.encode_to_vec(), &challenge, now.monotonic_ms, now)?;
+    let current_deadline = node.started + Duration::from_millis(state.gate.deadline_ms());
+    assert!(current_deadline > original_deadline);
+    assert!(inspect_snapshot(&mut state.gate, &original, node.started).is_err());
+    assert_eq!(inspect_polled_snapshot(&mut state.gate, &original, node.started, original_deadline)?, original_deadline);
+    assert_eq!(inspect_polled_snapshot(&mut state.gate, &original, node.started, current_deadline + Duration::from_secs(1))?, current_deadline);
+    assert!(inspect_polled_snapshot(&mut state.gate, &original, node.started, Instant::now()).is_err());
+    let (signed, _) = signed_snapshot(&fixture, &policy, 2, 1000, true)?;
+    let mut future: ServiceResourceSnapshot = serde_json::from_slice(&signed.claims)?;
+    future.query.lease_sequence = lease.lease_sequence + 1;
+    let request = fixture.edge.sign_service_query(&future.query)?;
+    future.query_sha256 = digest(&request.claims);
+    let future = verify_service_snapshot(&policy.sign_service_snapshot(&future)?, &policy.public_key(), &request, &fixture.edge.public_key())?;
+    assert!(inspect_polled_snapshot(&mut state.gate, &future, node.started, original_deadline).is_err());
+    Ok(())
+}
+#[tokio::test]
 async fn snapshot_verified_by_a_foreign_issuer_is_rejected_by_actual_node_gate() -> TestResult {
     let fixture = Fixture::new(
         ServiceIngress::Tcp { port: 29100 },

@@ -37,7 +37,7 @@ pub(in crate::control) async fn poll(
         if shutdown_requested {
             return std::future::pending().await;
         }
-        let (query, requested) = {
+        let (query, requested, original_node_deadline) = {
             let mut runtime = state.lock().map_err(|_| Error::Control)?;
             if runtime.service_shutdown {
                 continue;
@@ -48,6 +48,9 @@ pub(in crate::control) async fn poll(
             let requested = Instant::now();
             let now = sample(started)?;
             let lease = runtime.gate.current(now)?.clone();
+            let original_node_deadline = started
+                .checked_add(Duration::from_millis(runtime.gate.deadline_ms()))
+                .ok_or(Error::Control)?;
             if !lease.public_ingress_allowed || !lease.server_forwarding_allowed {
                 if accepted {
                     runtime.resources.services.stop();
@@ -76,7 +79,7 @@ pub(in crate::control) async fn poll(
                     .checked_add(SERVICE_RESOURCE_MS.min(NODE_RESOURCE_TTL_MS))
                     .ok_or(Error::Control)?
                     .min(lease.expires_at_unix_ms),
-            }, requested)
+            }, requested, original_node_deadline)
         };
         let signed = identity.sign_service_query(&query)?;
         let signed_at = Instant::now();
@@ -152,17 +155,10 @@ pub(in crate::control) async fn poll(
                 continue;
             }
             Ok(Ok((snapshot, issuer_delegation))) => {
-                let node_deadline = match inspect_snapshot(&mut runtime.gate, &snapshot, started) {
+                let prior_sequence = snapshot.claims().query.lease_sequence;
+                let node_deadline = match inspect_polled_snapshot(&mut runtime.gate, &snapshot, started, original_node_deadline) {
                     Ok(end) => end,
                     Err(error) => {
-                        // A concurrent node renewal can supersede the exact query;
-                        // discard it without installing its authority. Existing
-                        // owners retain only their original query/signed cap.
-                        let current = runtime.gate.current(sample(started)?)?;
-                        if snapshot.claims().query.lease_sequence < current.lease_sequence {
-                            runtime.resources.services.observe_superseded();
-                            continue;
-                        }
                         if accepted {
                             runtime.resources.services.stop();
                             return Err(error);
@@ -170,6 +166,9 @@ pub(in crate::control) async fn poll(
                         continue;
                     }
                 };
+                if prior_sequence < runtime.gate.current(sample(started)?)?.lease_sequence {
+                    runtime.resources.services.observe_superseded();
+                }
                 let installation_started = Instant::now();
                 let installation =
                     runtime
