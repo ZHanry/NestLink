@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "kind": "hosted_subnet_kernel_and_carrier_evidence",
+  "source_revision": "c70360a3d90f3824263a67df4e7fc3b4732bff95",
+  "task_ids": ["W23"],
+  "acceptance_group_completion_claimed": false,
+  "release_qualification_claimed": false,
+  "build_provenance": {
+    "repository": "ZHanry/NestLink",
+    "workflow": ".github/workflows/subnet-native.yml",
+    "run_id": 41204252074,
+    "run_attempt": 1,
+    "job_id": 124546005723,
+    "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41204252074",
+    "runner_environment": "github-hosted",
+    "runner_label": "ubuntu-24.04",
+    "runner_os": "Linux",
+    "kernel": "7.0.0-1017-azure",
+    "ordinary_uid": 1001,
+    "cargo_lock_sha256": "48063b78bd20ca07f585a6100f7437057af227fde24c94fdad266f8ff457933e",
+    "build_command": "cargo test --locked -p nestlink-daemon --bin nestlink-daemon --no-run --message-format=json-render-diagnostics",
+    "build_return_code": 0,
+    "executable_sha256_from_runner": "13651e923bde485926d676a3b2a57024bbc427a400c948635217b2760c39ef4a",
+    "strict_lint_command": "cargo clippy --locked -p nestlink-daemon --all-targets -- -D warnings",
+    "strict_lint_conclusion": "success",
+    "job_conclusion": "success",
+    "artifact": {
+      "id": 13044371308,
+      "name": "subnet-native-c70360a3d90f3824263a67df4e7fc3b4732bff95-1",
+      "sha256": "98545b3e5b9f7fb188246e29ce18582c33952bd7931db2f30cba22c659261858",
+      "download_digest_verified": true,
+      "receipt_sha256": "d2e32f3a502672742cdeae677e8c6e31782a7e3a9abe88ab6852c68a03105824",
+      "execution_log_sha256": "dec8f27a774159bda8291324612bc1de8dfa1a43144c28212d4455f94ed0986b"
+    }
+  },
+  "execution_provenance": {
+    "kind": "github_hosted_lab",
+    "evidence_level": "L2_scoped",
+    "test": "network_subnet_system::native_tests::overlapping_lans_kernel_nat_encrypted_udp_tcp_acl_and_exact_recovery",
+    "execution_return_code": 0,
+    "execution_seconds": 20.317964657999994,
+    "outer_case_result": {"passed": 1, "failed": 0, "ignored": 0},
+    "scenario_receipts": [
+      {"mode": "normal", "passed": true},
+      {"mode": "original_root_helper_SIGKILL", "passed": true},
+      {"mode": "original_ordinary_process_SIGSTOP_7_seconds", "passed": true}
+    ],
+    "actual_business": {
+      "overlapping_original_lans": "192.168.1.0/24 at two isolated sites",
+      "aliases": ["10.211.1.0/24", "10.211.2.0/24"],
+      "carrier": "real encrypted QUIC carrying complete IP packets between ordinary owners",
+      "os_path": "actual root-owned namespaces, macvlan, TUN, nftables prefix DNAT/SNAT and conntrack",
+      "udp_complete_ip_bytes": 1280,
+      "tcp_echo_payload_bytes": 16384,
+      "negative_cases": ["unapproved destination port", "wrong initiating direction", "spoofed original LAN source", "wrong authenticated peer at packet admission"],
+      "normal_accounting_assertions": [
+        "Both ordinary packet owners sent and received more than five complete packets.",
+        "Both original packet authorities accounted the same total complete-IP byte count.",
+        "Reapplying the consumed original business in its existing root journal was rejected; helper restart did not create a fresh kernel owner."
+      ]
+    },
+    "cleanup": {
+      "normal_socket_EOF": "both original helpers exited successfully and released their exact resources",
+      "helper_SIGKILL": "independent original journal recovery removed the recorded namespace and socket after worker/control-pipe termination",
+      "ordinary_SIGSTOP": "both root helpers independently failed closed during the seven-second ordinary-process suspension; after resume their exact namespaces and sockets were absent",
+      "conntrack": "whole owned namespaces were removed, releasing their private conntrack state",
+      "remaining_namespaces_log_bytes": 0,
+      "host_preservation": "unchanged IPv4/IPv6 routes, stateless nftables rule/object configuration, forwarding and rp_filter; background host counter values are excluded from configuration identity",
+      "replacement_policy": "foreign namespace, socket and lab-link replacements retain strict identity rejection and preservation"
+    },
+    "limitations": [
+      "This is exact-source hosted mechanism evidence using fixed signed credentials; it does not execute management HTTP login or the production online one-use start/lease path.",
+      "Equal per-owner traffic accounting and consumed-journal replay rejection do not independently qualify coordinator-wide cumulative quota exhaustion or reset recovery.",
+      "The test does not qualify Windows subnet endpoints, standard WireGuard peers, physical two-device installations, external NAT/LAN sites, primary/standby recovery, deployment upgrades or cross-day stability.",
+      "The deliberately failed inner helper roles in SIGKILL/SIGSTOP scenarios are required failure injection, while the complete outer case, native execution and strict daemon lint all passed.",
+      "The subsequent slow-handshake challenge-consumption repair is outside this source revision and requires its own exact-source execution evidence."
+    ]
+  }
+}
