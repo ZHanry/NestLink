@@ -190,13 +190,13 @@ jobs:
         run: |
           $accessLog = Join-Path $env:RUNNER_TEMP 'nestlink-private-web-and-diagnostic-tests.log'
           $accessTests = @(
-            @('-p', 'nestlink-sdk', '--lib', 'services::web_gateway::'),
-            @('-p', 'nestlink-sdk', '--lib', 'services::web_launch::'),
-            @('-p', 'nestlink-desktop', '--lib', 'network_diagnostics::tests::')
+            @{ Args = @('-p', 'nestlink-sdk', '--lib', 'services::web_gateway::') },
+            @{ Args = @('-p', 'nestlink-sdk', '--lib', 'services::web_launch::') },
+            @{ Args = @('-p', 'nestlink-desktop', '--lib', 'network_diagnostics::tests::') }
           )
           $accessFailure = 0
           foreach ($accessTest in $accessTests) {
-            $accessArguments = @('test', '--locked') + $accessTest + @('--', '--show-output', '--test-threads=1', '--color', 'never')
+            $accessArguments = @('test', '--locked') + $accessTest.Args + @('--', '--show-output', '--test-threads=1', '--color', 'never')
             if ($env:RUNNER_OS -eq 'Windows') {
               python scripts/refactor-windows-normal-user.py cargo @accessArguments 2>&1 | Tee-Object -FilePath $accessLog -Append
             } else {
