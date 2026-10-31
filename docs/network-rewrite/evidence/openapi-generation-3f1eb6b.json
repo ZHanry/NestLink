@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "source_revision": "3f1eb6b7ef93f5e891e8ecf81507260644150d4b",
+  "run_id": 41233618596,
+  "run_attempt": 1,
+  "workflow": ".github/workflows/rust-core.yml",
+  "job": "openapi-generation",
+  "job_conclusion": "success",
+  "generator": "cargo run --locked -p xtask -- contract --write",
+  "artifact": "openapi-generated-3f1eb6b7ef93f5e891e8ecf81507260644150d4b",
+  "output": "protocol-spec/openapi.json",
+  "output_bytes": 775456,
+  "output_sha256": "e072b94f1d919d6256d5f13f9ebee22506fbb3003485ce02297c505bdb53ea4d",
+  "imported_changes": "232 added lines covering the original remote cumulative budget and independent offline remote draft management contract.",
+  "source_verification": "Compared 122 receipt inputs under Cargo.*, rust-toolchain, compatibility.json, xtask/, crates/protocol/, crates/policy/ and protocol-spec/ with the clean 3f1eb6b source. SHA-256 matched after normalizing mixed Windows CRLF line endings to the repository's LF form when needed. Checked the generated output digest before copying the exact artifact bytes. No local generator was executed.",
+  "limitations": "Generation and import only. The complete Rust workflow was still running; later-source drift validation and release qualification are separate."
+}

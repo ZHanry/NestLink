@@ -3271,6 +3271,92 @@
         "title": "OfflinePrivateDraftRequest",
         "type": "object"
       },
+      "OfflineRemoteDraftRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "direct_transports": {
+            "items": {
+              "$ref": "#/components/schemas/OfflineDirectTransport"
+            },
+            "type": "array"
+          },
+          "expected_connection_generation": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expected_lease_sequence": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expected_policy_revision": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "expires_at_ms": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maximum_bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maximum_connections": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maximum_file_write_bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "operations": {
+            "items": {
+              "$ref": "#/components/schemas/OfflineRemoteOperation"
+            },
+            "type": "array"
+          },
+          "process_nonces": {
+            "items": {
+              "items": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "maxItems": 32,
+              "minItems": 32,
+              "type": "array"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "session_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "session_id",
+          "expected_policy_revision",
+          "expected_connection_generation",
+          "expected_lease_sequence",
+          "process_nonces",
+          "operations",
+          "direct_transports",
+          "maximum_bytes",
+          "maximum_file_write_bytes",
+          "maximum_connections",
+          "expires_at_ms"
+        ],
+        "title": "OfflineRemoteDraftRequest",
+        "type": "object"
+      },
       "OfflineRemoteOperation": {
         "enum": [
           "view",
@@ -3550,6 +3636,17 @@
       },
       "PermitResponse": {
         "properties": {
+          "budget": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SignedRemoteUsageBudget"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
           "claims": {
             "$ref": "#/components/schemas/PermitClaims"
           },
@@ -6916,6 +7013,34 @@
           "signature"
         ],
         "title": "SignedRelayCloseAck",
+        "type": "object"
+      },
+      "SignedRemoteUsageBudget": {
+        "additionalProperties": false,
+        "properties": {
+          "claims": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "signature": {
+            "items": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "claims",
+          "signature"
+        ],
         "type": "object"
       },
       "SignedServiceIssuerDelegation": {
@@ -15256,6 +15381,113 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/OfflinePrivateDraftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineBundleView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Structured NestLink error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "accessCookie": []
+          }
+        ],
+        "x-server-role": "control"
+      }
+    },
+    "/network/spaces/{space}/offline/remote-drafts": {
+      "post": {
+        "operationId": "network_policy::offline::remote_draft",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space",
+            "required": true,
+            "schema": {
+              "format": "string",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfflineRemoteDraftRequest"
               }
             }
           },
