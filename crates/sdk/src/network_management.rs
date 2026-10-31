@@ -6,6 +6,7 @@ use nestlink_protocol::network::{CLAIM_BYTES, GrantClaims, SCHEMA_VERSION as NET
 mod authority;
 mod network_access;
 mod offline;
+pub use offline::ConsumedOfflineBundle;
 mod route_sets;
 mod subnet;
 mod wireguard;

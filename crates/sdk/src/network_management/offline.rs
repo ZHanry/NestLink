@@ -7,6 +7,20 @@ use nestlink_identity::offline::{
 use nestlink_protocol::offline::management::*;
 use std::collections::BTreeSet;
 
+/// Opaque online-consume receipt. Importing a signed file or constructing an
+/// identity primitive cannot manufacture the production carrier admission.
+pub struct ConsumedOfflineBundle(OfflineAdmission, [u8;32]);
+impl std::ops::Deref for ConsumedOfflineBundle {
+    type Target = OfflineAdmission;
+    fn deref(&self) -> &Self::Target { &self.0 }
+}
+impl std::ops::DerefMut for ConsumedOfflineBundle {
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+}
+impl ConsumedOfflineBundle {
+    pub(crate) fn into_admission(self) -> (OfflineAdmission,[u8;32]) {(self.0,self.1)}
+}
+
 fn bundle_path(space: &str, id: &str) -> Result<String, SdkError> {
     if !valid_id(id) {
         return Err(SdkError::Invalid);
@@ -118,7 +132,7 @@ impl Sdk {
         authority: &[u8; 32],
         endpoint: u8,
         approved_digest: [u8; 32],
-    ) -> Result<OfflineAdmission, SdkError> {
+    ) -> Result<ConsumedOfflineBundle, SdkError> {
         reviewed(view, authority, approved_digest)?;
         let member = view
             .claims
@@ -173,7 +187,7 @@ impl Sdk {
         };
         let verified =
             verify_offline_bundle(consumed.signed.as_ref().ok_or(SdkError::Invalid)?, &context)?;
-        Ok(process.activate(verified, &context, approved_digest)?)
+        Ok(ConsumedOfflineBundle(process.activate(verified, &context, approved_digest)?,*authority))
     }
     /// Call before further I/O when management connectivity returns. Every
     /// failed synchronization is terminal for this original owner.

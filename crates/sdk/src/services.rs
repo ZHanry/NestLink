@@ -5,6 +5,8 @@ mod edge_group;
 #[cfg(not(target_arch = "wasm32"))]
 mod local_proxy;
 mod private;
+#[cfg(all(not(target_arch = "wasm32"), any(unix, windows)))]
+pub mod offline;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod web_gateway;
 pub mod web_launch;
