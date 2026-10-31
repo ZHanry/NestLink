@@ -183,4 +183,6 @@
   ,{"path":"/network/spaces/{space}/subnet-mappings","method":"post","operation":"network_policy::subnet::issue","request":"SubnetMappingRequest","response":"SubnetMappingView","status":201,"auth":true}
   ,{"path":"/network/spaces/{space}/subnet-mappings/{mapping}","method":"get","operation":"network_policy::subnet::read","response":"SubnetMappingView","status":200,"auth":true}
   ,{"path":"/network/spaces/{space}/subnet-mappings/{mapping}","method":"delete","operation":"network_policy::subnet::revoke","request":"SubnetMappingRevoke","response":"NetworkPolicyView","status":200,"auth":true}
+  ,{"path":"/network/spaces/{space}/subnet-mappings/{mapping}/installation","method":"post","operation":"network_policy::subnet::bind_installation","request":"SubnetGatewayInstallationRequest","response":"NetworkPolicyView","status":200,"auth":true}
+  ,{"path":"/network/spaces/{space}/subnet-packet-access","method":"post","operation":"network_policy::network_access::issue_subnet","request":"SubnetNetworkAccessRequest","response":"NetworkAccessView","status":201,"auth":true}
 ]

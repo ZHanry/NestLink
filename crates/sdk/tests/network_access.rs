@@ -24,6 +24,7 @@ use std::{
 };
 
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
+mod subnet;
 const PASSWORD: &str = "packet-access-http-integration-password";
 
 fn now() -> Result<u64> {
@@ -63,6 +64,10 @@ async fn endpoint(
     name: &str,
 ) -> Result<(DeviceIdentity, SpaceAddressView)> {
     let device = DeviceIdentity::generate();
+    endpoint_identity(manager,sdk,space,name,device).await
+}
+
+async fn endpoint_identity(manager:&Sdk,sdk:&Sdk,space:&str,name:&str,device:DeviceIdentity) -> Result<(DeviceIdentity,SpaceAddressView)> {
     sdk.enroll(
         &device,
         name.into(),
@@ -115,6 +120,7 @@ struct Fixture {
     target_device: DeviceIdentity,
     space: String,
     request: NetworkAccessRequest,
+    authority: [u8;32],
 }
 impl Fixture {
     async fn new() -> Result<Self> {
@@ -123,6 +129,7 @@ impl Fixture {
         let deployment = random_id();
         let signer = PermitSigner::generate();
         let issuer = signer.public_key();
+        let authority = signer.network_authority_signer()?.public_key();
         let mut store = Store::open(&database, &deployment)?;
         store.bootstrap_admin("manager", PASSWORD)?;
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
@@ -183,8 +190,10 @@ impl Fixture {
             )
             .await?;
         }
-        let (source_device, source_address) = endpoint(&manager, &source, &space, "source").await?;
-        let (target_device, target_address) = endpoint(&manager, &target, &space, "target").await?;
+        // Fixed fixture seeds permit a separately proven node identity to use
+        // the same test key without exporting an enrolled installation secret.
+        let (source_device, source_address) = endpoint_identity(&manager, &source, &space, "source", DeviceIdentity {device_id:random_id(),identity:nestlink_identity::InstallationIdentity::from_seed([61;32])}).await?;
+        let (target_device, target_address) = endpoint_identity(&manager, &target, &space, "target", DeviceIdentity {device_id:random_id(),identity:nestlink_identity::InstallationIdentity::from_seed([62;32])}).await?;
         // A third active directory row must never leak through an endpoint's
         // grant readback, even though a space manager owns this third device.
         endpoint(&manager, &manager, &space, "manager").await?;
@@ -271,6 +280,7 @@ impl Fixture {
             target_device,
             space,
             request,
+            authority,
         })
     }
     async fn fresh_request(&self) -> Result<NetworkAccessRequest> {
@@ -291,6 +301,12 @@ impl Fixture {
     }
     fn store(&self) -> Result<Store> {
         Ok(Store::open_existing(&self.database, &self.deployment)?)
+    }
+    async fn finish(mut self) -> Result {
+        self._server.0.abort();
+        let _=(&mut self._server.0).await;
+        self._directory.close()?;
+        Ok(())
     }
 }
 

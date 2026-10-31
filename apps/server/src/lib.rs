@@ -493,6 +493,14 @@ pub fn router(state: AppState) -> Router {
             post(network_policy::subnet::issue),
         )
         .route(
+            "/api/v3/network/spaces/{space}/subnet-mappings/{mapping}/installation",
+            post(network_policy::subnet::bind_installation),
+        )
+        .route(
+            "/api/v3/network/spaces/{space}/subnet-packet-access",
+            post(network_policy::network_access::issue_subnet),
+        )
+        .route(
             "/api/v3/network/spaces/{space}/subnet-mappings/{mapping}",
             get(network_policy::subnet::read).delete(network_policy::subnet::revoke),
         )

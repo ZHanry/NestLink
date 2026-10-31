@@ -3,7 +3,7 @@
 use super::*;
 use ipnet::IpNet;
 use nestlink_identity::subnet::{SubnetGatewayState, verify_subnet_mapping};
-use nestlink_protocol::{network::IpPrefix, subnet::{SignedSubnetMapping, SubnetMappingClaims, SUBNET_MAPPING_VERSION, MAX_SUBNET_MAPPING_MS, MAX_SUBNET_MAPPINGS, management::{SubnetGatewayView, SubnetMappingRequest, SubnetMappingRevoke}}};
+use nestlink_protocol::{network::IpPrefix, subnet::{SignedSubnetMapping, SubnetMappingClaims, SUBNET_MAPPING_VERSION, MAX_SUBNET_MAPPING_MS, MAX_SUBNET_MAPPINGS, management::{SubnetGatewayView, SubnetMappingRequest, SubnetMappingRevoke, SubnetMappingReference, SubnetGatewayInstallationRequest}}};
 
 pub const MAX_SUBNET_MAPPING_HISTORY: usize = 65_536;
 pub struct SubnetMappingBundle {
@@ -79,7 +79,44 @@ fn bundle(store: &Store, snapshot: TrustedNetworkPolicySnapshot, id: &str, row: 
         params![snapshot.space_id,export.claims().scope().grant_id], |row| Ok(SignedNetworkGrant {claims: row.get(0)?,signature: row.get(1)?}))?;
     Ok(SubnetMappingBundle { mapping: row.signed, route_export: signed_export, gateway, policy: snapshot })
 }
+
+pub(super) fn referenced(store: &Store, space: &str, reference: &SubnetMappingReference, now: u64) -> Result<SubnetMappingBundle, StorageError> {
+    let snapshot = read_snapshot(&store.connection, space, now)?;
+    let row = stored(&store.connection, space, &reference.mapping_id)?;
+    if row.revision != reference.expected_mapping_revision || row.digest.as_slice() != reference.mapping_digest.as_slice() {
+        return Err(StorageError::Forbidden);
+    }
+    bundle(store, snapshot, &reference.mapping_id, row)
+}
 impl Store {
+    pub fn bind_subnet_gateway_installation(&mut self, actor: &Principal, space: &str, id: &str, request: SubnetGatewayInstallationRequest, now: u64) -> Result<TrustedNetworkPolicySnapshot, StorageError> {
+        let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
+        topology::access(self, actor, space, false, now)?;
+        let snapshot = read_snapshot(&tx, space, now)?;
+        if snapshot.revision != request.expected_revision { return Err(StorageError::Conflict); }
+        if request.mapping.mapping_id != id { return Err(StorageError::Forbidden); }
+        let mapping = referenced(self, space, &request.mapping, now)?;
+        let (_, member) = remote_paths::member_credential(&tx, &snapshot, &request.membership_grant_id, &request.installation_id)?;
+        let owned: bool = tx.query_row("SELECT EXISTS(SELECT 1 FROM devices d JOIN device_details x ON x.device_id=d.id WHERE d.id=?1 AND d.account_id=?2 AND d.revoked=0 AND x.public_key=?3)",
+            params![request.installation_id,actor.account_id,member.claims().public_key.as_slice()], |row| row.get(0))?;
+        // Device registration already required the enrollment challenge PoP.
+        // `referenced` independently verifies the accepted node lease PoP,
+        // current boot and manager-signed mapping. Only the owning account's
+        // explicit request may join these separate authorities.
+        if !owned || member.claims().public_key != mapping.gateway.public_key || member.peer() != PeerId::from_public_key(&mapping.gateway.public_key) {
+            return Err(StorageError::Forbidden);
+        }
+        let exists: bool = tx.query_row("SELECT EXISTS(SELECT 1 FROM network_subnet_installations WHERE space_id=?1 AND mapping_id=?2)", params![space,id], |row| row.get(0))?;
+        if exists { return Err(StorageError::Conflict); }
+        tx.execute("INSERT INTO network_subnet_installations(space_id,mapping_id,installation_id,membership_grant_id,public_key,membership_digest,mapping_digest,mapping_revision,approved_at_ms) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9)",
+            params![space,id,request.installation_id,request.membership_grant_id,mapping.gateway.public_key.as_slice(),member.digest().as_slice(),request.mapping.mapping_digest.as_slice(),request.mapping.expected_mapping_revision,now])?;
+        tx.execute("UPDATE network_authorities SET revision=?1 WHERE space_id=?2", params![next(snapshot.revision)?,space])?;
+        observe(&tx, space, now)?;
+        audit(&tx, "network_subnet_installation_approved", id, auditing::management(actor))?;
+        let result = read_snapshot(&tx, space, now)?;
+        tx.commit()?;
+        Ok(result)
+    }
     pub fn issue_subnet_mapping(&mut self, actor: &Principal, signer: &NetworkAuthoritySigner, space: &str, request: SubnetMappingRequest, now: u64) -> Result<SubnetMappingBundle, StorageError> {
         require_id(&request.grant_id)?;
         require_id(&request.gateway_node_id)?;

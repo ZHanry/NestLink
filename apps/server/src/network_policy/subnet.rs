@@ -4,9 +4,19 @@ use super::*;
 use nestlink_protocol::subnet::management::{SubnetMappingRequest, SubnetMappingRevoke, SubnetMappingView};
 use nestlink_storage::network_policy::subnet::SubnetMappingBundle;
 
-fn view(bundle: SubnetMappingBundle) -> Result<SubnetMappingView, StorageError> {
+pub(super) fn view(bundle: SubnetMappingBundle) -> Result<SubnetMappingView, StorageError> {
     Ok(SubnetMappingView { mapping: bundle.mapping, route_export: grant_view(bundle.route_export)?,
         gateway: bundle.gateway, policy: policy_view(&bundle.policy) })
+}
+
+pub(crate) async fn bind_installation(State(state): State<AppState>, headers: HeaderMap, Path((space,id)): Path<(String,String)>, Json(request): Json<nestlink_protocol::subnet::management::SubnetGatewayInstallationRequest>) -> Result<Json<PolicyView>, ApiError> {
+    let token = member_access(&state, &headers, MemberOperation::Issue).await?;
+    let result = state.db(move |store| {
+        let now = now_ms()?;
+        let actor = store.authenticate(&token,now/1000)?;
+        Ok(policy_view(&store.bind_subnet_gateway_installation(&actor,&space,&id,request,now)?))
+    }).await?;
+    Ok(Json(result))
 }
 pub(crate) async fn issue(State(state): State<AppState>, headers: HeaderMap, Path(space): Path<String>, Json(request): Json<SubnetMappingRequest>) -> Result<(StatusCode, Json<SubnetMappingView>), ApiError> {
     let token = member_access(&state, &headers, MemberOperation::Issue).await?;

@@ -12,6 +12,7 @@ use nestlink_protocol::{
     spaces::addressing::{SpaceAddressDirectory, SpaceAddressView},
 };
 use std::net::IpAddr;
+mod subnet;
 
 pub const MAX_PACKET_ACCESS_MS: u64 = 60_000;
 pub const MAX_CURRENT_PACKET_ACCESS: usize = 1024;
@@ -23,6 +24,7 @@ pub struct NetworkAccessBundle {
     pub connectivity: SignedNetworkGrant,
     pub path: SignedNetworkGrant,
     pub address_directory: SpaceAddressDirectory,
+    pub subnet_mappings: Vec<super::subnet::SubnetMappingBundle>,
 }
 
 struct Stored {
@@ -34,6 +36,7 @@ struct Stored {
     digest: Vec<u8>,
     issued: u64,
     revoked: bool,
+    subnet_binding_count: usize,
 }
 
 fn stored(connection: &Connection, space: &str, id: &str) -> Result<Stored, StorageError> {
@@ -53,10 +56,11 @@ fn stored(connection: &Connection, space: &str, id: &str) -> Result<Stored, Stor
         String,
         String,
         String,
+        usize,
     );
     let row: Option<Row> = connection.query_row(
-        "SELECT request_json,addresses_json,access_claims,access_signature,connectivity_claims,connectivity_signature,path_claims,path_signature,digest,issued_at_ms,revoked,connectivity_grant_id,path_grant_id,source_installation_id FROM network_packet_access WHERE space_id=?1 AND access_grant_id=?2",
-        params![space,id], |r| Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?,r.get(4)?,r.get(5)?,r.get(6)?,r.get(7)?,r.get(8)?,r.get(9)?,r.get(10)?,r.get(11)?,r.get(12)?,r.get(13)?)),
+        "SELECT request_json,addresses_json,access_claims,access_signature,connectivity_claims,connectivity_signature,path_claims,path_signature,digest,issued_at_ms,revoked,connectivity_grant_id,path_grant_id,source_installation_id,subnet_binding_count FROM network_packet_access WHERE space_id=?1 AND access_grant_id=?2",
+        params![space,id], |r| Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?,r.get(4)?,r.get(5)?,r.get(6)?,r.get(7)?,r.get(8)?,r.get(9)?,r.get(10)?,r.get(11)?,r.get(12)?,r.get(13)?,r.get(14)?)),
     ).optional()?;
     let (
         request,
@@ -73,6 +77,7 @@ fn stored(connection: &Connection, space: &str, id: &str) -> Result<Stored, Stor
         connectivity_id,
         path_id,
         source_id,
+        subnet_binding_count,
     ) = row.ok_or(StorageError::Forbidden)?;
     let request: NetworkAccessRequest = serde_json::from_str(&request)?;
     if request.access_grant_id != id
@@ -100,6 +105,7 @@ fn stored(connection: &Connection, space: &str, id: &str) -> Result<Stored, Stor
         digest,
         issued,
         revoked,
+        subnet_binding_count,
     })
 }
 
@@ -213,8 +219,7 @@ fn check_addresses(
             return Err(StorageError::Forbidden);
         }
     }
-    host_prefixes(&request.source_prefixes, &directory.addresses[0])?;
-    host_prefixes(&request.destination_prefixes, &directory.addresses[1])
+    Ok(())
 }
 
 fn endpoint_account(
@@ -269,9 +274,18 @@ impl Store {
         actor: &Principal,
         signer: &NetworkAuthoritySigner,
         space: &str,
-        mut request: NetworkAccessRequest,
+        request: NetworkAccessRequest,
         now: u64,
     ) -> Result<NetworkAccessBundle, StorageError> {
+        self.issue_packet_access(actor, signer, space, request, [None,None], now)
+    }
+
+    pub fn issue_subnet_network_access(&mut self, actor: &Principal, signer: &NetworkAuthoritySigner, space: &str, request: nestlink_protocol::subnet::management::SubnetNetworkAccessRequest, now: u64) -> Result<NetworkAccessBundle, StorageError> {
+        if request.source_mapping.is_none() && request.destination_mapping.is_none() { return Err(StorageError::Invalid("subnet packet access needs an explicitly approved mapping")); }
+        self.issue_packet_access(actor, signer, space, request.packet, [request.source_mapping,request.destination_mapping], now)
+    }
+
+    fn issue_packet_access(&mut self, actor: &Principal, signer: &NetworkAuthoritySigner, space: &str, mut request: NetworkAccessRequest, references: [Option<nestlink_protocol::subnet::management::SubnetMappingReference>;2], now: u64) -> Result<NetworkAccessBundle, StorageError> {
         self.validate_access(actor, checked_seconds(now)?)?;
         if request.expires_at_unix_ms <= now
             || request.expires_at_unix_ms > i64::MAX as u64
@@ -330,10 +344,16 @@ impl Store {
             return Err(StorageError::Forbidden);
         }
         let (memberships, members) = member_pair(&tx, &snapshot, &request)?;
+        let subnet_mappings = subnet::select(self, &snapshot, &request, &members, references, now)?;
+        subnet::check_prefixes(&request, &directory, &subnet_mappings)?;
         request.expires_at_unix_ms = request
             .expires_at_unix_ms
             .min(members[0].claims().scope.expires_at_ms)
             .min(members[1].claims().scope.expires_at_ms);
+        for mapping in &subnet_mappings {
+            let claims = nestlink_protocol::subnet::SubnetMappingClaims::decode_canonical(&mapping.bundle.mapping.claims)?;
+            request.expires_at_unix_ms = request.expires_at_unix_ms.min(claims.scope.expires_at_ms).min(mapping.bundle.gateway.lease_expires_at_ms);
+        }
         if request.expires_at_unix_ms <= now {
             return Err(StorageError::Forbidden);
         }
@@ -391,10 +411,11 @@ impl Store {
         )?;
         let request_json = serde_json::to_string(&request)?;
         let addresses_json = serde_json::to_string(&directory.addresses)?;
-        tx.execute("INSERT INTO network_packet_access(space_id,access_grant_id,connectivity_grant_id,path_grant_id,source_installation_id,destination_installation_id,source_membership_id,destination_membership_id,policy_epoch,digest,request_json,addresses_json,access_claims,access_signature,connectivity_claims,connectivity_signature,path_claims,path_signature,issued_at_ms,expires_at_ms) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20)",
+        tx.execute("INSERT INTO network_packet_access(space_id,access_grant_id,connectivity_grant_id,path_grant_id,source_installation_id,destination_installation_id,source_membership_id,destination_membership_id,policy_epoch,digest,request_json,addresses_json,access_claims,access_signature,connectivity_claims,connectivity_signature,path_claims,path_signature,issued_at_ms,expires_at_ms,subnet_binding_count) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20,?21)",
             params![space,request.access_grant_id,request.connectivity_grant_id,request.path_grant_id,request.source_installation_id,request.destination_installation_id,
                 request.source_membership_grant_id,request.destination_membership_grant_id,snapshot.policy_epoch,access_bound.digest().as_slice(),request_json,addresses_json,
-                access.claims,access.signature,connectivity.claims,connectivity.signature,path.claims,path.signature,now,request.expires_at_unix_ms])?;
+                access.claims,access.signature,connectivity.claims,connectivity.signature,path.claims,path.signature,now,request.expires_at_unix_ms,subnet_mappings.len()])?;
+        subnet::insert(&tx, space, &request, access_bound.digest(), &subnet_mappings)?;
         tx.execute(
             "UPDATE network_authorities SET revision=?1 WHERE space_id=?2",
             params![next(snapshot.revision)?, space],
@@ -425,6 +446,7 @@ impl Store {
             connectivity,
             path,
             address_directory,
+            subnet_mappings: subnet_mappings.into_iter().map(|mapping| mapping.bundle).collect(),
         })
     }
 
@@ -438,10 +460,21 @@ impl Store {
         now: u64,
     ) -> Result<NetworkAccessBundle, StorageError> {
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
-        let bundle = self.current_packet_access(&tx, actor, space, id, now)?;
+        self.packet_observation_access(&tx, actor, space, id, now)?;
+        let bundle = self.current_packet_access(&tx, actor, space, id, now);
+        if bundle.is_err() { close_failed_observation(&tx, actor, space, id, now)?; }
         observe(&tx, space, now)?;
         tx.commit()?;
-        Ok(bundle)
+        bundle
+    }
+
+    fn packet_observation_access(&self, tx: &Transaction<'_>, actor: &Principal, space: &str, id: &str, now: u64) -> Result<(), StorageError> {
+        topology::access(self, actor, space, false, now)?;
+        let row = stored(tx, space, id)?;
+        if !row.addresses.iter().any(|address| address.account_id == actor.account_id) { return Err(StorageError::Forbidden); }
+        // Refuse rollback before any terminal mutation can advance revisions.
+        read_snapshot(tx, space, now)?;
+        Ok(())
     }
 
     fn current_packet_access(
@@ -481,6 +514,8 @@ impl Store {
             return Err(StorageError::Forbidden);
         }
         let (memberships, members) = member_pair(tx, &snapshot, request)?;
+        let subnet_mappings = subnet::current(self, &snapshot, &row, &members, now)?;
+        subnet::check_prefixes(request, &address_directory, &subnet_mappings)?;
         let access = verify_network_grant(&row.access, &snapshot.verification())?;
         if access.digest().as_slice() != row.digest
             || *access.claims() != claims(&snapshot, request, &members, row.issued)?
@@ -526,6 +561,7 @@ impl Store {
             connectivity: row.connectivity,
             path: row.path,
             address_directory,
+            subnet_mappings: subnet_mappings.into_iter().map(|mapping| mapping.bundle).collect(),
         })
     }
 
@@ -543,7 +579,16 @@ impl Store {
         require_id(&request.installation_id)?;
         require_id(&request.owner_id)?;
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
-        let bundle = self.current_packet_access(&tx, actor, space, id, now)?;
+        self.packet_observation_access(&tx, actor, space, id, now)?;
+        let bundle = match self.current_packet_access(&tx, actor, space, id, now) {
+            Ok(bundle) => bundle,
+            Err(error) => {
+                close_failed_observation(&tx,actor,space,id,now)?;
+                observe(&tx,space,now)?;
+                tx.commit()?;
+                return Err(error);
+            }
+        };
         let endpoint = bundle
             .address_directory
             .addresses
@@ -617,6 +662,15 @@ impl Store {
     }
 }
 
+fn close_failed_observation(tx: &Transaction<'_>, actor: &Principal, space: &str, id: &str, now: u64) -> Result<(), StorageError> {
+    let snapshot = read_snapshot(tx,space,now)?;
+    if tx.execute("UPDATE network_packet_access SET revoked=1 WHERE space_id=?1 AND access_grant_id=?2 AND revoked=0",params![space,id])? == 1 {
+        tx.execute("UPDATE network_authorities SET revision=?1 WHERE space_id=?2",params![next(snapshot.revision)?,space])?;
+        crate::spaces::event(tx,actor,space,"network_packet_access_invalidated",id,now)?;
+    }
+    Ok(())
+}
+
 /// Include dynamic address/key/account/membership invalidation in every fresh
 /// verification snapshot, so retained credentials cannot outlive a readback
 /// denial. All three graph IDs are invalidated together.
@@ -639,7 +693,8 @@ pub(super) fn collect_revocations(
     }
     let mut statement = connection.prepare(
         "SELECT e.access_grant_id,e.connectivity_grant_id,e.path_grant_id,
-        (e.revoked=1 OR sa.installation_id IS NULL OR da.installation_id IS NULL
+        (e.revoked=1 OR (SELECT count(*) FROM network_subnet_packet_bindings b WHERE b.space_id=e.space_id AND b.access_grant_id=e.access_grant_id)!=e.subnet_binding_count
+         OR sa.installation_id IS NULL OR da.installation_id IS NULL
          OR sa.revoked=1 OR da.revoked=1 OR sa.reserved=1 OR da.reserved=1
          OR sa.address_epoch!=json_extract(e.addresses_json,'$[0].address_epoch') OR da.address_epoch!=json_extract(e.addresses_json,'$[1].address_epoch')
          OR sa.ipv4!=json_extract(e.addresses_json,'$[0].ipv4') OR sa.ipv6!=json_extract(e.addresses_json,'$[0].ipv6')
@@ -695,5 +750,5 @@ pub(super) fn collect_revocations(
             revoked.extend([access, connectivity, path]);
         }
     }
-    Ok(())
+    subnet::collect_revocations(connection, space, now, revoked)
 }

@@ -44,3 +44,33 @@ pub struct SubnetMappingRevoke {
     pub expected_revision: u64,
     pub expected_mapping_revision: u64,
 }
+
+/// An exact immutable reference selected by an authenticated local owner.
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct SubnetMappingReference {
+    pub mapping_id: String,
+    pub mapping_digest: [u8; 32],
+    pub expected_mapping_revision: u64,
+}
+
+/// The installation's account explicitly joins its independently proven
+/// enrollment identity to the accepted node boot and approved mapping.
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct SubnetGatewayInstallationRequest {
+    pub mapping: SubnetMappingReference,
+    pub installation_id: String,
+    pub membership_grant_id: String,
+    pub expected_revision: u64,
+}
+
+/// The original host API remains host-only. This separate request requires a
+/// preapproved exact gateway installation for every non-host endpoint.
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct SubnetNetworkAccessRequest {
+    pub packet: crate::network_access::NetworkAccessRequest,
+    pub source_mapping: Option<SubnetMappingReference>,
+    pub destination_mapping: Option<SubnetMappingReference>,
+}

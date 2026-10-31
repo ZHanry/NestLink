@@ -46,6 +46,10 @@ pub struct NetworkAccessView {
     /// This does not widen the ordinary directory API's visibility. Its rows
     /// still confer no packet authority without independently verified grants.
     pub address_directory: SpaceAddressDirectory,
+    /// Fresh online association to the exact original mapping credentials.
+    /// Empty for the original host-only API; never populated from peer input.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub subnet_mappings: Vec<crate::subnet::management::SubnetMappingView>,
 }
 
 /// A fresh online start attempt by the account that owns this exact endpoint.
