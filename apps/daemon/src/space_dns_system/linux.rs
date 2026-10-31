@@ -256,7 +256,9 @@ pub(super) async fn inspect(plan: &DnsPlan) -> Result<Option<Value>> {
     )?;
     let link_name = plan.link();
     let address_args = ["-j", "address", "show", "dev", &link_name];
-    let route4_args = ["-j", "route", "show", "table", "all", "dev", &link_name];
+    let route4_args = [
+        "-4", "-j", "route", "show", "table", "all", "dev", &link_name,
+    ];
     let route6_args = [
         "-6", "-j", "route", "show", "table", "all", "dev", &link_name,
     ];
@@ -277,7 +279,12 @@ pub(super) async fn inspect(plan: &DnsPlan) -> Result<Option<Value>> {
         .filter(|flag| !matches!(flag.as_str(), Some("LOWER_UP" | "DORMANT" | "RUNNING")))
         .cloned()
         .collect::<Vec<_>>();
-    let configuration = json!({"ifindex":index,"ifname":link["ifname"],"ifalias":link["ifalias"],"linkinfo":{"info_kind":link["linkinfo"]["info_kind"]},"mtu":link["mtu"],"address":link["address"],"broadcast":link["broadcast"],"flags":flags});
+    let address_generation: u8 = std::fs::read_to_string(format!(
+        "/proc/sys/net/ipv6/conf/{link_name}/addr_gen_mode"
+    ))?
+    .trim()
+    .parse()?;
+    let configuration = json!({"ifindex":index,"ifname":link["ifname"],"ifalias":link["ifalias"],"linkinfo":{"info_kind":link["linkinfo"]["info_kind"]},"mtu":link["mtu"],"address":link["address"],"broadcast":link["broadcast"],"flags":flags,"ipv6_addr_gen_mode":address_generation});
     // The kernel's automatic IPv6 multicast route is intrinsic to an UP dummy
     // link. Any unicast/export route or configured address is an external use.
     let routes6 = routes6
@@ -326,6 +333,7 @@ pub(super) fn verify_installed(plan: &DnsPlan, current: &Value) -> Result {
         || current["mdns"] != "no"
         || current["dnssec"] != "no"
         || current["tls"] != "no"
+        || current["link"]["ipv6_addr_gen_mode"] != 1
         || !current["link"]["flags"]
             .as_array()
             .is_some_and(|flags| flags.iter().any(|flag| flag == "UP"))
@@ -415,6 +423,26 @@ pub(super) async fn install(plan: &DnsPlan) -> Result {
             .collect(),
     )
     .await?;
+    // Commit IPv6's no-generation mode while the new link is still DOWN.
+    // A combined addrgenmode/up request opens the device before AF_SPEC is
+    // applied and can create a real link-local address and unicast routes.
+    run(
+        "ip",
+        ["link", "set", "dev", &link, "addrgenmode", "none"]
+            .iter()
+            .map(|argument| (*argument).into())
+            .collect(),
+    )
+    .await?;
+    if std::fs::read_to_string(format!("/proc/sys/net/ipv6/conf/{link}/addr_gen_mode"))?
+        .trim()
+        != "1"
+    {
+        return Err(io::Error::other(
+            "owned interface did not disable IPv6 address generation before activation; journal retained",
+        )
+        .into());
+    }
     // Wait for resolved's netlink observer to create its Link object. The
     // interface is still DOWN and has no DNS server during this handoff.
     tokio::time::timeout(std::time::Duration::from_secs(3), async {
@@ -459,7 +487,7 @@ pub(super) async fn install(plan: &DnsPlan) -> Result {
     resolved(&["dns", &link, &plan.listen.to_string()]).await?;
     run(
         "ip",
-        ["link", "set", "dev", &link, "addrgenmode", "none", "up"]
+        ["link", "set", "dev", &link, "up"]
             .iter()
             .map(|s| (*s).into())
             .collect(),

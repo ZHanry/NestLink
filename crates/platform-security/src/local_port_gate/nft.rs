@@ -84,13 +84,30 @@ fn normalize(mut item: Value) -> Value {
         object.remove("handle");
     }
     if let Some(expressions) = item.get_mut("expr").and_then(Value::as_array_mut) {
-        for expression in expressions {
+        for expression in expressions.iter_mut() {
             if expression["match"]["left"] == json!({"meta":{"key":"l4proto"}}) {
                 match expression["match"]["right"].as_str() {
                     Some("tcp") => expression["match"]["right"] = json!(6),
                     Some("udp") => expression["match"]["right"] = json!(17),
                     _ => {}
                 }
+            }
+        }
+        // nft 1.0.9 omits an explicit l4proto selector when the matching
+        // transport payload already carries that dependency. Normalize only
+        // this precise redundant equality, once; the exact tcp/udp dport
+        // expression, address, UID/interface, order and verdict remain checked.
+        // A different protocol, duplicate selector or opaque expression is
+        // retained and therefore fails the complete expected-rule comparison.
+        for (protocol, number) in [("tcp", 6), ("udp", 17)] {
+            let selector = json!({"match":{"op":"==","left":{"meta":{"key":"l4proto"}},"right":number}});
+            let payloads = expressions.iter().filter(|expression| {
+                let right = &expression["match"]["right"];
+                right.as_u64().is_some()
+                    && **expression == json!({"match":{"op":"==","left":{"payload":{"protocol":protocol,"field":"dport"}},"right":right}})
+            }).count();
+            if payloads == 1 && expressions.iter().filter(|expression| **expression == selector).count() == 1 {
+                expressions.retain(|expression| *expression != selector);
             }
         }
     }
@@ -145,9 +162,9 @@ pub(super) fn verify(plan: &GatePlan, snapshot: &Value, denying: bool) -> io::Re
         return Err(invalid("duplicate gate rule handles"));
     }
     let expected_output = if denying {
-        vec![rule(plan, "output", "drop")]
+        vec![normalize(rule(plan, "output", "drop"))]
     } else {
-        vec![rule(plan, "output", "allow"), rule(plan, "output", "drop")]
+        vec![normalize(rule(plan, "output", "allow")), normalize(rule(plan, "output", "drop"))]
     };
     let actual_output: Vec<Value> = rules
         .iter()
@@ -161,7 +178,7 @@ pub(super) fn verify(plan: &GatePlan, snapshot: &Value, denying: bool) -> io::Re
         .cloned()
         .map(normalize)
         .collect();
-    if actual_output != expected_output || actual_input != vec![rule(plan, "input", "outside")] {
+    if actual_output != expected_output || actual_input != vec![normalize(rule(plan, "input", "outside"))] {
         return Err(invalid(
             "gate rules differ from the exact UID/endpoint/protocol deny policy",
         ));

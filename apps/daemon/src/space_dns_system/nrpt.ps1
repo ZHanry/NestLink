@@ -1,8 +1,10 @@
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 [Console]::Error.WriteLine('NestLink NRPT: script entered')
-[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
-$env:PSModulePath = Join-Path ([Environment]::SystemDirectory) 'WindowsPowerShell\v1.0\Modules'
+# Set the constrained module path before the first cmdlet can trigger module
+# discovery. BCL constructors need no inherited user/module search settings.
+$env:PSModulePath = [System.IO.Path]::Combine([Environment]::SystemDirectory, 'WindowsPowerShell\v1.0\Modules')
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 [Console]::Error.WriteLine('NestLink NRPT: bootstrap complete')
 $request = $env:NESTLINK_DNS_REQUEST | ConvertFrom-Json
 Remove-Item Env:NESTLINK_DNS_REQUEST

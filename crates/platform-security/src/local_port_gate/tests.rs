@@ -171,6 +171,29 @@ fn nft_readback_normalizes_protocol_names_but_preserves_ipv6_udp_selectors() -> 
 }
 
 #[test]
+fn nft_compiler_can_elide_only_the_matching_transport_payload_dependency() -> io::Result<()> {
+    let plan = plan()?;
+    let mut observed = snapshot(&plan, false);
+    for index in 0..3 {
+        observed["rules"][index]["expr"].as_array_mut()
+            .ok_or_else(|| io::Error::other("missing fixture expressions"))?.remove(1);
+    }
+    nft::verify(&plan, &observed, false)?;
+    let mut changed = observed.clone();
+    changed["rules"][0]["expr"][1]["match"]["left"]["payload"]["protocol"] = json!("udp");
+    assert!(nft::verify(&plan, &changed, false).is_err());
+    let mut changed = observed.clone();
+    changed["rules"][0]["expr"][1]["match"]["left"]["payload"]["field"] = json!("sport");
+    assert!(nft::verify(&plan, &changed, false).is_err());
+    let mut changed = snapshot(&plan, false);
+    let duplicate = changed["rules"][0]["expr"][1].clone();
+    changed["rules"][0]["expr"].as_array_mut()
+        .ok_or_else(|| io::Error::other("missing fixture expressions"))?.insert(1, duplicate);
+    assert!(nft::verify(&plan, &changed, false).is_err());
+    Ok(())
+}
+
+#[test]
 fn deny_crash_recovery_preserves_original_table_chain_and_input_handles() -> io::Result<()> {
     let plan = plan()?;
     let installed = snapshot(&plan, false);
