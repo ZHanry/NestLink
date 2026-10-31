@@ -259,6 +259,13 @@ pub struct OfflineProcess {
     highest_revocation_epoch: u64,
     stopped: Arc<AtomicBool>,
 }
+/// A local lifecycle guard may only terminate the original process authority.
+/// This handle cannot activate, clone, deserialize or extend a reservation.
+#[derive(Clone)]
+pub struct OfflineProcessStop(Arc<AtomicBool>);
+impl OfflineProcessStop {
+    pub fn stop(&self) { self.0.store(true, Ordering::Release); }
+}
 impl OfflineProcess {
     pub fn new(
         installation_id: String,
@@ -290,6 +297,7 @@ impl OfflineProcess {
     pub fn nonce(&self) -> [u8; 32] {
         self.nonce
     }
+    pub fn stop_handle(&self) -> OfflineProcessStop { OfflineProcessStop(self.stopped.clone()) }
     /// Only call with a freshly authenticated online policy/consume response.
     /// The storage reservation must already be irrevocably committed. Exact
     /// local consent is a separate requirement, never inferred from the bundle.

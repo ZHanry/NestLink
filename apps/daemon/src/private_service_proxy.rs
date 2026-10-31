@@ -1,5 +1,6 @@
 //! Explicit normal-user entry to one authorized private service.
 mod host;
+mod offline;
 #[cfg(any(target_os = "linux", windows))]
 mod raw_gate;
 use crate::diagnostics::service::{Counters, LocalEntry, Recorder, Stage, StopCause};
@@ -36,6 +37,9 @@ enum ProxyAction {
     /// Approve this installation's fixed local target and host its private service.
     /// Each invocation changes approval/exposure and invalidates old consumer ACLs.
     Host(host::HostArgs),
+    /// Resident finite offline approval and direct-only private-service owner.
+    /// Commands and complete review/status/cleanup events use bounded JSON lines.
+    Offline(offline::OfflineArgs),
     /// List currently authorized private services without creating listeners.
     List,
     /// Relay redirected stdin/stdout to an existing same-user native endpoint.
@@ -238,6 +242,10 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
     }
     let consumer = Arc::new(crate::identity(&directory)?);
     match args.action {
+        ProxyAction::Offline(args) => {
+            drop(installation);
+            offline::run(args, Arc::new(sdk), consumer, directory, original_login).await
+        }
         ProxyAction::Host(args) => {
             // Keep the same protected login and original runtime lease acquired
             // above; host must never start a second refresh/login owner.

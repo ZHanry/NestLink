@@ -15,6 +15,7 @@ pub(super) struct Shared {
     pub authority_key: [u8;32],
     signal: watch::Sender<bool>,
     pub active: AtomicU32,
+    recovery: tokio::sync::Mutex<()>,
 }
 fn denied(message: &str) -> io::Error {io::Error::new(io::ErrorKind::PermissionDenied,message)}
 impl State {
@@ -47,7 +48,7 @@ impl Shared {
         };
         let (definition,target)=(*definition_digest,*target_digest);
         let (signal,_) = watch::channel(false);
-        Ok(Arc::new(Self {state:Mutex::new(State {authority,definition,target,paused:false,wakers:Vec::new()}),authority_key,signal,active:AtomicU32::new(0)}))
+        Ok(Arc::new(Self {state:Mutex::new(State {authority,definition,target,paused:false,wakers:Vec::new()}),authority_key,signal,active:AtomicU32::new(0),recovery:tokio::sync::Mutex::new(())}))
     }
     pub fn lock(&self) -> io::Result<MutexGuard<'_,State>> {self.state.lock().map_err(|_|denied("offline authority lock failed"))}
     pub fn check(&self) -> io::Result<()> {self.lock()?.check(wall()?) }
@@ -76,6 +77,7 @@ impl Shared {
             central_revocation_may_be_delayed_until_ms:c.expires_at_ms})
     }
     pub async fn synchronize(&self,sdk:&Sdk) -> Result<(),SdkError> {
+        let _recovery=self.recovery.lock().await;
         let claims = {
             let mut state = self.lock()?;
             state.check(wall()?)?;
@@ -91,7 +93,7 @@ impl Shared {
             let context = nestlink_identity::offline::OfflineVerification {authority:&self.authority_key,
                 deployment_id:&claims.deployment_id,space_id:&claims.space_id,policy_epoch:view.policy_epoch,
                 security_epoch:view.security_epoch,highest_revocation_epoch:view.highest_revocation_epoch,
-                revoked_bundle_ids:&revoked,now_ms:view.observed_at_ms};
+                revoked_bundle_ids:&revoked,now_ms:wall()?};
             self.lock()?.authority.observe_online(&context)?;
             Ok(())
         }.await;

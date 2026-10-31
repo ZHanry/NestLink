@@ -1,5 +1,6 @@
 //! Actual HTTP/SDK approval, durable quota, one-process activation and recovery.
 //! Business carriers are qualified separately; no fake I/O is called a transport.
+#[path = "offline/carrier.rs"]
 mod carrier;
 use super::*;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};

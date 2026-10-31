@@ -86,19 +86,27 @@ async fn original_quic_real_center_disconnect_reconnect_half_close_and_socket_re
         let address=host.address().ok_or("host address")?;
         let mut proxy=f.sdk.start_offline_private_service_proxy(Arc::new(f.consumer),source,address,&f.usage).await?;
         let endpoint=proxy.endpoint().ok_or("native endpoint")?.to_path_buf();
+        let checkpoint=b"authenticated recovery keeps the same budget";
+        roundtrip(&endpoint,checkpoint).await?;
+        proxy.synchronize_online(&f.sdk).await?;
+        host.synchronize_online(&f.sdk).await?;
+        // The automatic original management-recovery monitor must also keep
+        // a live unchanged owner without treating response latency as rollback.
+        tokio::time::sleep(Duration::from_millis(2250)).await;
+        assert!(!proxy.status()?.stopped);
         f._server.0.abort();let _=(&mut f._server.0).await;
         assert!(reqwest::Client::new().get(format!("{}/api/v3/health",f.origin)).send().await.is_err());
         let first=b"first actual direct offline business";
         let second=b"second connection keeps the original cumulative authority";
         roundtrip(&endpoint,first).await?;
         roundtrip(&endpoint,second).await?;
-        let bytes=(first.len()+second.len()) as u64;
+        let bytes=(checkpoint.len()+first.len()+second.len()) as u64;
         assert_eq!(count.load(Ordering::Acquire),bytes);
-        assert_eq!(proxy.status()?.cumulative_connections,2);
-        assert_eq!(host.status()?.cumulative_connections,2);
+        assert_eq!(proxy.status()?.cumulative_connections,3);
+        assert_eq!(host.status()?.cumulative_connections,3);
         assert_eq!(proxy.status()?.remaining_bytes,32768-2*bytes);
         let source_report=cleaned(&mut proxy).await?;
-        assert_eq!(source_report.released_quic_sockets,2);
+        assert_eq!(source_report.released_quic_sockets,3);
         let host_report=cleaned(&mut host).await?;
         assert_eq!(host_report.released_quic_sockets,1);
         assert!(!endpoint.exists());

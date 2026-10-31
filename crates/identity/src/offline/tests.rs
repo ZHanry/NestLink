@@ -248,7 +248,7 @@ fn rollback_deadline_and_local_exit_are_terminal_for_existing_owners()
                 owner.deadline = Instant::now();
                 assert!(owner.check_current(NOW).is_err());
             }
-            3 => f.processes[0].stop(),
+            3 => f.processes[0].stop_handle().stop(),
             _ => drop(f.processes),
         }
         assert!(

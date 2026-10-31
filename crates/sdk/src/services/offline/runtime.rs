@@ -79,14 +79,30 @@ fn consent_current(shared:&Shared,consent:&LocalServiceTargetConsent)->Result<()
         || !c.connection.direct_transports.contains(&OfflineDirectTransport::Quic) {return Err(SdkError::Trust);}
     Ok(())
 }
-pub(super) async fn host(sdk:&Sdk,host:Arc<DeviceIdentity>,consumed:ConsumedOfflineBundle,consent:LocalServiceTargetConsent,listen:SocketAddr)->Result<OfflinePrivateRuntime,SdkError> {
+async fn recovery_monitor(shared:Arc<Shared>,sdk:Arc<Sdk>) {
+    let space=match shared.lock() {Ok(state)=>state.authority.claims().space_id.clone(),Err(_)=>{shared.stop();return;}};
+    loop {
+        tokio::select! {biased;_ = shared.stopped()=>break,_=tokio::time::sleep(Duration::from_secs(2))=>{}}
+        let response=tokio::select! {biased;_ = shared.stopped()=>break,result=sdk.offline_policy(&space)=>result};
+        // Failed probes cannot extend or replace authority. A freshly
+        // authenticated response enters the paused original recovery gate
+        // synchronously before the next business poll can pass it.
+        if response.is_ok() && shared.synchronize(&sdk).await.is_err() {break;}
+    }
+}
+pub(super) async fn host(sdk:&Arc<Sdk>,host:Arc<DeviceIdentity>,consumed:ConsumedOfflineBundle,consent:LocalServiceTargetConsent,listen:SocketAddr)->Result<OfflinePrivateRuntime,SdkError> {
     if consumed.claims().deployment_id!=sdk.trust.deployment_id {return Err(SdkError::Trust);}
     let shared=Shared::new(consumed,&host,1)?;
     consent_current(&shared,&consent)?;
     let key=shared.lock()?.authority.claims().members[0].public_key;
     let listener=PrivateListener::bind_pinned(listen,&host.identity,digest(&key)).map_err(SdkError::NodeQuic)?;
     let address=listener.endpoint.local_addr()?;
-    let task=tokio::spawn(run_host(shared.clone(),host,Arc::new(consent),listener));
+    let monitor=tokio::spawn(recovery_monitor(shared.clone(),sdk.clone()));
+    let owner=shared.clone();
+    let task=tokio::spawn(async move {
+        let report=run_host(owner,host,Arc::new(consent),listener).await;
+        monitor.abort();let _=monitor.await;report
+    });
     Ok(OfflinePrivateRuntime {shared,address:Some(address),endpoint:None,task:Some(task),report:None,runtime:tokio::runtime::Handle::current()})
 }
 async fn host_flow(shared:Arc<Shared>,host:Arc<DeviceIdentity>,consent:Arc<LocalServiceTargetConsent>,incoming:quinn::Incoming)->Result<(),SdkError> {
@@ -142,13 +158,18 @@ async fn run_host(shared:Arc<Shared>,host:Arc<DeviceIdentity>,consent:Arc<LocalS
     if listener.close_and_wait().await.is_ok() {report.released_quic_sockets+=1;} else {report.cleanup_failures+=1;}
     report
 }
-pub(super) async fn proxy(sdk:&Sdk,consumer:Arc<DeviceIdentity>,consumed:ConsumedOfflineBundle,peer:SocketAddr,private_directory:&Path)->Result<OfflinePrivateRuntime,SdkError> {
+pub(super) async fn proxy(sdk:&Arc<Sdk>,consumer:Arc<DeviceIdentity>,consumed:ConsumedOfflineBundle,peer:SocketAddr,private_directory:&Path)->Result<OfflinePrivateRuntime,SdkError> {
     if peer.port()==0 || peer.ip().is_unspecified() || peer.ip().is_multicast() || consumed.claims().deployment_id!=sdk.trust.deployment_id
         || !consumed.claims().connection.direct_transports.contains(&OfflineDirectTransport::Quic) {return Err(SdkError::Invalid);}
     let shared=Shared::new(consumed,&consumer,0)?;
     let listener=Listener::bind(private_directory,&random_id())?;
     let endpoint=listener.endpoint().to_path_buf();
-    let task=tokio::spawn(run_proxy(shared.clone(),consumer,peer,listener));
+    let monitor=tokio::spawn(recovery_monitor(shared.clone(),sdk.clone()));
+    let owner=shared.clone();
+    let task=tokio::spawn(async move {
+        let report=run_proxy(owner,consumer,peer,listener).await;
+        monitor.abort();let _=monitor.await;report
+    });
     Ok(OfflinePrivateRuntime {shared,address:None,endpoint:Some(endpoint),task:Some(task),report:None,runtime:tokio::runtime::Handle::current()})
 }
 async fn source_flow<S:AsyncRead+AsyncWrite+Unpin>(shared:Arc<Shared>,consumer:Arc<DeviceIdentity>,peer:SocketAddr,local:S)->FlowOutcome {

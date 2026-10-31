@@ -145,6 +145,13 @@ jobs:
           mkdir -p "$RUNNER_TEMP/offline-sdk"
           set -o pipefail
           cargo clippy --locked -p nestlink-server -p nestlink-sdk -p nestlink-transport-quic --lib -- -D warnings 2>&1 | tee "$RUNNER_TEMP/offline-sdk/clippy.log"
+      - name: Compile and lint original daemon resident offline entry
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/offline-sdk"
+          set -o pipefail
+          cargo clippy --locked -p nestlink-daemon --bin nestlink-daemon -- -D warnings 2>&1 | tee "$RUNNER_TEMP/offline-sdk/daemon-clippy.log"
       - name: Preserve actual HTTP SDK diagnostics and exact receipts
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
