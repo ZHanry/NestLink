@@ -79,6 +79,9 @@ pub(in crate::control) async fn poll(
             }, requested)
         };
         let signed = identity.sign_service_query(&query)?;
+        let signed_at = Instant::now();
+        let mut received_at = None;
+        let mut verified_at = None;
         // Preserve the original pre-sign/query monotonic anchor. Signing and
         // sending cannot shift the original signed query's finite lifetime.
         let response = tokio::time::timeout(Duration::from_millis(700), async {
@@ -108,6 +111,7 @@ pub(in crate::control) async fn poll(
                 }
                 bytes.extend_from_slice(&chunk);
             }
+            received_at = Some(Instant::now());
             let envelope: nestlink_protocol::service_plane::publication::ServiceResourceGrant =
                 serde_json::from_slice(&bytes)
                     .map_err(|_| phase("service snapshot JSON", Error::Control))?;
@@ -117,11 +121,19 @@ pub(in crate::control) async fn poll(
                 &signed,
                 &identity.public_key(),
             )?;
+            verified_at = Some(Instant::now());
             Ok::<_, Error>((snapshot, envelope.issuer))
         })
         .await;
+        let waiting_at = Instant::now();
         let mut runtime = state.lock().map_err(|_| Error::Control)?;
         runtime.resources.services.observe_response(requested);
+        runtime.resources.services.observe_poll_stages(
+            signed_at.saturating_duration_since(requested),
+            received_at.unwrap_or(waiting_at).saturating_duration_since(signed_at),
+            verified_at.unwrap_or(waiting_at).saturating_duration_since(received_at.unwrap_or(waiting_at)),
+            waiting_at.elapsed(),
+        );
         if runtime.service_shutdown {
             continue;
         }
@@ -159,12 +171,14 @@ pub(in crate::control) async fn poll(
                         continue;
                     }
                 };
-                if let Err(error) =
+                let installation_started = Instant::now();
+                let installation =
                     runtime
                         .resources
                         .services
-                        .accept_checked(snapshot, node_deadline, requested)
-                {
+                        .accept_checked(snapshot, node_deadline, requested);
+                runtime.resources.services.observe_installation(installation_started);
+                if let Err(error) = installation {
                     runtime.resources.services.stop();
                     return Err(phase("service snapshot installation", service_error(error)));
                 }

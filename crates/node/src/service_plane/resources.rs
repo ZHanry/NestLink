@@ -26,6 +26,11 @@ pub struct ServiceResourceObservation {
     pub superseded: u64,
     pub response_ms: u64,
     pub max_response_ms: u64,
+    pub signing_ms: u64,
+    pub transport_ms: u64,
+    pub verification_ms: u64,
+    pub state_wait_ms: u64,
+    pub installation_ms: u64,
     pub last_ttl_ms: u64,
     pub last_age_ms: Option<u64>,
     pub last_retire: Option<&'static str>,
@@ -94,6 +99,21 @@ impl ServiceResourceSet {
         let elapsed = duration_ms(requested.elapsed());
         self.observation.response_ms = elapsed;
         self.observation.max_response_ms = self.observation.max_response_ms.max(elapsed);
+    }
+    pub(crate) fn observe_poll_stages(
+        &mut self,
+        signing: std::time::Duration,
+        transport: std::time::Duration,
+        verification: std::time::Duration,
+        state_wait: std::time::Duration,
+    ) {
+        self.observation.signing_ms = duration_ms(signing);
+        self.observation.transport_ms = duration_ms(transport);
+        self.observation.verification_ms = duration_ms(verification);
+        self.observation.state_wait_ms = duration_ms(state_wait);
+    }
+    pub(crate) fn observe_installation(&mut self, started: Instant) {
+        self.observation.installation_ms = duration_ms(started.elapsed());
     }
     pub(crate) fn observe_transport_gap(&mut self) {
         self.observation.transport_gaps = self.observation.transport_gaps.saturating_add(1);
