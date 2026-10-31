@@ -29,6 +29,13 @@ authorization; it never quietly replaces an offline reservation with a renewed
 online permit. Recovery does not promise retroactive central revocation while
 the center is unreachable.
 
+Reserving a dial or accept attempt grants no business authority. The original
+admission retains separate pending QUIC/TLS reservations and authenticated
+connection state. A successful exact-peer authentication consumes one matching
+pending reservation, and cannot reuse that reservation. Both private-service
+delivery and remote Session activation require authenticated connection state;
+the original total attempt counter remains spent after any failed attempt.
+
 Hosted source tests cover the independent Session after online expiry, denied
 extra operation/relay/export/renewal, retained counters, and real two-account
 HTTP approval/consume followed by management socket closure, online expiry,
