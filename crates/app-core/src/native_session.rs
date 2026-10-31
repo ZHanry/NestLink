@@ -87,6 +87,7 @@ impl NativeSessionConfig {
                     "vp8".into(),
                     "opus".into(),
                     nestlink_protocol::native_ice::CAPABILITY.into(),
+                    nestlink_protocol::native_qos::CAPABILITY.into(),
                 ];
                 if nestlink_media_codec::h264_hardware_available() {
                     capabilities.push(nestlink_protocol::media::H264_CAPABILITY.into());

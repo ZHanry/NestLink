@@ -78,6 +78,7 @@ pub struct VideoSender {
 }
 #[derive(Debug, Clone, Copy, Default)]
 pub struct VideoSenderStats {
+    pub receiver_reports: u64,
     pub feedback_requests: u64,
     pub duplicate_requests: u64,
     pub keyframes_encoded: u64,
@@ -163,7 +164,20 @@ fn apply_feedback(
     epoch: VideoEpoch,
     codecs: &mut BTreeMap<u32, Encoder>,
     stats: &Mutex<VideoSenderStats>,
+    receiver_qos: &mut crate::ReceiverReportTracker,
 ) -> io::Result<()> {
+    if bytes.starts_with(b"NLQF") {
+        if !lease.media_capability(nestlink_protocol::native_qos::CAPABILITY).map_err(io::Error::other)? {
+            return Err(io::Error::other("unnegotiated receiver QoS report"));
+        }
+        let report=nestlink_protocol::native_qos::ReceiverReport::decode(bytes).map_err(io::Error::other)?;
+        let encoder=codecs.get(&report.context.source).ok_or_else(||io::Error::other("unapproved QoS source"))?;
+        let context=nestlink_protocol::native_qos::ReceiverContext{connection_generation:epoch.connection,layout_epoch:epoch.layout,source:report.context.source,format_epoch:0,format_sha256:Vec::new()};
+        receiver_qos.accept(report,&context,encoder.sequence,Instant::now())?;
+        let mut stats=stats.lock().map_err(|_|io::Error::other("video stats poisoned"))?;
+        stats.receiver_reports=stats.receiver_reports.saturating_add(1);
+        return Ok(());
+    }
     let nestlink_protocol::native_displays::DisplayEnvelope::Recovery(request) =
         nestlink_protocol::native_displays::DisplayEnvelope::decode(bytes)
             .map_err(io::Error::other)?
@@ -258,6 +272,8 @@ fn send<D: CaptureDevice>(
         VideoCodec::Vp8
     };
     let mut codecs = BTreeMap::new();
+    let qos_enabled=lease.media_capability(nestlink_protocol::native_qos::CAPABILITY).map_err(io::Error::other)?;
+    let mut receiver_qos=crate::ReceiverReportTracker::default();
     for stream in selected {
         codecs.insert(
             stream.source,
@@ -290,7 +306,7 @@ fn send<D: CaptureDevice>(
                 _ = stop.changed() => { return Ok(()); }
                 request = feedback.receive() => {
                     let request = request.map_err(io::Error::other)?;
-                    apply_feedback(&request.payload, &lease, epoch, &mut codecs, &stats)?;
+                    apply_feedback(&request.payload, &lease, epoch, &mut codecs, &stats,&mut receiver_qos)?;
                 }
                 _ = tokio::time::sleep(Duration::from_millis(2)) => {}
             }
@@ -483,7 +499,7 @@ fn send<D: CaptureDevice>(
                     result = &mut pending => { break result; }
                     request = feedback.receive() => {
                         let request = request.map_err(io::Error::other)?;
-                        apply_feedback(&request.payload, &lease, epoch, &mut codecs, &stats)?;
+                        apply_feedback(&request.payload, &lease, epoch, &mut codecs, &stats,&mut receiver_qos)?;
                     }
                 }
             };
@@ -493,11 +509,13 @@ fn send<D: CaptureDevice>(
             let encoder = codecs
                 .get_mut(&source)
                 .ok_or_else(|| io::Error::other("missing sent encoder"))?;
-            if let Some(kbps) =
-                encoder
-                    .quality
-                    .observe(Instant::now(), encoding_time, enqueue_started.elapsed())
-            {
+            let now=Instant::now();
+            let changed=if qos_enabled {
+                let context=nestlink_protocol::native_qos::ReceiverContext{connection_generation:epoch.connection,layout_epoch:epoch.layout,source,format_epoch:0,format_sha256:Vec::new()};
+                let condition=receiver_qos.condition(&context,encoder.sequence,encoder.quality.fps(),now);
+                encoder.quality.observe_with_receiver(now,encoding_time,enqueue_started.elapsed(),condition)
+            }else{encoder.quality.observe(now,encoding_time,enqueue_started.elapsed())};
+            if let Some(kbps) = changed {
                 encoder.codec.set_bitrate(kbps)?;
                 encoder.config.bitrate_kbps = kbps;
             }

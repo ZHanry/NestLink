@@ -1938,6 +1938,8 @@ fn receive(
     mut stop: watch::Receiver<bool>,
 ) -> io::Result<()> {
     let runtime = worker::runtime()?;
+    let qos_enabled=lease.media_capability(nestlink_protocol::native_qos::CAPABILITY).map_err(io::Error::other)?;
+    let mut qos_window=crate::receiver_qos::ReportWindow::new(Instant::now());
     let codec_kind = if lease
         .media_capability(nestlink_protocol::media::H264_CAPABILITY)
         .map_err(io::Error::other)?
@@ -2154,7 +2156,11 @@ fn receive(
             // before CPU decode or the external FIFO can add scheduling delay.
             let now=Instant::now();
             let due=if let Some(clock)=output.playout.as_ref(){clock.presentation_time(packet.pts_90khz,90_000,now)?}else{now};
+            let qos_context=nestlink_protocol::native_qos::ReceiverContext{connection_generation:packet.connection_generation,layout_epoch:packet.layout_epoch,source:packet.source,format_epoch:packet.format_epoch,format_sha256:packet.format_sha256.clone()};
+            let qos_sequence=packet.sequence;
+            let qos_bytes=payload.len();
             let mut external=output.external.lock().map_err(|_|io::Error::other("external sink poisoned"))?;
+            let qos_cpu=external.is_none();
             let consumer_revision=output.consumer_revision.load(std::sync::atomic::Ordering::Acquire);
             let decoded=if let Some(sink)=external.as_mut() {
                 if sink.context.source!=packet.source || sink.context.layout_epoch!=packet.layout_epoch {
@@ -2185,6 +2191,8 @@ fn receive(
                 }
             };
             drop(external);
+            let qos_decoded=if qos_cpu {Some(decoded.is_some())} else {None};
+            let qos_decode_time=now.elapsed();
             output.set_recovery_deadline(codecs.values().filter_map(Decoder::recovery_deadline).min())?;
             lease
                 .check_media_binding(Channel::Video, epoch.connection)
@@ -2230,6 +2238,15 @@ fn receive(
                     state.videos.remove(&source);
                 state.ready.retain(|ready| *ready != source);
                 state.stats.discarded_frames = state.stats.discarded_frames.saturating_add(1);
+            }
+            drop(state);
+            if qos_enabled && let Some(report)=qos_window.observe(qos_context,qos_sequence,qos_bytes,qos_decoded,qos_decode_time,Instant::now())? {
+                let bytes=report.encode().map_err(io::Error::other)?;
+                // Feedback shares the original bounded queue. A full queue
+                // never stalls decoding or consumes an unqueued report ID.
+                if sender.try_send_video_feedback(&bytes).map_err(io::Error::other)? {
+                    qos_window.inserted(&report,Instant::now());
+                }
             }
         }
     });

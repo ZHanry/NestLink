@@ -2,6 +2,7 @@ use crate::{ShutdownReport, VideoReceiver, VideoSender, VideoStream};
 mod advertised;
 mod dynamic;
 mod feedback;
+mod receiver_qos;
 use nestlink_auth::random_id;
 use nestlink_identity::{InstallationIdentity, PermitSigner, verify_permit};
 use nestlink_media_codec::{VideoConfig, Vp8Encoder};
@@ -66,12 +67,15 @@ async fn pair_with_fault(quic: bool, dropped_video: Option<u64>) -> Result<Pair>
     pair_with_profile(quic, dropped_video, false).await
 }
 async fn pair_with_profile(quic: bool, dropped_video: Option<u64>, h264: bool) -> Result<Pair> {
+    pair_with_features(quic,dropped_video,h264,false).await
+}
+async fn pair_with_features(quic: bool, dropped_video: Option<u64>, h264: bool,qos:bool) -> Result<Pair> {
     let controller = InstallationIdentity::generate();
     let host = InstallationIdentity::generate();
     let clock = RuntimeClock::default();
     let now = clock.sample()?;
     let permissions = vec![Permission::View, Permission::Audio, Permission::FileRead];
-    let binding = SessionBinding {
+    let mut binding = SessionBinding {
         media: None,
         deployment_id: random_id(),
         security_epoch: 1,
@@ -96,6 +100,7 @@ async fn pair_with_profile(quic: bool, dropped_video: Option<u64>, h264: bool) -
         },
         local_paths: PathSet::DIRECT,
     };
+    if qos {binding.supported_capabilities.push(nestlink_protocol::native_qos::CAPABILITY.into());}
     let claims = PermitClaims {
         media_format_version: 0,
         media_formats: Vec::new(),

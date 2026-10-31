@@ -959,6 +959,13 @@ enum StreamExit {
     TransportFailed,
 }
 
+fn observe_quality(core:&CoreHandle,identity:&SessionIdentity,binding:NativeVideoBinding,quality:&mut VideoQuality,encoding:Duration,enqueue:Duration)->io::Result<Option<u32>> {
+    let now=Instant::now();
+    Ok(match core.native_video_receiver_condition(identity,binding,quality.fps())? {
+        Some(receiver)=>quality.observe_with_receiver(now,encoding,enqueue,receiver),
+        None=>quality.observe(now,encoding,enqueue),
+    })
+}
 fn stream_capture<D: CaptureDevice>(
     core: &CoreHandle,
     identity: &SessionIdentity,
@@ -1243,12 +1250,11 @@ fn stream_capture<D: CaptureDevice>(
                 } else if !owner_output_seen && Instant::now() >= first_deadline {
                     return (controller, StreamExit::CaptureFailed);
                 }
-                if !negotiated_target
-                    && let Some(kbps) =
-                        quality.observe(Instant::now(), encoding_time, enqueue.elapsed())
-                    && controller.host_set_bitrate(kbps).is_err()
-                {
-                    return (controller, StreamExit::CaptureFailed);
+                if !negotiated_target {
+                    let changed=match observe_quality(core,identity,binding,&mut quality,encoding_time,enqueue.elapsed()) {
+                        Ok(changed)=>changed,Err(_)=>return (controller,StreamExit::SessionEnded),
+                    };
+                    if let Some(kbps)=changed && controller.host_set_bitrate(kbps).is_err(){return (controller,StreamExit::CaptureFailed);}
                 }
                 let fps = if negotiated_target {
                     legacy_prepare.as_ref().map_or(1, |(_, config)| config.fps)
@@ -1381,12 +1387,11 @@ fn stream_capture<D: CaptureDevice>(
             {
                 return (controller, StreamExit::TransportFailed);
             }
-            if !negotiated_target
-                && let Some(kbps) =
-                    quality.observe(Instant::now(), encoding_time, enqueue_started.elapsed())
-                && encoder.set_bitrate(kbps).is_err()
-            {
-                return (controller, StreamExit::CaptureFailed);
+            if !negotiated_target {
+                let changed=match observe_quality(core,identity,binding,&mut quality,encoding_time,enqueue_started.elapsed()) {
+                    Ok(changed)=>changed,Err(_)=>return (controller,StreamExit::SessionEnded),
+                };
+                if let Some(kbps)=changed && encoder.set_bitrate(kbps).is_err(){return (controller,StreamExit::CaptureFailed);}
             }
             let fps = if negotiated_target {
                 config.fps

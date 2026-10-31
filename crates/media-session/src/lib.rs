@@ -16,6 +16,8 @@ pub use negotiated_format::{
     execution_receipt_matches, h264_execution_target, software_h264_execution_limits,
 };
 mod receiver;
+mod receiver_qos;
+pub use receiver_qos::ReceiverReportTracker;
 pub use legacy_format::{LegacyPrepare, LegacySurface};
 mod video;
 mod worker;

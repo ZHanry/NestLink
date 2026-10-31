@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "source_revision": "59aad5405abe6231ddb9959d669188358d602a69",
+  "task_ids": [
+    "W31"
+  ],
+  "whole_task_passed": false,
+  "release_qualification_claimed": false,
+  "build_provenance": {
+    "repository": "ZHanry/NestLink",
+    "workflow": ".github/workflows/media-qos.yml",
+    "run_id": 41209620221,
+    "run_attempt": 1,
+    "job_id": 124561686963,
+    "runner_environment": "github-hosted",
+    "runner_label": "ubuntu-24.04",
+    "cargo_lock_sha256": "48063b78bd20ca07f585a6100f7437057af227fde24c94fdad266f8ff457933e",
+    "artifact": {
+      "id": 13046275290,
+      "name": "media-qos-59aad5405abe6231ddb9959d669188358d602a69-1",
+      "sha256": "b63207578480b206880b02f3b2d12ceb77245c42e7765be9e56507537995a412",
+      "download_digest_verified": true,
+      "files": [
+        {
+          "path": "receipt.json",
+          "sha256": "05826a4d92604a9b21dd65d89a9017777cdc48796cfea72f6bc48f7a59949b39"
+        },
+        {
+          "path": "media-tests.log",
+          "sha256": "c456d981a2b851133aedb056c5acbf13f3256d9a38418cde0fca51be61723c05"
+        },
+        {
+          "path": "queue-tests.log",
+          "sha256": "c0357183383183f19e1bc96c3d2008efda81047fb4de08b8cad8209cf0fd52ca"
+        },
+        {
+          "path": "clippy.log",
+          "sha256": "9b7de407e3b235bfd5127ac8a41f06ba88c5cebb7b937c40ce0b225f1de362d7"
+        }
+      ]
+    }
+  },
+  "execution_provenance": {
+    "kind": "github_hosted_lab",
+    "scope": "Existing mature VP8/Opus codec operations, original fixed/dynamic media owner and feedback regressions, channel consent/deadline/cleanup and strict lint. Neither end-to-end weak-network nor physical GPU acceptance.",
+    "results": [
+      {
+        "package": "nestlink-media-codec",
+        "passed": 32,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "package": "nestlink-media-session",
+        "passed": 57,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "package": "nestlink-remote",
+        "selector": "queues::",
+        "passed": 13,
+        "failed": 0,
+        "ignored": 0
+      }
+    ],
+    "strict_clippy": {
+      "packages": [
+        "nestlink-media-codec",
+        "nestlink-media-session"
+      ],
+      "all_targets": true,
+      "warnings_denied": true,
+      "passed": true
+    },
+    "producer_regressions": [
+      "Original 5fps/256kbps approval cannot be raised by initialization, congestion floor or recovery",
+      "Missing observations restart the continuous health window; old timestamps cannot qualify recovery",
+      "Existing bandwidth step/recovery hysteresis remains bounded",
+      "Fixed-source sender now uses original VideoQuality with real codec and enqueue costs; encoded references retain FIFO and original authority"
+    ]
+  },
+  "remaining": [
+    "Authenticated production receiver feedback and negotiated resolution adaptation",
+    "Actual20-to5Mbps with1percent loss and concurrent file transfer under original latency/quality gates",
+    "Physical Windows GPU/display and full W31/AC53 qualification"
+  ]
+}

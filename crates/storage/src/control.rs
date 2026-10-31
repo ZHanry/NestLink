@@ -1014,6 +1014,13 @@ impl Store {
                 (0, Vec::new(), Vec::new())
             };
         let mut required_capabilities = vec!["vp8".to_owned()];
+        if !self.is_browser_controller(&view.controller_device_id)?
+            && !self.is_browser_controller(&view.host_device_id)?
+            && c.capabilities.iter().any(|value| value==nestlink_protocol::native_qos::CAPABILITY)
+            && h.capabilities.iter().any(|value| value==nestlink_protocol::native_qos::CAPABILITY)
+        {
+            required_capabilities.push(nestlink_protocol::native_qos::CAPABILITY.into());
+        }
         if media_format_version != 0 {
             required_capabilities
                 .push(nestlink_protocol::media_authority::FORMAT_CAPABILITY.into());
