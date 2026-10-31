@@ -19,12 +19,14 @@ fn exclusive(endpoint: SocketAddr, kind: Type, protocol: Protocol) -> io::Result
         ));
     }
     let socket = Socket::new(Domain::for_address(endpoint), kind, Some(protocol))?;
+    let raw_socket = usize::try_from(socket.as_raw_socket())
+        .map_err(|_| io::Error::other("Winsock socket handle exceeds native width"))?;
     let enabled = 1i32;
     // SAFETY: Socket2 owns this live Winsock socket. The option reads exactly
     // one live i32; its borrowed address does not escape this synchronous call.
     if unsafe {
         setsockopt(
-            socket.as_raw_socket(),
+            raw_socket,
             SOL_SOCKET,
             SO_EXCLUSIVEADDRUSE,
             (&enabled as *const i32).cast(),
