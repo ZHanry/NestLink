@@ -242,7 +242,7 @@ pub(super) async fn create(plan: &TunPlan) -> Result<tun_rs::SyncDevice> {
     // on an occupied target, and Drop removes only our new ephemeral object.
     let device = tun_rs::DeviceBuilder::new().enable(false).build_sync()?;
     device.set_name(&plan.link())?;
-    device.user(i32::try_from(plan.linux_uid()?)?)?;
+    nestlink_platform_security::tun_owner::set_owner(&device, plan.linux_uid()?)?;
     // Disable automatic IPv6/multicast configuration on our still-ephemeral
     // fresh link before asserting that no addresses/routes have appeared.
     ip(&[

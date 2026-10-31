@@ -139,7 +139,7 @@ def main():
         binaries = {}
         with zipfile.ZipFile(archive) as package:
             (output / "wintun-license.txt").write_bytes(package.read("wintun/LICENSE.txt"))
-            for architecture in ("amd64", "arm64", "x86"):
+            for architecture in ("amd64", "arm", "arm64", "x86"):
                 dll = package.read(f"wintun/bin/{architecture}/wintun.dll")
                 binaries[architecture] = hashlib.sha256(dll).hexdigest()
                 if architecture == "amd64":

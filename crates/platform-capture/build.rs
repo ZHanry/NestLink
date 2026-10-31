@@ -6,7 +6,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .cpp(true)
             .file("src/dxgi.cpp")
             .file("src/dxgi_gpu.cpp")
-            .std("c++17")
+            // The Windows SDK C++/WinRT headers select standard <coroutine>
+            // in C++20 mode; VS 2026 rejects the C++17 experimental variant.
+            .std("c++20")
             .flag_if_supported("/EHsc")
             .warnings(true)
             .warnings_into_errors(true)

@@ -7,6 +7,9 @@ use std::{
 use zeroize::Zeroizing;
 #[cfg(target_os = "linux")]
 pub mod local_port_gate;
+#[cfg(target_os = "linux")]
+#[allow(unsafe_code)]
+pub mod tun_owner;
 #[cfg(any(unix, windows))]
 pub mod local_stream;
 
