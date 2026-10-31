@@ -42,7 +42,7 @@ pub(super) fn validate_owner(plan: &TunPlan) -> Result {
         nestlink_platform_security::local_port_gate::ProcessIdentity::read(plan.process.pid())?;
     let helper =
         nestlink_platform_security::local_port_gate::ProcessIdentity::read(std::process::id())?;
-    if facts.uid != plan.uid
+    if facts.uid != plan.linux_uid()?
         || facts.uid == 0
         || helper.uid != 0
         || facts.image_device != helper.image_device
@@ -242,7 +242,7 @@ pub(super) async fn create(plan: &TunPlan) -> Result<tun_rs::SyncDevice> {
     // on an occupied target, and Drop removes only our new ephemeral object.
     let device = tun_rs::DeviceBuilder::new().enable(false).build_sync()?;
     device.set_name(&plan.link())?;
-    device.user(i32::try_from(plan.uid)?)?;
+    device.user(i32::try_from(plan.linux_uid()?)?)?;
     ip(&["link", "set", "dev", &plan.link(), "alias", &plan.marker()]).await?;
     Ok(device)
 }
@@ -251,7 +251,7 @@ pub(super) async fn created_identity(plan: &TunPlan) -> Result<InterfaceIdentity
         .await?
         .ok_or_else(|| io::Error::other("new ephemeral TUN disappeared"))?;
     if state.identity.marker != plan.marker()
-        || state.identity.uid != plan.uid
+        || state.identity.uid != plan.linux_uid()?
         || state.up
         || state.persistent
         || !state.addresses.is_empty()
@@ -320,7 +320,7 @@ pub(super) async fn configure(plan: &TunPlan) -> Result {
 pub(super) fn verify(plan: &TunPlan, state: &TunState, complete: bool) -> Result {
     if state.identity.name != plan.link()
         || state.identity.marker != plan.marker()
-        || state.identity.uid != plan.uid
+        || state.identity.uid != plan.linux_uid()?
         || state.identity.index == 0
         || (complete && (state.mtu != 1280 || !state.up || !state.persistent))
     {

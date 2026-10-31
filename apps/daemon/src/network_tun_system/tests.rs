@@ -74,13 +74,13 @@ pub(super) fn plan() -> Result<TunPlan> {
         },
     )?;
     Ok(TunPlan {
-        schema_version: 1,
+        schema_version: 2,
         owner_id: nestlink_auth::random_id(),
         space_id: space,
         process: serde_json::from_value(
             json!({"pid":std::process::id(),"incarnation":"test-process-start","image":std::env::current_exe()?.to_string_lossy()}),
         )?,
-        uid: 1000,
+        principal: plan::HostPrincipal::Linux {uid:1000},
         created_at_ms: now,
         expires_at_ms: now + 50_000,
         deployment_id: deployment,
@@ -132,7 +132,7 @@ fn public_plan_rejects_links_nonregular_widened_and_oversized_inputs() -> Result
 }
 fn state(plan: &TunPlan) -> Result<TunState> {
     let name = plan.link();
-    Ok(TunState{identity:InterfaceIdentity{name:name.clone(),index:71,marker:plan.marker(),uid:plan.uid},mtu:1280,up:true,persistent:true,framing:0x1801,
+    Ok(TunState{identity:InterfaceIdentity{name:name.clone(),index:71,marker:plan.marker(),uid:plan.linux_uid()?},mtu:1280,up:true,persistent:true,framing:0x1801,
         addresses:plan.local_hosts.iter().map(|ip|json!({"family":if ip.is_ipv4(){"inet"}else{"inet6"},"local":ip.to_string(),"prefixlen":if ip.is_ipv4(){32}else{128},"scope":"global","peer":null,"broadcast":null})).collect(),
         routes:plan.remote_hosts.iter().zip(plan.local_hosts).map(|(ip,local)|json!({"dst":format!("{ip}/{}",if ip.is_ipv4(){32}else{128}),"dev":name,"protocol":"static","prefsrc":local.to_string(),"metric":42420,"flags":[]})).collect()})
 }
@@ -150,7 +150,7 @@ fn signed_plan_binds_digest_pair_hosts_scope_and_deadline_and_rejects_extra_comm
             3 => changed.remote_peer = PeerId([4; 32]),
             4 => changed.policy_epoch += 1,
             5 => changed.space_id = nestlink_auth::random_id(),
-            6 => changed.uid = 0,
+            6 => changed.principal = plan::HostPrincipal::Linux {uid:0},
             7 => changed.expires_at_ms = changed.created_at_ms + 60_001,
             8 => changed.local_hosts[0] = "127.0.0.1".parse()?,
             _ => unreachable!(),

@@ -53,10 +53,11 @@ impl JournalStore {
             return Err(io::Error::other("unsupported TUN recovery journal").into());
         }
         journal.plan.validate(false)?;
+        let uid=journal.plan.linux_uid()?;
         if journal.identity.as_ref().is_some_and(|id| {
             id.name != journal.plan.link()
                 || id.marker != journal.plan.marker()
-                || id.uid != journal.plan.uid
+                || id.uid != uid
                 || id.index == 0
         }) || journal
             .installed

@@ -28,7 +28,7 @@ use windows_sys::Win32::{
 };
 
 const JOURNAL: &str = "local-port-owner.json";
-pub(super) struct Parents {
+pub(in crate::windows) struct Parents {
     pub directory: PathBuf,
     _handles: Vec<File>,
 }
@@ -140,7 +140,7 @@ impl Parents {
         bounded(file)
     }
 }
-fn open(path: &Path, directory: bool, write: bool) -> io::Result<File> {
+pub(in crate::windows) fn open(path: &Path, directory: bool, write: bool) -> io::Result<File> {
     let mut options = OpenOptions::new();
     options
         .read(true)
@@ -167,7 +167,7 @@ fn open(path: &Path, directory: bool, write: bool) -> io::Result<File> {
     }
     Ok(file)
 }
-pub(super) fn bounded(file: File) -> io::Result<Vec<u8>> {
+pub(in crate::windows) fn bounded(file: File) -> io::Result<Vec<u8>> {
     if file.metadata()?.len() > MAXIMUM_JSON {
         return Err(invalid("gate metadata exceeds its bound"));
     }
@@ -239,12 +239,18 @@ fn create_with_descriptor(path: &Path, descriptor: &security::Local) -> io::Resu
     Ok(unsafe { File::from_raw_handle(handle.cast()) })
 }
 pub(super) fn save_plan(path: &Path, plan: &GatePlan) -> io::Result<()> {
+    save_owner_plan(path, &serde_json::to_vec_pretty(plan)?, &plan.process.sid)
+}
+pub(in crate::windows) fn save_owner_plan(path: &Path, bytes: &[u8], sid: &str) -> io::Result<()> {
+    if !valid_sid(sid) || bytes.is_empty() || bytes.len()>MAXIMUM_JSON as usize {
+        return Err(invalid("bounded original-owner public plan required"));
+    }
     // Explicit administrator read admission allows an administrator using a
     // different SID to consume the selected plan without changing its owner
     // or ACL. The ordinary owner's already-private parent remains private.
     let sddl = security::text(&format!(
         "O:{}D:P(A;;FA;;;{})(A;;FA;;;SY)(A;;FR;;;BA)",
-        plan.process.sid, plan.process.sid
+        sid, sid
     ))?;
     let mut raw = null_mut();
     if unsafe {
@@ -261,8 +267,8 @@ pub(super) fn save_plan(path: &Path, plan: &GatePlan) -> io::Result<()> {
     }
     let descriptor = security::Local(raw);
     let mut file = create_with_descriptor(path, &descriptor)?;
-    security::private_owner_acl(file.as_raw_handle().cast(), &plan.process.sid)?;
-    file.write_all(&serde_json::to_vec_pretty(plan)?)?;
+    security::private_owner_acl(file.as_raw_handle().cast(), sid)?;
+    file.write_all(bytes)?;
     file.sync_all()
 }
 pub(super) fn initialize(directory: &Path) -> io::Result<()> {
@@ -390,12 +396,12 @@ fn image_identity(file: &File) -> io::Result<(u32, u64)> {
         u64::from(info.nFileIndexLow) | u64::from(info.nFileIndexHigh) << 32,
     ))
 }
-pub(super) struct ImageLock {
+pub(in crate::windows) struct ImageLock {
     pub identity: (u32, u64),
     _file: File,
     _parents: Parents,
 }
-pub(super) fn lock_image(path: &Path) -> io::Result<ImageLock> {
+pub(in crate::windows) fn lock_image(path: &Path) -> io::Result<ImageLock> {
     let parents = Parents::open(
         path.parent()
             .ok_or_else(|| invalid("protected executable parent missing"))?,

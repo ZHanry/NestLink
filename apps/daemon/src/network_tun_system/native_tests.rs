@@ -128,7 +128,7 @@ async fn ordinary_uid_root_helper_whole_packets_normal_close_and_crash_recovery(
                 assert!(linux::inspect(&plan).await?.is_some(),"dropping the last ordinary descriptor must not erase persistence or the recovery identity");
                 if !status("recover",&plan_path,&journal).await? { return Err(io::Error::other("dead original owner recovery failed").into()); }
                 assert!(linux::inspect(&plan).await?.is_none());
-                println!("Native TUN receipt: actual ordinary UID {}, helper SIGKILL, live-owner recovery denied, ordinary SIGKILL, exact original root-journal recovery and kernel absence confirmed",plan.uid);
+                println!("Native TUN receipt: actual ordinary UID {}, helper SIGKILL, live-owner recovery denied, ordinary SIGKILL, exact original root-journal recovery and kernel absence confirmed",plan.linux_uid()?);
             } else {
                 let stopped=Instant::now();
                 nestlink_platform_security::create_private(&plan_path.with_extension("stop"),b"stop")?;
@@ -137,7 +137,7 @@ async fn ordinary_uid_root_helper_whole_packets_normal_close_and_crash_recovery(
                 assert!(finished(&mut helper).await?,"root helper must confirm exact physical cleanup");
                 assert!(linux::inspect(&plan).await?.is_none());
                 assert!(!plan_path.try_exists()?);
-                println!("Native TUN receipt: actual ordinary UID {}, exclusive descriptor, real IPv4/IPv6 UDP full 1280-byte request and reply, normal plan stop and kernel absence in {} ms",plan.uid,stopped.elapsed().as_millis());
+                println!("Native TUN receipt: actual ordinary UID {}, exclusive descriptor, real IPv4/IPv6 UDP full 1280-byte request and reply, normal plan stop and kernel absence in {} ms",plan.linux_uid()?,stopped.elapsed().as_millis());
             }
             Ok::<(),Box<dyn std::error::Error+Send+Sync>>(())
         }.await;
@@ -280,7 +280,7 @@ async fn ordinary(path: &Path) -> Result {
         return Err(io::Error::other("native packet owner must be an ordinary UID").into());
     }
     let mut plan = tests::plan()?;
-    plan.uid = rustix::process::geteuid().as_raw();
+    plan.principal = plan::HostPrincipal::current()?;
     plan.process = process_identity(std::process::id()).await?;
     plan.save_new(path)?;
     let state = tokio::time::timeout(Duration::from_secs(15), async {

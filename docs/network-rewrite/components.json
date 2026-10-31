@@ -858,21 +858,26 @@
       ],
       "candidates": [
         "Existing Axum/Caddy",
-        "Mature external LB/VIP for required fixed entry",
+        "Linux kernel IPVS-NAT plus existing keepalived HTTP_GET checker for one dedicated IPv4 VIP (selected W26 first mode)",
+        "nginx stream proxy (rejected for this mode because replacing raw TCP/UDP visitor IP changes existing source ACL semantics)",
         "New generic HTTP/LB implementation (rejected)"
       ],
       "official_sources": [
         "https://github.com/tokio-rs/axum",
         "https://crates.io/api/v1/crates/axum/0.8.9",
         "https://github.com/caddyserver/caddy",
-        "https://caddyserver.com/docs/"
+        "https://caddyserver.com/docs/",
+        "https://github.com/acassen/keepalived/blob/v2.2.8/doc/man/man8/keepalived.8.in",
+        "https://github.com/acassen/keepalived/blob/v2.2.8/doc/man/man5/keepalived.conf.5.in",
+        "https://github.com/acassen/keepalived/blob/v2.2.8/COPYING",
+        "https://www.kernel.org/doc/html/latest/networking/ipvs-sysctl.html"
       ],
       "maintenance_status": {
-        "evidence": "Official crates.io specified-version metadata reviewed; non-yanked publication plus existing production call sites/README where noted, not a security guarantee",
+        "evidence": "Existing Axum/Caddy call sites retained. keepalived v2.2.8 official checker/CLI manpages and GPLv2 COPYING read for the thin configuration adapter on 2026-10-31. Exact installed distribution package, kernel and runtime behavior must be recorded by hosted/target experiments; provenance is not a security or availability guarantee.",
         "name": "axum",
         "version": "0.8.9",
         "published_at": "2026-04-14",
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-10-31",
         "yanked": false
       },
       "platforms": [
@@ -881,29 +886,34 @@
       ],
       "version": {
         "axum": "0.8.9",
-        "caddy_and_lb": "Retain existing supported deployment and freeze exact binary/image digests in W26; not established by this research"
+        "caddy": "Hosted fixture pins 2.11.7 linux amd64 binary SHA256 678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9; production operator must independently provision matching trusted hostname certificates",
+        "keepalived": "v2.2.8 source documentation reviewed; Ubuntu distribution executable is an external system component, exact hosted/target version recorded at execution",
+        "ipvs": "Existing Linux kernel IPVS-NAT/wrr, ipvsadm and distribution iproute2; exact kernel/package versions belong to execution provenance"
       },
       "license": {
         "axum": "MIT",
-        "caddy": "Existing deployment notices must be preserved; exact image qualification pending",
-        "lb": "Depends on selected supported deployment"
+        "caddy": "Apache-2.0; preserve separate Caddy distribution notices",
+        "lb": "keepalived COPYING is GNU GPL version 2. Linux IPVS/ipvsadm remain separately installed system components. This adapter invokes their external CLIs and exports configuration; it does not link, copy or redistribute their implementation. Preserve distribution licenses when separately packaging them."
       },
       "selection_reason": "reuse_existing_HTTP_gateway_and_mature_fixed_entry",
-      "adapter_boundary": "HTTP/TLS/WebSocket/LB components own protocols; NestLink owns exact target/origin, service grants, lease/namespace/entry groups, quotas, readiness and revoke.",
+      "adapter_boundary": "Axum/Caddy own HTTP/TLS/WebSocket; kernel IPVS/keepalived own fixed-entry balancing and health polling. NestLink binds the immutable service-specific group, original approved target and lease purposes, partitioned original grants/four-scope ledger, exact member readiness, generated dedicated configuration and revoke/physical cleanup.",
       "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
       "security_and_operations_cost": [
         "No arbitrary URL proxy; per-service origin prevents management-origin HTML injection",
         "HTTP/HTTPS/TCP/UDP need actual double-edge fixed-entry fault tests",
         "No zero-interruption promise for old connections without replicated state",
-        "Every edge and restored old edge must honor revoke and shared budget"
+        "Every edge and restored old edge must honor revoke and shared budget",
+        "First IPVS deployment mode is dedicated IPv4 director, one group and prepared return routing; no director HA/VRRP or IPv6 VIP claim",
+        "Cooperative cleanup can seal original grants; a killed old runtime's unknown promise remains outstanding and cannot be donated or refilled",
+        "Operator-only protected DER HTTPS root supplements local trust; group requests cannot select roots or disable exact TLS name validation"
       ],
       "work_packages": [
         "W16",
         "W25",
         "W26"
       ],
-      "validation_status": "manual_selection_review_only; Actions and target qualification pending",
-      "decision_ref": "docs/adr/network/0001-component-boundaries.md"
+      "validation_status": "W26 production first slice and hosted L2 candidate implemented; first hosted fixture compilation reported import/temporary-lifetime errors now corrected, exact-source rerun and target qualification pending",
+      "decision_ref": "docs/adr/network/0046-partitioned-service-edge-group-and-ipvs-entry.md"
     },
     {
       "id": "C16",

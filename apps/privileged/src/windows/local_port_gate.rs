@@ -6,7 +6,7 @@
 //! Persistent filters survive controller crashes. Expiry removes the permit;
 //! only the original process handle becoming signaled permits final cleanup.
 #![allow(unsafe_code)]
-mod store;
+pub(in crate::windows) mod store;
 #[cfg(test)]
 mod tests;
 mod wfp;
@@ -89,13 +89,13 @@ impl ProcessIdentity {
         }
         Ok(())
     }
-    fn normal(&self) -> bool {
+    pub(in crate::windows) fn normal(&self) -> bool {
         !self.elevated && (0x2000..0x3000).contains(&self.integrity)
     }
-    fn administrator(&self) -> bool {
+    pub(in crate::windows) fn administrator(&self) -> bool {
         self.elevated && self.integrity == 0x3000
     }
-    fn same_image(&self, other: &Self) -> bool {
+    pub(in crate::windows) fn same_image(&self, other: &Self) -> bool {
         self.image_volume == other.image_volume
             && self.image_index == other.image_index
             && security::same_image(&self.image, &other.image)
@@ -114,7 +114,7 @@ impl ProcessIdentity {
     /// The administrator-owned receipt already attests the helper's token and
     /// image. Medium-integrity clients need only query the original kernel
     /// incarnation and liveness, without querying another user's admin token.
-    fn helper_alive(&self) -> io::Result<()> {
+    pub(in crate::windows) fn helper_alive(&self) -> io::Result<()> {
         self.validate()?;
         if !self.administrator() || !self.still_alive()? {
             return Err(invalid(

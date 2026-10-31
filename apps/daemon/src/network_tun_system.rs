@@ -5,6 +5,7 @@ mod linux;
 #[cfg(test)]
 mod native_tests;
 mod owner;
+mod packet_device;
 mod plan;
 mod store;
 #[cfg(test)]
@@ -13,6 +14,7 @@ mod tests;
 use crate::space_dns_system::{process_identity, require_system_admin, system_wall_ms};
 pub(crate) use owner::{TunArgs, run as run_owner};
 use plan::TunPlan;
+use packet_device::PacketDevice;
 use serde::{Deserialize, Serialize};
 use std::{io, path::PathBuf, time::Duration};
 use store::JournalStore;

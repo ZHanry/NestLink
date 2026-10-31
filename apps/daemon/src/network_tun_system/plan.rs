@@ -5,14 +5,38 @@ use nestlink_protocol::network::{GrantClaims, IpPrefix, NetworkAccessClaims, Pee
 use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeSet,
-    fs::{File, OpenOptions},
-    io::Read,
     net::IpAddr,
-    os::unix::fs::{MetadataExt, OpenOptionsExt},
     path::Path,
 };
+#[cfg(target_os="linux")]
+use std::{fs::{File,OpenOptions},io::Read,os::unix::fs::{MetadataExt, OpenOptionsExt}};
 
 pub(super) const MAX_JSON: u64 = 65_536;
+#[derive(Clone,Debug,PartialEq,Eq,Serialize,Deserialize)]
+#[serde(tag="platform",rename_all="snake_case",deny_unknown_fields)]
+pub(super) enum HostPrincipal {
+    Linux { uid:u32 },
+    Windows { sid:String,session:u32,image_volume:u32,image_index:u64 },
+}
+impl HostPrincipal {
+    pub fn current() -> Result<Self> {
+        #[cfg(target_os="linux")]
+        { Ok(Self::Linux {uid:rustix::process::geteuid().as_raw()}) }
+        #[cfg(windows)]
+        {
+            nestlink_privileged::windows::require_normal_user_process()?;
+            let process=nestlink_privileged::windows::local_port_gate::ProcessIdentity::read(std::process::id())?;
+            Ok(Self::Windows {sid:process.sid,session:process.session,image_volume:process.image_volume,image_index:process.image_index})
+        }
+    }
+    fn valid_here(&self) -> bool {
+        match self {
+            Self::Linux {uid}=>cfg!(target_os="linux") && *uid>0 && *uid<=i32::MAX as u32,
+            Self::Windows {sid,session,image_volume:_,image_index}=>cfg!(windows) && *session>0 && *image_index>0
+                && sid.starts_with("S-1-") && sid.len()<=184 && sid.bytes().all(|b|b==b'S'||b==b'-'||b.is_ascii_digit()),
+        }
+    }
+}
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct TunPlan {
@@ -20,7 +44,7 @@ pub(super) struct TunPlan {
     pub owner_id: String,
     pub space_id: String,
     pub process: crate::space_dns_system::ProcessIdentity,
-    pub uid: u32,
+    pub principal: HostPrincipal,
     pub created_at_ms: u64,
     pub expires_at_ms: u64,
     pub deployment_id: String,
@@ -35,6 +59,12 @@ pub(super) struct TunPlan {
     pub signature: String,
 }
 impl TunPlan {
+    #[cfg(target_os="linux")]
+    pub fn linux_uid(&self) -> Result<u32> {
+        match &self.principal {HostPrincipal::Linux {uid}=>Ok(*uid),_=>Err(io::Error::other("Linux TUN requires its explicit original ordinary UID").into())}
+    }
+    #[cfg(windows)]
+    pub fn digest(&self) -> Result<[u8;32]> {Ok(nestlink_identity::digest(&serde_json::to_vec(self)?))}
     pub fn link(&self) -> String {
         format!("nlt{}", &self.owner_id.replace('-', "")[..12])
     }
@@ -43,13 +73,12 @@ impl TunPlan {
     }
     pub fn validate(&self, fresh: bool) -> Result {
         let now = system_wall_ms()?;
-        if self.schema_version != 1
+        if self.schema_version != 2
             || !nestlink_protocol::valid_id(&self.owner_id)
             || !nestlink_protocol::valid_id(&self.space_id)
             || !nestlink_protocol::valid_id(&self.deployment_id)
             || !self.process.valid()
-            || self.uid == 0
-            || self.uid > i32::MAX as u32
+            || !self.principal.valid_here()
             || self.created_at_ms >= self.expires_at_ms
             || self.expires_at_ms - self.created_at_ms > 60_000
             || self.approved_digest == [0; 32]
@@ -143,6 +172,20 @@ impl TunPlan {
         Ok(())
     }
     pub fn read(path: &Path) -> Result<Self> {
+        #[cfg(target_os="linux")]
+        {Self::read_linux(path)}
+        #[cfg(windows)]
+        {
+            let input=nestlink_privileged::windows::network_tun::SelectedPlanFile::open(path)?;
+            let plan:Self=serde_json::from_slice(&input.bytes()?)?;
+            plan.validate(false)?;
+            let HostPrincipal::Windows {ref sid,..}=plan.principal else {return Err(io::Error::other("Windows TUN requires its explicit original SID principal").into());};
+            input.require_owner(sid)?;
+            Ok(plan)
+        }
+    }
+    #[cfg(target_os="linux")]
+    fn read_linux(path: &Path) -> Result<Self> {
         if !path.is_absolute() {
             return Err(io::Error::other("absolute public TUN plan path required").into());
         }
@@ -183,7 +226,7 @@ impl TunPlan {
         }
         let plan: Self = serde_json::from_slice(&bytes)?;
         plan.validate(false)?;
-        if metadata.uid() != plan.uid {
+        if metadata.uid() != plan.linux_uid()? {
             return Err(io::Error::other(
                 "TUN public input must belong to its captured ordinary UID",
             )
@@ -200,8 +243,13 @@ impl TunPlan {
             .parent()
             .ok_or_else(|| io::Error::other("TUN plan parent missing"))?;
         nestlink_platform_security::check_private_directory(parent)?;
-        nestlink_platform_security::create_private(path, &serde_json::to_vec_pretty(self)?)?;
-        File::open(parent)?.sync_all()?;
+        #[cfg(target_os="linux")]
+        {
+            nestlink_platform_security::create_private(path, &serde_json::to_vec_pretty(self)?)?;
+            File::open(parent)?.sync_all()?;
+        }
+        #[cfg(windows)]
+        {nestlink_privileged::windows::network_tun::save_owner_plan(path,&serde_json::to_vec_pretty(self)?)?;}
         Ok(())
     }
 }

@@ -112,8 +112,8 @@ pub(crate) async fn run(args: TunArgs) -> Result {
         let scope = claims.scope();
         let now = system_wall_ms()?;
         let remaining = u64::try_from(access.remaining_lifetime().as_millis())?;
-        let plan = TunPlan { schema_version:1, owner_id, space_id:args.space.clone(),
-            process: process_identity(std::process::id()).await?, uid:rustix::process::geteuid().as_raw(),
+        let plan = TunPlan { schema_version:2, owner_id, space_id:args.space.clone(),
+            process: process_identity(std::process::id()).await?, principal:plan::HostPrincipal::current()?,
             created_at_ms:now, expires_at_ms:scope.expires_at_ms.min(now.checked_add(remaining).ok_or_else(|| io::Error::other("TUN deadline overflow"))?),
             deployment_id:scope.deployment_id.clone(), authority_key:*pin.authority_key(),
             local_peer:nestlink_protocol::network::PeerId(local.identity.fingerprint()),remote_peer:access.remote_peer(),
@@ -128,14 +128,16 @@ pub(crate) async fn run(args: TunArgs) -> Result {
         println!("Review the exact plan, then separately run this same executable as root: network-tun-system apply --plan <above-path> --journal-dir <root-private-directory>");
         let outcome = async {
             let state = wait_ready(&plan,&sdk,&mut access,&directory,login).await?;
-            let device = adopt_ready(&plan,&state,&sdk,&mut access,&directory,login).await?;
+            let mut device = adopt_ready(&plan,&state,&sdk,&mut access,&directory,login).await?;
             access.refresh(&sdk).await?;
             // Physical binding precedes every overlay route. While a peer is
             // connecting, keep the original online authority and local login
             // observed; no packet is consumed until mTLS and digest proof pass.
             establish(&mut endpoint,args.dial,&sdk,&mut access,&directory,login,&plan,&state).await?;
             let result = packet_loop(&device,&mut endpoint,&sdk,&mut access,&directory,login,&plan,&state).await;
+            let stopped=device.shutdown().await;
             drop(device);
+            stopped?;
             result
         }.await;
         access.stop();
@@ -204,7 +206,7 @@ async fn adopt_ready(
     access: &mut OnlinePacketAccess,
     directory: &Path,
     login: [u8; 32],
-) -> Result<tun_rs::AsyncDevice> {
+) -> Result<PacketDevice> {
     // UP becomes observable before the helper durably commits its readback and
     // closes its one creating queue. That original EBUSY is a handoff wait,
     // never permission to attach a changed interface or restart the business.
@@ -221,7 +223,7 @@ async fn adopt_ready(
                 refreshed = Instant::now();
             }
             match linux::adopt(plan, state).await {
-                Ok(device) => return Ok(device),
+                Ok(device) => return Ok(PacketDevice::linux(device)),
                 Err(error)
                     if error
                         .downcast_ref::<io::Error>()
@@ -279,7 +281,7 @@ struct Counters {
 }
 #[allow(clippy::too_many_arguments)]
 async fn packet_loop(
-    device: &tun_rs::AsyncDevice,
+    device: &PacketDevice,
     endpoint: &mut DirectPacketEndpoint,
     sdk: &Sdk,
     access: &mut OnlinePacketAccess,
