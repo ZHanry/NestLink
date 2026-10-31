@@ -121,10 +121,27 @@ async fn select_client_key(lab:&lab::Lab,name:&str)->Result {
     let secret=nestlink_platform_security::read_private(&lab.root.join(format!("wireguard-{name}.key")),128)?;
     crate::wireguard::tools::run("wg",&["set","wgclient","private-key","/dev/stdin"],&secret,4096).await?;Ok(())
 }
+async fn public_diagnostic(lab:&lab::Lab)->Result {
+    let plan=Plan::read(&lab.plan(0))?;let namespace=plan.namespace();let name=super::super::wireguard::Ingress::interface(&plan);
+    for field in ["latest-handshakes","transfer"] {
+        let client=crate::wireguard::tools::run("wg",&["show","wgclient",field],&[],4096).await?;
+        let portal=kernel::command("ip",&["netns","exec",&namespace,"/usr/bin/wg","show",&name,field]).await?;
+        eprintln!("WireGuard hosted public diagnostic {field}: client={}, portal={}",std::str::from_utf8(&client)?.trim_end(),std::str::from_utf8(&portal)?.trim_end());
+    }
+    let nft=kernel::tool("nft")?;let nft=nft.to_str().ok_or_else(||io::Error::other("native nft path must be UTF-8"))?;
+    let quota=kernel::command("ip",&["netns","exec",&namespace,nft,"list","quota","inet",&namespace,"budget"]).await?;
+    eprintln!("WireGuard hosted original kernel quota: {}",std::str::from_utf8(&quota)?.trim_end());
+    Ok(())
+}
 pub(super) async fn client_probe(lab:&lab::Lab)->Result {
     let case=std::env::var("NESTLINK_SUBNET_NATIVE_CASE")?;
     if case=="wg-setup" {
         let plan=Plan::read(&lab.plan(0))?;let ingress=plan.wireguard.as_ref().ok_or_else(||io::Error::other("standard-client ingress fixture missing"))?;
+        // The original subnet lab fixes its inner LAN MTU at 1280. Standard
+        // WireGuard adds its outer IPv4/UDP/authentication overhead; retain a
+        // normal 1500-byte physical client link so a full approved 1280-byte
+        // inner packet does not depend on forbidden outer IP fragmentation.
+        kernel::command("ip",&["link","set","dev","eth0","mtu","1500"]).await?;
         kernel::command("ip",&["link","add","dev","wgclient","type","wireguard"]).await?;
         kernel::command("ip",&["link","set","dev","wgclient","mtu","1280","addrgenmode","none"]).await?;
         let secret=nestlink_platform_security::read_private(&lab.root.join("wireguard-client.key"),128)?;
@@ -148,6 +165,6 @@ pub(super) async fn client_probe(lab:&lab::Lab)->Result {
     let source=if case=="wg-spoofed-source" {kernel::command("ip",&["-4","addr","add","10.210.7.3/32","dev","wgclient"]).await?;"10.210.7.3"}else{CLIENT};
     let socket=UdpSocket::bind((source,0)).await?;let port=if case=="wg-bad-port" {fixture::DENIED}else{fixture::UDP};let payload=vec![79_u8;1252];socket.send_to(&payload,(target,port)).await?;let mut received=[0_u8;2048];
     let result=tokio::time::timeout(Duration::from_millis(if case=="wg-udp" {3000}else{800}),socket.recv_from(&mut received)).await;
-    if case=="wg-udp" {let (count,peer)=result??;assert_eq!(peer.ip().to_string(),target);assert_eq!(peer.port(),port);assert_eq!(&received[..count],payload);}else{assert!(result.is_err(),"wrong client key/source/ACL or ended owner forwarded standard-client data");}
+    if case=="wg-udp" {let (count,peer)=match result {Ok(Ok(packet))=>packet,Ok(Err(error))=>{let _=public_diagnostic(lab).await;return Err(error.into());},Err(error)=>{let _=public_diagnostic(lab).await;return Err(error.into());}};assert_eq!(peer.ip().to_string(),target);assert_eq!(peer.port(),port);assert_eq!(&received[..count],payload);}else{assert!(result.is_err(),"wrong client key/source/ACL or ended owner forwarded standard-client data");}
     Ok(())
 }

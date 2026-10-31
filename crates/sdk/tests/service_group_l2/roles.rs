@@ -383,7 +383,10 @@ async fn coordinator(directory: &Path) -> Result {
     // Only the SIGKILL experiment sets this. Unknown old commitments are never
     // turned into a fabricated drain receipt or assigned to the healthy edge.
     let mut crashed_member: Option<(usize, u64, u64)> = None;
-    for sequence in 1..=8 {
+    // HTTPS needs seven read/publish commands, then revoke and finish; its
+    // SIGKILL variant also records the unknown crashed slice. Keep a finite
+    // command budget without stopping the real management server at revoke.
+    for sequence in 1..=16 {
         let command = directory.join(format!("command-{sequence}.json"));
         exists(&command).await?;
         let action: serde_json::Value = read(&command)?;
