@@ -13,6 +13,8 @@ mod native_gpu_diagnostics;
 mod native_video;
 #[cfg(any(target_os = "linux", windows))]
 mod network_packet_runtime;
+#[cfg(target_os = "linux")]
+mod network_subnet_system;
 #[cfg(any(target_os = "linux", windows))]
 mod network_tun_system;
 mod private_service_proxy;
@@ -22,6 +24,8 @@ mod service_group;
 mod session_store;
 mod space_dns;
 mod space_dns_system;
+#[cfg(target_os = "linux")]
+mod wireguard;
 
 use clap::{Parser, Subcommand};
 use nestlink_app_core::{AppCore, Limits, ShutdownState};
@@ -102,6 +106,18 @@ enum Command {
     /// Review, apply or recover one exact host-only TUN OS plan; reads no login.
     #[cfg(any(target_os = "linux", windows))]
     NetworkTunSystem(network_tun_system::SystemTunArgs),
+    /// Explicit ordinary-user IPv4 subnet gateway with separate root approval.
+    #[cfg(target_os = "linux")]
+    NetworkSubnet(network_subnet_system::SubnetArgs),
+    /// Review, apply and recover one exact isolated subnet namespace.
+    #[cfg(target_os = "linux")]
+    NetworkSubnetSystem(network_subnet_system::SystemSubnetArgs),
+    #[cfg(target_os = "linux")]
+    #[command(hide = true)]
+    NetworkSubnetWorker(network_subnet_system::SubnetWorkerArgs),
+    /// Manage explicit WireGuard client bindings and protected configuration.
+    #[cfg(target_os = "linux")]
+    Wireguard(wireguard::WireGuardArgs),
     #[command(
         name = "file-quota",
         about = "Offline native FileWrite quota metadata maintenance"
@@ -456,6 +472,14 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         Some(Command::NetworkTun(command)) => return network_tun_system::run_owner(command).await,
         #[cfg(any(target_os = "linux", windows))]
         Some(Command::NetworkTunSystem(command)) => return network_tun_system::run(command).await,
+        #[cfg(target_os = "linux")]
+        Some(Command::NetworkSubnet(command)) => return network_subnet_system::run_owner(command).await,
+        #[cfg(target_os = "linux")]
+        Some(Command::NetworkSubnetSystem(command)) => return network_subnet_system::run(command).await,
+        #[cfg(target_os = "linux")]
+        Some(Command::NetworkSubnetWorker(command)) => return network_subnet_system::run_worker(command).await,
+        #[cfg(target_os = "linux")]
+        Some(Command::Wireguard(command)) => return wireguard::run(command).await,
         Some(Command::FileQuota(command)) => return Ok(run_file_quota(command)?),
         Some(Command::Maintenance(command)) => return maintenance::run(command).await,
         Some(Command::Shutdown(command)) => return maintenance::shutdown(command).await,

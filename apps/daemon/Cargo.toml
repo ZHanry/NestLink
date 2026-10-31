@@ -48,6 +48,7 @@ nestlink-platform-audio.workspace = true
 tun-rs = { version = "=2.8.16", default-features = false, features = ["async_tokio"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
+tokio = { workspace = true, features = ["io-std"] }
 ipnet = "=2.12.2"
 tun-rs = { version = "=2.8.16", default-features = false, features = ["async_tokio"] }
 nestlink-platform-input.workspace = true
