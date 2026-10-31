@@ -488,22 +488,33 @@ async fn portal_restart_and_observed_binding_expiry_close_the_original_graph_wit
                 )
                 .is_err()
         );
-        let connection = rusqlite::Connection::open(&f.database)?;
-        let closed: bool = connection.query_row(
-            "SELECT revoked FROM network_wireguard_bindings WHERE grant_id=?1",
-            [&request.grant_id],
-            |row| row.get(0),
-        )?;
-        assert!(closed);
         assert!(!issued.binding.claims.is_empty());
-        let original_closed: bool = connection.query_row(
-            "SELECT revoked FROM network_packet_access WHERE access_grant_id=?1",
-            [&request.access_grant_id],
-            |row| row.get(0),
-        )?;
-        assert!(original_closed);
-        drop(connection);
         drop(store);
+        // Reopen through the production Store surface. The persisted snapshot
+        // must close the binding and all three original graph grants even at
+        // the same observation clock; a direct SQL dependency would bypass the
+        // contract this integration test is meant to qualify.
+        let mut reopened = f.store()?;
+        let snapshot = reopened.network_policy_snapshot(&f.space, observation)?;
+        for id in [
+            &request.grant_id,
+            &access.access.grant_id,
+            &access.connectivity.grant_id,
+            &access.path.grant_id,
+        ] {
+            assert!(snapshot.verification().revoked_grant_ids.contains(id));
+        }
+        assert!(
+            reopened
+                .wireguard_client_binding(actor, &f.space, &request.grant_id, observation)
+                .is_err()
+        );
+        assert!(
+            reopened
+                .network_access(actor, &f.space, &request.access_grant_id, observation)
+                .is_err()
+        );
+        drop(reopened);
         f.finish().await?;
     }
     Ok(())

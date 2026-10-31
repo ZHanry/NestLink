@@ -4,7 +4,7 @@
 use super::*;
 use nestlink_identity::wireguard::{WireGuardPortalState, verify_wireguard_client_binding};
 use nestlink_protocol::{
-    network::{IpPrefix, PeerId},
+    network::IpPrefix,
     subnet::SubnetMappingClaims,
     wireguard::{management::*, *},
 };
