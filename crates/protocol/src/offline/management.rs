@@ -1,20 +1,21 @@
 //! Online review and durable consumption; these envelopes never authorize I/O.
 use super::*;
+use schemars::JsonSchema;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct OfflineEnableUpdate {
     pub expected_revision: u64,
     pub enabled: bool,
 }
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct OfflinePolicyView {
     pub revision: u64,
     pub enabled: bool,
     pub highest_revocation_epoch: u64,
 }
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct OfflinePrivateDraftRequest {
     pub consumer_device_id: String,
@@ -28,7 +29,7 @@ pub struct OfflinePrivateDraftRequest {
     pub maximum_connections: u32,
     pub expires_at_ms: u64,
 }
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct OfflineBundleView {
     pub claims: OfflineGrantBundleClaims,
@@ -44,7 +45,7 @@ pub struct OfflineBundleView {
     pub highest_revocation_epoch: u64,
     pub observed_at_ms: u64,
 }
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct OfflineConsumeChallenge {
     pub bundle_id: String,
@@ -54,7 +55,7 @@ pub struct OfflineConsumeChallenge {
     pub challenge: [u8; 32],
     pub expires_at_ms: u64,
 }
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct OfflineConsumeRequest {
     pub endpoint: u8,

@@ -2,6 +2,7 @@
 //! accepted by decoding this bundle. Every section is mandatory.
 use crate::{ContractError, ErrorCode, valid_id};
 use serde::{Deserialize, Serialize};
+use schemars::JsonSchema;
 pub mod channel;
 pub mod management;
 
@@ -9,7 +10,7 @@ pub const OFFLINE_BUNDLE_VERSION: u16 = 1;
 pub const MAX_OFFLINE_MS: u64 = 30 * 60 * 1000;
 pub const OFFLINE_BUNDLE_BYTES: usize = 16_384;
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct OfflineMember {
     pub installation_id: String,
@@ -21,14 +22,14 @@ pub struct OfflineMember {
     pub process_nonce: [u8; 32],
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum OfflineDirectTransport {
     Quic,
     Tls,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct OfflineConnection {
     pub connection_id: String,
@@ -37,7 +38,7 @@ pub struct OfflineConnection {
     pub direct_transports: Vec<OfflineDirectTransport>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum OfflineRemoteOperation {
     View,
@@ -49,7 +50,7 @@ pub enum OfflineRemoteOperation {
     FileWrite,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "purpose", rename_all = "snake_case", deny_unknown_fields)]
 pub enum OfflineBusiness {
     RemoteControl {
@@ -66,7 +67,7 @@ pub enum OfflineBusiness {
     },
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct OfflineResourceReservation {
     pub reservation_id: String,
@@ -78,7 +79,7 @@ pub struct OfflineResourceReservation {
     pub connection_limit: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct OfflineGrantBundleClaims {
     pub bundle_version: u16,
@@ -231,7 +232,7 @@ impl OfflineGrantBundleClaims {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct SignedOfflineGrantBundle {
     pub claims: Vec<u8>,
@@ -254,7 +255,7 @@ fn invalid(reason: &'static str) -> ContractError {
 
 /// Device consent to the exact complete draft, separate from the authority
 /// signature and from an account's management session. Both endpoints approve.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct OfflineEndpointApproval {
     pub endpoint: u8,

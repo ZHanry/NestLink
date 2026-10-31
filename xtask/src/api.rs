@@ -1,4 +1,5 @@
 use nestlink_protocol::api::*;
+use nestlink_protocol::offline::{OfflineEndpointApproval,management::*};
 use nestlink_protocol::service_plane::group::*;
 use nestlink_protocol::service_plane::{
     ServiceLeaseClaims, ServiceQuotaLimitUpdate, ServiceQuotaUsageQuery, ServiceQuotaUsageView,
@@ -147,6 +148,13 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         NetworkIssueRequest,
         NetworkRevokeGrantRequest,
         NetworkPolicyView,
+        OfflineEnableUpdate,
+        OfflinePolicyView,
+        OfflinePrivateDraftRequest,
+        OfflineBundleView,
+        OfflineEndpointApproval,
+        OfflineConsumeChallenge,
+        OfflineConsumeRequest,
         NetworkMemberView,
         NetworkGrantView,
         NetworkAccessRequest,

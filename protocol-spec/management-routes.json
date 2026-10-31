@@ -188,4 +188,12 @@
   ,{"path":"/network/spaces/{space}/wireguard-client-bindings","method":"post","operation":"network_policy::wireguard::issue","request":"WireGuardClientBindingRequest","response":"WireGuardClientBindingView","status":201,"auth":true}
   ,{"path":"/network/spaces/{space}/wireguard-client-bindings/{binding}","method":"get","operation":"network_policy::wireguard::read","response":"WireGuardClientBindingView","status":200,"auth":true}
   ,{"path":"/network/spaces/{space}/wireguard-client-bindings/{binding}","method":"delete","operation":"network_policy::wireguard::revoke","request":"WireGuardClientRevoke","response":"NetworkPolicyView","status":200,"auth":true}
+  ,{"path":"/network/spaces/{space}/offline","method":"get","operation":"network_policy::offline::policy","response":"OfflinePolicyView","status":200,"auth":true}
+  ,{"path":"/network/spaces/{space}/offline","method":"put","operation":"network_policy::offline::enable","request":"OfflineEnableUpdate","response":"OfflinePolicyView","status":200,"auth":true,"administrator":true}
+  ,{"path":"/network/spaces/{space}/offline/private-drafts","method":"post","operation":"network_policy::offline::draft","request":"OfflinePrivateDraftRequest","response":"OfflineBundleView","status":201,"auth":true}
+  ,{"path":"/network/spaces/{space}/offline/bundles/{bundle}","method":"get","operation":"network_policy::offline::read","response":"OfflineBundleView","status":200,"auth":true}
+  ,{"path":"/network/spaces/{space}/offline/bundles/{bundle}","method":"delete","operation":"network_policy::offline::revoke","response":"OfflineBundleView","status":200,"auth":true}
+  ,{"path":"/network/spaces/{space}/offline/bundles/{bundle}/approval","method":"post","operation":"network_policy::offline::approve","request":"OfflineEndpointApproval","response":"OfflineBundleView","status":200,"auth":true}
+  ,{"path":"/network/spaces/{space}/offline/bundles/{bundle}/consume-challenge/{endpoint}","method":"post","operation":"network_policy::offline::challenge","response":"OfflineConsumeChallenge","status":200,"auth":true}
+  ,{"path":"/network/spaces/{space}/offline/bundles/{bundle}/consume","method":"post","operation":"network_policy::offline::consume","request":"OfflineConsumeRequest","response":"OfflineBundleView","status":200,"auth":true}
 ]
