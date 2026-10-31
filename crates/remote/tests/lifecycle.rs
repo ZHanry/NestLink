@@ -2291,11 +2291,7 @@ async fn original_input_cleanup_receipt_prevents_double_reset_but_failed_cleanup
             },
         })?;
         lease.stop(StopReason::TransportLost)?;
-        let report = lease
-            .subscribe_stopped()
-            .borrow()
-            .clone()
-            .ok_or("missing cleanup receipt")?;
+        let report = (*lease.subscribe_stopped().borrow()).ok_or("missing cleanup receipt")?;
         assert_eq!(report.reason, StopReason::TransportLost);
         assert_eq!(
             report.cleanup,

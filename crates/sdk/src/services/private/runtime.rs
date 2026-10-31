@@ -103,7 +103,7 @@ impl Drop for PrivateServiceHost {
 
 enum PrivateCarrier {
     Direct(carrier::Connected),
-    Routed(super::network::RelayOwner),
+    Routed(Box<super::network::RelayOwner>),
 }
 impl PrivateCarrier {
     fn connection(&self) -> std::io::Result<&quinn::Connection> {
@@ -371,9 +371,9 @@ impl Sdk {
             return Err(SdkError::Trust);
         }
         let connected = if bundle.network.relay.is_some() {
-            PrivateCarrier::Routed(
+            PrivateCarrier::Routed(Box::new(
                 super::network::connect(self, consumer, &bundle, relay_policy).await?,
-            )
+            ))
         } else {
             PrivateCarrier::Direct(
                 carrier::connect(
