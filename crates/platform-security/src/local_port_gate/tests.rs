@@ -13,10 +13,15 @@ fn plan() -> io::Result<GatePlan> {
         endpoint: SocketAddr::from((Ipv4Addr::LOCALHOST, 34567)),
         transport: Transport::Tcp,
         process: ProcessIdentity {
-            pid: 42, uid: 1001, incarnation: format!("1001:123:{BOOT}"),
-            image: "/usr/bin/nestlink-daemon".into(), image_device: 8, image_inode: 991,
+            pid: 42,
+            uid: 1001,
+            incarnation: format!("1001:123:{BOOT}"),
+            image: "/usr/bin/nestlink-daemon".into(),
+            image_device: 8,
+            image_inode: 991,
         },
-        created_at_ms: now, expires_at_ms: now + 60_000,
+        created_at_ms: now,
+        expires_at_ms: now + 60_000,
     })
 }
 
@@ -63,7 +68,13 @@ fn snapshot(plan: &GatePlan, denying: bool) -> Value {
 fn gate_plan_rejects_other_endpoints_root_owners_and_extended_deadlines() -> io::Result<()> {
     let original = plan()?;
     original.validate(true)?;
-    for endpoint in ["0.0.0.0:34567", "127.0.0.2:34567", "192.0.2.1:34567", "[::]:34567", "127.0.0.1:0"] {
+    for endpoint in [
+        "0.0.0.0:34567",
+        "127.0.0.2:34567",
+        "192.0.2.1:34567",
+        "[::]:34567",
+        "127.0.0.1:0",
+    ] {
         let mut changed = original.clone();
         changed.endpoint = endpoint.parse().map_err(io::Error::other)?;
         assert!(changed.validate(true).is_err(), "accepted {endpoint}");
@@ -86,7 +97,8 @@ fn gate_plan_rejects_other_endpoints_root_owners_and_extended_deadlines() -> io:
 }
 
 #[test]
-fn nft_readback_requires_both_distinct_chains_ordered_rules_and_complete_handles() -> io::Result<()> {
+fn nft_readback_requires_both_distinct_chains_ordered_rules_and_complete_handles() -> io::Result<()>
+{
     let plan = plan()?;
     let original = snapshot(&plan, false);
     nft::verify(&plan, &original, false)?;
@@ -99,7 +111,11 @@ fn nft_readback_requires_both_distinct_chains_ordered_rules_and_complete_handles
     changed["chains"][0]["policy"] = json!("drop");
     assert!(nft::verify(&plan, &changed, false).is_err());
     let mut changed = original.clone();
-    changed["rules"] = json!([original["rules"][1], original["rules"][0], original["rules"][2]]);
+    changed["rules"] = json!([
+        original["rules"][1],
+        original["rules"][0],
+        original["rules"][2]
+    ]);
     assert!(nft::verify(&plan, &changed, false).is_err());
     for handle in [Value::Null, json!(0), json!("4")] {
         let mut changed = original.clone();
@@ -120,7 +136,10 @@ fn nft_readback_rejects_uid_protocol_address_and_interface_bypasses() -> io::Res
     let plan = plan()?;
     let original = snapshot(&plan, false);
     for (expression, replacement) in [
-        (0, json!("127.0.0.2")), (1, json!(17)), (2, json!(34568)), (3, json!(0)),
+        (0, json!("127.0.0.2")),
+        (1, json!(17)),
+        (2, json!(34568)),
+        (3, json!(0)),
     ] {
         let mut changed = original.clone();
         changed["rules"][0]["expr"][expression]["match"]["right"] = replacement;
@@ -181,7 +200,10 @@ fn process_incarnation_exit_check_does_not_confuse_exec_with_socket_close() -> i
     changed_image.image = "/different/image".into();
     changed_image.image_inode = original.image_inode.saturating_add(1);
     assert_ne!(changed_image, ProcessIdentity::read(std::process::id())?);
-    assert!(changed_image.still_alive()?, "a changed image cannot justify deleting a live process's fence");
+    assert!(
+        changed_image.still_alive()?,
+        "a changed image cannot justify deleting a live process's fence"
+    );
     let mut changed_credentials = original.clone();
     changed_credentials.uid = original.uid.saturating_add(1);
     let (start, boot) = original.incarnation_parts()?;
@@ -227,14 +249,22 @@ fn public_receipt_paths_reject_user_writable_ancestors_and_parent_traversal() ->
     let link = temporary.path().join("linked");
     symlink("/etc", &link)?;
     assert!(ReceiptParent::open(&link.join("receipt.json")).is_err());
-    assert!(trusted_ancestors(&link).is_err(), "canonicalization must not hide a user-replaceable ancestor");
+    assert!(
+        trusted_ancestors(&link).is_err(),
+        "canonicalization must not hide a user-replaceable ancestor"
+    );
     trusted_ancestors(Path::new("/tmp"))?;
     Ok(())
 }
 
 #[test]
 fn ordinary_plan_file_roundtrip_is_create_new_bounded_and_no_follow() -> io::Result<()> {
-    let plan = GatePlan::for_current_process(OWNER.into(), SocketAddr::from((Ipv4Addr::LOCALHOST, 34567)), Transport::Tcp, wall_ms()? + 60_000)?;
+    let plan = GatePlan::for_current_process(
+        OWNER.into(),
+        SocketAddr::from((Ipv4Addr::LOCALHOST, 34567)),
+        Transport::Tcp,
+        wall_ms()? + 60_000,
+    )?;
     let temporary = tempfile::tempdir()?;
     let path = temporary.path().join("plan.json");
     plan.save_new(&path)?;
@@ -246,7 +276,10 @@ fn ordinary_plan_file_roundtrip_is_create_new_bounded_and_no_follow() -> io::Res
     std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644))?;
     assert!(GatePlan::read_public(&path).is_err());
     std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600))?;
-    OpenOptions::new().write(true).open(&path)?.set_len(MAXIMUM_JSON + 1)?;
+    OpenOptions::new()
+        .write(true)
+        .open(&path)?
+        .set_len(MAXIMUM_JSON + 1)?;
     assert!(GatePlan::read_public(&path).is_err());
     assert!(RootGateReceipt::read_for_current_process(&path, &plan).is_err());
     Ok(())
@@ -254,17 +287,33 @@ fn ordinary_plan_file_roundtrip_is_create_new_bounded_and_no_follow() -> io::Res
 
 #[test]
 fn ordinary_receipt_liveness_checks_root_pid_without_reading_its_exe() -> io::Result<()> {
-    let plan = GatePlan::for_current_process(OWNER.into(), SocketAddr::from((Ipv4Addr::LOCALHOST, 34567)), Transport::Tcp, wall_ms()? + 60_000)?;
+    let plan = GatePlan::for_current_process(
+        OWNER.into(),
+        SocketAddr::from((Ipv4Addr::LOCALHOST, 34567)),
+        Transport::Tcp,
+        wall_ms()? + 60_000,
+    )?;
     // PID 1 is the Linux runner's live root process. This models the fields
     // already authenticated by a root-owned receipt. Its executable is
     // deliberately unavailable here: subsequent checks must only use proc's
     // publicly observable PID/start/boot/root-UID identity.
     let start = process_start(&std::fs::read_to_string("/proc/1/stat")?)?;
     let boot = std::fs::read_to_string("/proc/sys/kernel/random/boot_id")?;
-    let helper = ProcessIdentity { pid: 1, uid: 0, incarnation: format!("0:{start}:{}", boot.trim()),
-        image: "/unavailable/root/executable".into(), image_device: plan.process.image_device, image_inode: plan.process.image_inode };
+    let helper = ProcessIdentity {
+        pid: 1,
+        uid: 0,
+        incarnation: format!("0:{start}:{}", boot.trim()),
+        image: "/unavailable/root/executable".into(),
+        image_device: plan.process.image_device,
+        image_inode: plan.process.image_inode,
+    };
     helper.root_helper_alive()?;
-    let receipt = RootGateReceipt { schema_version: 1, installed: snapshot(&plan, false), plan: plan.clone(), helper };
+    let receipt = RootGateReceipt {
+        schema_version: 1,
+        installed: snapshot(&plan, false),
+        plan: plan.clone(),
+        helper,
+    };
     receipt.check_current(&plan)?;
     let mut changed = receipt.clone();
     changed.helper.incarnation = format!("0:0:{BOOT}");

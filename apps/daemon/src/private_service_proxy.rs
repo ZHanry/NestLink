@@ -2,8 +2,6 @@
 mod host;
 #[cfg(target_os = "linux")]
 mod raw_gate;
-#[cfg(target_os = "linux")]
-use raw_gate::wait_raw_gate;
 use crate::{session_store::SessionStore, space_dns::session_snapshot};
 use nestlink_protocol::services::private::PrivateServiceEntry;
 use nestlink_sdk::{
@@ -13,6 +11,8 @@ use nestlink_sdk::{
         NativeStreamWait,
     },
 };
+#[cfg(target_os = "linux")]
+use raw_gate::wait_raw_gate;
 use std::{
     io,
     net::SocketAddr,
@@ -158,8 +158,12 @@ impl RunningProxy {
             #[cfg(target_os = "linux")]
             Self::Raw(owner) => match owner.wait_stopped(Duration::from_secs(5)).await {
                 nestlink_sdk::services::RawProxyWait::CleanupPending => ProxyWait::Pending,
-                nestlink_sdk::services::RawProxyWait::Stopped(report) => ProxyWait::Stopped(format!("{report:?}")),
-                nestlink_sdk::services::RawProxyWait::CleanupFailed(report) => ProxyWait::Failed(format!("{report:?}")),
+                nestlink_sdk::services::RawProxyWait::Stopped(report) => {
+                    ProxyWait::Stopped(format!("{report:?}"))
+                }
+                nestlink_sdk::services::RawProxyWait::CleanupFailed(report) => {
+                    ProxyWait::Failed(format!("{report:?}"))
+                }
             },
         }
     }
@@ -295,17 +299,23 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
                 lifetime,
             )?;
             if relay_nodes.is_empty() {
-                if !relay_topology_digests.is_empty() || !relay_private_prefixes.is_empty() || allow_loopback_relay {
+                if !relay_topology_digests.is_empty()
+                    || !relay_private_prefixes.is_empty()
+                    || allow_loopback_relay
+                {
                     return Err(io::Error::other("relay scope and topology options require an explicit --relay-node selection").into());
                 }
             } else {
-                use base64::{Engine,engine::general_purpose::URL_SAFE_NO_PAD};
+                use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
                 let digests=relay_topology_digests.iter().map(|value| {
                     URL_SAFE_NO_PAD.decode(value).ok().and_then(|bytes|bytes.try_into().ok())
                         .ok_or_else(||io::Error::other("relay topology digest must be exactly 32 bytes in URL-safe unpadded base64"))
                 }).collect::<io::Result<Vec<[u8;32]>>>()?;
-                let policy=nestlink_sdk::services::PrivateServiceRelayPolicy::from_local_choice(&relay_private_prefixes,allow_loopback_relay)?;
-                choice=choice.with_relay_route(relay_nodes,digests,policy)?;
+                let policy = nestlink_sdk::services::PrivateServiceRelayPolicy::from_local_choice(
+                    &relay_private_prefixes,
+                    allow_loopback_relay,
+                )?;
+                choice = choice.with_relay_route(relay_nodes, digests, policy)?;
             }
             let sdk = Arc::new(sdk);
             let credential_directory = credentials_dir.unwrap_or_else(|| directory.clone());
@@ -313,14 +323,22 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
             let mut proxy = if raw_loopback {
                 #[cfg(target_os = "linux")]
                 {
-                    let plan_path=gate_plan.ok_or_else(||io::Error::other("raw loopback requires an explicit --gate-plan"))?;
-                    let receipt_path=gate_receipt.ok_or_else(||io::Error::other("raw loopback requires an explicit --gate-receipt"))?;
-                    let plan=wait_raw_gate(listen,datagram,lifetime,&plan_path,&receipt_path).await?;
-                    RunningProxy::Raw(sdk.start_private_service_raw(consumer,choice,plan,&receipt_path).await?)
+                    let plan_path = gate_plan.ok_or_else(|| {
+                        io::Error::other("raw loopback requires an explicit --gate-plan")
+                    })?;
+                    let receipt_path = gate_receipt.ok_or_else(|| {
+                        io::Error::other("raw loopback requires an explicit --gate-receipt")
+                    })?;
+                    let plan = wait_raw_gate(listen, datagram, lifetime, &plan_path, &receipt_path)
+                        .await?;
+                    RunningProxy::Raw(
+                        sdk.start_private_service_raw(consumer, choice, plan, &receipt_path)
+                            .await?,
+                    )
                 }
                 #[cfg(not(target_os = "linux"))]
                 {
-                    let _=(gate_plan,gate_receipt);
+                    let _ = (gate_plan, gate_receipt);
                     return Err(io::Error::other("raw loopback requires the Linux kernel UID gate; use authenticated SOCKS or the native OS endpoint on this platform").into());
                 }
             } else if native_stream {
@@ -370,8 +388,13 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
                 }
                 #[cfg(target_os = "linux")]
                 RunningProxy::Raw(owner) => {
-                    println!("Private service {service} in space {space}: raw loopback {}",owner.address());
-                    println!("Kernel admission permits only the locally approved OS user. The original administrator helper retains the gate until this process actually exits.");
+                    println!(
+                        "Private service {service} in space {space}: raw loopback {}",
+                        owner.address()
+                    );
+                    println!(
+                        "Kernel admission permits only the locally approved OS user. The original administrator helper retains the gate until this process actually exits."
+                    );
                 }
             }
             println!(

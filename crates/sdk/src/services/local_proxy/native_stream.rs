@@ -186,11 +186,18 @@ pub(super) async fn forward<S>(
     mut stop: watch::Receiver<bool>,
     owner_deadline: Instant,
 ) -> FlowOutcome
-where S: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin {
+where
+    S: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin,
+{
     let setup_deadline = (Instant::now() + SETUP_BUDGET).min(owner_deadline);
     let request = match choice.access_request(&consumer) {
-        Ok(request)=>request,
-        Err(_)=>return FlowOutcome { rejected:true, ..FlowOutcome::default() },
+        Ok(request) => request,
+        Err(_) => {
+            return FlowOutcome {
+                rejected: true,
+                ..FlowOutcome::default()
+            };
+        }
     };
     let lease = tokio::select! { biased;
         _ = stopping(&mut stop) => return FlowOutcome::default(),
@@ -199,7 +206,8 @@ where S: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin {
             _ => return FlowOutcome { rejected: true, ..FlowOutcome::default() },
         }
     };
-    let connecting = sdk.connect_private_service_with_relay_policy(&consumer, lease, &choice.relay_policy);
+    let connecting =
+        sdk.connect_private_service_with_relay_policy(&consumer, lease, &choice.relay_policy);
     tokio::pin!(connecting);
     let connected = tokio::select! { biased;
         _ = stopping(&mut stop) => None,

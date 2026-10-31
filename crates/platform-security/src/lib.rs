@@ -5,10 +5,10 @@ use std::{
     path::{Path, PathBuf},
 };
 use zeroize::Zeroizing;
-#[cfg(any(unix, windows))]
-pub mod local_stream;
 #[cfg(target_os = "linux")]
 pub mod local_port_gate;
+#[cfg(any(unix, windows))]
+pub mod local_stream;
 
 pub fn private_directory(path: &Path) -> io::Result<()> {
     fs::create_dir_all(path)?;

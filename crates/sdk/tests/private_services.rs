@@ -1,10 +1,10 @@
 //! Real management authorization, installation-pinned Quinn, fixed local
 //! HTTP/TCP/DNS targets, shared durable usage and physical listener release.
-#[path = "private_services/relay.rs"]
-mod relay;
 #[cfg(target_os = "linux")]
 #[path = "private_services/raw.rs"]
 mod raw;
+#[path = "private_services/relay.rs"]
+mod relay;
 use hickory_server::proto::{
     op::{Message, MessageType, OpCode, Query, ResponseCode},
     rr::{Name, RData, Record, RecordType, rdata::A},
@@ -600,42 +600,88 @@ async fn private_http_runs_real_http_backend_and_rejects_wrong_consumer_identity
 
 #[tokio::test]
 async fn private_udp_preserves_empty_datagrams_transports_dns_and_revokes_live_mapping() -> Result {
-    tokio::time::timeout(Duration::from_secs(25),async{
-        let backend=UdpSocket::bind("127.0.0.1:0").await?;let address=backend.local_addr()?;
-        let backend=tokio::spawn(async move{
-            let mut buffer=[0;2048];let (length,peer)=backend.recv_from(&mut buffer).await?;
-            assert_eq!(length,0);backend.send_to(&[],peer).await?;
-            let (length,peer)=backend.recv_from(&mut buffer).await?;
-            let request=Message::from_vec(&buffer[..length])?;
-            assert_eq!(request.queries[0].name().to_string(),"approved.private.test.");
-            let mut response=Message::new(request.metadata.id,MessageType::Response,OpCode::Query);
-            response.add_query(request.queries[0].clone());response.metadata.response_code=ResponseCode::NoError;
-            response.add_answer(Record::from_rdata(Name::from_ascii("approved.private.test.")?,30,
-                RData::A(A("192.0.2.81".parse()?))));
-            backend.send_to(&response.to_vec()?,peer).await?;
-            Ok::<_,Box<dyn std::error::Error+Send+Sync>>(())
+    tokio::time::timeout(Duration::from_secs(25), async {
+        let backend = UdpSocket::bind("127.0.0.1:0").await?;
+        let address = backend.local_addr()?;
+        let backend = tokio::spawn(async move {
+            let mut buffer = [0; 2048];
+            let (length, peer) = backend.recv_from(&mut buffer).await?;
+            assert_eq!(length, 0);
+            backend.send_to(&[], peer).await?;
+            let (length, peer) = backend.recv_from(&mut buffer).await?;
+            let request = Message::from_vec(&buffer[..length])?;
+            assert_eq!(
+                request.queries[0].name().to_string(),
+                "approved.private.test."
+            );
+            let mut response =
+                Message::new(request.metadata.id, MessageType::Response, OpCode::Query);
+            response.add_query(request.queries[0].clone());
+            response.metadata.response_code = ResponseCode::NoError;
+            response.add_answer(Record::from_rdata(
+                Name::from_ascii("approved.private.test.")?,
+                30,
+                RData::A(A("192.0.2.81".parse()?)),
+            ));
+            backend.send_to(&response.to_vec()?, peer).await?;
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
         });
-        let f=Fixture::new("udp",address).await?;let request=f.request(&f.consumer);
-        let mut host=f.sdk.start_private_service_host(f.host.clone(),f.consent,PrivateServiceHostConfig{
-            listen:"127.0.0.1:0".parse()?,advertised_ip:"127.0.0.1".parse()?,usage_directory:f.usage.join("ledger")}).await?;
-        let lease=f.sdk.request_private_service(&f.view.id,request).await?;
-        let mut connection=f.sdk.connect_private_service(&f.consumer,lease).await?;
-        connection.send_datagram(&[])?;assert!(connection.receive_datagram().await?.is_empty());
-        assert!(connection.send_datagram(&[0;1170]).is_err());
-        let mut query=Message::new(8173,MessageType::Query,OpCode::Query);
-        query.add_query(Query::query(Name::from_ascii("approved.private.test.")?,RecordType::A));
+        let f = Fixture::new("udp", address).await?;
+        let request = f.request(&f.consumer);
+        let mut host = f
+            .sdk
+            .start_private_service_host(
+                f.host.clone(),
+                f.consent,
+                PrivateServiceHostConfig {
+                    listen: "127.0.0.1:0".parse()?,
+                    advertised_ip: "127.0.0.1".parse()?,
+                    usage_directory: f.usage.join("ledger"),
+                },
+            )
+            .await?;
+        let lease = f.sdk.request_private_service(&f.view.id, request).await?;
+        let mut connection = f.sdk.connect_private_service(&f.consumer, lease).await?;
+        connection.send_datagram(&[])?;
+        assert!(connection.receive_datagram().await?.is_empty());
+        assert!(connection.send_datagram(&[0; 1170]).is_err());
+        let mut query = Message::new(8173, MessageType::Query, OpCode::Query);
+        query.add_query(Query::query(
+            Name::from_ascii("approved.private.test.")?,
+            RecordType::A,
+        ));
         connection.send_datagram(&query.to_vec()?)?;
-        let response=Message::from_vec(&connection.receive_datagram().await?)?;
-        assert_eq!(response.metadata.id,8173);assert_eq!(response.metadata.response_code,ResponseCode::NoError);
-        assert!(response.answers.iter().any(|r|matches!(&r.data,RData::A(A(ip)) if *ip==std::net::Ipv4Addr::new(192,0,2,81))));
+        let response = Message::from_vec(&connection.receive_datagram().await?)?;
+        assert_eq!(response.metadata.id, 8173);
+        assert_eq!(response.metadata.response_code, ResponseCode::NoError);
+        assert!(response.answers.iter().any(
+            |r| matches!(&r.data,RData::A(A(ip)) if *ip==std::net::Ipv4Addr::new(192,0,2,81))
+        ));
         backend.await??;
-        f.sdk.revoke_private_service(&f.view.id,&f.rule,f.exposure.revision).await?;
-        assert!(tokio::time::timeout(Duration::from_secs(3),connection.receive_datagram()).await?.is_err());
-        assert!(f.sdk.private_services(&f.consumer.device_id,None,20).await?.entries.is_empty());
-        connection.close().await?;let endpoint=host.address();host.wait_stopped().await?;drop(host);
-        drop(std::net::UdpSocket::bind(endpoint)?);std::fs::remove_dir_all(f.usage)?;
-        Ok::<_,Box<dyn std::error::Error+Send+Sync>>(())
-    }).await??;
+        f.sdk
+            .revoke_private_service(&f.view.id, &f.rule, f.exposure.revision)
+            .await?;
+        assert!(
+            tokio::time::timeout(Duration::from_secs(3), connection.receive_datagram())
+                .await?
+                .is_err()
+        );
+        assert!(
+            f.sdk
+                .private_services(&f.consumer.device_id, None, 20)
+                .await?
+                .entries
+                .is_empty()
+        );
+        connection.close().await?;
+        let endpoint = host.address();
+        host.wait_stopped().await?;
+        drop(host);
+        drop(std::net::UdpSocket::bind(endpoint)?);
+        std::fs::remove_dir_all(f.usage)?;
+        Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+    })
+    .await??;
     Ok(())
 }
 

@@ -14,31 +14,53 @@ enum GateAction {
     /// Use a root-private existing journal directory and root-controlled public
     /// receipt path. No service target or management credentials are consumed.
     Install {
-        #[arg(long)] plan: PathBuf,
-        #[arg(long)] journal_dir: PathBuf,
-        #[arg(long)] receipt: PathBuf,
+        #[arg(long)]
+        plan: PathBuf,
+        #[arg(long)]
+        journal_dir: PathBuf,
+        #[arg(long)]
+        receipt: PathBuf,
     },
     /// Inspect retained recovery state after the original helper releases it.
-    Inspect { #[arg(long)] journal_dir: PathBuf },
+    Inspect {
+        #[arg(long)]
+        journal_dir: PathBuf,
+    },
     /// Remove the exact original gate only after its real socket owner exits.
-    Recover { #[arg(long)] journal_dir: PathBuf },
+    Recover {
+        #[arg(long)]
+        journal_dir: PathBuf,
+    },
 }
 pub(crate) async fn run(args: GateArgs) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     match args.action {
-        GateAction::Inspect {journal_dir} => {
-            println!("{}", serde_json::to_string_pretty(&GateOwner::inspect_journal(&journal_dir).await?)?);
+        GateAction::Inspect { journal_dir } => {
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&GateOwner::inspect_journal(&journal_dir).await?)?
+            );
             Ok(())
-        },
-        GateAction::Recover {journal_dir} => Ok(GateOwner::recover(&journal_dir).await?),
-        GateAction::Install {plan, journal_dir, receipt} => {
+        }
+        GateAction::Recover { journal_dir } => Ok(GateOwner::recover(&journal_dir).await?),
+        GateAction::Install {
+            plan,
+            journal_dir,
+            receipt,
+        } => {
             let plan = GatePlan::read_public(&plan)?;
-            let mut previous_wall=wall_ms()?;
-            let remaining=plan.expires_at_ms.checked_sub(previous_wall).ok_or_else(||io::Error::other("gate plan already expired"))?;
-            let deadline=tokio::time::Instant::now()+Duration::from_millis(remaining);
+            let mut previous_wall = wall_ms()?;
+            let remaining = plan
+                .expires_at_ms
+                .checked_sub(previous_wall)
+                .ok_or_else(|| io::Error::other("gate plan already expired"))?;
+            let deadline = tokio::time::Instant::now() + Duration::from_millis(remaining);
             GateOwner::initialize_journal(&journal_dir)?;
             let mut owner = GateOwner::install(plan, &journal_dir).await?;
             owner.publish_receipt(&receipt).await?;
-            println!("Installed exact ordinary-user loopback gate; receipt {}", receipt.display());
+            println!(
+                "Installed exact ordinary-user loopback gate; receipt {}",
+                receipt.display()
+            );
             let signal = crate::space_dns_system::termination();
             tokio::pin!(signal);
             let mut tick = tokio::time::interval(Duration::from_millis(250));
@@ -64,6 +86,6 @@ pub(crate) async fn run(args: GateArgs) -> Result<(), Box<dyn std::error::Error 
                     },
                 }
             }
-        },
+        }
     }
 }

@@ -4,12 +4,12 @@ use crate::*;
 #[cfg(not(target_arch = "wasm32"))]
 mod local_proxy;
 mod private;
-#[cfg(target_os = "linux")]
-pub use local_proxy::raw::{LocalRawServiceProxy, RawProxyStopReport, RawProxyWait};
 #[cfg(all(not(target_arch = "wasm32"), any(unix, windows)))]
 pub use local_proxy::native_stream::{
     LocalNativeServiceProxy, NativeStreamStopReport, NativeStreamWait,
 };
+#[cfg(target_os = "linux")]
+pub use local_proxy::raw::{LocalRawServiceProxy, RawProxyStopReport, RawProxyWait};
 #[cfg(not(target_arch = "wasm32"))]
 pub use local_proxy::{
     LocalProxyError, LocalProxyServiceChoice, LocalProxyStopReport, LocalProxyWait,
@@ -20,7 +20,8 @@ use nestlink_protocol::service_plane::publication::{
 };
 #[cfg(not(target_arch = "wasm32"))]
 pub use private::runtime::{
-    PrivateServiceConnection, PrivateServiceHost, PrivateServiceHostConfig, PrivateServiceRelayPolicy,
+    PrivateServiceConnection, PrivateServiceHost, PrivateServiceHostConfig,
+    PrivateServiceRelayPolicy,
 };
 #[cfg(not(target_arch = "wasm32"))]
 use std::net::SocketAddr;
