@@ -53,6 +53,12 @@ jobs:
         if: ${{ !cancelled() }}
         run: |
           python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-privileged --lib windows::network_tun:: -- --show-output
+      - name: Verify the original daemon entry and real ordinary child processes
+        if: ${{ !cancelled() }}
+        run: |
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --bin nestlink-daemon entry_tests:: -- --show-output
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-daemon --test process --test maintenance_process --test native_stream_stdio -- --show-output
       # Create the shared Cargo target/lock with the actual ordinary token.
       # An elevated-first build can give .cargo-build-lock an Admins-only DACL.
       - name: Driver license, pinned archive, Authenticode, actual medium/admin packet and crash evidence

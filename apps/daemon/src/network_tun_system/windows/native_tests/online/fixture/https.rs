@@ -21,16 +21,16 @@ pub(super) async fn fixture_scope(
         .trim_start_matches('/')
         .split('/')
         .collect::<Vec<_>>();
-    let allowed = match (request.method(), path.as_slice()) {
-        (&Method::GET, ["api", "v3", "health"]) => true,
-        (&Method::POST, ["api", "v3", "health", "proof"]) => true,
-        (&Method::POST, ["api", "v3", "auth", "login" | "restore" | "refresh"]) => true,
-        (&Method::GET, ["api", "v3", "auth", "me"]) => true,
-        (&Method::POST, ["api", "v3", "devices"]) => true,
-        (&Method::POST, ["api", "v3", "devices", "challenge"]) => true,
-        (&Method::POST, ["api", "v3", "network", "spaces"]) => true,
-        (&Method::GET, ["api", "v3", "network", "spaces", _]) => true,
-        (&Method::GET, ["api", "v3", "network", "spaces", _, "addressing"]) => true,
+    let allowed = matches!((request.method(), path.as_slice()),
+        (&Method::GET, ["api", "v3", "health"]) |
+        (&Method::POST, ["api", "v3", "health", "proof"]) |
+        (&Method::POST, ["api", "v3", "auth", "login" | "restore" | "refresh"]) |
+        (&Method::GET, ["api", "v3", "auth", "me"]) |
+        (&Method::POST, ["api", "v3", "devices"]) |
+        (&Method::POST, ["api", "v3", "devices", "challenge"]) |
+        (&Method::POST, ["api", "v3", "network", "spaces"]) |
+        (&Method::GET, ["api", "v3", "network", "spaces", _]) |
+        (&Method::GET, ["api", "v3", "network", "spaces", _, "addressing"]) |
         (
             &Method::POST,
             [
@@ -41,12 +41,12 @@ pub(super) async fn fixture_scope(
                 _,
                 "devices" | "addresses" | "packet-access",
             ],
-        ) => true,
-        (&Method::POST, ["api", "v3", "network", "spaces", _, "members", _, "grants"]) => true,
+        ) |
+        (&Method::POST, ["api", "v3", "network", "spaces", _, "members", _, "grants"]) |
         (
             &Method::GET | &Method::DELETE,
             ["api", "v3", "network", "spaces", _, "packet-access", _],
-        ) => true,
+        ) |
         (
             &Method::POST,
             [
@@ -59,9 +59,8 @@ pub(super) async fn fixture_scope(
                 _,
                 "start",
             ],
-        ) => true,
-        _ => false,
-    };
+        )
+    );
     if allowed {
         next.run(request).await
     } else {

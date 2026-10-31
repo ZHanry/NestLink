@@ -458,44 +458,59 @@ async fn main() {
         std::process::exit(1);
     }
 }
+#[cfg(test)]
+mod entry_tests {
+    #[test]
+    fn command_dispatch_keeps_the_windows_main_future_bounded() {
+        fn size<F: std::future::Future>(_: fn() -> F) -> usize {
+            std::mem::size_of::<F>()
+        }
+        let bytes = size(super::run);
+        println!("Original command dispatcher future bytes: {bytes}");
+        assert!(bytes <= 64 * 1024, "the daemon entry must not embed unrelated business owner futures: {bytes}");
+    }
+}
 async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let args = Args::parse();
-    match args.command {
+    let mut args = Args::parse();
+    // Keep unrelated command state machines out of the daemon entry future.
+    // Their inline union can overflow the Windows main stack before the
+    // selected command (including a synchronous quota inspection) even starts.
+    match args.command.take() {
         #[cfg(any(target_os = "linux", windows))]
-        Some(Command::LocalPortGate(command)) => return local_port_gate::run(command).await,
-        Some(Command::SpaceDns(command)) => return space_dns::run(command).await,
+        Some(Command::LocalPortGate(command)) => return Box::pin(local_port_gate::run(command)).await,
+        Some(Command::SpaceDns(command)) => return Box::pin(space_dns::run(command)).await,
         Some(Command::PrivateServiceProxy(command)) => {
-            return private_service_proxy::run(command).await;
+            return Box::pin(private_service_proxy::run(command)).await;
         }
         Some(Command::PrivateWebGateway(command)) => {
-            return private_web_gateway::run(command).await;
+            return Box::pin(private_web_gateway::run(command)).await;
         }
-        Some(Command::SpaceDnsSystem(command)) => return space_dns_system::run(command).await,
+        Some(Command::SpaceDnsSystem(command)) => return Box::pin(space_dns_system::run(command)).await,
         Some(Command::Diagnostics(command)) => return Ok(diagnostics::run_export(command)?),
-        Some(Command::ServiceGroup(command)) => return service_group::run(command).await,
+        Some(Command::ServiceGroup(command)) => return Box::pin(service_group::run(command)).await,
         #[cfg(any(target_os = "linux", windows))]
-        Some(Command::NetworkTun(command)) => return network_tun_system::run_owner(command).await,
+        Some(Command::NetworkTun(command)) => return Box::pin(network_tun_system::run_owner(command)).await,
         #[cfg(any(target_os = "linux", windows))]
-        Some(Command::NetworkLan(command)) => return network_lan::run(command).await,
+        Some(Command::NetworkLan(command)) => return Box::pin(network_lan::run(command)).await,
         #[cfg(any(target_os = "linux", windows))]
-        Some(Command::NetworkTunSystem(command)) => return network_tun_system::run(command).await,
+        Some(Command::NetworkTunSystem(command)) => return Box::pin(network_tun_system::run(command)).await,
         #[cfg(target_os = "linux")]
         Some(Command::NetworkSubnet(command)) => {
-            return network_subnet_system::run_owner(command).await;
+            return Box::pin(network_subnet_system::run_owner(command)).await;
         }
         #[cfg(target_os = "linux")]
         Some(Command::NetworkSubnetSystem(command)) => {
-            return network_subnet_system::run(command).await;
+            return Box::pin(network_subnet_system::run(command)).await;
         }
         #[cfg(target_os = "linux")]
         Some(Command::NetworkSubnetWorker(command)) => {
-            return network_subnet_system::run_worker(command).await;
+            return Box::pin(network_subnet_system::run_worker(command)).await;
         }
         #[cfg(target_os = "linux")]
-        Some(Command::Wireguard(command)) => return wireguard::run(command).await,
+        Some(Command::Wireguard(command)) => return Box::pin(wireguard::run(command)).await,
         Some(Command::FileQuota(command)) => return Ok(run_file_quota(command)?),
-        Some(Command::Maintenance(command)) => return maintenance::run(command).await,
-        Some(Command::Shutdown(command)) => return maintenance::shutdown(command).await,
+        Some(Command::Maintenance(command)) => return Box::pin(maintenance::run(command)).await,
+        Some(Command::Shutdown(command)) => return Box::pin(maintenance::shutdown(command)).await,
         Some(Command::RetainedInstances { state_root }) => {
             let startup = nestlink_local_ipc::maintenance::InstallationStartup::acquire(
                 &std::env::current_exe()?,
@@ -508,6 +523,9 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         }
         None => {}
     }
+    Box::pin(serve(args)).await
+}
+async fn serve(args: Args) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let state_dir = args
         .state_dir
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "--state-dir is required"))?;
