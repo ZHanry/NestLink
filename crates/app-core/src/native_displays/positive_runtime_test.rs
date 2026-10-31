@@ -1019,7 +1019,7 @@ async fn positive_signed_software_core_ack_au() -> TestResult {
     let mut replacement_pixels = false;
     for request in 1..=8 {
         let (packet, receipt, execution) = encoder.next(&video).await?;
-        assert_eq!(receipt, actual);
+        assert_eq!(receipt, next_format);
         let send_started = Instant::now();
         host.send_native_video_execution_frame(
             &session_binding,
