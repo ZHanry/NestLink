@@ -106,12 +106,6 @@ jobs:
                       result = subprocess.run(command, stdout=stream, stderr=subprocess.STDOUT, check=False)
                   commands.append({'argv': command, 'return_code': result.returncode})
                   assert result.returncode == 0, 'Reviewed encoding selection failed'
-                  command = ['cargo', 'update', '-p', 'spin', '--precise', '0.9.8',
-                             '--manifest-path', str(manifest)]
-                  with (output / ('command-' + str(len(commands)) + '.log')).open('wb') as stream:
-                      result = subprocess.run(command, stdout=stream, stderr=subprocess.STDOUT, check=False)
-                  commands.append({'argv': command, 'return_code': result.returncode})
-                  assert result.returncode == 0, 'Reviewed spin selection failed'
               shutil.copyfile(lock, output / 'cargo-generated.lock')
               # Cargo can reselect an already-locked compatible windows-sys
               # edge even with --workspace. Preserve existing external blocks.
@@ -194,7 +188,7 @@ jobs:
                   ('netlink-packet-route', '0.33.0', registry): '59d48ffc8b73a506e1ff0878528c72668f2bfbc3d875b6be890a96be5d0d5576',
                   ('netlink-sys', '0.9.0', registry): 'c99d38e00b420df49e940fe0826e667c3dad82ac68eb4c2bbf754c1c14a83a10',
                   ('flume', '0.12.0', registry): '5e139bc46ca777eb5efaf62df0ab8cc5fd400866427e56c68b22e414e53bd3be',
-                  ('spin', '0.9.8', registry): '6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67',
+                  ('spin', '0.9.9', registry): '3763264f6b73151db08c50ff20d7d8a0b8796e021cdea7ceedad07b80155fa0e',
               }
               reviewed_packet_package = {
                   'name': 'etherparse', 'version': '0.21.0', 'source': registry,
