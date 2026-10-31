@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "source_revision": "3f1eb6b7ef93f5e891e8ecf81507260644150d4b",
+  "workflow": ".github/workflows/network-rewrite.yml",
+  "run_id": 41233618491,
+  "run_attempt": 1,
+  "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41233618491",
+  "workflow_conclusion": "failure",
+  "qualified_commands": [
+    {
+      "job": "contract (ubuntu-24.04)",
+      "runner": "github-hosted ubuntu-24.04",
+      "contract_clippy": 0,
+      "contract_clippy_log_sha256": "ac453cc93320e00bbc1025ffae6481fcd98b5a812c4463ab080896eb7fa6d8c6",
+      "contract_tests": 0,
+      "contract_tests_log_sha256": "90d9ee216f9e571488e1434ca64e96082903de7c5f28b4372358c5ef4fddb3ab",
+      "ci_evidence_tests": 0,
+      "ci_evidence_tests_log_sha256": "581a9bd7b8fa957579bcc690d12eaaefb169c9b5a916158b9b8405fef1f93764",
+      "format_check": 1,
+      "artifact_id": 13054478292,
+      "github_artifact_digest": "sha256:590abf3a2cbe56e55351f9b29f0c45d12231a479313c21e1b2087789ed8c67a5"
+    },
+    {
+      "job": "contract (windows-2022)",
+      "runner": "github-hosted windows-2022, ordinary process token",
+      "ordinary_windows_token": 0,
+      "contract_clippy": 0,
+      "contract_clippy_log_sha256": "498f691b8c3046fc6689c6babed0c0e9a800146326118d43013f1c8969f32cfc",
+      "contract_tests": 0,
+      "contract_tests_log_sha256": "45a50d4bf895056846afeb4be4b84b50c667d85a11d590a4853fc1d6c33b01c9",
+      "ci_evidence_tests": 0,
+      "ci_evidence_tests_log_sha256": "4982a6d9bc2546ac18e13910c2c7d1070603f07befd941a90ff7c6b6ce7067f1",
+      "format_check": 1,
+      "artifact_id": 13054993801,
+      "github_artifact_digest": "sha256:01c57325cd468473515c3b8cff9da79854644ce44932e0020fe1801858ed307a"
+    }
+  ],
+  "verification": "Downloaded both contract artifacts and compared every retained command log with its original receipt SHA256. Source before/after is clean and exact in both receipts. Both jobs failed only format-check; the other seven/eight retained command results passed without timeout.",
+  "related_failures": [
+    "The native ICE kernel NAT job failed before any NAT case started because the exact-source SDK strict lint rejected offline_remote.rs while_let_loop. That semantic lint fix is in b166d8b; a new same-source run is required to qualify the actual NAT experiments.",
+    "Hosted first-party formatting from this source was imported in 07488c1. This does not retroactively change these failed job conclusions."
+  ],
+  "acceptance_claims": [],
+  "limitations": [
+    "These successful commands are not a successful complete workflow, release qualification or physical-device acceptance.",
+    "No local formatter, compiler, lint or project test was executed."
+  ]
+}
