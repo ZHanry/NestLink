@@ -91,7 +91,9 @@ pub(super) fn rules(plan:&Plan,checked:&plan::Checked)->Result<String> {
     let name=plan.namespace();let tun=plan.tun();let lan=plan.macvlan();
     let original=plan::net(checked.mapping.original)?.to_string();let alias=plan::net(checked.mapping.alias)?.to_string();
     let remote=checked.remote.iter().map(|prefix|format!("{}/{}",prefix.network,prefix.prefix_len)).collect::<Vec<_>>().join(", ");
-    let mut rules=format!("table inet {name} {{\nquota budget {{ {} bytes }}\nchain raw {{ type filter hook prerouting priority -310; policy accept; meta time >= {} drop; meta nfproto ipv6 drop; ip frag-off & 0x3fff != 0 drop; ip hdrlength != 5 drop; }}\nchain input {{ type filter hook input priority 0; policy drop; }}\nchain output {{ type filter hook output priority 0; policy drop; }}\nchain admitted {{ quota name budget accept; }}\nchain forward {{ type filter hook forward priority 0; policy drop; ct state invalid drop;\n",checked.business.byte_limit,plan.expires_at_ms/1000);
+    // Reject original fragments before NF_CONNTRACK_DEFRAG (-400) can hide
+    // their fragmentation flags from the complete-IP business boundary.
+    let mut rules=format!("table inet {name} {{\nquota budget {{ {} bytes }}\nchain raw {{ type filter hook prerouting priority -450; policy accept; meta time >= {} drop; meta nfproto ipv6 drop; ip frag-off & 0x3fff != 0 drop; ip hdrlength != 5 drop; }}\nchain input {{ type filter hook input priority 0; policy drop; }}\nchain output {{ type filter hook output priority 0; policy drop; }}\nchain admitted {{ quota name budget accept; }}\nchain forward {{ type filter hook forward priority 0; policy drop; ct state invalid drop;\n",checked.business.byte_limit,plan.expires_at_ms/1000);
     // Replies use the kernel's exact conntrack tuple and original initiating
     // policy. Forwarding remains limited to the two owned interface directions.
     for (from,to,source,destination) in [(&tun,&lan,format!("{{ {remote} }}"),original.clone()),(&lan,&tun,original.clone(),format!("{{ {remote} }}"))] {
