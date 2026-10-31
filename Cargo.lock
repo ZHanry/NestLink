@@ -3728,6 +3728,7 @@ dependencies = [
  "axum",
  "base64 0.22.1",
  "clap",
+ "etherparse",
  "ipnet",
  "nestlink-app-core",
  "nestlink-app-ipc",

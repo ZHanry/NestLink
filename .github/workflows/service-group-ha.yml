@@ -1,0 +1,78 @@
+name: Service publication real dual-edge IPVS fixed entry
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "crates/protocol/src/service_plane*"
+      - "crates/protocol/src/service_plane/**"
+      - "crates/identity/src/service_plane*"
+      - "crates/identity/src/service_plane/**"
+      - "crates/node/src/service_plane*"
+      - "crates/node/src/service_plane/**"
+      - "crates/sdk/src/services/edge_group.rs"
+      - "crates/sdk/src/services/publication/group.rs"
+      - "crates/sdk/tests/service_group_l2*"
+      - "crates/sdk/tests/service_group_l2/**"
+      - "apps/server/src/service_edge*"
+      - "apps/server/src/service_edge/**"
+      - "scripts/network-rewrite-service-group.py"
+      - ".github/workflows/service-group-ha.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: service-group-ha-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  real-four-protocol-ipvs-failover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CARGO_INCREMENTAL: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      RUST_BACKTRACE: "0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+      - name: Set ephemeral native SDK build paths
+        shell: bash
+        run: |
+          printf 'NESTLINK_CODEC_PREFIX=%s/nestlink-codecs/x86_64-unknown-linux-gnu\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          printf 'CARGO_TARGET_DIR=%s/nestlink-service-group-target\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+      - name: Install mature hosted kernel and TLS tooling
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config libpipewire-0.3-dev openssl libcap2-bin iproute2 ipvsadm keepalived socat curl kmod
+      - name: Build and verify original SDK native codec inputs on GitHub
+        run: |
+          python3 scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir "$RUNNER_TEMP/nestlink-codec-sources" --work-dir "$RUNNER_TEMP/nestlink-codecs"
+          python3 scripts/refactor-native-codecs.py verify --target x86_64-unknown-linux-gnu --prefix "$NESTLINK_CODEC_PREFIX"
+      - name: Install verified Caddy for each original edge
+        run: |
+          mkdir -p "$RUNNER_TEMP/nestlink-service-group-caddy"
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/nestlink-service-group-caddy/caddy.tar.gz" \
+            https://github.com/caddyserver/caddy/releases/download/v2.11.7/caddy_2.11.7_linux_amd64.tar.gz
+          tar --extract --gzip --no-same-owner --file "$RUNNER_TEMP/nestlink-service-group-caddy/caddy.tar.gz" --directory "$RUNNER_TEMP/nestlink-service-group-caddy" caddy
+          printf '%s  %s\n' 678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9 "$RUNNER_TEMP/nestlink-service-group-caddy/caddy" | sha256sum --check --status
+          sudo -n setcap cap_net_bind_service=+ep "$RUNNER_TEMP/nestlink-service-group-caddy/caddy"
+      - name: Validate the hosted driver syntax on GitHub
+        run: python3 -B -c 'import ast,pathlib; ast.parse(pathlib.Path("scripts/network-rewrite-service-group.py").read_text())'
+      - name: Build exact source and execute real HTTP HTTPS TCP UDP failover
+        run: |
+          python3 -B scripts/network-rewrite-service-group.py \
+            --output "$RUNNER_TEMP/nestlink-service-group-evidence" \
+            --caddy "$RUNNER_TEMP/nestlink-service-group-caddy/caddy"
+      - name: Retain sanitized same-run build and execution evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: service-group-ipvs-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/nestlink-service-group-evidence/
+          if-no-files-found: warn
+          retention-days: 30

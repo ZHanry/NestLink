@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "purpose": "reviewed-network-components-lock-derivation-only",
+  "repository": "ZHanry/NestLink",
+  "source_revision": "d996c5ed82974e1a60771169f706f4182faa58c3",
+  "run_id": "41188133917",
+  "run_attempt": "1",
+  "scope": "product",
+  "manifest_path": "Cargo.toml",
+  "before_lock_sha256": "134375a45c01e06b307fd9ba7ecdfa4baa5346781ed35ff2c4c45cf87b64ac7a",
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "update",
+        "--workspace",
+        "--manifest-path",
+        "Cargo.toml"
+      ],
+      "return_code": 0
+    },
+    {
+      "argv": [
+        "cargo",
+        "update",
+        "-p",
+        "encoding_rs",
+        "--precise",
+        "0.8.35",
+        "--manifest-path",
+        "Cargo.toml"
+      ],
+      "return_code": 0
+    },
+    {
+      "argv": [
+        "cargo",
+        "metadata",
+        "--manifest-path",
+        "Cargo.toml",
+        "--locked",
+        "--format-version",
+        "1"
+      ],
+      "return_code": 0
+    }
+  ],
+  "assertions": {
+    "only_selected_lock_changed": true,
+    "all_existing_package_identities_and_checksums_preserved": true,
+    "all_unrelated_external_package_edges_preserved": true,
+    "only_exact_reviewed_component_feature_edges_added": true,
+    "reviewed_crab_nat_exact_version_and_checksum": true,
+    "reviewed_petgraph_exact_version_and_checksum": true,
+    "reviewed_authoritative_dns_exact_version": true,
+    "locked_metadata_succeeded": true,
+    "protected_native_stream_reuses_existing_tokio_identity": true,
+    "native_stdio_reuses_locked_tokio_util_identity": true,
+    "packet_parser_exact_identity_checksum_and_only_locked_arrayvec_edge": true,
+    "managed_tun_exact_reviewed_provider_closure": true,
+    "tun_native_fixture_reuses_exact_locked_packet_parser": true,
+    "only_reviewed_cookie_packet_components_or_exact_product_reuse_added": true
+  },
+  "failure": null,
+  "product_compilation_performed": false,
+  "quality_or_acceptance_claimed": false,
+  "files": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 208615,
+      "sha256": "48063b78bd20ca07f585a6100f7437057af227fde24c94fdad266f8ff457933e"
+    },
+    {
+      "path": "before.lock",
+      "bytes": 208600,
+      "sha256": "134375a45c01e06b307fd9ba7ecdfa4baa5346781ed35ff2c4c45cf87b64ac7a"
+    },
+    {
+      "path": "cargo-generated.lock",
+      "bytes": 208615,
+      "sha256": "48063b78bd20ca07f585a6100f7437057af227fde24c94fdad266f8ff457933e"
+    },
+    {
+      "path": "command-0.log",
+      "bytes": 470,
+      "sha256": "d69d871cc1120ac1f8bbd599909122340226bea3aaa3fb6398ea256347d1281e"
+    },
+    {
+      "path": "command-1.log",
+      "bytes": 125,
+      "sha256": "8d3d9ed62e856941288906061752fc98b1fbd0ff94969c6b3b73ec75b3b9104f"
+    },
+    {
+      "path": "command-2.log",
+      "bytes": 4240424,
+      "sha256": "44a4e08c3d6df1ed9df749966b7510e2c10a3830a95c64e465f7f3f703a18ee3"
+    },
+    {
+      "path": "derivation.diff",
+      "bytes": 251,
+      "sha256": "7882047e0af17ec4768e5ac37dbcc657dda5f95df235631770fbf928cfd1d538"
+    }
+  ]
+}
