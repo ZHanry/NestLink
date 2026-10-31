@@ -202,10 +202,10 @@ impl DirectPacketEndpoint {
         if let Some(mut tasks) = self.runtime.stop() {
             tokio::time::timeout_at(deadline, async {
                 while let Some(result) = tasks.join_next().await {
-                    if let Err(error) = result {
-                        if !error.is_cancelled() {
-                            return Err(io::Error::other(error));
-                        }
+                    if let Err(error) = result
+                        && !error.is_cancelled()
+                    {
+                        return Err(io::Error::other(error));
                     }
                 }
                 Ok(())
