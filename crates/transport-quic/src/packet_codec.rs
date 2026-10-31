@@ -392,18 +392,32 @@ mod tests {
         );
         left?;
         right?;
-        first.connection()?.send_datagram(b"after slow proof".to_vec().into())?;
-        assert_eq!(tokio::time::timeout_at(deadline, second.connection()?.read_datagram())
-            .await??.as_ref(), b"after slow proof");
+        first
+            .connection()?
+            .send_datagram(b"after slow proof".to_vec().into())?;
+        assert_eq!(
+            tokio::time::timeout_at(deadline, second.connection()?.read_datagram())
+                .await??
+                .as_ref(),
+            b"after slow proof"
+        );
         let cleanup = tokio::time::Instant::now() + Duration::from_secs(5);
-        let (left, right) = tokio::join!(first.close_and_wait(cleanup), second.close_and_wait(cleanup));
+        let (left, right) = tokio::join!(
+            first.close_and_wait(cleanup),
+            second.close_and_wait(cleanup)
+        );
         left?;
         right?;
         assert!(first.released.is_none() && second.released.is_none());
         let rebound_first = std::net::UdpSocket::bind(first_address)?;
         let rebound_second = std::net::UdpSocket::bind(second_address)?;
         drop((rebound_first, rebound_second));
-        assert!(first.establish(Some(second_address), [7; 32], [8; 32], deadline).await.is_err());
+        assert!(
+            first
+                .establish(Some(second_address), [7; 32], [8; 32], deadline)
+                .await
+                .is_err()
+        );
         Ok(())
     }
     #[tokio::test]

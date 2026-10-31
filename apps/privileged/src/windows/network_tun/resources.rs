@@ -506,7 +506,10 @@ impl FamilyState {
             && !self.advertising
             && !self.default_advertising
             && self.router_discovery == RouterDiscoveryDisabled
-            && matches!(self.link_local, LinkLocalAlwaysOff | LinkLocalDelayed | LinkLocalAlwaysOn)
+            && matches!(
+                self.link_local,
+                LinkLocalAlwaysOff | LinkLocalDelayed | LinkLocalAlwaysOn
+            )
             && self.dad == 0
             && !self.managed
             && !self.other_stateful

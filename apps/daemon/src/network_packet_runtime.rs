@@ -1,9 +1,12 @@
 //! One ordinary-user packet authorization/carrier loop for host and subnet
 //! owners. Platform adapters supply complete packets and exact owner checks.
 //! This module never creates an online start, replaces its owner or its budget.
-use nestlink_sdk::{Sdk, network::packet_access::{OnlinePacketAccess, PacketAdmission, PACKET_MTU}};
 #[cfg(target_os = "linux")]
 use nestlink_sdk::{DeviceIdentity, network::wireguard::OnlineWireGuardClient};
+use nestlink_sdk::{
+    Sdk,
+    network::packet_access::{OnlinePacketAccess, PACKET_MTU, PacketAdmission},
+};
 use nestlink_transport_quic::packet_codec::{DirectPacketEndpoint, PacketAssembler, encode_direct};
 use serde::Serialize;
 use std::{future::Future, io, net::SocketAddr, pin::Pin, time::Duration};
@@ -27,15 +30,37 @@ pub(crate) trait PacketAuthority {
     fn refresh<'a>(&'a mut self, sdk: &'a Sdk) -> GuardFuture<'a>;
 }
 impl PacketAuthority for OnlinePacketAccess {
-    fn business_digest(&self) -> [u8; 32] { OnlinePacketAccess::business_digest(self) }
-    fn transport_group(&self) -> [u8; 32] { OnlinePacketAccess::transport_group(self) }
-    fn wire_direction(&self) -> nestlink_protocol::network_datagram::Direction { OnlinePacketAccess::wire_direction(self) }
-    fn remaining_lifetime(&self) -> Duration { OnlinePacketAccess::remaining_lifetime(self) }
-    fn spent_bytes(&self) -> u64 { OnlinePacketAccess::spent_bytes(self) }
-    fn stop(&mut self) { OnlinePacketAccess::stop(self) }
-    fn admit_local(&mut self, packet: &[u8]) -> io::Result<PacketAdmission> { OnlinePacketAccess::admit_local(self, packet) }
-    fn admit_remote(&mut self, packet: &[u8]) -> io::Result<PacketAdmission> { OnlinePacketAccess::admit_remote(self, packet) }
-    fn refresh<'a>(&'a mut self, sdk: &'a Sdk) -> GuardFuture<'a> { Box::pin(async move { OnlinePacketAccess::refresh(self, sdk).await.map_err(Into::into) }) }
+    fn business_digest(&self) -> [u8; 32] {
+        OnlinePacketAccess::business_digest(self)
+    }
+    fn transport_group(&self) -> [u8; 32] {
+        OnlinePacketAccess::transport_group(self)
+    }
+    fn wire_direction(&self) -> nestlink_protocol::network_datagram::Direction {
+        OnlinePacketAccess::wire_direction(self)
+    }
+    fn remaining_lifetime(&self) -> Duration {
+        OnlinePacketAccess::remaining_lifetime(self)
+    }
+    fn spent_bytes(&self) -> u64 {
+        OnlinePacketAccess::spent_bytes(self)
+    }
+    fn stop(&mut self) {
+        OnlinePacketAccess::stop(self)
+    }
+    fn admit_local(&mut self, packet: &[u8]) -> io::Result<PacketAdmission> {
+        OnlinePacketAccess::admit_local(self, packet)
+    }
+    fn admit_remote(&mut self, packet: &[u8]) -> io::Result<PacketAdmission> {
+        OnlinePacketAccess::admit_remote(self, packet)
+    }
+    fn refresh<'a>(&'a mut self, sdk: &'a Sdk) -> GuardFuture<'a> {
+        Box::pin(async move {
+            OnlinePacketAccess::refresh(self, sdk)
+                .await
+                .map_err(Into::into)
+        })
+    }
 }
 #[cfg(target_os = "linux")]
 pub(crate) struct WireGuardAuthority<'a> {
@@ -44,15 +69,38 @@ pub(crate) struct WireGuardAuthority<'a> {
 }
 #[cfg(target_os = "linux")]
 impl PacketAuthority for WireGuardAuthority<'_> {
-    fn business_digest(&self) -> [u8; 32] { self.owner.business_digest() }
-    fn transport_group(&self) -> [u8; 32] { self.owner.transport_group() }
-    fn wire_direction(&self) -> nestlink_protocol::network_datagram::Direction { self.owner.wire_direction() }
-    fn remaining_lifetime(&self) -> Duration { self.owner.remaining_authorization_lifetime() }
-    fn spent_bytes(&self) -> u64 { self.owner.spent_bytes() }
-    fn stop(&mut self) { self.owner.stop() }
-    fn admit_local(&mut self, packet: &[u8]) -> io::Result<PacketAdmission> { self.owner.admit_local(packet) }
-    fn admit_remote(&mut self, packet: &[u8]) -> io::Result<PacketAdmission> { self.owner.admit_remote(packet) }
-    fn refresh<'a>(&'a mut self, sdk: &'a Sdk) -> GuardFuture<'a> { Box::pin(async move { self.owner.refresh(sdk, self.local).await.map_err(Into::into) }) }
+    fn business_digest(&self) -> [u8; 32] {
+        self.owner.business_digest()
+    }
+    fn transport_group(&self) -> [u8; 32] {
+        self.owner.transport_group()
+    }
+    fn wire_direction(&self) -> nestlink_protocol::network_datagram::Direction {
+        self.owner.wire_direction()
+    }
+    fn remaining_lifetime(&self) -> Duration {
+        self.owner.remaining_authorization_lifetime()
+    }
+    fn spent_bytes(&self) -> u64 {
+        self.owner.spent_bytes()
+    }
+    fn stop(&mut self) {
+        self.owner.stop()
+    }
+    fn admit_local(&mut self, packet: &[u8]) -> io::Result<PacketAdmission> {
+        self.owner.admit_local(packet)
+    }
+    fn admit_remote(&mut self, packet: &[u8]) -> io::Result<PacketAdmission> {
+        self.owner.admit_remote(packet)
+    }
+    fn refresh<'a>(&'a mut self, sdk: &'a Sdk) -> GuardFuture<'a> {
+        Box::pin(async move {
+            self.owner
+                .refresh(sdk, self.local)
+                .await
+                .map_err(Into::into)
+        })
+    }
 }
 pub(crate) trait WholePacketDevice: Sync {
     fn recv<'a>(&'a self, packet: &'a mut [u8]) -> PacketIoFuture<'a>;
@@ -143,7 +191,11 @@ struct Counters {
     rejected_packets: u64,
     spent_bytes: u64,
 }
-pub(crate) async fn packet_loop<D: WholePacketDevice + ?Sized, G: OwnerGuard + ?Sized, A: PacketAuthority + ?Sized>(
+pub(crate) async fn packet_loop<
+    D: WholePacketDevice + ?Sized,
+    G: OwnerGuard + ?Sized,
+    A: PacketAuthority + ?Sized,
+>(
     device: &D,
     endpoint: &mut DirectPacketEndpoint,
     sdk: &Sdk,

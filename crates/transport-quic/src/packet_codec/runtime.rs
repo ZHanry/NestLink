@@ -1,7 +1,13 @@
 //! Scope Quinn's background tasks to one terminal raw-packet owner. QUIC's
 //! draining timer depends on RTT; it is not a physical socket cleanup bound.
 use quinn::{AsyncTimer, AsyncUdpSocket, Runtime};
-use std::{future::Future, io, pin::Pin, sync::{Arc, Mutex}, time::Instant};
+use std::{
+    future::Future,
+    io,
+    pin::Pin,
+    sync::{Arc, Mutex},
+    time::Instant,
+};
 use tokio::task::JoinSet;
 
 #[derive(Debug)]
@@ -10,7 +16,9 @@ pub(super) struct PacketRuntime {
 }
 impl PacketRuntime {
     pub(super) fn new() -> Self {
-        Self { tasks: Mutex::new(Some(JoinSet::new())) }
+        Self {
+            tasks: Mutex::new(Some(JoinSet::new())),
+        }
     }
     pub(super) fn stop(&self) -> Option<JoinSet<()>> {
         let mut tasks = self.tasks.lock().unwrap_or_else(|error| error.into_inner());

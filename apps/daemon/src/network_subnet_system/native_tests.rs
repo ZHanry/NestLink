@@ -82,7 +82,7 @@ async fn overlapping_lans_kernel_nat_encrypted_udp_tcp_acl_and_exact_recovery() 
     for mode in ["normal", "crash", "observation-gap", "slow-proof"] {
         let crash = mode == "crash";
         let observation_gap = mode == "observation-gap";
-        let slow_proof=mode=="slow-proof";
+        let slow_proof = mode == "slow-proof";
         let lab = lab::Lab::new()?;
         nestlink_platform_security::create_private(&lab.config(), &serde_json::to_vec(&lab)?)?;
         if !lab.status("setup").await? {
