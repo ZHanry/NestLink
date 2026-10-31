@@ -94,7 +94,7 @@ async fn standard_client_tcp_udp_key_source_acl_original_carrier_and_exact_clean
                 probe(&lab,0,"wg-after-owner-loss").await?;
                 assert!(kernel::namespace(&kernel::namespace_path(&plans[0]))?.is_none());assert!(!plans[0].socket()?.try_exists()?);
             }
-            stop.send(true)?;let [left,right]=bridges;let (left,right)=tokio::join!(left,right);let left=left?;let right=right?;
+            let _=stop.send(true);let [left,right]=bridges;let (left,right)=tokio::join!(left,right);let left=left?;let right=right?;
             if !crash {let left=left?;let right=right?;assert!(left.sent>5&&left.received>5&&right.sent>5&&right.received>5);assert_eq!(left.spent,right.spent);}
             Ok::<_,Box<dyn std::error::Error+Send+Sync>>(())
         }.await;
