@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "kind": "hosted_standard_wireguard_tool_and_original_packet_kernel_evidence",
+  "source_revision": "794d3d1f45258d182a9baffd05526316b586a18d",
+  "task_ids": ["W24"],
+  "acceptance_group_completion_claimed": false,
+  "release_qualification_claimed": false,
+  "build_provenance": {
+    "repository": "ZHanry/NestLink",
+    "workflow": ".github/workflows/wireguard-native.yml",
+    "run_id": 41207005912,
+    "run_attempt": 1,
+    "job_id": 124554037245,
+    "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41207005912",
+    "runner_environment": "github-hosted",
+    "runner_label": "ubuntu-24.04",
+    "runner_os": "Linux",
+    "kernel": "7.0.0-1017-azure",
+    "ordinary_uid": 1001,
+    "cargo_lock_sha256": "48063b78bd20ca07f585a6100f7437057af227fde24c94fdad266f8ff457933e",
+    "build_command": "cargo test --locked -p nestlink-daemon --bin nestlink-daemon --no-run --message-format=json-render-diagnostics",
+    "build_return_code": 0,
+    "test_executable_sha256_from_runner": "80601b20a60d291e07c82bb328553c562765b2864ad79080bdba8eec22f2acd4",
+    "job_conclusion": "success",
+    "artifact": {
+      "id": 13045076235,
+      "name": "wireguard-native-794d3d1f45258d182a9baffd05526316b586a18d-1",
+      "sha256": "ba3bb68c8e2708a078d356a62f9a6efa8930db511554115b90d064f5078ac962",
+      "download_digest_verified": true,
+      "receipt_sha256": "e2c5ea4290f99dad58bf9c27e1e603469da3a7de99cd9a090d695b2aec54ae84",
+      "test_inventory_sha256": "de5f5c1dfa63f1c158818ece81e02e0933fcbf65a5eca2768ec82284bb354f8f",
+      "cli_log_sha256": "1565797bd5af13dd8d3541fc49f2c897dff02e4ac4de7779e35014ff69284730",
+      "kernel_log_sha256": "b84fb52494b906279595a06948b7529089ff85c9ffda0339b91388537e61db97"
+    }
+  },
+  "execution_provenance": {
+    "kind": "github_hosted_lab",
+    "evidence_level": "L2_scoped",
+    "cli": {
+      "selector": "wireguard::tests::",
+      "return_code": 0,
+      "passed": 3,
+      "failed": 0,
+      "ignored": 0,
+      "actual_components": ["distribution wg genkey/pubkey", "distribution qrencode SVG"],
+      "cases": [
+        "standard_config_uses_only_original_client_address_and_approved_destinations",
+        "private_exports_refuse_existing_files_shared_directories_and_noncanonical_keys",
+        "distribution_wireguard_derives_independent_keys_and_qrencode_exports_bounded_svg"
+      ]
+    },
+    "kernel": {
+      "exact_selector": "network_subnet_system::native_tests::wireguard::standard_client_tcp_udp_key_source_acl_original_carrier_and_exact_cleanup",
+      "return_code": 0,
+      "outer_case_result": {"passed": 1, "failed": 0, "ignored": 0},
+      "outer_case_seconds": 11.0,
+      "actual_standard_peer": "Linux kernel WireGuard configured by distribution wg, with independent server/client/wrong keys",
+      "original_authority": "fixed signed original NetworkAccess, Connectivity, Path, independent client binding and exact client /32 source mapping",
+      "actual_data_path": "kernel standard client -> exact root-owned WG/macvlan/TUN namespace -> original complete-IP packet admission -> real encrypted QUIC -> exact destination namespace prefix NAT -> actual LAN TCP/UDP service",
+      "udp_complete_ip_bytes": 1280,
+      "tcp_echo_payload_bytes": 16384,
+      "physical_client_mtu": 1500,
+      "wireguard_inner_mtu": 1280,
+      "actual_readback": "nonzero latest-handshakes for the exact selected portal public key",
+      "negative_cases": ["unapproved destination UDP port", "spoofed client source /32", "independent wrong client private key", "business after original root-helper SIGKILL"],
+      "key_restore": "restoring the exact approved independent client key resumed permitted UDP on the same original authority",
+      "scenarios": ["normal original-owner close", "original root-helper SIGKILL followed by exact journal recovery"],
+      "accounting": "normal case asserted both original packet owners sent/received more than five complete packets and accounted equal complete-IP byte totals",
+      "cleanup": "actual original namespace/socket absence, whole namespace conntrack release and unchanged original host routes/firewall/global forwarding readback",
+      "harness_output_note": "Nested source-exact subprocess roles interrupt the outer harness status line. The receipt's completed-name regex therefore lists the helper role; qualification here uses the retained exact --list inventory, --exact command, zero process exit code and manually reviewed final outer 1-passed/0-failed/0-ignored summary."
+    }
+  },
+  "mature_components": {
+    "wireguard-tools": "1.0.20210914-1ubuntu4; GPL-2.0; actual wg executable sha256 db75235c853de9bb1c20df798ab86c9a3bc4bdf3fc66758e1aaed6f5e23973a8",
+    "qrencode_and_libqrencode4": "4.1.1-1build2; LGPL-2.1-or-later; actual qrencode executable sha256 816a049ffaea945910b91ef7981caaccc486f3538f540cbe0c386a6c13d900fb",
+    "iproute2": "6.1.0-1ubuntu6.4",
+    "nftables": "1.0.9-1ubuntu0.1",
+    "iputils-arping": "3:20240117-1ubuntu0.1",
+    "util-linux": "2.39.3-9ubuntu6.6",
+    "license_evidence": "The verified same-run artifact retains distribution copyright files and their runner-computed SHA256 values; no new WireGuard crypto or QR implementation is introduced."
+  },
+  "limitations": [
+    "This kernel fixture uses signed fixed authority and the production root helper, original packet admission and encrypted carrier; management HTTP login, durable online one-use start and online renewal are qualified separately.",
+    "This source-exact hosted result does not qualify Android/iOS phone imports, physical cross-device deployment, NAT/port mapping, client roaming, long-running operations, installation/upgrade/uninstall or release readiness.",
+    "The kernel test proves exact per-owner traffic accounting and key/source/port refusal; complete cumulative quota exhaustion, signed expiry, HTTP revoke/rotation/restart and database reopen cases retain their separate identity/SDK/storage evidence.",
+    "Success at this source does not automatically qualify subsequent source revisions or complete W24, AC39 or AC40."
+  ]
+}
