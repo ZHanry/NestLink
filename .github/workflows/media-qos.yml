@@ -1,0 +1,96 @@
+name: Original media producer and queue bounds
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "Cargo.*"
+      - "crates/media-codec/**"
+      - "crates/media-session/**"
+      - "crates/remote/**"
+      - "apps/daemon/src/native_video.rs"
+      - ".github/workflows/media-qos.yml"
+  pull_request:
+    paths:
+      - "Cargo.*"
+      - "crates/media-codec/**"
+      - "crates/media-session/**"
+      - "crates/remote/**"
+      - "apps/daemon/src/native_video.rs"
+      - ".github/workflows/media-qos.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  producer-bounds:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+      RUST_BACKTRACE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+          components: clippy
+      - name: Prepare original mature codec inputs on GitHub
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build nasm pkg-config dbus libpipewire-0.3-dev
+          echo "NESTLINK_CODEC_PREFIX=$RUNNER_TEMP/nestlink-codecs/x86_64-unknown-linux-gnu" >> "$GITHUB_ENV"
+          mkdir "$RUNNER_TEMP/media-qos-evidence"
+          python3 scripts/refactor-native-codecs.py build --target x86_64-unknown-linux-gnu --cache-dir "$RUNNER_TEMP/nestlink-codec-sources" --work-dir "$RUNNER_TEMP/nestlink-codecs"
+          python3 scripts/refactor-native-codecs.py verify --target x86_64-unknown-linux-gnu --prefix "$RUNNER_TEMP/nestlink-codecs/x86_64-unknown-linux-gnu"
+      - name: Exercise actual codecs and original media owners
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-media-codec -p nestlink-media-session --lib -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/media-qos-evidence/media-tests.log"
+      - name: Exercise original channel queues and cleanup
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-remote --lib queues:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/media-qos-evidence/queue-tests.log"
+      - name: Require strict media lint
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo clippy --locked -p nestlink-media-codec -p nestlink-media-session --all-targets -- -D warnings 2>&1 | tee "$RUNNER_TEMP/media-qos-evidence/clippy.log"
+      - name: Record exact build and hosted execution provenance
+        if: always()
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, subprocess
+          assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
+          source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          assert source == os.environ['GITHUB_SHA']
+          output = pathlib.Path(os.environ['RUNNER_TEMP']) / 'media-qos-evidence'
+          output.mkdir(exist_ok=True)
+          receipt = {
+              'source_revision': source, 'workflow': os.environ['GITHUB_WORKFLOW_REF'],
+              'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'runner_environment': os.environ['RUNNER_ENVIRONMENT'], 'runner_os': os.environ['RUNNER_OS'],
+              'cargo_lock_sha256': hashlib.sha256(pathlib.Path('Cargo.lock').read_bytes()).hexdigest(),
+              'scope': 'Actual mature codecs, original media/channel owner regressions and strict lint. No physical GPU, external weak-network, full W31 or target acceptance claim.',
+              'files': [{'path': path.name, 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
+                        for path in sorted(output.iterdir()) if path.is_file()],
+          }
+          (output / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+      - name: Retain original logs and receipt including failures
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: media-qos-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/media-qos-evidence/
+          if-no-files-found: error
+          retention-days: 30
