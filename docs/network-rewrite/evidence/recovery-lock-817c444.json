@@ -1,0 +1,29 @@
+{
+    "schema_version":  1,
+    "ci_run_id":  "41157897849",
+    "review":  "Both generated lock diffs only add the already locked uuid dependency to nestlink-identity; no external package identity, version, checksum or edge changed.",
+    "purpose":  "recovery-identity-uuid-locked-workspace-edge",
+    "build_provenance":  {
+                             "scope":  "cargo metadata dependency lock derivation only",
+                             "environment":  "github-hosted",
+                             "os":  "ubuntu-24.04"
+                         },
+    "ci_workflow":  ".github/workflows/network-lock-refresh.yml",
+    "quality_or_acceptance_claimed":  false,
+    "source_revision":  "817c44468d0a0eaac80714891668f7d068482df5",
+    "artifacts":  [
+                      {
+                          "scope":  "product",
+                          "archive_sha256":  "84ba20e287b85e21ee98c25f7d654f7bfbc9f27d935bff09a66beb410513f90b",
+                          "id":  13025288939,
+                          "lock_sha256":  "1ff13e41c08eeecd4e904663ff607ddb39f8cdd26f28b62457f4e5602f828d88"
+                      },
+                      {
+                          "scope":  "browser-native-fixture",
+                          "archive_sha256":  "0578e3c7e08fe0b89bcf5b0737b7d6d887cb08cd110450594c1e39065215db11",
+                          "id":  13026106364,
+                          "lock_sha256":  "57f38611cc0290af6500f6ef2d0a7acd41a8a971eadc6ff5c79b591a851afa00"
+                      }
+                  ],
+    "ci_run_attempt":  1
+}
