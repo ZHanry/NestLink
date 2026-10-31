@@ -1243,6 +1243,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "cookie"
+version = "0.18.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a373e3602691c3cdea496d2f0ee5935151e6168fe87739483c463db1b2f2f87"
+dependencies = [
+ "percent-encoding",
+ "time",
+ "version_check",
+]
+
+[[package]]
+name = "cookie_store"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "15b2c103cf610ec6cae3da84a766285b42fd16aad564758459e6ecf128c75206"
+dependencies = [
+ "cookie",
+ "document-features",
+ "idna",
+ "log",
+ "publicsuffix",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "time",
+ "url",
+]
+
+[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3645,6 +3674,7 @@ dependencies = [
  "axum",
  "base64 0.22.1",
  "clap",
+ "ipnet",
  "nestlink-app-core",
  "nestlink-app-ipc",
  "nestlink-auth",
@@ -4001,6 +4031,7 @@ dependencies = [
  "clap",
  "nestlink-identity",
  "nestlink-platform-input",
+ "nestlink-platform-security",
  "nestlink-platform-session",
  "nestlink-protocol",
  "nestlink-remote",
@@ -4066,6 +4097,8 @@ dependencies = [
  "futures-util",
  "gloo-timers",
  "hickory-server",
+ "hyper",
+ "hyper-util",
  "if-addrs",
  "ipnet",
  "js-sys",
@@ -4080,6 +4113,7 @@ dependencies = [
  "nestlink-platform-network",
  "nestlink-platform-security",
  "nestlink-policy",
+ "nestlink-privileged",
  "nestlink-protocol",
  "nestlink-remote",
  "nestlink-server",
@@ -4096,6 +4130,7 @@ dependencies = [
  "rustls",
  "serde",
  "serde_json",
+ "socket2 0.6.5",
  "tempfile",
  "thiserror 2.0.21",
  "tokio",
@@ -5318,6 +5353,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "263a3f48f01e7309e857138bd47f785585b4a005e8e56c6d2824ce91195999c3"
 
 [[package]]
+name = "psl-types"
+version = "2.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "33cb294fe86a74cbcf50d4445b37da762029549ebeea341421c7c70370f86cac"
+
+[[package]]
+name = "publicsuffix"
+version = "2.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6f42ea446cab60335f76979ec15e12619a2165b5ae2c12166bef27d283a9fadf"
+dependencies = [
+ "idna",
+ "psl-types",
+]
+
+[[package]]
 name = "pxfm"
 version = "0.1.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5687,6 +5738,8 @@ checksum = "eddd3ca559203180a307f12d114c268abf583f59b03cb906fd0b3ff8646c1147"
 dependencies = [
  "base64 0.22.1",
  "bytes",
+ "cookie",
+ "cookie_store",
  "futures-core",
  "futures-util",
  "http",

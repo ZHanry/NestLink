@@ -1,0 +1,100 @@
+{
+    "schema_version":  1,
+    "purpose":  "isolated-private-web-cookie-and-Windows-gate-dependency-derivation",
+    "source_revision":  "22eeab916b75081dfdcc03fe85bcc215d1215e38",
+    "workflow":  ".github/workflows/network-lock-refresh.yml",
+    "run_id":  41176147017,
+    "run_attempt":  1,
+    "runner":  "github-hosted ubuntu-24.04",
+    "conclusion":  "product-success-fixture-failed-not-imported",
+    "artifact_id":  13033775438,
+    "archive_sha256":  "51bfe93a723928ae9c6b543fb810cf6b141611b49ea6366e2ae2f25b9c492176",
+    "receipt":  {
+                    "schema_version":  1,
+                    "purpose":  "reviewed-network-components-lock-derivation-only",
+                    "repository":  "ZHanry/NestLink",
+                    "source_revision":  "22eeab916b75081dfdcc03fe85bcc215d1215e38",
+                    "run_id":  "41176147017",
+                    "run_attempt":  "1",
+                    "scope":  "product",
+                    "manifest_path":  "Cargo.toml",
+                    "before_lock_sha256":  "5fc692e34a7c8d47f02e8b3362910020cc09a37f7c82ad05caf74ad9c584dfea",
+                    "commands":  [
+                                     {
+                                         "argv":  [
+                                                      "cargo",
+                                                      "update",
+                                                      "--workspace",
+                                                      "--manifest-path",
+                                                      "Cargo.toml"
+                                                  ],
+                                         "return_code":  0
+                                     },
+                                     {
+                                         "argv":  [
+                                                      "cargo",
+                                                      "metadata",
+                                                      "--manifest-path",
+                                                      "Cargo.toml",
+                                                      "--locked",
+                                                      "--format-version",
+                                                      "1"
+                                                  ],
+                                         "return_code":  0
+                                     }
+                                 ],
+                    "assertions":  {
+                                       "only_selected_lock_changed":  true,
+                                       "all_existing_package_identities_and_checksums_preserved":  true,
+                                       "all_unrelated_external_package_edges_preserved":  true,
+                                       "only_exact_reviewed_component_feature_edges_added":  true,
+                                       "reviewed_crab_nat_exact_version_and_checksum":  true,
+                                       "reviewed_petgraph_exact_version_and_checksum":  true,
+                                       "reviewed_authoritative_dns_exact_version":  true,
+                                       "locked_metadata_succeeded":  true,
+                                       "protected_native_stream_reuses_existing_tokio_identity":  true,
+                                       "native_stdio_reuses_locked_tokio_util_identity":  true,
+                                       "only_reviewed_proxy_cookie_component_new_external_packages":  true
+                                   },
+                    "failure":  null,
+                    "product_compilation_performed":  false,
+                    "quality_or_acceptance_claimed":  false,
+                    "files":  [
+                                  {
+                                      "path":  "Cargo.lock",
+                                      "bytes":  204779,
+                                      "sha256":  "4d8ca05568d4807a7b05d366c230e15cccfb186412ada07cc080cf547c5c6cff"
+                                  },
+                                  {
+                                      "path":  "before.lock",
+                                      "bytes":  203611,
+                                      "sha256":  "5fc692e34a7c8d47f02e8b3362910020cc09a37f7c82ad05caf74ad9c584dfea"
+                                  },
+                                  {
+                                      "path":  "cargo-generated.lock",
+                                      "bytes":  204779,
+                                      "sha256":  "4d8ca05568d4807a7b05d366c230e15cccfb186412ada07cc080cf547c5c6cff"
+                                  },
+                                  {
+                                      "path":  "command-0.log",
+                                      "bytes":  648,
+                                      "sha256":  "db55fa43a2019d9ec13d381c7e6b94ca3e0915228ecfa5f78fb07f2ba7c989d7"
+                                  },
+                                  {
+                                      "path":  "command-1.log",
+                                      "bytes":  4153371,
+                                      "sha256":  "a3daa604dccac8111a4e90749c736202c01d18a9c7a03a10f1b5578846be01b6"
+                                  },
+                                  {
+                                      "path":  "derivation.diff",
+                                      "bytes":  2643,
+                                      "sha256":  "ab0035f639b5434e7f484775a188bf56b5be7bc5535b42a711824de2efee958d"
+                                  }
+                              ]
+                },
+    "reviewed_change":  "Four precise new Cookie/PSL package identities, native SDK HTTP/TLS and Windows gate consumer edges; all previous registry identities, checksums and unrelated dependency edges preserved.",
+    "fixture_failure":  "document-features 0.2.12 and litrs 1.0.1 already in product were absent from fixture; require exact product package identity/checksum/edges reuse and rerun. Failed fixture output is not imported.",
+    "local_project_toolchain_executed":  false,
+    "quality_or_acceptance_claimed":  false,
+    "release_qualified":  false
+}

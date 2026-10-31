@@ -138,6 +138,27 @@ jobs:
               crab = [item for item in after if item['name'] == 'crab_nat']
               petgraph = [item for item in after if item['name'] == 'petgraph']
               dns = [item for item in after if item['name'] == 'hickory-server']
+              registry = 'registry+https://github.com/rust-lang/crates.io-index'
+              reviewed_cookie_packages = {
+                  ('cookie', '0.18.2', registry): '1a373e3602691c3cdea496d2f0ee5935151e6168fe87739483c463db1b2f2f87',
+                  ('cookie_store', '0.22.1', registry): '15b2c103cf610ec6cae3da84a766285b42fd16aad564758459e6ecf128c75206',
+                  ('publicsuffix', '2.3.0', registry): '6f42ea446cab60335f76979ec15e12619a2165b5ae2c12166bef27d283a9fadf',
+                  ('psl-types', '2.0.11', registry): '33cb294fe86a74cbcf50d4445b37da762029549ebeea341421c7c70370f86cac',
+              }
+              # The isolated browser fixture previously did not consume these
+              # packages. Permit only the exact, already-reviewed product
+              # package, including its dependency edges, never a name alone.
+              product_packages = tomllib.loads(pathlib.Path('Cargo.lock').read_text())['package']
+              reviewed_product_reuse = {
+                  identity(item): item for item in product_packages
+                  if item['name'] in {'tokio-stream', 'document-features', 'litrs'}
+              }
+              assert any(key[:2] == ('document-features', '0.2.12') and
+                         item.get('checksum') == 'd4b8a88685455ed29a21542a33abd9cb6510b6b129abadabdcef0f4c55bc8f61'
+                         for key, item in reviewed_product_reuse.items())
+              assert any(key[:2] == ('litrs', '1.0.1') and
+                         item.get('checksum') == '4744e383959f0db86ede514b809b1c53251889093803c05267acc7d4e7030d70'
+                         for key, item in reviewed_product_reuse.items())
               changed = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
               assertions = {
                   'only_selected_lock_changed': set(changed) <= {lock.as_posix()},
@@ -159,8 +180,9 @@ jobs:
                       for item in after) and any(key[:2] == ('tokio-util', '0.7.20') for key in existing),
                   'only_reviewed_proxy_cookie_component_new_external_packages': all(
                       identity(item) in existing or not item.get('source')
-                      or item['name'] in {'tokio-stream', 'cookie', 'cookie_store',
-                                          'publicsuffix', 'psl-types'} for item in after),
+                      or (identity(item) in reviewed_cookie_packages and
+                          item.get('checksum') == reviewed_cookie_packages[identity(item)])
+                      or item == reviewed_product_reuse.get(identity(item)) for item in after),
               }
               assert all(assertions.values()), 'Unreviewed dependency drift or incomplete lock derivation'
           except Exception as error:
