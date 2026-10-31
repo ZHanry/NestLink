@@ -26,12 +26,14 @@ use tokio_tungstenite::{
 };
 type Socket = WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>;
 mod closes;
+mod prefix;
 mod resources;
 mod services;
 mod topology;
 mod turn;
 mod usage;
 pub use closes::CloseReportStatus;
+pub use prefix::{LocalPrefixChoice, LocalPrefixOwner};
 pub use resources::{
     NetworkChainNeighborProof, RelayEndpointCandidate, RelayEndpointProof, RelayIoCleanup,
     RelayResourceReservation,

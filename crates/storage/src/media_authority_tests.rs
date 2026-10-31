@@ -408,6 +408,7 @@ impl MediaLifecycle {
             connection_generation: permit.connection_generation + 1,
             lease_sequence: permit.lease_sequence + 1,
             nonce: URL_SAFE_NO_PAD.encode([19; 32]),
+            network_recovery: None,
         };
         Ok(nestlink_protocol::api::ReconnectionSubmission {
             controller_signature: URL_SAFE_NO_PAD.encode(

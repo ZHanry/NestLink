@@ -6,8 +6,8 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "d3a587f354cfbe28cd3ddaee090f98f99d730dbb",
-    "checkpoint_kind":  "work_in_progress_against_source_revision",
+    "source_revision":  "5cc5be7cdc69dedebcf95235c6551f56c7d9278e",
+    "checkpoint_kind":  "unverified_W14_W20_host_prefix_source_before_hosted_lock_derivation",
     "active_tasks":  [
                          "W00",
                          "W02",
@@ -25,7 +25,8 @@
                          "W12",
                          "W13",
                          "W14",
-                         "W19"
+                         "W19",
+                         "W20"
                      ],
     "satisfied_interface_dependencies":  [
                                              "W01 nine-topic source and mature-component research independently reviewed",
@@ -65,12 +66,12 @@
                                    }
                                ],
     "next_steps":  [
-                       "Hickory locks were derived and verified on Actions. Derive new daemon test internal edges on Actions, then validate the new continuous SDK owner, physical socket release, paired route-set fixture and schema rewind repairs.",
-                       "Run actual isolated Windows NRPT and Linux resolved split-DNS queries, external-change protection and prepared/installed recovery through the new owned-system-DNS workflow. New source is not a passing result.",
-                       "Drive the single persistent Scheduler from product owners and implement authenticated production W14 migration or complete safe application recovery; retain the scoped private-experiment distinction.",
-                       "Implement the remaining local prefix reachability/forwarding owner and remaining W12 acceptance, then continue every mandatory W13-W40 implementation and product surface.",
-                       "Run the full same-source Windows/Linux/WASM/browser matrix and mandatory target acceptance; preserve scoped results and failures separately.",
-                       "Publish 0.8.0RC only after all mandatory implementation and evidence gates; retain only local and remote main."
+                       "Derive the new identity UUID workspace edges in both locks on GitHub Actions, import verified artifacts, then run exact-source W14 recovery, W20 authority and host-prefix source checks.",
+                       "Complete AppCore opt-in original-group owner driving, old platform/input/media release and new generation/keyframe restoration.",
+                       "Complete W20 private production data plane, durable usage reporting, HTTP/TCP/UDP quota/revocation/cleanup and remove public-edge configuration dependence.",
+                       "Repair and revalidate actual hosted Windows NRPT and Linux resolved split-DNS fixture failures without relaxing checks.",
+                       "Continue all remaining mandatory W12-W40 work; full same-source qualification and target-device acceptance remain required before release.",
+                       "Publish authorized 0.8.0RC after actual gates pass and retain only local and remote main."
                    ],
     "evidence_index":  [
                            "docs/network-rewrite/evidence/research-review-2026-10-30.md",

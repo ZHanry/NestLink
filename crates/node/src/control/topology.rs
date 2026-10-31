@@ -1,6 +1,6 @@
 //! Short-lived signed observations from an already authorized adjacency owner.
 //! Nothing in a publication grants forwarding, prefix or business access.
-use super::{Error, NodeConfig, NodeControl, NodeIdentity, sample};
+use super::{Error, LocalPrefixOwner, NodeConfig, NodeControl, NodeIdentity, sample};
 use futures_util::StreamExt;
 use nestlink_identity::{
     digest,
@@ -78,6 +78,23 @@ impl TopologyReporter {
         authority: &nestlink_protocol::api::NetworkNodeTopologyAuthority,
         neighbors: Vec<TopologyNeighbor>,
     ) -> Result<VerifiedTopologyAdvertisement, Error> {
+        self.publish_authority_with_prefixes(control, authority, neighbors, &[])
+            .await
+    }
+
+    /// Prefixes come only from explicit local owners which measured those
+    /// exact approved host targets. Their original freshness bounds cap the
+    /// signed report; RouteExport by itself supplies no reachability evidence.
+    pub async fn publish_authority_with_prefixes(
+        &self,
+        control: &NodeControl,
+        authority: &nestlink_protocol::api::NetworkNodeTopologyAuthority,
+        neighbors: Vec<TopologyNeighbor>,
+        owners: &[&LocalPrefixOwner],
+    ) -> Result<VerifiedTopologyAdvertisement, Error> {
+        if owners.len() > MAX_PREFIXES {
+            return Err(rejected(ErrorCode::CapacityExceeded, "too many local prefix owners"));
+        }
         let claims =
             nestlink_protocol::network_topology::TopologyPublisherClaims::decode_canonical(
                 &authority.publisher.claims,
@@ -119,16 +136,27 @@ impl TopologyReporter {
                 )
             })
             .collect::<Result<Vec<_>, _>>()?;
-        let result = self
-            .publish_with_route_exports(
-                control,
-                &authority.publisher,
-                &context,
-                &exports,
-                neighbors,
-            )
-            .await?;
+        let observations = owners.iter()
+            .map(|owner| owner.evidence(control, authority))
+            .collect::<Result<Vec<_>, _>>()?;
+        let mut prefixes = observations.iter().map(|evidence| evidence.prefix).collect::<Vec<_>>();
+        prefixes.sort_by_key(|prefix| (prefix.network, prefix.prefix_len));
+        if prefixes.windows(2).any(|pair| pair[0] == pair[1]) {
+            return Err(rejected(ErrorCode::InvalidMessage, "duplicate local prefix observation"));
+        }
+        let lifetime = observations.iter().map(|evidence| (evidence.expires_at_ms, evidence.deadline_ms))
+            .reduce(|left, right| (left.0.min(right.0), left.1.min(right.1)));
+        let prepared = self.prepare_observations(
+            control, &authority.publisher, &context, &exports, neighbors, prefixes, lifetime,
+        )?;
+        for (owner, evidence) in owners.iter().zip(&observations) {
+            owner.check_evidence(control, authority, evidence)?;
+        }
+        let result = self.publish_prepared(control, &context, &prepared).await?;
         control.check_network_topology_authority(authority)?;
+        for (owner, evidence) in owners.iter().zip(&observations) {
+            owner.check_evidence(control, authority, evidence)?;
+        }
         Ok(result)
     }
     pub fn new(config: NodeConfig, identity: NodeIdentity) -> Result<Self, Error> {
@@ -173,6 +201,15 @@ impl TopologyReporter {
         neighbors: Vec<TopologyNeighbor>,
     ) -> Result<VerifiedTopologyAdvertisement, Error> {
         let prepared = self.prepare(control, publisher, context, route_exports, neighbors)?;
+        self.publish_prepared(control, context, &prepared).await
+    }
+
+    async fn publish_prepared(
+        &self,
+        control: &NodeControl,
+        context: &NetworkVerification<'_>,
+        prepared: &PreparedReport,
+    ) -> Result<VerifiedTopologyAdvertisement, Error> {
         let url = format!(
             "{}/api/v3/network/spaces/{}/topology/reports/{}",
             self.config.control_origin, context.space_id, self.config.node_id
@@ -199,7 +236,7 @@ impl TopologyReporter {
                 self.send(&url, &prepared.signed),
             ) => result.map_err(|_| Error::Control)??,
         };
-        self.accept(control, context, &prepared, &response)
+        self.accept(control, context, prepared, &response)
     }
 
     fn prepare(
@@ -208,9 +245,23 @@ impl TopologyReporter {
         signed_publisher: &SignedTopologyPublisher,
         context: &NetworkVerification<'_>,
         route_exports: &[VerifiedNetworkGrant],
-        mut neighbors: Vec<TopologyNeighbor>,
+        neighbors: Vec<TopologyNeighbor>,
     ) -> Result<PreparedReport, Error> {
-        if neighbors.len() > MAX_NEIGHBORS || route_exports.len() > MAX_PREFIXES {
+        self.prepare_observations(control, signed_publisher, context, route_exports, neighbors, Vec::new(), None)
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn prepare_observations(
+        &self,
+        control: &NodeControl,
+        signed_publisher: &SignedTopologyPublisher,
+        context: &NetworkVerification<'_>,
+        route_exports: &[VerifiedNetworkGrant],
+        mut neighbors: Vec<TopologyNeighbor>,
+        prefixes: Vec<nestlink_protocol::network::IpPrefix>,
+        lifetime: Option<(u64, u64)>,
+    ) -> Result<PreparedReport, Error> {
+        if neighbors.len() > MAX_NEIGHBORS || route_exports.len() > MAX_PREFIXES || prefixes.len() > MAX_PREFIXES {
             return Err(rejected(
                 ErrorCode::CapacityExceeded,
                 "topology publication exceeded its budget",
@@ -274,7 +325,8 @@ impl TopologyReporter {
             .checked_add(REPORT_TTL_MS)
             .ok_or(Error::Control)?
             .min(publisher.claims().scope.expires_at_ms)
-            .min(lease.expires_at_unix_ms);
+            .min(lease.expires_at_unix_ms)
+            .min(lifetime.map_or(u64::MAX, |lifetime| lifetime.0));
         let remaining = expires_at_ms
             .checked_sub(now.unix_ms)
             .filter(|value| *value > 0)
@@ -288,7 +340,11 @@ impl TopologyReporter {
             .monotonic_ms
             .checked_add(remaining)
             .ok_or(Error::Control)?
-            .min(state.gate.deadline_ms());
+            .min(state.gate.deadline_ms())
+            .min(lifetime.map_or(u64::MAX, |lifetime| lifetime.1));
+        if now.monotonic_ms >= deadline_ms {
+            return Err(rejected(ErrorCode::LeaseExpired, "local prefix observation expired"));
+        }
         let sequence = state.topology.next(context.space_id)?;
         let report = TopologyReport {
             schema_version: SCHEMA_VERSION,
@@ -303,7 +359,7 @@ impl TopologyReporter {
             not_before_ms: now.unix_ms,
             expires_at_ms,
             neighbors,
-            prefixes: Vec::new(),
+            prefixes,
         };
         let signed = self.identity.sign_topology_report(&report)?;
         let report =

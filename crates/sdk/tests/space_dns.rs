@@ -344,15 +344,15 @@ async fn ordinary_member_and_admin_dns_remain_same_account_over_udp_and_tcp() ->
         assert_eq!(a.metadata.response_code, ResponseCode::NoError);
         assert!(a.metadata.authoritative && !a.metadata.recursion_available);
         assert_eq!(a.answers.len(), 1);
-        assert_eq!(a.answers[0].ttl(), 0);
-        assert!(matches!(a.answers[0].data(), RData::A(_)));
+        assert_eq!(a.answers[0].ttl, 0);
+        assert!(matches!(a.answers[0].data, RData::A(_)));
         let aaaa = tcp(
             dns.local_addr(),
             query(&f.name(own).to_uppercase(), RecordType::AAAA)?,
         )
         .await?;
         assert_eq!(aaaa.metadata.response_code, ResponseCode::NoError);
-        assert!(matches!(aaaa.answers[0].data(), RData::AAAA(_)));
+        assert!(matches!(aaaa.answers[0].data, RData::AAAA(_)));
         let hidden = udp(dns.local_addr(), query(&f.name(other), RecordType::A)?).await?;
         assert_eq!(hidden.metadata.response_code, ResponseCode::NXDomain);
         assert!(hidden.answers.is_empty() && hidden.authorities.is_empty());

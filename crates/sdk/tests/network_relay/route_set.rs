@@ -4,6 +4,8 @@ use super::*;
 
 #[path = "route_set/continuation.rs"]
 mod continuation;
+#[path = "route_set/recovery.rs"]
+mod recovery;
 use nestlink_protocol::{
     api::{NetworkRemoteRouteSetMemberRequest, NetworkRemoteRouteSetRequest},
     network::GrantClaims,

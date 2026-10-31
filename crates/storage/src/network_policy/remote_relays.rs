@@ -267,6 +267,7 @@ impl Store {
         self.remote(actor, &request_id)?;
         self.resume_relay_reservations(lifecycle, now_ms)?;
         let business = remote_paths::current_business(self, &request_id, now_ms)?;
+        self.validate_network_recovery_reservation(&tx, &business, &space_id, &request, now_ms)?;
         let allocation = &request.allocation;
         if allocation.device_id != business.controller_device_id
             && allocation.device_id != business.host_device_id
@@ -424,6 +425,7 @@ impl Store {
         let path =
             self.network_path_current_in_transaction(tx, actor, space, &row.path_id, true, now_ms)?;
         let business = remote_paths::current_business(self, &path.request_id, now_ms)?;
+        self.validate_network_recovery_parent(tx, &business, now_ms)?;
         let controller = self.device_record_at(&business.controller_device_id, now_ms / 1000)?;
         let host = self.device_record_at(&business.host_device_id, now_ms / 1000)?;
         let quota = self.relay_quota_current()?;

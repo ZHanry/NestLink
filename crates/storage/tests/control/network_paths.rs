@@ -359,6 +359,7 @@ fn renewal_and_reconnection_require_a_new_chain_for_the_exact_business_generatio
                 connection_generation: previous.connection_generation + 1,
                 lease_sequence: previous.lease_sequence + 1,
                 nonce: URL_SAFE_NO_PAD.encode([55; 32]),
+                network_recovery: None,
             };
             let transcript = nestlink_identity::reconnection::transcript;
             f.store.reconnect_permit(

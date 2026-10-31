@@ -1,4 +1,5 @@
 //! Explicit local target consent, separate from remote desktop approval.
+pub mod private;
 use crate::{digest, verify_device_action};
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use nestlink_protocol::{

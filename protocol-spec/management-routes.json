@@ -157,4 +157,15 @@
   ,{"path":"/network/spaces/{space}/route-exports/{node}","method":"post","operation":"network_policy::route_exports::issue","request":"NetworkRouteExportRequest","response":"NetworkGrantView","status":201,"auth":true}
   ,{"path":"/network/spaces/{space}/route-export-grants/{grant}","method":"get","operation":"network_policy::route_exports::read","response":"NetworkGrantView","status":200,"auth":true}
   ,{"path":"/network/spaces/{space}/route-export-grants/{grant}","method":"delete","operation":"network_policy::route_exports::revoke","request":"NetworkRevokeGrantRequest","response":"NetworkPolicyView","status":200,"auth":true}
+  ,{"path":"/services/{id}/exposure","method":"get","operation":"private_services::exposure","response":"ServiceExposureResponse","status":200,"auth":true}
+  ,{"path":"/services/{id}/exposure","method":"put","operation":"private_services::set_exposure","request":"ServiceExposureUpdate","response":"ServiceExposureView","status":200,"auth":true}
+  ,{"path":"/services/{id}/private-policy","method":"get","operation":"private_services::policy","response":"PrivateServicePolicyView","status":200,"auth":true}
+  ,{"path":"/services/{id}/private-policy","method":"post","operation":"private_services::allow","request":"PrivateServiceAclUpdate","response":"PrivateServicePolicyView","status":200,"auth":true}
+  ,{"path":"/services/{id}/private-policy","method":"post","operation":"private_services::allow","request":"PrivateServiceAclUpdate","response":"PrivateServicePolicyView","status":200,"auth":true}
+  ,{"path":"/services/{id}/private-policy/{rule}","method":"delete","operation":"private_services::revoke","request":"PrivateServiceAclRevocation","response":"PrivateServicePolicyView","status":200,"auth":true}
+  ,{"path":"/private-services/{consumer}","method":"get","operation":"private_services::directory","query":"ServiceQuery","response":"PrivateServicePage","status":200,"auth":true}
+  ,{"path":"/services/{id}/private-host","method":"post","operation":"private_services::host","request":"SignedPrivateServiceHost","status":204,"auth":true}
+  ,{"path":"/services/{id}/private-access","method":"post","operation":"private_services::issue","request":"PrivateServiceAccessRequest","response":"PrivateServiceGrant","status":200,"auth":true}
+  ,{"path":"/services/{id}/private-access/{reservation}","method":"get","operation":"private_services::current","response":"PrivateServiceGrant","status":200,"auth":true}
+  ,{"path":"/private-service-usage","method":"post","operation":"private_services::usage","request":"SignedPrivateServiceUsage","response":"PrivateServiceUsageAck","status":200,"auth":false}
 ]

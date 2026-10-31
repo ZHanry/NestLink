@@ -41,6 +41,26 @@ use std::{
 use tokio::{sync::watch, task::JoinHandle, time::Instant};
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
+#[derive(Default)]
+struct RecoveryResponseFaults {
+    offer: std::sync::atomic::AtomicBool,
+    approval: std::sync::atomic::AtomicBool,
+    commit: std::sync::atomic::AtomicBool,
+    reservation: std::sync::atomic::AtomicBool,
+    lost: std::sync::atomic::AtomicUsize,
+}
+impl RecoveryResponseFaults {
+    fn take(&self, path: &str) -> bool {
+        use std::sync::atomic::Ordering;
+        let flag = if path.ends_with("/reconnect/offer") { &self.offer }
+            else if path.ends_with("/reconnect/approve") { &self.approval }
+            else if path.ends_with("/reconnect") { &self.commit }
+            else if path.contains("/network/spaces/") && path.ends_with("/relays") { &self.reservation }
+            else { return false; };
+        if flag.swap(false,Ordering::SeqCst) { self.lost.fetch_add(1,Ordering::SeqCst); true } else { false }
+    }
+}
+
 async fn report_management_rejection(
     request: axum::http::Request<axum::body::Body>,
     next: axum::middleware::Next,
@@ -90,6 +110,7 @@ struct Fixture {
     node_task: Option<JoinHandle<io::Result<()>>>,
     http_task: Option<JoinHandle<()>>,
     _usage: ServiceUsageDirectory,
+    recovery_faults: Arc<RecoveryResponseFaults>,
 }
 impl Drop for Fixture {
     fn drop(&mut self) {
@@ -119,6 +140,8 @@ impl Fixture {
         store.bootstrap_admin("admin", password)?;
         let http = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
         let origin = format!("http://{}", http.local_addr()?);
+        let recovery_faults = Arc::new(RecoveryResponseFaults::default());
+        let faults = recovery_faults.clone();
         let app = router(AppState::new(
             store,
             VaultKey::from_bytes([6; 32]),
@@ -126,7 +149,24 @@ impl Fixture {
             origin.clone(),
             false,
         )?)
-        .layer(axum::middleware::from_fn(report_management_rejection));
+        .layer(axum::middleware::from_fn(report_management_rejection))
+        .layer(axum::middleware::from_fn(move |request: axum::extract::Request, next: axum::middleware::Next| {
+            let faults = faults.clone();
+            async move {
+                let post = request.method() == axum::http::Method::POST;
+                let path = request.uri().path().to_owned();
+                let response = next.run(request).await;
+                if post && response.status().is_success() && faults.take(&path) {
+                    let (mut parts,_) = response.into_parts();
+                    parts.headers.remove(axum::http::header::CONTENT_LENGTH);
+                    // Model a response whose acknowledgement cannot be read,
+                    // including the original empty 204 acknowledgement.
+                    parts.status = axum::http::StatusCode::OK;
+                    axum::response::Response::from_parts(parts,axum::body::Body::from_stream(
+                        futures_util::stream::once(async { Err::<Vec<u8>,io::Error>(io::Error::other("recovery fixture response lost after commit")) })))
+                } else { response }
+            }
+        }));
         let mut pending = PendingFixture {
             http_task: Some(tokio::spawn(async move {
                 let _ = axum::serve(http, app).await;
@@ -367,6 +407,7 @@ impl Fixture {
             node_task: Some(node_task),
             http_task: pending.http_task.take(),
             _usage: usage,
+            recovery_faults,
         })
     }
     fn setup(

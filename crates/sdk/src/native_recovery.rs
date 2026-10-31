@@ -85,12 +85,12 @@ impl RecoveredNativeSession {
         (self.session, self.endpoint, self.receipt)
     }
 }
-struct Signals {
-    stop: watch::Receiver<Option<StopReason>>,
-    cancel: watch::Receiver<bool>,
+pub(crate) struct Signals {
+    pub(crate) stop: watch::Receiver<Option<StopReason>>,
+    pub(crate) cancel: watch::Receiver<bool>,
 }
 impl Signals {
-    fn check(&self) -> Result<(), RecoveryError> {
+    pub(crate) fn check(&self) -> Result<(), RecoveryError> {
         if self.stop.has_changed().is_err() {
             return Err(RecoveryError::Stopped(StopReason::Revoked));
         }
@@ -115,7 +115,7 @@ impl Signals {
             }
         }
     }
-    fn guard<T>(
+    pub(crate) fn guard<T>(
         &mut self,
         future: impl Future<Output = Result<T, RecoveryError>>,
     ) -> impl Future<Output = Result<T, RecoveryError>> {
@@ -138,7 +138,7 @@ fn stage(progress: &Option<watch::Sender<RecoveryStage>>, value: RecoveryStage) 
         sender.send_replace(value);
     }
 }
-fn binding(
+pub(crate) fn binding(
     permit: &VerifiedPermit,
     permissions: &[Permission],
     capabilities: &[String],

@@ -47,20 +47,24 @@ pub fn remote_route_binding(
     {
         return Err(denied());
     }
-    let mut transcript = b"NestLink/network-datagram/v1/route-binding\0".to_vec();
-    transcript.extend_from_slice(&path.transport_group_id());
-    transcript.extend_from_slice(&connectivity.digest());
-    transcript.extend_from_slice(&transit.digest());
-    transcript.extend_from_slice(&permit.digest());
-    transcript.extend_from_slice(&permit.claims().connection_generation.to_be_bytes());
-    transcript.extend_from_slice(&network_datagram::PATH_EPOCH.to_be_bytes());
     Ok(RemoteRouteBinding {
-        digest: digest(&transcript),
-        peers,
-        relay: forward.relay,
-        byte_limit: forward.byte_limit,
-        expires_at_ms: forward.scope.expires_at_ms,
+        digest: remote_route_binding_digest(path.transport_group_id(), connectivity.digest(), transit.digest(),
+            permit.digest(), permit.claims().connection_generation),
+        peers, relay: forward.relay, byte_limit: forward.byte_limit, expires_at_ms: forward.scope.expires_at_ms,
     })
+}
+/// Canonical binding projection shared by endpoint and management validation.
+/// These digests are metadata; callers must separately verify all authorities.
+pub fn remote_route_binding_digest(transport_group: [u8;32], connectivity: [u8;32], transit: [u8;32],
+    permit: [u8;32], generation: u64) -> [u8;32] {
+    let mut transcript = b"NestLink/network-datagram/v1/route-binding\0".to_vec();
+    transcript.extend_from_slice(&transport_group);
+    transcript.extend_from_slice(&connectivity);
+    transcript.extend_from_slice(&transit);
+    transcript.extend_from_slice(&permit);
+    transcript.extend_from_slice(&generation.to_be_bytes());
+    transcript.extend_from_slice(&network_datagram::PATH_EPOCH.to_be_bytes());
+    digest(&transcript)
 }
 
 pub(super) fn remote_path_peers(

@@ -1,4 +1,5 @@
 //! Bounded service metadata; it supplies no network or publication authority.
+pub mod private;
 use crate::{ContractError, ErrorCode, api::*, valid_id};
 use std::net::{IpAddr, SocketAddr};
 

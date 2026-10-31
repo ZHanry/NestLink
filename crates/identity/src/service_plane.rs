@@ -41,7 +41,7 @@ fn verify_json(
 }
 
 pub struct ServiceLeaseSigner {
-    key: SigningKey,
+    pub(crate) key: SigningKey,
 }
 impl ServiceLeaseSigner {
     pub fn from_master_seed(seed: &[u8; 32]) -> Result<Self, ContractError> {

@@ -15,6 +15,7 @@ use nestlink_transport_quic::routed::{
 use std::{future::Future, io, pin::Pin, sync::Arc};
 use tokio::{sync::watch, time::Instant};
 mod control;
+pub use control::{RouteSetRecoverySource, RouteSetRecoveryConfig, RecoveredNetworkSession};
 pub use control::{
     PinnedNetworkSpace, VerifiedRemoteChain, VerifiedRemoteRelay, VerifiedRemoteRouteCandidate,
     VerifiedRemoteRouteSet, ContinuousRouteSetSession, RouteSetRecoveryProposal, RouteSetContinuationStatus,

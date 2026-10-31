@@ -78,15 +78,16 @@ fn standby_guardian(revocation: Arc<RouteRevocation>, lease: nestlink_remote::Le
 /// Cancellation retains pending physical owners and their original receipts;
 /// the next poll retires interrupted work before scheduling anything else.
 pub struct ContinuousRouteSetSession {
-    channels: ChannelRuntime,
+    pub(super) channels: ChannelRuntime,
+    control: crate::native::NativeSessionControl,
     observation: PathObservation,
-    route: VerifiedRemoteRouteSet,
-    permit: VerifiedPermit,
+    pub(super) route: VerifiedRemoteRouteSet,
+    pub(super) permit: VerifiedPermit,
     scheduler: Scheduler,
     group: OriginalGroup,
     originals: Vec<OriginalRoute>,
     keys: Vec<RouteIdentity>,
-    selected: usize,
+    pub(super) selected: usize,
     bind: SocketAddr,
     address_policy: AddressPolicy,
     cancel: watch::Receiver<bool>,
@@ -143,7 +144,8 @@ impl Sdk {
             Err(error) => { channels.shutdown(StopReason::Revoked).await?; return Err(error); }
         };
         let refreshed = route.fetched;
-        Ok(ContinuousRouteSetSession { channels, observation, route, permit, scheduler, group, originals, keys,
+        let control = crate::native::NativeSessionControl::from_routed(channels.lease_control(),channels.path_observation(),permit.claims().lease_sequence);
+        Ok(ContinuousRouteSetSession { channels, control, observation, route, permit, scheduler, group, originals, keys,
             selected, bind, address_policy: address_policy.clone(), cancel, started, refreshed,
             active_feedback: None, standby: None, interrupted: None, close_deadline: None, pending_retirements: Vec::new(),
             attempted_members: BTreeSet::from([selected]) })
@@ -155,11 +157,20 @@ fn ms_between(start: Instant, at: Instant) -> Result<u64, SdkError> {
 }
 impl ContinuousRouteSetSession {
     pub fn channels(&mut self) -> &mut ChannelRuntime { &mut self.channels }
+    pub fn control(&self) -> crate::native::NativeSessionControl { self.control.clone() }
+    pub fn permit(&self) -> &VerifiedPermit { &self.permit }
+    pub async fn wait_stopped(&mut self) -> Result<StopReport, SessionEstablishError> {
+        let report = self.channels.wait_stopped().await;
+        let deadline = *self.close_deadline.get_or_insert_with(|| Instant::now() + Duration::from_secs(2));
+        self.scheduler.stop_continuation(nestlink_protocol::ErrorCode::PolicyRevoked);
+        self.clear_standby(deadline).await?;
+        Ok(report?)
+    }
     /// Local diagnostic receipt target; retaining it grants no network I/O.
     pub fn standby_local_addr(&self) -> Option<SocketAddr> { self.standby.as_ref().map(|slot| slot.bound) }
-    fn now(&self) -> Result<u64, SdkError> { ms_between(self.started, Instant::now()) }
-    fn index(&self, key: RouteIdentity) -> Result<usize, SdkError> { self.keys.iter().position(|k| *k == key).ok_or(SdkError::Trust) }
-    fn status(&self) -> Result<RouteSetContinuationStatus, SdkError> {
+    pub(super) fn now(&self) -> Result<u64, SdkError> { ms_between(self.started, Instant::now()) }
+    pub(super) fn index(&self, key: RouteIdentity) -> Result<usize, SdkError> { self.keys.iter().position(|k| *k == key).ok_or(SdkError::Trust) }
+    pub(super) fn status(&self) -> Result<RouteSetContinuationStatus, SdkError> {
         let policy = self.scheduler.continuation_status().ok_or(SdkError::Invalid)?;
         let recovery = policy.proposal.clone().map(|proposal| {
             Ok::<_, SdkError>(RouteSetRecoveryProposal { candidate_index: self.index(proposal.to())?, proposal,

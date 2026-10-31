@@ -59,6 +59,11 @@ impl Store {
         offer: ReconnectionOffer,
         now: u64,
     ) -> Result<(), StorageError> {
+        self.offer_reconnection_at_ms(actor,id,offer,now.checked_mul(1000).ok_or(StorageError::Conflict)?)
+    }
+    pub fn offer_reconnection_at_ms(&mut self, actor: &Principal, id: &str, offer: ReconnectionOffer,
+        now_ms: u64) -> Result<(), StorageError> {
+        let now = now_ms / 1000;
         let tx = self.connection.unchecked_transaction()?;
         let current = self.reconnection_access(actor, id, now, true)?;
         self.verify_reconnection_proof(
@@ -68,12 +73,14 @@ impl Store {
             &offer.controller_signature,
             now,
         )?;
+        self.validate_network_recovery_choice(&tx, &current, &offer.choice, now_ms)?;
         let previous: Option<(String, String)> = tx.query_row("SELECT previous_permit_json,offer_json FROM reconnection_offers WHERE session_id=?1", [id], |r| Ok((r.get(0)?,r.get(1)?))).optional()?;
         let json = serde_json::to_string(&offer)?;
         if let Some((permit, old)) = previous
             && serde_json::from_str::<PermitClaims>(&permit)? == current
         {
             if old == json {
+                tx.commit()?;
                 return Ok(());
             }
             return Err(StorageError::Conflict);
@@ -95,6 +102,11 @@ impl Store {
         approval: ReconnectionApproval,
         now: u64,
     ) -> Result<(), StorageError> {
+        self.approve_reconnection_at_ms(actor,id,approval,now.checked_mul(1000).ok_or(StorageError::Conflict)?)
+    }
+    pub fn approve_reconnection_at_ms(&mut self, actor: &Principal, id: &str, approval: ReconnectionApproval,
+        now_ms: u64) -> Result<(), StorageError> {
+        let now = now_ms / 1000;
         let tx = self.connection.unchecked_transaction()?;
         // A same-account host may use its own login. Only the controller must use the original login.
         self.validate_management_session(actor, now)?;
@@ -117,8 +129,10 @@ impl Store {
             &approval.host_signature,
             now,
         )?;
+        self.validate_network_recovery_choice(&tx, &current, &approval.choice, now_ms)?;
         if let Some(recorded) = recorded {
             if recorded == approval.host_signature {
+                tx.commit()?;
                 return Ok(());
             }
             return Err(StorageError::Conflict);
@@ -133,7 +147,7 @@ impl Store {
         tx.commit()?;
         Ok(())
     }
-    fn receipt(&self, id: &str) -> Result<Option<ReconnectionReceipt>, StorageError> {
+    pub(crate) fn receipt(&self, id: &str) -> Result<Option<ReconnectionReceipt>, StorageError> {
         let row: Option<(Vec<u8>,String,String,String)> = self.connection.query_row("SELECT request_sha256,previous_permit_json,next_permit_json,submission_json FROM reconnection_receipts WHERE session_id=?1", [id], |r| Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?))).optional()?;
         row.map(|(hash, previous, next, submission)| {
             let receipt = ReconnectionReceipt {
@@ -159,6 +173,11 @@ impl Store {
         id: &str,
         now: u64,
     ) -> Result<(ReconnectionState, Option<ReconnectionReceipt>), StorageError> {
+        self.reconnection_state_at_ms(actor,id,now.checked_mul(1000).ok_or(StorageError::Conflict)?)
+    }
+    pub fn reconnection_state_at_ms(&self, actor: &Principal, id: &str, now_ms: u64)
+        -> Result<(ReconnectionState,Option<ReconnectionReceipt>),StorageError> {
+        let now = now_ms / 1000;
         self.validate_management_session(actor, now)?;
         let current = self.current_permit(actor, id, now)?;
         let row: Option<(String,String,Option<String>)> = self.connection.query_row("SELECT previous_permit_json,offer_json,host_signature FROM reconnection_offers WHERE session_id=?1", [id], |r| Ok((r.get(0)?,r.get(1)?,r.get(2)?))).optional()?;
@@ -177,6 +196,9 @@ impl Store {
         if let Some(receipt) = self.receipt(id)?
             && receipt.next == current
         {
+            let tx = self.connection.unchecked_transaction()?;
+            self.validate_network_recovery_choice(&tx, &receipt.previous, &receipt.submission.choice, now_ms)?;
+            tx.commit()?;
             let state = ReconnectionState {
                 offer: Some(ReconnectionOffer {
                     choice: receipt.submission.choice.clone(),
@@ -203,6 +225,11 @@ impl Store {
         submission: ReconnectionSubmission,
         now: u64,
     ) -> Result<ReconnectionReceipt, StorageError> {
+        self.reconnect_permit_at_ms(actor,id,submission,now.checked_mul(1000).ok_or(StorageError::Conflict)?)
+    }
+    pub fn reconnect_permit_at_ms(&mut self, actor: &Principal, id: &str, submission: ReconnectionSubmission,
+        now_ms: u64) -> Result<ReconnectionReceipt,StorageError> {
+        let now = now_ms / 1000;
         let tx = self.connection.unchecked_transaction()?;
         let current = self.reconnection_access(actor, id, now, true)?;
         let request_digest = reconnection::request_digest(&submission)?;
@@ -210,6 +237,7 @@ impl Store {
             && receipt.next == current
             && receipt.submission == submission
         {
+            self.validate_network_recovery_choice(&tx, &receipt.previous, &submission.choice, now_ms)?;
             self.verify_reconnection_proof(
                 &receipt.previous,
                 &submission.choice,
@@ -224,6 +252,7 @@ impl Store {
                 &submission.host_signature,
                 now,
             )?;
+            tx.commit()?;
             return Ok(receipt);
         }
         self.verify_reconnection_proof(
@@ -240,6 +269,7 @@ impl Store {
             &submission.host_signature,
             now,
         )?;
+        self.validate_network_recovery_choice(&tx, &current, &submission.choice, now_ms)?;
         let mut next = current.clone();
         next.connection_generation = submission.choice.connection_generation;
         next.lease_sequence = submission.choice.lease_sequence;

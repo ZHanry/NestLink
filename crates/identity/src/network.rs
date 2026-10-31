@@ -10,7 +10,7 @@ use zeroize::Zeroizing;
 mod remote;
 mod remote_chain;
 mod route_set;
-pub use remote::{RemoteRouteBinding, remote_route_binding, verify_node_network_resource};
+pub use remote::{RemoteRouteBinding, remote_route_binding, remote_route_binding_digest, verify_node_network_resource};
 pub use remote_chain::{
     NodeRemoteChainBinding, RemoteChainBinding, remote_chain_binding,
     remote_chain_reservation_transcript, verify_network_chain_admission,

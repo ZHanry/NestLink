@@ -579,6 +579,10 @@ pub struct NativeSessionControl {
     path_observation: Option<nestlink_remote::PathObservation>,
 }
 impl NativeSessionControl {
+    pub(crate) fn from_routed(lease: nestlink_remote::LeaseControl,
+        path_observation: Option<nestlink_remote::PathObservation>, sequence: u64) -> Self {
+        Self { lease, path_observation, sequence: std::sync::Arc::new(std::sync::atomic::AtomicU64::new(sequence)), renewal: None }
+    }
     pub fn path_observation(&self) -> Option<nestlink_remote::PathObservation> {
         self.path_observation.clone()
     }

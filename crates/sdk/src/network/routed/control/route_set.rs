@@ -5,7 +5,9 @@ use nestlink_identity::network::{VerifiedRemoteRouteSetGrants, verify_remote_rou
 use nestlink_protocol::api::{NetworkRemoteRouteSetRequest, NetworkRemoteRouteSetView, NodeEndpointsView};
 mod connect;
 mod continuation;
+mod recovery;
 pub use continuation::{ContinuousRouteSetSession, RouteSetRecoveryProposal, RouteSetContinuationStatus};
+pub use recovery::{RouteSetRecoverySource, RouteSetRecoveryConfig, RecoveredNetworkSession};
 
 pub(super) fn original_fingerprint(view: &NetworkRemoteRouteSetView) -> Result<[u8;32], SdkError> {
     let mut original = view.clone();

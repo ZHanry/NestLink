@@ -150,6 +150,12 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-node --lib control::topology:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-topology-reporter-tests.log"
+      - name: Exercise explicit host-prefix consent, real TCP observations and signed withdrawal
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-node --lib control::prefix:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/network-host-prefix-tests.log"
       - name: Exercise full-chain node admission, shared meters and live snapshot withdrawal
         if: ${{ !cancelled() }}
         shell: bash
@@ -166,6 +172,7 @@ jobs:
             ${{ runner.temp }}/network-topology-graph-tests.log
             ${{ runner.temp }}/network-datagram-v2-tests.log
             ${{ runner.temp }}/network-topology-reporter-tests.log
+            ${{ runner.temp }}/network-host-prefix-tests.log
             ${{ runner.temp }}/network-chain-carrier-tests.log
             ${{ runner.temp }}/network-path-observation-policy-tests.log
             ${{ runner.temp }}/network-continuation-policy-tests.log

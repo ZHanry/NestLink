@@ -325,6 +325,20 @@ impl Store {
         shape: (u8, usize),
         now_ms: u64,
     ) -> Result<NetworkRemotePathBundle, StorageError> {
+        self.network_path_current_with_business(tx, actor, space, path_id, shape, now_ms, None)
+    }
+    /// Only the dual-signed reconnection receipt may validate its exact previous
+    /// generation. Current membership, policy, expiry and revocation still apply.
+    pub(super) fn network_route_set_recovery_path(&self, tx: &Transaction<'_>, space: &str,
+        path_id: &str, now_ms: u64, previous: &nestlink_protocol::PermitClaims,
+    ) -> Result<NetworkRemotePathBundle, StorageError> {
+        self.network_path_current_with_business(tx, None, space, path_id, (1,2), now_ms, Some(previous))
+    }
+    #[allow(clippy::too_many_arguments)]
+    fn network_path_current_with_business(&self, tx: &Transaction<'_>, actor: Option<&Principal>,
+        space: &str, path_id: &str, shape: (u8,usize), now_ms: u64,
+        previous: Option<&nestlink_protocol::PermitClaims>,
+    ) -> Result<NetworkRemotePathBundle, StorageError> {
         let (relay_hops, relay_count) = shape;
         require_id(path_id)?;
         if let Some(actor) = actor {
@@ -343,7 +357,11 @@ impl Store {
         if let Some(actor) = actor {
             self.remote(actor, &row.request_id)?;
         }
-        let business = current_business(self, &row.request_id, now_ms)?;
+        let business = match previous {
+            Some(previous) if previous.session_id == row.request_id => previous.clone(),
+            Some(_) => return Err(StorageError::Forbidden),
+            None => current_business(self, &row.request_id, now_ms)?,
+        };
         let business_digest = digest(&business.encode_to_vec());
         if row.business_digest != business_digest
             || !business.paths.contains(

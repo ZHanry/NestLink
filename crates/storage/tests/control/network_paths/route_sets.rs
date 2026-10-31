@@ -9,6 +9,8 @@ use nestlink_protocol::{
     },
 };
 use nestlink_storage::relay_reservations::RelayLifecycle;
+#[path = "route_sets/recovery.rs"]
+mod recovery;
 
 struct RouteSetFixture {
     base: Setup,

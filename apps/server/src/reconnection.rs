@@ -22,7 +22,7 @@ pub(super) async fn status(
     let (mut body, receipt) = state
         .db(move |s| {
             let actor = s.authenticate(&token, now()?)?;
-            s.reconnection_state(&actor, &id, now()?)
+            s.reconnection_state_at_ms(&actor, &id, now_ms()?)
         })
         .await?;
     if let Some(receipt) = receipt {
@@ -41,7 +41,7 @@ pub(super) async fn offer(
     let audience = state
         .db(move |s| {
             let actor = s.authenticate(&token, now()?)?;
-            s.offer_reconnection(&actor, &id, body, now()?)?;
+            s.offer_reconnection_at_ms(&actor, &id, body, now_ms()?)?;
             s.remote_event_accounts(&id)
         })
         .await?;
@@ -64,7 +64,7 @@ pub(super) async fn approve(
     let audience = state
         .db(move |s| {
             let actor = s.authenticate(&token, now()?)?;
-            s.approve_reconnection(&actor, &id, body, now()?)?;
+            s.approve_reconnection_at_ms(&actor, &id, body, now_ms()?)?;
             s.remote_event_accounts(&id)
         })
         .await?;
@@ -87,7 +87,7 @@ pub(super) async fn commit(
     let (receipt, audience) = state
         .db(move |s| {
             let actor = s.authenticate(&token, now()?)?;
-            let receipt = s.reconnect_permit(&actor, &id, body, now()?)?;
+            let receipt = s.reconnect_permit_at_ms(&actor, &id, body, now_ms()?)?;
             Ok((receipt, s.remote_event_accounts(&id)?))
         })
         .await?;

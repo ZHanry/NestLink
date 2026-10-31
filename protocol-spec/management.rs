@@ -394,6 +394,26 @@ pub struct ReconnectionChoice {
     pub connection_generation: u64,
     pub lease_sequence: u64,
     pub nonce: String,
+    /// Absent on v15 exchanges: omission preserves their exact signed bytes.
+    /// New callers explicitly opt into this contract; legacy coordinators must
+    /// reject it instead of approving an unrecognised target selection.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub network_recovery: Option<NetworkRouteRecoveryChoice>,
+}
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NetworkRouteRecoveryChoice {
+    pub version: u32,
+    pub capability: String,
+    pub space_id: String,
+    pub route_set_id: String,
+    pub path_grant_id: String,
+    pub original_fingerprint: String,
+    pub transport_group: String,
+    pub previous_path_epoch: u64,
+    pub target_node_id: String,
+    pub target_route_binding: String,
+    pub expires_at_unix_ms: u64,
 }
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]

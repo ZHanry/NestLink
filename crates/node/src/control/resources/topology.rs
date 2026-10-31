@@ -149,6 +149,30 @@ pub(super) fn current(
 }
 
 impl NodeControl {
+    /// Local observation owners retain the same original monotonic boundary;
+    /// they cannot derive a fresh one from a detached publisher envelope.
+    pub(in crate::control) fn network_topology_observation_deadline(
+        &self,
+        original: &NetworkNodeTopologyAuthority,
+    ) -> Result<u64, Error> {
+        self.check_network_topology_authority(original)?;
+        let state = self.state.lock().map_err(|_| Error::Control)?;
+        state.resources.topology_deadlines.get(&original.publisher_digest)
+            .copied().ok_or(Error::Control)
+    }
+
+    #[cfg(test)]
+    pub(in crate::control) fn install_topology_fixture(
+        &self,
+        snapshot: NodeResourceSnapshotClaims,
+    ) -> Result<(), Error> {
+        let mut state = self.state.lock().map_err(|_| Error::Control)?;
+        let now = sample(self.started)?;
+        let lease = state.gate.current(now)?.clone();
+        state.resources.accept(snapshot, &lease, now.monotonic_ms, now)?;
+        Ok(())
+    }
+
     /// Lease observations may advance under the same original publication;
     /// identity, delegation, incarnation and endpoint changes remain terminal.
     pub fn check_network_topology_authority(

@@ -62,6 +62,7 @@ impl Fixture {
             connection_generation: p.connection_generation + 1,
             lease_sequence: p.lease_sequence + 1,
             nonce: URL_SAFE_NO_PAD.encode([nonce; 32]),
+            network_recovery: None,
         };
         Ok(ReconnectionSubmission {
             controller_signature: URL_SAFE_NO_PAD.encode(

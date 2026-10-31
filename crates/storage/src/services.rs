@@ -14,6 +14,7 @@ use nestlink_protocol::{
 };
 use rusqlite::{OptionalExtension, params};
 pub mod publication;
+pub mod private;
 pub mod quota_recovery;
 
 pub const MAX_ACCOUNT_SERVICES: u64 = 128;

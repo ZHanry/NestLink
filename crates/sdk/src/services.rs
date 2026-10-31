@@ -1,6 +1,7 @@
 //! Service configuration and explicit local target consent. No listener or target
 //! connection is created here, and no remote response chooses the local target.
 use crate::*;
+mod private;
 use nestlink_protocol::service_plane::publication::{
     ServiceEdgeNamespaceUpdate, ServiceEdgeNamespaceView, ServicePublicationRequest,
 };

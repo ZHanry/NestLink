@@ -13,6 +13,7 @@ use nestlink_protocol::service_plane::{
 use nestlink_protocol::spaces::addressing::*;
 use nestlink_protocol::spaces::service_publication::*;
 use nestlink_protocol::spaces::*;
+use nestlink_protocol::services::private::*;
 use nestlink_protocol::{
     SignedNodeResourceQuery, SignedNodeResourceSnapshot, SignedNodeUsage, SignedNodeUsageAck,
     SignedRelayClose, SignedRelayCloseAck, SignedTurnCredentials, SignedTurnResourceQuery,
@@ -252,6 +253,17 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         ServiceQuotaUsageQuery,
         ServiceQuotaLimitUpdate,
         ServiceQuotaUsageView,
+        ServiceExposureUpdate,
+        ServiceExposureView,
+        PrivateServiceAclUpdate,
+        PrivateServiceAclRevocation,
+        PrivateServicePolicyView,
+        PrivateServicePage,
+        SignedPrivateServiceHost,
+        PrivateServiceAccessRequest,
+        PrivateServiceGrant,
+        SignedPrivateServiceUsage,
+        PrivateServiceUsageAck,
         HealthResponse,
         ServerIdentityChallenge,
         ServerIdentityClaims,
@@ -272,6 +284,7 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         "MediaScopeResponse",
     )?;
     schema::<Vec<SpaceView>>(&mut schemas, "SpacesResponse")?;
+    schema::<Option<ServiceExposureView>>(&mut schemas, "ServiceExposureResponse")?;
     schema::<Vec<SpaceAuditEntry>>(&mut schemas, "SpaceAuditResponse")?;
     let routes: Vec<Value> = serde_json::from_slice(&fs::read(
         root.join("protocol-spec/management-routes.json"),
