@@ -38,7 +38,7 @@ fn value(name:&str)->Result<String>{Ok(std::env::var(name)?)}
 fn policy(space:&str,index:usize)->Result<LanPolicy> {
     let address:Ipv4Addr=value(&format!("NESTLINK_LAN_{index}_ADDRESS"))?.parse()?;
     let port=if index==0{38303}else{38403};
-    Ok(LanPolicy{schema_version:1,space_id:space.into(),interface_index:value(&format!("NESTLINK_LAN_{index}_INDEX"))?.parse()?,interface_address:address,local_prefix:value(&format!("NESTLINK_LAN_{index}_PREFIX"))?,transport_port:37828,packets_per_second:100,bytes_per_second:131_072,udp:vec![UdpRule{id:"actual-dns-service".into(),port,local_target:(value(&format!("NESTLINK_LAN_{index}_SERVER"))?.parse::<Ipv4Addr>()?,port).into(),allow_local_to_peer:true,allow_peer_to_local:true,allow_broadcast_discovery:true}],mdns:vec![MdnsRule{service_type:"_http._tcp.local.".into(),port:38080,allow_export:true,allow_import:true}]})
+    Ok(LanPolicy{schema_version:1,space_id:space.into(),interface_index:value(&format!("NESTLINK_LAN_{index}_INDEX"))?.parse()?,interface_address:address,local_prefix:value(&format!("NESTLINK_LAN_{index}_PREFIX"))?,transport_port:37828,packets_per_second:100,bytes_per_second:131_072,udp:vec![UdpRule{id:"actual-dns-service".into(),port,local_target:(value(&format!("NESTLINK_LAN_{index}_SERVER"))?.parse::<Ipv4Addr>()?,port).into(),allow_local_to_peer:true,allow_peer_to_local:true,allow_broadcast_discovery:true}],mdns:vec![MdnsRule{service_type:"_http._tcp.local.".into(),port:38080,allow_export:true,allow_import:true,allow_routable_publication:true}]})
 }
 async fn client(index:usize)->TaskResult<serde_json::Value> {
     let namespace=std::env::var(format!("NESTLINK_LAN_{index}_NAMESPACE"))?;

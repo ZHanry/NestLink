@@ -6,6 +6,10 @@ F19/F23 and AC47/AC48; it does not mark any acceptance group passed.
 The existing `webrtc-mdns` component serves ICE host names. It does not supply
 the product's DNS-SD PTR/SRV/TXT service catalog or its registration lifetime.
 We select the published, non-yanked `mdns-sd =0.21.6` with default features off.
+ADR 0056 records the reviewed complete local snapshot and its default-off,
+exact-interface routable IPv4 publication option needed by the peer's original
+virtual address. The original DNS implementation and lifecycle stay in this
+maintained component.
 The reviewed source provides typed resolved services, binary TXT properties,
 interface selection, probe/name conflict handling and unregister/shutdown
 receipts. Its `socket-pktinfo =0.4.0` dependency is reused directly for UDP

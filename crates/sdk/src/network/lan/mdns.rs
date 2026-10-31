@@ -84,8 +84,9 @@ impl Mdns {
         }
         let key=(service.service_type.clone(),service.instance.clone());
         if withdraw {return self.remove(&key);}
-        if let Some((_,original,seen))=self.remote.get_mut(&key) {
-            if original==&service {*seen=Instant::now();return Ok(());}
+        if let Some((_,original,seen))=self.remote.get_mut(&key)
+            && original==&service {
+            *seen=Instant::now();return Ok(());
         }
         if !self.remote.contains_key(&key) && self.remote.len()>=MAX_RECORDS {return Err(denied("remote DNS-SD catalog is full"));}
         let instance=format!("nl-{}-{}",self.peer_tag,service.instance);
@@ -96,6 +97,7 @@ impl Mdns {
         properties.push(TxtProperty::from(("nestlink-proxy","1")));
         let mut record=ServiceInfo::new(&service.service_type,&instance,&host,std::net::IpAddr::V4(self.peer_address),service.port as u16,properties).map_err(denied)?;
         record.set_interfaces(vec![IfKind::IndexV4(policy.interface_index)]);
+        record.set_routable_publication_interface(Some(policy.interface_index)).map_err(denied)?;
         let fullname=record.get_fullname().to_owned();
         self.daemon.as_ref().ok_or_else(||denied("DNS-SD is disabled"))?.register(record).map_err(denied)?;
         self.remote.insert(key,(fullname,service,Instant::now()));

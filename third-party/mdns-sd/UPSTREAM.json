@@ -1,0 +1,114 @@
+{
+    "schema_version":  1,
+    "package":  "mdns-sd",
+    "version":  "0.21.6",
+    "published_archive":  "UPSTREAM.crate",
+    "archive_sha256":  "8562654710f72a9cbce4b0d5b7c366a2f94330ba1ce3740f15e932ea2d37b161",
+    "upstream_repository":  "https://github.com/keepsimple1/mdns-sd",
+    "crate_vcs_revision":  "1a5cdb6ebb7299ee74dda75099461a2921b6e740",
+    "license_review_basis":  "Complete unchanged MIT and Apache-2.0 copyright/permission from the exact checksum-verified official published archive; LICENSE is an additional exact upstream LICENSE-MIT copy, original declarations/authors retained",
+    "upstream_license_file":  {
+                                  "vendored_path":  "LICENSE",
+                                  "upstream_url":  "https://raw.githubusercontent.com/keepsimple1/mdns-sd/1a5cdb6ebb7299ee74dda75099461a2921b6e740/LICENSE-MIT",
+                                  "sha256":  "cf0547f95d22b91b11540bc053d4973ad8beed39f98b614254c074ca4ed6b6af",
+                                  "full_license_text":  true
+                              },
+    "original_archive_files":  [
+                                   {
+                                       "path":  ".cargo_vcs_info.json",
+                                       "sha256":  "029be171ddbfaea232152dc3ab87b47e4000cf7d8ff3d7e71d2505c4a370ad6f"
+                                   },
+                                   {
+                                       "path":  ".github/workflows/build.yml",
+                                       "sha256":  "e89400834648fe109a489eccbcf470d2aa8ea2a02c27755e0c4f470aaadae806"
+                                   },
+                                   {
+                                       "path":  ".gitignore",
+                                       "sha256":  "fcb77015b10af0ed94b7c0648ccb8861c899448432436e578001dccd5c04c93f"
+                                   },
+                                   {
+                                       "path":  "Cargo.lock",
+                                       "sha256":  "de9b0443e3c57f88ade0e97a660b064cf43e4c7950110fe3505c194261d9c6ac"
+                                   },
+                                   {
+                                       "path":  "Cargo.toml",
+                                       "sha256":  "0fcc79974fb49f2c670668dc24380e6c43207fa50d79588c1b49550a406a5ae4"
+                                   },
+                                   {
+                                       "path":  "Cargo.toml.orig",
+                                       "sha256":  "ff5f5ecdfa416676a0d04812037251814e08e72b479fa67e54e062bd8dd6ce18"
+                                   },
+                                   {
+                                       "path":  "CHANGELOG.md",
+                                       "sha256":  "066d0f202ec139dc389fb05776501b352495ffb66711ccff109c62a675ee79f3"
+                                   },
+                                   {
+                                       "path":  "examples/query.rs",
+                                       "sha256":  "03b58f189cdd0925a68ef3afe1bdbfe7e9c47c439691db478f4253113f9407b9"
+                                   },
+                                   {
+                                       "path":  "examples/register.rs",
+                                       "sha256":  "a43d82301ec0ddcb6bbb3e8cb7c2b52384af9c4e3e98679f2014d57331213bdd"
+                                   },
+                                   {
+                                       "path":  "LICENSE-APACHE",
+                                       "sha256":  "1118360170ac75117538c65db992cfec5d0ffa28a6b990e46ab45602b638c8fd"
+                                   },
+                                   {
+                                       "path":  "LICENSE-MIT",
+                                       "sha256":  "cf0547f95d22b91b11540bc053d4973ad8beed39f98b614254c074ca4ed6b6af"
+                                   },
+                                   {
+                                       "path":  "README.md",
+                                       "sha256":  "db693ce32351116040f85dab7b247aceceb55adafc5440b9d2953579e7ffcce5"
+                                   },
+                                   {
+                                       "path":  "src/dns_cache.rs",
+                                       "sha256":  "27b2ed4b6b70441884ee3c17a8be52287a7b36086abef6882070a7ec33f0b67a"
+                                   },
+                                   {
+                                       "path":  "src/dns_parser.rs",
+                                       "sha256":  "42ddbe32ed1924f0c5790c456eed191c573d6a1a76efd97614bdacd841bf3158"
+                                   },
+                                   {
+                                       "path":  "src/error.rs",
+                                       "sha256":  "8cf4d9d315aca440b35618f5fd670cbfc0b0a331207e5edaf8f57b3b2f0d055d"
+                                   },
+                                   {
+                                       "path":  "src/fuzz_api.rs",
+                                       "sha256":  "6d16f18f4e5b59b9194da86f0562b1ddb5cdc1151f43d80fe06bcde65e4b19a4"
+                                   },
+                                   {
+                                       "path":  "src/lib.rs",
+                                       "sha256":  "000b013634a36ea6737584d07030446078a824f93ca915d262da7e129bf6fcf6"
+                                   },
+                                   {
+                                       "path":  "src/service_daemon.rs",
+                                       "sha256":  "73df8ee53735aa33139c65473a859f2660b235ee41a5d14e219a60d20a9d27e3"
+                                   },
+                                   {
+                                       "path":  "src/service_info.rs",
+                                       "sha256":  "97b64268a004e1040889ce7771de40a84b06503ec41d62cd4842523b2b6cdba4"
+                                   },
+                                   {
+                                       "path":  "tests/addr_parse.rs",
+                                       "sha256":  "531256c64c9287a5cf45b80401747a211d271b58d8783ae079149cbff8608ccb"
+                                   },
+                                   {
+                                       "path":  "tests/mdns_test.rs",
+                                       "sha256":  "709e7926b8b6e5d88139e6e493000787620e56864d2b5b740e5c492bb23724aa"
+                                   },
+                                   {
+                                       "path":  "tests/shutdown_test.rs",
+                                       "sha256":  "edc9ed4a70dd32b32165911248ce26a62eaed336952bbdd6505c247d5ff6fe3a"
+                                   }
+                               ],
+    "local_changes":  [
+                          {
+                              "path":  "src/service_info.rs",
+                              "original_sha256":  "97b64268a004e1040889ce7771de40a84b06503ec41d62cd4842523b2b6cdba4",
+                              "local_sha256":  "ae26d8c6615efa29a5b31dc93f949a1e64af4dde0bca1cfe36b45a800269e7a8",
+                              "reason":  "Default-off selected-interface unicast routed IPv4 publication option and focused boundary regression; unchanged maintained DNS parser/cache/probe/runtime/TTL/cleanup"
+                          }
+                      ]
+}

@@ -134,8 +134,9 @@ impl LanBridge {
             }
         }
         for reply in replies {if let Body::Reply(reply)=reply {self.enqueue_udp(&mut state,true,reply)?;}}
-        if let Some((withdraw,service))=state.mdns.poll(&self.policy)? {
-            if state.outgoing.len()<64{state.outgoing.push_back(if withdraw{Body::Withdraw(service)}else{Body::Service(service)});}
+        if let Some((withdraw,service))=state.mdns.poll(&self.policy)?
+            && state.outgoing.len()<64 {
+            state.outgoing.push_back(if withdraw{Body::Withdraw(service)}else{Body::Service(service)});
         }
         let Some(body)=state.outgoing.pop_front() else{return Ok(None);};
         state.next_sequence=state.next_sequence.checked_add(1).ok_or_else(||denied("LAN wire sequence exhausted"))?;

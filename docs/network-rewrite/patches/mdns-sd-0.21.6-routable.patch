@@ -1,0 +1,95 @@
+diff --git a/src/service_info.rs b/src/service_info.rs
+index ba5bfd8..bf8f68e 100644
+--- a/src/service_info.rs
++++ b/src/service_info.rs
+@@ -135,6 +135,10 @@ pub struct ServiceInfo {
+ 
+     /// If true, only link-local addresses are published.
+     is_link_local_only: bool,
++
++    /// Explicit opt-in for IPv4 proxy records on one locally selected interface.
++    /// Default None retains the upstream same-subnet publication behavior.
++    routable_publication_interface: Option<u32>,
+ }
+ 
+ #[derive(Debug, Clone, PartialEq, Eq)]
+@@ -243,6 +247,7 @@ impl ServiceInfo {
+             status: HashMap::new(),
+             requires_probe: true,
+             is_link_local_only: false,
++            routable_publication_interface: None,
+             supported_intfs: vec![IfKind::All],
+         };
+ 
+@@ -286,6 +291,21 @@ impl ServiceInfo {
+         self.supported_intfs = intfs;
+     }
+ 
++    /// Permit an explicitly supplied, unicast IPv4 proxy address on one exact
++    /// interface, even when that address belongs to a routed virtual network.
++    ///
++    /// None restores the upstream same-subnet behavior. This option supplies
++    /// neither routing nor authorization; the caller must validate the remote
++    /// address and independently constrain service publication to this interface.
++    /// IPv6 behavior, DNS TTLs, cache, probing and shutdown remain unchanged.
++    pub fn set_routable_publication_interface(&mut self, index: Option<u32>) -> Result<()> {
++        if index == Some(0) {
++            return Err(Error::Msg("routable publication interface must be nonzero".into()));
++        }
++        self.routable_publication_interface = index;
++        Ok(())
++    }
++
+     /// Returns whether this service info requires name probing for potential name conflicts.
+     ///
+     /// By default, it returns true for every service info.
+@@ -412,7 +432,10 @@ impl ServiceInfo {
+     pub(crate) fn get_addrs_on_my_intf_v4(&self, my_intf: &MyIntf) -> Vec<IpAddr> {
+         self.addresses
+             .iter()
+-            .filter(|a| a.is_ipv4() && my_intf.addrs.iter().any(|x| valid_ip_on_intf(a, x)))
++            .filter(|a| a.is_ipv4() && (my_intf.addrs.iter().any(|x| valid_ip_on_intf(a, x))
++                || self.routable_publication_interface == Some(my_intf.index)
++                    && matches!(a, IpAddr::V4(ip) if !ip.is_unspecified() && !ip.is_loopback()
++                        && !ip.is_multicast() && !ip.is_broadcast())))
+             .copied()
+             .collect()
+     }
+@@ -1530,6 +1553,37 @@ mod tests {
+     use std::net::{Ipv4Addr, Ipv6Addr};
+     use std::time::Duration;
+ 
++    #[test]
++    fn nestlink_routable_publication_is_default_off_exact_interface_and_reversible() {
++        use super::MyIntf;
++        use std::{collections::HashSet, net::IpAddr};
++        let interface = |index| MyIntf {
++            name: "selected-lan".into(), index,
++            addrs: HashSet::from([IfAddr::V4(Ifv4Addr {
++                ip: Ipv4Addr::new(192, 168, 42, 2),
++                netmask: Ipv4Addr::new(255, 255, 255, 0),
++                broadcast: Some(Ipv4Addr::new(192, 168, 42, 255)),
++            })]),
++            max_packet_size_v4: 1500, max_packet_size_v6: 1500,
++        };
++        let remote = IpAddr::V4(Ipv4Addr::new(10, 44, 0, 9));
++        let mut info = ServiceInfo::new("_http._tcp.local.", "proxy", "proxy.local.", remote,
++                                        8080, None::<std::collections::HashMap<String, String>>).unwrap();
++        assert!(info.get_addrs_on_my_intf_v4(&interface(2)).is_empty());
++        assert!(info.set_routable_publication_interface(Some(0)).is_err());
++        info.set_routable_publication_interface(Some(2)).unwrap();
++        assert_eq!(info.get_addrs_on_my_intf_v4(&interface(2)), vec![remote]);
++        assert!(info.get_addrs_on_my_intf_v4(&interface(3)).is_empty());
++        info.set_routable_publication_interface(None).unwrap();
++        assert!(info.get_addrs_on_my_intf_v4(&interface(2)).is_empty());
++        for address in ["0.0.0.0", "127.0.0.1", "224.0.0.251", "255.255.255.255"] {
++            let mut rejected = ServiceInfo::new("_http._tcp.local.", "proxy", "proxy.local.", address,
++                8080, None::<std::collections::HashMap<String, String>>).unwrap();
++            rejected.set_routable_publication_interface(Some(2)).unwrap();
++            assert!(rejected.get_addrs_on_my_intf_v4(&interface(2)).is_empty());
++        }
++    }
++
+     /// RFC 6762 section 6: the same record must not be multicast on an
+     /// interface more than once per second, but is allowed again after a
+     /// second has elapsed.

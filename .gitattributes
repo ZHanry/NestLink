@@ -70,3 +70,4 @@ packaging/notices/libvpx-1.16.0-LICENSE.txt -text whitespace=-blank-at-eof
 # Preserve every reviewed upstream file and provenance byte. This follows the
 # generic extension rules so those cannot normalize archive-bound JSON/text.
 third-party/fast-socks5/** -text
+third-party/mdns-sd/** -text

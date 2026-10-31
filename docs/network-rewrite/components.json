@@ -911,7 +911,7 @@
       ],
       "version": {
         "webrtc-mdns": "0.10.0",
-        "mdns-sd": "=0.21.6; default-features=false; sha256 8562654710f72a9cbce4b0d5b7c366a2f94330ba1ce3740f15e932ea2d37b161",
+        "mdns-sd": "=0.21.6; reviewed local snapshot third-party/mdns-sd; default-features=false; original archive sha256 8562654710f72a9cbce4b0d5b7c366a2f94330ba1ce3740f15e932ea2d37b161; explicit default-off selected-interface routed IPv4 publication per ADR0056",
         "socket-pktinfo": "=0.4.0; sha256 3e8e43b4bdce7cff8a4d3f8025ee38fce5ca138fab868ebbf9529c81328fbf9d",
         "if-addrs": "0.15.0 transitive only; sha256 c0a05c691e1fae256cf7013d99dad472dc52d5543322761f83ec8d47eab40d2b; existing SDK 0.14.0 preserved",
         "status": "selected_for_thin_production_adapter; hosted_lock_build_and_target_evidence_pending"

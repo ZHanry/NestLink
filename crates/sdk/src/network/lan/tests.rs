@@ -5,7 +5,7 @@ use std::net::Ipv4Addr;
 type Result<T=()>=std::result::Result<T,Box<dyn std::error::Error>>;
 const SPACE:&str="20000000-0000-4000-8000-000000000002";
 fn policy()->LanPolicy {
-    LanPolicy {schema_version:1,space_id:SPACE.into(),interface_index:2,interface_address:Ipv4Addr::new(192,168,42,2),local_prefix:"192.168.42.0/24".into(),transport_port:37828,packets_per_second:20,bytes_per_second:32_768,udp:vec![UdpRule{id:"teeworlds".into(),port:8303,local_target:std::net::SocketAddrV4::new(Ipv4Addr::new(192,168,42,3),8303),allow_local_to_peer:true,allow_peer_to_local:true,allow_broadcast_discovery:true}],mdns:vec![MdnsRule{service_type:"_http._tcp.local.".into(),port:8080,allow_export:true,allow_import:true}]}
+    LanPolicy {schema_version:1,space_id:SPACE.into(),interface_index:2,interface_address:Ipv4Addr::new(192,168,42,2),local_prefix:"192.168.42.0/24".into(),transport_port:37828,packets_per_second:20,bytes_per_second:32_768,udp:vec![UdpRule{id:"teeworlds".into(),port:8303,local_target:std::net::SocketAddrV4::new(Ipv4Addr::new(192,168,42,3),8303),allow_local_to_peer:true,allow_peer_to_local:true,allow_broadcast_discovery:true}],mdns:vec![MdnsRule{service_type:"_http._tcp.local.".into(),port:8080,allow_export:true,allow_import:true,allow_routable_publication:true}]}
 }
 fn envelope(sequence:u64)->Result<Envelope> {
     Ok(Envelope{version:1,space:SPACE.into(),business:vec![9;32],sequence,sent_ms:wall_ms()?,hops:1,body:Some(Body::Request(UdpRequest{rule:"teeworlds".into(),flow:1,payload:vec![17;1024],discovery:true}))})
@@ -20,6 +20,9 @@ fn local_policy_requires_exact_lan_ports_directions_and_dns_sd_scope()->Result {
     for kind in ["_http._tcp.example.com.","_http._tcp.local..","_services._dns-sd._udp.local.","_http._tcp.local","_._tcp.local."] {
         let mut invalid=value.clone();invalid.mdns[0].service_type=kind.into();assert!(invalid.validate().is_err(),"{kind}");
     }
+    let mut invalid=value.clone();invalid.mdns[0].allow_routable_publication=false;assert!(invalid.validate().is_err());
+    let mut invalid=value.clone();invalid.mdns[0].allow_import=false;assert!(invalid.validate().is_err());
+    let mut export_only=value.clone();export_only.mdns[0].allow_import=false;export_only.mdns[0].allow_routable_publication=false;export_only.validate()?;
     let mut invalid=value;invalid.packets_per_second=101;assert!(invalid.validate().is_err());Ok(())
 }
 #[test]

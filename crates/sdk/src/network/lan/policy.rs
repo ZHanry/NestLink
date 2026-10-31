@@ -41,6 +41,9 @@ pub struct MdnsRule {
     /// refer to the other authenticated virtual host, never an advertised LAN IP.
     pub allow_export: bool,
     pub allow_import: bool,
+    /// Explicit opt-in to advertise only the authenticated remote virtual IPv4
+    /// on this one selected LAN. A usable route remains independently required.
+    pub allow_routable_publication: bool,
 }
 impl LanPolicy {
     pub fn validate(&self) -> io::Result<()> {
@@ -76,6 +79,7 @@ impl LanPolicy {
             {return Err(denied("only explicit DNS-SD service types under .local. are allowed"));}
             if rule.port==0 || !services.insert((&rule.service_type,rule.port))
                 || !rule.allow_export && !rule.allow_import
+                || rule.allow_import != rule.allow_routable_publication
             {return Err(denied("invalid explicit DNS-SD port or direction"));}
         }
         Ok(())

@@ -39,7 +39,8 @@ approved deployment:
       "service_type": "_http._tcp.local.",
       "port": 8080,
       "allow_export": true,
-      "allow_import": true
+      "allow_import": true,
+      "allow_routable_publication": true
     }
   ]
 }
