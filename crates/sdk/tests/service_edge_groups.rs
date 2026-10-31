@@ -289,17 +289,27 @@ impl Fixture {
             expires_at_unix_ms: (at + SERVICE_RESOURCE_MS.min(NODE_RESOURCE_TTL_MS))
                 .min(node.lease.expires_at_unix_ms),
         })?;
-        let result: ServiceResourceGrant = reqwest::Client::new()
+        let response = reqwest::Client::new()
             .post(format!(
                 "{}/api/v3/nodes/{}/service-resources",
                 self.origin, node.lease.node_id
             ))
             .json(&query)
             .send()
-            .await?
-            .error_for_status()?
-            .json()
             .await?;
+        if !response.status().is_success() {
+            let status = response.status();
+            let body = response.text().await?;
+            return Err(std::io::Error::other(format!(
+                "service poll node index {index}, request {sequence}, runtime generation {}, lease sequence {}, issued {} ms ago, remaining {} ms: {status}; {body}",
+                node.lease.runtime_generation,
+                node.lease.lease_sequence,
+                at.saturating_sub(node.lease.issued_at_unix_ms),
+                node.lease.expires_at_unix_ms.saturating_sub(at),
+            ))
+            .into());
+        }
+        let result: ServiceResourceGrant = response.json().await?;
         Ok(verify_service_snapshot(
             &result.snapshot,
             &self.policy_issuer,

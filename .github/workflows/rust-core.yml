@@ -91,7 +91,8 @@ jobs:
           $subnetCases = @(
             @{ Args = @('-p', 'nestlink-protocol', '--lib', 'subnet::') },
             @{ Args = @('-p', 'nestlink-identity', '--lib', 'subnet::') },
-            @{ Args = @('-p', 'nestlink-sdk', '--lib', 'network::subnet::') }
+            @{ Args = @('-p', 'nestlink-sdk', '--lib', 'network::subnet::') },
+            @{ Args = @('-p', 'nestlink-sdk', '--test', 'network_subnets') }
           )
           foreach ($subnetCase in $subnetCases) {
             $subnetArgs = @('test', '--locked') + $subnetCase.Args + @('--', '--show-output', '--test-threads=1', '--color', 'never')

@@ -238,6 +238,38 @@ async fn coordinator(directory: &Path) -> Result {
     }
     eprintln!("group_l2_stage=approve_original_fixed_target");
     let approved = sdk.approve_service_target(&host, &consent, 180_000).await?;
+    // Group configuration requires live signed node authority. The real edge
+    // processes need the resulting group to load their Caddy configuration, so
+    // authenticate short bootstrap control lifetimes with the original client.
+    // They never own an ingress, health listener or service publication. The
+    // namespace edge processes subsequently establish fresh runtime identities.
+    let mut bootstrap_controls = Vec::new();
+    for (index, id) in node_ids.iter().enumerate() {
+        eprintln!("group_l2_stage=authenticate_bootstrap_node_control member_index={index}");
+        let local = directory.join(format!("bootstrap-edge{}", index + 1));
+        nestlink_platform_security::new_private_directory(&local)?;
+        let control = NodeControl::start(
+            NodeConfig {
+                deployment_id: deployment.clone(),
+                node_id: id.clone(),
+                control_origin: origin.clone(),
+                trusted_policy_issuer: policy_issuer.clone(),
+                identity_key_file: local.join("unused-fixture-key"),
+                service_usage_directory: Some(local.join("ledger")),
+                roles: vec![NodeRole::NodeEdge as i32],
+                allow_loopback_http: true,
+            },
+            NodeIdentity::from_seed(&[151 + index as u8; 32]),
+        )?;
+        let cleanup = control.service_usage_cleanup()?;
+        tokio::time::timeout(Duration::from_secs(12), async {
+            while control.authorize(NodeRole::NodeEdge, true).is_err() {
+                tokio::time::sleep(Duration::from_millis(20)).await;
+            }
+        })
+        .await?;
+        bootstrap_controls.push((control, cleanup));
+    }
     eprintln!("group_l2_stage=set_exact_edge_group");
     let group = sdk
         .set_service_edge_group(
@@ -267,6 +299,17 @@ async fn coordinator(directory: &Path) -> Result {
             },
         )
         .await?;
+    for (control, cleanup) in bootstrap_controls {
+        control.stop();
+        drop(control);
+        tokio::time::timeout(Duration::from_secs(8), async {
+            while !cleanup.is_finished() {
+                tokio::time::sleep(Duration::from_millis(20)).await;
+            }
+        })
+        .await?;
+    }
+    eprintln!("group_l2_stage=bootstrap_node_controls_physically_closed");
     let digest = service_edge_group_digest(&group)?;
     let mut edges = Vec::new();
     for (index, namespace) in namespaces.into_iter().enumerate() {
