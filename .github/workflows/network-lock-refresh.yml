@@ -59,6 +59,10 @@ jobs:
           assert native['async-trait'] == '=0.1.89'
           assert native['ipnet'] == '=2.12.2'
           assert native['fast-socks5'] == {'version': '=1.0.0', 'path': '../../third-party/fast-socks5'}
+          security = tomllib.loads(pathlib.Path('crates/platform-security/Cargo.toml').read_text())
+          assert security['dependencies']['tokio'] == {'workspace': True}
+          assert {'Win32_Foundation', 'Win32_System_Pipes', 'Win32_System_IO'} <= set(
+              security['target']['cfg(windows)']['dependencies']['windows-sys']['features'])
           # Verify original archive, complete source inventory, exact reviewed
           # security patch and MIT attribution before resolving this local crate.
           import importlib.util
@@ -137,6 +141,9 @@ jobs:
                   'reviewed_petgraph_exact_version_and_checksum': len(petgraph) == 1 and petgraph[0]['version'] == '0.8.3' and petgraph[0].get('checksum') == '8701b58ea97060d5e5b155d383a69952a60943f0e6dfe30b04c287beb0b27455',
                   'reviewed_authoritative_dns_exact_version': len(dns) == 1 and dns[0]['version'] == '0.26.3' and bool(dns[0].get('checksum')),
                   'locked_metadata_succeeded': all(item['return_code'] == 0 for item in commands),
+                  'protected_native_stream_reuses_existing_tokio_identity': any(
+                      item['name'] == 'nestlink-platform-security' and 'tokio' in item.get('dependencies', [])
+                      for item in after) and any(key[0] == 'tokio' for key in existing),
                   'only_reviewed_socks_component_new_external_packages': all(
                       identity(item) in existing or not item.get('source')
                       or item['name'] == 'tokio-stream' for item in after),
