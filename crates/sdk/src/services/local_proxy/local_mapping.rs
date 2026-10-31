@@ -20,6 +20,28 @@ fn association_peer(target: &TargetAddr, tcp_peer: SocketAddr) -> Option<SocketA
     }
 }
 
+async fn admitted_packet<'a>(choice: &LocalProxyServiceChoice, expected: SocketAddr,
+    source: SocketAddr, packet: &'a [u8]) -> Option<&'a [u8]> {
+    if source != expected || !source.ip().is_loopback() { return None; }
+    let (fragment, target, payload) = parse_udp_request(packet).await.ok()?;
+    (fragment == 0 && choice.accepts(&target) && payload.len() <= DatagramPacket::MAX_PAYLOAD)
+        .then_some(payload)
+}
+
+struct LocalDatagramBudget { bytes: u64, events: u64, maximum_bytes: u64 }
+impl LocalDatagramBudget {
+    fn observe_event(&mut self) -> bool {
+        self.events = self.events.saturating_add(1);
+        self.events <= MAX_DATAGRAM_EVENTS
+    }
+    fn admit_bytes(&mut self, length: usize) -> bool {
+        let Some(next) = self.bytes.checked_add(length as u64)
+            .filter(|next| *next <= self.maximum_bytes) else { return false; };
+        self.bytes = next;
+        true
+    }
+}
+
 async fn authenticate_association(socket: TcpStream, credentials: &Credentials)
     -> Result<(Command, SocketAddr), ()> {
     let tcp_peer = socket.peer_addr().map_err(|_| ())?;
@@ -134,8 +156,7 @@ async fn forward_association(mut control: TcpStream, udp: UdpSocket, peer: Socke
     tokio::pin!(expired);
     let idle = Duration::from_secs(u64::from(choice.entry.service.definition.limits.idle_timeout_seconds));
     let mut idle_deadline = Instant::now() + idle;
-    let mut events = 0_u64;
-    let mut local_bytes = 0_u64;
+    let mut budget = LocalDatagramBudget { bytes: 0, events: 0, maximum_bytes: choice.maximum_bytes };
     let response_header = match new_udp_header((choice.alias.as_str(), choice.port)) {
         Ok(header) => header,
         Err(_) => return FlowOutcome { failed: true, ..FlowOutcome::default() },
@@ -143,39 +164,30 @@ async fn forward_association(mut control: TcpStream, udp: UdpSocket, peer: Socke
     loop {
         // receive_datagram borrows the connection only inside this select. Its
         // cancellation-safe Quinn receive releases the borrow before send below.
+        let data = async { tokio::select! {
+            result = udp.recv_from(&mut buffer) => DatagramEvent::Local(result),
+            result = connection.receive_datagram() => DatagramEvent::Private(result),
+        }};
         let event = tokio::select! { biased;
             _ = stopping(stop) => break,
             _ = tokio::time::sleep_until(owner_deadline.min(idle_deadline)) => break,
             _ = &mut expired => break,
             _ = control.read(&mut control_byte) => break,
-            result = udp.recv_from(&mut buffer) => DatagramEvent::Local(result),
-            result = connection.receive_datagram() => DatagramEvent::Private(result),
+            event = data => event,
         };
-        events += 1;
-        if events > MAX_DATAGRAM_EVENTS { outcome.discarded_datagrams += 1; break; }
+        if !budget.observe_event() { outcome.discarded_datagrams += 1; break; }
         match event {
             DatagramEvent::Local(Ok((size, source))) => {
-                if source != peer || !source.ip().is_loopback() {
-                    outcome.discarded_datagrams += 1;
-                    continue;
-                }
-                let packet = parse_udp_request(&buffer[..size]).await;
-                let Ok((fragment, target, payload)) = packet else {
+                let Some(payload) = admitted_packet(choice, peer, source, &buffer[..size]).await else {
                     outcome.discarded_datagrams += 1;
                     continue;
                 };
-                if fragment != 0 || !choice.accepts(&target) || payload.len() > DatagramPacket::MAX_PAYLOAD {
-                    outcome.discarded_datagrams += 1;
-                    continue;
-                }
-                let Some(next_bytes) = local_bytes.checked_add(payload.len() as u64)
-                    .filter(|next| *next <= choice.maximum_bytes) else {
+                if !budget.admit_bytes(payload.len()) {
                     outcome.discarded_datagrams += 1;
                     break;
-                };
+                }
                 if lease.check_time(wall_ms().unwrap_or(0)).is_err() { break; }
                 if connection.send_datagram(payload).is_err() { outcome.failed = true; break; }
-                local_bytes = next_bytes;
                 outcome.forwarded_datagrams += 1;
                 idle_deadline = Instant::now() + idle;
             }
@@ -184,11 +196,10 @@ async fn forward_association(mut control: TcpStream, udp: UdpSocket, peer: Socke
                     outcome.discarded_datagrams += 1;
                     continue;
                 }
-                let Some(next_bytes) = local_bytes.checked_add(payload.len() as u64)
-                    .filter(|next| *next <= choice.maximum_bytes) else {
+                if !budget.admit_bytes(payload.len()) {
                     outcome.discarded_datagrams += 1;
                     break;
-                };
+                }
                 if lease.check_time(wall_ms().unwrap_or(0)).is_err() { break; }
                 let mut packet = response_header.clone();
                 packet.extend_from_slice(&payload);
@@ -199,7 +210,6 @@ async fn forward_association(mut control: TcpStream, udp: UdpSocket, peer: Socke
                     result = tokio::time::timeout_at(send_deadline, udp.send_to(&packet, peer)) => result,
                 };
                 if !matches!(sent, Ok(Ok(size)) if size == packet.len()) { outcome.failed = true; break; }
-                local_bytes = next_bytes;
                 outcome.forwarded_datagrams += 1;
                 idle_deadline = Instant::now() + idle;
             }
@@ -214,4 +224,7 @@ async fn forward_association(mut control: TcpStream, udp: UdpSocket, peer: Socke
     drop(udp);
     outcome
 }
+
+#[cfg(test)]
+mod tests;
 

@@ -14,7 +14,7 @@ use std::{
 };
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, ReadBuf};
 
-fn entry() -> Result<PrivateServiceEntry, Box<dyn std::error::Error>> {
+pub(super) fn entry() -> Result<PrivateServiceEntry, Box<dyn std::error::Error>> {
     let definition = ServiceDefinition {
         name: "Private test target".into(),
         host_device_id: random_id(),

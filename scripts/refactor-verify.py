@@ -31,7 +31,7 @@ def main():
     logs = root / "artifacts/core-verification" / datetime.now().strftime("%Y%m%d-%H%M%S")
     logs.mkdir(parents=True, exist_ok=True)
     commands = [
-        ("format", ["cargo", "fmt", "--all", "--exclude", "fast-socks5", "--", "--check"]),
+        ("format", [sys.executable, "-B", "scripts/format-first-party.py", "--check", "--receipt", str(logs / "format-commands.json")]),
         ("clippy", ["cargo", "clippy", "--workspace", "--all-targets", "--locked", "--", "-D", "warnings"]),
         ("security-tests", ["cargo", "test", "--workspace", "--locked"]),
         ("acceptance-tool-tests", [sys.executable, "-m", "unittest", "discover", "-s", "tests/refactor", "-p", "test_*.py"]),

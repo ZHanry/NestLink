@@ -595,7 +595,8 @@
       "existing_implementation": [
         "crates/node/src/service_plane/stream.rs",
         "crates/sdk/src/services/private/runtime.rs: fixed target, private lease and shared usage owner",
-        "crates/sdk/src/services/local_proxy.rs: authenticated fixed-service SOCKS TCP adapter"
+        "crates/sdk/src/services/local_proxy.rs: authenticated fixed-service SOCKS TCP/UDP adapter",
+        "crates/sdk/src/services/local_proxy/local_mapping.rs: explicit-source UDP association owner using the existing private datagram connection"
       ],
       "candidates": [
         "fast-socks5 1.0.0",
@@ -631,19 +632,20 @@
       },
       "license": "MIT",
       "selection_reason": "reuse_component_typestate_authentication_commands_and_replies_with_exact_private_service_routing",
-      "adapter_boundary": "Library owns SOCKS authentication, handshake, commands and replies. NestLink accepts only random-password authenticated loopback TCP CONNECT to one locally selected alias/port, obtains the existing private lease and connects only through PrivateServiceConnection. No DNS, generic outbound dial, NoAuth, BIND or UDP ASSOCIATE path is called.",
+      "adapter_boundary": "Library owns SOCKS authentication, handshake, commands, replies and UDP framing. NestLink accepts only random-password authenticated loopback TCP CONNECT or explicit-source UDP ASSOCIATE for one locally selected private service alias/port, obtains the existing private lease and connects only through PrivateServiceConnection. No DNS, generic outbound dial, NoAuth, BIND or component UDP proxy is called.",
       "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
       "security_and_operations_cost": [
         "Official 1.0.0 source logged raw username/password bytes; vendored parser removes those two statements and rejects RFC1929 versions other than 1; original archive/license/source hashes and patch are retained",
         "Loopback is not authentication: random per-owner credentials are delivered only through an existing owner-private directory; keep secrets out of logs, URLs and management IPC",
         "Per-owner/process flow limits, one setup deadline, fixed owner expiry and physical worker/carrier joins are required; cancellation retains the original cleanup owner",
-        "TCP slice only: ordinary standard-client integration, FIN, auth/target denial, debug-log confidentiality, credential replacement and shutdown are Actions test obligations",
-        "Raw TCP/UDP mapping, SOCKS UDP zero-length/large-packet behavior, production daemon/desktop lifetime wiring, unified routed private carrier and ordinary-user real-device AC34 remain open"
+        "UDP source must be an explicit nonzero loopback endpoint with the authenticated TCP peer IP; wildcard convenience clients fail closed; exact peer/target, zero-length boundary, 1169-byte maximum, FRAG rejection and finite byte/event/idle/lifetime bounds are required",
+        "Ordinary standard-client integration, FIN, auth/target/source denial, debug-log confidentiality, credential replacement and shutdown are Actions test obligations",
+        "Raw TCP/UDP mapping needs a reliable OS admission provider; production daemon/desktop lifetime wiring, unified routed private carrier and ordinary-user real-device AC34 remain open"
       ],
       "work_packages": [
         "W21"
       ],
-      "validation_status": "source_and_tests_added_for_authenticated_TCP_slice; no Actions pass or W21/AC34 completion claim; production and real-device qualification pending",
+      "validation_status": "source_and_tests_added_for_authenticated_TCP_and_explicit_source_SOCKS_UDP; no Actions pass or W21/AC34 completion claim; production and real-device qualification pending",
       "decision_ref": "docs/adr/network/0036-authenticated-local-private-service-proxy.md"
     },
     {

@@ -333,7 +333,7 @@ jobs:
           }
           exit $spaceDnsFailure
       - if: ${{ !cancelled() }}
-        run: cargo fmt --all --exclude fast-socks5 -- --check
+        run: python -B scripts/format-first-party.py --check --receipt "${{ runner.temp }}/first-party-format.json"
       - name: Retain complete SDK routed output and source test inventory
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -353,6 +353,7 @@ jobs:
             ${{ runner.temp }}/nestlink-network-discovery-tests.log
             ${{ runner.temp }}/nestlink-spaces-tests.log
             ${{ runner.temp }}/nestlink-space-dns-tests.log
+            ${{ runner.temp }}/first-party-format.json
           if-no-files-found: warn
           retention-days: 14
       - run: cargo check --locked -p nestlink-platform-audio

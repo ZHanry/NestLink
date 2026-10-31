@@ -1,6 +1,6 @@
 # ADR 0036: Authenticated local entry for one private service
 
-Status: selected TCP implementation slice; hosted and device verification pending.
+Status: selected authenticated TCP/UDP implementation; hosted and device verification pending.
 This decision does not close W21 or AC34.
 
 The SDK reuses the private-service admission, exact approved target, shared
@@ -37,9 +37,13 @@ path for local-owner recovery. Credential strings passed to the adapter's check
 are zeroized after comparison; this does not claim that all upstream temporary
 allocation storage is zeroized.
 
-Only loopback listeners and TCP CONNECT to the one chosen canonical
-`*.nestlink.internal` alias and exact port are admitted. IP literals, other names,
-other ports, NoAuth, BIND and UDP ASSOCIATE fail closed. The adapter never calls
+Only loopback listeners are admitted. TCP/HTTP services accept TCP CONNECT to the
+one chosen canonical `*.nestlink.internal` alias and exact port. UDP services
+accept UDP ASSOCIATE with an explicit nonzero local UDP source endpoint whose
+loopback IP equals the authenticated TCP peer IP. Unspecified IPs/ports, domains
+as association sources, other source IPs, NoAuth, BIND, and a command for the wrong
+service transport fail closed. Each UDP packet still must name the exact selected
+alias and port; IP targets, other names and other ports fail closed. The adapter never calls
 component DNS resolution, its generic TCP dial/proxy or UDP proxy. It obtains a
 verified private lease, compares the complete chosen service/definition/target,
 space and exposure revision, then invokes the existing private SDK connection.
@@ -64,6 +68,39 @@ error is conservatively an unconfirmed cleanup result. The caller must retain
 the owner and stop it when its local UI/daemon session ends; production lifecycle
 wiring is a separate requirement, not implied by exposing the SDK method.
 
+Each UDP association owns one separately bound loopback UDP relay socket and one
+original private-service connection. Datagrams are parsed with fast-socks5
+`parse_udp_request` and replies are framed with `new_udp_header`. Fragmented,
+malformed, wrong-source and oversized packets are discarded, without truncation,
+fragmentation, reassembly or a fallback transport. The payload maximum is the
+existing `DatagramPacket::MAX_PAYLOAD` (1169 bytes); empty application datagrams
+remain individual zero-length datagrams end to end. A 65536-byte receive buffer
+detects oversized local packets instead of silently forwarding a truncated one.
+Replies identify the one selected private alias, never the backend's address.
+
+The declared UDP source endpoint is pinned for the association's entire lifetime;
+there is no first-packet source selection or automatic rebinding. The authenticated
+TCP control connection must stay open; EOF or unexpected control data closes its
+UDP mapping. Each association shares the original service idle limit and chosen
+byte sub-reservation across request and response payloads, while the private host
+continues to enforce the authoritative grant and cumulative meter. A separate
+8192-event lifetime work cap also counts empty and rejected datagrams, preventing
+zero-byte traffic from evading bounded local work. Payload selection is fair
+between local and private inputs, with stop/expiry checked first. Local response
+sends have a 250ms ceiling within the original absolute owner/idle deadlines.
+The same single authority monitor remains pinned throughout the association, so
+loop iterations cannot reset expiry or wall-clock regression observation.
+
+Clients must bind their UDP socket first, authenticate their TCP SOCKS control
+connection, and send UDP ASSOCIATE naming that bound socket's exact local IP and
+nonzero port. They then send mature-library-framed UDP packets to the relay
+address in the success reply, targeting the chosen private alias and port.
+fast-socks5's `Socks5Datagram` convenience constructor always requests `[::]:0`
+and is deliberately incompatible with this source-pinning policy. Its mature
+`Socks5Stream::use_stream` and `request(UDPAssociate, TargetAddr::Ip(bound_addr))`
+APIs plus the mature UDP codec provide the explicit-source path. Product help
+must describe this requirement rather than silently relaxing local admission.
+
 Alternatives reviewed: socks5-server 0.10.1 is GPL-3.0-or-later and introduces a
 different licensing cost. Windows TCP peer-PID lookup is not an atomic credential
 boundary, and Linux TCP does not provide Unix-domain SO_PEERCRED semantics.
@@ -79,9 +116,12 @@ FIN, wrong password/NoAuth/name/port/IP/command denial, port collision, credenti
 replacement and cleanup, cancelled waits, and component debug-log confidentiality.
 A test transport mutates a byte emitted by the mature client to check the
 component's RFC1929 version fence; no authentication frame is hand-implemented.
-Source availability is not an Actions pass. W21 also still requires UDP/raw port
-mapping, empty/oversize UDP semantics, production entry wiring, unified routed
-private service carriage and ordinary Windows-user real-device L3 evidence.
+Source availability is not an Actions pass. W21 still requires a reliable OS
+admission design for raw loopback TCP/UDP mappings, complete product lifecycle
+wiring, unified routed private service carriage and ordinary Windows-user
+real-device L3 evidence. Current local-ipc is mutually pinned TLS on loopback,
+using private-directory installation keys; it is not an existing named-pipe or
+Unix-peer-credential server that can transparently admit ordinary raw clients.
 
 Sources: https://github.com/dizda/fast-socks5/tree/v1.0.0,
 https://crates.io/api/v1/crates/fast-socks5/1.0.0,

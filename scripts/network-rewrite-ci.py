@@ -199,7 +199,7 @@ def formatting_patch(source: Path, output: Path, records: list[dict]) -> bool:
         return False
     succeeded = False
     try:
-        formatted = run_command("format-patch-generate", ["cargo", "fmt", "--all", "--exclude", "fast-socks5"], worktree, output, records, 300)
+        formatted = run_command("format-patch-generate", [sys.executable, "-B", "scripts/format-first-party.py", "--receipt", str(output / "format-patch-commands.json")], worktree, output, records, 300)
         status = git_bytes(worktree, "status", "--porcelain=v1", "-z", "--untracked-files=all")
         (output / "format-worktree-status.json").write_text(
             json.dumps({"status": status.decode("utf-8", errors="replace").split("\0")[:-1]}, indent=2) + "\n", encoding="utf-8",
@@ -304,7 +304,7 @@ def main() -> int:
             prefix = [sys.executable, "-B", "scripts/refactor-windows-normal-user.py"]
             run_command("ordinary-windows-token", prefix + [sys.executable, "-B", "scripts/refactor-windows-normal-user.py", "--check"], source, output, records, 60)
         run_command("rust-toolchain", ["rustc", "--version", "--verbose"], source, output, records, 60)
-        fmt = run_command("format-check", ["cargo", "fmt", "--all", "--exclude", "fast-socks5", "--", "--check"], source, output, records, 300)
+        fmt = run_command("format-check", [sys.executable, "-B", "scripts/format-first-party.py", "--check", "--receipt", str(output / "format-check-commands.json")], source, output, records, 300)
         require_unchanged_source(before, source_snapshot(source, identity["source_revision"]))
         if fmt["return_code"] != 0:
             if not formatting_patch(source, output, records):
