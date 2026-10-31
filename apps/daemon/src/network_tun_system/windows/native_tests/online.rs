@@ -74,10 +74,20 @@ pub(super) async fn ordinary(case: &Path, plan_path: &Path, receipt: &Path) -> R
     // Both original endpoint claims are durable, even with a different owner
     // ID. Never manufacture another in-memory packet budget after this denial.
     for (sdk, device) in [(&f.source, &f.source_device), (&f.target, &f.target_device)] {
-        let repeated = sdk.start_network_access(&f.space,&f.view.access.grant_id,NetworkAccessStart{
-            installation_id:device.device_id.clone(),owner_id:nestlink_auth::random_id(),
-        }).await;
-        assert!(matches!(&repeated,Err(SdkError::Api(status,_)) if status.as_u16()==403), "the original consumed endpoint must retain the production Forbidden contract: {repeated:?}");
+        let repeated = sdk
+            .start_network_access(
+                &f.space,
+                &f.view.access.grant_id,
+                NetworkAccessStart {
+                    installation_id: device.device_id.clone(),
+                    owner_id: nestlink_auth::random_id(),
+                },
+            )
+            .await;
+        assert!(
+            matches!(&repeated,Err(SdkError::Api(status,_)) if status.as_u16()==403),
+            "the original consumed endpoint must retain the production Forbidden contract: {repeated:?}"
+        );
     }
     let interface = nestlink_platform_network::path::NetworkPathManager::interfaces()?
         .into_iter()
@@ -198,7 +208,11 @@ pub(super) async fn ordinary(case: &Path, plan_path: &Path, receipt: &Path) -> R
     peer.close_and_wait(Instant::now() + Duration::from_secs(5))
         .await?;
     let revoked = result?;
-    assert_eq!(local.spent_bytes(),5120,"the original ordinary budget must account for both complete requests and replies");
+    assert_eq!(
+        local.spent_bytes(),
+        5120,
+        "the original ordinary budget must account for both complete requests and replies"
+    );
     assert!(
         revoked.elapsed() < Duration::from_secs(5),
         "online revocation must physically release the original TUN and both packet endpoints within five seconds"
