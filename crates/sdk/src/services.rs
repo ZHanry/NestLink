@@ -4,6 +4,8 @@ use crate::*;
 #[cfg(not(target_arch = "wasm32"))]
 mod local_proxy;
 mod private;
+#[cfg(target_os = "linux")]
+pub use local_proxy::raw::{LocalRawServiceProxy, RawProxyStopReport, RawProxyWait};
 #[cfg(all(not(target_arch = "wasm32"), any(unix, windows)))]
 pub use local_proxy::native_stream::{
     LocalNativeServiceProxy, NativeStreamStopReport, NativeStreamWait,

@@ -15,6 +15,24 @@
   "research_runtime_exclusion": "EasyTier is idea_reference only; no executable, library, FFI, forked core or adapted code is selected.",
   "components": [
     {
+      "id": "C23",
+      "purpose": "Explicit Linux kernel UID admission for one ordinary-user raw loopback TCP/UDP endpoint",
+      "existing_implementation": ["crates/platform-security", "crates/sdk/src/services/local_proxy", "crates/sdk/src/services/private"],
+      "candidates": ["Installed nftables JSON CLI and Linux socket-owner metadata", "Post-accept TCP PID lookup (rejected race)", "Dedicated client network namespace (different application launch requirement)"],
+      "official_sources": ["https://netfilter.org/projects/nftables/manpage.html", "https://wiki.nftables.org/wiki-nftables/index.php/Matching_packet_metainformation"],
+      "maintenance_status": {"reviewed_at": "2026-10-31", "evidence": "Mature Linux kernel firewall and distribution component; exact runner package/version and actual kernel behavior must be recorded by hosted experiments"},
+      "platforms": ["Linux x64", "Linux ARM64 pending target qualification"],
+      "version": {"nftables": "Distribution-provided root-owned executable; record resolved version in Actions evidence", "rustix": "Reuse locked 1.1.2 fs/process APIs", "tokio": "Reuse existing locked process/socket/task runtime"},
+      "license": "nftables GPL-2.0 system component is invoked as a separate installed CLI; no source or library is linked or bundled by this adapter. Preserve existing rustix/Tokio/serde notices.",
+      "selection_reason": "Reuse the existing private-service carrier and mature kernel filtering rather than adding a raw capability port or a racy peer-PID authorization check",
+      "adapter_boundary": "nftables owns JSON parsing and kernel atomic transactions. NestLink owns exact local consent, original process/UID/endpoint, protected root receipt, bounded lifetime, original private grant/meter and physical exit/recovery receipts.",
+      "self_implementation_gap_if_any": "No existing raw TCP/UDP local peer credential boundary; the thin privileged helper adds only exact UID kernel admission and owned-resource recovery.",
+      "security_and_operations_cost": ["Administrator explicitly installs each kernel gate; ordinary clients and business runtime remain unprivileged", "Same OS user's applications share local access", "Helper crash retains kernel fence and journal", "Changed or foreign rules/handles are preserved", "Windows raw ports and protected-login CLI L3 remain separate mandatory work"],
+      "work_packages": ["W21", "W36"],
+      "validation_status": "implemented_unverified; all build, kernel experiments and automated checks pending GitHub-hosted Actions",
+      "decision_ref": "docs/adr/network/0037-explicit-linux-loopback-kernel-gate.md"
+    },
+    {
       "id": "C22",
       "purpose": "Explicit nonce-owned PCP UDP mapping of the original native ICE port",
       "existing_implementation": ["crates/sdk/src/native/ice.rs", "crates/traversal"],

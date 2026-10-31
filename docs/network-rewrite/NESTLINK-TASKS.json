@@ -1,4 +1,4 @@
-﻿{
+{
     "schema_version":  1,
     "plan_version":  "1.1",
     "created_date":  "2026-10-30",
@@ -2273,7 +2273,8 @@
                                                       "无未标明的外部验证缺口"
                                                   ],
                       "evidence_refs":  [
-
+                                            "docs/adr/network/0037-explicit-linux-loopback-kernel-gate.md",
+                                            "scripts/network-rewrite-local-port-gate.py"
                                         ],
                       "blockers":  [
 

@@ -1,7 +1,7 @@
 //! One fixed private service behind an OS-authenticated local byte stream.
 //! Unix sockets preserve half-close; Windows byte pipes have no write-half EOF.
 use super::*;
-use nestlink_platform_security::local_stream::{Listener, LocalStream};
+use nestlink_platform_security::local_stream::Listener;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct NativeStreamStopReport {
@@ -178,14 +178,15 @@ async fn run_owner(
     }
     report
 }
-async fn forward(
+pub(super) async fn forward<S>(
     sdk: Arc<Sdk>,
     consumer: Arc<DeviceIdentity>,
     choice: Arc<LocalProxyServiceChoice>,
-    mut local: LocalStream,
+    mut local: S,
     mut stop: watch::Receiver<bool>,
     owner_deadline: Instant,
-) -> FlowOutcome {
+) -> FlowOutcome
+where S: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin {
     let setup_deadline = (Instant::now() + SETUP_BUDGET).min(owner_deadline);
     let request = match choice.access_request(&consumer) {
         Ok(request)=>request,

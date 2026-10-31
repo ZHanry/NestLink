@@ -2,6 +2,8 @@
 mod browser_data;
 mod capture;
 mod diagnostics;
+#[cfg(target_os = "linux")]
+mod local_port_gate;
 mod maintenance;
 mod native_audio;
 mod native_clipboard;
@@ -72,6 +74,10 @@ struct Args {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Linux administrator helper for an explicit ordinary-user loopback gate.
+    /// It never loads installation keys, management login or service authority.
+    #[cfg(target_os = "linux")]
+    LocalPortGate(local_port_gate::GateArgs),
     /// List approved private services or serve one through authenticated local SOCKS5.
     PrivateServiceProxy(private_service_proxy::ProxyArgs),
     /// Serve one space's current same-account private names on loopback UDP/TCP.
@@ -416,6 +422,8 @@ async fn main() {
 async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let args = Args::parse();
     match args.command {
+        #[cfg(target_os = "linux")]
+        Some(Command::LocalPortGate(command)) => return local_port_gate::run(command).await,
         Some(Command::SpaceDns(command)) => return space_dns::run(command).await,
         Some(Command::PrivateServiceProxy(command)) => {
             return private_service_proxy::run(command).await;

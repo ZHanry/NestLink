@@ -2,9 +2,10 @@
 
 This source implements restricted SOCKS TCP/UDP and OS-authenticated native
 stream access to one locally selected private service. The new sources need
-exact-source hosted build and execution results before qualification. Plain
-local TCP/UDP port mappings and target ordinary-user qualification remain
-mandatory work; the native stream is an additional authenticated local entry.
+exact-source hosted build and execution results before qualification. Linux raw
+loopback TCP/UDP source is described below; its kernel and product qualification
+remains pending. Windows raw mappings and target ordinary-user qualification
+remain mandatory work. The native stream is an additional authenticated local entry.
 
 The normal-user daemon command uses the existing installed device identity and
 protected management login. Sign in using the product and enable protected login
@@ -85,3 +86,52 @@ recorded in ADR 0036 and third-party/fast-socks5/UPSTREAM.json. The original MIT
 license, author attribution and exact published archive accompany the source.
 Standard-client protocol, FIN, secrecy and cleanup tests run only in hosted
 Actions. Target ordinary-user acceptance remains required for AC34.
+
+Linux raw clients can select `serve --raw-loopback` with the same explicit
+service, space, byte limit and lifetime, a fixed nonzero `--listen` endpoint,
+an absolute fresh owner-private `--gate-plan` path, and an absolute fresh
+`--gate-receipt` path beneath a root-controlled public directory. This mode
+supports unmodified TCP/HTTP/HTTPS or UDP clients for the chosen service. It
+requires explicit administrator setup for its kernel UID gate; SOCKS and native
+streams retain their ordinary-user setup.
+
+The ordinary daemon writes its plan and waits in the same process. While it is
+waiting, run the same verified executable as administrator:
+
+```text
+nestlink-daemon local-port-gate install --plan <printed-plan-path> --journal-dir <fresh-root-private-directory> --receipt <chosen-root-public-receipt-path>
+```
+
+The administrator must select a protected root-owned parent, for example a
+dedicated directory under `/run`, rather than the user's home or temporary
+directory. Keep the helper running. It installs only this exact loopback
+address/port/transport and allows the selected OS user's client sockets. Other
+OS users and non-loopback ingress cannot use it. Applications belonging to the
+same OS user share that user's local access. The helper consumes no private
+service target, installation key or management login.
+
+Only after the complete root receipt is verified does the original ordinary
+daemon bind its port. Each connection or UDP source still requires current
+private service authority and the existing original cumulative meter. UDP
+packets retain their individual boundaries, including empty datagrams; payloads
+over 1169 bytes are discarded. There is no SOCKS framing in raw mode. TCP keeps
+the existing half-close behavior. Kernel receipts cannot select a remote target.
+
+The original owner lifetime is never extended by waiting for the helper. On
+termination the ordinary daemon joins its workers and exits; the helper waits
+for that actual process exit before deleting the gate. Expiry or an orderly
+helper stop changes it to deny-all. A helper crash retains its kernel fence and
+recovery journal, and the ordinary owner stops when it detects the missing
+helper. After the original process has exited, inspect or recover with:
+
+```text
+nestlink-daemon local-port-gate inspect --journal-dir <original-root-private-directory>
+nestlink-daemon local-port-gate recover --journal-dir <original-root-private-directory>
+```
+
+An active original helper holds the journal lock, so these recovery commands
+cannot race it. Changed rules, handles or foreign objects are preserved and
+reported. The immutable public receipt remains an audit record of that one
+installation and cannot authorize a different process or a new lifetime. Raw
+Windows support and production ordinary-user target qualification remain open;
+the Linux source and forthcoming hosted kernel scenarios do not qualify them.

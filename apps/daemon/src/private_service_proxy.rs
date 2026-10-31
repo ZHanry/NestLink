@@ -1,5 +1,9 @@
 //! Explicit normal-user entry to one authorized private service.
 mod host;
+#[cfg(target_os = "linux")]
+mod raw_gate;
+#[cfg(target_os = "linux")]
+use raw_gate::wait_raw_gate;
 use crate::{session_store::SessionStore, space_dns::session_snapshot};
 use nestlink_protocol::services::private::PrivateServiceEntry;
 use nestlink_sdk::{
@@ -47,6 +51,17 @@ enum ProxyAction {
     /// Each UDP packet must target the selected alias/port; fragments and
     /// payloads over 1169 bytes are discarded. Empty datagrams are preserved.
     Serve {
+        /// Linux raw loopback TCP/UDP behind an administrator-installed exact
+        /// UID/endpoint gate. Requires a nonzero --listen port, --gate-plan and
+        /// --gate-receipt. The same ordinary-user process waits for the helper.
+        #[arg(long, conflicts_with = "native_stream")]
+        raw_loopback: bool,
+        /// Fresh absolute owner-private file for this original process's plan.
+        #[arg(long, requires = "raw_loopback")]
+        gate_plan: Option<PathBuf>,
+        /// Fresh absolute public receipt path in a root-controlled directory.
+        #[arg(long, requires = "raw_loopback")]
+        gate_receipt: Option<PathBuf>,
         #[arg(long)]
         service: String,
         #[arg(long)]
@@ -96,6 +111,8 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>
 enum RunningProxy {
     Socks(LocalServiceProxy),
     Native(LocalNativeServiceProxy),
+    #[cfg(target_os = "linux")]
+    Raw(nestlink_sdk::services::LocalRawServiceProxy),
 }
 enum ProxyWait {
     Pending,
@@ -107,12 +124,16 @@ impl RunningProxy {
         match self {
             Self::Socks(owner) => owner.is_finished(),
             Self::Native(owner) => owner.is_finished(),
+            #[cfg(target_os = "linux")]
+            Self::Raw(owner) => owner.is_finished(),
         }
     }
     fn request_shutdown(&self) {
         match self {
             Self::Socks(owner) => owner.request_shutdown(),
             Self::Native(owner) => owner.request_shutdown(),
+            #[cfg(target_os = "linux")]
+            Self::Raw(owner) => owner.request_shutdown(),
         }
     }
     async fn wait_stopped(&mut self) -> ProxyWait {
@@ -126,6 +147,12 @@ impl RunningProxy {
                 NativeStreamWait::CleanupPending => ProxyWait::Pending,
                 NativeStreamWait::Stopped(report) => ProxyWait::Stopped(format!("{report:?}")),
                 NativeStreamWait::CleanupFailed(report) => ProxyWait::Failed(format!("{report:?}")),
+            },
+            #[cfg(target_os = "linux")]
+            Self::Raw(owner) => match owner.wait_stopped(Duration::from_secs(5)).await {
+                nestlink_sdk::services::RawProxyWait::CleanupPending => ProxyWait::Pending,
+                nestlink_sdk::services::RawProxyWait::Stopped(report) => ProxyWait::Stopped(format!("{report:?}")),
+                nestlink_sdk::services::RawProxyWait::CleanupFailed(report) => ProxyWait::Failed(format!("{report:?}")),
             },
         }
     }
@@ -215,6 +242,9 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
             .into())
         }
         ProxyAction::Serve {
+            raw_loopback,
+            gate_plan,
+            gate_receipt,
             service,
             space,
             alias,
@@ -273,7 +303,20 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
             let sdk = Arc::new(sdk);
             let credential_directory = credentials_dir.unwrap_or_else(|| directory.clone());
             let deadline = tokio::time::Instant::now() + lifetime;
-            let mut proxy = if native_stream {
+            let mut proxy = if raw_loopback {
+                #[cfg(target_os = "linux")]
+                {
+                    let plan_path=gate_plan.ok_or_else(||io::Error::other("raw loopback requires an explicit --gate-plan"))?;
+                    let receipt_path=gate_receipt.ok_or_else(||io::Error::other("raw loopback requires an explicit --gate-receipt"))?;
+                    let plan=wait_raw_gate(listen,datagram,lifetime,&plan_path,&receipt_path).await?;
+                    RunningProxy::Raw(sdk.start_private_service_raw(consumer,choice,plan,&receipt_path).await?)
+                }
+                #[cfg(not(target_os = "linux"))]
+                {
+                    let _=(gate_plan,gate_receipt);
+                    return Err(io::Error::other("raw loopback requires the Linux kernel UID gate; use authenticated SOCKS or the native OS endpoint on this platform").into());
+                }
+            } else if native_stream {
                 RunningProxy::Native(
                     sdk.start_private_service_native_stream(
                         consumer,
@@ -318,13 +361,18 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
                         "Windows byte pipes have no independent write-half EOF; use SOCKS TCP for applications that require FIN before a reverse response."
                     );
                 }
+                #[cfg(target_os = "linux")]
+                RunningProxy::Raw(owner) => {
+                    println!("Private service {service} in space {space}: raw loopback {}",owner.address());
+                    println!("Kernel admission permits only the locally approved OS user. The original administrator helper retains the gate until this process actually exits.");
+                }
             }
             println!(
                 "Destination: {alias}:{port}; maximum {maximum_bytes} bytes per connection; owner lifetime {} seconds.",
                 lifetime.as_secs()
             );
             println!("Press Ctrl-C to stop.");
-            if datagram {
+            if datagram && !raw_loopback {
                 println!(
                     "UDP requires password authentication on a live TCP control connection and UDP ASSOCIATE with your already-bound loopback UDP IP and nonzero port. Wildcard sources are rejected."
                 );

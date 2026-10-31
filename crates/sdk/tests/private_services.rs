@@ -2,6 +2,9 @@
 //! HTTP/TCP/DNS targets, shared durable usage and physical listener release.
 #[path = "private_services/relay.rs"]
 mod relay;
+#[cfg(target_os = "linux")]
+#[path = "private_services/raw.rs"]
+mod raw;
 use hickory_server::proto::{
     op::{Message, MessageType, OpCode, Query, ResponseCode},
     rr::{Name, RData, Record, RecordType, rdata::A},

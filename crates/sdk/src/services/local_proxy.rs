@@ -24,6 +24,8 @@ use tokio::{
 };
 use zeroize::Zeroizing;
 mod local_mapping;
+#[cfg(target_os = "linux")]
+pub(super) mod raw;
 #[cfg(any(unix, windows))]
 pub(super) mod native_stream;
 

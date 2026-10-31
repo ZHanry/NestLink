@@ -1,4 +1,4 @@
-﻿{
+{
     "schema_version":  1,
     "repository":  "ZHanry/NestLink",
     "target_release":  "0.8.0RC",
@@ -6,8 +6,8 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "a9fdd62837130a10f68831362116b2b2649f33d5",
-    "checkpoint_kind":  "hosted_validation_blockers_repaired_private_relay_authority_and_runtime_in_progress",
+    "source_revision":  "515b182b5da7bea53991447dc4bb3001d021a6df",
+    "checkpoint_kind":  "private_service_relay_compile_repairs_and_linux_raw_uid_gate_pending_hosted_derivation",
     "active_tasks":  [
                          "W00",
                          "W02",
@@ -36,12 +36,12 @@
                                              "Early GitHub-hosted Windows/Linux contract and real-carrier checks configured"
                                          ],
     "unverified_assumptions":  [
-                                   "e7614d6 SDK route_sets six cases and signed_direct three cases passed. Product AppCore cases did not execute because wait_network_change visibility failed; 1216488 fixes this.",
-                                   "e7614d6 failed Store mutable test fixture and Linux deprecated AsyncFd usage; 1e45d28 repairs both. 1216488 exposed the expected unsafe Tokio registration boundary lint; a9fdd62 documents and allows only that existing OS boundary.",
-                                   "e7614d6 transport service framing truncation classified UnexpectedEof as Other; 1e45d28 preserves original I/O error kinds.",
-                                   "W20 relay and multihop authority, atomic service/relay reservations, independent grant metadata, host inbox, SDK carrier owner and explicit node choices are being implemented in the working tree; they have not been built or validated.",
-                                   "W21 raw loopback TCP/UDP must have a real local OS authorization gate. Existing SOCKS and native-stream paths do not complete the raw mapping requirement.",
-                                   "Existing v15 relay packet limit is not an IPv6 TUN MTU qualification."
+                                   "a9fdd62 signed direct AppCore media/input/revocation passed; routed recovery reached successor but exposed duplicate platform reset. 6e938e7 retains successful terminal input cleanup and failed-cleanup retry; full product rerun pending.",
+                                   "6e938e7 run 41168640201 stopped at the private relay raw transcript verifier type mismatch. d966af7 repairs request and metadata domains; no private business pass is claimed.",
+                                   "d966af7 run 41169418139 passed actual topology carrier, kernel NAT, production sockets and Quinn carrier feasibility; product/private service compilation stopped at a host setup future borrow. 515b182 scopes that future before ownership transfer.",
+                                   "d966af7 topology journal exposed a dangling all_relay_capacity view in a historical schema fixture; 515b182 restores original view/table dependency order and exact old view.",
+                                   "Linux raw TCP/UDP SDK, root nft UID gate, ordinary-user CLI plan/wait, finite per-source queues and hosted kernel experiments are implemented in source. New manifest edges require Actions lock derivation, formatting and actual tests; none is claimed passed.",
+                                   "Windows raw loopback admission, protected-login raw CLI L3, W22-W40 mandatory implementation and target qualification remain open. Existing NRD packet limits are not IPv6 TUN MTU qualification."
                                ],
     "external_prerequisites":  [
                                    {
@@ -71,11 +71,11 @@
                                    }
                                ],
     "next_steps":  [
-                       "Complete and review W20 authority, endpoint runtime and real single/two-node TCP/UDP tests; freeze a source snapshot, derive formatting in Actions and import the reviewed exact-source patch.",
-                       "Read a9fdd62 network run 41167104969 and system DNS run 41167106875; retain real test failures and fix from their exact-source logs.",
-                       "Run complete Windows/Linux core checks including daemon private-service-host and stdio process tests on the next snapshot; rerun actual browser/native production scenarios.",
-                       "Finish local OS raw mapping gate and all remaining mandatory W16/W22-W40 production functionality and required qualifications.",
-                       "Publish 0.8.0RC only after all mandatory gates. Preserve local and remote main-only branch state."
+                       "Freeze and push the reviewed Linux raw gate source with W20/host borrow repairs. Derive both product and browser fixture locks in GitHub Actions, verify artifact receipts and import exact outputs.",
+                       "Generate and review exact-source hosted formatting, then run Linux raw SDK/kernel tests, complete Windows/Linux Core, network contracts, browser/native production and actual owned split DNS.",
+                       "Read exact-source failures, preserve failed evidence, repair production owners and continue W21 Windows/raw and every remaining mandatory W22-W40 feature.",
+                       "Obtain and record actual Windows/GPU, Android/iOS WireGuard, original NAT/public HA and cross-day soak evidence; preparation and independent source work continue meanwhile.",
+                       "Publish 0.8.0RC only after all mandatory functionality and evidence gates. Keep local/remote main-only branch state."
                    ],
     "evidence_index":  [
                            "docs/network-rewrite/evidence/research-review-2026-10-30.md",
@@ -144,7 +144,8 @@
                            "docs/network-rewrite/evidence/socks-lock-8ff5d4e.json",
                            "docs/adr/network/0036-authenticated-local-private-service-proxy.md",
                            "docs/network-rewrite/LOCAL-PRIVATE-SERVICE-PROXY.md",
-                           "docs/network-rewrite/ORIGINAL-ROUTE-RECOVERY.md"
+                           "docs/network-rewrite/ORIGINAL-ROUTE-RECOVERY.md",
+                           "docs/adr/network/0037-explicit-linux-loopback-kernel-gate.md"
                        ],
     "observed_actions":  [
                              {
@@ -260,6 +261,24 @@
                                  "source_revision":  "a9fdd62837130a10f68831362116b2b2649f33d5",
                                  "status":  "in_progress",
                                  "scope":  "Windows/Linux real owned split DNS."
+                             },
+                             {
+                                 "run_id":  41168640201,
+                                 "source_revision":  "6e938e7f40b415915bba05919b20a5f2be7d8b62",
+                                 "status":  "failure",
+                                 "scope":  "Private relay metadata verifier expected DeviceActionClaims for a raw transcript. Compilation stopped; subsequent source repair is not a pass."
+                             },
+                             {
+                                 "run_id":  41169418139,
+                                 "source_revision":  "d966af78ae1c01a27da13fc78e46425dd1000fb6",
+                                 "status":  "partial_failure",
+                                 "scope":  "Topology carrier, routed kernel NAT, production socket, Quinn feasibility and independent vectors passed; host borrow and historical migration fixture blocked later slices. Contracts pending at checkpoint."
+                             },
+                             {
+                                 "run_id":  41169420222,
+                                 "source_revision":  "d966af78ae1c01a27da13fc78e46425dd1000fb6",
+                                 "status":  "partial_failure",
+                                 "scope":  "Linux real DNS test did not execute because SDK host failed compilation; 515b182 repairs the borrow. Windows status must be read."
                              }
                          ],
     "release_state":  "not_ready",

@@ -60,7 +60,11 @@ jobs:
           assert native['ipnet'] == '=2.12.2'
           assert native['fast-socks5'] == {'version': '=1.0.0', 'path': '../../third-party/fast-socks5'}
           security = tomllib.loads(pathlib.Path('crates/platform-security/Cargo.toml').read_text())
-          assert security['dependencies']['tokio'] == {'workspace': True}
+          assert security['dependencies']['tokio'] == {'workspace': True, 'features': ['process']}
+          assert security['dependencies']['serde'] == {'workspace': True}
+          assert security['dependencies']['serde_json'] == {'workspace': True}
+          assert security['target']['cfg(unix)']['dependencies']['rustix'] == {
+              'version': '1.1.2', 'features': ['process', 'fs']}
           assert security['target']['cfg(windows)']['dependencies']['tokio-util'] == {
               'version': '=0.7.20', 'features': ['io-util']}
           assert {'Win32_Foundation', 'Win32_System_Pipes', 'Win32_System_IO'} <= set(
