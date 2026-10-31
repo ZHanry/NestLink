@@ -1,6 +1,8 @@
 # 0054: Controlled LAN discovery on the original packet owner
 
-Status: source implemented, hosted and target execution pending. Applies to W28,
+Status: source implemented; actual hosted dual-LAN UDP and DNS-SD mechanism
+passed in run 41235534909 on source 4a2d7a0. Actual combined TUN/service, games
+and target execution retain separate required evidence. Applies to W28,
 F19/F23 and AC47/AC48; it does not mark any acceptance group passed.
 
 The existing `webrtc-mdns` component serves ICE host names. It does not supply
@@ -30,6 +32,22 @@ prefix/L3/L4 rules, one-use start, cumulative budget, login observation and
 packet admission remain mandatory. The new adapter cannot renew them. Each
 complete outer packet is admitted before encrypted transmission or any local
 LAN delivery. Network membership alone supplies no LAN permission.
+
+For actual services on the virtual hosts, `network-tun` accepts the optional
+pair `--lan-policy` and `--approve-lan-policy`. Both are absent by default;
+enabling a TUN or issuing a grant never implies LAN consent. This composition
+reuses its original protected installation/login, one-use access, cumulative
+budget, physical peer endpoint, packet loop and existing OS helper. It creates
+no second packet owner or virtual interface. The original ordinary host reads
+from the existing TUN and the bounded LAN adapter; after original remote packet
+admission, only the exact remote/local virtual IPv4 pair with both UDP ports
+equal to the explicitly reserved transport port enters the strict LAN parser.
+Corrupt envelopes on that tuple cannot fall through to the OS. Other admitted
+host traffic stays on the existing TUN. The same host guard observes the exact
+private policy digest and interface every 250ms. Stop/revoke first terminates
+the original admission, then attempts both LAN socket/DNS-SD shutdown and the
+original TUN release. This option does not configure LAN forwarding or routes
+for third-party devices.
 
 A separately reviewed owner-private `LanPolicy` and its explicit SHA256 consent
 pin the space, LAN interface index/address/subnet, unicast envelope port, UDP
