@@ -72,6 +72,18 @@ jobs:
         run: |
           set -o pipefail
           cargo test --locked -p nestlink-remote --lib queues:: -- --show-output --color never 2>&1 | tee "$RUNNER_TEMP/media-qos-evidence/queue-tests.log"
+      - name: Retain the real Core native file lifecycle regression
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p nestlink-app-core --test native_session proved_file_access_tracks_dynamic_roots_and_keeps_failed_tasks_session_scoped -- --show-output --test-threads=1 --color never 2>&1 | tee "$RUNNER_TEMP/media-qos-evidence/native-file-tests.log"
+          python3 - <<'PY'
+          import os, pathlib, re
+          log = (pathlib.Path(os.environ['RUNNER_TEMP']) / 'media-qos-evidence/native-file-tests.log').read_text()
+          assert re.search(r'(?m)^test proved_file_access_tracks_dynamic_roots_and_keeps_failed_tasks_session_scoped \.\.\. ok\s*$', log)
+          assert re.findall(r'test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored;', log) == [('1', '0', '0')]
+          PY
       - name: Require strict media lint
         if: ${{ !cancelled() }}
         shell: bash

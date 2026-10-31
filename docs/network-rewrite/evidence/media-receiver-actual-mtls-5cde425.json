@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "source_revision": "5cde425732162805196e68ac3457991f717e9872",
+  "task_ids": [
+    "W31"
+  ],
+  "whole_task_passed": false,
+  "release_qualification_claimed": false,
+  "build_provenance": {
+    "repository": "ZHanry/NestLink",
+    "workflow": ".github/workflows/media-qos.yml",
+    "run_id": 41222892800,
+    "run_attempt": 1,
+    "job_id": 124600950079,
+    "runner_environment": "github-hosted",
+    "runner_label": "ubuntu-24.04",
+    "cargo_lock_sha256": "87315f505621834141721a3cb214b01a0203e6eb9d25b6d3bd5fdbdc4b7852e7",
+    "artifact": {
+      "id": 13050533664,
+      "name": "media-qos-5cde425732162805196e68ac3457991f717e9872-1",
+      "sha256": "8ac669183691536cfc7e4602c38aceb82139bfc6b7c4f5fd0c81107d3980393b",
+      "download_digest_verified": true,
+      "files": [
+        {
+          "path": "clippy.log",
+          "sha256": "0796ceffcb997aaff68f9fdf28673677f8d5ed8b752e7ecb6c808f3a58e44169"
+        },
+        {
+          "path": "media-tests.log",
+          "sha256": "6dfbd44ec1b62a000d96cc9d28833be8074e544a1040e1b1fb4656073d7e202b"
+        },
+        {
+          "path": "queue-tests.log",
+          "sha256": "8bebac4b6d1d98f317594872e91127b9f9bf5e7ea7c92853593cd334d76db3c8"
+        },
+        {
+          "path": "receipt.json",
+          "sha256": "0723a9a0ff8631217ba969574ed03a660d62dd1c916f56d7ce16c5958848b04f"
+        },
+        {
+          "path": "report-contract-tests.log",
+          "sha256": "7811a47c1b7b9e3f4395be11b930c9ef3942cd9658685d6f366440c6bab812aa"
+        },
+        {
+          "path": "report-negotiation-tests.log",
+          "sha256": "c61e0314284a7accd5c2e130eb211527114d483e5c3e6ea1a36a82a8ac8db3a6"
+        }
+      ]
+    }
+  },
+  "execution_provenance": {
+    "kind": "github_hosted_lab",
+    "scope": "Actual VP8/Opus, original authenticated native media owners, real loopback TCP with mutually pinned installation TLS1.3 and checked ALPN/peer certificates, actual kernel UDP/QUIC/mTLS, actual receiver reports and original lease stop. Signed two-party native-only capability negotiation, original queues, exact signed budget selector and strict media/Core/daemon all-target lint. No actual Windows MF owner replacement, shaped network, physical GPU, resolution downshift or whole W31 acceptance claim.",
+    "results": [
+      {
+        "log": "media-tests.log",
+        "passed": [
+          33,
+          62
+        ],
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "log": "queue-tests.log",
+        "passed": [
+          13
+        ],
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "log": "report-contract-tests.log",
+        "passed": [
+          1
+        ],
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "log": "report-negotiation-tests.log",
+        "passed": [
+          1
+        ],
+        "failed": 0,
+        "ignored": 0
+      }
+    ],
+    "strict_clippy": {
+      "packages": [
+        "nestlink-media-codec",
+        "nestlink-media-session",
+        "nestlink-app-core",
+        "nestlink-daemon"
+      ],
+      "all_targets": true,
+      "warnings_denied": true,
+      "passed": true
+    }
+  },
+  "historical_correction": {
+    "source_revision": "47946984f07eda74c9fa2aae5b136964878885e0",
+    "run_id": 41217399922,
+    "scope": "That source used an authenticated in-memory duplex stream for its non-QUIC branch. It is not actual TCP/TLS evidence; the corrected historical record is retained."
+  },
+  "retained_failures": [
+    {
+      "run_id": 41221562286,
+      "source_revision": "3ba925d7863a1e4e003ca1f024c2e89de5684c3b",
+      "scope": "Media tests passed, but required daemon all-target lint failed a resident offline fixture match-arm type. Fixed without excluding daemon lint."
+    },
+    {
+      "run_id": 41222895874,
+      "source_revision": "5cde425732162805196e68ac3457991f717e9872",
+      "scope": "Separate Windows actual exact-owner replacement run failed strict catalog canonical ordering; fixed subsequently, not counted as an exact-owner pass."
+    }
+  ],
+  "remaining": [
+    "Actual Windows MF/Core high-to-low sealed owner replacement and exact ACK execution",
+    "Resolution downshift through real scaler, original input coordinate mapping and independently probed formats",
+    "Actual20-to5Mbps,1percent loss,concurrent files and original2-second/input-p95 gates",
+    "Physical Windows GPU/display and target qualification"
+  ]
+}
