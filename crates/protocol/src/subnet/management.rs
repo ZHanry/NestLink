@@ -1,9 +1,13 @@
 //! Online management envelopes. Every returned credential still needs pinned
 //! signature and current-node verification before local approval or use.
-use crate::{api::{NetworkGrantView, NetworkPolicyView}, network::IpPrefix, network_topology::BootIncarnation};
 use super::SignedSubnetMapping;
-use serde::{Deserialize, Serialize};
+use crate::{
+    api::{NetworkGrantView, NetworkPolicyView},
+    network::IpPrefix,
+    network_topology::BootIncarnation,
+};
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]

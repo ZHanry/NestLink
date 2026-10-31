@@ -470,13 +470,16 @@ impl Store {
         }
         if version < 45 {
             let transaction = connection.transaction()?;
-            transaction.execute_batch(include_str!("../migrations/045_network_subnet_mappings.sql"))?;
+            transaction.execute_batch(include_str!(
+                "../migrations/045_network_subnet_mappings.sql"
+            ))?;
             transaction.pragma_update(None, "user_version", 45)?;
             transaction.commit()?;
         }
         if version < 46 {
             let transaction = connection.transaction()?;
-            transaction.execute_batch(include_str!("../migrations/046_subnet_packet_bindings.sql"))?;
+            transaction
+                .execute_batch(include_str!("../migrations/046_subnet_packet_bindings.sql"))?;
             transaction.pragma_update(None, "user_version", 46)?;
             transaction.commit()?;
         }

@@ -186,7 +186,12 @@ impl OnlinePacketAccess {
             self.policy.claims.scope.policy_epoch,
             &revoked,
         )?;
-        let [source_exports,destination_exports] = mapping_exports(&context, &view, [&self.policy.source.member,&self.policy.destination.member], &self.policy.access)?;
+        let [source_exports, destination_exports] = mapping_exports(
+            &context,
+            &view,
+            [&self.policy.source.member, &self.policy.destination.member],
+            &self.policy.access,
+        )?;
         let source = PacketPeerAuthority::from_directory(
             &context,
             self.policy.source.member.clone(),
@@ -272,18 +277,63 @@ impl OnlinePacketAccess {
     /// Build the privileged adapter's immutable configuration from this exact
     /// live one-use owner. The caller supplies a second explicit local mapping
     /// approval, exact interfaces and original physical carrier endpoints.
-    pub fn subnet_plan(&self, consent: crate::network::subnet::SubnetLocalConsent, interfaces: crate::network::subnet::SubnetInterfaces, physical_endpoints: &[IpAddr]) -> io::Result<crate::network::subnet::VerifiedSubnetPlan> {
-        use nestlink_identity::subnet::{SubnetGatewayState,verify_subnet_mapping};
-        if self.policy.stopped || self.fetched.elapsed()>=DIRECTORY_FRESHNESS || Instant::now()>=self.policy.deadline {return Err(denied("original subnet business owner is no longer current"));}
-        let mapping = self.subnet_mappings.iter().find(|mapping| mapping.gateway.public_key==self.local_public).ok_or_else(|| denied("this installation has no explicitly bound local subnet"))?;
+    pub fn subnet_plan(
+        &self,
+        consent: crate::network::subnet::SubnetLocalConsent,
+        interfaces: crate::network::subnet::SubnetInterfaces,
+        physical_endpoints: &[IpAddr],
+    ) -> io::Result<crate::network::subnet::VerifiedSubnetPlan> {
+        use nestlink_identity::subnet::{SubnetGatewayState, verify_subnet_mapping};
+        if self.policy.stopped
+            || self.fetched.elapsed() >= DIRECTORY_FRESHNESS
+            || Instant::now() >= self.policy.deadline
+        {
+            return Err(denied(
+                "original subnet business owner is no longer current",
+            ));
+        }
+        let mapping = self
+            .subnet_mappings
+            .iter()
+            .find(|mapping| mapping.gateway.public_key == self.local_public)
+            .ok_or_else(|| denied("this installation has no explicitly bound local subnet"))?;
         let revoked = BTreeSet::new();
-        let context = Self::context(&self.pin,&self.deployment,self.policy.claims.scope.policy_epoch,&revoked).map_err(denied)?;
-        let gateway = SubnetGatewayState {node_id:&mapping.gateway.node_id,public_key:&mapping.gateway.public_key,incarnation:&mapping.gateway.incarnation,
-            mapping_revision:mapping.gateway.mapping_revision,lease_expires_at_ms:mapping.gateway.lease_expires_at_ms};
-        let export = verify_network_grant(&crate::network_management::decode_network_grant(&mapping.route_export).map_err(denied)?,&context).map_err(denied)?;
-        let verified = verify_subnet_mapping(&mapping.mapping,&context,export,&gateway).map_err(denied)?;
-        let plan = crate::network::subnet::VerifiedSubnetPlan::new(&context,&gateway,verified,self.policy.access.clone(),consent,interfaces,physical_endpoints)?;
-        if plan.view().owner_id!=self.owner_id {return Err(denied("subnet approval belongs to another original packet owner"));}
+        let context = Self::context(
+            &self.pin,
+            &self.deployment,
+            self.policy.claims.scope.policy_epoch,
+            &revoked,
+        )
+        .map_err(denied)?;
+        let gateway = SubnetGatewayState {
+            node_id: &mapping.gateway.node_id,
+            public_key: &mapping.gateway.public_key,
+            incarnation: &mapping.gateway.incarnation,
+            mapping_revision: mapping.gateway.mapping_revision,
+            lease_expires_at_ms: mapping.gateway.lease_expires_at_ms,
+        };
+        let export = verify_network_grant(
+            &crate::network_management::decode_network_grant(&mapping.route_export)
+                .map_err(denied)?,
+            &context,
+        )
+        .map_err(denied)?;
+        let verified =
+            verify_subnet_mapping(&mapping.mapping, &context, export, &gateway).map_err(denied)?;
+        let plan = crate::network::subnet::VerifiedSubnetPlan::new(
+            &context,
+            &gateway,
+            verified,
+            self.policy.access.clone(),
+            consent,
+            interfaces,
+            physical_endpoints,
+        )?;
+        if plan.view().owner_id != self.owner_id {
+            return Err(denied(
+                "subnet approval belongs to another original packet owner",
+            ));
+        }
         Ok(plan)
     }
 }
@@ -295,7 +345,10 @@ fn fingerprint(view: &NetworkAccessView) -> Result<[u8; 32], SdkError> {
         &view.access,
         &view.connectivity,
         &view.path,
-        view.subnet_mappings.iter().map(|mapping| (&mapping.mapping,&mapping.route_export)).collect::<Vec<_>>(),
+        view.subnet_mappings
+            .iter()
+            .map(|mapping| (&mapping.mapping, &mapping.route_export))
+            .collect::<Vec<_>>(),
     ))?))
 }
 fn verify(
@@ -354,7 +407,8 @@ fn verify(
     if local_member.claims().public_key != local.identity.public_key() {
         return Err(SdkError::Trust);
     }
-    let [source_exports,destination_exports] = mapping_exports(&context,view,[&members[0],&members[1]],&access)?;
+    let [source_exports, destination_exports] =
+        mapping_exports(&context, view, [&members[0], &members[1]], &access)?;
     let source = PacketPeerAuthority::from_directory(
         &context,
         members[0].clone(),
@@ -397,28 +451,63 @@ fn verify(
     )?)
 }
 
-fn mapping_exports(context: &NetworkVerification<'_>, view: &NetworkAccessView, members: [&VerifiedMembership;2], access: &VerifiedNetworkGrant) -> Result<[Vec<VerifiedNetworkGrant>;2],SdkError> {
-    use nestlink_identity::subnet::{SubnetGatewayState,verify_subnet_mapping};
-    let GrantClaims::NetworkAccess(business) = access.claims() else {return Err(SdkError::Trust);};
-    if view.subnet_mappings.len()>2 {return Err(SdkError::Trust);}
-    let mut result = [Vec::new(),Vec::new()];
+fn mapping_exports(
+    context: &NetworkVerification<'_>,
+    view: &NetworkAccessView,
+    members: [&VerifiedMembership; 2],
+    access: &VerifiedNetworkGrant,
+) -> Result<[Vec<VerifiedNetworkGrant>; 2], SdkError> {
+    use nestlink_identity::subnet::{SubnetGatewayState, verify_subnet_mapping};
+    let GrantClaims::NetworkAccess(business) = access.claims() else {
+        return Err(SdkError::Trust);
+    };
+    if view.subnet_mappings.len() > 2 {
+        return Err(SdkError::Trust);
+    }
+    let mut result = [Vec::new(), Vec::new()];
     for mapping in &view.subnet_mappings {
         let policy = &mapping.policy;
         if policy.authority_public_key != URL_SAFE_NO_PAD.encode(context.authority_key)
-            || policy.deployment_id != context.deployment_id || policy.space_id != context.space_id || policy.policy_epoch != context.policy_epoch
-            || policy.observed_at_unix_ms > context.now_ms || context.now_ms-policy.observed_at_unix_ms >= DIRECTORY_FRESHNESS.as_millis() as u64 {
+            || policy.deployment_id != context.deployment_id
+            || policy.space_id != context.space_id
+            || policy.policy_epoch != context.policy_epoch
+            || policy.observed_at_unix_ms > context.now_ms
+            || context.now_ms - policy.observed_at_unix_ms >= DIRECTORY_FRESHNESS.as_millis() as u64
+        {
             return Err(SdkError::Trust);
         }
-        let export = verify_network_grant(&crate::network_management::decode_network_grant(&mapping.route_export)?,context)?;
-        let gateway = SubnetGatewayState {node_id:&mapping.gateway.node_id,public_key:&mapping.gateway.public_key,incarnation:&mapping.gateway.incarnation,
-            mapping_revision:mapping.gateway.mapping_revision,lease_expires_at_ms:mapping.gateway.lease_expires_at_ms};
-        let verified = verify_subnet_mapping(&mapping.mapping,context,export.clone(),&gateway)?;
+        let export = verify_network_grant(
+            &crate::network_management::decode_network_grant(&mapping.route_export)?,
+            context,
+        )?;
+        let gateway = SubnetGatewayState {
+            node_id: &mapping.gateway.node_id,
+            public_key: &mapping.gateway.public_key,
+            incarnation: &mapping.gateway.incarnation,
+            mapping_revision: mapping.gateway.mapping_revision,
+            lease_expires_at_ms: mapping.gateway.lease_expires_at_ms,
+        };
+        let verified = verify_subnet_mapping(&mapping.mapping, context, export.clone(), &gateway)?;
         let claims = verified.claims();
-        let endpoint = members.iter().position(|member| member.peer()==claims.gateway && member.claims().public_key==claims.gateway_public_key).ok_or(SdkError::Trust)?;
-        let prefixes = if endpoint==0 {&business.source_prefixes} else {&business.destination_prefixes};
-        if !result[endpoint].is_empty() || prefixes.as_slice()!=[claims.alias]
-            || business.scope.not_before_ms<claims.scope.not_before_ms || business.scope.expires_at_ms>verified.effective_expires_at_ms(&gateway)
-            || business.scope.grant_id==claims.scope.grant_id || business.scope.grant_id==mapping.route_export.grant_id {
+        let endpoint = members
+            .iter()
+            .position(|member| {
+                member.peer() == claims.gateway
+                    && member.claims().public_key == claims.gateway_public_key
+            })
+            .ok_or(SdkError::Trust)?;
+        let prefixes = if endpoint == 0 {
+            &business.source_prefixes
+        } else {
+            &business.destination_prefixes
+        };
+        if !result[endpoint].is_empty()
+            || prefixes.as_slice() != [claims.alias]
+            || business.scope.not_before_ms < claims.scope.not_before_ms
+            || business.scope.expires_at_ms > verified.effective_expires_at_ms(&gateway)
+            || business.scope.grant_id == claims.scope.grant_id
+            || business.scope.grant_id == mapping.route_export.grant_id
+        {
             return Err(SdkError::Trust);
         }
         result[endpoint].push(export);

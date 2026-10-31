@@ -64,10 +64,16 @@ async fn endpoint(
     name: &str,
 ) -> Result<(DeviceIdentity, SpaceAddressView)> {
     let device = DeviceIdentity::generate();
-    endpoint_identity(manager,sdk,space,name,device).await
+    endpoint_identity(manager, sdk, space, name, device).await
 }
 
-async fn endpoint_identity(manager:&Sdk,sdk:&Sdk,space:&str,name:&str,device:DeviceIdentity) -> Result<(DeviceIdentity,SpaceAddressView)> {
+async fn endpoint_identity(
+    manager: &Sdk,
+    sdk: &Sdk,
+    space: &str,
+    name: &str,
+    device: DeviceIdentity,
+) -> Result<(DeviceIdentity, SpaceAddressView)> {
     sdk.enroll(
         &device,
         name.into(),
@@ -120,7 +126,7 @@ struct Fixture {
     target_device: DeviceIdentity,
     space: String,
     request: NetworkAccessRequest,
-    authority: [u8;32],
+    authority: [u8; 32],
 }
 impl Fixture {
     async fn new() -> Result<Self> {
@@ -192,8 +198,28 @@ impl Fixture {
         }
         // Fixed fixture seeds permit a separately proven node identity to use
         // the same test key without exporting an enrolled installation secret.
-        let (source_device, source_address) = endpoint_identity(&manager, &source, &space, "source", DeviceIdentity {device_id:random_id(),identity:nestlink_identity::InstallationIdentity::from_seed([61;32])}).await?;
-        let (target_device, target_address) = endpoint_identity(&manager, &target, &space, "target", DeviceIdentity {device_id:random_id(),identity:nestlink_identity::InstallationIdentity::from_seed([62;32])}).await?;
+        let (source_device, source_address) = endpoint_identity(
+            &manager,
+            &source,
+            &space,
+            "source",
+            DeviceIdentity {
+                device_id: random_id(),
+                identity: nestlink_identity::InstallationIdentity::from_seed([61; 32]),
+            },
+        )
+        .await?;
+        let (target_device, target_address) = endpoint_identity(
+            &manager,
+            &target,
+            &space,
+            "target",
+            DeviceIdentity {
+                device_id: random_id(),
+                identity: nestlink_identity::InstallationIdentity::from_seed([62; 32]),
+            },
+        )
+        .await?;
         // A third active directory row must never leak through an endpoint's
         // grant readback, even though a space manager owns this third device.
         endpoint(&manager, &manager, &space, "manager").await?;
@@ -304,7 +330,7 @@ impl Fixture {
     }
     async fn finish(mut self) -> Result {
         self._server.0.abort();
-        let _=(&mut self._server.0).await;
+        let _ = (&mut self._server.0).await;
         self._directory.close()?;
         Ok(())
     }

@@ -1,5 +1,4 @@
 use nestlink_protocol::api::*;
-use nestlink_protocol::subnet::management::*;
 use nestlink_protocol::service_plane::group::*;
 use nestlink_protocol::service_plane::{
     ServiceLeaseClaims, ServiceQuotaLimitUpdate, ServiceQuotaUsageQuery, ServiceQuotaUsageView,
@@ -16,6 +15,7 @@ use nestlink_protocol::services::private::*;
 use nestlink_protocol::spaces::addressing::*;
 use nestlink_protocol::spaces::service_publication::*;
 use nestlink_protocol::spaces::*;
+use nestlink_protocol::subnet::management::*;
 use nestlink_protocol::{
     SignedNodeResourceQuery, SignedNodeResourceSnapshot, SignedNodeUsage, SignedNodeUsageAck,
     SignedRelayClose, SignedRelayCloseAck, SignedTurnCredentials, SignedTurnResourceQuery,
