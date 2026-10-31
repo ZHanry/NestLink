@@ -25,7 +25,7 @@ nestlink-daemon private-service-proxy --state-dir <另一台设备的私有状�
    {"command":"grant","service_id":"<服务 UUID>","request":{"expected_exposure_revision":1,"subject":{"kind":"installation","installation_id":"<来源设备 UUID>"},"expires_at_unix_ms":<有限的未来 UTC 毫秒>}}
    ```
 
-4. 完成本机目标和 ACL 后，两端分别执行 `{"command":"begin"}`。保存输出的 endpoint、device_id、process_nonce；nonce 只属于这个仍在运行的原始进程。再次 begin 被拒绝。进程退出后不能导入旧签名文件恢复它。
+4. 完成本机目标和 ACL 后，两端分别执行 `{"command":"begin"}`。保存输出的 endpoint、device_id、process_nonce；这个随机 nonce 是原始进程临时 Ed25519 公钥，匹配的私钥仅保存在该进程内存。实际直连同时验证安装证书、安装签名和原进程临时签名。再次 begin 被拒绝。恢复安装私钥及旧签名文件也不能产生原进程证明。
 5. 任一有权端根据实际 policy、服务和 exposure revision 创建完整草案；`process_nonces[0]` 为来源，`process_nonces[1]` 为宿主，必须从这两个仍在运行的进程复制：
 
    ```json

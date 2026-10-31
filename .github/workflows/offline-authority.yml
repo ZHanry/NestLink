@@ -152,6 +152,9 @@ jobs:
           mkdir -p "$RUNNER_TEMP/offline-sdk"
           set -o pipefail
           cargo clippy --locked -p nestlink-daemon --bin nestlink-daemon -- -D warnings 2>&1 | tee "$RUNNER_TEMP/offline-sdk/daemon-clippy.log"
+      - name: Exercise resident original authority on local logout identity change and maintenance
+        if: ${{ !cancelled() }}
+        run: python3 -B scripts/network-rewrite-offline-management.py --suite daemon --output "$RUNNER_TEMP/offline-sdk/resident-guard"
       - name: Preserve actual HTTP SDK diagnostics and exact receipts
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a

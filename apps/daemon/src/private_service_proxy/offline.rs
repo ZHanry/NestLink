@@ -25,6 +25,8 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 mod target;
+#[cfg(test)]
+mod tests;
 use target::{PendingTarget, TargetReview};
 
 #[derive(Clone, Copy, PartialEq, clap::ValueEnum, Serialize)]

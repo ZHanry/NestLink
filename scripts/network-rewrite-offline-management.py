@@ -7,7 +7,7 @@ import pathlib
 import subprocess
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--suite', choices=['storage', 'sdk'], required=True)
+parser.add_argument('--suite', choices=['storage', 'sdk', 'daemon'], required=True)
 parser.add_argument('--output', type=pathlib.Path, required=True)
 args = parser.parse_args()
 assert os.environ['RUNNER_ENVIRONMENT'] == 'github-hosted'
@@ -15,14 +15,18 @@ source = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(
 assert source == os.environ['GITHUB_SHA']
 output = args.output
 output.mkdir(parents=True, exist_ok=True)
-package, target, count = ('nestlink-storage', ['--lib'], 8) if args.suite == 'storage' else ('nestlink-sdk', ['--test', 'private_services'], 7)
+package, target, count = {
+    'storage': ('nestlink-storage', ['--lib'], 8),
+    'sdk': ('nestlink-sdk', ['--test', 'private_services'], 7),
+    'daemon': ('nestlink-daemon', ['--bin', 'nestlink-daemon'], 1),
+}[args.suite]
 build = ['cargo', 'test', '--locked', '-p', package, *target, '--no-run', '--message-format=json']
 receipt = {
     'source_revision': source, 'run_id': os.environ['GITHUB_RUN_ID'],
     'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'], 'workflow': os.environ['GITHUB_WORKFLOW_REF'],
     'runner_environment': os.environ['RUNNER_ENVIRONMENT'], 'runner_os': os.environ['RUNNER_OS'],
     'suite': args.suite,
-    'scope': ('Independent private-service online enable/review/reserve/consume/recovery; original shared SQLite budget and actual HTTP/SDK. SDK suite also exercises original direct QUIC/mTLS TCP bytes after physical center disconnect, reconnect, half-close, deadline, byte ceiling, process exit, authenticated revocation and original physical cleanup receipts. No UDP/TLS fallback, resident UI, remote-control or target-platform acceptance claimed.'),
+    'scope': ('Independent private-service online enable/review/reserve/consume/recovery; original shared SQLite budget and actual HTTP/SDK. SDK also exercises direct QUIC/mTLS TCP bytes, disconnection, reconnect, half-close, deadline, byte ceiling, original ephemeral process proof, revocation and physical cleanup. Daemon suite tests its actual resident lifecycle guard against protected login/identity changes and original installation maintenance; it does not claim protected login restoration or interactive multi-process acceptance. No UDP/TLS fallback, remote-control or target-platform acceptance claimed.'),
     'cargo_lock_sha256': hashlib.sha256(pathlib.Path('Cargo.lock').read_bytes()).hexdigest(),
     'build_command': build, 'passed': False,
 }
