@@ -54,6 +54,10 @@ impl PrivateServiceHost {
     pub fn address(&self) -> SocketAddr {
         self.address
     }
+    /// Observe the original worker without consuming its cleanup receipt.
+    pub fn is_finished(&self) -> bool {
+        self.task.as_ref().is_none_or(JoinHandle::is_finished)
+    }
     pub fn stop(&self) {
         if let Ok(mut deadline) = self.cleanup_deadline.lock() {
             deadline.get_or_insert(tokio::time::Instant::now() + Duration::from_secs(5));

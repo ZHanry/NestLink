@@ -123,7 +123,7 @@ fn request(f: &Fixture, access: &PrivateAccess) -> PrivateServiceAccessRequest {
         maximum_bytes: access.exposure.private_maximum_bytes,
     }
 }
-fn ledgers(f: &Fixture, spent: u64, outstanding: u64) -> Result {
+fn ledgers(f: &mut Fixture, spent: u64, outstanding: u64) -> Result {
     for (scope, scope_key) in [
         (ServiceQuotaScope::Account, f.creator.account_id.clone()),
         (ServiceQuotaScope::Device, f.host_id.clone()),
@@ -197,7 +197,7 @@ fn both_modes_share_durable_allowance_exact_network_graph_and_terminal_private_o
     assert_eq!(grant.byte_ceiling, access.exposure.private_maximum_bytes);
     assert_eq!(public.byte_ceiling, access.exposure.public_maximum_bytes);
     let total = f.view.definition.limits.maximum_bytes;
-    ledgers(&f, 0, total)?;
+    ledgers(&mut f, 0, total)?;
     assert!(
         f.store
             .issue_private_service(
@@ -241,7 +241,7 @@ fn both_modes_share_durable_allowance_exact_network_graph_and_terminal_private_o
             .accept_private_service_usage(&f.host.sign_private_service_usage(&wrong)?, now()?)
             .is_err()
     );
-    ledgers(&f, 0, total)?;
+    ledgers(&mut f, 0, total)?;
     let signed = f.host.sign_private_service_usage(&report)?;
     let ack = f.store.accept_private_service_usage(&signed, now()?)?;
     let repeated = f.store.accept_private_service_usage(&signed, now()?)?;
@@ -253,7 +253,7 @@ fn both_modes_share_durable_allowance_exact_network_graph_and_terminal_private_o
             .accept_private_service_usage(&f.host.sign_private_service_usage(&altered)?, now()?)
             .is_err()
     );
-    ledgers(&f, 7, public.byte_ceiling)?;
+    ledgers(&mut f, 7, public.byte_ceiling)?;
 
     let next = f.store.issue_private_service(
         &f.creator,
@@ -271,7 +271,7 @@ fn both_modes_share_durable_allowance_exact_network_graph_and_terminal_private_o
         SERVICE_USAGE_BYTES,
     )?;
     assert_eq!(next.byte_ceiling, access.exposure.private_maximum_bytes - 7);
-    ledgers(&f, 7, total - 7)?;
+    ledgers(&mut f, 7, total - 7)?;
     f.store.set_service_exposure(
         &f.creator,
         &f.view.id,
@@ -299,6 +299,6 @@ fn both_modes_share_durable_allowance_exact_network_graph_and_terminal_private_o
     // Mode switching revoked business access and withdrew publication, but
     // neither owner supplied the second terminal seal. Both promises remain.
     assert!(f.publish().is_err());
-    ledgers(&f, 7, total - 7)?;
+    ledgers(&mut f, 7, total - 7)?;
     Ok(())
 }

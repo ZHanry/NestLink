@@ -192,9 +192,8 @@ pub async fn write_message(
     }
     write
         .write_all(&(bytes.len() as u32).to_be_bytes())
-        .await
-        .map_err(io::Error::other)?;
-    write.write_all(&bytes).await.map_err(io::Error::other)?;
+        .await?;
+    write.write_all(&bytes).await?;
     write.flush().await
 }
 pub async fn read_message<T: DeserializeOwned>(
@@ -205,9 +204,7 @@ pub async fn read_message<T: DeserializeOwned>(
         return Err(io::ErrorKind::InvalidData.into());
     }
     let mut bytes = vec![0; n];
-    read.read_exact(&mut bytes)
-        .await
-        .map_err(io::Error::other)?;
+    read.read_exact(&mut bytes).await?;
     serde_json::from_slice(&bytes).map_err(io::Error::other)
 }
 /// Owns both halves. Cancellation resets unfinished directions; a successful

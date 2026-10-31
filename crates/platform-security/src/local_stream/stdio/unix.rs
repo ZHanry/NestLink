@@ -27,7 +27,10 @@ impl Fd {
     fn new(fd: OwnedFd, original: OFlags) -> io::Result<Self> {
         let fd = RestoreFlags { fd, original };
         fcntl_setfl(&fd, original | OFlags::NONBLOCK)?;
-        Ok(Self(AsyncFd::new(fd)?))
+        // SAFETY: RestoreFlags owns this descriptor for the entire AsyncFd
+        // lifetime. Its descriptor cannot be replaced or closed through any
+        // exposed method, and AsRawFd always returns the same OwnedFd.
+        Ok(Self(unsafe { AsyncFd::register(fd)? }))
     }
     fn restore(&self) -> io::Result<()> {
         let owner = self.0.get_ref();
