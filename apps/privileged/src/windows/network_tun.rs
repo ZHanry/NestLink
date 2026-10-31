@@ -1,12 +1,12 @@
 //! Windows TUN privilege adapter. The ordinary business owner retains network
 //! transport, login and packet policy. This module grants none of those powers.
+mod journal;
 mod packet_pipe;
 mod provider;
 pub mod resources;
-mod journal;
+pub use journal::{AdminJournal, clear_receipt, validate_receipt_destination};
 pub use packet_pipe::{PacketBinding, PacketPipe, PacketReceipt, PacketServer, ProviderIdentity};
 pub use provider::PinnedProviderImage;
-pub use journal::{AdminJournal, clear_receipt, validate_receipt_destination};
 
 use super::{
     local_port_gate::{ProcessIdentity, store},

@@ -105,7 +105,7 @@ async fn ordinary_uid_root_helper_whole_packets_normal_close_and_crash_recovery(
         let temporary = tempfile::tempdir()?;
         // tempfile's ordinary directory mode follows the process umask. Use
         // the production private-leaf creator instead of trusting that mode.
-        let owner_directory=temporary.path().join("ordinary-owner");
+        let owner_directory = temporary.path().join("ordinary-owner");
         nestlink_platform_security::new_private_directory(&owner_directory)?;
         let plan_path = owner_directory.join("plan.json");
         let journal = PathBuf::from("/tmp").join(format!(
@@ -291,9 +291,12 @@ async fn ordinary(path: &Path) -> Result {
         loop {
             plan.validate(true)?;
             if let Some(state) = linux::inspect(&plan).await?
-                && state.up && state.persistent && state.addresses.len() == 2 {
-                    linux::verify(&plan, &state, true)?;
-                    return Ok::<_, Box<dyn std::error::Error + Send + Sync>>(state);
+                && state.up
+                && state.persistent
+                && state.addresses.len() == 2
+            {
+                linux::verify(&plan, &state, true)?;
+                return Ok::<_, Box<dyn std::error::Error + Send + Sync>>(state);
             }
             tokio::time::sleep(Duration::from_millis(50)).await;
         }

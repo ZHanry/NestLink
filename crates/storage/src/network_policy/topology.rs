@@ -101,7 +101,11 @@ pub(super) fn node_key(store: &Store, id: &str, now: u64) -> Result<[u8; 32], St
 
 /// Reuse the original accepted node lease, role, endpoint and security checks
 /// for exact subnet authority; never infer a runtime from a caller's mapping.
-pub(super) fn current_node_authority(store: &Store, id: &str, now: u64) -> Result<([u8; 32], BootIncarnation, u64), StorageError> {
+pub(super) fn current_node_authority(
+    store: &Store,
+    id: &str,
+    now: u64,
+) -> Result<([u8; 32], BootIncarnation, u64), StorageError> {
     let node = node(store, id, now)?;
     Ok((node.key, node.incarnation, node.lease_end))
 }

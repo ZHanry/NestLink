@@ -7,9 +7,9 @@ use nestlink_protocol::network::{
     Direction, GrantClaims, GrantScope, IpPrefix, IpProtocol, NetworkAccessClaims, NetworkRule,
     PeerId,
 };
-use serde_json::json;
-#[cfg(target_os="linux")]
+#[cfg(target_os = "linux")]
 use serde_json::Value;
+use serde_json::json;
 use std::collections::BTreeSet;
 
 pub(super) fn plan() -> Result<TunPlan> {
@@ -82,10 +82,10 @@ pub(super) fn plan() -> Result<TunPlan> {
         process: serde_json::from_value(
             json!({"pid":std::process::id(),"incarnation":"test-process-start","image":std::env::current_exe()?.to_string_lossy()}),
         )?,
-        #[cfg(target_os="linux")]
+        #[cfg(target_os = "linux")]
         principal: plan::HostPrincipal::Linux { uid: 1000 },
         #[cfg(windows)]
-        principal:plan::HostPrincipal::current()?,
+        principal: plan::HostPrincipal::current()?,
         created_at_ms: now,
         expires_at_ms: now + 50_000,
         deployment_id: deployment,
@@ -102,7 +102,7 @@ pub(super) fn plan() -> Result<TunPlan> {
 }
 
 #[test]
-#[cfg(target_os="linux")]
+#[cfg(target_os = "linux")]
 fn public_plan_rejects_links_nonregular_widened_and_oversized_inputs() -> Result {
     use std::os::unix::fs::{PermissionsExt, symlink};
     let temporary = tempfile::tempdir()?;
@@ -136,7 +136,7 @@ fn public_plan_rejects_links_nonregular_widened_and_oversized_inputs() -> Result
     );
     Ok(())
 }
-#[cfg(target_os="linux")]
+#[cfg(target_os = "linux")]
 fn state(plan: &TunPlan) -> Result<TunState> {
     let name = plan.link();
     Ok(TunState{identity:InterfaceIdentity{name:name.clone(),index:71,marker:plan.marker(),uid:plan.linux_uid()?},mtu:1280,up:true,persistent:true,framing:0x1801,
@@ -144,7 +144,7 @@ fn state(plan: &TunPlan) -> Result<TunState> {
         routes:plan.remote_hosts.iter().zip(plan.local_hosts).map(|(ip,local)|json!({"dst":format!("{ip}/{}",if ip.is_ipv4(){32}else{128}),"dev":name,"protocol":"static","prefsrc":local.to_string(),"metric":42420,"flags":[]})).collect()})
 }
 #[test]
-#[cfg(target_os="linux")]
+#[cfg(target_os = "linux")]
 fn signed_plan_binds_digest_pair_hosts_scope_and_deadline_and_rejects_extra_commands() -> Result {
     let plan = plan()?;
     plan.validate(true)?;
@@ -174,7 +174,7 @@ fn signed_plan_binds_digest_pair_hosts_scope_and_deadline_and_rejects_extra_comm
     Ok(())
 }
 #[test]
-#[cfg(target_os="linux")]
+#[cfg(target_os = "linux")]
 fn exact_os_readback_refuses_foreign_identity_prefix_gateway_and_route_table() -> Result {
     let plan = plan()?;
     let original = state(&plan)?;
@@ -200,7 +200,7 @@ fn exact_os_readback_refuses_foreign_identity_prefix_gateway_and_route_table() -
     Ok(())
 }
 #[test]
-#[cfg(target_os="linux")]
+#[cfg(target_os = "linux")]
 fn preflight_preserves_existing_addresses_and_nondefault_vpn_routes() -> Result {
     let plan = plan()?;
     let empty = json!([]);
@@ -228,7 +228,7 @@ fn preflight_preserves_existing_addresses_and_nondefault_vpn_routes() -> Result 
     Ok(())
 }
 #[test]
-#[cfg(target_os="linux")]
+#[cfg(target_os = "linux")]
 fn protected_journal_retains_durable_identity_and_rejects_replacement() -> Result {
     let temporary = tempfile::tempdir()?;
     let directory = temporary.path().join("tun-root-journal");
@@ -260,7 +260,7 @@ fn protected_journal_retains_durable_identity_and_rejects_replacement() -> Resul
     Ok(())
 }
 #[test]
-#[cfg(target_os="linux")]
+#[cfg(target_os = "linux")]
 fn invalid_native_rows_never_look_like_empty_route_tables() -> Result {
     let plan = plan()?;
     for invalid in [

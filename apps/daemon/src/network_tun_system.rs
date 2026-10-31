@@ -22,11 +22,11 @@ use crate::space_dns_system::{process_identity, require_system_admin, system_wal
 pub(crate) use owner::{TunArgs, run as run_owner};
 use packet_device::PacketDevice;
 use plan::TunPlan;
+use platform::OwnerOs;
 use serde::{Deserialize, Serialize};
 use std::{io, path::PathBuf, time::Duration};
 #[cfg(target_os = "linux")]
 use store::JournalStore;
-use platform::OwnerOs;
 #[cfg(windows)]
 type TunState = nestlink_privileged::windows::network_tun::PacketReceipt;
 

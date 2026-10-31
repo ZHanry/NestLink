@@ -726,7 +726,13 @@ pub(crate) fn read_snapshot(
         now_ms,
         &mut revoked_grant_ids,
     )?;
-    subnet::collect_revocations(connection, space_id, policy_epoch, now_ms, &mut revoked_grant_ids)?;
+    subnet::collect_revocations(
+        connection,
+        space_id,
+        policy_epoch,
+        now_ms,
+        &mut revoked_grant_ids,
+    )?;
     network_access::collect_revocations(
         connection,
         space_id,

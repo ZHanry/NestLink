@@ -60,16 +60,16 @@ fn bytes32(value: &str) -> Result<[u8; 32]> {
     Ok(bytes)
 }
 pub(crate) async fn run(args: TunArgs) -> Result {
-    #[cfg(target_os="linux")]
+    #[cfg(target_os = "linux")]
     if rustix::process::geteuid().as_raw() == 0 {
         return Err(io::Error::other("network-tun must run as the original ordinary user; use a separate network-tun-system helper for OS configuration").into());
     }
     #[cfg(windows)]
     nestlink_privileged::windows::require_normal_user_process()?;
     #[cfg(windows)]
-    let os=OwnerOs::new(args.receipt.clone())?;
-    #[cfg(target_os="linux")]
-    let os=OwnerOs::new()?;
+    let os = OwnerOs::new(args.receipt.clone())?;
+    #[cfg(target_os = "linux")]
+    let os = OwnerOs::new()?;
     if args.bind.ip().is_unspecified()
         || args.bind.ip().is_multicast()
         || args.dial.is_some_and(|address| {
@@ -181,7 +181,7 @@ fn local_current(directory: &Path, login: [u8; 32]) -> Result {
     Ok(())
 }
 async fn wait_ready(
-    os:&OwnerOs,
+    os: &OwnerOs,
     plan: &TunPlan,
     sdk: &Sdk,
     access: &mut OnlinePacketAccess,
@@ -215,7 +215,7 @@ async fn wait_ready(
 }
 #[allow(clippy::too_many_arguments)]
 async fn adopt_ready(
-    os:&OwnerOs,
+    os: &OwnerOs,
     plan: &TunPlan,
     state: &TunState,
     sdk: &Sdk,
@@ -241,9 +241,9 @@ async fn adopt_ready(
             match os.adopt(plan, state).await {
                 Ok(device) => return Ok(device),
                 Err(error)
-                    if error
-                        .downcast_ref::<io::Error>()
-                        .is_some_and(|error| cfg!(target_os="linux") && error.raw_os_error() == Some(16)) =>
+                    if error.downcast_ref::<io::Error>().is_some_and(|error| {
+                        cfg!(target_os = "linux") && error.raw_os_error() == Some(16)
+                    }) =>
                 {
                     tokio::time::sleep(Duration::from_millis(25)).await
                 }
@@ -258,7 +258,7 @@ async fn adopt_ready(
 }
 #[allow(clippy::too_many_arguments)]
 async fn establish(
-    os:&OwnerOs,
+    os: &OwnerOs,
     endpoint: &mut DirectPacketEndpoint,
     dial: Option<SocketAddr>,
     sdk: &Sdk,
@@ -298,7 +298,7 @@ struct Counters {
 }
 #[allow(clippy::too_many_arguments)]
 async fn packet_loop(
-    os:&OwnerOs,
+    os: &OwnerOs,
     device: &PacketDevice,
     endpoint: &mut DirectPacketEndpoint,
     sdk: &Sdk,
@@ -365,15 +365,15 @@ async fn packet_loop(
     println!("TUN packet counters: {}", serde_json::to_string(&counters)?);
     outcome
 }
-#[cfg(all(test,target_os="linux"))]
+#[cfg(all(test, target_os = "linux"))]
 pub(super) async fn release_plan(plan: &TunPlan, path: &Path) -> Result {
-    release_plan_with_os(&OwnerOs::new()?,plan,path).await
+    release_plan_with_os(&OwnerOs::new()?, plan, path).await
 }
-pub(super) async fn release_plan_with_os(os:&OwnerOs,plan: &TunPlan, path: &Path) -> Result {
+pub(super) async fn release_plan_with_os(os: &OwnerOs, plan: &TunPlan, path: &Path) -> Result {
     match TunPlan::read(path) {
         Ok(current) if current == *plan => {
             std::fs::remove_file(path)?;
-            #[cfg(target_os="linux")]
+            #[cfg(target_os = "linux")]
             std::fs::File::open(
                 path.parent()
                     .ok_or_else(|| io::Error::other("TUN plan parent missing"))?,

@@ -145,10 +145,7 @@ pub struct PacketServer {
     _image: store::ImageLock,
 }
 impl PacketServer {
-    pub fn bind(
-        binding: PacketBinding,
-        provider: ProviderIdentity,
-    ) -> io::Result<Self> {
+    pub fn bind(binding: PacketBinding, provider: ProviderIdentity) -> io::Result<Self> {
         super::super::require_administrator_process()?;
         binding.check_current_owner()?;
         provider.validate()?;
@@ -198,10 +195,15 @@ impl PacketServer {
     }
     /// The caller must durably journal this exact receipt before publication.
     /// A crash before publish is therefore recoverable as actual file absence.
-    pub fn publish_receipt(&self,receipt_path:&Path)->io::Result<()> {
+    pub fn publish_receipt(&self, receipt_path: &Path) -> io::Result<()> {
         self.check_current()?;
-        let parents=store::Parents::open(receipt_path.parent().ok_or_else(security::denied)?)?;
-        parents.write(receipt_path.file_name().ok_or_else(security::denied)?,&serde_json::to_vec(&self.receipt)?,Some(&self.receipt.binding.process.sid),false)
+        let parents = store::Parents::open(receipt_path.parent().ok_or_else(security::denied)?)?;
+        parents.write(
+            receipt_path.file_name().ok_or_else(security::denied)?,
+            &serde_json::to_vec(&self.receipt)?,
+            Some(&self.receipt.binding.process.sid),
+            false,
+        )
     }
     pub fn check_current(&self) -> io::Result<()> {
         self.original.alive()?;
