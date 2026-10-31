@@ -207,10 +207,13 @@ async fn actual_quic_signed_refresh_keeps_publication_alive_past_original_issuer
         let mut claims = next.clone();
         claims.lease_sequence = sequence;
         claims.issued_at_unix_ms = at + offset;
-        progress.push((offset, ServiceLeaseRenewal {
-            lease: f.service.sign(&claims)?,
-            issuer: renewal.issuer.clone(),
-        }));
+        progress.push((
+            offset,
+            ServiceLeaseRenewal {
+                lease: f.service.sign(&claims)?,
+                issuer: renewal.issuer.clone(),
+            },
+        ));
     }
     let mut server = Abort(tokio::spawn(async move {
         let incoming = endpoint

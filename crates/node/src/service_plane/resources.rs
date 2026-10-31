@@ -7,10 +7,7 @@ use nestlink_identity::service_plane::{
     publication::{VerifiedServiceIssuerDelegation, verify_service_issuer_delegation},
 };
 use nestlink_protocol::service_plane::publication::SignedServiceIssuerDelegation;
-use nestlink_protocol::{
-    ErrorCode,
-    service_plane::SERVICE_PUBLICATIONS_PER_NODE,
-};
+use nestlink_protocol::{ErrorCode, service_plane::SERVICE_PUBLICATIONS_PER_NODE};
 use std::{
     collections::{BTreeMap, HashSet},
     time::{Instant, SystemTime, UNIX_EPOCH},
@@ -230,7 +227,11 @@ impl ServiceResourceSet {
                 } else {
                     match publication.handle().lease() {
                         Ok(_) => None,
-                        Err(Error::Authorization(error)) if error.code == ErrorCode::LeaseExpired => Some("publication-expired"),
+                        Err(Error::Authorization(error))
+                            if error.code == ErrorCode::LeaseExpired =>
+                        {
+                            Some("publication-expired")
+                        }
                         Err(_) => Some("publication-stopped"),
                     }
                 };
@@ -331,8 +332,18 @@ impl ServiceResourceSet {
         // Retain both the response's signed expiry and the original query's
         // shorter lifetime. A response's later issuance is not a new request
         // anchor and must not subtract inbound/queue time twice.
-        let deadline = super::gate::signed_query_deadline(q.issued_at_unix_ms, c.issued_at_unix_ms, c.expires_at_unix_ms, request_started, now, wall)?.min(node_deadline);
-        if deadline <= now { return Err(rejected(ErrorCode::LeaseExpired).into()); }
+        let deadline = super::gate::signed_query_deadline(
+            q.issued_at_unix_ms,
+            c.issued_at_unix_ms,
+            c.expires_at_unix_ms,
+            request_started,
+            now,
+            wall,
+        )?
+        .min(node_deadline);
+        if deadline <= now {
+            return Err(rejected(ErrorCode::LeaseExpired).into());
+        }
         let binding = Binding {
             deployment_id: q.deployment_id.clone(),
             security_epoch: q.security_epoch,
