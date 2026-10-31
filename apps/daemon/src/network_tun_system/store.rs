@@ -14,6 +14,16 @@ pub(super) struct JournalStore {
     directory: PathBuf,
     _lock: File,
 }
+impl Drop for JournalStore {
+    fn drop(&mut self) {
+        // A concurrent process launch can briefly inherit the locked open-file
+        // description before exec closes it. Release this completed owner's
+        // lock explicitly, so that unrelated child cannot extend ownership
+        // after the original store has gone out of scope. While Self is alive,
+        // the same exclusive lock and admission failure remain unchanged.
+        let _ = self._lock.unlock();
+    }
+}
 impl JournalStore {
     pub fn open(directory: &Path) -> Result<Self> {
         if !directory.is_absolute() {
