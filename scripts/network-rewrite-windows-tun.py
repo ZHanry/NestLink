@@ -454,15 +454,28 @@ def main():
         result["failure"] = {"type": type(error).__name__, "message": str(error)}
         raise
     finally:
+        child_cleanup_errors = []
         for handle in retained:
-            if native.kernel.WaitForSingleObject(handle, 0) == 258:
-                native.kernel.TerminateProcess(handle, 74)
-            native.kernel.CloseHandle(handle)
+            try:
+                if native.kernel.WaitForSingleObject(handle, 0) == 258:
+                    checked(native.kernel.TerminateProcess(handle, 74))
+                checked(native.kernel.WaitForSingleObject(handle, 5000) == 0)
+            except Exception as child_error:
+                child_cleanup_errors.append(str(child_error))
+            finally:
+                native.kernel.CloseHandle(handle)
         for process, log in active:
-            if process.poll() is None:
-                process.kill()
-            process.wait(timeout=10)
-            log.close()
+            try:
+                if process.poll() is None:
+                    process.kill()
+                process.wait(timeout=10)
+            except Exception as child_error:
+                child_cleanup_errors.append(str(child_error))
+            finally:
+                log.close()
+        if child_cleanup_errors:
+            result["status"] = "failed"
+            result["child_cleanup_errors"] = child_cleanup_errors
         if result["status"] != "passed":
             # Retain exact public recovery metadata and kernel identity after
             # stopping our original actors. Never recover/delete on failure.
@@ -509,8 +522,8 @@ def main():
             result["private_fixture_state_deleted"] = False
             result["private_fixture_cleanup_error"] = str(cleanup_error)
         write(output / "receipt.json", result)
-        if result.get("private_fixture_state_deleted") is not True:
-            raise RuntimeError("temporary management database and protected login cleanup failed")
+        if result.get("private_fixture_state_deleted") is not True or child_cleanup_errors:
+            raise RuntimeError("temporary management processes, database or protected login cleanup failed")
 
 
 if __name__ == "__main__":

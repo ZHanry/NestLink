@@ -132,12 +132,11 @@ pub(super) async fn start(
                     && name.bytes().all(|value| {
                         value.is_ascii_lowercase() || value.is_ascii_digit() || value == b'-'
                     })
+                    && text.contains("Registered tunnel connection")
                 {
-                    if text.contains("Registered tunnel connection") {
-                        return Ok::<_, Box<dyn std::error::Error + Send + Sync>>(format!(
-                            "https://{name}.trycloudflare.com"
-                        ));
-                    }
+                    return Ok::<_, Box<dyn std::error::Error + Send + Sync>>(format!(
+                        "https://{name}.trycloudflare.com"
+                    ));
                 }
             }
             tokio::time::sleep(Duration::from_millis(100)).await;
