@@ -80,33 +80,74 @@ fn deadline(
     now: Instant,
     wall: u64,
 ) -> Result<Instant, ContractError> {
-    signed_deadline(lease.issued_at_unix_ms, lease.expires_at_unix_ms, request_started, now, wall)
+    signed_deadline(
+        lease.issued_at_unix_ms,
+        lease.expires_at_unix_ms,
+        request_started,
+        now,
+        wall,
+    )
 }
 /// The signed remaining time already excludes response latency. Intersect its
 /// receipt-relative end with the original request's signed lifetime, as the
 /// independent NodeGate does. This never creates time after either bound.
-pub(super) fn signed_deadline(issued: u64, expires: u64, request_started: Instant, now: Instant, wall: u64) -> Result<Instant, ContractError> {
+pub(super) fn signed_deadline(
+    issued: u64,
+    expires: u64,
+    request_started: Instant,
+    now: Instant,
+    wall: u64,
+) -> Result<Instant, ContractError> {
     if request_started > now || issued > wall {
-        return Err(ContractError::new(ErrorCode::LeaseExpired, "service signed deadline has a future request or issuance"));
+        return Err(ContractError::new(
+            ErrorCode::LeaseExpired,
+            "service signed deadline has a future request or issuance",
+        ));
     }
     let remaining = expires
         .checked_sub(wall)
         .filter(|remaining| *remaining > 0)
-        .ok_or_else(|| ContractError::new(ErrorCode::LeaseExpired, "service signed expiry passed before receipt"))?;
-    let lifetime = expires.checked_sub(issued).filter(|lifetime| *lifetime > 0).ok_or_else(|| rejected(ErrorCode::LeaseExpired))?;
-    let signed = now.checked_add(Duration::from_millis(remaining)).ok_or_else(|| rejected(ErrorCode::LeaseExpired))?;
-    request_started.checked_add(Duration::from_millis(lifetime))
+        .ok_or_else(|| {
+            ContractError::new(
+                ErrorCode::LeaseExpired,
+                "service signed expiry passed before receipt",
+            )
+        })?;
+    let lifetime = expires
+        .checked_sub(issued)
+        .filter(|lifetime| *lifetime > 0)
+        .ok_or_else(|| rejected(ErrorCode::LeaseExpired))?;
+    let signed = now
+        .checked_add(Duration::from_millis(remaining))
+        .ok_or_else(|| rejected(ErrorCode::LeaseExpired))?;
+    request_started
+        .checked_add(Duration::from_millis(lifetime))
         .map(|request_end| request_end.min(signed))
         .filter(|end| *end > now)
-        .ok_or_else(|| ContractError::new(ErrorCode::LeaseExpired, "service original request lifetime passed before receipt"))
+        .ok_or_else(|| {
+            ContractError::new(
+                ErrorCode::LeaseExpired,
+                "service original request lifetime passed before receipt",
+            )
+        })
 }
 /// A response can be issued after the original query, while its signed end is
 /// still capped by that query's original expiry. Use the original query's
 /// signed start for the request cap; using response issuance would subtract
 /// the server's inbound/queue time a second time.
-pub(super) fn signed_query_deadline(query_issued: u64, response_issued: u64, expires: u64, request_started: Instant, now: Instant, wall: u64) -> Result<Instant, ContractError> {
+pub(super) fn signed_query_deadline(
+    query_issued: u64,
+    response_issued: u64,
+    expires: u64,
+    request_started: Instant,
+    now: Instant,
+    wall: u64,
+) -> Result<Instant, ContractError> {
     if query_issued > response_issued || response_issued > wall {
-        return Err(ContractError::new(ErrorCode::LeaseExpired, "service signed deadline has a future request or issuance"));
+        return Err(ContractError::new(
+            ErrorCode::LeaseExpired,
+            "service signed deadline has a future request or issuance",
+        ));
     }
     signed_deadline(query_issued, expires, request_started, now, wall)
 }
@@ -134,14 +175,20 @@ impl State {
                     .saturating_add(1000)
         {
             self.stopped = true;
-            return Err(ContractError::new(ErrorCode::LeaseExpired, "service publication clock observation regressed or diverged"));
+            return Err(ContractError::new(
+                ErrorCode::LeaseExpired,
+                "service publication clock observation regressed or diverged",
+            ));
         }
         let end = self
             .resource_deadline
             .map_or(self.lease_deadline, |d| d.min(self.lease_deadline));
         if now >= end {
             self.stopped = true;
-            return Err(ContractError::new(ErrorCode::LeaseExpired, "service publication original effective deadline passed"));
+            return Err(ContractError::new(
+                ErrorCode::LeaseExpired,
+                "service publication original effective deadline passed",
+            ));
         }
         self.last_clock = sample;
         Ok(end)
@@ -284,7 +331,11 @@ impl ServicePublication {
             .map_err(|_| rejected(ErrorCode::PolicyRevoked))?;
         state.live()?;
         if deadline <= Instant::now() {
-            return Err(ContractError::new(ErrorCode::LeaseExpired, "service snapshot deadline passed before installation").into());
+            return Err(ContractError::new(
+                ErrorCode::LeaseExpired,
+                "service snapshot deadline passed before installation",
+            )
+            .into());
         }
         state.resource_deadline = Some(deadline);
         self.shared.signal.send_replace(false);

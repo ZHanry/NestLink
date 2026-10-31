@@ -57,12 +57,24 @@ fn failure_summary(error: &Error) -> String {
                     Some("publication-sequence-regressed")
                 }
                 "service publication same sequence changed" => Some("publication-sequence-changed"),
-                "service signed deadline has a future request or issuance" => Some("signed-deadline-future"),
-                "service signed expiry passed before receipt" => Some("signed-expiry-before-receipt"),
-                "service original request lifetime passed before receipt" => Some("original-request-lifetime-expired"),
-                "service publication clock observation regressed or diverged" => Some("publication-clock-regressed"),
-                "service publication original effective deadline passed" => Some("publication-original-deadline-expired"),
-                "service snapshot deadline passed before installation" => Some("snapshot-expired-before-installation"),
+                "service signed deadline has a future request or issuance" => {
+                    Some("signed-deadline-future")
+                }
+                "service signed expiry passed before receipt" => {
+                    Some("signed-expiry-before-receipt")
+                }
+                "service original request lifetime passed before receipt" => {
+                    Some("original-request-lifetime-expired")
+                }
+                "service publication clock observation regressed or diverged" => {
+                    Some("publication-clock-regressed")
+                }
+                "service publication original effective deadline passed" => {
+                    Some("publication-original-deadline-expired")
+                }
+                "service snapshot deadline passed before installation" => {
+                    Some("snapshot-expired-before-installation")
+                }
                 _ => None,
             };
             match fence {
@@ -533,7 +545,10 @@ async fn pump(
     workers.abort_all();
     while workers.join_next().await.is_some() {}
     match first {
-        Some(Ok((stage, result))) => result.map_err(|cause| Error::Phase { stage, cause: Box::new(cause) }),
+        Some(Ok((stage, result))) => result.map_err(|cause| Error::Phase {
+            stage,
+            cause: Box::new(cause),
+        }),
         Some(Err(_)) | None => Err(Error::Control),
     }
 }

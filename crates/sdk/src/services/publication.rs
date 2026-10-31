@@ -519,8 +519,11 @@ async fn run(context: RunContext, _revoke: Revoke) -> ServiceHostStopReport {
             // QUIC idle/signed-lease timeout. Retain one pending framed read up
             // to the original stream cap; no cancelled partial read is reused.
             let signed: ServiceLeaseRenewal = tokio::time::timeout_at(
-                freshness.deadline().into(), read_message(&mut control_recv),
-            ).await.map_err(|_| SdkError::Timeout)??;
+                freshness.deadline().into(),
+                read_message(&mut control_recv),
+            )
+            .await
+            .map_err(|_| SdkError::Timeout)??;
             let candidate = renew_delegation.prepare(&signed, wall()?)?;
             let lease = candidate.lease;
             if !renew_target.accepts(&lease) {

@@ -36,7 +36,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn original_edge_progress_gap_and_replays_cannot_extend_or_revive_health() -> Result<(), SdkError> {
+    fn original_edge_progress_gap_and_replays_cannot_extend_or_revive_health()
+    -> Result<(), SdkError> {
         let start = Instant::now();
         let mut observation = RenewalFreshness::new(7, start);
         let original = start + Duration::from_millis(SERVICE_RESOURCE_MS);
@@ -45,12 +46,19 @@ mod tests {
         assert_eq!(observation.deadline(), original);
         let progressed = start + Duration::from_millis(1500);
         observation.advanced(8, progressed)?;
-        assert_eq!(observation.deadline(), progressed + Duration::from_millis(SERVICE_RESOURCE_MS));
+        assert_eq!(
+            observation.deadline(),
+            progressed + Duration::from_millis(SERVICE_RESOURCE_MS)
+        );
         let final_deadline = observation.deadline();
         observation.advanced(8, final_deadline - Duration::from_millis(1))?;
         assert_eq!(observation.deadline(), final_deadline);
         assert!(observation.advanced(9, final_deadline).is_err());
-        assert!(observation.advanced(10, final_deadline + Duration::from_millis(1)).is_err());
+        assert!(
+            observation
+                .advanced(10, final_deadline + Duration::from_millis(1))
+                .is_err()
+        );
         assert_eq!(observation.deadline(), final_deadline);
         Ok(())
     }
