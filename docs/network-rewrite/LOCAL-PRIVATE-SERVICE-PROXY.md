@@ -34,6 +34,16 @@ than attempting local DNS resolution. The alias routes only to the selected
 private service. The SDK obtains independent current service authority for each
 connection and connects the host's approved fixed target.
 
+For a selected HTTPS service, the host establishes TLS to the approved backend
+and verifies its configured server name and trusted CA. The local stream entry
+therefore carries HTTP application bytes; an HTTP client can use it to access
+that HTTPS backend. This applies to SOCKS, native streams and Linux raw TCP.
+The private carrier and the host's verified backend TLS retain their existing
+protection. A standard HTTPS client that starts its own TLS handshake at the
+local entry needs a separate local TLS termination or approved passthrough
+implementation and qualification. Those client modes remain pending; the
+current adapter does not qualify them.
+
 The command never prints credentials or places them in a command line or URL.
 The file is created with the existing OS private-file checks, using a random
 create-new name. An optional `--credentials-dir` selects an existing private
@@ -91,9 +101,10 @@ Linux raw clients can select `serve --raw-loopback` with the same explicit
 service, space, byte limit and lifetime, a fixed nonzero `--listen` endpoint,
 an absolute fresh owner-private `--gate-plan` path, and an absolute fresh
 `--gate-receipt` path beneath a root-controlled public directory. This mode
-supports unmodified TCP/HTTP/HTTPS or UDP clients for the chosen service. It
-requires explicit administrator setup for its kernel UID gate; SOCKS and native
-streams retain their ordinary-user setup.
+supports unmodified TCP and UDP clients, and HTTP application clients for the
+chosen HTTP or HTTPS backend, with the HTTPS stream semantics described above.
+It requires explicit administrator setup for its kernel UID gate; SOCKS and
+native streams retain their ordinary-user setup.
 
 The ordinary daemon writes its plan and waits in the same process. While it is
 waiting, run the same verified executable as administrator:

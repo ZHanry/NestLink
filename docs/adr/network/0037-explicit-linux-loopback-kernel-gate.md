@@ -43,6 +43,16 @@ finite byte allowance, idle timeout and event limits apply; empty datagrams reta
 their boundary and oversize packets are dropped. No failed TCP stream or queued
 UDP packet is replayed under a new grant.
 
+The stream retains the existing private host's application-byte semantics. For
+a selected HTTPS service, that host establishes and verifies TLS to its approved
+backend; the local entry carries HTTP application bytes. An HTTP client can
+therefore reach the HTTPS backend through this adapter. A standard HTTPS client
+that initiates TLS at the local entry still requires a separate local TLS
+termination or approved passthrough implementation and qualification. The raw
+gate adds neither capability, and existing backend TLS verification remains in
+force for this service type. The same distinction applies to SOCKS and native
+stream access.
+
 Both ordinary and privileged owners observe their original deadlines. The normal
 owner stops on a missing helper, changed identity, expiry or its original product
 lifecycle. The helper atomically changes its output gate to deny-all on expiry

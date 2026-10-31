@@ -2213,6 +2213,8 @@ name = "nestlink-platform-security"
 version = "0.7.0-rc.1"
 dependencies = [
  "rustix",
+ "serde",
+ "serde_json",
  "tokio",
  "tokio-util",
  "windows-sys 0.61.2",

@@ -3954,6 +3954,8 @@ name = "nestlink-platform-security"
 version = "0.7.0-rc.1"
 dependencies = [
  "rustix 1.1.5",
+ "serde",
+ "serde_json",
  "tempfile",
  "tokio",
  "tokio-util",

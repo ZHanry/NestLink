@@ -45,11 +45,18 @@ enum ProxyAction {
         endpoint: PathBuf,
     },
     /// Serve one chosen TCP/HTTP/HTTPS/UDP service until stopped or its deadline.
-    /// UDP clients must bind their local UDP socket first, authenticate the TCP
-    /// control connection, and declare that exact loopback IP and nonzero UDP
-    /// port in UDP ASSOCIATE. Unspecified sources such as [::]:0 are rejected.
-    /// Each UDP packet must target the selected alias/port; fragments and
+    ///
+    /// Stream entries carry application bytes. For an HTTPS service the host
+    /// establishes and verifies backend TLS; use HTTP application bytes locally.
+    /// Local TLS termination or passthrough for a standard HTTPS client needs
+    /// separate implementation and qualification.
+    ///
+    /// SOCKS UDP clients must first bind their local UDP socket and authenticate
+    /// the TCP control connection. Declare that exact loopback IP and nonzero
+    /// UDP port in UDP ASSOCIATE. Unspecified sources such as [::]:0 are rejected.
+    /// Each SOCKS UDP packet must target the selected alias/port; fragments and
     /// payloads over 1169 bytes are discarded. Empty datagrams are preserved.
+    /// Linux raw UDP clients send individual application datagrams directly.
     Serve {
         /// Linux raw loopback TCP/UDP behind an administrator-installed exact
         /// UID/endpoint gate. Requires a nonzero --listen port, --gate-plan and
