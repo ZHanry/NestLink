@@ -41,6 +41,13 @@ async fn hosted_native_role() -> Result {
     if role == "online" {
         return online::ordinary(&case, &plan, &receipt).await;
     }
+    if role == "fault-inspect" {
+        let observation: serde_json::Value = serde_json::from_slice(&std::fs::read(case.join("fault-observed.json"))?)?;
+        let original: ProviderIdentity = serde_json::from_value(observation["provider"].clone())?;
+        assert!(resources::absent(&original)?, "partial installation left its original native adapter or routes behind");
+        std::fs::write(case.join("fault-absent.json"), serde_json::to_vec(&serde_json::json!({"original_provider":original,"kernel_absent":true}))?)?;
+        return Ok(());
+    }
     if role == "foreign" {
         nestlink_privileged::windows::require_normal_user_process()?;
         let receipt: PacketReceipt = serde_json::from_slice(&std::fs::read(receipt)?)?;
@@ -88,6 +95,21 @@ async fn hosted_native_role() -> Result {
         }
         _ => Err(io::Error::other("unknown bounded Windows TUN fixture role").into()),
     }
+}
+pub(super) fn fail_after(stage: &str, record: &Record) -> Result {
+    if std::env::var("NESTLINK_TUN_NATIVE_FAULT").as_deref() != Ok(stage) { return Ok(()); }
+    lab()?;
+    let original = record.identity.as_ref().ok_or_else(|| io::Error::other("fault fixture original identity not journaled"))?;
+    assert_eq!(record.capture()?.as_ref(), Some(original));
+    let observed = match resources::inspect(original) {
+        Ok(snapshot) => serde_json::json!({"snapshot":snapshot}),
+        Err(error) => serde_json::json!({"incomplete_snapshot_error":error.to_string()}),
+    };
+    std::fs::write(path("NESTLINK_TUN_NATIVE_CASE")?.join("fault-observed.json"), serde_json::to_vec(&serde_json::json!({
+        "stage":stage,"provider":original,"partial_snapshot":observed,"journaled_original_pnp_instance":record.device_instance,
+        "receipt_unpublished":record.receipt.is_none(),"production_packet_readiness_claimed":false
+    }))?)?;
+    Err(io::Error::other(format!("injected bounded native installation failure after {stage}")).into())
 }
 fn provider_negative(case: &Path) -> Result {
     nestlink_privileged::windows::require_administrator_process()?;
@@ -191,11 +213,26 @@ fn recovery_identity_negative(case: &Path, receipt: &Path) -> Result {
             "a refused nonoriginal recovery changed the captured PnP instance"
         );
     }
+    let plan = TunPlan::read(&case.join("private-plan/plan.json"))?;
+    let fresh = nestlink_auth::random_id();
+    let fresh_name = format!("NestLink-{fresh}");
+    let unassigned: [IpAddr;2] = ["198.18.99.2".parse()?,"fdfe:99::2".parse()?];
+    for (guid,name,local,remote,message) in [
+        (&original.adapter_guid,&original.name,&unassigned,&unassigned,"fresh TUN adapter identity already exists"),
+        (&fresh,&fresh_name,&plan.local_hosts,&plan.remote_hosts,"signed TUN address is already configured"),
+        (&fresh,&fresh_name,&unassigned,&plan.remote_hosts,"an existing specific route already captures a signed remote TUN host"),
+    ] {
+        let error = resources::preflight(guid,name,local,remote).expect_err("preflight accepted an original adapter, address or specific route conflict");
+        assert!(error.to_string().contains(message),"preflight did not reject the selected conflict: {error}");
+        assert_eq!(resources::inspect(original)?.as_ref(),Some(&installed),"preflight refusal changed the complete original snapshot");
+        assert_eq!(device_instance::capture(original)?,instance,"preflight refusal changed the captured original PnP instance");
+    }
     std::fs::write(
         case.join("recovery-identity-negative.json"),
         serde_json::to_vec(&serde_json::json!({
             "rejected_fields":["interface_index","luid","alias","guid"],"kernel_unchanged":true,
             "configuration_sha256":installed.digest()?
+            ,"preflight_rejected":["existing_guid_alias","configured_host_address","specific_remote_route"]
         }))?,
     )?;
     Ok(())

@@ -188,7 +188,9 @@ def main():
             or digest(fixture / "wintun.dll") != binaries["amd64"]):
             raise ValueError("production provider trust checks did not reject unreviewed or mutable inputs")
         result["cases"]["provider-negative"] = {"status": "passed", "receipt": provider_negative}
-        for scenario in ("normal", "crash", "raw-peer", "online"):
+        fault_stages = {"fault-provider": "provider_created", "fault-addresses": "addresses_installed", "fault-routes": "routes_installed"}
+        scenarios = ("normal", "crash", "raw-peer", "online", *fault_stages)
+        for scenario in scenarios:
             case = output / scenario
             native.directory(case, f"O:BAG:BAD:P(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)(A;OICI;FA;;;{runner_sid})")
             root = fixture / scenario
@@ -196,7 +198,8 @@ def main():
             extra = {"NESTLINK_TUN_NATIVE_CASE": str(case), "NESTLINK_TUN_NATIVE_RECEIPT": str(root / "receipt.json"),
                      "NESTLINK_TUN_NATIVE_JOURNAL": str(root / "journal"), "NESTLINK_TUN_NATIVE_DRIVER": str(fixture / "wintun.dll"),
                      "NESTLINK_TUN_NATIVE_DRIVER_SHA256": binaries["amd64"], "TEMP": str(case), "TMP": str(case),
-                     "NESTLINK_TUN_NATIVE_PAUSE": "1" if scenario == "raw-peer" else "0"}
+                     "NESTLINK_TUN_NATIVE_PAUSE": "1" if scenario == "raw-peer" or scenario in fault_stages else "0",
+                     "NESTLINK_TUN_NATIVE_FAULT": fault_stages.get(scenario, "")}
             ordinary = start(scenario + "-ordinary", [sys.executable, source / "scripts/refactor-windows-normal-user.py", executable, *ROLE_ARGS], dict(extra, NESTLINK_TUN_NATIVE_ROLE="online" if scenario == "online" else "ordinary"))
             ready = await_json(case / "plan-ready.json", ordinary)
             identity = ready["identity"]
@@ -204,6 +207,26 @@ def main():
                 raise ValueError("ordinary actor was not the original medium non-admin user")
             handle = owner_handle(identity)
             helper = start(scenario + "-administrator", [executable, *ROLE_ARGS], dict(extra, NESTLINK_TUN_NATIVE_ROLE="apply"))
+            if scenario in fault_stages:
+                observed = await_json(case / "fault-observed.json", helper)
+                helper.wait(timeout=10)
+                log = (output / (scenario + "-administrator.log")).read_text(encoding="utf-8", errors="replace")
+                if (helper.returncode == 0 or "injected bounded native installation failure after " + fault_stages[scenario] not in log
+                    or observed["stage"] != fault_stages[scenario] or not observed["receipt_unpublished"]
+                    or observed["journaled_original_pnp_instance"] is None or observed["production_packet_readiness_claimed"] is not False
+                    or native.kernel.WaitForSingleObject(handle, 0) != 258):
+                    raise ValueError("partial native installation did not fail at its exact stage with the original ordinary owner still alive")
+                execute(scenario + "-exact-kernel-absence", [executable, *ROLE_ARGS], extra=dict(extra, NESTLINK_TUN_NATIVE_ROLE="fault-inspect"))
+                absent = await_json(case / "fault-absent.json")
+                execute(scenario + "-final-inspection", [executable, *ROLE_ARGS], extra=dict(extra, NESTLINK_TUN_NATIVE_ROLE="inspect"))
+                inspection = await_json(case / "inspection.json")
+                if (not absent["kernel_absent"] or absent["original_provider"] != observed["provider"]
+                    or inspection["record"] is not None or inspection["current"] is not None or (root / "receipt.json").exists()):
+                    raise ValueError("partial installation failed to release its exact original kernel resources and journal")
+                checked(native.kernel.TerminateProcess(handle, 73)); checked(native.kernel.WaitForSingleObject(handle, 5000) == 0)
+                ordinary.wait(timeout=10)
+                result["cases"][scenario] = {"status": "passed", "plan": ready, "observed": observed, "absence": absent, "inspection": inspection}
+                continue
             if scenario == "raw-peer":
                 published = await_json(root / "receipt.json", helper)
                 if (published["binding"]["process"] != identity or published["helper"]["pid"] != helper.pid
@@ -251,7 +274,8 @@ def main():
                 identity_negative = await_json(case / "recovery-identity-negative.json")
                 if (identity_negative["rejected_fields"] != ["interface_index", "luid", "alias", "guid"]
                     or not identity_negative["kernel_unchanged"]
-                    or identity_negative["configuration_sha256"] != receipt["provider"]["configuration_sha256"]):
+                    or identity_negative["configuration_sha256"] != receipt["provider"]["configuration_sha256"]
+                    or identity_negative["preflight_rejected"] != ["existing_guid_alias", "configured_host_address", "specific_remote_route"]):
                     raise ValueError("nonoriginal PnP recovery did not preserve the exact original kernel state")
             if scenario in ("normal", "online"):
                 write(case / "stop.json", {"stop": True})
@@ -303,7 +327,7 @@ def main():
             # ProgramFiles is outside the uploaded evidence tree and the hosted
             # VM is disposable, so leaving only a pathname would lose evidence.
             inspections = result.setdefault("failure_inspections", {})
-            for scenario in ("normal", "crash", "raw-peer", "online"):
+            for scenario in ("normal", "crash", "raw-peer", "online", "fault-provider", "fault-addresses", "fault-routes"):
                 case, root = output / scenario, fixture / scenario
                 if not case.is_dir() or not root.is_dir():
                     continue

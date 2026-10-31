@@ -283,6 +283,7 @@ async fn apply(
         if identity.index!=original.if_index()?{return Err(io::Error::other("Wintun provider and kernel adapter differ").into());}
         record.identity=Some(identity.clone());record.save(&store)?;
         record.device_instance=Some(native("capture original PnP instance",device_instance::capture(&identity))?);record.save(&store)?;
+        #[cfg(test)] native_tests::fail_after("provider_created",&record)?;
         resources::isolate(&identity)?;
         for address in native("list fresh provider addresses",original.addresses())? {native(&format!("remove fresh automatic address {address}"),original.remove_address(address))?;}
         let [IpAddr::V4(v4),IpAddr::V6(v6)]=record.plan.local_hosts else {return Err(io::Error::other("signed dual-stack hosts missing").into());};
@@ -309,7 +310,9 @@ async fn apply(
         }
         native("add signed IPv6 host",original.add_address_v6(v6,128))?;
         native("set IPv4 MTU",original.set_mtu(1280))?;native("set IPv6 MTU",original.set_mtu_v6(1280))?;
+        #[cfg(test)] native_tests::fail_after("addresses_installed",&record)?;
         resources::install_routes(&identity,&record.plan.local_hosts,&record.plan.remote_hosts)?;
+        #[cfg(test)] native_tests::fail_after("routes_installed",&record)?;
         let snapshot=resources::inspect(&identity)?.ok_or_else(||io::Error::other("Wintun disappeared during readback"))?;
         snapshot.verify(&record.plan.local_hosts,&record.plan.remote_hosts)?;
         let mut identity=identity;identity.configuration_sha256=snapshot.digest()?;
