@@ -14,6 +14,7 @@ mod addressing;
 mod authority;
 mod subnet;
 mod topology;
+mod wireguard;
 
 #[derive(Clone, Copy)]
 enum Command {
@@ -336,5 +337,6 @@ pub(super) fn NetworkMembershipPanel(
         <topology::NetworkTopologyPanel api space session_revision auth_failure />
         <addressing::SpaceAddressPanel api space session_revision auth_failure />
         <subnet::SubnetMappingPanel api space session_revision auth_failure />
+        <wireguard::WireGuardClientPanel api space session_revision auth_failure />
     }
 }
