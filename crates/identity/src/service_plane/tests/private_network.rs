@@ -183,7 +183,7 @@ fn private_chain_requires_service_purpose_epoch_membership_and_independent_signe
 }
 
 #[test]
-fn private_relay_policy_cannot_be_dialled_direct_and_transit_never_expands_shared_budget()
+fn private_relay_policy_cannot_be_dialled_direct_and_wire_overhead_is_bounded()
 -> Result<(), ContractError> {
     let f = PrivateFixture::new()?;
     let key = f.network.public_key();
@@ -236,7 +236,7 @@ fn private_relay_policy_cannot_be_dialled_direct_and_transit_never_expands_share
         &f.lease,
     )?;
     let mut exceeded = transit.clone();
-    exceeded.byte_limit += 1;
+    exceeded.byte_limit = nestlink_protocol::services::private::private_service_wire_allowance(65536)? + 1;
     assert!(
         private_service_route_binding(&context, &path, &connection, &verify(exceeded)?, &f.lease)
             .is_err()
@@ -342,7 +342,7 @@ fn private_two_relay_chain_binds_order_full_grant_set_shared_ceiling_and_revocat
         match mutation {
             0 => changed.route_id = id(53),
             1 => changed.transport_group = [193; 32],
-            2 => changed.byte_limit = 65537,
+            2 => changed.byte_limit = nestlink_protocol::services::private::private_service_wire_allowance(65536)? + 1,
             3 => changed.previous = peers.first,
             4 => changed.remaining_hops = 2,
             _ => changed.scope.grant_id = path.claims().scope.grant_id.clone(),

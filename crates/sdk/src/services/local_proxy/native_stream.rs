@@ -187,12 +187,9 @@ async fn forward(
     owner_deadline: Instant,
 ) -> FlowOutcome {
     let setup_deadline = (Instant::now() + SETUP_BUDGET).min(owner_deadline);
-    let request = PrivateServiceAccessRequest {
-        request_id: random_id(),
-        consumer_device_id: consumer.device_id.clone(),
-        expected_service_revision: choice.entry.service.revision,
-        expected_exposure_revision: choice.entry.exposure.revision,
-        maximum_bytes: choice.maximum_bytes,
+    let request = match choice.access_request(&consumer) {
+        Ok(request)=>request,
+        Err(_)=>return FlowOutcome { rejected:true, ..FlowOutcome::default() },
     };
     let lease = tokio::select! { biased;
         _ = stopping(&mut stop) => return FlowOutcome::default(),
@@ -201,7 +198,7 @@ async fn forward(
             _ => return FlowOutcome { rejected: true, ..FlowOutcome::default() },
         }
     };
-    let connecting = sdk.connect_private_service(&consumer, lease);
+    let connecting = sdk.connect_private_service_with_relay_policy(&consumer, lease, &choice.relay_policy);
     tokio::pin!(connecting);
     let connected = tokio::select! { biased;
         _ = stopping(&mut stop) => None,

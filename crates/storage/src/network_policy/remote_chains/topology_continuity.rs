@@ -3,10 +3,10 @@
 use super::*;
 use nestlink_protocol::network_topology::{TopologyAdvertisement, TopologyReport};
 
-pub(super) struct InitialBinding {
-    publisher: [u8; 32],
-    sequence: u64,
-    observed_until: u64,
+pub(crate) struct InitialBinding {
+    pub(crate) publisher: [u8; 32],
+    pub(crate) sequence: u64,
+    pub(crate) observed_until: u64,
 }
 
 fn adjacent(report: &TopologyReport, local: &RelayNode, remote: &RelayNode) -> bool {
@@ -22,7 +22,7 @@ fn adjacent(report: &TopologyReport, local: &RelayNode, remote: &RelayNode) -> b
         })
 }
 
-pub(super) fn capture(
+pub(crate) fn capture(
     store: &Store,
     snapshot: &TrustedNetworkPolicySnapshot,
     node_ids: &[String; 2],
@@ -119,6 +119,20 @@ pub(super) fn current(
     Ok(())
 }
 
+/// Uses the same retained-publisher and uninterrupted-observation rules for a
+/// private chain. No business currentness or capacity owner is substituted.
+pub(crate) fn private_current(store:&Store,tx:&Transaction<'_>,snapshot:&TrustedNetworkPolicySnapshot,grant:&str,views:&[nestlink_protocol::api::NodeEndpointsView],nodes:&[RelayNode],now:u64)->Result<(),StorageError>{
+    if nodes.len()!=2 || views.len()!=2{return Err(StorageError::Forbidden);}
+    for index in 0..2 {
+        let binding:Option<(Vec<u8>,u64,u64,u64)>=tx.query_row("SELECT original_publisher_digest,original_sequence,latest_sequence,observed_until FROM private_service_relay_hops WHERE grant_id=?1 AND position=?2 AND closed=0",params![grant,index as u8],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?,r.get(3)?))).optional()?;
+        let (publisher,original,latest,until)=binding.ok_or(StorageError::Forbidden)?;
+        let ad=topology::current_head(store,snapshot,&views[index].node_id,now)?;
+        let ad=ad.claims();
+        if publisher!=ad.report.publisher_digest || ad.report.sequence<original || ad.report.sequence<latest || now>=until || ad.expires_at_ms<until || !adjacent(&ad.report,&nodes[index],&nodes[1-index]){return Err(StorageError::Forbidden);}
+    }
+    Ok(())
+}
+
 /// Runs in the authenticated report acceptance transaction, before replacing
 /// the head. Recording every accepted transition prevents down/up or expiry/up
 /// between resource polls from resurrecting an earlier reservation.
@@ -130,6 +144,7 @@ pub(in crate::network_policy) fn report_accepted(
 ) -> Result<(), StorageError> {
     let report = &ad.report;
     type BoundHop = (
+        bool,
         String,
         u8,
         Vec<u8>,
@@ -144,11 +159,15 @@ pub(in crate::network_policy) fn report_accepted(
         u64,
     );
     let mut statement = tx.prepare(
-        "SELECT h.route_id,h.position,b.original_publisher_digest,b.original_sequence,b.latest_sequence,b.observed_until,h.node_key,h.runtime_id,h.runtime_generation,h.endpoint_revision,o.node_key,o.endpoint_revision
+        "SELECT 0,h.route_id,h.position,b.original_publisher_digest,b.original_sequence,b.latest_sequence,b.observed_until,h.node_key,h.runtime_id,h.runtime_generation,h.endpoint_revision,o.node_key,o.endpoint_revision
          FROM network_remote_chain_hops h
          JOIN network_remote_chain_topology_bindings b ON b.route_id=h.route_id AND b.position=h.position
          JOIN network_remote_chain_hops o ON o.route_id=h.route_id AND o.position=1-h.position
-         WHERE h.space_id=?1 AND h.node_id=?2 AND h.closed=0",
+         WHERE h.space_id=?1 AND h.node_id=?2 AND h.closed=0
+         UNION ALL
+         SELECT 1,h.route_id,h.position,h.original_publisher_digest,h.original_sequence,h.latest_sequence,h.observed_until,h.node_key,h.runtime_id,h.runtime_generation,h.endpoint_revision,o.node_key,o.endpoint_revision
+         FROM private_service_relay_hops h JOIN private_service_relay_hops o ON o.route_id=h.route_id AND o.position=1-h.position
+         WHERE h.space_id=?1 AND h.node_id=?2 AND h.closed=0 AND h.original_publisher_digest IS NOT NULL",
     )?;
     let rows = statement
         .query_map(params![space, report.node_id], |r| {
@@ -165,11 +184,13 @@ pub(in crate::network_policy) fn report_accepted(
                 r.get(9)?,
                 r.get(10)?,
                 r.get(11)?,
+                r.get(12)?,
             ))
         })?
         .collect::<Result<Vec<BoundHop>, _>>()?;
     drop(statement);
     for (
+        private,
         route,
         position,
         publisher,
@@ -202,9 +223,12 @@ pub(in crate::network_policy) fn report_accepted(
             });
         if uninterrupted {
             tx.execute(
-                "UPDATE network_remote_chain_topology_bindings SET latest_sequence=?1,observed_until=?2 WHERE route_id=?3 AND position=?4",
+                if private {"UPDATE private_service_relay_hops SET latest_sequence=?1,observed_until=?2 WHERE route_id=?3 AND position=?4"} else {"UPDATE network_remote_chain_topology_bindings SET latest_sequence=?1,observed_until=?2 WHERE route_id=?3 AND position=?4"},
                 params![report.sequence,ad.expires_at_ms,route,position],
             )?;
+        } else if private {
+            tx.execute("UPDATE private_service_leases SET revoked=1 WHERE grant_id IN(SELECT grant_id FROM private_service_relay_hops WHERE route_id=?1 AND space_id=?2)",params![route,space])?;
+            tx.execute("UPDATE private_service_relay_hops SET closed=1 WHERE route_id=?1 AND space_id=?2",params![route,space])?;
         } else {
             retire(tx, space, &route)?;
         }
@@ -217,6 +241,8 @@ pub(in crate::network_policy) fn withdrawn(
     space: &str,
     node: &str,
 ) -> Result<(), StorageError> {
+    tx.execute("UPDATE private_service_leases SET revoked=1 WHERE grant_id IN(SELECT grant_id FROM private_service_relay_hops WHERE space_id=?1 AND node_id=?2 AND original_publisher_digest IS NOT NULL)",params![space,node])?;
+    tx.execute("UPDATE private_service_relay_hops SET closed=1 WHERE route_id IN(SELECT route_id FROM private_service_relay_hops WHERE space_id=?1 AND node_id=?2 AND original_publisher_digest IS NOT NULL)",params![space,node])?;
     let mut statement = tx.prepare(
         "SELECT route_id FROM network_remote_chain_hops WHERE space_id=?1 AND node_id=?2 AND closed=0",
     )?;

@@ -22,15 +22,15 @@ pub struct NetworkRemoteRelayBundle {
     pub node: NodeEndpointsView,
 }
 
-pub(super) struct RelayNode {
-    pub(super) key: [u8; 32],
-    pub(super) runtime: String,
-    pub(super) generation: u64,
-    pub(super) endpoint_revision: u64,
-    pub(super) maximum: u32,
-    pub(super) lease_end: u64,
-    pub(super) policy: u64,
-    pub(super) endpoints: NodeEndpoints,
+pub(crate) struct RelayNode {
+    pub(crate) key: [u8; 32],
+    pub(crate) runtime: String,
+    pub(crate) generation: u64,
+    pub(crate) endpoint_revision: u64,
+    pub(crate) maximum: u32,
+    pub(crate) lease_end: u64,
+    pub(crate) policy: u64,
+    pub(crate) endpoints: NodeEndpoints,
 }
 struct StoredRelay {
     path_id: String,
@@ -52,7 +52,7 @@ struct StoredRelay {
     signed: SignedNetworkGrant,
 }
 
-pub(super) fn relay_node(
+pub(crate) fn relay_node(
     store: &Store,
     node_id: &str,
     now_ms: u64,
@@ -217,6 +217,7 @@ impl Store {
                 node: bundle.node,
             };
             let resource = NodeNetworkRelayResource {
+                private_service_bundle_json: Vec::new(),
                 network_schema_version: 1,
                 allocation: Some(allocation),
                 network_authority_key: snapshot.authority_key.to_vec(),

@@ -263,6 +263,7 @@ pub fn document(root: &Path) -> Result<(Value, Value), Box<dyn std::error::Error
         SignedPrivateServiceHostWithdrawal,
         PrivateServiceAccessRequest,
         PrivateServiceGrant,
+        PrivateServiceHostAccessPage,
         SignedPrivateServiceUsage,
         PrivateServiceUsageAck,
         HealthResponse,

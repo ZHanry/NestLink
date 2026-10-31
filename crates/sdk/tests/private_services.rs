@@ -1,5 +1,7 @@
 //! Real management authorization, installation-pinned Quinn, fixed local
 //! HTTP/TCP/DNS targets, shared durable usage and physical listener release.
+#[path = "private_services/relay.rs"]
+mod relay;
 use hickory_server::proto::{
     op::{Message, MessageType, OpCode, Query, ResponseCode},
     rr::{Name, RData, Record, RecordType, rdata::A},
@@ -134,7 +136,7 @@ impl Fixture {
                 name.into(),
                 "linux-x11".into(),
                 vec!["host".into(), "vp8".into()],
-                "direct_only".into(),
+                path_mode.into(),
             )
             .await
             .map_err(|error| format!("enroll {name}: {error:?}"))?;
@@ -257,6 +259,7 @@ impl Fixture {
             expected_service_revision: self.view.revision,
             expected_exposure_revision: self.exposure.revision,
             maximum_bytes: 4096,
+            route: PrivateServiceRouteRequest::Direct,
         }
     }
 }

@@ -23,13 +23,14 @@ impl Store {
         }
         lifecycle.check_clock(now_ms)?;
         let tx = self.connection.unchecked_transaction()?;
-        type Reservation = (String, Vec<u8>, u64, bool, String, u64);
+        type Reservation = (String, Vec<u8>, u64, bool, String, u64, bool);
         let row: Option<Reservation> = tx.query_row(
-            "SELECT r.claims_json,n.public_key,r.promised_until,r.closed,r.control_runtime_id,t.started_at FROM relay_reservations r JOIN data_nodes n ON n.id=r.node_id JOIN node_runtimes t ON t.node_id=r.node_id AND t.runtime_id=r.runtime_id AND t.generation=r.runtime_generation AND t.security_epoch=r.security_epoch WHERE r.id=?1 AND r.kind='node'",
+            "SELECT r.claims_json,n.public_key,r.promised_until,r.closed,r.control_runtime_id,t.started_at,0 FROM relay_reservations r JOIN data_nodes n ON n.id=r.node_id JOIN node_runtimes t ON t.node_id=r.node_id AND t.runtime_id=r.runtime_id AND t.generation=r.runtime_generation AND t.security_epoch=r.security_epoch WHERE r.id=?1 AND r.kind='node'
+             UNION ALL SELECT h.allocation_json,n.public_key,h.promised_until,h.closed,h.control_runtime_id,t.started_at,1 FROM private_service_relay_hops h JOIN data_nodes n ON n.id=h.node_id JOIN node_runtimes t ON t.node_id=h.node_id AND t.runtime_id=h.runtime_id AND t.generation=h.runtime_generation AND t.security_epoch=h.security_epoch WHERE h.transit_grant_id=?1",
             [&untrusted.allocation_id],
-            |row| Ok((row.get(0)?,row.get(1)?,row.get(2)?,row.get(3)?,row.get(4)?,row.get(5)?)),
+            |row| Ok((row.get(0)?,row.get(1)?,row.get(2)?,row.get(3)?,row.get(4)?,row.get(5)?,row.get(6)?)),
         ).optional()?;
-        let (json, key, promised_until, closed, control_runtime, node_started) =
+        let (json, key, promised_until, closed, control_runtime, node_started, private) =
             row.ok_or(StorageError::Forbidden)?;
         let key: [u8; 32] = key.try_into().map_err(|_| StorageError::Conflict)?;
         let c = verify_relay_close(signed, &key)?;
@@ -80,7 +81,7 @@ impl Store {
             }
             return Ok(original);
         }
-        if closed {
+        if closed && !private {
             return Err(StorageError::Conflict);
         }
         // Exact acknowledged facts survive a control restart. A new fact can
@@ -102,7 +103,7 @@ impl Store {
             released_endpoint_slots: if promised_until > now_ms { 2 } else { 0 },
         };
         ack.validate()?;
-        let changed=tx.execute("UPDATE relay_reservations SET closed=1,promised_until=MIN(promised_until,?1) WHERE id=?2 AND closed=0 AND control_runtime_id=?3",params![now_ms,c.allocation_id,lifecycle.runtime_id])?;
+        let changed=tx.execute(if private {"UPDATE private_service_relay_hops SET closed=1,promised_until=MIN(promised_until,?1) WHERE transit_grant_id=?2 AND control_runtime_id=?3"} else {"UPDATE relay_reservations SET closed=1,promised_until=MIN(promised_until,?1) WHERE id=?2 AND closed=0 AND control_runtime_id=?3"},params![now_ms,c.allocation_id,lifecycle.runtime_id])?;
         if changed != 1 {
             return Err(StorageError::Conflict);
         }

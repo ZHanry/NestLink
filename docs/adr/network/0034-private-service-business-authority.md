@@ -92,3 +92,44 @@ deadline retires all workers and the physical listener when that approval ends.
 The standard W21 SOCKS integration uses this exact SDK path, and tests actual
 request/response half-close, authentication/target denial, listener collision,
 an accepted stalled authentication worker, expiration and physical cleanup.
+
+The ordinary-user daemon now exposes that original host through
+`private-service-proxy --state-dir <installation> host`. It reuses installation
+startup admission, the single headless runtime lease, the existing installation
+identity and protected management-session recovery. It cannot implicitly enroll
+a device or start another login/refresh owner. The caller explicitly supplies
+service/space IDs, a numeric fixed backend and its protocol, QUIC listen address,
+reachable numeric advertised IP, private/both mode, finite private/public byte
+shares and an approval lifetime of 1..3600 seconds. `--approve-target` is required
+and confirms the local target and the current definition/exposure update. Help
+and startup output explain that each invocation invalidates previous consumer
+ACLs/leases and stops previous publications. The command never grants consumer
+access; the existing Web private ACL panel can grant specific consumers while
+the host runs. Both mode reserves the explicit public share but this command
+starts the private listener; public ingress still uses its existing publication
+owner and must be started separately after the exposure change.
+
+The command creates `LocalServiceTargetConsent` from the current service and
+that local numeric choice, obtains the existing signed target approval, updates
+exposure with both original revision fences, then calls the existing SDK private
+host. HTTPS requires an explicit local TLS server name and 1..8 local DER X.509
+CA files, bounded at 16384 bytes each, through `HttpsBackendTls`; no certificate
+or name check is disabled. Public-unicast relay endpoints remain the default.
+The host command passes explicit repeated `--relay-private-prefix` choices and
+`--allow-loopback-relay` into the SDK's existing local relay endpoint policy;
+these choices do not select or authorize a backend target.
+
+Termination, installation maintenance, changed/disabled protected login, original
+login expiry, target-approval expiry or wall-clock regression stops this same
+host. Setup retains its original resource-owning future after a stop request,
+checks the same session between approval/exposure/start effects and joins any
+host returned by an already in-progress start. Shutdown retains the original
+handle through pending waits and requires its actual worker/listener cleanup
+result before reporting success. The stable installation-private directory
+`private-service-usage` retains the original cumulative usage database across
+invocations and is never cleared as runtime cleanup. Hosted tests exercise the
+production command function against the actual management router and local TCP
+backend, explicit consumer ACL, byte exchange, session-change/backend EOF,
+physical UDP listener release, approval expiry and retained usage state. These
+are implementation/test sources awaiting Actions evidence, not a laboratory or
+target verification claim.

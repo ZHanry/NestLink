@@ -66,7 +66,14 @@ impl NodeResourceSnapshotClaims {
         let mut previous: Option<&str> = None;
         for route in &self.network_routes {
             let allocation = route.allocation.as_ref().ok_or_else(invalid)?;
-            let bundle_valid = match route.network_schema_version {
+            let private = !route.private_service_bundle_json.is_empty();
+            let bundle_valid = if private {
+                matches!(route.network_schema_version, 1 | 2)
+                    && route.private_service_bundle_json.len() <= 65_536
+                    && route.business_permit.is_empty()
+                    && route.relay_bundle_json.is_empty()
+                    && route.chain_bundle_json.is_empty()
+            } else { match route.network_schema_version {
                 1 => {
                     !route.relay_bundle_json.is_empty()
                         && route.relay_bundle_json.len() <= 32_768
@@ -78,10 +85,10 @@ impl NodeResourceSnapshotClaims {
                         && route.relay_bundle_json.is_empty()
                 }
                 _ => false,
-            };
+            }};
             if !bundle_valid
                 || route.network_authority_key.len() != 32
-                || route.business_permit.is_empty()
+                || (!private && route.business_permit.is_empty())
                 || route.business_permit.len() as u64 > crate::PERMIT_BYTES + 128
                 || previous.is_some_and(|id| id >= allocation.allocation_id.as_str())
                 || self

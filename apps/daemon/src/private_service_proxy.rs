@@ -1,4 +1,5 @@
 //! Explicit normal-user entry to one authorized private service.
+mod host;
 use crate::{session_store::SessionStore, space_dns::session_snapshot};
 use nestlink_protocol::services::private::PrivateServiceEntry;
 use nestlink_sdk::{
@@ -27,6 +28,9 @@ pub(crate) struct ProxyArgs {
 
 #[derive(clap::Subcommand)]
 enum ProxyAction {
+    /// Approve this installation's fixed local target and host its private service.
+    /// Each invocation changes approval/exposure and invalidates old consumer ACLs.
+    Host(host::HostArgs),
     /// List currently authorized private services without creating listeners.
     List,
     /// Relay redirected stdin/stdout to an existing same-user native endpoint.
@@ -70,6 +74,20 @@ enum ProxyAction {
         /// SOCKS. TCP/HTTP/HTTPS only; --listen applies to SOCKS mode only.
         #[arg(long)]
         native_stream: bool,
+        /// Explicit relay nodes in canonical peer order. One node uses NRD1;
+        /// two nodes require both current topology digests. Omit for direct.
+        #[arg(long = "relay-node")]
+        relay_nodes: Vec<String>,
+        /// Current signed topology digests in URL-safe unpadded base64,
+        /// ordered with the two nodes. Never taken from a peer's message.
+        #[arg(long = "relay-topology-digest")]
+        relay_topology_digests: Vec<String>,
+        /// Locally approved private relay address prefix; repeat as needed.
+        #[arg(long = "relay-private-prefix")]
+        relay_private_prefixes: Vec<String>,
+        /// Also requires the registered node to permit loopback endpoints.
+        #[arg(long)]
+        allow_loopback_relay: bool,
     },
 }
 
@@ -152,6 +170,12 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
     }
     let consumer = Arc::new(crate::identity(&directory)?);
     match args.action {
+        ProxyAction::Host(args) => {
+            // Keep the same protected login and original runtime lease acquired
+            // above; host must never start a second refresh/login owner.
+            drop(installation);
+            host::run(args, Arc::new(sdk), consumer, directory, original_login).await
+        }
         ProxyAction::List => {
             let mut after = None;
             for _ in 0..64 {
@@ -200,6 +224,10 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
             listen,
             credentials_dir,
             native_stream,
+            relay_nodes,
+            relay_topology_digests,
+            relay_private_prefixes,
+            allow_loopback_relay,
         } => {
             if !nestlink_protocol::valid_id(&service)
                 || !nestlink_protocol::valid_id(&space)
@@ -222,13 +250,26 @@ pub(crate) async fn run(args: ProxyArgs) -> Result<()> {
                 .access_expires
                 .saturating_sub(now);
             let lifetime = Duration::from_secs(lifetime_seconds.min(remaining));
-            let choice = LocalProxyServiceChoice::from_local_choice(
+            let mut choice = LocalProxyServiceChoice::from_local_choice(
                 &entry,
                 &alias,
                 port,
                 maximum_bytes,
                 lifetime,
             )?;
+            if relay_nodes.is_empty() {
+                if !relay_topology_digests.is_empty() || !relay_private_prefixes.is_empty() || allow_loopback_relay {
+                    return Err(io::Error::other("relay scope and topology options require an explicit --relay-node selection").into());
+                }
+            } else {
+                use base64::{Engine,engine::general_purpose::URL_SAFE_NO_PAD};
+                let digests=relay_topology_digests.iter().map(|value| {
+                    URL_SAFE_NO_PAD.decode(value).ok().and_then(|bytes|bytes.try_into().ok())
+                        .ok_or_else(||io::Error::other("relay topology digest must be exactly 32 bytes in URL-safe unpadded base64"))
+                }).collect::<io::Result<Vec<[u8;32]>>>()?;
+                let policy=nestlink_sdk::services::PrivateServiceRelayPolicy::from_local_choice(&relay_private_prefixes,allow_loopback_relay)?;
+                choice=choice.with_relay_route(relay_nodes,digests,policy)?;
+            }
             let sdk = Arc::new(sdk);
             let credential_directory = credentials_dir.unwrap_or_else(|| directory.clone());
             let deadline = tokio::time::Instant::now() + lifetime;

@@ -8,7 +8,7 @@ use fast_socks5::{
 use nestlink_auth::{token, token_hash};
 use nestlink_identity::services::private::VerifiedPrivateServiceLease;
 use nestlink_protocol::services::private::{
-    PrivateServiceAccessRequest, PrivateServiceAvailability, PrivateServiceEntry,
+    PrivateServiceAccessRequest, PrivateServiceAvailability, PrivateServiceEntry, PrivateServiceRouteRequest,
 };
 use std::{
     io,
@@ -56,6 +56,8 @@ pub struct LocalProxyServiceChoice {
     port: u16,
     maximum_bytes: u64,
     lifetime: Duration,
+    relay_route: Option<(Vec<String>, Vec<[u8;32]>)>,
+    relay_policy: PrivateServiceRelayPolicy,
 }
 impl LocalProxyServiceChoice {
     pub fn from_local_choice(
@@ -108,7 +110,38 @@ impl LocalProxyServiceChoice {
             port,
             maximum_bytes,
             lifetime,
+            relay_route: None,
+            relay_policy: PrivateServiceRelayPolicy::default(),
         })
+    }
+
+    /// Select an exact authorized relay path locally. No direct failure can
+    /// turn this choice into a different path or change its business target.
+    pub fn with_relay_route(mut self, node_ids:Vec<String>, topology_digests:Vec<[u8;32]>, policy:PrivateServiceRelayPolicy)->Result<Self,LocalProxyError> {
+        if !(1..=2).contains(&node_ids.len()) || node_ids.iter().any(|id|!valid_id(id))
+            || node_ids.len()==2 && node_ids[0]==node_ids[1]
+            || topology_digests.len()!=if node_ids.len()==2 {2}else{0}
+            || topology_digests.contains(&[0;32]) { return Err(LocalProxyError::Invalid); }
+        self.relay_route=Some((node_ids,topology_digests));
+        self.relay_policy=policy;
+        Ok(self)
+    }
+
+    fn access_request(&self, consumer:&DeviceIdentity)->Result<PrivateServiceAccessRequest,SdkError> {
+        let mut request=PrivateServiceAccessRequest {
+            request_id:random_id(), consumer_device_id:consumer.device_id.clone(),
+            expected_service_revision:self.entry.service.revision,
+            expected_exposure_revision:self.entry.exposure.revision, maximum_bytes:self.maximum_bytes,
+            route:match &self.relay_route {
+                None=>PrivateServiceRouteRequest::Direct,
+                Some((node_ids,topology_digests))=>PrivateServiceRouteRequest::Relay {node_ids:node_ids.clone(),topology_digests:topology_digests.clone(),signature:String::new()},
+            },
+        };
+        if self.relay_route.is_some() {
+            let signed=URL_SAFE_NO_PAD.encode(consumer.identity.sign_private_service_route(&self.entry.service.id,&request)?);
+            if let PrivateServiceRouteRequest::Relay{signature,..}=&mut request.route {*signature=signed;}
+        }
+        Ok(request)
     }
 
     fn accepts(&self, target: &TargetAddr) -> bool {
@@ -531,13 +564,7 @@ async fn run_flow(
     let setup_deadline = (Instant::now() + SETUP_BUDGET).min(owner_deadline);
     let setup = async {
         let protocol = authenticate_target(socket, &credentials, &choice).await?;
-        let request = PrivateServiceAccessRequest {
-            request_id: random_id(),
-            consumer_device_id: consumer.device_id.clone(),
-            expected_service_revision: choice.entry.service.revision,
-            expected_exposure_revision: choice.entry.exposure.revision,
-            maximum_bytes: choice.maximum_bytes,
-        };
+        let request = choice.access_request(&consumer).map_err(|_|())?;
         let lease = match sdk
             .request_private_service(&choice.entry.service.id, request)
             .await
@@ -561,7 +588,7 @@ async fn run_flow(
     };
     // A connect future owns native sockets before it returns a Connection. Keep
     // that exact future on stop/deadline, then await its physical close receipt.
-    let connecting = sdk.connect_private_service(&consumer, lease);
+    let connecting = sdk.connect_private_service_with_relay_policy(&consumer, lease, &choice.relay_policy);
     tokio::pin!(connecting);
     let connected = tokio::select! { biased;
         _ = stopping(&mut stop) => None,

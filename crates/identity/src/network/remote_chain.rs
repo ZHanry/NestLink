@@ -271,6 +271,7 @@ pub fn verify_node_network_chain_resource(
     use crate::{relay::session_binding, verify_permit};
     use nestlink_protocol::api::NetworkRemoteRelayChainView;
     if resource.network_schema_version != 2
+        || !resource.private_service_bundle_json.is_empty()
         || !resource.relay_bundle_json.is_empty()
         || resource.chain_bundle_json.is_empty()
         || resource.chain_bundle_json.len() > 49_152

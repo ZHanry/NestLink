@@ -522,7 +522,7 @@ fn schema_38_upgrade_preserves_existing_memberships_and_starts_an_empty_director
     join(&mut f, &owner, &device, 0)?;
     let before = f.view()?;
     let db = Connection::open(&f.path)?;
-    db.execute_batch("DROP TABLE private_service_usage_reports; DROP TABLE private_service_leases; DROP TABLE private_service_hosts; DROP TABLE private_service_acl; DROP TABLE service_exposures; DROP TABLE network_space_addresses; DROP TABLE network_space_address_directories; PRAGMA user_version=37;")?;
+    db.execute_batch("DROP TABLE private_service_relay_hops; DROP TABLE private_service_usage_reports; DROP TABLE private_service_leases; DROP TABLE private_service_hosts; DROP TABLE private_service_acl; DROP TABLE service_exposures; DROP TABLE network_space_addresses; DROP TABLE network_space_address_directories; PRAGMA user_version=37;")?;
     drop(db);
     f.store = Store::open_existing(&f.path, &f.deployment)?;
     let after = f.view()?;

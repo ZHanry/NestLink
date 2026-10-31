@@ -20,6 +20,7 @@ impl Store {
             signed,
             &signer.public_key(),
             Some(signer),
+            None,
             now_ms,
         )
     }
@@ -30,14 +31,19 @@ impl Store {
         allocation_issuer: &[u8; 32],
         now_ms: u64,
     ) -> Result<NodeResourceSnapshotClaims, StorageError> {
-        self.node_resource_snapshot_inner(lifecycle, signed, allocation_issuer, None, now_ms)
+        self.node_resource_snapshot_inner(lifecycle, signed, allocation_issuer, None, None, now_ms)
     }
+    pub fn node_resource_snapshot_with_private_services(&mut self,lifecycle:&RelayLifecycle,signed:&SignedNodeResourceQuery,signer:&nestlink_identity::PermitSigner,service_signer:&nestlink_identity::service_plane::ServiceLeaseSigner,node_signer:&nestlink_identity::nodes::NodePolicySigner,now_ms:u64)->Result<NodeResourceSnapshotClaims,StorageError>{
+        self.node_resource_snapshot_inner(lifecycle,signed,&signer.public_key(),Some(signer),Some((service_signer,node_signer)),now_ms)
+    }
+    #[allow(clippy::too_many_arguments)]
     fn node_resource_snapshot_inner(
         &mut self,
         lifecycle: &RelayLifecycle,
         signed: &SignedNodeResourceQuery,
         allocation_issuer: &[u8; 32],
         signer: Option<&nestlink_identity::PermitSigner>,
+        private_signers:Option<(&nestlink_identity::service_plane::ServiceLeaseSigner,&nestlink_identity::nodes::NodePolicySigner)>,
         now_ms: u64,
     ) -> Result<NodeResourceSnapshotClaims, StorageError> {
         let unverified: NodeResourceQueryClaims =
@@ -110,10 +116,14 @@ impl Store {
             }
         }
         drop(query);
-        let network_routes = match signer {
+        let mut network_routes = match signer {
             Some(signer) => self.node_network_resources(&tx, lifecycle, &q, signer, now_ms)?,
             None => Vec::new(),
         };
+        if let Some((service_signer,node_signer))=private_signers {
+            network_routes.extend(self.node_private_service_resources(&tx,&q,service_signer,node_signer,now_ms)?);
+            network_routes.sort_by(|a,b|a.allocation.as_ref().map(|a|&a.allocation_id).cmp(&b.allocation.as_ref().map(|a|&a.allocation_id)));
+        }
         let snapshot = NodeResourceSnapshotClaims {
             topology_publications_json: if signer.is_some() {
                 let publications = self.node_topology_publications(&q, now_ms)?;

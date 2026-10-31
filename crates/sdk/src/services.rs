@@ -18,7 +18,7 @@ use nestlink_protocol::service_plane::publication::{
 };
 #[cfg(not(target_arch = "wasm32"))]
 pub use private::runtime::{
-    PrivateServiceConnection, PrivateServiceHost, PrivateServiceHostConfig,
+    PrivateServiceConnection, PrivateServiceHost, PrivateServiceHostConfig, PrivateServiceRelayPolicy,
 };
 #[cfg(not(target_arch = "wasm32"))]
 use std::net::SocketAddr;

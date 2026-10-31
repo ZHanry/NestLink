@@ -16,9 +16,9 @@ use rusqlite::{Connection, OptionalExtension, Transaction, TransactionBehavior, 
 use std::collections::{BTreeMap, BTreeSet};
 mod remote_paths;
 pub use remote_paths::{NetworkRemotePathBundle, NetworkRemotePathIssuance};
-mod remote_relays;
+pub(crate) mod remote_relays;
 pub use remote_relays::{NetworkRemoteRelayBundle, NetworkRemoteRelayIssuance};
-mod remote_chains;
+pub(crate) mod remote_chains;
 pub use remote_chains::{NetworkRemoteRelayChainBundle, NetworkRemoteRelayChainIssuance};
 mod recovery;
 mod route_sets;

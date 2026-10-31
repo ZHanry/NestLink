@@ -9,7 +9,7 @@ use nestlink_protocol::{
 };
 use remote_relays::{RelayNode, relay_node};
 mod node_resources;
-pub(super) mod topology_continuity;
+pub(crate) mod topology_continuity;
 
 pub struct NetworkRemoteRelayChainIssuance {
     pub space_id: String,

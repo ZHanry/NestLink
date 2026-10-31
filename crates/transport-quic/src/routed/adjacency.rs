@@ -170,53 +170,7 @@ impl AdjacencyEndpoint {
             return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
         }
         self.attempted = true;
-        let endpoint = self
-            .endpoint
-            .as_ref()
-            .ok_or_else(|| io::Error::from(io::ErrorKind::NotConnected))?;
-        // A freshly reserved allocation reaches the node's dynamic TLS pins
-        // through its independently authenticated resource stream. A TLS
-        // refusal before that publication consumed no allocation or endpoint
-        // proof. TLS 1.3 can return a client connection before the server has
-        // accepted its certificate, so this boundary includes accept_bi. The
-        // challenge stream proves that acceptance. No hello is retried.
-        let (connection, mut write, mut read) = loop {
-            let attempt: Result<_> = async {
-                let connection = tokio::time::timeout_at(
-                    deadline,
-                    endpoint.connect(address, "peer.nestlink.invalid")?,
-                )
-                .await??;
-                self.pending = Some(connection.clone());
-                let (write, read) =
-                    tokio::time::timeout_at(deadline, connection.accept_bi()).await??;
-                Ok((connection, write, read))
-            }
-            .await;
-            match attempt {
-                Ok(accepted) => break accepted,
-                Err(error)
-                    if error
-                        .downcast_ref::<quinn::ConnectionError>()
-                        .is_some_and(|error| {
-                            matches!(error, quinn::ConnectionError::ConnectionClosed(close)
-                            if close.error_code == quinn::TransportErrorCode::crypto(49))
-                        }) =>
-                {
-                    // rustls CurrentClients maps an unavailable dynamic client
-                    // pin to peer access_denied (49). Local node-pin failures,
-                    // ALPN/protocol errors and all other TLS errors stay fatal.
-                    if let Some(connection) = self.pending.take() {
-                        connection.close(0u32.into(), b"node TLS admission unavailable");
-                    }
-                    if Instant::now() + Duration::from_millis(50) >= deadline {
-                        return Err(error);
-                    }
-                    tokio::time::sleep(Duration::from_millis(50)).await;
-                }
-                Err(error) => return Err(error),
-            }
-        };
+        let (connection, mut write, mut read) = self.connect_before_hello(address,deadline).await?;
         let challenge: NetworkNodeChallenge =
             tokio::time::timeout_at(deadline, crate::node::read_message(&mut read)).await??;
         let nonce: [u8; 32] = decode_exact(&challenge.nonce)?;
@@ -280,18 +234,7 @@ impl AdjacencyEndpoint {
             return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
         }
         self.attempted = true;
-        let endpoint = self
-            .endpoint
-            .as_ref()
-            .ok_or_else(|| io::Error::from(io::ErrorKind::NotConnected))?;
-        let connection = tokio::time::timeout_at(
-            deadline,
-            endpoint.connect(address, "peer.nestlink.invalid")?,
-        )
-        .await??;
-        self.pending = Some(connection.clone());
-        let (mut write, mut read) =
-            tokio::time::timeout_at(deadline, connection.accept_bi()).await??;
+        let (connection, mut write, mut read) = self.connect_before_hello(address,deadline).await?;
         let challenge: NetworkNodeChallenge =
             tokio::time::timeout_at(deadline, crate::node::read_message(&mut read)).await??;
         if challenge.schema_version != 2 {
@@ -354,6 +297,33 @@ impl AdjacencyEndpoint {
             let _ = read.read(&mut byte).await;
         })));
         Ok(adjacency)
+    }
+    /// Both NRD versions use the original finite publication wait. Retry is
+    /// allowed only for the node's dynamic-client-pin TLS access_denied before
+    /// the challenge stream exists. No Hello or possession proof is retried.
+    async fn connect_before_hello(&mut self,address:SocketAddr,deadline:Instant)->Result<(Connection,quinn::SendStream,quinn::RecvStream)> {
+        let endpoint=self.endpoint.as_ref().ok_or_else(||io::Error::from(io::ErrorKind::NotConnected))?;
+        loop {
+            let attempt:Result<_>=async {
+                let connection=tokio::time::timeout_at(deadline,endpoint.connect(address,"peer.nestlink.invalid")?).await??;
+                self.pending=Some(connection.clone());
+                // TLS 1.3 can return a client connection before the node has
+                // accepted its certificate. The first challenge proves this.
+                let (write,read)=tokio::time::timeout_at(deadline,connection.accept_bi()).await??;
+                Ok((connection,write,read))
+            }.await;
+            match attempt {
+                Ok(accepted)=>return Ok(accepted),
+                Err(error) if error.downcast_ref::<quinn::ConnectionError>().is_some_and(|error|
+                    matches!(error,quinn::ConnectionError::ConnectionClosed(close)
+                        if close.error_code==quinn::TransportErrorCode::crypto(49)))=>{
+                    if let Some(connection)=self.pending.take() {connection.close(0u32.into(),b"node TLS admission unavailable");}
+                    if Instant::now()+Duration::from_millis(50)>=deadline {return Err(error);}
+                    tokio::time::sleep(Duration::from_millis(50)).await;
+                },
+                Err(error)=>return Err(error),
+            }
+        }
     }
     pub async fn close_and_wait(&mut self, deadline: Instant) -> io::Result<()> {
         let deadline = *self.close_deadline.get_or_insert(deadline);

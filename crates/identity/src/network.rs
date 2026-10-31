@@ -12,6 +12,8 @@ mod remote;
 pub use private_service::{
     PrivateServiceChainBinding, PrivateServiceRouteBinding, private_service_chain_binding,
     private_service_path_peers, private_service_route_binding,
+    PrivateServiceNodeBinding, VerifiedPrivateServiceGrant, private_service_allocation_binding,
+    verify_private_service_grant, verify_node_private_service_resource,
 };
 mod remote_chain;
 mod route_set;

@@ -6,7 +6,7 @@ use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, params};
 use std::{path::Path, time::Duration};
 
 pub const APPLICATION_ID: i32 = 1_313_622_833;
-pub const SCHEMA_VERSION: i32 = 41;
+pub const SCHEMA_VERSION: i32 = 42;
 const MIGRATION: &str = include_str!("../migrations/001_initial.sql");
 const CONTROL_MIGRATION: &str = include_str!("../migrations/002_control.sql");
 const SCOPES_MIGRATION: &str = include_str!("../migrations/003_policy_scopes.sql");
@@ -446,6 +446,12 @@ impl Store {
                 "../migrations/041_private_service_network_path.sql"
             ))?;
             transaction.pragma_update(None, "user_version", 41)?;
+            transaction.commit()?;
+        }
+        if version < 42 {
+            let transaction=connection.transaction()?;
+            transaction.execute_batch(include_str!("../migrations/042_private_service_relays.sql"))?;
+            transaction.pragma_update(None,"user_version",42)?;
             transaction.commit()?;
         }
         Ok(Self {

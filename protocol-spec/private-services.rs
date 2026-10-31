@@ -106,6 +106,41 @@ pub struct PrivateServiceAccessRequest {
     pub expected_exposure_revision: u64,
     /// A bounded sub-reservation, never a second service allowance.
     pub maximum_bytes: u64,
+    #[serde(default)]
+    pub route: PrivateServiceRouteRequest,
+}
+/// Relays are ordered from the canonical first peer, independently of which
+/// business endpoint requested the route. Selection grants no remote authority.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum PrivateServiceRouteRequest {
+    #[default]
+    Direct,
+    Relay {
+        node_ids: Vec<String>,
+        topology_digests: Vec<[u8;32]>,
+        signature: String,
+    },
+}
+impl PrivateServiceAccessRequest {
+    pub fn route_transcript(&self, service_id: &str) -> Result<Vec<u8>, ContractError> {
+        if !valid_id(service_id) { return Err(invalid()); }
+        let mut request = self.clone();
+        if let PrivateServiceRouteRequest::Relay { signature, .. } = &mut request.route {
+            signature.clear();
+        }
+        let mut bytes = b"NestLink/private-service/v1/route-request\0".to_vec();
+        bytes.extend_from_slice(service_id.as_bytes());
+        bytes.push(0);
+        bytes.extend_from_slice(&serde_json::to_vec(&request).map_err(|_| invalid())?);
+        Ok(bytes)
+    }
+}
+/// A separate bounded wire meter covers encrypted framing and finite setup.
+/// Application plaintext still spends only the original service usage grant.
+pub fn private_service_wire_allowance(plaintext: u64) -> Result<u64, ContractError> {
+    plaintext.checked_mul(2).and_then(|n| n.checked_add(65_536))
+        .filter(|n| *n > 0 && *n <= i64::MAX as u64).ok_or_else(invalid)
 }
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
@@ -151,6 +186,35 @@ pub struct PrivateServiceNetworkPath {
     pub host_membership:crate::api::NetworkGrantView,
     pub connectivity:crate::api::NetworkGrantView,
     pub path:crate::api::NetworkGrantView,
+    #[serde(default,skip_serializing_if="Option::is_none")]
+    pub relay:Option<PrivateServiceRelayRoute>,
+}
+#[derive(Clone,Serialize,Deserialize,JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct PrivateServiceRelayRoute {
+    pub route_id:String,
+    pub transits:Vec<crate::api::NetworkGrantView>,
+    pub nodes:Vec<crate::api::NodeEndpointsView>,
+    pub node_public_keys:Vec<[u8;32]>,
+    pub topology_digests:Vec<[u8;32]>,
+    pub signature:Vec<u8>,
+}
+impl PrivateServiceRelayRoute {
+    pub fn transcript(&self,business_digest:&[u8;32])->Result<Vec<u8>,ContractError>{
+        let mut route=self.clone();route.signature.clear();
+        let mut bytes=b"NestLink/private-service/v1/relay-metadata\0".to_vec();
+        bytes.extend_from_slice(business_digest);
+        bytes.extend_from_slice(&serde_json::to_vec(&route).map_err(|_|invalid())?);
+        Ok(bytes)
+    }
+}
+#[derive(Clone,Serialize,Deserialize,JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct PrivateServiceHostAccessPage {
+    pub runtime_id:String,
+    pub grants:Vec<PrivateServiceGrant>,
+    pub next_id:Option<String>,
+    pub more:bool,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]

@@ -114,13 +114,7 @@ pub(super) async fn run_udp_flow(
                 return Err(());
             }
         };
-        let request = PrivateServiceAccessRequest {
-            request_id: random_id(),
-            consumer_device_id: consumer.device_id.clone(),
-            expected_service_revision: choice.entry.service.revision,
-            expected_exposure_revision: choice.entry.exposure.revision,
-            maximum_bytes: choice.maximum_bytes,
-        };
+        let request = choice.access_request(&consumer).map_err(|_|())?;
         let lease = match sdk
             .request_private_service(&choice.entry.service.id, request)
             .await
@@ -142,7 +136,7 @@ pub(super) async fn run_udp_flow(
             _ => return FlowOutcome { rejected: true, ..FlowOutcome::default() },
         }
     };
-    let connecting = sdk.connect_private_service(&consumer, lease);
+    let connecting = sdk.connect_private_service_with_relay_policy(&consumer, lease, &choice.relay_policy);
     tokio::pin!(connecting);
     let connected = tokio::select! { biased;
         _ = stopping(&mut stop) => None,

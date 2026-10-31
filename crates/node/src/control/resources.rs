@@ -21,18 +21,20 @@ pub use network::NetworkChainNeighborProof;
 enum NetworkBinding {
     Single(RemoteRouteBinding),
     Chain(NodeRemoteChainBinding),
+    PrivateSingle(RemoteRouteBinding),
+    PrivateChain(NodeRemoteChainBinding),
 }
 impl NetworkBinding {
     fn digest(self) -> [u8; 32] {
         match self {
-            Self::Single(route) => route.digest,
-            Self::Chain(route) => route.chain.digest,
+            Self::Single(route) | Self::PrivateSingle(route) => route.digest,
+            Self::Chain(route) | Self::PrivateChain(route) => route.chain.digest,
         }
     }
     fn expires_at_ms(self) -> u64 {
         match self {
-            Self::Single(route) => route.expires_at_ms,
-            Self::Chain(route) => route.chain.expires_at_ms,
+            Self::Single(route) | Self::PrivateSingle(route) => route.expires_at_ms,
+            Self::Chain(route) | Self::PrivateChain(route) => route.chain.expires_at_ms,
         }
     }
 }
@@ -63,7 +65,7 @@ impl RelayEndpointCandidate {
         self.network.map(NetworkBinding::digest)
     }
     pub fn network_direction(&self) -> Option<nestlink_protocol::network_datagram::Direction> {
-        let Some(NetworkBinding::Single(route)) = self.network else {
+        let Some(NetworkBinding::Single(route) | NetworkBinding::PrivateSingle(route)) = self.network else {
             return None;
         };
         Some({
@@ -84,7 +86,7 @@ impl RelayEndpointCandidate {
     /// The original business allocation and all shared meters stay unchanged.
     pub fn network_chain(&self) -> Option<NodeRemoteChainBinding> {
         match self.network {
-            Some(NetworkBinding::Chain(route)) => Some(route),
+            Some(NetworkBinding::Chain(route) | NetworkBinding::PrivateChain(route)) => Some(route),
             _ => None,
         }
     }
@@ -509,6 +511,7 @@ impl Pair {
 }
 #[derive(Default)]
 pub(super) struct Resources {
+    policy_issuer:Option<[u8;32]>,
     pub(super) services: crate::service_plane::ServiceResourceSet,
     snapshot: Option<Snapshot>,
     last_sequence: u64,
@@ -674,7 +677,13 @@ impl Resources {
                     {
                         self.network_chain_verifications += 1;
                     }
-                    match resource.network_schema_version {
+                    if !resource.private_service_bundle_json.is_empty() {
+                        let policy=self.policy_issuer.ok_or_else(||error(ErrorCode::IdentityMismatch))?;
+                        match nestlink_identity::network::verify_node_private_service_resource(resource,&policy,now.unix_ms)? {
+                            nestlink_identity::network::PrivateServiceNodeBinding::Single(route)=>NetworkBinding::PrivateSingle(RemoteRouteBinding{digest:route.digest,peers:route.peers,relay:route.relay,byte_limit:route.byte_limit,expires_at_ms:route.expires_at_ms}),
+                            nestlink_identity::network::PrivateServiceNodeBinding::Chain(route)=>NetworkBinding::PrivateChain(route),
+                        }
+                    } else { match resource.network_schema_version {
                         1 => NetworkBinding::Single(
                             nestlink_identity::network::verify_node_network_resource(
                                 resource,
@@ -690,7 +699,7 @@ impl Resources {
                             )?,
                         ),
                         _ => return Err(error(ErrorCode::InvalidMessage)),
-                    }
+                    }}
                 }
             };
             routes.insert(grant.allocation_id.clone(), (route, credential));
@@ -1071,6 +1080,7 @@ pub(super) async fn poll(
         match response {
             Ok(Ok(c)) => {
                 let lease = runtime.gate.current(now)?.clone();
+                runtime.resources.policy_issuer=Some(issuer);
                 if runtime
                     .resources
                     .accept(c, &lease, request_start, now)

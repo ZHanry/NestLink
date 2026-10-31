@@ -123,6 +123,7 @@ impl Store {
                 topology_digests: bundle.topology_digests,
             };
             let resource = NodeNetworkRelayResource {
+                private_service_bundle_json: Vec::new(),
                 network_schema_version: 2,
                 allocation: Some(allocation),
                 network_authority_key: snapshot.authority_key.to_vec(),

@@ -251,6 +251,14 @@ fn private_target_consent_requires_no_public_edge_or_public_ingress() -> Result 
     Ok(())
 }
 
+fn remove_schema_42_relays(raw:&Connection)->Result {
+    raw.execute_batch("DROP VIEW all_relay_capacity; DROP TABLE private_service_relay_hops;
+        CREATE VIEW all_relay_capacity AS SELECT id,kind,controller_account_id,host_account_id,node_id,promised_until FROM relay_reservations
+        UNION ALL SELECT allocation_id,'node',controller_account_id,host_account_id,node_id,promised_until FROM network_remote_relays
+        UNION ALL SELECT route_id,'node',controller_account_id,host_account_id,node_id,promised_until FROM network_remote_chain_hops
+        UNION ALL SELECT allocation_id,'node',controller_account_id,host_account_id,node_id,promised_until FROM network_remote_route_set_members;")?;
+    Ok(())
+}
 #[test]
 fn schema_39_upgrade_preserves_approved_public_target_and_child_foreign_keys() -> Result {
     let mut f = Fixture::new()?;
@@ -271,6 +279,7 @@ fn schema_39_upgrade_preserves_approved_public_target_and_child_foreign_keys() -
     drop(store);
     let path = directory.path().join("services.sqlite3");
     let raw = Connection::open(&path)?;
+    remove_schema_42_relays(&raw)?;
     // Build the historical parent table from its authoritative schema, retaining
     // the real signed consent and challenge children created through Store.
     let historical = include_str!("../migrations/018_service_registry.sql")
@@ -327,6 +336,7 @@ fn schema_40_upgrade_preserves_consent_without_minting_private_network_authority
     drop(store);
     let path = directory.path().join("services.sqlite3");
     let raw = Connection::open(&path)?;
+    remove_schema_42_relays(&raw)?;
     raw.execute_batch(
         "ALTER TABLE private_service_leases DROP COLUMN network_json; PRAGMA user_version=40;",
     )?;

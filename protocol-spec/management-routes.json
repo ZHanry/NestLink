@@ -169,4 +169,5 @@
   ,{"path":"/services/{id}/private-access","method":"post","operation":"private_services::issue","request":"PrivateServiceAccessRequest","response":"PrivateServiceGrant","status":200,"auth":true}
   ,{"path":"/services/{id}/private-access/{reservation}","method":"get","operation":"private_services::current","response":"PrivateServiceGrant","status":200,"auth":true}
   ,{"path":"/private-service-usage","method":"post","operation":"private_services::usage","request":"SignedPrivateServiceUsage","response":"PrivateServiceUsageAck","status":200,"auth":false}
+  ,{"path":"/services/{id}/private-host/{runtime}/access","method":"get","operation":"private_services::host_access","query":"ServiceQuery","response":"PrivateServiceHostAccessPage","status":200,"auth":true}
 ]

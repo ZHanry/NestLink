@@ -8,6 +8,7 @@ use rusqlite::{Connection, Transaction, TransactionBehavior};
 const MAX_RULE_MS: u64 = 7 * 24 * 60 * 60 * 1000;
 const MAX_RULES: u64 = 256;
 mod network;
+mod relay;
 
 fn mode(value: &str) -> Result<ServiceAccessMode, StorageError> {
     match value {
@@ -394,7 +395,7 @@ impl Store {
         if account != actor.account_id || consumer == record.definition.host_device_id {
             return Err(StorageError::Forbidden);
         }
-        if !self
+        if self
             .private_service_paths(
                 &actor.session_id,
                 consumer,
@@ -402,10 +403,8 @@ impl Store {
                 service,
                 now / 1000,
             )?
-            .contains(nestlink_protocol::Path::Direct)
+            .is_empty()
         {
-            // The currently installed private carrier is direct. A relay-only
-            // business must wait for its separately admitted transit owner.
             return Err(StorageError::Forbidden);
         }
         let rule:Option<(String,u64,u64)> = self.connection.query_row("SELECT rule_id,subject_epoch,expires_at FROM private_service_acl WHERE service_id=?1 AND exposure_revision=?2 AND revoked=0 AND host_epoch=?3 AND expires_at>?4 AND ((subject_kind='account' AND subject_id=?5 AND subject_epoch=?6) OR (subject_kind='installation' AND subject_id=?7 AND subject_epoch=?8)) ORDER BY expires_at DESC,rule_id LIMIT 1",params![service,view.revision,host_epoch,now,account,account_epoch,consumer,consumer_epoch],|r|Ok((r.get(0)?,r.get(1)?,r.get(2)?))).optional()?;
@@ -599,11 +598,21 @@ impl Store {
         signer: &ServiceLeaseSigner,
         now: u64,
     ) -> Result<SignedPrivateServiceLease, StorageError> {
+        if !matches!(&request.route,PrivateServiceRouteRequest::Direct){return Err(StorageError::Forbidden);}
+        let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
+        let lease=self.issue_private_service_in_transaction(&tx,actor,service,request,signer,now)?;
+        tx.commit()?;
+        Ok(lease)
+    }
+    fn issue_private_service_in_transaction(
+        &self,tx:&Transaction<'_>,actor:&Principal,service:&str,request:PrivateServiceAccessRequest,signer:&ServiceLeaseSigner,now:u64,
+    )->Result<SignedPrivateServiceLease,StorageError>{
         require_id(&request.request_id)?;
         let request_hash = digest(&serde_json::to_vec(&request)?);
-        let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
         let (record, approval, view, mut binding, acl_end) =
             self.private_consumer(actor, service, &request.consumer_device_id, now)?;
+        let selected=match &request.route {PrivateServiceRouteRequest::Direct=>nestlink_protocol::Path::Direct,PrivateServiceRouteRequest::Relay{..}=>nestlink_protocol::Path::Relay};
+        if !self.private_service_paths(&actor.session_id,&request.consumer_device_id,&record.definition.host_device_id,service,now/1000)?.contains(selected) {return Err(StorageError::Forbidden);}
         if request.expected_service_revision != record.revision
             || request.expected_exposure_revision != view.revision
         {
@@ -633,7 +642,7 @@ impl Store {
         )?);
         let publication = random_id();
         let usage = Self::reserve_service_usage(
-            &tx,
+            tx,
             signer,
             &record,
             &approval,
@@ -690,12 +699,11 @@ impl Store {
             decode_service_message(&usage.claims, SERVICE_USAGE_BYTES)?;
         tx.execute("INSERT INTO private_service_leases(grant_id,service_id,space_id,exposure_revision,acl_rule_id,host_device_id,host_epoch,runtime_id,consumer_device_id,request_id,request_sha256,lease_json) VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)",params![grant.grant_id,service,view.space_id,view.revision,binding.acl_rule_id,record.definition.host_device_id,binding.host_membership_epoch,host.runtime_id,request.consumer_device_id,request.request_id,request_hash,serde_json::to_string(&signed)?])?;
         auditing::record(
-            &tx,
+            tx,
             "private_service_access_issued",
             &grant.grant_id,
             auditing::management(actor),
         )?;
-        tx.commit()?;
         Ok(signed)
     }
     /// Used by the actual host/consumer monitor, not just the directory UI.
@@ -709,17 +717,17 @@ impl Store {
     ) -> Result<SignedPrivateServiceLease, StorageError> {
         require_id(grant)?;
         self.validate_access(actor, now / 1000)?;
+        let signed=self.private_service_lease_current(service,grant,signer,now)?;
+        let verified=verify_private_service_lease(&signed,&signer.public_key())?;
+        if actor.account_id!=verified.lease().claims().account_id && actor.account_id!=verified.claims().consumer_account_id {return Err(StorageError::Forbidden);}
+        Ok(signed)
+    }
+    pub(crate) fn private_service_lease_current(&self,service:&str,grant:&str,signer:&ServiceLeaseSigner,now:u64)->Result<SignedPrivateServiceLease,StorageError>{
         let row:Option<(String,String)>=self.connection.query_row("SELECT l.lease_json,l.consumer_device_id FROM private_service_leases l JOIN service_usage_grants g ON g.grant_id=l.grant_id WHERE l.service_id=?1 AND l.grant_id=?2 AND l.revoked=0 AND g.terminal=0",params![service,grant],|r|Ok((r.get(0)?,r.get(1)?))).optional()?;
         let (json, consumer) = row.ok_or(StorageError::Forbidden)?;
         let signed: SignedPrivateServiceLease = serde_json::from_str(&json)?;
         let verified = verify_private_service_lease(&signed, &signer.public_key())?;
         verified.check_time(now)?;
-        let consumer_device = self.device_record_at(&consumer, now / 1000)?;
-        if actor.account_id != verified.lease().claims().account_id
-            && actor.account_id != consumer_device.account
-        {
-            return Err(StorageError::Forbidden);
-        }
         // Validate the consumer's current membership and exact captured rule;
         // no stale bearer principal is fabricated for this path.
         let (_, _, view, host_epoch) = self.private_exposure_current(service, now)?;
@@ -735,7 +743,7 @@ impl Store {
                     service,
                     now / 1000,
                 )?
-                .contains(nestlink_protocol::Path::Direct)
+                .contains(self.private_service_selected_path(grant)?)
         {
             return Err(StorageError::Forbidden);
         }

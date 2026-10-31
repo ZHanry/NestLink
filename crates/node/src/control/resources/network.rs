@@ -41,7 +41,7 @@ impl nestlink_transport_stream::tls::CurrentClientPins for NodeControl {
                     snapshot.entries.values().any(|entry| {
                         now.monotonic_ms < entry.deadline
                             && match entry.network {
-                                Some(NetworkBinding::Chain(route)) => {
+                                Some(NetworkBinding::Chain(route) | NetworkBinding::PrivateChain(route)) => {
                                     route.neighbors().iter().any(|peer| &peer.0 == fingerprint)
                                 }
                                 _ => {
@@ -85,7 +85,7 @@ impl NodeControl {
                 .entries
                 .get(&allocation.allocation_id)
                 .ok_or(Error::Control)?;
-            let Some(NetworkBinding::Chain(binding)) = entry.network else {
+            let Some(NetworkBinding::Chain(binding) | NetworkBinding::PrivateChain(binding)) = entry.network else {
                 return Err(Error::Control);
             };
             if now.monotonic_ms >= entry.deadline
@@ -114,9 +114,15 @@ impl NodeControl {
             {
                 return Err(error(ErrorCode::IdentityMismatch).into());
             }
-            let view: NetworkRemoteRelayChainView =
-                serde_json::from_slice(&resource.chain_bundle_json)
-                    .map_err(|_| error(ErrorCode::InvalidMessage))?;
+            let (route_id,nodes,route_transits)=if resource.private_service_bundle_json.is_empty(){
+                let view:NetworkRemoteRelayChainView=serde_json::from_slice(&resource.chain_bundle_json).map_err(|_|error(ErrorCode::InvalidMessage))?;
+                (view.route_id,view.nodes.to_vec(),view.transits.to_vec())
+            }else{
+                let view:nestlink_protocol::services::private::PrivateServiceGrant=serde_json::from_slice(&resource.private_service_bundle_json).map_err(|_|error(ErrorCode::InvalidMessage))?;
+                let route=view.network.relay.ok_or_else(||error(ErrorCode::InvalidMessage))?;
+                (route.route_id,route.nodes,route.transits)
+            };
+            if nodes.len()!=2 || route_transits.len()!=2{return Err(error(ErrorCode::InvalidMessage).into());}
             let local = binding
                 .chain
                 .relays
@@ -124,19 +130,19 @@ impl NodeControl {
                 .position(|relay| *relay == binding.relay)
                 .ok_or_else(|| error(ErrorCode::IdentityMismatch))?;
             let transits = [
-                chain_transit(&view.transits[0])?,
-                chain_transit(&view.transits[1])?,
+                chain_transit(&route_transits[0])?,
+                chain_transit(&route_transits[1])?,
             ];
             let remote = local ^ 1;
-            if view.nodes[local].node_id != allocation.node_id
-                || view.nodes[local].revision != allocation.node_endpoint_revision
-                || view.nodes[remote].node_id == allocation.node_id
+            if nodes[local].node_id != allocation.node_id
+                || nodes[local].revision != allocation.node_endpoint_revision
+                || nodes[remote].node_id == allocation.node_id
                 || transits[0].relay != binding.chain.relays[0]
                 || transits[1].relay != binding.chain.relays[1]
                 || transits[local].scope.grant_id != allocation.allocation_id
                 || transits[remote].scope.grant_id == allocation.allocation_id
-                || transits[0].route_id != view.route_id
-                || transits[1].route_id != view.route_id
+                || transits[0].route_id != route_id
+                || transits[1].route_id != route_id
                 || transits[0]
                     .scope
                     .expires_at_ms
@@ -149,7 +155,7 @@ impl NodeControl {
                 binding,
                 allocation_id: allocation.allocation_id.clone(),
                 neighbor_allocation_id: transits[remote].scope.grant_id.clone(),
-                neighbor_node: view.nodes[remote].clone(),
+                neighbor_node: nodes[remote].clone(),
             });
         }
         routes.sort_unstable_by(|left, right| left.allocation_id.cmp(&right.allocation_id));
@@ -187,9 +193,10 @@ impl NodeControl {
         state.resources.expire(now);
         let snapshot = state.resources.snapshot.as_ref().ok_or(Error::Control)?;
         let entry = snapshot.entries.get(allocation_id).ok_or(Error::Control)?;
-        let Some(NetworkBinding::Chain(route)) = entry.network else {
+        let Some(NetworkBinding::Chain(route) | NetworkBinding::PrivateChain(route)) = entry.network else {
             return Err(Error::Control);
         };
+        let network=entry.network;
         let claims = entry.claims.clone();
         let issuer = snapshot
             .claims
@@ -228,7 +235,7 @@ impl NodeControl {
             issuer,
             deadline: original_deadline,
             node_stop: self.stopped.clone(),
-            network: Some(NetworkBinding::Chain(route)),
+            network,
             continuity,
         })
     }
@@ -253,9 +260,10 @@ impl NodeControl {
         state.resources.expire(now);
         let snapshot = state.resources.snapshot.as_ref().ok_or(Error::Control)?;
         let entry = snapshot.entries.get(allocation_id).ok_or(Error::Control)?;
-        let Some(NetworkBinding::Single(route)) = entry.network else {
+        let Some(NetworkBinding::Single(route) | NetworkBinding::PrivateSingle(route)) = entry.network else {
             return Err(Error::Control);
         };
+        let network=entry.network;
         let claims = entry.claims.clone();
         let issuer = snapshot
             .claims
@@ -303,7 +311,7 @@ impl NodeControl {
             issuer,
             deadline: original_deadline,
             node_stop: self.stopped.clone(),
-            network: Some(NetworkBinding::Single(route)),
+            network,
             continuity,
         })
     }

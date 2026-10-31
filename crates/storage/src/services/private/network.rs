@@ -10,7 +10,7 @@ use nestlink_protocol::network::{
     PeerPair, Purpose,
 };
 
-fn view(signed: SignedNetworkGrant) -> Result<NetworkGrantView, StorageError> {
+pub(super) fn view(signed: SignedNetworkGrant) -> Result<NetworkGrantView, StorageError> {
     let claims = GrantClaims::decode_canonical(&signed.claims)?;
     Ok(NetworkGrantView {
         schema_version: nestlink_protocol::network::SCHEMA_VERSION,
@@ -19,7 +19,7 @@ fn view(signed: SignedNetworkGrant) -> Result<NetworkGrantView, StorageError> {
         signature: URL_SAFE_NO_PAD.encode(signed.signature),
     })
 }
-fn signed(view: &NetworkGrantView) -> Result<SignedNetworkGrant, StorageError> {
+pub(super) fn signed(view: &NetworkGrantView) -> Result<SignedNetworkGrant, StorageError> {
     let decode = |value: &str| -> Result<Vec<u8>, StorageError> {
         let bytes = URL_SAFE_NO_PAD
             .decode(value)
@@ -41,7 +41,7 @@ fn signed(view: &NetworkGrantView) -> Result<SignedNetworkGrant, StorageError> {
     }
     Ok(signed)
 }
-fn verify(
+pub(super) fn verify(
     snapshot: &crate::network_policy::TrustedNetworkPolicySnapshot,
     view: &PrivateServiceNetworkPath,
     lease: &VerifiedPrivateServiceLease,
@@ -71,7 +71,13 @@ fn verify(
         lease.digest(),
     )?;
     private_service_path_peers(&context, &path, &connection, lease)?;
-    path.check_route(&context, &[])?;
+    match &view.relay {
+        None=>path.check_route(&context,&[])?,
+        Some(route)=>{
+            let transits=route.transits.iter().map(|v|Ok(verify_network_grant(&signed(v)?,&context)?)).collect::<Result<Vec<_>,StorageError>>()?;
+            if transits.len()==1 {nestlink_identity::network::private_service_route_binding(&context,&path,&connection,&transits[0],lease)?;} else {nestlink_identity::network::private_service_chain_binding(&context,&path,&connection,&transits,lease)?;}
+        }
+    }
     Ok(path)
 }
 impl Store {
@@ -87,12 +93,18 @@ impl Store {
         let tx = Transaction::new_unchecked(&self.connection, TransactionBehavior::Immediate)?;
         let lease = self.private_service_lease(actor, service, grant_id, service_signer, now)?;
         let lease = verify_private_service_lease(&lease, &service_signer.public_key())?;
+        let path=self.issue_private_service_network_path_in_transaction(&tx,actor,grant_id,&lease,network_signer,PathPolicy{allow_direct:true,relays:Vec::new(),max_hops:0},now)?;
+        tx.commit()?;
+        Ok(path)
+    }
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn issue_private_service_network_path_in_transaction(&self,tx:&Transaction<'_>,actor:&Principal,grant_id:&str,lease:&VerifiedPrivateServiceLease,network_signer:&NetworkAuthoritySigner,policy:PathPolicy,now:u64)->Result<PrivateServiceNetworkPath,StorageError>{
         let binding = lease.claims();
         let base = lease.lease().claims();
         if actor.account_id != binding.consumer_account_id {
             return Err(StorageError::Forbidden);
         }
-        let snapshot = crate::network_policy::read_snapshot(&tx, &binding.space_id, now)?;
+        let snapshot = crate::network_policy::read_snapshot(tx, &binding.space_id, now)?;
         if network_signer.public_key() != binding.network_authority_key
             || snapshot.verification().authority_key != &binding.network_authority_key
         {
@@ -105,7 +117,7 @@ impl Store {
         )?;
         if let Some(json) = existing {
             let path = serde_json::from_str(&json)?;
-            verify(&snapshot, &path, &lease)?;
+            verify(&snapshot, &path, lease)?;
             return Ok(path);
         }
         let scope = || GrantScope {
@@ -168,11 +180,7 @@ impl Store {
             peers,
             purpose: Purpose::PrivateService,
             connectivity_grant_digest: verified_connectivity.digest(),
-            policy: PathPolicy {
-                allow_direct: true,
-                relays: Vec::new(),
-                max_hops: 0,
-            },
+            policy,
         }))?;
         let path = PrivateServiceNetworkPath {
             grant_id: grant_id.into(),
@@ -180,10 +188,10 @@ impl Store {
             host_membership: view(host)?,
             connectivity: view(connectivity)?,
             path: view(path)?,
+            relay:None,
         };
-        verify(&snapshot, &path, &lease)?;
+        if path.relay.is_none() && GrantClaims::decode_canonical(&signed(&path.path)?.claims).is_ok_and(|c|matches!(c,GrantClaims::Path(p) if p.policy.allow_direct)) { verify(&snapshot, &path, lease)?; }
         tx.execute("UPDATE private_service_leases SET network_json=?1 WHERE grant_id=?2 AND network_json IS NULL",params![serde_json::to_string(&path)?,grant_id])?;
-        tx.commit()?;
         Ok(path)
     }
     pub fn private_service_network_path(
@@ -205,6 +213,7 @@ impl Store {
         )?;
         let path = serde_json::from_str(&json.ok_or(StorageError::Forbidden)?)?;
         verify(&snapshot, &path, &lease)?;
+        self.private_service_relay_current(&tx,grant_id,&lease,now)?;
         tx.commit()?;
         Ok(path)
     }
