@@ -472,7 +472,7 @@
     },
     {
       "id": "C08",
-      "purpose": "IP packet parsing and bounded fragment reassembly for ACLs",
+      "purpose": "Mature strict IP packet parsing before NetworkAccess ACL admission",
       "existing_implementation": [
         "Existing protocol-specific UDP framing, no generic NetworkAccess packet ACL yet"
       ],
@@ -491,7 +491,7 @@
         "name": "etherparse",
         "version": "0.21.0",
         "published_at": "2026-07-21",
-        "reviewed_at": "2026-10-30",
+        "reviewed_at": "2026-10-31",
         "yanked": false
       },
       "platforms": [
@@ -501,11 +501,12 @@
       ],
       "version": {
         "etherparse": "0.21.0",
-        "status": "provisional_candidate_not_runtime_dependency"
+        "crates_io_sha256": "17304d06addb3283cdc4bd528e42dd95e73c8ee2d6492ffce415e93660885449",
+        "status": "exact_native_manifest_selected; Actions_lock_derivation_pending"
       },
       "license": "MIT OR Apache-2.0",
-      "selection_reason": "candidate_preferred_after_actual_scope_review",
-      "adapter_boundary": "Mature library parses IP/TCP/UDP/extensions and fragments; NestLink enforces authenticated peer/source prefix mapping, destination/direction/ports and bounded reassembly policy.",
+      "selection_reason": "Exact 0.21.0 metadata and published parser source reviewed; reuse only existing locked arrayvec 0.7.8, no handwritten generic IP parser",
+      "adapter_boundary": "Mature library parses IP/TCP/UDP headers. NestLink enforces authenticated peer/source prefix mapping, destination/direction/ports, bounded reply state and cumulative grant budget. Initial adapter fails closed for all fragmentation, IPv4 options and IPv6 extensions; broader fragment support and full TUN product qualification remain open.",
       "self_implementation_gap_if_any": "NestLink-specific authorization, orchestration, policy, lifecycle and UI integration only; no replacement of the general component.",
       "security_and_operations_cost": [
         "Official README explicitly supports common IPv6 extension headers, not all; unsupported/opaque/fragment-incomplete packets must fail closed or use bounded supported reassembly",

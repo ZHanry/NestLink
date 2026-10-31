@@ -58,6 +58,7 @@ jobs:
           assert native['hickory-server'] == {'version': '=0.26.3', 'default-features': False}
           assert native['async-trait'] == '=0.1.89'
           assert native['ipnet'] == '=2.12.2'
+          assert native['etherparse'] == '=0.21.0'
           assert native['fast-socks5'] == {'version': '=1.0.0', 'path': '../../third-party/fast-socks5'}
           security = tomllib.loads(pathlib.Path('crates/platform-security/Cargo.toml').read_text())
           assert security['dependencies']['tokio'] == {'workspace': True, 'features': ['process']}
@@ -145,6 +146,12 @@ jobs:
                   ('publicsuffix', '2.3.0', registry): '6f42ea446cab60335f76979ec15e12619a2165b5ae2c12166bef27d283a9fadf',
                   ('psl-types', '2.0.11', registry): '33cb294fe86a74cbcf50d4445b37da762029549ebeea341421c7c70370f86cac',
               }
+              packet_key = ('etherparse', '0.21.0', registry)
+              reviewed_packet_package = {
+                  'name': 'etherparse', 'version': '0.21.0', 'source': registry,
+                  'checksum': '17304d06addb3283cdc4bd528e42dd95e73c8ee2d6492ffce415e93660885449',
+                  'dependencies': ['arrayvec'],
+              }
               # The isolated browser fixture previously did not consume these
               # packages. Permit only the exact, already-reviewed product
               # package, including its dependency edges, never a name alone.
@@ -178,10 +185,13 @@ jobs:
                   'native_stdio_reuses_locked_tokio_util_identity': any(
                       item['name'] == 'nestlink-platform-security' and 'tokio-util' in item.get('dependencies', [])
                       for item in after) and any(key[:2] == ('tokio-util', '0.7.20') for key in existing),
-                  'only_reviewed_proxy_cookie_component_new_external_packages': all(
+                  'packet_parser_exact_identity_checksum_and_only_locked_arrayvec_edge':
+                      [item for item in after if item['name'] == 'etherparse'] == [reviewed_packet_package],
+                  'only_reviewed_cookie_packet_components_or_exact_product_reuse_added': all(
                       identity(item) in existing or not item.get('source')
                       or (identity(item) in reviewed_cookie_packages and
                           item.get('checksum') == reviewed_cookie_packages[identity(item)])
+                      or (identity(item) == packet_key and item == reviewed_packet_package)
                       or item == reviewed_product_reuse.get(identity(item)) for item in after),
               }
               assert all(assertions.values()), 'Unreviewed dependency drift or incomplete lock derivation'
