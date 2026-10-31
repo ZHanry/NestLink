@@ -59,14 +59,25 @@ pub(in super::super) async fn fixture(
             .parent()
             .ok_or_else(|| io::Error::other("HTTPS CLI plan parent missing"))?,
     )?;
-    let mut args=vec![OsString::from("network-tun")];
-    for (flag,value) in [
-        ("--state-dir",f.directory.as_os_str().to_os_string()),("--space",f.space.clone().into()),
-        ("--grant",f.view.access.grant_id.clone().into()),("--authority",URL_SAFE_NO_PAD.encode(f.authority).into()),
-        ("--approve-digest",URL_SAFE_NO_PAD.encode(f.approved).into()),("--interface",interface.index.to_string().into()),
-        ("--bind",owner_endpoint.to_string().into()),("--dial",peer.local_addr().to_string().into()),
-        ("--plan",plan_path.as_os_str().to_os_string()),("--receipt",receipt_path.as_os_str().to_os_string()),
-    ]{args.push(flag.into());args.push(value);}
+    let mut args = vec![OsString::from("network-tun")];
+    for (flag, value) in [
+        ("--state-dir", f.directory.as_os_str().to_os_string()),
+        ("--space", f.space.clone().into()),
+        ("--grant", f.view.access.grant_id.clone().into()),
+        ("--authority", URL_SAFE_NO_PAD.encode(f.authority).into()),
+        (
+            "--approve-digest",
+            URL_SAFE_NO_PAD.encode(f.approved).into(),
+        ),
+        ("--interface", interface.index.to_string().into()),
+        ("--bind", owner_endpoint.to_string().into()),
+        ("--dial", peer.local_addr().to_string().into()),
+        ("--plan", plan_path.as_os_str().to_os_string()),
+        ("--receipt", receipt_path.as_os_str().to_os_string()),
+    ] {
+        args.push(flag.into());
+        args.push(value);
+    }
     let log = case.join("production-cli.log");
     let output = std::fs::File::create(&log)?;
     // This is the separately built product executable: its real main, Clap
@@ -193,14 +204,22 @@ pub(in super::super) async fn fixture(
         "the actual production CLI still owns its original physical UDP endpoint"
     );
     let text = std::fs::read_to_string(log)?;
-    assert!(text.contains("NestLink user daemon stopped: management operation rejected (403 Forbidden): Forbidden"),"the real product main did not report the original HTTP revocation error: {text}");
-    let retained=crate::identity(&f.directory)?;
-    assert_eq!(retained.device_id,f.source_device.device_id);
-    assert_eq!(retained.identity.fingerprint(),f.source_device.identity.fingerprint());
-    let stopped=serde_json::json!({"owner_pid":identity.pid,"actual_product_main":true,"actual_clap_entry":true,
+    assert!(
+        text.contains(
+            "NestLink user daemon stopped: management operation rejected (403 Forbidden): Forbidden"
+        ),
+        "the real product main did not report the original HTTP revocation error: {text}"
+    );
+    let retained = crate::identity(&f.directory)?;
+    assert_eq!(retained.device_id, f.source_device.device_id);
+    assert_eq!(
+        retained.identity.fingerprint(),
+        f.source_device.identity.fingerprint()
+    );
+    let stopped = serde_json::json!({"owner_pid":identity.pid,"actual_product_main":true,"actual_clap_entry":true,
         "actual_session_store_restore":true,"original_installation_retained":true,"online_http_403_observed":true,
         "production_cleanup_returned":true,"product_exit_code":1});
-    std::fs::write(case.join("cli-stopped.json"),serde_json::to_vec(&stopped)?)?;
+    std::fs::write(case.join("cli-stopped.json"), serde_json::to_vec(&stopped)?)?;
     let counters: serde_json::Value = text
         .lines()
         .find_map(|line| line.strip_prefix("Packet owner counters: "))
