@@ -149,6 +149,8 @@ pub enum Error {
     UsageStatus(u16),
     #[error("node TURN resource endpoint returned HTTP {0}")]
     TurnResourceStatus(u16),
+    #[error("node service resource endpoint returned HTTP {0}")]
+    ServiceResourceStatus(u16),
     #[error("persistent service usage store failed")]
     ServiceUsage(#[from] crate::service_usage::Error),
     #[error("node authorization failed: {0}")]

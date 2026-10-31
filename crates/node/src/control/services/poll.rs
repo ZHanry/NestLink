@@ -88,7 +88,7 @@ pub(in crate::control) async fn poll(
                 .await
                 .map_err(|_| Error::Control)?;
             if !response.status().is_success() {
-                return Err(Error::Control);
+                return Err(Error::ServiceResourceStatus(response.status().as_u16()));
             }
             let mut chunks = response.bytes_stream();
             let mut bytes = Vec::new();
@@ -108,7 +108,7 @@ pub(in crate::control) async fn poll(
                 bytes.extend_from_slice(&chunk);
             }
             let envelope: nestlink_protocol::service_plane::publication::ServiceResourceGrant =
-                serde_json::from_slice(&bytes).map_err(|_| Error::Control)?;
+                serde_json::from_slice(&bytes).map_err(|_| phase("service snapshot JSON",Error::Control))?;
             let snapshot = verify_service_snapshot(
                 &envelope.snapshot,
                 &issuer,
@@ -145,34 +145,40 @@ pub(in crate::control) async fn poll(
                         continue;
                     }
                 };
-                if runtime
+                if let Err(error)=runtime
                     .resources
                     .services
                     .accept_checked(snapshot, node_deadline, requested)
-                    .is_err()
                 {
                     runtime.resources.services.stop();
-                    return Err(Error::Control);
+                    return Err(phase("service snapshot installation",service_error(error)));
                 }
-                if runtime
+                if let Err(error)=runtime
                     .resources
                     .services
                     .set_issuer_delegation(issuer_delegation)
-                    .is_err()
                 {
                     runtime.resources.services.stop();
-                    return Err(Error::Control);
+                    return Err(phase("service issuer delegation installation",service_error(error)));
                 }
                 accepted = true;
             }
-            _ => {
+            failure => {
                 // Before the first snapshot there is no service authority to
                 // revoke (including a server's initial restart fence).
                 if accepted {
                     runtime.resources.services.stop();
-                    return Err(Error::Control);
+                    return Err(match failure {Ok(Err(error))=>phase("service snapshot response",error),Err(_)=>phase("service snapshot deadline",Error::Control),Ok(Ok(_))=>unreachable!()});
                 }
             }
         }
+    }
+}
+fn phase(stage:&'static str,cause:Error)->Error {Error::Phase{stage,cause:Box::new(cause)}}
+fn service_error(error:crate::service_plane::Error)->Error {
+    match error {
+        crate::service_plane::Error::Authorization(error)=>Error::Authorization(error),
+        crate::service_plane::Error::Node(error)=>error,
+        _=>Error::Control,
     }
 }
