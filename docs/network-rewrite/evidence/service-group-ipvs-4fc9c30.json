@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "kind": "hosted_actual_ipvs_keepalived_dual_edge_service_evidence",
+  "source_revision": "4fc9c30cdbf0aca9c252bd1011f6e1e770e272c1",
+  "task_ids": ["W26"],
+  "evidence_level": "L2_scoped",
+  "acceptance_group_completion_claimed": false,
+  "release_qualification_claimed": false,
+  "build_provenance": {
+    "repository": "ZHanry/NestLink",
+    "workflow": ".github/workflows/service-group-ha.yml",
+    "workflow_revision": "4fc9c30cdbf0aca9c252bd1011f6e1e770e272c1",
+    "run_id": 41223203804,
+    "run_attempt": 1,
+    "job_id": 124601863445,
+    "run_url": "https://github.com/ZHanry/NestLink/actions/runs/41223203804",
+    "runner_environment": "github-hosted",
+    "runner_label": "ubuntu-24.04",
+    "runner_os": "Linux",
+    "kernel": "7.0.0-1017-azure",
+    "cargo_lock_sha256": "87315f505621834141721a3cb214b01a0203e6eb9d25b6d3bd5fdbdc4b7852e7",
+    "build_command": ["cargo", "test", "--locked", "-p", "nestlink-sdk", "--test", "service_group_l2", "--no-run", "--message-format=json-render-diagnostics"],
+    "build_return_code": 0,
+    "test_executable_sha256_from_runner": "2ec1a3fe3f48e9f70428e00a07d91f7fcbb471d61caea0aba1201f7204938362",
+    "job_conclusion": "success",
+    "artifact": {
+      "id": 13051555537,
+      "name": "service-group-ipvs-4fc9c30cdbf0aca9c252bd1011f6e1e770e272c1-1",
+      "sha256": "5f040339a12e0f33e2fabad021d33a332d571e8db4ace0d7dd9ffff7027e07a1",
+      "download_digest_verified": true,
+      "receipt_sha256": "69eed324fff2e6ef8759719b6065d9d5e1be7130047828337e2afeb522fd9eca",
+      "build_log_sha256": "2e3533bfbf691e7f694324737ca9eaaa46d730c1a5f020caf07c8419962d60c0",
+      "compiler_messages_sha256": "eb59272b5443e93dde50e8e35d2e0d515ae5751e08713b6c214f70418bcbdfca"
+    }
+  },
+  "execution_provenance": {
+    "kind": "github_hosted_lab",
+    "started_unix_ms": 1793466938013,
+    "finished_unix_ms": 1793467167505,
+    "result": "passed",
+    "actual_data_path": "real visitor namespace -> fixed virtual IP with Linux IPVS/keepalived -> one of two real independent original edge NodeControl/QUIC owners -> original SDK fixed local target",
+    "cooperative_original_owner_stop_new_flow_recovery_seconds": {
+      "http": 1.929836561000002,
+      "https": 2.429355230999988,
+      "tcp": 1.2228279369999768,
+      "udp": 1.454271650999999
+    },
+    "sigkill_original_edge_new_flow_recovery_seconds": {
+      "http": 1.3007126749999998,
+      "https": 2.0752284269999564,
+      "tcp": 1.7257205680000425,
+      "udp": 1.4760220819999859
+    },
+    "recovery_limit_seconds": 5,
+    "all_protocols_cooperative_cases": [
+      "both exact original SDK members became ready",
+      "actual IPVS connection tuples reached both member nodes",
+      "wrong group revision health path refused",
+      "original visitor source ACL refused a different source without a backend request",
+      "failed edge selected from the exact current visitor IPVS connection tuple",
+      "external Caddy process remained running while its original edge owner stopped",
+      "healthy sibling accepted new visitor flows within five seconds",
+      "all member route deletion acknowledged and read back on revoke",
+      "fixed entry refused new traffic after revoke",
+      "restored old runtime could not revive the old group",
+      "account/device/resource and individual member quota highwaters agreed and sealed",
+      "original physical usage store closed before fixture files were removed"
+    ],
+    "all_protocols_sigkill_cases": [
+      "actual original edge process group killed with SIGKILL and exit code -9",
+      "no cooperative Rust Drop or fabricated final usage seal",
+      "host observed exactly one healthy original member within five seconds",
+      "healthy member accepted new flows within five seconds",
+      "failed original runtime's unsealed quota promise remained reserved",
+      "healthy original member's quota slice sealed independently",
+      "revoke and restored-runtime fences still refused old authority"
+    ],
+    "retained_unknown_failed_member_bytes": {"http": 4194304, "https": 4189609, "tcp": 4191232, "udp": 4191744},
+    "https_negatives": ["actual untrusted frontend root refused by TLS verification", "actual wrong frontend name refused by certificate-name verification or SNI alert", "adjacent valid TLS requests succeeded and negative backend count stayed unchanged"],
+    "dns_stale_negative": {"wrong_group_revision_txt_refused": true, "both_edges_queried_real_https_dns": true, "original_backend_requests": 0, "route_delete_ack_readback": true},
+    "cleanup": {"owned_processes_joined": true, "owned_hosts_mapping_removed": true, "owned_namespaces_and_bridge_removed": true, "private_keys_configs_and_databases_removed": true}
+  },
+  "same_run_exact_regressions": [
+    {"selector": "service_plane::tests::signed_service_deadline_counts_response_latency_once_and_keeps_both_original_caps", "package": "nestlink-node", "passed": 1, "failed": 0, "ignored": 0, "log_sha256": "6a0e77c555ed63102070063b45389819de12b8ab9a1414ec7dab3c89a8e036dc", "receipt_sha256": "4d807f31d10c98823f95f1041d8400d8d376f733c66c62e8064ebe4403c9ed2f"},
+    {"selector": "control::services::tests::unavailable_response_keeps_only_original_deadline_and_never_revives_publication", "package": "nestlink-node", "passed": 1, "failed": 0, "ignored": 0, "log_sha256": "aacab45367400e6016102a118050fdd7c4c595e63d902e1fd7e8ae858d9526cc", "receipt_sha256": "2793b41f5fba2d18d5ba5dc92df7ba4ec3b30a29739fcf7ed4b9554368c51812"},
+    {"selector": "control::services::tests::in_flight_service_query_keeps_original_node_cap_across_same_binding_renewal", "package": "nestlink-node", "passed": 1, "failed": 0, "ignored": 0, "log_sha256": "c39d0fc8a5a50f5e2c0182be407764bc5889fe363526ebcacdcbf0b11ad0839d", "receipt_sha256": "3884cd99a38242be164dae32eff32e6a9a9212e81910e893ee8e7a2a47723b4f"},
+    {"selector": "services::publication::renewal::tests::original_edge_progress_gap_and_replays_cannot_extend_or_revive_health", "package": "nestlink-sdk", "passed": 1, "failed": 0, "ignored": 0, "log_sha256": "ad4149a9718d5a097b619ddd3ad25f7fc77c227da836490f0b3671f0ff011af8", "receipt_sha256": "6ac1cd100a6ee9e79d4f7a49d0a95d98ff2bfa1c72679b005c9c860267cf1201"},
+    {"selector": "services::publication::issuer::tests::actual_quic_signed_refresh_keeps_publication_alive_past_original_issuer_deadline", "package": "nestlink-sdk", "passed": 1, "failed": 0, "ignored": 0, "log_sha256": "9d50d79888a1cbd42bdea62da7d303c804f2507377cf2cb4f704359e249e5583", "receipt_sha256": "c408bf41ee2ff5e99b2c530358ba7131fdfde0f068756b09511ce8105f1ecddf"}
+  ],
+  "mature_components": {"caddy": "2.11.7; executable SHA256 678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9", "keepalived": "2.2.8", "fixed_entry": "Linux kernel IPVS, iproute2 and distribution keepalived", "driver_sha256": "dd389b3345b64a0a767314a1e5db4c5bfbd56a0adee7711dbe4fec1cce54b854"},
+  "limitations": [
+    "Isolated Linux routing, DNS-over-HTTPS fixture and explicit operator CA qualify this scoped hosted mechanism only; there is no public Internet, public DNS or ACME issuance claim.",
+    "Only one director is present. Director/VIP failover, physical two-network deployment, long-running operations and old-session continuity are not qualified.",
+    "Crash quota is intentionally not fully sealed: failed-runtime promises remain held. Healthy-member sealing never refunds or refills the unknown failed slice.",
+    "All compilation and automatic execution occurred on GitHub-hosted Actions. Local handling only downloaded/read evidence and compared SHA256 values.",
+    "This result binds source4fc9c30 only. Subsequent NodeGate signed-wall tightening, formatting, other functional changes, final release source and complete W26/AC43/AC44 acceptance require their own checks."
+  ]
+}
