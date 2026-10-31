@@ -73,8 +73,8 @@ jobs:
               shutil.copyfile(lock, output / 'cargo-generated.lock')
               # Cargo can reselect an already-locked compatible windows-sys
               # edge even with --workspace. Preserve existing external blocks.
-              # The reviewed direct petgraph default features activate its
-              # already-locked serde edge; permit that exact addition only.
+              # Reviewed feature activation by the pinned graph/DNS components.
+              # Keep every preexisting identity, checksum and other edge exact.
               def blocks(raw):
                   parts = raw.split('[[package]]')
                   return parts[0], [(identity(tomllib.loads('[[package]]' + part)['package'][0]), part)
@@ -82,13 +82,23 @@ jobs:
               _, original_blocks = blocks(before_bytes.decode())
               header, generated_blocks = blocks(lock.read_text())
               original_by_key = dict(original_blocks)
+              reviewed_feature_edges = {
+                  ('petgraph', '0.8.3'): {'serde'},
+                  ('ipnet', '2.12.2'): {'serde'},
+                  ('once_cell', '1.21.4'): {'critical-section', 'portable-atomic'},
+                  ('url', '2.5.8'): {'serde_derive'},
+              }
+              feature_keys = set()
               for key, part in generated_blocks:
-                  if key[0] == 'petgraph':
+                  additions = reviewed_feature_edges.get(key[:2])
+                  if additions is not None:
+                      feature_keys.add(key)
                       previous = tomllib.loads('[[package]]' + original_by_key[key])['package'][0]
-                      expected_graph = dict(previous)
-                      expected_graph['dependencies'] = sorted(set(previous['dependencies']) | {'serde'})
-                      assert tomllib.loads('[[package]]' + part)['package'][0] == expected_graph, 'Unreviewed petgraph dependency drift'
-              retained = {key: part for key, part in original_blocks if key[2] and key[0] != 'petgraph'}
+                      expected_package = dict(previous)
+                      expected_package['dependencies'] = sorted(set(previous.get('dependencies', [])) | additions)
+                      assert tomllib.loads('[[package]]' + part)['package'][0] == expected_package, 'Unreviewed component feature dependency drift: ' + str(key)
+              assert {key[:2] for key in feature_keys} == set(reviewed_feature_edges)
+              retained = {key: part for key, part in original_blocks if key[2] and key not in feature_keys}
               lock.write_text(header + ''.join('[[package]]' + retained.get(key, part)
                                               for key, part in generated_blocks))
               for command in [
@@ -107,10 +117,11 @@ jobs:
               assertions = {
                   'only_selected_lock_changed': set(changed) <= {lock.as_posix()},
                   'all_existing_package_identities_and_checksums_preserved': all(derived.get(key) == checksum and key in derived for key, checksum in existing.items()),
-                  'all_existing_external_package_edges_preserved': all(
+                  'all_unrelated_external_package_edges_preserved': all(
                       tomllib.loads('[[package]]' + part)['package'][0] ==
                       tomllib.loads('[[package]]' + dict(blocks(lock.read_text())[1])[key])['package'][0]
                       for key, part in retained.items()),
+                  'only_exact_reviewed_component_feature_edges_added': {key[:2] for key in feature_keys} == set(reviewed_feature_edges),
                   'reviewed_crab_nat_exact_version_and_checksum': len(crab) == 1 and crab[0]['version'] == '0.8.1' and crab[0].get('checksum') == 'b6571f33e3d6520c5b08e54b1202836c6ebe68b950f450951804d037a875c25c',
                   'reviewed_petgraph_exact_version_and_checksum': len(petgraph) == 1 and petgraph[0]['version'] == '0.8.3' and petgraph[0].get('checksum') == '8701b58ea97060d5e5b155d383a69952a60943f0e6dfe30b04c287beb0b27455',
                   'reviewed_authoritative_dns_exact_version': len(dns) == 1 and dns[0]['version'] == '0.26.3' and bool(dns[0].get('checksum')),
