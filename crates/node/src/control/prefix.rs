@@ -16,6 +16,11 @@ use tokio::{sync::watch, task::JoinHandle, time::Instant};
 const PERIOD: Duration = Duration::from_millis(500);
 const PROBE_BUDGET: Duration = Duration::from_millis(700);
 const FRESH_MS: u64 = 1000;
+// A completed observation is locally usable for at most the original attempt
+// budget, measured from that attempt's start. This is stricter than the signed
+// 1000ms upper bound: a slow or pending next connect cannot keep stale local
+// reachability usable until its later completion.
+const LOCAL_MEASUREMENT_MS: u64 = 700;
 const CHECK_PERIOD: Duration = Duration::from_millis(25);
 const MAX_CLEANUP: Duration = Duration::from_secs(5);
 // Mature Tokio permits bound physical probe tasks across all local choices.
@@ -51,6 +56,28 @@ pub(super) struct PrefixEvidence {
     pub expires_at_ms: u64,
     pub deadline_ms: u64,
     continuity: u64,
+}
+
+impl PrefixEvidence {
+    fn measured(
+        prefix: IpPrefix,
+        started: nestlink_session::ClockSample,
+        completed: nestlink_session::ClockSample,
+        wall_cap: u64,
+        monotonic_cap: u64,
+        continuity: u64,
+    ) -> Option<Self> {
+        let lifetime = FRESH_MS.min(LOCAL_MEASUREMENT_MS);
+        let evidence = Self {
+            prefix,
+            expires_at_ms: started.unix_ms.checked_add(lifetime)?.min(wall_cap),
+            deadline_ms: started.monotonic_ms.checked_add(lifetime)?.min(monotonic_cap),
+            continuity,
+        };
+        (completed.unix_ms < evidence.expires_at_ms
+            && completed.monotonic_ms < evidence.deadline_ms)
+            .then_some(evidence)
+    }
 }
 
 #[derive(Default)]
@@ -369,21 +396,14 @@ async fn probe_loop(binding: &Binding, measurement: &Mutex<Measurement>) {
                 return;
             }
             if reachable {
-                let Some(expires_at_ms) = now.unix_ms.checked_add(FRESH_MS) else {
-                    return;
-                };
-                let Some(deadline_ms) = now.monotonic_ms.checked_add(FRESH_MS) else {
-                    return;
-                };
-                let evidence = PrefixEvidence {
-                    prefix: binding.choice.prefix,
-                    expires_at_ms: expires_at_ms.min(binding.expires_at_ms),
-                    deadline_ms: deadline_ms.min(binding.deadline_ms),
-                    continuity: measurement.continuity,
-                };
-                if completed.unix_ms < evidence.expires_at_ms
-                    && completed.monotonic_ms < evidence.deadline_ms
-                {
+                if let Some(evidence) = PrefixEvidence::measured(
+                    binding.choice.prefix,
+                    now,
+                    completed,
+                    binding.expires_at_ms,
+                    binding.deadline_ms,
+                    measurement.continuity,
+                ) {
                     measurement.evidence = Some(evidence);
                 }
             } else {

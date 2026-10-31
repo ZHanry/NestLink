@@ -41,8 +41,20 @@ measurement merely by presenting the wrong control object.
 
 One owned task attempts a real zero-payload TCP connection every 500ms, with a
 700ms attempt budget. It drops a successfully connected stream immediately.
-The original attempt start bounds freshness to 1000ms under both wall and
-monotonic clocks, independently capped by the original authority and lease.
+The signed freshness upper bound remains 1000ms. Local completed measurements
+now have a stricter 700ms validity cap from the original attempt start under
+both wall and monotonic clocks, independently capped by the original authority
+and lease. This corrects a cross-platform gap demonstrated by hosted Windows:
+even after accepting the original successful connection and observing EOF,
+closing the sole listener need not cause the next TCP connect to fail
+immediately. The unchanged 500ms cadence plus 700ms connect timeout could
+otherwise retain an old measurement past the original 800ms regression bound.
+The local validity cap is an explicit conservative availability tradeoff:
+successful connections slower than 200ms can create a short withdrawal before
+the next observation; a connection completing at or after its own 700ms cap
+cannot publish that already expired observation. Physical probe budgets,
+cadence and the signed 1000ms upper bound are unchanged. This is a local
+observation bound, not a claim of end-to-end network failure detection in 800ms.
 The next attempt is scheduled relative to its start. Failed or expired
 measurements withdraw the prefix and advance a continuity fence. Recovery may
 create new evidence, but cannot validate an acknowledgement for evidence from
