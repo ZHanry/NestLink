@@ -31,7 +31,8 @@ async fn probe(lab:&lab::Lab,index:usize,case:&str)->Result {
 async fn overlapping_lans_kernel_nat_encrypted_udp_tcp_acl_and_exact_recovery()->Result {
     lab_only()?;
     if rustix::process::geteuid().as_raw()==0 {return Err(io::Error::other("start subnet qualification as the original ordinary hosted runner UID").into());}
-    for crash in [false,true] {
+    for mode in ["normal","crash","observation-gap"] {
+        let crash=mode=="crash";let observation_gap=mode=="observation-gap";
         let lab=lab::Lab::new()?;
         nestlink_platform_security::create_private(&lab.config(),&serde_json::to_vec(&lab)?)?;
         if !lab.status("setup").await? {return Err(io::Error::other("exact owned subnet lab setup failed").into());}
@@ -53,6 +54,7 @@ async fn overlapping_lans_kernel_nat_encrypted_udp_tcp_acl_and_exact_recovery()-
             probe(&lab,1,"wrong-direction").await?;
             probe(&lab,0,"spoofed-source").await?;
             if !lab.status("verify-host").await? {return Err(io::Error::other("subnet gateway changed original host state").into());}
+            if observation_gap {assert!(lab.status("freeze-ordinary").await?,"the exact original ordinary actor must resume after the isolated SIGSTOP experiment");}
             if crash {
                 if !lab.status("kill-helper0").await? {return Err(io::Error::other("original root helper SIGKILL failed").into());}
                 assert!(!finished(&mut helpers[0]).await?,"SIGKILL must bypass original helper cleanup");
@@ -60,17 +62,16 @@ async fn overlapping_lans_kernel_nat_encrypted_udp_tcp_acl_and_exact_recovery()-
                 assert!(!plans[0].socket()?.try_exists()?,"exact journal recovery must remove the original root socket");
                 assert!(kernel::namespace(&kernel::namespace_path(&plans[0]))?.is_none(),"whole owned namespace and conntrack must disappear after original helper loss");
             }
-            stop.send(true)?;
+            let _=stop.send(true);
             let [left,right]=bridges;
             let left=left.await?;let right=right.await?;
-            if !crash {let left=left?;let right=right?;assert!(left.sent>5&&left.received>5&&right.sent>5&&right.received>5,"actual TCP and UDP must traverse both ordinary packet owners");assert_eq!(left.spent,right.spent,"both original packet owners account the same complete IP traffic");}
+            if !crash&&!observation_gap {let left=left?;let right=right?;assert!(left.sent>5&&left.received>5&&right.sent>5&&right.received>5,"actual TCP and UDP must traverse both ordinary packet owners");assert_eq!(left.spent,right.spent,"both original packet owners account the same complete IP traffic");}
             drop(pipes);
-            if !crash {assert!(finished(&mut helpers[0]).await?,"normal original socket EOF must cleanly release root resources");}
-            assert!(finished(&mut helpers[1]).await?,"second original root helper must confirm normal cleanup");
+            if observation_gap {for helper in &mut helpers {assert!(!finished(helper).await?,"root must independently reject a frozen ordinary owner before the fixed deadline");}}else{if !crash {assert!(finished(&mut helpers[0]).await?,"normal original socket EOF must cleanly release root resources");}assert!(finished(&mut helpers[1]).await?,"second original root helper must confirm normal cleanup");}
             for plan in &plans {assert!(kernel::namespace(&kernel::namespace_path(plan))?.is_none());assert!(!plan.socket()?.try_exists()?);std::fs::remove_file(&plan.path)?;}
             // A helper restart must not reset the original kernel byte quota.
-            if !crash {plans[0].save_new()?;assert!(!lab.status("reapply0").await?,"consumed original business cannot create a second kernel owner");std::fs::remove_file(&plans[0].path)?;}
-            println!("Subnet native receipt: ordinary_uid={}, overlapping_original_lans=192.168.1.0/24, distinct_aliases=10.211.1.0/24,10.211.2.0/24, real_kernel_prefix_nat=true, real_encrypted_quic_whole_packets=true, udp_mtu=1280, tcp_payload=16384, wrong_port/direction/source=denied, helper_crash={crash}, exact_namespace/socket/conntrack_cleanup=true",rustix::process::geteuid().as_raw());
+            if !crash&&!observation_gap {plans[0].save_new()?;assert!(!lab.status("reapply0").await?,"consumed original business cannot create a second kernel owner");std::fs::remove_file(&plans[0].path)?;}
+            println!("Subnet native receipt: ordinary_uid={}, overlapping_original_lans=192.168.1.0/24, distinct_aliases=10.211.1.0/24,10.211.2.0/24, real_kernel_prefix_nat=true, real_encrypted_quic_whole_packets=true, udp_mtu=1280, tcp_payload=16384, wrong_port/direction/source=denied, helper_crash={crash}, ordinary_sigstop_gap={observation_gap}, exact_namespace/socket/conntrack_cleanup=true",rustix::process::geteuid().as_raw());
             Ok::<_,Box<dyn std::error::Error+Send+Sync>>(())
         }.await;
         // All actors are exact subprocess handles. On a failure, ask the
@@ -98,6 +99,7 @@ async fn hosted_native_role()->Result {
         "setup"=>lab.setup().await,
         "wg-install-secrets"=>wireguard::install_secrets(&lab).await,
         "verify-host"=>lab.verify_host().await,
+        "freeze-ordinary"=>lab.freeze_ordinary().await,
         "teardown"=>lab.teardown().await,
         "apply0"=>lab.apply(0).await,
         "apply1"=>lab.apply(1).await,

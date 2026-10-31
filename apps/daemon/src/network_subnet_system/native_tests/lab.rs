@@ -80,5 +80,14 @@ impl Lab {
         let pid=rustix::process::Pid::from_raw(i32::try_from(original.pid())?).ok_or_else(||io::Error::other("invalid original actor PID"))?;
         rustix::process::kill_process(pid,if service {rustix::process::Signal::TERM}else{rustix::process::Signal::KILL})?;Ok(())
     }
+    pub async fn freeze_ordinary(&self)->Result {
+        let plan=Plan::read(&self.plan(0))?;
+        if process_identity(plan.process.pid()).await?!=plan.process||!crate::space_dns_system::current_image_matches(&plan.process)? {return Err(io::Error::other("the original ordinary lab owner was replaced").into());}
+        let pid=rustix::process::Pid::from_raw(i32::try_from(plan.process.pid())?).ok_or_else(||io::Error::other("invalid original ordinary PID"))?;
+        rustix::process::kill_process(pid,rustix::process::Signal::STOP)?;
+        tokio::time::sleep(Duration::from_secs(7)).await;
+        if process_identity(plan.process.pid()).await?!=plan.process {return Err(io::Error::other("ordinary lab owner changed during the bounded suspension").into());}
+        rustix::process::kill_process(pid,rustix::process::Signal::CONT)?;Ok(())
+    }
 }
 async fn host()->Result<serde_json::Value> {Ok(serde_json::json!({"routes":kernel::ip(&["-j","-4","route","show","table","all"]).await?,"routes6":kernel::ip(&["-j","-6","route","show","table","all"]).await?,"firewall":serde_json::from_slice::<serde_json::Value>(&kernel::command("nft",&["-j","list","ruleset"]).await?)?,"forwarding":std::fs::read_to_string("/proc/sys/net/ipv4/ip_forward")?,"rp_filter":std::fs::read_to_string("/proc/sys/net/ipv4/conf/all/rp_filter")?}))}
