@@ -2240,9 +2240,22 @@
       ],
       "evidence_refs": [
         "docs/adr/network/0043-one-use-host-packet-access.md",
-        "docs/network-rewrite/evidence/packet-parser-fixture-lock-79add64.json"
+        "docs/network-rewrite/evidence/packet-parser-fixture-lock-79add64.json",
+        "docs/network-rewrite/evidence/wintun-native-normal-crash-peer-41219154119.json",
+        "docs/network-rewrite/evidence/wintun-official-pin-native-41220079226.json",
+        "docs/network-rewrite/evidence/wintun-online-faults-native-41224496857.json"
       ],
-      "blockers": []
+      "blockers": [],
+      "implementation_notes": "Hosted Windows actual pinned Wintun normal/crash/raw-peer and four driver provenance negatives passed. Sourcef45b41a online HTTP/SQLite one-use packet access, original QUIC packet loop, IPv4/IPv6 1280-byte traffic and three install fault stages passed; online physical cleanup793ms. That workflow failed strict fixture lint, repaired subsequently; clean2d1c2d2 native/lint run remains pending. Production protected-login CLI, two independent machines and VPN coexistence remain mandatory.",
+      "partial_verification": {
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/network-rewrite/evidence/wintun-native-normal-crash-peer-41219154119.json",
+          "docs/network-rewrite/evidence/wintun-official-pin-native-41220079226.json",
+          "docs/network-rewrite/evidence/wintun-online-faults-native-41224496857.json"
+        ]
+      }
     },
     {
       "id": "W23",
@@ -2519,17 +2532,18 @@
         "apps/daemon/src/service_group.rs",
         "apps/server/src/service_edge/frontdoor.rs",
         "packaging/ipvs/install-frontdoor.sh",
-        "docs/network-rewrite/evidence/edge-group-http-b313dbf.json"
+        "docs/network-rewrite/evidence/edge-group-http-b313dbf.json",
+        "docs/network-rewrite/evidence/service-group-ipvs-4fc9c30.json"
       ],
       "blockers": [],
       "partial_verification": {
-        "source_revision": "b313dbf2db5536830b0c5ed46738c4bc385b4fc7",
         "scoped_passed": true,
         "whole_task_passed": false,
         "evidence_refs": [
-          "docs/network-rewrite/evidence/edge-group-http-b313dbf.json"
+          "docs/network-rewrite/evidence/service-group-ipvs-4fc9c30.json"
         ]
-      }
+      },
+      "implementation_notes": "Source4fc9c30 hosted run41223203804 passed all five exact regressions and actual fixed IPVS HTTP/HTTPS/TCP/UDP across two edge processes, cooperative stop and independent SIGKILL, revoke, old-runtime revival isolation, four-domain accounting and physical cleanup. Both failure modes recovered new connections within original5s. Independent public target ingress/DNS and complete W26 acceptance remain open."
     },
     {
       "id": "W27",
@@ -2590,18 +2604,22 @@
       ],
       "evidence_refs": [
         "docs/adr/network/0050-independent-finite-offline-bundle.md",
-        "docs/network-rewrite/evidence/offline-primitives-b313dbf.json"
+        "docs/network-rewrite/evidence/offline-primitives-b313dbf.json",
+        "docs/network-rewrite/evidence/offline-management-94bbe13.json",
+        "docs/network-rewrite/evidence/offline-carrier-97541a2.json",
+        "docs/network-rewrite/evidence/offline-resident-091686c.json"
       ],
       "blockers": [],
       "partial_verification": {
-        "source_revision": "b313dbf2db5536830b0c5ed46738c4bc385b4fc7",
         "scoped_passed": true,
         "whole_task_passed": false,
         "evidence_refs": [
-          "docs/adr/network/0050-independent-finite-offline-bundle.md",
-          "docs/network-rewrite/evidence/offline-primitives-b313dbf.json"
+          "docs/network-rewrite/evidence/offline-management-94bbe13.json",
+          "docs/network-rewrite/evidence/offline-carrier-97541a2.json",
+          "docs/network-rewrite/evidence/offline-resident-091686c.json"
         ]
-      }
+      },
+      "implementation_notes": "Durable SQLite admin policy, exact two-account signed approval, pre-reserved shared quota, one-use consume, actual HTTP/SDK and direct private QUIC/native-stream carrier passed. Source97541a2 binds finite recovery to an original in-memory Ed25519 process key; source091686c adds resident protected-login/installation/logout/maintenance guard. Cumulative remote budgets newly implemented in73efd0d await hosted validation; actual offline remote-control production activation and full UI/multiple-resident lifecycle remain mandatory open work."
     },
     {
       "id": "W28",
@@ -2856,10 +2874,22 @@
       "evidence_refs": [
         "docs/adr/network/0051-terminal-packet-and-producer-bounds.md",
         "docs/adr/network/0052-authenticated-native-receiver-observation.md",
-        "docs/network-rewrite/evidence/media-receiver-4794698.json"
+        "docs/network-rewrite/evidence/media-receiver-4794698.json",
+        "docs/adr/network/0053-finite-probed-media-budget-switch.md",
+        "docs/network-rewrite/evidence/media-receiver-actual-mtls-5cde425.json",
+        "docs/network-rewrite/evidence/media-and-native-files-2494ab3.json"
       ],
       "blockers": [],
-      "implementation_notes": "Original producer control respects approval ceilings and observation freshness. Authenticated bounded receiver observations are negotiated only by both signed native declarations, track exact original connection/layout/source/format, and feed original fixed-source and daemon VideoQuality. Source4794698 hosted run41217399922 passed actual TLS/QUIC/VP8/revoke, codec/queue/report/negotiation and strict Core/daemon lint. Original Core host runtime, exact negotiated resolution adaptation and real weak-network/file-concurrency qualification remain mandatory open work."
+      "implementation_notes": "Source4794698 used an authenticated in-memory duplex for its non-QUIC branch; it is not actual TCP/TLS evidence. Source5cde425 run41222892800 and2494ab3 run41224384460 passed real loopback TCP/mutually pinned TLS1.3 certificate+ALPN checks, kernel QUIC/mTLS, VP8/revoke/receiver reports, signed capability negotiation and strict Core/daemon lint; latter also passed original native-file lifecycle exact regression. Finite independently probed signed fps/bitrate targets and actual owner/ACK replacement are wired; latest Windows rerun73efd0d pending after23b1133 toolchain-download timeout before tests. Resolution adaptation, actual20-to5Mbps/1percent loss plus files/input and all original AC53 thresholds remain mandatory open work.",
+      "partial_verification": {
+        "scoped_passed": true,
+        "whole_task_passed": false,
+        "evidence_refs": [
+          "docs/adr/network/0053-finite-probed-media-budget-switch.md",
+          "docs/network-rewrite/evidence/media-receiver-actual-mtls-5cde425.json",
+          "docs/network-rewrite/evidence/media-and-native-files-2494ab3.json"
+        ]
+      }
     },
     {
       "id": "W32",

@@ -6,8 +6,8 @@
   "timezone": "Asia/Shanghai",
   "baseline_source": "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
   "branch": "main",
-  "source_revision": "d20d1afd61fbf2342ef236b75c164e8309aa77b6",
-  "checkpoint_kind": "W31_authenticated_receiver_and_original_producer_lab_pass_W22_crash_W26_HA_W27_carrier_active",
+  "source_revision": "f9692e3542917938ffb03b1cc68618ea2be783d4",
+  "checkpoint_kind": "hosted_HA_four_protocol_pass_offline_private_pass_actual_mtls_pass_remote_budget_and_windows_exact_active",
   "active_tasks": [
     "W00",
     "W02",
@@ -47,13 +47,12 @@
   "unverified_assumptions": [
     "W23 sourcec70360a run41204252074 passed real overlapping-LAN TCP/UDP/NAT/QUIC, ACL and normal/helper-SIGKILL/ordinary-SIGSTOP cleanup plus strict daemon lint. Source6301c55 run41208039887 also passed the additional6s delayed proof, original5s physical cleanup and packet proof regressions, but full workflow failed one newly introduced nested-if lint; fixede8e45e7 awaits clean same-source rerun. Production HTTP one-use starts, same-prefix primary/standby and physical two-site acceptance remain separate.",
     "W24 source794d3d1 run41207005912 passed all3 distribution wg/config/QR/protected-export cases plus actual Linux kernel standard-client handshake, TCP/UDP/key/source ACL/original authority accounting and normal/helper-SIGKILL cleanup. Android/iOS target acceptance and complete production online lifecycle remain outstanding.",
-    "W22 source6301c55 run41208214146 passed real ordinary-token Windows TUN IPC; native readback reached exact manualIPv4/IPv6 hosts and routes without extra link-local, but receipt comparison failed on driver linkMTU versus familyIPMTU and route autoconfigure flags. Effective-state correction remains under implementation; no Windows native pass claimed.",
-    "HA source794d3d1 run41207008606 failed HTTP after strict original snapshot installation rejected a replay. Static nonsecret fence diagnostics were added; real four-protocol fixed-entry cooperative/SIGKILL validation is being rerun without extending signed authorization deadlines.",
     "W30/W24 source467e7bd run41204581203 passed full real Chrome/Edge production Web/native integration and WireGuard client UI role/approval/403/draft/late-response fencing. Browser evidence does not cover positive client issuance, OS forwarding, phone clients or installed full onboarding.",
-    "W27 independent protocol/identity6 primitive cases passed onb313dbf. Production private-service administrator policy, exact two-party approval, durable shared quota reservation, one-use consume, authenticated recovery and typed SDK are now being implemented. Actual offline private-service and remote-control carriers/UI remain mandatory open work; no production pass yet.",
     "W28,W32-W40 and remainingW30/W31 are mandatory unfinished implementation/verification work, not external prerequisites. Release stays not_ready.",
-    "W31 source4794698 run41217399922 passed33 codec,61 media,13 queue,1 strict report,1 five-way capability matrix and strictmedia/Core/daemon all-target lint. Historical stream fixture used an endpoint-proof-authorized in-memory duplex stream; only the QUIC branch used actual kernel UDP/mTLS. It is not actual TCP/TLS evidence. Source d02d81c adds loopback TCP/mTLS and certificate/ALPN assertions, awaiting hosted lock derivation and new actual execution. Original Core native feedback runtime, exact negotiated format/resolution adaptation and shaped-network/file competition remain open. No wholeW31/AC53 qualification.",
-    "W27 source94bbe13 passed durable original SQLite/two-account signed approval/one-use quota/HTTP SDK; direct finite offline QUIC/native proxy carrier and resident CLI added subsequently; source854d3d1 run41218101083 pending exact original carrier/daemon validation. No wholeW27/remote-control claim."
+    "W22 Hosted Windows actual pinned Wintun normal/crash/raw-peer and four driver provenance negatives passed. Sourcef45b41a online HTTP/SQLite one-use packet access, original QUIC packet loop, IPv4/IPv6 1280-byte traffic and three install fault stages passed; online physical cleanup793ms. That workflow failed strict fixture lint, repaired subsequently; clean2d1c2d2 native/lint run remains pending. Production protected-login CLI, two independent machines and VPN coexistence remain mandatory.",
+    "W26 Source4fc9c30 hosted run41223203804 passed all five exact regressions and actual fixed IPVS HTTP/HTTPS/TCP/UDP across two edge processes, cooperative stop and independent SIGKILL, revoke, old-runtime revival isolation, four-domain accounting and physical cleanup. Both failure modes recovered new connections within original5s. Independent public target ingress/DNS and complete W26 acceptance remain open.",
+    "W27 Durable SQLite admin policy, exact two-account signed approval, pre-reserved shared quota, one-use consume, actual HTTP/SDK and direct private QUIC/native-stream carrier passed. Source97541a2 binds finite recovery to an original in-memory Ed25519 process key; source091686c adds resident protected-login/installation/logout/maintenance guard. Cumulative remote budgets newly implemented in73efd0d await hosted validation; actual offline remote-control production activation and full UI/multiple-resident lifecycle remain mandatory open work.",
+    "W31 Source4794698 used an authenticated in-memory duplex for its non-QUIC branch; it is not actual TCP/TLS evidence. Source5cde425 run41222892800 and2494ab3 run41224384460 passed real loopback TCP/mutually pinned TLS1.3 certificate+ALPN checks, kernel QUIC/mTLS, VP8/revoke/receiver reports, signed capability negotiation and strict Core/daemon lint; latter also passed original native-file lifecycle exact regression. Finite independently probed signed fps/bitrate targets and actual owner/ACK replacement are wired; latest Windows rerun73efd0d pending after23b1133 toolchain-download timeout before tests. Resolution adaptation, actual20-to5Mbps/1percent loss plus files/input and all original AC53 thresholds remain mandatory open work."
   ],
   "external_prerequisites": [
     {
@@ -83,7 +82,7 @@
     }
   ],
   "next_steps": [
-    "Complete exact-source hosted packet/Windows native/lint and HA failure repairs without relaxing authority, physical cleanup or replay assertions.",
+    "Complete clean same-source Windows online TUN strict lint, Windows actual media owner replacement and complete Rust/network matrices; retain all exact-source evidence without relaxing gates.",
     "Complete W27 durable production authorization and actual direct private-service/remote-control activation, UI, stop/expiry and recovery.",
     "Verify original media producer ceiling/freshness/backpressure changes, then complete authenticated receiver feedback, negotiated downshift and weak-network/file competition.",
     "Implement controlled LAN discovery/game functionality; continue full UI, GPU/format, packaging/upgrade/rollback/security/end-to-end/performance/capacity/soak requirements.",
@@ -182,7 +181,17 @@
     "docs/adr/network/0051-terminal-packet-and-producer-bounds.md",
     "docs/adr/network/0052-authenticated-native-receiver-observation.md",
     "docs/network-rewrite/evidence/media-producer-59aad54.json",
-    "docs/network-rewrite/evidence/media-receiver-4794698.json"
+    "docs/network-rewrite/evidence/media-receiver-4794698.json",
+    "docs/network-rewrite/evidence/wintun-native-normal-crash-peer-41219154119.json",
+    "docs/network-rewrite/evidence/wintun-official-pin-native-41220079226.json",
+    "docs/network-rewrite/evidence/wintun-online-faults-native-41224496857.json",
+    "docs/network-rewrite/evidence/service-group-ipvs-4fc9c30.json",
+    "docs/network-rewrite/evidence/offline-management-94bbe13.json",
+    "docs/network-rewrite/evidence/offline-carrier-97541a2.json",
+    "docs/network-rewrite/evidence/offline-resident-091686c.json",
+    "docs/adr/network/0053-finite-probed-media-budget-switch.md",
+    "docs/network-rewrite/evidence/media-receiver-actual-mtls-5cde425.json",
+    "docs/network-rewrite/evidence/media-and-native-files-2494ab3.json"
   ],
   "observed_actions": [
     {
@@ -560,7 +569,31 @@
       "run_id": 41217399922,
       "source_revision": "47946984f07eda74c9fa2aae5b136964878885e0",
       "status": "success",
-      "scope": "Actual native receiver feedback on original TLS/QUIC, mature codec/queue/lease regressions, signed both-native-only negotiation and strict media/Core/daemon lint. No fullW31/target qualification."
+      "scope": "Historical authorized in-memory stream plus actual kernel QUIC/mTLS; not actual TCP/TLS evidence. Other codec/queue/report/signed negotiation and strict Core/daemon lint passed; no full W31/target claim."
+    },
+    {
+      "run_id": 41223203804,
+      "source_revision": "4fc9c30cdbf0aca9c252bd1011f6e1e770e272c1",
+      "status": "success",
+      "scope": "Source4fc9c30 hosted run41223203804 passed all five exact regressions and actual fixed IPVS HTTP/HTTPS/TCP/UDP across two edge processes, cooperative stop and independent SIGKILL, revoke, old-runtime revival isolation, four-domain accounting and physical cleanup. Both failure modes recovered new connections within original5s. Independent public target ingress/DNS and complete W26 acceptance remain open."
+    },
+    {
+      "run_id": 41224384460,
+      "source_revision": "2494ab319cf0c33744069ffc7d59c846c38f6310",
+      "status": "success",
+      "scope": "Source4794698 used an authenticated in-memory duplex for its non-QUIC branch; it is not actual TCP/TLS evidence. Source5cde425 run41222892800 and2494ab3 run41224384460 passed real loopback TCP/mutually pinned TLS1.3 certificate+ALPN checks, kernel QUIC/mTLS, VP8/revoke/receiver reports, signed capability negotiation and strict Core/daemon lint; latter also passed original native-file lifecycle exact regression. Finite independently probed signed fps/bitrate targets and actual owner/ACK replacement are wired; latest Windows rerun73efd0d pending after23b1133 toolchain-download timeout before tests. Resolution adaptation, actual20-to5Mbps/1percent loss plus files/input and all original AC53 thresholds remain mandatory open work."
+    },
+    {
+      "run_id": 41226505303,
+      "source_revision": "f9692e3542917938ffb03b1cc68618ea2be783d4",
+      "status": "in_progress",
+      "scope": "Windows actual signed MF/Core high-to-low owner replacement and strict lint; no pass claimed"
+    },
+    {
+      "run_id": 41226366649,
+      "source_revision": "f9692e3542917938ffb03b1cc68618ea2be783d4",
+      "status": "in_progress",
+      "scope": "Remote cumulative budget plus original finite offline authorization/carrier/resident regressions; no pass claimed"
     }
   ]
 }
