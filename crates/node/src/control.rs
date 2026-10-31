@@ -25,6 +25,25 @@ use tokio_tungstenite::{
     tungstenite::{Message as WsMessage, protocol::WebSocketConfig},
 };
 type Socket = WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>;
+fn failure_summary(error:&Error)->String {
+    let mut phases=Vec::new();let mut current=error;
+    while let Error::Phase{stage,cause}=current {
+        phases.push(*stage);current=cause;
+        if phases.len()==8 {break;}
+    }
+    let cause=match current {
+        Error::Configuration=>"configuration".into(),
+        Error::Control=>"control".into(),
+        Error::Transport=>"transport".into(),
+        Error::Phase{..}=>"phase-depth-bound".into(),
+        Error::UsageStatus(status)=>format!("usage-http-{status}"),
+        Error::TurnResourceStatus(status)=>format!("turn-http-{status}"),
+        Error::ServiceResourceStatus(status)=>format!("service-http-{status}"),
+        Error::ServiceUsage(_)=>"service-usage-store".into(),
+        Error::Authorization(error)=>format!("authorization-{:?}",error.code),
+    };
+    format!("{}: {cause}",phases.join(" / "))
+}
 mod closes;
 mod prefix;
 mod resources;
@@ -165,6 +184,7 @@ pub struct NodeControl {
     pump: tokio::task::JoinHandle<Result<(), Error>>,
     _usage_pump: tokio::task::JoinHandle<Result<(), Error>>,
     runtime_id: String,
+    terminal_failure: Arc<Mutex<Option<String>>>,
 }
 struct Runtime {
     gate: NodeGate,
@@ -310,13 +330,17 @@ impl NodeControl {
             started,
             stopped.clone(),
         ));
+        let terminal_failure=Arc::new(Mutex::new(None));
+        let failure_for_pump=terminal_failure.clone();
         let pump = tokio::spawn(async move {
             let _stopper = Stopper {
                 state: copy.clone(),
                 turn_authorization: turn_copy.clone(),
                 sender,
             };
-            pump(config, identity, runtime_id, copy, turn_copy, started).await
+            let result=pump(config, identity, runtime_id, copy, turn_copy, started).await;
+            if let Err(error)=&result && let Ok(mut failure)=failure_for_pump.lock() {*failure=Some(failure_summary(error));}
+            result
         });
         Ok(Self {
             state,
@@ -327,6 +351,7 @@ impl NodeControl {
             pump,
             _usage_pump: usage_pump,
             runtime_id: runtime_id_for_control,
+            terminal_failure,
         })
     }
     /// Consume the control owner and preserve its task's terminal failure for
@@ -336,6 +361,12 @@ impl NodeControl {
     }
     pub fn stopped(&self) -> watch::Receiver<bool> {
         self.stopped.clone()
+    }
+    /// Bounded non-secret terminal diagnostics remain readable while worker
+    /// cleanup still retains this shared owner. No grant/key/URL or raw server
+    /// response is included, and this never changes forwarding authority.
+    pub fn terminal_failure(&self)->Option<String> {
+        self.terminal_failure.lock().ok().and_then(|failure|failure.clone())
     }
     /// Shared synchronous TURN authority consumed by the local TURN listeners.
     /// Only grants verified by the node control poll are installed into it.

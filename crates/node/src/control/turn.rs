@@ -1270,6 +1270,7 @@ mod tests {
             pump,
             _usage_pump: tokio::spawn(async { Ok(()) }),
             runtime_id: test_id(3),
+            terminal_failure: Default::default(),
         };
         control.stop();
         assert!(*control.stopped().borrow());

@@ -112,7 +112,7 @@ pub(super) async fn install_secrets(lab:&lab::Lab)->Result {
     if uid==0 {return Err(io::Error::other("original ordinary test owner must select independent keys").into());}
     let bytes=Zeroizing::new(bytes);let secrets:Secrets=serde_json::from_slice(&bytes)?;
     for (name,key) in [("server",secrets.server),("client",secrets.client),("other",secrets.other)] {
-        let key=Zeroizing::new(key);let encoded=Zeroizing::new(format!("{}\n",STANDARD.encode(&*key)));
+        let key=Zeroizing::new(key);let encoded=Zeroizing::new(format!("{}\n",STANDARD.encode(key.as_slice())));
         nestlink_platform_security::create_private(&lab.root.join(format!("wireguard-{name}.key")),encoded.as_bytes())?;
     }
     Ok(())

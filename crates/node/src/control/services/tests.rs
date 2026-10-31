@@ -105,6 +105,7 @@ fn control_with_runtime(
     }));
     let (stop_signal, stopped) = watch::channel(false);
     let control = NodeControl {
+        terminal_failure: Default::default(),
         state,
         started,
         stopped,

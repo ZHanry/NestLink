@@ -661,7 +661,7 @@ async fn edge(directory: &Path) -> Result {
         result=&mut worker=>{
             let terminal=match Arc::try_unwrap(control) {
                 Ok(control)=>format!("{:?}",tokio::time::timeout(Duration::from_secs(1),control.wait_finished()).await),
-                Err(control)=>format!("shared-control stopped={}",*control.stopped().borrow()),
+                Err(control)=>format!("shared-control stopped={} terminal={:?}",*control.stopped().borrow(),control.terminal_failure()),
             };
             return Err(format!("original edge stopped before requested physical stop: worker={result:?}; control={terminal}").into());
         },

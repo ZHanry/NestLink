@@ -655,6 +655,7 @@ impl CandidateFixture {
             (c, l)
         };
         let control = NodeControl {
+            terminal_failure: Default::default(),
             state,
             started,
             stopped: guard.node_stop.clone(),

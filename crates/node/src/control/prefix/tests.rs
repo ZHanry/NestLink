@@ -100,6 +100,7 @@ impl Fixture {
         gate.accept(&policy.sign(&lease)?.encode_to_vec(), &challenge, 0, now)?;
         let (stop_signal, stopped) = watch::channel(false);
         let control = Arc::new(NodeControl {
+            terminal_failure: Default::default(),
             state: Arc::new(Mutex::new(Runtime {
                 gate,
                 meter: Meter::default(),
