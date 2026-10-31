@@ -69,7 +69,7 @@ jobs:
           output.mkdir()
           prefix = ['python', 'scripts/refactor-windows-normal-user.py', 'cargo']
           commands = [
-            ('exact-core.log', prefix + ['test', '--locked', '-p', 'nestlink-app-core', '--lib', '--features', 'media-runtime-test-support', 'native_displays::positive_runtime_test::', '--', '--nocapture', '--test-threads=1', '--color', 'never']),
+            ('exact-core.log', prefix + ['test', '--locked', '-p', 'nestlink-app-core', '--lib', '--features', 'media-runtime-test-support', 'native_displays::positive_runtime_test::', '--', '--show-output', '--test-threads=1', '--color', 'never']),
             ('provider.log', prefix + ['test', '--locked', '-p', 'nestlink-app-core', '--lib', 'native_media_provider::tests::', '--', '--show-output', '--test-threads=1', '--color', 'never']),
             ('clippy.log', prefix + ['clippy', '--locked', '-p', 'nestlink-app-core', '-p', 'nestlink-media-session', '-p', 'nestlink-daemon', '--all-targets', '--features', 'nestlink-app-core/media-runtime-test-support', '--', '-D', 'warnings']),
           ]
