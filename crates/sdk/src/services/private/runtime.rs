@@ -239,6 +239,9 @@ impl Sdk {
         {
             return Err(SdkError::Trust);
         }
+        let approved_until = view.approval_expires_at_unix_ms
+            .filter(|end| *end > private_wall_ms().unwrap_or(u64::MAX))
+            .ok_or(SdkError::Trust)?;
         let usage =
             Arc::new(ServiceUsageStore::open(&config.usage_directory).map_err(usage_error)?);
         let policy = self.policy().await?;
@@ -260,7 +263,9 @@ impl Sdk {
             request_sequence: 1,
             address: address.to_string(),
             issued_at_unix_ms: 1,
-            expires_at_unix_ms: 2,
+            // Retain the original local approval deadline for every refresh.
+            // register signs only its remaining bounded presence interval.
+            expires_at_unix_ms: approved_until,
         };
         if let Err(error) = register(self, &host, &claims).await {
             listener.close_and_wait().await?;
@@ -376,7 +381,8 @@ async fn register(
     claims.expires_at_unix_ms = claims
         .issued_at_unix_ms
         .checked_add(nestlink_protocol::service_plane::SERVICE_LEASE_MS)
-        .ok_or(SdkError::Invalid)?;
+        .ok_or(SdkError::Invalid)?
+        .min(base.expires_at_unix_ms);
     tokio::time::timeout(
         Duration::from_secs(1),
         sdk.register_private_service_host(
@@ -407,15 +413,19 @@ async fn run_host(
     let mut workers = JoinSet::new();
     let mut refresh = tokio::time::interval(Duration::from_secs(5));
     refresh.tick().await;
+    let deadline = tokio::time::Instant::now() + Duration::from_millis(
+        presence.expires_at_unix_ms.saturating_sub(private_wall_ms().unwrap_or(u64::MAX)));
     let mut failed = false;
     loop {
         tokio::select! {biased;
             _=stopped(&mut stop)=>break,
+            _=tokio::time::sleep_until(deadline)=>break,
             _=refresh.tick()=>{
                 let Some(next)=presence.request_sequence.checked_add(1) else {failed=true;break;};
                 presence.request_sequence=next;
                 let registered=tokio::select!{biased;
                     _=stopped(&mut stop)=>break,
+                    _=tokio::time::sleep_until(deadline)=>break,
                     result=register(&sdk,&host,&presence)=>result,
                 };
                 if registered.is_err() {failed=true;break;}
@@ -423,6 +433,7 @@ async fn run_host(
                 if let Ok(pending)=pending {
                     for (grant,terminal)in pending {tokio::select!{biased;
                         _=stopped(&mut stop)=>break,
+                        _=tokio::time::sleep_until(deadline)=>break,
                         _=flush_report(&sdk,&usage,&host,&grant,terminal)=>{},
                     }}
                 }else{failed=true;break;}

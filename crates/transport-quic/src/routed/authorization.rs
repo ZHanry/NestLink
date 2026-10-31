@@ -5,7 +5,7 @@ use nestlink_identity::{
         remote_chain_binding, remote_route_binding,
     },
 };
-use nestlink_protocol::network::{PeerId, PeerPair};
+use nestlink_protocol::network::{PeerId, PeerPair, Purpose};
 use std::{
     io,
     sync::Arc,
@@ -16,6 +16,7 @@ use tokio::{sync::watch, time::Instant};
 const MAX_LEASE_MS: u64 = 30_000;
 struct Binding {
     digest: [u8; 32],
+    purpose: Purpose,
     peers: PeerPair,
     relay: PeerId,
     chain: Option<RemoteChainBinding>,
@@ -73,9 +74,30 @@ impl RouteAuthorization {
             .map_err(|e|io::Error::new(io::ErrorKind::PermissionDenied,e))?;
         let remaining=route.expires_at_ms.checked_sub(current.now_ms).filter(|n|*n>0).ok_or_else(denied)?;
         let(stop,stopped)=watch::channel(RouteStop::Live);
-        Ok((Self{binding:Arc::new(Binding{digest:route.digest,peers:route.peers,relay:route.relay,chain:None,
+        Ok((Self{binding:Arc::new(Binding{digest:route.digest,purpose:Purpose::PrivateService,peers:route.peers,relay:route.relay,chain:None,
             byte_limit:route.byte_limit,deadline:started+Duration::from_millis(remaining.min(MAX_LEASE_MS))}),stopped},RouteRevocation(stop)))
     }
+    pub fn private_service_chain(context:&NetworkVerification<'_>,path:&VerifiedNetworkPath,
+        connectivity:&VerifiedNetworkGrant,transits:&[VerifiedNetworkGrant],
+        lease:&nestlink_identity::services::private::VerifiedPrivateServiceLease)
+        ->io::Result<(Self,RouteRevocation)>{
+        let started=Instant::now();
+        let now:u64=SystemTime::now().duration_since(UNIX_EPOCH).map_err(io::Error::other)?
+            .as_millis().try_into().map_err(io::Error::other)?;
+        let current=NetworkVerification{authority_key:context.authority_key,deployment_id:context.deployment_id,
+            space_id:context.space_id,policy_epoch:context.policy_epoch,revoked_grant_ids:context.revoked_grant_ids,
+            now_ms:now.max(context.now_ms)};
+        let route=nestlink_identity::network::private_service_chain_binding(&current,path,connectivity,transits,lease)
+            .map_err(|error|io::Error::new(io::ErrorKind::PermissionDenied,error))?;
+        let remaining=route.expires_at_ms.checked_sub(current.now_ms).filter(|n|*n>0).ok_or_else(denied)?;
+        let(stop,stopped)=watch::channel(RouteStop::Live);
+        Ok((Self{binding:Arc::new(Binding{digest:route.digest,purpose:Purpose::PrivateService,
+            peers:route.peers,relay:route.relays[0],chain:Some(route),byte_limit:route.byte_limit,
+            deadline:started+Duration::from_millis(remaining.min(MAX_LEASE_MS))}),stopped},RouteRevocation(stop)))
+    }
+    /// The inner TLS protocol follows the verified business purpose. Callers
+    /// cannot negotiate an arbitrary protocol through a routed constructor.
+    pub(super) fn purpose(&self)->Purpose{self.binding.purpose}
     pub fn remote(
         context: &NetworkVerification<'_>,
         path: &VerifiedNetworkPath,
@@ -113,6 +135,7 @@ impl RouteAuthorization {
             Self {
                 binding: Arc::new(Binding {
                     digest: route.digest,
+                    purpose: Purpose::RemoteControl,
                     peers: route.peers,
                     relay: route.relay,
                     chain: None,
@@ -163,6 +186,7 @@ impl RouteAuthorization {
             Self {
                 binding: Arc::new(Binding {
                     digest: route.digest,
+                    purpose: Purpose::RemoteControl,
                     peers: route.peers,
                     relay: route.relays[0],
                     chain: Some(route),

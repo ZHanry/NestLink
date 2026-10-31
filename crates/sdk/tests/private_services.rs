@@ -31,6 +31,9 @@ impl Fixture {
         Self::with_path_policy(protocol,target,"direct_only").await
     }
     async fn with_path_policy(protocol:&str,target:SocketAddr,path_mode:&str)->Result<Self>{
+        Self::configured(protocol,target,path_mode,60000).await
+    }
+    async fn configured(protocol:&str,target:SocketAddr,path_mode:&str,approval_lifetime:u64)->Result<Self>{
         let deployment=random_id();let signer=PermitSigner::generate();let issuer=signer.public_key();
         let mut store=Store::in_memory(&deployment)?;store.bootstrap_admin("admin",PASSWORD)?;
         // Default public ingress remains disabled and no edge is registered.
@@ -64,7 +67,7 @@ impl Fixture {
                 maximum_bytes:131072,idle_timeout_seconds:5},
         }}).await?;
         let consent=LocalServiceTargetConsent::from_local_choice(&pending,protocol,target)?;
-        let view=sdk.approve_service_target(&host,&consent,60000).await?;
+        let view=sdk.approve_service_target(&host,&consent,approval_lifetime).await?;
         let exposure=sdk.set_service_exposure(&view.id,ServiceExposureUpdate{expected_revision:0,
             expected_service_revision:view.revision,space_id:space.space_id,mode:ServiceAccessMode::Private,
             private_maximum_bytes:131072,public_maximum_bytes:0}).await?;
@@ -123,6 +126,39 @@ async fn private_host_rechecks_original_consumer_login_after_signout()->Result {
         assert!(tokio::time::timeout(Duration::from_secs(3),connection.receive_datagram()).await?.is_err());
         connection.close().await?;let endpoint=host.address();host.wait_stopped().await?;drop(host);
         drop(std::net::UdpSocket::bind(endpoint)?);std::fs::remove_dir_all(f.usage)?;
+        Ok::<_,Box<dyn std::error::Error+Send+Sync>>(())
+    }).await??;Ok(())
+}
+
+#[tokio::test]
+async fn short_local_target_approval_bounds_presence_business_and_automatic_socket_release()->Result {
+    tokio::time::timeout(Duration::from_secs(15),async {
+        let backend=UdpSocket::bind("127.0.0.1:0").await?;
+        let f=Fixture::configured("udp",backend.local_addr()?,"direct_only",4000).await?;
+        let request=f.request(&f.consumer);
+        let approval_end=f.view.approval_expires_at_unix_ms.ok_or("approval deadline missing")?;
+        let mut host=f.sdk.start_private_service_host(f.host.clone(),f.consent,PrivateServiceHostConfig{
+            listen:"127.0.0.1:0".parse()?,advertised_ip:"127.0.0.1".parse()?,usage_directory:f.usage.join("ledger")}).await?;
+        let lease=f.sdk.request_private_service(&f.view.id,request).await?;
+        assert!(lease.lease().claims().expires_at_unix_ms<=approval_end);
+        let mut connection=f.sdk.connect_private_service(&f.consumer,lease).await?;
+        connection.send_datagram(b"short explicit target consent")?;
+        let mut bytes=[0;64];let (length,peer)=backend.recv_from(&mut bytes).await?;
+        assert_eq!(&bytes[..length],b"short explicit target consent");backend.send_to(b"approved reply",peer).await?;
+        assert_eq!(connection.receive_datagram().await?,b"approved reply");
+        tokio::time::sleep(Duration::from_millis(approval_end.saturating_sub(wall_ms()?)+100)).await;
+        assert!(connection.receive_datagram().await.is_err());connection.close().await?;
+        let endpoint=host.address();
+        // No host.stop/wait_stopped call has run: the original local target
+        // deadline must itself retire every connection and physical listener.
+        tokio::time::timeout(Duration::from_secs(3),async {
+            loop {match std::net::UdpSocket::bind(endpoint) {
+                Ok(rebound)=>{drop(rebound);break;},
+                Err(error)if error.kind()==std::io::ErrorKind::AddrInUse=>tokio::time::sleep(Duration::from_millis(10)).await,
+                Err(error)=>return Err(error),
+            }}Ok::<_,std::io::Error>(())
+        }).await??;
+        host.wait_stopped().await?;drop(host);std::fs::remove_dir_all(f.usage)?;
         Ok::<_,Box<dyn std::error::Error+Send+Sync>>(())
     }).await??;Ok(())
 }

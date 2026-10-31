@@ -15,7 +15,7 @@ pub use listener::{
 };
 
 use crate::*;
-use nestlink_protocol::{network::PeerId, network_datagram as wire};
+use nestlink_protocol::{network::{PeerId, Purpose}, network_datagram as wire};
 use nestlink_transport_stream::owner::TaskOwner;
 use std::io;
 use tokio::time::Instant;
@@ -69,10 +69,10 @@ impl RoutedTransport {
     }
     fn request_close_with_code(&self, code: u32) {
         let already_closed = self.connection.as_ref().is_some_and(|connection| connection.close_reason().is_some());
-        if let Some(connection) = &self.connection {
-            if connection.close_reason().is_none() {
-                connection.close(0u32.into(), b"routed transport stopping");
-            }
+        if let Some(connection) = &self.connection
+            && connection.close_reason().is_none()
+        {
+            connection.close(0u32.into(), b"routed transport stopping");
         }
         if !already_closed && let Some(endpoint) = &self.endpoint {
             endpoint.close(0u32.into(), b"routed transport stopping");
@@ -156,6 +156,14 @@ impl RoutedEstablishment {
         self.attempted = true;
         let authorization = self.authorization.take().ok_or_else(not_connected)?;
         authorization.live()?;
+        // The independently verified business purpose selects protocol
+        // isolation. A caller cannot relabel a service grant as remote control
+        // or supply an arbitrary ALPN for an authenticated route.
+        let inner_alpn = match authorization.purpose() {
+            Purpose::RemoteControl => nestlink_protocol::ALPN.as_bytes(),
+            Purpose::PrivateService => nestlink_protocol::service_plane::publication::SERVICE_ALPN,
+            _ => return Err(io::Error::from(io::ErrorKind::PermissionDenied).into()),
+        };
         let deadline = deadline.min(authorization.deadline());
         if Instant::now() >= deadline {
             return Err(io::Error::from(io::ErrorKind::TimedOut).into());
@@ -181,14 +189,14 @@ impl RoutedEstablishment {
         config.min_mtu(wire::PACKET_BYTES as u16);
         config.mtu_discovery_config(None);
         let config = Arc::new(config);
-        let mut server = ServerConfig::with_crypto(Arc::new(QuicServerConfig::try_from(
-            tls::server_config(identity, peer.0)?,
-        )?));
+        let mut server_tls = tls::server_config(identity, peer.0)?;
+        server_tls.alpn_protocols = vec![inner_alpn.to_vec()];
+        let mut server = ServerConfig::with_crypto(Arc::new(QuicServerConfig::try_from(server_tls)?));
         server.transport_config(config.clone());
         server.migration(false);
-        let mut client = ClientConfig::new(Arc::new(QuicClientConfig::try_from(
-            tls::client_config(identity, peer.0)?,
-        )?));
+        let mut client_tls = tls::client_config(identity, peer.0)?;
+        client_tls.alpn_protocols = vec![inner_alpn.to_vec()];
+        let mut client = ClientConfig::new(Arc::new(QuicClientConfig::try_from(client_tls)?));
         client.transport_config(config);
         let mut settings = quinn::EndpointConfig::default();
         settings.max_udp_payload_size(wire::PACKET_BYTES as u16)?;
@@ -232,6 +240,14 @@ impl RoutedEstablishment {
                 .await
                 .map_err(|_| io::Error::from(io::ErrorKind::TimedOut))??,
         );
+        let connection = self.connection.as_ref().ok_or_else(not_connected)?;
+        let negotiated = connection.handshake_data()
+            .and_then(|data| data.downcast::<quinn::crypto::rustls::HandshakeData>().ok())
+            .is_some_and(|data| data.protocol.as_deref() == Some(inner_alpn));
+        if !negotiated {
+            connection.close(1u32.into(), b"routed business ALPN mismatch");
+            return Err(io::Error::from(io::ErrorKind::PermissionDenied).into());
+        }
         Ok(())
     }
     pub fn take_transport(&mut self) -> io::Result<RoutedTransport> {

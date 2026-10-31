@@ -44,7 +44,7 @@ pub struct LocalServiceRuntime {
     delegation: Arc<ServiceIssuerOwner>,
     publication: Arc<ServicePublication>,
     target: Arc<LocalTargetOwner>,
-    connection: quinn::Connection,
+    connection: Option<quinn::Connection>,
     stop: watch::Sender<bool>,
     cleanup: ServiceCleanupMonitor,
 }
@@ -53,7 +53,9 @@ impl LocalServiceRuntime {
         self.stop.send_replace(true);
         self.target.revoke();
         self.publication.revoke();
-        self.connection.close(0u32.into(), b"local service stopped");
+        if let Some(connection) = &self.connection {
+            connection.close(0u32.into(), b"local service stopped");
+        }
     }
     /// Sample the actual verified lease without network, renewal or target I/O.
     pub fn lease_observation(
@@ -66,7 +68,7 @@ impl LocalServiceRuntime {
         let issuer_proof = self.delegation.observation(&first, wall()?)?;
         let mut sample = observation::sample(&handle, request, || {
             (
-                *self.stop.borrow() || self.connection.close_reason().is_some(),
+                *self.stop.borrow() || self.connection.as_ref().is_none_or(|connection| connection.close_reason().is_some()),
                 self.cleanup_pending(),
             )
         })?;
@@ -75,7 +77,7 @@ impl LocalServiceRuntime {
         if issuer_proof != current_proof
             || !self.target.accepts(&current)
             || *self.stop.borrow()
-            || self.connection.close_reason().is_some()
+            || self.connection.as_ref().is_none_or(|connection| connection.close_reason().is_some())
             || sample.signed_lease_envelope_sha256 != observation::envelope_digest(&current)
             || sample.verified_issuer_ed25519 != current.issuer()
         {
@@ -109,6 +111,10 @@ impl LocalServiceRuntime {
     /// Only Stopped certifies the worker, every flow task and QUIC endpoint ended.
     pub async fn wait_stopped(&mut self, budget: Duration) -> ServiceHostWait {
         self.stop();
+        // The final runtime-held connection keeps Quinn's endpoint and physical
+        // socket alive even after wait_idle. Release it before collecting the
+        // original socket/poller receipt. Repeated waits retain the same worker.
+        self.connection.take();
         self.cleanup.wait(budget).await
     }
 }
@@ -339,6 +345,8 @@ impl Sdk {
                 return Err(error);
             }
         };
+        let mut connected = connected;
+        let socket_release = connected.take_socket_release().map_err(SdkError::ServiceIo)?;
         let connection = connected.connection.clone();
         let (stop, stopped) = watch::channel(false);
         let endpoint = connected.endpoint.clone();
@@ -357,12 +365,12 @@ impl Sdk {
             },
             revoke,
         ));
-        let cleanup = ServiceCleanupMonitor::new(task, endpoint);
+        let cleanup = ServiceCleanupMonitor::new(task, endpoint, socket_release.wait());
         Ok(LocalServiceRuntime {
             delegation,
             publication,
             target,
-            connection,
+            connection: Some(connection),
             stop,
             cleanup,
         })

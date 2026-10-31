@@ -145,7 +145,7 @@ pub fn remote_chain_reservation_transcript(
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct RemoteChainBinding {
+pub struct RelayChainBinding {
     pub digest: [u8; 32],
     pub peers: PeerPair,
     /// Ordered from the canonical first business peer to the second.
@@ -153,7 +153,11 @@ pub struct RemoteChainBinding {
     pub byte_limit: u64,
     pub expires_at_ms: u64,
 }
-impl RemoteChainBinding {
+/// Compatibility name for the RemoteControl-specific verifier below. The
+/// retained chain geometry and NRD2 hop rules are shared by typed purposes.
+pub type RemoteChainBinding = RelayChainBinding;
+
+impl RelayChainBinding {
     pub fn adjacency(&self, relay: PeerId) -> Option<(PeerId, PeerId)> {
         if relay == self.relays[0] {
             Some((self.peers.first, self.relays[1]))

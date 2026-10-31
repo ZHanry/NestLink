@@ -86,6 +86,9 @@ follow-up work. They are not established by a direct Quinn test.
 
 Host presence and withdrawal use the existing ten-second service lease bound;
 refresh never extends a private business lease or refunds its original promise.
+Presence refresh is capped by the original local target approval deadline. A
+shorter valid approval can therefore start normally, and an independent monotonic
+deadline retires all workers and the physical listener when that approval ends.
 The standard W21 SOCKS integration uses this exact SDK path, and tests actual
 request/response half-close, authentication/target denial, listener collision,
 an accepted stalled authentication worker, expiration and physical cleanup.

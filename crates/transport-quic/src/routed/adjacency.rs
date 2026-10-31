@@ -432,10 +432,10 @@ impl Adjacency {
     }
     pub(super) fn request_close_with_code(&self, code: u32) {
         let already_closed = self.connection.as_ref().is_some_and(|connection| connection.close_reason().is_some());
-        if let Some(connection) = &self.connection {
-            if connection.close_reason().is_none() {
-                connection.close(code.into(), b"network adjacency stopping");
-            }
+        if let Some(connection) = &self.connection
+            && connection.close_reason().is_none()
+        {
+            connection.close(code.into(), b"network adjacency stopping");
         }
         if !already_closed && let Some(endpoint) = &self.endpoint {
             endpoint.close(code.into(), b"network adjacency stopping");

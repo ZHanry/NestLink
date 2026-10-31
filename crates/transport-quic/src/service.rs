@@ -48,6 +48,16 @@ pub struct Connected {
     pub endpoint: Endpoint,
     socket_closed: Option<tokio::sync::oneshot::Receiver<()>>,
 }
+/// A single-use receipt for the actual UDP socket and all of its pollers.
+/// Closing a connection or observing an idle endpoint cannot create this proof.
+pub struct SocketRelease {
+    completion: tokio::sync::oneshot::Receiver<()>,
+}
+impl SocketRelease {
+    pub async fn wait(self) -> io::Result<()> {
+        socket::wait_released(self.completion).await
+    }
+}
 /// One installation listener with the same physical socket receipt as service
 /// clients. The coordinator drops every connection/task clone before closing.
 pub struct PrivateListener {
@@ -86,6 +96,13 @@ impl Drop for PrivateListener {
     }
 }
 impl Connected {
+    /// Transfer the original physical release receipt to a longer lived cleanup
+    /// owner. After transfer that owner must close/drop every endpoint and
+    /// connection clone before awaiting the receipt.
+    pub fn take_socket_release(&mut self) -> io::Result<SocketRelease> {
+        self.socket_closed.take().map(|completion| SocketRelease { completion })
+            .ok_or_else(|| io::Error::other("service UDP release receipt already transferred"))
+    }
     /// Consumes this owner and confirms physical UDP socket release after all
     /// connection/endpoint/poller references are gone. Drop external clones
     /// before awaiting; an idle endpoint alone does not certify release.
@@ -164,7 +181,7 @@ pub fn negotiated_service(connection: &Connection) -> bool {
         .is_some_and(|data| data.protocol.as_deref() == Some(SERVICE_ALPN))
 }
 pub async fn write_message(
-    write: &mut quinn::SendStream,
+    write: &mut (impl AsyncWrite + Unpin),
     value: &impl Serialize,
 ) -> io::Result<()> {
     let bytes = serde_json::to_vec(value).map_err(io::Error::other)?;
@@ -178,7 +195,7 @@ pub async fn write_message(
     write.write_all(&bytes).await.map_err(io::Error::other)?;
     write.flush().await
 }
-pub async fn read_message<T: DeserializeOwned>(read: &mut quinn::RecvStream) -> io::Result<T> {
+pub async fn read_message<T: DeserializeOwned>(read: &mut (impl AsyncRead + Unpin)) -> io::Result<T> {
     let n = read.read_u32().await? as usize;
     if n == 0 || n > CARRIER_MESSAGE_BYTES {
         return Err(io::ErrorKind::InvalidData.into());
@@ -273,6 +290,35 @@ impl Drop for BiStream {
 mod tests {
     use super::*;
     type TestResult = std::result::Result<(), Box<dyn std::error::Error + Send + Sync>>;
+    #[tokio::test]
+    async fn service_framing_uses_bounded_generic_streams_and_preserves_half_close() -> TestResult {
+        let (mut left, mut right) = tokio::io::duplex(17);
+        let worker = tokio::spawn(async move {
+            let request: Vec<String> = read_message(&mut right).await?;
+            if request != ["fixed approved service"] { return Err(io::ErrorKind::InvalidData.into()); }
+            let mut end = [0;1];
+            if right.read(&mut end).await? != 0 { return Err(io::ErrorKind::InvalidData.into()); }
+            write_message(&mut right, &"response after request FIN").await?;
+            right.shutdown().await
+        });
+        write_message(&mut left, &vec!["fixed approved service"]).await?;
+        left.shutdown().await?;
+        assert_eq!(read_message::<String>(&mut left).await?, "response after request FIN");
+        tokio::time::timeout(Duration::from_secs(1), worker).await???;
+        for length in [0, CARRIER_MESSAGE_BYTES as u32 + 1] {
+            // There is deliberately no payload: invalid headers must return
+            // before allocating or waiting for an attacker-controlled body.
+            let bytes = length.to_be_bytes();
+            let mut input = bytes.as_slice();
+            assert_eq!(read_message::<Vec<u8>>(&mut input).await.err()
+                .ok_or("invalid service frame accepted")?.kind(), io::ErrorKind::InvalidData);
+        }
+        let bytes = [0,0,0,8,b'['];
+        let mut input = bytes.as_slice();
+        assert_eq!(read_message::<Vec<u8>>(&mut input).await.err()
+            .ok_or("truncated service frame accepted")?.kind(), io::ErrorKind::UnexpectedEof);
+        Ok(())
+    }
     #[tokio::test]
     async fn service_owner_confirms_real_udp_release_before_returning() -> TestResult {
         service_owner_release("127.0.0.1:0".parse()?).await

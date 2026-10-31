@@ -9,7 +9,8 @@ use std::collections::BTreeSet;
 use zeroize::Zeroizing;
 mod remote;
 mod private_service;
-pub use private_service::{PrivateServiceRouteBinding,private_service_path_peers,private_service_route_binding};
+pub use private_service::{PrivateServiceChainBinding,PrivateServiceRouteBinding,
+    private_service_chain_binding,private_service_path_peers,private_service_route_binding};
 mod remote_chain;
 mod route_set;
 pub use remote::{
@@ -17,7 +18,7 @@ pub use remote::{
     verify_node_network_resource,
 };
 pub use remote_chain::{
-    NodeRemoteChainBinding, RemoteChainBinding, remote_chain_binding,
+    NodeRemoteChainBinding, RelayChainBinding, RemoteChainBinding, remote_chain_binding,
     remote_chain_reservation_transcript, verify_network_chain_admission,
     verify_node_network_chain_resource,
 };

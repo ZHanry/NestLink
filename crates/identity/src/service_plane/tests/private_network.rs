@@ -3,7 +3,7 @@
 use super::*;
 use crate::network::{NetworkAuthoritySigner, NetworkVerification, SignedNetworkGrant,
     VerifiedMembership, VerifiedNetworkGrant, VerifiedNetworkPath, private_service_path_peers,
-    private_service_route_binding, verify_network_grant};
+    private_service_chain_binding, private_service_route_binding, verify_network_grant};
 use crate::services::private::{VerifiedPrivateServiceLease, verify_private_service_lease};
 use nestlink_protocol::{network::{ConnectivityClaims, GrantClaims, GrantScope, MembershipClaims,
     PathClaims, PathPolicy, PeerId, PeerPair, Purpose, SpaceRole, TransitClaims},
@@ -102,5 +102,58 @@ fn private_relay_policy_cannot_be_dialled_direct_and_transit_never_expands_share
     assert!(private_service_route_binding(&context,&path,&connection,&verify(exceeded)?,&f.lease).is_err());
     let mut wrong=transit;wrong.transport_group=[191;32];
     assert!(private_service_route_binding(&context,&path,&connection,&verify(wrong)?,&f.lease).is_err());
+    Ok(())
+}
+
+#[test]
+fn private_two_relay_chain_binds_order_full_grant_set_shared_ceiling_and_revocation()->Result<(),ContractError>{
+    let f=PrivateFixture::new()?;let key=f.network.public_key();let revoked=BTreeSet::new();
+    let deployment=id(1);let space=id(30);
+    let context=NetworkVerification{authority_key:&key,deployment_id:&deployment,space_id:&space,
+        policy_epoch:1,now_ms:11_000,revoked_grant_ids:&revoked};
+    let mut relays=[PeerId::from_public_key(&[174;32]),PeerId::from_public_key(&[175;32])];
+    relays.sort();
+    let policy=PathPolicy{allow_direct:false,relays:relays.to_vec(),max_hops:2};
+    let (path,connection)=f.path(&f.network,&context,Purpose::PrivateService,3,policy.clone())?;
+    let peers=path.peers();
+    let first=TransitClaims{scope:f.scope(50,1),relay:relays[0],peers,
+        transport_group:path.transport_group_id(),route_id:id(52),previous:peers.first,
+        next:relays[1],remaining_hops:2,byte_limit:32768};
+    let second=TransitClaims{scope:f.scope(51,1),relay:relays[1],peers,
+        transport_group:path.transport_group_id(),route_id:id(52),previous:relays[0],
+        next:peers.second,remaining_hops:1,byte_limit:65536};
+    let verify=|claims:TransitClaims|->Result<VerifiedNetworkGrant,ContractError>{
+        verify_network_grant(&f.network.sign(&GrantClaims::Transit(claims))?,&context)
+    };
+    let transits=[verify(first.clone())?,verify(second.clone())?];
+    let chain=private_service_chain_binding(&context,&path,&connection,&transits,&f.lease)?;
+    assert_eq!(chain.relays,relays);assert_eq!(chain.byte_limit,32768);
+    assert_eq!(chain.adjacency(relays[0]),Some((peers.first,relays[1])));
+    assert_eq!(chain.adjacency(relays[1]),Some((relays[0],peers.second)));
+    assert_eq!(chain.remaining_hops(relays[0],nestlink_protocol::network_datagram::Direction::FirstToSecond),Some(2));
+    assert_eq!(chain.remaining_hops(relays[1],nestlink_protocol::network_datagram::Direction::SecondToFirst),Some(2));
+    assert!(private_service_chain_binding(&context,&path,&connection,&transits[..1],&f.lease).is_err());
+    let reversed=[transits[1].clone(),transits[0].clone()];
+    assert!(private_service_chain_binding(&context,&path,&connection,&reversed,&f.lease).is_err());
+    for mutation in 0..6{
+        let mut changed=second.clone();
+        match mutation{
+            0=>changed.route_id=id(53),
+            1=>changed.transport_group=[193;32],
+            2=>changed.byte_limit=65537,
+            3=>changed.previous=peers.first,
+            4=>changed.remaining_hops=2,
+            _=>changed.scope.grant_id=path.claims().scope.grant_id.clone(),
+        }
+        let altered=[transits[0].clone(),verify(changed)?];
+        assert!(private_service_chain_binding(&context,&path,&connection,&altered,&f.lease).is_err());
+    }
+    let (wrong,connection)=f.path(&f.network,&context,Purpose::RemoteControl,3,policy)?;
+    assert!(private_service_chain_binding(&context,&wrong,&connection,&transits,&f.lease).is_err());
+    let revoked=BTreeSet::from([first.scope.grant_id]);
+    let withdrawn=NetworkVerification{revoked_grant_ids:&revoked,..context};
+    let (path,connection)=f.path(&f.network,&context,Purpose::PrivateService,3,
+        PathPolicy{allow_direct:false,relays:relays.to_vec(),max_hops:2})?;
+    assert!(private_service_chain_binding(&withdrawn,&path,&connection,&transits,&f.lease).is_err());
     Ok(())
 }
