@@ -1,0 +1,59 @@
+name: Windows managed TUN ordinary and administrator mechanism
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-managed-tun-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hosted-wintun-kernel:
+    runs-on: windows-2025
+    timeout-minutes: 65
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
+      RUST_BACKTRACE: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      NESTLINK_TUN_NATIVE_LAB: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f
+        with:
+          toolchain: "1.96.0"
+      - id: msys
+        uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e
+        with:
+          msystem: MSYS
+          install: make perl diffutils gawk sed grep coreutils nasm
+          cache: false
+      - name: Select existing native codec prefix
+        shell: pwsh
+        run: |
+          $codecRoot = Join-Path $env:RUNNER_TEMP 'nestlink-codecs/x86_64-pc-windows-msvc'
+          "NESTLINK_CODEC_PREFIX=$codecRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Build the existing pinned native codecs on Actions
+        run: python scripts/refactor-native-codecs.py build --target x86_64-pc-windows-msvc --cache-dir "${{ runner.temp }}/nestlink-codec-sources" --work-dir "${{ runner.temp }}/nestlink-codecs" --msys-bin "${{ steps.msys.outputs.msys2-location }}/usr/bin" --nasm "${{ steps.msys.outputs.msys2-location }}/usr/bin/nasm.exe"
+      - name: Verify the native codec provenance
+        run: python scripts/refactor-native-codecs.py verify --target x86_64-pc-windows-msvc --prefix "$env:NESTLINK_CODEC_PREFIX"
+      - name: Driver license, pinned archive, Authenticode, actual medium/admin packet and crash evidence
+        run: python -B scripts/network-rewrite-windows-tun.py --output "${{ runner.temp }}/windows-managed-tun-evidence"
+      - name: Verify Windows TUN IPC tests using the normal token
+        run: python scripts/refactor-windows-normal-user.py cargo test --locked -p nestlink-privileged --lib windows::network_tun:: -- --show-output
+      - name: Check the Windows daemon privilege adapter strictly
+        run: cargo clippy --locked -p nestlink-daemon --all-targets -- -D warnings
+      - name: Preserve exact-source build, driver license, real tokens and OS cleanup evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: managed-tun-windows-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/windows-managed-tun-evidence/
+          if-no-files-found: error
+          retention-days: 30

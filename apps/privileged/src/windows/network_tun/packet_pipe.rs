@@ -62,18 +62,22 @@ impl PacketBinding {
 #[serde(deny_unknown_fields)]
 pub struct ProviderIdentity {
     pub adapter_guid: String,
+    pub name: String,
     pub luid: u64,
     pub index: u32,
     pub mtu: u16,
     pub provider_sha256: [u8; 32],
+    pub configuration_sha256: [u8; 32],
 }
 impl ProviderIdentity {
     fn validate(&self) -> io::Result<()> {
         if !nestlink_protocol::valid_id(&self.adapter_guid)
+            || self.name != format!("NestLink-{}", self.adapter_guid)
             || self.luid == 0
             || self.index == 0
             || self.mtu != MAX_PACKET as u16
             || self.provider_sha256 == [0; 32]
+            || self.configuration_sha256 == [0; 32]
         {
             return Err(security::denied());
         }
@@ -144,7 +148,6 @@ impl PacketServer {
     pub fn bind(
         binding: PacketBinding,
         provider: ProviderIdentity,
-        receipt_path: &Path,
     ) -> io::Result<Self> {
         super::super::require_administrator_process()?;
         binding.check_current_owner()?;
@@ -186,19 +189,19 @@ impl PacketServer {
             helper,
             provider,
         };
-        let parents = store::Parents::open(receipt_path.parent().ok_or_else(security::denied)?)?;
-        parents.write(
-            receipt_path.file_name().ok_or_else(security::denied)?,
-            &serde_json::to_vec(&receipt)?,
-            Some(&receipt.binding.process.sid),
-            false,
-        )?;
         Ok(Self {
             pipe: Some(pipe),
             original,
             receipt,
             _image: image,
         })
+    }
+    /// The caller must durably journal this exact receipt before publication.
+    /// A crash before publish is therefore recoverable as actual file absence.
+    pub fn publish_receipt(&self,receipt_path:&Path)->io::Result<()> {
+        self.check_current()?;
+        let parents=store::Parents::open(receipt_path.parent().ok_or_else(security::denied)?)?;
+        parents.write(receipt_path.file_name().ok_or_else(security::denied)?,&serde_json::to_vec(&self.receipt)?,Some(&self.receipt.binding.process.sid),false)
     }
     pub fn check_current(&self) -> io::Result<()> {
         self.original.alive()?;

@@ -271,7 +271,7 @@ pub(in crate::windows) fn save_owner_plan(path: &Path, bytes: &[u8], sid: &str) 
     file.write_all(bytes)?;
     file.sync_all()
 }
-pub(super) fn initialize(directory: &Path) -> io::Result<()> {
+pub(in crate::windows) fn initialize(directory: &Path) -> io::Result<()> {
     require_admin()?;
     let _parent = Parents::open(
         directory

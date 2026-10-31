@@ -41,6 +41,10 @@ pub(crate) struct TunArgs {
     /// Fresh owner-private public plan for a separately invoked root helper.
     #[arg(long)]
     plan: PathBuf,
+    /// Exact administrator-owned receipt selected for the separate Wintun helper.
+    #[cfg(windows)]
+    #[arg(long)]
+    receipt: PathBuf,
 }
 fn bytes32(value: &str) -> Result<[u8; 32]> {
     if value.len() != 43 {
@@ -56,9 +60,16 @@ fn bytes32(value: &str) -> Result<[u8; 32]> {
     Ok(bytes)
 }
 pub(crate) async fn run(args: TunArgs) -> Result {
+    #[cfg(target_os="linux")]
     if rustix::process::geteuid().as_raw() == 0 {
         return Err(io::Error::other("network-tun must run as the original ordinary user; use a separate network-tun-system helper for OS configuration").into());
     }
+    #[cfg(windows)]
+    nestlink_privileged::windows::require_normal_user_process()?;
+    #[cfg(windows)]
+    let os=OwnerOs::new(args.receipt.clone())?;
+    #[cfg(target_os="linux")]
+    let os=OwnerOs::new()?;
     if args.bind.ip().is_unspecified()
         || args.bind.ip().is_multicast()
         || args.dial.is_some_and(|address| {
@@ -125,23 +136,26 @@ pub(crate) async fn run(args: TunArgs) -> Result {
         plan.save_new(&args.plan)?;
         drop(installation);
         println!("Public TUN plan: {}",args.plan.display());
+        #[cfg(target_os="linux")]
         println!("Review the exact plan, then separately run this same executable as root: network-tun-system apply --plan <above-path> --journal-dir <root-private-directory>");
+        #[cfg(windows)]
+        println!("Review the exact plan, then separately run this protected executable as administrator: network-tun-system apply --plan <above-path> --journal-dir <admin-private-directory> --driver <absolute-pinned-wintun.dll> --driver-sha256 <exact-architecture-hash> --receipt {}",args.receipt.display());
         let outcome = async {
-            let state = wait_ready(&plan,&sdk,&mut access,&directory,login).await?;
-            let mut device = adopt_ready(&plan,&state,&sdk,&mut access,&directory,login).await?;
+            let state = wait_ready(&os,&plan,&sdk,&mut access,&directory,login).await?;
+            let mut device = adopt_ready(&os,&plan,&state,&sdk,&mut access,&directory,login).await?;
             access.refresh(&sdk).await?;
             // Physical binding precedes every overlay route. While a peer is
             // connecting, keep the original online authority and local login
             // observed; no packet is consumed until mTLS and digest proof pass.
-            establish(&mut endpoint,args.dial,&sdk,&mut access,&directory,login,&plan,&state).await?;
-            let result = packet_loop(&device,&mut endpoint,&sdk,&mut access,&directory,login,&plan,&state).await;
+            establish(&os,&mut endpoint,args.dial,&sdk,&mut access,&directory,login,&plan,&state).await?;
+            let result = packet_loop(&os,&device,&mut endpoint,&sdk,&mut access,&directory,login,&plan,&state).await;
             let stopped=device.shutdown().await;
             drop(device);
             stopped?;
             result
         }.await;
         access.stop();
-        let cleanup = release_plan(&plan,&args.plan).await;
+        let cleanup = release_plan_with_os(&os,&plan,&args.plan).await;
         cleanup?;
         outcome
     }.await;
@@ -167,6 +181,7 @@ fn local_current(directory: &Path, login: [u8; 32]) -> Result {
     Ok(())
 }
 async fn wait_ready(
+    os:&OwnerOs,
     plan: &TunPlan,
     sdk: &Sdk,
     access: &mut OnlinePacketAccess,
@@ -185,12 +200,12 @@ async fn wait_ready(
                 local_current(directory,login)?;
                 plan.validate(true)?;
                 if refreshed.elapsed()>=Duration::from_secs(1) {access.refresh(sdk).await?;refreshed=Instant::now();}
-                if let Some(state)=linux::inspect(plan).await? {
+                if let Some(state)=os.inspect(plan).await? {
                     // An incomplete original root installation is still DOWN;
                     // its UID/alias are set before persistence. Never open a
                     // descriptor until complete readback independently passes.
-                    if state.up && state.persistent && state.addresses.len()==2 {
-                        linux::verify(plan,&state,true)?;
+                    if os.ready(&state) {
+                        os.verify(plan,&state)?;
                         return Ok(state);
                     }
                 }
@@ -200,6 +215,7 @@ async fn wait_ready(
 }
 #[allow(clippy::too_many_arguments)]
 async fn adopt_ready(
+    os:&OwnerOs,
     plan: &TunPlan,
     state: &TunState,
     sdk: &Sdk,
@@ -222,12 +238,12 @@ async fn adopt_ready(
                 access.refresh(sdk).await?;
                 refreshed = Instant::now();
             }
-            match linux::adopt(plan, state).await {
-                Ok(device) => return Ok(PacketDevice::linux(device)),
+            match os.adopt(plan, state).await {
+                Ok(device) => return Ok(device),
                 Err(error)
                     if error
                         .downcast_ref::<io::Error>()
-                        .is_some_and(|error| error.raw_os_error() == Some(16)) =>
+                        .is_some_and(|error| cfg!(target_os="linux") && error.raw_os_error() == Some(16)) =>
                 {
                     tokio::time::sleep(Duration::from_millis(25)).await
                 }
@@ -242,6 +258,7 @@ async fn adopt_ready(
 }
 #[allow(clippy::too_many_arguments)]
 async fn establish(
+    os:&OwnerOs,
     endpoint: &mut DirectPacketEndpoint,
     dial: Option<SocketAddr>,
     sdk: &Sdk,
@@ -266,7 +283,7 @@ async fn establish(
             _=tick.tick()=>{
                 local_current(directory,login)?;
                 access.refresh(sdk).await?;
-                if linux::inspect(plan).await?.as_ref()!=Some(state){return Err(io::Error::other("original managed TUN changed during peer proof").into());}
+                if os.inspect(plan).await?.as_ref()!=Some(state){return Err(io::Error::other("original managed TUN changed during peer proof").into());}
             },
             result=&mut connection=>return result,
         }
@@ -281,6 +298,7 @@ struct Counters {
 }
 #[allow(clippy::too_many_arguments)]
 async fn packet_loop(
+    os:&OwnerOs,
     device: &PacketDevice,
     endpoint: &mut DirectPacketEndpoint,
     sdk: &Sdk,
@@ -315,7 +333,7 @@ async fn packet_loop(
                 if refreshed.elapsed()>=Duration::from_secs(1){
                     if let Err(error)=access.refresh(sdk).await{break Err(error.into());}
                     if let Err(error)=endpoint.validate_underlay(){break Err(error.into());}
-                    match linux::inspect(plan).await {Ok(Some(current)) if current==*state=>{},Ok(_)=>break Err(io::Error::other("managed TUN configuration changed").into()),Err(error)=>break Err(error)}
+                    match os.inspect(plan).await {Ok(Some(current)) if current==*state=>{},Ok(_)=>break Err(io::Error::other("managed TUN configuration changed").into()),Err(error)=>break Err(error)}
                     refreshed=Instant::now();
                 }
             },
@@ -347,10 +365,15 @@ async fn packet_loop(
     println!("TUN packet counters: {}", serde_json::to_string(&counters)?);
     outcome
 }
+#[cfg(all(test,target_os="linux"))]
 pub(super) async fn release_plan(plan: &TunPlan, path: &Path) -> Result {
+    release_plan_with_os(&OwnerOs::new()?,plan,path).await
+}
+pub(super) async fn release_plan_with_os(os:&OwnerOs,plan: &TunPlan, path: &Path) -> Result {
     match TunPlan::read(path) {
         Ok(current) if current == *plan => {
             std::fs::remove_file(path)?;
+            #[cfg(target_os="linux")]
             std::fs::File::open(
                 path.parent()
                     .ok_or_else(|| io::Error::other("TUN plan parent missing"))?,
@@ -371,7 +394,7 @@ pub(super) async fn release_plan(plan: &TunPlan, path: &Path) -> Result {
     let deadline = Instant::now() + Duration::from_secs(5);
     tokio::time::timeout_at(deadline,async {
         loop {
-            if linux::inspect(plan).await?.is_none(){return Ok::<(),Box<dyn std::error::Error+Send+Sync>>(());}
+            if os.absent(plan).await?{return Ok::<(),Box<dyn std::error::Error+Send+Sync>>(());}
             tokio::time::sleep(Duration::from_millis(50)).await;
         }
     }).await.map_err(|_|io::Error::other("original TUN/host-route cleanup was not confirmed within five seconds; root recovery journal is retained"))??;

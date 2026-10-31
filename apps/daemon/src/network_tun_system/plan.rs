@@ -11,6 +11,7 @@ use std::{
     os::unix::fs::{MetadataExt, OpenOptionsExt},
 };
 
+#[cfg(target_os="linux")]
 pub(super) const MAX_JSON: u64 = 65_536;
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "platform", rename_all = "snake_case", deny_unknown_fields)]
@@ -90,6 +91,16 @@ pub(super) struct TunPlan {
     pub signature: String,
 }
 impl TunPlan {
+    #[cfg(windows)]
+    pub async fn windows_binding(&self) -> Result<nestlink_privileged::windows::network_tun::PacketBinding> {
+        use nestlink_privileged::windows::{local_port_gate::ProcessIdentity, network_tun::PacketBinding};
+        let process=ProcessIdentity::read(self.process.pid())?;
+        let HostPrincipal::Windows {sid,session,image_volume,image_index}=&self.principal else {return Err(io::Error::other("Windows TUN requires the original Windows principal").into());};
+        if process_identity(process.pid).await?!=self.process || process.sid!=*sid || process.session!=*session || process.image_volume!=*image_volume || process.image_index!=*image_index {return Err(io::Error::other("original Windows TUN principal changed").into());}
+        let binding=PacketBinding {schema_version:1,owner_id:self.owner_id.clone(),plan_sha256:self.digest()?,process,expires_at_ms:self.expires_at_ms};
+        binding.check_current_owner()?;
+        Ok(binding)
+    }
     #[cfg(target_os = "linux")]
     pub fn linux_uid(&self) -> Result<u32> {
         match &self.principal {
@@ -103,6 +114,7 @@ impl TunPlan {
     pub fn digest(&self) -> Result<[u8; 32]> {
         Ok(nestlink_identity::digest(&serde_json::to_vec(self)?))
     }
+    #[cfg(target_os="linux")]
     pub fn link(&self) -> String {
         format!("nlt{}", &self.owner_id.replace('-', "")[..12])
     }

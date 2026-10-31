@@ -1,15 +1,22 @@
 //! Host-only managed Linux TUN. The ordinary owner holds all packet policy,
 //! login and carrier state; the separate root command only owns one OS plan.
 //! This module never turns space membership into permission to inject IP.
+#[cfg(target_os = "linux")]
 mod linux;
-#[cfg(test)]
+#[cfg(all(test, target_os = "linux"))]
 mod native_tests;
 mod owner;
 mod packet_device;
 mod plan;
+mod platform;
+#[cfg(target_os = "linux")]
 mod store;
 #[cfg(test)]
 mod tests;
+#[cfg(windows)]
+mod windows;
+#[cfg(windows)]
+pub(crate) use windows::{SystemTunArgs, run};
 
 use crate::space_dns_system::{process_identity, require_system_admin, system_wall_ms};
 pub(crate) use owner::{TunArgs, run as run_owner};
@@ -17,16 +24,22 @@ use packet_device::PacketDevice;
 use plan::TunPlan;
 use serde::{Deserialize, Serialize};
 use std::{io, path::PathBuf, time::Duration};
+#[cfg(target_os = "linux")]
 use store::JournalStore;
+use platform::OwnerOs;
+#[cfg(windows)]
+type TunState = nestlink_privileged::windows::network_tun::PacketReceipt;
 
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 #[derive(clap::Args)]
+#[cfg(target_os = "linux")]
 pub(crate) struct SystemTunArgs {
     #[command(subcommand)]
     action: SystemTunAction,
 }
 #[derive(clap::Subcommand)]
+#[cfg(target_os = "linux")]
 enum SystemTunAction {
     /// Create one root-private recovery directory; no network configuration.
     InitJournal {
@@ -59,6 +72,7 @@ enum SystemTunAction {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+#[cfg(target_os = "linux")]
 struct InterfaceIdentity {
     name: String,
     index: u32,
@@ -67,6 +81,7 @@ struct InterfaceIdentity {
 }
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+#[cfg(target_os = "linux")]
 struct TunState {
     identity: InterfaceIdentity,
     mtu: u16,
@@ -78,6 +93,7 @@ struct TunState {
 }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+#[cfg(target_os = "linux")]
 struct Journal {
     schema_version: u16,
     plan: TunPlan,
@@ -86,6 +102,7 @@ struct Journal {
     installed: Option<TunState>,
 }
 
+#[cfg(target_os = "linux")]
 pub(crate) async fn run(args: SystemTunArgs) -> Result {
     match args.action {
         SystemTunAction::InitJournal { journal_dir } => {
@@ -211,6 +228,7 @@ pub(crate) async fn run(args: SystemTunArgs) -> Result {
     }
 }
 
+#[cfg(target_os = "linux")]
 async fn monitor(journal: &Journal, path: &std::path::Path) -> Result {
     let signal = crate::space_dns_system::termination();
     tokio::pin!(signal);
@@ -238,6 +256,7 @@ async fn monitor(journal: &Journal, path: &std::path::Path) -> Result {
     }
 }
 
+#[cfg(target_os = "linux")]
 async fn recover(store: &JournalStore) -> Result {
     let Some(journal) = store.read()? else {
         return Ok(());

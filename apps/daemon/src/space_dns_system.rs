@@ -65,7 +65,7 @@ pub(crate) struct ProcessIdentity {
     incarnation: String,
     image: String,
 }
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", windows))]
 impl ProcessIdentity {
     pub(crate) fn pid(&self) -> u32 {
         self.pid
@@ -82,19 +82,19 @@ impl ProcessIdentity {
 
 // Share only the original bounded process/command primitives with the explicit
 // host TUN owner. DNS plans, journals and OS backend mutation stay private.
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", windows))]
 pub(crate) async fn process_identity(pid: u32) -> Result<ProcessIdentity> {
     identity(pid).await
 }
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", windows))]
 pub(crate) async fn require_system_admin() -> Result {
     require_admin().await
 }
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", windows))]
 pub(crate) fn system_wall_ms() -> Result<u64> {
     wall_ms()
 }
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", windows))]
 pub(crate) fn current_image_matches(process: &ProcessIdentity) -> Result<bool> {
     same_image(&process.image)
 }
