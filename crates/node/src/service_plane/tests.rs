@@ -15,6 +15,23 @@ use tokio::{
 };
 
 #[test]
+fn signed_service_deadline_counts_response_latency_once_and_keeps_both_original_caps() -> TestResult {
+    let request = Instant::now();
+    let received = request + Duration::from_millis(400);
+    // A 1000ms signed lifetime has 600ms left at receipt. Response time must
+    // not be deducted again from the original request's monotonic anchor.
+    assert_eq!(super::gate::signed_deadline(1000, 2000, request, received, 1400)?, request + Duration::from_millis(1000));
+    // A lagging wall observation cannot move past the original request cap.
+    assert_eq!(super::gate::signed_deadline(1000, 2000, request, received, 1000)?, request + Duration::from_millis(1000));
+    // A later wall observation still shortens the signed receipt-relative cap.
+    assert_eq!(super::gate::signed_deadline(1000, 2000, request, received, 1600)?, request + Duration::from_millis(800));
+    assert!(super::gate::signed_deadline(1000, 2000, request, request + Duration::from_millis(1000), 1000).is_err());
+    assert!(super::gate::signed_deadline(1000, 2000, request, received, 2000).is_err());
+    assert!(super::gate::signed_deadline(1500, 2000, request, received, 1400).is_err());
+    Ok(())
+}
+
+#[test]
 fn grouped_host_enforces_its_slice_and_requires_explicit_original_target_group_choice() -> TestResult
 {
     use nestlink_protocol::{api::ServiceLimits, service_plane::group::*};

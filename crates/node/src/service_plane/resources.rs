@@ -9,11 +9,11 @@ use nestlink_identity::service_plane::{
 use nestlink_protocol::service_plane::publication::SignedServiceIssuerDelegation;
 use nestlink_protocol::{
     ErrorCode,
-    service_plane::{SERVICE_PUBLICATIONS_PER_NODE, SERVICE_RESOURCE_MS},
+    service_plane::SERVICE_PUBLICATIONS_PER_NODE,
 };
 use std::{
     collections::{BTreeMap, HashSet},
-    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
+    time::{Instant, SystemTime, UNIX_EPOCH},
 };
 
 const MAX_REMEMBERED_PUBLICATIONS: usize = 4096;
@@ -259,19 +259,11 @@ impl ServiceResourceSet {
             )
             .into());
         }
-        let remaining = c
-            .expires_at_unix_ms
-            .checked_sub(wall)
-            .filter(|n| *n > 0)
-            .ok_or_else(|| rejected(ErrorCode::LeaseExpired))?;
-        if c.issued_at_unix_ms > wall {
-            return Err(rejected(ErrorCode::LeaseExpired).into());
-        }
-        let deadline = request_started
-            .checked_add(Duration::from_millis(remaining.min(SERVICE_RESOURCE_MS)))
-            .map(|end| end.min(node_deadline))
-            .filter(|end| *end > now)
-            .ok_or_else(|| rejected(ErrorCode::LeaseExpired))?;
+        // VerifiedServiceSnapshot already enforces its signed <=2s lifetime.
+        // Use the same receipt/request intersection as the original node lease;
+        // subtracting response latency from an old request anchor counts it twice.
+        let deadline = super::gate::signed_deadline(c.issued_at_unix_ms, c.expires_at_unix_ms, request_started, now, wall)?.min(node_deadline);
+        if deadline <= now { return Err(rejected(ErrorCode::LeaseExpired).into()); }
         let binding = Binding {
             deployment_id: q.deployment_id.clone(),
             security_epoch: q.security_epoch,
