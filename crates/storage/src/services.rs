@@ -13,8 +13,8 @@ use nestlink_protocol::{
     services::{SERVICE_APPROVAL_LIFETIME_MS, SERVICE_CHALLENGE_MS, revision_valid},
 };
 use rusqlite::{OptionalExtension, params};
-pub mod publication;
 pub mod private;
+pub mod publication;
 pub mod quota_recovery;
 
 pub const MAX_ACCOUNT_SERVICES: u64 = 128;
@@ -45,7 +45,16 @@ struct Approval {
     proof: String,
     revoked: bool,
 }
-type ServiceRow = (String, String, u64, String, Vec<u8>, bool, String, Option<String>);
+type ServiceRow = (
+    String,
+    String,
+    u64,
+    String,
+    Vec<u8>,
+    bool,
+    String,
+    Option<String>,
+);
 type ChallengeRow = (u64, u64, Vec<u8>, u64, u64);
 fn next(revision: u64) -> Result<u64, StorageError> {
     revision

@@ -1,6 +1,7 @@
 #![cfg(target_os = "linux")]
 use super::{DnsPlan, Journal, ProcessIdentity, Result, Value, command, io};
 use serde_json::json;
+use sha2::{Digest, Sha256};
 use std::{
     os::unix::fs::MetadataExt,
     path::{Path, PathBuf},
@@ -310,6 +311,15 @@ pub(super) fn verify_installed(plan: &DnsPlan, current: &Value) -> Result {
 
 pub(super) async fn install(plan: &DnsPlan) -> Result {
     let link = plan.link();
+    // Specify the locally administered unicast address in the create request.
+    // rtnl_create_link then sets NET_ADDR_SET before udev observes this device;
+    // systemd's default persistent-MAC policy respects this explicit choice.
+    // An initially random dummy MAC can otherwise change during the handoff.
+    let mut address_bytes: [u8; 32] = Sha256::digest(plan.marker().as_bytes()).into();
+    address_bytes[0] = (address_bytes[0] & 0xfc) | 0x02;
+    let address = address_bytes[..6].iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<Vec<_>>().join(":");
     run(
         "ip",
         [
@@ -317,6 +327,8 @@ pub(super) async fn install(plan: &DnsPlan) -> Result {
             "add",
             "name",
             &link,
+            "address",
+            &address,
             "alias",
             &plan.marker(),
             "type",
@@ -345,6 +357,7 @@ pub(super) async fn install(plan: &DnsPlan) -> Result {
         .ok_or_else(|| io::Error::other("created dummy address missing"))?
         .to_owned();
     if created["ifname"] != link
+        || created_address != address
         || created["linkinfo"]["info_kind"] != "dummy"
         || created["ifalias"].as_str().is_some_and(|alias| !alias.is_empty() && alias != plan.marker())
         || !created["flags"].as_array().is_some_and(|flags| !flags.iter().any(|flag| flag == "UP"))
@@ -368,7 +381,7 @@ pub(super) async fn install(plan: &DnsPlan) -> Result {
                 if observed["ifindex"].as_u64() != Some(created_index)
                     || observed["address"].as_str() != Some(created_address.as_str())
                 {
-                    return Err(io::Error::other("created interface incarnation changed before DNS setup; journal retained").into());
+                    return Err(io::Error::other(format!("created interface incarnation changed before DNS setup; expected index {created_index}, address {created_address}; observed index {}, address {}; journal retained",observed["ifindex"],observed["address"])).into());
                 }
                 let path = format!("/org/freedesktop/resolve1/link/_{created_index}");
                 if property(&path, "org.freedesktop.resolve1.Link", "DefaultRoute")

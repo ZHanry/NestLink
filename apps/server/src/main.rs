@@ -432,9 +432,17 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             local_prefixes,
         } => {
             let config = nestlink_node::control::NodeConfig::load(&config)?;
-            let local_prefixes = local_prefixes.as_deref().map(|path| {
-                nestlink_server::node_quic::LocalPrefixRegistration::load(path, &config.deployment_id, &config.node_id)
-            }).transpose()?.unwrap_or_default();
+            let local_prefixes = local_prefixes
+                .as_deref()
+                .map(|path| {
+                    nestlink_server::node_quic::LocalPrefixRegistration::load(
+                        path,
+                        &config.deployment_id,
+                        &config.node_id,
+                    )
+                })
+                .transpose()?
+                .unwrap_or_default();
             if !config
                 .roles
                 .contains(&(nestlink_protocol::NodeRole::NodeRelay as i32))

@@ -28,12 +28,28 @@ pub(super) fn retain_source(
         NativeConnection::Legacy(failed) => {
             let (failed, endpoint) = (*failed).into_stopped_parts().ok()?;
             let budget = failed.channels.lease_control().reconnection_budget().ok()?;
-            (NativeRecoveryTransport::Legacy { failed: Box::new(failed), endpoint: Box::new(endpoint) }, budget)
-        },
-        NativeConnection::Original { mut session, lifetime } => {
-            let budget = session.channels().lease_control().reconnection_budget().ok()?;
-            (NativeRecoveryTransport::Original { session, lifetime }, budget)
-        },
+            (
+                NativeRecoveryTransport::Legacy {
+                    failed: Box::new(failed),
+                    endpoint: Box::new(endpoint),
+                },
+                budget,
+            )
+        }
+        NativeConnection::Original {
+            mut session,
+            lifetime,
+        } => {
+            let budget = session
+                .channels()
+                .lease_control()
+                .reconnection_budget()
+                .ok()?;
+            (
+                NativeRecoveryTransport::Original { session, lifetime },
+                budget,
+            )
+        }
         // This first safe-recovery contract authorizes one successor only.
         NativeConnection::Recovered { .. } => return None,
     };
@@ -318,20 +334,36 @@ pub(super) async fn prepare_media(
     fence: &sdk_call::DispatchFence,
 ) -> Result<Option<nestlink_sdk::native::NativeMediaEvidence>, Failure> {
     if nestlink_protocol::media_authority::permit_formats(permit.claims())
-        .map_err(|_| Failure::local(FailureKind::Trust))?.is_none() { return Ok(None); }
-    let provider = config.media_provider.as_ref()
+        .map_err(|_| Failure::local(FailureKind::Trust))?
+        .is_none()
+    {
+        return Ok(None);
+    }
+    let provider = config
+        .media_provider
+        .as_ref()
         .ok_or_else(|| Failure::local(FailureKind::NativeSessionUnavailable))?;
     let direction = if identity.device_id == permit.claims().controller_device_id {
         nestlink_protocol::media_authority::MediaDirection::Decode
-    } else { nestlink_protocol::media_authority::MediaDirection::Encode };
-    let local = provider.publish(&client.sdk,identity,direction,fence).await
+    } else {
+        nestlink_protocol::media_authority::MediaDirection::Encode
+    };
+    let local = provider
+        .publish(&client.sdk, identity, direction, fence)
+        .await
         .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?;
     fence.check()?;
-    let frozen = client.sdk.remote_media_scope(&permit.claims().session_id).await
-        .map_err(Failure::from)?.ok_or_else(|| Failure::local(FailureKind::Trust))?;
+    let frozen = client
+        .sdk
+        .remote_media_scope(&permit.claims().session_id)
+        .await
+        .map_err(Failure::from)?
+        .ok_or_else(|| Failure::local(FailureKind::Trust))?;
     fence.check()?;
     Ok(Some(nestlink_sdk::native::NativeMediaEvidence {
-        frozen,local,internal_candidate:config.internal_software_media_candidate.clone(),
+        frozen,
+        local,
+        internal_candidate: config.internal_software_media_candidate.clone(),
     }))
 }
 
@@ -346,7 +378,14 @@ pub(super) async fn prove_endpoint(
 ) -> Result<LegacyConnection, Failure> {
     fence.check()?;
     let (cancel_sender, cancel_receiver) = watch::channel(false);
-    let media = prepare_media(client,identity,config,endpoint.native().verified_permit(),&fence).await?;
+    let media = prepare_media(
+        client,
+        identity,
+        config,
+        endpoint.native().verified_permit(),
+        &fence,
+    )
+    .await?;
     let establish = endpoint.establish_with_media(
         &client.sdk,
         identity,
@@ -407,11 +446,12 @@ async fn recover_native_session(
     if Instant::now() >= deadline || !same_server(&client.server, &context.server) {
         return Err(Failure::local(FailureKind::PermitExpired));
     }
-    let (failed,endpoint) = match transport {
+    let (failed, endpoint) = match transport {
         NativeRecoveryTransport::Original { session, lifetime } => {
-            return native_routed::recover(client,identity,session,lifetime,context,fence).await;
-        },
-        NativeRecoveryTransport::Legacy { failed, endpoint } => (failed,endpoint),
+            return native_routed::recover(client, identity, session, lifetime, context, fence)
+                .await;
+        }
+        NativeRecoveryTransport::Legacy { failed, endpoint } => (failed, endpoint),
     };
     let network = context.config.network().subscribe();
     let baseline = *network.borrow();

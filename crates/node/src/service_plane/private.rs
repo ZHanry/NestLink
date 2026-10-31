@@ -9,14 +9,15 @@ use std::{sync::Arc, time::Instant};
 pub struct PrivateServicePublication {
     authority: VerifiedPrivateServiceLease,
     publication: ServicePublication,
+    _usage_owner: crate::service_usage::PrivateServiceUsageOwner,
 }
 impl PrivateServicePublication {
     pub fn new(authority: VerifiedPrivateServiceLease, context: &PublicationContext,
         request_started: Instant, usage: Arc<ServiceUsageStore>) -> Result<Self, Error> {
-        usage.activate_private(&authority).map_err(nestlink_protocol::ContractError::from)?;
+        let usage_owner=usage.claim_private_owner(&authority).map_err(nestlink_protocol::ContractError::from)?;
         let publication = ServicePublication::new_with_usage_store(
             authority.lease().clone(), context, request_started, usage)?;
-        Ok(Self { authority, publication })
+        Ok(Self { authority, publication, _usage_owner:usage_owner })
     }
     pub fn authority(&self) -> &VerifiedPrivateServiceLease { &self.authority }
     pub fn handle(&self) -> ServicePublicationHandle { self.publication.handle() }

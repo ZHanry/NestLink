@@ -12,7 +12,7 @@ pub(super) async fn forward(
     let mapping = DatagramMapping::new(prepared).await?;
     forward_mapping(mapping,control,&context.connection,packets).await
 }
-pub(crate) async fn forward_mapping(mapping: DatagramMapping,mut control:BiStream,
+pub(crate) async fn forward_mapping<S:tokio::io::AsyncRead+Unpin>(mapping: DatagramMapping,mut control:S,
     connection:&quinn::Connection,mut packets:DatagramRoute) -> Result<(),SdkError> {
     let maximum_age = tokio::time::sleep(Duration::from_secs(60));
     tokio::pin!(maximum_age);

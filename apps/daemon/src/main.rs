@@ -49,8 +49,11 @@ struct Args {
     private_network_prefixes: Vec<String>,
     /// Private JSON NativeRouteSetSettings: explicit pinned space and two relays.
     /// Applies to future sessions and persists with the other local consent.
-    #[arg(long)]
+    #[arg(long, conflicts_with = "disable_native_route_set")]
     native_route_set: Option<PathBuf>,
+    /// Explicitly clear the persisted signed original-group opt-in.
+    #[arg(long)]
+    disable_native_route_set: bool,
     /// Exact finite CPU media target, e.g. 1920x1080@30:4000. No implied presets.
     #[arg(long, value_parser=parse_native_media_target)]
     native_media_target: Option<nestlink_media_codec::VideoConfig>,
@@ -478,8 +481,9 @@ async fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let network_store = Arc::new(NativeNetworkFileStore::open(&state_dir)?);
     // An explicit operator argument can add consent, while ordinary UI startup
     // must preserve saved settings instead of replacing them with an empty list.
-    if !args.private_network_prefixes.is_empty() || args.native_route_set.is_some() {
+    if !args.private_network_prefixes.is_empty() || args.native_route_set.is_some() || args.disable_native_route_set {
         let mut settings = network_store.load()?;
+        if args.disable_native_route_set { settings.route_set = None; }
         if let Some(path) = args.native_route_set {
             let bytes = nestlink_platform_security::read_private(&path, 8192)?;
             let route: nestlink_app_core::NativeRouteSetSettings = serde_json::from_slice(&bytes)?;

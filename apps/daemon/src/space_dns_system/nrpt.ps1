@@ -4,10 +4,19 @@ $ProgressPreference = 'SilentlyContinue'
 $env:PSModulePath = Join-Path ([Environment]::SystemDirectory) 'WindowsPowerShell\v1.0\Modules'
 $request = $env:NESTLINK_DNS_REQUEST | ConvertFrom-Json
 Remove-Item Env:NESTLINK_DNS_REQUEST
-# Process/token checks reuse the existing native local-process owner. Only
-# actual DNS operations need the constrained PowerShell DNS module.
-$dnsModule = Join-Path $env:PSModulePath 'DnsClient\DnsClient.psd1'
-Import-Module -Name $dnsModule -ErrorAction Stop
+# Import only the Microsoft provider used by this operation. Importing the
+# aggregate DnsClient manifest also loads every unrelated DNS adapter/cache/DoH
+# module and type/format file on each short-lived owner command. Keep the same
+# DNS cmdlets, trusted absolute system paths and three-second process deadline.
+$dnsDirectory = Join-Path $env:PSModulePath 'DnsClient'
+if ([string]$request.action -ceq 'query') {
+    Import-Module -Name (Join-Path $dnsDirectory 'DnsLookup.dll') -ErrorAction Stop
+} else {
+    Import-Module -Name (Join-Path $dnsDirectory 'PS_DnsClientNRPTRule_v1.0.0.cdxml') -ErrorAction Stop
+    if ([string]$request.action -cin @('preflight', 'install')) {
+        Import-Module -Name (Join-Path $dnsDirectory 'PS_DnsClientNrptPolicy_v1.0.0.cdxml') -ErrorAction Stop
+    }
+}
 function Emit($value) { ConvertTo-Json -InputObject $value -Depth 20 -Compress }
 function View($rule) {
     [ordered]@{

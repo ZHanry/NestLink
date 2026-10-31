@@ -3551,6 +3551,7 @@ dependencies = [
  "nestlink-identity",
  "nestlink-media-codec",
  "nestlink-media-session",
+ "nestlink-node",
  "nestlink-platform-clipboard",
  "nestlink-platform-network",
  "nestlink-platform-security",
@@ -3561,6 +3562,7 @@ dependencies = [
  "nestlink-server",
  "nestlink-session",
  "nestlink-storage",
+ "nestlink-transport-quic",
  "nestlink-transport-stream",
  "prost",
  "reqwest",
@@ -3569,6 +3571,7 @@ dependencies = [
  "thiserror 2.0.21",
  "tokio",
  "tower",
+ "uuid",
  "zeroize",
 ]
 
@@ -4074,6 +4077,7 @@ dependencies = [
  "rustls",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror 2.0.21",
  "tokio",
  "tokio-rustls",

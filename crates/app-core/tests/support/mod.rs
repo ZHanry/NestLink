@@ -33,7 +33,7 @@ pub fn seconds() -> Result<u64> {
 
 pub struct Server {
     pub config: ApprovedServer,
-    pub network_authority_key: [u8;32],
+    pub network_authority_key: [u8; 32],
     forbidden_responses: Arc<std::sync::Mutex<Vec<String>>>,
     task: tokio::task::JoinHandle<()>,
 }

@@ -187,6 +187,15 @@ pub(crate) async fn issue(
         .await?;
     Ok(Json(grant(&state, lease)?))
 }
+pub(crate) async fn withdraw_host(State(state):State<AppState>,headers:HeaderMap,
+    Path(id):Path<String>,Json(body):Json<SignedPrivateServiceHostWithdrawal>)->Result<StatusCode,ApiError>{
+    let claims:PrivateServiceHostClaims=decode_service_message(&body.claims,PRIVATE_SERVICE_MESSAGE_BYTES).map_err(StorageError::from)?;
+    if claims.service_id!=id{return Err(ApiError(StatusCode::FORBIDDEN,ErrorCode::IdentityMismatch));}
+    let token=access(&headers)?;
+    state.db_revocation(move |store|{let at=now_ms()?;let actor=store.authenticate(&token,at/1000)?;
+        store.withdraw_private_service_host(&actor,&body,at)}).await?;
+    Ok(StatusCode::NO_CONTENT)
+}
 pub(crate) async fn current(
     State(state): State<AppState>,
     headers: HeaderMap,

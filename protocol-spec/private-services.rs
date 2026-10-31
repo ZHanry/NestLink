@@ -92,6 +92,9 @@ pub struct PrivateServiceHostClaims {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct SignedPrivateServiceHost { pub claims: Vec<u8>, pub signature: Vec<u8> }
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct SignedPrivateServiceHostWithdrawal { pub claims: Vec<u8>, pub signature: Vec<u8> }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]

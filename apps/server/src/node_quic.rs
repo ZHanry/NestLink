@@ -188,7 +188,15 @@ pub async fn serve_with_chain_identity(
     identity: Arc<nestlink_identity::nodes::NodeIdentity>,
     shutdown: impl Future<Output = ()> + Send,
 ) -> io::Result<()> {
-    serve_inner(endpoint, selector, Some(identity), None, Vec::new(), shutdown).await
+    serve_inner(
+        endpoint,
+        selector,
+        Some(identity),
+        None,
+        Vec::new(),
+        shutdown,
+    )
+    .await
 }
 /// The registered relay owns real adjacency observations and their periodic
 /// signed reports alongside the original chain and legacy forwarding tasks.
@@ -199,7 +207,15 @@ pub async fn serve_with_topology_identity(
     reporter: Arc<nestlink_node::control::TopologyReporter>,
     shutdown: impl Future<Output = ()> + Send,
 ) -> io::Result<()> {
-    serve_inner(endpoint, selector, Some(identity), Some(reporter), Vec::new(), shutdown).await
+    serve_inner(
+        endpoint,
+        selector,
+        Some(identity),
+        Some(reporter),
+        Vec::new(),
+        shutdown,
+    )
+    .await
 }
 /// Explicit protected local approvals feed the existing topology owner. They
 /// permit only zero-payload host probes; publication still requires live grants.
@@ -211,7 +227,15 @@ pub async fn serve_with_topology_and_prefixes(
     prefixes: Vec<LocalPrefixRegistration>,
     shutdown: impl Future<Output = ()> + Send,
 ) -> io::Result<()> {
-    serve_inner(endpoint, selector, Some(identity), Some(reporter), prefixes, shutdown).await
+    serve_inner(
+        endpoint,
+        selector,
+        Some(identity),
+        Some(reporter),
+        prefixes,
+        shutdown,
+    )
+    .await
 }
 async fn serve_inner(
     endpoint: quinn::Endpoint,

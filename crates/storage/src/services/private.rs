@@ -186,6 +186,19 @@ impl Store {
         tx.execute("INSERT INTO private_service_hosts(service_id,runtime_id,request_sequence,claims_sha256,claims_json,expires_at) VALUES(?1,?2,?3,?4,?5,?6) ON CONFLICT(service_id) DO UPDATE SET runtime_id=excluded.runtime_id,request_sequence=excluded.request_sequence,claims_sha256=excluded.claims_sha256,claims_json=excluded.claims_json,expires_at=excluded.expires_at",params![c.service_id,c.runtime_id,c.request_sequence,digest(&signed.claims),serde_json::to_string(&c)?,c.expires_at_unix_ms])?;
         tx.commit()?; Ok(())
     }
+    pub fn withdraw_private_service_host(&mut self, actor:&Principal, signed:&SignedPrivateServiceHostWithdrawal, now:u64) -> Result<(),StorageError> {
+        let untrusted:PrivateServiceHostClaims=decode_service_message(&signed.claims,PRIVATE_SERVICE_MESSAGE_BYTES)?;
+        let tx=Transaction::new_unchecked(&self.connection,TransactionBehavior::Immediate)?;
+        let record=self.service_owner(actor,&untrusted.service_id,now/1000)?;
+        let key=self.device_record_at(&record.definition.host_device_id,now/1000)?.public_key;
+        let c=verify_private_service_host_withdrawal(signed,&key)?;
+        if c.deployment_id!=self.deployment_id()? || c.security_epoch!=self.security_epoch()?
+            || c.host_device_id!=record.definition.host_device_id || now<c.issued_at_unix_ms || now>=c.expires_at_unix_ms {return Err(StorageError::Forbidden);}
+        tx.execute("DELETE FROM private_service_hosts WHERE service_id=?1 AND runtime_id=?2 AND request_sequence<?3",
+            params![c.service_id,c.runtime_id,c.request_sequence])?;
+        tx.execute("UPDATE private_service_leases SET revoked=1 WHERE service_id=?1 AND runtime_id=?2",params![c.service_id,c.runtime_id])?;
+        tx.commit()?;Ok(())
+    }
     pub fn issue_private_service(&mut self, actor:&Principal, service:&str, request:PrivateServiceAccessRequest, signer:&ServiceLeaseSigner, now:u64) -> Result<SignedPrivateServiceLease,StorageError> {
         require_id(&request.request_id)?;
         let request_hash=digest(&serde_json::to_vec(&request)?);

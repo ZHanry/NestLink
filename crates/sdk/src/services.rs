@@ -2,10 +2,12 @@
 //! connection is created here, and no remote response chooses the local target.
 use crate::*;
 mod private;
-#[cfg(not(target_arch = "wasm32"))]
-pub use private::runtime::{PrivateServiceConnection, PrivateServiceHost, PrivateServiceHostConfig};
 use nestlink_protocol::service_plane::publication::{
     ServiceEdgeNamespaceUpdate, ServiceEdgeNamespaceView, ServicePublicationRequest,
+};
+#[cfg(not(target_arch = "wasm32"))]
+pub use private::runtime::{
+    PrivateServiceConnection, PrivateServiceHost, PrivateServiceHostConfig,
 };
 #[cfg(not(target_arch = "wasm32"))]
 use std::net::SocketAddr;

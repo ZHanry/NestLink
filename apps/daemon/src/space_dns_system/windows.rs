@@ -3,11 +3,7 @@ use super::{DnsPlan, Journal, ProcessIdentity, Result, Value, command, io};
 use base64::{Engine, engine::general_purpose::STANDARD};
 use serde_json::json;
 
-async fn invoke(
-    action: &str,
-    plan: Option<&DnsPlan>,
-    expected: Option<&Value>,
-) -> Result<Value> {
+async fn invoke(action: &str, plan: Option<&DnsPlan>, expected: Option<&Value>) -> Result<Value> {
     let source = include_str!("nrpt.ps1");
     let encoded = STANDARD.encode(
         source
@@ -27,7 +23,8 @@ async fn invoke(
         ],
         Some(("NESTLINK_DNS_REQUEST", serde_json::to_string(&request)?)),
     )
-    .await.map_err(|error| io::Error::other(format!("Windows split-DNS {action}: {error}")))?;
+    .await
+    .map_err(|error| io::Error::other(format!("Windows split-DNS {action}: {error}")))?;
     Ok(serde_json::from_slice(&bytes)?)
 }
 
@@ -36,7 +33,11 @@ pub(super) async fn identity(pid: u32) -> Result<ProcessIdentity> {
     Ok(ProcessIdentity {
         pid: observed.pid,
         incarnation: observed.creation.to_string(),
-        image: observed.image.to_str().ok_or_else(|| io::Error::other("non-Unicode resolver image"))?.into(),
+        image: observed
+            .image
+            .to_str()
+            .ok_or_else(|| io::Error::other("non-Unicode resolver image"))?
+            .into(),
     })
 }
 pub(super) async fn require_admin() -> Result {

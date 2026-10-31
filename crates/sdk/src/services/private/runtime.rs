@@ -26,16 +26,24 @@ pub struct PrivateServiceHost {
     task: Option<JoinHandle<Result<(), SdkError>>>,
     runtime: tokio::runtime::Handle,
     failed: bool,
+    cleanup_deadline: std::sync::Mutex<Option<tokio::time::Instant>>,
 }
 impl PrivateServiceHost {
     pub fn address(&self) -> SocketAddr { self.address }
-    pub fn stop(&self) { self.stop.send_replace(true); }
+    pub fn stop(&self) {
+        if let Ok(mut deadline)=self.cleanup_deadline.lock(){deadline.get_or_insert(tokio::time::Instant::now()+Duration::from_secs(5));}
+        self.stop.send_replace(true);
+    }
     /// Cancellation retains the original join handle. Success includes every
     /// connection worker and the real UDP socket/poller completion receipt.
     pub async fn wait_stopped(&mut self) -> Result<(), SdkError> {
         self.stop();
         let Some(task) = self.task.as_mut() else { return if self.failed {Err(SdkError::Trust)} else {Ok(())}; };
-        let result = task.await.map_err(|_| SdkError::Trust).and_then(|r|r);
+        let deadline=self.cleanup_deadline.lock().map_err(|_|SdkError::Trust)?.ok_or(SdkError::Trust)?;
+        let result = match tokio::time::timeout_at(deadline,&mut *task).await {
+            Err(_)=>return Err(SdkError::Timeout),
+            Ok(result)=>result.map_err(|_|SdkError::Trust).and_then(|r|r),
+        };
         self.task.take();
         self.failed = result.is_err();
         result
@@ -152,7 +160,7 @@ impl Sdk {
         }
         let (stop, stopped) = watch::channel(false);
         let task = tokio::spawn(run_host(self.clone(),host,Arc::new(consent),claims,listener,usage,stopped));
-        Ok(PrivateServiceHost { address, stop, task: Some(task), runtime: tokio::runtime::Handle::current(), failed: false })
+        Ok(PrivateServiceHost { address, stop, task: Some(task), runtime: tokio::runtime::Handle::current(), failed: false, cleanup_deadline:std::sync::Mutex::new(None) })
     }
     pub async fn connect_private_service(&self, consumer: &DeviceIdentity,
         lease: VerifiedPrivateServiceLease) -> Result<PrivateServiceConnection,SdkError> {
@@ -188,7 +196,7 @@ async fn register(sdk:&Sdk,host:&DeviceIdentity,base:&PrivateServiceHostClaims) 
     let mut claims=base.clone();
     claims.issued_at_unix_ms=private_wall_ms()?;
     claims.expires_at_unix_ms=claims.issued_at_unix_ms.checked_add(20_000).ok_or(SdkError::Invalid)?;
-    sdk.register_private_service_host(&claims.service_id,&host.identity.sign_private_service_host(&claims)?).await
+    tokio::time::timeout(Duration::from_secs(1),sdk.register_private_service_host(&claims.service_id,&host.identity.sign_private_service_host(&claims)?)).await.map_err(|_|SdkError::Timeout)?
 }
 async fn stopped(stop:&mut watch::Receiver<bool>) {
     loop { if *stop.borrow() || stop.changed().await.is_err() { return; } }
@@ -205,9 +213,20 @@ async fn run_host(sdk:Arc<Sdk>,host:Arc<DeviceIdentity>,consent:Arc<LocalService
         _=refresh.tick()=>{
             let Some(next)=presence.request_sequence.checked_add(1) else {failed=true;break;};
             presence.request_sequence=next;
-            if register(&sdk,&host,&presence).await.is_err() {failed=true;break;}
+            let registered=tokio::select!{biased;
+                _=stopped(&mut stop)=>break,
+                result=register(&sdk,&host,&presence)=>result,
+            };
+            if registered.is_err() {failed=true;break;}
+            let pending=usage.private_report_targets(&host.identity,&presence.runtime_id).map_err(usage_error);
+            if let Ok(pending)=pending {
+                for (grant,terminal)in pending {tokio::select!{biased;
+                    _=stopped(&mut stop)=>break,
+                    _=flush_report(&sdk,&usage,&host,&grant,terminal)=>{},
+                }}
+            }else{failed=true;break;}
         },
-        joined=workers.join_next(),if !workers.is_empty()=>{if joined.is_some_and(|r|r.is_err()){failed=true;}},
+        joined=workers.join_next(),if !workers.is_empty()=>{if matches!(joined,Some(Err(_)|Ok(Err(_)))){failed=true;}},
         incoming=listener.endpoint.accept()=>{
             let Some(incoming)=incoming else{break;};
             if workers.len()>=128 {incoming.refuse();continue;}
@@ -215,7 +234,14 @@ async fn run_host(sdk:Arc<Sdk>,host:Arc<DeviceIdentity>,consent:Arc<LocalService
         }
     }}
     listener.endpoint.close(0u32.into(),b"private service stopping");
-    while let Some(joined)=workers.join_next().await {if joined.is_err(){failed=true;}}
+    let mut withdrawal=presence.clone();
+    withdrawal.request_sequence=withdrawal.request_sequence.saturating_add(1);
+    withdrawal.issued_at_unix_ms=private_wall_ms().unwrap_or(u64::MAX);
+    withdrawal.expires_at_unix_ms=withdrawal.issued_at_unix_ms.saturating_add(20_000);
+    if let Ok(signed)=host.identity.withdraw_private_service_host(&withdrawal) {
+        if !matches!(tokio::time::timeout(Duration::from_secs(1),sdk.withdraw_private_service_host(&withdrawal.service_id,&signed)).await,Ok(Ok(()))){failed=true;}
+    }else{failed=true;}
+    while let Some(joined)=workers.join_next().await {if !matches!(joined,Ok(Ok(()))){failed=true;}}
     listener.close_and_wait().await?;
     if failed {return Err(SdkError::Trust);}
     Ok(())
@@ -239,25 +265,30 @@ async fn serve_connection(sdk:Arc<Sdk>,host:Arc<DeviceIdentity>,consent:Arc<Loca
         verify_private_service_open(&lease,&open)?;
         Ok::<_,SdkError>((connection,send,recv,lease,open,nonce))
     });
-    let (connection,mut send,recv,lease,open,nonce)=tokio::select!{biased;
+    let admitted=tokio::select!{biased;
         _=stopped(&mut stop)=>return Ok(()),
-        result=handshake=>result.map_err(|_|SdkError::Timeout)??,
+        result=handshake=>result,
     };
+    // Unauthenticated/mismatched socket attempts are ordinary refusals. Once
+    // a durable publication activates, every cleanup/report error is retained.
+    let Ok(Ok((connection,send,recv,lease,open,nonce)))=admitted else{return Ok(());};
+    let _connection_close=ConnectionClose(connection.clone());
     let context=PublicationContext {deployment_id:presence.deployment_id.clone(),security_epoch:presence.security_epoch,
         policy_revision:presence.policy_revision,service_lease_issuer:lease.lease().issuer()};
     let target=LocalTargetOwner::from_local_choice(context.clone(),consent.original_view.clone(),
         consent.target_id.clone(),consent.protocol.clone(),consent.address,host.identity.public_key())?;
-    let publication=PrivateServicePublication::new(lease.clone(),&context,Instant::now(),usage.clone())?;
-    let prepared=publication.prepare(&target,&open,nonce,&host.identity)?;
+    let ready=host.identity.private_service_ready(&lease,&open)?;
     let grant=usage_claims(&lease)?;
-    write_message(&mut send,&host.identity.private_service_ready(&lease,&open)?).await?;
-    let stream=BiStream::new(send,recv);
+    let publication=PrivateServicePublication::new(lease.clone(),&context,Instant::now(),usage.clone())?;
+    let mut stream=BiStream::new(send,recv);
     let forward=async {
+        let prepared=publication.prepare(&target,&open,nonce,&host.identity)?;
+        write_message(stream.parts_mut().0,&ready).await?;
         if consent.protocol=="udp" {
-            forward_udp(prepared,stream,&connection).await
+            forward_udp(prepared,&mut stream,&connection).await
         } else if let Some(tls)=consent.backend_tls.clone() {
-            prepared.forward_https(stream,move |socket|tls.connect(socket)).await?; Ok(())
-        } else {prepared.forward_stream(stream).await?;Ok(())}
+            prepared.forward_https(&mut stream,move |socket|tls.connect(socket)).await?; Ok(())
+        } else {prepared.forward_stream(&mut stream).await?;Ok(())}
     };
     let monitor=async {
         let mut tick=tokio::time::interval(Duration::from_secs(1));
@@ -267,13 +298,18 @@ async fn serve_connection(sdk:Arc<Sdk>,host:Arc<DeviceIdentity>,consent:Arc<Loca
             flush_report(&sdk,&usage,&host,&grant.grant_id,false).await?;
         }
     };
-    tokio::select!{biased;
-        _=stopped(&mut stop)=>{},
-        _=connection.closed()=>{},
-        _=monitor=>{},
-        _=forward=>{},
+    let completed=tokio::select!{biased;
+        _=stopped(&mut stop)=>false,
+        _=connection.closed()=>false,
+        _=monitor=>false,
+        result=forward=>result.is_ok(),
+    };
+    publication.revoke();target.revoke();
+    if completed && consent.protocol!="udp" {
+        let _=tokio::time::timeout(Duration::from_secs(3),stream.wait_finished()).await;
     }
-    publication.revoke();target.revoke();connection.close(0u32.into(),b"private grant ended");
+    drop(stream);
+    connection.close(0u32.into(),b"private grant ended");
     let token=publication.handle().wait_drained().await?;
     usage.confirm_drained(&token).map_err(usage_error)?;
     // A pending ordinary report is acknowledged first, then the final seal.
@@ -282,11 +318,13 @@ async fn serve_connection(sdk:Arc<Sdk>,host:Arc<DeviceIdentity>,consent:Arc<Loca
 }
 async fn flush_report(sdk:&Sdk,usage:&ServiceUsageStore,host:&DeviceIdentity,grant:&str,terminal:bool)->Result<bool,SdkError>{
     let Some(report)=usage.private_report(grant,&host.identity,terminal,private_wall_ms()?).map_err(usage_error)? else{return Ok(true);};
-    let ack=sdk.report_private_service_usage(&report).await?;
+    let ack=tokio::time::timeout(Duration::from_secs(1),sdk.report_private_service_usage(&report)).await.map_err(|_|SdkError::Timeout)??;
     usage.acknowledge_private_report(&ack).map_err(usage_error)?;
     Ok(ack.terminal)
 }
-async fn forward_udp(prepared:nestlink_node::service_plane::PreparedPrivateLocalTunnel,control:BiStream,
+struct ConnectionClose(quinn::Connection);
+impl Drop for ConnectionClose{fn drop(&mut self){self.0.close(0u32.into(),b"private connection owner ended");}}
+async fn forward_udp(prepared:nestlink_node::service_plane::PreparedPrivateLocalTunnel,control:&mut BiStream,
     connection:&quinn::Connection)->Result<(),SdkError>{
     let mapping=DatagramMapping::new_private(prepared).await?;
     let router=carrier::datagram::DatagramRouter::new();

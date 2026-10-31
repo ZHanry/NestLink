@@ -1,6 +1,7 @@
 # ADR 0033: Signed route-set application recovery
 
-Status: implemented source; exact-source Actions and product integration pending.
+Status: implemented source including product ownership and explicit local opt-in;
+exact-source Actions and target evidence pending.
 
 Applies to W14 / AC21 / AC22 / AC23. This ADR does not close those work packages
 or replace their platform, input, media and target-device evidence.

@@ -2036,14 +2036,24 @@ struct NativeRecoverySource {
     context: NativeRecoveryContext,
 }
 enum NativeRecoveryTransport {
-    Legacy { failed: Box<NativeSession>, endpoint: Box<LegacyEndpoint> },
-    Original { session: Box<nestlink_sdk::network::routed::ContinuousRouteSetSession>, lifetime: native_routed::RouteLifetime },
+    Legacy {
+        failed: Box<NativeSession>,
+        endpoint: Box<LegacyEndpoint>,
+    },
+    Original {
+        session: Box<nestlink_sdk::network::routed::ContinuousRouteSetSession>,
+        lifetime: native_routed::RouteLifetime,
+    },
 }
 impl NativeRecoverySource {
     fn stop(&self, reason: StopReason) {
         match &self.transport {
-            NativeRecoveryTransport::Legacy { failed, .. } => { let _ = failed.control.stop(reason); },
-            NativeRecoveryTransport::Original { session, .. } => { let _ = session.control().stop(reason); },
+            NativeRecoveryTransport::Legacy { failed, .. } => {
+                let _ = failed.control.stop(reason);
+            }
+            NativeRecoveryTransport::Original { session, .. } => {
+                let _ = session.control().stop(reason);
+            }
         }
     }
 }
@@ -4351,7 +4361,9 @@ impl Actor {
             native_connection_generation: None,
             service_host_runtime_id: None,
             future: Box::pin(async move {
-                let client = native_routed::poll_owned(client, identity.clone(), fence.clone(), route_poll).await;
+                let client =
+                    native_routed::poll_owned(client, identity.clone(), fence.clone(), route_poll)
+                        .await;
                 let result = native_renewal::poll(
                     &client,
                     &identity,
@@ -5022,7 +5034,10 @@ impl Actor {
                             }),
                         }),
                         send_order: AsyncMutex::new(()),
-                        cursor: Mutex::new(NativeVideoCursor { keyframe_pending: true, ..NativeVideoCursor::default() }),
+                        cursor: Mutex::new(NativeVideoCursor {
+                            keyframe_pending: true,
+                            ..NativeVideoCursor::default()
+                        }),
                         timing: media_timing.clone(),
                     }))
                 } else {
@@ -5130,7 +5145,9 @@ impl Actor {
                 self.native_session_task = Some(tokio::spawn(async move {
                     let recovery_context = established.recovery;
                     let mut session = established.session;
-                    let stopped = session.wait_owned(&mut route_requests, &recovery_context).await;
+                    let stopped = session
+                        .wait_owned(&mut route_requests, &recovery_context)
+                        .await;
                     if let Some(control) = stop_control {
                         stop_key.lease_sequence = control.lease_sequence();
                     }
@@ -5517,11 +5534,20 @@ async fn establish_native_session(
         .map_err(|_| Failure::local(FailureKind::NativeSessionUnavailable))?;
     if config.route_set.is_some() {
         let core_generation = fence.expected;
-        let session = native_routed::establish(client,identity,&config,permit,&peer_key,&key,options,fence).await?;
+        let session = native_routed::establish(
+            client, identity, &config, permit, &peer_key, &key, options, fence,
+        )
+        .await?;
         key.path = nestlink_protocol::Path::Relay as i32;
         return Ok(EstablishedNativeSession {
-            session, key, recovery: NativeRecoveryContext {
-                config,peer_key,core_generation,server:client.server.clone(),deadline:None,
+            session,
+            key,
+            recovery: NativeRecoveryContext {
+                config,
+                peer_key,
+                core_generation,
+                server: client.server.clone(),
+                deadline: None,
             },
         });
     }

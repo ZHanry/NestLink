@@ -191,9 +191,14 @@ impl NativeSessionConfig {
         }
     }
 
-    pub fn with_route_set(mut self, route_set: crate::NativeRouteSetSettings) -> Result<Self, NativeNetworkError> {
+    pub fn with_route_set(
+        mut self,
+        route_set: crate::NativeRouteSetSettings,
+    ) -> Result<Self, NativeNetworkError> {
         route_set.validate()?;
-        if self.relay_node_id.is_some() || self.pcp_gateway.is_some() { return Err(NativeNetworkError::Invalid); }
+        if self.relay_node_id.is_some() || self.pcp_gateway.is_some() {
+            return Err(NativeNetworkError::Invalid);
+        }
         self.route_set = Some(route_set);
         Ok(self)
     }
@@ -238,9 +243,10 @@ impl NativeSessionConfig {
     pub(crate) fn validate(&self) -> bool {
         self.network_settings().validate().is_ok()
             && (self.route_set.is_none() || self.relay_node_id.is_none())
-            && self.relay_node_id
-            .as_ref()
-            .is_none_or(|id| nestlink_protocol::valid_id(id))
+            && self
+                .relay_node_id
+                .as_ref()
+                .is_none_or(|id| nestlink_protocol::valid_id(id))
             && self.stun_servers.len() <= 4
             && self.pcp_gateway.is_none_or(|gateway| gateway.is_private())
             && self.private_network_prefixes.len() <= 32

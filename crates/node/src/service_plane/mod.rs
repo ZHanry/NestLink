@@ -3,8 +3,8 @@
 mod datagram;
 pub(crate) mod gate;
 mod ingress;
-mod resources;
 mod private;
+mod resources;
 mod stream;
 mod target;
 #[cfg(test)]
@@ -12,7 +12,9 @@ pub(crate) mod test_support;
 #[cfg(test)]
 mod tests;
 
-pub use datagram::{DatagramMapping, DatagramPacket, DatagramReply, ReplayWindow as ServiceDatagramReplayWindow};
+pub use datagram::{
+    DatagramMapping, DatagramPacket, DatagramReply, ReplayWindow as ServiceDatagramReplayWindow,
+};
 pub use gate::{
     PublicationContext, ServiceDrainToken, ServiceFlowPermit, ServicePublication,
     ServicePublicationHandle,
@@ -23,10 +25,12 @@ pub use ingress::{
     PendingServiceTcp, PendingServiceWebOpen, ServiceTcpIngress, ServiceUdpIngress,
     ServiceWebIngress, ServiceWebVisitor,
 };
+pub use private::PrivateServicePublication;
 pub use resources::ServiceResourceSet;
 pub use stream::forward_streams;
-pub use target::{LocalTargetOwner, PendingTunnelOpen, PreparedLocalTunnel, PreparedPrivateLocalTunnel};
-pub use private::PrivateServicePublication;
+pub use target::{
+    LocalTargetOwner, PendingTunnelOpen, PreparedLocalTunnel, PreparedPrivateLocalTunnel,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

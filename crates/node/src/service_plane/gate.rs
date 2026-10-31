@@ -408,9 +408,7 @@ impl ServicePublicationHandle {
             }
             _ => false,
         };
-        if !admitted
-            || target_stop.as_ref().is_some_and(|s| *s.borrow())
-        {
+        if !admitted || target_stop.as_ref().is_some_and(|s| *s.borrow()) {
             return Err(rejected(ErrorCode::PermissionRequired).into());
         }
         if state.meter.counters().admitted_bytes

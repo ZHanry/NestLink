@@ -199,6 +199,16 @@ impl BiStream {
     pub fn parts_mut(&mut self) -> (&mut quinn::SendStream, &mut quinn::RecvStream) {
         (&mut self.send, &mut self.recv)
     }
+    /// Quinn confirms that the peer acknowledged every byte and FIN. A reset
+    /// is not a successful half-close receipt, and an unfinished writer cannot
+    /// certify queued application bytes before its connection is closed.
+    pub async fn wait_finished(&mut self) -> io::Result<()> {
+        if !self.write_finished { return Err(io::ErrorKind::BrokenPipe.into()); }
+        match self.send.stopped().await.map_err(io::Error::other)? {
+            None => Ok(()),
+            Some(_) => Err(io::ErrorKind::BrokenPipe.into()),
+        }
+    }
 }
 impl AsyncRead for BiStream {
     fn poll_read(

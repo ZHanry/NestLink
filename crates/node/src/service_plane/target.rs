@@ -204,10 +204,14 @@ impl LocalTargetOwner {
         host: &InstallationIdentity,
     ) -> Result<PreparedPrivateLocalTunnel, Error> {
         lease.check_time(wall()?)?;
-        if !self.accepts(lease.lease()) || host.public_key() != self.host_public_key
+        if !self.accepts(lease.lease())
+            || host.public_key() != self.host_public_key
             || lease.claims().host_public_key != self.host_public_key
-            || open.nonce != expected_nonce || expected_nonce == [0; 32]
-        { return Err(Error::Target); }
+            || open.nonce != expected_nonce
+            || expected_nonce == [0; 32]
+        {
+            return Err(Error::Target);
+        }
         nestlink_identity::services::private::verify_private_service_open(lease, open)?;
         let deadline = publication.deadline()?;
         let key = digest(&open.consumer_signature);
@@ -219,9 +223,13 @@ impl LocalTargetOwner {
         }
         let flow = publication.reserve_private(lease, self.stopped.subscribe())?;
         used.insert(key, deadline);
-        Ok(PreparedPrivateLocalTunnel { flow, address: self.address,
-            protocol: self.protocol.clone(), stream_id: lease.lease().claims().publication_id.clone(),
-            challenge_deadline: deadline.min(now + Duration::from_secs(3)) })
+        Ok(PreparedPrivateLocalTunnel {
+            flow,
+            address: self.address,
+            protocol: self.protocol.clone(),
+            stream_id: lease.lease().claims().publication_id.clone(),
+            challenge_deadline: deadline.min(now + Duration::from_secs(3)),
+        })
     }
 }
 impl Drop for LocalTargetOwner {
@@ -271,51 +279,92 @@ impl PreparedLocalTunnel {
         F: FnOnce(TcpStream) -> Fut,
         Fut: std::future::Future<Output = std::io::Result<T>>,
     {
-        forward_local_target(self.flow, self.address, self.challenge_deadline, carrier, adapter).await
+        forward_local_target(
+            self.flow,
+            self.address,
+            self.challenge_deadline,
+            carrier,
+            adapter,
+        )
+        .await
     }
 }
 impl PreparedPrivateLocalTunnel {
     pub async fn forward_stream<S>(self, carrier: S) -> Result<(), Error>
-    where S: AsyncRead + AsyncWrite + Unpin {
-        if !matches!(self.protocol.as_str(), "tcp" | "http") { return Err(Error::Target); }
-        forward_local_target(self.flow, self.address, self.challenge_deadline, carrier,
-            |target| std::future::ready(Ok(target))).await
+    where
+        S: AsyncRead + AsyncWrite + Unpin,
+    {
+        if !matches!(self.protocol.as_str(), "tcp" | "http") {
+            return Err(Error::Target);
+        }
+        forward_local_target(
+            self.flow,
+            self.address,
+            self.challenge_deadline,
+            carrier,
+            |target| std::future::ready(Ok(target)),
+        )
+        .await
     }
-    pub async fn forward_https<S,T,F,Fut>(self, carrier: S, tls: F) -> Result<(), Error>
-    where S: AsyncRead + AsyncWrite + Unpin, T: AsyncRead + AsyncWrite + Unpin,
-        F: FnOnce(TcpStream) -> Fut, Fut: std::future::Future<Output=std::io::Result<T>> {
-        if self.protocol != "https" { return Err(Error::Target); }
-        forward_local_target(self.flow, self.address, self.challenge_deadline, carrier, tls).await
+    pub async fn forward_https<S, T, F, Fut>(self, carrier: S, tls: F) -> Result<(), Error>
+    where
+        S: AsyncRead + AsyncWrite + Unpin,
+        T: AsyncRead + AsyncWrite + Unpin,
+        F: FnOnce(TcpStream) -> Fut,
+        Fut: std::future::Future<Output = std::io::Result<T>>,
+    {
+        if self.protocol != "https" {
+            return Err(Error::Target);
+        }
+        forward_local_target(
+            self.flow,
+            self.address,
+            self.challenge_deadline,
+            carrier,
+            tls,
+        )
+        .await
     }
 }
-async fn forward_local_target<S,T,F,Fut>(flow: ServiceFlowPermit, address: SocketAddr,
-    challenge_deadline: Instant, carrier: S, adapter: F) -> Result<(), Error>
-where S: AsyncRead + AsyncWrite + Unpin, T: AsyncRead + AsyncWrite + Unpin,
-    F: FnOnce(TcpStream) -> Fut, Fut: std::future::Future<Output=std::io::Result<T>> {
-        if Instant::now() >= challenge_deadline {
-            return Err(rejected(ErrorCode::LeaseExpired).into());
-        }
-        flow.check_live()?;
-        let connect = TcpStream::connect(address);
-        let target = tokio::select! { biased;
-            _=flow.wait_stopped()=>return Err(rejected(ErrorCode::PolicyRevoked).into()),
-            _=tokio::time::sleep_until(challenge_deadline.into())=>return Err(rejected(ErrorCode::LeaseExpired).into()),
-            result=tokio::time::timeout(Duration::from_secs(3),connect)=>result.map_err(|_| Error::Timeout("local TCP connect"))??,
-        };
-        if Instant::now() >= challenge_deadline {
-            return Err(rejected(ErrorCode::LeaseExpired).into());
-        }
-        flow.check_live()?;
-        let target = tokio::select! {biased;
-            _=flow.wait_stopped()=>return Err(rejected(ErrorCode::PolicyRevoked).into()),
-            _=tokio::time::sleep_until(challenge_deadline.into())=>return Err(rejected(ErrorCode::LeaseExpired).into()),
-            target=adapter(target)=>target?,
-        };
-        if Instant::now() >= challenge_deadline { return Err(rejected(ErrorCode::LeaseExpired).into()); }
-        flow.check_live()?;
-        // The challenge gates local connection establishment. Connected flows
-        // continue under their publication, node, idle and explicit stop owners.
-        forward_streams(carrier, target, flow).await
+async fn forward_local_target<S, T, F, Fut>(
+    flow: ServiceFlowPermit,
+    address: SocketAddr,
+    challenge_deadline: Instant,
+    carrier: S,
+    adapter: F,
+) -> Result<(), Error>
+where
+    S: AsyncRead + AsyncWrite + Unpin,
+    T: AsyncRead + AsyncWrite + Unpin,
+    F: FnOnce(TcpStream) -> Fut,
+    Fut: std::future::Future<Output = std::io::Result<T>>,
+{
+    if Instant::now() >= challenge_deadline {
+        return Err(rejected(ErrorCode::LeaseExpired).into());
+    }
+    flow.check_live()?;
+    let connect = TcpStream::connect(address);
+    let target = tokio::select! { biased;
+        _=flow.wait_stopped()=>return Err(rejected(ErrorCode::PolicyRevoked).into()),
+        _=tokio::time::sleep_until(challenge_deadline.into())=>return Err(rejected(ErrorCode::LeaseExpired).into()),
+        result=tokio::time::timeout(Duration::from_secs(3),connect)=>result.map_err(|_| Error::Timeout("local TCP connect"))??,
+    };
+    if Instant::now() >= challenge_deadline {
+        return Err(rejected(ErrorCode::LeaseExpired).into());
+    }
+    flow.check_live()?;
+    let target = tokio::select! {biased;
+        _=flow.wait_stopped()=>return Err(rejected(ErrorCode::PolicyRevoked).into()),
+        _=tokio::time::sleep_until(challenge_deadline.into())=>return Err(rejected(ErrorCode::LeaseExpired).into()),
+        target=adapter(target)=>target?,
+    };
+    if Instant::now() >= challenge_deadline {
+        return Err(rejected(ErrorCode::LeaseExpired).into());
+    }
+    flow.check_live()?;
+    // The challenge gates local connection establishment. Connected flows
+    // continue under their publication, node, idle and explicit stop owners.
+    forward_streams(carrier, target, flow).await
 }
 impl PendingTunnelOpen {
     pub fn lease(&self) -> &VerifiedServiceLease {

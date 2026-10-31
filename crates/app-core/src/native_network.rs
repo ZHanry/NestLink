@@ -44,14 +44,21 @@ pub struct NativeRouteSetSettings {
 impl NativeRouteSetSettings {
     pub fn validate(&self) -> Result<(), NativeNetworkError> {
         if ![
-            &self.deployment_id, &self.space_id,
-            &self.controller_membership_grant_id, &self.host_membership_grant_id,
-            &self.node_ids[0], &self.node_ids[1],
-        ].into_iter().all(|id| nestlink_protocol::valid_id(id))
+            &self.deployment_id,
+            &self.space_id,
+            &self.controller_membership_grant_id,
+            &self.host_membership_grant_id,
+            &self.node_ids[0],
+            &self.node_ids[1],
+        ]
+        .into_iter()
+        .all(|id| nestlink_protocol::valid_id(id))
             || self.authority_key == [0; 32]
             || self.node_ids[0] == self.node_ids[1]
             || self.controller_membership_grant_id == self.host_membership_grant_id
-        { return Err(NativeNetworkError::Invalid); }
+        {
+            return Err(NativeNetworkError::Invalid);
+        }
         Ok(())
     }
 }
@@ -111,7 +118,9 @@ impl NativeNetworkSettings {
     pub fn validate(&self) -> Result<(), NativeNetworkError> {
         if let Some(route_set) = &self.route_set {
             route_set.validate()?;
-            if self.pcp_gateway.is_some() { return Err(NativeNetworkError::Invalid); }
+            if self.pcp_gateway.is_some() {
+                return Err(NativeNetworkError::Invalid);
+            }
         }
         if self
             .pcp_gateway
@@ -213,29 +222,44 @@ mod tests {
     use super::*;
 
     #[test]
-    fn signed_route_set_requires_independent_local_scope_and_legacy_settings_stay_default_off() -> Result<(),Box<dyn std::error::Error>> {
-        let legacy: NativeNetworkSettings = serde_json::from_str(r#"{"use_deployment_stun":true,"private_network_prefixes":[]}"#)?;
+    fn signed_route_set_requires_independent_local_scope_and_legacy_settings_stay_default_off()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let legacy: NativeNetworkSettings =
+            serde_json::from_str(r#"{"use_deployment_stun":true,"private_network_prefixes":[]}"#)?;
         assert!(legacy.route_set.is_none());
         assert!(!serde_json::to_string(&legacy)?.contains("route_set"));
         let id = |last| format!("00000000-0000-4000-8000-{last:012}");
         let approved = NativeRouteSetSettings {
-            deployment_id:id(1),space_id:id(2),authority_key:[3;32],
-            controller_membership_grant_id:id(4),host_membership_grant_id:id(5),node_ids:[id(6),id(7)],
+            deployment_id: id(1),
+            space_id: id(2),
+            authority_key: [3; 32],
+            controller_membership_grant_id: id(4),
+            host_membership_grant_id: id(5),
+            node_ids: [id(6), id(7)],
         };
-        let mut settings = NativeNetworkSettings { route_set:Some(approved.clone()),..Default::default() };
+        let mut settings = NativeNetworkSettings {
+            route_set: Some(approved.clone()),
+            ..Default::default()
+        };
         assert!(settings.validate().is_ok());
-        assert_eq!(serde_json::from_str::<NativeNetworkSettings>(&serde_json::to_string(&settings)?)?,settings);
-        settings.pcp_gateway=Some("10.0.0.1".parse()?);
-        assert_eq!(settings.validate(),Err(NativeNetworkError::Invalid));
+        assert_eq!(
+            serde_json::from_str::<NativeNetworkSettings>(&serde_json::to_string(&settings)?)?,
+            settings
+        );
+        settings.pcp_gateway = Some("10.0.0.1".parse()?);
+        assert_eq!(settings.validate(), Err(NativeNetworkError::Invalid));
         for mutation in 0..4 {
-            let mut invalid=approved.clone();
+            let mut invalid = approved.clone();
             match mutation {
-                0=>invalid.authority_key=[0;32],
-                1=>invalid.node_ids[1]=invalid.node_ids[0].clone(),
-                2=>invalid.host_membership_grant_id=invalid.controller_membership_grant_id.clone(),
-                _=>invalid.deployment_id="untrusted deployment".into(),
+                0 => invalid.authority_key = [0; 32],
+                1 => invalid.node_ids[1] = invalid.node_ids[0].clone(),
+                2 => {
+                    invalid.host_membership_grant_id =
+                        invalid.controller_membership_grant_id.clone()
+                }
+                _ => invalid.deployment_id = "untrusted deployment".into(),
             }
-            assert_eq!(invalid.validate(),Err(NativeNetworkError::Invalid));
+            assert_eq!(invalid.validate(), Err(NativeNetworkError::Invalid));
         }
         Ok(())
     }

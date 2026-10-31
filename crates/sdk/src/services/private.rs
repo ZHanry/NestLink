@@ -77,6 +77,10 @@ impl Sdk {
             &format!("{}/private-host", resource("services", id)?), Some(signed), true).await?;
         Ok(())
     }
+    pub async fn withdraw_private_service_host(&self,id:&str,signed:&SignedPrivateServiceHostWithdrawal)->Result<(),SdkError>{
+        self.call::<_,serde_json::Value>(Method::DELETE,&format!("{}/private-host",resource("services",id)?),Some(signed),true).await?;
+        Ok(())
+    }
     pub async fn request_private_service(&self, id: &str, request: PrivateServiceAccessRequest) -> Result<VerifiedPrivateServiceLease, SdkError> {
         if !valid_id(&request.request_id) || !valid_id(&request.consumer_device_id) || request.maximum_bytes == 0 {
             return Err(SdkError::Invalid);

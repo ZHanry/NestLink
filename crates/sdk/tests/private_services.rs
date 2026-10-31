@@ -116,6 +116,7 @@ async fn private_tcp_preserves_half_close_without_public_edge_and_charges_origin
             assert_eq!(usage.spent_bytes,spent);assert_eq!(usage.outstanding_bytes,0);
         }
         let endpoint=host.address();host.wait_stopped().await?;drop(host);
+        assert_eq!(f.sdk.private_services(&f.consumer.device_id,None,20).await?.entries[0].availability,PrivateServiceAvailability::Offline);
         let rebound=std::net::UdpSocket::bind(endpoint)?;drop(rebound);
         std::fs::remove_dir_all(f.usage)?;
         Ok::<_,Box<dyn std::error::Error+Send+Sync>>(())

@@ -96,6 +96,7 @@ impl NativeNetworkPanel {
                     self.approved = false;
                 }
                 if self.enable_route_set {
+                    ui.small(t("当前候选功能的路径授权最多 30 秒，只支持一次安全恢复；期限届满后需建立新会话。", "This candidate feature has a fixed path lifetime of at most 30 seconds and supports one safe recovery. Start a new session after it expires."));
                     ui.label(t("在双方设备配置相同的空间、成员凭据和节点顺序。中继切换将清理旧输入和媒体后重新认证，恢复后重新选择共享屏幕。", "Configure the same space, memberships and node order on both devices. Recovery clears old input and media before fresh authentication. Select the shared screen again afterwards."));
                     for (label,value) in [
                         (t("部署 ID", "Deployment ID"), &mut self.route_deployment),

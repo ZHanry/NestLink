@@ -1,7 +1,7 @@
 #![allow(clippy::unwrap_used)]
-mod support;
 #[path = "native_session/route_set.rs"]
 mod route_set;
+mod support;
 
 use nestlink_app_core::*;
 use nestlink_protocol::{

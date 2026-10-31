@@ -622,7 +622,7 @@ pub fn router(state: AppState) -> Router {
         )
         .route(
             "/api/v3/services/{id}/private-host",
-            post(private_services::host),
+            post(private_services::host).delete(private_services::withdraw_host),
         )
         .route(
             "/api/v3/services/{id}/private-access",

@@ -133,20 +133,39 @@ pub struct DatagramMapping {
 }
 impl DatagramMapping {
     pub async fn new(prepared: PreparedLocalTunnel) -> Result<Self, Error> {
-        Self::from_target(prepared.flow, prepared.address, prepared.protocol,
-            prepared.stream_id, prepared.challenge_deadline).await
+        Self::from_target(
+            prepared.flow,
+            prepared.address,
+            prepared.protocol,
+            prepared.stream_id,
+            prepared.challenge_deadline,
+        )
+        .await
     }
     pub async fn new_private(prepared: super::PreparedPrivateLocalTunnel) -> Result<Self, Error> {
-        Self::from_target(prepared.flow, prepared.address, prepared.protocol,
-            prepared.stream_id, prepared.challenge_deadline).await
+        Self::from_target(
+            prepared.flow,
+            prepared.address,
+            prepared.protocol,
+            prepared.stream_id,
+            prepared.challenge_deadline,
+        )
+        .await
     }
-    async fn from_target(flow: ServiceFlowPermit, address: SocketAddr, protocol: String,
-        stream_id: String, challenge_deadline: std::time::Instant) -> Result<Self, Error> {
+    async fn from_target(
+        flow: ServiceFlowPermit,
+        address: SocketAddr,
+        protocol: String,
+        stream_id: String,
+        challenge_deadline: std::time::Instant,
+    ) -> Result<Self, Error> {
         if protocol != "udp" {
             return Err(Error::Target);
         }
         flow.check_live()?;
-        if std::time::Instant::now() >= challenge_deadline { return Err(rejected(ErrorCode::LeaseExpired).into()); }
+        if std::time::Instant::now() >= challenge_deadline {
+            return Err(rejected(ErrorCode::LeaseExpired).into());
+        }
         let bind: SocketAddr = if address.is_ipv4() {
             "0.0.0.0:0"
         } else {
@@ -161,7 +180,9 @@ impl DatagramMapping {
             connected=socket.connect(address)=>connected?,
         }
         flow.check_live()?;
-        if std::time::Instant::now() >= challenge_deadline { return Err(rejected(ErrorCode::LeaseExpired).into()); }
+        if std::time::Instant::now() >= challenge_deadline {
+            return Err(rejected(ErrorCode::LeaseExpired).into());
+        }
         Ok(Self {
             socket,
             flow,

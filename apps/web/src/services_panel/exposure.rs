@@ -2,7 +2,12 @@
 use super::*;
 use nestlink_protocol::services::private::*;
 
-enum Action { Read, Save, Allow, Revoke(String) }
+enum Action {
+    Read,
+    Save,
+    Allow,
+    Revoke(String),
+}
 enum Request {
     Read,
     Save(ServiceExposureUpdate),
@@ -11,22 +16,36 @@ enum Request {
 }
 
 fn mode(value: &str) -> Option<ServiceAccessMode> {
-    Some(match value { "private" => ServiceAccessMode::Private, "public" => ServiceAccessMode::Public,
-        "both" => ServiceAccessMode::Both, _ => return None })
+    Some(match value {
+        "private" => ServiceAccessMode::Private,
+        "public" => ServiceAccessMode::Public,
+        "both" => ServiceAccessMode::Both,
+        _ => return None,
+    })
 }
 fn mode_name(value: ServiceAccessMode) -> &'static str {
-    match value { ServiceAccessMode::Private => "private", ServiceAccessMode::Public => "public", ServiceAccessMode::Both => "both" }
+    match value {
+        ServiceAccessMode::Private => "private",
+        ServiceAccessMode::Public => "public",
+        ServiceAccessMode::Both => "both",
+    }
 }
 fn subject_label(subject: &PrivateServiceSubject) -> String {
     match subject {
-        PrivateServiceSubject::Account { account_id } => format!("{}: {account_id}", t("账号", "Account")),
-        PrivateServiceSubject::Installation { installation_id } => format!("{}: {installation_id}", t("设备", "Device")),
+        PrivateServiceSubject::Account { account_id } => {
+            format!("{}: {account_id}", t("账号", "Account"))
+        }
+        PrivateServiceSubject::Installation { installation_id } => {
+            format!("{}: {installation_id}", t("设备", "Device"))
+        }
     }
 }
 
 #[component]
 pub(super) fn ServiceExposurePanel(
-    api: Api, page: RwSignal<Option<ServicePage>>, session_revision: RwSignal<u64>,
+    api: Api,
+    page: RwSignal<Option<ServicePage>>,
+    session_revision: RwSignal<u64>,
     auth_failure: Callback<SdkHandle>,
 ) -> impl IntoView {
     let selected = RwSignal::new(String::new());
@@ -49,96 +68,176 @@ pub(super) fn ServiceExposurePanel(
     Effect::new(move |_| {
         let _ = (selected.get(), session_revision.get(), page.get());
         generation.update(|g| *g = g.wrapping_add(1));
-        policy.set(None); loaded.set(false); busy.set(false);
-        space.set(String::new()); private_bytes.set("0".into()); public_bytes.set(String::new());
-        exposure_mode.set("public".into()); subject_id.set(String::new());
-        problem.set(String::new()); message.set(String::new());
+        policy.set(None);
+        loaded.set(false);
+        busy.set(false);
+        space.set(String::new());
+        private_bytes.set("0".into());
+        public_bytes.set(String::new());
+        exposure_mode.set("public".into());
+        subject_id.set(String::new());
+        problem.set(String::new());
+        message.set(String::new());
     });
     let request = Callback::new(move |action: Action| {
-        if busy.get_untracked() { return; }
+        if busy.get_untracked() {
+            return;
+        }
         let id = selected.get_untracked();
-        let service = page.get_untracked().and_then(|p| p.services.into_iter().find(|s| s.id == id));
-        let Some(service) = service.filter(|s| s.approval == ServiceApprovalState::ApprovedTarget && s.target_sha256.is_some()) else {
-            problem.set(t("请选择已由主机批准目标的服务。", "Select a service whose target the host has approved.").into());
+        let service = page
+            .get_untracked()
+            .and_then(|p| p.services.into_iter().find(|s| s.id == id));
+        let Some(service) = service.filter(|s| {
+            s.approval == ServiceApprovalState::ApprovedTarget && s.target_sha256.is_some()
+        }) else {
+            problem.set(
+                t(
+                    "请选择已由主机批准目标的服务。",
+                    "Select a service whose target the host has approved.",
+                )
+                .into(),
+            );
             return;
         };
         let snapshot = policy.get_untracked();
-        let invalid = || t("请先读取状态，并检查空间、访问模式、分配额度和消费者有效期。", "Read the current state and check the space, access mode, quotas and consumer expiry.").to_owned();
+        let invalid = || {
+            t("请先读取状态，并检查空间、访问模式、分配额度和消费者有效期。", "Read the current state and check the space, access mode, quotas and consumer expiry.").to_owned()
+        };
         let command: Option<Request> = match action {
             Action::Read => Some(Request::Read),
             Action::Save if loaded.get_untracked() => (|| {
-                let mode=mode(&exposure_mode.get_untracked())?;
-                let space_id=space.get_untracked().trim().to_owned();
-                let private_maximum_bytes=private_bytes.get_untracked().parse::<u64>().ok()?;
-                let public_maximum_bytes=public_bytes.get_untracked().parse::<u64>().ok()?;
+                let mode = mode(&exposure_mode.get_untracked())?;
+                let space_id = space.get_untracked().trim().to_owned();
+                let private_maximum_bytes = private_bytes.get_untracked().parse::<u64>().ok()?;
+                let public_maximum_bytes = public_bytes.get_untracked().parse::<u64>().ok()?;
                 if !nestlink_protocol::valid_id(&space_id)
-                    || private_maximum_bytes.checked_add(public_maximum_bytes)? > service.definition.limits.maximum_bytes
+                    || private_maximum_bytes.checked_add(public_maximum_bytes)?
+                        > service.definition.limits.maximum_bytes
                     || (mode.private_enabled() && private_maximum_bytes == 0)
                     || (mode.public_enabled() && public_maximum_bytes == 0)
                     || (!mode.private_enabled() && private_maximum_bytes != 0)
-                    || (!mode.public_enabled() && public_maximum_bytes != 0) { return None; }
-                Some(Request::Save(ServiceExposureUpdate { expected_revision:snapshot.as_ref().map_or(0,|p|p.exposure.revision),
-                    expected_service_revision:service.revision, space_id, mode, private_maximum_bytes, public_maximum_bytes }))
+                    || (!mode.public_enabled() && public_maximum_bytes != 0)
+                {
+                    return None;
+                }
+                Some(Request::Save(ServiceExposureUpdate {
+                    expected_revision: snapshot.as_ref().map_or(0, |p| p.exposure.revision),
+                    expected_service_revision: service.revision,
+                    space_id,
+                    mode,
+                    private_maximum_bytes,
+                    public_maximum_bytes,
+                }))
             })(),
             Action::Allow => (|| {
-                let current=snapshot.as_ref().filter(|p|p.exposure.mode.private_enabled())?;
-                let id=subject_id.get_untracked().trim().to_owned();
-                if !nestlink_protocol::valid_id(&id) { return None; }
-                let subject=match subject_kind.get_untracked().as_str() {
-                    "account" => PrivateServiceSubject::Account { account_id:id },
-                    "installation" => PrivateServiceSubject::Installation { installation_id:id }, _=>return None };
-                let duration=minutes.get_untracked().parse::<u64>().ok().filter(|m|(1..=10_080).contains(m))?;
-                let now=js_sys::Date::now();
-                if !now.is_finite() || now < 0.0 || now > i64::MAX as f64 { return None; }
-                Some(Request::Allow(PrivateServiceAclUpdate { expected_exposure_revision:current.exposure.revision,
-                    subject, expires_at_unix_ms:(now as u64).checked_add(duration.checked_mul(60_000)?)? }))
+                let current = snapshot
+                    .as_ref()
+                    .filter(|p| p.exposure.mode.private_enabled())?;
+                let id = subject_id.get_untracked().trim().to_owned();
+                if !nestlink_protocol::valid_id(&id) {
+                    return None;
+                }
+                let subject = match subject_kind.get_untracked().as_str() {
+                    "account" => PrivateServiceSubject::Account { account_id: id },
+                    "installation" => PrivateServiceSubject::Installation {
+                        installation_id: id,
+                    },
+                    _ => return None,
+                };
+                let duration = minutes
+                    .get_untracked()
+                    .parse::<u64>()
+                    .ok()
+                    .filter(|m| (1..=10_080).contains(m))?;
+                let now = js_sys::Date::now();
+                if !now.is_finite() || now < 0.0 || now > i64::MAX as f64 {
+                    return None;
+                }
+                Some(Request::Allow(PrivateServiceAclUpdate {
+                    expected_exposure_revision: current.exposure.revision,
+                    subject,
+                    expires_at_unix_ms: (now as u64).checked_add(duration.checked_mul(60_000)?)?,
+                }))
             })(),
-            Action::Revoke(rule) => snapshot.as_ref().filter(|p|p.rules.iter().any(|r|r.rule_id==rule&&!r.revoked))
-                .map(|p|Request::Revoke(rule,p.exposure.revision)),
+            Action::Revoke(rule) => snapshot
+                .as_ref()
+                .filter(|p| p.rules.iter().any(|r| r.rule_id == rule && !r.revoked))
+                .map(|p| Request::Revoke(rule, p.exposure.revision)),
             _ => None,
         };
-        let Some(command)=command else { problem.set(invalid()); return; };
-        let Some(sdk)=api.get_value() else { return; };
-        let session=session_revision.get_untracked();
-        let operation=generation.get_untracked();
-        let alive=alive.clone();
-        let mutation=!matches!(command,Request::Read);
-        busy.set(true); problem.set(String::new()); message.set(String::new());
+        let Some(command) = command else {
+            problem.set(invalid());
+            return;
+        };
+        let Some(sdk) = api.get_value() else {
+            return;
+        };
+        let session = session_revision.get_untracked();
+        let operation = generation.get_untracked();
+        let alive = alive.clone();
+        let mutation = !matches!(command, Request::Read);
+        busy.set(true);
+        problem.set(String::new());
+        message.set(String::new());
         spawn_local(async move {
-            let current=|| alive.load(Ordering::Acquire)
-                && session_revision.try_get_untracked()==Some(session)
-                && generation.try_get_untracked()==Some(operation)
-                && selected.try_get_untracked().as_deref()==Some(id.as_str());
-            let result: Result<Option<PrivateServicePolicyView>,SdkError>=async {
-                let sdk=sdk.lock().await;
-                if !current() { return Err(SdkError::Invalid); }
+            let current = || {
+                alive.load(Ordering::Acquire)
+                    && session_revision.try_get_untracked() == Some(session)
+                    && generation.try_get_untracked() == Some(operation)
+                    && selected.try_get_untracked().as_deref() == Some(id.as_str())
+            };
+            let result: Result<Option<PrivateServicePolicyView>, SdkError> = async {
+                let sdk = sdk.lock().await;
+                if !current() {
+                    return Err(SdkError::Invalid);
+                }
                 match command {
                     Request::Read => match sdk.service_exposure(&id).await? {
-                        None=>Ok(None), Some(_)=>sdk.private_service_policy(&id).await.map(Some),
+                        None => Ok(None),
+                        Some(_) => sdk.private_service_policy(&id).await.map(Some),
                     },
-                    Request::Save(update) => { sdk.set_service_exposure(&id,update).await?; sdk.private_service_policy(&id).await.map(Some) },
-                    Request::Allow(update) => sdk.grant_private_service(&id,update).await.map(Some),
-                    Request::Revoke(rule,revision) => sdk.revoke_private_service(&id,&rule,revision).await.map(Some),
+                    Request::Save(update) => {
+                        sdk.set_service_exposure(&id, update).await?;
+                        sdk.private_service_policy(&id).await.map(Some)
+                    }
+                    Request::Allow(update) => {
+                        sdk.grant_private_service(&id, update).await.map(Some)
+                    }
+                    Request::Revoke(rule, revision) => sdk
+                        .revoke_private_service(&id, &rule, revision)
+                        .await
+                        .map(Some),
                 }
-            }.await;
-            if !current() { return; }
+            }
+            .await;
+            if !current() {
+                return;
+            }
             busy.set(false);
             match result {
                 Ok(value) => {
-                    if let Some(value)=&value {
-                        space.set(value.exposure.space_id.clone()); exposure_mode.set(mode_name(value.exposure.mode).into());
+                    if let Some(value) = &value {
+                        space.set(value.exposure.space_id.clone());
+                        exposure_mode.set(mode_name(value.exposure.mode).into());
                         private_bytes.set(value.exposure.private_maximum_bytes.to_string());
                         public_bytes.set(value.exposure.public_maximum_bytes.to_string());
-                    } else { public_bytes.set(service.definition.limits.maximum_bytes.to_string()); }
-                    policy.set(value); loaded.set(true);
+                    } else {
+                        public_bytes.set(service.definition.limits.maximum_bytes.to_string());
+                    }
+                    policy.set(value);
+                    loaded.set(true);
                     message.set(if mutation { t("访问设置已更新。现有访问按当前授权重新校验。", "Access settings updated. Existing access is checked against the current authorization.") }
                         else { t("已读取当前设置。", "Current settings loaded.") }.into());
-                },
+                }
                 Err(error) => {
-                    policy.set(None); loaded.set(false);
-                    if authentication_lost(&error) { auth_failure.run(sdk); return; }
+                    policy.set(None);
+                    loaded.set(false);
+                    if authentication_lost(&error) {
+                        auth_failure.run(sdk);
+                        return;
+                    }
                     problem.set(format!("{} {}",sdk_error(&error),t("请重新读取当前设置再操作；已提交的更改可能已经生效。", "Read current settings before another operation; a submitted change may already have taken effect.")));
-                },
+                }
             }
         });
     });

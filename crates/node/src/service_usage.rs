@@ -12,6 +12,7 @@ use nestlink_protocol::{
 use rusqlite::{Connection, OptionalExtension, params};
 use std::{path::Path, sync::Mutex, time::Duration};
 mod private;
+pub use private::PrivateServiceUsageOwner;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -25,6 +26,7 @@ pub enum Error {
 
 pub struct ServiceUsageStore {
     connection: Mutex<Connection>,
+    private_owners: Mutex<std::collections::BTreeSet<String>>,
     // This sentinel drops only after the actual Connection has closed.
     closed_after_connection: std::sync::Arc<()>,
     // Fields drop in declaration order: close SQLite before removing its files.
@@ -173,6 +175,7 @@ impl ServiceUsageStore {
         }
         Ok(Self {
             connection: Mutex::new(connection),
+            private_owners: Mutex::new(std::collections::BTreeSet::new()),
             closed_after_connection: std::sync::Arc::new(()),
             #[cfg(test)]
             owned_test_directory: None,

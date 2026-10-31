@@ -425,8 +425,13 @@ impl Store {
                 transaction.execute_batch(include_str!(
                     "../migrations/040_private_service_host_accounting.sql"
                 ))?;
-                if transaction.prepare("PRAGMA foreign_key_check")?.exists([])? {
-                    return Err(StorageError::Invalid("service migration foreign key failure"));
+                if transaction
+                    .prepare("PRAGMA foreign_key_check")?
+                    .exists([])?
+                {
+                    return Err(StorageError::Invalid(
+                        "service migration foreign key failure",
+                    ));
                 }
                 transaction.pragma_update(None, "user_version", 40)?;
                 transaction.commit()?;

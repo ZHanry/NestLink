@@ -316,7 +316,9 @@ pub(super) async fn run(
         }
     }}.await;
     drop(observations);
-    for prefix in &prefixes { prefix.revoke(); }
+    for prefix in &prefixes {
+        prefix.revoke();
+    }
     probes.abort_all();
     reports.abort_all();
     let deadline = Deadline::now() + Duration::from_secs(5);
@@ -338,7 +340,9 @@ pub(super) async fn run(
         }
     }
     for prefix in &mut prefixes {
-        if prefix.close(deadline).await.is_err() { cleanup_failed = true; }
+        if prefix.close(deadline).await.is_err() {
+            cleanup_failed = true;
+        }
     }
     if cleanup_failed {
         Err(failed())

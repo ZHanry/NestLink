@@ -499,18 +499,36 @@ impl Store {
             generation,
         } = publication;
         let requested = super::private::public_reservation_limit(tx, record)?;
-        Self::reserve_service_usage(tx, signer, record, approval, publication_id, generation,
-            &edge.runtime, edge.generation, edge.namespace.revision, requested, now_ms)
+        Self::reserve_service_usage(
+            tx,
+            signer,
+            record,
+            approval,
+            publication_id,
+            generation,
+            &edge.runtime,
+            edge.generation,
+            edge.namespace.revision,
+            requested,
+            now_ms,
+        )
     }
 
     /// One durable reservation primitive for public edge and installation-host
     /// reports. Both paths debit the same four outstanding/spent ledgers.
     #[allow(clippy::too_many_arguments)]
     pub(super) fn reserve_service_usage(
-        tx: &Transaction<'_>, signer: &ServiceLeaseSigner, record: &Record,
-        approval: &Approval, publication_id: &str, generation: u64,
-        runtime_id: &str, runtime_generation: u64, ingress_revision: u64,
-        requested: u64, now_ms: u64,
+        tx: &Transaction<'_>,
+        signer: &ServiceLeaseSigner,
+        record: &Record,
+        approval: &Approval,
+        publication_id: &str,
+        generation: u64,
+        runtime_id: &str,
+        runtime_generation: u64,
+        ingress_revision: u64,
+        requested: u64,
+        now_ms: u64,
     ) -> Result<SignedServiceUsageBudgetGrant, StorageError> {
         let quota_revision: u64 = tx.query_row(
             "SELECT revision FROM service_quota_settings WHERE singleton=1",
@@ -536,8 +554,18 @@ impl Store {
                 &record.definition.host_device_id,
                 DEVICE_BYTES,
             )?,
-            Self::quota_available(tx, "node", record.definition.accounting_node_id(), NODE_BYTES)?,
-            Self::quota_available(tx, "resource", &record.id, record.definition.limits.maximum_bytes)?,
+            Self::quota_available(
+                tx,
+                "node",
+                record.definition.accounting_node_id(),
+                NODE_BYTES,
+            )?,
+            Self::quota_available(
+                tx,
+                "resource",
+                &record.id,
+                record.definition.limits.maximum_bytes,
+            )?,
         ]
         .into_iter()
         .fold(requested, u64::min);
@@ -959,7 +987,11 @@ impl Store {
             return Err(StorageError::Invalid("invalid service usage clock"));
         }
         let tx = self.connection.transaction()?;
-        if tx.query_row("SELECT EXISTS(SELECT 1 FROM private_service_leases WHERE grant_id=?1)", [&untrusted.grant_id], |r| r.get::<_,bool>(0))? {
+        if tx.query_row(
+            "SELECT EXISTS(SELECT 1 FROM private_service_leases WHERE grant_id=?1)",
+            [&untrusted.grant_id],
+            |r| r.get::<_, bool>(0),
+        )? {
             return Err(StorageError::Forbidden);
         }
         type Node = (Vec<u8>, Option<String>, u64, u64, u64);
@@ -1156,7 +1188,11 @@ impl Store {
             return Err(StorageError::Invalid("invalid service stop clock"));
         }
         let tx = self.connection.transaction()?;
-        if tx.query_row("SELECT EXISTS(SELECT 1 FROM private_service_leases WHERE grant_id=?1)", [&untrusted.grant_id], |r| r.get::<_,bool>(0))? {
+        if tx.query_row(
+            "SELECT EXISTS(SELECT 1 FROM private_service_leases WHERE grant_id=?1)",
+            [&untrusted.grant_id],
+            |r| r.get::<_, bool>(0),
+        )? {
             return Err(StorageError::Forbidden);
         }
         type Node = (Vec<u8>, Option<String>, u64, u64, u64);
@@ -1303,7 +1339,11 @@ impl Store {
                 "SELECT EXISTS(SELECT 1 FROM data_nodes WHERE id=?1) OR EXISTS(SELECT 1 FROM services WHERE host_device_id=?1 AND edge_node_id IS NULL)",
                 [key], |row| row.get(0),
             )?;
-            return if exists { Ok(()) } else { Err(StorageError::Forbidden) };
+            return if exists {
+                Ok(())
+            } else {
+                Err(StorageError::Forbidden)
+            };
         }
         let table = match scope {
             ServiceQuotaScope::Account => "accounts",

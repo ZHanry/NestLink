@@ -165,6 +165,7 @@
   ,{"path":"/services/{id}/private-policy/{rule}","method":"delete","operation":"private_services::revoke","request":"PrivateServiceAclRevocation","response":"PrivateServicePolicyView","status":200,"auth":true}
   ,{"path":"/private-services/{consumer}","method":"get","operation":"private_services::directory","query":"ServiceQuery","response":"PrivateServicePage","status":200,"auth":true}
   ,{"path":"/services/{id}/private-host","method":"post","operation":"private_services::host","request":"SignedPrivateServiceHost","status":204,"auth":true}
+  ,{"path":"/services/{id}/private-host","method":"delete","operation":"private_services::withdraw_host","request":"SignedPrivateServiceHostWithdrawal","status":204,"auth":true}
   ,{"path":"/services/{id}/private-access","method":"post","operation":"private_services::issue","request":"PrivateServiceAccessRequest","response":"PrivateServiceGrant","status":200,"auth":true}
   ,{"path":"/services/{id}/private-access/{reservation}","method":"get","operation":"private_services::current","response":"PrivateServiceGrant","status":200,"auth":true}
   ,{"path":"/private-service-usage","method":"post","operation":"private_services::usage","request":"SignedPrivateServiceUsage","response":"PrivateServiceUsageAck","status":200,"auth":false}

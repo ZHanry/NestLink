@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "source_revision": "fd52f01bab8e5edb58d81365d9039e8e82f22a2b",
+  "run_id": 41159780464,
+  "run_attempt": 1,
+  "workflow": ".github/workflows/network-lock-refresh.yml",
+  "runner": "github-hosted Ubuntu 24.04",
+  "local_toolchain_executed": false,
+  "product": {
+    "artifact_id": 13025629545,
+    "archive_sha256": "611f92498cdeb6d04b1b01b4fab68ffe99e399bfa0f7fa7cd4537975dac8d52b",
+    "before_lock_sha256": "1ff13e41c08eeecd4e904663ff607ddb39f8cdd26f28b62457f4e5602f828d88",
+    "after_lock_sha256": "ad053f66c8a0faffc531a23bd8dd3c23113fdd9ff8905610d4c3de762614dfe3",
+    "changes": ["AppCore test workspace edges: node, transport-quic, uuid", "SDK test tempfile edge"],
+    "existing_external_identities_checksums_edges_preserved": true
+  },
+  "browser_native_fixture": {
+    "artifact_id": 13026701778,
+    "archive_sha256": "f9d46c60fa6e71af825ffe8bce3c7b9973aa57d9531bc7eadf7ec888a5ec31c6",
+    "lock_changed": false
+  },
+  "formatting": {
+    "run_id": 41159783591,
+    "artifact_id": 13026492227,
+    "archive_sha256": "a9a25da6d2cf395ebfab21120a9b28fe6f6e28e71f666d18c5d82664efeb70e0",
+    "patch_sha256": "2959c081a385da5858f47793cc9a9a976d052e06a9daa42efde1d4c41122158e",
+    "application": "Only files without subsequent local changes; all files changed by active owners were excluded"
+  },
+  "verification": "Original artifact archive and every receipt-listed file SHA256 checked before import; original working locks matched receipt before bytes",
+  "compilation_or_acceptance_claimed": false,
+  "release_qualified": false
+}
