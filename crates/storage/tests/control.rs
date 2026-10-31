@@ -20,10 +20,10 @@ mod browser_readiness;
 mod media_authority;
 #[path = "control/native_ice_capabilities.rs"]
 mod native_ice_capabilities;
-#[path = "control/native_receiver_qos.rs"]
-mod native_receiver_qos;
 #[path = "control/native_readiness.rs"]
 mod native_readiness;
+#[path = "control/native_receiver_qos.rs"]
+mod native_receiver_qos;
 #[path = "control/network_paths.rs"]
 mod network_paths;
 #[path = "control/quotas.rs"]
