@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "purpose": "Actions-only lock update for real daemon split-DNS tests",
+  "source_revision": "d3a587f354cfbe28cd3ddaee090f98f99d730dbb",
+  "build_provenance": {
+    "repository": "ZHanry/NestLink",
+    "workflow": ".github/workflows/network-lock-refresh.yml",
+    "run_id": 41155313556,
+    "run_attempt": 1,
+    "runner_environment": "github-hosted",
+    "conclusion": "success"
+  },
+  "scopes": [
+    {
+      "scope": "product",
+      "artifact": "network-lock-product-d3a587f354cfbe28cd3ddaee090f98f99d730dbb-1",
+      "before_lock_sha256": "fd3a5eab62f021bac47f444336ec75e2d22167224cf3978d6b060c915b9bf179",
+      "derived_lock_sha256": "60afc3c5f71cdcb36ccfe77243772c87c65575490750093ef518486e6fb2098a",
+      "reviewed_diff": "Only axum, nestlink-server and nestlink-storage edges added to nestlink-daemon for real OS tests; no package identity, version, checksum or external dependency edge changed"
+    },
+    {
+      "scope": "browser-native-fixture",
+      "artifact": "network-lock-browser-native-fixture-d3a587f354cfbe28cd3ddaee090f98f99d730dbb-1",
+      "before_lock_sha256": "add7cfdbd5df9d730d3da6892554b450d3e25cfbd47ff9cc2f81ef269a62b740",
+      "derived_lock_sha256": "add7cfdbd5df9d730d3da6892554b450d3e25cfbd47ff9cc2f81ef269a62b740",
+      "reviewed_diff": "No change"
+    }
+  ],
+  "review": {
+    "source_and_run_identity_verified": true,
+    "all_receipt_file_digests_verified": true,
+    "local_original_lock_matches_receipt": true,
+    "all_hosted_derivation_assertions_true": true,
+    "both_hosted_locked_metadata_commands_succeeded": true,
+    "local_project_toolchain_executed": false,
+    "quality_or_acceptance_claimed": false
+  }
+}

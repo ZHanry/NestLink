@@ -3626,6 +3626,7 @@ dependencies = [
 name = "nestlink-daemon"
 version = "0.7.0-rc.1"
 dependencies = [
+ "axum",
  "base64 0.22.1",
  "clap",
  "nestlink-app-core",
@@ -3646,7 +3647,9 @@ dependencies = [
  "nestlink-protocol",
  "nestlink-remote",
  "nestlink-sdk",
+ "nestlink-server",
  "nestlink-session",
+ "nestlink-storage",
  "nestlink-transport-stream",
  "rustix 1.1.5",
  "serde",

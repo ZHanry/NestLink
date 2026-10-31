@@ -6,7 +6,7 @@
     "timezone":  "Asia/Shanghai",
     "baseline_source":  "82f1c8dfb31bdf0872ea7430b5608e205c1cbb08",
     "branch":  "main",
-    "source_revision":  "d4de410b66a700ea66148a16f8618e3110150216",
+    "source_revision":  "d3a587f354cfbe28cd3ddaee090f98f99d730dbb",
     "checkpoint_kind":  "work_in_progress_against_source_revision",
     "active_tasks":  [
                          "W00",
@@ -131,7 +131,8 @@
                            "docs/network-rewrite/evidence/dns-lock-derivation-ca18962.json",
                            "docs/network-rewrite/evidence/development-run-d4de410.json",
                            "docs/adr/network/0032-managed-split-dns-recovery.md",
-                           "docs/network-rewrite/SPLIT-DNS-OPERATIONS.md"
+                           "docs/network-rewrite/SPLIT-DNS-OPERATIONS.md",
+                           "docs/network-rewrite/evidence/system-dns-lock-derivation-d3a587f.json"
                        ],
     "observed_actions":  [
                              {
