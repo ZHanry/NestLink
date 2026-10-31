@@ -24,6 +24,7 @@ use std::{
 };
 
 type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
+#[path = "network_access/subnet.rs"]
 mod subnet;
 const PASSWORD: &str = "packet-access-http-integration-password";
 
