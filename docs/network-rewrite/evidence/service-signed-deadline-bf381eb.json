@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "evidence_kind": "exact_source_hosted_unit_regression",
+  "scope": "Signed service lease and resource snapshot deadline calculation only; this is not a passing HA mechanism run or release qualification.",
+  "build_provenance": {
+    "source_revision": "bf381eb7b252b1c5639fe5899fdc62ce6f6b7909",
+    "workflow_revision": "bf381eb7b252b1c5639fe5899fdc62ce6f6b7909",
+    "workflow": ".github/workflows/service-group-ha.yml",
+    "run_id": 41211545097,
+    "run_attempt": 1,
+    "job_id": 124567426396,
+    "runner_environment": "github-hosted",
+    "runner": "ubuntu-24.04",
+    "rust_toolchain": "1.96.0",
+    "cargo_lock_sha256": "48063b78bd20ca07f585a6100f7437057af227fde24c94fdad266f8ff457933e"
+  },
+  "execution_provenance": {
+    "environment": "same GitHub-hosted job as build",
+    "test": "service_plane::tests::signed_service_deadline_counts_response_latency_once_and_keeps_both_original_caps",
+    "command": ["cargo", "test", "--locked", "-p", "nestlink-node", "--lib", "service_plane::tests::signed_service_deadline_counts_response_latency_once_and_keeps_both_original_caps", "--", "--exact", "--nocapture", "--color", "never"],
+    "return_code": 0,
+    "passed": 1,
+    "failed": 0,
+    "ignored": 0,
+    "observed_cases": [
+      "400ms response latency is counted once",
+      "lagging wall time cannot exceed the original request-relative signed lifetime",
+      "advanced wall time retains the earlier signed expiry cap",
+      "original request lifetime expiration is terminal",
+      "signed expiry at receipt is terminal",
+      "future issuance is refused"
+    ]
+  },
+  "artifact": {
+    "id": 13046925354,
+    "name": "service-group-ipvs-bf381eb7b252b1c5639fe5899fdc62ce6f6b7909-1",
+    "archive_sha256": "fd82f307195c98c4eb206346fc0ae339801e3a6393061039b3e729e048b663c5",
+    "archive_digest_matches_github_api": true,
+    "deadline_receipt_path": "nestlink-service-deadline-evidence/deadline-test-receipt.json",
+    "deadline_receipt_sha256": "e5322f313de3d7797c1382a74605e0ce47195d9e55df7add9cc7a7cadea84f40",
+    "deadline_log_path": "nestlink-service-deadline-evidence/deadline-test.log",
+    "deadline_log_sha256": "4e0d3543055d92b5e2252694988c8a1cf453e28332b4f4bf6b7ff6e131ecd2cd"
+  },
+  "enclosing_ha_workflow": {
+    "conclusion": "failure",
+    "failure_case": "hosted-source-build",
+    "reason": "The later SDK build failed on two u32/u16 comparisons in the concurrently added private-service offline implementation. No native HA scenario was executed in this run.",
+    "followup_source_fix": "6e168ef",
+    "native_ha_result": "pending a new exact-source hosted run"
+  },
+  "limitations": [
+    "The deterministic regression establishes deadline arithmetic and original caps only.",
+    "It does not establish real HTTP, HTTPS, TCP, UDP failover, crash recovery, quota settlement, or public Internet behavior.",
+    "No local project build, test, formatter, or lint was run; the artifact was downloaded, read, and SHA256-checked locally under R02."
+  ]
+}
